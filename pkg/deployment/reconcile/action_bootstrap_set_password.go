@@ -37,13 +37,13 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeBootstrapSetPassword, newBootstrapSetPasswordAction)
+	registerAction(api.ActionTypeBootstrapSetPassword, newBootstrapSetPasswordAction, defaultTimeout)
 }
 
 func newBootstrapSetPasswordAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &actionBootstrapSetPassword{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, defaultTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
 
 	return a
 }
@@ -66,7 +66,7 @@ func (a actionBootstrapSetPassword) Start(ctx context.Context) (bool, error) {
 			a.log.Warn().Msgf("User does not exist in password hashes")
 			return true, nil
 		} else {
-			ctxChild, cancel := context.WithTimeout(ctx, a.Timeout(spec))
+			ctxChild, cancel := globals.GetGlobals().Timeouts().ArangoD().WithTimeout(ctx)
 			defer cancel()
 
 			if password, err := a.setUserPassword(ctxChild, user, secret.Get()); err != nil {

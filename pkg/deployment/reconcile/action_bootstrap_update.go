@@ -28,13 +28,13 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeBootstrapUpdate, newBootstrapUpdateAction)
+	registerAction(api.ActionTypeBootstrapUpdate, newBootstrapUpdateAction, defaultTimeout)
 }
 
 func newBootstrapUpdateAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &actionBootstrapUpdate{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, defaultTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
 
 	return a
 }

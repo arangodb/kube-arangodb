@@ -34,7 +34,7 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeResignLeadership, newResignLeadershipAction)
+	registerAction(api.ActionTypeResignLeadership, newResignLeadershipAction, shutdownMemberTimeout)
 }
 
 // newResignLeadershipAction creates a new Action that implements the given
@@ -42,7 +42,7 @@ func init() {
 func newResignLeadershipAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &actionResignLeadership{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, shutdownMemberTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
 
 	return a
 }

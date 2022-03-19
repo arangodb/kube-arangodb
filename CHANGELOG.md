@@ -8,6 +8,7 @@
 - (Update) Bump K8S API to 1.21.10
 - (Feature) (ACS) Add ACS handler
 - (Feature) Allow to restart DBServers in cases when WriteConcern will be satisfied
+- (Feature) Allow to configure action timeouts
 
 ## [1.2.8](https://github.com/arangodb/kube-arangodb/tree/1.2.8) (2022-02-24)
 - Do not check License V2 on Community images

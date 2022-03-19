@@ -34,7 +34,7 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeRotateMember, withActionStartFailureGracePeriod(newRotateMemberAction, time.Minute))
+	registerAction(api.ActionTypeRotateMember, withActionStartFailureGracePeriod(newRotateMemberAction, time.Minute), rotateMemberTimeout)
 }
 
 // newRotateMemberAction creates a new Action that implements the given
@@ -42,7 +42,7 @@ func init() {
 func newRotateMemberAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &actionRotateMember{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, rotateMemberTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
 
 	return a
 }

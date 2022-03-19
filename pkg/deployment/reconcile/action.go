@@ -30,6 +30,16 @@ import (
 	"github.com/rs/zerolog"
 )
 
+func GetAllActions() []api.ActionType {
+	z := make([]api.ActionType, 0, len(definedActions))
+
+	for k := range definedActions {
+		z = append(z, k)
+	}
+
+	return z
+}
+
 // ActionCore executes a single Plan item.
 type ActionCore interface {
 	// Start performs the start of the action.
@@ -45,8 +55,6 @@ type ActionCore interface {
 type Action interface {
 	ActionCore
 
-	// Timeout returns the amount of time after which this action will timeout.
-	Timeout(deploymentSpec api.DeploymentSpec) time.Duration
 	// MemberID Return the MemberID used / created in this action
 	MemberID() string
 }
@@ -144,9 +152,10 @@ type actionFactory func(log zerolog.Logger, action api.Action, actionCtx ActionC
 var (
 	definedActions     = map[api.ActionType]actionFactory{}
 	definedActionsLock sync.Mutex
+	actionTimeouts     = api.ActionTimeouts{}
 )
 
-func registerAction(t api.ActionType, f actionFactory) {
+func registerAction(t api.ActionType, f actionFactory, timeout time.Duration) {
 	definedActionsLock.Lock()
 	defer definedActionsLock.Unlock()
 
@@ -156,6 +165,7 @@ func registerAction(t api.ActionType, f actionFactory) {
 	}
 
 	definedActions[t] = f
+	actionTimeouts[t] = api.NewTimeout(timeout)
 }
 
 func getActionFactory(t api.ActionType) (actionFactory, bool) {

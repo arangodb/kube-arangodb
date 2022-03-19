@@ -32,7 +32,7 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeClusterMemberCleanup, newClusterMemberCleanupAction)
+	registerAction(api.ActionTypeClusterMemberCleanup, newClusterMemberCleanupAction, addMemberTimeout)
 }
 
 // newClusterMemberCleanupAction creates a new Action that implements the given
@@ -40,7 +40,7 @@ func init() {
 func newClusterMemberCleanupAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &actionClusterMemberCleanup{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, addMemberTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
 
 	return a
 }

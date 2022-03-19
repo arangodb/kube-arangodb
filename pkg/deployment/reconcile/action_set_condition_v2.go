@@ -30,7 +30,7 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeSetConditionV2, setConditionV2)
+	registerAction(api.ActionTypeSetConditionV2, setConditionV2, defaultTimeout)
 }
 
 const (
@@ -48,7 +48,7 @@ const (
 func setConditionV2(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &actionSetConditionV2{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, defaultTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
 
 	return a
 }

@@ -28,13 +28,13 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeJWTPropagated, newJWTPropagated)
+	registerAction(api.ActionTypeJWTPropagated, newJWTPropagated, defaultTimeout)
 }
 
 func newJWTPropagated(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &jwtPropagatedAction{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, defaultTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
 
 	return a
 }

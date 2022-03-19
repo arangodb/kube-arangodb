@@ -31,7 +31,7 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeMemberPhaseUpdate, newMemberPhaseUpdate)
+	registerAction(api.ActionTypeMemberPhaseUpdate, newMemberPhaseUpdate, defaultTimeout)
 }
 
 const (
@@ -41,7 +41,7 @@ const (
 func newMemberPhaseUpdate(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &memberPhaseUpdateAction{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, defaultTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
 
 	return a
 }

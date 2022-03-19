@@ -32,13 +32,13 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeJWTRefresh, newJWTRefresh)
+	registerAction(api.ActionTypeJWTRefresh, newJWTRefresh, defaultTimeout)
 }
 
 func newJWTRefresh(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &jwtRefreshAction{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, defaultTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
 
 	return a
 }

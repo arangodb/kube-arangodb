@@ -29,14 +29,14 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeEnableClusterScaling, newEnableScalingCluster)
+	registerAction(api.ActionTypeEnableClusterScaling, newEnableScalingCluster, 0)
 }
 
 // newEnableScalingCluster creates the new action with enabling scaling DBservers and coordinators.
 func newEnableScalingCluster(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &actionEnableScalingCluster{}
 
-	a.actionImpl = newActionImpl(log, action, actionCtx, 0, util.NewString(""))
+	a.actionImpl = newActionImpl(log, action, actionCtx, util.NewString(""))
 
 	return a
 }

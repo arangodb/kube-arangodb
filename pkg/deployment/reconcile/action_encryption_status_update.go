@@ -34,13 +34,13 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeEncryptionKeyStatusUpdate, newEncryptionKeyStatusUpdate)
+	registerAction(api.ActionTypeEncryptionKeyStatusUpdate, newEncryptionKeyStatusUpdate, defaultTimeout)
 }
 
 func newEncryptionKeyStatusUpdate(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &encryptionKeyStatusUpdateAction{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, defaultTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
 
 	return a
 }

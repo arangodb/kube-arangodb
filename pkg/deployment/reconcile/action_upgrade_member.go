@@ -30,7 +30,7 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeUpgradeMember, newUpgradeMemberAction)
+	registerAction(api.ActionTypeUpgradeMember, newUpgradeMemberAction, upgradeMemberTimeout)
 }
 
 // newUpgradeMemberAction creates a new Action that implements the given
@@ -38,7 +38,7 @@ func init() {
 func newUpgradeMemberAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &actionUpgradeMember{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, upgradeMemberTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
 
 	return a
 }

@@ -33,7 +33,7 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeRecreateMember, newRecreateMemberAction)
+	registerAction(api.ActionTypeRecreateMember, newRecreateMemberAction, recreateMemberTimeout)
 }
 
 // newRecreateMemberAction creates a new Action that implements the given
@@ -41,7 +41,7 @@ func init() {
 func newRecreateMemberAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &actionRecreateMember{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, recreateMemberTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
 
 	return a
 }

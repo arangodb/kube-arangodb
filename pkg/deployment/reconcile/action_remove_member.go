@@ -35,7 +35,7 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeRemoveMember, newRemoveMemberAction)
+	registerAction(api.ActionTypeRemoveMember, newRemoveMemberAction, removeMemberTimeout)
 }
 
 // newRemoveMemberAction creates a new Action that implements the given
@@ -43,7 +43,7 @@ func init() {
 func newRemoveMemberAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &actionRemoveMember{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, removeMemberTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
 
 	return a
 }

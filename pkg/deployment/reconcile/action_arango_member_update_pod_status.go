@@ -31,7 +31,7 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeArangoMemberUpdatePodStatus, newArangoMemberUpdatePodStatusAction)
+	registerAction(api.ActionTypeArangoMemberUpdatePodStatus, newArangoMemberUpdatePodStatusAction, defaultTimeout)
 }
 
 const (
@@ -43,7 +43,7 @@ const (
 func newArangoMemberUpdatePodStatusAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &actionArangoMemberUpdatePodStatus{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, defaultTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
 
 	return a
 }

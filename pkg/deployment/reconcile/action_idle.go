@@ -28,7 +28,7 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeIdle, newIdleAction)
+	registerAction(api.ActionTypeIdle, newIdleAction, addMemberTimeout)
 }
 
 // newIdleAction creates a new Action that implements the given
@@ -36,7 +36,7 @@ func init() {
 func newIdleAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &actionIdle{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, addMemberTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
 
 	return a
 }

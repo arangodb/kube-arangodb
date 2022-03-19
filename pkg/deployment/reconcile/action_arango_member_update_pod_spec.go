@@ -33,7 +33,7 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeArangoMemberUpdatePodSpec, newArangoMemberUpdatePodSpecAction)
+	registerAction(api.ActionTypeArangoMemberUpdatePodSpec, newArangoMemberUpdatePodSpecAction, defaultTimeout)
 }
 
 // newArangoMemberUpdatePodSpecAction creates a new Action that implements the given
@@ -41,7 +41,7 @@ func init() {
 func newArangoMemberUpdatePodSpecAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &actionArangoMemberUpdatePodSpec{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, defaultTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
 
 	return a
 }

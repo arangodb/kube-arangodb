@@ -26,13 +26,13 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeTopologyDisable, newTopologyDisable)
+	registerAction(api.ActionTypeTopologyDisable, newTopologyDisable, defaultTimeout)
 }
 
 func newTopologyDisable(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &topologyDisable{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, defaultTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
 
 	return a
 }

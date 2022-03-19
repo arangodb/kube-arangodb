@@ -29,14 +29,14 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeDisableClusterScaling, newDisableScalingCluster)
+	registerAction(api.ActionTypeDisableClusterScaling, newDisableScalingCluster, 0)
 }
 
 // newDisableScalingCluster creates the new action with disabling scaling DBservers and coordinators.
 func newDisableScalingCluster(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &actionDisableScalingCluster{}
 
-	a.actionImpl = newActionImpl(log, action, actionCtx, 0, util.NewString(""))
+	a.actionImpl = newActionImpl(log, action, actionCtx, util.NewString(""))
 
 	return a
 }

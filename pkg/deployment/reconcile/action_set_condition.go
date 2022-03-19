@@ -30,13 +30,13 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeSetCondition, setCondition)
+	registerAction(api.ActionTypeSetCondition, setCondition, defaultTimeout)
 }
 
 func setCondition(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &actionSetCondition{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, defaultTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
 
 	return a
 }

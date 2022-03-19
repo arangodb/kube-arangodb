@@ -292,7 +292,7 @@ func (d *Reconciler) executeAction(ctx context.Context, log zerolog.Logger, plan
 		log.Warn().Msg("Action aborted. Removing the entire plan")
 		d.context.CreateEvent(k8sutil.NewPlanAbortedEvent(d.context.GetAPIObject(), string(planAction.Type), planAction.MemberID, planAction.Group.AsRole()))
 		return false, true, false, false, nil
-	} else if time.Now().After(planAction.CreationTime.Add(action.Timeout(d.context.GetSpec()))) {
+	} else if time.Now().After(planAction.CreationTime.Add(GetActionTimeout(d.context.GetSpec(), planAction.Type))) {
 		log.Warn().Msg("Action not finished in time. Removing the entire plan")
 		d.context.CreateEvent(k8sutil.NewPlanTimeoutEvent(d.context.GetAPIObject(), string(planAction.Type), planAction.MemberID, planAction.Group.AsRole()))
 		return false, true, false, false, nil

@@ -30,13 +30,13 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeUpdateTLSSNI, newTLSSNIUpdate)
+	registerAction(api.ActionTypeUpdateTLSSNI, newTLSSNIUpdate, tlsSNIUpdateTimeout)
 }
 
 func newTLSSNIUpdate(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &tlsSNIUpdate{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, tlsSNIUpdateTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
 
 	return a
 }

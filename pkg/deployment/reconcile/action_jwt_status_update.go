@@ -65,13 +65,13 @@ func ensureJWTFolderSupport(spec api.DeploymentSpec, status api.DeploymentStatus
 }
 
 func init() {
-	registerAction(api.ActionTypeJWTStatusUpdate, newJWTStatusUpdate)
+	registerAction(api.ActionTypeJWTStatusUpdate, newJWTStatusUpdate, defaultTimeout)
 }
 
 func newJWTStatusUpdate(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &jwtStatusUpdateAction{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, defaultTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
 
 	return a
 }

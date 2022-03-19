@@ -22,7 +22,6 @@ package reconcile
 
 import (
 	"context"
-	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -34,15 +33,13 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeRuntimeContainerImageUpdate, runtimeContainerImageUpdate)
+	registerAction(api.ActionTypeRuntimeContainerImageUpdate, runtimeContainerImageUpdate, defaultTimeout)
 }
 
 func runtimeContainerImageUpdate(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &actionRuntimeContainerImageUpdate{}
 
-	a.actionImpl = newBaseActionImplDefRef(log, action, actionCtx, func(deploymentSpec api.DeploymentSpec) time.Duration {
-		return deploymentSpec.Timeouts.Get().AddMember.Get(defaultTimeout)
-	})
+	a.actionImpl = newBaseActionImplDefRef(log, action, actionCtx)
 
 	return a
 }

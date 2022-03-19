@@ -28,13 +28,13 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeEncryptionKeyPropagated, newEncryptionKeyPropagated)
+	registerAction(api.ActionTypeEncryptionKeyPropagated, newEncryptionKeyPropagated, defaultTimeout)
 }
 
 func newEncryptionKeyPropagated(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &encryptionKeyPropagatedAction{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, defaultTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
 
 	return a
 }
