@@ -45,3 +45,11 @@ type ArangoMemberListerExpansion interface{}
 // ArangoMemberNamespaceListerExpansion allows custom methods to be added to
 // ArangoMemberNamespaceLister.
 type ArangoMemberNamespaceListerExpansion interface{}
+
+// ArangoTaskListerExpansion allows custom methods to be added to
+// ArangoTaskLister.
+type ArangoTaskListerExpansion interface{}
+
+// ArangoTaskNamespaceListerExpansion allows custom methods to be added to
+// ArangoTaskNamespaceLister.
+type ArangoTaskNamespaceListerExpansion interface{}

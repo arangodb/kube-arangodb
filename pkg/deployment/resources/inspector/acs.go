@@ -137,7 +137,7 @@ func arangoClusterSynchronizationsToMap(ctx context.Context, inspector *inspecto
 	return func() error {
 		acss, err := getArangoClusterSynchronizations(ctx, k, namespace, "")
 		if err != nil {
-			if apiErrors.IsUnauthorized(err) {
+			if apiErrors.IsUnauthorized(err) || apiErrors.IsNotFound(err) {
 				inspector.acs = &arangoClusterSynchronizationLoader{
 					accessible: false,
 				}

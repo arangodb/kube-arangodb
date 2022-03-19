@@ -33,6 +33,7 @@ type DatabaseV2alpha1Interface interface {
 	ArangoClusterSynchronizationsGetter
 	ArangoDeploymentsGetter
 	ArangoMembersGetter
+	ArangoTasksGetter
 }
 
 // DatabaseV2alpha1Client is used to interact with features provided by the database.arangodb.com group.
@@ -50,6 +51,10 @@ func (c *DatabaseV2alpha1Client) ArangoDeployments(namespace string) ArangoDeplo
 
 func (c *DatabaseV2alpha1Client) ArangoMembers(namespace string) ArangoMemberInterface {
 	return newArangoMembers(c, namespace)
+}
+
+func (c *DatabaseV2alpha1Client) ArangoTasks(namespace string) ArangoTaskInterface {
+	return newArangoTasks(c, namespace)
 }
 
 // NewForConfig creates a new DatabaseV2alpha1Client for the given config.

@@ -79,6 +79,8 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Database().V1().ArangoDeployments().Informer()}, nil
 	case deploymentv1.SchemeGroupVersion.WithResource("arangomembers"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Database().V1().ArangoMembers().Informer()}, nil
+	case deploymentv1.SchemeGroupVersion.WithResource("arangotasks"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Database().V1().ArangoTasks().Informer()}, nil
 
 		// Group=database.arangodb.com, Version=v2alpha1
 	case v2alpha1.SchemeGroupVersion.WithResource("arangoclustersynchronizations"):
@@ -87,6 +89,8 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Database().V2alpha1().ArangoDeployments().Informer()}, nil
 	case v2alpha1.SchemeGroupVersion.WithResource("arangomembers"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Database().V2alpha1().ArangoMembers().Informer()}, nil
+	case v2alpha1.SchemeGroupVersion.WithResource("arangotasks"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Database().V2alpha1().ArangoTasks().Informer()}, nil
 
 		// Group=replication.database.arangodb.com, Version=v1
 	case replicationv1.SchemeGroupVersion.WithResource("arangodeploymentreplications"):

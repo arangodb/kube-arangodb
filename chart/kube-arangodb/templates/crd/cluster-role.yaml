@@ -18,6 +18,7 @@ rules:
       verbs: ["get", "list", "watch", "update", "delete"]
       resourceNames:
         - "arangoclustersynchronizations.database.arangodb.com"
+        - "arangotasks.database.arangodb.com"
 
 {{- end }}
 {{- end }}

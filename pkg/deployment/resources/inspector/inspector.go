@@ -72,6 +72,7 @@ func newInspector(ctx context.Context, client kclient.Client, namespace string) 
 		arangoMembersToMap(ctx, &i, client.Arango(), namespace),
 		nodesToMap(ctx, &i, client.Kubernetes()),
 		arangoClusterSynchronizationsToMap(ctx, &i, client.Arango(), namespace),
+		arangoTasksToMap(ctx, &i, client.Arango(), namespace),
 	); err != nil {
 		return nil, err
 	}
@@ -80,7 +81,7 @@ func newInspector(ctx context.Context, client kclient.Client, namespace string) 
 }
 
 func NewEmptyInspector() inspectorInterface.Inspector {
-	return NewInspectorFromData(nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, "")
+	return NewInspectorFromData(nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, "")
 }
 
 func NewInspectorFromData(pods map[string]*core.Pod,
@@ -93,6 +94,7 @@ func NewInspectorFromData(pods map[string]*core.Pod,
 	arangoMembers map[string]*api.ArangoMember,
 	nodes map[string]*core.Node,
 	acs map[string]*api.ArangoClusterSynchronization,
+	at map[string]*api.ArangoTask,
 	version driver.Version) inspectorInterface.Inspector {
 	i := &inspector{
 		pods:                 pods,
@@ -130,6 +132,18 @@ func NewInspectorFromData(pods map[string]*core.Pod,
 		}
 	}
 
+	if at == nil {
+		i.at = &arangoTaskLoader{
+			accessible: false,
+			at:         nil,
+		}
+	} else {
+		i.at = &arangoTaskLoader{
+			accessible: true,
+			at:         at,
+		}
+	}
+
 	return i
 }
 
@@ -150,6 +164,7 @@ type inspector struct {
 	arangoMembers        map[string]*api.ArangoMember
 	nodes                *nodeLoader
 	acs                  *arangoClusterSynchronizationLoader
+	at                   *arangoTaskLoader
 	versionInfo          driver.Version
 }
 
