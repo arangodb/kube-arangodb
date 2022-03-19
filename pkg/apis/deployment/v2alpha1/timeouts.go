@@ -31,14 +31,18 @@ const (
 )
 
 type Timeouts struct {
-	// AddMember action timeout
-	AddMember *Timeout `json:"addMember,omitempty"`
 
 	// MaintenanceGracePeriod action timeout
 	MaintenanceGracePeriod *Timeout `json:"maintenanceGracePeriod,omitempty"`
 
-	// RuntimeContainerImageUpdate action timeout
-	RuntimeContainerImageUpdate *Timeout `json:"runtimeContainerImageUpdate,omitempty"`
+	// Actions
+	Actions ActionTimeouts `json:"actions,omitempty"`
+
+	// deprecated
+	AddMember *Timeout `json:"-"`
+
+	// deprecated
+	RuntimeContainerImageUpdate *Timeout `json:"-"`
 }
 
 func (t *Timeouts) GetMaintenanceGracePeriod() time.Duration {
@@ -55,6 +59,12 @@ func (t *Timeouts) Get() Timeouts {
 	}
 
 	return *t
+}
+
+type ActionTimeouts map[ActionType]Timeout
+
+func NewTimeout(timeout time.Duration) Timeout {
+	return Timeout(meta.Duration{Duration: timeout})
 }
 
 type Timeout meta.Duration

@@ -34,6 +34,8 @@ type Interface interface {
 	ArangoDeployments() ArangoDeploymentInformer
 	// ArangoMembers returns a ArangoMemberInformer.
 	ArangoMembers() ArangoMemberInformer
+	// ArangoTasks returns a ArangoTaskInformer.
+	ArangoTasks() ArangoTaskInformer
 }
 
 type version struct {
@@ -60,4 +62,9 @@ func (v *version) ArangoDeployments() ArangoDeploymentInformer {
 // ArangoMembers returns a ArangoMemberInformer.
 func (v *version) ArangoMembers() ArangoMemberInformer {
 	return &arangoMemberInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// ArangoTasks returns a ArangoTaskInformer.
+func (v *version) ArangoTasks() ArangoTaskInformer {
+	return &arangoTaskInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

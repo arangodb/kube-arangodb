@@ -14,7 +14,7 @@ metadata:
         release: {{ .Release.Name }}
 rules:
     - apiGroups: ["database.arangodb.com"]
-      resources: ["arangodeployments", "arangodeployments/status","arangomembers", "arangomembers/status", "arangoclustersynchronizations", "arangoclustersynchronizations/status"]
+      resources: ["arangodeployments", "arangodeployments/status","arangomembers", "arangomembers/status", "arangoclustersynchronizations", "arangoclustersynchronizations/status", "arangotasks", "arangotasks/status"]
       verbs: ["*"]
     - apiGroups: [""]
       resources: ["pods", "services", "endpoints", "persistentvolumeclaims", "events", "secrets", "serviceaccounts"]

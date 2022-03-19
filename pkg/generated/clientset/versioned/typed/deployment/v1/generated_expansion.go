@@ -27,3 +27,5 @@ type ArangoClusterSynchronizationExpansion interface{}
 type ArangoDeploymentExpansion interface{}
 
 type ArangoMemberExpansion interface{}
+
+type ArangoTaskExpansion interface{}
