@@ -125,17 +125,17 @@ func (s *stateInspector) RefreshState(ctx context.Context, members api.Deploymen
 		} else {
 			cs.Version = v
 		}
-	}
 
-	hctx, cancel := globals.GetGlobalTimeouts().ArangoDCheck().WithTimeout(ctx)
-	defer cancel()
-	if cluster, err := c.Cluster(hctx); err != nil {
-		h.Error = err
-	} else {
-		if health, err := cluster.Health(hctx); err != nil {
+		hctx, cancel := globals.GetGlobalTimeouts().ArangoDCheck().WithTimeout(ctx)
+		defer cancel()
+		if cluster, err := c.Cluster(hctx); err != nil {
 			h.Error = err
 		} else {
-			h.Members = health.Health
+			if health, err := cluster.Health(hctx); err != nil {
+				h.Error = err
+			} else {
+				h.Members = health.Health
+			}
 		}
 	}
 

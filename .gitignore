@@ -8,7 +8,6 @@ vendor/
 deps/
 .vscode/
 **/*.enterprise.go
-**/*.enterprise.go
 **/enterprise/**
 enterprise.mk
 local/
