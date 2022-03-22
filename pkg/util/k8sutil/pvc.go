@@ -24,14 +24,13 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
-
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	persistentvolumeclaimv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim/v1"
 )
 
 // IsPersistentVolumeClaimMarkedForDeletion returns true if the pvc has been marked for deletion.
@@ -78,7 +77,7 @@ func ExtractStorageResourceRequirement(resources v1.ResourceRequirements) v1.Res
 // CreatePersistentVolumeClaim creates a persistent volume claim with given name and configuration.
 // If the pvc already exists, nil is returned.
 // If another error occurs, that error is returned.
-func CreatePersistentVolumeClaim(ctx context.Context, pvcs persistentvolumeclaim.ModInterface, pvcName, deploymentName,
+func CreatePersistentVolumeClaim(ctx context.Context, pvcs persistentvolumeclaimv1.ModInterface, pvcName, deploymentName,
 	storageClassName, role string, enforceAntiAffinity bool, resources v1.ResourceRequirements,
 	vct *v1.PersistentVolumeClaim, finalizers []string, owner metav1.OwnerReference) error {
 	labels := LabelsForDeployment(deploymentName, role)

@@ -22,129 +22,171 @@ package inspector
 
 import (
 	"context"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
-	apiErrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 )
 
-func (i *inspector) IterateServices(action service.Action, filters ...service.Filter) error {
-	for _, service := range i.Services() {
-		if err := i.iterateServices(service, action, filters...); err != nil {
-			return err
-		}
-	}
-	return nil
+func init() {
+	requireRegisterInspectorLoader(servicesInspectorLoaderObj)
 }
 
-func (i *inspector) iterateServices(service *core.Service, action service.Action, filters ...service.Filter) error {
-	for _, filter := range filters {
-		if !filter(service) {
-			return nil
-		}
-	}
+var servicesInspectorLoaderObj = servicesInspectorLoader{}
 
-	return action(service)
+type servicesInspectorLoader struct {
 }
 
-func (i *inspector) Services() []*core.Service {
-	i.lock.Lock()
-	defer i.lock.Unlock()
-
-	var r []*core.Service
-	for _, service := range i.services {
-		r = append(r, service)
-	}
-
-	return r
+func (p servicesInspectorLoader) Throttle(t throttle.Components) throttle.Throttle {
+	return t.Service()
 }
 
-func (i *inspector) ServiceReadInterface() service.ReadInterface {
-	return &serviceReadInterface{i: i}
+func (p servicesInspectorLoader) Load(ctx context.Context, i *inspectorState) {
+	var q servicesInspector
+	p.loadV1(ctx, i, &q)
+	i.services = &q
+	q.state = i
+	q.last = time.Now()
 }
 
-type serviceReadInterface struct {
-	i *inspector
+func (p servicesInspectorLoader) loadV1(ctx context.Context, i *inspectorState, q *servicesInspector) {
+	var z servicesInspectorV1
+
+	z.serviceInspector = q
+
+	z.services, z.err = p.getV1Services(ctx, i)
+
+	q.v1 = &z
 }
 
-func (s serviceReadInterface) Get(ctx context.Context, name string, opts meta.GetOptions) (*core.Service, error) {
-	if s, ok := s.i.Service(name); !ok {
-		return nil, apiErrors.NewNotFound(schema.GroupResource{
-			Group:    core.GroupName,
-			Resource: "services",
-		}, name)
-	} else {
-		return s, nil
-	}
-}
-
-func (i *inspector) Service(name string) (*core.Service, bool) {
-	i.lock.Lock()
-	defer i.lock.Unlock()
-
-	service, ok := i.services[name]
-	if !ok {
-		return nil, false
+func (p servicesInspectorLoader) getV1Services(ctx context.Context, i *inspectorState) (map[string]*core.Service, error) {
+	objs, err := p.getV1ServicesList(ctx, i)
+	if err != nil {
+		return nil, err
 	}
 
-	return service, true
-}
+	r := make(map[string]*core.Service, len(objs))
 
-func servicesToMap(ctx context.Context, inspector *inspector, k kubernetes.Interface, namespace string) func() error {
-	return func() error {
-		services, err := getServices(ctx, k, namespace, "")
-		if err != nil {
-			return err
-		}
-
-		serviceMap := map[string]*core.Service{}
-
-		for _, service := range services {
-			_, exists := serviceMap[service.GetName()]
-			if exists {
-				return errors.Newf("Service %s already exists in map, error received", service.GetName())
-			}
-
-			serviceMap[service.GetName()] = servicePointer(service)
-		}
-
-		inspector.services = serviceMap
-
-		return nil
+	for id := range objs {
+		r[objs[id].GetName()] = objs[id]
 	}
+
+	return r, nil
 }
 
-func servicePointer(pod core.Service) *core.Service {
-	return &pod
-}
-
-func getServices(ctx context.Context, k kubernetes.Interface, namespace, cont string) ([]core.Service, error) {
+func (p servicesInspectorLoader) getV1ServicesList(ctx context.Context, i *inspectorState) ([]*core.Service, error) {
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
-	services, err := k.CoreV1().Services(namespace).List(ctxChild, meta.ListOptions{
-		Limit:    globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
-		Continue: cont,
+	obj, err := i.client.Kubernetes().CoreV1().Services(i.namespace).List(ctxChild, meta.ListOptions{
+		Limit: globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
 	})
 
 	if err != nil {
 		return nil, err
 	}
 
-	if services.Continue != "" {
-		nextServicesLayer, err := getServices(ctx, k, namespace, services.Continue)
+	items := obj.Items
+	cont := obj.Continue
+	var s = int64(len(items))
+
+	if z := obj.RemainingItemCount; z != nil {
+		s += *z
+	}
+
+	ptrs := make([]*core.Service, 0, s)
+
+	for {
+		for id := range items {
+			ptrs = append(ptrs, &items[id])
+		}
+
+		if cont == "" {
+			break
+		}
+
+		items, cont, err = p.getV1ServicesListRequest(ctx, i, cont)
+
 		if err != nil {
 			return nil, err
 		}
-
-		return append(services.Items, nextServicesLayer...), nil
 	}
 
-	return services.Items, nil
+	return ptrs, nil
+}
+
+func (p servicesInspectorLoader) getV1ServicesListRequest(ctx context.Context, i *inspectorState, cont string) ([]core.Service, string, error) {
+	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
+	defer cancel()
+	obj, err := i.client.Kubernetes().CoreV1().Services(i.namespace).List(ctxChild, meta.ListOptions{
+		Limit:    globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
+		Continue: cont,
+	})
+
+	if err != nil {
+		return nil, "", err
+	}
+
+	return obj.Items, obj.Continue, err
+}
+
+func (p servicesInspectorLoader) Verify(i *inspectorState) error {
+	if err := i.services.v1.err; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p servicesInspectorLoader) Copy(from, to *inspectorState, override bool) {
+	if to.services != nil {
+		if !override {
+			return
+		}
+	}
+
+	to.services = from.services
+	to.services.state = to
+}
+
+func (p servicesInspectorLoader) Name() string {
+	return "services"
+}
+
+type servicesInspector struct {
+	state *inspectorState
+
+	last time.Time
+
+	v1 *servicesInspectorV1
+}
+
+func (p *servicesInspector) LastRefresh() time.Time {
+	return p.last
+}
+
+func (p *servicesInspector) IsStatic() bool {
+	return p.state.IsStatic()
+}
+
+func (p *servicesInspector) Refresh(ctx context.Context) error {
+	return p.state.refresh(ctx, servicesInspectorLoaderObj)
+}
+
+func (p servicesInspector) Throttle(c throttle.Components) throttle.Throttle {
+	return c.Service()
+}
+
+func (p *servicesInspector) validate() error {
+	if p == nil {
+		return errors.Newf("ServiceInspector is nil")
+	}
+
+	if p.state == nil {
+		return errors.Newf("Parent is nil")
+	}
+
+	return p.v1.validate()
 }

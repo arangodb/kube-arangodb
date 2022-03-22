@@ -147,7 +147,7 @@ func (r *Resources) ValidateSecretHashes(ctx context.Context, cachedStatus inspe
 				badSecretNames = append(badSecretNames, secretName)
 			}
 		} else {
-			if _, exists := cachedStatus.Secret(pod.JWTSecretFolder(deploymentName)); !exists {
+			if _, exists := cachedStatus.Secret().V1().GetSimple(pod.JWTSecretFolder(deploymentName)); !exists {
 				secretName := spec.Authentication.GetJWTSecretName()
 				getExpectedHash := func() string { return getHashes().AuthJWT }
 				setExpectedHash := func(h string) error {
@@ -174,7 +174,7 @@ func (r *Resources) ValidateSecretHashes(ctx context.Context, cachedStatus inspe
 				badSecretNames = append(badSecretNames, secretName)
 			}
 		} else {
-			if _, exists := cachedStatus.Secret(pod.GetEncryptionFolderSecretName(deploymentName)); !exists {
+			if _, exists := cachedStatus.Secret().V1().GetSimple(pod.GetEncryptionFolderSecretName(deploymentName)); !exists {
 				secretName := spec.RocksDB.Encryption.GetKeySecretName()
 				getExpectedHash := func() string { return getHashes().RocksDBEncryptionKey }
 				setExpectedHash := func(h string) error {
@@ -231,7 +231,7 @@ func (r *Resources) ValidateSecretHashes(ctx context.Context, cachedStatus inspe
 
 // getSecretHash fetches a secret with given name and returns a hash over its value.
 func (r *Resources) getSecretHash(cachedStatus inspectorInterface.Inspector, secretName string) (*core.Secret, string, bool) {
-	s, exists := cachedStatus.Secret(secretName)
+	s, exists := cachedStatus.Secret().V1().GetSimple(secretName)
 	if !exists {
 		return nil, "", false
 	}

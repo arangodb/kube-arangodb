@@ -82,7 +82,7 @@ func (s sni) Verify(i Input, cachedStatus interfaces.Inspector) error {
 	}
 
 	for _, secret := range util.SortKeys(i.Deployment.TLS.GetSNI().Mapping) {
-		kubeSecret, exists := cachedStatus.Secret(secret)
+		kubeSecret, exists := cachedStatus.Secret().V1().GetSimple(secret)
 		if !exists {
 			return errors.Newf("SNI Secret not found %s", secret)
 		}

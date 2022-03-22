@@ -30,8 +30,6 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
-
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -57,6 +55,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	secretv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
 	jg "github.com/golang-jwt/jwt"
 	"k8s.io/apimachinery/pkg/api/equality"
 )
@@ -142,18 +141,18 @@ func (r *Resources) EnsureSecrets(ctx context.Context, log zerolog.Logger, cache
 
 			memberName := members[id].Member.ArangoMemberName(r.context.GetAPIObject().GetName(), members[id].Group)
 
-			member, ok := cachedStatus.ArangoMember(memberName)
+			member, ok := cachedStatus.ArangoMember().V1().GetSimple(memberName)
 			if !ok {
 				return errors.Newf("Member %s not found", memberName)
 			}
 
-			service, ok := cachedStatus.Service(memberName)
+			service, ok := cachedStatus.Service().V1().GetSimple(memberName)
 			if !ok {
 				return errors.Newf("Service of member %s not found", memberName)
 			}
 
 			tlsKeyfileSecretName := k8sutil.AppendTLSKeyfileSecretPostfix(member.GetName())
-			if _, exists := cachedStatus.Secret(tlsKeyfileSecretName); !exists {
+			if _, exists := cachedStatus.Secret().V1().GetSimple(tlsKeyfileSecretName); !exists {
 				serverNames, err := tls.GetServerAltNames(apiObject, spec, spec.TLS, service, members[id].Group, members[id].Member)
 				if err != nil {
 					return errors.WithStack(errors.Wrapf(err, "Failed to render alt names"))
@@ -198,10 +197,10 @@ func (r *Resources) EnsureSecrets(ctx context.Context, log zerolog.Logger, cache
 	return reconcileRequired.Reconcile(ctx)
 }
 
-func (r *Resources) ensureTokenSecretFolder(ctx context.Context, cachedStatus inspectorInterface.Inspector, secrets secret.ModInterface, secretName, folderSecretName string) error {
-	if f, exists := cachedStatus.Secret(folderSecretName); exists {
+func (r *Resources) ensureTokenSecretFolder(ctx context.Context, cachedStatus inspectorInterface.Inspector, secrets secretv1.ModInterface, secretName, folderSecretName string) error {
+	if f, exists := cachedStatus.Secret().V1().GetSimple(folderSecretName); exists {
 		if len(f.Data) == 0 {
-			s, exists := cachedStatus.Secret(secretName)
+			s, exists := cachedStatus.Secret().V1().GetSimple(secretName)
 			if !exists {
 				return errors.Newf("Token secret does not exist")
 			}
@@ -275,7 +274,7 @@ func (r *Resources) ensureTokenSecretFolder(ctx context.Context, cachedStatus in
 		return nil
 	}
 
-	s, exists := cachedStatus.Secret(secretName)
+	s, exists := cachedStatus.Secret().V1().GetSimple(secretName)
 	if !exists {
 		return errors.Newf("Token secret does not exist")
 	}
@@ -296,23 +295,23 @@ func (r *Resources) ensureTokenSecretFolder(ctx context.Context, cachedStatus in
 	return nil
 }
 
-func (r *Resources) ensureTokenSecret(ctx context.Context, cachedStatus inspectorInterface.Inspector, secrets secret.ModInterface, secretName string) error {
-	if _, exists := cachedStatus.Secret(secretName); !exists {
+func (r *Resources) ensureTokenSecret(ctx context.Context, cachedStatus inspectorInterface.Inspector, secrets secretv1.ModInterface, secretName string) error {
+	if _, exists := cachedStatus.Secret().V1().GetSimple(secretName); !exists {
 		return r.createTokenSecret(ctx, secrets, secretName)
 	}
 
 	return nil
 }
 
-func (r *Resources) ensureSecretWithEmptyKey(ctx context.Context, cachedStatus inspectorInterface.Inspector, secrets secret.ModInterface, secretName, keyName string) error {
-	if _, exists := cachedStatus.Secret(secretName); !exists {
+func (r *Resources) ensureSecretWithEmptyKey(ctx context.Context, cachedStatus inspectorInterface.Inspector, secrets secretv1.ModInterface, secretName, keyName string) error {
+	if _, exists := cachedStatus.Secret().V1().GetSimple(secretName); !exists {
 		return r.createSecretWithKey(ctx, secrets, secretName, keyName, nil)
 	}
 
 	return nil
 }
 
-func (r *Resources) createSecretWithMod(ctx context.Context, secrets secret.ModInterface, secretName string, f func(s *core.Secret)) error {
+func (r *Resources) createSecretWithMod(ctx context.Context, secrets secretv1.ModInterface, secretName string, f func(s *core.Secret)) error {
 	// Create secret
 	secret := &core.Secret{
 		ObjectMeta: meta.ObjectMeta{
@@ -338,13 +337,13 @@ func (r *Resources) createSecretWithMod(ctx context.Context, secrets secret.ModI
 	return operatorErrors.Reconcile()
 }
 
-func (r *Resources) createSecretWithKey(ctx context.Context, secrets secret.ModInterface, secretName, keyName string, value []byte) error {
+func (r *Resources) createSecretWithKey(ctx context.Context, secrets secretv1.ModInterface, secretName, keyName string, value []byte) error {
 	return r.createSecretWithMod(ctx, secrets, secretName, func(s *core.Secret) {
 		s.Data[keyName] = value
 	})
 }
 
-func (r *Resources) createTokenSecret(ctx context.Context, secrets secret.ModInterface, secretName string) error {
+func (r *Resources) createTokenSecret(ctx context.Context, secrets secretv1.ModInterface, secretName string) error {
 	tokenData := make([]byte, 32)
 	rand.Read(tokenData)
 	token := hex.EncodeToString(tokenData)
@@ -365,10 +364,10 @@ func (r *Resources) createTokenSecret(ctx context.Context, secrets secret.ModInt
 	return operatorErrors.Reconcile()
 }
 
-func (r *Resources) ensureEncryptionKeyfolderSecret(ctx context.Context, cachedStatus inspectorInterface.Inspector, secrets secret.ModInterface, keyfileSecretName, secretName string) error {
-	_, folderExists := cachedStatus.Secret(secretName)
+func (r *Resources) ensureEncryptionKeyfolderSecret(ctx context.Context, cachedStatus inspectorInterface.Inspector, secrets secretv1.ModInterface, keyfileSecretName, secretName string) error {
+	_, folderExists := cachedStatus.Secret().V1().GetSimple(secretName)
 
-	keyfile, exists := cachedStatus.Secret(keyfileSecretName)
+	keyfile, exists := cachedStatus.Secret().V1().GetSimple(keyfileSecretName)
 	if !exists {
 		if folderExists {
 			return nil
@@ -402,9 +401,9 @@ func (r *Resources) ensureEncryptionKeyfolderSecret(ctx context.Context, cachedS
 }
 
 func AppendKeyfileToKeyfolder(ctx context.Context, cachedStatus inspectorInterface.Inspector,
-	secrets secret.ModInterface, ownerRef *meta.OwnerReference, secretName string, encryptionKey []byte) error {
+	secrets secretv1.ModInterface, ownerRef *meta.OwnerReference, secretName string, encryptionKey []byte) error {
 	encSha := fmt.Sprintf("%0x", sha256.Sum256(encryptionKey))
-	if _, exists := cachedStatus.Secret(secretName); !exists {
+	if _, exists := cachedStatus.Secret().V1().GetSimple(secretName); !exists {
 
 		// Create secret
 		secret := &core.Secret{
@@ -441,14 +440,14 @@ var (
 // ensureExporterTokenSecret checks if a secret with given name exists in the namespace
 // of the deployment. If not, it will add such a secret with correct access.
 func (r *Resources) ensureExporterTokenSecret(ctx context.Context, cachedStatus inspectorInterface.Inspector,
-	secrets secret.ModInterface, tokenSecretName, secretSecretName string) error {
+	secrets secretv1.ModInterface, tokenSecretName, secretSecretName string) error {
 	if update, exists, err := r.ensureExporterTokenSecretCreateRequired(cachedStatus, tokenSecretName, secretSecretName); err != nil {
 		return err
 	} else if update {
 		// Create secret
 		if !exists {
 			owner := r.context.GetAPIObject().AsOwner()
-			err = k8sutil.CreateJWTFromSecret(ctx, cachedStatus.SecretReadInterface(), secrets, tokenSecretName, secretSecretName, exporterTokenClaims, &owner)
+			err = k8sutil.CreateJWTFromSecret(ctx, cachedStatus.Secret().V1().Read(), secrets, tokenSecretName, secretSecretName, exporterTokenClaims, &owner)
 			if k8sutil.IsAlreadyExists(err) {
 				// Secret added while we tried it also
 				return nil
@@ -464,7 +463,7 @@ func (r *Resources) ensureExporterTokenSecret(ctx context.Context, cachedStatus 
 }
 
 func (r *Resources) ensureExporterTokenSecretCreateRequired(cachedStatus inspectorInterface.Inspector, tokenSecretName, secretSecretName string) (bool, bool, error) {
-	if secret, exists := cachedStatus.Secret(tokenSecretName); !exists {
+	if secret, exists := cachedStatus.Secret().V1().GetSimple(tokenSecretName); !exists {
 		return true, false, nil
 	} else {
 		// Check if claims are fine
@@ -473,7 +472,7 @@ func (r *Resources) ensureExporterTokenSecretCreateRequired(cachedStatus inspect
 			return true, true, nil
 		}
 
-		jwtSecret, exists := cachedStatus.Secret(secretSecretName)
+		jwtSecret, exists := cachedStatus.Secret().V1().GetSimple(secretSecretName)
 		if !exists {
 			return true, true, errors.Newf("Secret %s does not exists", secretSecretName)
 		}
@@ -502,8 +501,8 @@ func (r *Resources) ensureExporterTokenSecretCreateRequired(cachedStatus inspect
 
 // ensureTLSCACertificateSecret checks if a secret with given name exists in the namespace
 // of the deployment. If not, it will add such a secret with a generated CA certificate.
-func (r *Resources) ensureTLSCACertificateSecret(ctx context.Context, cachedStatus inspectorInterface.Inspector, secrets secret.ModInterface, spec api.TLSSpec) error {
-	if _, exists := cachedStatus.Secret(spec.GetCASecretName()); !exists {
+func (r *Resources) ensureTLSCACertificateSecret(ctx context.Context, cachedStatus inspectorInterface.Inspector, secrets secretv1.ModInterface, spec api.TLSSpec) error {
+	if _, exists := cachedStatus.Secret().V1().GetSimple(spec.GetCASecretName()); !exists {
 		// Secret not found, create it
 		apiObject := r.context.GetAPIObject()
 		owner := apiObject.AsOwner()
@@ -526,8 +525,8 @@ func (r *Resources) ensureTLSCACertificateSecret(ctx context.Context, cachedStat
 
 // ensureClientAuthCACertificateSecret checks if a secret with given name exists in the namespace
 // of the deployment. If not, it will add such a secret with a generated CA certificate.
-func (r *Resources) ensureClientAuthCACertificateSecret(ctx context.Context, cachedStatus inspectorInterface.Inspector, secrets secret.ModInterface, spec api.SyncAuthenticationSpec) error {
-	if _, exists := cachedStatus.Secret(spec.GetClientCASecretName()); !exists {
+func (r *Resources) ensureClientAuthCACertificateSecret(ctx context.Context, cachedStatus inspectorInterface.Inspector, secrets secretv1.ModInterface, spec api.SyncAuthenticationSpec) error {
+	if _, exists := cachedStatus.Secret().V1().GetSimple(spec.GetClientCASecretName()); !exists {
 		// Secret not found, create it
 		apiObject := r.context.GetAPIObject()
 		owner := apiObject.AsOwner()
@@ -554,7 +553,7 @@ func (r *Resources) getJWTSecret(spec api.DeploymentSpec) (string, error) {
 		return "", nil
 	}
 	secretName := spec.Authentication.GetJWTSecretName()
-	s, err := k8sutil.GetTokenSecret(context.Background(), r.context.GetCachedStatus().SecretReadInterface(), secretName)
+	s, err := k8sutil.GetTokenSecret(context.Background(), r.context.GetCachedStatus().Secret().V1().Read(), secretName)
 	if err != nil {
 		r.log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get JWT secret")
 		return "", errors.WithStack(err)
@@ -565,7 +564,7 @@ func (r *Resources) getJWTSecret(spec api.DeploymentSpec) (string, error) {
 // getSyncJWTSecret loads the JWT secret used for syncmasters from a Secret configured in apiObject.Spec.Sync.Authentication.JWTSecretName.
 func (r *Resources) getSyncJWTSecret(spec api.DeploymentSpec) (string, error) {
 	secretName := spec.Sync.Authentication.GetJWTSecretName()
-	s, err := k8sutil.GetTokenSecret(context.Background(), r.context.GetCachedStatus().SecretReadInterface(), secretName)
+	s, err := k8sutil.GetTokenSecret(context.Background(), r.context.GetCachedStatus().Secret().V1().Read(), secretName)
 	if err != nil {
 		r.log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get sync JWT secret")
 		return "", errors.WithStack(err)
@@ -576,7 +575,7 @@ func (r *Resources) getSyncJWTSecret(spec api.DeploymentSpec) (string, error) {
 // getSyncMonitoringToken loads the token secret used for monitoring sync masters & workers.
 func (r *Resources) getSyncMonitoringToken(spec api.DeploymentSpec) (string, error) {
 	secretName := spec.Sync.Monitoring.GetTokenSecretName()
-	s, err := k8sutil.GetTokenSecret(context.Background(), r.context.GetCachedStatus().SecretReadInterface(), secretName)
+	s, err := k8sutil.GetTokenSecret(context.Background(), r.context.GetCachedStatus().Secret().V1().Read(), secretName)
 	if err != nil {
 		r.log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get sync monitoring secret")
 		return "", errors.WithStack(err)

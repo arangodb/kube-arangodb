@@ -60,6 +60,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/trigger"
 )
@@ -203,6 +204,21 @@ func (d *Deployment) SetAgencyMaintenanceMode(ctx context.Context, enabled bool)
 	return nil
 }
 
+func newDeploymentThrottle() throttle.Components {
+	return throttle.NewThrottleComponents(
+		30*time.Second, // ArangoDeploymentSynchronization
+		30*time.Second, // ArangoMember
+		30*time.Second, // ArangoTask
+		30*time.Second, // Node
+		15*time.Second, // PVC
+		10*time.Second, // Pod
+		30*time.Second, // PDB
+		10*time.Second, // Secret
+		10*time.Second, // Service
+		30*time.Second, // SA
+		30*time.Second) // ServiceMonitor
+}
+
 // New creates a new Deployment from the given API object.
 func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*Deployment, error) {
 	if err := apiObject.Spec.Validate(); err != nil {
@@ -210,14 +226,15 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 	}
 
 	d := &Deployment{
-		apiObject:   apiObject,
-		name:        apiObject.GetName(),
-		namespace:   apiObject.GetNamespace(),
-		config:      config,
-		deps:        deps,
-		eventCh:     make(chan *deploymentEvent, deploymentEventQueueSize),
-		stopCh:      make(chan struct{}),
-		agencyCache: agency.NewCache(apiObject.Spec.Mode),
+		apiObject:    apiObject,
+		name:         apiObject.GetName(),
+		namespace:    apiObject.GetNamespace(),
+		config:       config,
+		deps:         deps,
+		eventCh:      make(chan *deploymentEvent, deploymentEventQueueSize),
+		stopCh:       make(chan struct{}),
+		agencyCache:  agency.NewCache(apiObject.Spec.Mode),
+		currentState: inspector.NewInspector(newDeploymentThrottle(), deps.Client, apiObject.GetNamespace()),
 	}
 
 	d.memberState = memberState.NewStateInspector(d)
@@ -329,16 +346,16 @@ func (d *Deployment) run() {
 	for {
 		select {
 		case <-d.stopCh:
-			cachedStatus, err := inspector.NewInspector(context.Background(), d.deps.Client, d.GetNamespace())
+			err := d.currentState.Refresh(context.Background())
 			if err != nil {
 				log.Error().Err(err).Msg("Unable to get resources")
 			}
 			// Remove finalizers from created resources
 			log.Info().Msg("Deployment removed, removing finalizers to prevent orphaned resources")
-			if _, err := d.removePodFinalizers(context.TODO(), cachedStatus); err != nil {
+			if _, err := d.removePodFinalizers(context.TODO(), d.GetCachedStatus()); err != nil {
 				log.Warn().Err(err).Msg("Failed to remove Pod finalizers")
 			}
-			if _, err := d.removePVCFinalizers(context.TODO(), cachedStatus); err != nil {
+			if _, err := d.removePVCFinalizers(context.TODO(), d.GetCachedStatus()); err != nil {
 				log.Warn().Err(err).Msg("Failed to remove PVC finalizers")
 			}
 			// We're being stopped.
@@ -577,7 +594,7 @@ func (d *Deployment) isOwnerOf(obj meta.Object) bool {
 func (d *Deployment) lookForServiceMonitorCRD() {
 	var err error
 	if d.GetScope().IsNamespaced() {
-		_, err = d.deps.Client.Monitoring().MonitoringV1().ServiceMonitors(d.GetNamespace()).List(context.Background(), meta.ListOptions{})
+		_, err = d.currentState.ServiceMonitor().V1()
 	} else {
 		_, err = d.deps.Client.KubernetesExtensions().ApiextensionsV1().CustomResourceDefinitions().Get(context.Background(), "servicemonitors.monitoring.coreos.com", meta.GetOptions{})
 	}

@@ -23,9 +23,14 @@ package kclient
 import (
 	"sync"
 
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	versionedFake "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/fake"
+	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringFake "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/fake"
+	core "k8s.io/api/core/v1"
+	policy "k8s.io/api/policy/v1beta1"
 	apiextensionsclientFake "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/fake"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	kubernetesFake "k8s.io/client-go/kubernetes/fake"
 )
@@ -35,10 +40,7 @@ func NewFakeClient() Client {
 }
 
 type FakeClientBuilder interface {
-	Kubernetes(objects ...runtime.Object) FakeClientBuilder
-	KubernetesExtensions(objects ...runtime.Object) FakeClientBuilder
-	Arango(objects ...runtime.Object) FakeClientBuilder
-	Monitoring(objects ...runtime.Object) FakeClientBuilder
+	Add(objects ...runtime.Object) FakeClientBuilder
 
 	Client() Client
 }
@@ -50,52 +52,171 @@ func NewFakeClientBuilder() FakeClientBuilder {
 type fakeClientBuilder struct {
 	lock sync.Mutex
 
-	kubernetes           []runtime.Object
-	kubernetesExtensions []runtime.Object
-	arango               []runtime.Object
-	monitoring           []runtime.Object
+	all []runtime.Object
 }
 
-func (f *fakeClientBuilder) Kubernetes(objects ...runtime.Object) FakeClientBuilder {
+func (f *fakeClientBuilder) Add(objects ...runtime.Object) FakeClientBuilder {
 	f.lock.Lock()
 	defer f.lock.Unlock()
 
-	f.kubernetes = append(f.kubernetes, objects...)
+	f.all = append(f.all, objects...)
 
 	return f
 }
 
-func (f *fakeClientBuilder) KubernetesExtensions(objects ...runtime.Object) FakeClientBuilder {
-	f.lock.Lock()
-	defer f.lock.Unlock()
+func (f *fakeClientBuilder) filter(reg func(s *runtime.Scheme) error) []runtime.Object {
+	s := runtime.NewScheme()
 
-	f.kubernetesExtensions = append(f.kubernetesExtensions, objects...)
+	r := make([]runtime.Object, 0, len(f.all))
 
-	return f
-}
+	if err := reg(s); err != nil {
+		panic(err)
+	}
 
-func (f *fakeClientBuilder) Arango(objects ...runtime.Object) FakeClientBuilder {
-	f.lock.Lock()
-	defer f.lock.Unlock()
+	for _, o := range f.all {
+		if o == nil {
+			continue
+		}
+		if _, _, err := s.ObjectKinds(o); err == nil {
+			r = append(r, o)
+		}
+	}
 
-	f.arango = append(f.arango, objects...)
-
-	return f
-}
-
-func (f *fakeClientBuilder) Monitoring(objects ...runtime.Object) FakeClientBuilder {
-	f.lock.Lock()
-	defer f.lock.Unlock()
-
-	f.monitoring = append(f.monitoring, objects...)
-
-	return f
+	return r
 }
 
 func (f *fakeClientBuilder) Client() Client {
 	return NewStaticClient(
-		kubernetesFake.NewSimpleClientset(f.kubernetes...),
-		apiextensionsclientFake.NewSimpleClientset(f.kubernetesExtensions...),
-		versionedFake.NewSimpleClientset(f.arango...),
-		monitoringFake.NewSimpleClientset(f.monitoring...))
+		kubernetesFake.NewSimpleClientset(f.filter(kubernetesFake.AddToScheme)...),
+		apiextensionsclientFake.NewSimpleClientset(f.filter(apiextensionsclientFake.AddToScheme)...),
+		versionedFake.NewSimpleClientset(f.filter(versionedFake.AddToScheme)...),
+		monitoringFake.NewSimpleClientset(f.filter(monitoringFake.AddToScheme)...))
+}
+
+type FakeDataInput struct {
+	Namespace string
+
+	Pods            map[string]*core.Pod
+	Secrets         map[string]*core.Secret
+	Services        map[string]*core.Service
+	PVCS            map[string]*core.PersistentVolumeClaim
+	ServiceAccounts map[string]*core.ServiceAccount
+	PDBS            map[string]*policy.PodDisruptionBudget
+	ServiceMonitors map[string]*monitoring.ServiceMonitor
+	ArangoMembers   map[string]*api.ArangoMember
+	Nodes           map[string]*core.Node
+	ACS             map[string]*api.ArangoClusterSynchronization
+	AT              map[string]*api.ArangoTask
+}
+
+func (f FakeDataInput) asList() []runtime.Object {
+	var r []runtime.Object
+
+	for k, v := range f.Pods {
+		c := v.DeepCopy()
+		c.SetName(k)
+		if c.GetNamespace() == "" && f.Namespace != "" {
+			c.SetNamespace(f.Namespace)
+		}
+		r = append(r, c)
+	}
+	for k, v := range f.Secrets {
+		c := v.DeepCopy()
+		c.SetName(k)
+		if c.GetNamespace() == "" && f.Namespace != "" {
+			c.SetNamespace(f.Namespace)
+		}
+		r = append(r, c)
+	}
+	for k, v := range f.Services {
+		c := v.DeepCopy()
+		c.SetName(k)
+		if c.GetNamespace() == "" && f.Namespace != "" {
+			c.SetNamespace(f.Namespace)
+		}
+		r = append(r, c)
+	}
+	for k, v := range f.PVCS {
+		c := v.DeepCopy()
+		c.SetName(k)
+		if c.GetNamespace() == "" && f.Namespace != "" {
+			c.SetNamespace(f.Namespace)
+		}
+		r = append(r, c)
+	}
+	for k, v := range f.ServiceAccounts {
+		c := v.DeepCopy()
+		c.SetName(k)
+		if c.GetNamespace() == "" && f.Namespace != "" {
+			c.SetNamespace(f.Namespace)
+		}
+		r = append(r, c)
+	}
+	for k, v := range f.PDBS {
+		c := v.DeepCopy()
+		c.SetName(k)
+		if c.GetNamespace() == "" && f.Namespace != "" {
+			c.SetNamespace(f.Namespace)
+		}
+		r = append(r, c)
+	}
+	for k, v := range f.ServiceMonitors {
+		c := v.DeepCopy()
+		c.SetName(k)
+		if c.GetNamespace() == "" && f.Namespace != "" {
+			c.SetNamespace(f.Namespace)
+		}
+		r = append(r, c)
+	}
+	for k, v := range f.ArangoMembers {
+		c := v.DeepCopy()
+		c.SetName(k)
+		if c.GetNamespace() == "" && f.Namespace != "" {
+			c.SetNamespace(f.Namespace)
+		}
+		r = append(r, c)
+	}
+	for k, v := range f.Nodes {
+		c := v.DeepCopy()
+		c.SetName(k)
+		if c.GetNamespace() == "" && f.Namespace != "" {
+			c.SetNamespace(f.Namespace)
+		}
+		r = append(r, c)
+	}
+	for k, v := range f.ACS {
+		c := v.DeepCopy()
+		c.SetName(k)
+		if c.GetNamespace() == "" && f.Namespace != "" {
+			c.SetNamespace(f.Namespace)
+		}
+		r = append(r, c)
+	}
+	for k, v := range f.AT {
+		c := v.DeepCopy()
+		c.SetName(k)
+		if c.GetNamespace() == "" && f.Namespace != "" {
+			c.SetNamespace(f.Namespace)
+		}
+		r = append(r, c)
+	}
+
+	for _, o := range r {
+		if f.Namespace != "" {
+			if m, ok := o.(meta.Object); ok {
+				if m.GetName() == "" {
+					panic("Invalid data")
+				}
+				if n := m.GetNamespace(); n == "" {
+					m.SetNamespace(f.Namespace)
+				}
+			}
+		}
+	}
+
+	return r
+}
+
+func (f FakeDataInput) Client() Client {
+	return NewFakeClientBuilder().Add(f.asList()...).Client()
 }

@@ -24,9 +24,7 @@ import (
 	"context"
 	"sort"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -153,7 +151,7 @@ func (d *Deployment) ReadyVolumeCount() int {
 			// Find status
 			for _, pvc := range pvcs {
 				if pvc.Name == m.PersistentVolumeClaimName {
-					if pvc.Status.Phase == v1.ClaimBound {
+					if pvc.Status.Phase == core.ClaimBound {
 						count++
 					}
 				}
@@ -190,8 +188,7 @@ func (d *Deployment) StorageClasses() []string {
 // Empty string means that the database is not reachable outside the Kubernetes cluster.
 func (d *Deployment) DatabaseURL() string {
 	eaSvcName := k8sutil.CreateDatabaseExternalAccessServiceName(d.Name())
-	ns := d.apiObject.Namespace
-	svc, err := d.deps.Client.Kubernetes().CoreV1().Services(ns).Get(context.Background(), eaSvcName, metav1.GetOptions{})
+	svc, err := d.currentState.Service().V1().Read().Get(context.Background(), eaSvcName, metav1.GetOptions{})
 	if err != nil {
 		return ""
 	}
@@ -199,14 +196,14 @@ func (d *Deployment) DatabaseURL() string {
 	if !d.GetSpec().IsSecure() {
 		scheme = "http"
 	}
-	nodeFetcher := func() (v1.NodeList, error) {
-		result, err := d.deps.Client.Kubernetes().CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
-		if err != nil {
-			return v1.NodeList{}, errors.WithStack(err)
+	nodeFetcher := func() ([]*core.Node, error) {
+		if n, err := d.currentState.Node().V1(); err != nil {
+			return nil, nil
+		} else {
+			return n.ListSimple(), nil
 		}
-		return *result, nil
 	}
-	portPredicate := func(p v1.ServicePort) bool {
+	portPredicate := func(p core.ServicePort) bool {
 		return p.TargetPort.IntValue() == k8sutil.ArangoPort
 	}
 	url, err := k8sutil.CreateServiceURL(*svc, scheme, portPredicate, nodeFetcher)

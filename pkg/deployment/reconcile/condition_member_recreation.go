@@ -117,7 +117,7 @@ func isStorageClassChanged(_ context.Context, log zerolog.Logger, apiObject k8su
 	}
 
 	// Check if a storage class changed.
-	if pvc, ok := cachedStatus.PersistentVolumeClaim(member.PersistentVolumeClaimName); !ok {
+	if pvc, ok := cachedStatus.PersistentVolumeClaim().V1().GetSimple(member.PersistentVolumeClaimName); !ok {
 		log.Warn().Str("role", group.AsRole()).Str("id", member.ID).Msg("Failed to get PVC")
 		return false, "", fmt.Errorf("failed to get PVC %s", member.PersistentVolumeClaimName)
 	} else {
@@ -141,7 +141,7 @@ func isStorageClassChanged(_ context.Context, log zerolog.Logger, apiObject k8su
 
 	// From here on it is known that the member requires replacement, so `true` must be returned.
 	// If pod does not exist then it will try next time.
-	if pod, ok := cachedStatus.Pod(member.PodName); ok {
+	if pod, ok := cachedStatus.Pod().V1().GetSimple(member.PodName); ok {
 		if _, ok := pod.GetAnnotations()[deployment.ArangoDeploymentPodReplaceAnnotation]; !ok {
 			log.Warn().
 				Str("pod-name", member.PodName).
@@ -175,7 +175,7 @@ func isVolumeSizeChanged(_ context.Context, log zerolog.Logger, _ k8sutil.APIObj
 		return false, "", nil
 	}
 
-	pvc, ok := cachedStatus.PersistentVolumeClaim(member.PersistentVolumeClaimName)
+	pvc, ok := cachedStatus.PersistentVolumeClaim().V1().GetSimple(member.PersistentVolumeClaimName)
 	if !ok {
 		log.Warn().
 			Str("role", group.AsRole()).
@@ -202,7 +202,7 @@ func isVolumeSizeChanged(_ context.Context, log zerolog.Logger, _ k8sutil.APIObj
 
 	// From here on it is known that the member requires replacement, so `true` must be returned.
 	// If pod does not exist then it will try next time.
-	if pod, ok := cachedStatus.Pod(member.PodName); ok {
+	if pod, ok := cachedStatus.Pod().V1().GetSimple(member.PodName); ok {
 		if _, ok := pod.GetAnnotations()[deployment.ArangoDeploymentPodReplaceAnnotation]; !ok {
 			log.Warn().Str("pod-name", member.PodName).
 				Msgf("try shrinking volume size, but %s", getRequiredReplaceMessage(member.PodName))

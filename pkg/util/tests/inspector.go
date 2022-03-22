@@ -27,13 +27,20 @@ import (
 	"context"
 	"github.com/stretchr/testify/require"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 )
 
 const FakeNamespace = "fake"
 
 func NewInspector(t *testing.T, c kclient.Client) inspectorInterface.Inspector {
-	i, err := inspector.NewInspector(context.Background(), c, FakeNamespace)
-	require.NoError(t, err)
+	i := inspector.NewInspector(throttle.NewAlwaysThrottleComponents(), c, FakeNamespace)
+	require.NoError(t, i.Refresh(context.Background()))
 
 	return i
+}
+
+func NewEmptyInspector(t *testing.T) inspectorInterface.Inspector {
+	c := kclient.NewFakeClient()
+
+	return NewInspector(t, c)
 }

@@ -28,8 +28,6 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
-
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
 
@@ -38,6 +36,7 @@ import (
 	certificates "github.com/arangodb-helper/go-certificates"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	secretv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
 	"github.com/rs/zerolog"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -49,7 +48,7 @@ const (
 
 // createTLSCACertificate creates a CA certificate and stores it in a secret with name
 // specified in the given spec.
-func createTLSCACertificate(ctx context.Context, log zerolog.Logger, secrets secret.ModInterface, spec api.TLSSpec,
+func createTLSCACertificate(ctx context.Context, log zerolog.Logger, secrets secretv1.ModInterface, spec api.TLSSpec,
 	deploymentName string, ownerRef *metav1.OwnerReference) error {
 	log = log.With().Str("secret", spec.GetCASecretName()).Logger()
 
@@ -79,14 +78,13 @@ func createTLSCACertificate(ctx context.Context, log zerolog.Logger, secrets sec
 
 // createTLSServerCertificate creates a TLS certificate for a specific server and stores
 // it in a secret with the given name.
-func createTLSServerCertificate(ctx context.Context, log zerolog.Logger, cachedStatus inspectorInterface.Inspector, secrets secret.ModInterface, names tls.KeyfileInput, spec api.TLSSpec,
+func createTLSServerCertificate(ctx context.Context, log zerolog.Logger, cachedStatus inspectorInterface.Inspector, secrets secretv1.ModInterface, names tls.KeyfileInput, spec api.TLSSpec,
 	secretName string, ownerRef *metav1.OwnerReference) (bool, error) {
-
 	log = log.With().Str("secret", secretName).Logger()
 	// Load CA certificate
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
-	caCert, caKey, _, err := k8sutil.GetCASecret(ctxChild, cachedStatus.SecretReadInterface(), spec.GetCASecretName(), nil)
+	caCert, caKey, _, err := k8sutil.GetCASecret(ctxChild, cachedStatus.Secret().V1().Read(), spec.GetCASecretName(), nil)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to load CA certificate")
 		return false, errors.WithStack(err)

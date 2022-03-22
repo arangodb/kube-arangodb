@@ -25,6 +25,7 @@ import (
 	"testing"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
@@ -35,10 +36,10 @@ func Test_SecretConfigGetter(t *testing.T) {
 	t.Run("Missing secret", func(t *testing.T) {
 		c := kclient.NewFakeClient()
 
-		i, err := inspector.NewInspector(context.Background(), c, "default")
-		require.NoError(t, err)
+		i := inspector.NewInspector(throttle.NewAlwaysThrottleComponents(), c, "default")
+		require.NoError(t, i.Refresh(context.Background()))
 
-		_, _, err = SecretConfigGetter(i, "secret", "key")()
+		_, _, err := SecretConfigGetter(i, "secret", "key")()
 		require.EqualError(t, err, "Secret secret not found")
 	})
 
@@ -55,8 +56,8 @@ func Test_SecretConfigGetter(t *testing.T) {
 		_, err := c.Kubernetes().CoreV1().Secrets("default").Create(context.Background(), &s, meta.CreateOptions{})
 		require.NoError(t, err)
 
-		i, err := inspector.NewInspector(context.Background(), c, "default")
-		require.NoError(t, err)
+		i := inspector.NewInspector(throttle.NewAlwaysThrottleComponents(), c, "default")
+		require.NoError(t, i.Refresh(context.Background()))
 
 		_, _, err = SecretConfigGetter(i, "secret", "key")()
 		require.EqualError(t, err, "Key secret/key not found")
@@ -80,8 +81,8 @@ random data
 		_, err := c.Kubernetes().CoreV1().Secrets("default").Create(context.Background(), &s, meta.CreateOptions{})
 		require.NoError(t, err)
 
-		i, err := inspector.NewInspector(context.Background(), c, "default")
-		require.NoError(t, err)
+		i := inspector.NewInspector(throttle.NewAlwaysThrottleComponents(), c, "default")
+		require.NoError(t, i.Refresh(context.Background()))
 
 		_, _, err = SecretConfigGetter(i, "secret", "key")()
 		require.Error(t, err, "Key secret/key not found")
@@ -122,8 +123,8 @@ users:
 		_, err := c.Kubernetes().CoreV1().Secrets("default").Create(context.Background(), &s, meta.CreateOptions{})
 		require.NoError(t, err)
 
-		i, err := inspector.NewInspector(context.Background(), c, "default")
-		require.NoError(t, err)
+		i := inspector.NewInspector(throttle.NewAlwaysThrottleComponents(), c, "default")
+		require.NoError(t, i.Refresh(context.Background()))
 
 		_, _, err = SecretConfigGetter(i, "secret", "key")()
 		require.NoError(t, err)

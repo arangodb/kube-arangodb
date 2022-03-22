@@ -26,8 +26,6 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
-
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -38,6 +36,7 @@ import (
 	memberState "github.com/arangodb/kube-arangodb/pkg/deployment/member"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	arangomemberv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember/v1"
 )
 
 const (
@@ -159,7 +158,6 @@ func (r *Resources) cleanupRemovedClusterMembers(ctx context.Context, health mem
 
 func (r *Resources) EnsureArangoMembers(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
 	// Create all missing arangomembers
-
 	s, _ := r.context.GetStatus()
 	obj := r.context.GetAPIObject()
 
@@ -169,7 +167,7 @@ func (r *Resources) EnsureArangoMembers(ctx context.Context, cachedStatus inspec
 		for _, member := range list {
 			name := member.ArangoMemberName(r.context.GetAPIObject().GetName(), group)
 
-			if m, ok := cachedStatus.ArangoMember(name); !ok {
+			if m, ok := cachedStatus.ArangoMember().V1().GetSimple(name); !ok {
 				// Create ArangoMember
 				a := api.ArangoMember{
 					ObjectMeta: metav1.ObjectMeta{
@@ -234,7 +232,7 @@ func (r *Resources) EnsureArangoMembers(ctx context.Context, cachedStatus inspec
 		return err
 	}
 
-	if err := cachedStatus.IterateArangoMembers(func(member *api.ArangoMember) error {
+	if err := cachedStatus.ArangoMember().V1().Iterate(func(member *api.ArangoMember) error {
 		_, g, ok := s.Members.ElementByID(member.Spec.ID)
 
 		if !ok || g != member.Spec.Group {
@@ -253,7 +251,7 @@ func (r *Resources) EnsureArangoMembers(ctx context.Context, cachedStatus inspec
 		}
 
 		return nil
-	}, arangomember.FilterByDeploymentUID(obj.GetUID())); err != nil {
+	}, arangomemberv1.FilterByDeploymentUID(obj.GetUID())); err != nil {
 		return err
 	}
 

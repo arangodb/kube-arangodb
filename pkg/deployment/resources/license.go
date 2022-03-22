@@ -34,7 +34,7 @@ func (r *Resources) ValidateLicenseKeySecret(cachedStatus inspectorInterface.Ins
 	if spec.HasSecretName() {
 		secretName := spec.GetSecretName()
 
-		s, exists := cachedStatus.Secret(secretName)
+		s, exists := cachedStatus.Secret().V1().GetSimple(secretName)
 
 		if !exists {
 			return errors.Newf("License secret %s does not exist", s)

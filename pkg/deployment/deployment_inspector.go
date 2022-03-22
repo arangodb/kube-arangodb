@@ -36,8 +36,6 @@ import (
 
 	operatorErrors "github.com/arangodb/kube-arangodb/pkg/util/errors"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
-
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -75,7 +73,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 	deploymentName := d.GetName()
 	defer metrics.SetDuration(inspectDeploymentDurationGauges.WithLabelValues(deploymentName), start)
 
-	cachedStatus, err := inspector.NewInspector(context.Background(), d.deps.Client, d.GetNamespace())
+	err := d.currentState.Refresh(ctxReconciliation)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to get resources")
 		return minInspectionInterval // Retry ASAP
@@ -95,7 +93,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 		return nextInterval
 	} else if updated != nil && updated.GetDeletionTimestamp() != nil {
 		// Deployment is marked for deletion
-		if err := d.runDeploymentFinalizers(ctxReconciliation, cachedStatus); err != nil {
+		if err := d.runDeploymentFinalizers(ctxReconciliation, d.GetCachedStatus()); err != nil {
 			hasError = true
 			d.CreateEvent(k8sutil.NewErrorEvent("ArangoDeployment finalizer inspection failed", err, d.apiObject))
 		}
@@ -119,7 +117,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 		d.GetMembersState().RefreshState(ctxReconciliation, updated.Status.Members.AsList())
 		d.GetMembersState().Log(d.deps.Log)
 
-		inspectNextInterval, err := d.inspectDeploymentWithError(ctxReconciliation, nextInterval, cachedStatus)
+		inspectNextInterval, err := d.inspectDeploymentWithError(ctxReconciliation, nextInterval)
 		if err != nil {
 			if !operatorErrors.IsReconcile(err) {
 				nextInterval = inspectNextInterval
@@ -144,11 +142,8 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 	return nextInterval.ReduceTo(maxInspectionInterval)
 }
 
-func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterval util.Interval,
-	cachedStatus inspectorInterface.Inspector) (nextInterval util.Interval, inspectError error) {
+func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterval util.Interval) (nextInterval util.Interval, inspectError error) {
 	t := time.Now()
-
-	d.SetCachedStatus(cachedStatus)
 
 	defer func() {
 		d.deps.Log.Info().Msgf("Reconciliation loop took %s", time.Since(t))
@@ -175,36 +170,36 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 		}
 	}
 
-	if err := acs.Inspect(ctx, d.apiObject, d.deps.Client, cachedStatus); err != nil {
+	if err := acs.Inspect(ctx, d.apiObject, d.deps.Client, d.GetCachedStatus()); err != nil {
 		d.deps.Log.Warn().Err(err).Msgf("Unable to handle ACS objects")
 	}
 
 	// Cleanup terminated pods on the beginning of loop
-	if x, err := d.resources.CleanupTerminatedPods(ctx, cachedStatus); err != nil {
+	if x, err := d.resources.CleanupTerminatedPods(ctx, d.GetCachedStatus()); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Pod cleanup failed")
 	} else {
 		nextInterval = nextInterval.ReduceTo(x)
 	}
 
-	if err := d.resources.EnsureArangoMembers(ctx, cachedStatus); err != nil {
+	if err := d.resources.EnsureArangoMembers(ctx, d.GetCachedStatus()); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "ArangoMember creation failed")
 	}
 
-	if err := d.resources.EnsureServices(ctx, cachedStatus); err != nil {
+	if err := d.resources.EnsureServices(ctx, d.GetCachedStatus()); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Service creation failed")
 	}
 
-	if err := d.resources.EnsureSecrets(ctx, d.deps.Log, cachedStatus); err != nil {
+	if err := d.resources.EnsureSecrets(ctx, d.deps.Log, d.GetCachedStatus()); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Secret creation failed")
 	}
 
 	// Inspect secret hashes
-	if err := d.resources.ValidateSecretHashes(ctx, cachedStatus); err != nil {
+	if err := d.resources.ValidateSecretHashes(ctx, d.GetCachedStatus()); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Secret hash validation failed")
 	}
 
 	// Check for LicenseKeySecret
-	if err := d.resources.ValidateLicenseKeySecret(cachedStatus); err != nil {
+	if err := d.resources.ValidateLicenseKeySecret(d.GetCachedStatus()); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "License Key Secret invalid")
 	}
 
@@ -214,20 +209,20 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	}
 
 	// Ensure we have image info
-	if retrySoon, exists, err := d.ensureImages(ctx, d.apiObject, cachedStatus); err != nil {
+	if retrySoon, exists, err := d.ensureImages(ctx, d.apiObject, d.GetCachedStatus()); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Image detection failed")
 	} else if retrySoon || !exists {
 		return minInspectionInterval, nil
 	}
 
 	// Inspection of generated resources needed
-	if x, err := d.resources.InspectPods(ctx, cachedStatus); err != nil {
+	if x, err := d.resources.InspectPods(ctx, d.GetCachedStatus()); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Pod inspection failed")
 	} else {
 		nextInterval = nextInterval.ReduceTo(x)
 	}
 
-	if x, err := d.resources.InspectPVCs(ctx, cachedStatus); err != nil {
+	if x, err := d.resources.InspectPVCs(ctx, d.GetCachedStatus()); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "PVC inspection failed")
 	} else {
 		nextInterval = nextInterval.ReduceTo(x)
@@ -243,7 +238,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 		return minInspectionInterval, errors.Wrapf(err, "Reconciler immediate actions failed")
 	}
 
-	if interval, err := d.ensureResources(ctx, nextInterval, cachedStatus); err != nil {
+	if interval, err := d.ensureResources(ctx, nextInterval, d.GetCachedStatus()); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Reconciler resource recreation failed")
 	} else {
 		nextInterval = interval
@@ -272,7 +267,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 		}, true); err != nil {
 			return minInspectionInterval, errors.Wrapf(err, "Unable clean plan")
 		}
-	} else if err, updated := d.reconciler.CreatePlan(ctx, cachedStatus); err != nil {
+	} else if err, updated := d.reconciler.CreatePlan(ctx, d.GetCachedStatus()); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Plan creation failed")
 	} else if updated {
 		d.deps.Log.Info().Msgf("Plan generated, reconciling")
@@ -325,7 +320,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	}
 
 	// Execute current step of scale/update plan
-	retrySoon, err := d.reconciler.ExecutePlan(ctx, cachedStatus)
+	retrySoon, err := d.reconciler.ExecutePlan(ctx, d.GetCachedStatus())
 	if err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Plan execution failed")
 	}
@@ -344,7 +339,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	}
 
 	// At the end of the inspect, we cleanup terminated pods.
-	if x, err := d.resources.CleanupTerminatedPods(ctx, cachedStatus); err != nil {
+	if x, err := d.resources.CleanupTerminatedPods(ctx, d.GetCachedStatus()); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Pod cleanup failed")
 	} else {
 		nextInterval = nextInterval.ReduceTo(x)

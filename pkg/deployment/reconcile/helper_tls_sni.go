@@ -44,7 +44,7 @@ func mapTLSSNIConfig(sni api.TLSSNISpec, cachedStatus inspectorInterface.Inspect
 	}
 
 	for name, servers := range mapping {
-		secret, exists := cachedStatus.Secret(name)
+		secret, exists := cachedStatus.Secret().V1().GetSimple(name)
 		if !exists {
 			return nil, errors.Newf("Secret %s does not exist", name)
 		}

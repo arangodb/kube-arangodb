@@ -77,7 +77,7 @@ func (a *jwtAddAction) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	s, ok := a.actionCtx.GetCachedStatus().Secret(a.actionCtx.GetSpec().Authentication.GetJWTSecretName())
+	s, ok := a.actionCtx.GetCachedStatus().Secret().V1().GetSimple(a.actionCtx.GetSpec().Authentication.GetJWTSecretName())
 	if !ok {
 		a.log.Error().Msgf("JWT Secret is missing, no rotation will take place")
 		return true, nil
@@ -96,7 +96,7 @@ func (a *jwtAddAction) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	f, ok := a.actionCtx.GetCachedStatus().Secret(pod.JWTSecretFolder(a.actionCtx.GetName()))
+	f, ok := a.actionCtx.GetCachedStatus().Secret().V1().GetSimple(pod.JWTSecretFolder(a.actionCtx.GetName()))
 	if !ok {
 		a.log.Error().Msgf("Unable to get JWT folder info")
 		return true, nil

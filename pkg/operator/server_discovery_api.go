@@ -27,7 +27,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/rs/zerolog"
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/server"
@@ -99,15 +99,22 @@ func (o *Operator) findOtherOperatorsInNamespace(log zerolog.Logger, namespace s
 		log.Debug().Err(err).Msg("Failed to list services")
 		return nil
 	}
-	nodeFetcher := func() (v1.NodeList, error) {
+	nodeFetcher := func() ([]*core.Node, error) {
 		if o.Scope.IsNamespaced() {
-			return v1.NodeList{}, nil
+			return nil, nil
 		}
 		result, err := o.Dependencies.Client.Kubernetes().CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
 		if err != nil {
-			return v1.NodeList{}, errors.WithStack(err)
+			return nil, errors.WithStack(err)
 		}
-		return *result, nil
+
+		r := make([]*core.Node, len(result.Items))
+
+		for id := range result.Items {
+			r[id] = &result.Items[id]
+		}
+
+		return r, nil
 	}
 	for _, svc := range services.Items {
 		// Filter out unwanted services
@@ -133,7 +140,7 @@ func (o *Operator) findOtherOperatorsInNamespace(log zerolog.Logger, namespace s
 		}
 		var url string
 		switch svc.Spec.Type {
-		case v1.ServiceTypeNodePort, v1.ServiceTypeLoadBalancer:
+		case core.ServiceTypeNodePort, core.ServiceTypeLoadBalancer:
 			if x, err := k8sutil.CreateServiceURL(svc, "https", nil, nodeFetcher); err == nil {
 				url = x
 			} else {

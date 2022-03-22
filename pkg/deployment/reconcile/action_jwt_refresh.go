@@ -52,7 +52,7 @@ func (a *jwtRefreshAction) CheckProgress(ctx context.Context) (bool, bool, error
 		return true, false, nil
 	}
 
-	folder, ok := a.actionCtx.GetCachedStatus().Secret(pod.JWTSecretFolder(a.actionCtx.GetAPIObject().GetName()))
+	folder, ok := a.actionCtx.GetCachedStatus().Secret().V1().GetSimple(pod.JWTSecretFolder(a.actionCtx.GetAPIObject().GetName()))
 	if !ok {
 		a.log.Error().Msgf("Unable to get JWT folder info")
 		return true, false, nil

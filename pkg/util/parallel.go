@@ -24,17 +24,10 @@ import "sync"
 
 // RunParallel runs actions parallelly throttling them to the given maximum number.
 func RunParallel(max int, actions ...func() error) error {
-	c := make(chan int, max)
-	errors := make([]error, len(actions))
-	defer func() {
-		close(c)
-		for range c {
-		}
-	}()
+	c, close := ParallelThread(max)
+	defer close()
 
-	for i := 0; i < max; i++ {
-		c <- 0
-	}
+	errors := make([]error, len(actions))
 
 	var wg sync.WaitGroup
 
@@ -42,7 +35,7 @@ func RunParallel(max int, actions ...func() error) error {
 	for id, i := range actions {
 		go func(id int, action func() error) {
 			defer func() {
-				c <- 0
+				c <- struct{}{}
 				wg.Done()
 			}()
 			<-c
@@ -60,4 +53,18 @@ func RunParallel(max int, actions ...func() error) error {
 	}
 
 	return nil
+}
+
+func ParallelThread(max int) (chan struct{}, func()) {
+	c := make(chan struct{}, max)
+
+	for i := 0; i < max; i++ {
+		c <- struct{}{}
+	}
+
+	return c, func() {
+		close(c)
+		for range c {
+		}
+	}
 }

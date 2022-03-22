@@ -31,7 +31,7 @@ import (
 
 func GenerateMemberEndpoint(services service.Inspector, apiObject meta.Object, spec api.DeploymentSpec, group api.ServerGroup, member api.MemberStatus) (string, error) {
 	memberName := member.ArangoMemberName(apiObject.GetName(), group)
-	svc, ok := services.Service(memberName)
+	svc, ok := services.Service().V1().GetSimple(memberName)
 	if !ok {
 		return "", errors.Newf("Service %s not found", memberName)
 	}

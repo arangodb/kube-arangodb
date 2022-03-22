@@ -22,146 +22,171 @@ package inspector
 
 import (
 	"context"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
-	apiErrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 )
 
-func (i *inspector) IterateServiceAccounts(action serviceaccount.Action, filters ...serviceaccount.Filter) error {
-	for _, serviceAccount := range i.ServiceAccounts() {
-		if err := i.iterateServiceAccount(serviceAccount, action, filters...); err != nil {
-			return err
-		}
-	}
-	return nil
+func init() {
+	requireRegisterInspectorLoader(serviceAccountsInspectorLoaderObj)
 }
 
-func (i *inspector) iterateServiceAccount(serviceAccount *core.ServiceAccount, action serviceaccount.Action, filters ...serviceaccount.Filter) error {
-	for _, filter := range filters {
-		if !filter(serviceAccount) {
-			return nil
-		}
-	}
+var serviceAccountsInspectorLoaderObj = serviceAccountsInspectorLoader{}
 
-	return action(serviceAccount)
+type serviceAccountsInspectorLoader struct {
 }
 
-func (i *inspector) ServiceAccounts() []*core.ServiceAccount {
-	i.lock.Lock()
-	defer i.lock.Unlock()
-
-	var r []*core.ServiceAccount
-	for _, serviceAccount := range i.serviceAccounts {
-		r = append(r, serviceAccount)
-	}
-
-	return r
+func (p serviceAccountsInspectorLoader) Throttle(t throttle.Components) throttle.Throttle {
+	return t.ServiceAccount()
 }
 
-func (i *inspector) ServiceAccount(name string) (*core.ServiceAccount, bool) {
-	i.lock.Lock()
-	defer i.lock.Unlock()
+func (p serviceAccountsInspectorLoader) Load(ctx context.Context, i *inspectorState) {
+	var q serviceAccountsInspector
+	p.loadV1(ctx, i, &q)
+	i.serviceAccounts = &q
+	q.state = i
+	q.last = time.Now()
+}
 
-	serviceAccount, ok := i.serviceAccounts[name]
-	if !ok {
-		return nil, false
+func (p serviceAccountsInspectorLoader) loadV1(ctx context.Context, i *inspectorState, q *serviceAccountsInspector) {
+	var z serviceAccountsInspectorV1
+
+	z.serviceAccountInspector = q
+
+	z.serviceAccounts, z.err = p.getV1ServiceAccounts(ctx, i)
+
+	q.v1 = &z
+}
+
+func (p serviceAccountsInspectorLoader) getV1ServiceAccounts(ctx context.Context, i *inspectorState) (map[string]*core.ServiceAccount, error) {
+	objs, err := p.getV1ServiceAccountsList(ctx, i)
+	if err != nil {
+		return nil, err
 	}
 
-	return serviceAccount, true
-}
+	r := make(map[string]*core.ServiceAccount, len(objs))
 
-func (i *inspector) ServiceAccountReadInterface() serviceaccount.ReadInterface {
-	return &serviceAccountReadInterface{i: i}
-}
-
-type serviceAccountReadInterface struct {
-	i *inspector
-}
-
-func (s serviceAccountReadInterface) Get(ctx context.Context, name string, opts meta.GetOptions) (*core.ServiceAccount, error) {
-	if s, ok := s.i.ServiceAccount(name); !ok {
-		return nil, apiErrors.NewNotFound(schema.GroupResource{
-			Group:    core.GroupName,
-			Resource: "serviceaccounts",
-		}, name)
-	} else {
-		return s, nil
+	for id := range objs {
+		r[objs[id].GetName()] = objs[id]
 	}
+
+	return r, nil
 }
 
-func serviceAccountsToMap(ctx context.Context, inspector *inspector, k kubernetes.Interface, namespace string) func() error {
-	return func() error {
-		serviceAccounts, err := getServiceAccounts(ctx, k, namespace, "")
-		if err != nil {
-			return err
-		}
-
-		serviceAccountMap := map[string]*core.ServiceAccount{}
-
-		for _, serviceAccount := range serviceAccounts {
-			_, exists := serviceAccountMap[serviceAccount.GetName()]
-			if exists {
-				return errors.Newf("ServiceAccount %s already exists in map, error received", serviceAccount.GetName())
-			}
-
-			serviceAccountMap[serviceAccount.GetName()] = serviceAccountPointer(serviceAccount)
-		}
-
-		inspector.serviceAccounts = serviceAccountMap
-
-		return nil
-	}
-}
-
-func serviceAccountPointer(serviceAccount core.ServiceAccount) *core.ServiceAccount {
-	return &serviceAccount
-}
-
-func getServiceAccounts(ctx context.Context, k kubernetes.Interface, namespace, cont string) ([]core.ServiceAccount, error) {
+func (p serviceAccountsInspectorLoader) getV1ServiceAccountsList(ctx context.Context, i *inspectorState) ([]*core.ServiceAccount, error) {
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
-	serviceAccounts, err := k.CoreV1().ServiceAccounts(namespace).List(ctxChild, meta.ListOptions{
-		Limit:    globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
-		Continue: cont,
+	obj, err := i.client.Kubernetes().CoreV1().ServiceAccounts(i.namespace).List(ctxChild, meta.ListOptions{
+		Limit: globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
 	})
 
 	if err != nil {
 		return nil, err
 	}
 
-	if serviceAccounts.Continue != "" {
-		nextServiceAccountsLayer, err := getServiceAccounts(ctx, k, namespace, serviceAccounts.Continue)
+	items := obj.Items
+	cont := obj.Continue
+	var s = int64(len(items))
+
+	if z := obj.RemainingItemCount; z != nil {
+		s += *z
+	}
+
+	ptrs := make([]*core.ServiceAccount, 0, s)
+
+	for {
+		for id := range items {
+			ptrs = append(ptrs, &items[id])
+		}
+
+		if cont == "" {
+			break
+		}
+
+		items, cont, err = p.getV1ServiceAccountsListRequest(ctx, i, cont)
+
 		if err != nil {
 			return nil, err
 		}
-
-		return append(serviceAccounts.Items, nextServiceAccountsLayer...), nil
 	}
 
-	return serviceAccounts.Items, nil
+	return ptrs, nil
 }
 
-func FilterServiceAccountsByLabels(labels map[string]string) serviceaccount.Filter {
-	return func(serviceAccount *core.ServiceAccount) bool {
-		for key, value := range labels {
-			v, ok := serviceAccount.Labels[key]
-			if !ok {
-				return false
-			}
+func (p serviceAccountsInspectorLoader) getV1ServiceAccountsListRequest(ctx context.Context, i *inspectorState, cont string) ([]core.ServiceAccount, string, error) {
+	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
+	defer cancel()
+	obj, err := i.client.Kubernetes().CoreV1().ServiceAccounts(i.namespace).List(ctxChild, meta.ListOptions{
+		Limit:    globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
+		Continue: cont,
+	})
 
-			if v != value {
-				return false
-			}
-		}
-
-		return true
+	if err != nil {
+		return nil, "", err
 	}
+
+	return obj.Items, obj.Continue, err
+}
+
+func (p serviceAccountsInspectorLoader) Verify(i *inspectorState) error {
+	if err := i.serviceAccounts.v1.err; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p serviceAccountsInspectorLoader) Copy(from, to *inspectorState, override bool) {
+	if to.serviceAccounts != nil {
+		if !override {
+			return
+		}
+	}
+
+	to.serviceAccounts = from.serviceAccounts
+	to.serviceAccounts.state = to
+}
+
+func (p serviceAccountsInspectorLoader) Name() string {
+	return "serviceAccounts"
+}
+
+type serviceAccountsInspector struct {
+	state *inspectorState
+
+	last time.Time
+
+	v1 *serviceAccountsInspectorV1
+}
+
+func (p *serviceAccountsInspector) LastRefresh() time.Time {
+	return p.last
+}
+
+func (p *serviceAccountsInspector) IsStatic() bool {
+	return p.state.IsStatic()
+}
+
+func (p *serviceAccountsInspector) Refresh(ctx context.Context) error {
+	return p.state.refresh(ctx, serviceAccountsInspectorLoaderObj)
+}
+
+func (p serviceAccountsInspector) Throttle(c throttle.Components) throttle.Throttle {
+	return c.ServiceAccount()
+}
+
+func (p *serviceAccountsInspector) validate() error {
+	if p == nil {
+		return errors.Newf("ServiceAccountInspector is nil")
+	}
+
+	if p.state == nil {
+		return errors.Newf("Parent is nil")
+	}
+
+	return p.v1.validate()
 }

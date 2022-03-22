@@ -22,170 +22,167 @@ package inspector
 
 import (
 	"context"
+	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoclustersynchronization"
-	apiErrors "k8s.io/apimachinery/pkg/api/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-func (i *inspector) GetArangoClusterSynchronizations() (arangoclustersynchronization.Inspector, bool) {
-	i.lock.Lock()
-	defer i.lock.Unlock()
+func init() {
+	requireRegisterInspectorLoader(arangoClusterSynchronizationsInspectorLoaderObj)
+}
 
-	if i.acs == nil {
-		return nil, false
+var arangoClusterSynchronizationsInspectorLoaderObj = arangoClusterSynchronizationsInspectorLoader{}
+
+type arangoClusterSynchronizationsInspectorLoader struct {
+}
+
+func (p arangoClusterSynchronizationsInspectorLoader) Throttle(t throttle.Components) throttle.Throttle {
+	return t.ArangoClusterSynchronization()
+}
+
+func (p arangoClusterSynchronizationsInspectorLoader) Load(ctx context.Context, i *inspectorState) {
+	var q arangoClusterSynchronizationsInspector
+	p.loadV1(ctx, i, &q)
+	i.arangoClusterSynchronizations = &q
+	q.state = i
+	q.last = time.Now()
+}
+
+func (p arangoClusterSynchronizationsInspectorLoader) loadV1(ctx context.Context, i *inspectorState, q *arangoClusterSynchronizationsInspector) {
+	var z arangoClusterSynchronizationsInspectorV1
+
+	z.arangoClusterSynchronizationInspector = q
+
+	z.arangoClusterSynchronizations, z.err = p.getV1ArangoClusterSynchronizations(ctx, i)
+
+	q.v1 = &z
+}
+
+func (p arangoClusterSynchronizationsInspectorLoader) getV1ArangoClusterSynchronizations(ctx context.Context, i *inspectorState) (map[string]*api.ArangoClusterSynchronization, error) {
+	objs, err := p.getV1ArangoClusterSynchronizationsList(ctx, i)
+	if err != nil {
+		return nil, err
 	}
 
-	return i.acs, i.acs.accessible
-}
+	r := make(map[string]*api.ArangoClusterSynchronization, len(objs))
 
-type arangoClusterSynchronizationLoader struct {
-	accessible bool
-
-	acs map[string]*api.ArangoClusterSynchronization
-}
-
-func (a *arangoClusterSynchronizationLoader) FilterArangoClusterSynchronizations(filters ...arangoclustersynchronization.Filter) []*api.ArangoClusterSynchronization {
-	q := make([]*api.ArangoClusterSynchronization, 0, len(a.acs))
-
-	for _, obj := range a.acs {
-		if a.filterArangoClusterSynchronizations(obj, filters...) {
-			q = append(q, obj)
-		}
+	for id := range objs {
+		r[objs[id].GetName()] = objs[id]
 	}
 
-	return q
+	return r, nil
 }
 
-func (a *arangoClusterSynchronizationLoader) filterArangoClusterSynchronizations(obj *api.ArangoClusterSynchronization, filters ...arangoclustersynchronization.Filter) bool {
-	for _, f := range filters {
-		if !f(obj) {
-			return false
-		}
-	}
-
-	return true
-}
-
-func (a *arangoClusterSynchronizationLoader) ArangoClusterSynchronizations() []*api.ArangoClusterSynchronization {
-	var r []*api.ArangoClusterSynchronization
-	for _, acs := range a.acs {
-		r = append(r, acs)
-	}
-
-	return r
-}
-
-func (a *arangoClusterSynchronizationLoader) ArangoClusterSynchronization(name string) (*api.ArangoClusterSynchronization, bool) {
-	acs, ok := a.acs[name]
-	if !ok {
-		return nil, false
-	}
-
-	return acs, true
-}
-
-func (a *arangoClusterSynchronizationLoader) IterateArangoClusterSynchronizations(action arangoclustersynchronization.Action, filters ...arangoclustersynchronization.Filter) error {
-	for _, node := range a.ArangoClusterSynchronizations() {
-		if err := a.iterateArangoClusterSynchronization(node, action, filters...); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (a *arangoClusterSynchronizationLoader) iterateArangoClusterSynchronization(acs *api.ArangoClusterSynchronization, action arangoclustersynchronization.Action, filters ...arangoclustersynchronization.Filter) error {
-	for _, filter := range filters {
-		if !filter(acs) {
-			return nil
-		}
-	}
-
-	return action(acs)
-}
-
-func (a *arangoClusterSynchronizationLoader) ArangoClusterSynchronizationReadInterface() arangoclustersynchronization.ReadInterface {
-	return &arangoClusterSynchronizationReadInterface{i: a}
-}
-
-type arangoClusterSynchronizationReadInterface struct {
-	i *arangoClusterSynchronizationLoader
-}
-
-func (a *arangoClusterSynchronizationReadInterface) Get(ctx context.Context, name string, opts meta.GetOptions) (*api.ArangoClusterSynchronization, error) {
-	if s, ok := a.i.ArangoClusterSynchronization(name); !ok {
-		return nil, apiErrors.NewNotFound(schema.GroupResource{
-			Group:    deployment.ArangoDeploymentGroupName,
-			Resource: "arangoclustersynchronizations",
-		}, name)
-	} else {
-		return s, nil
-	}
-}
-
-func arangoClusterSynchronizationPointer(acs api.ArangoClusterSynchronization) *api.ArangoClusterSynchronization {
-	return &acs
-}
-
-func arangoClusterSynchronizationsToMap(ctx context.Context, inspector *inspector, k versioned.Interface, namespace string) func() error {
-	return func() error {
-		acss, err := getArangoClusterSynchronizations(ctx, k, namespace, "")
-		if err != nil {
-			if apiErrors.IsUnauthorized(err) || apiErrors.IsNotFound(err) {
-				inspector.acs = &arangoClusterSynchronizationLoader{
-					accessible: false,
-				}
-				return nil
-			}
-			return err
-		}
-
-		acssMap := map[string]*api.ArangoClusterSynchronization{}
-
-		for _, acs := range acss {
-			_, exists := acssMap[acs.GetName()]
-			if exists {
-				return errors.Newf("ArangoMember %s already exists in map, error received", acs.GetName())
-			}
-
-			acssMap[acs.GetName()] = arangoClusterSynchronizationPointer(acs)
-		}
-
-		inspector.acs = &arangoClusterSynchronizationLoader{
-			accessible: true,
-			acs:        acssMap,
-		}
-
-		return nil
-	}
-}
-
-func getArangoClusterSynchronizations(ctx context.Context, k versioned.Interface, namespace, cont string) ([]api.ArangoClusterSynchronization, error) {
+func (p arangoClusterSynchronizationsInspectorLoader) getV1ArangoClusterSynchronizationsList(ctx context.Context, i *inspectorState) ([]*api.ArangoClusterSynchronization, error) {
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
-	acss, err := k.DatabaseV1().ArangoClusterSynchronizations(namespace).List(ctxChild, meta.ListOptions{
-		Limit:    globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
-		Continue: cont,
+	obj, err := i.client.Arango().DatabaseV1().ArangoClusterSynchronizations(i.namespace).List(ctxChild, meta.ListOptions{
+		Limit: globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
 	})
 
 	if err != nil {
 		return nil, err
 	}
 
-	if acss.Continue != "" {
-		newACSLoader, err := getArangoClusterSynchronizations(ctx, k, namespace, acss.Continue)
+	items := obj.Items
+	cont := obj.Continue
+	var s = int64(len(items))
+
+	if z := obj.RemainingItemCount; z != nil {
+		s += *z
+	}
+
+	ptrs := make([]*api.ArangoClusterSynchronization, 0, s)
+
+	for {
+		for id := range items {
+			ptrs = append(ptrs, &items[id])
+		}
+
+		if cont == "" {
+			break
+		}
+
+		items, cont, err = p.getV1ArangoClusterSynchronizationsListRequest(ctx, i, cont)
+
 		if err != nil {
 			return nil, err
 		}
-
-		return append(acss.Items, newACSLoader...), nil
 	}
 
-	return acss.Items, nil
+	return ptrs, nil
+}
+
+func (p arangoClusterSynchronizationsInspectorLoader) getV1ArangoClusterSynchronizationsListRequest(ctx context.Context, i *inspectorState, cont string) ([]api.ArangoClusterSynchronization, string, error) {
+	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
+	defer cancel()
+	obj, err := i.client.Arango().DatabaseV1().ArangoClusterSynchronizations(i.namespace).List(ctxChild, meta.ListOptions{
+		Limit:    globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
+		Continue: cont,
+	})
+
+	if err != nil {
+		return nil, "", err
+	}
+
+	return obj.Items, obj.Continue, err
+}
+
+func (p arangoClusterSynchronizationsInspectorLoader) Verify(i *inspectorState) error {
+	return nil
+}
+
+func (p arangoClusterSynchronizationsInspectorLoader) Copy(from, to *inspectorState, override bool) {
+	if to.arangoClusterSynchronizations != nil {
+		if !override {
+			return
+		}
+	}
+
+	to.arangoClusterSynchronizations = from.arangoClusterSynchronizations
+	to.arangoClusterSynchronizations.state = to
+}
+
+func (p arangoClusterSynchronizationsInspectorLoader) Name() string {
+	return "arangoClusterSynchronizations"
+}
+
+type arangoClusterSynchronizationsInspector struct {
+	state *inspectorState
+
+	last time.Time
+
+	v1 *arangoClusterSynchronizationsInspectorV1
+}
+
+func (p *arangoClusterSynchronizationsInspector) LastRefresh() time.Time {
+	return p.last
+}
+
+func (p *arangoClusterSynchronizationsInspector) IsStatic() bool {
+	return p.state.IsStatic()
+}
+
+func (p *arangoClusterSynchronizationsInspector) Refresh(ctx context.Context) error {
+	return p.state.refresh(ctx, arangoClusterSynchronizationsInspectorLoaderObj)
+}
+
+func (p arangoClusterSynchronizationsInspector) Throttle(c throttle.Components) throttle.Throttle {
+	return c.ArangoClusterSynchronization()
+}
+
+func (p *arangoClusterSynchronizationsInspector) validate() error {
+	if p == nil {
+		return errors.Newf("ArangoClusterSynchronizationInspector is nil")
+	}
+
+	if p.state == nil {
+		return errors.Newf("Parent is nil")
+	}
+
+	return p.v1.validate()
 }

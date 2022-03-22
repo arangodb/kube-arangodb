@@ -33,8 +33,6 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
-
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	core "k8s.io/api/core/v1"
@@ -172,15 +170,14 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 					return err
 				}
 
-				cache, err := inspector.NewInspector(context.Background(), d.deps.Client, d.GetNamespace())
-				require.NoError(t, err)
+				require.NoError(t, d.currentState.Refresh(context.Background()))
 
 				groupSpec := d.apiObject.Spec.GetServerGroupSpec(group)
 
 				image, ok := d.resources.SelectImage(d.apiObject.Spec, d.status.last)
 				require.True(t, ok)
 
-				template, err := d.resources.RenderPodTemplateForMember(context.Background(), cache, d.apiObject.Spec, d.status.last, m.ID, image)
+				template, err := d.resources.RenderPodTemplateForMember(context.Background(), d.GetCachedStatus(), d.apiObject.Spec, d.status.last, m.ID, image)
 				if err != nil {
 					return err
 				}

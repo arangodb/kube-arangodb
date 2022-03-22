@@ -29,8 +29,6 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
-
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -185,7 +183,7 @@ func TestEnsureImages(t *testing.T) {
 				require.NoError(t, err)
 			},
 			After: func(t *testing.T, deployment *Deployment) {
-				pods := deployment.GetCachedStatus().Pods()
+				pods := deployment.GetCachedStatus().Pod().V1().ListSimple()
 				require.Len(t, pods, 1)
 			},
 		},
@@ -209,7 +207,7 @@ func TestEnsureImages(t *testing.T) {
 				require.NoError(t, err)
 			},
 			After: func(t *testing.T, deployment *Deployment) {
-				pods := deployment.GetCachedStatus().Pods()
+				pods := deployment.GetCachedStatus().Pod().V1().ListSimple()
 				require.Len(t, pods, 0)
 			},
 		},
@@ -238,7 +236,7 @@ func TestEnsureImages(t *testing.T) {
 				require.NoError(t, err)
 			},
 			After: func(t *testing.T, deployment *Deployment) {
-				pods := deployment.GetCachedStatus().Pods()
+				pods := deployment.GetCachedStatus().Pod().V1().ListSimple()
 				require.Len(t, pods, 1)
 			},
 		},
@@ -268,7 +266,7 @@ func TestEnsureImages(t *testing.T) {
 				require.NoError(t, err)
 			},
 			After: func(t *testing.T, deployment *Deployment) {
-				pods := deployment.GetCachedStatus().Pods()
+				pods := deployment.GetCachedStatus().Pod().V1().ListSimple()
 				require.Len(t, pods, 1)
 			},
 		},
@@ -301,7 +299,7 @@ func TestEnsureImages(t *testing.T) {
 				require.NoError(t, err)
 			},
 			After: func(t *testing.T, deployment *Deployment) {
-				pods := deployment.GetCachedStatus().Pods()
+				pods := deployment.GetCachedStatus().Pod().V1().ListSimple()
 				require.Len(t, pods, 1)
 			},
 		},
@@ -326,8 +324,10 @@ func TestEnsureImages(t *testing.T) {
 			_, err := d.deps.Client.Arango().DatabaseV1().ArangoDeployments(testNamespace).Create(context.Background(), d.apiObject, metav1.CreateOptions{})
 			require.NoError(t, err)
 
+			require.NoError(t, d.currentState.Refresh(context.Background()))
+
 			// Act
-			retrySoon, _, err := d.ensureImages(context.Background(), d.apiObject, inspector.NewEmptyInspector())
+			retrySoon, _, err := d.ensureImages(context.Background(), d.apiObject, d.GetCachedStatus())
 
 			// Assert
 			assert.EqualValues(t, testCase.RetrySoon, retrySoon)

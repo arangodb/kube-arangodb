@@ -167,7 +167,7 @@ func updateMemberRotationConditionsPlan(ctx context.Context,
 
 	if err := status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
 		for _, m := range list {
-			p, ok := cachedStatus.Pod(m.PodName)
+			p, ok := cachedStatus.Pod().V1().GetSimple(m.PodName)
 			if !ok {
 				p = nil
 			}
@@ -193,7 +193,7 @@ func updateMemberRotationConditions(log zerolog.Logger, apiObject k8sutil.APIObj
 		return nil, nil
 	}
 
-	arangoMember, ok := cachedStatus.ArangoMember(member.ArangoMemberName(apiObject.GetName(), group))
+	arangoMember, ok := cachedStatus.ArangoMember().V1().GetSimple(member.ArangoMemberName(apiObject.GetName(), group))
 	if !ok {
 		return nil, nil
 	}

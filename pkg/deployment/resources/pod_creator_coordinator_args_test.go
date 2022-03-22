@@ -35,6 +35,8 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
+	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 )
 
 // TestCreateArangodArgsCoordinator tests createArangodArgs for coordinator.
@@ -45,7 +47,7 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 		apiObject := &api.ArangoDeployment{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "name",
-				Namespace: "ns",
+				Namespace: tests.FakeNamespace,
 			},
 			Spec: api.DeploymentSpec{
 				Mode: api.NewMode(api.DeploymentModeCluster),
@@ -69,17 +71,19 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 			Member:      api.MemberStatus{ID: "id1"},
 		}
 
-		i := newInspectorMock()
-		i = i.RegisterMemberStatus(t, apiObject, api.ServerGroupAgents, agents...).RegisterMemberStatus(t, apiObject, input.Group, input.Member)
+		f := kclient.NewFakeClientBuilder()
+		f = createClient(f, apiObject, api.ServerGroupAgents, agents...)
+		f = createClient(f, apiObject, input.Group, input.Member)
+		i := createInspector(t, f)
 
-		cmdline, err := createArangodArgs(i.Get(t), input)
+		cmdline, err := createArangodArgs(i, input)
 		require.NoError(t, err)
 		assert.Equal(t,
 			[]string{
-				"--cluster.agency-endpoint=ssl://name-agent-a1.name-int.ns.svc:8529",
-				"--cluster.agency-endpoint=ssl://name-agent-a2.name-int.ns.svc:8529",
-				"--cluster.agency-endpoint=ssl://name-agent-a3.name-int.ns.svc:8529",
-				"--cluster.my-address=ssl://name-coordinator-id1.name-int.ns.svc:8529",
+				"--cluster.agency-endpoint=ssl://name-agent-a1.name-int." + tests.FakeNamespace + ".svc:8529",
+				"--cluster.agency-endpoint=ssl://name-agent-a2.name-int." + tests.FakeNamespace + ".svc:8529",
+				"--cluster.agency-endpoint=ssl://name-agent-a3.name-int." + tests.FakeNamespace + ".svc:8529",
+				"--cluster.my-address=ssl://name-coordinator-id1.name-int." + tests.FakeNamespace + ".svc:8529",
 				"--cluster.my-role=COORDINATOR",
 				"--database.directory=/data",
 				"--foxx.queues=true",
@@ -102,7 +106,7 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 		apiObject := &api.ArangoDeployment{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "name",
-				Namespace: "ns",
+				Namespace: tests.FakeNamespace,
 			},
 			Spec: api.DeploymentSpec{
 				Mode: api.NewMode(api.DeploymentModeCluster),
@@ -126,17 +130,19 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 			Member:      api.MemberStatus{ID: "id1"},
 		}
 
-		i := newInspectorMock()
-		i = i.RegisterMemberStatus(t, apiObject, api.ServerGroupAgents, agents...).RegisterMemberStatus(t, apiObject, input.Group, input.Member)
+		f := kclient.NewFakeClientBuilder()
+		f = createClient(f, apiObject, api.ServerGroupAgents, agents...)
+		f = createClient(f, apiObject, input.Group, input.Member)
+		i := createInspector(t, f)
 
-		cmdline, err := createArangodArgsWithUpgrade(i.Get(t), input)
+		cmdline, err := createArangodArgsWithUpgrade(i, input)
 		require.NoError(t, err)
 		assert.Equal(t,
 			[]string{
-				"--cluster.agency-endpoint=ssl://name-agent-a1.name-int.ns.svc:8529",
-				"--cluster.agency-endpoint=ssl://name-agent-a2.name-int.ns.svc:8529",
-				"--cluster.agency-endpoint=ssl://name-agent-a3.name-int.ns.svc:8529",
-				"--cluster.my-address=ssl://name-coordinator-id1.name-int.ns.svc:8529",
+				"--cluster.agency-endpoint=ssl://name-agent-a1.name-int." + tests.FakeNamespace + ".svc:8529",
+				"--cluster.agency-endpoint=ssl://name-agent-a2.name-int." + tests.FakeNamespace + ".svc:8529",
+				"--cluster.agency-endpoint=ssl://name-agent-a3.name-int." + tests.FakeNamespace + ".svc:8529",
+				"--cluster.my-address=ssl://name-coordinator-id1.name-int." + tests.FakeNamespace + ".svc:8529",
 				"--cluster.my-role=COORDINATOR",
 				"--database.auto-upgrade=true",
 				"--database.directory=/data",
@@ -160,7 +166,7 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 		apiObject := &api.ArangoDeployment{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "name",
-				Namespace: "ns",
+				Namespace: tests.FakeNamespace,
 			},
 			Spec: api.DeploymentSpec{
 				Mode: api.NewMode(api.DeploymentModeCluster),
@@ -184,17 +190,19 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 			Member:      api.MemberStatus{ID: "id1"},
 		}
 
-		i := newInspectorMock()
-		i = i.RegisterMemberStatus(t, apiObject, api.ServerGroupAgents, agents...).RegisterMemberStatus(t, apiObject, input.Group, input.Member)
+		f := kclient.NewFakeClientBuilder()
+		f = createClient(f, apiObject, api.ServerGroupAgents, agents...)
+		f = createClient(f, apiObject, input.Group, input.Member)
+		i := createInspector(t, f)
 
-		cmdline, err := createArangodArgsWithUpgrade(i.Get(t), input)
+		cmdline, err := createArangodArgsWithUpgrade(i, input)
 		require.NoError(t, err)
 		assert.Equal(t,
 			[]string{
-				"--cluster.agency-endpoint=ssl://name-agent-a1.name-int.ns.svc:8529",
-				"--cluster.agency-endpoint=ssl://name-agent-a2.name-int.ns.svc:8529",
-				"--cluster.agency-endpoint=ssl://name-agent-a3.name-int.ns.svc:8529",
-				"--cluster.my-address=ssl://name-coordinator-id1.name-int.ns.svc:8529",
+				"--cluster.agency-endpoint=ssl://name-agent-a1.name-int." + tests.FakeNamespace + ".svc:8529",
+				"--cluster.agency-endpoint=ssl://name-agent-a2.name-int." + tests.FakeNamespace + ".svc:8529",
+				"--cluster.agency-endpoint=ssl://name-agent-a3.name-int." + tests.FakeNamespace + ".svc:8529",
+				"--cluster.my-address=ssl://name-coordinator-id1.name-int." + tests.FakeNamespace + ".svc:8529",
 				"--cluster.my-role=COORDINATOR",
 				"--cluster.upgrade=online",
 				"--database.directory=/data",
@@ -218,7 +226,7 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 		apiObject := &api.ArangoDeployment{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "name",
-				Namespace: "ns",
+				Namespace: tests.FakeNamespace,
 			},
 			Spec: api.DeploymentSpec{
 				Mode: api.NewMode(api.DeploymentModeCluster),
@@ -245,17 +253,19 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 			Member:      api.MemberStatus{ID: "id1"},
 		}
 
-		i := newInspectorMock()
-		i = i.RegisterMemberStatus(t, apiObject, api.ServerGroupAgents, agents...).RegisterMemberStatus(t, apiObject, input.Group, input.Member)
+		f := kclient.NewFakeClientBuilder()
+		f = createClient(f, apiObject, api.ServerGroupAgents, agents...)
+		f = createClient(f, apiObject, input.Group, input.Member)
+		i := createInspector(t, f)
 
-		cmdline, err := createArangodArgs(i.Get(t), input)
+		cmdline, err := createArangodArgs(i, input)
 		require.NoError(t, err)
 		assert.Equal(t,
 			[]string{
-				"--cluster.agency-endpoint=tcp://name-agent-a1.name-int.ns.svc:8529",
-				"--cluster.agency-endpoint=tcp://name-agent-a2.name-int.ns.svc:8529",
-				"--cluster.agency-endpoint=tcp://name-agent-a3.name-int.ns.svc:8529",
-				"--cluster.my-address=tcp://name-coordinator-id1.name-int.ns.svc:8529",
+				"--cluster.agency-endpoint=tcp://name-agent-a1.name-int." + tests.FakeNamespace + ".svc:8529",
+				"--cluster.agency-endpoint=tcp://name-agent-a2.name-int." + tests.FakeNamespace + ".svc:8529",
+				"--cluster.agency-endpoint=tcp://name-agent-a3.name-int." + tests.FakeNamespace + ".svc:8529",
+				"--cluster.my-address=tcp://name-coordinator-id1.name-int." + tests.FakeNamespace + ".svc:8529",
 				"--cluster.my-role=COORDINATOR",
 				"--database.directory=/data",
 				"--foxx.queues=true",
@@ -276,7 +286,7 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 		apiObject := &api.ArangoDeployment{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "name",
-				Namespace: "ns",
+				Namespace: tests.FakeNamespace,
 			},
 			Spec: api.DeploymentSpec{
 				Mode: api.NewMode(api.DeploymentModeCluster),
@@ -301,17 +311,19 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 			Member:      api.MemberStatus{ID: "id1"},
 		}
 
-		i := newInspectorMock()
-		i = i.RegisterMemberStatus(t, apiObject, api.ServerGroupAgents, agents...).RegisterMemberStatus(t, apiObject, input.Group, input.Member)
+		f := kclient.NewFakeClientBuilder()
+		f = createClient(f, apiObject, api.ServerGroupAgents, agents...)
+		f = createClient(f, apiObject, input.Group, input.Member)
+		i := createInspector(t, f)
 
-		cmdline, err := createArangodArgs(i.Get(t), input)
+		cmdline, err := createArangodArgs(i, input)
 		require.NoError(t, err)
 		assert.Equal(t,
 			[]string{
-				"--cluster.agency-endpoint=ssl://name-agent-a1.name-int.ns.svc:8529",
-				"--cluster.agency-endpoint=ssl://name-agent-a2.name-int.ns.svc:8529",
-				"--cluster.agency-endpoint=ssl://name-agent-a3.name-int.ns.svc:8529",
-				"--cluster.my-address=ssl://name-coordinator-id1.name-int.ns.svc:8529",
+				"--cluster.agency-endpoint=ssl://name-agent-a1.name-int." + tests.FakeNamespace + ".svc:8529",
+				"--cluster.agency-endpoint=ssl://name-agent-a2.name-int." + tests.FakeNamespace + ".svc:8529",
+				"--cluster.agency-endpoint=ssl://name-agent-a3.name-int." + tests.FakeNamespace + ".svc:8529",
+				"--cluster.my-address=ssl://name-coordinator-id1.name-int." + tests.FakeNamespace + ".svc:8529",
 				"--cluster.my-role=COORDINATOR",
 				"--database.directory=/data",
 				"--foxx.queues=true",
@@ -333,7 +345,7 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 		apiObject := &api.ArangoDeployment{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "name",
-				Namespace: "ns",
+				Namespace: tests.FakeNamespace,
 			},
 			Spec: api.DeploymentSpec{
 				Mode: api.NewMode(api.DeploymentModeCluster),
@@ -359,17 +371,19 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 			Member:      api.MemberStatus{ID: "id1"},
 		}
 
-		i := newInspectorMock()
-		i = i.RegisterMemberStatus(t, apiObject, api.ServerGroupAgents, agents...).RegisterMemberStatus(t, apiObject, input.Group, input.Member)
+		f := kclient.NewFakeClientBuilder()
+		f = createClient(f, apiObject, api.ServerGroupAgents, agents...)
+		f = createClient(f, apiObject, input.Group, input.Member)
+		i := createInspector(t, f)
 
-		cmdline, err := createArangodArgs(i.Get(t), input)
+		cmdline, err := createArangodArgs(i, input)
 		require.NoError(t, err)
 		assert.Equal(t,
 			[]string{
-				"--cluster.agency-endpoint=ssl://name-agent-a1.name-int.ns.svc:8529",
-				"--cluster.agency-endpoint=ssl://name-agent-a2.name-int.ns.svc:8529",
-				"--cluster.agency-endpoint=ssl://name-agent-a3.name-int.ns.svc:8529",
-				"--cluster.my-address=ssl://name-coordinator-id1.name-int.ns.svc:8529",
+				"--cluster.agency-endpoint=ssl://name-agent-a1.name-int." + tests.FakeNamespace + ".svc:8529",
+				"--cluster.agency-endpoint=ssl://name-agent-a2.name-int." + tests.FakeNamespace + ".svc:8529",
+				"--cluster.agency-endpoint=ssl://name-agent-a3.name-int." + tests.FakeNamespace + ".svc:8529",
+				"--cluster.my-address=ssl://name-coordinator-id1.name-int." + tests.FakeNamespace + ".svc:8529",
 				"--cluster.my-role=COORDINATOR",
 				"--database.directory=/data",
 				"--foxx.queues=true",

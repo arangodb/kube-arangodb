@@ -168,7 +168,7 @@ func (r *Resources) EnsureAnnotations(ctx context.Context, cachedStatus inspecto
 }
 
 func ensureSecretsAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
-	if err := cachedStatus.IterateSecrets(func(secret *core.Secret) error {
+	if err := cachedStatus.Secret().V1().Iterate(func(secret *core.Secret) error {
 		ensureAnnotationsMap(secret.Kind, secret, spec, patch)
 		return nil
 	}, func(secret *core.Secret) bool {
@@ -181,7 +181,7 @@ func ensureSecretsAnnotations(patch PatchFunc, cachedStatus inspectorInterface.I
 }
 
 func ensureServiceAccountsAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
-	if err := cachedStatus.IterateServiceAccounts(func(serviceAccount *core.ServiceAccount) error {
+	if err := cachedStatus.ServiceAccount().V1().Iterate(func(serviceAccount *core.ServiceAccount) error {
 		ensureAnnotationsMap(serviceAccount.Kind, serviceAccount, spec, patch)
 		return nil
 	}, func(serviceAccount *core.ServiceAccount) bool {
@@ -194,7 +194,7 @@ func ensureServiceAccountsAnnotations(patch PatchFunc, cachedStatus inspectorInt
 }
 
 func ensureServicesAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
-	if err := cachedStatus.IterateServices(func(service *core.Service) error {
+	if err := cachedStatus.Service().V1().Iterate(func(service *core.Service) error {
 		ensureAnnotationsMap(service.Kind, service, spec, patch)
 		return nil
 	}, func(service *core.Service) bool {
@@ -207,7 +207,11 @@ func ensureServicesAnnotations(patch PatchFunc, cachedStatus inspectorInterface.
 }
 
 func ensurePdbsAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
-	if err := cachedStatus.IteratePodDisruptionBudgets(func(podDisruptionBudget *policy.PodDisruptionBudget) error {
+	i, err := cachedStatus.PodDisruptionBudget().V1Beta1()
+	if err != nil {
+		return err
+	}
+	if err := i.Iterate(func(podDisruptionBudget *policy.PodDisruptionBudget) error {
 		ensureAnnotationsMap(podDisruptionBudget.Kind, podDisruptionBudget, spec, patch)
 		return nil
 	}, func(podDisruptionBudget *policy.PodDisruptionBudget) bool {
@@ -220,7 +224,7 @@ func ensurePdbsAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Insp
 }
 
 func ensurePvcsAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
-	if err := cachedStatus.IteratePersistentVolumeClaims(func(persistentVolumeClaim *core.PersistentVolumeClaim) error {
+	if err := cachedStatus.PersistentVolumeClaim().V1().Iterate(func(persistentVolumeClaim *core.PersistentVolumeClaim) error {
 		ensureGroupAnnotationsMap(persistentVolumeClaim.Kind, persistentVolumeClaim, spec, patch)
 		return nil
 	}, func(persistentVolumeClaim *core.PersistentVolumeClaim) bool {
@@ -233,7 +237,11 @@ func ensurePvcsAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Insp
 }
 
 func ensureServiceMonitorsAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
-	if err := cachedStatus.IterateServiceMonitors(func(serviceMonitor *monitoring.ServiceMonitor) error {
+	i, err := cachedStatus.ServiceMonitor().V1()
+	if err != nil {
+		return err
+	}
+	if err := i.Iterate(func(serviceMonitor *monitoring.ServiceMonitor) error {
 		ensureAnnotationsMap(serviceMonitor.Kind, serviceMonitor, spec, patch)
 		return nil
 	}, func(serviceMonitor *monitoring.ServiceMonitor) bool {
@@ -260,7 +268,8 @@ func getObjectGroup(obj meta.Object) api.ServerGroup {
 }
 
 func ensurePodsAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
-	if err := cachedStatus.IteratePods(func(pod *core.Pod) error {
+
+	if err := cachedStatus.Pod().V1().Iterate(func(pod *core.Pod) error {
 		ensureGroupAnnotationsMap(pod.Kind, pod, spec, patch)
 		return nil
 	}, func(pod *core.Pod) bool {

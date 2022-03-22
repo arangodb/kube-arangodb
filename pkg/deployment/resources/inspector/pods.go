@@ -22,146 +22,171 @@ package inspector
 
 import (
 	"context"
-
-	core "k8s.io/api/core/v1"
-	apiErrors "k8s.io/apimachinery/pkg/api/errors"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/kubernetes"
+	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func (i *inspector) IteratePods(action pod.Action, filters ...pod.Filter) error {
-	for _, pod := range i.Pods() {
-		if err := i.iteratePod(pod, action, filters...); err != nil {
-			return err
-		}
-	}
-	return nil
+func init() {
+	requireRegisterInspectorLoader(podsInspectorLoaderObj)
 }
 
-func (i *inspector) iteratePod(pod *core.Pod, action pod.Action, filters ...pod.Filter) error {
-	for _, filter := range filters {
-		if !filter(pod) {
-			return nil
-		}
-	}
+var podsInspectorLoaderObj = podsInspectorLoader{}
 
-	return action(pod)
+type podsInspectorLoader struct {
 }
 
-func (i *inspector) Pods() []*core.Pod {
-	i.lock.Lock()
-	defer i.lock.Unlock()
-
-	var r []*core.Pod
-	for _, pod := range i.pods {
-		r = append(r, pod)
-	}
-
-	return r
+func (p podsInspectorLoader) Throttle(t throttle.Components) throttle.Throttle {
+	return t.Pod()
 }
 
-func (i *inspector) Pod(name string) (*core.Pod, bool) {
-	i.lock.Lock()
-	defer i.lock.Unlock()
+func (p podsInspectorLoader) Load(ctx context.Context, i *inspectorState) {
+	var q podsInspector
+	p.loadV1(ctx, i, &q)
+	i.pods = &q
+	q.state = i
+	q.last = time.Now()
+}
 
-	pod, ok := i.pods[name]
-	if !ok {
-		return nil, false
+func (p podsInspectorLoader) loadV1(ctx context.Context, i *inspectorState, q *podsInspector) {
+	var z podsInspectorV1
+
+	z.podInspector = q
+
+	z.pods, z.err = p.getV1Pods(ctx, i)
+
+	q.v1 = &z
+}
+
+func (p podsInspectorLoader) getV1Pods(ctx context.Context, i *inspectorState) (map[string]*core.Pod, error) {
+	objs, err := p.getV1PodsList(ctx, i)
+	if err != nil {
+		return nil, err
 	}
 
-	return pod, true
-}
+	r := make(map[string]*core.Pod, len(objs))
 
-func (i *inspector) PodReadInterface() pod.ReadInterface {
-	return &podReadInterface{i: i}
-}
-
-type podReadInterface struct {
-	i *inspector
-}
-
-func (s podReadInterface) Get(ctx context.Context, name string, opts meta.GetOptions) (*core.Pod, error) {
-	if s, ok := s.i.Pod(name); !ok {
-		return nil, apiErrors.NewNotFound(schema.GroupResource{
-			Group:    core.GroupName,
-			Resource: "pods",
-		}, name)
-	} else {
-		return s, nil
+	for id := range objs {
+		r[objs[id].GetName()] = objs[id]
 	}
+
+	return r, nil
 }
 
-func podsToMap(ctx context.Context, inspector *inspector, k kubernetes.Interface, namespace string) func() error {
-	return func() error {
-		pods, err := getPods(ctx, k, namespace, "")
-		if err != nil {
-			return err
-		}
-
-		podMap := map[string]*core.Pod{}
-
-		for _, pod := range pods {
-			_, exists := podMap[pod.GetName()]
-			if exists {
-				return errors.Newf("Pod %s already exists in map, error received", pod.GetName())
-			}
-
-			podMap[pod.GetName()] = podPointer(pod)
-		}
-
-		inspector.pods = podMap
-
-		return nil
-	}
-}
-
-func podPointer(pod core.Pod) *core.Pod {
-	return &pod
-}
-
-func getPods(ctx context.Context, k kubernetes.Interface, namespace, cont string) ([]core.Pod, error) {
+func (p podsInspectorLoader) getV1PodsList(ctx context.Context, i *inspectorState) ([]*core.Pod, error) {
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
-	pods, err := k.CoreV1().Pods(namespace).List(ctxChild, meta.ListOptions{
-		Limit:    globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
-		Continue: cont,
+	obj, err := i.client.Kubernetes().CoreV1().Pods(i.namespace).List(ctxChild, meta.ListOptions{
+		Limit: globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
 	})
 
 	if err != nil {
 		return nil, err
 	}
 
-	if pods.Continue != "" {
-		// pass the original context
-		nextPodsLayer, err := getPods(ctx, k, namespace, pods.Continue)
+	items := obj.Items
+	cont := obj.Continue
+	var s = int64(len(items))
+
+	if z := obj.RemainingItemCount; z != nil {
+		s += *z
+	}
+
+	ptrs := make([]*core.Pod, 0, s)
+
+	for {
+		for id := range items {
+			ptrs = append(ptrs, &items[id])
+		}
+
+		if cont == "" {
+			break
+		}
+
+		items, cont, err = p.getV1PodsListRequest(ctx, i, cont)
+
 		if err != nil {
 			return nil, err
 		}
-
-		return append(pods.Items, nextPodsLayer...), nil
 	}
 
-	return pods.Items, nil
+	return ptrs, nil
 }
 
-func FilterPodsByLabels(labels map[string]string) pod.Filter {
-	return func(pod *core.Pod) bool {
-		for key, value := range labels {
-			v, ok := pod.Labels[key]
-			if !ok {
-				return false
-			}
+func (p podsInspectorLoader) getV1PodsListRequest(ctx context.Context, i *inspectorState, cont string) ([]core.Pod, string, error) {
+	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
+	defer cancel()
+	obj, err := i.client.Kubernetes().CoreV1().Pods(i.namespace).List(ctxChild, meta.ListOptions{
+		Limit:    globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
+		Continue: cont,
+	})
 
-			if v != value {
-				return false
-			}
-		}
-
-		return true
+	if err != nil {
+		return nil, "", err
 	}
+
+	return obj.Items, obj.Continue, err
+}
+
+func (p podsInspectorLoader) Verify(i *inspectorState) error {
+	if err := i.pods.v1.err; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p podsInspectorLoader) Copy(from, to *inspectorState, override bool) {
+	if to.pods != nil {
+		if !override {
+			return
+		}
+	}
+
+	to.pods = from.pods
+	to.pods.state = to
+}
+
+func (p podsInspectorLoader) Name() string {
+	return "pods"
+}
+
+type podsInspector struct {
+	state *inspectorState
+
+	last time.Time
+
+	v1 *podsInspectorV1
+}
+
+func (p *podsInspector) LastRefresh() time.Time {
+	return p.last
+}
+
+func (p *podsInspector) IsStatic() bool {
+	return p.state.IsStatic()
+}
+
+func (p *podsInspector) Refresh(ctx context.Context) error {
+	return p.state.refresh(ctx, podsInspectorLoaderObj)
+}
+
+func (p podsInspector) Throttle(c throttle.Components) throttle.Throttle {
+	return c.Pod()
+}
+
+func (p *podsInspector) validate() error {
+	if p == nil {
+		return errors.Newf("PodInspector is nil")
+	}
+
+	if p.state == nil {
+		return errors.Newf("Parent is nil")
+	}
+
+	return p.v1.validate()
 }

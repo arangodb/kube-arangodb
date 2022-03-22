@@ -30,8 +30,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
-
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -41,6 +39,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
 )
 
 var (
@@ -70,7 +69,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 	var podNamesWithScheduleTimeout []string
 	var unscheduledPodNames []string
 
-	err := cachedStatus.IteratePods(func(pod *v1.Pod) error {
+	err := cachedStatus.Pod().V1().Iterate(func(pod *v1.Pod) error {
 		if k8sutil.IsArangoDBImageIDAndVersionPod(pod) {
 			// Image ID pods are not relevant to inspect here
 			return nil
@@ -239,9 +238,9 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 				log.Debug().Str("pod-name", pod.GetName()).Msg("Updating member condition Ready, Started & Serving to true")
 
 				if status.Topology.IsTopologyOwned(memberStatus.Topology) {
-					nodes, ok := cachedStatus.GetNodes()
-					if ok {
-						node, ok := nodes.Node(pod.Spec.NodeName)
+					nodes, err := cachedStatus.Node().V1()
+					if err == nil {
+						node, ok := nodes.GetSimple(pod.Spec.NodeName)
 						if ok {
 							label, ok := node.Labels[status.Topology.Label]
 							if ok {
@@ -306,7 +305,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 		}
 
 		return nil
-	}, inspector.FilterPodsByLabels(k8sutil.LabelsForDeployment(deploymentName, "")))
+	}, podv1.FilterPodsByLabels(k8sutil.LabelsForDeployment(deploymentName, "")))
 	if err != nil {
 		return 0, err
 	}
@@ -315,7 +314,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 	status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
 		for _, m := range members {
 			if podName := m.PodName; podName != "" {
-				if _, exists := cachedStatus.Pod(podName); !exists {
+				if _, exists := cachedStatus.Pod().V1().GetSimple(podName); !exists {
 					log.Debug().Str("pod-name", podName).Msg("Does not exist")
 					switch m.Phase {
 					case api.MemberPhaseNone, api.MemberPhasePending:

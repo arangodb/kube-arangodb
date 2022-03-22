@@ -53,7 +53,7 @@ func getShutdownHelper(a *api.Action, actionCtx ActionContext, log zerolog.Logge
 		return NewActionSuccess(), m, true
 	}
 
-	pod, ok := actionCtx.GetCachedStatus().Pod(m.PodName)
+	pod, ok := actionCtx.GetCachedStatus().Pod().V1().GetSimple(m.PodName)
 	if !ok {
 		log.Warn().Str("pod-name", m.PodName).Msg("pod is already gone")
 		// Pod does not exist, so create success action to finish it immediately.

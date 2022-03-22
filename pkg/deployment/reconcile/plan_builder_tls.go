@@ -122,7 +122,7 @@ func createTLSStatusUpdateRequired(log zerolog.Logger, apiObject k8sutil.APIObje
 		return false
 	}
 
-	trusted, exists := cachedStatus.Secret(resources.GetCASecretName(apiObject))
+	trusted, exists := cachedStatus.Secret().V1().GetSimple(resources.GetCASecretName(apiObject))
 	if !exists {
 		log.Warn().Str("secret", resources.GetCASecretName(apiObject)).Msg("Folder with secrets does not exist")
 		return false
@@ -160,7 +160,7 @@ func createCAAppendPlan(ctx context.Context,
 		return nil
 	}
 
-	caSecret, exists := cachedStatus.Secret(spec.TLS.GetCASecretName())
+	caSecret, exists := cachedStatus.Secret().V1().GetSimple(spec.TLS.GetCASecretName())
 	if !exists {
 		log.Warn().Str("secret", spec.TLS.GetCASecretName()).Msg("CA Secret does not exists")
 		return nil
@@ -177,7 +177,7 @@ func createCAAppendPlan(ctx context.Context,
 		return nil
 	}
 
-	trusted, exists := cachedStatus.Secret(resources.GetCASecretName(apiObject))
+	trusted, exists := cachedStatus.Secret().V1().GetSimple(resources.GetCASecretName(apiObject))
 	if !exists {
 		log.Warn().Str("secret", resources.GetCASecretName(apiObject)).Msg("Folder with secrets does not exist")
 		return nil
@@ -208,7 +208,7 @@ func createCARenewalPlan(ctx context.Context,
 		return nil
 	}
 
-	caSecret, exists := cachedStatus.Secret(spec.TLS.GetCASecretName())
+	caSecret, exists := cachedStatus.Secret().V1().GetSimple(spec.TLS.GetCASecretName())
 	if !exists {
 		log.Warn().Str("secret", spec.TLS.GetCASecretName()).Msg("CA Secret does not exists")
 		return nil
@@ -244,7 +244,7 @@ func createCACleanPlan(ctx context.Context,
 		return nil
 	}
 
-	caSecret, exists := cachedStatus.Secret(spec.TLS.GetCASecretName())
+	caSecret, exists := cachedStatus.Secret().V1().GetSimple(spec.TLS.GetCASecretName())
 	if !exists {
 		log.Warn().Str("secret", spec.TLS.GetCASecretName()).Msg("CA Secret does not exists")
 		return nil
@@ -261,7 +261,7 @@ func createCACleanPlan(ctx context.Context,
 		return nil
 	}
 
-	trusted, exists := cachedStatus.Secret(resources.GetCASecretName(apiObject))
+	trusted, exists := cachedStatus.Secret().V1().GetSimple(resources.GetCASecretName(apiObject))
 	if !exists {
 		log.Warn().Str("secret", resources.GetCASecretName(apiObject)).Msg("Folder with secrets does not exist")
 		return nil
@@ -452,13 +452,13 @@ func keyfileRenewalRequired(ctx context.Context,
 
 	memberName := member.ArangoMemberName(apiObject.GetName(), group)
 
-	service, ok := cachedStatus.Service(memberName)
+	service, ok := cachedStatus.Service().V1().GetSimple(memberName)
 	if !ok {
 		log.Warn().Str("service", memberName).Msg("Service does not exists")
 		return false, false
 	}
 
-	caSecret, exists := cachedStatus.Secret(spec.TLS.GetCASecretName())
+	caSecret, exists := cachedStatus.Secret().V1().GetSimple(spec.TLS.GetCASecretName())
 	if !exists {
 		log.Warn().Str("secret", spec.TLS.GetCASecretName()).Msg("CA Secret does not exists")
 		return false, false
@@ -531,7 +531,7 @@ func keyfileRenewalRequired(ctx context.Context,
 			return false, false
 		}
 
-		s, exists := cachedStatus.Secret(k8sutil.CreateTLSKeyfileSecretName(apiObject.GetName(), group.AsRole(), member.ID))
+		s, exists := cachedStatus.Secret().V1().GetSimple(k8sutil.CreateTLSKeyfileSecretName(apiObject.GetName(), group.AsRole(), member.ID))
 		if !exists {
 			log.Warn().Msg("Keyfile secret is missing")
 			return false, false

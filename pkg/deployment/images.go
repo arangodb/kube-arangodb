@@ -139,7 +139,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 	// Check if pod exists
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
-	pod, err := ib.Context.GetCachedStatus().PodReadInterface().Get(ctxChild, podName, metav1.GetOptions{})
+	pod, err := ib.Context.GetCachedStatus().Pod().V1().Read().Get(ctxChild, podName, metav1.GetOptions{})
 	if err == nil {
 		// Pod found
 		if k8sutil.IsPodFailed(pod, utils.StringList{k8sutil.ServerContainerName}) {

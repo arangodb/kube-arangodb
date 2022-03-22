@@ -34,6 +34,8 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
+	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -59,9 +61,11 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 			Member:      api.MemberStatus{ID: "a1"},
 		}
 
-		i := newInspectorMock().RegisterMemberStatus(t, apiObject, input.Group, input.Member)
+		f := kclient.NewFakeClientBuilder()
+		f = createClient(f, apiObject, input.Group, input.Member)
+		i := createInspector(t, f)
 
-		cmdline, err := createArangodArgs(i.Get(t), input)
+		cmdline, err := createArangodArgs(i, input)
 		require.NoError(t, err)
 		assert.Equal(t,
 			[]string{
@@ -100,9 +104,11 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 			Member:      api.MemberStatus{ID: "a1"},
 		}
 
-		i := newInspectorMock().RegisterMemberStatus(t, apiObject, input.Group, input.Member)
+		f := kclient.NewFakeClientBuilder()
+		f = createClient(f, apiObject, input.Group, input.Member)
+		i := createInspector(t, f)
 
-		cmdline, err := createArangodArgsWithUpgrade(i.Get(t), input)
+		cmdline, err := createArangodArgsWithUpgrade(i, input)
 		require.NoError(t, err)
 		assert.Equal(t,
 			[]string{
@@ -145,9 +151,11 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 			Member:      api.MemberStatus{ID: "a1"},
 		}
 
-		i := newInspectorMock().RegisterMemberStatus(t, apiObject, input.Group, input.Member)
+		f := kclient.NewFakeClientBuilder()
+		f = createClient(f, apiObject, input.Group, input.Member)
+		i := createInspector(t, f)
 
-		cmdline, err := createArangodArgs(i.Get(t), input)
+		cmdline, err := createArangodArgs(i, input)
 		require.NoError(t, err)
 		assert.Equal(t,
 			[]string{
@@ -185,9 +193,11 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 			Member:      api.MemberStatus{ID: "a1"},
 		}
 
-		i := newInspectorMock().RegisterMemberStatus(t, apiObject, input.Group, input.Member)
+		f := kclient.NewFakeClientBuilder()
+		f = createClient(f, apiObject, input.Group, input.Member)
+		i := createInspector(t, f)
 
-		cmdline, err := createArangodArgs(i.Get(t), input)
+		cmdline, err := createArangodArgs(i, input)
 		require.NoError(t, err)
 		assert.Equal(t,
 			[]string{
@@ -227,9 +237,11 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 			Member:      api.MemberStatus{ID: "a1"},
 		}
 
-		i := newInspectorMock().RegisterMemberStatus(t, apiObject, input.Group, input.Member)
+		f := kclient.NewFakeClientBuilder()
+		f = createClient(f, apiObject, input.Group, input.Member)
+		i := createInspector(t, f)
 
-		cmdline, err := createArangodArgs(i.Get(t), input)
+		cmdline, err := createArangodArgs(i, input)
 		require.NoError(t, err)
 		assert.Equal(t,
 			[]string{
@@ -268,9 +280,11 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 			Member:      api.MemberStatus{ID: "a1"},
 		}
 
-		i := newInspectorMock().RegisterMemberStatus(t, apiObject, input.Group, input.Member)
+		f := kclient.NewFakeClientBuilder()
+		f = createClient(f, apiObject, input.Group, input.Member)
+		i := createInspector(t, f)
 
-		cmdline, err := createArangodArgs(i.Get(t), input)
+		cmdline, err := createArangodArgs(i, input)
 		require.NoError(t, err)
 		assert.Equal(t,
 			[]string{
@@ -297,7 +311,7 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 		apiObject := &api.ArangoDeployment{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "name",
-				Namespace: "ns",
+				Namespace: tests.FakeNamespace,
 			},
 			Spec: api.DeploymentSpec{
 				Mode: api.NewMode(api.DeploymentModeActiveFailover),
@@ -321,17 +335,19 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 			Member:      api.MemberStatus{ID: "id1"},
 		}
 
-		i := newInspectorMock().RegisterMemberStatus(t, apiObject, input.Group, input.Member)
-		i = i.RegisterMemberStatus(t, apiObject, api.ServerGroupAgents, agents...)
+		f := kclient.NewFakeClientBuilder()
+		f = createClient(f, apiObject, api.ServerGroupAgents, agents...)
+		f = createClient(f, apiObject, input.Group, input.Member)
+		i := createInspector(t, f)
 
-		cmdline, err := createArangodArgs(i.Get(t), input)
+		cmdline, err := createArangodArgs(i, input)
 		require.NoError(t, err)
 		assert.Equal(t,
 			[]string{
-				"--cluster.agency-endpoint=ssl://name-agent-a1.name-int.ns.svc:8529",
-				"--cluster.agency-endpoint=ssl://name-agent-a2.name-int.ns.svc:8529",
-				"--cluster.agency-endpoint=ssl://name-agent-a3.name-int.ns.svc:8529",
-				"--cluster.my-address=ssl://name-single-id1.name-int.ns.svc:8529",
+				"--cluster.agency-endpoint=ssl://name-agent-a1.name-int." + tests.FakeNamespace + ".svc:8529",
+				"--cluster.agency-endpoint=ssl://name-agent-a2.name-int." + tests.FakeNamespace + ".svc:8529",
+				"--cluster.agency-endpoint=ssl://name-agent-a3.name-int." + tests.FakeNamespace + ".svc:8529",
+				"--cluster.my-address=ssl://name-single-id1.name-int." + tests.FakeNamespace + ".svc:8529",
 				"--cluster.my-role=SINGLE",
 				"--database.directory=/data",
 				"--foxx.queues=true",

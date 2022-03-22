@@ -29,6 +29,8 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	persistentvolumeclaimv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim/v1"
+	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
 	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -39,13 +41,13 @@ const (
 )
 
 // RemovePodFinalizers removes the given finalizers from the given pod.
-func RemovePodFinalizers(ctx context.Context, cachedStatus pod.Inspector, log zerolog.Logger, c pod.ModInterface, p *core.Pod,
+func RemovePodFinalizers(ctx context.Context, cachedStatus pod.Inspector, log zerolog.Logger, c podv1.ModInterface, p *core.Pod,
 	finalizers []string, ignoreNotFound bool) (int, error) {
 	getFunc := func() (metav1.Object, error) {
 		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
 
-		result, err := cachedStatus.PodReadInterface().Get(ctxChild, p.GetName(), metav1.GetOptions{})
+		result, err := cachedStatus.Pod().V1().Read().Get(ctxChild, p.GetName(), metav1.GetOptions{})
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
@@ -71,13 +73,13 @@ func RemovePodFinalizers(ctx context.Context, cachedStatus pod.Inspector, log ze
 }
 
 // RemovePVCFinalizers removes the given finalizers from the given PVC.
-func RemovePVCFinalizers(ctx context.Context, cachedStatus persistentvolumeclaim.Inspector, log zerolog.Logger, c persistentvolumeclaim.ModInterface,
+func RemovePVCFinalizers(ctx context.Context, cachedStatus persistentvolumeclaim.Inspector, log zerolog.Logger, c persistentvolumeclaimv1.ModInterface,
 	p *core.PersistentVolumeClaim, finalizers []string, ignoreNotFound bool) (int, error) {
 	getFunc := func() (metav1.Object, error) {
 		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
 
-		result, err := cachedStatus.PersistentVolumeClaimReadInterface().Get(ctxChild, p.GetName(), metav1.GetOptions{})
+		result, err := cachedStatus.PersistentVolumeClaim().V1().Read().Get(ctxChild, p.GetName(), metav1.GetOptions{})
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
