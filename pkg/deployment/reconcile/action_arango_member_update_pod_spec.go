@@ -29,6 +29,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	"github.com/rs/zerolog"
 )
 
@@ -55,6 +56,12 @@ type actionArangoMemberUpdatePodSpec struct {
 
 	// actionEmptyCheckProgress implement check progress with empty implementation
 	actionEmptyCheckProgress
+}
+
+func (a *actionArangoMemberUpdatePodSpec) ReloadComponents() []throttle.Component {
+	return []throttle.Component{
+		throttle.ArangoMember,
+	}
 }
 
 // Start performs the start of the action.
@@ -151,8 +158,4 @@ func (a *actionArangoMemberUpdatePodSpec) Start(ctx context.Context) (bool, erro
 	}
 
 	return true, nil
-}
-
-func (a *actionArangoMemberUpdatePodSpec) ReloadCachedStatus() bool {
-	return true
 }

@@ -34,6 +34,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 )
 
 func init() {
@@ -115,9 +116,11 @@ func (a actionRuntimeContainerArgsUpdate) Post(ctx context.Context) error {
 	return nil
 }
 
-// ReloadCachedStatus reloads the inspector cache when the action is done.
-func (a actionRuntimeContainerArgsUpdate) ReloadCachedStatus() bool {
-	return true
+func (a *actionRuntimeContainerArgsUpdate) ReloadComponents() []throttle.Component {
+	return []throttle.Component{
+		throttle.ArangoMember,
+		throttle.Pod,
+	}
 }
 
 // Start starts the action for changing conditions on the provided member.

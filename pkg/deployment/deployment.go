@@ -211,7 +211,7 @@ func newDeploymentThrottle() throttle.Components {
 		30*time.Second, // ArangoTask
 		30*time.Second, // Node
 		15*time.Second, // PVC
-		10*time.Second, // Pod
+		time.Second,    // Pod
 		30*time.Second, // PDB
 		10*time.Second, // Secret
 		10*time.Second, // Service

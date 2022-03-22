@@ -27,6 +27,7 @@ import (
 	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	"github.com/rs/zerolog"
 )
 
@@ -79,15 +80,15 @@ func getActionPost(a Action, ctx context.Context) error {
 type ActionReloadCachedStatus interface {
 	Action
 
-	// ReloadCachedStatus keeps information about CachedStatus reloading (executed after action has been executed)
-	ReloadCachedStatus() bool
+	// ReloadComponents return cache components to be reloaded
+	ReloadComponents() []throttle.Component
 }
 
-func getActionReloadCachedStatus(a Action) bool {
+func getActionReloadCachedStatus(a Action) []throttle.Component {
 	if c, ok := a.(ActionReloadCachedStatus); !ok {
-		return false
+		return nil
 	} else {
-		return c.ReloadCachedStatus()
+		return c.ReloadComponents()
 	}
 }
 

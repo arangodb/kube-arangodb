@@ -49,6 +49,22 @@ func NewThrottleComponents(acs, am, at, node, pvc, pod, pdb, secret, service, se
 	}
 }
 
+type Component string
+
+const (
+	ArangoClusterSynchronization Component = "ArangoClusterSynchronization"
+	ArangoMember                 Component = "ArangoMember"
+	ArangoTask                   Component = "ArangoTask"
+	Node                         Component = "Node"
+	PersistentVolumeClaim        Component = "PersistentVolumeClaim"
+	Pod                          Component = "Pod"
+	PodDisruptionBudget          Component = "PodDisruptionBudget"
+	Secret                       Component = "Secret"
+	Service                      Component = "Service"
+	ServiceAccount               Component = "ServiceAccount"
+	ServiceMonitor               Component = "ServiceMonitor"
+)
+
 type Components interface {
 	ArangoClusterSynchronization() Throttle
 	ArangoMember() Throttle
@@ -61,6 +77,9 @@ type Components interface {
 	Service() Throttle
 	ServiceAccount() Throttle
 	ServiceMonitor() Throttle
+
+	Get(c Component) Throttle
+	Invalidate(components ...Component)
 
 	Copy() Components
 }
@@ -77,6 +96,44 @@ type throttleComponents struct {
 	service                      Throttle
 	serviceAccount               Throttle
 	serviceMonitor               Throttle
+}
+
+func (t *throttleComponents) Invalidate(components ...Component) {
+	for _, c := range components {
+		t.Get(c).Invalidate()
+	}
+}
+
+func (t *throttleComponents) Get(c Component) Throttle {
+	if t == nil {
+		return NewAlwaysThrottle()
+	}
+	switch c {
+	case ArangoClusterSynchronization:
+		return t.arangoClusterSynchronization
+	case ArangoMember:
+		return t.arangoMember
+	case ArangoTask:
+		return t.arangoTask
+	case Node:
+		return t.node
+	case PersistentVolumeClaim:
+		return t.persistentVolumeClaim
+	case Pod:
+		return t.pod
+	case PodDisruptionBudget:
+		return t.podDisruptionBudget
+	case Secret:
+		return t.secret
+	case Service:
+		return t.service
+	case ServiceAccount:
+		return t.serviceAccount
+	case ServiceMonitor:
+		return t.serviceMonitor
+	default:
+		return NewAlwaysThrottle()
+	}
 }
 
 func (t *throttleComponents) Copy() Components {

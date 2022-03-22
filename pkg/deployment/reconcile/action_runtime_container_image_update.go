@@ -30,6 +30,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 )
 
 func init() {
@@ -108,8 +109,10 @@ func (a actionRuntimeContainerImageUpdate) Post(ctx context.Context) error {
 	})
 }
 
-func (a actionRuntimeContainerImageUpdate) ReloadCachedStatus() bool {
-	return true
+func (a *actionRuntimeContainerImageUpdate) ReloadComponents() []throttle.Component {
+	return []throttle.Component{
+		throttle.ArangoMember,
+	}
 }
 
 func (a actionRuntimeContainerImageUpdate) getContainerDetails() (string, string, bool) {

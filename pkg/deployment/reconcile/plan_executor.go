@@ -217,7 +217,9 @@ func (d *Reconciler) executePlan(ctx context.Context, cachedStatus inspectorInte
 				plan = nil
 			}
 
-			if getActionReloadCachedStatus(action) {
+			if components := getActionReloadCachedStatus(action); len(components) > 0 {
+				cachedStatus.GetThrottles().Invalidate(components...)
+
 				log.Info().Msgf("Reloading cached status")
 				if err := cachedStatus.Refresh(ctx); err != nil {
 					log.Warn().Err(err).Msgf("Unable to reload cached status")
