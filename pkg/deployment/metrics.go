@@ -24,6 +24,7 @@ import (
 	"sync"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -41,6 +42,8 @@ func init() {
 		deploymentAgencyStateMetric:    metrics.NewDescription("arango_operator_deployment_agency_state", "Reachability of agency", []string{"namespace", "deployment"}, nil),
 		deploymentShardLeadersMetric:   metrics.NewDescription("arango_operator_deployment_shard_leaders", "Deployment leader shards distribution", []string{"namespace", "deployment", "database", "collection", "shard", "server"}, nil),
 		deploymentShardsMetric:         metrics.NewDescription("arango_operator_deployment_shards", "Deployment shards distribution", []string{"namespace", "deployment", "database", "collection", "shard", "server"}, nil),
+
+		operatorStateRefreshMetric: metrics.NewDescription("arango_operator_deployment_state_refresh_count", "Number of refreshes in deployment", []string{"namespace", "deployment", "type"}, nil),
 	}
 
 	prometheus.MustRegister(&localInventory)
@@ -55,13 +58,15 @@ type inventory struct {
 	deployments map[string]map[string]*Deployment
 
 	deploymentsMetric, deploymentMetricsMembersMetric, deploymentAgencyStateMetric, deploymentShardsMetric, deploymentShardLeadersMetric metrics.Description
+
+	operatorStateRefreshMetric metrics.Description
 }
 
 func (i *inventory) Describe(descs chan<- *prometheus.Desc) {
 	i.lock.Lock()
 	defer i.lock.Unlock()
 
-	metrics.NewPushDescription(descs).Push(i.deploymentsMetric, i.deploymentMetricsMembersMetric, i.deploymentAgencyStateMetric, i.deploymentShardLeadersMetric, i.deploymentShardsMetric)
+	metrics.NewPushDescription(descs).Push(i.deploymentsMetric, i.deploymentMetricsMembersMetric, i.deploymentAgencyStateMetric, i.deploymentShardLeadersMetric, i.deploymentShardsMetric, i.operatorStateRefreshMetric)
 }
 
 func (i *inventory) Collect(m chan<- prometheus.Metric) {
@@ -72,6 +77,14 @@ func (i *inventory) Collect(m chan<- prometheus.Metric) {
 	for _, deployments := range i.deployments {
 		for _, deployment := range deployments {
 			p.Push(i.deploymentsMetric.Gauge(1, deployment.GetNamespace(), deployment.GetName()))
+
+			if state := deployment.currentState; state != nil {
+				t := state.GetThrottles()
+
+				for _, c := range throttle.AllComponents() {
+					p.Push(i.operatorStateRefreshMetric.Gauge(float64(t.Get(c).Count()), deployment.GetNamespace(), deployment.GetName(), string(c)))
+				}
+			}
 
 			spec := deployment.GetSpec()
 			status, _ := deployment.GetStatus()

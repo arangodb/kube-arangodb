@@ -49,6 +49,8 @@ func NewThrottleComponents(acs, am, at, node, pvc, pod, pdb, secret, service, se
 	}
 }
 
+type ComponentCount map[Component]int
+
 type Component string
 
 const (
@@ -64,6 +66,22 @@ const (
 	ServiceAccount               Component = "ServiceAccount"
 	ServiceMonitor               Component = "ServiceMonitor"
 )
+
+func AllComponents() []Component {
+	return []Component{
+		ArangoClusterSynchronization,
+		ArangoMember,
+		ArangoTask,
+		Node,
+		PersistentVolumeClaim,
+		Pod,
+		PodDisruptionBudget,
+		Secret,
+		Service,
+		ServiceAccount,
+		ServiceMonitor,
+	}
+}
 
 type Components interface {
 	ArangoClusterSynchronization() Throttle
@@ -81,6 +99,7 @@ type Components interface {
 	Get(c Component) Throttle
 	Invalidate(components ...Component)
 
+	Counts() ComponentCount
 	Copy() Components
 }
 
@@ -96,6 +115,16 @@ type throttleComponents struct {
 	service                      Throttle
 	serviceAccount               Throttle
 	serviceMonitor               Throttle
+}
+
+func (t *throttleComponents) Counts() ComponentCount {
+	z := ComponentCount{}
+
+	for _, c := range AllComponents() {
+		z[c] = t.Get(c).Count()
+	}
+
+	return z
 }
 
 func (t *throttleComponents) Invalidate(components ...Component) {
@@ -202,16 +231,23 @@ type Throttle interface {
 	Delay()
 
 	Copy() Throttle
+
+	Count() int
 }
 
 func NewAlwaysThrottle() Throttle {
-	return alwaysThrottle{}
+	return &alwaysThrottle{}
 }
 
 type alwaysThrottle struct {
+	count int
 }
 
-func (a alwaysThrottle) Copy() Throttle {
+func (a alwaysThrottle) Count() int {
+	return a.count
+}
+
+func (a *alwaysThrottle) Copy() Throttle {
 	return a
 }
 
@@ -223,7 +259,8 @@ func (a alwaysThrottle) Throttle() bool {
 	return true
 }
 
-func (a alwaysThrottle) Delay() {
+func (a *alwaysThrottle) Delay() {
+	a.count++
 }
 
 func NewThrottle(delay time.Duration) Throttle {
@@ -240,12 +277,21 @@ type throttle struct {
 
 	delay time.Duration
 	next  time.Time
+	count int
+}
+
+func (t *throttle) Count() int {
+	t.lock.Lock()
+	defer t.lock.Unlock()
+
+	return t.count
 }
 
 func (t *throttle) Copy() Throttle {
 	return &throttle{
 		delay: t.delay,
 		next:  t.next,
+		count: t.count,
 	}
 }
 
@@ -254,6 +300,7 @@ func (t *throttle) Delay() {
 	defer t.lock.Unlock()
 
 	t.next = time.Now().Add(t.delay)
+	t.count++
 }
 
 func (t *throttle) Throttle() bool {
