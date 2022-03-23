@@ -678,10 +678,16 @@ func (d *Deployment) WithArangoMemberUpdate(ctx context.Context, namespace, name
 		return err
 	}
 
+	d.deps.Log.Info().Str("member", name).Msg("ArangoMember Update")
+
 	if action(o) {
 		if _, err := d.ArangoMembersModInterface().Update(ctx, o, meta.UpdateOptions{}); err != nil {
 			return err
 		}
+	}
+
+	if err := d.currentState.Refresh(ctx); err != nil {
+		return err
 	}
 
 	return nil
@@ -693,6 +699,8 @@ func (d *Deployment) WithArangoMemberStatusUpdate(ctx context.Context, namespace
 		return err
 	}
 
+	d.deps.Log.Info().Str("member", name).Msg("ArangoMember Status Update")
+
 	status := o.Status.DeepCopy()
 
 	if action(o, status) {
@@ -700,6 +708,10 @@ func (d *Deployment) WithArangoMemberStatusUpdate(ctx context.Context, namespace
 		if _, err := d.ArangoMembersModInterface().UpdateStatus(ctx, o, meta.UpdateOptions{}); err != nil {
 			return err
 		}
+	}
+
+	if err := d.currentState.Refresh(ctx); err != nil {
+		return err
 	}
 
 	return nil

@@ -253,7 +253,7 @@ func (i *inspectorState) refreshInThreads(ctx context.Context, threads int, load
 			i.logger.Debug().Str("component", string(c)).Msg("Inspector refresh")
 
 			defer func() {
-				i.logger.Debug().Str("component", string(c)).Dur("duration", time.Since(start)).Msg("Inspector done")
+				i.logger.Debug().Str("component", string(c)).Str("duration", time.Since(start).String()).Msg("Inspector done")
 				t.Delay()
 			}()
 
@@ -268,7 +268,7 @@ func (i *inspectorState) refreshInThreads(ctx context.Context, threads int, load
 
 	m.Wait()
 
-	i.logger.Debug().Dur("duration", time.Since(start)).Msg("Inspector refresh done")
+	i.logger.Debug().Str("duration", time.Since(start).String()).Msg("Inspector refresh done")
 
 	for id := range loaders {
 		if err := loaders[id].Verify(n); err != nil {
