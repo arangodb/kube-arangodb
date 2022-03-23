@@ -172,6 +172,7 @@ func (p *servicesInspector) IsStatic() bool {
 }
 
 func (p *servicesInspector) Refresh(ctx context.Context) error {
+	p.Throttle(p.state.throttles).Invalidate()
 	return p.state.refresh(ctx, servicesInspectorLoaderObj)
 }
 

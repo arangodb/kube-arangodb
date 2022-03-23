@@ -39,6 +39,8 @@ import (
 	"github.com/arangodb/arangosync-client/client"
 	"github.com/arangodb/go-driver/agency"
 
+	"time"
+
 	"github.com/arangodb/go-driver"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -81,6 +83,14 @@ type testContext struct {
 	RecordedEvent    *k8sutil.Event
 
 	Inspector inspectorInterface.Inspector
+}
+
+func (c *testContext) WithArangoMember(cache inspectorInterface.Inspector, timeout time.Duration, name string) reconciler.ArangoMemberModContext {
+	return reconciler.NewArangoMemberModContext(cache, timeout, name)
+}
+
+func (c *testContext) WithCurrentArangoMember(name string) reconciler.ArangoMemberModContext {
+	return c.WithArangoMember(c.Inspector, 0, name)
 }
 
 func (c *testContext) GetMembersState() member.StateInspector {

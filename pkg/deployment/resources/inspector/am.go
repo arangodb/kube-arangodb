@@ -172,6 +172,7 @@ func (p *arangoMembersInspector) IsStatic() bool {
 }
 
 func (p *arangoMembersInspector) Refresh(ctx context.Context) error {
+	p.Throttle(p.state.throttles).Invalidate()
 	return p.state.refresh(ctx, arangoMembersInspectorLoaderObj)
 }
 

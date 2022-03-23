@@ -168,6 +168,7 @@ func (p *arangoClusterSynchronizationsInspector) IsStatic() bool {
 }
 
 func (p *arangoClusterSynchronizationsInspector) Refresh(ctx context.Context) error {
+	p.Throttle(p.state.throttles).Invalidate()
 	return p.state.refresh(ctx, arangoClusterSynchronizationsInspectorLoaderObj)
 }
 

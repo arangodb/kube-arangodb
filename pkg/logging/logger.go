@@ -41,7 +41,9 @@ func GlobalLogger() Service {
 	defer globalLoggerLock.Unlock()
 
 	if globalLogger == nil {
-		panic("Global logger is not set")
+		if err := initGlobalLogger("info", nil); err != nil {
+			panic(err)
+		}
 	}
 
 	return globalLogger
@@ -51,6 +53,10 @@ func InitGlobalLogger(defaultLevel string, overrides []string) error {
 	globalLoggerLock.Lock()
 	defer globalLoggerLock.Unlock()
 
+	return initGlobalLogger(defaultLevel, overrides)
+}
+
+func initGlobalLogger(defaultLevel string, overrides []string) error {
 	if globalLogger != nil {
 		return errors.Newf("GlobalLogger already created")
 	}

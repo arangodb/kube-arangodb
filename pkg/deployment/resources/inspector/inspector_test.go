@@ -149,8 +149,13 @@ func Test_Inspector_RefreshMatrix(t *testing.T) {
 			}
 
 			ntimes := getTimes(i)
-			for k, v := range times {
-				require.Equal(t, v, ntimes[k])
+
+			for _, k := range changed {
+				require.NotEqual(t, times[k], ntimes[k])
+			}
+
+			for _, k := range not {
+				require.Equal(t, times[k], ntimes[k])
 			}
 
 			for _, k := range changed {
@@ -304,19 +309,15 @@ func Test_Inspector_Invalidate(t *testing.T) {
 					require.NoError(t, q.get(i).Refresh(context.Background()))
 				})
 
-				t.Run("Ensure time did not change", func(t *testing.T) {
+				t.Run("Ensure time changed", func(t *testing.T) {
 					ntimes := getTimes(i)
 					for k, v := range times {
-						require.Equal(t, v, ntimes[k])
+						if k == n {
+							require.NotEqual(t, v, ntimes[k])
+						} else {
+							require.Equal(t, v, ntimes[k])
+						}
 					}
-				})
-
-				t.Run("Invalidate", func(t *testing.T) {
-					q.tg(i.GetThrottles()).Invalidate()
-				})
-
-				t.Run("Refresh after invalidate", func(t *testing.T) {
-					require.NoError(t, q.get(i).Refresh(context.Background()))
 				})
 
 				t.Run("Ensure time changed", func(t *testing.T) {

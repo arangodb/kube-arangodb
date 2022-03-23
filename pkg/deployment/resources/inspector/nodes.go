@@ -168,6 +168,7 @@ func (p *nodesInspector) IsStatic() bool {
 }
 
 func (p *nodesInspector) Refresh(ctx context.Context) error {
+	p.Throttle(p.state.throttles).Invalidate()
 	return p.state.refresh(ctx, nodesInspectorLoaderObj)
 }
 

@@ -30,7 +30,6 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 )
 
 func init() {
@@ -45,7 +44,6 @@ func runtimeContainerImageUpdate(log zerolog.Logger, action api.Action, actionCt
 	return a
 }
 
-var _ ActionReloadCachedStatus = &actionRuntimeContainerImageUpdate{}
 var _ ActionPost = &actionRuntimeContainerImageUpdate{}
 
 type actionRuntimeContainerImageUpdate struct {
@@ -74,7 +72,7 @@ func (a actionRuntimeContainerImageUpdate) Post(ctx context.Context) error {
 		return err
 	}
 
-	return a.actionCtx.WithArangoMemberStatusUpdate(ctx, member.GetNamespace(), member.GetName(), func(obj *api.ArangoMember, s *api.ArangoMemberStatus) bool {
+	return a.actionCtx.WithCurrentArangoMember(member.GetName()).UpdateStatus(ctx, func(obj *api.ArangoMember, s *api.ArangoMemberStatus) bool {
 		if obj.Spec.Template == nil || s.Template == nil ||
 			obj.Spec.Template.PodSpec == nil || s.Template.PodSpec == nil {
 			a.log.Info().Msgf("Nil Member definition")
@@ -107,12 +105,6 @@ func (a actionRuntimeContainerImageUpdate) Post(ctx context.Context) error {
 		}
 		return false
 	})
-}
-
-func (a *actionRuntimeContainerImageUpdate) ReloadComponents() []throttle.Component {
-	return []throttle.Component{
-		throttle.ArangoMember,
-	}
 }
 
 func (a actionRuntimeContainerImageUpdate) getContainerDetails() (string, string, bool) {

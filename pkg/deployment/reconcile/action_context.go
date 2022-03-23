@@ -31,6 +31,8 @@ import (
 	"github.com/arangodb/arangosync-client/client"
 	"github.com/arangodb/go-driver/agency"
 
+	"time"
+
 	"github.com/arangodb/go-driver"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -40,7 +42,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-	arangomemberv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember/v1"
 	persistentvolumeclaimv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim/v1"
 	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
 	poddisruptionbudgetv1beta1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget/v1beta1"
@@ -144,6 +145,14 @@ type actionContext struct {
 	cachedStatus inspectorInterface.Inspector
 }
 
+func (ac *actionContext) WithArangoMember(cache inspectorInterface.Inspector, timeout time.Duration, name string) reconciler.ArangoMemberModContext {
+	return ac.context.WithArangoMember(cache, timeout, name)
+}
+
+func (ac *actionContext) WithCurrentArangoMember(name string) reconciler.ArangoMemberModContext {
+	return ac.context.WithCurrentArangoMember(name)
+}
+
 func (ac *actionContext) GetMembersState() member.StateInspector {
 	return ac.context.GetMembersState()
 }
@@ -186,14 +195,6 @@ func (ac *actionContext) RenderPodTemplateForMemberFromCurrent(ctx context.Conte
 
 func (ac *actionContext) SetAgencyMaintenanceMode(ctx context.Context, enabled bool) error {
 	return ac.context.SetAgencyMaintenanceMode(ctx, enabled)
-}
-
-func (ac *actionContext) WithArangoMemberUpdate(ctx context.Context, namespace, name string, action reconciler.ArangoMemberUpdateFunc) error {
-	return ac.context.WithArangoMemberUpdate(ctx, namespace, name, action)
-}
-
-func (ac *actionContext) WithArangoMemberStatusUpdate(ctx context.Context, namespace, name string, action reconciler.ArangoMemberStatusUpdateFunc) error {
-	return ac.context.WithArangoMemberStatusUpdate(ctx, namespace, name, action)
 }
 
 func (ac *actionContext) RenderPodForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error) {
@@ -254,10 +255,6 @@ func (ac *actionContext) PodDisruptionBudgetsModInterface() poddisruptionbudgetv
 
 func (ac *actionContext) ServiceMonitorsModInterface() servicemonitorv1.ModInterface {
 	return ac.context.ServiceMonitorsModInterface()
-}
-
-func (ac *actionContext) ArangoMembersModInterface() arangomemberv1.ModInterface {
-	return ac.context.ArangoMembersModInterface()
 }
 
 func (ac *actionContext) UpdateClusterCondition(ctx context.Context, conditionType api.ConditionType, status bool, reason, message string) error {

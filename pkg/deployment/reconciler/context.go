@@ -31,7 +31,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-	arangomemberv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember/v1"
 	persistentvolumeclaimv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim/v1"
 	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
 	poddisruptionbudgetv1beta1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget/v1beta1"
@@ -114,24 +113,11 @@ type DeploymentModInterfaces interface {
 
 	// ServiceMonitorsModInterface define servicemonitor modification interface
 	ServiceMonitorsModInterface() servicemonitorv1.ModInterface
-
-	// ArangoMembersModInterface define arangomembers modification interface
-	ArangoMembersModInterface() arangomemberv1.ModInterface
 }
 
 type DeploymentCachedStatus interface {
 	// GetCachedStatus current cached state of deployment
 	GetCachedStatus() inspectorInterface.Inspector
-}
-
-type ArangoMemberUpdateFunc func(obj *api.ArangoMember) bool
-type ArangoMemberStatusUpdateFunc func(obj *api.ArangoMember, s *api.ArangoMemberStatus) bool
-
-type ArangoMemberContext interface {
-	// WithArangoMemberUpdate run action with update of ArangoMember
-	WithArangoMemberUpdate(ctx context.Context, namespace, name string, action ArangoMemberUpdateFunc) error
-	// WithArangoMemberStatusUpdate run action with update of ArangoMember Status
-	WithArangoMemberStatusUpdate(ctx context.Context, namespace, name string, action ArangoMemberStatusUpdateFunc) error
 }
 
 type ArangoAgencyGet interface {

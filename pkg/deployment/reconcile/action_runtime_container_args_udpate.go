@@ -49,7 +49,6 @@ func runtimeContainerArgsUpdate(log zerolog.Logger, action api.Action, actionCtx
 	return a
 }
 
-var _ ActionReloadCachedStatus = &actionRuntimeContainerArgsUpdate{}
 var _ ActionPost = &actionRuntimeContainerArgsUpdate{}
 
 type actionRuntimeContainerArgsUpdate struct {
@@ -108,7 +107,7 @@ func (a actionRuntimeContainerArgsUpdate) Post(ctx context.Context) error {
 		return false
 	}
 
-	err := a.actionCtx.WithArangoMemberStatusUpdate(ctx, member.GetNamespace(), member.GetName(), updateMemberStatusArgs)
+	err := a.actionCtx.WithCurrentArangoMember(member.GetName()).UpdateStatus(ctx, updateMemberStatusArgs)
 	if err != nil {
 		return errors.WithMessage(err, "Error while updating member status")
 	}
@@ -118,7 +117,6 @@ func (a actionRuntimeContainerArgsUpdate) Post(ctx context.Context) error {
 
 func (a *actionRuntimeContainerArgsUpdate) ReloadComponents() []throttle.Component {
 	return []throttle.Component{
-		throttle.ArangoMember,
 		throttle.Pod,
 	}
 }

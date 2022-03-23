@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/arangodb/go-driver"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoclustersynchronization"
@@ -43,7 +44,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/rs/zerolog"
-	"github.com/arangodb/kube-arangodb/pkg/logging"
 )
 
 var (
@@ -140,6 +140,14 @@ type inspectorState struct {
 	versionInfo driver.Version
 
 	static bool
+}
+
+func (i *inspectorState) Client() kclient.Client {
+	return i.client
+}
+
+func (i *inspectorState) Namespace() string {
+	return i.namespace
 }
 
 func (i *inspectorState) LastRefresh() time.Time {

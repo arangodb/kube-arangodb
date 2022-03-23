@@ -56,6 +56,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/chaos"
 	memberState "github.com/arangodb/kube-arangodb/pkg/deployment/member"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resilience"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -140,6 +141,14 @@ type Deployment struct {
 	haveServiceMonitorCRD     bool
 
 	memberState memberState.StateInspector
+}
+
+func (d *Deployment) WithArangoMember(cache inspectorInterface.Inspector, timeout time.Duration, name string) reconciler.ArangoMemberModContext {
+	return reconciler.NewArangoMemberModContext(cache, timeout, name)
+}
+
+func (d *Deployment) WithCurrentArangoMember(name string) reconciler.ArangoMemberModContext {
+	return d.WithArangoMember(d.currentState, globals.GetGlobals().Timeouts().Kubernetes().Get(), name)
 }
 
 func (d *Deployment) GetMembersState() memberState.StateInspector {

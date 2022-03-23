@@ -24,8 +24,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -161,18 +159,17 @@ func (r *Resources) EnsureArangoMembers(ctx context.Context, cachedStatus inspec
 	s, _ := r.context.GetStatus()
 	obj := r.context.GetAPIObject()
 
-	reconcileRequired := k8sutil.NewReconcile(cachedStatus)
-
 	if err := s.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
 		for _, member := range list {
 			name := member.ArangoMemberName(r.context.GetAPIObject().GetName(), group)
 
-			if m, ok := cachedStatus.ArangoMember().V1().GetSimple(name); !ok {
+			c := r.context.WithCurrentArangoMember(name)
+
+			if !c.Exists(ctx) {
 				// Create ArangoMember
-				a := api.ArangoMember{
+				obj := &api.ArangoMember{
 					ObjectMeta: metav1.ObjectMeta{
-						Name:      name,
-						Namespace: r.context.GetNamespace(),
+						Name: name,
 						OwnerReferences: []metav1.OwnerReference{
 							obj.AsOwner(),
 						},
@@ -184,41 +181,29 @@ func (r *Resources) EnsureArangoMembers(ctx context.Context, cachedStatus inspec
 					},
 				}
 
-				err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-					_, err := r.context.ArangoMembersModInterface().Create(ctxChild, &a, metav1.CreateOptions{})
-					return err
-				})
-				if err != nil {
+				if err := r.context.WithCurrentArangoMember(name).Create(ctx, obj); err != nil {
 					return err
 				}
 
-				reconcileRequired.Required()
 				continue
 			} else {
-				changed := false
-				if len(m.OwnerReferences) == 0 {
-					m.OwnerReferences = []metav1.OwnerReference{
-						obj.AsOwner(),
-					}
-					changed = true
-				}
-
-				if m.Spec.DeploymentUID == "" {
-					m.Spec.DeploymentUID = obj.GetUID()
-					changed = true
-				}
-				if changed {
-
-					err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-						_, err := r.context.ArangoMembersModInterface().Update(ctxChild, m, metav1.UpdateOptions{})
-						return err
-					})
-					if err != nil {
-						return err
+				if err := c.Update(ctx, func(m *api.ArangoMember) bool {
+					changed := false
+					if len(m.OwnerReferences) == 0 {
+						m.OwnerReferences = []metav1.OwnerReference{
+							obj.AsOwner(),
+						}
+						changed = true
 					}
 
-					reconcileRequired.Required()
-					continue
+					if m.Spec.DeploymentUID == "" {
+						m.Spec.DeploymentUID = obj.GetUID()
+						changed = true
+					}
+
+					return changed
+				}); err != nil {
+					return err
 				}
 			}
 		}
@@ -228,34 +213,18 @@ func (r *Resources) EnsureArangoMembers(ctx context.Context, cachedStatus inspec
 		return err
 	}
 
-	if err := reconcileRequired.Reconcile(ctx); err != nil {
-		return err
-	}
-
 	if err := cachedStatus.ArangoMember().V1().Iterate(func(member *api.ArangoMember) error {
 		_, g, ok := s.Members.ElementByID(member.Spec.ID)
 
 		if !ok || g != member.Spec.Group {
 			// Remove member
-
-			err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-				return r.context.ArangoMembersModInterface().Delete(ctxChild, member.GetName(), metav1.DeleteOptions{})
-			})
-			if err != nil {
-				if !k8sutil.IsNotFound(err) {
-					return err
-				}
+			if err := r.context.WithCurrentArangoMember(member.GetName()).Delete(ctx); err != nil {
+				return err
 			}
-
-			reconcileRequired.Required()
 		}
 
 		return nil
 	}, arangomemberv1.FilterByDeploymentUID(obj.GetUID())); err != nil {
-		return err
-	}
-
-	if err := reconcileRequired.Reconcile(ctx); err != nil {
 		return err
 	}
 
