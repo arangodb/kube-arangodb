@@ -62,12 +62,12 @@ func init() {
 
 // Run the provisioner
 func cmdStorageProvisionerRun(cmd *cobra.Command, args []string) {
-	//goflag.CommandLine.Parse([]string{"-logtostderr"})
 	var err error
-	logService, err = logging.NewService(defaultLogLevel, logLevels)
-	if err != nil {
+	if err := logging.InitGlobalLogger(defaultLogLevel, logLevels); err != nil {
 		cliLog.Fatal().Err(err).Msg("Failed to initialize log service")
 	}
+
+	logService = logging.GlobalLogger()
 
 	// Log version
 

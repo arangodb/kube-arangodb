@@ -40,8 +40,8 @@ var persistentVolumeClaimsInspectorLoaderObj = persistentVolumeClaimsInspectorLo
 type persistentVolumeClaimsInspectorLoader struct {
 }
 
-func (p persistentVolumeClaimsInspectorLoader) Throttle(t throttle.Components) throttle.Throttle {
-	return t.PersistentVolumeClaim()
+func (p persistentVolumeClaimsInspectorLoader) Component() throttle.Component {
+	return throttle.PersistentVolumeClaim
 }
 
 func (p persistentVolumeClaimsInspectorLoader) Load(ctx context.Context, i *inspectorState) {

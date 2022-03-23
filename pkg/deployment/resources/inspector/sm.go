@@ -40,8 +40,8 @@ var serviceMonitorsInspectorLoaderObj = serviceMonitorsInspectorLoader{}
 type serviceMonitorsInspectorLoader struct {
 }
 
-func (p serviceMonitorsInspectorLoader) Throttle(t throttle.Components) throttle.Throttle {
-	return t.ServiceMonitor()
+func (p serviceMonitorsInspectorLoader) Component() throttle.Component {
+	return throttle.ServiceMonitor
 }
 
 func (p serviceMonitorsInspectorLoader) Load(ctx context.Context, i *inspectorState) {

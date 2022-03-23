@@ -40,8 +40,8 @@ var secretsInspectorLoaderObj = secretsInspectorLoader{}
 type secretsInspectorLoader struct {
 }
 
-func (p secretsInspectorLoader) Throttle(t throttle.Components) throttle.Throttle {
-	return t.Secret()
+func (p secretsInspectorLoader) Component() throttle.Component {
+	return throttle.Secret
 }
 
 func (p secretsInspectorLoader) Load(ctx context.Context, i *inspectorState) {

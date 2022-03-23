@@ -40,8 +40,8 @@ var nodesInspectorLoaderObj = nodesInspectorLoader{}
 type nodesInspectorLoader struct {
 }
 
-func (p nodesInspectorLoader) Throttle(t throttle.Components) throttle.Throttle {
-	return t.Node()
+func (p nodesInspectorLoader) Component() throttle.Component {
+	return throttle.Node
 }
 
 func (p nodesInspectorLoader) Load(ctx context.Context, i *inspectorState) {

@@ -40,8 +40,8 @@ var serviceAccountsInspectorLoaderObj = serviceAccountsInspectorLoader{}
 type serviceAccountsInspectorLoader struct {
 }
 
-func (p serviceAccountsInspectorLoader) Throttle(t throttle.Components) throttle.Throttle {
-	return t.ServiceAccount()
+func (p serviceAccountsInspectorLoader) Component() throttle.Component {
+	return throttle.ServiceAccount
 }
 
 func (p serviceAccountsInspectorLoader) Load(ctx context.Context, i *inspectorState) {

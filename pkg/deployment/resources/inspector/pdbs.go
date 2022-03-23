@@ -43,8 +43,8 @@ var podDisruptionBudgetsInspectorLoaderObj = podDisruptionBudgetsInspectorLoader
 type podDisruptionBudgetsInspectorLoader struct {
 }
 
-func (p podDisruptionBudgetsInspectorLoader) Throttle(t throttle.Components) throttle.Throttle {
-	return t.PodDisruptionBudget()
+func (p podDisruptionBudgetsInspectorLoader) Component() throttle.Component {
+	return throttle.PodDisruptionBudget
 }
 
 func (p podDisruptionBudgetsInspectorLoader) Load(ctx context.Context, i *inspectorState) {

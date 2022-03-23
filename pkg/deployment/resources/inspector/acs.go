@@ -40,8 +40,8 @@ var arangoClusterSynchronizationsInspectorLoaderObj = arangoClusterSynchronizati
 type arangoClusterSynchronizationsInspectorLoader struct {
 }
 
-func (p arangoClusterSynchronizationsInspectorLoader) Throttle(t throttle.Components) throttle.Throttle {
-	return t.ArangoClusterSynchronization()
+func (p arangoClusterSynchronizationsInspectorLoader) Component() throttle.Component {
+	return throttle.ArangoClusterSynchronization
 }
 
 func (p arangoClusterSynchronizationsInspectorLoader) Load(ctx context.Context, i *inspectorState) {

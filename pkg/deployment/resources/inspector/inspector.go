@@ -42,6 +42,8 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
+	"github.com/rs/zerolog"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 )
 
 var (
@@ -85,7 +87,7 @@ func (i inspectorLoaders) Get(name string) int {
 type inspectorLoader interface {
 	Name() string
 
-	Throttle(t throttle.Components) throttle.Throttle
+	Component() throttle.Component
 
 	Load(context context.Context, i *inspectorState)
 
@@ -105,6 +107,7 @@ func NewInspector(throttles throttle.Components, client kclient.Client, namespac
 		namespace: namespace,
 		client:    client,
 		throttles: throttles,
+		logger:    logging.GlobalLogger().MustGetLogger(logging.LoggerNameInspector),
 	}
 
 	return i
@@ -117,6 +120,8 @@ type inspectorState struct {
 	client    kclient.Client
 
 	last time.Time
+
+	logger zerolog.Logger
 
 	pods                          *podsInspector
 	secrets                       *secretsInspector
@@ -228,15 +233,29 @@ func (i *inspectorState) refreshInThreads(ctx context.Context, threads int, load
 		n.versionInfo = driver.Version(strings.TrimPrefix(v.GitVersion, "v"))
 	}
 
+	start := time.Now()
+
+	i.logger.Debug().Msg("Inspector refresh start")
+
 	for id := range loaders {
 		go func(id int) {
 			defer m.Done()
 
-			if !loaders[id].Throttle(n.throttles).Throttle() {
+			c := loaders[id].Component()
+
+			t := n.throttles.Get(c)
+
+			if !t.Throttle() {
+				i.logger.Debug().Str("component", string(c)).Msg("Inspector refresh skipped")
 				return
 			}
 
-			defer loaders[id].Throttle(n.throttles).Delay()
+			i.logger.Debug().Str("component", string(c)).Msg("Inspector refresh")
+
+			defer func() {
+				i.logger.Debug().Str("component", string(c)).Dur("duration", time.Since(start)).Msg("Inspector done")
+				t.Delay()
+			}()
 
 			<-p
 			defer func() {
@@ -248,6 +267,8 @@ func (i *inspectorState) refreshInThreads(ctx context.Context, threads int, load
 	}
 
 	m.Wait()
+
+	i.logger.Debug().Dur("duration", time.Since(start)).Msg("Inspector refresh done")
 
 	for id := range loaders {
 		if err := loaders[id].Verify(n); err != nil {
@@ -336,5 +357,6 @@ func (i *inspectorState) copyCore() *inspectorState {
 		throttles:                     i.throttles.Copy(),
 		versionInfo:                   i.versionInfo,
 		static:                        i.static,
+		logger:                        i.logger,
 	}
 }

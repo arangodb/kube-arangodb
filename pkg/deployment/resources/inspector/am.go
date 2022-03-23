@@ -40,8 +40,8 @@ var arangoMembersInspectorLoaderObj = arangoMembersInspectorLoader{}
 type arangoMembersInspectorLoader struct {
 }
 
-func (p arangoMembersInspectorLoader) Throttle(t throttle.Components) throttle.Throttle {
-	return t.ArangoMember()
+func (p arangoMembersInspectorLoader) Component() throttle.Component {
+	return throttle.ArangoMember
 }
 
 func (p arangoMembersInspectorLoader) Load(ctx context.Context, i *inspectorState) {

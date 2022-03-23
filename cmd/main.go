@@ -226,10 +226,12 @@ func executeMain(cmd *cobra.Command, args []string) {
 
 	// Prepare log service
 	var err error
-	logService, err = logging.NewService(defaultLogLevel, logLevels)
-	if err != nil {
+	if err := logging.InitGlobalLogger(defaultLogLevel, logLevels); err != nil {
 		cliLog.Fatal().Err(err).Msg("Failed to initialize log service")
 	}
+
+	logService = logging.GlobalLogger()
+
 	logService.ConfigureRootLogger(func(log zerolog.Logger) zerolog.Logger {
 		podNameParts := strings.Split(name, "-")
 		operatorID := podNameParts[len(podNameParts)-1]

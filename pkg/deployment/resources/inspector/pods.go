@@ -40,8 +40,8 @@ var podsInspectorLoaderObj = podsInspectorLoader{}
 type podsInspectorLoader struct {
 }
 
-func (p podsInspectorLoader) Throttle(t throttle.Components) throttle.Throttle {
-	return t.Pod()
+func (p podsInspectorLoader) Component() throttle.Component {
+	return throttle.Pod
 }
 
 func (p podsInspectorLoader) Load(ctx context.Context, i *inspectorState) {
