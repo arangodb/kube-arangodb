@@ -31,6 +31,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
+	servicev1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service/v1"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -66,14 +67,14 @@ func CreateExporterClientServiceName(deploymentName string) string {
 }
 
 // CreateExporterService
-func CreateExporterService(ctx context.Context, cachedStatus service.Inspector, svcs service.ModInterface,
+func CreateExporterService(ctx context.Context, cachedStatus service.Inspector, svcs servicev1.ModInterface,
 	deployment metav1.Object, owner metav1.OwnerReference) (string, bool, error) {
 	deploymentName := deployment.GetName()
 	svcName := CreateExporterClientServiceName(deploymentName)
 
 	selectorLabels := LabelsForExporterServiceSelector(deploymentName)
 
-	if _, exists := cachedStatus.Service(svcName); exists {
+	if _, exists := cachedStatus.Service().V1().GetSimple(svcName); exists {
 		return svcName, false, nil
 	}
 
@@ -85,7 +86,7 @@ func CreateExporterService(ctx context.Context, cachedStatus service.Inspector, 
 		Spec: core.ServiceSpec{
 			ClusterIP: core.ClusterIPNone,
 			Ports: []core.ServicePort{
-				core.ServicePort{
+				{
 					Name:     "exporter",
 					Protocol: core.ProtocolTCP,
 					Port:     ArangoExporterPort,
@@ -108,12 +109,12 @@ func CreateExporterService(ctx context.Context, cachedStatus service.Inspector, 
 // If the service already exists, nil is returned.
 // If another error occurs, that error is returned.
 // The returned bool is true if the service is created, or false when the service already existed.
-func CreateHeadlessService(ctx context.Context, svcs service.ModInterface, deployment metav1.Object,
+func CreateHeadlessService(ctx context.Context, svcs servicev1.ModInterface, deployment metav1.Object,
 	owner metav1.OwnerReference) (string, bool, error) {
 	deploymentName := deployment.GetName()
 	svcName := CreateHeadlessServiceName(deploymentName)
 	ports := []core.ServicePort{
-		core.ServicePort{
+		{
 			Name:     "server",
 			Protocol: core.ProtocolTCP,
 			Port:     ArangoPort,
@@ -132,12 +133,12 @@ func CreateHeadlessService(ctx context.Context, svcs service.ModInterface, deplo
 // If the service already exists, nil is returned.
 // If another error occurs, that error is returned.
 // The returned bool is true if the service is created, or false when the service already existed.
-func CreateDatabaseClientService(ctx context.Context, svcs service.ModInterface, deployment metav1.Object, single bool,
+func CreateDatabaseClientService(ctx context.Context, svcs servicev1.ModInterface, deployment metav1.Object, single bool,
 	owner metav1.OwnerReference) (string, bool, error) {
 	deploymentName := deployment.GetName()
 	svcName := CreateDatabaseClientServiceName(deploymentName)
 	ports := []core.ServicePort{
-		core.ServicePort{
+		{
 			Name:     "server",
 			Protocol: core.ProtocolTCP,
 			Port:     ArangoPort,
@@ -162,12 +163,12 @@ func CreateDatabaseClientService(ctx context.Context, svcs service.ModInterface,
 // If the service already exists, nil is returned.
 // If another error occurs, that error is returned.
 // The returned bool is true if the service is created, or false when the service already existed.
-func CreateExternalAccessService(ctx context.Context, svcs service.ModInterface, svcName, role string,
+func CreateExternalAccessService(ctx context.Context, svcs servicev1.ModInterface, svcName, role string,
 	deployment metav1.Object, serviceType core.ServiceType, port, nodePort int, loadBalancerIP string,
 	loadBalancerSourceRanges []string, owner metav1.OwnerReference) (string, bool, error) {
 	deploymentName := deployment.GetName()
 	ports := []core.ServicePort{
-		core.ServicePort{
+		{
 			Name:     "server",
 			Protocol: core.ProtocolTCP,
 			Port:     int32(port),
@@ -186,7 +187,7 @@ func CreateExternalAccessService(ctx context.Context, svcs service.ModInterface,
 // If the service already exists, nil is returned.
 // If another error occurs, that error is returned.
 // The returned bool is true if the service is created, or false when the service already existed.
-func createService(ctx context.Context, svcs service.ModInterface, svcName, deploymentName, clusterIP, role string,
+func createService(ctx context.Context, svcs servicev1.ModInterface, svcName, deploymentName, clusterIP, role string,
 	serviceType core.ServiceType, ports []core.ServicePort, loadBalancerIP string, loadBalancerSourceRanges []string,
 	publishNotReadyAddresses bool, owner metav1.OwnerReference) (bool, error) {
 	labels := LabelsForDeployment(deploymentName, role)
@@ -216,7 +217,7 @@ func createService(ctx context.Context, svcs service.ModInterface, svcName, depl
 }
 
 // CreateServiceURL creates a URL used to reach the given service.
-func CreateServiceURL(svc core.Service, scheme string, portPredicate func(core.ServicePort) bool, nodeFetcher func() (core.NodeList, error)) (string, error) {
+func CreateServiceURL(svc core.Service, scheme string, portPredicate func(core.ServicePort) bool, nodeFetcher func() ([]*core.Node, error)) (string, error) {
 	var port int32
 	var nodePort int32
 	portFound := false
@@ -255,10 +256,10 @@ func CreateServiceURL(svc core.Service, scheme string, portPredicate func(core.S
 		if err != nil {
 			return "", errors.WithStack(err)
 		}
-		if len(nodeList.Items) == 0 {
+		if len(nodeList) == 0 {
 			return "", errors.WithStack(errors.Newf("No nodes found"))
 		}
-		node := nodeList.Items[rand.Intn(len(nodeList.Items))]
+		node := nodeList[rand.Intn(len(nodeList))]
 		if len(node.Status.Addresses) > 0 {
 			host = node.Status.Addresses[0].Address
 		}

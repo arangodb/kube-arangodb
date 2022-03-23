@@ -57,9 +57,9 @@ func (r *Resources) prepareAgencyPodTermination(ctx context.Context, log zerolog
 
 	// Check node the pod is scheduled on. Only if not in namespaced scope
 	agentDataWillBeGone := false
-	if nodes, ok := r.context.GetCachedStatus().GetNodes(); ok {
+	if nodes, err := r.context.GetCachedStatus().Node().V1(); err == nil {
 		if !r.context.GetScope().IsNamespaced() && p.Spec.NodeName != "" {
-			node, ok := nodes.Node(p.Spec.NodeName)
+			node, ok := nodes.GetSimple(p.Spec.NodeName)
 			if !ok {
 				log.Warn().Msg("Node not found")
 			} else if node.Spec.Unschedulable {
@@ -71,7 +71,7 @@ func (r *Resources) prepareAgencyPodTermination(ctx context.Context, log zerolog
 	// Check PVC
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
-	pvc, err := r.context.GetCachedStatus().PersistentVolumeClaimReadInterface().Get(ctxChild, memberStatus.PersistentVolumeClaimName, metav1.GetOptions{})
+	pvc, err := r.context.GetCachedStatus().PersistentVolumeClaim().V1().Read().Get(ctxChild, memberStatus.PersistentVolumeClaimName, metav1.GetOptions{})
 	if err != nil {
 		log.Warn().Err(err).Msg("Failed to get PVC for member")
 		return errors.WithStack(err)
@@ -142,8 +142,8 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 
 	// Check node the pod is scheduled on
 	dbserverDataWillBeGone := false
-	if nodes, ok := r.context.GetCachedStatus().GetNodes(); ok {
-		node, ok := nodes.Node(p.Spec.NodeName)
+	if nodes, err := r.context.GetCachedStatus().Node().V1(); err == nil {
+		node, ok := nodes.GetSimple(p.Spec.NodeName)
 		if !ok {
 			log.Warn().Msg("Node not found")
 		} else if node.Spec.Unschedulable {
@@ -156,7 +156,7 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 	// Check PVC
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
-	pvc, err := r.context.GetCachedStatus().PersistentVolumeClaimReadInterface().Get(ctxChild, memberStatus.PersistentVolumeClaimName, metav1.GetOptions{})
+	pvc, err := r.context.GetCachedStatus().PersistentVolumeClaim().V1().Read().Get(ctxChild, memberStatus.PersistentVolumeClaimName, metav1.GetOptions{})
 	if err != nil {
 		log.Warn().Err(err).Msg("Failed to get PVC for member")
 		return errors.WithStack(err)

@@ -22,149 +22,168 @@ package inspector
 
 import (
 	"context"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/node"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	core "k8s.io/api/core/v1"
-	policy "k8s.io/api/policy/v1beta1"
-	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/kubernetes"
 )
 
-func (i *inspector) GetNodes() (node.Inspector, bool) {
-	i.lock.Lock()
-	defer i.lock.Unlock()
+func init() {
+	requireRegisterInspectorLoader(nodesInspectorLoaderObj)
+}
 
-	if i.nodes == nil {
-		return nil, false
+var nodesInspectorLoaderObj = nodesInspectorLoader{}
+
+type nodesInspectorLoader struct {
+}
+
+func (p nodesInspectorLoader) Component() throttle.Component {
+	return throttle.Node
+}
+
+func (p nodesInspectorLoader) Load(ctx context.Context, i *inspectorState) {
+	var q nodesInspector
+	p.loadV1(ctx, i, &q)
+	i.nodes = &q
+	q.state = i
+	q.last = time.Now()
+}
+
+func (p nodesInspectorLoader) loadV1(ctx context.Context, i *inspectorState, q *nodesInspector) {
+	var z nodesInspectorV1
+
+	z.nodeInspector = q
+
+	z.nodes, z.err = p.getV1Nodes(ctx, i)
+
+	q.v1 = &z
+}
+
+func (p nodesInspectorLoader) getV1Nodes(ctx context.Context, i *inspectorState) (map[string]*core.Node, error) {
+	objs, err := p.getV1NodesList(ctx, i)
+	if err != nil {
+		return nil, err
 	}
 
-	return i.nodes, i.nodes.accessible
-}
+	r := make(map[string]*core.Node, len(objs))
 
-type nodeLoader struct {
-	accessible bool
-
-	nodes map[string]*core.Node
-}
-
-func (n *nodeLoader) Node(name string) (*core.Node, bool) {
-	node, ok := n.nodes[name]
-	if !ok {
-		return nil, false
+	for id := range objs {
+		r[objs[id].GetName()] = objs[id]
 	}
 
-	return node, true
+	return r, nil
 }
 
-func (n *nodeLoader) Nodes() []*core.Node {
-	var r []*core.Node
-	for _, node := range n.nodes {
-		r = append(r, node)
-	}
-
-	return r
-}
-
-func (n *nodeLoader) IterateNodes(action node.Action, filters ...node.Filter) error {
-	for _, node := range n.Nodes() {
-		if err := n.iterateNode(node, action, filters...); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (n *nodeLoader) iterateNode(node *core.Node, action node.Action, filters ...node.Filter) error {
-	for _, filter := range filters {
-		if !filter(node) {
-			return nil
-		}
-	}
-
-	return action(node)
-}
-
-func (n *nodeLoader) NodeReadInterface() node.ReadInterface {
-	return &nodeReadInterface{i: n}
-}
-
-type nodeReadInterface struct {
-	i *nodeLoader
-}
-
-func (s nodeReadInterface) Get(ctx context.Context, name string, opts meta.GetOptions) (*core.Node, error) {
-	if s, ok := s.i.Node(name); !ok {
-		return nil, apiErrors.NewNotFound(schema.GroupResource{
-			Group:    policy.GroupName,
-			Resource: "nodes",
-		}, name)
-	} else {
-		return s, nil
-	}
-}
-
-func nodePointer(node core.Node) *core.Node {
-	return &node
-}
-
-func nodesToMap(ctx context.Context, inspector *inspector, k kubernetes.Interface) func() error {
-	return func() error {
-		nodes, err := getNodes(ctx, k, "")
-		if err != nil {
-			if apiErrors.IsUnauthorized(err) {
-				inspector.nodes = &nodeLoader{
-					accessible: false,
-				}
-				return nil
-			}
-			return err
-		}
-
-		nodesMap := map[string]*core.Node{}
-
-		for _, node := range nodes {
-			_, exists := nodesMap[node.GetName()]
-			if exists {
-				return errors.Newf("ArangoMember %s already exists in map, error received", node.GetName())
-			}
-
-			nodesMap[node.GetName()] = nodePointer(node)
-		}
-
-		inspector.nodes = &nodeLoader{
-			accessible: true,
-			nodes:      nodesMap,
-		}
-
-		return nil
-	}
-}
-
-func getNodes(ctx context.Context, k kubernetes.Interface, cont string) ([]core.Node, error) {
+func (p nodesInspectorLoader) getV1NodesList(ctx context.Context, i *inspectorState) ([]*core.Node, error) {
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
-	nodes, err := k.CoreV1().Nodes().List(ctxChild, meta.ListOptions{
-		Limit:    globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
-		Continue: cont,
+	obj, err := i.client.Kubernetes().CoreV1().Nodes().List(ctxChild, meta.ListOptions{
+		Limit: globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
 	})
 
 	if err != nil {
 		return nil, err
 	}
 
-	if nodes.Continue != "" {
-		nextNodeLayer, err := getNodes(ctx, k, nodes.Continue)
+	items := obj.Items
+	cont := obj.Continue
+	var s = int64(len(items))
+
+	if z := obj.RemainingItemCount; z != nil {
+		s += *z
+	}
+
+	ptrs := make([]*core.Node, 0, s)
+
+	for {
+		for id := range items {
+			ptrs = append(ptrs, &items[id])
+		}
+
+		if cont == "" {
+			break
+		}
+
+		items, cont, err = p.getV1NodesListRequest(ctx, i, cont)
+
 		if err != nil {
 			return nil, err
 		}
-
-		return append(nodes.Items, nextNodeLayer...), nil
 	}
 
-	return nodes.Items, nil
+	return ptrs, nil
+}
+
+func (p nodesInspectorLoader) getV1NodesListRequest(ctx context.Context, i *inspectorState, cont string) ([]core.Node, string, error) {
+	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
+	defer cancel()
+	obj, err := i.client.Kubernetes().CoreV1().Nodes().List(ctxChild, meta.ListOptions{
+		Limit:    globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
+		Continue: cont,
+	})
+
+	if err != nil {
+		return nil, "", err
+	}
+
+	return obj.Items, obj.Continue, err
+}
+
+func (p nodesInspectorLoader) Verify(i *inspectorState) error {
+	return nil
+}
+
+func (p nodesInspectorLoader) Copy(from, to *inspectorState, override bool) {
+	if to.nodes != nil {
+		if !override {
+			return
+		}
+	}
+
+	to.nodes = from.nodes
+	to.nodes.state = to
+}
+
+func (p nodesInspectorLoader) Name() string {
+	return "nodes"
+}
+
+type nodesInspector struct {
+	state *inspectorState
+
+	last time.Time
+
+	v1 *nodesInspectorV1
+}
+
+func (p *nodesInspector) LastRefresh() time.Time {
+	return p.last
+}
+
+func (p *nodesInspector) IsStatic() bool {
+	return p.state.IsStatic()
+}
+
+func (p *nodesInspector) Refresh(ctx context.Context) error {
+	p.Throttle(p.state.throttles).Invalidate()
+	return p.state.refresh(ctx, nodesInspectorLoaderObj)
+}
+
+func (p nodesInspector) Throttle(c throttle.Components) throttle.Throttle {
+	return c.Node()
+}
+
+func (p *nodesInspector) validate() error {
+	if p == nil {
+		return errors.Newf("NodeInspector is nil")
+	}
+
+	if p.state == nil {
+		return errors.Newf("Parent is nil")
+	}
+
+	return p.v1.validate()
 }

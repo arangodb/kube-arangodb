@@ -24,13 +24,13 @@ import (
 	"context"
 	"time"
 
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
+	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
 )
 
 const (
@@ -46,7 +46,7 @@ func (r *Resources) CleanupTerminatedPods(ctx context.Context, cachedStatus insp
 
 	// Update member status from all pods found
 	status, _ := r.context.GetStatus()
-	err := cachedStatus.IteratePods(func(pod *v1.Pod) error {
+	err := cachedStatus.Pod().V1().Iterate(func(pod *core.Pod) error {
 		if k8sutil.IsArangoDBImageIDAndVersionPod(pod) {
 			// Image ID pods are not relevant to inspect here
 			return nil
@@ -91,7 +91,7 @@ func (r *Resources) CleanupTerminatedPods(ctx context.Context, cachedStatus insp
 		}
 
 		return nil
-	}, inspector.FilterPodsByLabels(k8sutil.LabelsForDeployment(r.context.GetAPIObject().GetName(), "")))
+	}, podv1.FilterPodsByLabels(k8sutil.LabelsForDeployment(r.context.GetAPIObject().GetName(), "")))
 	if err != nil {
 		return 0, err
 	}

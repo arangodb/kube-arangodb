@@ -33,8 +33,6 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
-
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	core "k8s.io/api/core/v1"
@@ -157,7 +155,9 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 					},
 				}
 
-				if _, err := d.ArangoMembersModInterface().Create(context.Background(), &member, metav1.CreateOptions{}); err != nil {
+				c := d.WithCurrentArangoMember(m.ArangoMemberName(d.GetName(), group))
+
+				if err := c.Create(context.Background(), &member); err != nil {
 					return err
 				}
 
@@ -172,15 +172,14 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 					return err
 				}
 
-				cache, err := inspector.NewInspector(context.Background(), d.deps.Client, d.GetNamespace())
-				require.NoError(t, err)
+				require.NoError(t, d.currentState.Refresh(context.Background()))
 
 				groupSpec := d.apiObject.Spec.GetServerGroupSpec(group)
 
 				image, ok := d.resources.SelectImage(d.apiObject.Spec, d.status.last)
 				require.True(t, ok)
 
-				template, err := d.resources.RenderPodTemplateForMember(context.Background(), cache, d.apiObject.Spec, d.status.last, m.ID, image)
+				template, err := d.resources.RenderPodTemplateForMember(context.Background(), d.GetCachedStatus(), d.apiObject.Spec, d.status.last, m.ID, image)
 				if err != nil {
 					return err
 				}
@@ -194,11 +193,17 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 				member.Status.Template = podTemplate
 				member.Spec.Template = podTemplate
 
-				if _, err := d.ArangoMembersModInterface().Update(context.Background(), &member, metav1.UpdateOptions{}); err != nil {
+				if err := c.Update(context.Background(), func(obj *api.ArangoMember) bool {
+					obj.Spec.Template = podTemplate
+					return true
+				}); err != nil {
 					return err
 				}
 
-				if _, err := d.ArangoMembersModInterface().UpdateStatus(context.Background(), &member, metav1.UpdateOptions{}); err != nil {
+				if err := c.UpdateStatus(context.Background(), func(obj *api.ArangoMember, s *api.ArangoMemberStatus) bool {
+					s.Template = podTemplate
+					return true
+				}); err != nil {
 					return err
 				}
 			}

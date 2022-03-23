@@ -20,9 +20,12 @@
 
 package logging
 
+import "github.com/rs/zerolog"
+
 const (
 	LoggerNameOperator              = "operator"
 	LoggerNameDeployment            = "deployment"
+	LoggerNameInspector             = "inspector"
 	LoggerNameKLog                  = "klog"
 	LoggerNameServer                = "server"
 	LoggerNameDeploymentReplication = "deployment-replication"
@@ -32,10 +35,15 @@ const (
 	LoggerNameEventRecorder         = "event-recorder"
 )
 
+var defaultLogLevels = map[string]zerolog.Level{
+	LoggerNameInspector: zerolog.WarnLevel,
+}
+
 func LoggerNames() []string {
 	return []string{
 		LoggerNameOperator,
 		LoggerNameDeployment,
+		LoggerNameInspector,
 		LoggerNameKLog,
 		LoggerNameServer,
 		LoggerNameDeploymentReplication,

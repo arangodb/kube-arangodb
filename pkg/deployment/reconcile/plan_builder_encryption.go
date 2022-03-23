@@ -98,7 +98,7 @@ func createEncryptionKey(ctx context.Context,
 		return nil
 	}
 
-	secret, exists := cachedStatus.Secret(spec.RocksDB.Encryption.GetKeySecretName())
+	secret, exists := cachedStatus.Secret().V1().GetSimple(spec.RocksDB.Encryption.GetKeySecretName())
 	if !exists {
 		return nil
 	}
@@ -113,7 +113,7 @@ func createEncryptionKey(ctx context.Context,
 		return nil
 	}
 
-	keyfolder, exists := cachedStatus.Secret(pod.GetEncryptionFolderSecretName(context.GetName()))
+	keyfolder, exists := cachedStatus.Secret().V1().GetSimple(pod.GetEncryptionFolderSecretName(context.GetName()))
 	if !exists {
 		log.Error().Msgf("Encryption key folder does not exist")
 		return nil
@@ -166,7 +166,7 @@ func createEncryptionKeyStatusUpdateRequired(log zerolog.Logger, spec api.Deploy
 		return false
 	}
 
-	keyfolder, exists := cachedStatus.Secret(pod.GetEncryptionFolderSecretName(context.GetName()))
+	keyfolder, exists := cachedStatus.Secret().V1().GetSimple(pod.GetEncryptionFolderSecretName(context.GetName()))
 	if !exists {
 		log.Error().Msgf("Encryption key folder does not exist")
 		return false
@@ -185,7 +185,7 @@ func createEncryptionKeyCleanPlan(ctx context.Context,
 		return nil
 	}
 
-	keyfolder, exists := cachedStatus.Secret(pod.GetEncryptionFolderSecretName(context.GetName()))
+	keyfolder, exists := cachedStatus.Secret().V1().GetSimple(pod.GetEncryptionFolderSecretName(context.GetName()))
 	if !exists {
 		log.Error().Msgf("Encryption key folder does not exist")
 		return nil
@@ -201,7 +201,7 @@ func createEncryptionKeyCleanPlan(ctx context.Context,
 		return nil
 	}
 
-	secret, exists := cachedStatus.Secret(spec.RocksDB.Encryption.GetKeySecretName())
+	secret, exists := cachedStatus.Secret().V1().GetSimple(spec.RocksDB.Encryption.GetKeySecretName())
 	if !exists {
 		return nil
 	}

@@ -24,68 +24,49 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-	"github.com/stretchr/testify/require"
-	core "k8s.io/api/core/v1"
-
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
+	"github.com/stretchr/testify/require"
 
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"context"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
+	"github.com/arangodb/kube-arangodb/pkg/util/tests"
+	core "k8s.io/api/core/v1"
 )
 
-type inspectorMock interface {
-	AddService(t *testing.T, svc ...*core.Service) inspectorMock
-
-	RegisterMemberStatus(t *testing.T, apiObject *api.ArangoDeployment, group api.ServerGroup, members ...api.MemberStatus) inspectorMock
-
-	Get(t *testing.T) inspectorInterface.Inspector
-}
-
-func newInspectorMock() inspectorMock {
-	return inspectorMockStruct{
-		services: map[string]*core.Service{},
-	}
-}
-
-type inspectorMockStruct struct {
-	services map[string]*core.Service
-}
-
-func (i inspectorMockStruct) RegisterMemberStatus(t *testing.T, apiObject *api.ArangoDeployment, group api.ServerGroup, members ...api.MemberStatus) inspectorMock {
-	var z inspectorMock = i
-	for _, member := range members {
-		memberName := member.ArangoMemberName(apiObject.GetName(), group)
+func createClient(f kclient.FakeClientBuilder, apiObject *api.ArangoDeployment, group api.ServerGroup, statuses ...api.MemberStatus) kclient.FakeClientBuilder {
+	for _, a := range statuses {
+		memberName := a.ArangoMemberName(apiObject.GetName(), group)
 
 		svc := core.Service{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: memberName,
+				Name:      memberName,
+				Namespace: tests.FakeNamespace,
 			},
 			Spec: core.ServiceSpec{
 				ClusterIP: "127.0.0.1",
 			},
 		}
-		z = z.AddService(t, &svc)
+
+		f = f.Add(&svc)
 	}
-	return z
+
+	return f
 }
 
-func (i inspectorMockStruct) AddService(t *testing.T, svc ...*core.Service) inspectorMock {
-	for _, s := range svc {
-		i.services[s.GetName()] = s
-	}
-
+func createInspector(t *testing.T, f kclient.FakeClientBuilder) inspector.Inspector {
+	c := f.Client()
+	i := tests.NewInspector(t, c)
+	require.NoError(t, i.Refresh(context.Background()))
 	return i
-}
-
-func (i inspectorMockStruct) Get(t *testing.T) inspectorInterface.Inspector {
-	return inspector.NewInspectorFromData(nil, nil, nil, i.services, nil, nil, nil, nil, nil, nil, nil, "")
 }
 
 // TestCreateArangodArgsAgent tests createArangodArgs for agent.
@@ -96,7 +77,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 		apiObject := &api.ArangoDeployment{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "name",
-				Namespace: "ns",
+				Namespace: tests.FakeNamespace,
 			},
 			Spec: api.DeploymentSpec{
 				Mode: api.NewMode(api.DeploymentModeCluster),
@@ -120,18 +101,19 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			Member:      api.MemberStatus{ID: "a1"},
 		}
 
-		i := newInspectorMock()
-		i = i.RegisterMemberStatus(t, apiObject, api.ServerGroupAgents, agents...)
+		f := kclient.NewFakeClientBuilder()
+		f = createClient(f, apiObject, api.ServerGroupAgents, agents...)
+		i := createInspector(t, f)
 
-		cmdline, err := createArangodArgs(i.Get(t), input)
+		cmdline, err := createArangodArgs(i, input)
 		require.NoError(t, err)
 		assert.Equal(t,
 			[]string{
 				"--agency.activate=true",
 				"--agency.disaster-recovery-id=a1",
-				"--agency.endpoint=ssl://name-agent-a2.name-int.ns.svc:8529",
-				"--agency.endpoint=ssl://name-agent-a3.name-int.ns.svc:8529",
-				"--agency.my-address=ssl://name-agent-a1.name-int.ns.svc:8529",
+				"--agency.endpoint=ssl://name-agent-a2.name-int." + tests.FakeNamespace + ".svc:8529",
+				"--agency.endpoint=ssl://name-agent-a3.name-int." + tests.FakeNamespace + ".svc:8529",
+				"--agency.my-address=ssl://name-agent-a1.name-int." + tests.FakeNamespace + ".svc:8529",
 				"--agency.size=3",
 				"--agency.supervision=true",
 				"--database.directory=/data",
@@ -155,7 +137,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 		apiObject := &api.ArangoDeployment{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "name",
-				Namespace: "ns",
+				Namespace: tests.FakeNamespace,
 			},
 			Spec: api.DeploymentSpec{
 				Mode: api.NewMode(api.DeploymentModeCluster),
@@ -180,18 +162,19 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			Member:      api.MemberStatus{ID: "a1"},
 		}
 
-		i := newInspectorMock()
-		i = i.RegisterMemberStatus(t, apiObject, api.ServerGroupAgents, agents...)
+		f := kclient.NewFakeClientBuilder()
+		f = createClient(f, apiObject, api.ServerGroupAgents, agents...)
+		i := createInspector(t, f)
 
-		cmdline, err := createArangodArgsWithUpgrade(i.Get(t), input)
+		cmdline, err := createArangodArgsWithUpgrade(i, input)
 		require.NoError(t, err)
 		assert.Equal(t,
 			[]string{
 				"--agency.activate=true",
 				"--agency.disaster-recovery-id=a1",
-				"--agency.endpoint=ssl://name-agent-a2.name-int.ns.svc:8529",
-				"--agency.endpoint=ssl://name-agent-a3.name-int.ns.svc:8529",
-				"--agency.my-address=ssl://name-agent-a1.name-int.ns.svc:8529",
+				"--agency.endpoint=ssl://name-agent-a2.name-int." + tests.FakeNamespace + ".svc:8529",
+				"--agency.endpoint=ssl://name-agent-a3.name-int." + tests.FakeNamespace + ".svc:8529",
+				"--agency.my-address=ssl://name-agent-a1.name-int." + tests.FakeNamespace + ".svc:8529",
 				"--agency.size=3",
 				"--agency.supervision=true",
 				"--database.auto-upgrade=true",
@@ -216,7 +199,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 		apiObject := &api.ArangoDeployment{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "name",
-				Namespace: "ns",
+				Namespace: tests.FakeNamespace,
 			},
 			Spec: api.DeploymentSpec{
 				Mode: api.NewMode(api.DeploymentModeCluster),
@@ -244,18 +227,19 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			Member:      api.MemberStatus{ID: "a1"},
 		}
 
-		i := newInspectorMock()
-		i = i.RegisterMemberStatus(t, apiObject, api.ServerGroupAgents, agents...)
+		f := kclient.NewFakeClientBuilder()
+		f = createClient(f, apiObject, api.ServerGroupAgents, agents...)
+		i := createInspector(t, f)
 
-		cmdline, err := createArangodArgs(i.Get(t), input)
+		cmdline, err := createArangodArgs(i, input)
 		require.NoError(t, err)
 		assert.Equal(t,
 			[]string{
 				"--agency.activate=true",
 				"--agency.disaster-recovery-id=a1",
-				"--agency.endpoint=tcp://name-agent-a2.name-int.ns.svc:8529",
-				"--agency.endpoint=tcp://name-agent-a3.name-int.ns.svc:8529",
-				"--agency.my-address=tcp://name-agent-a1.name-int.ns.svc:8529",
+				"--agency.endpoint=tcp://name-agent-a2.name-int." + tests.FakeNamespace + ".svc:8529",
+				"--agency.endpoint=tcp://name-agent-a3.name-int." + tests.FakeNamespace + ".svc:8529",
+				"--agency.my-address=tcp://name-agent-a1.name-int." + tests.FakeNamespace + ".svc:8529",
 				"--agency.size=3",
 				"--agency.supervision=true",
 				"--database.directory=/data",
@@ -277,7 +261,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 		apiObject := &api.ArangoDeployment{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "name",
-				Namespace: "ns",
+				Namespace: tests.FakeNamespace,
 			},
 			Spec: api.DeploymentSpec{
 				Mode: api.NewMode(api.DeploymentModeCluster),
@@ -303,18 +287,19 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			Member:      api.MemberStatus{ID: "a1"},
 		}
 
-		i := newInspectorMock()
-		i = i.RegisterMemberStatus(t, apiObject, api.ServerGroupAgents, agents...)
+		f := kclient.NewFakeClientBuilder()
+		f = createClient(f, apiObject, api.ServerGroupAgents, agents...)
+		i := createInspector(t, f)
 
-		cmdline, err := createArangodArgs(i.Get(t), input)
+		cmdline, err := createArangodArgs(i, input)
 		require.NoError(t, err)
 		assert.Equal(t,
 			[]string{
 				"--agency.activate=true",
 				"--agency.disaster-recovery-id=a1",
-				"--agency.endpoint=ssl://name-agent-a2.name-int.ns.svc:8529",
-				"--agency.endpoint=ssl://name-agent-a3.name-int.ns.svc:8529",
-				"--agency.my-address=ssl://name-agent-a1.name-int.ns.svc:8529",
+				"--agency.endpoint=ssl://name-agent-a2.name-int." + tests.FakeNamespace + ".svc:8529",
+				"--agency.endpoint=ssl://name-agent-a3.name-int." + tests.FakeNamespace + ".svc:8529",
+				"--agency.my-address=ssl://name-agent-a1.name-int." + tests.FakeNamespace + ".svc:8529",
 				"--agency.size=3",
 				"--agency.supervision=true",
 				"--database.directory=/data",
@@ -337,7 +322,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 		apiObject := &api.ArangoDeployment{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "name",
-				Namespace: "ns",
+				Namespace: tests.FakeNamespace,
 			},
 			Spec: api.DeploymentSpec{
 				Mode: api.NewMode(api.DeploymentModeCluster),
@@ -362,18 +347,19 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			Member:      api.MemberStatus{ID: "a1"},
 		}
 
-		i := newInspectorMock()
-		i = i.RegisterMemberStatus(t, apiObject, api.ServerGroupAgents, agents...)
+		f := kclient.NewFakeClientBuilder()
+		f = createClient(f, apiObject, api.ServerGroupAgents, agents...)
+		i := createInspector(t, f)
 
-		cmdline, err := createArangodArgs(i.Get(t), input)
+		cmdline, err := createArangodArgs(i, input)
 		require.NoError(t, err)
 		assert.Equal(t,
 			[]string{
 				"--agency.activate=true",
 				"--agency.disaster-recovery-id=a1",
-				"--agency.endpoint=ssl://name-agent-a2.name-int.ns.svc:8529",
-				"--agency.endpoint=ssl://name-agent-a3.name-int.ns.svc:8529",
-				"--agency.my-address=ssl://name-agent-a1.name-int.ns.svc:8529",
+				"--agency.endpoint=ssl://name-agent-a2.name-int." + tests.FakeNamespace + ".svc:8529",
+				"--agency.endpoint=ssl://name-agent-a3.name-int." + tests.FakeNamespace + ".svc:8529",
+				"--agency.my-address=ssl://name-agent-a1.name-int." + tests.FakeNamespace + ".svc:8529",
 				"--agency.size=3",
 				"--agency.supervision=true",
 				"--database.directory=/data",

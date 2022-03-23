@@ -98,7 +98,7 @@ func createMarkToRemovePlan(ctx context.Context,
 				continue
 			}
 
-			pod, found := cachedStatus.Pod(m.PodName)
+			pod, found := cachedStatus.Pod().V1().GetSimple(m.PodName)
 			if !found {
 				continue
 			}
@@ -202,12 +202,12 @@ func createRotateOrUpgradePlanInternal(log zerolog.Logger, apiObject k8sutil.API
 			if m.Member.Conditions.IsTrue(api.ConditionTypeRestart) {
 				return createRotateMemberPlan(log, m.Member, m.Group, spec, "Restart flag present"), false
 			}
-			arangoMember, ok := cachedStatus.ArangoMember(m.Member.ArangoMemberName(apiObject.GetName(), m.Group))
+			arangoMember, ok := cachedStatus.ArangoMember().V1().GetSimple(m.Member.ArangoMemberName(apiObject.GetName(), m.Group))
 			if !ok {
 				continue
 			}
 
-			p, ok := cachedStatus.Pod(m.Member.PodName)
+			p, ok := cachedStatus.Pod().V1().GetSimple(m.Member.PodName)
 			if !ok {
 				p = nil
 			}
@@ -343,7 +343,7 @@ func getPodDetails(ctx context.Context, log zerolog.Logger, apiObject k8sutil.AP
 		return "", nil, nil, false
 	}
 
-	member, ok := cachedStatus.ArangoMember(m.ArangoMemberName(apiObject.GetName(), group))
+	member, ok := cachedStatus.ArangoMember().V1().GetSimple(m.ArangoMemberName(apiObject.GetName(), group))
 	if !ok {
 		return "", nil, nil, false
 	}

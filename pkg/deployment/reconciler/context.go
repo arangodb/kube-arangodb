@@ -31,14 +31,13 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor"
+	persistentvolumeclaimv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim/v1"
+	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
+	poddisruptionbudgetv1beta1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget/v1beta1"
+	secretv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
+	servicev1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service/v1"
+	serviceaccountv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount/v1"
+	servicemonitorv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor/v1"
 	core "k8s.io/api/core/v1"
 )
 
@@ -100,38 +99,25 @@ type DeploymentImageManager interface {
 
 type DeploymentModInterfaces interface {
 	// SecretsModInterface define secret modification interface
-	SecretsModInterface() secret.ModInterface
+	SecretsModInterface() secretv1.ModInterface
 	// PodsModInterface define pod modification interface
-	PodsModInterface() pod.ModInterface
+	PodsModInterface() podv1.ModInterface
 	// ServiceAccountsModInterface define serviceaccounts modification interface
-	ServiceAccountsModInterface() serviceaccount.ModInterface
+	ServiceAccountsModInterface() serviceaccountv1.ModInterface
 	// ServicesModInterface define services modification interface
-	ServicesModInterface() service.ModInterface
+	ServicesModInterface() servicev1.ModInterface
 	// PersistentVolumeClaimsModInterface define persistentvolumeclaims modification interface
-	PersistentVolumeClaimsModInterface() persistentvolumeclaim.ModInterface
+	PersistentVolumeClaimsModInterface() persistentvolumeclaimv1.ModInterface
 	// PodDisruptionBudgetsModInterface define poddisruptionbudgets modification interface
-	PodDisruptionBudgetsModInterface() poddisruptionbudget.ModInterface
+	PodDisruptionBudgetsModInterface() poddisruptionbudgetv1beta1.ModInterface
 
 	// ServiceMonitorsModInterface define servicemonitor modification interface
-	ServiceMonitorsModInterface() servicemonitor.ModInterface
-
-	// ArangoMembersModInterface define arangomembers modification interface
-	ArangoMembersModInterface() arangomember.ModInterface
+	ServiceMonitorsModInterface() servicemonitorv1.ModInterface
 }
 
 type DeploymentCachedStatus interface {
 	// GetCachedStatus current cached state of deployment
 	GetCachedStatus() inspectorInterface.Inspector
-}
-
-type ArangoMemberUpdateFunc func(obj *api.ArangoMember) bool
-type ArangoMemberStatusUpdateFunc func(obj *api.ArangoMember, s *api.ArangoMemberStatus) bool
-
-type ArangoMemberContext interface {
-	// WithArangoMemberUpdate run action with update of ArangoMember
-	WithArangoMemberUpdate(ctx context.Context, namespace, name string, action ArangoMemberUpdateFunc) error
-	// WithArangoMemberStatusUpdate run action with update of ArangoMember Status
-	WithArangoMemberStatusUpdate(ctx context.Context, namespace, name string, action ArangoMemberStatusUpdateFunc) error
 }
 
 type ArangoAgencyGet interface {

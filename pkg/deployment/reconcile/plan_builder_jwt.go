@@ -53,13 +53,13 @@ func createJWTKeyUpdate(ctx context.Context,
 		return nil
 	}
 
-	folder, ok := cachedStatus.Secret(pod.JWTSecretFolder(apiObject.GetName()))
+	folder, ok := cachedStatus.Secret().V1().GetSimple(pod.JWTSecretFolder(apiObject.GetName()))
 	if !ok {
 		log.Error().Msgf("Unable to get JWT folder info")
 		return nil
 	}
 
-	s, ok := cachedStatus.Secret(spec.Authentication.GetJWTSecretName())
+	s, ok := cachedStatus.Secret().V1().GetSimple(spec.Authentication.GetJWTSecretName())
 	if !ok {
 		log.Info().Msgf("JWT Secret is missing, no rotation will take place")
 		return nil
@@ -144,7 +144,7 @@ func createJWTStatusUpdateRequired(log zerolog.Logger, apiObject k8sutil.APIObje
 			return true
 		}
 
-		f, ok := cachedStatus.Secret(spec.Authentication.GetJWTSecretName())
+		f, ok := cachedStatus.Secret().V1().GetSimple(spec.Authentication.GetJWTSecretName())
 		if !ok {
 			log.Error().Msgf("Unable to get JWT secret info")
 			return false
@@ -166,7 +166,7 @@ func createJWTStatusUpdateRequired(log zerolog.Logger, apiObject k8sutil.APIObje
 		return false
 	}
 
-	f, ok := cachedStatus.Secret(pod.JWTSecretFolder(apiObject.GetName()))
+	f, ok := cachedStatus.Secret().V1().GetSimple(pod.JWTSecretFolder(apiObject.GetName()))
 	if !ok {
 		log.Error().Msgf("Unable to get JWT folder info")
 		return false

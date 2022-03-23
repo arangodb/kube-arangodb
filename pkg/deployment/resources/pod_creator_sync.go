@@ -319,7 +319,7 @@ func (m *MemberSyncPod) Init(ctx context.Context, cachedStatus interfaces.Inspec
 
 	m.masterJWTSecretName = m.spec.Sync.Authentication.GetJWTSecretName()
 	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-		return k8sutil.ValidateTokenSecret(ctxChild, cachedStatus.SecretReadInterface(), m.masterJWTSecretName)
+		return k8sutil.ValidateTokenSecret(ctxChild, cachedStatus.Secret().V1().Read(), m.masterJWTSecretName)
 	})
 	if err != nil {
 		return errors.Wrapf(err, "Master JWT secret validation failed")
@@ -327,7 +327,7 @@ func (m *MemberSyncPod) Init(ctx context.Context, cachedStatus interfaces.Inspec
 
 	monitoringTokenSecretName := m.spec.Sync.Monitoring.GetTokenSecretName()
 	err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-		return k8sutil.ValidateTokenSecret(ctxChild, cachedStatus.SecretReadInterface(), monitoringTokenSecretName)
+		return k8sutil.ValidateTokenSecret(ctxChild, cachedStatus.Secret().V1().Read(), monitoringTokenSecretName)
 	})
 	if err != nil {
 		return errors.Wrapf(err, "Monitoring token secret validation failed")
@@ -340,7 +340,7 @@ func (m *MemberSyncPod) Init(ctx context.Context, cachedStatus interfaces.Inspec
 		if m.spec.IsAuthenticated() {
 			m.clusterJWTSecretName = m.spec.Authentication.GetJWTSecretName()
 			err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-				return k8sutil.ValidateTokenSecret(ctxChild, cachedStatus.SecretReadInterface(), m.clusterJWTSecretName)
+				return k8sutil.ValidateTokenSecret(ctxChild, cachedStatus.Secret().V1().Read(), m.clusterJWTSecretName)
 			})
 			if err != nil {
 				return errors.Wrapf(err, "Cluster JWT secret validation failed")
@@ -349,7 +349,7 @@ func (m *MemberSyncPod) Init(ctx context.Context, cachedStatus interfaces.Inspec
 		// Check client-auth CA certificate secret
 		m.clientAuthCASecretName = m.spec.Sync.Authentication.GetClientCASecretName()
 		err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-			return k8sutil.ValidateCACertificateSecret(ctxChild, cachedStatus.SecretReadInterface(), m.clientAuthCASecretName)
+			return k8sutil.ValidateCACertificateSecret(ctxChild, cachedStatus.Secret().V1().Read(), m.clientAuthCASecretName)
 		})
 		if err != nil {
 			return errors.Wrapf(err, "Client authentication CA certificate secret validation failed")

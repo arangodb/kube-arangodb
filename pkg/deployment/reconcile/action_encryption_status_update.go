@@ -60,7 +60,7 @@ func (a *encryptionKeyStatusUpdateAction) Start(ctx context.Context) (bool, erro
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 
-	f, err := a.actionCtx.GetCachedStatus().SecretReadInterface().Get(ctxChild, pod.GetEncryptionFolderSecretName(a.actionCtx.GetAPIObject().GetName()), meta.GetOptions{})
+	f, err := a.actionCtx.GetCachedStatus().Secret().V1().Read().Get(ctxChild, pod.GetEncryptionFolderSecretName(a.actionCtx.GetAPIObject().GetName()), meta.GetOptions{})
 	if err != nil {
 		a.log.Error().Err(err).Msgf("Unable to get folder info")
 		return true, nil

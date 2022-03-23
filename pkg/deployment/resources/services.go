@@ -27,8 +27,6 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
-
 	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
@@ -41,6 +39,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	servicev1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service/v1"
 	"github.com/rs/zerolog"
 )
 
@@ -71,12 +70,12 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 		for _, m := range list {
 			memberName := m.ArangoMemberName(r.context.GetAPIObject().GetName(), group)
 
-			member, ok := cachedStatus.ArangoMember(memberName)
+			member, ok := cachedStatus.ArangoMember().V1().GetSimple(memberName)
 			if !ok {
 				return errors.Newf("Member %s not found", memberName)
 			}
 
-			if s, ok := cachedStatus.Service(member.GetName()); !ok {
+			if s, ok := cachedStatus.Service().V1().GetSimple(member.GetName()); !ok {
 				s = &core.Service{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      member.GetName(),
@@ -151,7 +150,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 
 	// Headless service
 	counterMetric.Inc()
-	if _, exists := cachedStatus.Service(k8sutil.CreateHeadlessServiceName(deploymentName)); !exists {
+	if _, exists := cachedStatus.Service().V1().GetSimple(k8sutil.CreateHeadlessServiceName(deploymentName)); !exists {
 		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
 		svcName, newlyCreated, err := k8sutil.CreateHeadlessService(ctxChild, svcs, apiObject, owner)
@@ -167,7 +166,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 	// Internal database client service
 	single := spec.GetMode().HasSingleServers()
 	counterMetric.Inc()
-	if _, exists := cachedStatus.Service(k8sutil.CreateDatabaseClientServiceName(deploymentName)); !exists {
+	if _, exists := cachedStatus.Service().V1().GetSimple(k8sutil.CreateDatabaseClientServiceName(deploymentName)); !exists {
 		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
 		svcName, newlyCreated, err := k8sutil.CreateDatabaseClientService(ctxChild, svcs, apiObject, single, owner)
@@ -238,13 +237,13 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 
 // EnsureServices creates all services needed to service the deployment
 func (r *Resources) ensureExternalAccessServices(ctx context.Context, cachedStatus inspectorInterface.Inspector,
-	svcs service.ModInterface, eaServiceName, svcRole, title string, port int, noneIsClusterIP bool,
+	svcs servicev1.ModInterface, eaServiceName, svcRole, title string, port int, noneIsClusterIP bool,
 	spec api.ExternalAccessSpec, apiObject k8sutil.APIObject, log zerolog.Logger) error {
 	// Database external access service
 	createExternalAccessService := false
 	deleteExternalAccessService := false
 	eaServiceType := spec.GetType().AsServiceType() // Note: Type auto defaults to ServiceTypeLoadBalancer
-	if existing, exists := cachedStatus.Service(eaServiceName); exists {
+	if existing, exists := cachedStatus.Service().V1().GetSimple(eaServiceName); exists {
 		// External access service exists
 		updateExternalAccessService := false
 		loadBalancerIP := spec.GetLoadBalancerIP()

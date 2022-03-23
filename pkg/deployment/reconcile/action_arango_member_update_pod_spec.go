@@ -46,8 +46,6 @@ func newArangoMemberUpdatePodSpecAction(log zerolog.Logger, action api.Action, a
 	return a
 }
 
-var _ ActionReloadCachedStatus = &actionArangoMemberUpdatePodSpec{}
-
 // actionArangoMemberUpdatePodSpec implements an ArangoMemberUpdatePodSpec.
 type actionArangoMemberUpdatePodSpec struct {
 	// actionImpl implement timeout and member id functions
@@ -70,9 +68,7 @@ func (a *actionArangoMemberUpdatePodSpec) Start(ctx context.Context) (bool, erro
 		return true, nil
 	}
 
-	cache := a.actionCtx.GetCachedStatus()
-
-	member, ok := cache.ArangoMember(m.ArangoMemberName(a.actionCtx.GetName(), a.action.Group))
+	member, ok := a.actionCtx.GetCachedStatus().ArangoMember().V1().GetSimple(m.ArangoMemberName(a.actionCtx.GetName(), a.action.Group))
 	if !ok {
 		err := errors.Newf("ArangoMember not found")
 		log.Error().Err(err).Msg("ArangoMember not found")
@@ -129,7 +125,9 @@ func (a *actionArangoMemberUpdatePodSpec) Start(ctx context.Context) (bool, erro
 		template.Endpoint = &q
 	}
 
-	if err := a.actionCtx.WithArangoMemberUpdate(context.Background(), member.GetNamespace(), member.GetName(), func(member *api.ArangoMember) bool {
+	c := a.actionCtx.WithCurrentArangoMember(member.GetName())
+
+	if err := c.Update(ctx, func(member *api.ArangoMember) bool {
 		if !member.Spec.Template.Equals(template) {
 			member.Spec.Template = template.DeepCopy()
 			return true
@@ -141,7 +139,7 @@ func (a *actionArangoMemberUpdatePodSpec) Start(ctx context.Context) (bool, erro
 		return false, err
 	}
 
-	if err := a.actionCtx.WithArangoMemberStatusUpdate(context.Background(), member.GetNamespace(), member.GetName(), func(member *api.ArangoMember, status *api.ArangoMemberStatus) bool {
+	if err := c.UpdateStatus(ctx, func(member *api.ArangoMember, status *api.ArangoMemberStatus) bool {
 		if (status.Template == nil || status.Template.PodSpec == nil) && (m.PodSpecVersion == "" || m.PodSpecVersion == template.PodSpecChecksum) {
 			status.Template = template.DeepCopy()
 		}
@@ -153,8 +151,4 @@ func (a *actionArangoMemberUpdatePodSpec) Start(ctx context.Context) (bool, erro
 	}
 
 	return true, nil
-}
-
-func (a *actionArangoMemberUpdatePodSpec) ReloadCachedStatus() bool {
-	return true
 }

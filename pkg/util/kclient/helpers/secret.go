@@ -31,7 +31,7 @@ import (
 
 func SecretConfigGetter(s secret.Inspector, name, key string) kclient.ConfigGetter {
 	return func() (*rest.Config, string, error) {
-		secret, ok := s.Secret(name)
+		secret, ok := s.Secret().V1().GetSimple(name)
 		if !ok {
 			return nil, "", errors.Errorf("Secret %s not found", name)
 		}

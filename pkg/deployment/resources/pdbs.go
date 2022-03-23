@@ -106,6 +106,11 @@ func newPDB(minAvail int, deplname string, group api.ServerGroup, owner metav1.O
 
 // ensurePDBForGroup ensure pdb for a specific server group, if wantMinAvail is zero, the PDB is removed and not recreated
 func (r *Resources) ensurePDBForGroup(ctx context.Context, group api.ServerGroup, wantedMinAvail int) error {
+	i, err := r.context.GetCachedStatus().PodDisruptionBudget().V1Beta1()
+	if err != nil {
+		return err
+	}
+
 	deplname := r.context.GetAPIObject().GetName()
 	pdbname := PDBNameForGroup(deplname, group)
 	log := r.log.With().Str("group", group.AsRole()).Logger()
@@ -114,7 +119,7 @@ func (r *Resources) ensurePDBForGroup(ctx context.Context, group api.ServerGroup
 		var pdb *policyv1beta1.PodDisruptionBudget
 		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 			var err error
-			pdb, err = r.context.GetCachedStatus().PodDisruptionBudgetReadInterface().Get(ctxChild, pdbname, metav1.GetOptions{})
+			pdb, err = i.Read().Get(ctxChild, pdbname, metav1.GetOptions{})
 			return err
 		})
 		if k8sutil.IsNotFound(err) {

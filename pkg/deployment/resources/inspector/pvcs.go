@@ -22,146 +22,172 @@ package inspector
 
 import (
 	"context"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
-	apiErrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 )
 
-func (i *inspector) IteratePersistentVolumeClaims(action persistentvolumeclaim.Action, filters ...persistentvolumeclaim.Filter) error {
-	for _, pvc := range i.PersistentVolumeClaims() {
-		if err := i.iteratePersistentVolumeClaim(pvc, action, filters...); err != nil {
-			return err
-		}
-	}
-	return nil
+func init() {
+	requireRegisterInspectorLoader(persistentVolumeClaimsInspectorLoaderObj)
 }
 
-func (i *inspector) iteratePersistentVolumeClaim(pvc *core.PersistentVolumeClaim, action persistentvolumeclaim.Action, filters ...persistentvolumeclaim.Filter) error {
-	for _, filter := range filters {
-		if !filter(pvc) {
-			return nil
-		}
-	}
+var persistentVolumeClaimsInspectorLoaderObj = persistentVolumeClaimsInspectorLoader{}
 
-	return action(pvc)
+type persistentVolumeClaimsInspectorLoader struct {
 }
 
-func (i *inspector) PersistentVolumeClaims() []*core.PersistentVolumeClaim {
-	i.lock.Lock()
-	defer i.lock.Unlock()
-
-	var r []*core.PersistentVolumeClaim
-	for _, persistentVolumeClaim := range i.pvcs {
-		r = append(r, persistentVolumeClaim)
-	}
-
-	return r
+func (p persistentVolumeClaimsInspectorLoader) Component() throttle.Component {
+	return throttle.PersistentVolumeClaim
 }
 
-func (i *inspector) PersistentVolumeClaim(name string) (*core.PersistentVolumeClaim, bool) {
-	i.lock.Lock()
-	defer i.lock.Unlock()
+func (p persistentVolumeClaimsInspectorLoader) Load(ctx context.Context, i *inspectorState) {
+	var q persistentVolumeClaimsInspector
+	p.loadV1(ctx, i, &q)
+	i.persistentVolumeClaims = &q
+	q.state = i
+	q.last = time.Now()
+}
 
-	pvc, ok := i.pvcs[name]
-	if !ok {
-		return nil, false
+func (p persistentVolumeClaimsInspectorLoader) loadV1(ctx context.Context, i *inspectorState, q *persistentVolumeClaimsInspector) {
+	var z persistentVolumeClaimsInspectorV1
+
+	z.persistentVolumeClaimInspector = q
+
+	z.persistentVolumeClaims, z.err = p.getV1PersistentVolumeClaims(ctx, i)
+
+	q.v1 = &z
+}
+
+func (p persistentVolumeClaimsInspectorLoader) getV1PersistentVolumeClaims(ctx context.Context, i *inspectorState) (map[string]*core.PersistentVolumeClaim, error) {
+	objs, err := p.getV1PersistentVolumeClaimsList(ctx, i)
+	if err != nil {
+		return nil, err
 	}
 
-	return pvc, true
-}
+	r := make(map[string]*core.PersistentVolumeClaim, len(objs))
 
-func (i *inspector) PersistentVolumeClaimReadInterface() persistentvolumeclaim.ReadInterface {
-	return &persistentVolumeClaimReadInterface{i: i}
-}
-
-type persistentVolumeClaimReadInterface struct {
-	i *inspector
-}
-
-func (s persistentVolumeClaimReadInterface) Get(ctx context.Context, name string, opts meta.GetOptions) (*core.PersistentVolumeClaim, error) {
-	if s, ok := s.i.PersistentVolumeClaim(name); !ok {
-		return nil, apiErrors.NewNotFound(schema.GroupResource{
-			Group:    core.GroupName,
-			Resource: "persistentvolumeclaims",
-		}, name)
-	} else {
-		return s, nil
+	for id := range objs {
+		r[objs[id].GetName()] = objs[id]
 	}
+
+	return r, nil
 }
 
-func pvcsToMap(ctx context.Context, inspector *inspector, k kubernetes.Interface, namespace string) func() error {
-	return func() error {
-		pvcs, err := getPersistentVolumeClaims(ctx, k, namespace, "")
-		if err != nil {
-			return err
-		}
-
-		pvcMap := map[string]*core.PersistentVolumeClaim{}
-
-		for _, pvc := range pvcs {
-			_, exists := pvcMap[pvc.GetName()]
-			if exists {
-				return errors.Newf("PersistentVolumeClaim %s already exists in map, error received", pvc.GetName())
-			}
-
-			pvcMap[pvc.GetName()] = pvcPointer(pvc)
-		}
-
-		inspector.pvcs = pvcMap
-
-		return nil
-	}
-}
-
-func pvcPointer(pvc core.PersistentVolumeClaim) *core.PersistentVolumeClaim {
-	return &pvc
-}
-
-func getPersistentVolumeClaims(ctx context.Context, k kubernetes.Interface, namespace, cont string) ([]core.PersistentVolumeClaim, error) {
+func (p persistentVolumeClaimsInspectorLoader) getV1PersistentVolumeClaimsList(ctx context.Context, i *inspectorState) ([]*core.PersistentVolumeClaim, error) {
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
-	pvcs, err := k.CoreV1().PersistentVolumeClaims(namespace).List(ctxChild, meta.ListOptions{
-		Limit:    globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
-		Continue: cont,
+	obj, err := i.client.Kubernetes().CoreV1().PersistentVolumeClaims(i.namespace).List(ctxChild, meta.ListOptions{
+		Limit: globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
 	})
 
 	if err != nil {
 		return nil, err
 	}
 
-	if pvcs.Continue != "" {
-		nextPersistentVolumeClaimsLayer, err := getPersistentVolumeClaims(ctx, k, namespace, pvcs.Continue)
+	items := obj.Items
+	cont := obj.Continue
+	var s = int64(len(items))
+
+	if z := obj.RemainingItemCount; z != nil {
+		s += *z
+	}
+
+	ptrs := make([]*core.PersistentVolumeClaim, 0, s)
+
+	for {
+		for id := range items {
+			ptrs = append(ptrs, &items[id])
+		}
+
+		if cont == "" {
+			break
+		}
+
+		items, cont, err = p.getV1PersistentVolumeClaimsListRequest(ctx, i, cont)
+
 		if err != nil {
 			return nil, err
 		}
-
-		return append(pvcs.Items, nextPersistentVolumeClaimsLayer...), nil
 	}
 
-	return pvcs.Items, nil
+	return ptrs, nil
 }
 
-func FilterPersistentVolumeClaimsByLabels(labels map[string]string) persistentvolumeclaim.Filter {
-	return func(pvc *core.PersistentVolumeClaim) bool {
-		for key, value := range labels {
-			v, ok := pvc.Labels[key]
-			if !ok {
-				return false
-			}
+func (p persistentVolumeClaimsInspectorLoader) getV1PersistentVolumeClaimsListRequest(ctx context.Context, i *inspectorState, cont string) ([]core.PersistentVolumeClaim, string, error) {
+	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
+	defer cancel()
+	obj, err := i.client.Kubernetes().CoreV1().PersistentVolumeClaims(i.namespace).List(ctxChild, meta.ListOptions{
+		Limit:    globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
+		Continue: cont,
+	})
 
-			if v != value {
-				return false
-			}
-		}
-
-		return true
+	if err != nil {
+		return nil, "", err
 	}
+
+	return obj.Items, obj.Continue, err
+}
+
+func (p persistentVolumeClaimsInspectorLoader) Verify(i *inspectorState) error {
+	if err := i.persistentVolumeClaims.v1.err; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p persistentVolumeClaimsInspectorLoader) Copy(from, to *inspectorState, override bool) {
+	if to.persistentVolumeClaims != nil {
+		if !override {
+			return
+		}
+	}
+
+	to.persistentVolumeClaims = from.persistentVolumeClaims
+	to.persistentVolumeClaims.state = to
+}
+
+func (p persistentVolumeClaimsInspectorLoader) Name() string {
+	return "persistentVolumeClaims"
+}
+
+type persistentVolumeClaimsInspector struct {
+	state *inspectorState
+
+	last time.Time
+
+	v1 *persistentVolumeClaimsInspectorV1
+}
+
+func (p *persistentVolumeClaimsInspector) LastRefresh() time.Time {
+	return p.last
+}
+
+func (p *persistentVolumeClaimsInspector) IsStatic() bool {
+	return p.state.IsStatic()
+}
+
+func (p *persistentVolumeClaimsInspector) Refresh(ctx context.Context) error {
+	p.Throttle(p.state.throttles).Invalidate()
+	return p.state.refresh(ctx, persistentVolumeClaimsInspectorLoaderObj)
+}
+
+func (p persistentVolumeClaimsInspector) Throttle(c throttle.Components) throttle.Throttle {
+	return c.PersistentVolumeClaim()
+}
+
+func (p *persistentVolumeClaimsInspector) validate() error {
+	if p == nil {
+		return errors.Newf("PersistentVolumeClaimInspector is nil")
+	}
+
+	if p.state == nil {
+		return errors.Newf("Parent is nil")
+	}
+
+	return p.v1.validate()
 }

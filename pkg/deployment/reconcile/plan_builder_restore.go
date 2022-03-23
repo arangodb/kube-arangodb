@@ -93,6 +93,7 @@ func restorePlan(spec api.DeploymentSpec) api.Plan {
 }
 
 func createRestorePlanEncryption(ctx context.Context, log zerolog.Logger, spec api.DeploymentSpec, status api.DeploymentStatus, builderCtx PlanBuilderContext) (bool, api.Plan) {
+
 	if spec.RestoreEncryptionSecret != nil {
 		if !spec.RocksDB.IsEncrypted() {
 			return true, nil
@@ -109,7 +110,7 @@ func createRestorePlanEncryption(ctx context.Context, log zerolog.Logger, spec a
 		secret := *spec.RestoreEncryptionSecret
 
 		// Additional logic to do restore with encryption key
-		name, _, exists, err := pod.GetEncryptionKey(ctx, builderCtx.GetCachedStatus().SecretReadInterface(), secret)
+		name, _, exists, err := pod.GetEncryptionKey(ctx, builderCtx.GetCachedStatus().Secret().V1().Read(), secret)
 		if err != nil {
 			log.Err(err).Msgf("Unable to fetch encryption key")
 			return false, nil

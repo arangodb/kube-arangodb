@@ -22,128 +22,172 @@ package inspector
 
 import (
 	"context"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	core "k8s.io/api/core/v1"
-	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/kubernetes"
 )
 
-func (i *inspector) IterateSecrets(action secret.Action, filters ...secret.Filter) error {
-	for _, secret := range i.Secrets() {
-		if err := i.iterateSecrets(secret, action, filters...); err != nil {
-			return err
-		}
-	}
-	return nil
+func init() {
+	requireRegisterInspectorLoader(secretsInspectorLoaderObj)
 }
 
-func (i *inspector) iterateSecrets(secret *core.Secret, action secret.Action, filters ...secret.Filter) error {
-	for _, filter := range filters {
-		if !filter(secret) {
-			return nil
-		}
-	}
+var secretsInspectorLoaderObj = secretsInspectorLoader{}
 
-	return action(secret)
+type secretsInspectorLoader struct {
 }
 
-func (i *inspector) Secrets() []*core.Secret {
-	i.lock.Lock()
-	defer i.lock.Unlock()
-
-	var r []*core.Secret
-	for _, secret := range i.secrets {
-		r = append(r, secret)
-	}
-
-	return r
+func (p secretsInspectorLoader) Component() throttle.Component {
+	return throttle.Secret
 }
 
-func (i *inspector) Secret(name string) (*core.Secret, bool) {
-	i.lock.Lock()
-	defer i.lock.Unlock()
+func (p secretsInspectorLoader) Load(ctx context.Context, i *inspectorState) {
+	var q secretsInspector
+	p.loadV1(ctx, i, &q)
+	i.secrets = &q
+	q.state = i
+	q.last = time.Now()
+}
 
-	secret, ok := i.secrets[name]
-	if !ok {
-		return nil, false
+func (p secretsInspectorLoader) loadV1(ctx context.Context, i *inspectorState, q *secretsInspector) {
+	var z secretsInspectorV1
+
+	z.secretInspector = q
+
+	z.secrets, z.err = p.getV1Secrets(ctx, i)
+
+	q.v1 = &z
+}
+
+func (p secretsInspectorLoader) getV1Secrets(ctx context.Context, i *inspectorState) (map[string]*core.Secret, error) {
+	objs, err := p.getV1SecretsList(ctx, i)
+	if err != nil {
+		return nil, err
 	}
 
-	return secret, true
-}
+	r := make(map[string]*core.Secret, len(objs))
 
-func (i *inspector) SecretReadInterface() secret.ReadInterface {
-	return &secretReadInterface{i: i}
-}
-
-type secretReadInterface struct {
-	i *inspector
-}
-
-func (s secretReadInterface) Get(ctx context.Context, name string, opts meta.GetOptions) (*core.Secret, error) {
-	if s, ok := s.i.Secret(name); !ok {
-		return nil, apiErrors.NewNotFound(schema.GroupResource{
-			Group:    core.GroupName,
-			Resource: "secrets",
-		}, name)
-	} else {
-		return s, nil
+	for id := range objs {
+		r[objs[id].GetName()] = objs[id]
 	}
+
+	return r, nil
 }
 
-func secretsToMap(ctx context.Context, inspector *inspector, k kubernetes.Interface, namespace string) func() error {
-	return func() error {
-		secrets, err := getSecrets(ctx, k, namespace, "")
-		if err != nil {
-			return err
-		}
-
-		secretMap := map[string]*core.Secret{}
-
-		for _, secret := range secrets {
-			_, exists := secretMap[secret.GetName()]
-			if exists {
-				return errors.Newf("Secret %s already exists in map, error received", secret.GetName())
-			}
-
-			secretMap[secret.GetName()] = secretPointer(secret)
-		}
-
-		inspector.secrets = secretMap
-
-		return nil
-	}
-}
-
-func secretPointer(pod core.Secret) *core.Secret {
-	return &pod
-}
-
-func getSecrets(ctx context.Context, k kubernetes.Interface, namespace, cont string) ([]core.Secret, error) {
+func (p secretsInspectorLoader) getV1SecretsList(ctx context.Context, i *inspectorState) ([]*core.Secret, error) {
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
-	secrets, err := k.CoreV1().Secrets(namespace).List(ctxChild, meta.ListOptions{
-		Limit:    globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
-		Continue: cont,
+	obj, err := i.client.Kubernetes().CoreV1().Secrets(i.namespace).List(ctxChild, meta.ListOptions{
+		Limit: globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
 	})
 
 	if err != nil {
 		return nil, err
 	}
 
-	if secrets.Continue != "" {
-		nextSecretsLayer, err := getSecrets(ctx, k, namespace, secrets.Continue)
+	items := obj.Items
+	cont := obj.Continue
+	var s = int64(len(items))
+
+	if z := obj.RemainingItemCount; z != nil {
+		s += *z
+	}
+
+	ptrs := make([]*core.Secret, 0, s)
+
+	for {
+		for id := range items {
+			ptrs = append(ptrs, &items[id])
+		}
+
+		if cont == "" {
+			break
+		}
+
+		items, cont, err = p.getV1SecretsListRequest(ctx, i, cont)
+
 		if err != nil {
 			return nil, err
 		}
-
-		return append(secrets.Items, nextSecretsLayer...), nil
 	}
 
-	return secrets.Items, nil
+	return ptrs, nil
+}
+
+func (p secretsInspectorLoader) getV1SecretsListRequest(ctx context.Context, i *inspectorState, cont string) ([]core.Secret, string, error) {
+	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
+	defer cancel()
+	obj, err := i.client.Kubernetes().CoreV1().Secrets(i.namespace).List(ctxChild, meta.ListOptions{
+		Limit:    globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
+		Continue: cont,
+	})
+
+	if err != nil {
+		return nil, "", err
+	}
+
+	return obj.Items, obj.Continue, err
+}
+
+func (p secretsInspectorLoader) Verify(i *inspectorState) error {
+	if err := i.secrets.v1.err; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p secretsInspectorLoader) Copy(from, to *inspectorState, override bool) {
+	if to.secrets != nil {
+		if !override {
+			return
+		}
+	}
+
+	to.secrets = from.secrets
+	to.secrets.state = to
+}
+
+func (p secretsInspectorLoader) Name() string {
+	return "secrets"
+}
+
+type secretsInspector struct {
+	state *inspectorState
+
+	last time.Time
+
+	v1 *secretsInspectorV1
+}
+
+func (p *secretsInspector) LastRefresh() time.Time {
+	return p.last
+}
+
+func (p *secretsInspector) IsStatic() bool {
+	return p.state.IsStatic()
+}
+
+func (p *secretsInspector) Refresh(ctx context.Context) error {
+	p.Throttle(p.state.throttles).Invalidate()
+	return p.state.refresh(ctx, secretsInspectorLoaderObj)
+}
+
+func (p secretsInspector) Throttle(c throttle.Components) throttle.Throttle {
+	return c.Secret()
+}
+
+func (p *secretsInspector) validate() error {
+	if p == nil {
+		return errors.Newf("SecretInspector is nil")
+	}
+
+	if p.state == nil {
+		return errors.Newf("Parent is nil")
+	}
+
+	return p.v1.validate()
 }

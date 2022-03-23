@@ -59,13 +59,13 @@ func (h *handler) Handle(item operation.Item) error {
 		if k8sutil.IsNotFound(err) {
 			return nil
 		}
-		h.operator.GetLogger().Error().Msgf("ArangoClusterSynchronizations fetch error %v", err)
+		h.operator.GetLogger().Error().Msgf("ListSimple fetch error %v", err)
 		return err
 	}
 
 	// Update status on object
 	if _, err = h.client.DatabaseV1().ArangoClusterSynchronizations(item.Namespace).UpdateStatus(context.Background(), clusterSync, meta.UpdateOptions{}); err != nil {
-		h.operator.GetLogger().Error().Msgf("ArangoClusterSynchronizations status update error %v", err)
+		h.operator.GetLogger().Error().Msgf("ListSimple status update error %v", err)
 		return err
 	}
 

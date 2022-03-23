@@ -83,7 +83,7 @@ func ifPodUIDMismatch(m api.MemberStatus, a api.Action, i pod.Inspector) bool {
 		return false
 	}
 
-	p, ok := i.Pod(m.PodName)
+	p, ok := i.Pod().V1().GetSimple(m.PodName)
 	if !ok {
 		return true
 	}

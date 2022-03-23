@@ -33,22 +33,10 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"k8s.io/apimachinery/pkg/types"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
-	podMod "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor"
-
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile"
 
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
-
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 
@@ -72,6 +60,13 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	persistentvolumeclaimv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim/v1"
+	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
+	poddisruptionbudgetv1beta1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget/v1beta1"
+	secretv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
+	servicev1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service/v1"
+	serviceaccountv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount/v1"
+	servicemonitorv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/rs/zerolog/log"
 	core "k8s.io/api/core/v1"
@@ -294,7 +289,7 @@ func (d *Deployment) getAuth() (driver.Authentication, error) {
 
 func (d *Deployment) getJWTFolderToken() (string, bool) {
 	if i := d.apiObject.Status.CurrentImage; i == nil || features.JWTRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
-		s, err := d.GetCachedStatus().SecretReadInterface().Get(context.Background(), pod.JWTSecretFolder(d.GetName()), meta.GetOptions{})
+		s, err := d.GetCachedStatus().Secret().V1().Read().Get(context.Background(), pod.JWTSecretFolder(d.GetName()), meta.GetOptions{})
 		if err != nil {
 			d.deps.Log.Error().Err(err).Msgf("Unable to get secret")
 			return "", false
@@ -317,7 +312,7 @@ func (d *Deployment) getJWTFolderToken() (string, bool) {
 }
 
 func (d *Deployment) getJWTToken() (string, bool) {
-	s, err := d.GetCachedStatus().SecretReadInterface().Get(context.Background(), d.apiObject.Spec.Authentication.GetJWTSecretName(), meta.GetOptions{})
+	s, err := d.GetCachedStatus().Secret().V1().Read().Get(context.Background(), d.apiObject.Spec.Authentication.GetJWTSecretName(), meta.GetOptions{})
 	if err != nil {
 		return "", false
 	}
@@ -335,7 +330,7 @@ func (d *Deployment) GetSyncServerClient(ctx context.Context, group api.ServerGr
 	// Fetch monitoring token
 	log := d.deps.Log
 	secretName := d.apiObject.Spec.Sync.Monitoring.GetTokenSecretName()
-	monitoringToken, err := k8sutil.GetTokenSecret(ctx, d.GetCachedStatus().SecretReadInterface(), secretName)
+	monitoringToken, err := k8sutil.GetTokenSecret(ctx, d.GetCachedStatus().Secret().V1().Read(), secretName)
 	if err != nil {
 		log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get sync monitoring secret")
 		return nil, errors.WithStack(err)
@@ -390,7 +385,7 @@ func (d *Deployment) CreateMember(ctx context.Context, group api.ServerGroup, id
 
 // GetPod returns pod.
 func (d *Deployment) GetPod(ctx context.Context, podName string) (*core.Pod, error) {
-	return d.GetCachedStatus().PodReadInterface().Get(ctx, podName, meta.GetOptions{})
+	return d.GetCachedStatus().Pod().V1().Read().Get(ctx, podName, meta.GetOptions{})
 }
 
 // DeletePod deletes a pod with given name in the namespace
@@ -431,7 +426,7 @@ func (d *Deployment) RemovePodFinalizers(ctx context.Context, podName string) er
 
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
-	p, err := d.GetCachedStatus().PodReadInterface().Get(ctxChild, podName, meta.GetOptions{})
+	p, err := d.GetCachedStatus().Pod().V1().Read().Get(ctxChild, podName, meta.GetOptions{})
 	if err != nil {
 		if k8sutil.IsNotFound(err) {
 			return nil
@@ -481,7 +476,7 @@ func (d *Deployment) UpdatePvc(ctx context.Context, pvc *core.PersistentVolumeCl
 // GetOwnedPVCs returns a list of all PVCs owned by the deployment.
 func (d *Deployment) GetOwnedPVCs() ([]core.PersistentVolumeClaim, error) {
 	// Get all current PVCs
-	pvcs := d.GetCachedStatus().PersistentVolumeClaims()
+	pvcs := d.GetCachedStatus().PersistentVolumeClaim().V1().ListSimple()
 	myPVCs := make([]core.PersistentVolumeClaim, 0, len(pvcs))
 	for _, p := range pvcs {
 		if d.isOwnerOf(p) {
@@ -496,7 +491,7 @@ func (d *Deployment) GetPvc(ctx context.Context, pvcName string) (*core.Persiste
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 
-	pvc, err := d.GetCachedStatus().PersistentVolumeClaimReadInterface().Get(ctxChild, pvcName, meta.GetOptions{})
+	pvc, err := d.GetCachedStatus().PersistentVolumeClaim().V1().Read().Get(ctxChild, pvcName, meta.GetOptions{})
 	if err != nil {
 		log.Debug().Err(err).Str("pvc-name", pvcName).Msg("Failed to get PVC")
 		return nil, errors.WithStack(err)
@@ -508,7 +503,7 @@ func (d *Deployment) GetPvc(ctx context.Context, pvcName string) (*core.Persiste
 // the given member.
 func (d *Deployment) GetTLSKeyfile(group api.ServerGroup, member api.MemberStatus) (string, error) {
 	secretName := k8sutil.CreateTLSKeyfileSecretName(d.GetName(), group.AsRole(), member.ID)
-	result, err := k8sutil.GetTLSKeyfileSecret(d.GetCachedStatus().SecretReadInterface(), secretName)
+	result, err := k8sutil.GetTLSKeyfileSecret(d.GetCachedStatus().Secret().V1().Read(), secretName)
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
@@ -612,36 +607,39 @@ func (d *Deployment) WithStatusUpdate(ctx context.Context, action reconciler.Dep
 	}, force...)
 }
 
-func (d *Deployment) SecretsModInterface() secret.ModInterface {
+func (d *Deployment) SecretsModInterface() secretv1.ModInterface {
+	d.currentState.GetThrottles().Secret().Invalidate()
 	return kclient.NewModInterface(d.deps.Client, d.namespace).Secrets()
 }
 
-func (d *Deployment) PodsModInterface() podMod.ModInterface {
+func (d *Deployment) PodsModInterface() podv1.ModInterface {
+	d.currentState.GetThrottles().Pod().Invalidate()
 	return kclient.NewModInterface(d.deps.Client, d.namespace).Pods()
 }
 
-func (d *Deployment) ServiceAccountsModInterface() serviceaccount.ModInterface {
+func (d *Deployment) ServiceAccountsModInterface() serviceaccountv1.ModInterface {
+	d.currentState.GetThrottles().ServiceAccount().Invalidate()
 	return kclient.NewModInterface(d.deps.Client, d.namespace).ServiceAccounts()
 }
 
-func (d *Deployment) ServicesModInterface() service.ModInterface {
+func (d *Deployment) ServicesModInterface() servicev1.ModInterface {
+	d.currentState.GetThrottles().Service().Invalidate()
 	return kclient.NewModInterface(d.deps.Client, d.namespace).Services()
 }
 
-func (d *Deployment) PersistentVolumeClaimsModInterface() persistentvolumeclaim.ModInterface {
+func (d *Deployment) PersistentVolumeClaimsModInterface() persistentvolumeclaimv1.ModInterface {
+	d.currentState.GetThrottles().PersistentVolumeClaim().Invalidate()
 	return kclient.NewModInterface(d.deps.Client, d.namespace).PersistentVolumeClaims()
 }
 
-func (d *Deployment) PodDisruptionBudgetsModInterface() poddisruptionbudget.ModInterface {
+func (d *Deployment) PodDisruptionBudgetsModInterface() poddisruptionbudgetv1beta1.ModInterface {
+	d.currentState.GetThrottles().PodDisruptionBudget().Invalidate()
 	return kclient.NewModInterface(d.deps.Client, d.namespace).PodDisruptionBudgets()
 }
 
-func (d *Deployment) ServiceMonitorsModInterface() servicemonitor.ModInterface {
+func (d *Deployment) ServiceMonitorsModInterface() servicemonitorv1.ModInterface {
+	d.currentState.GetThrottles().ServiceMonitor().Invalidate()
 	return kclient.NewModInterface(d.deps.Client, d.namespace).ServiceMonitors()
-}
-
-func (d *Deployment) ArangoMembersModInterface() arangomember.ModInterface {
-	return kclient.NewModInterface(d.deps.Client, d.namespace).ArangoMembers()
 }
 
 func (d *Deployment) GetName() string {
@@ -649,7 +647,7 @@ func (d *Deployment) GetName() string {
 }
 
 func (d *Deployment) GetOwnedPods(ctx context.Context) ([]core.Pod, error) {
-	pods := d.GetCachedStatus().Pods()
+	pods := d.GetCachedStatus().Pod().V1().ListSimple()
 
 	podList := make([]core.Pod, 0, len(pods))
 
@@ -665,48 +663,7 @@ func (d *Deployment) GetOwnedPods(ctx context.Context) ([]core.Pod, error) {
 }
 
 func (d *Deployment) GetCachedStatus() inspectorInterface.Inspector {
-	if c := d.currentState; c != nil {
-		return c
-	}
-
-	return inspector.NewEmptyInspector()
-}
-
-func (d *Deployment) SetCachedStatus(i inspectorInterface.Inspector) {
-	d.currentState = i
-}
-
-func (d *Deployment) WithArangoMemberUpdate(ctx context.Context, namespace, name string, action reconciler.ArangoMemberUpdateFunc) error {
-	o, err := d.deps.Client.Arango().DatabaseV1().ArangoMembers(namespace).Get(ctx, name, meta.GetOptions{})
-	if err != nil {
-		return err
-	}
-
-	if action(o) {
-		if _, err := d.deps.Client.Arango().DatabaseV1().ArangoMembers(namespace).Update(ctx, o, meta.UpdateOptions{}); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (d *Deployment) WithArangoMemberStatusUpdate(ctx context.Context, namespace, name string, action reconciler.ArangoMemberStatusUpdateFunc) error {
-	o, err := d.deps.Client.Arango().DatabaseV1().ArangoMembers(namespace).Get(ctx, name, meta.GetOptions{})
-	if err != nil {
-		return err
-	}
-
-	status := o.Status.DeepCopy()
-
-	if action(o, status) {
-		o.Status = *status
-		if _, err := d.deps.Client.Arango().DatabaseV1().ArangoMembers(namespace).UpdateStatus(ctx, o, meta.UpdateOptions{}); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return d.currentState
 }
 
 func (d *Deployment) ApplyPatchOnPod(ctx context.Context, pod *core.Pod, p ...patch.Item) error {
@@ -717,11 +674,9 @@ func (d *Deployment) ApplyPatchOnPod(ctx context.Context, pod *core.Pod, p ...pa
 		return err
 	}
 
-	c := d.deps.Client.Kubernetes().CoreV1().Pods(pod.GetNamespace())
-
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
-	_, err = c.Patch(ctxChild, pod.GetName(), types.JSONPatchType, data, meta.PatchOptions{})
+	_, err = d.PodsModInterface().Patch(ctxChild, pod.GetName(), types.JSONPatchType, data, meta.PatchOptions{})
 	if err != nil {
 		return err
 	}

@@ -36,7 +36,6 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/member"
 
-	podMod "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -57,6 +56,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
 )
 
 // createArangodArgsWithUpgrade creates command line arguments for an arangod server upgrade in the given group.
@@ -337,7 +337,7 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 
 	memberName := m.ArangoMemberName(r.context.GetAPIObject().GetName(), group)
 
-	member, ok := cachedStatus.ArangoMember(memberName)
+	member, ok := cachedStatus.ArangoMember().V1().GetSimple(memberName)
 	if !ok {
 		return nil, errors.Newf("ArangoMember %s not found", memberName)
 	}
@@ -646,7 +646,7 @@ func RenderArangoPod(ctx context.Context, cachedStatus inspectorInterface.Inspec
 // CreateArangoPod creates a new Pod with container provided by parameter 'containerCreator'
 // If the pod already exists, nil is returned.
 // If another error occurs, that error is returned.
-func CreateArangoPod(ctx context.Context, c podMod.ModInterface, deployment k8sutil.APIObject,
+func CreateArangoPod(ctx context.Context, c podv1.ModInterface, deployment k8sutil.APIObject,
 	deploymentSpec api.DeploymentSpec, group api.ServerGroup, pod *core.Pod) (string, types.UID, error) {
 	podName, uid, err := k8sutil.CreatePod(ctx, c, pod, deployment.GetNamespace(), deployment.AsOwner())
 	if err != nil {
@@ -693,7 +693,7 @@ func (r *Resources) EnsurePods(ctx context.Context, cachedStatus inspectorInterf
 				continue
 			}
 
-			member, ok := cachedStatus.ArangoMember(m.ArangoMemberName(r.context.GetName(), group))
+			member, ok := cachedStatus.ArangoMember().V1().GetSimple(m.ArangoMemberName(r.context.GetName(), group))
 			if !ok {
 				// ArangoMember not found, skip
 				continue

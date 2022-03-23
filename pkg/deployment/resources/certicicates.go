@@ -117,7 +117,7 @@ func GetCertsFromSecret(log zerolog.Logger, secret *core.Secret) Certificates {
 }
 
 func GetKeyCertFromCache(log zerolog.Logger, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, certName, keyName string) (Certificates, interface{}, error) {
-	caSecret, exists := cachedStatus.Secret(spec.TLS.GetCASecretName())
+	caSecret, exists := cachedStatus.Secret().V1().GetSimple(spec.TLS.GetCASecretName())
 	if !exists {
 		return nil, nil, errors.Newf("CA Secret does not exists")
 	}

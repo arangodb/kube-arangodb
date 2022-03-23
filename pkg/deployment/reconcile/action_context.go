@@ -31,6 +31,8 @@ import (
 	"github.com/arangodb/arangosync-client/client"
 	"github.com/arangodb/go-driver/agency"
 
+	"time"
+
 	"github.com/arangodb/go-driver"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -40,14 +42,13 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor"
+	persistentvolumeclaimv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim/v1"
+	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
+	poddisruptionbudgetv1beta1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget/v1beta1"
+	secretv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
+	servicev1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service/v1"
+	serviceaccountv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount/v1"
+	servicemonitorv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor/v1"
 )
 
 // ActionContext provides methods to the Action implementations
@@ -144,6 +145,14 @@ type actionContext struct {
 	cachedStatus inspectorInterface.Inspector
 }
 
+func (ac *actionContext) WithArangoMember(cache inspectorInterface.Inspector, timeout time.Duration, name string) reconciler.ArangoMemberModContext {
+	return ac.context.WithArangoMember(cache, timeout, name)
+}
+
+func (ac *actionContext) WithCurrentArangoMember(name string) reconciler.ArangoMemberModContext {
+	return ac.context.WithCurrentArangoMember(name)
+}
+
 func (ac *actionContext) GetMembersState() member.StateInspector {
 	return ac.context.GetMembersState()
 }
@@ -188,14 +197,6 @@ func (ac *actionContext) SetAgencyMaintenanceMode(ctx context.Context, enabled b
 	return ac.context.SetAgencyMaintenanceMode(ctx, enabled)
 }
 
-func (ac *actionContext) WithArangoMemberUpdate(ctx context.Context, namespace, name string, action reconciler.ArangoMemberUpdateFunc) error {
-	return ac.context.WithArangoMemberUpdate(ctx, namespace, name, action)
-}
-
-func (ac *actionContext) WithArangoMemberStatusUpdate(ctx context.Context, namespace, name string, action reconciler.ArangoMemberStatusUpdateFunc) error {
-	return ac.context.WithArangoMemberStatusUpdate(ctx, namespace, name, action)
-}
-
 func (ac *actionContext) RenderPodForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error) {
 	return ac.context.RenderPodForMember(ctx, cachedStatus, spec, status, memberID, imageInfo)
 }
@@ -228,36 +229,32 @@ func (ac *actionContext) WithStatusUpdate(ctx context.Context, action reconciler
 	return ac.context.WithStatusUpdate(ctx, action, force...)
 }
 
-func (ac *actionContext) SecretsModInterface() secret.ModInterface {
+func (ac *actionContext) SecretsModInterface() secretv1.ModInterface {
 	return ac.context.SecretsModInterface()
 }
 
-func (ac *actionContext) PodsModInterface() pod.ModInterface {
+func (ac *actionContext) PodsModInterface() podv1.ModInterface {
 	return ac.context.PodsModInterface()
 }
 
-func (ac *actionContext) ServiceAccountsModInterface() serviceaccount.ModInterface {
+func (ac *actionContext) ServiceAccountsModInterface() serviceaccountv1.ModInterface {
 	return ac.context.ServiceAccountsModInterface()
 }
 
-func (ac *actionContext) ServicesModInterface() service.ModInterface {
+func (ac *actionContext) ServicesModInterface() servicev1.ModInterface {
 	return ac.context.ServicesModInterface()
 }
 
-func (ac *actionContext) PersistentVolumeClaimsModInterface() persistentvolumeclaim.ModInterface {
+func (ac *actionContext) PersistentVolumeClaimsModInterface() persistentvolumeclaimv1.ModInterface {
 	return ac.context.PersistentVolumeClaimsModInterface()
 }
 
-func (ac *actionContext) PodDisruptionBudgetsModInterface() poddisruptionbudget.ModInterface {
+func (ac *actionContext) PodDisruptionBudgetsModInterface() poddisruptionbudgetv1beta1.ModInterface {
 	return ac.context.PodDisruptionBudgetsModInterface()
 }
 
-func (ac *actionContext) ServiceMonitorsModInterface() servicemonitor.ModInterface {
+func (ac *actionContext) ServiceMonitorsModInterface() servicemonitorv1.ModInterface {
 	return ac.context.ServiceMonitorsModInterface()
-}
-
-func (ac *actionContext) ArangoMembersModInterface() arangomember.ModInterface {
-	return ac.context.ArangoMembersModInterface()
 }
 
 func (ac *actionContext) UpdateClusterCondition(ctx context.Context, conditionType api.ConditionType, status bool, reason, message string) error {

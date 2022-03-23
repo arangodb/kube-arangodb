@@ -22,170 +22,168 @@ package inspector
 
 import (
 	"context"
+	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangotask"
-	apiErrors "k8s.io/apimachinery/pkg/api/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-func (i *inspector) GetArangoTasks() (arangotask.Inspector, bool) {
-	i.lock.Lock()
-	defer i.lock.Unlock()
+func init() {
+	requireRegisterInspectorLoader(arangoTasksInspectorLoaderObj)
+}
 
-	if i.at == nil {
-		return nil, false
+var arangoTasksInspectorLoaderObj = arangoTasksInspectorLoader{}
+
+type arangoTasksInspectorLoader struct {
+}
+
+func (p arangoTasksInspectorLoader) Component() throttle.Component {
+	return throttle.ArangoTask
+}
+
+func (p arangoTasksInspectorLoader) Load(ctx context.Context, i *inspectorState) {
+	var q arangoTasksInspector
+	p.loadV1(ctx, i, &q)
+	i.arangoTasks = &q
+	q.state = i
+	q.last = time.Now()
+}
+
+func (p arangoTasksInspectorLoader) loadV1(ctx context.Context, i *inspectorState, q *arangoTasksInspector) {
+	var z arangoTasksInspectorV1
+
+	z.arangoTaskInspector = q
+
+	z.arangoTasks, z.err = p.getV1ArangoTasks(ctx, i)
+
+	q.v1 = &z
+}
+
+func (p arangoTasksInspectorLoader) getV1ArangoTasks(ctx context.Context, i *inspectorState) (map[string]*api.ArangoTask, error) {
+	objs, err := p.getV1ArangoTasksList(ctx, i)
+	if err != nil {
+		return nil, err
 	}
 
-	return i.at, i.at.accessible
-}
+	r := make(map[string]*api.ArangoTask, len(objs))
 
-type arangoTaskLoader struct {
-	accessible bool
-
-	at map[string]*api.ArangoTask
-}
-
-func (a *arangoTaskLoader) FilterArangoTasks(filters ...arangotask.Filter) []*api.ArangoTask {
-	q := make([]*api.ArangoTask, 0, len(a.at))
-
-	for _, obj := range a.at {
-		if a.filterArangoTasks(obj, filters...) {
-			q = append(q, obj)
-		}
+	for id := range objs {
+		r[objs[id].GetName()] = objs[id]
 	}
 
-	return q
+	return r, nil
 }
 
-func (a *arangoTaskLoader) filterArangoTasks(obj *api.ArangoTask, filters ...arangotask.Filter) bool {
-	for _, f := range filters {
-		if !f(obj) {
-			return false
-		}
-	}
-
-	return true
-}
-
-func (a *arangoTaskLoader) ArangoTasks() []*api.ArangoTask {
-	var r []*api.ArangoTask
-	for _, at := range a.at {
-		r = append(r, at)
-	}
-
-	return r
-}
-
-func (a *arangoTaskLoader) ArangoTask(name string) (*api.ArangoTask, bool) {
-	at, ok := a.at[name]
-	if !ok {
-		return nil, false
-	}
-
-	return at, true
-}
-
-func (a *arangoTaskLoader) IterateArangoTasks(action arangotask.Action, filters ...arangotask.Filter) error {
-	for _, node := range a.ArangoTasks() {
-		if err := a.iterateArangoTask(node, action, filters...); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (a *arangoTaskLoader) iterateArangoTask(at *api.ArangoTask, action arangotask.Action, filters ...arangotask.Filter) error {
-	for _, filter := range filters {
-		if !filter(at) {
-			return nil
-		}
-	}
-
-	return action(at)
-}
-
-func (a *arangoTaskLoader) ArangoTaskReadInterface() arangotask.ReadInterface {
-	return &arangoTaskReadInterface{i: a}
-}
-
-type arangoTaskReadInterface struct {
-	i *arangoTaskLoader
-}
-
-func (a *arangoTaskReadInterface) Get(ctx context.Context, name string, opts meta.GetOptions) (*api.ArangoTask, error) {
-	if s, ok := a.i.ArangoTask(name); !ok {
-		return nil, apiErrors.NewNotFound(schema.GroupResource{
-			Group:    deployment.ArangoDeploymentGroupName,
-			Resource: "arangotasks",
-		}, name)
-	} else {
-		return s, nil
-	}
-}
-
-func arangoTaskPointer(at api.ArangoTask) *api.ArangoTask {
-	return &at
-}
-
-func arangoTasksToMap(ctx context.Context, inspector *inspector, k versioned.Interface, namespace string) func() error {
-	return func() error {
-		ats, err := getArangoTasks(ctx, k, namespace, "")
-		if err != nil {
-			if apiErrors.IsUnauthorized(err) || apiErrors.IsNotFound(err) {
-				inspector.at = &arangoTaskLoader{
-					accessible: false,
-				}
-				return nil
-			}
-			return err
-		}
-
-		atsMap := map[string]*api.ArangoTask{}
-
-		for _, at := range ats {
-			_, exists := atsMap[at.GetName()]
-			if exists {
-				return errors.Newf("ArangoMember %s already exists in map, error received", at.GetName())
-			}
-
-			atsMap[at.GetName()] = arangoTaskPointer(at)
-		}
-
-		inspector.at = &arangoTaskLoader{
-			accessible: true,
-			at:         atsMap,
-		}
-
-		return nil
-	}
-}
-
-func getArangoTasks(ctx context.Context, k versioned.Interface, namespace, cont string) ([]api.ArangoTask, error) {
+func (p arangoTasksInspectorLoader) getV1ArangoTasksList(ctx context.Context, i *inspectorState) ([]*api.ArangoTask, error) {
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
-	ats, err := k.DatabaseV1().ArangoTasks(namespace).List(ctxChild, meta.ListOptions{
-		Limit:    globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
-		Continue: cont,
+	obj, err := i.client.Arango().DatabaseV1().ArangoTasks(i.namespace).List(ctxChild, meta.ListOptions{
+		Limit: globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
 	})
 
 	if err != nil {
 		return nil, err
 	}
 
-	if ats.Continue != "" {
-		newATLoader, err := getArangoTasks(ctx, k, namespace, ats.Continue)
+	items := obj.Items
+	cont := obj.Continue
+	var s = int64(len(items))
+
+	if z := obj.RemainingItemCount; z != nil {
+		s += *z
+	}
+
+	ptrs := make([]*api.ArangoTask, 0, s)
+
+	for {
+		for id := range items {
+			ptrs = append(ptrs, &items[id])
+		}
+
+		if cont == "" {
+			break
+		}
+
+		items, cont, err = p.getV1ArangoTasksListRequest(ctx, i, cont)
+
 		if err != nil {
 			return nil, err
 		}
-
-		return append(ats.Items, newATLoader...), nil
 	}
 
-	return ats.Items, nil
+	return ptrs, nil
+}
+
+func (p arangoTasksInspectorLoader) getV1ArangoTasksListRequest(ctx context.Context, i *inspectorState, cont string) ([]api.ArangoTask, string, error) {
+	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
+	defer cancel()
+	obj, err := i.client.Arango().DatabaseV1().ArangoTasks(i.namespace).List(ctxChild, meta.ListOptions{
+		Limit:    globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
+		Continue: cont,
+	})
+
+	if err != nil {
+		return nil, "", err
+	}
+
+	return obj.Items, obj.Continue, err
+}
+
+func (p arangoTasksInspectorLoader) Verify(i *inspectorState) error {
+	return nil
+}
+
+func (p arangoTasksInspectorLoader) Copy(from, to *inspectorState, override bool) {
+	if to.arangoTasks != nil {
+		if !override {
+			return
+		}
+	}
+
+	to.arangoTasks = from.arangoTasks
+	to.arangoTasks.state = to
+}
+
+func (p arangoTasksInspectorLoader) Name() string {
+	return "arangoTasks"
+}
+
+type arangoTasksInspector struct {
+	state *inspectorState
+
+	last time.Time
+
+	v1 *arangoTasksInspectorV1
+}
+
+func (p *arangoTasksInspector) LastRefresh() time.Time {
+	return p.last
+}
+
+func (p *arangoTasksInspector) IsStatic() bool {
+	return p.state.IsStatic()
+}
+
+func (p *arangoTasksInspector) Refresh(ctx context.Context) error {
+	p.Throttle(p.state.throttles).Invalidate()
+	return p.state.refresh(ctx, arangoTasksInspectorLoaderObj)
+}
+
+func (p arangoTasksInspector) Throttle(c throttle.Components) throttle.Throttle {
+	return c.ArangoTask()
+}
+
+func (p *arangoTasksInspector) validate() error {
+	if p == nil {
+		return errors.Newf("ArangoTaskInspector is nil")
+	}
+
+	if p.state == nil {
+		return errors.Newf("Parent is nil")
+	}
+
+	return p.v1.validate()
 }

@@ -35,7 +35,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	monitoringFakeClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/fake"
 	"github.com/rs/zerolog"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -49,6 +48,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/probes"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	extfake "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/fake"
@@ -108,7 +108,7 @@ func createTestLifecycle(group api.ServerGroup) *core.Lifecycle {
 func createTestToken(deployment *Deployment, testCase *testCaseStruct, paths []string) (string, error) {
 
 	name := testCase.ArangoDeployment.Spec.Authentication.GetJWTSecretName()
-	s, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().SecretReadInterface(), name)
+	s, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
 	if err != nil {
 		return "", err
 	}
@@ -479,20 +479,18 @@ func createTestDeployment(t *testing.T, config Config, arangoDeployment *api.Ara
 	}
 
 	d := &Deployment{
-		apiObject: arangoDeployment,
-		name:      arangoDeployment.GetName(),
-		namespace: arangoDeployment.GetNamespace(),
-		config:    config,
-		deps:      deps,
-		eventCh:   make(chan *deploymentEvent, deploymentEventQueueSize),
-		stopCh:    make(chan struct{}),
+		apiObject:    arangoDeployment,
+		name:         arangoDeployment.GetName(),
+		namespace:    arangoDeployment.GetNamespace(),
+		config:       config,
+		deps:         deps,
+		eventCh:      make(chan *deploymentEvent, deploymentEventQueueSize),
+		stopCh:       make(chan struct{}),
+		currentState: inspector.NewInspector(throttle.NewAlwaysThrottleComponents(), deps.Client, arangoDeployment.GetNamespace()),
 	}
 	d.clientCache = client.NewClientCache(d, conn.NewFactory(d.getAuth, d.getConnConfig))
 
-	cachedStatus, err := inspector.NewInspector(context.Background(), deps.Client, d.GetNamespace())
-	require.NoError(t, err)
-	assert.NotEmpty(t, cachedStatus.GetVersionInfo(), "API server should not have returned empty version")
-	d.SetCachedStatus(cachedStatus)
+	require.NoError(t, d.currentState.Refresh(context.Background()))
 
 	arangoDeployment.Spec.SetDefaults(arangoDeployment.GetName())
 	d.resources = resources.NewResources(deps.Log, d)

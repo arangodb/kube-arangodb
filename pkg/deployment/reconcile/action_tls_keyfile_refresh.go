@@ -60,7 +60,7 @@ func (a *refreshTLSKeyfileCertificateAction) CheckProgress(ctx context.Context) 
 		return true, false, nil
 	}
 
-	s, exists := a.actionCtx.GetCachedStatus().Secret(k8sutil.CreateTLSKeyfileSecretName(a.actionCtx.GetAPIObject().GetName(), a.action.Group.AsRole(), a.action.MemberID))
+	s, exists := a.actionCtx.GetCachedStatus().Secret().V1().GetSimple(k8sutil.CreateTLSKeyfileSecretName(a.actionCtx.GetAPIObject().GetName(), a.action.Group.AsRole(), a.action.MemberID))
 	if !exists {
 		a.log.Warn().Msg("Keyfile secret is missing")
 		return true, false, nil

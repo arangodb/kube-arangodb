@@ -49,7 +49,6 @@ const (
 func (d *Deployment) createAccessPackages(ctx context.Context) error {
 	log := d.deps.Log
 	spec := d.apiObject.Spec
-	secrets := d.deps.Client.Kubernetes().CoreV1().Secrets(d.GetNamespace())
 
 	if !spec.Sync.IsEnabled() {
 		// We're only relevant when sync is enabled
@@ -66,21 +65,15 @@ func (d *Deployment) createAccessPackages(ctx context.Context) error {
 	}
 
 	// Remove all access packages that we did build, but are no longer needed
-	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
-	defer cancel()
-	secretList, err := secrets.List(ctxChild, metav1.ListOptions{})
-	if err != nil {
-		log.Debug().Err(err).Msg("Failed to list secrets")
-		return errors.WithStack(err)
-	}
-	for _, secret := range secretList.Items {
-		if d.isOwnerOf(&secret) {
+	secretList := d.currentState.Secret().V1().ListSimple()
+	for _, secret := range secretList {
+		if d.isOwnerOf(secret) {
 			if _, found := secret.Data[constants.SecretAccessPackageYaml]; found {
 				// Secret is an access package
 				if _, wanted := apNameMap[secret.GetName()]; !wanted {
 					// We found an obsolete access package secret. Remove it.
-					err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-						return secrets.Delete(ctxChild, secret.GetName(), metav1.DeleteOptions{
+					err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
+						return d.SecretsModInterface().Delete(ctxChild, secret.GetName(), metav1.DeleteOptions{
 							Preconditions: &metav1.Preconditions{UID: &secret.UID},
 						})
 					})
@@ -105,14 +98,9 @@ func (d *Deployment) createAccessPackages(ctx context.Context) error {
 // it is does not already exist.
 func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName string) error {
 	log := d.deps.Log
-	ns := d.GetNamespace()
-	secrets := d.deps.Client.Kubernetes().CoreV1().Secrets(ns)
 	spec := d.apiObject.Spec
 
-	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-		_, err := secrets.Get(ctxChild, apSecretName, metav1.GetOptions{})
-		return err
-	})
+	_, err := d.currentState.Secret().V1().Read().Get(ctx, apSecretName, metav1.GetOptions{})
 	if err == nil {
 		// Secret already exists
 		return nil
@@ -123,9 +111,7 @@ func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName strin
 
 	// Fetch client authentication CA
 	clientAuthSecretName := spec.Sync.Authentication.GetClientCASecretName()
-	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
-	defer cancel()
-	clientAuthCert, clientAuthKey, _, err := k8sutil.GetCASecret(ctxChild, secrets, clientAuthSecretName, nil)
+	clientAuthCert, clientAuthKey, _, err := k8sutil.GetCASecret(ctx, d.currentState.Secret().V1().Read(), clientAuthSecretName, nil)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to get client-auth CA secret")
 		return errors.WithStack(err)
@@ -133,7 +119,7 @@ func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName strin
 
 	// Fetch TLS CA public key
 	tlsCASecretName := spec.Sync.TLS.GetCASecretName()
-	tlsCACert, err := k8sutil.GetCACertficateSecret(ctx, secrets, tlsCASecretName)
+	tlsCACert, err := k8sutil.GetCACertficateSecret(ctx, d.currentState.Secret().V1().Read(), tlsCASecretName)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to get TLS CA secret")
 		return errors.WithStack(err)
@@ -220,7 +206,7 @@ func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName strin
 	// Attach secret to owner
 	secret.SetOwnerReferences(append(secret.GetOwnerReferences(), d.apiObject.AsOwner()))
 	err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-		_, err := secrets.Create(ctxChild, secret, metav1.CreateOptions{})
+		_, err := d.SecretsModInterface().Create(ctxChild, secret, metav1.CreateOptions{})
 		return err
 	})
 	if err != nil {

@@ -67,9 +67,7 @@ func (a *actionArangoMemberUpdatePodStatus) Start(ctx context.Context) (bool, er
 		return true, nil
 	}
 
-	cache := a.actionCtx.GetCachedStatus()
-
-	member, ok := cache.ArangoMember(m.ArangoMemberName(a.actionCtx.GetName(), a.action.Group))
+	member, ok := a.actionCtx.GetCachedStatus().ArangoMember().V1().GetSimple(m.ArangoMemberName(a.actionCtx.GetName(), a.action.Group))
 	if !ok {
 		err := errors.Newf("ArangoMember not found")
 		log.Error().Err(err).Msg("ArangoMember not found")
@@ -88,7 +86,7 @@ func (a *actionArangoMemberUpdatePodStatus) Start(ctx context.Context) (bool, er
 	}
 
 	if member.Status.Template == nil || !member.Status.Template.Equals(member.Spec.Template) {
-		if err := a.actionCtx.WithArangoMemberStatusUpdate(context.Background(), member.GetNamespace(), member.GetName(), func(obj *api.ArangoMember, status *api.ArangoMemberStatus) bool {
+		if err := a.actionCtx.WithCurrentArangoMember(member.GetName()).UpdateStatus(ctx, func(obj *api.ArangoMember, status *api.ArangoMemberStatus) bool {
 			if status.Template == nil || !status.Template.Equals(member.Spec.Template) {
 				status.Template = member.Spec.Template.DeepCopy()
 				return true

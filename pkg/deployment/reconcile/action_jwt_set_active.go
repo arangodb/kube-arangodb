@@ -77,7 +77,7 @@ func (a *jwtSetActiveAction) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	f, ok := a.actionCtx.GetCachedStatus().Secret(pod.JWTSecretFolder(a.actionCtx.GetName()))
+	f, ok := a.actionCtx.GetCachedStatus().Secret().V1().GetSimple(pod.JWTSecretFolder(a.actionCtx.GetName()))
 	if !ok {
 		a.log.Error().Msgf("Unable to get JWT folder info")
 		return true, nil

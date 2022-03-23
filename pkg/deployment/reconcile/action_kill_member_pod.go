@@ -86,7 +86,6 @@ func (a *actionKillMemberPod) CheckProgress(ctx context.Context) (bool, bool, er
 	if !features.GracefulShutdown().Enabled() {
 		return true, false, nil
 	}
-
 	log := a.log
 	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !ok {
@@ -94,7 +93,7 @@ func (a *actionKillMemberPod) CheckProgress(ctx context.Context) (bool, bool, er
 		return true, false, nil
 	}
 
-	p, ok := a.actionCtx.GetCachedStatus().Pod(m.PodName)
+	p, ok := a.actionCtx.GetCachedStatus().Pod().V1().GetSimple(m.PodName)
 	if !ok {
 		log.Error().Msg("No such member")
 		return true, false, nil

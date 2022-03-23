@@ -34,6 +34,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 )
 
 func init() {
@@ -48,7 +49,6 @@ func runtimeContainerArgsUpdate(log zerolog.Logger, action api.Action, actionCtx
 	return a
 }
 
-var _ ActionReloadCachedStatus = &actionRuntimeContainerArgsUpdate{}
 var _ ActionPost = &actionRuntimeContainerArgsUpdate{}
 
 type actionRuntimeContainerArgsUpdate struct {
@@ -58,7 +58,6 @@ type actionRuntimeContainerArgsUpdate struct {
 
 // Post updates arguments for the specific Arango member.
 func (a actionRuntimeContainerArgsUpdate) Post(ctx context.Context) error {
-
 	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !ok {
 		a.log.Info().Msg("member is gone already")
@@ -66,7 +65,7 @@ func (a actionRuntimeContainerArgsUpdate) Post(ctx context.Context) error {
 	}
 
 	memberName := m.ArangoMemberName(a.actionCtx.GetName(), a.action.Group)
-	member, ok := a.actionCtx.GetCachedStatus().ArangoMember(memberName)
+	member, ok := a.actionCtx.GetCachedStatus().ArangoMember().V1().GetSimple(memberName)
 	if !ok {
 		return errors.Errorf("ArangoMember %s not found", memberName)
 	}
@@ -108,7 +107,7 @@ func (a actionRuntimeContainerArgsUpdate) Post(ctx context.Context) error {
 		return false
 	}
 
-	err := a.actionCtx.WithArangoMemberStatusUpdate(ctx, member.GetNamespace(), member.GetName(), updateMemberStatusArgs)
+	err := a.actionCtx.WithCurrentArangoMember(member.GetName()).UpdateStatus(ctx, updateMemberStatusArgs)
 	if err != nil {
 		return errors.WithMessage(err, "Error while updating member status")
 	}
@@ -116,14 +115,14 @@ func (a actionRuntimeContainerArgsUpdate) Post(ctx context.Context) error {
 	return nil
 }
 
-// ReloadCachedStatus reloads the inspector cache when the action is done.
-func (a actionRuntimeContainerArgsUpdate) ReloadCachedStatus() bool {
-	return true
+func (a *actionRuntimeContainerArgsUpdate) ReloadComponents() []throttle.Component {
+	return []throttle.Component{
+		throttle.Pod,
+	}
 }
 
 // Start starts the action for changing conditions on the provided member.
 func (a actionRuntimeContainerArgsUpdate) Start(ctx context.Context) (bool, error) {
-
 	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !ok {
 		a.log.Info().Msg("member is gone already")
@@ -141,12 +140,12 @@ func (a actionRuntimeContainerArgsUpdate) Start(ctx context.Context) (bool, erro
 	}
 
 	memberName := m.ArangoMemberName(a.actionCtx.GetName(), a.action.Group)
-	member, ok := a.actionCtx.GetCachedStatus().ArangoMember(memberName)
+	member, ok := a.actionCtx.GetCachedStatus().ArangoMember().V1().GetSimple(memberName)
 	if !ok {
 		return false, errors.Errorf("ArangoMember %s not found", memberName)
 	}
 
-	pod, ok := a.actionCtx.GetCachedStatus().Pod(m.PodName)
+	pod, ok := a.actionCtx.GetCachedStatus().Pod().V1().GetSimple(m.PodName)
 	if !ok {
 		a.log.Info().Str("podName", m.PodName).Msg("pod is not present")
 		return true, nil

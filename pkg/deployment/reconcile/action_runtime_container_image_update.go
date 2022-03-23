@@ -44,7 +44,6 @@ func runtimeContainerImageUpdate(log zerolog.Logger, action api.Action, actionCt
 	return a
 }
 
-var _ ActionReloadCachedStatus = &actionRuntimeContainerImageUpdate{}
 var _ ActionPost = &actionRuntimeContainerImageUpdate{}
 
 type actionRuntimeContainerImageUpdate struct {
@@ -66,14 +65,14 @@ func (a actionRuntimeContainerImageUpdate) Post(ctx context.Context) error {
 		return nil
 	}
 
-	member, ok := a.actionCtx.GetCachedStatus().ArangoMember(m.ArangoMemberName(a.actionCtx.GetName(), a.action.Group))
+	member, ok := a.actionCtx.GetCachedStatus().ArangoMember().V1().GetSimple(m.ArangoMemberName(a.actionCtx.GetName(), a.action.Group))
 	if !ok {
 		err := errors.Newf("ArangoMember not found")
 		a.log.Error().Err(err).Msg("ArangoMember not found")
 		return err
 	}
 
-	return a.actionCtx.WithArangoMemberStatusUpdate(ctx, member.GetNamespace(), member.GetName(), func(obj *api.ArangoMember, s *api.ArangoMemberStatus) bool {
+	return a.actionCtx.WithCurrentArangoMember(member.GetName()).UpdateStatus(ctx, func(obj *api.ArangoMember, s *api.ArangoMemberStatus) bool {
 		if obj.Spec.Template == nil || s.Template == nil ||
 			obj.Spec.Template.PodSpec == nil || s.Template.PodSpec == nil {
 			a.log.Info().Msgf("Nil Member definition")
@@ -106,10 +105,6 @@ func (a actionRuntimeContainerImageUpdate) Post(ctx context.Context) error {
 		}
 		return false
 	})
-}
-
-func (a actionRuntimeContainerImageUpdate) ReloadCachedStatus() bool {
-	return true
 }
 
 func (a actionRuntimeContainerImageUpdate) getContainerDetails() (string, string, bool) {
@@ -145,14 +140,14 @@ func (a actionRuntimeContainerImageUpdate) Start(ctx context.Context) (bool, err
 		return true, nil
 	}
 
-	member, ok := a.actionCtx.GetCachedStatus().ArangoMember(m.ArangoMemberName(a.actionCtx.GetName(), a.action.Group))
+	member, ok := a.actionCtx.GetCachedStatus().ArangoMember().V1().GetSimple(m.ArangoMemberName(a.actionCtx.GetName(), a.action.Group))
 	if !ok {
 		err := errors.Newf("ArangoMember not found")
 		a.log.Error().Err(err).Msg("ArangoMember not found")
 		return false, err
 	}
 
-	pod, ok := a.actionCtx.GetCachedStatus().Pod(m.PodName)
+	pod, ok := a.actionCtx.GetCachedStatus().Pod().V1().GetSimple(m.PodName)
 	if !ok {
 		a.log.Info().Msg("pod is not present")
 		return true, nil
@@ -207,7 +202,6 @@ func (a actionRuntimeContainerImageUpdate) Start(ctx context.Context) (bool, err
 }
 
 func (a actionRuntimeContainerImageUpdate) CheckProgress(ctx context.Context) (bool, bool, error) {
-
 	a.log.Info().Msgf("Update Progress")
 	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !ok {
@@ -215,7 +209,7 @@ func (a actionRuntimeContainerImageUpdate) CheckProgress(ctx context.Context) (b
 		return true, false, nil
 	}
 
-	pod, ok := a.actionCtx.GetCachedStatus().Pod(m.PodName)
+	pod, ok := a.actionCtx.GetCachedStatus().Pod().V1().GetSimple(m.PodName)
 	if !ok {
 		a.log.Info().Msg("pod is not present")
 		return true, false, nil

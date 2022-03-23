@@ -26,13 +26,11 @@ import (
 	"io/ioutil"
 	"testing"
 
-	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
-	policy "k8s.io/api/policy/v1beta1"
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -40,6 +38,8 @@ import (
 
 	"github.com/arangodb/arangosync-client/client"
 	"github.com/arangodb/go-driver/agency"
+
+	"time"
 
 	"github.com/arangodb/go-driver"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
@@ -51,21 +51,22 @@ import (
 	pod2 "github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor"
+	arangomemberv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember/v1"
+	persistentvolumeclaimv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim/v1"
+	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
+	poddisruptionbudgetv1beta1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget/v1beta1"
+	secretv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
+	servicev1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service/v1"
+	serviceaccountv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount/v1"
+	servicemonitorv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
+	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 )
 
 const pvcName = "pvc_test"
@@ -82,6 +83,14 @@ type testContext struct {
 	RecordedEvent    *k8sutil.Event
 
 	Inspector inspectorInterface.Inspector
+}
+
+func (c *testContext) WithArangoMember(cache inspectorInterface.Inspector, timeout time.Duration, name string) reconciler.ArangoMemberModContext {
+	return reconciler.NewArangoMemberModContext(cache, timeout, name)
+}
+
+func (c *testContext) WithCurrentArangoMember(name string) reconciler.ArangoMemberModContext {
+	return c.WithArangoMember(c.Inspector, 0, name)
 }
 
 func (c *testContext) GetMembersState() member.StateInspector {
@@ -130,35 +139,35 @@ func (c *testContext) GetAgencyCache() (agencyCache.State, bool) {
 	return agencyCache.State{}, true
 }
 
-func (c *testContext) SecretsModInterface() secret.ModInterface {
+func (c *testContext) SecretsModInterface() secretv1.ModInterface {
 	panic("implement me")
 }
 
-func (c *testContext) PodsModInterface() pod.ModInterface {
+func (c *testContext) PodsModInterface() podv1.ModInterface {
 	panic("implement me")
 }
 
-func (c *testContext) ServiceAccountsModInterface() serviceaccount.ModInterface {
+func (c *testContext) ServiceAccountsModInterface() serviceaccountv1.ModInterface {
 	panic("implement me")
 }
 
-func (c *testContext) ServicesModInterface() service.ModInterface {
+func (c *testContext) ServicesModInterface() servicev1.ModInterface {
 	panic("implement me")
 }
 
-func (c *testContext) PersistentVolumeClaimsModInterface() persistentvolumeclaim.ModInterface {
+func (c *testContext) PersistentVolumeClaimsModInterface() persistentvolumeclaimv1.ModInterface {
 	panic("implement me")
 }
 
-func (c *testContext) PodDisruptionBudgetsModInterface() poddisruptionbudget.ModInterface {
+func (c *testContext) PodDisruptionBudgetsModInterface() poddisruptionbudgetv1beta1.ModInterface {
 	panic("implement me")
 }
 
-func (c *testContext) ServiceMonitorsModInterface() servicemonitor.ModInterface {
+func (c *testContext) ServiceMonitorsModInterface() servicemonitorv1.ModInterface {
 	panic("implement me")
 }
 
-func (c *testContext) ArangoMembersModInterface() arangomember.ModInterface {
+func (c *testContext) ArangoMembersModInterface() arangomemberv1.ModInterface {
 	panic("implement me")
 }
 
@@ -252,7 +261,7 @@ func (c *testContext) GetBackup(_ context.Context, backup string) (*backupApi.Ar
 	panic("implement me")
 }
 
-func (c *testContext) SecretsInterface() secret.Interface {
+func (c *testContext) SecretsInterface() secretv1.Interface {
 	panic("implement me")
 }
 
@@ -437,7 +446,7 @@ func TestCreatePlanSingleScale(t *testing.T) {
 	status.Hashes.TLS.Propagated = true
 	status.Hashes.Encryption.Propagated = true
 
-	newPlan, _, changed := createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	newPlan, _, changed := createNormalPlan(ctx, log, depl, nil, spec, status, tests.NewEmptyInspector(t), c)
 	assert.True(t, changed)
 	assert.Len(t, newPlan, 1)
 
@@ -448,12 +457,12 @@ func TestCreatePlanSingleScale(t *testing.T) {
 			PodName: "something",
 		},
 	}
-	newPlan, _, changed = createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	newPlan, _, changed = createNormalPlan(ctx, log, depl, nil, spec, status, tests.NewEmptyInspector(t), c)
 	assert.True(t, changed)
 	assert.Len(t, newPlan, 0) // Single mode does not scale
 
 	spec.Single.Count = util.NewInt(2)
-	newPlan, _, changed = createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	newPlan, _, changed = createNormalPlan(ctx, log, depl, nil, spec, status, tests.NewEmptyInspector(t), c)
 	assert.True(t, changed)
 	assert.Len(t, newPlan, 0) // Single mode does not scale
 
@@ -469,7 +478,7 @@ func TestCreatePlanSingleScale(t *testing.T) {
 			PodName: "something1",
 		},
 	}
-	newPlan, _, changed = createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	newPlan, _, changed = createNormalPlan(ctx, log, depl, nil, spec, status, tests.NewEmptyInspector(t), c)
 	assert.True(t, changed)
 	assert.Len(t, newPlan, 0) // Single mode does not scale down
 }
@@ -498,7 +507,7 @@ func TestCreatePlanActiveFailoverScale(t *testing.T) {
 	var status api.DeploymentStatus
 	addAgentsToStatus(t, &status, 3)
 
-	newPlan, _, changed := createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	newPlan, _, changed := createNormalPlan(ctx, log, depl, nil, spec, status, tests.NewEmptyInspector(t), c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 2)
 	assert.Equal(t, api.ActionTypeAddMember, newPlan[0].Type)
@@ -511,7 +520,7 @@ func TestCreatePlanActiveFailoverScale(t *testing.T) {
 			PodName: "something",
 		},
 	}
-	newPlan, _, changed = createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	newPlan, _, changed = createNormalPlan(ctx, log, depl, nil, spec, status, tests.NewEmptyInspector(t), c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 1)
 	assert.Equal(t, api.ActionTypeAddMember, newPlan[0].Type)
@@ -536,7 +545,7 @@ func TestCreatePlanActiveFailoverScale(t *testing.T) {
 			PodName: "something4",
 		},
 	}
-	newPlan, _, changed = createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	newPlan, _, changed = createNormalPlan(ctx, log, depl, nil, spec, status, tests.NewEmptyInspector(t), c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 3) // Note: Downscaling is only down 1 at a time
 	assert.Equal(t, api.ActionTypeKillMemberPod, newPlan[0].Type)
@@ -570,7 +579,7 @@ func TestCreatePlanClusterScale(t *testing.T) {
 	var status api.DeploymentStatus
 	addAgentsToStatus(t, &status, 3)
 
-	newPlan, _, changed := createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	newPlan, _, changed := createNormalPlan(ctx, log, depl, nil, spec, status, tests.NewEmptyInspector(t), c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 6) // Adding 3 dbservers & 3 coordinators (note: agents do not scale now)
 	assert.Equal(t, api.ActionTypeAddMember, newPlan[0].Type)
@@ -603,7 +612,7 @@ func TestCreatePlanClusterScale(t *testing.T) {
 			PodName: "coordinator1",
 		},
 	}
-	newPlan, _, changed = createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	newPlan, _, changed = createNormalPlan(ctx, log, depl, nil, spec, status, tests.NewEmptyInspector(t), c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 3)
 	assert.Equal(t, api.ActionTypeAddMember, newPlan[0].Type)
@@ -640,7 +649,7 @@ func TestCreatePlanClusterScale(t *testing.T) {
 	}
 	spec.DBServers.Count = util.NewInt(1)
 	spec.Coordinators.Count = util.NewInt(1)
-	newPlan, _, changed = createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	newPlan, _, changed = createNormalPlan(ctx, log, depl, nil, spec, status, tests.NewEmptyInspector(t), c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 7) // Note: Downscaling is done 1 at a time
 	assert.Equal(t, api.ActionTypeCleanOutMember, newPlan[0].Type)
@@ -679,25 +688,14 @@ type testCase struct {
 	ExpectedLog      string
 	ExpectedEvent    *k8sutil.Event
 
-	Pods            map[string]*core.Pod
-	Secrets         map[string]*core.Secret
-	Services        map[string]*core.Service
-	PVCS            map[string]*core.PersistentVolumeClaim
-	ServiceAccounts map[string]*core.ServiceAccount
-	PDBS            map[string]*policy.PodDisruptionBudget
-	ServiceMonitors map[string]*monitoring.ServiceMonitor
-	ArangoMembers   map[string]*api.ArangoMember
-	Nodes           map[string]*core.Node
-	ACS             map[string]*api.ArangoClusterSynchronization
-	AT              map[string]*api.ArangoTask
-	VersionInfo     driver.Version
+	kclient.FakeDataInput
 
 	Extender func(t *testing.T, r *Reconciler, c *testCase)
 }
 
-func (t testCase) Inspector() inspectorInterface.Inspector {
-	return inspector.NewInspectorFromData(t.Pods, t.Secrets, t.PVCS, t.Services, t.ServiceAccounts, t.PDBS,
-		t.ServiceMonitors, t.ArangoMembers, t.Nodes, t.ACS, t.AT, t.VersionInfo)
+func (t testCase) Inspector(test *testing.T) inspectorInterface.Inspector {
+	t.FakeDataInput.Namespace = tests.FakeNamespace
+	return tests.NewInspector(test, t.FakeDataInput.Client())
 }
 
 func TestCreatePlan(t *testing.T) {
@@ -734,7 +732,7 @@ func TestCreatePlan(t *testing.T) {
 	deploymentTemplate := &api.ArangoDeployment{
 		ObjectMeta: meta.ObjectMeta{
 			Name:      "test_depl",
-			Namespace: "test",
+			Namespace: tests.FakeNamespace,
 		},
 		Spec: api.DeploymentSpec{
 			Mode: api.NewMode(api.DeploymentModeCluster),
@@ -787,18 +785,20 @@ func TestCreatePlan(t *testing.T) {
 		},
 		{
 			Name: "Change Storage for DBServers",
-			PVCS: map[string]*core.PersistentVolumeClaim{
-				pvcName: {
-					Spec: core.PersistentVolumeClaimSpec{
-						StorageClassName: util.NewString("oldStorage"),
+			FakeDataInput: kclient.FakeDataInput{
+				PVCS: map[string]*core.PersistentVolumeClaim{
+					pvcName: {
+						Spec: core.PersistentVolumeClaimSpec{
+							StorageClassName: util.NewString("oldStorage"),
+						},
 					},
+				},
+				Pods: map[string]*core.Pod{
+					"dbserver1": {},
 				},
 			},
 			context: &testContext{
 				ArangoDeployment: deploymentTemplate.DeepCopy(),
-			},
-			Pods: map[string]*core.Pod{
-				"dbserver1": {},
 			},
 			Helper: func(ad *api.ArangoDeployment) {
 				ad.Spec.DBServers = api.ServerGroupSpec{
@@ -832,10 +832,12 @@ func TestCreatePlan(t *testing.T) {
 		},
 		{
 			Name: "Wait for changing Storage for DBServers",
-			PVCS: map[string]*core.PersistentVolumeClaim{
-				pvcName: {
-					Spec: core.PersistentVolumeClaimSpec{
-						StorageClassName: util.NewString("oldStorage"),
+			FakeDataInput: kclient.FakeDataInput{
+				PVCS: map[string]*core.PersistentVolumeClaim{
+					pvcName: {
+						Spec: core.PersistentVolumeClaimSpec{
+							StorageClassName: util.NewString("oldStorage"),
+						},
 					},
 				},
 			},
@@ -862,10 +864,12 @@ func TestCreatePlan(t *testing.T) {
 		},
 		{
 			Name: "Change Storage for Agents with deprecated storage class name",
-			PVCS: map[string]*core.PersistentVolumeClaim{
-				pvcName: {
-					Spec: core.PersistentVolumeClaimSpec{
-						StorageClassName: util.NewString(""),
+			FakeDataInput: kclient.FakeDataInput{
+				PVCS: map[string]*core.PersistentVolumeClaim{
+					pvcName: {
+						Spec: core.PersistentVolumeClaimSpec{
+							StorageClassName: util.NewString(""),
+						},
 					},
 				},
 			},
@@ -893,10 +897,12 @@ func TestCreatePlan(t *testing.T) {
 		},
 		{
 			Name: "Storage for Coordinators is not possible",
-			PVCS: map[string]*core.PersistentVolumeClaim{
-				pvcName: {
-					Spec: core.PersistentVolumeClaimSpec{
-						StorageClassName: util.NewString("oldStorage"),
+			FakeDataInput: kclient.FakeDataInput{
+				PVCS: map[string]*core.PersistentVolumeClaim{
+					pvcName: {
+						Spec: core.PersistentVolumeClaimSpec{
+							StorageClassName: util.NewString("oldStorage"),
+						},
 					},
 				},
 			},
@@ -932,16 +938,18 @@ func TestCreatePlan(t *testing.T) {
 		},
 		{
 			Name: "Create rotation plan",
-			PVCS: map[string]*core.PersistentVolumeClaim{
-				"pvc_test": {
-					Spec: core.PersistentVolumeClaimSpec{
-						StorageClassName: util.NewString("oldStorage"),
-					},
-					Status: core.PersistentVolumeClaimStatus{
-						Conditions: []core.PersistentVolumeClaimCondition{
-							{
-								Type:   core.PersistentVolumeClaimFileSystemResizePending,
-								Status: core.ConditionTrue,
+			FakeDataInput: kclient.FakeDataInput{
+				PVCS: map[string]*core.PersistentVolumeClaim{
+					"pvc_test": {
+						Spec: core.PersistentVolumeClaimSpec{
+							StorageClassName: util.NewString("oldStorage"),
+						},
+						Status: core.PersistentVolumeClaimStatus{
+							Conditions: []core.PersistentVolumeClaimCondition{
+								{
+									Type:   core.PersistentVolumeClaimFileSystemResizePending,
+									Status: core.ConditionTrue,
+								},
 							},
 						},
 					},
@@ -951,7 +959,7 @@ func TestCreatePlan(t *testing.T) {
 				// Add ArangoMember
 				builderCtx := newPlanBuilderContext(r.context)
 
-				template, err := builderCtx.RenderPodTemplateForMemberFromCurrent(context.Background(), c.Inspector(), c.context.ArangoDeployment.Status.Members.Agents[0].ID)
+				template, err := builderCtx.RenderPodTemplateForMemberFromCurrent(context.Background(), c.Inspector(t), c.context.ArangoDeployment.Status.Members.Agents[0].ID)
 				require.NoError(t, err)
 
 				checksum, err := resources.ChecksumArangoPod(c.context.ArangoDeployment.Spec.Agents, resources.CreatePodFromTemplate(template))
@@ -1134,7 +1142,7 @@ func TestCreatePlan(t *testing.T) {
 				testCase.Helper(testCase.context.ArangoDeployment)
 			}
 
-			err, _ := r.CreatePlan(ctx, testCase.Inspector())
+			err, _ := r.CreatePlan(ctx, testCase.Inspector(t))
 
 			// Assert
 			if testCase.ExpectedEvent != nil {

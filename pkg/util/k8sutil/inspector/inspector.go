@@ -35,10 +35,17 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
 type Inspector interface {
+	Client() kclient.Client
+	Namespace() string
+
 	refresh.Inspector
+	throttle.Inspector
+
 	pod.Inspector
 	secret.Inspector
 	persistentvolumeclaim.Inspector
@@ -49,7 +56,7 @@ type Inspector interface {
 	arangomember.Inspector
 	server.Inspector
 
-	node.Loader
-	arangoclustersynchronization.Loader
-	arangotask.Loader
+	node.Inspector
+	arangoclustersynchronization.Inspector
+	arangotask.Inspector
 }

@@ -31,6 +31,45 @@ import (
 	"github.com/rs/zerolog"
 )
 
+var (
+	globalLoggerLock sync.Mutex
+	globalLogger     Service
+)
+
+func GlobalLogger() Service {
+	globalLoggerLock.Lock()
+	defer globalLoggerLock.Unlock()
+
+	if globalLogger == nil {
+		if err := initGlobalLogger("info", nil); err != nil {
+			panic(err)
+		}
+	}
+
+	return globalLogger
+}
+
+func InitGlobalLogger(defaultLevel string, overrides []string) error {
+	globalLoggerLock.Lock()
+	defer globalLoggerLock.Unlock()
+
+	return initGlobalLogger(defaultLevel, overrides)
+}
+
+func initGlobalLogger(defaultLevel string, overrides []string) error {
+	if globalLogger != nil {
+		return errors.Newf("GlobalLogger already created")
+	}
+
+	s, err := newService(defaultLevel, overrides)
+	if err != nil {
+		return err
+	}
+
+	globalLogger = s
+	return nil
+}
+
 // Service exposes the interfaces for a logger service
 // that supports different loggers with different levels.
 type Service interface {
@@ -59,8 +98,8 @@ func NewRootLogger() zerolog.Logger {
 	}).With().Timestamp().Logger()
 }
 
-// NewService creates a new Service.
-func NewService(defaultLevel string, overrides []string) (Service, error) {
+// newService creates a new Service.
+func newService(defaultLevel string, overrides []string) (Service, error) {
 	l, err := stringToLevel(defaultLevel)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -70,6 +109,10 @@ func NewService(defaultLevel string, overrides []string) (Service, error) {
 		rootLog:      rootLog,
 		defaultLevel: l,
 		levels:       make(map[string]zerolog.Level),
+	}
+
+	for k, v := range defaultLogLevels {
+		s.levels[k] = v
 	}
 
 	for _, override := range overrides {

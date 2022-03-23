@@ -42,7 +42,7 @@ type LicenseSecret struct {
 }
 
 func GetLicenseFromSecret(secret secret.Inspector, name string) (LicenseSecret, bool) {
-	s, ok := secret.Secret(name)
+	s, ok := secret.Secret().V1().GetSimple(name)
 	if !ok {
 		return LicenseSecret{}, false
 	}

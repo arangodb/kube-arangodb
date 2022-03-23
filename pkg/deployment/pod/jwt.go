@@ -101,7 +101,7 @@ func (e jwt) Verify(i Input, cachedStatus interfaces.Inspector) error {
 	}
 
 	if !VersionHasJWTSecretKeyfolder(i.Version, i.Enterprise) {
-		secret, exists := cachedStatus.Secret(i.Deployment.Authentication.GetJWTSecretName())
+		secret, exists := cachedStatus.Secret().V1().GetSimple(i.Deployment.Authentication.GetJWTSecretName())
 		if !exists {
 			return errors.Newf("Secret for JWT token is missing %s", i.Deployment.Authentication.GetJWTSecretName())
 		}

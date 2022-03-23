@@ -27,12 +27,12 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	v1 "k8s.io/api/core/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	pvcv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim/v1"
 )
 
 var (
@@ -55,7 +55,7 @@ func (r *Resources) InspectPVCs(ctx context.Context, cachedStatus inspectorInter
 
 	// Update member status from all pods found
 	status, _ := r.context.GetStatus()
-	if err := cachedStatus.IteratePersistentVolumeClaims(func(pvc *v1.PersistentVolumeClaim) error {
+	if err := cachedStatus.PersistentVolumeClaim().V1().Iterate(func(pvc *v1.PersistentVolumeClaim) error {
 		// PVC belongs to this deployment, update metric
 		inspectedPVCsCounters.WithLabelValues(deploymentName).Inc()
 
@@ -87,7 +87,7 @@ func (r *Resources) InspectPVCs(ctx context.Context, cachedStatus inspectorInter
 		}
 
 		return nil
-	}, inspector.FilterPersistentVolumeClaimsByLabels(k8sutil.LabelsForDeployment(deploymentName, ""))); err != nil {
+	}, pvcv1.FilterPersistentVolumeClaimsByLabels(k8sutil.LabelsForDeployment(deploymentName, ""))); err != nil {
 		return 0, err
 	}
 

@@ -52,7 +52,7 @@ func (r *Resources) EnsurePVCs(ctx context.Context, cachedStatus inspectorInterf
 				continue
 			}
 
-			if _, exists := cachedStatus.PersistentVolumeClaim(m.PersistentVolumeClaimName); exists {
+			if _, exists := cachedStatus.PersistentVolumeClaim().V1().GetSimple(m.PersistentVolumeClaimName); exists {
 				continue
 			}
 

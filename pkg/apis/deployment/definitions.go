@@ -33,6 +33,10 @@ const (
 	ArangoClusterSynchronizationResourceKind   = "ArangoClusterSynchronization"
 	ArangoClusterSynchronizationResourcePlural = "arangoclustersynchronizations"
 
+	ArangoTaskCRDName        = ArangoTaskResourcePlural + "." + ArangoDeploymentGroupName
+	ArangoTaskResourceKind   = "ArangoTask"
+	ArangoTaskResourcePlural = "arangotasks"
+
 	ArangoDeploymentGroupName = "database.arangodb.com"
 )
 

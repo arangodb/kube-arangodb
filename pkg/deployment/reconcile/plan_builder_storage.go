@@ -56,7 +56,7 @@ func createRotateServerStorageResizePlan(ctx context.Context,
 			}
 
 			// Load PVC
-			pvc, exists := cachedStatus.PersistentVolumeClaim(m.PersistentVolumeClaimName)
+			pvc, exists := cachedStatus.PersistentVolumeClaim().V1().GetSimple(m.PersistentVolumeClaimName)
 			if !exists {
 				log.Warn().
 					Str("role", group.AsRole()).
@@ -96,7 +96,7 @@ func createRotateServerStoragePVCPendingResizeConditionPlan(ctx context.Context,
 			continue
 		}
 
-		pvc, exists := cachedStatus.PersistentVolumeClaim(i.Member.PersistentVolumeClaimName)
+		pvc, exists := cachedStatus.PersistentVolumeClaim().V1().GetSimple(i.Member.PersistentVolumeClaimName)
 		if !exists {
 			continue
 		}
