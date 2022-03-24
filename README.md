@@ -10,14 +10,7 @@ read the [tutorial](https://www.arangodb.com/docs/stable/tutorials-kubernetes.ht
 
 ## State
 
-The ArangoDB Kubernetes Operator is still in **development**.
-
-Running ArangoDB deployments (single, active-failover or cluster)
-is reasonably stable, and we're in the process of validating
-production readiness of various Kubernetes platforms.
-
-The feature set of the ArangoDB Kubernetes Operator is close to what
-it is intended to be.
+The ArangoDB Kubernetes Operator is Production ready.
 
 [Documentation](./docs/README.md)
 
@@ -31,39 +24,51 @@ state and over time move to full "production readiness".
 Operator will supports versions supported on providers and maintained by Kubernetes.
 Once version is not supported anymore it will go into "Deprecating" state and will be marked as deprecated on Minor release.
 
-Kubernetes versions starting from 1.16 are supported and tested, charts and manifests can use API Versions which are not present in older versions.
+Kubernetes versions starting from 1.18 are supported and tested, charts and manifests can use API Versions which are not present in older versions.
 
 The following table has the general readiness state, the table below
 covers individual newer features separately.
 
-| Platform            | Kubernetes Version | ArangoDB Version | State      | Remarks               | Provider Remarks                   |
-|---------------------|--------------------|------------------|------------|-----------------------|------------------------------------|
-| Google GKE          | 1.17               | >= 3.6.0         | Production | Don't use micro nodes |                                    |
-| Google GKE          | 1.18               | >= 3.6.0         | Production | Don't use micro nodes |                                    |
-| Google GKE          | 1.19               | >= 3.6.0         | Production | Don't use micro nodes |                                    |
-| Google GKE          | 1.20               | >= 3.6.0         | Production | Don't use micro nodes |                                    |
-| Azure AKS           | 1.18               | >= 3.6.0         | Production |                       |                                    |
-| Azure AKS           | 1.19               | >= 3.6.0         | Production |                       |                                    |
-| Azure AKS           | 1.20               | >= 3.6.0         | Production |                       |                                    |
-| Amazon EKS          | 1.16               | >= 3.6.0         | Production |                       | [Amazon EKS](./docs/providers/eks) |
-| Amazon EKS          | 1.17               | >= 3.6.0         | Production |                       | [Amazon EKS](./docs/providers/eks) |
-| Amazon EKS          | 1.18               | >= 3.6.0         | Production |                       | [Amazon EKS](./docs/providers/eks) |
-| Amazon EKS          | 1.19               | >= 3.6.0         | Production |                       | [Amazon EKS](./docs/providers/eks) |
-| Amazon EKS          | 1.20               | >= 3.6.0         | Production |                       | [Amazon EKS](./docs/providers/eks) |
-| IBM Cloud           | 1.17               | >= 3.6.0         | Deprecated |                       |                                    |
-| IBM Cloud           | 1.18               | >= 3.6.0         | Production |                       |                                    |
-| IBM Cloud           | 1.19               | >= 3.6.0         | Production |                       |                                    |
-| IBM Cloud           | 1.20               | >= 3.6.0         | Production |                       |                                    |
-| OpenShift           | 3.11               | >= 3.6.0         | Production |                       |                                    |
-| OpenShift           | 4.2                | >= 3.6.0         | Production |                       |                                    |
-| BareMetal (kubeadm) | 1.16               | >= 3.6.0         | Production |                       |                                    |
-| BareMetal (kubeadm) | 1.17               | >= 3.6.0         | Production |                       |                                    |
-| BareMetal (kubeadm) | 1.18               | >= 3.6.0         | Production |                       |                                    |
-| BareMetal (kubeadm) | 1.19               | >= 3.6.0         | Production |                       |                                    |
-| BareMetal (kubeadm) | 1.20               | >= 3.6.0         | Production |                       |                                    |
-| BareMetal (kubeadm) | 1.21               | >= 3.6.0         | Production |                       |                                    |
-| Minikube            | 1.14+              | >= 3.6.0         | Devel Only |                       |                                    |
-| Other               | 1.14+              | >= 3.6.0         | Devel Only |                       |                                    |
+| Platform            | Kubernetes Version | ArangoDB Version | State      | Remarks                                                          | Provider Remarks                   |
+|---------------------|--------------------|------------------|------------|------------------------------------------------------------------|------------------------------------|
+| Google GKE          | 1.17               | >= 3.6.0         | Deprecated | Don't use micro nodes. Support will be dropped in Operator 1.5.0 |                                    |
+| Google GKE          | 1.18               | >= 3.6.0         | Production | Don't use micro nodes                                            |                                    |
+| Google GKE          | 1.19               | >= 3.6.0         | Production | Don't use micro nodes                                            |                                    |
+| Google GKE          | 1.20               | >= 3.6.0         | Production | Don't use micro nodes                                            |                                    |
+| Google GKE          | 1.21               | >= 3.6.0         | Production | Don't use micro nodes                                            |                                    |
+| Google GKE          | 1.22               | >= 3.6.0         | Production | Don't use micro nodes                                            |                                    |
+| Google GKE          | 1.23               | >= 3.6.0         | Production | Don't use micro nodes                                            |                                    |
+| Azure AKS           | 1.18               | >= 3.6.0         | Production |                                                                  |                                    |
+| Azure AKS           | 1.19               | >= 3.6.0         | Production |                                                                  |                                    |
+| Azure AKS           | 1.20               | >= 3.6.0         | Production |                                                                  |                                    |
+| Azure AKS           | 1.21               | >= 3.6.0         | Production |                                                                  |                                    |
+| Azure AKS           | 1.22               | >= 3.6.0         | Production |                                                                  |                                    |
+| Azure AKS           | 1.23               | >= 3.6.0         | Production |                                                                  |                                    |
+| Amazon EKS          | 1.16               | >= 3.6.0         | Deprecated | Support will be dropped in Operator 1.5.0                        | [Amazon EKS](./docs/providers/eks) |
+| Amazon EKS          | 1.17               | >= 3.6.0         | Deprecated | Support will be dropped in Operator 1.5.0                        | [Amazon EKS](./docs/providers/eks) |
+| Amazon EKS          | 1.18               | >= 3.6.0         | Production |                                                                  | [Amazon EKS](./docs/providers/eks) |
+| Amazon EKS          | 1.19               | >= 3.6.0         | Production |                                                                  | [Amazon EKS](./docs/providers/eks) |
+| Amazon EKS          | 1.20               | >= 3.6.0         | Production |                                                                  | [Amazon EKS](./docs/providers/eks) |
+| Amazon EKS          | 1.21               | >= 3.6.0         | Production |                                                                  | [Amazon EKS](./docs/providers/eks) |
+| Amazon EKS          | 1.22               | >= 3.6.0         | Production |                                                                  | [Amazon EKS](./docs/providers/eks) |
+| Amazon EKS          | 1.23               | >= 3.6.0         | Production |                                                                  | [Amazon EKS](./docs/providers/eks) |
+| IBM Cloud           | 1.17               | >= 3.6.0         | Deprecated | Support will be dropped in Operator 1.5.0                        |                                    |
+| IBM Cloud           | 1.18               | >= 3.6.0         | Production |                                                                  |                                    |
+| IBM Cloud           | 1.19               | >= 3.6.0         | Production |                                                                  |                                    |
+| IBM Cloud           | 1.20               | >= 3.6.0         | Production |                                                                  |                                    |
+| IBM Cloud           | 1.21               | >= 3.6.0         | Production |                                                                  |                                    |
+| IBM Cloud           | 1.22               | >= 3.6.0         | Production |                                                                  |                                    |
+| IBM Cloud           | 1.23               | >= 3.6.0         | Production |                                                                  |                                    |
+| OpenShift           | 3.11               | >= 3.6.0         | Deprecated | Support will be dropped in Operator 1.5.0                        |                                    |
+| OpenShift           | 4.2                | >= 3.6.0         | Production |                                                                  |                                    |
+| BareMetal (kubeadm) | 1.16               | >= 3.6.0         | Deprecated | Support will be dropped in Operator 1.5.0                        |                                    |
+| BareMetal (kubeadm) | 1.17               | >= 3.6.0         | Deprecated | Support will be dropped in Operator 1.5.0                        |                                    |
+| BareMetal (kubeadm) | 1.18               | >= 3.6.0         | Production |                                                                  |                                    |
+| BareMetal (kubeadm) | 1.19               | >= 3.6.0         | Production |                                                                  |                                    |
+| BareMetal (kubeadm) | 1.20               | >= 3.6.0         | Production |                                                                  |                                    |
+| BareMetal (kubeadm) | 1.21               | >= 3.6.0         | Production |                                                                  |                                    |
+| Minikube            | 1.18+              | >= 3.6.0         | Devel Only |                                                                  |                                    |
+| Other               | 1.18+              | >= 3.6.0         | Devel Only |                                                                  |                                    |
 
 Feature-wise production readiness table:
 
