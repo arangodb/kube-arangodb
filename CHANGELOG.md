@@ -12,6 +12,7 @@
 - (Feature) (AT) Add ArangoTask API
 - (Bugfix) Fix NPE in State fetcher
 - (Refactor) Configurable throttle inspector
+- (Bugfix) Skip Replace operation on DBServer if they need to be scaled down
 - (Feature) Upgrade procedure steps
 
 ## [1.2.8](https://github.com/arangodb/kube-arangodb/tree/1.2.8) (2022-02-24)
