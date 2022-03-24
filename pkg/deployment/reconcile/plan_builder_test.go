@@ -1058,13 +1058,13 @@ func TestCreatePlan(t *testing.T) {
 			ExpectedLog: "Creating member replacement plan because member has failed",
 		},
 		{
-			Name: "DBServer in failed state",
+			Name: "DBServer in failed state - recreate",
 			context: &testContext{
 				ArangoDeployment: deploymentTemplate.DeepCopy(),
 			},
 			Helper: func(ad *api.ArangoDeployment) {
 				ad.Spec.DBServers = api.ServerGroupSpec{
-					Count: util.NewInt(2),
+					Count: util.NewInt(3),
 				}
 				ad.Status.Members.DBServers[0].Phase = api.MemberPhaseFailed
 				ad.Status.Members.DBServers[0].ID = "id"
@@ -1075,6 +1075,26 @@ func TestCreatePlan(t *testing.T) {
 				actions.NewAction(api.ActionTypeWaitForMemberUp, api.ServerGroupDBServers, withPredefinedMember(api.MemberIDPreviousAction)),
 			},
 			ExpectedLog: "Creating member replacement plan because member has failed",
+		},
+		{
+			Name: "DBServer in failed state - remove",
+			context: &testContext{
+				ArangoDeployment: deploymentTemplate.DeepCopy(),
+			},
+			Helper: func(ad *api.ArangoDeployment) {
+				ad.Spec.DBServers = api.ServerGroupSpec{
+					Count: util.NewInt(2),
+				}
+				ad.Status.Members.DBServers[2].Phase = api.MemberPhaseFailed
+				ad.Status.Members.DBServers[2].ID = "id3"
+			},
+			ExpectedPlan: []api.Action{
+				actions.NewAction(api.ActionTypeCleanOutMember, api.ServerGroupDBServers, withPredefinedMember("id3")),
+				actions.NewAction(api.ActionTypeKillMemberPod, api.ServerGroupDBServers, withPredefinedMember("id3")),
+				actions.NewAction(api.ActionTypeShutdownMember, api.ServerGroupDBServers, withPredefinedMember("id3")),
+				actions.NewAction(api.ActionTypeRemoveMember, api.ServerGroupDBServers, withPredefinedMember("id3")),
+			},
+			ExpectedLog: "Creating scale-down plan",
 		},
 		{
 			Name: "CleanOut DBserver",
@@ -1100,6 +1120,32 @@ func TestCreatePlan(t *testing.T) {
 				actions.NewAction(api.ActionTypeRemoveMember, api.ServerGroupDBServers, withPredefinedMember("")),
 			},
 			ExpectedLog: "Creating dbserver replacement plan because server is cleanout in created phase",
+		},
+		{
+			Name: "CleanOut DBserver - scale down",
+			context: &testContext{
+				ArangoDeployment: deploymentTemplate.DeepCopy(),
+			},
+			Helper: func(ad *api.ArangoDeployment) {
+				ad.Spec.DBServers = api.ServerGroupSpec{
+					Count: util.NewInt(2),
+				}
+				ad.Status.Members.DBServers[2].ID = "id3"
+				ad.Status.Members.DBServers[2].Phase = api.MemberPhaseCreated
+				ad.Status.Members.DBServers[2].Conditions = api.ConditionList{
+					{
+						Type:   api.ConditionTypeCleanedOut,
+						Status: core.ConditionTrue,
+					},
+				}
+			},
+			ExpectedPlan: []api.Action{
+				actions.NewAction(api.ActionTypeCleanOutMember, api.ServerGroupDBServers, withPredefinedMember("id3")),
+				actions.NewAction(api.ActionTypeKillMemberPod, api.ServerGroupDBServers, withPredefinedMember("id3")),
+				actions.NewAction(api.ActionTypeShutdownMember, api.ServerGroupDBServers, withPredefinedMember("id3")),
+				actions.NewAction(api.ActionTypeRemoveMember, api.ServerGroupDBServers, withPredefinedMember("id3")),
+			},
+			ExpectedLog: "Creating scale-down plan",
 		},
 		{
 			Name: "Scale down DBservers",
