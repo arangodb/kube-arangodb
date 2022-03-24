@@ -34,6 +34,7 @@ import (
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	coreosv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -95,7 +96,7 @@ func (r *Resources) serviceMonitorSpec() (coreosv1.ServiceMonitorSpec, error) {
 
 		endpoint.BearerTokenSecret.Name = *spec.Metrics.Authentication.JWTTokenSecretName
 		endpoint.BearerTokenSecret.Key = constants.SecretKeyToken
-		endpoint.Path = k8sutil.ArangoExporterInternalEndpoint
+		endpoint.Path = shared.ArangoExporterInternalEndpoint
 
 		return coreosv1.ServiceMonitorSpec{
 			JobLabel: "k8s-app",

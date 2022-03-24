@@ -35,7 +35,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 )
 
 func (d *Deployment) createAgencyMapping(ctx context.Context) error {
@@ -142,7 +142,7 @@ func renderMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 			UID:                       uuid.NewUUID(),
 			CreatedAt:                 metav1.Now(),
 			Phase:                     api.MemberPhaseNone,
-			PersistentVolumeClaimName: k8sutil.CreatePersistentVolumeClaimName(deploymentName, role, id),
+			PersistentVolumeClaimName: shared.CreatePersistentVolumeClaimName(deploymentName, role, id),
 			PodName:                   "",
 			Image:                     apiObject.Status.CurrentImage,
 			Architecture:              &arch,
@@ -154,7 +154,7 @@ func renderMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 			UID:                       uuid.NewUUID(),
 			CreatedAt:                 metav1.Now(),
 			Phase:                     api.MemberPhaseNone,
-			PersistentVolumeClaimName: k8sutil.CreatePersistentVolumeClaimName(deploymentName, role, id),
+			PersistentVolumeClaimName: shared.CreatePersistentVolumeClaimName(deploymentName, role, id),
 			PodName:                   "",
 			Image:                     apiObject.Status.CurrentImage,
 			Architecture:              &arch,
@@ -166,7 +166,7 @@ func renderMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 			UID:                       uuid.NewUUID(),
 			CreatedAt:                 metav1.Now(),
 			Phase:                     api.MemberPhaseNone,
-			PersistentVolumeClaimName: k8sutil.CreatePersistentVolumeClaimName(deploymentName, role, id),
+			PersistentVolumeClaimName: shared.CreatePersistentVolumeClaimName(deploymentName, role, id),
 			PodName:                   "",
 			Image:                     apiObject.Status.CurrentImage,
 			Architecture:              &arch,

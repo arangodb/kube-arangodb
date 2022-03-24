@@ -21,9 +21,9 @@
 package v2alpha1
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 // RocksDBEncryptionSpec holds rocksdb encryption at rest specific configuration settings
@@ -55,7 +55,7 @@ func (s RocksDBSpec) IsEncrypted() bool {
 
 // Validate the given spec
 func (s RocksDBSpec) Validate() error {
-	if err := k8sutil.ValidateOptionalResourceName(s.Encryption.GetKeySecretName()); err != nil {
+	if err := shared.ValidateOptionalResourceName(s.Encryption.GetKeySecretName()); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil

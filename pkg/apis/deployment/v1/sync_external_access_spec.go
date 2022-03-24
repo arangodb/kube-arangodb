@@ -25,9 +25,8 @@ import (
 	"net/url"
 	"strconv"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 // SyncExternalAccessSpec holds configuration for the external access provided for the sync deployment.
@@ -69,7 +68,7 @@ func (s SyncExternalAccessSpec) Validate() error {
 		}
 	}
 	for _, name := range s.AccessPackageSecretNames {
-		if err := k8sutil.ValidateResourceName(name); err != nil {
+		if err := shared.ValidateResourceName(name); err != nil {
 			return errors.WithStack(errors.Newf("Invalid name '%s' in accessPackageSecretNames: %s", name, err))
 		}
 	}

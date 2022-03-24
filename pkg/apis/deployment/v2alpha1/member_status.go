@@ -23,11 +23,10 @@ package v2alpha1
 import (
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-
 	"k8s.io/apimachinery/pkg/types"
 
 	driver "github.com/arangodb/go-driver"
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -174,5 +173,5 @@ func (s MemberStatus) IsNotReadySince(timestamp time.Time) bool {
 
 // ArangoMemberName create member name from given member
 func (s MemberStatus) ArangoMemberName(deploymentName string, group ServerGroup) string {
-	return k8sutil.CreatePodHostName(deploymentName, group.AsRole(), s.ID)
+	return shared.CreatePodHostName(deploymentName, group.AsRole(), s.ID)
 }

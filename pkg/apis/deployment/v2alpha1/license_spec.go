@@ -21,8 +21,8 @@
 package v2alpha1
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 // LicenseSpec holds the license related information
@@ -43,7 +43,7 @@ func (s LicenseSpec) GetSecretName() string {
 // Validate validates the LicenseSpec
 func (s LicenseSpec) Validate() error {
 	if s.HasSecretName() {
-		if err := k8sutil.ValidateResourceName(s.GetSecretName()); err != nil {
+		if err := shared.ValidateResourceName(s.GetSecretName()); err != nil {
 			return err
 		}
 	}

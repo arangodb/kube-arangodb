@@ -25,6 +25,7 @@ import (
 
 	core "k8s.io/api/core/v1"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -39,7 +40,7 @@ func appendDeploymentClusterDomain(dns string, domain *string) string {
 // CreatePodDNSName returns the DNS of a pod with a given role & id in
 // a given deployment.
 func CreatePodDNSName(deployment metav1.Object, role, id string) string {
-	return fmt.Sprintf("%s.%s.%s.svc", CreatePodHostName(deployment.GetName(), role, id), CreateHeadlessServiceName(deployment.GetName()), deployment.GetNamespace())
+	return fmt.Sprintf("%s.%s.%s.svc", shared.CreatePodHostName(deployment.GetName(), role, id), CreateHeadlessServiceName(deployment.GetName()), deployment.GetNamespace())
 }
 
 // CreatePodDNSName returns the DNS of a pod with a given role & id in

@@ -38,6 +38,7 @@ import (
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
@@ -187,7 +188,7 @@ type cmdLifecyclePreStopRunPort struct {
 
 // Wait until port 8529 is closed.
 func (c *cmdLifecyclePreStopRunPort) run(cmd *cobra.Command, args []string) error {
-	address := net.JoinHostPort("127.0.0.1", strconv.Itoa(k8sutil.ArangoPort))
+	address := net.JoinHostPort("127.0.0.1", strconv.Itoa(shared.ArangoPort))
 
 	// Get environment
 	namespace := os.Getenv(constants.EnvOperatorPodNamespace)

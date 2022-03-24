@@ -34,6 +34,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
@@ -43,27 +44,6 @@ import (
 )
 
 const (
-	ServerContainerName             = "server"
-	ExporterContainerName           = "exporter"
-	ArangodVolumeName               = "arangod-data"
-	TlsKeyfileVolumeName            = "tls-keyfile"
-	ClientAuthCAVolumeName          = "client-auth-ca"
-	ClusterJWTSecretVolumeName      = "cluster-jwt"
-	MasterJWTSecretVolumeName       = "master-jwt"
-	LifecycleVolumeName             = "lifecycle"
-	FoxxAppEphemeralVolumeName      = "ephemeral-apps"
-	TMPEphemeralVolumeName          = "ephemeral-tmp"
-	RocksdbEncryptionVolumeName     = "rocksdb-encryption"
-	ExporterJWTVolumeName           = "exporter-jwt"
-	ArangodVolumeMountDir           = "/data"
-	RocksDBEncryptionVolumeMountDir = "/secrets/rocksdb/encryption"
-	TLSKeyfileVolumeMountDir        = "/secrets/tls"
-	TLSSNIKeyfileVolumeMountDir     = "/secrets/sni"
-	ClientAuthCAVolumeMountDir      = "/secrets/client-auth/ca"
-	ClusterJWTSecretVolumeMountDir  = "/secrets/cluster/jwt"
-	ExporterJWTVolumeMountDir       = "/secrets/exporter/jwt"
-	MasterJWTSecretVolumeMountDir   = "/secrets/master/jwt"
-
 	ServerContainerConditionContainersNotReady = "ContainersNotReady"
 	ServerContainerConditionPrefix             = "containers with unready status: "
 )
@@ -174,7 +154,7 @@ func GetPodByName(pods []core.Pod, podName string) (core.Pod, bool) {
 
 // IsPodServerContainerRunning returns true if the arangodb container of the pod is still running
 func IsPodServerContainerRunning(pod *core.Pod) bool {
-	return IsContainerRunning(pod, ServerContainerName)
+	return IsContainerRunning(pod, shared.ServerContainerName)
 }
 
 // IsContainerRunning returns true if the container of the pod is still running
@@ -307,7 +287,7 @@ func IsPodTerminating(pod *core.Pod) bool {
 // IsArangoDBImageIDAndVersionPod returns true if the given pod is used for fetching image ID and ArangoDB version of an image
 func IsArangoDBImageIDAndVersionPod(p *core.Pod) bool {
 	role, found := p.GetLabels()[LabelKeyRole]
-	return found && role == ImageIDAndVersionRole
+	return found && role == shared.ImageIDAndVersionRole
 }
 
 // getPodCondition returns the condition of given type in the given status.
@@ -327,13 +307,7 @@ func CreatePodName(deploymentName, role, id, suffix string) string {
 	if len(suffix) > 0 && suffix[0] != '-' {
 		suffix = "-" + suffix
 	}
-	return CreatePodHostName(deploymentName, role, id) + suffix
-}
-
-// CreatePodHostName returns the hostname of the pod for a member with
-// a given id in a deployment with a given name.
-func CreatePodHostName(deploymentName, role, id string) string {
-	return deploymentName + "-" + role + "-" + stripArangodPrefix(id)
+	return shared.CreatePodHostName(deploymentName, role, id) + suffix
 }
 
 // CreateTLSKeyfileSecretName returns the name of the Secret that holds the TLS keyfile for a member with
@@ -350,16 +324,16 @@ func AppendTLSKeyfileSecretPostfix(name string) string {
 // ArangodVolumeMount creates a volume mount structure for arangod.
 func ArangodVolumeMount() core.VolumeMount {
 	return core.VolumeMount{
-		Name:      ArangodVolumeName,
-		MountPath: ArangodVolumeMountDir,
+		Name:      shared.ArangodVolumeName,
+		MountPath: shared.ArangodVolumeMountDir,
 	}
 }
 
 // TlsKeyfileVolumeMount creates a volume mount structure for a TLS keyfile.
 func TlsKeyfileVolumeMount() core.VolumeMount {
 	return core.VolumeMount{
-		Name:      TlsKeyfileVolumeName,
-		MountPath: TLSKeyfileVolumeMountDir,
+		Name:      shared.TlsKeyfileVolumeName,
+		MountPath: shared.TLSKeyfileVolumeMountDir,
 		ReadOnly:  true,
 	}
 }
@@ -367,31 +341,31 @@ func TlsKeyfileVolumeMount() core.VolumeMount {
 // ClientAuthCACertificateVolumeMount creates a volume mount structure for a client-auth CA certificate (ca.crt).
 func ClientAuthCACertificateVolumeMount() core.VolumeMount {
 	return core.VolumeMount{
-		Name:      ClientAuthCAVolumeName,
-		MountPath: ClientAuthCAVolumeMountDir,
+		Name:      shared.ClientAuthCAVolumeName,
+		MountPath: shared.ClientAuthCAVolumeMountDir,
 	}
 }
 
 // MasterJWTVolumeMount creates a volume mount structure for a master JWT secret (token).
 func MasterJWTVolumeMount() core.VolumeMount {
 	return core.VolumeMount{
-		Name:      MasterJWTSecretVolumeName,
-		MountPath: MasterJWTSecretVolumeMountDir,
+		Name:      shared.MasterJWTSecretVolumeName,
+		MountPath: shared.MasterJWTSecretVolumeMountDir,
 	}
 }
 
 // ClusterJWTVolumeMount creates a volume mount structure for a cluster JWT secret (token).
 func ClusterJWTVolumeMount() core.VolumeMount {
 	return core.VolumeMount{
-		Name:      ClusterJWTSecretVolumeName,
-		MountPath: ClusterJWTSecretVolumeMountDir,
+		Name:      shared.ClusterJWTSecretVolumeName,
+		MountPath: shared.ClusterJWTSecretVolumeMountDir,
 	}
 }
 
 func ExporterJWTVolumeMount() core.VolumeMount {
 	return core.VolumeMount{
-		Name:      ExporterJWTVolumeName,
-		MountPath: ExporterJWTVolumeMountDir,
+		Name:      shared.ExporterJWTVolumeName,
+		MountPath: shared.ExporterJWTVolumeMountDir,
 		ReadOnly:  true,
 	}
 }
@@ -399,24 +373,24 @@ func ExporterJWTVolumeMount() core.VolumeMount {
 // RocksdbEncryptionVolumeMount creates a volume mount structure for a RocksDB encryption key.
 func RocksdbEncryptionVolumeMount() core.VolumeMount {
 	return core.VolumeMount{
-		Name:      RocksdbEncryptionVolumeName,
-		MountPath: RocksDBEncryptionVolumeMountDir,
+		Name:      shared.RocksdbEncryptionVolumeName,
+		MountPath: shared.RocksDBEncryptionVolumeMountDir,
 	}
 }
 
 // RocksdbEncryptionReadOnlyVolumeMount creates a volume mount structure for a RocksDB encryption key.
 func RocksdbEncryptionReadOnlyVolumeMount() core.VolumeMount {
 	return core.VolumeMount{
-		Name:      RocksdbEncryptionVolumeName,
-		MountPath: RocksDBEncryptionVolumeMountDir,
+		Name:      shared.RocksdbEncryptionVolumeName,
+		MountPath: shared.RocksDBEncryptionVolumeMountDir,
 		ReadOnly:  true,
 	}
 }
 
 // ArangodInitContainer creates a container configured to initialize a UUID file.
 func ArangodInitContainer(name, id, engine, executable, operatorImage string, requireUUID bool, securityContext *core.SecurityContext) core.Container {
-	uuidFile := filepath.Join(ArangodVolumeMountDir, "UUID")
-	engineFile := filepath.Join(ArangodVolumeMountDir, "ENGINE")
+	uuidFile := filepath.Join(shared.ArangodVolumeMountDir, "UUID")
+	engineFile := filepath.Join(shared.ArangodVolumeMountDir, "ENGINE")
 	var command = []string{
 		executable,
 		"uuid",
@@ -542,7 +516,7 @@ func NewContainer(containerCreator interfaces.ContainerCreator) (core.Container,
 // NewPod creates a basic Pod for given settings.
 func NewPod(deploymentName, role, id, podName string, podCreator interfaces.PodCreator) core.Pod {
 
-	hostname := CreatePodHostName(deploymentName, role, id)
+	hostname := shared.CreatePodHostName(deploymentName, role, id)
 	p := core.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:       podName,

@@ -26,6 +26,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/probes"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	v1 "k8s.io/api/core/v1"
 )
@@ -42,7 +43,7 @@ func ArangodbInternalExporterContainer(image string, args []string, livenessProb
 	exePath := filepath.Join(k8sutil.LifecycleVolumeMountDir, filepath.Base(binaryPath))
 
 	c := v1.Container{
-		Name:    k8sutil.ExporterContainerName,
+		Name:    shared.ExporterContainerName,
 		Image:   image,
 		Command: append([]string{exePath, "exporter"}, args...),
 		Ports: []v1.ContainerPort{

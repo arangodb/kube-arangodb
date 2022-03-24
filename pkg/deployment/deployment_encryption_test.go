@@ -28,6 +28,7 @@ import (
 	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
@@ -63,12 +64,12 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
-						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
-						k8sutil.CreateVolumeWithSecret(k8sutil.RocksdbEncryptionVolumeName, testRocksDBEncryptionKey),
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
+						k8sutil.CreateVolumeWithSecret(shared.RocksdbEncryptionVolumeName, testRocksDBEncryptionKey),
 					},
 					Containers: []core.Container{
 						{
-							Name:  k8sutil.ServerContainerName,
+							Name:  shared.ServerContainerName,
 							Image: testImage,
 							Command: BuildTestAgentArgs(t, firstAgentStatus.ID,
 								AgentArgsWithTLS(firstAgentStatus.ID, false),
@@ -80,7 +81,7 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 								k8sutil.RocksdbEncryptionVolumeMount(),
 							},
 							Resources:       emptyResources,
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", k8sutil.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -129,7 +130,7 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 				require.NoError(t, err)
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(httpProbe, true,
-					authorization, k8sutil.ArangoPort)
+					authorization, shared.ArangoPort)
 			},
 			config: Config{
 				OperatorImage: testImageOperator,
@@ -138,11 +139,11 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
-						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
 						createTestTLSVolume(api.ServerGroupDBServersString, firstDBServerStatus.ID),
-						k8sutil.CreateVolumeWithSecret(k8sutil.RocksdbEncryptionVolumeName, testRocksDBEncryptionKey),
-						k8sutil.CreateVolumeWithSecret(k8sutil.ExporterJWTVolumeName, testExporterToken),
-						k8sutil.CreateVolumeWithSecret(k8sutil.ClusterJWTSecretVolumeName, testJWTSecretName),
+						k8sutil.CreateVolumeWithSecret(shared.RocksdbEncryptionVolumeName, testRocksDBEncryptionKey),
+						k8sutil.CreateVolumeWithSecret(shared.ExporterJWTVolumeName, testExporterToken),
+						k8sutil.CreateVolumeWithSecret(shared.ClusterJWTSecretVolumeName, testJWTSecretName),
 						k8sutil.LifecycleVolume(),
 					},
 					InitContainers: []core.Container{
@@ -150,12 +151,12 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 					},
 					Containers: []core.Container{
 						{
-							Name:            k8sutil.ServerContainerName,
+							Name:            shared.ServerContainerName,
 							Image:           testImage,
 							Command:         createTestCommandForDBServer(firstDBServerStatus.ID, true, true, true),
 							Ports:           createTestPorts(),
 							Lifecycle:       createTestLifecycle(api.ServerGroupAgents),
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", k8sutil.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 							VolumeMounts: []core.VolumeMount{
@@ -211,12 +212,12 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
-						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
-						k8sutil.CreateVolumeWithSecret(k8sutil.RocksdbEncryptionVolumeName, testRocksDBEncryptionKey),
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
+						k8sutil.CreateVolumeWithSecret(shared.RocksdbEncryptionVolumeName, testRocksDBEncryptionKey),
 					},
 					Containers: []core.Container{
 						{
-							Name:  k8sutil.ServerContainerName,
+							Name:  shared.ServerContainerName,
 							Image: testImage,
 							Command: BuildTestAgentArgs(t, firstAgentStatus.ID,
 								AgentArgsWithTLS(firstAgentStatus.ID, false),
@@ -228,7 +229,7 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 								k8sutil.RocksdbEncryptionVolumeMount(),
 							},
 							Resources:       emptyResources,
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", k8sutil.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -274,12 +275,12 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
-						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
-						k8sutil.CreateVolumeWithSecret(k8sutil.RocksdbEncryptionVolumeName, fmt.Sprintf("%s-encryption-folder", testDeploymentName)),
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
+						k8sutil.CreateVolumeWithSecret(shared.RocksdbEncryptionVolumeName, fmt.Sprintf("%s-encryption-folder", testDeploymentName)),
 					},
 					Containers: []core.Container{
 						{
-							Name:  k8sutil.ServerContainerName,
+							Name:  shared.ServerContainerName,
 							Image: testImage,
 							Command: BuildTestAgentArgs(t, firstAgentStatus.ID,
 								AgentArgsWithTLS(firstAgentStatus.ID, false),
@@ -295,7 +296,7 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 								k8sutil.RocksdbEncryptionReadOnlyVolumeMount(),
 							},
 							Resources:       emptyResources,
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", k8sutil.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},

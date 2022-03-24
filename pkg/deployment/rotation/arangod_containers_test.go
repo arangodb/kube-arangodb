@@ -27,16 +27,16 @@ import (
 	v1 "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 func Test_ArangoDContainers_SidecarImages(t *testing.T) {
 	testCases := []TestCase{
 		{
 			name:   "Sidecar Image Update",
-			spec:   buildPodSpec(addContainer(k8sutil.ServerContainerName, nil), addSidecarWithImage("sidecar", "local:1.0")),
-			status: buildPodSpec(addContainer(k8sutil.ServerContainerName, nil), addSidecarWithImage("sidecar", "local:2.0")),
+			spec:   buildPodSpec(addContainer(shared.ServerContainerName, nil), addSidecarWithImage("sidecar", "local:1.0")),
+			status: buildPodSpec(addContainer(shared.ServerContainerName, nil), addSidecarWithImage("sidecar", "local:2.0")),
 
 			expectedMode: InPlaceRotation,
 			expectedPlan: api.Plan{
@@ -220,8 +220,8 @@ func logLevelTestCaseGen(name string, mode Mode, spec, status []string) TestCase
 			actions.NewClusterAction(api.ActionTypeRuntimeContainerArgsLogLevelUpdate),
 		}
 	}
-	c.spec = buildPodSpec(addContainerWithCommand(k8sutil.ServerContainerName, spec))
-	c.status = buildPodSpec(addContainerWithCommand(k8sutil.ServerContainerName, status))
+	c.spec = buildPodSpec(addContainerWithCommand(shared.ServerContainerName, spec))
+	c.status = buildPodSpec(addContainerWithCommand(shared.ServerContainerName, status))
 
 	return c
 }

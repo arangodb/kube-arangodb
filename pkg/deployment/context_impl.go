@@ -57,6 +57,7 @@ import (
 	"github.com/arangodb/go-driver/agency"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -344,9 +345,9 @@ func (d *Deployment) GetSyncServerClient(ctx context.Context, group api.ServerGr
 	dnsName := k8sutil.CreatePodDNSNameWithDomain(d.apiObject, d.apiObject.Spec.ClusterDomain, group.AsRole(), id)
 
 	// Build client
-	port := k8sutil.ArangoSyncMasterPort
+	port := shared.ArangoSyncMasterPort
 	if group == api.ServerGroupSyncWorkers {
-		port = k8sutil.ArangoSyncWorkerPort
+		port = shared.ArangoSyncWorkerPort
 	}
 	source := client.Endpoint{"https://" + net.JoinHostPort(dnsName, strconv.Itoa(port))}
 	tlsAuth := tasks.TLSAuthentication{

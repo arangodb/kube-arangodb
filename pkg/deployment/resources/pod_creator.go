@@ -53,6 +53,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -74,7 +75,7 @@ func createArangodArgs(cachedStatus interfaces.Inspector, input pod.Input, addit
 	}
 
 	if input.GroupSpec.GetExternalPortEnabled() {
-		options.Addf("--server.endpoint", "%s://%s:%d", scheme, input.Deployment.GetListenAddr(), k8sutil.ArangoPort)
+		options.Addf("--server.endpoint", "%s://%s:%d", scheme, input.Deployment.GetListenAddr(), shared.ArangoPort)
 	}
 
 	if port := input.GroupSpec.InternalPort; port != nil {
@@ -105,7 +106,7 @@ func createArangodArgs(cachedStatus interfaces.Inspector, input pod.Input, addit
 	// RocksDB
 	options.Merge(pod.Encryption().Args(input))
 
-	options.Add("--database.directory", k8sutil.ArangodVolumeMountDir)
+	options.Add("--database.directory", shared.ArangodVolumeMountDir)
 	options.Add("--log.output", "+")
 
 	options.Merge(pod.SNI().Args(input))
@@ -116,7 +117,7 @@ func createArangodArgs(cachedStatus interfaces.Inspector, input pod.Input, addit
 	}
 	endpoint = util.StringOrDefault(input.Member.Endpoint, endpoint)
 
-	myTCPURL := scheme + "://" + net.JoinHostPort(endpoint, strconv.Itoa(k8sutil.ArangoPort))
+	myTCPURL := scheme + "://" + net.JoinHostPort(endpoint, strconv.Itoa(shared.ArangoPort))
 	addAgentEndpoints := false
 	switch input.Group {
 	case api.ServerGroupAgents:
@@ -133,7 +134,7 @@ func createArangodArgs(cachedStatus interfaces.Inspector, input pod.Input, addit
 				if err != nil {
 					return nil, err
 				}
-				options.Addf("--agency.endpoint", "%s://%s", scheme, net.JoinHostPort(util.StringOrDefault(p.Endpoint, dnsName), strconv.Itoa(k8sutil.ArangoPort)))
+				options.Addf("--agency.endpoint", "%s://%s", scheme, net.JoinHostPort(util.StringOrDefault(p.Endpoint, dnsName), strconv.Itoa(shared.ArangoPort)))
 			}
 		}
 	case api.ServerGroupDBServers:
@@ -170,7 +171,7 @@ func createArangodArgs(cachedStatus interfaces.Inspector, input pod.Input, addit
 			if err != nil {
 				return nil, err
 			}
-			options.Addf("--cluster.agency-endpoint", "%s://%s", scheme, net.JoinHostPort(util.StringOrDefault(p.Endpoint, dnsName), strconv.Itoa(k8sutil.ArangoPort)))
+			options.Addf("--cluster.agency-endpoint", "%s://%s", scheme, net.JoinHostPort(util.StringOrDefault(p.Endpoint, dnsName), strconv.Itoa(shared.ArangoPort)))
 		}
 	}
 
@@ -200,22 +201,22 @@ func createArangoSyncArgs(apiObject meta.Object, spec api.DeploymentSpec, group 
 	if spec.Sync.Monitoring.GetTokenSecretName() != "" {
 		options.Addf("--monitoring.token", "$(%s)", constants.EnvArangoSyncMonitoringToken)
 	}
-	masterSecretPath := filepath.Join(k8sutil.MasterJWTSecretVolumeMountDir, constants.SecretKeyToken)
+	masterSecretPath := filepath.Join(shared.MasterJWTSecretVolumeMountDir, constants.SecretKeyToken)
 	options.Add("--master.jwt-secret", masterSecretPath)
 
 	var masterEndpoint []string
 	switch group {
 	case api.ServerGroupSyncMasters:
 		runCmd = "master"
-		port = k8sutil.ArangoSyncMasterPort
+		port = shared.ArangoSyncMasterPort
 		masterEndpoint = spec.Sync.ExternalAccess.ResolveMasterEndpoint(k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(apiObject, spec.ClusterDomain), port)
-		keyPath := filepath.Join(k8sutil.TLSKeyfileVolumeMountDir, constants.SecretTLSKeyfile)
-		clientCAPath := filepath.Join(k8sutil.ClientAuthCAVolumeMountDir, constants.SecretCACertificate)
+		keyPath := filepath.Join(shared.TLSKeyfileVolumeMountDir, constants.SecretTLSKeyfile)
+		clientCAPath := filepath.Join(shared.ClientAuthCAVolumeMountDir, constants.SecretCACertificate)
 		options.Add("--server.keyfile", keyPath)
 		options.Add("--server.client-cafile", clientCAPath)
 		options.Add("--mq.type", "direct")
 		if spec.IsAuthenticated() {
-			clusterSecretPath := filepath.Join(k8sutil.ClusterJWTSecretVolumeMountDir, constants.SecretKeyToken)
+			clusterSecretPath := filepath.Join(shared.ClusterJWTSecretVolumeMountDir, constants.SecretKeyToken)
 			options.Add("--cluster.jwt-secret", clusterSecretPath)
 		}
 		dbServiceName := k8sutil.CreateDatabaseClientServiceName(apiObject.GetName())
@@ -223,12 +224,12 @@ func createArangoSyncArgs(apiObject meta.Object, spec api.DeploymentSpec, group 
 		if spec.IsSecure() {
 			scheme = "https"
 		}
-		options.Addf("--cluster.endpoint", "%s://%s:%d", scheme, dbServiceName, k8sutil.ArangoPort)
+		options.Addf("--cluster.endpoint", "%s://%s:%d", scheme, dbServiceName, shared.ArangoPort)
 	case api.ServerGroupSyncWorkers:
 		runCmd = "worker"
-		port = k8sutil.ArangoSyncWorkerPort
+		port = shared.ArangoSyncWorkerPort
 		masterEndpointHost := k8sutil.CreateSyncMasterClientServiceName(apiObject.GetName())
-		masterEndpoint = []string{"https://" + net.JoinHostPort(masterEndpointHost, strconv.Itoa(k8sutil.ArangoSyncMasterPort))}
+		masterEndpoint = []string{"https://" + net.JoinHostPort(masterEndpointHost, strconv.Itoa(shared.ArangoSyncMasterPort))}
 	}
 	for _, ep := range masterEndpoint {
 		options.Add("--master.endpoint", ep)
@@ -527,7 +528,7 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 				k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(apiObject, spec.ClusterDomain),
 				k8sutil.CreatePodDNSNameWithDomain(apiObject, spec.ClusterDomain, role, m.ID),
 			)
-			masterEndpoint := spec.Sync.ExternalAccess.ResolveMasterEndpoint(k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(apiObject, spec.ClusterDomain), k8sutil.ArangoSyncMasterPort)
+			masterEndpoint := spec.Sync.ExternalAccess.ResolveMasterEndpoint(k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(apiObject, spec.ClusterDomain), shared.ArangoSyncMasterPort)
 			for _, ep := range masterEndpoint {
 				if u, err := url.Parse(ep); err == nil {
 					names.AltNames = append(names.AltNames, u.Hostname())

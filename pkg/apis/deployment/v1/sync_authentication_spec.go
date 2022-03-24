@@ -21,9 +21,9 @@
 package v1
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 // SyncAuthenticationSpec holds dc2dc sync authentication specific configuration settings
@@ -44,10 +44,10 @@ func (s SyncAuthenticationSpec) GetClientCASecretName() string {
 
 // Validate the given spec
 func (s SyncAuthenticationSpec) Validate() error {
-	if err := k8sutil.ValidateResourceName(s.GetJWTSecretName()); err != nil {
+	if err := shared.ValidateResourceName(s.GetJWTSecretName()); err != nil {
 		return errors.WithStack(err)
 	}
-	if err := k8sutil.ValidateResourceName(s.GetClientCASecretName()); err != nil {
+	if err := shared.ValidateResourceName(s.GetClientCASecretName()); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil

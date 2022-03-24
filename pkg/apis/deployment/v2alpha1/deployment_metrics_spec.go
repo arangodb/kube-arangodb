@@ -22,8 +22,8 @@
 package v2alpha1
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -44,9 +44,9 @@ func (m MetricsMode) New() *MetricsMode {
 func (m MetricsMode) GetMetricsEndpoint() string {
 	switch m {
 	case MetricsModeInternal:
-		return k8sutil.ArangoExporterInternalEndpoint
+		return shared.ArangoExporterInternalEndpoint
 	default:
-		return k8sutil.ArangoExporterDefaultEndpoint
+		return shared.ArangoExporterDefaultEndpoint
 	}
 }
 
@@ -94,7 +94,7 @@ func (s *MetricsSpec) IsTLS() bool {
 
 func (s *MetricsSpec) GetPort() uint16 {
 	if s == nil || s.Port == nil {
-		return k8sutil.ArangoExporterPort
+		return shared.ArangoExporterPort
 	}
 
 	return *s.Port
@@ -156,7 +156,7 @@ func (s *MetricsSpec) SetDefaultsFrom(source MetricsSpec) {
 func (s *MetricsSpec) Validate() error {
 
 	if s.HasJWTTokenSecretName() {
-		if err := k8sutil.ValidateResourceName(s.GetJWTTokenSecretName()); err != nil {
+		if err := shared.ValidateResourceName(s.GetJWTTokenSecretName()); err != nil {
 			return err
 		}
 	}

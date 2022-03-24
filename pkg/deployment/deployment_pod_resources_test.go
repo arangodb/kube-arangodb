@@ -28,6 +28,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	core "k8s.io/api/core/v1"
@@ -122,11 +123,11 @@ func TestEnsurePod_ArangoDB_Resources(t *testing.T) {
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
-						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
 					},
 					Containers: []core.Container{
 						{
-							Name:      k8sutil.ServerContainerName,
+							Name:      shared.ServerContainerName,
 							Image:     testImage,
 							Command:   createTestCommandForDBServer(firstDBServerStatus.ID, false, false, false),
 							Ports:     createTestPorts(),
@@ -134,7 +135,7 @@ func TestEnsurePod_ArangoDB_Resources(t *testing.T) {
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", k8sutil.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 							Env:             withDefaultEnvs(t, resourcesUnfiltered),
@@ -180,11 +181,11 @@ func TestEnsurePod_ArangoDB_Resources(t *testing.T) {
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
-						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
 					},
 					Containers: []core.Container{
 						{
-							Name:      k8sutil.ServerContainerName,
+							Name:      shared.ServerContainerName,
 							Image:     testImage,
 							Command:   createTestCommandForDBServer(firstDBServerStatus.ID, false, false, false),
 							Ports:     createTestPorts(),
@@ -193,7 +194,7 @@ func TestEnsurePod_ArangoDB_Resources(t *testing.T) {
 								k8sutil.ArangodVolumeMount(),
 							},
 							Env:             withEnvs(resourceCPULimitAsEnv(t, resourcesUnfiltered)),
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", k8sutil.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -237,11 +238,11 @@ func TestEnsurePod_ArangoDB_Resources(t *testing.T) {
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
-						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
 					},
 					Containers: []core.Container{
 						{
-							Name:      k8sutil.ServerContainerName,
+							Name:      shared.ServerContainerName,
 							Image:     testImage,
 							Command:   createTestCommandForDBServer(firstDBServerStatus.ID, false, false, false),
 							Ports:     createTestPorts(),
@@ -249,7 +250,7 @@ func TestEnsurePod_ArangoDB_Resources(t *testing.T) {
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", k8sutil.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},

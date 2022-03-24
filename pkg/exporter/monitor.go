@@ -34,8 +34,7 @@ import (
 	"time"
 
 	"github.com/arangodb/go-driver"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/rs/zerolog/log"
 )
 
@@ -48,7 +47,7 @@ const (
 var currentMembersStatus atomic.Value
 
 func NewMonitor(arangodbEndpoint string, auth Authentication, sslVerify bool, timeout time.Duration) *monitor {
-	uri, err := setPath(arangodbEndpoint, k8sutil.ArangoExporterClusterHealthEndpoint)
+	uri, err := setPath(arangodbEndpoint, shared.ArangoExporterClusterHealthEndpoint)
 	if err != nil {
 		log.Error().Err(err).Msgf("Fatal")
 		os.Exit(1)
@@ -131,7 +130,7 @@ func (m monitor) GetMemberStatus(id driver.ServerID, member driver.ServerHealth)
 		return result, err
 	}
 
-	req.URL, err = setPath(member.Endpoint, k8sutil.ArangoExporterStatusEndpoint)
+	req.URL, err = setPath(member.Endpoint, shared.ArangoExporterStatusEndpoint)
 	if err != nil {
 		return result, err
 	}

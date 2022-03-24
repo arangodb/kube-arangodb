@@ -38,6 +38,7 @@ import (
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -190,7 +191,7 @@ func createArangodHTTPConfigForDNSNames(apiObject *api.ArangoDeployment, dnsName
 		DontFollowRedirect: true,
 	}
 	for _, dnsName := range dnsNames {
-		connConfig.Endpoints = append(connConfig.Endpoints, scheme+"://"+net.JoinHostPort(dnsName, strconv.Itoa(k8sutil.ArangoPort)))
+		connConfig.Endpoints = append(connConfig.Endpoints, scheme+"://"+net.JoinHostPort(dnsName, strconv.Itoa(shared.ArangoPort)))
 	}
 	return connConfig
 }

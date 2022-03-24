@@ -25,8 +25,8 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 // EndpointSpec contains the specification used to reach the syncmasters
@@ -56,7 +56,7 @@ func (s EndpointSpec) HasDeploymentName() bool {
 // Validate the given spec, returning an error on validation
 // problems or nil if all ok.
 func (s EndpointSpec) Validate(isSourceEndpoint bool) error {
-	if err := k8sutil.ValidateOptionalResourceName(s.GetDeploymentName()); err != nil {
+	if err := shared.ValidateOptionalResourceName(s.GetDeploymentName()); err != nil {
 		return errors.WithStack(err)
 	}
 	for _, ep := range s.MasterEndpoint {

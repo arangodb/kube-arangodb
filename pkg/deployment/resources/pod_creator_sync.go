@@ -39,6 +39,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	core "k8s.io/api/core/v1"
 )
@@ -84,14 +85,14 @@ func (a *ArangoSyncContainer) GetArgs() ([]string, error) {
 }
 
 func (a *ArangoSyncContainer) GetName() string {
-	return k8sutil.ServerContainerName
+	return shared.ServerContainerName
 }
 
 func (a *ArangoSyncContainer) GetPorts() []core.ContainerPort {
 	return []core.ContainerPort{
 		{
-			Name:          k8sutil.ServerContainerName,
-			ContainerPort: int32(k8sutil.ArangoPort),
+			Name:          shared.ServerContainerName,
+			ContainerPort: int32(shared.ArangoPort),
 			Protocol:      core.ProtocolTCP,
 		},
 	}
@@ -391,25 +392,25 @@ func createArangoSyncVolumes(tlsKeyfileSecretName, clientAuthCASecretName, maste
 	volumes.AddVolumeMount(k8sutil.LifecycleVolumeMount())
 
 	if tlsKeyfileSecretName != "" {
-		vol := k8sutil.CreateVolumeWithSecret(k8sutil.TlsKeyfileVolumeName, tlsKeyfileSecretName)
+		vol := k8sutil.CreateVolumeWithSecret(shared.TlsKeyfileVolumeName, tlsKeyfileSecretName)
 		volumes.AddVolume(vol)
 		volumes.AddVolumeMount(k8sutil.TlsKeyfileVolumeMount())
 	}
 
 	if clientAuthCASecretName != "" {
-		vol := k8sutil.CreateVolumeWithSecret(k8sutil.ClientAuthCAVolumeName, clientAuthCASecretName)
+		vol := k8sutil.CreateVolumeWithSecret(shared.ClientAuthCAVolumeName, clientAuthCASecretName)
 		volumes.AddVolume(vol)
 		volumes.AddVolumeMount(k8sutil.ClientAuthCACertificateVolumeMount())
 	}
 
 	if masterJWTSecretName != "" {
-		vol := k8sutil.CreateVolumeWithSecret(k8sutil.MasterJWTSecretVolumeName, masterJWTSecretName)
+		vol := k8sutil.CreateVolumeWithSecret(shared.MasterJWTSecretVolumeName, masterJWTSecretName)
 		volumes.AddVolume(vol)
 		volumes.AddVolumeMount(k8sutil.MasterJWTVolumeMount())
 	}
 
 	if clusterJWTSecretName != "" {
-		vol := k8sutil.CreateVolumeWithSecret(k8sutil.ClusterJWTSecretVolumeName, clusterJWTSecretName)
+		vol := k8sutil.CreateVolumeWithSecret(shared.ClusterJWTSecretVolumeName, clusterJWTSecretName)
 		volumes.AddVolume(vol)
 		volumes.AddVolumeMount(k8sutil.ClusterJWTVolumeMount())
 	}

@@ -34,6 +34,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	core "k8s.io/api/core/v1"
 )
 
@@ -72,9 +73,9 @@ func (e jwt) Args(i Input) k8sutil.OptionPairs {
 	options.Add("--server.authentication", "true")
 
 	if VersionHasJWTSecretKeyfolder(i.Version, i.Enterprise) {
-		options.Add("--server.jwt-secret-folder", k8sutil.ClusterJWTSecretVolumeMountDir)
+		options.Add("--server.jwt-secret-folder", shared.ClusterJWTSecretVolumeMountDir)
 	} else {
-		keyPath := filepath.Join(k8sutil.ClusterJWTSecretVolumeMountDir, constants.SecretKeyToken)
+		keyPath := filepath.Join(shared.ClusterJWTSecretVolumeMountDir, constants.SecretKeyToken)
 		options.Add("--server.jwt-secret-keyfile", keyPath)
 	}
 
@@ -88,9 +89,9 @@ func (e jwt) Volumes(i Input) ([]core.Volume, []core.VolumeMount) {
 
 	var vol core.Volume
 	if VersionHasJWTSecretKeyfolder(i.Version, i.Enterprise) {
-		vol = k8sutil.CreateVolumeWithSecret(k8sutil.ClusterJWTSecretVolumeName, JWTSecretFolder(i.ApiObject.GetName()))
+		vol = k8sutil.CreateVolumeWithSecret(shared.ClusterJWTSecretVolumeName, JWTSecretFolder(i.ApiObject.GetName()))
 	} else {
-		vol = k8sutil.CreateVolumeWithSecret(k8sutil.ClusterJWTSecretVolumeName, i.Deployment.Authentication.GetJWTSecretName())
+		vol = k8sutil.CreateVolumeWithSecret(shared.ClusterJWTSecretVolumeName, i.Deployment.Authentication.GetJWTSecretName())
 	}
 	return []core.Volume{vol}, []core.VolumeMount{k8sutil.ClusterJWTVolumeMount()}
 }

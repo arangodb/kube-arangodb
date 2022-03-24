@@ -41,6 +41,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	core "k8s.io/api/core/v1"
 )
@@ -98,8 +99,8 @@ type ArangoVersionCheckContainer struct {
 func (a *ArangoDContainer) GetPorts() []core.ContainerPort {
 	ports := []core.ContainerPort{
 		{
-			Name:          k8sutil.ServerContainerName,
-			ContainerPort: int32(k8sutil.ArangoPort),
+			Name:          shared.ServerContainerName,
+			ContainerPort: int32(shared.ArangoPort),
 			Protocol:      core.ProtocolTCP,
 		},
 	}
@@ -109,7 +110,7 @@ func (a *ArangoDContainer) GetPorts() []core.ContainerPort {
 		case api.MetricsModeInternal:
 			ports = append(ports, core.ContainerPort{
 				Name:          "exporter",
-				ContainerPort: int32(k8sutil.ArangoPort),
+				ContainerPort: int32(shared.ArangoPort),
 				Protocol:      core.ProtocolTCP,
 			})
 		}
@@ -123,7 +124,7 @@ func (a *ArangoDContainer) GetArgs() ([]string, error) {
 }
 
 func (a *ArangoDContainer) GetName() string {
-	return k8sutil.ServerContainerName
+	return shared.ServerContainerName
 }
 
 func (a *ArangoDContainer) GetExecutor() string {
@@ -555,12 +556,12 @@ func CreateArangoDVolumes(status api.MemberStatus, input pod.Input, spec api.Dep
 	volumes.AddVolumeMount(k8sutil.LifecycleVolumeMount())
 
 	if status.PersistentVolumeClaimName != "" {
-		vol := k8sutil.CreateVolumeWithPersitantVolumeClaim(k8sutil.ArangodVolumeName,
+		vol := k8sutil.CreateVolumeWithPersitantVolumeClaim(shared.ArangodVolumeName,
 			status.PersistentVolumeClaimName)
 
 		volumes.AddVolume(vol)
 	} else {
-		volumes.AddVolume(k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName))
+		volumes.AddVolume(k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName))
 	}
 
 	// TLS
@@ -575,7 +576,7 @@ func CreateArangoDVolumes(status api.MemberStatus, input pod.Input, spec api.Dep
 	if spec.Metrics.IsEnabled() {
 		token := spec.Metrics.GetJWTTokenSecretName()
 		if spec.Authentication.IsAuthenticated() && token != "" {
-			vol := k8sutil.CreateVolumeWithSecret(k8sutil.ExporterJWTVolumeName, token)
+			vol := k8sutil.CreateVolumeWithSecret(shared.ExporterJWTVolumeName, token)
 			volumes.AddVolume(vol)
 		}
 	}

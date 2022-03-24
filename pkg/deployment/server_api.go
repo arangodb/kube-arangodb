@@ -28,6 +28,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/server"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
@@ -204,7 +205,7 @@ func (d *Deployment) DatabaseURL() string {
 		}
 	}
 	portPredicate := func(p core.ServicePort) bool {
-		return p.TargetPort.IntValue() == k8sutil.ArangoPort
+		return p.TargetPort.IntValue() == shared.ArangoPort
 	}
 	url, err := k8sutil.CreateServiceURL(*svc, scheme, portPredicate, nodeFetcher)
 	if err != nil {

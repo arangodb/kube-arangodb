@@ -31,9 +31,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 	"github.com/stretchr/testify/assert"
@@ -41,7 +41,7 @@ import (
 
 // TestCreateArangodArgsSingle tests createArangodArgs for single server.
 func TestCreateArangodArgsSingle(t *testing.T) {
-	jwtSecretFile := filepath.Join(k8sutil.ClusterJWTSecretVolumeMountDir, constants.SecretKeyToken)
+	jwtSecretFile := filepath.Join(shared.ClusterJWTSecretVolumeMountDir, constants.SecretKeyToken)
 	// Default deployment
 	{
 		apiObject := &api.ArangoDeployment{

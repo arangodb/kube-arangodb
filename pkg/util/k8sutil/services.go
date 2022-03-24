@@ -31,6 +31,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	servicev1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service/v1"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -89,7 +90,7 @@ func CreateExporterService(ctx context.Context, cachedStatus service.Inspector, 
 				{
 					Name:     "exporter",
 					Protocol: core.ProtocolTCP,
-					Port:     ArangoExporterPort,
+					Port:     shared.ArangoExporterPort,
 				},
 			},
 			Selector: selectorLabels,
@@ -117,12 +118,12 @@ func CreateHeadlessService(ctx context.Context, svcs servicev1.ModInterface, dep
 		{
 			Name:     "server",
 			Protocol: core.ProtocolTCP,
-			Port:     ArangoPort,
+			Port:     shared.ArangoPort,
 		},
 	}
 	publishNotReadyAddresses := true
 	serviceType := core.ServiceTypeClusterIP
-	newlyCreated, err := createService(ctx, svcs, svcName, deploymentName, ClusterIPNone, "", serviceType, ports, "", nil, publishNotReadyAddresses, owner)
+	newlyCreated, err := createService(ctx, svcs, svcName, deploymentName, shared.ClusterIPNone, "", serviceType, ports, "", nil, publishNotReadyAddresses, owner)
 	if err != nil {
 		return "", false, errors.WithStack(err)
 	}
@@ -141,7 +142,7 @@ func CreateDatabaseClientService(ctx context.Context, svcs servicev1.ModInterfac
 		{
 			Name:     "server",
 			Protocol: core.ProtocolTCP,
-			Port:     ArangoPort,
+			Port:     shared.ArangoPort,
 		},
 	}
 	var role string

@@ -26,6 +26,7 @@ import (
 	"testing"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -100,12 +101,12 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
-						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
 						createTestTLSVolume(api.ServerGroupCoordinatorsString, firstCoordinatorStatus.ID),
 					},
 					Containers: []core.Container{
 						{
-							Name:    k8sutil.ServerContainerName,
+							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForCoordinator(firstCoordinatorStatus.ID, true, false),
 							Ports:   createTestPorts(),
@@ -175,12 +176,12 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
-						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
 						createTestTLSVolume(api.ServerGroupCoordinatorsString, firstCoordinatorStatus.ID),
 					},
 					Containers: []core.Container{
 						{
-							Name:    k8sutil.ServerContainerName,
+							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForCoordinator(firstCoordinatorStatus.ID, true, false),
 							Ports:   createTestPorts(),
@@ -250,12 +251,12 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
-						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
 						createTestTLSVolume(api.ServerGroupCoordinatorsString, firstCoordinatorStatus.ID),
 					},
 					Containers: []core.Container{
 						{
-							Name:    k8sutil.ServerContainerName,
+							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForCoordinator(firstCoordinatorStatus.ID, true, false),
 							Ports:   createTestPorts(),
@@ -325,7 +326,7 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
-						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
 						createTestTLSVolume(api.ServerGroupCoordinatorsString, firstCoordinatorStatus.ID),
 						{
 							Name: "sni-1b43a8b9b6df3d38b4ef394346283cd5aeda46a9b61d52da",
@@ -346,14 +347,14 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 					},
 					Containers: []core.Container{
 						{
-							Name:  k8sutil.ServerContainerName,
+							Name:  shared.ServerContainerName,
 							Image: testImage,
 							Command: func() []string {
 								args := createTestCommandForCoordinator(firstCoordinatorStatus.ID, true, false)
-								args = append(args, fmt.Sprintf("--ssl.server-name-indication=a=%s/sni1/tls.keyfile", k8sutil.TLSSNIKeyfileVolumeMountDir),
-									fmt.Sprintf("--ssl.server-name-indication=b=%s/sni1/tls.keyfile", k8sutil.TLSSNIKeyfileVolumeMountDir),
-									fmt.Sprintf("--ssl.server-name-indication=c=%s/sni2/tls.keyfile", k8sutil.TLSSNIKeyfileVolumeMountDir),
-									fmt.Sprintf("--ssl.server-name-indication=d=%s/sni2/tls.keyfile", k8sutil.TLSSNIKeyfileVolumeMountDir))
+								args = append(args, fmt.Sprintf("--ssl.server-name-indication=a=%s/sni1/tls.keyfile", shared.TLSSNIKeyfileVolumeMountDir),
+									fmt.Sprintf("--ssl.server-name-indication=b=%s/sni1/tls.keyfile", shared.TLSSNIKeyfileVolumeMountDir),
+									fmt.Sprintf("--ssl.server-name-indication=c=%s/sni2/tls.keyfile", shared.TLSSNIKeyfileVolumeMountDir),
+									fmt.Sprintf("--ssl.server-name-indication=d=%s/sni2/tls.keyfile", shared.TLSSNIKeyfileVolumeMountDir))
 								return args
 							}(),
 							Ports: createTestPorts(),
@@ -362,12 +363,12 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 								k8sutil.TlsKeyfileVolumeMount(),
 								{
 									Name:      "sni-1b43a8b9b6df3d38b4ef394346283cd5aeda46a9b61d52da",
-									MountPath: k8sutil.TLSSNIKeyfileVolumeMountDir + "/sni1",
+									MountPath: shared.TLSSNIKeyfileVolumeMountDir + "/sni1",
 									ReadOnly:  true,
 								},
 								{
 									Name:      "sni-bbd5fc9d5151a1294ffb5de7b85ee74b7f4620021b5891e4",
-									MountPath: k8sutil.TLSSNIKeyfileVolumeMountDir + "/sni2",
+									MountPath: shared.TLSSNIKeyfileVolumeMountDir + "/sni2",
 									ReadOnly:  true,
 								},
 							},
@@ -433,12 +434,12 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
-						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
 						createTestTLSVolume(api.ServerGroupDBServersString, firstDBServerStatus.ID),
 					},
 					Containers: []core.Container{
 						{
-							Name:  k8sutil.ServerContainerName,
+							Name:  shared.ServerContainerName,
 							Image: testImage,
 							Command: func() []string {
 								args := createTestCommandForDBServer(firstDBServerStatus.ID, true, false, false)
@@ -450,7 +451,7 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 								k8sutil.TlsKeyfileVolumeMount(),
 							},
 							Resources:       emptyResources,
-							LivenessProbe:   createTestLivenessProbe(httpProbe, true, "", k8sutil.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, true, "", shared.ArangoPort),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},

@@ -21,9 +21,9 @@
 package v1
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 // MonitoringSpec holds monitoring specific configuration settings
@@ -38,7 +38,7 @@ func (s MonitoringSpec) GetTokenSecretName() string {
 
 // Validate the given spec
 func (s MonitoringSpec) Validate() error {
-	if err := k8sutil.ValidateOptionalResourceName(s.GetTokenSecretName()); err != nil {
+	if err := shared.ValidateOptionalResourceName(s.GetTokenSecretName()); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil

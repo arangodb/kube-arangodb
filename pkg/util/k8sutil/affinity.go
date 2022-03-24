@@ -21,13 +21,9 @@
 package k8sutil
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-)
-
-const (
-	NodeArchAffinityLabel     = "kubernetes.io/arch"
-	NodeArchAffinityLabelBeta = "beta.kubernetes.io/arch"
 )
 
 // CreateAffinity creates pod anti-affinity for the given role.
@@ -41,7 +37,7 @@ func CreateAffinity(deploymentName, role string, required bool, affinityWithRole
 					{
 						MatchExpressions: []v1.NodeSelectorRequirement{
 							{
-								Key:      NodeArchAffinityLabel,
+								Key:      shared.NodeArchAffinityLabel,
 								Operator: "In",
 								Values:   []string{"amd64"},
 							},
@@ -59,14 +55,14 @@ func CreateAffinity(deploymentName, role string, required bool, affinityWithRole
 	if required {
 		a.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution = append(a.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution, v1.PodAffinityTerm{
 			LabelSelector: labelSelector,
-			TopologyKey:   TopologyKeyHostname,
+			TopologyKey:   shared.TopologyKeyHostname,
 		})
 	} else {
 		a.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution = append(a.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution, v1.WeightedPodAffinityTerm{
 			Weight: 1,
 			PodAffinityTerm: v1.PodAffinityTerm{
 				LabelSelector: labelSelector,
-				TopologyKey:   TopologyKeyHostname,
+				TopologyKey:   shared.TopologyKeyHostname,
 			},
 		})
 	}
@@ -78,14 +74,14 @@ func CreateAffinity(deploymentName, role string, required bool, affinityWithRole
 		if required {
 			a.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution = append(a.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution, v1.PodAffinityTerm{
 				LabelSelector: labelSelector,
-				TopologyKey:   TopologyKeyHostname,
+				TopologyKey:   shared.TopologyKeyHostname,
 			})
 		} else {
 			a.PodAffinity.PreferredDuringSchedulingIgnoredDuringExecution = append(a.PodAffinity.PreferredDuringSchedulingIgnoredDuringExecution, v1.WeightedPodAffinityTerm{
 				Weight: 1,
 				PodAffinityTerm: v1.PodAffinityTerm{
 					LabelSelector: labelSelector,
-					TopologyKey:   TopologyKeyHostname,
+					TopologyKey:   shared.TopologyKeyHostname,
 				},
 			})
 		}
