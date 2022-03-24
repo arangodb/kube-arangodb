@@ -36,6 +36,7 @@ func Test_ArangoTask_Details(t *testing.T) {
 		"data": "exp",
 	})
 }
+
 func arangoTaskDetails(t *testing.T, obj interface{}) {
 	arangoTaskDetailsExp(t, obj, obj)
 }
