@@ -1633,6 +1633,11 @@ func (in *MemberStatus) DeepCopyInto(out *MemberStatus) {
 		*out = new(ImageInfo)
 		**out = **in
 	}
+	if in.Architecture != nil {
+		in, out := &in.Architecture, &out.Architecture
+		*out = new(ArangoDeploymentArchitectureType)
+		**out = **in
+	}
 	if in.Endpoint != nil {
 		in, out := &in.Endpoint, &out.Endpoint
 		*out = new(string)

@@ -25,7 +25,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const NodeArchAffinityLabel = "kubernetes.io/arch"
+const (
+	NodeArchAffinityLabel     = "kubernetes.io/arch"
+	NodeArchAffinityLabelBeta = "beta.kubernetes.io/arch"
+)
 
 // CreateAffinity creates pod anti-affinity for the given role.
 // role contains the name of the role to configure any-affinity with.

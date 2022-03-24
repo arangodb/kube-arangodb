@@ -24,6 +24,7 @@ import (
 	"runtime"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+
 	"github.com/pkg/errors"
 	core "k8s.io/api/core/v1"
 )
@@ -39,10 +40,6 @@ func (a ArangoDeploymentArchitecture) GetDefault() ArangoDeploymentArchitectureT
 }
 
 func (a ArangoDeploymentArchitecture) Validate() error {
-	if len(a) > 1 {
-		return errors.Errorf("Only one architecture type is supported currently")
-	}
-
 	for id := range a {
 		if err := a[id].Validate(); err != nil {
 			return errors.WithStack(errors.Wrapf(err, "%d", id))
@@ -50,18 +47,6 @@ func (a ArangoDeploymentArchitecture) Validate() error {
 	}
 
 	return nil
-}
-
-func (a ArangoDeploymentArchitecture) AsNodeSelectorRequirement() core.NodeSelectorTerm {
-	return core.NodeSelectorTerm{
-		MatchExpressions: []core.NodeSelectorRequirement{
-			{
-				Key:      k8sutil.NodeArchAffinityLabel,
-				Operator: "In",
-				Values:   []string{string(a.GetDefault())},
-			},
-		},
-	}
 }
 
 type ArangoDeploymentArchitectureType string
@@ -86,4 +71,43 @@ func (a ArangoDeploymentArchitectureType) Validate() error {
 	default:
 		return errors.Errorf("Unknown architecture type %s", q)
 	}
+}
+
+func (a ArangoDeploymentArchitectureType) AsNodeSelectorRequirement() core.NodeSelectorTerm {
+	return core.NodeSelectorTerm{
+		MatchExpressions: []core.NodeSelectorRequirement{
+			{
+				Key:      k8sutil.NodeArchAffinityLabel,
+				Operator: "In",
+				Values:   []string{string(a)},
+			},
+		},
+	}
+}
+
+func GetArchsFromNodeSelector(selectors []core.NodeSelectorTerm) map[ArangoDeploymentArchitectureType]bool {
+	result := make(map[ArangoDeploymentArchitectureType]bool)
+	for _, selector := range selectors {
+		if selector.MatchExpressions != nil {
+			for _, req := range selector.MatchExpressions {
+				if req.Key == k8sutil.NodeArchAffinityLabel || req.Key == k8sutil.NodeArchAffinityLabelBeta {
+					for _, arch := range req.Values {
+						result[ArangoDeploymentArchitectureType(arch)] = true
+					}
+				}
+			}
+		}
+	}
+	return result
+}
+
+func (a *ArangoDeploymentArchitectureType) Equal(other *ArangoDeploymentArchitectureType) bool {
+	if a == nil && other == nil {
+		return true
+	} else if a == nil || other == nil {
+		return false
+	} else if a == other {
+		return true
+	}
+	return false
 }
