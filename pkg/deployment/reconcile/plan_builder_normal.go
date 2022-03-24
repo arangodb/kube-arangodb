@@ -98,6 +98,12 @@ func createMemberFailedRestorePlan(ctx context.Context,
 
 	// Check for members in failed state
 	status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
+		failed := 0
+		for _, m := range members {
+			if m.Phase == api.MemberPhaseFailed {
+				failed++
+			}
+		}
 		for _, m := range members {
 			if m.Phase != api.MemberPhaseFailed || len(plan) > 0 {
 				continue
@@ -109,6 +115,11 @@ func createMemberFailedRestorePlan(ctx context.Context,
 				// Do pre check for DBServers. If agency is down DBServers should not be touch
 				if !agencyOK {
 					memberLog.Msg("Agency state is not present")
+					continue
+				}
+
+				if c := spec.DBServers.GetCount(); c <= len(members)-failed {
+					// We have more or equal alive members than current count, we should not recreate this member
 					continue
 				}
 

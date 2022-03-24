@@ -477,6 +477,7 @@ set-api-version/%:
 	      "$(ROOT)/pkg/util/" \
 	      "$(ROOT)/pkg/handlers/" \
 	      "$(ROOT)/pkg/apis/backup/" \
+	      "$(ROOT)/pkg/upgrade/" \
 	  | cut -d ':' -f 1 | sort | uniq \
 	  | xargs -n 1 sed -i "s#github.com/arangodb/kube-arangodb/pkg/apis/$*/v[A-Za-z0-9]\+#github.com/arangodb/kube-arangodb/pkg/apis/$*/v$(API_VERSION)#g"
 	@grep -rHn "DatabaseV[A-Za-z0-9]\+()" \
@@ -487,6 +488,7 @@ set-api-version/%:
 		  "$(ROOT)/pkg/util/" \
 	      "$(ROOT)/pkg/handlers/" \
 	      "$(ROOT)/pkg/apis/backup/" \
+	      "$(ROOT)/pkg/upgrade/" \
 	  | cut -d ':' -f 1 | sort | uniq \
 	  | xargs -n 1 sed -i "s#DatabaseV[A-Za-z0-9]\+()\.#DatabaseV$(API_VERSION)().#g"
 	@grep -rHn "ReplicationV[A-Za-z0-9]\+()" \
@@ -497,6 +499,7 @@ set-api-version/%:
 		  "$(ROOT)/pkg/util/" \
 		  "$(ROOT)/pkg/handlers" \
 		  "$(ROOT)/pkg/apis/backup/" \
+	      "$(ROOT)/pkg/upgrade/" \
 	  | cut -d ':' -f 1 | sort | uniq \
 	  | xargs -n 1 sed -i "s#ReplicationV[A-Za-z0-9]\+()\.#ReplicationV$(API_VERSION)().#g"
 

@@ -18,36 +18,33 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package util
+package upgrade
 
-func CompareInt(a, b int) bool {
-	return a == b
+import (
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
+)
+
+func init() {
+	registerUpgrade(memberCIDAppend())
 }
 
-func CompareIntp(a, b *int) bool {
-	if a == nil && b == nil {
-		return true
-	}
+func memberCIDAppend() Upgrade {
+	return newUpgrade(api.Version{
+		Major: 1,
+		Minor: 2,
+		Patch: 8,
+		ID:    1,
+	}, func(obj api.ArangoDeployment, status *api.DeploymentStatus, _ interfaces.Inspector) error {
+		for _, i := range status.Members.AsList() {
+			if i.Member.ClusterID == "" {
+				i.Member.ClusterID = obj.GetUID()
+				if err := status.Members.Update(i.Member, i.Group); err != nil {
+					return err
+				}
+			}
+		}
 
-	if a == nil || b == nil {
-		return false
-	}
-
-	return CompareInt(*a, *b)
-}
-
-func CompareInt64(a, b int64) bool {
-	return a == b
-}
-
-func CompareInt64p(a, b *int64) bool {
-	if a == nil && b == nil {
-		return true
-	}
-
-	if a == nil || b == nil {
-		return false
-	}
-
-	return CompareInt64(*a, *b)
+		return nil
+	})
 }
