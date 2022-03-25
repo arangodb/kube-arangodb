@@ -163,10 +163,6 @@ func (p *serviceMonitorsInspector) LastRefresh() time.Time {
 	return p.last
 }
 
-func (p *serviceMonitorsInspector) IsStatic() bool {
-	return p.state.IsStatic()
-}
-
 func (p *serviceMonitorsInspector) Refresh(ctx context.Context) error {
 	p.Throttle(p.state.throttles).Invalidate()
 	return p.state.refresh(ctx, serviceMonitorsInspectorLoaderObj)

@@ -167,10 +167,6 @@ func (p *servicesInspector) LastRefresh() time.Time {
 	return p.last
 }
 
-func (p *servicesInspector) IsStatic() bool {
-	return p.state.IsStatic()
-}
-
 func (p *servicesInspector) Refresh(ctx context.Context) error {
 	p.Throttle(p.state.throttles).Invalidate()
 	return p.state.refresh(ctx, servicesInspectorLoaderObj)

@@ -163,10 +163,6 @@ func (p *arangoTasksInspector) LastRefresh() time.Time {
 	return p.last
 }
 
-func (p *arangoTasksInspector) IsStatic() bool {
-	return p.state.IsStatic()
-}
-
 func (p *arangoTasksInspector) Refresh(ctx context.Context) error {
 	p.Throttle(p.state.throttles).Invalidate()
 	return p.state.refresh(ctx, arangoTasksInspectorLoaderObj)

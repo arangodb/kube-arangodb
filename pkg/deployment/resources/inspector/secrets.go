@@ -167,10 +167,6 @@ func (p *secretsInspector) LastRefresh() time.Time {
 	return p.last
 }
 
-func (p *secretsInspector) IsStatic() bool {
-	return p.state.IsStatic()
-}
-
 func (p *secretsInspector) Refresh(ctx context.Context) error {
 	p.Throttle(p.state.throttles).Invalidate()
 	return p.state.refresh(ctx, secretsInspectorLoaderObj)

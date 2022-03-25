@@ -119,10 +119,6 @@ func (r *reconcile) WithRefresh(ctx context.Context, err error) error {
 
 func (r *reconcile) Reconcile(ctx context.Context) error {
 	if r.required {
-		if r.refresh.IsStatic() {
-			return errors.Reconcile()
-		}
-
 		if err := r.refresh.Refresh(ctx); err != nil {
 			return err
 		}

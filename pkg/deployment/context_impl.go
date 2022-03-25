@@ -262,6 +262,10 @@ func (d *Deployment) getAuth() (driver.Authentication, error) {
 		return nil, nil
 	}
 
+	if !d.GetCachedStatus().Initialised() {
+		return nil, errors.Newf("Cache is not yet started")
+	}
+
 	var secret string
 	var found bool
 

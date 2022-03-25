@@ -64,6 +64,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/trigger"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
 // Config holds configuration settings for a Deployment
@@ -604,6 +605,9 @@ func (d *Deployment) lookForServiceMonitorCRD() {
 	var err error
 	if d.GetScope().IsNamespaced() {
 		_, err = d.currentState.ServiceMonitor().V1()
+		if apierrors.IsForbidden(err) {
+			return
+		}
 	} else {
 		_, err = d.deps.Client.KubernetesExtensions().ApiextensionsV1().CustomResourceDefinitions().Get(context.Background(), "servicemonitors.monitoring.coreos.com", meta.GetOptions{})
 	}
