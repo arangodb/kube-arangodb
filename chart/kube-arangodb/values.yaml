@@ -55,3 +55,7 @@ operator:
 
 rbac:
   enabled: true
+  extensions:
+    monitoring: true
+    acs: true
+    at: true

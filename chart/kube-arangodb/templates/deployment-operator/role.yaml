@@ -14,8 +14,18 @@ metadata:
         release: {{ .Release.Name }}
 rules:
     - apiGroups: ["database.arangodb.com"]
-      resources: ["arangodeployments", "arangodeployments/status","arangomembers", "arangomembers/status", "arangoclustersynchronizations", "arangoclustersynchronizations/status", "arangotasks", "arangotasks/status"]
+      resources: ["arangodeployments", "arangodeployments/status","arangomembers", "arangomembers/status"]
       verbs: ["*"]
+{{- if .Values.rbac.extensions.acs -}}
+    - apiGroups: ["database.arangodb.com"]
+      resources: ["arangoclustersynchronizations", "arangoclustersynchronizations/status"]
+      verbs: ["*"]
+{{- end }}
+{{- if .Values.rbac.extensions.at -}}
+    - apiGroups: ["database.arangodb.com"]
+      resources: ["arangotasks", "arangotasks/status"]
+      verbs: ["*"]
+{{- end }}
     - apiGroups: [""]
       resources: ["pods", "services", "endpoints", "persistentvolumeclaims", "events", "secrets", "serviceaccounts"]
       verbs: ["*"]
@@ -28,9 +38,11 @@ rules:
     - apiGroups: ["backup.arangodb.com"]
       resources: ["arangobackuppolicies", "arangobackups"]
       verbs: ["get", "list", "watch"]
+{{- if .Values.rbac.extensions.monitoring -}}
     - apiGroups: ["monitoring.coreos.com"]
       resources: ["servicemonitors"]
       verbs: ["get", "create", "delete", "update", "list", "watch", "patch"]
-
+  
+{{- end }}
 {{- end }}
 {{- end }}
