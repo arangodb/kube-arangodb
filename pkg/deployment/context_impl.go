@@ -262,6 +262,10 @@ func (d *Deployment) getAuth() (driver.Authentication, error) {
 		return nil, nil
 	}
 
+	if !d.GetCachedStatus().Initialised() {
+		return nil, errors.Newf("Cache is not yet started")
+	}
+
 	var secret string
 	var found bool
 
@@ -288,9 +292,6 @@ func (d *Deployment) getAuth() (driver.Authentication, error) {
 }
 
 func (d *Deployment) getJWTFolderToken() (string, bool) {
-	if !d.GetCachedStatus().Initialised() {
-		return "", false
-	}
 	if i := d.apiObject.Status.CurrentImage; i == nil || features.JWTRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
 		s, err := d.GetCachedStatus().Secret().V1().Read().Get(context.Background(), pod.JWTSecretFolder(d.GetName()), meta.GetOptions{})
 		if err != nil {
