@@ -139,7 +139,15 @@ type inspectorState struct {
 
 	versionInfo driver.Version
 
-	static bool
+	initialised bool
+}
+
+func (i *inspectorState) Initialised() bool {
+	if i == nil {
+		return false
+	}
+
+	return i.initialised
 }
 
 func (i *inspectorState) Client() kclient.Client {
@@ -210,15 +218,7 @@ func (i *inspectorState) Pod() pod.Definition {
 	return i.pods
 }
 
-func (i *inspectorState) IsStatic() bool {
-	return i.static
-}
-
 func (i *inspectorState) refresh(ctx context.Context, loaders ...inspectorLoader) error {
-	if i.IsStatic() {
-		return nil
-	}
-
 	return i.refreshInThreads(ctx, 15, loaders...)
 }
 
@@ -295,6 +295,7 @@ func (i *inspectorState) refreshInThreads(ctx context.Context, threads int, load
 	i.throttles = n.throttles
 
 	i.last = time.Now()
+	i.initialised = true
 
 	return nil
 }
@@ -364,7 +365,6 @@ func (i *inspectorState) copyCore() *inspectorState {
 		arangoClusterSynchronizations: i.arangoClusterSynchronizations,
 		throttles:                     i.throttles.Copy(),
 		versionInfo:                   i.versionInfo,
-		static:                        i.static,
 		logger:                        i.logger,
 	}
 }

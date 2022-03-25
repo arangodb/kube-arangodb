@@ -163,10 +163,6 @@ func (p *arangoClusterSynchronizationsInspector) LastRefresh() time.Time {
 	return p.last
 }
 
-func (p *arangoClusterSynchronizationsInspector) IsStatic() bool {
-	return p.state.IsStatic()
-}
-
 func (p *arangoClusterSynchronizationsInspector) Refresh(ctx context.Context) error {
 	p.Throttle(p.state.throttles).Invalidate()
 	return p.state.refresh(ctx, arangoClusterSynchronizationsInspectorLoaderObj)

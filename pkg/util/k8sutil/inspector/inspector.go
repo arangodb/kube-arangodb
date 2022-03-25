@@ -43,6 +43,8 @@ type Inspector interface {
 	Client() kclient.Client
 	Namespace() string
 
+	Initialised() bool
+
 	refresh.Inspector
 	throttle.Inspector
 
