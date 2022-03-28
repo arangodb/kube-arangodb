@@ -32,7 +32,7 @@ Combine name of the deployment.
 Create the name of the Operator RBAC role
 */}}
 {{- define "kube-arangodb.rbac" -}}
-{{- printf "%s-%s" (include "kube-arangodb.operatorName" .) "rbac" | trunc 63 | trimSuffix "-" -}}
+{{- printf "%s-%s" (include "kube-arangodb.operatorName" .) "rbac" | trunc 95 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*

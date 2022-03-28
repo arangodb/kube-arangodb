@@ -23,11 +23,11 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/go-driver"
 	"github.com/rs/zerolog"
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -84,7 +84,7 @@ func (a *actionRemoveMember) Start(ctx context.Context) (bool, error) {
 			} else if driver.IsPreconditionFailed(err) {
 				health := a.actionCtx.GetMembersState().Health()
 				if health.Error != nil {
-					return false, errors.WithStack(errors.Wrapf(health.Error, "failed to get cluster health"))
+					a.log.Err(err).Str("member-id", m.ID).Msgf("Failed get cluster health")
 				}
 				// We don't care if not found
 				if record, ok := health.Members[driver.ServerID(m.ID)]; ok {
