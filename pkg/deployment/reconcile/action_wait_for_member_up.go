@@ -166,7 +166,8 @@ func (a *actionWaitForMemberUp) checkProgressCluster() (bool, bool, error) {
 	log := a.log
 	h := a.actionCtx.GetMembersState().Health()
 	if h.Error != nil {
-		return false, false, errors.WithStack(errors.Wrapf(h.Error, "failed to get cluster health"))
+		log.Debug().Err(h.Error).Msg("Cluster health is missing")
+		return false, false, nil
 	}
 	sh, found := h.Members[driver.ServerID(a.action.MemberID)]
 	if !found {

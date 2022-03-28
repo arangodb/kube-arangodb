@@ -49,6 +49,11 @@ var (
 
 // CleanupRemovedMembers removes all arangod members that are no longer part of ArangoDB deployment.
 func (r *Resources) CleanupRemovedMembers(ctx context.Context, health memberState.Health) error {
+	if health.Error != nil {
+		r.log.Info().Err(health.Error).Msg("Health of the cluster is missing")
+		return nil
+	}
+
 	// Decide what to do depending on cluster mode
 	switch r.context.GetSpec().GetMode() {
 	case api.DeploymentModeCluster:
@@ -68,11 +73,6 @@ func (r *Resources) CleanupRemovedMembers(ctx context.Context, health memberStat
 // cleanupRemovedClusterMembers removes all arangod members that are no longer part of the cluster.
 func (r *Resources) cleanupRemovedClusterMembers(ctx context.Context, health memberState.Health) error {
 	log := r.log
-
-	if health.Error != nil {
-		log.Info().Err(health.Error).Msg("Health od the cluster is missing")
-		return nil
-	}
 
 	serverFound := func(id string) bool {
 		_, found := health.Members[driver.ServerID(id)]
