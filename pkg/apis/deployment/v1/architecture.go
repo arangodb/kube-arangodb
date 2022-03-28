@@ -23,8 +23,7 @@ package v1
 import (
 	"runtime"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/pkg/errors"
 	core "k8s.io/api/core/v1"
 )
@@ -77,7 +76,7 @@ func (a ArangoDeploymentArchitectureType) AsNodeSelectorRequirement() core.NodeS
 	return core.NodeSelectorTerm{
 		MatchExpressions: []core.NodeSelectorRequirement{
 			{
-				Key:      k8sutil.NodeArchAffinityLabel,
+				Key:      shared.NodeArchAffinityLabel,
 				Operator: "In",
 				Values:   []string{string(a)},
 			},
@@ -90,7 +89,7 @@ func GetArchsFromNodeSelector(selectors []core.NodeSelectorTerm) map[ArangoDeplo
 	for _, selector := range selectors {
 		if selector.MatchExpressions != nil {
 			for _, req := range selector.MatchExpressions {
-				if req.Key == k8sutil.NodeArchAffinityLabel || req.Key == k8sutil.NodeArchAffinityLabelBeta {
+				if req.Key == shared.NodeArchAffinityLabel || req.Key == shared.NodeArchAffinityLabelBeta {
 					for _, arch := range req.Values {
 						result[ArangoDeploymentArchitectureType(arch)] = true
 					}

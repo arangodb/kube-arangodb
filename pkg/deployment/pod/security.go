@@ -21,6 +21,7 @@
 package pod
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
@@ -52,7 +53,7 @@ func (s security) Volumes(i Input) ([]core.Volume, []core.VolumeMount) {
 		// Add Volumes
 		{
 			v = append(v, core.Volume{
-				Name: k8sutil.FoxxAppEphemeralVolumeName,
+				Name: shared.FoxxAppEphemeralVolumeName,
 				VolumeSource: core.VolumeSource{
 					EmptyDir: &core.EmptyDirVolumeSource{
 						SizeLimit: i.GroupSpec.EphemeralVolumes.GetAppsSize(),
@@ -63,7 +64,7 @@ func (s security) Volumes(i Input) ([]core.Volume, []core.VolumeMount) {
 
 		{
 			v = append(v, core.Volume{
-				Name: k8sutil.TMPEphemeralVolumeName,
+				Name: shared.TMPEphemeralVolumeName,
 				VolumeSource: core.VolumeSource{
 					EmptyDir: &core.EmptyDirVolumeSource{
 						SizeLimit: i.GroupSpec.EphemeralVolumes.GetTempSize(),
@@ -74,11 +75,11 @@ func (s security) Volumes(i Input) ([]core.Volume, []core.VolumeMount) {
 
 		// Mount volumes
 		vm = append(vm, core.VolumeMount{
-			Name:      k8sutil.FoxxAppEphemeralVolumeName,
+			Name:      shared.FoxxAppEphemeralVolumeName,
 			MountPath: "/ephemeral/app",
 		})
 		vm = append(vm, core.VolumeMount{
-			Name:      k8sutil.TMPEphemeralVolumeName,
+			Name:      shared.TMPEphemeralVolumeName,
 			MountPath: "/ephemeral/tmp",
 		})
 	}

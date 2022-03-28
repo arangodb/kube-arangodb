@@ -26,6 +26,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/probes"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	v1 "k8s.io/api/core/v1"
@@ -37,7 +38,7 @@ func ArangodbExporterContainer(image string, args []string, livenessProbe *probe
 	spec api.DeploymentSpec) v1.Container {
 
 	c := v1.Container{
-		Name:    k8sutil.ExporterContainerName,
+		Name:    shared.ExporterContainerName,
 		Image:   image,
 		Command: append([]string{"/app/arangodb-exporter"}, args...),
 		Ports: []v1.ContainerPort{
@@ -60,16 +61,16 @@ func ArangodbExporterContainer(image string, args []string, livenessProbe *probe
 }
 
 func createInternalExporterArgs(spec api.DeploymentSpec, groupSpec api.ServerGroupSpec, version driver.Version) []string {
-	tokenpath := filepath.Join(k8sutil.ExporterJWTVolumeMountDir, constants.SecretKeyToken)
+	tokenpath := filepath.Join(shared.ExporterJWTVolumeMountDir, constants.SecretKeyToken)
 	options := k8sutil.CreateOptionPairs(64)
 
 	if spec.Authentication.IsAuthenticated() {
 		options.Add("--arangodb.jwt-file", tokenpath)
 	}
 
-	path := k8sutil.ArangoExporterInternalEndpoint
+	path := shared.ArangoExporterInternalEndpoint
 	if version.CompareTo("3.8.0") >= 0 {
-		path = k8sutil.ArangoExporterInternalEndpointV2
+		path = shared.ArangoExporterInternalEndpointV2
 	}
 
 	if port := groupSpec.InternalPort; port == nil {
@@ -77,17 +78,17 @@ func createInternalExporterArgs(spec api.DeploymentSpec, groupSpec api.ServerGro
 		if spec.IsSecure() {
 			scheme = "https"
 		}
-		options.Addf("--arangodb.endpoint", "%s://localhost:%d%s", scheme, k8sutil.ArangoPort, path)
+		options.Addf("--arangodb.endpoint", "%s://localhost:%d%s", scheme, shared.ArangoPort, path)
 	} else {
 		options.Addf("--arangodb.endpoint", "http://localhost:%d%s", *port, path)
 	}
 
-	keyPath := filepath.Join(k8sutil.TLSKeyfileVolumeMountDir, constants.SecretTLSKeyfile)
+	keyPath := filepath.Join(shared.TLSKeyfileVolumeMountDir, constants.SecretTLSKeyfile)
 	if spec.IsSecure() && spec.Metrics.IsTLS() {
 		options.Add("--ssl.keyfile", keyPath)
 	}
 
-	if port := spec.Metrics.GetPort(); port != k8sutil.ArangoExporterPort {
+	if port := spec.Metrics.GetPort(); port != shared.ArangoExporterPort {
 		options.Addf("--server.address", ":%d", port)
 	}
 
@@ -97,7 +98,7 @@ func createInternalExporterArgs(spec api.DeploymentSpec, groupSpec api.ServerGro
 func createExporterLivenessProbe(isSecure bool) *probes.HTTPProbeConfig {
 	probeCfg := &probes.HTTPProbeConfig{
 		LocalPath: "/",
-		Port:      k8sutil.ArangoExporterPort,
+		Port:      shared.ArangoExporterPort,
 		Secure:    isSecure,
 	}
 

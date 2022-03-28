@@ -28,10 +28,10 @@ import (
 
 	core "k8s.io/api/core/v1"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 var (
@@ -547,12 +547,12 @@ func (s DeploymentSpec) Checksum() (string, error) {
 func (s DeploymentSpec) GetCoreContainers(group ServerGroup) utils.StringList {
 	groupSpec := s.GetServerGroupSpec(group)
 	if len(groupSpec.SidecarCoreNames) == 0 {
-		return utils.StringList{k8sutil.ServerContainerName}
+		return utils.StringList{shared.ServerContainerName}
 	}
 
 	result := make(utils.StringList, 0, len(groupSpec.SidecarCoreNames)+1)
-	if !utils.StringList(groupSpec.SidecarCoreNames).Has(k8sutil.ServerContainerName) {
-		result = append(result, k8sutil.ServerContainerName)
+	if !utils.StringList(groupSpec.SidecarCoreNames).Has(shared.ServerContainerName) {
+		result = append(result, shared.ServerContainerName)
 	}
 	result = append(result, groupSpec.SidecarCoreNames...)
 

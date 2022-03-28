@@ -20,7 +20,11 @@
 
 package k8sutil
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+)
 
 func TestValidateResourceName(t *testing.T) {
 	validNames := []string{
@@ -29,10 +33,10 @@ func TestValidateResourceName(t *testing.T) {
 		"129.abc",
 	}
 	for _, name := range validNames {
-		if err := ValidateResourceName(name); err != nil {
+		if err := shared.ValidateResourceName(name); err != nil {
 			t.Errorf("Name '%s' is valid, but ValidateResourceName reports '%s'", name, err)
 		}
-		if err := ValidateOptionalResourceName(name); err != nil {
+		if err := shared.ValidateOptionalResourceName(name); err != nil {
 			t.Errorf("Name '%s' is valid, but ValidateResourceName reports '%s'", name, err)
 		}
 	}
@@ -43,7 +47,7 @@ func TestValidateResourceName(t *testing.T) {
 		"name_underscore",
 	}
 	for _, name := range invalidNames {
-		if err := ValidateResourceName(name); err == nil {
+		if err := shared.ValidateResourceName(name); err == nil {
 			t.Errorf("Name '%s' is invalid, but ValidateResourceName reports no error", name)
 		}
 	}

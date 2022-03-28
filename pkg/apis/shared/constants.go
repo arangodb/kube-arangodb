@@ -18,7 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package k8sutil
+package shared
 
 const (
 	// Arango constants
@@ -37,6 +37,31 @@ const (
 	ClusterIPNone       = "None"
 	TopologyKeyHostname = "kubernetes.io/hostname"
 
+	NodeArchAffinityLabel     = "kubernetes.io/arch"
+	NodeArchAffinityLabelBeta = "beta.kubernetes.io/arch"
+
 	// Internal constants
 	ImageIDAndVersionRole = "id" // Role use by identification pods
+
+	// Pod constants
+	ServerContainerName             = "server"
+	ExporterContainerName           = "exporter"
+	ArangodVolumeName               = "arangod-data"
+	TlsKeyfileVolumeName            = "tls-keyfile"
+	ClientAuthCAVolumeName          = "client-auth-ca"
+	ClusterJWTSecretVolumeName      = "cluster-jwt"
+	MasterJWTSecretVolumeName       = "master-jwt"
+	LifecycleVolumeName             = "lifecycle"
+	FoxxAppEphemeralVolumeName      = "ephemeral-apps"
+	TMPEphemeralVolumeName          = "ephemeral-tmp"
+	RocksdbEncryptionVolumeName     = "rocksdb-encryption"
+	ExporterJWTVolumeName           = "exporter-jwt"
+	ArangodVolumeMountDir           = "/data"
+	RocksDBEncryptionVolumeMountDir = "/secrets/rocksdb/encryption"
+	TLSKeyfileVolumeMountDir        = "/secrets/tls"
+	TLSSNIKeyfileVolumeMountDir     = "/secrets/sni"
+	ClientAuthCAVolumeMountDir      = "/secrets/client-auth/ca"
+	ClusterJWTSecretVolumeMountDir  = "/secrets/cluster/jwt"
+	ExporterJWTVolumeMountDir       = "/secrets/exporter/jwt"
+	MasterJWTSecretVolumeMountDir   = "/secrets/master/jwt"
 )

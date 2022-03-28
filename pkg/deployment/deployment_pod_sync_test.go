@@ -31,6 +31,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -230,7 +231,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				require.NoError(t, err)
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(
-					"", true, "bearer "+auth, k8sutil.ArangoSyncMasterPort)
+					"", true, "bearer "+auth, shared.ArangoSyncMasterPort)
 			},
 			ExpectedEvent: "member syncmaster is created",
 			ExpectedPod: core.Pod{
@@ -238,16 +239,16 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 					Volumes: []core.Volume{
 						k8sutil.LifecycleVolume(),
 						createTestTLSVolume(api.ServerGroupSyncMastersString, firstSyncMaster.ID),
-						k8sutil.CreateVolumeWithSecret(k8sutil.ClientAuthCAVolumeName, "test-sync-client-auth-ca"),
-						k8sutil.CreateVolumeWithSecret(k8sutil.MasterJWTSecretVolumeName, "test-sync-jwt"),
-						k8sutil.CreateVolumeWithSecret(k8sutil.ClusterJWTSecretVolumeName, testJWTSecretName),
+						k8sutil.CreateVolumeWithSecret(shared.ClientAuthCAVolumeName, "test-sync-client-auth-ca"),
+						k8sutil.CreateVolumeWithSecret(shared.MasterJWTSecretVolumeName, "test-sync-jwt"),
+						k8sutil.CreateVolumeWithSecret(shared.ClusterJWTSecretVolumeName, testJWTSecretName),
 					},
 					InitContainers: []core.Container{
 						createTestLifecycleContainer(emptyResources),
 					},
 					Containers: []core.Container{
 						{
-							Name:    k8sutil.ServerContainerName,
+							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForSyncMaster(firstSyncMaster.ID, true, true, true),
 							Ports:   createTestPorts(),
@@ -320,7 +321,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				require.NoError(t, err)
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(
-					"", true, "bearer "+auth, k8sutil.ArangoSyncMasterPort)
+					"", true, "bearer "+auth, shared.ArangoSyncMasterPort)
 			},
 			ExpectedEvent: "member syncmaster is created",
 			ExpectedPod: core.Pod{
@@ -328,9 +329,9 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 					Volumes: []core.Volume{
 						k8sutil.LifecycleVolume(),
 						createTestTLSVolume(api.ServerGroupSyncMastersString, firstSyncMaster.ID),
-						k8sutil.CreateVolumeWithSecret(k8sutil.ClientAuthCAVolumeName,
+						k8sutil.CreateVolumeWithSecret(shared.ClientAuthCAVolumeName,
 							testDeploymentName+"-sync-client-auth-ca"),
-						k8sutil.CreateVolumeWithSecret(k8sutil.MasterJWTSecretVolumeName,
+						k8sutil.CreateVolumeWithSecret(shared.MasterJWTSecretVolumeName,
 							testDeploymentName+"-sync-jwt"),
 					},
 					InitContainers: []core.Container{
@@ -338,7 +339,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 					},
 					Containers: []core.Container{
 						{
-							Name:    k8sutil.ServerContainerName,
+							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForSyncMaster(firstSyncMaster.ID, true, false, true),
 							Ports:   createTestPorts(),
@@ -423,21 +424,21 @@ func TestEnsurePod_Sync_Worker(t *testing.T) {
 				require.NoError(t, err)
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(
-					"", true, "bearer "+auth, k8sutil.ArangoSyncWorkerPort)
+					"", true, "bearer "+auth, shared.ArangoSyncWorkerPort)
 			},
 			ExpectedEvent: "member syncworker is created",
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
 						k8sutil.LifecycleVolume(),
-						k8sutil.CreateVolumeWithSecret(k8sutil.MasterJWTSecretVolumeName, testDeploymentName+"-sync-jwt"),
+						k8sutil.CreateVolumeWithSecret(shared.MasterJWTSecretVolumeName, testDeploymentName+"-sync-jwt"),
 					},
 					InitContainers: []core.Container{
 						createTestLifecycleContainer(emptyResources),
 					},
 					Containers: []core.Container{
 						{
-							Name:    k8sutil.ServerContainerName,
+							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForSyncWorker(firstSyncWorker.ID, true, true),
 							Ports:   createTestPorts(),

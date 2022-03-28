@@ -33,6 +33,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -113,7 +114,7 @@ func (dr *DeploymentReplication) createArangoSyncEndpoint(epSpec api.EndpointSpe
 			return nil, errors.WithStack(err)
 		}
 		dnsName := k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(depl, depl.Spec.ClusterDomain)
-		return client.Endpoint{"https://" + net.JoinHostPort(dnsName, strconv.Itoa(k8sutil.ArangoSyncMasterPort))}, nil
+		return client.Endpoint{"https://" + net.JoinHostPort(dnsName, strconv.Itoa(shared.ArangoSyncMasterPort))}, nil
 	}
 	return client.Endpoint(epSpec.MasterEndpoint), nil
 }

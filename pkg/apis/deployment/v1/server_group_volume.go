@@ -28,21 +28,19 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	sharedv1 "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-
 	core "k8s.io/api/core/v1"
 )
 
 var (
 	restrictedVolumeNames = []string{
-		k8sutil.ArangodVolumeName,
-		k8sutil.TlsKeyfileVolumeName,
-		k8sutil.RocksdbEncryptionVolumeName,
-		k8sutil.ExporterJWTVolumeName,
-		k8sutil.ClusterJWTSecretVolumeName,
-		k8sutil.LifecycleVolumeName,
-		k8sutil.FoxxAppEphemeralVolumeName,
-		k8sutil.TMPEphemeralVolumeName,
+		shared.ArangodVolumeName,
+		shared.TlsKeyfileVolumeName,
+		shared.RocksdbEncryptionVolumeName,
+		shared.ExporterJWTVolumeName,
+		shared.ClusterJWTSecretVolumeName,
+		shared.LifecycleVolumeName,
+		shared.FoxxAppEphemeralVolumeName,
+		shared.TMPEphemeralVolumeName,
 	}
 )
 

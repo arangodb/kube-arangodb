@@ -30,6 +30,7 @@ import (
 	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
@@ -61,11 +62,11 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
-						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
 					},
 					Containers: []core.Container{
 						{
-							Name:    k8sutil.ServerContainerName,
+							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForAgent(firstAgentStatus.ID, false, false, false),
 							Ports:   createTestPorts(),
@@ -73,7 +74,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 								k8sutil.ArangodVolumeMount(),
 							},
 							Resources:       emptyResources,
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", k8sutil.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
 							ImagePullPolicy: core.PullAlways,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -112,11 +113,11 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
-						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
 					},
 					Containers: []core.Container{
 						{
-							Name:    k8sutil.ServerContainerName,
+							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForAgent(firstAgentStatus.ID, false, false, false),
 							Ports:   createTestPorts(),
@@ -124,7 +125,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 								k8sutil.ArangodVolumeMount(),
 							},
 							Resources:       emptyResources,
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", k8sutil.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
 							ImagePullPolicy: core.PullAlways,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -172,11 +173,11 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
-						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
 					},
 					Containers: []core.Container{
 						{
-							Name:    k8sutil.ServerContainerName,
+							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForAgent(firstAgentStatus.ID, false, false, false),
 							Ports:   createTestPorts(),
@@ -184,7 +185,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 								k8sutil.ArangodVolumeMount(),
 							},
 							Resources:       emptyResources,
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", k8sutil.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -229,11 +230,11 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
-						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
 					},
 					Containers: []core.Container{
 						{
-							Name:    k8sutil.ServerContainerName,
+							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForAgent(firstAgentStatus.ID, false, false, false),
 							Ports:   createTestPorts(),
@@ -241,7 +242,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 								k8sutil.ArangodVolumeMount(),
 							},
 							Resources:       emptyResources,
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", k8sutil.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -291,14 +292,14 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
-						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
 					},
 					InitContainers: []core.Container{
 						createTestAlpineContainer(firstAgentStatus.ID, false),
 					},
 					Containers: []core.Container{
 						{
-							Name:    k8sutil.ServerContainerName,
+							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForAgent(firstAgentStatus.ID, false, false, false),
 							Ports:   createTestPorts(),
@@ -306,7 +307,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 								k8sutil.ArangodVolumeMount(),
 							},
 							Resources:       emptyResources,
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", k8sutil.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -349,11 +350,11 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
-						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
 					},
 					Containers: []core.Container{
 						{
-							Name:      k8sutil.ServerContainerName,
+							Name:      shared.ServerContainerName,
 							Image:     testImage,
 							Command:   createTestCommandForDBServer(firstDBServerStatus.ID, false, false, false),
 							Ports:     createTestPorts(),
@@ -361,7 +362,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", k8sutil.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 							Env:             withDefaultEnvs(t, resourcesUnfiltered),
@@ -406,11 +407,11 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
-						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
 					},
 					Containers: []core.Container{
 						{
-							Name:      k8sutil.ServerContainerName,
+							Name:      shared.ServerContainerName,
 							Image:     testImage,
 							Command:   createTestCommandForDBServer(firstDBServerStatus.ID, false, false, false),
 							Ports:     createTestPorts(),
@@ -418,7 +419,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", k8sutil.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 							Env:             withDefaultEnvs(t, resourcesUnfiltered),
@@ -463,12 +464,12 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
-						k8sutil.CreateVolumeWithPersitantVolumeClaim(k8sutil.ArangodVolumeName,
+						k8sutil.CreateVolumeWithPersitantVolumeClaim(shared.ArangodVolumeName,
 							testPersistentVolumeClaimName),
 					},
 					Containers: []core.Container{
 						{
-							Name:      k8sutil.ServerContainerName,
+							Name:      shared.ServerContainerName,
 							Image:     testImage,
 							Command:   createTestCommandForDBServer(firstDBServerStatus.ID, false, false, false),
 							Ports:     createTestPorts(),
@@ -476,7 +477,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", k8sutil.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 							Env:             withDefaultEnvs(t, resourcesUnfiltered),
@@ -521,14 +522,14 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
-						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
 					},
 					InitContainers: []core.Container{
 						createTestAlpineContainer(firstDBServerStatus.ID, true),
 					},
 					Containers: []core.Container{
 						{
-							Name:    k8sutil.ServerContainerName,
+							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForDBServer(firstDBServerStatus.ID, false, false, false),
 							Ports:   createTestPorts(),
@@ -536,7 +537,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 								k8sutil.ArangodVolumeMount(),
 							},
 							Resources:       emptyResources,
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", k8sutil.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -576,11 +577,11 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
-						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
 					},
 					Containers: []core.Container{
 						{
-							Name:    k8sutil.ServerContainerName,
+							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForAgent(firstAgentStatus.ID, false, false, false),
 							Ports:   createTestPorts(),
@@ -588,7 +589,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 								k8sutil.ArangodVolumeMount(),
 							},
 							Resources:       emptyResources,
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", k8sutil.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -630,12 +631,12 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
-						k8sutil.CreateVolumeWithPersitantVolumeClaim(k8sutil.ArangodVolumeName,
+						k8sutil.CreateVolumeWithPersitantVolumeClaim(shared.ArangodVolumeName,
 							testPersistentVolumeClaimName),
 					},
 					Containers: []core.Container{
 						{
-							Name:    k8sutil.ServerContainerName,
+							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForAgent(firstAgentStatus.ID, false, false, false),
 							Ports:   createTestPorts(),
@@ -643,7 +644,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 								k8sutil.ArangodVolumeMount(),
 							},
 							Resources:       emptyResources,
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", k8sutil.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -682,12 +683,12 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
-						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
 						createTestTLSVolume(api.ServerGroupAgentsString, firstAgentStatus.ID),
 					},
 					Containers: []core.Container{
 						{
-							Name:    k8sutil.ServerContainerName,
+							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForAgent(firstAgentStatus.ID, true, false, false),
 							Ports:   createTestPorts(),
@@ -696,7 +697,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 								k8sutil.TlsKeyfileVolumeMount(),
 							},
 							Resources:       emptyResources,
-							LivenessProbe:   createTestLivenessProbe(httpProbe, true, "", k8sutil.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, true, "", shared.ArangoPort),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -736,18 +737,18 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 				require.NoError(t, err)
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(httpProbe, false,
-					authorization, k8sutil.ArangoPort)
+					authorization, shared.ArangoPort)
 			},
 			ExpectedEvent: "member agent is created",
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
-						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
-						k8sutil.CreateVolumeWithSecret(k8sutil.ClusterJWTSecretVolumeName, testJWTSecretName),
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
+						k8sutil.CreateVolumeWithSecret(shared.ClusterJWTSecretVolumeName, testJWTSecretName),
 					},
 					Containers: []core.Container{
 						{
-							Name:    k8sutil.ServerContainerName,
+							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForAgent(firstAgentStatus.ID, false, true, false),
 							Ports:   createTestPorts(),
@@ -796,19 +797,19 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 				require.NoError(t, err)
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(httpProbe, true,
-					authorization, k8sutil.ArangoPort)
+					authorization, shared.ArangoPort)
 			},
 			ExpectedEvent: "member agent is created",
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
-						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
 						createTestTLSVolume(api.ServerGroupAgentsString, firstAgentStatus.ID),
-						k8sutil.CreateVolumeWithSecret(k8sutil.ClusterJWTSecretVolumeName, testJWTSecretName),
+						k8sutil.CreateVolumeWithSecret(shared.ClusterJWTSecretVolumeName, testJWTSecretName),
 					},
 					Containers: []core.Container{
 						{
-							Name:            k8sutil.ServerContainerName,
+							Name:            shared.ServerContainerName,
 							Image:           testImage,
 							Command:         createTestCommandForAgent(firstAgentStatus.ID, true, true, false),
 							Ports:           createTestPorts(),
@@ -860,12 +861,12 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
-						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
-						k8sutil.CreateVolumeWithSecret(k8sutil.RocksdbEncryptionVolumeName, testRocksDBEncryptionKey),
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
+						k8sutil.CreateVolumeWithSecret(shared.RocksdbEncryptionVolumeName, testRocksDBEncryptionKey),
 					},
 					Containers: []core.Container{
 						{
-							Name:    k8sutil.ServerContainerName,
+							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForAgent(firstAgentStatus.ID, false, false, true),
 							Ports:   createTestPorts(),
@@ -874,7 +875,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 								k8sutil.RocksdbEncryptionVolumeMount(),
 							},
 							Resources:       emptyResources,
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", k8sutil.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -915,19 +916,19 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 				require.NoError(t, err)
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(httpProbe, false,
-					authorization, k8sutil.ArangoPort)
+					authorization, shared.ArangoPort)
 			},
 			ExpectedEvent: "member dbserver is created",
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
-						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
-						k8sutil.CreateVolumeWithSecret(k8sutil.ExporterJWTVolumeName, testExporterToken),
-						k8sutil.CreateVolumeWithSecret(k8sutil.ClusterJWTSecretVolumeName, testJWTSecretName),
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
+						k8sutil.CreateVolumeWithSecret(shared.ExporterJWTVolumeName, testExporterToken),
+						k8sutil.CreateVolumeWithSecret(shared.ClusterJWTSecretVolumeName, testJWTSecretName),
 					},
 					Containers: []core.Container{
 						{
-							Name:    k8sutil.ServerContainerName,
+							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForDBServer(firstDBServerStatus.ID, false, true, false),
 							Ports:   createTestPorts(),
@@ -984,19 +985,19 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 				require.NoError(t, err)
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(httpProbe, false,
-					authorization, k8sutil.ArangoPort)
+					authorization, shared.ArangoPort)
 			},
 			ExpectedEvent: "member dbserver is created",
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
-						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
-						k8sutil.CreateVolumeWithSecret(k8sutil.ExporterJWTVolumeName, testExporterToken),
-						k8sutil.CreateVolumeWithSecret(k8sutil.ClusterJWTSecretVolumeName, testJWTSecretName),
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
+						k8sutil.CreateVolumeWithSecret(shared.ExporterJWTVolumeName, testExporterToken),
+						k8sutil.CreateVolumeWithSecret(shared.ClusterJWTSecretVolumeName, testJWTSecretName),
 					},
 					Containers: []core.Container{
 						{
-							Name:    k8sutil.ServerContainerName,
+							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForDBServer(firstDBServerStatus.ID, false, true, false),
 							Ports:   createTestPorts(),
@@ -1049,7 +1050,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 				require.NoError(t, err)
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(httpProbe, false,
-					authorization, k8sutil.ArangoPort)
+					authorization, shared.ArangoPort)
 			},
 			config: Config{
 				OperatorImage: testImageOperator,
@@ -1058,9 +1059,9 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
-						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
-						k8sutil.CreateVolumeWithSecret(k8sutil.ExporterJWTVolumeName, testExporterToken),
-						k8sutil.CreateVolumeWithSecret(k8sutil.ClusterJWTSecretVolumeName, testJWTSecretName),
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
+						k8sutil.CreateVolumeWithSecret(shared.ExporterJWTVolumeName, testExporterToken),
+						k8sutil.CreateVolumeWithSecret(shared.ClusterJWTSecretVolumeName, testJWTSecretName),
 						k8sutil.LifecycleVolume(),
 					},
 					InitContainers: []core.Container{
@@ -1068,7 +1069,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 					},
 					Containers: []core.Container{
 						{
-							Name:    k8sutil.ServerContainerName,
+							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForDBServer(firstDBServerStatus.ID, false, true, false),
 							Ports:   createTestPorts(),
@@ -1120,7 +1121,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 				require.NoError(t, err)
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(httpProbe, false,
-					authorization, k8sutil.ArangoPort)
+					authorization, shared.ArangoPort)
 			},
 			config: Config{
 				OperatorImage: testImageOperator,
@@ -1129,9 +1130,9 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
-						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
-						k8sutil.CreateVolumeWithSecret(k8sutil.ExporterJWTVolumeName, testExporterToken),
-						k8sutil.CreateVolumeWithSecret(k8sutil.ClusterJWTSecretVolumeName, testJWTSecretName),
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
+						k8sutil.CreateVolumeWithSecret(shared.ExporterJWTVolumeName, testExporterToken),
+						k8sutil.CreateVolumeWithSecret(shared.ClusterJWTSecretVolumeName, testJWTSecretName),
 					},
 					InitContainers: []core.Container{
 						createTestLifecycleContainer(emptyResources),
@@ -1139,7 +1140,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 					},
 					Containers: []core.Container{
 						{
-							Name:    k8sutil.ServerContainerName,
+							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForDBServer(firstDBServerStatus.ID, false, true, false),
 							Ports:   createTestPorts(),
@@ -1197,13 +1198,13 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
-						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
 						createTestTLSVolume(api.ServerGroupCoordinatorsString, firstCoordinatorStatus.ID),
-						k8sutil.CreateVolumeWithSecret(k8sutil.ClusterJWTSecretVolumeName, testJWTSecretName),
+						k8sutil.CreateVolumeWithSecret(shared.ClusterJWTSecretVolumeName, testJWTSecretName),
 					},
 					Containers: []core.Container{
 						{
-							Name:            k8sutil.ServerContainerName,
+							Name:            shared.ServerContainerName,
 							Image:           testImage,
 							Command:         createTestCommandForCoordinator(firstCoordinatorStatus.ID, true, true),
 							Ports:           createTestPorts(),
@@ -1263,13 +1264,13 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
-						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
 						createTestTLSVolume(api.ServerGroupSingleString, singleStatus.ID),
-						k8sutil.CreateVolumeWithSecret(k8sutil.ClusterJWTSecretVolumeName, testJWTSecretName),
+						k8sutil.CreateVolumeWithSecret(shared.ClusterJWTSecretVolumeName, testJWTSecretName),
 					},
 					Containers: []core.Container{
 						{
-							Name:            k8sutil.ServerContainerName,
+							Name:            shared.ServerContainerName,
 							Image:           testImage,
 							Command:         createTestCommandForSingleMode(true, true),
 							Ports:           createTestPorts(),
@@ -1299,13 +1300,13 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 
 func testArangodbInternalExporterContainer(secure, auth bool, resources core.ResourceRequirements, ports ...int32) core.Container {
 
-	var port int32 = k8sutil.ArangoExporterPort
+	var port int32 = shared.ArangoExporterPort
 	if len(ports) > 0 {
 		port = ports[0]
 	}
 
 	c := core.Container{
-		Name:    k8sutil.ExporterContainerName,
+		Name:    shared.ExporterContainerName,
 		Image:   testImage,
 		Command: createTestInternalExporterCommand(secure, auth, port),
 		Ports: []core.ContainerPort{
@@ -1355,7 +1356,7 @@ func createTestInternalExporterCommand(secure, auth bool, port int32) []string {
 		args = append(args, "--arangodb.jwt-file=/secrets/exporter/jwt/token")
 	}
 
-	if port != k8sutil.ArangoExporterPort {
+	if port != shared.ArangoExporterPort {
 		args = append(args, fmt.Sprintf("--server.address=:%d", port))
 	}
 

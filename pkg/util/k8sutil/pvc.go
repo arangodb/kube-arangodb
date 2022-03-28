@@ -48,12 +48,6 @@ func IsPersistentVolumeClaimFileSystemResizePending(pvc *v1.PersistentVolumeClai
 	return false
 }
 
-// CreatePersistentVolumeClaimName returns the name of the persistent volume claim for a member with
-// a given id in a deployment with a given name.
-func CreatePersistentVolumeClaimName(deploymentName, role, id string) string {
-	return deploymentName + "-" + role + "-" + stripArangodPrefix(id)
-}
-
 // ExtractStorageResourceRequirement filters resource requirements for Pods.
 func ExtractStorageResourceRequirement(resources v1.ResourceRequirements) v1.ResourceRequirements {
 

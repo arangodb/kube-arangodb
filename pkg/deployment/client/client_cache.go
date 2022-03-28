@@ -34,6 +34,7 @@ import (
 
 	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 )
 
@@ -76,7 +77,7 @@ func (cc *cache) extendHost(host string) string {
 		scheme = "https"
 	}
 
-	return scheme + "://" + net.JoinHostPort(host, strconv.Itoa(k8sutil.ArangoPort))
+	return scheme + "://" + net.JoinHostPort(host, strconv.Itoa(shared.ArangoPort))
 }
 
 func (cc *cache) getClient(group api.ServerGroup, id string) (driver.Client, error) {

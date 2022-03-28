@@ -29,9 +29,9 @@ import (
 	"path"
 
 	"github.com/arangodb/go-driver/jwt"
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -57,7 +57,7 @@ func init() {
 	f.BoolVarP(&probeInput.SSL, "ssl", "", false, "Determines if SSL is enabled")
 	f.BoolVarP(&probeInput.Auth, "auth", "", false, "Determines if authentication is enabled")
 	f.StringVarP(&probeInput.Endpoint, "endpoint", "", "/_api/version", "Endpoint (path) to call for lifecycle probe")
-	f.StringVarP(&probeInput.JWTPath, "jwt", "", k8sutil.ClusterJWTSecretVolumeMountDir, "Path to the JWT tokens")
+	f.StringVarP(&probeInput.JWTPath, "jwt", "", shared.ClusterJWTSecretVolumeMountDir, "Path to the JWT tokens")
 }
 
 func probeClient() *http.Client {
@@ -80,7 +80,7 @@ func probeEndpoint(endpoint string) string {
 		proto = "https"
 	}
 
-	return fmt.Sprintf("%s://%s:%d%s", proto, "127.0.0.1", k8sutil.ArangoPort, endpoint)
+	return fmt.Sprintf("%s://%s:%d%s", proto, "127.0.0.1", shared.ArangoPort, endpoint)
 }
 
 func readJWTFile(file string) ([]byte, error) {

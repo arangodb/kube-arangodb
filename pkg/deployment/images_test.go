@@ -38,6 +38,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/stretchr/testify/require"
 )
@@ -60,7 +61,7 @@ func TestEnsureImages(t *testing.T) {
 	// Arange
 	terminationGracePeriodSeconds := int64((time.Second * 30).Seconds())
 	id := fmt.Sprintf("%0x", sha1.Sum([]byte(testNewImage)))[:6]
-	hostname := testDeploymentName + "-" + k8sutil.ImageIDAndVersionRole + "-" + id
+	hostname := testDeploymentName + "-" + shared.ImageIDAndVersionRole + "-" + id
 
 	var securityContext api.ServerGroupSpecSecurityContext
 
@@ -84,11 +85,11 @@ func TestEnsureImages(t *testing.T) {
 			ExpectedPod: v1.Pod{
 				Spec: v1.PodSpec{
 					Volumes: []v1.Volume{
-						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
 					},
 					Containers: []v1.Container{
 						{
-							Name:    k8sutil.ServerContainerName,
+							Name:    shared.ServerContainerName,
 							Image:   testNewImage,
 							Command: createTestCommandForImageUpdatePod(),
 							Ports:   createTestPorts(),
@@ -109,7 +110,7 @@ func TestEnsureImages(t *testing.T) {
 					Hostname:                      hostname,
 					Subdomain:                     testDeploymentName + "-int",
 					Affinity: k8sutil.CreateAffinity(testDeploymentName,
-						k8sutil.ImageIDAndVersionRole, false, ""),
+						shared.ImageIDAndVersionRole, false, ""),
 				},
 			},
 		},
@@ -127,11 +128,11 @@ func TestEnsureImages(t *testing.T) {
 			ExpectedPod: v1.Pod{
 				Spec: v1.PodSpec{
 					Volumes: []v1.Volume{
-						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
 					},
 					Containers: []v1.Container{
 						{
-							Name:    k8sutil.ServerContainerName,
+							Name:    shared.ServerContainerName,
 							Image:   testNewImage,
 							Command: createTestCommandForImageUpdatePod(),
 							Ports:   createTestPorts(),
@@ -156,7 +157,7 @@ func TestEnsureImages(t *testing.T) {
 					Hostname:                      hostname,
 					Subdomain:                     testDeploymentName + "-int",
 					Affinity: k8sutil.CreateAffinity(testDeploymentName,
-						k8sutil.ImageIDAndVersionRole, false, ""),
+						shared.ImageIDAndVersionRole, false, ""),
 				},
 			},
 		},
@@ -170,7 +171,7 @@ func TestEnsureImages(t *testing.T) {
 			Before: func(t *testing.T, deployment *Deployment) {
 				pod := v1.Pod{
 					ObjectMeta: metav1.ObjectMeta{
-						Name:              k8sutil.CreatePodName(testDeploymentName, k8sutil.ImageIDAndVersionRole, id, ""),
+						Name:              k8sutil.CreatePodName(testDeploymentName, shared.ImageIDAndVersionRole, id, ""),
 						CreationTimestamp: metav1.Now(),
 					},
 					Spec: v1.PodSpec{},
@@ -197,7 +198,7 @@ func TestEnsureImages(t *testing.T) {
 			Before: func(t *testing.T, deployment *Deployment) {
 				pod := v1.Pod{
 					ObjectMeta: metav1.ObjectMeta{
-						Name: k8sutil.CreatePodName(testDeploymentName, k8sutil.ImageIDAndVersionRole, id, ""),
+						Name: k8sutil.CreatePodName(testDeploymentName, shared.ImageIDAndVersionRole, id, ""),
 					},
 					Status: v1.PodStatus{
 						Phase: v1.PodFailed,
@@ -222,7 +223,7 @@ func TestEnsureImages(t *testing.T) {
 			Before: func(t *testing.T, deployment *Deployment) {
 				pod := v1.Pod{
 					ObjectMeta: metav1.ObjectMeta{
-						Name: k8sutil.CreatePodName(testDeploymentName, k8sutil.ImageIDAndVersionRole, id, ""),
+						Name: k8sutil.CreatePodName(testDeploymentName, shared.ImageIDAndVersionRole, id, ""),
 					},
 					Status: v1.PodStatus{
 						Conditions: []v1.PodCondition{
@@ -251,7 +252,7 @@ func TestEnsureImages(t *testing.T) {
 			Before: func(t *testing.T, deployment *Deployment) {
 				pod := v1.Pod{
 					ObjectMeta: metav1.ObjectMeta{
-						Name: k8sutil.CreatePodName(testDeploymentName, k8sutil.ImageIDAndVersionRole, id, ""),
+						Name: k8sutil.CreatePodName(testDeploymentName, shared.ImageIDAndVersionRole, id, ""),
 					},
 					Status: v1.PodStatus{
 						Conditions: []v1.PodCondition{
@@ -281,7 +282,7 @@ func TestEnsureImages(t *testing.T) {
 			Before: func(t *testing.T, deployment *Deployment) {
 				pod := v1.Pod{
 					ObjectMeta: metav1.ObjectMeta{
-						Name: k8sutil.CreatePodName(testDeploymentName, k8sutil.ImageIDAndVersionRole, id, ""),
+						Name: k8sutil.CreatePodName(testDeploymentName, shared.ImageIDAndVersionRole, id, ""),
 					},
 					Status: v1.PodStatus{
 						Conditions: []v1.PodCondition{
@@ -361,8 +362,8 @@ func TestEnsureImages(t *testing.T) {
 func createTestCommandForImageUpdatePod() []string {
 	return []string{resources.ArangoDExecutor,
 		"--server.authentication=false",
-		fmt.Sprintf("--server.endpoint=tcp://[::]:%d", k8sutil.ArangoPort),
-		"--database.directory=" + k8sutil.ArangodVolumeMountDir,
+		fmt.Sprintf("--server.endpoint=tcp://[::]:%d", shared.ArangoPort),
+		"--database.directory=" + shared.ArangodVolumeMountDir,
 		"--log.output=+",
 	}
 }

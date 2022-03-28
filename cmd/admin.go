@@ -43,6 +43,7 @@ import (
 	"github.com/arangodb/go-driver/jwt"
 	"github.com/arangodb/go-driver/v2/connection"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -222,10 +223,10 @@ func getDeploymentAndCredentials(ctx context.Context,
 // getArangoEndpoint returns ArangoDB endpoint with scheme and port for the given dnsName.
 func getArangoEndpoint(secure bool, dnsName string) string {
 	if secure {
-		return "https://" + net.JoinHostPort(dnsName, strconv.Itoa(k8sutil.ArangoPort))
+		return "https://" + net.JoinHostPort(dnsName, strconv.Itoa(shared.ArangoPort))
 	}
 
-	return "http://" + net.JoinHostPort(dnsName, strconv.Itoa(k8sutil.ArangoPort))
+	return "http://" + net.JoinHostPort(dnsName, strconv.Itoa(shared.ArangoPort))
 }
 
 // getAgencyLeader returns the leader ID of the agency.

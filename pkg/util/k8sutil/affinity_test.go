@@ -25,6 +25,7 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -36,7 +37,7 @@ func TestCreateAffinity(t *testing.T) {
 				{
 					MatchExpressions: []v1.NodeSelectorRequirement{
 						{
-							Key:      NodeArchAffinityLabel,
+							Key:      shared.NodeArchAffinityLabel,
 							Operator: "In",
 							Values:   []string{"amd64"},
 						},

@@ -33,6 +33,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
@@ -128,7 +129,7 @@ func (ib *imagesBuilder) Run(ctx context.Context, cachedStatus inspectorInterfac
 // When no pod exists, it is created, otherwise the ID is fetched & version detected.
 // Returns: retrySoon, error
 func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cachedStatus inspectorInterface.Inspector, image string) (bool, error) {
-	role := k8sutil.ImageIDAndVersionRole
+	role := shared.ImageIDAndVersionRole
 	id := fmt.Sprintf("%0x", sha1.Sum([]byte(image)))[:6]
 	podName := k8sutil.CreatePodName(ib.APIObject.GetName(), role, id, "")
 	log := ib.Log.With().
@@ -142,7 +143,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 	pod, err := ib.Context.GetCachedStatus().Pod().V1().Read().Get(ctxChild, podName, metav1.GetOptions{})
 	if err == nil {
 		// Pod found
-		if k8sutil.IsPodFailed(pod, utils.StringList{k8sutil.ServerContainerName}) {
+		if k8sutil.IsPodFailed(pod, utils.StringList{shared.ServerContainerName}) {
 			// Wait some time before deleting the pod
 			if time.Now().After(pod.GetCreationTimestamp().Add(30 * time.Second)) {
 				err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
@@ -396,14 +397,14 @@ func (a *ContainerIdentity) GetLifecycle() (*core.Lifecycle, error) {
 }
 
 func (a *ContainerIdentity) GetName() string {
-	return k8sutil.ServerContainerName
+	return shared.ServerContainerName
 }
 
 func (a *ContainerIdentity) GetPorts() []core.ContainerPort {
 	return []core.ContainerPort{
 		{
-			Name:          k8sutil.ServerContainerName,
-			ContainerPort: int32(k8sutil.ArangoPort),
+			Name:          shared.ServerContainerName,
+			ContainerPort: int32(shared.ArangoPort),
 			Protocol:      core.ProtocolTCP,
 		},
 	}
@@ -430,8 +431,8 @@ func (a *ContainerIdentity) GetVolumeMounts() []core.VolumeMount {
 func (a *ArangoDIdentity) GetArgs() ([]string, error) {
 	return []string{
 		"--server.authentication=false",
-		fmt.Sprintf("--server.endpoint=tcp://%s:%d", a.ipAddress, k8sutil.ArangoPort),
-		"--database.directory=" + k8sutil.ArangodVolumeMountDir,
+		fmt.Sprintf("--server.endpoint=tcp://%s:%d", a.ipAddress, shared.ArangoPort),
+		"--database.directory=" + shared.ArangodVolumeMountDir,
 		"--log.output=+",
 	}, nil
 }
@@ -463,7 +464,7 @@ func (a *ArangoSyncIdentity) GetExecutor() string {
 
 func getVolumes() pod.Volumes {
 	volumes := pod.NewVolumes()
-	volumes.AddVolume(k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName))
+	volumes.AddVolume(k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName))
 	volumes.AddVolumeMount(k8sutil.ArangodVolumeMount())
 
 	return volumes

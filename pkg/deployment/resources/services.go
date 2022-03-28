@@ -37,6 +37,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	servicev1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service/v1"
@@ -90,8 +91,8 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 							{
 								Name:       "server",
 								Protocol:   "TCP",
-								Port:       k8sutil.ArangoPort,
-								TargetPort: intstr.IntOrString{IntVal: k8sutil.ArangoPort},
+								Port:       shared.ArangoPort,
+								TargetPort: intstr.IntOrString{IntVal: shared.ArangoPort},
 							},
 						},
 						PublishNotReadyAddresses: true,
@@ -119,8 +120,8 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 					{
 						Name:       "server",
 						Protocol:   "TCP",
-						Port:       k8sutil.ArangoPort,
-						TargetPort: intstr.IntOrString{IntVal: k8sutil.ArangoPort},
+						Port:       shared.ArangoPort,
+						TargetPort: intstr.IntOrString{IntVal: shared.ArangoPort},
 					},
 				}
 				spec.PublishNotReadyAddresses = true
@@ -194,7 +195,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 	if single {
 		role = "single"
 	}
-	if err := r.ensureExternalAccessServices(ctx, cachedStatus, svcs, eaServiceName, role, "database", k8sutil.ArangoPort, false, spec.ExternalAccess, apiObject, log); err != nil {
+	if err := r.ensureExternalAccessServices(ctx, cachedStatus, svcs, eaServiceName, role, "database", shared.ArangoPort, false, spec.ExternalAccess, apiObject, log); err != nil {
 		return errors.WithStack(err)
 	}
 
@@ -203,7 +204,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 		counterMetric.Inc()
 		eaServiceName := k8sutil.CreateSyncMasterClientServiceName(deploymentName)
 		role := "syncmaster"
-		if err := r.ensureExternalAccessServices(ctx, cachedStatus, svcs, eaServiceName, role, "sync", k8sutil.ArangoSyncMasterPort, true, spec.Sync.ExternalAccess.ExternalAccessSpec, apiObject, log); err != nil {
+		if err := r.ensureExternalAccessServices(ctx, cachedStatus, svcs, eaServiceName, role, "sync", shared.ArangoSyncMasterPort, true, spec.Sync.ExternalAccess.ExternalAccessSpec, apiObject, log); err != nil {
 			return errors.WithStack(err)
 		}
 		status, lastVersion := r.context.GetStatus()

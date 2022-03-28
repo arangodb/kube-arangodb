@@ -18,47 +18,18 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package k8sutil
+package shared
 
 import (
 	"crypto/sha1"
 	"fmt"
-	"regexp"
 	"strings"
 	"unicode"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 var (
-	resourceNameRE  = regexp.MustCompile(`^([0-9\-\.a-z])+$`)
 	arangodPrefixes = []string{"CRDN-", "PRMR-", "AGNT-", "SNGL-"}
 )
-
-// ValidateOptionalResourceName validates a kubernetes resource name.
-// If not empty and not valid, an error is returned.
-func ValidateOptionalResourceName(name string) error {
-	if name == "" {
-		return nil
-	}
-	if err := ValidateResourceName(name); err != nil {
-		return errors.WithStack(err)
-	}
-	return nil
-}
-
-// ValidateResourceName validates a kubernetes resource name.
-// If not valid, an error is returned.
-// See https://kubernetes.io/docs/concepts/overview/working-with-objects/names/
-func ValidateResourceName(name string) error {
-	if len(name) > 253 {
-		return errors.WithStack(errors.Newf("Name '%s' is too long", name))
-	}
-	if resourceNameRE.MatchString(name) {
-		return nil
-	}
-	return errors.WithStack(errors.Newf("Name '%s' is not a valid resource name", name))
-}
 
 // stripArangodPrefix removes well know arangod ID prefixes from the given id.
 func stripArangodPrefix(id string) string {
@@ -99,4 +70,16 @@ func FixupResourceName(name string) string {
 		result = result + h
 	}
 	return result
+}
+
+// CreatePodHostName returns the hostname of the pod for a member with
+// a given id in a deployment with a given name.
+func CreatePodHostName(deploymentName, role, id string) string {
+	return deploymentName + "-" + role + "-" + stripArangodPrefix(id)
+}
+
+// CreatePersistentVolumeClaimName returns the name of the persistent volume claim for a member with
+// a given id in a deployment with a given name.
+func CreatePersistentVolumeClaimName(deploymentName, role, id string) string {
+	return deploymentName + "-" + role + "-" + stripArangodPrefix(id)
 }

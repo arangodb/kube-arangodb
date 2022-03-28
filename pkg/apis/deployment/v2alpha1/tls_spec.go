@@ -25,8 +25,8 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/validation"
 )
 
@@ -115,7 +115,7 @@ func (s TLSSpec) GetParsedAltNames() (dnsNames, ipAddresses, emailAddresses []st
 // Validate the given spec
 func (s TLSSpec) Validate() error {
 	if s.IsSecure() {
-		if err := k8sutil.ValidateResourceName(s.GetCASecretName()); err != nil {
+		if err := shared.ValidateResourceName(s.GetCASecretName()); err != nil {
 			return errors.WithStack(err)
 		}
 		if _, _, _, err := s.GetParsedAltNames(); err != nil {

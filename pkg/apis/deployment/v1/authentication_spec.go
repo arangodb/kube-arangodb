@@ -21,9 +21,9 @@
 package v1
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 // AuthenticationSpec holds authentication specific configuration settings
@@ -53,7 +53,7 @@ func (s AuthenticationSpec) Validate(required bool) error {
 		return errors.WithStack(errors.Wrap(ValidationError, "JWT secret is required"))
 	}
 	if s.IsAuthenticated() {
-		if err := k8sutil.ValidateResourceName(s.GetJWTSecretName()); err != nil {
+		if err := shared.ValidateResourceName(s.GetJWTSecretName()); err != nil {
 			return errors.WithStack(err)
 		}
 	}

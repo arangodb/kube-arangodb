@@ -22,7 +22,7 @@ package probes
 
 import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -80,7 +80,7 @@ func (config HTTPProbeConfig) Create() *core.Probe {
 		Handler: core.Handler{
 			HTTPGet: &core.HTTPGetAction{
 				Path:        config.LocalPath,
-				Port:        intstr.FromInt(int(def(int32(config.Port), k8sutil.ArangoPort))),
+				Port:        intstr.FromInt(int(def(int32(config.Port), shared.ArangoPort))),
 				Scheme:      scheme,
 				HTTPHeaders: headers,
 			},

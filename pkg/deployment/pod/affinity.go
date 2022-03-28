@@ -22,6 +22,7 @@ package pod
 
 import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 	core "k8s.io/api/core/v1"
@@ -37,14 +38,14 @@ func AppendPodAntiAffinityDefault(p interfaces.PodCreator, a *core.PodAntiAffini
 	if !p.IsDeploymentMode() {
 		a.RequiredDuringSchedulingIgnoredDuringExecution = append(a.RequiredDuringSchedulingIgnoredDuringExecution, core.PodAffinityTerm{
 			LabelSelector: labelSelector,
-			TopologyKey:   k8sutil.TopologyKeyHostname,
+			TopologyKey:   shared.TopologyKeyHostname,
 		})
 	} else {
 		a.PreferredDuringSchedulingIgnoredDuringExecution = append(a.PreferredDuringSchedulingIgnoredDuringExecution, core.WeightedPodAffinityTerm{
 			Weight: 1,
 			PodAffinityTerm: core.PodAffinityTerm{
 				LabelSelector: labelSelector,
-				TopologyKey:   k8sutil.TopologyKeyHostname,
+				TopologyKey:   shared.TopologyKeyHostname,
 			},
 		})
 	}
@@ -65,14 +66,14 @@ func AppendAffinityWithRole(p interfaces.PodCreator, a *core.PodAffinity, role s
 	if !p.IsDeploymentMode() {
 		a.RequiredDuringSchedulingIgnoredDuringExecution = append(a.RequiredDuringSchedulingIgnoredDuringExecution, core.PodAffinityTerm{
 			LabelSelector: labelSelector,
-			TopologyKey:   k8sutil.TopologyKeyHostname,
+			TopologyKey:   shared.TopologyKeyHostname,
 		})
 	} else {
 		a.PreferredDuringSchedulingIgnoredDuringExecution = append(a.PreferredDuringSchedulingIgnoredDuringExecution, core.WeightedPodAffinityTerm{
 			Weight: 1,
 			PodAffinityTerm: core.PodAffinityTerm{
 				LabelSelector: labelSelector,
-				TopologyKey:   k8sutil.TopologyKeyHostname,
+				TopologyKey:   shared.TopologyKeyHostname,
 			},
 		})
 	}

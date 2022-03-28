@@ -40,6 +40,7 @@ import (
 
 	"github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -407,7 +408,7 @@ func createKeyfileRenewalPlanMode(
 }
 
 func checkServerValidCertRequest(ctx context.Context, context PlanBuilderContext, apiObject k8sutil.APIObject, group api.ServerGroup, member api.MemberStatus, ca resources.Certificates) (*tls.ConnectionState, error) {
-	endpoint := fmt.Sprintf("https://%s:%d", k8sutil.CreatePodDNSNameWithDomain(apiObject, context.GetSpec().ClusterDomain, group.AsRole(), member.ID), k8sutil.ArangoPort)
+	endpoint := fmt.Sprintf("https://%s:%d", k8sutil.CreatePodDNSNameWithDomain(apiObject, context.GetSpec().ClusterDomain, group.AsRole(), member.ID), shared.ArangoPort)
 
 	tlsConfig := &tls.Config{
 		RootCAs: ca.AsCertPool(),

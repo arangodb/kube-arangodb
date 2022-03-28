@@ -38,6 +38,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	secretv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -133,7 +134,7 @@ func (e encryption) Args(i Input) k8sutil.OptionPairs {
 		return nil
 	}
 	if !MultiFileMode(i) {
-		keyPath := filepath.Join(k8sutil.RocksDBEncryptionVolumeMountDir, constants.SecretEncryptionKey)
+		keyPath := filepath.Join(shared.RocksDBEncryptionVolumeMountDir, constants.SecretEncryptionKey)
 		return k8sutil.NewOptionPair(k8sutil.OptionPair{
 			Key:   "--rocksdb.encryption-keyfile",
 			Value: keyPath,
@@ -141,7 +142,7 @@ func (e encryption) Args(i Input) k8sutil.OptionPairs {
 	} else {
 		return k8sutil.NewOptionPair(k8sutil.OptionPair{
 			Key:   "--rocksdb.encryption-keyfolder",
-			Value: k8sutil.RocksDBEncryptionVolumeMountDir,
+			Value: shared.RocksDBEncryptionVolumeMountDir,
 		})
 	}
 }
@@ -151,10 +152,10 @@ func (e encryption) Volumes(i Input) ([]core.Volume, []core.VolumeMount) {
 		return nil, nil
 	}
 	if !MultiFileMode(i) {
-		vol := k8sutil.CreateVolumeWithSecret(k8sutil.RocksdbEncryptionVolumeName, i.Deployment.RocksDB.Encryption.GetKeySecretName())
+		vol := k8sutil.CreateVolumeWithSecret(shared.RocksdbEncryptionVolumeName, i.Deployment.RocksDB.Encryption.GetKeySecretName())
 		return []core.Volume{vol}, []core.VolumeMount{k8sutil.RocksdbEncryptionVolumeMount()}
 	} else {
-		vol := k8sutil.CreateVolumeWithSecret(k8sutil.RocksdbEncryptionVolumeName, GetEncryptionFolderSecretName(i.ApiObject.GetName()))
+		vol := k8sutil.CreateVolumeWithSecret(shared.RocksdbEncryptionVolumeName, GetEncryptionFolderSecretName(i.ApiObject.GetName()))
 		return []core.Volume{vol}, []core.VolumeMount{k8sutil.RocksdbEncryptionReadOnlyVolumeMount()}
 	}
 }

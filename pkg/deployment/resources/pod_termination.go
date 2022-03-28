@@ -34,6 +34,7 @@ import (
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	v1 "k8s.io/api/core/v1"
@@ -185,7 +186,7 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 		log.Debug().Err(err).Msg("Failed to access cluster")
 
 		if r.context.GetSpec().Recovery.Get().GetAutoRecover() {
-			if c, ok := k8sutil.GetContainerStatusByName(p, k8sutil.ServerContainerName); ok {
+			if c, ok := k8sutil.GetContainerStatusByName(p, shared.ServerContainerName); ok {
 				if t := c.State.Terminated; t != nil {
 					return nil
 				}

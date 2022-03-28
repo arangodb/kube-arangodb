@@ -37,6 +37,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	batchv1 "k8s.io/api/batch/v1"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -144,7 +145,7 @@ func (h *handler) prepareK8sJob(job *appsApi.ArangoJob) (*batchv1.Job, error) {
 	if deployment.Spec.TLS.IsSecure() {
 		k8sJob.Spec.Template.Spec.Volumes = []core.Volume{
 			{
-				Name: k8sutil.TlsKeyfileVolumeName,
+				Name: shared.TlsKeyfileVolumeName,
 				VolumeSource: core.VolumeSource{
 					Secret: &core.SecretVolumeSource{
 						SecretName: deployment.Spec.TLS.GetCASecretName(),

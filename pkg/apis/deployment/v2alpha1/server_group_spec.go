@@ -35,7 +35,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	arangodOptions "github.com/arangodb/kube-arangodb/pkg/util/arangod/options"
 	arangosyncOptions "github.com/arangodb/kube-arangodb/pkg/util/arangosync/options"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 // ServerGroupShutdownMethod enum of possible shutdown methods
@@ -492,12 +491,12 @@ func (s ServerGroupSpec) Validate(group ServerGroup, used bool, mode DeploymentM
 			return errors.WithStack(errors.Wrapf(ValidationError, "Invalid count value %d. Expected 1", s.GetCount()))
 		}
 		if name := s.GetServiceAccountName(); name != "" {
-			if err := k8sutil.ValidateOptionalResourceName(name); err != nil {
+			if err := shared.ValidateOptionalResourceName(name); err != nil {
 				return errors.WithStack(errors.Wrapf(ValidationError, "Invalid serviceAccountName: %s", err))
 			}
 		}
 		if name := s.GetStorageClassName(); name != "" {
-			if err := k8sutil.ValidateOptionalResourceName(name); err != nil {
+			if err := shared.ValidateOptionalResourceName(name); err != nil {
 				return errors.WithStack(errors.Wrapf(ValidationError, "Invalid storageClassName: %s", err))
 			}
 		}

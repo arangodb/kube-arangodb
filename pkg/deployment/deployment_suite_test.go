@@ -42,6 +42,7 @@ import (
 	recordfake "k8s.io/client-go/tools/record"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	arangofake "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/fake"
@@ -92,7 +93,7 @@ type testCaseStruct struct {
 }
 
 func createTestTLSVolume(serverGroupString, ID string) core.Volume {
-	return k8sutil.CreateVolumeWithSecret(k8sutil.TlsKeyfileVolumeName,
+	return k8sutil.CreateVolumeWithSecret(shared.TlsKeyfileVolumeName,
 		k8sutil.CreateTLSKeyfileSecretName(testDeploymentName, serverGroupString, ID))
 }
 
@@ -138,7 +139,7 @@ func createTestLivenessProbe(mode string, secure bool, authorization string, por
 }
 
 func createTestReadinessProbe(mode string, secure bool, authorization string) *core.Probe {
-	p := getProbeCreator(mode)(secure, authorization, "/_admin/server/availability", k8sutil.ArangoPort).Create()
+	p := getProbeCreator(mode)(secure, authorization, "/_admin/server/availability", shared.ArangoPort).Create()
 
 	p.InitialDelaySeconds = 2
 	p.PeriodSeconds = 2
@@ -526,7 +527,7 @@ func createTestImages(enterprise bool) api.ImageInfoList {
 func createTestExporterLivenessProbe(secure bool) *core.Probe {
 	return probes.HTTPProbeConfig{
 		LocalPath: "/",
-		Port:      k8sutil.ArangoExporterPort,
+		Port:      shared.ArangoExporterPort,
 		Secure:    secure,
 	}.Create()
 }
@@ -728,7 +729,7 @@ func addLifecycle(name string, uuidRequired bool, license string, group api.Serv
 			}
 		}
 
-		if _, ok := k8sutil.GetAnyVolumeByName(p.Spec.Volumes, k8sutil.LifecycleVolumeName); !ok {
+		if _, ok := k8sutil.GetAnyVolumeByName(p.Spec.Volumes, shared.LifecycleVolumeName); !ok {
 			p.Spec.Volumes = append([]core.Volume{k8sutil.LifecycleVolume()}, p.Spec.Volumes...)
 		}
 		if _, ok := k8sutil.GetAnyVolumeByName(p.Spec.Volumes, "arangod-data"); !ok {

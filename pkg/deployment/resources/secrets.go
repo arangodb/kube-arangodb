@@ -52,6 +52,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -432,8 +433,8 @@ var (
 		"iss":       "arangodb",
 		"server_id": "exporter",
 		"allowed_paths": []interface{}{"/_admin/statistics", "/_admin/statistics-description",
-			k8sutil.ArangoExporterInternalEndpoint, k8sutil.ArangoExporterInternalEndpointV2,
-			k8sutil.ArangoExporterStatusEndpoint, k8sutil.ArangoExporterClusterHealthEndpoint},
+			shared.ArangoExporterInternalEndpoint, shared.ArangoExporterInternalEndpointV2,
+			shared.ArangoExporterStatusEndpoint, shared.ArangoExporterClusterHealthEndpoint},
 	}
 )
 

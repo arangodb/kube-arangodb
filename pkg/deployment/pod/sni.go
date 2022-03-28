@@ -36,6 +36,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	core "k8s.io/api/core/v1"
 )
 
@@ -120,7 +121,7 @@ func (s sni) Volumes(i Input) ([]core.Volume, []core.VolumeMount) {
 
 		volMount := core.VolumeMount{
 			Name:      secretNameSha,
-			MountPath: fmt.Sprintf("%s/%s", k8sutil.TLSSNIKeyfileVolumeMountDir, secret),
+			MountPath: fmt.Sprintf("%s/%s", shared.TLSSNIKeyfileVolumeMountDir, secret),
 			ReadOnly:  true,
 		}
 
@@ -145,7 +146,7 @@ func (s sni) Args(i Input) k8sutil.OptionPairs {
 		}
 
 		for _, server := range servers {
-			opts.Addf("--ssl.server-name-indication", "%s=%s/%s/%s", server, k8sutil.TLSSNIKeyfileVolumeMountDir, volume, constants.SecretTLSKeyfile)
+			opts.Addf("--ssl.server-name-indication", "%s=%s/%s/%s", server, shared.TLSSNIKeyfileVolumeMountDir, volume, constants.SecretTLSKeyfile)
 		}
 	}
 

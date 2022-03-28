@@ -23,7 +23,7 @@ package v2alpha1
 import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 )
 
 const (
@@ -76,7 +76,7 @@ func (s PasswordSecretNameList) GetSecretName(user string) PasswordSecretName {
 
 // getSecretNameForUserPassword returns the default secret name for the given user
 func getSecretNameForUserPassword(deploymentname, username string) PasswordSecretName {
-	return PasswordSecretName(k8sutil.FixupResourceName(deploymentname + "-" + username + "-password"))
+	return PasswordSecretName(shared.FixupResourceName(deploymentname + "-" + username + "-password"))
 }
 
 // Validate the specification.
@@ -92,7 +92,7 @@ func (b *BootstrapSpec) Validate() error {
 				return errors.Newf("magic value None not allowed for %s", username)
 			}
 		} else {
-			if err := k8sutil.ValidateResourceName(string(secretname)); err != nil {
+			if err := shared.ValidateResourceName(string(secretname)); err != nil {
 				return errors.WithStack(err)
 			}
 		}
