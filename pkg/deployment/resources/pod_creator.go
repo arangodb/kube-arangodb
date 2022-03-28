@@ -554,7 +554,7 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 		m.PodSpecVersion = template.PodSpecChecksum
 	}
 
-	member.GetPhaseExecutor().Execute(r.context.GetAPIObject(), group, &m, api.Action{}, newPhase)
+	member.GetPhaseExecutor().Execute(r.context.GetAPIObject(), spec, group, &m, api.Action{}, newPhase)
 
 	if top := status.Topology; top.Enabled() {
 		if m.Topology != nil && m.Topology.ID == top.ID {

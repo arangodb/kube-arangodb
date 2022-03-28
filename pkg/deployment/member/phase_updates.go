@@ -32,12 +32,12 @@ const (
 	recentTerminationsKeepPeriod = time.Minute * 30
 )
 
-type phaseMapFunc func(obj meta.Object, group api.ServerGroup, action api.Action, m *api.MemberStatus)
+type phaseMapFunc func(obj meta.Object, spec api.DeploymentSpec, group api.ServerGroup, action api.Action, m *api.MemberStatus)
 type phaseMapTo map[api.MemberPhase]phaseMapFunc
 type phaseMap map[api.MemberPhase]phaseMapTo
 
 type PhaseExecutor interface {
-	Execute(obj meta.Object, group api.ServerGroup, m *api.MemberStatus, action api.Action, to api.MemberPhase) bool
+	Execute(obj meta.Object, spec api.DeploymentSpec, group api.ServerGroup, m *api.MemberStatus, action api.Action, to api.MemberPhase) bool
 }
 
 func GetPhaseExecutor() PhaseExecutor {
@@ -46,22 +46,30 @@ func GetPhaseExecutor() PhaseExecutor {
 
 var phase = phaseMap{
 	api.MemberPhaseNone: {
-		api.MemberPhasePending: func(obj meta.Object, group api.ServerGroup, action api.Action, m *api.MemberStatus) {
+		api.MemberPhasePending: func(obj meta.Object, spec api.DeploymentSpec, group api.ServerGroup, action api.Action, m *api.MemberStatus) {
 			// Change member RID
 			m.RID = uuid.NewUUID()
 
 			// Clean Pod details
 			m.PodUID = ""
 
-			m.ClusterID = obj.GetUID()
+			// Add ClusterID
+			if m.ClusterID == "" {
+				m.ClusterID = obj.GetUID()
+			}
+
+			if m.Architecture == nil {
+				d := spec.Architecture.GetDefault()
+				m.Architecture = &d
+			}
 		},
 	},
 	api.MemberPhasePending: {
-		api.MemberPhaseCreated: func(obj meta.Object, group api.ServerGroup, action api.Action, m *api.MemberStatus) {
+		api.MemberPhaseCreated: func(obj meta.Object, spec api.DeploymentSpec, group api.ServerGroup, action api.Action, m *api.MemberStatus) {
 			// Clean conditions
 			removeMemberConditionsMapFunc(m)
 		},
-		api.MemberPhaseUpgrading: func(obj meta.Object, group api.ServerGroup, action api.Action, m *api.MemberStatus) {
+		api.MemberPhaseUpgrading: func(obj meta.Object, spec api.DeploymentSpec, group api.ServerGroup, action api.Action, m *api.MemberStatus) {
 			removeMemberConditionsMapFunc(m)
 		},
 	},
@@ -94,7 +102,7 @@ func removeMemberConditionsMapFunc(m *api.MemberStatus) {
 	m.Upgrade = false
 }
 
-func (p phaseMap) empty(obj meta.Object, group api.ServerGroup, action api.Action, m *api.MemberStatus) {
+func (p phaseMap) empty(obj meta.Object, spec api.DeploymentSpec, group api.ServerGroup, action api.Action, m *api.MemberStatus) {
 
 }
 
@@ -108,7 +116,7 @@ func (p phaseMap) getFunc(from, to api.MemberPhase) phaseMapFunc {
 	return p.empty
 }
 
-func (p phaseMap) Execute(obj meta.Object, group api.ServerGroup, m *api.MemberStatus, action api.Action, to api.MemberPhase) bool {
+func (p phaseMap) Execute(obj meta.Object, spec api.DeploymentSpec, group api.ServerGroup, m *api.MemberStatus, action api.Action, to api.MemberPhase) bool {
 	from := m.Phase
 
 	if from == to {
@@ -119,7 +127,7 @@ func (p phaseMap) Execute(obj meta.Object, group api.ServerGroup, m *api.MemberS
 
 	m.Phase = to
 
-	f(obj, group, action, m)
+	f(obj, spec, group, action, m)
 
 	return true
 }
