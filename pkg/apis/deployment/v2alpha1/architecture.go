@@ -72,6 +72,14 @@ func (a ArangoDeploymentArchitectureType) Validate() error {
 	}
 }
 
+func (a *ArangoDeploymentArchitectureType) Default(def ArangoDeploymentArchitectureType) ArangoDeploymentArchitectureType {
+	if a == nil {
+		return def
+	}
+
+	return *a
+}
+
 func (a ArangoDeploymentArchitectureType) AsNodeSelectorRequirement() core.NodeSelectorTerm {
 	return core.NodeSelectorTerm{
 		MatchExpressions: []core.NodeSelectorRequirement{

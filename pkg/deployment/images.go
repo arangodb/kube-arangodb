@@ -357,7 +357,7 @@ func (i *ImageUpdatePod) GetNodeAffinity() *core.NodeAffinity {
 	a := core.NodeAffinity{}
 	arch := i.spec.Architecture.GetDefault()
 
-	pod.AppendArchSelector(&a, &arch)
+	pod.AppendArchSelector(&a, arch)
 
 	pod.MergeNodeAffinity(&a, i.spec.ID.Get().NodeAffinity)
 
