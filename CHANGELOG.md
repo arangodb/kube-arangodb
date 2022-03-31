@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.2.9](https://github.com/arangodb/kube-arangodb/tree/1.2.9) (2022-03-30)
 - (Feature) Improve Kubernetes clientsets management
 - Migrate storage-operator CustomResourceDefinition apiVersion to apiextensions.k8s.io/v1
 - (Feature) Add CRD Installer
