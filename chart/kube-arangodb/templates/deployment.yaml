@@ -86,7 +86,7 @@ spec:
             hostIPC: false
             securityContext:
                 runAsNonRoot: true
-                runAsUser: 1000
+                runAsUser: {{ .Values.operator.securityContext.runAsUser }}
             containers:
                 - name: operator
                   imagePullPolicy: {{ .Values.operator.imagePullPolicy }}

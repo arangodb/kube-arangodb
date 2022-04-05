@@ -139,6 +139,12 @@ tolerations:
 ```
 Default (empty): `[]`
 
+### `operator.securityContext.runAsUser`
+
+Controls which user ID the containers are run with.
+
+Default: `1000`
+
 ### `operator.replicaCount`
 
 Replication count for Operator deployment.
