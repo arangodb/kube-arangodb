@@ -27,6 +27,9 @@ operator:
       cpu: 250m
       memory: 256Mi
 
+  securityContext:
+    runAsUser: 1000
+
   replicaCount: 2
 
   updateStrategy:
