@@ -54,6 +54,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
 	"github.com/arangodb/kube-arangodb/pkg/replication"
 	"github.com/arangodb/kube-arangodb/pkg/storage"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/probe"
@@ -105,6 +106,8 @@ type Config struct {
 	ScalingIntegrationEnabled   bool
 	SingleMode                  bool
 	Scope                       scope.Scope
+	ShutdownDelay               time.Duration
+	ShutdownTimeout             time.Duration
 }
 
 type Dependencies struct {
@@ -177,8 +180,34 @@ func (o *Operator) Run() {
 			go o.runWithoutLeaderElection("arango-k2k-cluster-sync-operator", constants.ClusterSyncLabelRole, o.onStartK2KClusterSync, o.Dependencies.K2KClusterSyncProbe)
 		}
 	}
-	// Wait until process terminates
-	<-context.TODO().Done()
+
+	ctx := util.CreateSignalContext(context.Background())
+	<-ctx.Done()
+	o.log.Info().Msgf("Got interrupt signal, running shutdown handler in %s...", o.Config.ShutdownDelay)
+	time.Sleep(o.Config.ShutdownDelay)
+	o.handleShutdown()
+}
+
+func (o *Operator) handleShutdown() {
+	o.log.Info().Msg("Waiting for deployments termination...")
+	shutdownCh := make(chan struct{})
+	go func() {
+		for {
+			if len(o.deployments) == 0 {
+				break
+			}
+			time.Sleep(time.Second)
+		}
+		shutdownCh <- struct{}{}
+	}()
+	select {
+	case <-shutdownCh:
+		o.log.Info().Msg("All deployments terminated, exiting.")
+		return
+	case <-time.After(o.Config.ShutdownTimeout):
+		o.log.Info().Msg("Timeout reached before all deployments terminated, exiting.")
+		return
+	}
 }
 
 // onStartDeployment starts the deployment operator and run till given channel is closed.
