@@ -57,17 +57,17 @@ type StatePlanCollection struct {
 	Shards Shards  `json:"shards"`
 	// deprecated
 	// MinReplicationFactor is deprecated, but we have to support it for backward compatibility
-	MinReplicationFactor *int `json:"minReplicationFactor,omitempty"`
-	WriteConcern         *int `json:"writeConcern,omitempty"`
-	ReplicationFactor    *int `json:"replicationFactor,omitempty"`
+	MinReplicationFactor *int               `json:"minReplicationFactor,omitempty"`
+	WriteConcern         *int               `json:"writeConcern,omitempty"`
+	ReplicationFactor    *ReplicationFactor `json:"replicationFactor,omitempty"`
 }
 
-func (a *StatePlanCollection) GetReplicationFactor(shard string) int {
+func (a *StatePlanCollection) GetReplicationFactor(shard string) ReplicationFactor {
 	if a == nil {
 		return 0
 	}
 
-	l := len(a.Shards[shard])
+	l := ReplicationFactor(len(a.Shards[shard]))
 
 	if z := a.ReplicationFactor; z == nil {
 		return l
