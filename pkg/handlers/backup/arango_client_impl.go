@@ -75,8 +75,7 @@ func (ac *arangoClientBackupImpl) List() (map[driver.BackupID]driver.BackupMeta,
 }
 
 func (ac *arangoClientBackupImpl) Create() (ArangoBackupCreateResponse, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), defaultArangoClientTimeout)
-	defer cancel()
+	dt := defaultArangoClientTimeout
 
 	co := driver.BackupCreateOptions{}
 
@@ -86,8 +85,12 @@ func (ac *arangoClientBackupImpl) Create() (ArangoBackupCreateResponse, error) {
 		}
 		if timeout := opt.Timeout; timeout != nil {
 			co.Timeout = time.Duration(*timeout * float32(time.Second))
+			dt += co.Timeout
 		}
 	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), dt)
+	defer cancel()
 
 	id, resp, err := ac.driver.Backup().Create(ctx, &co)
 	if err != nil {
