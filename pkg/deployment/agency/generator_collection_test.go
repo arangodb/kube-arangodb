@@ -32,7 +32,7 @@ type collectionGenerator struct {
 	col string
 
 	wc     *int
-	rf     *int
+	rf     *ReplicationFactor
 	shards map[int]shardGenerator
 }
 
@@ -59,6 +59,6 @@ func (c collectionGenerator) WithWriteConcern(wc int) CollectionGeneratorInterfa
 }
 
 func (c collectionGenerator) WithReplicationFactor(rf int) CollectionGeneratorInterface {
-	c.rf = &rf
+	c.rf = (*ReplicationFactor)(&rf)
 	return c
 }

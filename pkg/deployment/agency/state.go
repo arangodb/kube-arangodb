@@ -219,9 +219,21 @@ func FilterDBServerShardRestart(serverID string) StateShardFilter {
 			return true
 		}
 
-		// If WriteConcern equals replicationFactor then downtime is always there
 		wc := plan.GetWriteConcern(1)
-		if rf := plan.GetReplicationFactor(shard); wc >= rf {
+		var rf int
+
+		if plan.ReplicationFactor.IsUnknown() {
+			// We are on unknown
+			rf = len(currentShard)
+		} else if plan.ReplicationFactor.IsSatellite() {
+			// We are on satellite
+			rf = len(s.PlanServers())
+		} else {
+			rf = int(plan.GetReplicationFactor(shard))
+		}
+
+		// If WriteConcern equals replicationFactor then downtime is always there
+		if wc >= rf {
 			wc = rf - 1
 		}
 
