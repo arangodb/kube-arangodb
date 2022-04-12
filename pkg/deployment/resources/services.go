@@ -34,7 +34,7 @@ import (
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 
 	core "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
@@ -68,6 +68,15 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 
 	// Ensure member services
 	if err := status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
+		var targetPort int32 = shared.ArangoPort
+
+		switch group {
+		case api.ServerGroupSyncMasters:
+			targetPort = shared.ArangoSyncMasterPort
+		case api.ServerGroupSyncWorkers:
+			targetPort = shared.ArangoSyncWorkerPort
+		}
+
 		for _, m := range list {
 			memberName := m.ArangoMemberName(r.context.GetAPIObject().GetName(), group)
 
@@ -78,10 +87,10 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 
 			if s, ok := cachedStatus.Service().V1().GetSimple(member.GetName()); !ok {
 				s = &core.Service{
-					ObjectMeta: metav1.ObjectMeta{
+					ObjectMeta: meta.ObjectMeta{
 						Name:      member.GetName(),
 						Namespace: member.GetNamespace(),
-						OwnerReferences: []metav1.OwnerReference{
+						OwnerReferences: []meta.OwnerReference{
 							member.AsOwner(),
 						},
 					},
@@ -92,7 +101,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 								Name:       "server",
 								Protocol:   "TCP",
 								Port:       shared.ArangoPort,
-								TargetPort: intstr.IntOrString{IntVal: shared.ArangoPort},
+								TargetPort: intstr.IntOrString{IntVal: targetPort},
 							},
 						},
 						PublishNotReadyAddresses: true,
@@ -101,7 +110,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 				}
 
 				err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-					_, err := svcs.Create(ctxChild, s, metav1.CreateOptions{})
+					_, err := svcs.Create(ctxChild, s, meta.CreateOptions{})
 					return err
 				})
 				if err != nil {
@@ -121,7 +130,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 						Name:       "server",
 						Protocol:   "TCP",
 						Port:       shared.ArangoPort,
-						TargetPort: intstr.IntOrString{IntVal: shared.ArangoPort},
+						TargetPort: intstr.IntOrString{IntVal: targetPort},
 					},
 				}
 				spec.PublishNotReadyAddresses = true
@@ -131,7 +140,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 					s.Spec = *spec
 
 					err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-						_, err := svcs.Update(ctxChild, s, metav1.UpdateOptions{})
+						_, err := svcs.Update(ctxChild, s, meta.UpdateOptions{})
 						return err
 					})
 					if err != nil {
@@ -296,7 +305,7 @@ func (r *Resources) ensureExternalAccessServices(ctx context.Context, cachedStat
 		}
 		if updateExternalAccessService && !createExternalAccessService && !deleteExternalAccessService {
 			err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-				_, err := svcs.Update(ctxChild, existing, metav1.UpdateOptions{})
+				_, err := svcs.Update(ctxChild, existing, meta.UpdateOptions{})
 				return err
 			})
 			if err != nil {
@@ -314,7 +323,7 @@ func (r *Resources) ensureExternalAccessServices(ctx context.Context, cachedStat
 	if deleteExternalAccessService {
 		log.Info().Str("service", eaServiceName).Msgf("Removing obsolete %s external access service", title)
 		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-			return svcs.Delete(ctxChild, eaServiceName, metav1.DeleteOptions{})
+			return svcs.Delete(ctxChild, eaServiceName, meta.DeleteOptions{})
 		})
 		if err != nil {
 			log.Debug().Err(err).Msgf("Failed to remove %s external access service", title)

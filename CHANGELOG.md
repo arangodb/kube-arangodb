@@ -4,6 +4,7 @@
 - (Feature) Allow configuration for securityContext.runAsUser value
 - (Bugfix) Fix Satellite collections in Agency
 - (Bugfix) Fix backup creation timeout
+- (Bugfix) ArangoSync port fix
 
 ## [1.2.9](https://github.com/arangodb/kube-arangodb/tree/1.2.9) (2022-03-30)
 - (Feature) Improve Kubernetes clientsets management
