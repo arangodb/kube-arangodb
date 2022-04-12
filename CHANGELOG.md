@@ -5,6 +5,7 @@
 - (Bugfix) Fix Satellite collections in Agency
 - (Bugfix) Fix backup creation timeout
 - (Bugfix) ArangoSync port fix
+- (Bugfix) Fix GetClient lock system
 
 ## [1.2.9](https://github.com/arangodb/kube-arangodb/tree/1.2.9) (2022-03-30)
 - (Feature) Improve Kubernetes clientsets management

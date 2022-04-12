@@ -26,16 +26,14 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	"github.com/arangodb/go-driver/agency"
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-
 	driver "github.com/arangodb/go-driver"
+	"github.com/arangodb/go-driver/agency"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 type Cache interface {
@@ -81,6 +79,8 @@ func (cc *cache) extendHost(host string) string {
 }
 
 func (cc *cache) getClient(group api.ServerGroup, id string) (driver.Client, error) {
+	cc.mutex.Lock()
+	defer cc.mutex.Unlock()
 	m, _, _ := cc.in.GetStatusSnapshot().Members.ElementByID(id)
 
 	endpoint, err := cc.in.GenerateMemberEndpoint(group, m)
@@ -95,7 +95,9 @@ func (cc *cache) getClient(group api.ServerGroup, id string) (driver.Client, err
 	return c, nil
 }
 
-func (cc *cache) get(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error) {
+// Get a cached client for the given ID in the given group, creating one
+// if needed.
+func (cc *cache) Get(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error) {
 	client, err := cc.getClient(group, id)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -110,20 +112,14 @@ func (cc *cache) get(ctx context.Context, group api.ServerGroup, id string) (dri
 	}
 }
 
-// Get a cached client for the given ID in the given group, creating one
-// if needed.
-func (cc *cache) Get(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error) {
-	cc.mutex.Lock()
-	defer cc.mutex.Unlock()
-
-	return cc.get(ctx, group, id)
-}
-
 func (cc *cache) GetAuth() conn.Auth {
 	return cc.factory.GetAuth()
 }
 
 func (cc *cache) getDatabaseClient() (driver.Client, error) {
+	cc.mutex.Lock()
+	defer cc.mutex.Unlock()
+
 	c, err := cc.factory.Client(cc.extendHost(k8sutil.CreateDatabaseClientServiceDNSName(cc.in.GetAPIObject())))
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -131,7 +127,9 @@ func (cc *cache) getDatabaseClient() (driver.Client, error) {
 	return c, nil
 }
 
-func (cc *cache) getDatabase(ctx context.Context) (driver.Client, error) {
+// GetDatabase returns a cached client for the entire database (cluster coordinators or single server),
+// creating one if needed.
+func (cc *cache) GetDatabase(ctx context.Context) (driver.Client, error) {
 	client, err := cc.getDatabaseClient()
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -146,16 +144,11 @@ func (cc *cache) getDatabase(ctx context.Context) (driver.Client, error) {
 	}
 }
 
-// GetDatabase returns a cached client for the entire database (cluster coordinators or single server),
-// creating one if needed.
-func (cc *cache) GetDatabase(ctx context.Context) (driver.Client, error) {
+// GetAgency returns a cached client for the agency
+func (cc *cache) GetAgency(ctx context.Context) (agency.Agency, error) {
 	cc.mutex.Lock()
 	defer cc.mutex.Unlock()
 
-	return cc.getDatabase(ctx)
-}
-
-func (cc *cache) getAgencyClient() (agency.Agency, error) {
 	// Not found, create a new client
 	var dnsNames []string
 	for _, m := range cc.in.GetStatusSnapshot().Members.Agents {
@@ -176,12 +169,4 @@ func (cc *cache) getAgencyClient() (agency.Agency, error) {
 		return nil, errors.WithStack(err)
 	}
 	return c, nil
-}
-
-// GetDatabase returns a cached client for the agency
-func (cc *cache) GetAgency(ctx context.Context) (agency.Agency, error) {
-	cc.mutex.Lock()
-	defer cc.mutex.Unlock()
-
-	return cc.getAgencyClient()
 }
