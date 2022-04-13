@@ -24,7 +24,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
@@ -63,10 +63,10 @@ func Test_InitContainers(t *testing.T) {
 		testCases := []TestCase{
 			{
 				name: "Same containers",
-				spec: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, nil), addInitContainer("sidecar", func(c *v1.Container) {
+				spec: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, nil), addInitContainer("sidecar", func(c *core.Container) {
 					c.Image = "local:1.0"
 				})),
-				status: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, nil), addInitContainer("sidecar", func(c *v1.Container) {
+				status: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, nil), addInitContainer("sidecar", func(c *core.Container) {
 					c.Image = "local:1.0"
 				})),
 
@@ -80,10 +80,10 @@ func Test_InitContainers(t *testing.T) {
 			},
 			{
 				name: "Containers with different image",
-				spec: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, nil), addInitContainer("sidecar", func(c *v1.Container) {
+				spec: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, nil), addInitContainer("sidecar", func(c *core.Container) {
 					c.Image = "local:1.0"
 				})),
-				status: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, nil), addInitContainer("sidecar", func(c *v1.Container) {
+				status: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, nil), addInitContainer("sidecar", func(c *core.Container) {
 					c.Image = "local:2.0"
 				})),
 
@@ -104,10 +104,10 @@ func Test_InitContainers(t *testing.T) {
 		testCases := []TestCase{
 			{
 				name: "Containers with different image but init rotation enforced",
-				spec: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, nil), addInitContainer("sidecar", func(c *v1.Container) {
+				spec: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, nil), addInitContainer("sidecar", func(c *core.Container) {
 					c.Image = "local:1.0"
 				})),
-				status: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, nil), addInitContainer("sidecar", func(c *v1.Container) {
+				status: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, nil), addInitContainer("sidecar", func(c *core.Container) {
 					c.Image = "local:2.0"
 				})),
 
@@ -121,14 +121,14 @@ func Test_InitContainers(t *testing.T) {
 			},
 			{
 				name: "Core Containers with different image but init rotation enforced",
-				spec: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, func(c *v1.Container) {
+				spec: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, func(c *core.Container) {
 					c.Image = "local:1.0"
-				}), addInitContainer("sidecar", func(c *v1.Container) {
+				}), addInitContainer("sidecar", func(c *core.Container) {
 					c.Image = "local:1.0"
 				})),
-				status: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, func(c *v1.Container) {
+				status: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, func(c *core.Container) {
 					c.Image = "local:2.0"
-				}), addInitContainer("sidecar", func(c *v1.Container) {
+				}), addInitContainer("sidecar", func(c *core.Container) {
 					c.Image = "local:1.0"
 				})),
 
@@ -142,12 +142,12 @@ func Test_InitContainers(t *testing.T) {
 			},
 			{
 				name: "Only core container change",
-				spec: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, func(c *v1.Container) {
+				spec: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, func(c *core.Container) {
 					c.Image = "local:1.0"
-				}), addInitContainer(api.ServerGroupReservedInitContainerNameUpgrade, func(c *v1.Container) {
+				}), addInitContainer(api.ServerGroupReservedInitContainerNameUpgrade, func(c *core.Container) {
 					c.Image = "local:1.0"
 				})),
-				status: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, func(c *v1.Container) {
+				status: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, func(c *core.Container) {
 					c.Image = "local:2.0"
 				})),
 
@@ -161,16 +161,16 @@ func Test_InitContainers(t *testing.T) {
 			},
 			{
 				name: "Only core container change with sidecar",
-				spec: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, func(c *v1.Container) {
+				spec: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, func(c *core.Container) {
 					c.Image = "local:1.0"
-				}), addInitContainer(api.ServerGroupReservedInitContainerNameUpgrade, func(c *v1.Container) {
+				}), addInitContainer(api.ServerGroupReservedInitContainerNameUpgrade, func(c *core.Container) {
 					c.Image = "local:1.0"
-				}), addInitContainer("sidecar", func(c *v1.Container) {
+				}), addInitContainer("sidecar", func(c *core.Container) {
 					c.Image = "local:1.0"
 				})),
-				status: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, func(c *v1.Container) {
+				status: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, func(c *core.Container) {
 					c.Image = "local:2.0"
-				}), addInitContainer("sidecar", func(c *v1.Container) {
+				}), addInitContainer("sidecar", func(c *core.Container) {
 					c.Image = "local:1.0"
 				})),
 
@@ -184,16 +184,16 @@ func Test_InitContainers(t *testing.T) {
 			},
 			{
 				name: "Only core container change with sidecar change",
-				spec: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, func(c *v1.Container) {
+				spec: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, func(c *core.Container) {
 					c.Image = "local:1.0"
-				}), addInitContainer(api.ServerGroupReservedInitContainerNameUpgrade, func(c *v1.Container) {
+				}), addInitContainer(api.ServerGroupReservedInitContainerNameUpgrade, func(c *core.Container) {
 					c.Image = "local:1.0"
-				}), addInitContainer("sidecar", func(c *v1.Container) {
+				}), addInitContainer("sidecar", func(c *core.Container) {
 					c.Image = "local:1.0"
 				})),
-				status: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, func(c *v1.Container) {
+				status: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, func(c *core.Container) {
 					c.Image = "local:2.0"
-				}), addInitContainer("sidecar", func(c *v1.Container) {
+				}), addInitContainer("sidecar", func(c *core.Container) {
 					c.Image = "local:2.0"
 				})),
 
@@ -264,6 +264,57 @@ func Test_Container_Args(t *testing.T) {
 			spec: buildPodSpec(addContainerWithCommand("sidecar",
 				[]string{"--log.level=INFO", "--log.level=requests=error"})),
 			status:       buildPodSpec(addContainerWithCommand("sidecar", []string{"--log.level=INFO"})),
+			expectedMode: GracefulRotation,
+		},
+	}
+
+	runTestCases(t)(testCases...)
+}
+
+func Test_Container_Ports(t *testing.T) {
+	testCases := []TestCase{
+		{
+			name: "Ports of server pod changed",
+			spec: buildPodSpec(addContainer("server", func(c *core.Container) {
+				c.Ports = []core.ContainerPort{
+					{
+						Name:          "server",
+						ContainerPort: 8526,
+						Protocol:      "tcp",
+					},
+				}
+			})),
+			status: buildPodSpec(addContainer("server", func(c *core.Container) {
+				c.Ports = []core.ContainerPort{
+					{
+						Name:          "server",
+						ContainerPort: 8626,
+						Protocol:      "tcp",
+					},
+				}
+			})),
+			expectedMode: SilentRotation,
+		},
+		{
+			name: "Ports of sidecar pod changed",
+			spec: buildPodSpec(addContainer("sidecar", func(c *core.Container) {
+				c.Ports = []core.ContainerPort{
+					{
+						Name:          "server",
+						ContainerPort: 8526,
+						Protocol:      "tcp",
+					},
+				}
+			})),
+			status: buildPodSpec(addContainer("sidecar", func(c *core.Container) {
+				c.Ports = []core.ContainerPort{
+					{
+						Name:          "server",
+						ContainerPort: 8626,
+						Protocol:      "tcp",
+					},
+				}
+			})),
 			expectedMode: GracefulRotation,
 		},
 	}

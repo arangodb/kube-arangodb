@@ -69,6 +69,11 @@ func containersCompare(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *co
 						}
 					}
 
+					if !equality.Semantic.DeepEqual(ac.Ports, bc.Ports) {
+						bc.Ports = ac.Ports
+						mode = mode.And(SilentRotation)
+					}
+
 					if !areProbesEqual(ac.StartupProbe, bc.StartupProbe) {
 						bc.StartupProbe = ac.StartupProbe
 						mode = mode.And(SilentRotation)
