@@ -96,6 +96,12 @@ const (
 
 	// ConditionTypeLicenseSet indicates that license V2 is set on cluster.
 	ConditionTypeLicenseSet ConditionType = "LicenseSet"
+
+	// ConditionTypeBackupInProgress indicates that there is Backup in progress on cluster
+	ConditionTypeBackupInProgress ConditionType = "BackupInProgress"
+
+	// ConditionTypeMaintenance indicates that maintenance is enabled on cluster
+	ConditionTypeMaintenance ConditionType = "Maintenance"
 )
 
 // Condition represents one current condition of a deployment or deployment member.
