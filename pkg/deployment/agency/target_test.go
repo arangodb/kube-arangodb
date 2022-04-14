@@ -21,33 +21,23 @@
 package agency
 
 import (
-	"fmt"
-	"strings"
+	"encoding/json"
+	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
-const (
-	ArangoKey = "arango"
+func Test_Target_HotBackup(t *testing.T) {
+	t.Run("Exists", func(t *testing.T) {
+		var s DumpState
+		require.NoError(t, json.Unmarshal(agencyDump39HotBackup, &s))
 
-	PlanKey    = "Plan"
-	CurrentKey = "Current"
-	TargetKey  = "Target"
+		require.True(t, s.Agency.Arango.Target.HotBackup.Create.Exists())
+	})
+	t.Run("Does Not Exists", func(t *testing.T) {
+		var s DumpState
+		require.NoError(t, json.Unmarshal(agencyDump39Satellite, &s))
 
-	TargetHotBackupKey = "HotBackup"
-
-	PlanCollectionsKey = "Collections"
-
-	SupervisionKey            = "Supervision"
-	SupervisionMaintenanceKey = "Maintenance"
-)
-
-func GetAgencyKey(parts ...string) string {
-	return fmt.Sprintf("/%s", strings.Join(parts, "/"))
-}
-
-func GetAgencyReadKey(elements ...string) []string {
-	return elements
-}
-
-func GetAgencyReadRequest(elements ...[]string) [][]string {
-	return elements
+		require.False(t, s.Agency.Arango.Target.HotBackup.Create.Exists())
+	})
 }

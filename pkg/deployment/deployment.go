@@ -161,12 +161,12 @@ func (d *Deployment) GetAgencyCache() (agency.State, bool) {
 }
 
 func (d *Deployment) RefreshAgencyCache(ctx context.Context) (uint64, error) {
-	lCtx, c := context.WithTimeout(ctx, time.Second)
-	defer c()
-
 	if d.apiObject.Spec.Mode.Get() == api.DeploymentModeSingle {
 		return 0, nil
 	}
+
+	lCtx, c := globals.GetGlobalTimeouts().Agency().WithTimeout(ctx)
+	defer c()
 
 	a, err := d.GetAgency(lCtx)
 	if err != nil {

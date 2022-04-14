@@ -40,7 +40,14 @@ func loadState(ctx context.Context, client agency.Agency) (State, error) {
 
 	var data []byte
 
-	req, err = req.SetBody(GetAgencyReadRequest(GetAgencyReadKey(GetAgencyKey(ArangoKey, SupervisionKey, SupervisionMaintenanceKey), GetAgencyKey(ArangoKey, PlanKey, PlanCollectionsKey), GetAgencyKey(ArangoKey, CurrentKey, PlanCollectionsKey))))
+	readKeys := []string{
+		GetAgencyKey(ArangoKey, SupervisionKey, SupervisionMaintenanceKey),
+		GetAgencyKey(ArangoKey, PlanKey, PlanCollectionsKey),
+		GetAgencyKey(ArangoKey, CurrentKey, PlanCollectionsKey),
+		GetAgencyKey(ArangoKey, TargetKey, TargetHotBackupKey),
+	}
+
+	req, err = req.SetBody(GetAgencyReadRequest(GetAgencyReadKey(readKeys...)))
 	if err != nil {
 		return State{}, err
 	}
@@ -91,6 +98,7 @@ type State struct {
 	Supervision StateSupervision `json:"Supervision"`
 	Plan        StatePlan        `json:"Plan"`
 	Current     StateCurrent     `json:"Current"`
+	Target      StateTarget      `json:"Target"`
 }
 
 type StateCurrent struct {
