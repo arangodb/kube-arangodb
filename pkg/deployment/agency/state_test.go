@@ -43,6 +43,9 @@ var agencyDump39 []byte
 //go:embed testdata/agency_dump.3.9.satellite.json
 var agencyDump39Satellite []byte
 
+//go:embed testdata/agency_dump.3.9.hotbackup.json
+var agencyDump39HotBackup []byte
+
 var (
 	data = map[string][]byte{
 		"3.6":           agencyDump36,
@@ -50,6 +53,7 @@ var (
 		"3.8":           agencyDump38,
 		"3.9":           agencyDump39,
 		"3.9-satellite": agencyDump39Satellite,
+		"3.9-hotbackup": agencyDump39HotBackup,
 	}
 )
 

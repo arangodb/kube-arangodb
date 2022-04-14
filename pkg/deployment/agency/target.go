@@ -20,34 +20,10 @@
 
 package agency
 
-import (
-	"fmt"
-	"strings"
-)
-
-const (
-	ArangoKey = "arango"
-
-	PlanKey    = "Plan"
-	CurrentKey = "Current"
-	TargetKey  = "Target"
-
-	TargetHotBackupKey = "HotBackup"
-
-	PlanCollectionsKey = "Collections"
-
-	SupervisionKey            = "Supervision"
-	SupervisionMaintenanceKey = "Maintenance"
-)
-
-func GetAgencyKey(parts ...string) string {
-	return fmt.Sprintf("/%s", strings.Join(parts, "/"))
+type StateTarget struct {
+	HotBackup StateTargetHotBackup `json:"HotBackup,omitempty"`
 }
 
-func GetAgencyReadKey(elements ...string) []string {
-	return elements
-}
-
-func GetAgencyReadRequest(elements ...[]string) [][]string {
-	return elements
+type StateTargetHotBackup struct {
+	Create *StateExists `json:"Create,omitempty"`
 }

@@ -25,6 +25,7 @@ import "time"
 const (
 	DefaultKubernetesTimeout     = 2 * time.Second
 	DefaultArangoDTimeout        = time.Second * 10
+	DefaultArangoDAgencyTimeout  = time.Second * 10
 	DefaultArangoDCheckTimeout   = time.Second * 2
 	DefaultReconciliationTimeout = time.Minute
 
@@ -39,6 +40,7 @@ var globalObj = &globals{
 		arangod:        NewTimeout(DefaultArangoDTimeout),
 		arangodCheck:   NewTimeout(DefaultArangoDCheckTimeout),
 		reconciliation: NewTimeout(DefaultReconciliationTimeout),
+		agency:         NewTimeout(DefaultArangoDAgencyTimeout),
 	},
 	kubernetes: &globalKubernetes{
 		requestBatchSize: NewInt64(DefaultKubernetesRequestBatchSize),
@@ -110,10 +112,15 @@ type GlobalTimeouts interface {
 	Kubernetes() Timeout
 	ArangoD() Timeout
 	ArangoDCheck() Timeout
+	Agency() Timeout
 }
 
 type globalTimeouts struct {
-	requests, arangod, reconciliation, arangodCheck Timeout
+	requests, arangod, reconciliation, arangodCheck, agency Timeout
+}
+
+func (g *globalTimeouts) Agency() Timeout {
+	return g.agency
 }
 
 func (g *globalTimeouts) ArangoDCheck() Timeout {
