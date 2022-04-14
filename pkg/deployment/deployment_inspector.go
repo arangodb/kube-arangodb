@@ -346,8 +346,8 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 		return minInspectionInterval, errors.Wrapf(err, "AccessPackage creation failed")
 	}
 
-	// Inspect deployment for obsolete members
-	if err := d.resources.CleanupRemovedMembers(ctx, d.GetMembersState().Health()); err != nil {
+	// Inspect deployment for synced members
+	if err := d.resources.SyncMembersInCluster(ctx, d.GetMembersState().Health()); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Removed member cleanup failed")
 	}
 
