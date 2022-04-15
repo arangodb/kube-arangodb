@@ -77,6 +77,7 @@ func removeConditionActionV2(actionReason string, conditionType api.ConditionTyp
 		AddParam(setConditionActionV2KeyType, setConditionActionV2KeyTypeRemove)
 }
 
+//nolint:unparam
 func updateConditionActionV2(actionReason string, conditionType api.ConditionType, status bool, reason, message, hash string) api.Action {
 	statusBool := core.ConditionTrue
 	if !status {

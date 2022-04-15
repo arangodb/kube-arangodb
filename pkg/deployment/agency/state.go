@@ -27,6 +27,7 @@ import (
 
 	"github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -113,18 +114,31 @@ type StateSupervision struct {
 	Maintenance StateExists `json:"Maintenance,omitempty"`
 }
 
-type StateExists bool
+type StateExists []byte
 
-func (d *StateExists) Exists() bool {
+func (d StateExists) Hash() string {
 	if d == nil {
-		return false
+		return ""
 	}
 
-	return bool(*d)
+	return util.SHA256(d)
+}
+
+func (d StateExists) Exists() bool {
+	return d != nil
 }
 
 func (d *StateExists) UnmarshalJSON(bytes []byte) error {
-	*d = bytes != nil
+	if bytes == nil {
+		*d = nil
+		return nil
+	}
+
+	z := make([]byte, len(bytes))
+
+	copy(z, bytes)
+
+	*d = z
 	return nil
 }
 

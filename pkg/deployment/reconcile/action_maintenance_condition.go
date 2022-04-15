@@ -60,7 +60,7 @@ func (a *actionSetMaintenanceCondition) Start(ctx context.Context) (bool, error)
 	} else {
 
 		if err := a.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
-			if agencyState.Supervision.Maintenance {
+			if agencyState.Supervision.Maintenance.Exists() {
 				return s.Conditions.Update(api.ConditionTypeMaintenanceMode, true, "Maintenance", "Maintenance enabled")
 			} else {
 				return s.Conditions.Remove(api.ConditionTypeMaintenanceMode)
