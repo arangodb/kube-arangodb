@@ -33,7 +33,6 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	memberState "github.com/arangodb/kube-arangodb/pkg/deployment/member"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	arangomemberv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember/v1"
 )
 
@@ -47,8 +46,8 @@ var (
 	cleanupRemovedMembersCounters = metrics.MustRegisterCounterVec(metricsComponent, "cleanup_removed_members", "Number of cleanup-removed-members actions", metrics.DeploymentName, metrics.Result)
 )
 
-// CleanupRemovedMembers removes all arangod members that are no longer part of ArangoDB deployment.
-func (r *Resources) CleanupRemovedMembers(ctx context.Context, health memberState.Health) error {
+// SyncMembersInCluster sets proper condition for all arangod members that belongs to the deployment.
+func (r *Resources) SyncMembersInCluster(ctx context.Context, health memberState.Health) error {
 	if health.Error != nil {
 		r.log.Info().Err(health.Error).Msg("Health of the cluster is missing")
 		return nil
@@ -58,7 +57,7 @@ func (r *Resources) CleanupRemovedMembers(ctx context.Context, health memberStat
 	switch r.context.GetSpec().GetMode() {
 	case api.DeploymentModeCluster:
 		deploymentName := r.context.GetAPIObject().GetName()
-		if err := r.cleanupRemovedClusterMembers(ctx, health); err != nil {
+		if err := r.syncMembersInCluster(ctx, health); err != nil {
 			cleanupRemovedMembersCounters.WithLabelValues(deploymentName, metrics.Failed).Inc()
 			return errors.WithStack(err)
 		}
@@ -70,8 +69,8 @@ func (r *Resources) CleanupRemovedMembers(ctx context.Context, health memberStat
 	}
 }
 
-// cleanupRemovedClusterMembers removes all arangod members that are no longer part of the cluster.
-func (r *Resources) cleanupRemovedClusterMembers(ctx context.Context, health memberState.Health) error {
+// syncMembersInCluster sets proper condition for all arangod members that are part of the cluster.
+func (r *Resources) syncMembersInCluster(ctx context.Context, health memberState.Health) error {
 	log := r.log
 
 	serverFound := func(id string) bool {
@@ -79,20 +78,16 @@ func (r *Resources) cleanupRemovedClusterMembers(ctx context.Context, health mem
 		return found
 	}
 
-	// For over all members that can be removed
 	status, lastVersion := r.context.GetStatus()
 	updateStatusNeeded := false
-	var podNamesToRemove, pvcNamesToRemove []string
+
 	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
 		if group != api.ServerGroupCoordinators && group != api.ServerGroupDBServers {
 			// We're not interested in these other groups
 			return nil
 		}
 		for _, m := range list {
-			log := log.With().
-				Str("member", m.ID).
-				Str("role", group.AsRole()).
-				Logger()
+			log := log.With().Str("member", m.ID).Str("role", group.AsRole()).Logger()
 			if serverFound(m.ID) {
 				// Member is (still) found, skip it
 				if m.Conditions.Update(api.ConditionTypeMemberOfCluster, true, "", "") {
@@ -104,25 +99,13 @@ func (r *Resources) cleanupRemovedClusterMembers(ctx context.Context, health mem
 				}
 				continue
 			} else if !m.Conditions.IsTrue(api.ConditionTypeMemberOfCluster) {
-				// Member is not yet recorded as member of cluster
 				if m.Age() < minMemberAge {
-					log.Debug().Dur("age", m.Age()).Msg("Member age is below minimum for removal")
+					log.Debug().Dur("age", m.Age()).Msg("Member is not yet recorded as member of cluster")
 					continue
 				}
-				log.Info().Msg("Member has never been part of the cluster for a long time. Removing it.")
+				log.Warn().Msg("Member can not be found in cluster")
 			} else {
-				// Member no longer part of cluster, remove it
-				log.Info().Msg("Member is no longer part of the ArangoDB cluster. Removing it.")
-			}
-			log.Info().Msg("Removing member")
-			status.Members.RemoveByID(m.ID, group)
-			updateStatusNeeded = true
-			// Remove Pod & PVC (if any)
-			if m.PodName != "" {
-				podNamesToRemove = append(podNamesToRemove, m.PodName)
-			}
-			if m.PersistentVolumeClaimName != "" {
-				pvcNamesToRemove = append(pvcNamesToRemove, m.PersistentVolumeClaimName)
+				log.Info().Msg("Member is no longer part of the ArangoDB cluster")
 			}
 		}
 		return nil
@@ -134,20 +117,6 @@ func (r *Resources) cleanupRemovedClusterMembers(ctx context.Context, health mem
 		if err := r.context.UpdateStatus(ctx, status, lastVersion); err != nil {
 			log.Warn().Err(err).Msg("Failed to update deployment status")
 			return errors.WithStack(err)
-		}
-	}
-
-	for _, podName := range podNamesToRemove {
-		log.Info().Str("pod", podName).Msg("Removing obsolete member pod")
-		if err := r.context.DeletePod(ctx, podName, metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
-			log.Warn().Err(err).Str("pod", podName).Msg("Failed to remove obsolete pod")
-		}
-	}
-
-	for _, pvcName := range pvcNamesToRemove {
-		log.Info().Str("pvc", pvcName).Msg("Removing obsolete member PVC")
-		if err := r.context.DeletePvc(ctx, pvcName); err != nil && !k8sutil.IsNotFound(err) {
-			log.Warn().Err(err).Str("pvc", pvcName).Msg("Failed to remove obsolete PVC")
 		}
 	}
 
