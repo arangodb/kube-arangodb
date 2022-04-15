@@ -7,6 +7,7 @@
 - (Bugfix) ArangoSync port fix
 - (Bugfix) Fix GetClient lock system
 - (Feature) Backup InProgress Agency key discovery
+- (Feature) Backup & Maintenance Conditions
 - (Bugfix) Disable member removal in case of health failure
 
 ## [1.2.9](https://github.com/arangodb/kube-arangodb/tree/1.2.9) (2022-03-30)

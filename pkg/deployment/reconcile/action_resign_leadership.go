@@ -80,7 +80,7 @@ func (a *actionResignLeadership) Start(ctx context.Context) (bool, error) {
 		if agencyState, agencyOK := a.actionCtx.GetAgencyCache(); !agencyOK {
 			log.Warn().Err(err).Msgf("Maintenance is enabled, skipping action")
 			return true, errors.WithStack(err)
-		} else if agencyState.Supervision.Maintenance {
+		} else if agencyState.Supervision.Maintenance.Exists() {
 			// We are done, action cannot be handled on maintenance mode
 			log.Warn().Msgf("Maintenance is enabled, skipping action")
 			return true, nil
@@ -129,7 +129,7 @@ func (a *actionResignLeadership) CheckProgress(ctx context.Context) (bool, bool,
 	if agencyState, agencyOK := a.actionCtx.GetAgencyCache(); !agencyOK {
 		log.Error().Msgf("Unable to get maintenance mode")
 		return false, false, nil
-	} else if agencyState.Supervision.Maintenance {
+	} else if agencyState.Supervision.Maintenance.Exists() {
 		log.Warn().Msgf("Maintenance is enabled, skipping action")
 		// We are done, action cannot be handled on maintenance mode
 		m.CleanoutJobID = ""

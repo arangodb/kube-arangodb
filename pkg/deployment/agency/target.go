@@ -25,5 +25,5 @@ type StateTarget struct {
 }
 
 type StateTargetHotBackup struct {
-	Create *StateExists `json:"Create,omitempty"`
+	Create StateExists `json:"Create,omitempty"`
 }
