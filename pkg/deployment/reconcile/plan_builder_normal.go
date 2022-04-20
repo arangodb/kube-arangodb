@@ -43,10 +43,10 @@ func createNormalPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil
 	}
 
 	r := recoverPlanAppender(log, newPlanAppender(NewWithPlanBuilder(ctx, log, apiObject, spec, status, cachedStatus, builderCtx), status.BackOff, currentPlan).
-		// Adjust topology settings
-		ApplyIfEmpty(createTopologyMemberAdjustmentPlan).
 		// Define topology
 		ApplyIfEmpty(createTopologyEnablementPlan).
+		// Adjust topology settings
+		ApplyIfEmpty(createTopologyMemberAdjustmentPlan).
 		ApplyIfEmpty(createTopologyUpdatePlan).
 		// Check for scale up
 		ApplyIfEmpty(createScaleUPMemberPlan).
