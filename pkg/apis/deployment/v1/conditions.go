@@ -99,6 +99,10 @@ const (
 
 	// ConditionTypeBackupInProgress indicates that there is Backup in progress on cluster
 	ConditionTypeBackupInProgress ConditionType = "BackupInProgress"
+	// ConditionTypeUpgradeInProgress indicates that there is upgrade in progress on cluster
+	ConditionTypeUpgradeInProgress ConditionType = "UpgradeInProgress"
+	// ConditionTypeUpdateInProgress indicates that there is update in progress on cluster
+	ConditionTypeUpdateInProgress ConditionType = "UpdateInProgress"
 
 	// ConditionTypeMaintenance indicates that maintenance is enabled on cluster
 	ConditionTypeMaintenance ConditionType = "Maintenance"
