@@ -45,11 +45,11 @@ func createBackupInProgressConditionPlan(ctx context.Context,
 
 	currentCondition, currentConditionExists := status.Conditions.Get(api.ConditionTypeBackupInProgress)
 
-	backupInProgress := cache.Target.HotBackup.Create
+	maintenance := cache.Target.HotBackup.Create
 
 	if currentConditionExists {
 		// Condition exists
-		if !backupInProgress.Exists() {
+		if !maintenance.Exists() {
 			// Condition needs to be removed
 			return api.Plan{
 				removeConditionActionV2("Backup not in progress", api.ConditionTypeBackupInProgress),
@@ -58,7 +58,7 @@ func createBackupInProgressConditionPlan(ctx context.Context,
 
 		// Backup is in progress
 
-		hash := backupInProgress.Hash()
+		hash := maintenance.Hash()
 
 		if !currentCondition.IsTrue() || currentCondition.Hash != hash {
 			return api.Plan{
@@ -68,9 +68,9 @@ func createBackupInProgressConditionPlan(ctx context.Context,
 
 		return nil
 	} else {
-		if backupInProgress.Exists() {
+		if maintenance.Exists() {
 			return api.Plan{
-				updateConditionActionV2("Backup in progress", api.ConditionTypeBackupInProgress, true, "Backup In Progress", "", backupInProgress.Hash()),
+				updateConditionActionV2("Backup in progress", api.ConditionTypeBackupInProgress, true, "Backup In Progress", "", maintenance.Hash()),
 			}
 		}
 
@@ -94,32 +94,32 @@ func createMaintenanceConditionPlan(ctx context.Context,
 
 	currentCondition, currentConditionExists := status.Conditions.Get(api.ConditionTypeMaintenance)
 
-	backupInProgress := cache.Target.HotBackup.Create
+	maintenance := cache.Supervision.Maintenance
 
 	if currentConditionExists {
 		// Condition exists
-		if !backupInProgress.Exists() {
+		if !maintenance.Exists() {
 			// Condition needs to be removed
 			return api.Plan{
-				removeConditionActionV2("Backup not in progress", api.ConditionTypeMaintenance),
+				removeConditionActionV2("Maintenance Disabled", api.ConditionTypeMaintenance),
 			}
 		}
 
 		// Backup is in progress
 
-		hash := backupInProgress.Hash()
+		hash := maintenance.Hash()
 
 		if !currentCondition.IsTrue() || currentCondition.Hash != hash {
 			return api.Plan{
-				updateConditionActionV2("Backup in progress", api.ConditionTypeMaintenance, true, "Backup In Progress", "", hash),
+				updateConditionActionV2("Maintenance Enabled", api.ConditionTypeMaintenance, true, "Maintenance Enabled", "", hash),
 			}
 		}
 
 		return nil
 	} else {
-		if backupInProgress.Exists() {
+		if maintenance.Exists() {
 			return api.Plan{
-				updateConditionActionV2("Backup in progress", api.ConditionTypeMaintenance, true, "Backup In Progress", "", backupInProgress.Hash()),
+				updateConditionActionV2("Maintenance Enabled", api.ConditionTypeMaintenance, true, "Maintenance Enabled", "", maintenance.Hash()),
 			}
 		}
 

@@ -418,7 +418,7 @@ func (d *Deployment) refreshMaintenanceTTL(ctx context.Context) {
 
 	// Check GracePeriod
 	if t, ok := maintenance.Time(); ok {
-		if time.Until(t) < d.apiObject.Spec.Timeouts.GetMaintenanceGracePeriod() {
+		if time.Until(t) < time.Hour-d.apiObject.Spec.Timeouts.GetMaintenanceGracePeriod() {
 			if err := d.SetAgencyMaintenanceMode(ctx, true); err != nil {
 				return
 			}
