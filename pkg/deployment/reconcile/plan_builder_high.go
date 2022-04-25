@@ -60,7 +60,8 @@ func createHighPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.A
 		ApplyIfEmpty(createRebalancerCheckPlan).
 		ApplyWithBackOff(BackOffCheck, time.Minute, emptyPlanBuilder)).
 		Apply(createBackupInProgressConditionPlan). // Discover backups always
-		Apply(createMaintenanceConditionPlan)       // Discover maintenance always
+		Apply(createMaintenanceConditionPlan).      // Discover maintenance always
+		Apply(cleanupConditions)                    // Cleanup Conditions
 
 	return r.Plan(), r.BackOff(), true
 }

@@ -39,8 +39,7 @@ func withMaintenanceStart(plan ...api.Action) api.Plan {
 	}
 
 	return api.AsPlan(plan).Before(
-		actions.NewClusterAction(api.ActionTypeEnableMaintenance, "Enable maintenance before actions"),
-		actions.NewClusterAction(api.ActionTypeSetMaintenanceCondition, "Enable maintenance before actions"))
+		actions.NewClusterAction(api.ActionTypeEnableMaintenance, "Enable maintenance before actions"))
 }
 
 func withResignLeadership(group api.ServerGroup, member api.MemberStatus, reason string, plan ...api.Action) api.Plan {

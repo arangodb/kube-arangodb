@@ -33,6 +33,8 @@ func Test_Target_HotBackup(t *testing.T) {
 		require.NoError(t, json.Unmarshal(agencyDump39HotBackup, &s))
 
 		require.True(t, s.Agency.Arango.Target.HotBackup.Create.Exists())
+
+		t.Log(s.Agency.Arango.Target.HotBackup.Create.time.String())
 	})
 	t.Run("Does Not Exists", func(t *testing.T) {
 		var s DumpState

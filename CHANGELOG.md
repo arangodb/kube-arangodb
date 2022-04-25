@@ -11,6 +11,7 @@
 - (Bugfix) Disable member removal in case of health failure
 - (Bugfix) Reorder Topology management plan steps
 - (Feature) UpdateInProgress & UpgradeInProgress Conditions
+- (Bugfix) Fix Maintenance switch and HotBackup race
 
 ## [1.2.9](https://github.com/arangodb/kube-arangodb/tree/1.2.9) (2022-03-30)
 - (Feature) Improve Kubernetes clientsets management
