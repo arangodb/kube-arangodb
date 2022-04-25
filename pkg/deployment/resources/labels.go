@@ -209,7 +209,8 @@ func (r *Resources) EnsurePodsLabels(ctx context.Context, cachedStatus inspector
 
 func (r *Resources) EnsurePersistentVolumeClaimsLabels(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
 	changed := false
-	if err := cachedStatus.PersistentVolumeClaim().V1().Iterate(func(persistentVolumeClaim *core.PersistentVolumeClaim) error {
+
+	actionFn := func(persistentVolumeClaim *core.PersistentVolumeClaim) error {
 		if ensureGroupLabelsMap(persistentVolumeClaim.Kind, persistentVolumeClaim, r.context.GetSpec(), func(name string, d []byte) error {
 			return globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				_, err := r.context.PersistentVolumeClaimsModInterface().Patch(ctxChild, name, types.JSONPatchType, d, meta.PatchOptions{})
@@ -220,9 +221,13 @@ func (r *Resources) EnsurePersistentVolumeClaimsLabels(ctx context.Context, cach
 		}
 
 		return nil
-	}, func(persistentVolumeClaim *core.PersistentVolumeClaim) bool {
+	}
+
+	ownerFilterFn := func(persistentVolumeClaim *core.PersistentVolumeClaim) bool {
 		return r.isChildResource(persistentVolumeClaim)
-	}); err != nil {
+	}
+
+	if err := cachedStatus.PersistentVolumeClaim().V1().Iterate(actionFn, ownerFilterFn); err != nil {
 		return err
 	}
 
