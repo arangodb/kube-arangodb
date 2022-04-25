@@ -425,7 +425,7 @@ func (d *Deployment) refreshMaintenanceTTL(ctx context.Context) {
 	}
 }
 
-// here we create all required resources for the deployment
+// ensureResources creates all required resources for the deployment
 func (d *Deployment) ensureResources(ctx context.Context, lastInterval util.Interval, cachedStatus inspectorInterface.Inspector) (util.Interval, error) {
 	// Ensure all resources are created
 	if d.haveServiceMonitorCRD {
