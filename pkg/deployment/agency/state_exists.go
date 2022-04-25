@@ -18,28 +18,34 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package reconcile
+package agency
 
-import (
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/rs/zerolog"
-)
+import "github.com/arangodb/kube-arangodb/pkg/util"
 
-func init() {
-	registerAction(api.ActionTypeSetMaintenanceCondition, newSetMaintenanceConditionAction, addMemberTimeout)
+type StateExists []byte
+
+func (d StateExists) Hash() string {
+	if d == nil {
+		return ""
+	}
+
+	return util.SHA256(d)
 }
 
-func newSetMaintenanceConditionAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
-	a := &actionSetMaintenanceCondition{}
-
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
-
-	return a
+func (d StateExists) Exists() bool {
+	return d != nil
 }
 
-type actionSetMaintenanceCondition struct {
-	// actionImpl implement timeout and member id functions
-	actionImpl
+func (d *StateExists) UnmarshalJSON(bytes []byte) error {
+	if bytes == nil {
+		*d = nil
+		return nil
+	}
 
-	actionEmpty
+	z := make([]byte, len(bytes))
+
+	copy(z, bytes)
+
+	*d = z
+	return nil
 }

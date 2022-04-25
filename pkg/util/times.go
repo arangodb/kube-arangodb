@@ -23,6 +23,8 @@ package util
 import (
 	"math"
 
+	"time"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -40,4 +42,26 @@ func TimeCompareEqualPointer(a, b *metav1.Time) bool {
 	}
 
 	return TimeCompareEqual(*a, *b)
+}
+
+func TimeAgencyLayouts() []string {
+	return []string{
+		time.RFC3339,
+	}
+}
+
+func ParseAgencyTime(s string) (time.Time, bool) {
+	t, id := ParseTime(s, TimeAgencyLayouts()...)
+
+	return t, id != -1
+}
+
+func ParseTime(s string, layouts ...string) (time.Time, int) {
+	for id, layout := range layouts {
+		if t, err := time.Parse(layout, s); err == nil {
+			return t, id
+		}
+	}
+
+	return time.Time{}, -1
 }
