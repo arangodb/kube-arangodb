@@ -237,9 +237,6 @@ update-vendor:
 
 .PHONY: update-generated
 update-generated:
-	@rm -fr $(ORGDIR)
-	@mkdir -p $(ORGDIR)
-	@ln -s -f $(SCRIPTDIR) $(ORGDIR)/kube-arangodb
 	GOPATH=$(GOBUILDDIR) $(VENDORDIR)/k8s.io/code-generator/generate-groups.sh  \
 			"all" \
 			"github.com/arangodb/kube-arangodb/pkg/generated" \
