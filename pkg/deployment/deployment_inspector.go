@@ -405,23 +405,33 @@ func (d *Deployment) refreshMaintenanceTTL(ctx context.Context) {
 		return
 	}
 
-	condition, ok := d.status.last.Conditions.Get(api.ConditionTypeMaintenanceMode)
+	agencyState, agencyOK := d.GetAgencyCache()
+	if !agencyOK {
+		return
+	}
+
+	condition, ok := d.status.last.Conditions.Get(api.ConditionTypeMaintenance)
+	maintenance := agencyState.Supervision.Maintenance
 
 	if !ok || !condition.IsTrue() {
 		return
 	}
 
 	// Check GracePeriod
-	if condition.LastUpdateTime.Add(d.apiObject.Spec.Timeouts.GetMaintenanceGracePeriod()).Before(time.Now()) {
-		if err := d.SetAgencyMaintenanceMode(ctx, true); err != nil {
-			return
+	if t, ok := maintenance.Time(); ok {
+		if time.Until(t) < time.Hour-d.apiObject.Spec.Timeouts.GetMaintenanceGracePeriod() {
+			if err := d.SetAgencyMaintenanceMode(ctx, true); err != nil {
+				return
+			}
+			d.deps.Log.Info().Msgf("Refreshed maintenance lock")
 		}
-		if err := d.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
-			return s.Conditions.Touch(api.ConditionTypeMaintenanceMode)
-		}); err != nil {
-			return
+	} else {
+		if condition.LastUpdateTime.Add(d.apiObject.Spec.Timeouts.GetMaintenanceGracePeriod()).Before(time.Now()) {
+			if err := d.SetAgencyMaintenanceMode(ctx, true); err != nil {
+				return
+			}
+			d.deps.Log.Info().Msgf("Refreshed maintenance lock")
 		}
-		d.deps.Log.Info().Msgf("Refreshed maintenance lock")
 	}
 }
 
