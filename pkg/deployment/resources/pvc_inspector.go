@@ -24,14 +24,17 @@ import (
 	"context"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-
 	v1 "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	pvcv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim/v1"
 )
 
@@ -74,6 +77,26 @@ func (r *Resources) InspectPVCs(ctx context.Context, cachedStatus inspectorInter
 				}
 			}
 			return nil
+		}
+
+		owner := r.context.GetAPIObject().AsOwner()
+		if k8sutil.UpdateOwnerRefToObjectIfNeeded(pvc.GetObjectMeta(), &owner) {
+			q := patch.NewPatch(patch.ItemReplace(patch.NewPath("metadata", "ownerReferences"), pvc.ObjectMeta.OwnerReferences))
+			d, err := q.Marshal()
+			if err != nil {
+				log.Debug().Err(err).Msg("Failed to prepare PVC patch (ownerReferences)")
+				return errors.WithStack(err)
+			}
+
+			err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
+				_, err := r.context.PersistentVolumeClaimsModInterface().Patch(ctxChild, pvc.GetName(), types.JSONPatchType, d, meta.PatchOptions{})
+				return err
+			})
+
+			if err != nil {
+				log.Debug().Err(err).Msg("Failed to update PVC (ownerReferences)")
+				return errors.WithStack(err)
+			}
 		}
 
 		if k8sutil.IsPersistentVolumeClaimMarkedForDeletion(pvc) {

@@ -56,6 +56,21 @@ func AddOwnerRefToObject(obj metav1.Object, ownerRef *metav1.OwnerReference) {
 	}
 }
 
+// UpdateOwnerRefToObjectIfNeeded add given owner reference to given object if it does not exist yet
+func UpdateOwnerRefToObjectIfNeeded(obj metav1.Object, ownerRef *metav1.OwnerReference) bool {
+	if ownerRef != nil {
+		for _, existingOwnerRef := range obj.GetOwnerReferences() {
+			if existingOwnerRef.UID == ownerRef.UID {
+				return false
+			}
+		}
+
+		AddOwnerRefToObject(obj, ownerRef)
+		return true
+	}
+	return false
+}
+
 // LabelsForExporterServiceSelector returns a map of labels, used to select the all arangodb-exporter containers
 func LabelsForExporterServiceSelector(deploymentName string) map[string]string {
 	return map[string]string{

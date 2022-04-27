@@ -155,6 +155,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 	return nextInterval.ReduceTo(maxInspectionInterval)
 }
 
+// inspectDeploymentWithError ensures that the deployment is in a valid state
 func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterval util.Interval) (nextInterval util.Interval, inspectError error) {
 	t := time.Now()
 
@@ -434,6 +435,7 @@ func (d *Deployment) refreshMaintenanceTTL(ctx context.Context) {
 	}
 }
 
+// ensureResources creates all required resources for the deployment
 func (d *Deployment) ensureResources(ctx context.Context, lastInterval util.Interval, cachedStatus inspectorInterface.Inspector) (util.Interval, error) {
 	// Ensure all resources are created
 	if d.haveServiceMonitorCRD {

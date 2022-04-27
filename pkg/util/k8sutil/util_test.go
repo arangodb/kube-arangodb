@@ -38,6 +38,22 @@ func TestAddOwnerRefToObject(t *testing.T) {
 	assert.Len(t, p.GetOwnerReferences(), 1)
 }
 
+// UpdateOwnerRefToObjectIfNeeded tests UpdateOwnerRefToObjectIfNeeded.
+func TestUpdateOwnerRefToObjectIfNeeded(t *testing.T) {
+	p := &v1.Pod{}
+	result := UpdateOwnerRefToObjectIfNeeded(p, nil)
+	assert.Len(t, p.GetOwnerReferences(), 0)
+	assert.False(t, result)
+
+	result = UpdateOwnerRefToObjectIfNeeded(p, &metav1.OwnerReference{})
+	assert.Len(t, p.GetOwnerReferences(), 1)
+	assert.True(t, result)
+
+	result = UpdateOwnerRefToObjectIfNeeded(p, &metav1.OwnerReference{})
+	assert.Len(t, p.GetOwnerReferences(), 1)
+	assert.False(t, result)
+}
+
 // TestLabelsForDeployment tests LabelsForDeployment.
 func TestLabelsForDeployment(t *testing.T) {
 	l := LabelsForDeployment("test", "role")

@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Bugfix) Orphan PVC are not removed
 
 ## [1.2.10](https://github.com/arangodb/kube-arangodb/tree/1.2.10) (2022-04-27)
 - (Feature) Allow configuration for securityContext.runAsUser value
