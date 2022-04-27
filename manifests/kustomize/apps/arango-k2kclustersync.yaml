@@ -7,7 +7,7 @@ metadata:
   namespace: default
   labels:
       app.kubernetes.io/name: kube-arangodb
-      helm.sh/chart: kube-arangodb-1.2.9
+      helm.sh/chart: kube-arangodb-1.2.10
       app.kubernetes.io/managed-by: Tiller
       app.kubernetes.io/instance: k2kclustersync
       release: k2kclustersync
@@ -19,7 +19,7 @@ metadata:
     name: arango-k2kclustersync-operator-rbac-crd
     labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.2.9
+        helm.sh/chart: kube-arangodb-1.2.10
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: k2kclustersync
         release: k2kclustersync
@@ -38,7 +38,7 @@ metadata:
     name: arango-k2kclustersync-operator-rbac-k2kclustersync
     labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.2.9
+        helm.sh/chart: kube-arangodb-1.2.10
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: k2kclustersync
         release: k2kclustersync
@@ -55,7 +55,7 @@ metadata:
     name: arango-k2kclustersync-operator-rbac-crd
     labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.2.9
+        helm.sh/chart: kube-arangodb-1.2.10
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: k2kclustersync
         release: k2kclustersync
@@ -75,7 +75,7 @@ metadata:
     name: arango-k2kclustersync-operator-rbac-k2kclustersync
     labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.2.9
+        helm.sh/chart: kube-arangodb-1.2.10
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: k2kclustersync
         release: k2kclustersync
@@ -97,7 +97,7 @@ metadata:
     namespace: default
     labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.2.9
+        helm.sh/chart: kube-arangodb-1.2.10
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: k2kclustersync
         release: k2kclustersync
@@ -127,7 +127,7 @@ metadata:
     namespace: default
     labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.2.9
+        helm.sh/chart: kube-arangodb-1.2.10
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: k2kclustersync
         release: k2kclustersync
@@ -149,7 +149,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.9
+    helm.sh/chart: kube-arangodb-1.2.10
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: k2kclustersync
     release: k2kclustersync
@@ -176,7 +176,7 @@ metadata:
     namespace: default
     labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.2.9
+        helm.sh/chart: kube-arangodb-1.2.10
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: k2kclustersync
         release: k2kclustersync
@@ -184,6 +184,7 @@ spec:
     replicas: 2
     strategy:
         type: Recreate
+        
     selector:
         matchLabels:
             app.kubernetes.io/name: kube-arangodb
@@ -194,7 +195,7 @@ spec:
         metadata:
             labels:
                 app.kubernetes.io/name: kube-arangodb
-                helm.sh/chart: kube-arangodb-1.2.9
+                helm.sh/chart: kube-arangodb-1.2.10
                 app.kubernetes.io/managed-by: Tiller
                 app.kubernetes.io/instance: k2kclustersync
                 release: k2kclustersync
@@ -233,7 +234,7 @@ spec:
             containers:
                 - name: operator
                   imagePullPolicy: Always
-                  image: arangodb/kube-arangodb:1.2.9
+                  image: arangodb/kube-arangodb:1.2.10
                   args:
                     - --scope=legacy
 
@@ -270,8 +271,6 @@ spec:
                       capabilities:
                           drop:
                               - 'ALL'
-                  resources:
-                      "null"
                   livenessProbe:
                       httpGet:
                           path: /health
