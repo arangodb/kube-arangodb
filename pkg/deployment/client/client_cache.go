@@ -29,8 +29,8 @@ import (
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -69,13 +69,14 @@ func (cc *cache) Connection(ctx context.Context, host string) (driver.Connection
 	return cc.factory.Connection(host)
 }
 
-func (cc *cache) extendHost(host string) string {
+func (cc *cache) extendHost(host string, group api.ServerGroup) string {
 	scheme := "http"
 	if cc.in.GetSpec().TLS.IsSecure() {
 		scheme = "https"
 	}
 
-	return scheme + "://" + net.JoinHostPort(host, strconv.Itoa(shared.ArangoPort))
+	p := resources.GetServerGroupPort(group)
+	return scheme + "://" + net.JoinHostPort(host, strconv.Itoa(p))
 }
 
 func (cc *cache) getClient(group api.ServerGroup, id string) (driver.Client, error) {
@@ -88,7 +89,7 @@ func (cc *cache) getClient(group api.ServerGroup, id string) (driver.Client, err
 		return nil, err
 	}
 
-	c, err := cc.factory.Client(cc.extendHost(m.GetEndpoint(endpoint)))
+	c, err := cc.factory.Client(cc.extendHost(m.GetEndpoint(endpoint), group))
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -120,7 +121,7 @@ func (cc *cache) getDatabaseClient() (driver.Client, error) {
 	cc.mutex.Lock()
 	defer cc.mutex.Unlock()
 
-	c, err := cc.factory.Client(cc.extendHost(k8sutil.CreateDatabaseClientServiceDNSName(cc.in.GetAPIObject())))
+	c, err := cc.factory.Client(cc.extendHost(k8sutil.CreateDatabaseClientServiceDNSName(cc.in.GetAPIObject()), api.ServerGroupCoordinators))
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -149,15 +150,17 @@ func (cc *cache) GetAgency(ctx context.Context) (agency.Agency, error) {
 	cc.mutex.Lock()
 	defer cc.mutex.Unlock()
 
+	const serverGroup = api.ServerGroupAgents
+
 	// Not found, create a new client
 	var dnsNames []string
 	for _, m := range cc.in.GetStatusSnapshot().Members.Agents {
-		endpoint, err := cc.in.GenerateMemberEndpoint(api.ServerGroupAgents, m)
+		endpoint, err := cc.in.GenerateMemberEndpoint(serverGroup, m)
 		if err != nil {
 			return nil, err
 		}
 
-		dnsNames = append(dnsNames, cc.extendHost(m.GetEndpoint(endpoint)))
+		dnsNames = append(dnsNames, cc.extendHost(m.GetEndpoint(endpoint), serverGroup))
 	}
 
 	if len(dnsNames) == 0 {

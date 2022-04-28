@@ -36,12 +36,13 @@ import (
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/rs/zerolog"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	servicev1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service/v1"
-	"github.com/rs/zerolog"
 )
 
 var (
@@ -68,14 +69,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 
 	// Ensure member services
 	if err := status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
-		var targetPort int32 = shared.ArangoPort
-
-		switch group {
-		case api.ServerGroupSyncMasters:
-			targetPort = shared.ArangoSyncMasterPort
-		case api.ServerGroupSyncWorkers:
-			targetPort = shared.ArangoSyncWorkerPort
-		}
+		targetPort := int32(GetServerGroupPort(group))
 
 		for _, m := range list {
 			memberName := m.ArangoMemberName(r.context.GetAPIObject().GetName(), group)
