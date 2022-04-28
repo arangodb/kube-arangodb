@@ -133,7 +133,7 @@ func getAllTypes() []string {
 func Test_Inspector_RefreshMatrix(t *testing.T) {
 	c := kclient.NewFakeClient()
 
-	tc := throttle.NewThrottleComponents(time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour)
+	tc := throttle.NewThrottleComponents(time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour)
 
 	i := NewInspector(tc, c, "test")
 
@@ -293,7 +293,7 @@ func Test_Inspector_Load(t *testing.T) {
 func Test_Inspector_Invalidate(t *testing.T) {
 	c := kclient.NewFakeClient()
 
-	tc := throttle.NewThrottleComponents(time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour)
+	tc := throttle.NewThrottleComponents(time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour)
 
 	i := NewInspector(tc, c, "test")
 
