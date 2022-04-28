@@ -24,11 +24,12 @@ import (
 	"context"
 	"sync"
 
+	"github.com/rs/zerolog"
+
 	"github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-	"github.com/rs/zerolog"
 )
 
 type StateInspectorGetter interface {
@@ -93,6 +94,10 @@ func (s *stateInspector) RefreshState(ctx context.Context, members api.Deploymen
 	defer cancel()
 
 	members.ForEach(func(id int) {
+		if members[id].Group.IsArangosync() {
+			return
+		}
+
 		results[id] = State{}
 
 		c, err := s.client.GetServerClient(nctx, members[id].Group, members[id].Member.ID)
