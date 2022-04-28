@@ -204,8 +204,6 @@ func (o *Operator) onStartDeploymentReplication(stop <-chan struct{}) {
 // onStartStorage starts the storage operator and run till given channel is closed.
 func (o *Operator) onStartStorage(stop <-chan struct{}) {
 	o.waitForCRD(lsapi.ArangoLocalStorageCRDName, nil)
-	o.runDeploymentReplications(stop)
-
 	o.runLocalStorages(stop)
 }
 
