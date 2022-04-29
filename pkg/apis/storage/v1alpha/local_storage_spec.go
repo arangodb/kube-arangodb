@@ -29,10 +29,13 @@ import (
 // LocalStorageSpec contains the specification part of
 // an ArangoLocalStorage.
 type LocalStorageSpec struct {
-	StorageClass StorageClassSpec  `json:"storageClass"`
-	LocalPath    []string          `json:"localPath,omitempty"`
+	StorageClass StorageClassSpec `json:"storageClass"`
+	LocalPath    []string         `json:"localPath,omitempty"`
+
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 	Privileged   *bool             `json:"privileged,omitempty"`
+
+	PodCustomization *LocalStoragePodCustomization `json:"podCustomization,omitempty"`
 }
 
 // Validate the given spec, returning an error on validation

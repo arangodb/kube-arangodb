@@ -21,65 +21,77 @@
 package storage
 
 import (
-	"context"
 	"testing"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
-	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
-
 	"github.com/stretchr/testify/require"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	core "k8s.io/api/core/v1"
 )
 
 // TestEnsureDaemonSet tests ensureDaemonSet() method
 func TestEnsureDaemonSet(t *testing.T) {
-	testNamespace := "testNs"
-	testLsName := "testDsName"
-
-	testPodName := "testPodName"
 	testImage := "test-image"
 
-	testPullSecrets := []v1.LocalObjectReference{
+	tps := []core.LocalObjectReference{
 		{
 			Name: "custom-docker",
 		},
 	}
 
-	ls := &LocalStorage{
-		apiObject: &api.ArangoLocalStorage{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      testLsName,
-				Namespace: testNamespace,
+	ls, ds := generateDaemonSet(t, core.PodSpec{
+		ImagePullSecrets: tps,
+		Containers: []core.Container{
+			{
+				Name:            testImage,
+				ImagePullPolicy: core.PullAlways,
+				Image:           testImage,
 			},
-			Spec: api.LocalStorageSpec{},
 		},
-		deps: Dependencies{
-			Client: kclient.NewFakeClient(),
+	}, api.LocalStorageSpec{})
+
+	require.Equal(t, ds.GetName(), ls.apiObject.GetName())
+	require.Equal(t, ds.Spec.Template.Spec.ImagePullSecrets, tps)
+	require.Equal(t, len(ds.Spec.Template.Spec.Containers), 1)
+
+	c := ds.Spec.Template.Spec.Containers[0]
+	require.Equal(t, c.Image, testImage)
+	require.Equal(t, c.ImagePullPolicy, core.PullAlways)
+	require.Nil(t, ds.Spec.Template.Spec.Priority)
+}
+
+// TestEnsureDaemonSet tests ensureDaemonSet() method
+func TestEnsureDaemonSet_WithPriority(t *testing.T) {
+	testImage := "test-image"
+	var priority int32 = 555
+
+	tps := []core.LocalObjectReference{
+		{
+			Name: "custom-docker",
 		},
-		config: Config{
-			Namespace: testNamespace,
-			PodName:   testPodName,
-		},
-		image:            testImage,
-		imagePullSecrets: testPullSecrets,
-		imagePullPolicy:  v1.PullAlways,
 	}
 
-	err := ls.ensureDaemonSet(ls.apiObject)
-	require.NoError(t, err)
+	ls, ds := generateDaemonSet(t, core.PodSpec{
+		ImagePullSecrets: tps,
+		Containers: []core.Container{
+			{
+				Name:            testImage,
+				ImagePullPolicy: core.PullAlways,
+				Image:           testImage,
+			},
+		},
+	}, api.LocalStorageSpec{
+		PodCustomization: &api.LocalStoragePodCustomization{
+			Priority: &priority,
+		},
+	})
 
-	// verify if DaemonSet has been created with correct values
-	ds, err := ls.deps.Client.Kubernetes().AppsV1().DaemonSets(testNamespace).Get(context.Background(), testLsName, metav1.GetOptions{})
-	require.NoError(t, err)
+	require.Equal(t, ds.GetName(), ls.apiObject.GetName())
+	require.Equal(t, ds.Spec.Template.Spec.ImagePullSecrets, tps)
+	require.Equal(t, len(ds.Spec.Template.Spec.Containers), 1)
 
-	pod := ds.Spec.Template.Spec
-
-	require.Equal(t, ds.GetName(), testLsName)
-	require.Equal(t, pod.ImagePullSecrets, testPullSecrets)
-	require.Equal(t, len(pod.Containers), 1)
-
-	c := pod.Containers[0]
+	c := ds.Spec.Template.Spec.Containers[0]
 	require.Equal(t, c.Image, testImage)
-	require.Equal(t, c.ImagePullPolicy, v1.PullAlways)
+	require.Equal(t, c.ImagePullPolicy, core.PullAlways)
+	require.NotNil(t, ds.Spec.Template.Spec.Priority)
+	require.Equal(t, priority, *ds.Spec.Template.Spec.Priority)
 }
