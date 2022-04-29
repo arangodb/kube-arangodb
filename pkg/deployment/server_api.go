@@ -219,11 +219,7 @@ func (d *Deployment) DatabaseURL() string {
 func (d *Deployment) DatabaseVersion() (string, string) {
 	status, _ := d.GetStatus()
 	if current := status.CurrentImage; current != nil {
-		license := "community"
-		if current.Enterprise {
-			license = "enterprise"
-		}
-		return string(current.ArangoDBVersion), license
+		return string(current.ArangoDBVersion), status.CurrentImage.License()
 	}
 	return "", ""
 }

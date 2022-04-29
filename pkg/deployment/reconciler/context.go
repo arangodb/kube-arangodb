@@ -23,6 +23,8 @@ package reconciler
 import (
 	"context"
 
+	core "k8s.io/api/core/v1"
+
 	"github.com/arangodb/arangosync-client/client"
 	"github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
@@ -38,7 +40,6 @@ import (
 	servicev1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service/v1"
 	serviceaccountv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount/v1"
 	servicemonitorv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor/v1"
-	core "k8s.io/api/core/v1"
 )
 
 // ServerGroupIterator provides a helper to callback on every server
@@ -191,4 +192,5 @@ type DeploymentClient interface {
 	DeploymentAgencyClient
 	DeploymentDatabaseClient
 	DeploymentMemberClient
+	DeploymentSyncClient
 }
