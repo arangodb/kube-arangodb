@@ -95,6 +95,7 @@ func (ls *LocalStorage) ensureDaemonSet(apiObject *api.ArangoLocalStorage) error
 				},
 				NodeSelector:     apiObject.Spec.NodeSelector,
 				ImagePullSecrets: ls.imagePullSecrets,
+				Priority:         apiObject.Spec.PodCustomization.GetPriority(),
 			},
 		},
 	}
