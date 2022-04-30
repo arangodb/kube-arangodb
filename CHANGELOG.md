@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.2.11](https://github.com/arangodb/kube-arangodb/tree/1.2.11) (2022-04-30)
 - (Bugfix) Orphan PVC are not removed
 - (Bugfix) Remove LocalStorage Deadlock
 - (Bugfix) Skip arangosync members state inspection checks
