@@ -33,7 +33,7 @@ import (
 const FakeNamespace = "fake"
 
 func NewInspector(t *testing.T, c kclient.Client) inspectorInterface.Inspector {
-	i := inspector.NewInspector(throttle.NewAlwaysThrottleComponents(), c, FakeNamespace)
+	i := inspector.NewInspector(throttle.NewAlwaysThrottleComponents(), c, FakeNamespace, FakeNamespace)
 	require.NoError(t, i.Refresh(context.Background()))
 
 	return i

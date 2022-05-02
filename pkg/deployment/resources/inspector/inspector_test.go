@@ -135,7 +135,7 @@ func Test_Inspector_RefreshMatrix(t *testing.T) {
 
 	tc := throttle.NewThrottleComponents(time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour)
 
-	i := NewInspector(tc, c, "test")
+	i := NewInspector(tc, c, "test", "test")
 
 	require.NoError(t, i.Refresh(context.Background()))
 
@@ -285,7 +285,7 @@ func getTimes(i inspector.Inspector) map[string]time.Time {
 func Test_Inspector_Load(t *testing.T) {
 	c := kclient.NewFakeClient()
 
-	i := NewInspector(throttle.NewAlwaysThrottleComponents(), c, "test")
+	i := NewInspector(throttle.NewAlwaysThrottleComponents(), c, "test", "test")
 
 	require.NoError(t, i.Refresh(context.Background()))
 }
@@ -295,7 +295,7 @@ func Test_Inspector_Invalidate(t *testing.T) {
 
 	tc := throttle.NewThrottleComponents(time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour)
 
-	i := NewInspector(tc, c, "test")
+	i := NewInspector(tc, c, "test", "test")
 
 	require.NoError(t, i.Refresh(context.Background()))
 
