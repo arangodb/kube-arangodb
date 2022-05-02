@@ -36,7 +36,7 @@ func Test_SecretConfigGetter(t *testing.T) {
 	t.Run("Missing secret", func(t *testing.T) {
 		c := kclient.NewFakeClient()
 
-		i := inspector.NewInspector(throttle.NewAlwaysThrottleComponents(), c, "default")
+		i := inspector.NewInspector(throttle.NewAlwaysThrottleComponents(), c, "default", "default")
 		require.NoError(t, i.Refresh(context.Background()))
 
 		_, _, err := SecretConfigGetter(i, "secret", "key")()
@@ -56,7 +56,7 @@ func Test_SecretConfigGetter(t *testing.T) {
 		_, err := c.Kubernetes().CoreV1().Secrets("default").Create(context.Background(), &s, meta.CreateOptions{})
 		require.NoError(t, err)
 
-		i := inspector.NewInspector(throttle.NewAlwaysThrottleComponents(), c, "default")
+		i := inspector.NewInspector(throttle.NewAlwaysThrottleComponents(), c, "default", "default")
 		require.NoError(t, i.Refresh(context.Background()))
 
 		_, _, err = SecretConfigGetter(i, "secret", "key")()
@@ -81,7 +81,7 @@ random data
 		_, err := c.Kubernetes().CoreV1().Secrets("default").Create(context.Background(), &s, meta.CreateOptions{})
 		require.NoError(t, err)
 
-		i := inspector.NewInspector(throttle.NewAlwaysThrottleComponents(), c, "default")
+		i := inspector.NewInspector(throttle.NewAlwaysThrottleComponents(), c, "default", "default")
 		require.NoError(t, i.Refresh(context.Background()))
 
 		_, _, err = SecretConfigGetter(i, "secret", "key")()
@@ -123,7 +123,7 @@ users:
 		_, err := c.Kubernetes().CoreV1().Secrets("default").Create(context.Background(), &s, meta.CreateOptions{})
 		require.NoError(t, err)
 
-		i := inspector.NewInspector(throttle.NewAlwaysThrottleComponents(), c, "default")
+		i := inspector.NewInspector(throttle.NewAlwaysThrottleComponents(), c, "default", "default")
 		require.NoError(t, i.Refresh(context.Background()))
 
 		_, _, err = SecretConfigGetter(i, "secret", "key")()

@@ -26,6 +26,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/server"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoclustersynchronization"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangodeployment"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangotask"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/endpoints"
@@ -59,6 +60,8 @@ type Inspector interface {
 	arangomember.Inspector
 	server.Inspector
 	endpoints.Inspector
+
+	arangodeployment.Inspector
 
 	node.Inspector
 	arangoclustersynchronization.Inspector

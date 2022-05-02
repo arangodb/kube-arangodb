@@ -245,7 +245,7 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 		eventCh:      make(chan *deploymentEvent, deploymentEventQueueSize),
 		stopCh:       make(chan struct{}),
 		agencyCache:  agency.NewCache(apiObject.Spec.Mode),
-		currentState: inspector.NewInspector(newDeploymentThrottle(), deps.Client, apiObject.GetNamespace()),
+		currentState: inspector.NewInspector(newDeploymentThrottle(), deps.Client, apiObject.GetNamespace(), apiObject.GetName()),
 	}
 
 	d.memberState = memberState.NewStateInspector(d)
