@@ -226,7 +226,8 @@ func newDeploymentThrottle() throttle.Components {
 		10*time.Second, // Secret
 		10*time.Second, // Service
 		30*time.Second, // SA
-		30*time.Second) // ServiceMonitor
+		30*time.Second, // ServiceMonitor
+		15*time.Second) // Endpoints
 }
 
 // New creates a new Deployment from the given API object.

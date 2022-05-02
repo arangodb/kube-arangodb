@@ -33,6 +33,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoclustersynchronization"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangotask"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/endpoints"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/node"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
@@ -134,12 +135,17 @@ type inspectorState struct {
 	arangoMembers                 *arangoMembersInspector
 	arangoTasks                   *arangoTasksInspector
 	arangoClusterSynchronizations *arangoClusterSynchronizationsInspector
+	endpoints                     *endpointsInspector
 
 	throttles throttle.Components
 
 	versionInfo driver.Version
 
 	initialised bool
+}
+
+func (i *inspectorState) Endpoints() endpoints.Definition {
+	return i.endpoints
 }
 
 func (i *inspectorState) Initialised() bool {
@@ -345,6 +351,10 @@ func (i *inspectorState) validate() error {
 		return err
 	}
 
+	if err := i.endpoints.validate(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -365,6 +375,7 @@ func (i *inspectorState) copyCore() *inspectorState {
 		arangoClusterSynchronizations: i.arangoClusterSynchronizations,
 		throttles:                     i.throttles.Copy(),
 		versionInfo:                   i.versionInfo,
+		endpoints:                     i.endpoints,
 		logger:                        i.logger,
 	}
 }

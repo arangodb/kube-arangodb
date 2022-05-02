@@ -30,10 +30,10 @@ type Inspector interface {
 }
 
 func NewAlwaysThrottleComponents() Components {
-	return NewThrottleComponents(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+	return NewThrottleComponents(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 }
 
-func NewThrottleComponents(acs, am, at, node, pvc, pod, pdb, secret, service, serviceAccount, sm time.Duration) Components {
+func NewThrottleComponents(acs, am, at, node, pvc, pod, pdb, secret, service, serviceAccount, sm, endpoints time.Duration) Components {
 	return &throttleComponents{
 		arangoClusterSynchronization: NewThrottle(acs),
 		arangoMember:                 NewThrottle(am),
@@ -46,6 +46,7 @@ func NewThrottleComponents(acs, am, at, node, pvc, pod, pdb, secret, service, se
 		service:                      NewThrottle(service),
 		serviceAccount:               NewThrottle(serviceAccount),
 		serviceMonitor:               NewThrottle(sm),
+		endpoints:                    NewThrottle(endpoints),
 	}
 }
 
@@ -65,6 +66,7 @@ const (
 	Service                      Component = "Service"
 	ServiceAccount               Component = "ServiceAccount"
 	ServiceMonitor               Component = "ServiceMonitor"
+	Endpoints                    Component = "Endpoints"
 )
 
 func AllComponents() []Component {
@@ -80,6 +82,7 @@ func AllComponents() []Component {
 		Service,
 		ServiceAccount,
 		ServiceMonitor,
+		Endpoints,
 	}
 }
 
@@ -95,6 +98,7 @@ type Components interface {
 	Service() Throttle
 	ServiceAccount() Throttle
 	ServiceMonitor() Throttle
+	Endpoints() Throttle
 
 	Get(c Component) Throttle
 	Invalidate(components ...Component)
@@ -115,6 +119,11 @@ type throttleComponents struct {
 	service                      Throttle
 	serviceAccount               Throttle
 	serviceMonitor               Throttle
+	endpoints                    Throttle
+}
+
+func (t *throttleComponents) Endpoints() Throttle {
+	return t.endpoints
 }
 
 func (t *throttleComponents) Counts() ComponentCount {
@@ -160,6 +169,8 @@ func (t *throttleComponents) Get(c Component) Throttle {
 		return t.serviceAccount
 	case ServiceMonitor:
 		return t.serviceMonitor
+	case Endpoints:
+		return t.endpoints
 	default:
 		return NewAlwaysThrottle()
 	}
@@ -178,6 +189,7 @@ func (t *throttleComponents) Copy() Components {
 		service:                      t.service.Copy(),
 		serviceAccount:               t.serviceAccount.Copy(),
 		serviceMonitor:               t.serviceMonitor.Copy(),
+		endpoints:                    t.endpoints.Copy(),
 	}
 }
 
