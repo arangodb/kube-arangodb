@@ -4,6 +4,7 @@
 - (Feature) Add CoreV1 Endpoints Inspector
 - (Feature) Add Current ArangoDeployment Inspector
 - (Refactor) Anonymous inspector functions
+- (Feature) Recursive OwnerReference discovery
 
 ## [1.2.11](https://github.com/arangodb/kube-arangodb/tree/1.2.11) (2022-04-30)
 - (Bugfix) Orphan PVC are not removed

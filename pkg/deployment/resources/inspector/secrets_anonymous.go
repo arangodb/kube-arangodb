@@ -30,7 +30,10 @@ func (p *secretsInspector) Anonymous(gvk schema.GroupVersionKind) (anonymous.Int
 
 	if g.Kind == gvk.Kind && g.Group == gvk.Group {
 		switch gvk.Version {
-		case SecretVersionV1:
+		case SecretVersionV1, DefaultVersion:
+			if p.v1 == nil || p.v1.err != nil {
+				return nil, false
+			}
 			return &secretsInspectorAnonymousV1{i: p.v1}, true
 		}
 	}

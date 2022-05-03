@@ -30,7 +30,10 @@ func (p *servicesInspector) Anonymous(gvk schema.GroupVersionKind) (anonymous.In
 
 	if g.Kind == gvk.Kind && g.Group == gvk.Group {
 		switch gvk.Version {
-		case ServiceVersionV1:
+		case ServiceVersionV1, DefaultVersion:
+			if p.v1 == nil || p.v1.err != nil {
+				return nil, false
+			}
 			return &servicesInspectorAnonymousV1{i: p.v1}, true
 		}
 	}
