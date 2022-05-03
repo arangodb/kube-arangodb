@@ -21,11 +21,14 @@
 package v1
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/gvk"
 	core "k8s.io/api/core/v1"
 )
 
 // Inspector for secrets
 type Inspector interface {
+	gvk.GVK
+
 	ListSimple() []*core.Secret
 	GetSimple(name string) (*core.Secret, bool)
 	Iterate(action Action, filters ...Filter) error

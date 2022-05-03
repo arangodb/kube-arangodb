@@ -27,8 +27,7 @@ import (
 	ins "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
 	core "k8s.io/api/core/v1"
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func (p *podsInspector) V1() ins.Inspector {
@@ -109,12 +108,9 @@ func (p *podsInspectorV1) Read() ins.ReadInterface {
 	return p
 }
 
-func (p *podsInspectorV1) Get(ctx context.Context, name string, opts metav1.GetOptions) (*core.Pod, error) {
+func (p *podsInspectorV1) Get(ctx context.Context, name string, opts meta.GetOptions) (*core.Pod, error) {
 	if s, ok := p.GetSimple(name); !ok {
-		return nil, apiErrors.NewNotFound(schema.GroupResource{
-			Group:    core.GroupName,
-			Resource: "pods",
-		}, name)
+		return nil, apiErrors.NewNotFound(PodGR(), name)
 	} else {
 		return s, nil
 	}

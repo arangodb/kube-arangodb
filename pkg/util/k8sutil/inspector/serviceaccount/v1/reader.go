@@ -23,6 +23,7 @@ package v1
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -38,6 +39,8 @@ type ModInterface interface {
 
 // Interface has methods to work with ServiceAccount resources.
 type Interface interface {
+	anonymous.Impl
+
 	ModInterface
 	ReadInterface
 }

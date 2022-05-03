@@ -38,7 +38,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	secretv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
 	"github.com/rs/zerolog"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
@@ -49,7 +49,7 @@ const (
 // createTLSCACertificate creates a CA certificate and stores it in a secret with name
 // specified in the given spec.
 func createTLSCACertificate(ctx context.Context, log zerolog.Logger, secrets secretv1.ModInterface, spec api.TLSSpec,
-	deploymentName string, ownerRef *metav1.OwnerReference) error {
+	deploymentName string, ownerRef *meta.OwnerReference) error {
 	log = log.With().Str("secret", spec.GetCASecretName()).Logger()
 
 	options := certificates.CreateCertificateOptions{
@@ -79,7 +79,7 @@ func createTLSCACertificate(ctx context.Context, log zerolog.Logger, secrets sec
 // createTLSServerCertificate creates a TLS certificate for a specific server and stores
 // it in a secret with the given name.
 func createTLSServerCertificate(ctx context.Context, log zerolog.Logger, cachedStatus inspectorInterface.Inspector, secrets secretv1.ModInterface, names tls.KeyfileInput, spec api.TLSSpec,
-	secretName string, ownerRef *metav1.OwnerReference) (bool, error) {
+	secretName string, ownerRef *meta.OwnerReference) (bool, error) {
 	log = log.With().Str("secret", secretName).Logger()
 	// Load CA certificate
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)

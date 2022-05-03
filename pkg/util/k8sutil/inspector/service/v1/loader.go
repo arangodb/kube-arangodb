@@ -21,10 +21,13 @@
 package v1
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/gvk"
 	core "k8s.io/api/core/v1"
 )
 
 type Inspector interface {
+	gvk.GVK
+
 	GetSimple(name string) (*core.Service, bool)
 	Iterate(action Action, filters ...Filter) error
 	Read() ReadInterface

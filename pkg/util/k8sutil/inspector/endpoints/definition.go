@@ -21,7 +21,9 @@
 package endpoints
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
 	v1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/endpoints/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/gvk"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/refresh"
 )
 
@@ -31,6 +33,9 @@ type Inspector interface {
 
 type Definition interface {
 	refresh.Inspector
+
+	gvk.GK
+	anonymous.Impl
 
 	V1() (v1.Inspector, error)
 }

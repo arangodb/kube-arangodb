@@ -25,12 +25,9 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	ins "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor/v1"
-	core "k8s.io/api/core/v1"
-	apiErrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-
 	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	apiErrors "k8s.io/apimachinery/pkg/api/errors"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func (p *serviceMonitorsInspector) V1() (ins.Inspector, error) {
@@ -114,12 +111,9 @@ func (p *serviceMonitorsInspectorV1) Read() ins.ReadInterface {
 	return p
 }
 
-func (p *serviceMonitorsInspectorV1) Get(ctx context.Context, name string, opts metav1.GetOptions) (*monitoring.ServiceMonitor, error) {
+func (p *serviceMonitorsInspectorV1) Get(ctx context.Context, name string, opts meta.GetOptions) (*monitoring.ServiceMonitor, error) {
 	if s, ok := p.GetSimple(name); !ok {
-		return nil, apiErrors.NewNotFound(schema.GroupResource{
-			Group:    core.GroupName,
-			Resource: "serviceMonitors",
-		}, name)
+		return nil, apiErrors.NewNotFound(ServiceMonitorGR(), name)
 	} else {
 		return s, nil
 	}

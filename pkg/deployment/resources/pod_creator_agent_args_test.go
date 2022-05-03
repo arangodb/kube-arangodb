@@ -28,7 +28,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/stretchr/testify/assert"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"context"
 
@@ -47,7 +47,7 @@ func createClient(f kclient.FakeClientBuilder, apiObject *api.ArangoDeployment, 
 		memberName := a.ArangoMemberName(apiObject.GetName(), group)
 
 		svc := core.Service{
-			ObjectMeta: metav1.ObjectMeta{
+			ObjectMeta: meta.ObjectMeta{
 				Name:      memberName,
 				Namespace: tests.FakeNamespace,
 			},
@@ -75,7 +75,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 	// Default deployment
 	{
 		apiObject := &api.ArangoDeployment{
-			ObjectMeta: metav1.ObjectMeta{
+			ObjectMeta: meta.ObjectMeta{
 				Name:      "name",
 				Namespace: tests.FakeNamespace,
 			},
@@ -135,7 +135,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 	// Default+AutoUpgrade deployment
 	{
 		apiObject := &api.ArangoDeployment{
-			ObjectMeta: metav1.ObjectMeta{
+			ObjectMeta: meta.ObjectMeta{
 				Name:      "name",
 				Namespace: tests.FakeNamespace,
 			},
@@ -197,7 +197,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 	// Default+TLS disabled deployment
 	{
 		apiObject := &api.ArangoDeployment{
-			ObjectMeta: metav1.ObjectMeta{
+			ObjectMeta: meta.ObjectMeta{
 				Name:      "name",
 				Namespace: tests.FakeNamespace,
 			},
@@ -259,7 +259,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 	// No authentication, mmfiles
 	{
 		apiObject := &api.ArangoDeployment{
-			ObjectMeta: metav1.ObjectMeta{
+			ObjectMeta: meta.ObjectMeta{
 				Name:      "name",
 				Namespace: tests.FakeNamespace,
 			},
@@ -320,7 +320,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 	// Custom args
 	{
 		apiObject := &api.ArangoDeployment{
-			ObjectMeta: metav1.ObjectMeta{
+			ObjectMeta: meta.ObjectMeta{
 				Name:      "name",
 				Namespace: tests.FakeNamespace,
 			},

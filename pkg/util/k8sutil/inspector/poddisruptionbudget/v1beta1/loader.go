@@ -20,9 +20,14 @@
 
 package v1beta1
 
-import policy "k8s.io/api/policy/v1beta1"
+import (
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/gvk"
+	policy "k8s.io/api/policy/v1beta1"
+)
 
 type Inspector interface {
+	gvk.GVK
+
 	GetSimple(name string) (*policy.PodDisruptionBudget, bool)
 	Iterate(action Action, filters ...Filter) error
 	Read() ReadInterface

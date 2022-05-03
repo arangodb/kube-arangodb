@@ -26,7 +26,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	certificates "github.com/arangodb-helper/go-certificates"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -41,7 +41,7 @@ const (
 
 // createClientAuthCACertificate creates a client authentication CA certificate and stores it in a secret with name
 // specified in the given spec.
-func createClientAuthCACertificate(ctx context.Context, log zerolog.Logger, secrets secretv1.ModInterface, spec api.SyncAuthenticationSpec, deploymentName string, ownerRef *metav1.OwnerReference) error {
+func createClientAuthCACertificate(ctx context.Context, log zerolog.Logger, secrets secretv1.ModInterface, spec api.SyncAuthenticationSpec, deploymentName string, ownerRef *meta.OwnerReference) error {
 	log = log.With().Str("secret", spec.GetClientCASecretName()).Logger()
 	options := certificates.CreateCertificateOptions{
 		CommonName:   fmt.Sprintf("%s Client Authentication Root Certificate", deploymentName),

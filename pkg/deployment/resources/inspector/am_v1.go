@@ -23,13 +23,11 @@ package inspector
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	ins "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember/v1"
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func (p *arangoMembersInspector) V1() ins.Inspector {
@@ -109,12 +107,9 @@ func (p *arangoMembersInspectorV1) Read() ins.ReadInterface {
 	return p
 }
 
-func (p *arangoMembersInspectorV1) Get(ctx context.Context, name string, opts metav1.GetOptions) (*api.ArangoMember, error) {
+func (p *arangoMembersInspectorV1) Get(ctx context.Context, name string, opts meta.GetOptions) (*api.ArangoMember, error) {
 	if s, ok := p.GetSimple(name); !ok {
-		return nil, apiErrors.NewNotFound(schema.GroupResource{
-			Group:    deployment.ArangoDeploymentGroupName,
-			Resource: deployment.ArangoMemberResourcePlural,
-		}, name)
+		return nil, apiErrors.NewNotFound(ArangoMemberGR(), name)
 	} else {
 		return s, nil
 	}

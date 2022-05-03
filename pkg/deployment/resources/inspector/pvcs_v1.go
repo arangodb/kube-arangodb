@@ -27,8 +27,7 @@ import (
 	ins "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim/v1"
 	core "k8s.io/api/core/v1"
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func (p *persistentVolumeClaimsInspector) V1() ins.Inspector {
@@ -108,12 +107,9 @@ func (p *persistentVolumeClaimsInspectorV1) Read() ins.ReadInterface {
 	return p
 }
 
-func (p *persistentVolumeClaimsInspectorV1) Get(ctx context.Context, name string, opts metav1.GetOptions) (*core.PersistentVolumeClaim, error) {
+func (p *persistentVolumeClaimsInspectorV1) Get(ctx context.Context, name string, opts meta.GetOptions) (*core.PersistentVolumeClaim, error) {
 	if s, ok := p.GetSimple(name); !ok {
-		return nil, apiErrors.NewNotFound(schema.GroupResource{
-			Group:    core.GroupName,
-			Resource: "persistentVolumeClaims",
-		}, name)
+		return nil, apiErrors.NewNotFound(PersistentVolumeClaimGR(), name)
 	} else {
 		return s, nil
 	}
