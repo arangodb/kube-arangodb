@@ -37,7 +37,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	coreosv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func LabelsForExporterServiceMonitor(name string, obj deploymentApi.DeploymentSpec) map[string]string {
@@ -103,7 +103,7 @@ func (r *Resources) serviceMonitorSpec() (coreosv1.ServiceMonitorSpec, error) {
 			Endpoints: []coreosv1.Endpoint{
 				endpoint,
 			},
-			Selector: metav1.LabelSelector{
+			Selector: meta.LabelSelector{
 				MatchLabels: LabelsForExporterServiceMonitorSelector(r.context.GetName()),
 			},
 		}, nil
@@ -113,7 +113,7 @@ func (r *Resources) serviceMonitorSpec() (coreosv1.ServiceMonitorSpec, error) {
 			Endpoints: []coreosv1.Endpoint{
 				r.makeEndpoint(spec.IsSecure()),
 			},
-			Selector: metav1.LabelSelector{
+			Selector: meta.LabelSelector{
 				MatchLabels: LabelsForExporterServiceMonitorSelector(deploymentName),
 			},
 		}, nil
@@ -149,7 +149,7 @@ func (r *Resources) EnsureServiceMonitor(ctx context.Context) error {
 	serviceMonitors := mClient.MonitoringV1().ServiceMonitors(ns)
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
-	servMon, err := serviceMonitors.Get(ctxChild, serviceMonitorName, metav1.GetOptions{})
+	servMon, err := serviceMonitors.Get(ctxChild, serviceMonitorName, meta.GetOptions{})
 	if err != nil {
 		if k8sutil.IsNotFound(err) {
 			if !wantMetrics {
@@ -163,16 +163,16 @@ func (r *Resources) EnsureServiceMonitor(ctx context.Context) error {
 
 			// Need to create one:
 			smon := &coreosv1.ServiceMonitor{
-				ObjectMeta: metav1.ObjectMeta{
+				ObjectMeta: meta.ObjectMeta{
 					Name:            serviceMonitorName,
 					Labels:          LabelsForExporterServiceMonitor(r.context.GetName(), r.context.GetSpec()),
-					OwnerReferences: []metav1.OwnerReference{owner},
+					OwnerReferences: []meta.OwnerReference{owner},
 				},
 				Spec: spec,
 			}
 
 			err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-				_, err := serviceMonitors.Create(ctxChild, smon, metav1.CreateOptions{})
+				_, err := serviceMonitors.Create(ctxChild, smon, meta.CreateOptions{})
 				return err
 			})
 			if err != nil {
@@ -217,7 +217,7 @@ func (r *Resources) EnsureServiceMonitor(ctx context.Context) error {
 		servMon.Spec = spec
 
 		err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-			_, err := serviceMonitors.Update(ctxChild, servMon, metav1.UpdateOptions{})
+			_, err := serviceMonitors.Update(ctxChild, servMon, meta.UpdateOptions{})
 			return err
 		})
 		if err != nil {
@@ -228,7 +228,7 @@ func (r *Resources) EnsureServiceMonitor(ctx context.Context) error {
 	}
 	// Need to get rid of the ServiceMonitor:
 	err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-		return serviceMonitors.Delete(ctxChild, serviceMonitorName, metav1.DeleteOptions{})
+		return serviceMonitors.Delete(ctxChild, serviceMonitorName, meta.DeleteOptions{})
 	})
 	if err == nil {
 		log.Debug().Msgf("Deleted ServiceMonitor %s", serviceMonitorName)

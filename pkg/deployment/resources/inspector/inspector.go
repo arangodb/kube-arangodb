@@ -32,6 +32,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoclustersynchronization"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangotask"
@@ -48,6 +49,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/rs/zerolog"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 var (
@@ -155,6 +157,38 @@ type inspectorState struct {
 	versionInfo driver.Version
 
 	initialised bool
+}
+
+func (i *inspectorState) Anonymous(gvk schema.GroupVersionKind) (anonymous.Interface, bool) {
+	for _, o := range i.AnonymousObjects() {
+		if o == nil {
+			continue
+		}
+
+		obj, ok := o.Anonymous(gvk)
+		if ok {
+			return obj, true
+		}
+	}
+
+	return nil, false
+}
+
+func (i *inspectorState) AnonymousObjects() []anonymous.Impl {
+	return []anonymous.Impl{
+		i.pods,
+		i.secrets,
+		i.persistentVolumeClaims,
+		i.services,
+		i.serviceAccounts,
+		i.nodes,
+		i.podDisruptionBudgets,
+		i.serviceMonitors,
+		i.arangoMembers,
+		i.arangoTasks,
+		i.arangoClusterSynchronizations,
+		i.endpoints,
+	}
 }
 
 func (i *inspectorState) GetCurrentArangoDeployment() (*api.ArangoDeployment, error) {

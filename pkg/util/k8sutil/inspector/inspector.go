@@ -25,6 +25,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/refresh"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/server"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoclustersynchronization"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangodeployment"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
@@ -46,6 +47,10 @@ type Inspector interface {
 	Namespace() string
 
 	Initialised() bool
+
+	anonymous.Impl
+
+	AnonymousObjects() []anonymous.Impl
 
 	refresh.Inspector
 	throttle.Inspector
