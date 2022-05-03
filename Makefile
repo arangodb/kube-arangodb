@@ -510,3 +510,16 @@ synchronize-v2alpha1-with-v1:
 	@make update-generated
 	@make set-deployment-api-version-v2alpha1 bin
 	@make set-deployment-api-version-v1 bin
+
+.PHONY: check-all check-enterprise check-community _check
+
+check-all: check-community check-enterprise
+
+check-enterprise:
+	@$(MAKE) _check RELEASE_MODE=enterprise
+
+check-community:
+	@$(MAKE) _check RELEASE_MODE=community
+
+_check:
+	@$(MAKE) fmt license-verify linter run-unit-tests bin
