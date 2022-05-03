@@ -30,7 +30,10 @@ func (p *arangoTasksInspector) Anonymous(gvk schema.GroupVersionKind) (anonymous
 
 	if g.Kind == gvk.Kind && g.Group == gvk.Group {
 		switch gvk.Version {
-		case ArangoTaskVersionV1:
+		case ArangoTaskVersionV1, DefaultVersion:
+			if p.v1 == nil || p.v1.err != nil {
+				return nil, false
+			}
 			return &arangoTasksInspectorAnonymousV1{i: p.v1}, true
 		}
 	}

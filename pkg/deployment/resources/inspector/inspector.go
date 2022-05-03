@@ -48,8 +48,13 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/rs/zerolog"
+	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+)
+
+const (
+	DefaultVersion = ""
 )
 
 var (
@@ -157,6 +162,31 @@ type inspectorState struct {
 	versionInfo driver.Version
 
 	initialised bool
+}
+
+func extractGVKFromOwnerReference(o meta.OwnerReference) schema.GroupVersionKind {
+	z := strings.SplitN(o.APIVersion, "/", 2)
+
+	switch len(z) {
+	case 1:
+		return schema.GroupVersionKind{
+			Group:   core.GroupName,
+			Version: z[0],
+			Kind:    o.Kind,
+		}
+	case 2:
+		return schema.GroupVersionKind{
+			Group:   z[0],
+			Version: z[1],
+			Kind:    o.Kind,
+		}
+	default:
+		return schema.GroupVersionKind{
+			Group:   core.GroupName,
+			Version: z[1],
+			Kind:    o.APIVersion,
+		}
+	}
 }
 
 func (i *inspectorState) Anonymous(gvk schema.GroupVersionKind) (anonymous.Interface, bool) {

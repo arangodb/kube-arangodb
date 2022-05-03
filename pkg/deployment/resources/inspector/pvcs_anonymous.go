@@ -30,7 +30,10 @@ func (p *persistentVolumeClaimsInspector) Anonymous(gvk schema.GroupVersionKind)
 
 	if g.Kind == gvk.Kind && g.Group == gvk.Group {
 		switch gvk.Version {
-		case PersistentVolumeClaimVersionV1:
+		case PersistentVolumeClaimVersionV1, DefaultVersion:
+			if p.v1 == nil || p.v1.err != nil {
+				return nil, false
+			}
 			return &persistentVolumeClaimsInspectorAnonymousV1{i: p.v1}, true
 		}
 	}

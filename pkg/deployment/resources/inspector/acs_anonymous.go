@@ -30,7 +30,10 @@ func (p *arangoClusterSynchronizationsInspector) Anonymous(gvk schema.GroupVersi
 
 	if g.Kind == gvk.Kind && g.Group == gvk.Group {
 		switch gvk.Version {
-		case ArangoClusterSynchronizationVersionV1:
+		case ArangoClusterSynchronizationVersionV1, DefaultVersion:
+			if p.v1 == nil || p.v1.err != nil {
+				return nil, false
+			}
 			return &arangoClusterSynchronizationsInspectorAnonymousV1{i: p.v1}, true
 		}
 	}
