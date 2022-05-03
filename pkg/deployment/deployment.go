@@ -53,6 +53,8 @@ import (
 	"k8s.io/client-go/tools/record"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/acs"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/acs/sutil"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/chaos"
 	memberState "github.com/arangodb/kube-arangodb/pkg/deployment/member"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile"
@@ -138,6 +140,7 @@ type Deployment struct {
 	resilience                *resilience.Resilience
 	resources                 *resources.Resources
 	chaosMonkey               *chaos.Monkey
+	acs                       sutil.ACS
 	syncClientCache           client.ClientCache
 	haveServiceMonitorCRD     bool
 
@@ -246,6 +249,7 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 		stopCh:       make(chan struct{}),
 		agencyCache:  agency.NewCache(apiObject.Spec.Mode),
 		currentState: inspector.NewInspector(newDeploymentThrottle(), deps.Client, apiObject.GetNamespace(), apiObject.GetName()),
+		acs:          acs.NewACS(),
 	}
 
 	d.memberState = memberState.NewStateInspector(d)

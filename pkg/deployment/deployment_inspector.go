@@ -39,7 +39,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/acs"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/upgrade"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -178,7 +177,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 		}
 	}
 
-	if err := acs.Inspect(ctx, d.apiObject, d.deps.Client, d.GetCachedStatus()); err != nil {
+	if err := d.acs.Inspect(ctx, d.apiObject, d.deps.Client, d.GetCachedStatus()); err != nil {
 		d.deps.Log.Warn().Err(err).Msgf("Unable to handle ACS objects")
 	}
 
