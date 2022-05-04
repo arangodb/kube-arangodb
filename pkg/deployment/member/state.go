@@ -157,7 +157,7 @@ func (s *stateInspector) fetchArangosyncMemberState(ctx context.Context, m api.D
 		state.Version = driver.VersionInfo{
 			Server:  m.Group.AsRole(),
 			Version: driver.Version(v.Version),
-			License: m.Member.Image.License(),
+			License: GetImageLicense(m.Member.Image),
 			Details: map[string]interface{}{
 				"arangosync-build": v.Build,
 			},

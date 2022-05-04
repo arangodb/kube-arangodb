@@ -22,7 +22,6 @@ package v1
 
 import (
 	"fmt"
-	"unicode"
 
 	driver "github.com/arangodb/go-driver"
 )
@@ -40,17 +39,13 @@ func (i *ImageInfo) String() string {
 		return "undefined"
 	}
 
-	license := []rune(i.License())
-	license[0] = unicode.ToTitle(license[0])
+	e := "Community"
 
-	return fmt.Sprintf("ArangoDB %s %s (%s)", string(license), string(i.ArangoDBVersion), i.Image)
-}
-
-func (i *ImageInfo) License() string {
 	if i.Enterprise {
-		return "enterprise"
+		e = "Enterprise"
 	}
-	return "community"
+
+	return fmt.Sprintf("ArangoDB %s %s (%s)", e, string(i.ArangoDBVersion), i.Image)
 }
 
 // ImageInfoList is a list of image infos
