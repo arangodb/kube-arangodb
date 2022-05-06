@@ -30,8 +30,9 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"k8s.io/apimachinery/pkg/types"
+
+	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile"
 
@@ -51,6 +52,10 @@ import (
 
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 
+	"github.com/rs/zerolog/log"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"github.com/arangodb/arangosync-client/client"
 	"github.com/arangodb/arangosync-client/tasks"
 	driver "github.com/arangodb/go-driver"
@@ -69,9 +74,6 @@ import (
 	serviceaccountv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount/v1"
 	servicemonitorv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
-	"github.com/rs/zerolog/log"
-	core "k8s.io/api/core/v1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var _ resources.Context = &Deployment{}
@@ -185,6 +187,41 @@ func (d *Deployment) GetDatabaseClient(ctx context.Context) (driver.Client, erro
 		return nil, errors.WithStack(err)
 	}
 	return c, nil
+}
+
+// RunAsyncRequest runs an ArangoDB operation asynchronously.
+func (d *Deployment) RunAsyncRequest(ctx context.Context, f conn.ASyncFunc) (string, error) {
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
+	defer cancel()
+
+	c, err := d.clientCache.GetDatabase(ctxChild)
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+
+	fAuth := d.clientCache.GetAuth()
+	asyncConn := &conn.AsyncConnection{
+		Connection: c.Connection(),
+	}
+	config := driver.ClientConfig{
+		Connection: asyncConn,
+	}
+
+	if config.Authentication, err = fAuth(); err != nil {
+		return "", errors.WithStack(err)
+	}
+
+	// Create a new client with asynchronous connection.
+	asyncClient, err := driver.NewClient(config)
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+
+	if err = f(ctxChild, asyncClient); err != nil {
+		return "", errors.WithStack(err)
+	}
+
+	return asyncConn.GetJobID(), nil
 }
 
 // GetServerClient returns a cached client for a specific server.
