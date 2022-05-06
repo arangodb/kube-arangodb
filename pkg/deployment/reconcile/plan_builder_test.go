@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"testing"
+	"time"
 
 	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 	"github.com/rs/zerolog"
@@ -38,8 +39,6 @@ import (
 
 	"github.com/arangodb/arangosync-client/client"
 	"github.com/arangodb/go-driver/agency"
-
-	"time"
 
 	"github.com/arangodb/go-driver"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
@@ -308,6 +307,10 @@ func (c *testContext) UpdateMember(_ context.Context, member api.MemberStatus) e
 
 func (c *testContext) GetDatabaseClient(ctx context.Context) (driver.Client, error) {
 	return nil, errors.Newf("Client Not Found")
+}
+
+func (c *testContext) RunAsyncRequest(_ context.Context, _ conn.ASyncFunc) (string, error) {
+	panic("implement me")
 }
 
 func (c *testContext) GetServerClient(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error) {

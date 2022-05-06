@@ -22,6 +22,7 @@ package reconcile
 
 import (
 	"context"
+	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -29,16 +30,14 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/arangosync-client/client"
-	"github.com/arangodb/go-driver/agency"
-
-	"time"
-
 	"github.com/arangodb/go-driver"
+	"github.com/arangodb/go-driver/agency"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/member"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
@@ -318,6 +317,10 @@ func (ac *actionContext) GetDatabaseClient(ctx context.Context) (driver.Client, 
 		return nil, errors.WithStack(err)
 	}
 	return c, nil
+}
+
+func (ac *actionContext) RunAsyncRequest(ctx context.Context, f conn.ASyncFunc) (string, error) {
+	return ac.context.RunAsyncRequest(ctx, f)
 }
 
 // GetServerClient returns a cached client for a specific server.
