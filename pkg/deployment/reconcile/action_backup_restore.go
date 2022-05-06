@@ -23,6 +23,7 @@ package reconcile
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/rs/zerolog"
 
@@ -179,7 +180,12 @@ func (a *actionBackupRestore) CheckProgress(ctx context.Context) (bool, bool, er
 		return true, false, nil
 	}
 
-	if err = a.updateRestoreStatus(ctx, api.DeploymentRestoreStateRestoring, restoreError.Error()); err != nil {
+	message := restoreError.Error()
+	if ar, ok := driver.AsArangoError(err); ok && ar.Code == http.StatusNoContent {
+		message = "restore job is pending or not finished yet"
+	}
+
+	if err = a.updateRestoreStatus(ctx, api.DeploymentRestoreStateRestoring, message); err != nil {
 		log.Info().Err(err).Msg("restore operation is being restored, but status could not be updated")
 		// fallthrough and return isReady=false.
 		// Next iteration should reconcile it because it is possible to fetch job status again.
