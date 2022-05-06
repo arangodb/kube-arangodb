@@ -249,8 +249,10 @@ func (d *Reconciler) executePlan(ctx context.Context, cachedStatus inspectorInte
 
 				now := metav1.Now()
 				plan[0].StartTime = &now
-				plan[0].Locals = action.GetLocals()
 			}
+
+			// action Start or action CheckProgress could add some new variables.
+			plan[0].Locals = action.GetLocals()
 
 			return plan, recall, nil
 		}
