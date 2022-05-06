@@ -26,9 +26,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/rs/zerolog"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
-	"github.com/rs/zerolog"
 )
 
 func GetAllActions() []api.ActionType {
@@ -58,6 +59,9 @@ type Action interface {
 
 	// MemberID Return the MemberID used / created in this action
 	MemberID() string
+
+	// GetLocals returns locals variable which can be added during the action.
+	GetLocals() map[string]string
 }
 
 // ActionPost keep interface which is executed after action is completed.

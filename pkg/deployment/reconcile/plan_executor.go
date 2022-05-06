@@ -168,7 +168,11 @@ func (d *Reconciler) executePlan(ctx context.Context, cachedStatus inspectorInte
 		}
 
 		for k, v := range planAction.Params {
-			logContext = logContext.Str(k, v)
+			logContext = logContext.Str("param."+k, v)
+		}
+
+		for k, v := range planAction.Locals {
+			logContext = logContext.Str("local."+k, v)
 		}
 
 		log := logContext.Logger()
@@ -245,6 +249,7 @@ func (d *Reconciler) executePlan(ctx context.Context, cachedStatus inspectorInte
 
 				now := metav1.Now()
 				plan[0].StartTime = &now
+				plan[0].Locals = action.GetLocals()
 			}
 
 			return plan, recall, nil

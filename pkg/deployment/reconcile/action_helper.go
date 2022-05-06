@@ -23,8 +23,9 @@ package reconcile
 import (
 	"context"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/rs/zerolog"
+
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
 
 type actionEmpty struct {
@@ -89,4 +90,9 @@ type actionImpl struct {
 // MemberID returns the member ID used / created in the current action.
 func (a actionImpl) MemberID() string {
 	return *a.memberIDRef
+}
+
+// GetLocals returns locals variable which can be added during the action.
+func (a actionImpl) GetLocals() map[string]string {
+	return a.action.Locals
 }

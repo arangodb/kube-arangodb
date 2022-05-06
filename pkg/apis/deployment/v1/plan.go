@@ -21,12 +21,13 @@
 package v1
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/dchest/uniuri"
 	"k8s.io/apimachinery/pkg/api/equality"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/uuid"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 // ActionPriority define action priority
@@ -225,6 +226,8 @@ type Action struct {
 	Image string `json:"image,omitempty"`
 	// Params additional parameters used for action
 	Params map[string]string `json:"params,omitempty"`
+	// Locals additional storage for local variables which are produced during the action.
+	Locals map[string]string `json:"locals,omitempty"`
 }
 
 // Equal compares two Actions
@@ -237,7 +240,29 @@ func (a Action) Equal(other Action) bool {
 		util.TimeCompareEqualPointer(a.StartTime, other.StartTime) &&
 		a.Reason == other.Reason &&
 		a.Image == other.Image &&
-		equality.Semantic.DeepEqual(a.Params, other.Params)
+		equality.Semantic.DeepEqual(a.Params, other.Params) &&
+		equality.Semantic.DeepEqual(a.Locals, other.Locals)
+}
+
+// AddLocal returns a copy of an action with set local variable.
+// If a local variable already exits then it is overwritten.
+func (a Action) AddLocal(key, value string) Action {
+	if a.Locals == nil {
+		a.Locals = map[string]string{}
+	}
+
+	a.Locals[key] = value
+
+	return a
+}
+
+// GetLocal returns an action's local variable.
+// If a variable does not exist then false is returned.
+func (a Action) GetLocal(key string) (string, bool) {
+	// The Locals variable can be nil.
+	i, ok := a.Locals[key]
+
+	return i, ok
 }
 
 // AddParam returns copy of action with set parameter
