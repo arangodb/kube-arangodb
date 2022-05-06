@@ -22,13 +22,21 @@ package reconcile
 
 import (
 	"context"
+	"fmt"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
-	"github.com/arangodb/go-driver"
 	"github.com/rs/zerolog"
 
+	"github.com/arangodb/go-driver"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+)
+
+const (
+	actionLocalJobID = "job-id"
 )
 
 func init() {
@@ -47,11 +55,10 @@ func newBackupRestoreAction(log zerolog.Logger, action api.Action, actionCtx Act
 type actionBackupRestore struct {
 	// actionImpl implement timeout and member id functions
 	actionImpl
-
-	actionEmptyCheckProgress
 }
 
-func (a actionBackupRestore) Start(ctx context.Context) (bool, error) {
+// Start runs restore operation.
+func (a *actionBackupRestore) Start(ctx context.Context) (bool, error) {
 	spec := a.actionCtx.GetSpec()
 	status := a.actionCtx.GetStatusSnapshot()
 
@@ -62,13 +69,6 @@ func (a actionBackupRestore) Start(ctx context.Context) (bool, error) {
 	if status.Restore != nil {
 		a.log.Warn().Msg("Backup restore status should not be nil")
 		return true, nil
-	}
-
-	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	dbc, err := a.actionCtx.GetDatabaseClient(ctxChild)
-	if err != nil {
-		return false, err
 	}
 
 	backupResource, err := a.actionCtx.GetBackup(ctx, *spec.RestoreFrom)
@@ -82,45 +82,125 @@ func (a actionBackupRestore) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	if err := a.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
-		result := &api.DeploymentRestoreResult{
-			RequestedFrom: spec.GetRestoreFrom(),
-		}
-
-		result.State = api.DeploymentRestoreStateRestoring
-
-		s.Restore = result
-
-		return true
-	}, true); err != nil {
+	if err = a.updateRestoreStatus(ctx, api.DeploymentRestoreStateRestoring, ""); err != nil {
+		// Try again in a while.
 		return false, err
 	}
 
-	// The below action can take a while so the full parent timeout context is used.
-	restoreError := dbc.Backup().Restore(ctx, driver.BackupID(backupResource.Status.Backup.ID), nil)
-	if restoreError != nil {
-		a.log.Error().Err(restoreError).Msg("Restore failed")
-	}
-
-	if err := a.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
-		result := &api.DeploymentRestoreResult{
-			RequestedFrom: spec.GetRestoreFrom(),
+	if spec.GetMode() == api.DeploymentModeCluster {
+		// In a cluster mode a restore operation should be launched asynchronously.
+		var op conn.ASyncFunc = func(ctx context.Context, cli driver.Client) error {
+			return cli.Backup().Restore(ctx, driver.BackupID(backupResource.Status.Backup.ID), nil)
 		}
 
-		if restoreError != nil {
-			result.State = api.DeploymentRestoreStateRestoreFailed
-			result.Message = restoreError.Error()
+		jobID, err := a.actionCtx.RunAsyncRequest(ctx, op)
+		if err == nil {
+			a.action = a.action.AddLocal(actionLocalJobID, jobID)
 		} else {
-			result.State = api.DeploymentRestoreStateRestored
+			a.log.Error().Err(err).Msg("Restore failed")
 		}
 
-		s.Restore = result
-
-		return true
-	}); err != nil {
-		a.log.Error().Err(err).Msg("Unable to ser restored state")
 		return false, err
 	}
 
+	// In a Non-cluster mode a request should be sent synchronously.
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
+	defer cancel()
+	dbc, err := a.actionCtx.GetDatabaseClient(ctxChild)
+	if err != nil {
+		return false, err
+	}
+
+	restoreError := dbc.Backup().Restore(ctx, driver.BackupID(backupResource.Status.Backup.ID), nil)
+	if restoreError == nil {
+		if err = a.updateRestoreStatus(ctx, api.DeploymentRestoreStateRestored, ""); err != nil {
+			// Next iteration will launch Restore again, and then it will try to save restore status.
+			return false, err
+		}
+
+		return true, nil
+	}
+
+	a.log.Error().Err(restoreError).Msg("Restore failed")
+	if err = a.updateRestoreStatus(ctx, api.DeploymentRestoreStateRestoreFailed, restoreError.Error()); err != nil {
+		// Next iteration will launch Restore again, and then it will try to save restore status.
+		return false, err
+	}
+
+	// When a Restore operation fails it must be considered as finished.
 	return true, nil
+}
+
+// CheckProgress checks whether restore job is finished.
+func (a *actionBackupRestore) CheckProgress(ctx context.Context) (bool, bool, error) {
+	spec := a.actionCtx.GetSpec()
+	if spec.GetMode() != api.DeploymentModeCluster {
+		// Job ID can not be fetched in non-cluster mode.
+		return true, false, nil
+	}
+
+	jobID, _ := a.action.GetLocal(actionLocalJobID)
+	if len(jobID) == 0 {
+		a.log.Error().Msg("Restoring backup is not possible. Job Id is empty in local action memory")
+		return true, false, nil
+	}
+	log := a.log.With().Str(actionLocalJobID, jobID).Logger()
+
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
+	defer cancel()
+
+	dbc, err := a.actionCtx.GetDatabaseClient(ctxChild)
+	if err != nil {
+		return false, false, errors.WithStack(err)
+	}
+
+	restoreError := globals.GetGlobalTimeouts().ArangoD().RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		return arangod.IsJobFinished(ctxChild, dbc, jobID)
+	})
+
+	if restoreError == nil {
+		if err := a.updateRestoreStatus(ctx, api.DeploymentRestoreStateRestored, ""); err != nil {
+			log.Error().Err(err).Msg("restore operation finished successfully, but status could not be updated")
+			// fallthrough and return isReady=true because it is not possible to fetch job status anymore.
+			// In this case restore status will be invalid.
+		}
+
+		return true, false, nil
+	}
+
+	if driver.IsNotFound(restoreError) {
+		// Actually it is not known if a Restore job is finished.
+		if err = a.updateRestoreStatus(ctx, api.DeploymentRestoreStateRestoreFailed, "restore job ID not found"); err != nil {
+			log.Error().Err(err).Msg("restore operation is gone, and status could not be updated")
+			// fallthrough and return isReady=true because this action is no longer valid.
+			// In this case restore status will be invalid.
+		}
+
+		return true, false, nil
+	}
+
+	if err = a.updateRestoreStatus(ctx, api.DeploymentRestoreStateRestoring, restoreError.Error()); err != nil {
+		log.Info().Err(err).Msg("restore operation is being restored, but status could not be updated")
+		// fallthrough and return isReady=false.
+		// Next iteration should reconcile it because it is possible to fetch job status again.
+	}
+
+	return false, false, err
+}
+
+// updateRestoreStatus updates current status of a restore action.
+func (a *actionBackupRestore) updateRestoreStatus(ctx context.Context, state api.DeploymentRestoreState, message string) error {
+	spec := a.actionCtx.GetSpec()
+
+	err := a.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
+		s.Restore = &api.DeploymentRestoreResult{
+			RequestedFrom: spec.GetRestoreFrom(),
+			State:         state,
+			Message:       message,
+		}
+
+		return true
+	})
+
+	return errors.WithMessage(err, fmt.Sprintf("Unable setting restore state to \"%s\"", state))
 }
