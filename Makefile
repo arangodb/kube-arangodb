@@ -82,7 +82,7 @@ ifeq ($(DEBUG),true)
 	DEBUG := true
 	DOCKERFILE := Dockerfile.debug
 	# required by DLV https://github.com/go-delve/delve/blob/master/Documentation/usage/dlv_exec.md
-	COMPILE_DEBUG_FLAGS := -gcflags="all=-N -l"
+	COMPILE_DEBUG_FLAGS := -gcflags="all=-N -l" -ldflags "-extldflags '-static'" 
 else
 	DEBUG := false
 	DOCKERFILE := Dockerfile

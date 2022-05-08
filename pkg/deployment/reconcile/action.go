@@ -26,9 +26,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/rs/zerolog"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
-	"github.com/rs/zerolog"
 )
 
 func GetAllActions() []api.ActionType {

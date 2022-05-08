@@ -67,6 +67,8 @@ type ActionContext interface {
 
 	member.StateInspectorGetter
 
+	ActionLocalsContext
+
 	// GetMemberStatusByID returns the current member status
 	// for the member with given id.
 	// Returns member status, true when found, or false
@@ -129,6 +131,13 @@ type ActionContext interface {
 	SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool)
 }
 
+type ActionLocalsContext interface {
+	CurrentLocals() api.PlanLocals
+
+	Get(action api.Action, key api.PlanLocalKey) (string, bool)
+	Add(key api.PlanLocalKey, value string, override bool) bool
+}
+
 // newActionContext creates a new ActionContext implementation.
 func newActionContext(log zerolog.Logger, context Context, cachedStatus inspectorInterface.Inspector) ActionContext {
 	return &actionContext{
@@ -143,6 +152,19 @@ type actionContext struct {
 	context      Context
 	log          zerolog.Logger
 	cachedStatus inspectorInterface.Inspector
+	locals       api.PlanLocals
+}
+
+func (ac *actionContext) CurrentLocals() api.PlanLocals {
+	return ac.locals
+}
+
+func (ac *actionContext) Get(action api.Action, key api.PlanLocalKey) (string, bool) {
+	return ac.locals.GetWithParent(action.Locals, key)
+}
+
+func (ac *actionContext) Add(key api.PlanLocalKey, value string, override bool) bool {
+	return ac.locals.Add(key, value, override)
 }
 
 func (ac *actionContext) WithArangoMember(cache inspectorInterface.Inspector, timeout time.Duration, name string) reconciler.ArangoMemberModContext {

@@ -23,8 +23,9 @@ package reconcile
 import (
 	"context"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/rs/zerolog"
+
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
 
 type actionEmpty struct {
