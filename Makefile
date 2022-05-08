@@ -150,7 +150,7 @@ ifdef VERBOSE
 	TESTVERBOSEOPTIONS := -v
 endif
 
-EXCLUDE_DIRS := tests vendor .gobuild deps tools
+EXCLUDE_DIRS := vendor .gobuild deps tools
 SOURCES_QUERY := find ./ -type f -name '*.go' $(foreach EXCLUDE_DIR,$(EXCLUDE_DIRS), ! -path "*/$(EXCLUDE_DIR)/*")
 SOURCES := $(shell $(SOURCES_QUERY))
 DASHBOARDSOURCES := $(shell find $(DASHBOARDDIR)/src -name '*.js') $(DASHBOARDDIR)/package.json

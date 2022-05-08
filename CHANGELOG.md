@@ -7,6 +7,7 @@
 - (Feature) Recursive OwnerReference discovery
 - (Maintenance) Add check make targets
 - (Feature) Create support for local variables in actions.
+- (Feature) Support for asynchronous ArangoD resquests.
 
 ## [1.2.11](https://github.com/arangodb/kube-arangodb/tree/1.2.11) (2022-04-30)
 - (Bugfix) Orphan PVC are not removed

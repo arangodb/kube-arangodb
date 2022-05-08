@@ -21,13 +21,14 @@
 package tests
 
 import (
-	"testing"
-	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"context"
-	"github.com/stretchr/testify/require"
+	"testing"
+
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
+	"github.com/stretchr/testify/require"
 )
 
 const FakeNamespace = "fake"
