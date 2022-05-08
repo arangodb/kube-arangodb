@@ -165,6 +165,10 @@ type DeploymentDatabaseClient interface {
 	// GetDatabaseClient returns a cached client for the entire database (cluster coordinators or single server),
 	// creating one if needed.
 	GetDatabaseClient(ctx context.Context) (driver.Client, error)
+
+	// GetDatabaseAsyncClient returns a cached client for the entire database (cluster coordinators or single server),
+	// creating one if needed. Only in AsyncMode
+	GetDatabaseAsyncClient(ctx context.Context) (driver.Client, error)
 }
 
 type DeploymentMemberClient interface {

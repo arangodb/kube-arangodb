@@ -28,12 +28,20 @@ import (
 	"github.com/arangodb/go-driver"
 	"github.com/rs/zerolog"
 
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 func init() {
 	registerAction(api.ActionTypeBackupRestore, newBackupRestoreAction, backupRestoreTimeout)
 }
+
+const (
+	actionBackupRestoreLocalJobID      api.PlanLocalKey = "jobID"
+	actionBackupRestoreLocalBackupName api.PlanLocalKey = "backupName"
+)
 
 func newBackupRestoreAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &actionBackupRestore{}
@@ -47,8 +55,6 @@ func newBackupRestoreAction(log zerolog.Logger, action api.Action, actionCtx Act
 type actionBackupRestore struct {
 	// actionImpl implement timeout and member id functions
 	actionImpl
-
-	actionEmptyCheckProgress
 }
 
 func (a actionBackupRestore) Start(ctx context.Context) (bool, error) {
@@ -62,13 +68,6 @@ func (a actionBackupRestore) Start(ctx context.Context) (bool, error) {
 	if status.Restore != nil {
 		a.log.Warn().Msg("Backup restore status should not be nil")
 		return true, nil
-	}
-
-	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	dbc, err := a.actionCtx.GetDatabaseClient(ctxChild)
-	if err != nil {
-		return false, err
 	}
 
 	backupResource, err := a.actionCtx.GetBackup(ctx, *spec.RestoreFrom)
@@ -96,15 +95,62 @@ func (a actionBackupRestore) Start(ctx context.Context) (bool, error) {
 		return false, err
 	}
 
+	switch mode := a.actionCtx.GetSpec().Mode.Get(); mode {
+	case api.DeploymentModeActiveFailover, api.DeploymentModeSingle:
+		return a.restoreSync(ctx, backupResource)
+	case api.DeploymentModeCluster:
+		return a.restoreAsync(ctx, backupResource)
+	default:
+		return false, errors.Newf("Unknown mode %s", mode)
+	}
+}
+
+func (a actionBackupRestore) restoreAsync(ctx context.Context, backup *backupApi.ArangoBackup) (bool, error) {
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
+	defer cancel()
+
+	dbc, err := a.actionCtx.GetDatabaseAsyncClient(ctxChild)
+	if err != nil {
+		return false, err
+	}
+
+	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
+	defer cancel()
+
+	restoreError := dbc.Backup().Restore(ctxChild, driver.BackupID(backup.Status.Backup.ID), nil)
+	if restoreError != nil {
+		if id, ok := conn.IsAsyncJobInProgress(restoreError); ok {
+			a.actionCtx.Add(actionBackupRestoreLocalJobID, id, true)
+			a.actionCtx.Add(actionBackupRestoreLocalBackupName, backup.GetName(), true)
+
+			// Async request has been send
+			return false, nil
+		} else {
+			return false, restoreError
+		}
+	}
+
+	return false, errors.Newf("Async response not received")
+}
+
+func (a actionBackupRestore) restoreSync(ctx context.Context, backup *backupApi.ArangoBackup) (bool, error) {
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
+	defer cancel()
+	dbc, err := a.actionCtx.GetDatabaseClient(ctxChild)
+	if err != nil {
+		a.log.Debug().Err(err).Msg("Failed to create database client")
+		return false, nil
+	}
+
 	// The below action can take a while so the full parent timeout context is used.
-	restoreError := dbc.Backup().Restore(ctx, driver.BackupID(backupResource.Status.Backup.ID), nil)
+	restoreError := dbc.Backup().Restore(ctx, driver.BackupID(backup.Status.Backup.ID), nil)
 	if restoreError != nil {
 		a.log.Error().Err(restoreError).Msg("Restore failed")
 	}
 
 	if err := a.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
 		result := &api.DeploymentRestoreResult{
-			RequestedFrom: spec.GetRestoreFrom(),
+			RequestedFrom: backup.GetName(),
 		}
 
 		if restoreError != nil {
@@ -118,9 +164,70 @@ func (a actionBackupRestore) Start(ctx context.Context) (bool, error) {
 
 		return true
 	}); err != nil {
-		a.log.Error().Err(err).Msg("Unable to ser restored state")
+		a.log.Error().Err(err).Msg("Unable to set restored state")
 		return false, err
 	}
 
 	return true, nil
+}
+
+func (a actionBackupRestore) CheckProgress(ctx context.Context) (bool, bool, error) {
+	backup, ok := a.actionCtx.Get(a.action, actionBackupRestoreLocalBackupName)
+	if !ok {
+		return false, false, errors.Newf("Local Key is missing in action: %s", actionBackupRestoreLocalBackupName)
+	}
+
+	job, ok := a.actionCtx.Get(a.action, actionBackupRestoreLocalJobID)
+	if !ok {
+		return false, false, errors.Newf("Local Key is missing in action: %s", actionBackupRestoreLocalJobID)
+	}
+
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
+	defer cancel()
+
+	dbc, err := a.actionCtx.GetDatabaseAsyncClient(ctxChild)
+	if err != nil {
+		a.log.Debug().Err(err).Msg("Failed to create database client")
+		return false, false, nil
+	}
+
+	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
+	defer cancel()
+
+	// Params does not matter in async fetch
+	restoreError := dbc.Backup().Restore(conn.WithAsyncID(ctxChild, job), "", nil)
+	if restoreError != nil {
+		if _, ok := conn.IsAsyncJobInProgress(restoreError); ok {
+			// Job still in progress
+			return false, false, nil
+		}
+
+		if errors.IsTemporary(restoreError) {
+			// Retry
+			return false, false, nil
+		}
+	}
+
+	// Restore is done
+
+	if err := a.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
+		result := &api.DeploymentRestoreResult{
+			RequestedFrom: backup,
+			State:         api.DeploymentRestoreStateRestored,
+		}
+
+		if restoreError != nil {
+			result.State = api.DeploymentRestoreStateRestoreFailed
+			result.Message = restoreError.Error()
+		}
+
+		s.Restore = result
+
+		return true
+	}); err != nil {
+		a.log.Error().Err(err).Msg("Unable to set restored state")
+		return false, false, err
+	}
+
+	return true, false, nil
 }
