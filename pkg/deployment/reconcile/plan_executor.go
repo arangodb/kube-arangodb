@@ -172,12 +172,12 @@ func (d *Reconciler) executePlan(ctx context.Context, cachedStatus inspectorInte
 		}
 
 		for k, v := range planAction.Locals {
-			logContext = logContext.Str("local."+k, v)
+			logContext = logContext.Str("local."+k.String(), v)
 		}
 
 		log := logContext.Logger()
 
-		action := d.createAction(log, planAction, cachedStatus)
+		action, actionContext := d.createAction(log, planAction, cachedStatus)
 
 		done, abort, recall, retry, err := d.executeAction(ctx, log, planAction, action)
 		if err != nil {
@@ -251,8 +251,7 @@ func (d *Reconciler) executePlan(ctx context.Context, cachedStatus inspectorInte
 				plan[0].StartTime = &now
 			}
 
-			// action Start or action CheckProgress could add some new variables.
-			plan[0].Locals = action.GetLocals()
+			plan[0].Locals.Merge(actionContext.CurrentLocals())
 
 			return plan, recall, nil
 		}
@@ -312,7 +311,7 @@ func (d *Reconciler) executeAction(ctx context.Context, log zerolog.Logger, plan
 }
 
 // createAction create action object based on action type
-func (d *Reconciler) createAction(log zerolog.Logger, action api.Action, cachedStatus inspectorInterface.Inspector) Action {
+func (d *Reconciler) createAction(log zerolog.Logger, action api.Action, cachedStatus inspectorInterface.Inspector) (Action, ActionContext) {
 	actionCtx := newActionContext(log.With().Str("id", action.ID).Str("type", action.Type.String()).Logger(), d.context, cachedStatus)
 
 	f, ok := getActionFactory(action.Type)
@@ -320,5 +319,5 @@ func (d *Reconciler) createAction(log zerolog.Logger, action api.Action, cachedS
 		panic(fmt.Sprintf("Unknown action type '%s'", action.Type))
 	}
 
-	return f(log, action, actionCtx)
+	return f(log, action, actionCtx), actionCtx
 }

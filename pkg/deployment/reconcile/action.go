@@ -59,9 +59,6 @@ type Action interface {
 
 	// MemberID Return the MemberID used / created in this action
 	MemberID() string
-
-	// GetLocals returns locals variable which can be added during the action.
-	GetLocals() map[string]string
 }
 
 // ActionPost keep interface which is executed after action is completed.

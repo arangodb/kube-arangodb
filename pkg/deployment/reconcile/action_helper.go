@@ -91,8 +91,3 @@ type actionImpl struct {
 func (a actionImpl) MemberID() string {
 	return *a.memberIDRef
 }
-
-// GetLocals returns locals variable which can be added during the action.
-func (a actionImpl) GetLocals() map[string]string {
-	return a.action.Locals
-}
