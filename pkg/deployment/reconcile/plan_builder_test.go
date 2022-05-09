@@ -85,6 +85,11 @@ type testContext struct {
 	Inspector inspectorInterface.Inspector
 }
 
+func (c *testContext) GetDatabaseAsyncClient(ctx context.Context) (driver.Client, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (c *testContext) WithArangoMember(cache inspectorInterface.Inspector, timeout time.Duration, name string) reconciler.ArangoMemberModContext {
 	return reconciler.NewArangoMemberModContext(cache, timeout, name)
 }

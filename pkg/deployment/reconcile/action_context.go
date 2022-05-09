@@ -155,6 +155,10 @@ type actionContext struct {
 	locals       api.PlanLocals
 }
 
+func (ac *actionContext) GetDatabaseAsyncClient(ctx context.Context) (driver.Client, error) {
+	return ac.context.GetDatabaseAsyncClient(ctx)
+}
+
 func (ac *actionContext) CurrentLocals() api.PlanLocals {
 	return ac.locals
 }

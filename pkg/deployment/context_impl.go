@@ -187,6 +187,14 @@ func (d *Deployment) GetDatabaseClient(ctx context.Context) (driver.Client, erro
 	return c, nil
 }
 
+func (d *Deployment) GetDatabaseAsyncClient(ctx context.Context) (driver.Client, error) {
+	c, err := d.clientCache.GetDatabaseWithWrap(ctx, conn.NewAsyncConnection)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return c, nil
+}
+
 // GetServerClient returns a cached client for a specific server.
 func (d *Deployment) GetServerClient(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error) {
 	c, err := d.clientCache.Get(ctx, group, id)

@@ -20,7 +20,11 @@
 
 package conn
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+)
 
 func IsAsyncErrorNotFound(err error) bool {
 	if err == nil {
@@ -31,7 +35,7 @@ func IsAsyncErrorNotFound(err error) bool {
 		return true
 	}
 
-	return false
+	return IsAsyncErrorNotFound(errors.Cause(err))
 }
 
 func newAsyncErrorNotFound(id string) error {
@@ -57,7 +61,7 @@ func IsAsyncJobInProgress(err error) (string, bool) {
 		return v.jobID, true
 	}
 
-	return "", false
+	return IsAsyncJobInProgress(errors.Cause(err))
 }
 
 func newAsyncJobInProgress(id string) error {
