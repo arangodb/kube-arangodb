@@ -9,13 +9,13 @@
 - (Feature) Create support for local variables in actions.
 - (Feature) Support for asynchronous ArangoD resquests.
 - (Feature) Change Restore in Cluster mode to Async Request
+- (Bugfix) Fix arangosync members state inspection
 
 ## [1.2.11](https://github.com/arangodb/kube-arangodb/tree/1.2.11) (2022-04-30)
 - (Bugfix) Orphan PVC are not removed
 - (Bugfix) Remove LocalStorage Deadlock
 - (Bugfix) Skip arangosync members state inspection checks
 - (Feature) Add LocalStorage DaemonSet Priority support
-- (Bugfix) Fix arangosync members state inspection
 
 ## [1.2.10](https://github.com/arangodb/kube-arangodb/tree/1.2.10) (2022-04-27)
 - (Feature) Allow configuration for securityContext.runAsUser value
