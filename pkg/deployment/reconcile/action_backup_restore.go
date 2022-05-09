@@ -111,22 +111,21 @@ func (a actionBackupRestore) restoreAsync(ctx context.Context, backup *backupApi
 
 	dbc, err := a.actionCtx.GetDatabaseAsyncClient(ctxChild)
 	if err != nil {
-		return false, err
+		return false, errors.Wrapf(err, "Unable to create client")
 	}
 
 	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 
-	restoreError := dbc.Backup().Restore(ctxChild, driver.BackupID(backup.Status.Backup.ID), nil)
-	if restoreError != nil {
-		if id, ok := conn.IsAsyncJobInProgress(restoreError); ok {
+	if err := dbc.Backup().Restore(ctxChild, driver.BackupID(backup.Status.Backup.ID), nil); err != nil {
+		if id, ok := conn.IsAsyncJobInProgress(err); ok {
 			a.actionCtx.Add(actionBackupRestoreLocalJobID, id, true)
 			a.actionCtx.Add(actionBackupRestoreLocalBackupName, backup.GetName(), true)
 
 			// Async request has been send
 			return false, nil
 		} else {
-			return false, restoreError
+			return false, errors.Wrapf(err, "Unknown restore error")
 		}
 	}
 
