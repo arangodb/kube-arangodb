@@ -78,7 +78,7 @@ func (s *stateInspector) Log(logger zerolog.Logger) {
 	defer s.lock.Unlock()
 
 	for m, s := range s.members {
-		if s.IsInvalid() {
+		if !s.IsReachable() {
 			s.Log(logger.Info()).Str("member", m).Msgf("Member is in invalid state")
 		}
 	}
@@ -95,22 +95,9 @@ func (s *stateInspector) RefreshState(ctx context.Context, members api.Deploymen
 
 	members.ForEach(func(id int) {
 		if members[id].Group.IsArangosync() {
-			return
-		}
-
-		results[id] = State{}
-
-		c, err := s.client.GetServerClient(nctx, members[id].Group, members[id].Member.ID)
-		if err != nil {
-			results[id].Reachable = err
-			return
-		}
-
-		if v, err := c.Version(nctx); err != nil {
-			results[id].Reachable = err
-			return
+			results[id] = s.fetchArangosyncMemberState(nctx, members[id])
 		} else {
-			results[id].Version = v
+			results[id] = s.fetchServerMemberState(nctx, members[id])
 		}
 	})
 
@@ -122,11 +109,11 @@ func (s *stateInspector) RefreshState(ctx context.Context, members api.Deploymen
 
 	c, err := s.client.GetDatabaseClient(ctx)
 	if err != nil {
-		cs.Reachable = err
+		cs.NotReachableErr = err
 	} else {
 		v, err := c.Version(gctx)
 		if err != nil {
-			cs.Reachable = err
+			cs.NotReachableErr = err
 		} else {
 			cs.Version = v
 		}
@@ -155,6 +142,46 @@ func (s *stateInspector) RefreshState(ctx context.Context, members api.Deploymen
 	s.health = h
 }
 
+func (s *stateInspector) fetchArangosyncMemberState(ctx context.Context, m api.DeploymentStatusMemberElement) State {
+	var state State
+	c, err := s.client.GetSyncServerClient(ctx, m.Group, m.Member.ID)
+	if err != nil {
+		state.NotReachableErr = err
+		return state
+	}
+
+	if v, err := c.Version(ctx); err != nil {
+		state.NotReachableErr = err
+	} else {
+		// convert arangosync VersionInfo to go-driver VersionInfo for simplicity:
+		state.Version = driver.VersionInfo{
+			Server:  m.Group.AsRole(),
+			Version: driver.Version(v.Version),
+			License: GetImageLicense(m.Member.Image),
+			Details: map[string]interface{}{
+				"arangosync-build": v.Build,
+			},
+		}
+	}
+	return state
+}
+
+func (s *stateInspector) fetchServerMemberState(ctx context.Context, m api.DeploymentStatusMemberElement) State {
+	var state State
+	c, err := s.client.GetServerClient(ctx, m.Group, m.Member.ID)
+	if err != nil {
+		state.NotReachableErr = err
+		return state
+	}
+
+	if v, err := c.Version(ctx); err != nil {
+		state.NotReachableErr = err
+	} else {
+		state.Version = v
+	}
+	return state
+}
+
 func (s *stateInspector) MemberState(id string) (State, bool) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
@@ -175,24 +202,15 @@ type Health struct {
 }
 
 type State struct {
-	Reachable error
+	NotReachableErr error
 
 	Version driver.VersionInfo
 }
 
 func (s State) IsReachable() bool {
-	return s.Reachable == nil
+	return s.NotReachableErr == nil
 }
 
 func (s State) Log(event *zerolog.Event) *zerolog.Event {
-	if !s.IsReachable() {
-		event = event.Bool("reachable", false).AnErr("reachableError", s.Reachable)
-	} else {
-		event = event.Bool("reachable", false)
-	}
-	return event
-}
-
-func (s State) IsInvalid() bool {
-	return !s.IsReachable()
+	return event.Bool("reachable", s.IsReachable()).AnErr("reachableError", s.NotReachableErr)
 }

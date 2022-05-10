@@ -29,6 +29,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	memberState "github.com/arangodb/kube-arangodb/pkg/deployment/member"
 	"github.com/arangodb/kube-arangodb/pkg/server"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
@@ -219,11 +220,7 @@ func (d *Deployment) DatabaseURL() string {
 func (d *Deployment) DatabaseVersion() (string, string) {
 	status, _ := d.GetStatus()
 	if current := status.CurrentImage; current != nil {
-		license := "community"
-		if current.Enterprise {
-			license = "enterprise"
-		}
-		return string(current.ArangoDBVersion), license
+		return string(current.ArangoDBVersion), memberState.GetImageLicense(status.CurrentImage)
 	}
 	return "", ""
 }
