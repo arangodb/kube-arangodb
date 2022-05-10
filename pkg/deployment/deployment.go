@@ -63,7 +63,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/trigger"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -217,22 +216,6 @@ func (d *Deployment) SetAgencyMaintenanceMode(ctx context.Context, enabled bool)
 	return nil
 }
 
-func newDeploymentThrottle() throttle.Components {
-	return throttle.NewThrottleComponents(
-		30*time.Second, // ArangoDeploymentSynchronization
-		30*time.Second, // ArangoMember
-		30*time.Second, // ArangoTask
-		30*time.Second, // Node
-		15*time.Second, // PVC
-		time.Second,    // Pod
-		30*time.Second, // PDB
-		10*time.Second, // Secret
-		10*time.Second, // Service
-		30*time.Second, // SA
-		30*time.Second, // ServiceMonitor
-		15*time.Second) // Endpoints
-}
-
 // New creates a new Deployment from the given API object.
 func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*Deployment, error) {
 	if err := apiObject.Spec.Validate(); err != nil {
@@ -248,7 +231,7 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 		eventCh:      make(chan *deploymentEvent, deploymentEventQueueSize),
 		stopCh:       make(chan struct{}),
 		agencyCache:  agency.NewCache(apiObject.Spec.Mode),
-		currentState: inspector.NewInspector(newDeploymentThrottle(), deps.Client, apiObject.GetNamespace(), apiObject.GetName()),
+		currentState: inspector.NewInspector(inspector.NewDefaultThrottle(), deps.Client, apiObject.GetNamespace(), apiObject.GetName()),
 		acs:          acs.NewACS(),
 	}
 

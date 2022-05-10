@@ -245,6 +245,13 @@ func (i *inspectorState) Client() kclient.Client {
 	return i.client
 }
 
+func (i *inspectorState) SetClient(k kclient.Client) {
+	i.lock.Lock()
+	defer i.lock.Unlock()
+
+	i.client = k
+}
+
 func (i *inspectorState) Namespace() string {
 	return i.namespace
 }

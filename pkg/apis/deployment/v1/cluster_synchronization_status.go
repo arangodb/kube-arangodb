@@ -23,8 +23,10 @@ package v1
 import "k8s.io/apimachinery/pkg/types"
 
 type ArangoClusterSynchronizationStatus struct {
-	Deployment *ArangoClusterSynchronizationDeploymentStatus `json:"deployment,omitempty"`
-	Conditions ConditionList                                 `json:"conditions,omitempty"`
+	Deployment       *ArangoClusterSynchronizationDeploymentStatus `json:"deployment,omitempty"`
+	RemoteDeployment *ArangoClusterSynchronizationDeploymentStatus `json:"remoteDeployment,omitempty"`
+
+	Conditions ConditionList `json:"conditions,omitempty"`
 }
 
 type ArangoClusterSynchronizationDeploymentStatus struct {
