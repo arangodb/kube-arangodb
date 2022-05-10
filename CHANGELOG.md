@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Bugfix) Fix arangosync members state inspection
 
 ## [1.2.12](https://github.com/arangodb/kube-arangodb/tree/1.2.12) (2022-05-10)
 - (Feature) Add CoreV1 Endpoints Inspector
@@ -11,7 +12,6 @@
 - (Feature) Create support for local variables in actions.
 - (Feature) Support for asynchronous ArangoD resquests.
 - (Feature) Change Restore in Cluster mode to Async Request
-- (Bugfix) Fix arangosync members state inspection
 
 ## [1.2.11](https://github.com/arangodb/kube-arangodb/tree/1.2.11) (2022-04-30)
 - (Bugfix) Orphan PVC are not removed
