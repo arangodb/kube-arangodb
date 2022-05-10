@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.2.12](https://github.com/arangodb/kube-arangodb/tree/1.2.12) (2022-05-10)
 - (Feature) Add CoreV1 Endpoints Inspector
 - (Feature) Add Current ArangoDeployment Inspector
 - (Refactor) Anonymous inspector functions
