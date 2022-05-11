@@ -18,14 +18,26 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package sutil
+package inspector
 
-import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+import (
+	"time"
 
-const (
-	DeploymentReadyCondition       api.ConditionType = "DeploymentReady"
-	KubernetesConnectedCondition   api.ConditionType = "KubernetesConnected"
-	RemoteDeploymentReadyCondition api.ConditionType = "RemoteDeploymentReadyCondition"
-	RemoteCacheReadyCondition      api.ConditionType = "RemoteCacheReady"
-	ConnectionReadyCondition       api.ConditionType = "ConnectionReady"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 )
+
+func NewDefaultThrottle() throttle.Components {
+	return throttle.NewThrottleComponents(
+		30*time.Second, // ArangoDeploymentSynchronization
+		30*time.Second, // ArangoMember
+		30*time.Second, // ArangoTask
+		30*time.Second, // Node
+		15*time.Second, // PVC
+		time.Second,    // Pod
+		30*time.Second, // PDB
+		10*time.Second, // Secret
+		10*time.Second, // Service
+		30*time.Second, // SA
+		30*time.Second, // ServiceMonitor
+		15*time.Second) // Endpoints
+}

@@ -53,7 +53,9 @@ type Object interface {
 }
 
 type Inspector interface {
+	SetClient(k kclient.Client)
 	Client() kclient.Client
+
 	Namespace() string
 
 	Initialised() bool

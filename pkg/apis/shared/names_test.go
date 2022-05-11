@@ -18,14 +18,16 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package sutil
+package shared
 
-import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+import (
+	"testing"
 
-const (
-	DeploymentReadyCondition       api.ConditionType = "DeploymentReady"
-	KubernetesConnectedCondition   api.ConditionType = "KubernetesConnected"
-	RemoteDeploymentReadyCondition api.ConditionType = "RemoteDeploymentReadyCondition"
-	RemoteCacheReadyCondition      api.ConditionType = "RemoteCacheReady"
-	ConnectionReadyCondition       api.ConditionType = "ConnectionReady"
+	"github.com/stretchr/testify/require"
 )
+
+func Test_Names(t *testing.T) {
+	t.Run("Empty", func(t *testing.T) {
+		require.EqualError(t, ValidateResourceName(""), "Name '' is not a valid resource name")
+	})
+}
