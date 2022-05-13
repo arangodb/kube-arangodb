@@ -232,7 +232,7 @@ func getLeader(ctx context.Context, clients []agency.Agency) (agency.Agency, *ag
 			configs[iLocal] = config
 			// Count leaders.
 			leaders[config.LeaderId]++
-			h[config.LeaderId] = config.CommitIndex
+			h[config.Configuration.ID] = config.CommitIndex
 		}(i, cli)
 	}
 	wg.Wait()
