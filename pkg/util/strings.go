@@ -86,14 +86,3 @@ func DiffStrings(compareWhat, compareTo []string) []string {
 
 	return append(diff, DiffStringsOneWay(compareTo, compareWhat)...)
 }
-
-// IsStringInSlice returns true if haystack contains needle.
-func IsStringInSlice(needle string, haystack []string) bool {
-	for _, v := range haystack {
-		if v == needle {
-			return true
-		}
-	}
-
-	return false
-}

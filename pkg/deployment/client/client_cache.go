@@ -31,7 +31,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
-	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -176,7 +176,7 @@ func (cc *cache) GetAgency(_ context.Context, agencyIDs ...string) (agency.Agenc
 	var dnsNames []string
 	for _, m := range cc.in.GetStatusSnapshot().Members.Agents {
 		if len(agencyIDs) > 0 {
-			if !util.IsStringInSlice(m.ID, agencyIDs) {
+			if !utils.StringList(agencyIDs).Has(m.ID) {
 				continue
 			}
 		}
