@@ -65,7 +65,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/trigger"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
 // Config holds configuration settings for a Deployment
@@ -593,7 +592,7 @@ func (d *Deployment) lookForServiceMonitorCRD() {
 	var err error
 	if d.GetScope().IsNamespaced() {
 		_, err = d.currentState.ServiceMonitor().V1()
-		if apierrors.IsForbidden(err) {
+		if k8sutil.IsForbiddenOrNotFound(err) {
 			return
 		}
 	} else {

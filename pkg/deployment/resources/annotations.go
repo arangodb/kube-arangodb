@@ -37,7 +37,6 @@ import (
 	"github.com/rs/zerolog/log"
 	core "k8s.io/api/core/v1"
 	policy "k8s.io/api/policy/v1beta1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -240,7 +239,7 @@ func ensurePvcsAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Insp
 func ensureServiceMonitorsAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
 	i, err := cachedStatus.ServiceMonitor().V1()
 	if err != nil {
-		if apierrors.IsForbidden(err) {
+		if k8sutil.IsForbiddenOrNotFound(err) {
 			return nil
 		}
 		return err
