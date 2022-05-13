@@ -27,42 +27,35 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
-
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-
-	deploymentClient "github.com/arangodb/kube-arangodb/pkg/deployment/client"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
-	"k8s.io/apimachinery/pkg/types"
-
-	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
-
-	"github.com/arangodb/arangosync-client/client"
 	"github.com/rs/zerolog"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
+
+	"github.com/arangodb/arangosync-client/client"
+	agencydriver "github.com/arangodb/go-driver/agency"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/acs"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/acs/sutil"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/chaos"
+	deploymentClient "github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	memberState "github.com/arangodb/kube-arangodb/pkg/deployment/member"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resilience"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/trigger"
 )
@@ -169,11 +162,17 @@ func (d *Deployment) RefreshAgencyCache(ctx context.Context) (uint64, error) {
 	lCtx, c := globals.GetGlobalTimeouts().Agency().WithTimeout(ctx)
 	defer c()
 
-	a, err := d.GetAgency(lCtx)
-	if err != nil {
-		return 0, err
+	var clients []agencydriver.Agency
+	for _, m := range d.GetStatusSnapshot().Members.Agents {
+		a, err := d.GetAgency(lCtx, m.ID)
+		if err != nil {
+			return 0, err
+		}
+
+		clients = append(clients, a)
 	}
-	return d.agencyCache.Reload(lCtx, a)
+
+	return d.agencyCache.Reload(lCtx, clients)
 }
 
 func (d *Deployment) SetAgencyMaintenanceMode(ctx context.Context, enabled bool) error {
