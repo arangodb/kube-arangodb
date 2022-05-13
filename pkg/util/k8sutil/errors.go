@@ -48,3 +48,7 @@ func IsNotFound(err error) bool {
 func IsInvalid(err error) bool {
 	return apierrors.IsInvalid(errors.Cause(err))
 }
+
+func IsForbiddenOrNotFound(err error) bool {
+	return apierrors.IsNotFound(err) || apierrors.IsForbidden(err)
+}
