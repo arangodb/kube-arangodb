@@ -29,7 +29,6 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
 )
@@ -39,14 +38,14 @@ import (
 // Otherwise the new plan is returned with a boolean true.
 func createHighPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIObject,
 	currentPlan api.Plan, spec api.DeploymentSpec,
-	status api.DeploymentStatus, cachedStatus inspectorInterface.Inspector,
+	status api.DeploymentStatus,
 	builderCtx PlanBuilderContext) (api.Plan, api.BackOff, bool) {
 	if !currentPlan.IsEmpty() {
 		// Plan already exists, complete that first
 		return currentPlan, nil, false
 	}
 
-	r := recoverPlanAppender(log, newPlanAppender(NewWithPlanBuilder(ctx, log, apiObject, spec, status, cachedStatus, builderCtx), status.BackOff, currentPlan).
+	r := recoverPlanAppender(log, newPlanAppender(NewWithPlanBuilder(ctx, log, apiObject, spec, status, builderCtx), status.BackOff, currentPlan).
 		ApplyIfEmpty(updateMemberPodTemplateSpec).
 		ApplyIfEmpty(updateMemberPhasePlan).
 		ApplyIfEmpty(createCleanOutPlan).
@@ -70,14 +69,14 @@ func createHighPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.A
 func updateMemberPodTemplateSpec(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
+	context PlanBuilderContext) api.Plan {
 	var plan api.Plan
 
 	// Update member specs
 	status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
 		for _, m := range members {
 			if m.Phase != api.MemberPhaseNone {
-				if reason, changed := arangoMemberPodTemplateNeedsUpdate(ctx, log, apiObject, spec, group, status, m, cachedStatus, context); changed {
+				if reason, changed := arangoMemberPodTemplateNeedsUpdate(ctx, log, apiObject, spec, group, status, m, context); changed {
 					plan = append(plan, actions.NewAction(api.ActionTypeArangoMemberUpdatePodSpec, group, m, reason))
 				}
 			}
@@ -93,7 +92,7 @@ func updateMemberPodTemplateSpec(ctx context.Context,
 func updateMemberPhasePlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
+	context PlanBuilderContext) api.Plan {
 	var plan api.Plan
 
 	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
@@ -133,7 +132,7 @@ func tlsRotateConditionAction(group api.ServerGroup, memberID string, reason str
 func updateMemberUpdateConditionsPlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
+	context PlanBuilderContext) api.Plan {
 	var plan api.Plan
 
 	if err := status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
@@ -165,17 +164,22 @@ func updateMemberUpdateConditionsPlan(ctx context.Context,
 func updateMemberRotationConditionsPlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
+	context PlanBuilderContext) api.Plan {
 	var plan api.Plan
 
 	if err := status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
 		for _, m := range list {
-			p, ok := cachedStatus.Pod().V1().GetSimple(m.PodName)
+			cache, ok := context.ACS().ClusterCache(m.ClusterID)
+			if !ok {
+				continue
+			}
+
+			p, ok := cache.Pod().V1().GetSimple(m.PodName)
 			if !ok {
 				p = nil
 			}
 
-			if p, err := updateMemberRotationConditions(log, apiObject, spec, cachedStatus, m, group, p); err != nil {
+			if p, err := updateMemberRotationConditions(log, apiObject, spec, m, group, p, context); err != nil {
 				return err
 			} else if len(p) > 0 {
 				plan = append(plan, p...)
@@ -191,17 +195,17 @@ func updateMemberRotationConditionsPlan(ctx context.Context,
 	return plan
 }
 
-func updateMemberRotationConditions(log zerolog.Logger, apiObject k8sutil.APIObject, spec api.DeploymentSpec, cachedStatus inspectorInterface.Inspector, member api.MemberStatus, group api.ServerGroup, p *core.Pod) (api.Plan, error) {
+func updateMemberRotationConditions(log zerolog.Logger, apiObject k8sutil.APIObject, spec api.DeploymentSpec, member api.MemberStatus, group api.ServerGroup, p *core.Pod, context PlanBuilderContext) (api.Plan, error) {
 	if member.Conditions.IsTrue(api.ConditionTypeRestart) {
 		return nil, nil
 	}
 
-	arangoMember, ok := cachedStatus.ArangoMember().V1().GetSimple(member.ArangoMemberName(apiObject.GetName(), group))
+	arangoMember, ok := context.ACS().CurrentClusterCache().ArangoMember().V1().GetSimple(member.ArangoMemberName(apiObject.GetName(), group))
 	if !ok {
 		return nil, nil
 	}
 
-	if m, _, reason, err := rotation.IsRotationRequired(log, cachedStatus, spec, member, group, p, arangoMember.Spec.Template, arangoMember.Status.Template); err != nil {
+	if m, _, reason, err := rotation.IsRotationRequired(log, context.ACS(), spec, member, group, p, arangoMember.Spec.Template, arangoMember.Status.Template); err != nil {
 		log.Error().Err(err).Msgf("Error while getting rotation details")
 		return nil, err
 	} else {

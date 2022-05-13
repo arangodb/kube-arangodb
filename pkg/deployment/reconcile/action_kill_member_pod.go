@@ -30,6 +30,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 func init() {
@@ -67,12 +68,17 @@ func (a *actionKillMemberPod) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	if ifPodUIDMismatch(m, a.action, a.actionCtx.GetCachedStatus()) {
+	cache, ok := a.actionCtx.ACS().ClusterCache(m.ClusterID)
+	if !ok {
+		return true, errors.Newf("Client is not ready")
+	}
+
+	if ifPodUIDMismatch(m, a.action, cache) {
 		log.Error().Msg("Member UID is changed")
 		return true, nil
 	}
 
-	if err := a.actionCtx.DeletePod(ctx, m.PodName, meta.DeleteOptions{}); err != nil {
+	if err := cache.Client().Kubernetes().CoreV1().Secrets(cache.Namespace()).Delete(ctx, m.PodName, meta.DeleteOptions{}); err != nil {
 		log.Error().Err(err).Msg("Unable to kill pod")
 		return true, nil
 	}
@@ -86,6 +92,7 @@ func (a *actionKillMemberPod) CheckProgress(ctx context.Context) (bool, bool, er
 	if !features.GracefulShutdown().Enabled() {
 		return true, false, nil
 	}
+
 	log := a.log
 	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !ok {
@@ -93,7 +100,12 @@ func (a *actionKillMemberPod) CheckProgress(ctx context.Context) (bool, bool, er
 		return true, false, nil
 	}
 
-	p, ok := a.actionCtx.GetCachedStatus().Pod().V1().GetSimple(m.PodName)
+	cache, ok := a.actionCtx.ACS().ClusterCache(m.ClusterID)
+	if !ok {
+		return false, false, errors.Newf("Client is not ready")
+	}
+
+	p, ok := cache.Pod().V1().GetSimple(m.PodName)
 	if !ok {
 		log.Error().Msg("No such member")
 		return true, false, nil

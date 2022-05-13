@@ -54,7 +54,13 @@ func (r *Reconciler) CheckDeployment(ctx context.Context) error {
 		if status.Members.Coordinators.AllFailed() {
 			r.log.Error().Msg("All coordinators failed - reset")
 			for _, m := range status.Members.Coordinators {
-				if err := r.context.DeletePod(ctx, m.PodName, meta.DeleteOptions{}); err != nil {
+				cache, ok := r.context.ACS().ClusterCache(m.ClusterID)
+				if !ok {
+					r.log.Warn().Msg("Cluster is not ready")
+					continue
+				}
+
+				if err := cache.Client().Kubernetes().CoreV1().Secrets(cache.Namespace()).Delete(ctx, m.PodName, meta.DeleteOptions{}); err != nil {
 					r.log.Error().Err(err).Msg("Failed to delete pod")
 				}
 				m.Phase = api.MemberPhaseNone

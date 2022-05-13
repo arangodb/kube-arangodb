@@ -23,12 +23,10 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	core "k8s.io/api/core/v1"
-	apiErrors "k8s.io/apimachinery/pkg/api/errors"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/rs/zerolog"
+	core "k8s.io/api/core/v1"
 )
 
 func init() {
@@ -65,13 +63,15 @@ func (a *actionPVCResized) CheckProgress(ctx context.Context) (bool, bool, error
 		return true, false, nil
 	}
 
-	pvc, err := a.actionCtx.GetPvc(ctx, m.PersistentVolumeClaimName)
-	if err != nil {
-		if apiErrors.IsNotFound(err) {
-			return true, false, nil
-		}
+	cache, ok := a.actionCtx.ACS().ClusterCache(m.ClusterID)
+	if !ok {
+		log.Warn().Msg("Cluster is not ready")
+		return false, false, nil
+	}
 
-		return false, true, err
+	pvc, ok := cache.PersistentVolumeClaim().V1().GetSimple(m.PersistentVolumeClaimName)
+	if !ok {
+		return true, false, nil
 	}
 
 	// If we are pending for FS to be resized - we need to proceed with mounting of PVC

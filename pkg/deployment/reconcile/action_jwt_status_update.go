@@ -90,7 +90,7 @@ func (a *jwtStatusUpdateAction) Start(ctx context.Context) (bool, error) {
 	}
 
 	if !folder {
-		f, ok := a.actionCtx.GetCachedStatus().Secret().V1().GetSimple(a.actionCtx.GetSpec().Authentication.GetJWTSecretName())
+		f, ok := a.actionCtx.ACS().CurrentClusterCache().Secret().V1().GetSimple(a.actionCtx.GetSpec().Authentication.GetJWTSecretName())
 		if !ok {
 			a.log.Error().Msgf("Unable to get JWT secret info")
 			return true, nil
@@ -123,7 +123,7 @@ func (a *jwtStatusUpdateAction) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	f, ok := a.actionCtx.GetCachedStatus().Secret().V1().GetSimple(pod.JWTSecretFolder(a.actionCtx.GetName()))
+	f, ok := a.actionCtx.ACS().CurrentClusterCache().Secret().V1().GetSimple(pod.JWTSecretFolder(a.actionCtx.GetName()))
 	if !ok {
 		a.log.Error().Msgf("Unable to get JWT folder info")
 		return true, nil

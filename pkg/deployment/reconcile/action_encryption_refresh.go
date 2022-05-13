@@ -57,7 +57,7 @@ func (a *encryptionKeyRefreshAction) Start(ctx context.Context) (bool, error) {
 func (a *encryptionKeyRefreshAction) CheckProgress(ctx context.Context) (bool, bool, error) {
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
-	keyfolder, err := a.actionCtx.GetCachedStatus().Secret().V1().Read().Get(ctxChild, pod.GetEncryptionFolderSecretName(a.actionCtx.GetName()), meta.GetOptions{})
+	keyfolder, err := a.actionCtx.ACS().CurrentClusterCache().Secret().V1().Read().Get(ctxChild, pod.GetEncryptionFolderSecretName(a.actionCtx.GetName()), meta.GetOptions{})
 	if err != nil {
 		a.log.Err(err).Msgf("Unable to fetch encryption folder")
 		return true, false, nil

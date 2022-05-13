@@ -54,6 +54,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/acs/sutil"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -288,8 +289,8 @@ func (r *Resources) CreatePodTolerations(group api.ServerGroup, groupSpec api.Se
 	return tolerations
 }
 
-func (r *Resources) RenderPodTemplateForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.PodTemplateSpec, error) {
-	if p, err := r.RenderPodForMember(ctx, cachedStatus, spec, status, memberID, imageInfo); err != nil {
+func (r *Resources) RenderPodTemplateForMember(ctx context.Context, acs sutil.ACS, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.PodTemplateSpec, error) {
+	if p, err := r.RenderPodForMember(ctx, acs, spec, status, memberID, imageInfo); err != nil {
 		return nil, err
 	} else {
 		return &core.PodTemplateSpec{
@@ -299,8 +300,8 @@ func (r *Resources) RenderPodTemplateForMember(ctx context.Context, cachedStatus
 	}
 }
 
-func (r *Resources) RenderPodTemplateForMemberFromCurrent(ctx context.Context, cachedStatus inspectorInterface.Inspector, memberID string) (*core.PodTemplateSpec, error) {
-	if p, err := r.RenderPodForMemberFromCurrent(ctx, cachedStatus, memberID); err != nil {
+func (r *Resources) RenderPodTemplateForMemberFromCurrent(ctx context.Context, acs sutil.ACS, memberID string) (*core.PodTemplateSpec, error) {
+	if p, err := r.RenderPodForMemberFromCurrent(ctx, acs, memberID); err != nil {
 		return nil, err
 	} else {
 		return &core.PodTemplateSpec{
@@ -310,7 +311,7 @@ func (r *Resources) RenderPodTemplateForMemberFromCurrent(ctx context.Context, c
 	}
 }
 
-func (r *Resources) RenderPodForMemberFromCurrent(ctx context.Context, cachedStatus inspectorInterface.Inspector, memberID string) (*core.Pod, error) {
+func (r *Resources) RenderPodForMemberFromCurrent(ctx context.Context, acs sutil.ACS, memberID string) (*core.Pod, error) {
 	spec := r.context.GetSpec()
 	status, _ := r.context.GetStatus()
 
@@ -324,10 +325,10 @@ func (r *Resources) RenderPodForMemberFromCurrent(ctx context.Context, cachedSta
 		return nil, errors.Newf("ImageInfo not found")
 	}
 
-	return r.RenderPodForMember(ctx, cachedStatus, spec, status, member.ID, imageInfo)
+	return r.RenderPodForMember(ctx, acs, spec, status, member.ID, imageInfo)
 }
 
-func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error) {
+func (r *Resources) RenderPodForMember(ctx context.Context, acs sutil.ACS, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error) {
 	log := r.log
 	apiObject := r.context.GetAPIObject()
 	m, group, found := status.Members.ElementByID(memberID)
@@ -338,10 +339,21 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 
 	memberName := m.ArangoMemberName(r.context.GetAPIObject().GetName(), group)
 
-	member, ok := cachedStatus.ArangoMember().V1().GetSimple(memberName)
+	member, ok := acs.CurrentClusterCache().ArangoMember().V1().GetSimple(memberName)
 	if !ok {
 		return nil, errors.Newf("ArangoMember %s not found", memberName)
 	}
+
+	cluster, ok := acs.Cluster(m.ClusterID)
+	if !ok {
+		return nil, errors.Newf("Cluster is not found")
+	}
+
+	if !cluster.Ready() {
+		return nil, errors.Newf("Cluster is not ready")
+	}
+
+	cache := cluster.Cache()
 
 	// Update pod name
 	role := group.AsRole()
@@ -367,7 +379,7 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 			autoUpgrade:      autoUpgrade,
 			deploymentStatus: status,
 			arangoMember:     *member,
-			cachedStatus:     cachedStatus,
+			cachedStatus:     cache,
 		}
 	} else if group.IsArangosync() {
 		// Check image
@@ -395,7 +407,7 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 		return nil, errors.Newf("unable to render Pod")
 	}
 
-	pod, err := RenderArangoPod(ctx, cachedStatus, apiObject, role, newMember.ID, newMember.PodName, podCreator)
+	pod, err := RenderArangoPod(ctx, cache, apiObject, role, newMember.ID, newMember.PodName, podCreator)
 	if err != nil {
 		return nil, err
 	}

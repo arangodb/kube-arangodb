@@ -120,20 +120,20 @@ func (p plannerResources) Set(deployment *api.DeploymentStatus, plan api.Plan) b
 func (d *Reconciler) ExecutePlan(ctx context.Context, cachedStatus inspectorInterface.Inspector) (bool, error) {
 	var callAgain bool
 
-	if again, err := d.executePlanStatus(ctx, cachedStatus, d.log, plannerHigh{}); err != nil {
+	if again, err := d.executePlanStatus(ctx, d.log, plannerHigh{}); err != nil {
 		return false, errors.WithStack(err)
 	} else if again {
 		callAgain = true
 	}
 
-	if again, err := d.executePlanStatus(ctx, cachedStatus, d.log, plannerResources{}); err != nil {
+	if again, err := d.executePlanStatus(ctx, d.log, plannerResources{}); err != nil {
 		d.log.Error().Err(err).Msg("Execution of plan failed")
 		return false, nil
 	} else if again {
 		callAgain = true
 	}
 
-	if again, err := d.executePlanStatus(ctx, cachedStatus, d.log, plannerNormal{}); err != nil {
+	if again, err := d.executePlanStatus(ctx, d.log, plannerNormal{}); err != nil {
 		return false, errors.WithStack(err)
 	} else if again {
 		callAgain = true
@@ -142,7 +142,7 @@ func (d *Reconciler) ExecutePlan(ctx context.Context, cachedStatus inspectorInte
 	return callAgain, nil
 }
 
-func (d *Reconciler) executePlanStatus(ctx context.Context, cachedStatus inspectorInterface.Inspector, log zerolog.Logger, pg planner) (bool, error) {
+func (d *Reconciler) executePlanStatus(ctx context.Context, log zerolog.Logger, pg planner) (bool, error) {
 	loopStatus, _ := d.context.GetStatus()
 
 	plan := pg.Get(&loopStatus)
@@ -151,7 +151,7 @@ func (d *Reconciler) executePlanStatus(ctx context.Context, cachedStatus inspect
 		return false, nil
 	}
 
-	newPlan, callAgain, err := d.executePlan(ctx, cachedStatus, log, plan, pg)
+	newPlan, callAgain, err := d.executePlan(ctx, log, plan, pg)
 
 	// Refresh current status
 	loopStatus, lastVersion := d.context.GetStatus()
@@ -171,7 +171,7 @@ func (d *Reconciler) executePlanStatus(ctx context.Context, cachedStatus inspect
 	return callAgain, nil
 }
 
-func (d *Reconciler) executePlan(ctx context.Context, cachedStatus inspectorInterface.Inspector, log zerolog.Logger, statusPlan api.Plan, pg planner) (newPlan api.Plan, callAgain bool, err error) {
+func (d *Reconciler) executePlan(ctx context.Context, log zerolog.Logger, statusPlan api.Plan, pg planner) (newPlan api.Plan, callAgain bool, err error) {
 	plan := statusPlan.DeepCopy()
 
 	for {
@@ -204,7 +204,7 @@ func (d *Reconciler) executePlan(ctx context.Context, cachedStatus inspectorInte
 
 		log := logContext.Logger()
 
-		action, actionContext := d.createAction(log, planAction, cachedStatus)
+		action, actionContext := d.createAction(log, planAction)
 
 		done, abort, recall, retry, err := d.executeAction(ctx, log, planAction, action)
 		if err != nil {
@@ -248,13 +248,16 @@ func (d *Reconciler) executePlan(ctx context.Context, cachedStatus inspectorInte
 				plan = nil
 			}
 
-			if components := getActionReloadCachedStatus(action); len(components) > 0 {
-				cachedStatus.GetThrottles().Invalidate(components...)
+			if uid, components := getActionReloadCachedStatus(action); len(components) > 0 {
+				c, ok := d.context.ACS().ClusterCache(uid)
+				if ok {
+					c.GetThrottles().Invalidate(components...)
 
-				log.Info().Msgf("Reloading cached status")
-				if err := cachedStatus.Refresh(ctx); err != nil {
-					log.Warn().Err(err).Msgf("Unable to reload cached status")
-					return plan, recall, nil
+					log.Info().Msgf("Reloading cached status")
+					if err := c.Refresh(ctx); err != nil {
+						log.Warn().Err(err).Msgf("Unable to reload cached status")
+						return plan, recall, nil
+					}
 				}
 			}
 
@@ -338,8 +341,8 @@ func (d *Reconciler) executeAction(ctx context.Context, log zerolog.Logger, plan
 }
 
 // createAction create action object based on action type
-func (d *Reconciler) createAction(log zerolog.Logger, action api.Action, cachedStatus inspectorInterface.Inspector) (Action, ActionContext) {
-	actionCtx := newActionContext(log.With().Str("id", action.ID).Str("type", action.Type.String()).Logger(), d.context, cachedStatus)
+func (d *Reconciler) createAction(log zerolog.Logger, action api.Action) (Action, ActionContext) {
+	actionCtx := newActionContext(log.With().Str("id", action.ID).Str("type", action.Type.String()).Logger(), d.context)
 
 	f, ok := getActionFactory(action.Type)
 	if !ok {

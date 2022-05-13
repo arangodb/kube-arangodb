@@ -30,6 +30,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -93,8 +94,17 @@ func (a *actionRotateMember) CheckProgress(ctx context.Context) (bool, bool, err
 		return false, false, nil
 	}
 
+	cache, ok := a.actionCtx.ACS().ClusterCache(m.ClusterID)
+	if !ok {
+		log.Warn().Msg("Cluster is not ready")
+		return false, false, nil
+	}
+
+	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
+	defer cancel()
+
 	// Pod is terminated, we can now remove it
-	if err := a.actionCtx.DeletePod(ctx, m.PodName, meta.DeleteOptions{}); err != nil {
+	if err := cache.Client().Kubernetes().CoreV1().Pods(cache.Namespace()).Delete(ctxChild, m.PodName, meta.DeleteOptions{}); err != nil {
 		if !k8sutil.IsNotFound(err) {
 			log.Error().Err(err).Msg("Unable to delete pod")
 			return false, false, nil

@@ -182,7 +182,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	}
 
 	// Cleanup terminated pods on the beginning of loop
-	if x, err := d.resources.CleanupTerminatedPods(ctx, d.GetCachedStatus()); err != nil {
+	if x, err := d.resources.CleanupTerminatedPods(ctx); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Pod cleanup failed")
 	} else {
 		nextInterval = nextInterval.ReduceTo(x)
@@ -346,7 +346,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	}
 
 	// At the end of the inspect, we cleanup terminated pods.
-	if x, err := d.resources.CleanupTerminatedPods(ctx, d.GetCachedStatus()); err != nil {
+	if x, err := d.resources.CleanupTerminatedPods(ctx); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Pod cleanup failed")
 	} else {
 		nextInterval = nextInterval.ReduceTo(x)

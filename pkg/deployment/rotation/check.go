@@ -25,9 +25,9 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/acs/sutil"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
 )
@@ -56,7 +56,7 @@ func CheckPossible(member api.MemberStatus) bool {
 	return !member.Conditions.IsTrue(api.ConditionTypeTerminated)
 }
 
-func IsRotationRequired(log zerolog.Logger, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, member api.MemberStatus, group api.ServerGroup, pod *core.Pod, specTemplate, statusTemplate *api.ArangoMemberPodTemplate) (mode Mode, plan api.Plan, reason string, err error) {
+func IsRotationRequired(log zerolog.Logger, acs sutil.ACS, spec api.DeploymentSpec, member api.MemberStatus, group api.ServerGroup, pod *core.Pod, specTemplate, statusTemplate *api.ArangoMemberPodTemplate) (mode Mode, plan api.Plan, reason string, err error) {
 	// Determine if rotation is required based on plan and actions
 
 	// Set default mode for return value

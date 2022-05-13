@@ -62,7 +62,7 @@ func (t *tlsSNIUpdate) CheckProgress(ctx context.Context) (bool, bool, error) {
 		return true, false, nil
 	}
 
-	fetchedSecrets, err := mapTLSSNIConfig(*sni, t.actionCtx.GetCachedStatus())
+	fetchedSecrets, err := mapTLSSNIConfig(*sni, t.actionCtx.ACS().CurrentClusterCache())
 	if err != nil {
 		t.log.Warn().Err(err).Msg("Unable to get SNI desired state")
 		return true, false, nil

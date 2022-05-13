@@ -58,7 +58,7 @@ func (a *tlsKeyStatusUpdateAction) Start(ctx context.Context) (bool, error) {
 
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
-	f, err := a.actionCtx.GetCachedStatus().Secret().V1().Read().Get(ctxChild, resources.GetCASecretName(a.actionCtx.GetAPIObject()), meta.GetOptions{})
+	f, err := a.actionCtx.ACS().CurrentClusterCache().Secret().V1().Read().Get(ctxChild, resources.GetCASecretName(a.actionCtx.GetAPIObject()), meta.GetOptions{})
 	if err != nil {
 		a.log.Error().Err(err).Msgf("Unable to get folder info")
 		return true, nil

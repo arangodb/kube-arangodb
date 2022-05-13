@@ -26,7 +26,6 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
 )
@@ -35,11 +34,16 @@ import (
 func createRotateServerStorageResizePlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
+	context PlanBuilderContext) api.Plan {
 	var plan api.Plan
 
 	status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
 		for _, m := range members {
+			cache, ok := context.ACS().ClusterCache(m.ClusterID)
+			if !ok {
+				// Do not work without cache
+				continue
+			}
 			if m.Phase != api.MemberPhaseCreated {
 				// Only make changes when phase is created
 				continue
@@ -56,7 +60,7 @@ func createRotateServerStorageResizePlan(ctx context.Context,
 			}
 
 			// Load PVC
-			pvc, exists := cachedStatus.PersistentVolumeClaim().V1().GetSimple(m.PersistentVolumeClaimName)
+			pvc, exists := cache.PersistentVolumeClaim().V1().GetSimple(m.PersistentVolumeClaimName)
 			if !exists {
 				log.Warn().
 					Str("role", group.AsRole()).
@@ -89,14 +93,14 @@ func createRotateServerStorageResizePlan(ctx context.Context,
 func createRotateServerStoragePVCPendingResizeConditionPlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
+	context PlanBuilderContext) api.Plan {
 	var plan api.Plan
 	for _, i := range status.Members.AsList() {
 		if i.Member.PersistentVolumeClaimName == "" {
 			continue
 		}
 
-		pvc, exists := cachedStatus.PersistentVolumeClaim().V1().GetSimple(i.Member.PersistentVolumeClaimName)
+		pvc, exists := context.ACS().CurrentClusterCache().PersistentVolumeClaim().V1().GetSimple(i.Member.PersistentVolumeClaimName)
 		if !exists {
 			continue
 		}

@@ -26,7 +26,6 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/rs/zerolog"
 )
 
@@ -35,14 +34,14 @@ import (
 // Otherwise the new plan is returned with a boolean true.
 func createNormalPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIObject,
 	currentPlan api.Plan, spec api.DeploymentSpec,
-	status api.DeploymentStatus, cachedStatus inspectorInterface.Inspector,
+	status api.DeploymentStatus,
 	builderCtx PlanBuilderContext) (api.Plan, api.BackOff, bool) {
 	if !currentPlan.IsEmpty() {
 		// Plan already exists, complete that first
 		return currentPlan, nil, false
 	}
 
-	r := recoverPlanAppender(log, newPlanAppender(NewWithPlanBuilder(ctx, log, apiObject, spec, status, cachedStatus, builderCtx), status.BackOff, currentPlan).
+	r := recoverPlanAppender(log, newPlanAppender(NewWithPlanBuilder(ctx, log, apiObject, spec, status, builderCtx), status.BackOff, currentPlan).
 		// Define topology
 		ApplyIfEmpty(createTopologyEnablementPlan).
 		// Adjust topology settings
@@ -90,7 +89,7 @@ func createNormalPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil
 func createMemberFailedRestorePlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
+	context PlanBuilderContext) api.Plan {
 	var plan api.Plan
 
 	// Fetch agency plan
@@ -176,7 +175,7 @@ func createMemberFailedRestorePlan(ctx context.Context,
 func createRemoveCleanedDBServersPlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
+	context PlanBuilderContext) api.Plan {
 	for _, m := range status.Members.DBServers {
 		if !m.Phase.IsReady() {
 			// Ensure that we CleanOut members which are Ready only to ensure data will be moved

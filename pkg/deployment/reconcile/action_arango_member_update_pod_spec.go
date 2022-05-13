@@ -68,7 +68,7 @@ func (a *actionArangoMemberUpdatePodSpec) Start(ctx context.Context) (bool, erro
 		return true, nil
 	}
 
-	member, ok := a.actionCtx.GetCachedStatus().ArangoMember().V1().GetSimple(m.ArangoMemberName(a.actionCtx.GetName(), a.action.Group))
+	member, ok := a.actionCtx.ACS().CurrentClusterCache().ArangoMember().V1().GetSimple(m.ArangoMemberName(a.actionCtx.GetName(), a.action.Group))
 	if !ok {
 		err := errors.Newf("ArangoMember not found")
 		log.Error().Err(err).Msg("ArangoMember not found")
@@ -102,7 +102,7 @@ func (a *actionArangoMemberUpdatePodSpec) Start(ctx context.Context) (bool, erro
 		imageInfo = *m.Image
 	}
 
-	renderedPod, err := a.actionCtx.RenderPodTemplateForMember(ctx, a.actionCtx.GetCachedStatus(), spec, status, a.action.MemberID, imageInfo)
+	renderedPod, err := a.actionCtx.RenderPodTemplateForMember(ctx, a.actionCtx.ACS(), spec, status, a.action.MemberID, imageInfo)
 	if err != nil {
 		log.Err(err).Msg("Error while rendering pod")
 		return false, err
