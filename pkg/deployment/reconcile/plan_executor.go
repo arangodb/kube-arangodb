@@ -94,6 +94,26 @@ func (p plannerHigh) Set(deployment *api.DeploymentStatus, plan api.Plan) bool {
 	return false
 }
 
+type plannerResources struct {
+}
+
+func (p plannerResources) Type() string {
+	return "resources"
+}
+
+func (p plannerResources) Get(deployment *api.DeploymentStatus) api.Plan {
+	return deployment.ResourcesPlan
+}
+
+func (p plannerResources) Set(deployment *api.DeploymentStatus, plan api.Plan) bool {
+	if !deployment.ResourcesPlan.Equal(plan) {
+		deployment.ResourcesPlan = plan
+		return true
+	}
+
+	return false
+}
+
 // ExecutePlan tries to execute the plan as far as possible.
 // Returns true when it has to be called again soon.
 // False otherwise.
@@ -102,6 +122,13 @@ func (d *Reconciler) ExecutePlan(ctx context.Context, cachedStatus inspectorInte
 
 	if again, err := d.executePlanStatus(ctx, cachedStatus, d.log, plannerHigh{}); err != nil {
 		return false, errors.WithStack(err)
+	} else if again {
+		callAgain = true
+	}
+
+	if again, err := d.executePlanStatus(ctx, cachedStatus, d.log, plannerResources{}); err != nil {
+		d.log.Error().Err(err).Msg("Execution of plan failed")
+		return false, nil
 	} else if again {
 		callAgain = true
 	}

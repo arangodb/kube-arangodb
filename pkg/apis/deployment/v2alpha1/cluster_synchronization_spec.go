@@ -20,6 +20,11 @@
 
 package v2alpha1
 
+import (
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/pkg/errors"
+)
+
 type ArangoClusterSynchronizationSpec struct {
 	DeploymentName string                                      `json:"deploymentName,omitempty"`
 	KubeConfig     *ArangoClusterSynchronizationKubeConfigSpec `json:"kubeconfig,omitempty"`
@@ -29,4 +34,16 @@ type ArangoClusterSynchronizationKubeConfigSpec struct {
 	SecretName string `json:"secretName"`
 	SecretKey  string `json:"secretKey"`
 	Namespace  string `json:"namespace"`
+}
+
+func (a *ArangoClusterSynchronizationKubeConfigSpec) Validate() error {
+	if a == nil {
+		return errors.Errorf("KubeConfig Spec cannot be nil")
+	}
+
+	return shared.WithErrors(
+		shared.PrefixResourceError("secretName", shared.ValidateResourceName(a.SecretName)),
+		shared.PrefixResourceError("secretKey", shared.ValidateResourceName(a.SecretKey)),
+		shared.PrefixResourceError("namespace", shared.ValidateResourceName(a.Namespace)),
+	)
 }

@@ -192,6 +192,9 @@ const (
 	// Rebalancer
 	ActionTypeRebalancerGenerate ActionType = "RebalancerGenerate"
 	ActionTypeRebalancerCheck    ActionType = "RebalancerCheck"
+
+	// Resources
+	ActionTypeResourceSync ActionType = "ResourceSync"
 )
 
 const (

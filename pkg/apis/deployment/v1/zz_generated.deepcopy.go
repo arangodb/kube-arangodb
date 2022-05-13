@@ -1133,6 +1133,13 @@ func (in *DeploymentStatus) DeepCopyInto(out *DeploymentStatus) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.ResourcesPlan != nil {
+		in, out := &in.ResourcesPlan, &out.ResourcesPlan
+		*out = make(Plan, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
 	if in.AcceptedSpec != nil {
 		in, out := &in.AcceptedSpec, &out.AcceptedSpec
 		*out = new(DeploymentSpec)
