@@ -26,8 +26,20 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 type ACS interface {
+	ACSItem
+
 	Inspect(ctx context.Context, deployment *api.ArangoDeployment, client kclient.Client, cachedStatus inspectorInterface.Inspector) error
+
+	Cluster(uid types.UID) (ACSItem, bool)
+
+	RemoteClusters() []types.UID
+}
+
+type ACSItem interface {
+	UID() types.UID
+	Cache() inspectorInterface.Inspector
 }

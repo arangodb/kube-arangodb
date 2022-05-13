@@ -213,6 +213,11 @@ func (in *ArangoClusterSynchronizationStatus) DeepCopyInto(out *ArangoClusterSyn
 		*out = new(ArangoClusterSynchronizationDeploymentStatus)
 		**out = **in
 	}
+	if in.RemoteDeployment != nil {
+		in, out := &in.RemoteDeployment, &out.RemoteDeployment
+		*out = new(ArangoClusterSynchronizationDeploymentStatus)
+		**out = **in
+	}
 	if in.Conditions != nil {
 		in, out := &in.Conditions, &out.Conditions
 		*out = make(ConditionList, len(*in))
@@ -1123,6 +1128,13 @@ func (in *DeploymentStatus) DeepCopyInto(out *DeploymentStatus) {
 	}
 	if in.HighPriorityPlan != nil {
 		in, out := &in.HighPriorityPlan, &out.HighPriorityPlan
+		*out = make(Plan, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
+	if in.ResourcesPlan != nil {
+		in, out := &in.ResourcesPlan, &out.ResourcesPlan
 		*out = make(Plan, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])

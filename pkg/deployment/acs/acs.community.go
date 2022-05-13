@@ -28,13 +28,39 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/acs/sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
+	"k8s.io/apimachinery/pkg/types"
 )
 
-func NewACS() sutil.ACS {
-	return acs{}
+func NewACS(main types.UID, cache inspectorInterface.Inspector) sutil.ACS {
+	return acs{
+		main:  main,
+		cache: cache,
+	}
 }
 
 type acs struct {
+	main  types.UID
+	cache inspectorInterface.Inspector
+}
+
+func (a acs) UID() types.UID {
+	return a.main
+}
+
+func (a acs) Cache() inspectorInterface.Inspector {
+	return a.cache
+}
+
+func (a acs) Cluster(uid types.UID) (sutil.ACSItem, bool) {
+	if a.main == uid || uid == "" {
+		return a, true
+	}
+
+	return nil, false
+}
+
+func (a acs) RemoteClusters() []types.UID {
+	return nil
 }
 
 func (a acs) Inspect(ctx context.Context, deployment *api.ArangoDeployment, client kclient.Client, cachedStatus inspectorInterface.Inspector) error {

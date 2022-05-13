@@ -64,6 +64,9 @@ type DeploymentStatus struct {
 	// HighPriorityPlan to update this deployment. Executed before plan
 	HighPriorityPlan Plan `json:"highPriorityPlan,omitempty"`
 
+	// ResourcesPlan to update this deployment. Executed before plan, after highPlan
+	ResourcesPlan Plan `json:"resourcesPlan,omitempty"`
+
 	// AcceptedSpec contains the last specification that was accepted by the operator.
 	AcceptedSpec *DeploymentSpec `json:"accepted-spec,omitempty"`
 
@@ -103,6 +106,8 @@ func (ds *DeploymentStatus) Equal(other DeploymentStatus) bool {
 		ds.Members.Equal(other.Members) &&
 		ds.Conditions.Equal(other.Conditions) &&
 		ds.Plan.Equal(other.Plan) &&
+		ds.HighPriorityPlan.Equal(other.HighPriorityPlan) &&
+		ds.ResourcesPlan.Equal(other.ResourcesPlan) &&
 		ds.AcceptedSpec.Equal(other.AcceptedSpec) &&
 		ds.SecretHashes.Equal(other.SecretHashes) &&
 		ds.Agency.Equal(other.Agency) &&

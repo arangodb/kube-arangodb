@@ -24,23 +24,21 @@ import (
 	"context"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
+	"github.com/rs/zerolog"
 )
 
-const (
-	// Component name for reconciliation of this package
-	reconciliationComponent = "deployment_reconciliation"
-)
+func createResourcesPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIObject,
+	currentPlan api.Plan, spec api.DeploymentSpec,
+	status api.DeploymentStatus, cachedStatus inspectorInterface.Inspector,
+	builderCtx PlanBuilderContext) (api.Plan, api.BackOff, bool) {
+	if !currentPlan.IsEmpty() {
+		// Plan already exists, complete that first
+		return currentPlan, nil, false
+	}
 
-const (
-	BackOffCheck api.BackOffKey = "check"
-	LicenseCheck api.BackOffKey = "license"
-)
+	r := recoverPlanAppender(log, newPlanAppender(NewWithPlanBuilder(ctx, log, apiObject, spec, status, cachedStatus, builderCtx), status.BackOff, currentPlan))
 
-// CreatePlan considers the current specification & status of the deployment creates a plan to
-// get the status in line with the specification.
-// If a plan already exists, nothing is done.
-func (d *Reconciler) CreatePlan(ctx context.Context, cachedStatus inspectorInterface.Inspector) (error, bool) {
-	return d.generatePlan(ctx, cachedStatus, d.generatePlanFunc(createHighPlan, plannerHigh{}), d.generatePlanFunc(createResourcesPlan, plannerResources{}), d.generatePlanFunc(createNormalPlan, plannerNormal{}))
+	return r.Plan(), r.BackOff(), true
 }

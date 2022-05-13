@@ -221,6 +221,8 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 		return nil, errors.WithStack(err)
 	}
 
+	i := inspector.NewInspector(inspector.NewDefaultThrottle(), deps.Client, apiObject.GetNamespace(), apiObject.GetName())
+
 	d := &Deployment{
 		apiObject:    apiObject,
 		name:         apiObject.GetName(),
@@ -230,8 +232,8 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 		eventCh:      make(chan *deploymentEvent, deploymentEventQueueSize),
 		stopCh:       make(chan struct{}),
 		agencyCache:  agency.NewCache(apiObject.Spec.Mode),
-		currentState: inspector.NewInspector(inspector.NewDefaultThrottle(), deps.Client, apiObject.GetNamespace(), apiObject.GetName()),
-		acs:          acs.NewACS(),
+		currentState: i,
+		acs:          acs.NewACS(apiObject.GetUID(), i),
 	}
 
 	d.memberState = memberState.NewStateInspector(d)
