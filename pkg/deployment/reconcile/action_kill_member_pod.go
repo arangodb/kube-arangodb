@@ -78,7 +78,7 @@ func (a *actionKillMemberPod) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	if err := cache.Client().Kubernetes().CoreV1().Secrets(cache.Namespace()).Delete(ctx, m.PodName, meta.DeleteOptions{}); err != nil {
+	if err := cache.Client().Kubernetes().CoreV1().Pods(cache.Namespace()).Delete(ctx, m.PodName, meta.DeleteOptions{}); err != nil {
 		log.Error().Err(err).Msg("Unable to kill pod")
 		return true, nil
 	}
