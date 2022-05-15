@@ -58,6 +58,7 @@ import (
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/acs/sutil"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -567,20 +568,20 @@ func (d *Deployment) GetAgencyData(ctx context.Context, i interface{}, keyParts 
 	return err
 }
 
-func (d *Deployment) RenderPodForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error) {
-	return d.resources.RenderPodForMember(ctx, cachedStatus, spec, status, memberID, imageInfo)
+func (d *Deployment) RenderPodForMember(ctx context.Context, acs sutil.ACS, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error) {
+	return d.resources.RenderPodForMember(ctx, acs, spec, status, memberID, imageInfo)
 }
 
-func (d *Deployment) RenderPodForMemberFromCurrent(ctx context.Context, cachedStatus inspectorInterface.Inspector, memberID string) (*core.Pod, error) {
-	return d.resources.RenderPodForMemberFromCurrent(ctx, cachedStatus, memberID)
+func (d *Deployment) RenderPodForMemberFromCurrent(ctx context.Context, acs sutil.ACS, memberID string) (*core.Pod, error) {
+	return d.resources.RenderPodForMemberFromCurrent(ctx, acs, memberID)
 }
 
-func (d *Deployment) RenderPodTemplateForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.PodTemplateSpec, error) {
-	return d.resources.RenderPodTemplateForMember(ctx, cachedStatus, spec, status, memberID, imageInfo)
+func (d *Deployment) RenderPodTemplateForMember(ctx context.Context, acs sutil.ACS, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.PodTemplateSpec, error) {
+	return d.resources.RenderPodTemplateForMember(ctx, acs, spec, status, memberID, imageInfo)
 }
 
-func (d *Deployment) RenderPodTemplateForMemberFromCurrent(ctx context.Context, cachedStatus inspectorInterface.Inspector, memberID string) (*core.PodTemplateSpec, error) {
-	return d.resources.RenderPodTemplateForMemberFromCurrent(ctx, cachedStatus, memberID)
+func (d *Deployment) RenderPodTemplateForMemberFromCurrent(ctx context.Context, acs sutil.ACS, memberID string) (*core.PodTemplateSpec, error) {
+	return d.resources.RenderPodTemplateForMemberFromCurrent(ctx, acs, memberID)
 }
 
 func (d *Deployment) SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool) {
@@ -709,4 +710,8 @@ func (d *Deployment) GetStatusSnapshot() api.DeploymentStatus {
 	z := s.DeepCopy()
 
 	return *z
+}
+
+func (d *Deployment) ACS() sutil.ACS {
+	return d.acs
 }

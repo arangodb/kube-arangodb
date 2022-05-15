@@ -25,12 +25,10 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/rs/zerolog"
 )
 
@@ -39,7 +37,7 @@ const secretActionParam = "secret"
 func createRestorePlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
+	context PlanBuilderContext) api.Plan {
 	if spec.RestoreFrom == nil && status.Restore != nil {
 		return api.Plan{
 			actions.NewClusterAction(api.ActionTypeBackupRestoreClean),
@@ -110,7 +108,7 @@ func createRestorePlanEncryption(ctx context.Context, log zerolog.Logger, spec a
 		secret := *spec.RestoreEncryptionSecret
 
 		// Additional logic to do restore with encryption key
-		name, _, exists, err := pod.GetEncryptionKey(ctx, builderCtx.GetCachedStatus().Secret().V1().Read(), secret)
+		name, _, exists, err := pod.GetEncryptionKey(ctx, builderCtx.ACS().CurrentClusterCache().Secret().V1().Read(), secret)
 		if err != nil {
 			log.Err(err).Msgf("Unable to fetch encryption key")
 			return false, nil

@@ -43,8 +43,29 @@ type acs struct {
 	cache inspectorInterface.Inspector
 }
 
+func (a acs) ForEachHealthyCluster(f func(item sutil.ACSItem) error) error {
+	return f(a)
+}
+
+func (a acs) CurrentClusterCache() inspectorInterface.Inspector {
+	return a.cache
+}
+
+func (a acs) ClusterCache(uid types.UID) (inspectorInterface.Inspector, bool) {
+	c, ok := a.Cluster(uid)
+	if ok {
+		return c.Cache(), true
+	}
+
+	return nil, false
+}
+
 func (a acs) UID() types.UID {
 	return a.main
+}
+
+func (a acs) Ready() bool {
+	return true
 }
 
 func (a acs) Cache() inspectorInterface.Inspector {

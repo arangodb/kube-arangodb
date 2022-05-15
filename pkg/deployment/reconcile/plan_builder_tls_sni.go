@@ -26,10 +26,8 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
 	"github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -40,7 +38,7 @@ import (
 func createRotateTLSServerSNIPlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, planCtx PlanBuilderContext) api.Plan {
+	planCtx PlanBuilderContext) api.Plan {
 	if !spec.TLS.IsSecure() {
 		return nil
 	}
@@ -54,7 +52,7 @@ func createRotateTLSServerSNIPlan(ctx context.Context,
 		return nil
 	}
 
-	fetchedSecrets, err := mapTLSSNIConfig(*sni, cachedStatus)
+	fetchedSecrets, err := mapTLSSNIConfig(*sni, planCtx.ACS().CurrentClusterCache())
 	if err != nil {
 		log.Warn().Err(err).Msg("Unable to get SNI desired state")
 		return nil

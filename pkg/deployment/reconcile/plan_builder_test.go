@@ -31,9 +31,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
-	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/arangodb/arangosync-client/client"
@@ -44,6 +42,8 @@ import (
 	"github.com/arangodb/go-driver"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/acs"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/acs/sutil"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/member"
@@ -83,6 +83,29 @@ type testContext struct {
 	RecordedEvent    *k8sutil.Event
 
 	Inspector inspectorInterface.Inspector
+}
+
+func (c *testContext) RenderPodForMember(ctx context.Context, acs sutil.ACS, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c *testContext) RenderPodTemplateForMember(ctx context.Context, acs sutil.ACS, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.PodTemplateSpec, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c *testContext) RenderPodForMemberFromCurrent(ctx context.Context, acs sutil.ACS, memberID string) (*core.Pod, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c *testContext) RenderPodTemplateForMemberFromCurrent(ctx context.Context, acs sutil.ACS, memberID string) (*core.PodTemplateSpec, error) {
+	return &core.PodTemplateSpec{}, nil
+}
+
+func (c *testContext) ACS() sutil.ACS {
+	return acs.NewACS("", c.Inspector)
 }
 
 func (c *testContext) GetDatabaseAsyncClient(ctx context.Context) (driver.Client, error) {
@@ -176,10 +199,6 @@ func (c *testContext) ArangoMembersModInterface() arangomemberv1.ModInterface {
 	panic("implement me")
 }
 
-func (c *testContext) GetCachedStatus() inspectorInterface.Inspector {
-	panic("implement me")
-}
-
 func (c *testContext) WithStatusUpdateErr(ctx context.Context, action reconciler.DeploymentStatusUpdateErrFunc, force ...bool) error {
 	_, err := action(&c.ArangoDeployment.Status)
 	return err
@@ -197,20 +216,8 @@ func (c *testContext) GetArangoCli() versioned.Interface {
 	panic("implement me")
 }
 
-func (c *testContext) RenderPodForMemberFromCurrent(ctx context.Context, cachedStatus inspectorInterface.Inspector, memberID string) (*core.Pod, error) {
-	panic("implement me")
-}
-
-func (c *testContext) RenderPodTemplateForMemberFromCurrent(ctx context.Context, cachedStatus inspectorInterface.Inspector, memberID string) (*core.PodTemplateSpec, error) {
-	return &core.PodTemplateSpec{}, nil
-}
-
 func (c *testContext) SelectImageForMember(spec api.DeploymentSpec, status api.DeploymentStatus, member api.MemberStatus) (api.ImageInfo, bool) {
 	return c.SelectImage(spec, status)
-}
-
-func (c *testContext) RenderPodTemplateForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.PodTemplateSpec, error) {
-	panic("implement me")
 }
 
 func (c *testContext) WithArangoMemberUpdate(ctx context.Context, namespace, name string, action reconciler.ArangoMemberUpdateFunc) error {
@@ -234,28 +241,10 @@ func (c *testContext) WithStatusUpdate(ctx context.Context, action reconciler.De
 	return nil
 }
 
-func (c *testContext) GetPod(_ context.Context, podName string) (*core.Pod, error) {
-	if c.ErrPods != nil {
-		return nil, c.ErrPods
-	}
-
-	for _, p := range c.Pods {
-		if p.Name == podName {
-			return p.DeepCopy(), nil
-		}
-	}
-
-	return nil, apiErrors.NewNotFound(schema.GroupResource{}, podName)
-}
-
 func (c *testContext) GetAuthentication() conn.Auth {
 	return func() (authentication driver.Authentication, err error) {
 		return nil, nil
 	}
-}
-
-func (c *testContext) RenderPodForMember(_ context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error) {
-	return &core.Pod{}, nil
 }
 
 func (c *testContext) GetName() string {
@@ -425,12 +414,18 @@ func addAgentsToStatus(t *testing.T, status *api.DeploymentStatus, count int) {
 	}
 }
 
+func newTC(t *testing.T) *testContext {
+	return &testContext{
+		Inspector: tests.NewEmptyInspector(t),
+	}
+}
+
 // TestCreatePlanSingleScale creates a `single` deployment to test the creating of scaling plan.
 func TestCreatePlanSingleScale(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	c := &testContext{}
+	c := newTC(t)
 	log := zerolog.Nop()
 	spec := api.DeploymentSpec{
 		Mode: api.NewMode(api.DeploymentModeSingle),
@@ -451,7 +446,7 @@ func TestCreatePlanSingleScale(t *testing.T) {
 	status.Hashes.TLS.Propagated = true
 	status.Hashes.Encryption.Propagated = true
 
-	newPlan, _, changed := createNormalPlan(ctx, log, depl, nil, spec, status, tests.NewEmptyInspector(t), c)
+	newPlan, _, changed := createNormalPlan(ctx, log, depl, nil, spec, status, c)
 	assert.True(t, changed)
 	assert.Len(t, newPlan, 1)
 
@@ -462,12 +457,12 @@ func TestCreatePlanSingleScale(t *testing.T) {
 			PodName: "something",
 		},
 	}
-	newPlan, _, changed = createNormalPlan(ctx, log, depl, nil, spec, status, tests.NewEmptyInspector(t), c)
+	newPlan, _, changed = createNormalPlan(ctx, log, depl, nil, spec, status, c)
 	assert.True(t, changed)
 	assert.Len(t, newPlan, 0) // Single mode does not scale
 
 	spec.Single.Count = util.NewInt(2)
-	newPlan, _, changed = createNormalPlan(ctx, log, depl, nil, spec, status, tests.NewEmptyInspector(t), c)
+	newPlan, _, changed = createNormalPlan(ctx, log, depl, nil, spec, status, c)
 	assert.True(t, changed)
 	assert.Len(t, newPlan, 0) // Single mode does not scale
 
@@ -483,7 +478,7 @@ func TestCreatePlanSingleScale(t *testing.T) {
 			PodName: "something1",
 		},
 	}
-	newPlan, _, changed = createNormalPlan(ctx, log, depl, nil, spec, status, tests.NewEmptyInspector(t), c)
+	newPlan, _, changed = createNormalPlan(ctx, log, depl, nil, spec, status, c)
 	assert.True(t, changed)
 	assert.Len(t, newPlan, 0) // Single mode does not scale down
 }
@@ -493,7 +488,7 @@ func TestCreatePlanActiveFailoverScale(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	c := &testContext{}
+	c := newTC(t)
 	log := zerolog.Nop()
 	spec := api.DeploymentSpec{
 		Mode: api.NewMode(api.DeploymentModeActiveFailover),
@@ -512,7 +507,7 @@ func TestCreatePlanActiveFailoverScale(t *testing.T) {
 	var status api.DeploymentStatus
 	addAgentsToStatus(t, &status, 3)
 
-	newPlan, _, changed := createNormalPlan(ctx, log, depl, nil, spec, status, tests.NewEmptyInspector(t), c)
+	newPlan, _, changed := createNormalPlan(ctx, log, depl, nil, spec, status, c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 2)
 	assert.Equal(t, api.ActionTypeAddMember, newPlan[0].Type)
@@ -525,7 +520,7 @@ func TestCreatePlanActiveFailoverScale(t *testing.T) {
 			PodName: "something",
 		},
 	}
-	newPlan, _, changed = createNormalPlan(ctx, log, depl, nil, spec, status, tests.NewEmptyInspector(t), c)
+	newPlan, _, changed = createNormalPlan(ctx, log, depl, nil, spec, status, c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 1)
 	assert.Equal(t, api.ActionTypeAddMember, newPlan[0].Type)
@@ -550,7 +545,7 @@ func TestCreatePlanActiveFailoverScale(t *testing.T) {
 			PodName: "something4",
 		},
 	}
-	newPlan, _, changed = createNormalPlan(ctx, log, depl, nil, spec, status, tests.NewEmptyInspector(t), c)
+	newPlan, _, changed = createNormalPlan(ctx, log, depl, nil, spec, status, c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 3) // Note: Downscaling is only down 1 at a time
 	assert.Equal(t, api.ActionTypeKillMemberPod, newPlan[0].Type)
@@ -566,7 +561,7 @@ func TestCreatePlanClusterScale(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	c := &testContext{}
+	c := newTC(t)
 	log := zerolog.Nop()
 	spec := api.DeploymentSpec{
 		Mode: api.NewMode(api.DeploymentModeCluster),
@@ -584,7 +579,7 @@ func TestCreatePlanClusterScale(t *testing.T) {
 	var status api.DeploymentStatus
 	addAgentsToStatus(t, &status, 3)
 
-	newPlan, _, changed := createNormalPlan(ctx, log, depl, nil, spec, status, tests.NewEmptyInspector(t), c)
+	newPlan, _, changed := createNormalPlan(ctx, log, depl, nil, spec, status, c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 6) // Adding 3 dbservers & 3 coordinators (note: agents do not scale now)
 	assert.Equal(t, api.ActionTypeAddMember, newPlan[0].Type)
@@ -617,7 +612,7 @@ func TestCreatePlanClusterScale(t *testing.T) {
 			PodName: "coordinator1",
 		},
 	}
-	newPlan, _, changed = createNormalPlan(ctx, log, depl, nil, spec, status, tests.NewEmptyInspector(t), c)
+	newPlan, _, changed = createNormalPlan(ctx, log, depl, nil, spec, status, c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 3)
 	assert.Equal(t, api.ActionTypeAddMember, newPlan[0].Type)
@@ -654,7 +649,7 @@ func TestCreatePlanClusterScale(t *testing.T) {
 	}
 	spec.DBServers.Count = util.NewInt(1)
 	spec.Coordinators.Count = util.NewInt(1)
-	newPlan, _, changed = createNormalPlan(ctx, log, depl, nil, spec, status, tests.NewEmptyInspector(t), c)
+	newPlan, _, changed = createNormalPlan(ctx, log, depl, nil, spec, status, c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 7) // Note: Downscaling is done 1 at a time
 	assert.Equal(t, api.ActionTypeCleanOutMember, newPlan[0].Type)
@@ -962,9 +957,7 @@ func TestCreatePlan(t *testing.T) {
 			},
 			Extender: func(t *testing.T, r *Reconciler, c *testCase) {
 				// Add ArangoMember
-				builderCtx := newPlanBuilderContext(r.context)
-
-				template, err := builderCtx.RenderPodTemplateForMemberFromCurrent(context.Background(), c.Inspector(t), c.context.ArangoDeployment.Status.Members.Agents[0].ID)
+				template, err := newPlanBuilderContext(r.context).RenderPodTemplateForMemberFromCurrent(context.Background(), c.context.ACS(), c.context.ArangoDeployment.Status.Members.Agents[0].ID)
 				require.NoError(t, err)
 
 				checksum, err := resources.ChecksumArangoPod(c.context.ArangoDeployment.Spec.Agents, resources.CreatePodFromTemplate(template))
@@ -1180,6 +1173,10 @@ func TestCreatePlan(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
+			i := testCase.Inspector(t)
+
+			testCase.context.Inspector = i
+
 			h := &LastLogRecord{t: t}
 			logger := zerolog.New(ioutil.Discard).Hook(h)
 			r := NewReconciler(logger, testCase.context)
@@ -1193,7 +1190,7 @@ func TestCreatePlan(t *testing.T) {
 				testCase.Helper(testCase.context.ArangoDeployment)
 			}
 
-			err, _ := r.CreatePlan(ctx, testCase.Inspector(t))
+			err, _ := r.CreatePlan(ctx, i)
 
 			// Assert
 			if testCase.ExpectedEvent != nil {

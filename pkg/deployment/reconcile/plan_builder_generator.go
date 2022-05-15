@@ -27,7 +27,6 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/rs/zerolog"
 )
 
@@ -40,19 +39,19 @@ type planGenerationOutput struct {
 
 type planGeneratorFunc func(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIObject,
 	currentPlan api.Plan, spec api.DeploymentSpec,
-	status api.DeploymentStatus, cachedStatus inspectorInterface.Inspector,
+	status api.DeploymentStatus,
 	builderCtx PlanBuilderContext) (api.Plan, api.BackOff, bool)
 
-type planGenerator func(ctx context.Context, cachedStatus inspectorInterface.Inspector) planGenerationOutput
+type planGenerator func(ctx context.Context) planGenerationOutput
 
 func (d *Reconciler) generatePlanFunc(gen planGeneratorFunc, planner planner) planGenerator {
-	return func(ctx context.Context, cachedStatus inspectorInterface.Inspector) planGenerationOutput {
+	return func(ctx context.Context) planGenerationOutput {
 		// Create plan
 		apiObject := d.context.GetAPIObject()
 		spec := d.context.GetSpec()
 		status, _ := d.context.GetStatus()
 		builderCtx := newPlanBuilderContext(d.context)
-		newPlan, backoffs, changed := gen(ctx, d.log, apiObject, planner.Get(&status), spec, status, cachedStatus, builderCtx)
+		newPlan, backoffs, changed := gen(ctx, d.log, apiObject, planner.Get(&status), spec, status, builderCtx)
 
 		return planGenerationOutput{
 			plan:    newPlan,
@@ -63,7 +62,7 @@ func (d *Reconciler) generatePlanFunc(gen planGeneratorFunc, planner planner) pl
 	}
 }
 
-func (d *Reconciler) generatePlan(ctx context.Context, cachedStatus inspectorInterface.Inspector, generators ...planGenerator) (error, bool) {
+func (d *Reconciler) generatePlan(ctx context.Context, generators ...planGenerator) (error, bool) {
 	updated := false
 	updateRequired := false
 
@@ -71,7 +70,7 @@ func (d *Reconciler) generatePlan(ctx context.Context, cachedStatus inspectorInt
 		var b api.BackOff
 
 		for id := range generators {
-			result := generators[id](ctx, cachedStatus)
+			result := generators[id](ctx)
 
 			b = b.CombineLatest(result.backoff)
 

@@ -27,9 +27,8 @@ import (
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/acs/sutil"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
-	core "k8s.io/api/core/v1"
 )
 
 // PlanBuilderContext contains context methods provided to plan builders.
@@ -40,16 +39,11 @@ type PlanBuilderContext interface {
 	reconciler.DeploymentPodRenderer
 	reconciler.DeploymentImageManager
 	reconciler.DeploymentModInterfaces
-	reconciler.DeploymentCachedStatus
 	reconciler.ArangoAgencyGet
 	reconciler.DeploymentClient
 	reconciler.KubernetesEventGenerator
 
-	// GetTLSKeyfile returns the keyfile encoded TLS certificate+key for
-	// the given member.
-	GetTLSKeyfile(group api.ServerGroup, member api.MemberStatus) (string, error)
-	// GetPvc gets a PVC by the given name, in the samespace of the deployment.
-	GetPvc(ctx context.Context, pvcName string) (*core.PersistentVolumeClaim, error)
+	sutil.ACSGetter
 	// GetAuthentication return authentication for members
 	GetAuthentication() conn.Auth
 	// GetBackup receives information about a backup resource

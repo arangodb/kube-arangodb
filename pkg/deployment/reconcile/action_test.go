@@ -41,7 +41,7 @@ var _ ActionStartFailureGracePeriod = gracefulAction{}
 
 func Test_GracefulTimeouts(t *testing.T) {
 	t.Run("Default", func(t *testing.T) {
-		require.EqualValues(t, 0, getStartFailureGracePeriod(actionEmpty{}))
+		require.EqualValues(t, DefaultStartFailureGracePeriod, getStartFailureGracePeriod(actionEmpty{}))
 	})
 	t.Run("Set", func(t *testing.T) {
 		require.EqualValues(t, time.Second, getStartFailureGracePeriod(gracefulAction{

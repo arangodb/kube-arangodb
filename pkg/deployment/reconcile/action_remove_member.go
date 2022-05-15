@@ -66,6 +66,12 @@ func (a *actionRemoveMember) Start(ctx context.Context) (bool, error) {
 		// We wanted to remove and it is already gone. All ok
 		return true, nil
 	}
+
+	cache, ok := a.actionCtx.ACS().ClusterCache(m.ClusterID)
+	if !ok {
+		return true, errors.Newf("Cluster is not ready")
+	}
+
 	// For safety, remove from cluster
 	if a.action.Group == api.ServerGroupCoordinators || a.action.Group == api.ServerGroupDBServers {
 		ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
@@ -106,7 +112,7 @@ func (a *actionRemoveMember) Start(ctx context.Context) (bool, error) {
 	}
 	if m.PodName != "" {
 		// Remove the pod (if any)
-		if err := a.actionCtx.DeletePod(ctx, m.PodName, meta.DeleteOptions{}); err != nil {
+		if err := cache.Client().Kubernetes().CoreV1().Pods(cache.Namespace()).Delete(ctx, m.PodName, meta.DeleteOptions{}); err != nil {
 			if !apiErrors.IsNotFound(err) {
 				return false, errors.WithStack(err)
 			}
@@ -114,7 +120,7 @@ func (a *actionRemoveMember) Start(ctx context.Context) (bool, error) {
 	}
 	// Remove the pvc (if any)
 	if m.PersistentVolumeClaimName != "" {
-		if err := a.actionCtx.DeletePvc(ctx, m.PersistentVolumeClaimName); err != nil {
+		if err := cache.Client().Kubernetes().CoreV1().PersistentVolumeClaims(cache.Namespace()).Delete(ctx, m.PersistentVolumeClaimName, meta.DeleteOptions{}); err != nil {
 			if !apiErrors.IsNotFound(err) {
 				return false, errors.WithStack(err)
 			}

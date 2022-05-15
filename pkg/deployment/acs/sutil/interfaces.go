@@ -29,12 +29,20 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
+type ACSGetter interface {
+	ACS() ACS
+}
+
 type ACS interface {
 	ACSItem
 
 	Inspect(ctx context.Context, deployment *api.ArangoDeployment, client kclient.Client, cachedStatus inspectorInterface.Inspector) error
 
 	Cluster(uid types.UID) (ACSItem, bool)
+	CurrentClusterCache() inspectorInterface.Inspector
+	ClusterCache(uid types.UID) (inspectorInterface.Inspector, bool)
+
+	ForEachHealthyCluster(f func(item ACSItem) error) error
 
 	RemoteClusters() []types.UID
 }
@@ -42,4 +50,5 @@ type ACS interface {
 type ACSItem interface {
 	UID() types.UID
 	Cache() inspectorInterface.Inspector
+	Ready() bool
 }

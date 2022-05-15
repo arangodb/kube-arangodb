@@ -25,14 +25,13 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/rs/zerolog"
 )
 
 func createBackupInProgressConditionPlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
+	context PlanBuilderContext) api.Plan {
 
 	if spec.Mode.Get() != api.DeploymentModeCluster {
 		return nil
@@ -81,7 +80,7 @@ func createBackupInProgressConditionPlan(ctx context.Context,
 func createMaintenanceConditionPlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
+	context PlanBuilderContext) api.Plan {
 
 	if spec.Mode.Get() != api.DeploymentModeCluster {
 		return nil

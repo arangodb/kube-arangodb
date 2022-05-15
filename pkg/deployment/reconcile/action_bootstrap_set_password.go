@@ -138,7 +138,7 @@ func (a actionBootstrapSetPassword) setUserPassword(ctx context.Context, user, s
 }
 
 func (a actionBootstrapSetPassword) ensureUserPasswordSecret(ctx context.Context, user, secret string) (string, error) {
-	if auth, ok := a.actionCtx.GetCachedStatus().Secret().V1().GetSimple(secret); !ok {
+	if auth, ok := a.actionCtx.ACS().CurrentClusterCache().Secret().V1().GetSimple(secret); !ok {
 		// Create new one
 		tokenData := make([]byte, 32)
 		if _, err := rand.Read(tokenData); err != nil {

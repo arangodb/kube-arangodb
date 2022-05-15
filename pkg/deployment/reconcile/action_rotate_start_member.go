@@ -87,6 +87,12 @@ func (a *actionRotateStartMember) CheckProgress(ctx context.Context) (bool, bool
 		return true, false, nil
 	}
 
+	cache, ok := a.actionCtx.ACS().ClusterCache(m.ClusterID)
+	if !ok {
+		log.Warn().Msg("Cluster is not ready")
+		return false, false, nil
+	}
+
 	if ready, abort, err := shutdown.CheckProgress(ctx); err != nil {
 		return false, abort, err
 	} else if !ready {
@@ -94,7 +100,7 @@ func (a *actionRotateStartMember) CheckProgress(ctx context.Context) (bool, bool
 	}
 
 	// Pod is terminated, we can now remove it
-	if err := a.actionCtx.DeletePod(ctx, m.PodName, meta.DeleteOptions{}); err != nil {
+	if err := cache.Client().Kubernetes().CoreV1().Pods(cache.Namespace()).Delete(ctx, m.PodName, meta.DeleteOptions{}); err != nil {
 		if !k8sutil.IsNotFound(err) {
 			log.Error().Err(err).Msg("Unable to delete pod")
 			return false, false, nil

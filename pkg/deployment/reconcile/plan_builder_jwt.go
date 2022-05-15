@@ -26,10 +26,8 @@ import (
 	"sort"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 
@@ -48,18 +46,18 @@ import (
 func createJWTKeyUpdate(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
+	context PlanBuilderContext) api.Plan {
 	if folder, err := ensureJWTFolderSupport(spec, status); err != nil || !folder {
 		return nil
 	}
 
-	folder, ok := cachedStatus.Secret().V1().GetSimple(pod.JWTSecretFolder(apiObject.GetName()))
+	folder, ok := context.ACS().CurrentClusterCache().Secret().V1().GetSimple(pod.JWTSecretFolder(apiObject.GetName()))
 	if !ok {
 		log.Error().Msgf("Unable to get JWT folder info")
 		return nil
 	}
 
-	s, ok := cachedStatus.Secret().V1().GetSimple(spec.Authentication.GetJWTSecretName())
+	s, ok := context.ACS().CurrentClusterCache().Secret().V1().GetSimple(spec.Authentication.GetJWTSecretName())
 	if !ok {
 		log.Info().Msgf("JWT Secret is missing, no rotation will take place")
 		return nil
@@ -119,12 +117,12 @@ func createJWTKeyUpdate(ctx context.Context,
 func createJWTStatusUpdate(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
+	context PlanBuilderContext) api.Plan {
 	if _, err := ensureJWTFolderSupport(spec, status); err != nil {
 		return nil
 	}
 
-	if createJWTStatusUpdateRequired(log, apiObject, spec, status, cachedStatus) {
+	if createJWTStatusUpdateRequired(log, apiObject, spec, status, context) {
 		return addJWTPropagatedPlanAction(status, actions.NewClusterAction(api.ActionTypeJWTStatusUpdate, "Update status"))
 	}
 
@@ -132,7 +130,7 @@ func createJWTStatusUpdate(ctx context.Context,
 }
 
 func createJWTStatusUpdateRequired(log zerolog.Logger, apiObject k8sutil.APIObject, spec api.DeploymentSpec,
-	status api.DeploymentStatus, cachedStatus inspectorInterface.Inspector) bool {
+	status api.DeploymentStatus, context PlanBuilderContext) bool {
 	folder, err := ensureJWTFolderSupport(spec, status)
 	if err != nil {
 		log.Error().Err(err).Msgf("Action not supported")
@@ -144,7 +142,7 @@ func createJWTStatusUpdateRequired(log zerolog.Logger, apiObject k8sutil.APIObje
 			return true
 		}
 
-		f, ok := cachedStatus.Secret().V1().GetSimple(spec.Authentication.GetJWTSecretName())
+		f, ok := context.ACS().CurrentClusterCache().Secret().V1().GetSimple(spec.Authentication.GetJWTSecretName())
 		if !ok {
 			log.Error().Msgf("Unable to get JWT secret info")
 			return false
@@ -166,7 +164,7 @@ func createJWTStatusUpdateRequired(log zerolog.Logger, apiObject k8sutil.APIObje
 		return false
 	}
 
-	f, ok := cachedStatus.Secret().V1().GetSimple(pod.JWTSecretFolder(apiObject.GetName()))
+	f, ok := context.ACS().CurrentClusterCache().Secret().V1().GetSimple(pod.JWTSecretFolder(apiObject.GetName()))
 	if !ok {
 		log.Error().Msgf("Unable to get JWT folder info")
 		return false

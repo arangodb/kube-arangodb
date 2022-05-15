@@ -23,15 +23,14 @@ package resources
 import (
 	"context"
 
-	core "k8s.io/api/core/v1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/acs/sutil"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/member"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	core "k8s.io/api/core/v1"
 )
 
 // Context provides all functions needed by the Resources service
@@ -52,6 +51,8 @@ type Context interface {
 
 	member.StateInspectorGetter
 
+	sutil.ACSGetter
+
 	// GetServerGroupIterator returns the deployment as ServerGroupIterator.
 	GetServerGroupIterator() reconciler.ServerGroupIterator
 	// UpdateStatus replaces the status of the deployment with the given status and
@@ -66,15 +67,6 @@ type Context interface {
 	CreateEvent(evt *k8sutil.Event)
 	// GetOwnedPVCs returns a list of all PVCs owned by the deployment.
 	GetOwnedPVCs() ([]core.PersistentVolumeClaim, error)
-	// CleanupPod deletes a given pod with force and explicit UID.
-	// If the pod does not exist, the error is ignored.
-	CleanupPod(ctx context.Context, p *core.Pod) error
-	// DeletePod deletes a pod with given name in the namespace
-	// of the deployment. If the pod does not exist, the error is ignored.
-	DeletePod(ctx context.Context, podName string, options meta.DeleteOptions) error
-	// DeletePvc deletes a persistent volume claim with given name in the namespace
-	// of the deployment. If the pvc does not exist, the error is ignored.
-	DeletePvc(ctx context.Context, pvcName string) error
 	// GetBackup receives information about a backup resource
 	GetBackup(ctx context.Context, backup string) (*backupApi.ArangoBackup, error)
 	GetScope() scope.Scope

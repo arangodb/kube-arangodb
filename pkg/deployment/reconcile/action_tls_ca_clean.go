@@ -71,13 +71,13 @@ func (a *cleanTLSCACertificateAction) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	caSecret, exists := a.actionCtx.GetCachedStatus().Secret().V1().GetSimple(a.actionCtx.GetSpec().TLS.GetCASecretName())
+	caSecret, exists := a.actionCtx.ACS().CurrentClusterCache().Secret().V1().GetSimple(a.actionCtx.GetSpec().TLS.GetCASecretName())
 	if !exists {
 		a.log.Warn().Msgf("Secret %s is missing", a.actionCtx.GetSpec().TLS.GetCASecretName())
 		return true, nil
 	}
 
-	caFolder, exists := a.actionCtx.GetCachedStatus().Secret().V1().GetSimple(resources.GetCASecretName(a.actionCtx.GetAPIObject()))
+	caFolder, exists := a.actionCtx.ACS().CurrentClusterCache().Secret().V1().GetSimple(resources.GetCASecretName(a.actionCtx.GetAPIObject()))
 	if !exists {
 		a.log.Warn().Msgf("Secret %s is missing", resources.GetCASecretName(a.actionCtx.GetAPIObject()))
 		return true, nil

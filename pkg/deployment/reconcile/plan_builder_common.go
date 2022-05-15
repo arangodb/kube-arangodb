@@ -29,7 +29,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/rs/zerolog"
 )
 
@@ -42,7 +41,7 @@ var (
 func cleanupConditions(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, planCtx PlanBuilderContext) api.Plan {
+	planCtx PlanBuilderContext) api.Plan {
 	var p api.Plan
 
 	for _, c := range ObsoleteClusterConditions {
@@ -57,7 +56,7 @@ func cleanupConditions(ctx context.Context,
 func createMaintenanceManagementPlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, planCtx PlanBuilderContext) api.Plan {
+	planCtx PlanBuilderContext) api.Plan {
 	if spec.Mode.Get() == api.DeploymentModeSingle {
 		return nil
 	}

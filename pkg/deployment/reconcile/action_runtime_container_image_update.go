@@ -65,7 +65,7 @@ func (a actionRuntimeContainerImageUpdate) Post(ctx context.Context) error {
 		return nil
 	}
 
-	member, ok := a.actionCtx.GetCachedStatus().ArangoMember().V1().GetSimple(m.ArangoMemberName(a.actionCtx.GetName(), a.action.Group))
+	member, ok := a.actionCtx.ACS().CurrentClusterCache().ArangoMember().V1().GetSimple(m.ArangoMemberName(a.actionCtx.GetName(), a.action.Group))
 	if !ok {
 		err := errors.Newf("ArangoMember not found")
 		a.log.Error().Err(err).Msg("ArangoMember not found")
@@ -129,6 +129,11 @@ func (a actionRuntimeContainerImageUpdate) Start(ctx context.Context) (bool, err
 		return true, nil
 	}
 
+	cache, ok := a.actionCtx.ACS().ClusterCache(m.ClusterID)
+	if !ok {
+		return true, errors.Newf("Client is not ready")
+	}
+
 	name, image, ok := a.getContainerDetails()
 	if !ok {
 		a.log.Info().Msg("Unable to find container details")
@@ -140,14 +145,14 @@ func (a actionRuntimeContainerImageUpdate) Start(ctx context.Context) (bool, err
 		return true, nil
 	}
 
-	member, ok := a.actionCtx.GetCachedStatus().ArangoMember().V1().GetSimple(m.ArangoMemberName(a.actionCtx.GetName(), a.action.Group))
+	member, ok := a.actionCtx.ACS().CurrentClusterCache().ArangoMember().V1().GetSimple(m.ArangoMemberName(a.actionCtx.GetName(), a.action.Group))
 	if !ok {
 		err := errors.Newf("ArangoMember not found")
 		a.log.Error().Err(err).Msg("ArangoMember not found")
 		return false, err
 	}
 
-	pod, ok := a.actionCtx.GetCachedStatus().Pod().V1().GetSimple(m.PodName)
+	pod, ok := cache.Pod().V1().GetSimple(m.PodName)
 	if !ok {
 		a.log.Info().Msg("pod is not present")
 		return true, nil
@@ -209,7 +214,13 @@ func (a actionRuntimeContainerImageUpdate) CheckProgress(ctx context.Context) (b
 		return true, false, nil
 	}
 
-	pod, ok := a.actionCtx.GetCachedStatus().Pod().V1().GetSimple(m.PodName)
+	cache, ok := a.actionCtx.ACS().ClusterCache(m.ClusterID)
+	if !ok {
+		a.log.Info().Msg("Cluster is not ready")
+		return false, false, nil
+	}
+
+	pod, ok := cache.Pod().V1().GetSimple(m.PodName)
 	if !ok {
 		a.log.Info().Msg("pod is not present")
 		return true, false, nil

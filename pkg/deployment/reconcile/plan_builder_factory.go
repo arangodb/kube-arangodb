@@ -25,37 +25,35 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/rs/zerolog"
 )
 
 type planBuilder func(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan
+	context PlanBuilderContext) api.Plan
 
 type planBuilderCondition func(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) bool
+	context PlanBuilderContext) bool
 
 type planBuilderSubPlan func(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext, w WithPlanBuilder, plans ...planBuilder) api.Plan
+	context PlanBuilderContext, w WithPlanBuilder, plans ...planBuilder) api.Plan
 
 func NewWithPlanBuilder(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) WithPlanBuilder {
+	context PlanBuilderContext) WithPlanBuilder {
 	return &withPlanBuilder{
-		ctx:          ctx,
-		log:          log,
-		apiObject:    apiObject,
-		spec:         spec,
-		status:       status,
-		cachedStatus: cachedStatus,
-		context:      context,
+		ctx:       ctx,
+		log:       log,
+		apiObject: apiObject,
+		spec:      spec,
+		status:    status,
+		context:   context,
 	}
 }
 
@@ -66,17 +64,16 @@ type WithPlanBuilder interface {
 }
 
 type withPlanBuilder struct {
-	ctx          context.Context
-	log          zerolog.Logger
-	apiObject    k8sutil.APIObject
-	spec         api.DeploymentSpec
-	status       api.DeploymentStatus
-	cachedStatus inspectorInterface.Inspector
-	context      PlanBuilderContext
+	ctx       context.Context
+	log       zerolog.Logger
+	apiObject k8sutil.APIObject
+	spec      api.DeploymentSpec
+	status    api.DeploymentStatus
+	context   PlanBuilderContext
 }
 
 func (w withPlanBuilder) ApplyWithCondition(c planBuilderCondition, p planBuilder) api.Plan {
-	if !c(w.ctx, w.log, w.apiObject, w.spec, w.status, w.cachedStatus, w.context) {
+	if !c(w.ctx, w.log, w.apiObject, w.spec, w.status, w.context) {
 		return api.Plan{}
 	}
 
@@ -84,9 +81,9 @@ func (w withPlanBuilder) ApplyWithCondition(c planBuilderCondition, p planBuilde
 }
 
 func (w withPlanBuilder) ApplySubPlan(p planBuilderSubPlan, plans ...planBuilder) api.Plan {
-	return p(w.ctx, w.log, w.apiObject, w.spec, w.status, w.cachedStatus, w.context, w, plans...)
+	return p(w.ctx, w.log, w.apiObject, w.spec, w.status, w.context, w, plans...)
 }
 
 func (w withPlanBuilder) Apply(p planBuilder) api.Plan {
-	return p(w.ctx, w.log, w.apiObject, w.spec, w.status, w.cachedStatus, w.context)
+	return p(w.ctx, w.log, w.apiObject, w.spec, w.status, w.context)
 }

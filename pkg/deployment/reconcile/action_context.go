@@ -23,19 +23,18 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/arangosync-client/client"
+	"github.com/arangodb/go-driver/agency"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	core "k8s.io/api/core/v1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/arangodb/arangosync-client/client"
-	"github.com/arangodb/go-driver/agency"
 
 	"time"
 
 	"github.com/arangodb/go-driver"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/acs/sutil"
 	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/member"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
@@ -59,13 +58,14 @@ type ActionContext interface {
 	reconciler.ArangoMemberContext
 	reconciler.DeploymentPodRenderer
 	reconciler.DeploymentModInterfaces
-	reconciler.DeploymentCachedStatus
 	reconciler.ArangoAgencyGet
 	reconciler.DeploymentInfoGetter
 	reconciler.DeploymentClient
 	reconciler.DeploymentSyncClient
 
 	member.StateInspectorGetter
+
+	sutil.ACSGetter
 
 	ActionLocalsContext
 
@@ -86,28 +86,6 @@ type ActionContext interface {
 	UpdateMember(ctx context.Context, member api.MemberStatus) error
 	// RemoveMemberByID removes a member with given id.
 	RemoveMemberByID(ctx context.Context, id string) error
-	// GetPod returns pod.
-	GetPod(ctx context.Context, podName string) (*core.Pod, error)
-	// DeletePod deletes a pod with given name in the namespace
-	// of the deployment. If the pod does not exist, the error is ignored.
-	DeletePod(ctx context.Context, podName string, options meta.DeleteOptions) error
-	// DeletePvc deletes a persistent volume claim with given name in the namespace
-	// of the deployment. If the pvc does not exist, the error is ignored.
-	DeletePvc(ctx context.Context, pvcName string) error
-	// GetPvc returns PVC info about PVC with given name in the namespace
-	// of the deployment.
-	GetPvc(ctx context.Context, pvcName string) (*core.PersistentVolumeClaim, error)
-	// UpdatePvc update PVC with given name in the namespace
-	// of the deployment.
-	UpdatePvc(ctx context.Context, pvc *core.PersistentVolumeClaim) error
-	// RemovePodFinalizers removes all the finalizers from the Pod with given name in the namespace
-	// of the deployment. If the pod does not exist, the error is ignored.
-	RemovePodFinalizers(ctx context.Context, podName string) error
-	// DeleteTLSKeyfile removes the Secret containing the TLS keyfile for the given member.
-	// If the secret does not exist, the error is ignored.
-	DeleteTLSKeyfile(ctx context.Context, group api.ServerGroup, member api.MemberStatus) error
-	// DeleteTLSCASecret removes the Secret containing the TLS CA certificate.
-	DeleteTLSCASecret(ctx context.Context) error
 	// GetImageInfo returns the image info for an image with given name.
 	// Returns: (info, infoFound)
 	GetImageInfo(imageName string) (api.ImageInfo, bool)
@@ -139,11 +117,10 @@ type ActionLocalsContext interface {
 }
 
 // newActionContext creates a new ActionContext implementation.
-func newActionContext(log zerolog.Logger, context Context, cachedStatus inspectorInterface.Inspector) ActionContext {
+func newActionContext(log zerolog.Logger, context Context) ActionContext {
 	return &actionContext{
-		log:          log,
-		context:      context,
-		cachedStatus: cachedStatus,
+		log:     log,
+		context: context,
 	}
 }
 
@@ -153,6 +130,10 @@ type actionContext struct {
 	log          zerolog.Logger
 	cachedStatus inspectorInterface.Inspector
 	locals       api.PlanLocals
+}
+
+func (ac *actionContext) ACS() sutil.ACS {
+	return ac.context.ACS()
 }
 
 func (ac *actionContext) GetDatabaseAsyncClient(ctx context.Context) (driver.Client, error) {
@@ -211,24 +192,24 @@ func (ac *actionContext) GetAgencyCache() (agencyCache.State, bool) {
 	return ac.context.GetAgencyCache()
 }
 
-func (ac *actionContext) RenderPodForMemberFromCurrent(ctx context.Context, cachedStatus inspectorInterface.Inspector, memberID string) (*core.Pod, error) {
-	return ac.context.RenderPodForMemberFromCurrent(ctx, cachedStatus, memberID)
+func (ac *actionContext) RenderPodForMemberFromCurrent(ctx context.Context, acs sutil.ACS, memberID string) (*core.Pod, error) {
+	return ac.context.RenderPodForMemberFromCurrent(ctx, acs, memberID)
 }
 
-func (ac *actionContext) RenderPodTemplateForMemberFromCurrent(ctx context.Context, cachedStatus inspectorInterface.Inspector, memberID string) (*core.PodTemplateSpec, error) {
-	return ac.context.RenderPodTemplateForMemberFromCurrent(ctx, cachedStatus, memberID)
+func (ac *actionContext) RenderPodTemplateForMemberFromCurrent(ctx context.Context, acs sutil.ACS, memberID string) (*core.PodTemplateSpec, error) {
+	return ac.context.RenderPodTemplateForMemberFromCurrent(ctx, acs, memberID)
 }
 
 func (ac *actionContext) SetAgencyMaintenanceMode(ctx context.Context, enabled bool) error {
 	return ac.context.SetAgencyMaintenanceMode(ctx, enabled)
 }
 
-func (ac *actionContext) RenderPodForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error) {
-	return ac.context.RenderPodForMember(ctx, cachedStatus, spec, status, memberID, imageInfo)
+func (ac *actionContext) RenderPodForMember(ctx context.Context, acs sutil.ACS, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error) {
+	return ac.context.RenderPodForMember(ctx, acs, spec, status, memberID, imageInfo)
 }
 
-func (ac *actionContext) RenderPodTemplateForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.PodTemplateSpec, error) {
-	return ac.context.RenderPodTemplateForMember(ctx, cachedStatus, spec, status, memberID, imageInfo)
+func (ac *actionContext) RenderPodTemplateForMember(ctx context.Context, acs sutil.ACS, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.PodTemplateSpec, error) {
+	return ac.context.RenderPodTemplateForMember(ctx, acs, spec, status, memberID, imageInfo)
 }
 
 func (ac *actionContext) SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool) {
@@ -293,16 +274,8 @@ func (ac *actionContext) GetAPIObject() k8sutil.APIObject {
 	return ac.context.GetAPIObject()
 }
 
-func (ac *actionContext) UpdatePvc(ctx context.Context, pvc *core.PersistentVolumeClaim) error {
-	return ac.context.UpdatePvc(ctx, pvc)
-}
-
 func (ac *actionContext) CreateEvent(evt *k8sutil.Event) {
 	ac.context.CreateEvent(evt)
-}
-
-func (ac *actionContext) GetPvc(ctx context.Context, pvcName string) (*core.PersistentVolumeClaim, error) {
-	return ac.context.GetPvc(ctx, pvcName)
 }
 
 // Gets the specified mode of deployment
@@ -419,76 +392,6 @@ func (ac *actionContext) RemoveMemberByID(ctx context.Context, id string) error 
 	}
 	// Save removed member
 	if err := ac.context.UpdateStatus(ctx, status, lastVersion); err != nil {
-		return errors.WithStack(err)
-	}
-	return nil
-}
-
-// GetPod returns pod.
-func (ac *actionContext) GetPod(ctx context.Context, podName string) (*core.Pod, error) {
-	if pod, err := ac.context.GetPod(ctx, podName); err != nil {
-		return nil, errors.WithStack(err)
-	} else {
-		return pod, nil
-	}
-}
-
-// DeletePod deletes a pod with given name in the namespace
-// of the deployment. If the pod does not exist, the error is ignored.
-func (ac *actionContext) DeletePod(ctx context.Context, podName string, options meta.DeleteOptions) error {
-	if err := ac.context.DeletePod(ctx, podName, options); err != nil {
-		return errors.WithStack(err)
-	}
-	return nil
-}
-
-// DeletePvc deletes a persistent volume claim with given name in the namespace
-// of the deployment. If the pvc does not exist, the error is ignored.
-func (ac *actionContext) DeletePvc(ctx context.Context, pvcName string) error {
-	if err := ac.context.DeletePvc(ctx, pvcName); err != nil {
-		return errors.WithStack(err)
-	}
-	return nil
-}
-
-// RemovePodFinalizers removes all the finalizers from the Pod with given name in the namespace
-// of the deployment. If the pod does not exist, the error is ignored.
-func (ac *actionContext) RemovePodFinalizers(ctx context.Context, podName string) error {
-	if err := ac.context.RemovePodFinalizers(ctx, podName); err != nil {
-		return errors.WithStack(err)
-	}
-	return nil
-}
-
-// DeleteTLSKeyfile removes the Secret containing the TLS keyfile for the given member.
-// If the secret does not exist, the error is ignored.
-func (ac *actionContext) DeleteTLSKeyfile(ctx context.Context, group api.ServerGroup, member api.MemberStatus) error {
-	if err := ac.context.DeleteTLSKeyfile(ctx, group, member); err != nil {
-		return errors.WithStack(err)
-	}
-	return nil
-}
-
-// DeleteTLSCASecret removes the Secret containing the TLS CA certificate.
-func (ac *actionContext) DeleteTLSCASecret(ctx context.Context) error {
-	spec := ac.context.GetSpec().TLS
-	if !spec.IsSecure() {
-		return nil
-	}
-	secretName := spec.GetCASecretName()
-	if secretName == "" {
-		return nil
-	}
-	// Remove secret hash, since it is going to change
-	status, lastVersion := ac.context.GetStatus()
-	if status.SecretHashes != nil {
-		status.SecretHashes.TLSCA = ""
-		if err := ac.context.UpdateStatus(ctx, status, lastVersion); err != nil {
-			return errors.WithStack(err)
-		}
-	}
-	// Do delete the secret
-	if err := ac.context.DeleteSecret(secretName); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil

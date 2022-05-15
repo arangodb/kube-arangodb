@@ -30,7 +30,6 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/rs/zerolog"
 )
 
@@ -39,7 +38,7 @@ const coordinatorHealthFailedTimeout time.Duration = time.Minute
 func createClusterOperationPlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, planCtx PlanBuilderContext) api.Plan {
+	planCtx PlanBuilderContext) api.Plan {
 
 	if spec.GetMode() != api.DeploymentModeCluster {
 		return nil
