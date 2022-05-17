@@ -51,6 +51,7 @@ type PodCreator interface {
 	GetPodAntiAffinity() *core.PodAntiAffinity
 	GetPodAffinity() *core.PodAffinity
 	GetNodeAffinity() *core.NodeAffinity
+	GetRestartPolicy() core.RestartPolicy
 	GetContainerCreator() ContainerCreator
 	GetImagePullSecrets() []string
 	IsDeploymentMode() bool

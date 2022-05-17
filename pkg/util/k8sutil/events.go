@@ -151,7 +151,7 @@ func NewAccessPackageDeletedEvent(apiObject APIObject, apSecretName string) *Eve
 	return event
 }
 
-// NewPlanTimeoutEvent creates an event indicating that an item on a reconciliation plan has been added
+// NewPlanAppendEvent creates an event indicating that an item on a reconciliation plan has been added
 func NewPlanAppendEvent(apiObject APIObject, itemType, memberID, role, reason string) *Event {
 	event := newDeploymentEvent(apiObject)
 	event.Type = v1.EventTypeNormal

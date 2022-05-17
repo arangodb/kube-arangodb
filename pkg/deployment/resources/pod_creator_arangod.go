@@ -493,6 +493,13 @@ func (m *MemberArangoDPod) GetContainerCreator() interfaces.ContainerCreator {
 	}
 }
 
+func (m *MemberArangoDPod) GetRestartPolicy() core.RestartPolicy {
+	if features.RestartPolicyAlways().Enabled() {
+		return core.RestartPolicyAlways
+	}
+	return core.RestartPolicyNever
+}
+
 func (m *MemberArangoDPod) createMetricsExporterSidecarInternalExporter() (*core.Container, error) {
 	image := m.GetContainerCreator().GetImage()
 

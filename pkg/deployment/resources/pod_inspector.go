@@ -23,22 +23,20 @@ package resources
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-
+	core "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"strings"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
 )
 
@@ -106,6 +104,18 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 				log.Debug().Str("pod-name", pod.GetName()).Msg("Updating member condition Terminated to true: Pod Succeeded")
 				updateMemberStatusNeeded = true
 				nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
+
+				if pod.Spec.RestartPolicy == core.RestartPolicyAlways {
+					containerStatus, exist := k8sutil.GetContainerStatusByName(pod, api.ServerGroupReservedContainerNameServer)
+					if exist && containerStatus.LastTerminationState.Terminated != nil {
+						lastTermination := containerStatus.LastTerminationState.Terminated.FinishedAt
+						if memberStatus.RecentTerminationsSince(lastTermination.Time) == 0 {
+							memberStatus.RecentTerminations = append(memberStatus.RecentTerminations, lastTermination)
+							wasTerminated = true
+						}
+					}
+				}
+
 				if !wasTerminated {
 					// Record termination time
 					now := meta.Now()
@@ -171,6 +181,18 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 				log.Debug().Str("pod-name", pod.GetName()).Msg("Updating member condition Terminated to true: Pod Failed")
 				updateMemberStatusNeeded = true
 				nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
+
+				if pod.Spec.RestartPolicy == core.RestartPolicyAlways {
+					containerStatus, exist := k8sutil.GetContainerStatusByName(pod, api.ServerGroupReservedContainerNameServer)
+					if exist && containerStatus.LastTerminationState.Terminated != nil {
+						lastTermination := containerStatus.LastTerminationState.Terminated.FinishedAt
+						if memberStatus.RecentTerminationsSince(lastTermination.Time) == 0 {
+							memberStatus.RecentTerminations = append(memberStatus.RecentTerminations, lastTermination)
+							wasTerminated = true
+						}
+					}
+				}
+
 				if !wasTerminated {
 					// Record termination time
 					now := meta.Now()
@@ -236,6 +258,10 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 				memberStatus.Conditions.Update(api.ConditionTypeStarted, true, "Pod Started", ""),
 				memberStatus.Conditions.Update(api.ConditionTypeServing, true, "Pod Serving", "")) {
 				log.Debug().Str("pod-name", pod.GetName()).Msg("Updating member condition Ready, Started & Serving to true")
+
+				if pod.Spec.RestartPolicy == core.RestartPolicyAlways && memberStatus.Conditions.IsTrue(api.ConditionTypeTerminated) {
+					memberStatus.Conditions.Update(api.ConditionTypeTerminated, false, "Pod Successfully Restarted", "")
+				}
 
 				if status.Topology.IsTopologyOwned(memberStatus.Topology) {
 					nodes, err := cachedStatus.Node().V1()
