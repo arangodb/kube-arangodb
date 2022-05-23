@@ -83,3 +83,11 @@ func CreatePodHostName(deploymentName, role, id string) string {
 func CreatePersistentVolumeClaimName(deploymentName, role, id string) string {
 	return deploymentName + "-" + role + "-" + stripArangodPrefix(id)
 }
+
+func RenderResourceName(in string, keys map[string]string) string {
+	for k, v := range keys {
+		in = strings.ReplaceAll(in, fmt.Sprintf("${%s}", k), v)
+	}
+
+	return in
+}
