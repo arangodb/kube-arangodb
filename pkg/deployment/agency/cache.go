@@ -237,6 +237,10 @@ func getLeader(ctx context.Context, clients []agency.Agency) (agency.Agency, *ag
 	}
 	wg.Wait()
 
+	if anyError != nil {
+		return nil, nil, nil, wrapError(anyError, "not all agencies are responsive")
+	}
+
 	if len(leaders) == 0 {
 		return nil, nil, nil, wrapError(anyError, "failed to get config from agencies")
 	}
@@ -259,7 +263,7 @@ func getLeader(ctx context.Context, clients []agency.Agency) (agency.Agency, *ag
 
 	// From here on, a leader with quorum is known.
 	for i, config := range configs {
-		if config != nil && config.LeaderId == leaderID {
+		if config != nil && config.Configuration.ID == leaderID {
 			return clients[i], config, h, nil
 		}
 	}
