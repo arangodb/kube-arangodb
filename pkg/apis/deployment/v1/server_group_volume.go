@@ -226,7 +226,7 @@ func (s *ServerGroupSpecVolume) notNilFields() int {
 	return i
 }
 
-func renderSourceName(in string, depl meta.Object, member MemberStatus) string {
+func renderVolumeResourceName(in string, depl meta.Object, member MemberStatus) string {
 	return shared.RenderResourceName(in, map[string]string{
 		ServerGroupSpecVolumeRenderParamDeploymentName:      depl.GetName(),
 		ServerGroupSpecVolumeRenderParamDeploymentNamespace: depl.GetNamespace(),
@@ -262,7 +262,7 @@ func (s *ServerGroupSpecVolumeSecret) render(depl meta.Object, member MemberStat
 
 	var obj = core.SecretVolumeSource(*s)
 
-	obj.SecretName = renderSourceName(obj.SecretName, depl, member)
+	obj.SecretName = renderVolumeResourceName(obj.SecretName, depl, member)
 
 	return &obj
 }
@@ -295,7 +295,7 @@ func (s *ServerGroupSpecVolumeConfigMap) render(depl meta.Object, member MemberS
 
 	var obj = core.ConfigMapVolumeSource(*s)
 
-	obj.Name = renderSourceName(obj.Name, depl, member)
+	obj.Name = renderVolumeResourceName(obj.Name, depl, member)
 
 	return &obj
 }
@@ -327,7 +327,7 @@ func (s *ServerGroupSpecVolumeHostPath) render(depl meta.Object, member MemberSt
 
 	var obj = core.HostPathVolumeSource(*s)
 
-	obj.Path = renderSourceName(obj.Path, depl, member)
+	obj.Path = renderVolumeResourceName(obj.Path, depl, member)
 
 	return &obj
 }
@@ -360,7 +360,7 @@ func (s *ServerGroupSpecVolumePersistentVolumeClaim) render(depl meta.Object, me
 
 	var obj = core.PersistentVolumeClaimVolumeSource(*s)
 
-	obj.ClaimName = renderSourceName(obj.ClaimName, depl, member)
+	obj.ClaimName = renderVolumeResourceName(obj.ClaimName, depl, member)
 
 	return &obj
 }

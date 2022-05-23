@@ -146,6 +146,32 @@ func Test_Volume_Validation(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "Templating",
+			volumes: []ServerGroupSpecVolume{
+				{
+					Name: validName,
+					Secret: &ServerGroupSpecVolumeSecret{
+						SecretName: fmt.Sprintf("${%s}-secret", ServerGroupSpecVolumeRenderParamDeploymentName),
+					},
+				},
+			},
+		},
+		{
+			name: "Invalid templating",
+			volumes: []ServerGroupSpecVolume{
+				{
+					Name: validName,
+					Secret: &ServerGroupSpecVolumeSecret{
+						SecretName: fmt.Sprintf("${%sRANDOM}-secret", ServerGroupSpecVolumeRenderParamDeploymentName),
+					},
+				},
+			},
+			fail: true,
+			failedFields: map[string]string{
+				"0.secret.secretName": labelValidationError,
+			},
+		},
 	}
 
 	for _, c := range cases {
