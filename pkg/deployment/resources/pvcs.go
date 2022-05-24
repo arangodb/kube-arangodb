@@ -62,7 +62,7 @@ func (r *Resources) EnsurePVCs(ctx context.Context, cachedStatus inspectorInterf
 			vct := spec.VolumeClaimTemplate
 			finalizers := r.createPVCFinalizers(group)
 			err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-				return k8sutil.CreatePersistentVolumeClaim(ctxChild, r.context.PersistentVolumeClaimsModInterface(),
+				return k8sutil.CreatePersistentVolumeClaim(ctxChild, cachedStatus.PersistentVolumeClaimsModInterface().V1(),
 					m.PersistentVolumeClaimName, deploymentName, storageClassName, role, enforceAntiAffinity,
 					resources, vct, finalizers, owner)
 			})

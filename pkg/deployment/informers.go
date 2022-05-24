@@ -51,19 +51,19 @@ func (d *Deployment) listenForPodEvents(stopCh <-chan struct{}) {
 		&v1.Pod{},
 		cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
-				d.currentState.GetThrottles().Pod().Invalidate()
+				d.acs.CurrentClusterCache().GetThrottles().Pod().Invalidate()
 				if p, ok := getPod(obj); ok && d.isOwnerOf(p) {
 					d.triggerInspection()
 				}
 			},
 			UpdateFunc: func(oldObj, newObj interface{}) {
-				d.currentState.GetThrottles().Pod().Invalidate()
+				d.acs.CurrentClusterCache().GetThrottles().Pod().Invalidate()
 				if p, ok := getPod(newObj); ok && d.isOwnerOf(p) {
 					d.triggerInspection()
 				}
 			},
 			DeleteFunc: func(obj interface{}) {
-				d.currentState.GetThrottles().Pod().Invalidate()
+				d.acs.CurrentClusterCache().GetThrottles().Pod().Invalidate()
 				if p, ok := getPod(obj); ok && d.isOwnerOf(p) {
 					d.triggerInspection()
 				}
@@ -96,19 +96,19 @@ func (d *Deployment) listenForPVCEvents(stopCh <-chan struct{}) {
 		&v1.PersistentVolumeClaim{},
 		cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
-				d.currentState.GetThrottles().PersistentVolumeClaim().Invalidate()
+				d.acs.CurrentClusterCache().GetThrottles().PersistentVolumeClaim().Invalidate()
 				if p, ok := getPVC(obj); ok && d.isOwnerOf(p) {
 					d.triggerInspection()
 				}
 			},
 			UpdateFunc: func(oldObj, newObj interface{}) {
-				d.currentState.GetThrottles().PersistentVolumeClaim().Invalidate()
+				d.acs.CurrentClusterCache().GetThrottles().PersistentVolumeClaim().Invalidate()
 				if p, ok := getPVC(newObj); ok && d.isOwnerOf(p) {
 					d.triggerInspection()
 				}
 			},
 			DeleteFunc: func(obj interface{}) {
-				d.currentState.GetThrottles().PersistentVolumeClaim().Invalidate()
+				d.acs.CurrentClusterCache().GetThrottles().PersistentVolumeClaim().Invalidate()
 				if p, ok := getPVC(obj); ok && d.isOwnerOf(p) {
 					d.triggerInspection()
 				}
@@ -142,19 +142,19 @@ func (d *Deployment) listenForSecretEvents(stopCh <-chan struct{}) {
 		cache.ResourceEventHandlerFuncs{
 			// Note: For secrets we look at all of them because they do not have to be owned by this deployment.
 			AddFunc: func(obj interface{}) {
-				d.currentState.GetThrottles().Secret().Invalidate()
+				d.acs.CurrentClusterCache().GetThrottles().Secret().Invalidate()
 				if getSecret(obj) {
 					d.triggerInspection()
 				}
 			},
 			UpdateFunc: func(oldObj, newObj interface{}) {
-				d.currentState.GetThrottles().Secret().Invalidate()
+				d.acs.CurrentClusterCache().GetThrottles().Secret().Invalidate()
 				if getSecret(newObj) {
 					d.triggerInspection()
 				}
 			},
 			DeleteFunc: func(obj interface{}) {
-				d.currentState.GetThrottles().Secret().Invalidate()
+				d.acs.CurrentClusterCache().GetThrottles().Secret().Invalidate()
 				if getSecret(obj) {
 					d.triggerInspection()
 				}
@@ -187,19 +187,19 @@ func (d *Deployment) listenForServiceEvents(stopCh <-chan struct{}) {
 		&v1.Service{},
 		cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
-				d.currentState.GetThrottles().Service().Invalidate()
+				d.acs.CurrentClusterCache().GetThrottles().Service().Invalidate()
 				if s, ok := getService(obj); ok && d.isOwnerOf(s) {
 					d.triggerInspection()
 				}
 			},
 			UpdateFunc: func(oldObj, newObj interface{}) {
-				d.currentState.GetThrottles().Service().Invalidate()
+				d.acs.CurrentClusterCache().GetThrottles().Service().Invalidate()
 				if s, ok := getService(newObj); ok && d.isOwnerOf(s) {
 					d.triggerInspection()
 				}
 			},
 			DeleteFunc: func(obj interface{}) {
-				d.currentState.GetThrottles().Service().Invalidate()
+				d.acs.CurrentClusterCache().GetThrottles().Service().Invalidate()
 				if s, ok := getService(obj); ok && d.isOwnerOf(s) {
 					d.triggerInspection()
 				}

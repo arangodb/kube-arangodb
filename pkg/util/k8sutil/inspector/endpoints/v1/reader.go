@@ -32,7 +32,6 @@ import (
 type ModInterface interface {
 	Create(ctx context.Context, endpoints *core.Endpoints, opts meta.CreateOptions) (*core.Endpoints, error)
 	Update(ctx context.Context, endpoints *core.Endpoints, opts meta.UpdateOptions) (*core.Endpoints, error)
-	UpdateStatus(ctx context.Context, endpoints *core.Endpoints, opts meta.UpdateOptions) (*core.Endpoints, error)
 	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts meta.PatchOptions, subresources ...string) (result *core.Endpoints, err error)
 	Delete(ctx context.Context, name string, opts meta.DeleteOptions) error
 }

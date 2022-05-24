@@ -38,7 +38,6 @@ type PlanBuilderContext interface {
 	reconciler.ArangoMemberContext
 	reconciler.DeploymentPodRenderer
 	reconciler.DeploymentImageManager
-	reconciler.DeploymentModInterfaces
 	reconciler.ArangoAgencyGet
 	reconciler.DeploymentClient
 	reconciler.KubernetesEventGenerator

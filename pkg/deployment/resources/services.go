@@ -81,7 +81,7 @@ func (r *Resources) createService(name, namespace string, owner meta.OwnerRefere
 // adjustService checks whether service contains is valid and if not than it reconciles service.
 // Returns true if service is adjusted.
 func (r *Resources) adjustService(ctx context.Context, s *core.Service, targetPort int32, selector map[string]string) (error, bool) {
-	services := r.context.ServicesModInterface()
+	services := r.context.ACS().CurrentClusterCache().ServicesModInterface().V1()
 	spec := s.Spec.DeepCopy()
 
 	spec.Type = core.ServiceTypeClusterIP
@@ -128,7 +128,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 	counterMetric := inspectedServicesCounters.WithLabelValues(deploymentName)
 
 	// Fetch existing services
-	svcs := r.context.ServicesModInterface()
+	svcs := cachedStatus.ServicesModInterface().V1()
 
 	reconcileRequired := k8sutil.NewReconcile(cachedStatus)
 
