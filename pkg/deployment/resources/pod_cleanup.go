@@ -69,10 +69,11 @@ func (r *Resources) CleanupTerminatedPods(ctx context.Context) (util.Interval, e
 					return nil
 				}
 
-				if pod.Spec.RestartPolicy == core.RestartPolicyAlways && !k8sutil.IsPodMarkedForDeletion(pod) {
-					// The pod restart (failure case) will be handled by the kubelet.
-					return nil
-				}
+				// todo: we don't need it
+				/*				if pod.Spec.RestartPolicy == core.RestartPolicyAlways && !k8sutil.IsPodMarkedForDeletion(pod) && !memberStatus.Conditions.IsTrue(api.ConditionTypeTerminated) {
+								// The pod restart (failure case) will be handled by the kubelet.
+								return nil
+							}*/
 
 				// Check member termination condition
 				if !memberStatus.Conditions.IsTrue(api.ConditionTypeTerminated) {

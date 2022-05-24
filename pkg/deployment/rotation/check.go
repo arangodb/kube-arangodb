@@ -126,6 +126,8 @@ func IsRotationRequired(log zerolog.Logger, acs sutil.ACS, spec api.DeploymentSp
 
 	if mode, plan, err := compare(log, spec, member, group, specTemplate, statusTemplate); err != nil {
 		return SkippedRotation, nil, "", err
+	} else if mode == SkippedRotation {
+		return mode, plan, "No rotation needed", nil
 	} else {
 		return mode, plan, "Pod needs rotation", nil
 	}
