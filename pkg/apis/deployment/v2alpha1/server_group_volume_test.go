@@ -172,6 +172,17 @@ func Test_Volume_Validation(t *testing.T) {
 				"0.secret.secretName": labelValidationError,
 			},
 		},
+		{
+			name: "Templating with group name",
+			volumes: []ServerGroupSpecVolume{
+				{
+					Name: validName,
+					Secret: &ServerGroupSpecVolumeSecret{
+						SecretName: fmt.Sprintf("${%s}-${%s}-${%s}-cache", ServerGroupSpecVolumeRenderParamDeploymentName, ServerGroupSpecVolumeRenderParamMemberRole, ServerGroupSpecVolumeRenderParamMemberID),
+					},
+				},
+			},
+		},
 	}
 
 	for _, c := range cases {

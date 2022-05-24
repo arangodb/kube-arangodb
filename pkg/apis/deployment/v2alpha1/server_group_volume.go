@@ -49,6 +49,8 @@ const (
 	ServerGroupSpecVolumeRenderParamDeploymentName      = "DEPLOYMENT_NAME"
 	ServerGroupSpecVolumeRenderParamDeploymentNamespace = "DEPLOYMENT_NAMESPACE"
 	ServerGroupSpecVolumeRenderParamMemberID            = "MEMBER_ID"
+	ServerGroupSpecVolumeRenderParamMemberRoleAbbr      = "ROLE_ABBR"
+	ServerGroupSpecVolumeRenderParamMemberRole          = "ROLE"
 )
 
 // IsRestrictedVolumeName check of volume name is restricted, for example for originally mounted volumes
@@ -99,11 +101,11 @@ func (s ServerGroupSpecVolumes) Validate() error {
 }
 
 // RenderVolumes render volumes
-func (s ServerGroupSpecVolumes) RenderVolumes(depl meta.Object, member MemberStatus) []core.Volume {
+func (s ServerGroupSpecVolumes) RenderVolumes(depl meta.Object, group ServerGroup, member MemberStatus) []core.Volume {
 	volumes := make([]core.Volume, len(s))
 
 	for id, volume := range s {
-		volumes[id] = volume.RenderVolume(depl, member)
+		volumes[id] = volume.RenderVolume(depl, group, member)
 	}
 
 	return volumes
@@ -159,15 +161,15 @@ func (s *ServerGroupSpecVolume) Validate() error {
 }
 
 // RenderVolume create Pod Volume object with dynamic names
-func (s ServerGroupSpecVolume) RenderVolume(depl meta.Object, member MemberStatus) core.Volume {
+func (s ServerGroupSpecVolume) RenderVolume(depl meta.Object, group ServerGroup, member MemberStatus) core.Volume {
 	return core.Volume{
 		Name: s.Name,
 		VolumeSource: core.VolumeSource{
-			ConfigMap:             s.ConfigMap.render(depl, member),
-			Secret:                s.Secret.render(depl, member),
+			ConfigMap:             s.ConfigMap.render(depl, group, member),
+			Secret:                s.Secret.render(depl, group, member),
 			EmptyDir:              s.EmptyDir.render(),
-			HostPath:              s.HostPath.render(depl, member),
-			PersistentVolumeClaim: s.PersistentVolumeClaim.render(depl, member),
+			HostPath:              s.HostPath.render(depl, group, member),
+			PersistentVolumeClaim: s.PersistentVolumeClaim.render(depl, group, member),
 		},
 	}
 }
@@ -226,11 +228,13 @@ func (s *ServerGroupSpecVolume) notNilFields() int {
 	return i
 }
 
-func renderVolumeResourceName(in string, depl meta.Object, member MemberStatus) string {
+func renderVolumeResourceName(in string, depl meta.Object, group ServerGroup, member MemberStatus) string {
 	return shared.RenderResourceName(in, map[string]string{
 		ServerGroupSpecVolumeRenderParamDeploymentName:      depl.GetName(),
 		ServerGroupSpecVolumeRenderParamDeploymentNamespace: depl.GetNamespace(),
-		ServerGroupSpecVolumeRenderParamMemberID:            member.ID,
+		ServerGroupSpecVolumeRenderParamMemberID:            shared.StripArangodPrefix(member.ID),
+		ServerGroupSpecVolumeRenderParamMemberRole:          group.AsRole(),
+		ServerGroupSpecVolumeRenderParamMemberRoleAbbr:      group.AsRoleAbbreviated(),
 	})
 }
 
@@ -242,7 +246,7 @@ func (s *ServerGroupSpecVolumeSecret) Validate() error {
 			Name:      "render",
 			Namespace: "render",
 		},
-	}, MemberStatus{
+	}, ServerGroupSingle, MemberStatus{
 		ID: "render",
 	})
 
@@ -255,14 +259,14 @@ func (s *ServerGroupSpecVolumeSecret) Validate() error {
 	)
 }
 
-func (s *ServerGroupSpecVolumeSecret) render(depl meta.Object, member MemberStatus) *core.SecretVolumeSource {
+func (s *ServerGroupSpecVolumeSecret) render(depl meta.Object, group ServerGroup, member MemberStatus) *core.SecretVolumeSource {
 	if s == nil {
 		return nil
 	}
 
 	var obj = core.SecretVolumeSource(*s)
 
-	obj.SecretName = renderVolumeResourceName(obj.SecretName, depl, member)
+	obj.SecretName = renderVolumeResourceName(obj.SecretName, depl, group, member)
 
 	return &obj
 }
@@ -275,7 +279,7 @@ func (s *ServerGroupSpecVolumeConfigMap) Validate() error {
 			Name:      "render",
 			Namespace: "render",
 		},
-	}, MemberStatus{
+	}, ServerGroupSingle, MemberStatus{
 		ID: "render",
 	})
 
@@ -288,14 +292,14 @@ func (s *ServerGroupSpecVolumeConfigMap) Validate() error {
 	)
 }
 
-func (s *ServerGroupSpecVolumeConfigMap) render(depl meta.Object, member MemberStatus) *core.ConfigMapVolumeSource {
+func (s *ServerGroupSpecVolumeConfigMap) render(depl meta.Object, group ServerGroup, member MemberStatus) *core.ConfigMapVolumeSource {
 	if s == nil {
 		return nil
 	}
 
 	var obj = core.ConfigMapVolumeSource(*s)
 
-	obj.Name = renderVolumeResourceName(obj.Name, depl, member)
+	obj.Name = renderVolumeResourceName(obj.Name, depl, group, member)
 
 	return &obj
 }
@@ -320,14 +324,14 @@ func (s *ServerGroupSpecVolumeHostPath) Validate() error {
 	return nil
 }
 
-func (s *ServerGroupSpecVolumeHostPath) render(depl meta.Object, member MemberStatus) *core.HostPathVolumeSource {
+func (s *ServerGroupSpecVolumeHostPath) render(depl meta.Object, group ServerGroup, member MemberStatus) *core.HostPathVolumeSource {
 	if s == nil {
 		return nil
 	}
 
 	var obj = core.HostPathVolumeSource(*s)
 
-	obj.Path = renderVolumeResourceName(obj.Path, depl, member)
+	obj.Path = renderVolumeResourceName(obj.Path, depl, group, member)
 
 	return &obj
 }
@@ -340,7 +344,7 @@ func (s *ServerGroupSpecVolumePersistentVolumeClaim) Validate() error {
 			Name:      "render",
 			Namespace: "render",
 		},
-	}, MemberStatus{
+	}, ServerGroupSingle, MemberStatus{
 		ID: "render",
 	})
 
@@ -353,14 +357,14 @@ func (s *ServerGroupSpecVolumePersistentVolumeClaim) Validate() error {
 	)
 }
 
-func (s *ServerGroupSpecVolumePersistentVolumeClaim) render(depl meta.Object, member MemberStatus) *core.PersistentVolumeClaimVolumeSource {
+func (s *ServerGroupSpecVolumePersistentVolumeClaim) render(depl meta.Object, group ServerGroup, member MemberStatus) *core.PersistentVolumeClaimVolumeSource {
 	if s == nil {
 		return nil
 	}
 
 	var obj = core.PersistentVolumeClaimVolumeSource(*s)
 
-	obj.ClaimName = renderVolumeResourceName(obj.ClaimName, depl, member)
+	obj.ClaimName = renderVolumeResourceName(obj.ClaimName, depl, group, member)
 
 	return &obj
 }
