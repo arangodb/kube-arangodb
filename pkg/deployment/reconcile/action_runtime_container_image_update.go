@@ -22,16 +22,16 @@ package reconcile
 
 import (
 	"context"
-	core "k8s.io/api/core/v1"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/rs/zerolog"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+
+	"github.com/rs/zerolog"
+	core "k8s.io/api/core/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func init() {
@@ -267,7 +267,7 @@ func (a actionRuntimeContainerImageUpdate) CheckProgress(ctx context.Context) (b
 			if lastTermination != nil {
 				allowedRestartPeriod := time.Now().Add(time.Second * -20)
 				if lastTermination.FinishedAt.Time.Before(allowedRestartPeriod) {
-					return true, false, errors.Newf("Container %s continuously failed during image replacement: (%d) %s: %s", name, lastTermination.ExitCode, lastTermination.Reason, lastTermination.Message)
+					return true, false, errors.Newf("Container %s continuously failing during image replacement: (%d) %s: %s", name, lastTermination.ExitCode, lastTermination.Reason, lastTermination.Message)
 				} else {
 					a.log.Debug().Str("pod-name", pod.GetName()).Msg("pod is restarting - we are not marking it as terminated yet..")
 				}

@@ -29,7 +29,7 @@ var restartPolicyAlways = &feature{
 	description:        "Allow to restart containers with always restart policy",
 	version:            "3.6.0",
 	enterpriseRequired: false,
-	enabledByDefault:   true,
+	enabledByDefault:   false,
 }
 
 func RestartPolicyAlways() Feature {

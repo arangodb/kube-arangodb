@@ -46,10 +46,35 @@ var (
 )
 
 const (
-	podScheduleTimeout              = time.Minute                // How long we allow the schedule to take scheduling a pod.
+	podScheduleTimeout       = time.Minute       // How long we allow the schedule to take scheduling a pod.
+	terminationRestartPeriod = time.Second * -30 // If previous pod termination happened less than this time ago,
+	// we will mark the pod as scheduled for termination
 	recheckSoonPodInspectorInterval = util.Interval(time.Second) // Time between Pod inspection if we think something will change soon
 	maxPodInspectorInterval         = util.Interval(time.Hour)   // Maximum time between Pod inspection (if nothing else happens)
 )
+
+func (r *Resources) handleRestartedPod(pod *core.Pod, memberStatus *api.MemberStatus, wasTerminated, markAsTerminated *bool) {
+	containerStatus, exist := k8sutil.GetContainerStatusByName(pod, api.ServerGroupReservedContainerNameServer)
+	if exist && containerStatus.State.Terminated != nil {
+		// do not record termination time again in the code below
+		*wasTerminated = true
+
+		termination := containerStatus.State.Terminated.FinishedAt
+		if memberStatus.RecentTerminationsSince(termination.Time) == 0 {
+			memberStatus.RecentTerminations = append(memberStatus.RecentTerminations, termination)
+		}
+
+		previousTermination := containerStatus.LastTerminationState.Terminated
+		allowedRestartPeriod := time.Now().Add(terminationRestartPeriod)
+		if previousTermination != nil && !previousTermination.FinishedAt.Time.Before(allowedRestartPeriod) {
+			r.log.Debug().Str("pod-name", pod.GetName()).Msg("pod is continuously restarting - we will terminate it")
+			*markAsTerminated = true
+		} else {
+			*markAsTerminated = false
+			r.log.Debug().Str("pod-name", pod.GetName()).Msg("pod is restarting - we are not marking it as terminated yet..")
+		}
+	}
+}
 
 // InspectPods lists all pods that belong to the given deployment and updates
 // the member status of the deployment accordingly.
@@ -102,25 +127,8 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 			wasTerminated := memberStatus.Conditions.IsTrue(api.ConditionTypeTerminated)
 			markAsTerminated := true
 
-			if pod.Spec.RestartPolicy == core.RestartPolicyAlways {
-				containerStatus, exist := k8sutil.GetContainerStatusByName(pod, api.ServerGroupReservedContainerNameServer)
-				if exist && containerStatus.State.Terminated != nil {
-					termination := containerStatus.State.Terminated.FinishedAt
-					if memberStatus.RecentTerminationsSince(termination.Time) == 0 {
-						memberStatus.RecentTerminations = append(memberStatus.RecentTerminations, termination)
-						wasTerminated = true
-						markAsTerminated = false
-					}
-
-					lastTermination := containerStatus.LastTerminationState.Terminated
-					allowedRestartPeriod := time.Now().Add(time.Second * -10)
-					if lastTermination != nil && lastTermination.FinishedAt.Time.Before(allowedRestartPeriod) {
-						log.Debug().Str("pod-name", pod.GetName()).Msg("pod is continuously restarting - we will terminate it")
-						markAsTerminated = true
-					} else {
-						log.Debug().Str("pod-name", pod.GetName()).Msg("pod is restarting - we are not marking it as terminated yet..")
-					}
-				}
+			if pod.Spec.RestartPolicy == core.RestartPolicyAlways && !wasTerminated {
+				r.handleRestartedPod(pod, &memberStatus, &wasTerminated, &markAsTerminated)
 			}
 
 			if markAsTerminated && memberStatus.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Succeeded", "") {
@@ -139,26 +147,8 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 			wasTerminated := memberStatus.Conditions.IsTrue(api.ConditionTypeTerminated)
 			markAsTerminated := true
 
-			if pod.Spec.RestartPolicy == core.RestartPolicyAlways {
-				containerStatus, exist := k8sutil.GetContainerStatusByName(pod, api.ServerGroupReservedContainerNameServer)
-				if exist && containerStatus.State.Terminated != nil {
-					termination := containerStatus.State.Terminated.FinishedAt
-					if memberStatus.RecentTerminationsSince(termination.Time) == 0 {
-						memberStatus.RecentTerminations = append(memberStatus.RecentTerminations, termination)
-						wasTerminated = true
-						markAsTerminated = false
-					}
-
-					lastTermination := containerStatus.LastTerminationState.Terminated
-					allowedRestartPeriod := time.Now().Add(time.Second * -10)
-					if lastTermination != nil && lastTermination.FinishedAt.Time.Before(allowedRestartPeriod) {
-						log.Debug().Str("pod-name", pod.GetName()).Msg("pod is continuously restarting - we will terminate it")
-						markAsTerminated = true
-					} else {
-						log.Debug().Str("pod-name", pod.GetName()).Msg("pod is restarting - we are not marking it as terminated yet..")
-					}
-
-				}
+			if pod.Spec.RestartPolicy == core.RestartPolicyAlways && !wasTerminated {
+				r.handleRestartedPod(pod, &memberStatus, &wasTerminated, &markAsTerminated)
 			}
 
 			if markAsTerminated && memberStatus.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Failed", "") {
@@ -283,10 +273,6 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 				memberStatus.Conditions.Update(api.ConditionTypeStarted, true, "Pod Started", ""),
 				memberStatus.Conditions.Update(api.ConditionTypeServing, true, "Pod Serving", "")) {
 				log.Debug().Str("pod-name", pod.GetName()).Msg("Updating member condition Ready, Started & Serving to true")
-
-				if pod.Spec.RestartPolicy == core.RestartPolicyAlways && memberStatus.Conditions.IsTrue(api.ConditionTypeTerminated) {
-					memberStatus.Conditions.Update(api.ConditionTypeTerminated, false, "Pod Successfully Restarted", "")
-				}
 
 				if status.Topology.IsTopologyOwned(memberStatus.Topology) {
 					nodes, err := cachedStatus.Node().V1()
