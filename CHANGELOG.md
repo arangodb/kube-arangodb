@@ -5,7 +5,8 @@
 - (Feature) (ACS) Improve Reconciliation Loop
 - (Bugfix) Allow missing Monitoring CRD
 - (Feature) (ACS) Add Resource plan
-- (Feature) Allow raw json value for license token-v2 
+- (Feature) Allow raw json value for license token-v2
+- (Update) Replace `beta.kubernetes.io/arch` to `kubernetes.io/arch` in Operator Chart
 
 ## [1.2.12](https://github.com/arangodb/kube-arangodb/tree/1.2.12) (2022-05-10)
 - (Feature) Add CoreV1 Endpoints Inspector
