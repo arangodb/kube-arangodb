@@ -33,8 +33,9 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 
-	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 	"github.com/gin-gonic/gin"
+
+	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 
 	"github.com/arangodb/kube-arangodb/pkg/version"
 
@@ -61,6 +62,9 @@ import (
 	v1core "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/record"
 
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/klog"
+
 	"github.com/arangodb/kube-arangodb/pkg/crd"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
@@ -71,8 +75,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/probe"
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/klog"
 )
 
 const (
@@ -83,6 +85,8 @@ const (
 	defaultAlpineImage          = "alpine:3.7"
 	defaultMetricsExporterImage = "arangodb/arangodb-exporter:0.1.6"
 	defaultArangoImage          = "arangodb/arangodb:latest"
+	defaultShutdownDelay        = 2 * time.Second
+	defaultShutdownTimeout      = 30 * time.Second
 
 	UBIImageEnv             util.EnvironmentVariable = "RELATED_IMAGE_UBI"
 	ArangoImageEnv          util.EnvironmentVariable = "RELATED_IMAGE_DATABASE"
@@ -120,6 +124,10 @@ var (
 
 		singleMode bool
 		scope      string
+	}
+	shutdownOptions struct {
+		delay   time.Duration
+		timeout time.Duration
 	}
 	crdOptions struct {
 		install bool
@@ -180,6 +188,8 @@ func init() {
 	f.DurationVar(&operatorTimeouts.arangoDCheck, "timeout.arangod-check", globals.DefaultArangoDCheckTimeout, "The version check request timeout to the ArangoDB")
 	f.DurationVar(&operatorTimeouts.agency, "timeout.agency", globals.DefaultArangoDAgencyTimeout, "The Agency read timeout")
 	f.DurationVar(&operatorTimeouts.reconciliation, "timeout.reconciliation", globals.DefaultReconciliationTimeout, "The reconciliation timeout to the ArangoDB CR")
+	f.DurationVar(&shutdownOptions.delay, "shutdown.delay", defaultShutdownDelay, "The delay before running shutdown handlers")
+	f.DurationVar(&shutdownOptions.timeout, "shutdown.timeout", defaultShutdownTimeout, "Timeout for shutdown handlers")
 	f.BoolVar(&operatorOptions.scalingIntegrationEnabled, "internal.scaling-integration", true, "Enable Scaling Integration")
 	f.Int64Var(&operatorKubernetesOptions.maxBatchSize, "kubernetes.max-batch-size", globals.DefaultKubernetesRequestBatchSize, "Size of batch during objects read")
 	f.Float32Var(&operatorKubernetesOptions.qps, "kubernetes.qps", kclient.DefaultQPS, "Number of queries per second for k8s API")
@@ -421,6 +431,8 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		ArangoImage:                 operatorOptions.arangoImage,
 		SingleMode:                  operatorOptions.singleMode,
 		Scope:                       scope,
+		ShutdownDelay:               shutdownOptions.delay,
+		ShutdownTimeout:             shutdownOptions.timeout,
 	}
 	deps := operator.Dependencies{
 		LogService:                 logService,
