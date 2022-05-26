@@ -82,7 +82,7 @@ ifeq ($(DEBUG),true)
 	DEBUG := true
 	DOCKERFILE := Dockerfile.debug
 	# required by DLV https://github.com/go-delve/delve/blob/master/Documentation/usage/dlv_exec.md
-	COMPILE_DEBUG_FLAGS := -gcflags="all=-N -l"
+	COMPILE_DEBUG_FLAGS := -gcflags="all=-N -l" -ldflags "-extldflags '-static'" 
 else
 	DEBUG := false
 	DOCKERFILE := Dockerfile
@@ -150,7 +150,7 @@ ifdef VERBOSE
 	TESTVERBOSEOPTIONS := -v
 endif
 
-EXCLUDE_DIRS := tests vendor .gobuild deps tools
+EXCLUDE_DIRS := vendor .gobuild deps tools
 SOURCES_QUERY := find ./ -type f -name '*.go' $(foreach EXCLUDE_DIR,$(EXCLUDE_DIRS), ! -path "*/$(EXCLUDE_DIR)/*")
 SOURCES := $(shell $(SOURCES_QUERY))
 DASHBOARDSOURCES := $(shell find $(DASHBOARDDIR)/src -name '*.js') $(DASHBOARDDIR)/package.json
@@ -510,3 +510,16 @@ synchronize-v2alpha1-with-v1:
 	@make update-generated
 	@make set-deployment-api-version-v2alpha1 bin
 	@make set-deployment-api-version-v1 bin
+
+.PHONY: check-all check-enterprise check-community _check
+
+check-all: check-community check-enterprise
+
+check-enterprise:
+	@$(MAKE) _check RELEASE_MODE=enterprise
+
+check-community:
+	@$(MAKE) _check RELEASE_MODE=community
+
+_check:
+	@$(MAKE) fmt license-verify linter run-unit-tests bin

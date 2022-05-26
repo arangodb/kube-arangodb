@@ -25,10 +25,65 @@ import (
 	"context"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/acs/sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
+	"k8s.io/apimachinery/pkg/types"
 )
 
-func Inspect(ctx context.Context, deployment *api.ArangoDeployment, client kclient.Client, cachedStatus inspectorInterface.Inspector) error {
+func NewACS(main types.UID, cache inspectorInterface.Inspector) sutil.ACS {
+	return acs{
+		main:  main,
+		cache: cache,
+	}
+}
+
+type acs struct {
+	main  types.UID
+	cache inspectorInterface.Inspector
+}
+
+func (a acs) ForEachHealthyCluster(f func(item sutil.ACSItem) error) error {
+	return f(a)
+}
+
+func (a acs) CurrentClusterCache() inspectorInterface.Inspector {
+	return a.cache
+}
+
+func (a acs) ClusterCache(uid types.UID) (inspectorInterface.Inspector, bool) {
+	c, ok := a.Cluster(uid)
+	if ok {
+		return c.Cache(), true
+	}
+
+	return nil, false
+}
+
+func (a acs) UID() types.UID {
+	return a.main
+}
+
+func (a acs) Ready() bool {
+	return true
+}
+
+func (a acs) Cache() inspectorInterface.Inspector {
+	return a.cache
+}
+
+func (a acs) Cluster(uid types.UID) (sutil.ACSItem, bool) {
+	if a.main == uid || uid == "" {
+		return a, true
+	}
+
+	return nil, false
+}
+
+func (a acs) RemoteClusters() []types.UID {
+	return nil
+}
+
+func (a acs) Inspect(ctx context.Context, deployment *api.ArangoDeployment, client kclient.Client, cachedStatus inspectorInterface.Inspector) error {
 	return nil
 }

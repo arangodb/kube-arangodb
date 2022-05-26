@@ -28,7 +28,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
@@ -309,7 +309,7 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 	// ActiveFailover
 	{
 		apiObject := &api.ArangoDeployment{
-			ObjectMeta: metav1.ObjectMeta{
+			ObjectMeta: meta.ObjectMeta{
 				Name:      "name",
 				Namespace: tests.FakeNamespace,
 			},

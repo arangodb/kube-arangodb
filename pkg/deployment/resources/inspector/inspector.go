@@ -27,9 +27,12 @@ import (
 	"time"
 
 	"github.com/arangodb/go-driver"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoclustersynchronization"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangotask"
@@ -45,6 +48,13 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/rs/zerolog"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+)
+
+const (
+	DefaultVersion = ""
 )
 
 var (
@@ -99,26 +109,36 @@ type inspectorLoader interface {
 
 var _ inspector.Inspector = &inspectorState{}
 
-func NewInspector(throttles throttle.Components, client kclient.Client, namespace string) inspector.Inspector {
+func NewInspector(throttles throttle.Components, client kclient.Client, namespace, deploymentName string) inspector.Inspector {
 	if throttles == nil {
 		throttles = throttle.NewAlwaysThrottleComponents()
 	}
 
 	i := &inspectorState{
-		namespace: namespace,
-		client:    client,
-		throttles: throttles,
-		logger:    logging.GlobalLogger().MustGetLogger(logging.LoggerNameInspector),
+		namespace:      namespace,
+		deploymentName: deploymentName,
+		client:         client,
+		throttles:      throttles,
+		logger:         logging.GlobalLogger().MustGetLogger(logging.LoggerNameInspector),
 	}
 
 	return i
 }
 
+type inspectorStateDeploymentResult struct {
+	depl *api.ArangoDeployment
+	err  error
+}
+
 type inspectorState struct {
 	lock sync.Mutex
 
-	namespace string
-	client    kclient.Client
+	namespace      string
+	deploymentName string
+
+	deploymentResult *inspectorStateDeploymentResult
+
+	client kclient.Client
 
 	last time.Time
 
@@ -144,6 +164,71 @@ type inspectorState struct {
 	initialised bool
 }
 
+func extractGVKFromOwnerReference(o meta.OwnerReference) schema.GroupVersionKind {
+	z := strings.SplitN(o.APIVersion, "/", 2)
+
+	switch len(z) {
+	case 1:
+		return schema.GroupVersionKind{
+			Group:   core.GroupName,
+			Version: z[0],
+			Kind:    o.Kind,
+		}
+	case 2:
+		return schema.GroupVersionKind{
+			Group:   z[0],
+			Version: z[1],
+			Kind:    o.Kind,
+		}
+	default:
+		return schema.GroupVersionKind{
+			Group:   core.GroupName,
+			Version: z[1],
+			Kind:    o.APIVersion,
+		}
+	}
+}
+
+func (i *inspectorState) Anonymous(gvk schema.GroupVersionKind) (anonymous.Interface, bool) {
+	for _, o := range i.AnonymousObjects() {
+		if o == nil {
+			continue
+		}
+
+		obj, ok := o.Anonymous(gvk)
+		if ok {
+			return obj, true
+		}
+	}
+
+	return nil, false
+}
+
+func (i *inspectorState) AnonymousObjects() []anonymous.Impl {
+	return []anonymous.Impl{
+		i.pods,
+		i.secrets,
+		i.persistentVolumeClaims,
+		i.services,
+		i.serviceAccounts,
+		i.nodes,
+		i.podDisruptionBudgets,
+		i.serviceMonitors,
+		i.arangoMembers,
+		i.arangoTasks,
+		i.arangoClusterSynchronizations,
+		i.endpoints,
+	}
+}
+
+func (i *inspectorState) GetCurrentArangoDeployment() (*api.ArangoDeployment, error) {
+	if i.deploymentResult == nil {
+		return nil, errors.Newf("Deployment not initialised")
+	}
+
+	return i.deploymentResult.depl, i.deploymentResult.err
+}
+
 func (i *inspectorState) Endpoints() endpoints.Definition {
 	return i.endpoints
 }
@@ -158,6 +243,13 @@ func (i *inspectorState) Initialised() bool {
 
 func (i *inspectorState) Client() kclient.Client {
 	return i.client
+}
+
+func (i *inspectorState) SetClient(k kclient.Client) {
+	i.lock.Lock()
+	defer i.lock.Unlock()
+
+	i.client = k
 }
 
 func (i *inspectorState) Namespace() string {
@@ -248,6 +340,12 @@ func (i *inspectorState) refreshInThreads(ctx context.Context, threads int, load
 	}
 
 	start := time.Now()
+	i.logger.Debug().Msg("Pre-inspector refresh start")
+	d, err := i.client.Arango().DatabaseV1().ArangoDeployments(i.namespace).Get(context.Background(), i.deploymentName, meta.GetOptions{})
+	n.deploymentResult = &inspectorStateDeploymentResult{
+		depl: d,
+		err:  err,
+	}
 
 	i.logger.Debug().Msg("Inspector refresh start")
 
@@ -297,6 +395,8 @@ func (i *inspectorState) refreshInThreads(ctx context.Context, threads int, load
 	for id := range loaders {
 		loaders[id].Copy(n, i, true)
 	}
+
+	i.deploymentResult = n.deploymentResult
 
 	i.throttles = n.throttles
 
@@ -361,6 +461,7 @@ func (i *inspectorState) validate() error {
 func (i *inspectorState) copyCore() *inspectorState {
 	return &inspectorState{
 		namespace:                     i.namespace,
+		deploymentName:                i.deploymentName,
 		client:                        i.client,
 		pods:                          i.pods,
 		secrets:                       i.secrets,
@@ -376,6 +477,7 @@ func (i *inspectorState) copyCore() *inspectorState {
 		throttles:                     i.throttles.Copy(),
 		versionInfo:                   i.versionInfo,
 		endpoints:                     i.endpoints,
+		deploymentResult:              i.deploymentResult,
 		logger:                        i.logger,
 	}
 }

@@ -32,7 +32,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
@@ -89,15 +89,15 @@ func PDBNameForGroup(depl string, group api.ServerGroup) string {
 	return fmt.Sprintf("%s-%s-pdb", depl, group.AsRole())
 }
 
-func newPDB(minAvail int, deplname string, group api.ServerGroup, owner metav1.OwnerReference) *policyv1beta1.PodDisruptionBudget {
+func newPDB(minAvail int, deplname string, group api.ServerGroup, owner meta.OwnerReference) *policyv1beta1.PodDisruptionBudget {
 	return &policyv1beta1.PodDisruptionBudget{
-		ObjectMeta: metav1.ObjectMeta{
+		ObjectMeta: meta.ObjectMeta{
 			Name:            PDBNameForGroup(deplname, group),
-			OwnerReferences: []metav1.OwnerReference{owner},
+			OwnerReferences: []meta.OwnerReference{owner},
 		},
 		Spec: policyv1beta1.PodDisruptionBudgetSpec{
 			MinAvailable: newFromInt(minAvail),
-			Selector: &metav1.LabelSelector{
+			Selector: &meta.LabelSelector{
 				MatchLabels: k8sutil.LabelsForDeployment(deplname, group.AsRole()),
 			},
 		},
@@ -119,7 +119,7 @@ func (r *Resources) ensurePDBForGroup(ctx context.Context, group api.ServerGroup
 		var pdb *policyv1beta1.PodDisruptionBudget
 		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 			var err error
-			pdb, err = i.Read().Get(ctxChild, pdbname, metav1.GetOptions{})
+			pdb, err = i.Read().Get(ctxChild, pdbname, meta.GetOptions{})
 			return err
 		})
 		if k8sutil.IsNotFound(err) {
@@ -128,7 +128,7 @@ func (r *Resources) ensurePDBForGroup(ctx context.Context, group api.ServerGroup
 				pdb := newPDB(wantedMinAvail, deplname, group, r.context.GetAPIObject().AsOwner())
 				log.Debug().Msg("Creating new PDB")
 				err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-					_, err := r.context.PodDisruptionBudgetsModInterface().Create(ctxChild, pdb, metav1.CreateOptions{})
+					_, err := r.context.PodDisruptionBudgetsModInterface().Create(ctxChild, pdb, meta.CreateOptions{})
 					return err
 				})
 				if err != nil {
@@ -153,7 +153,7 @@ func (r *Resources) ensurePDBForGroup(ctx context.Context, group api.ServerGroup
 			if pdb.GetDeletionTimestamp() == nil {
 				// Update the PDB
 				err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-					return r.context.PodDisruptionBudgetsModInterface().Delete(ctxChild, pdbname, metav1.DeleteOptions{})
+					return r.context.PodDisruptionBudgetsModInterface().Delete(ctxChild, pdbname, meta.DeleteOptions{})
 				})
 				if err != nil && !k8sutil.IsNotFound(err) {
 					log.Error().Err(err).Msg("PDB deletion failed")

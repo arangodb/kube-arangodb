@@ -22,9 +22,12 @@ package v1
 
 import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/gvk"
 )
 
 type Inspector interface {
+	gvk.GVK
+
 	GetSimple(name string) (*api.ArangoMember, bool)
 	Iterate(action Action, filters ...Filter) error
 	Read() ReadInterface

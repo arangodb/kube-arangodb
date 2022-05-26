@@ -21,12 +21,13 @@
 package v1
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/dchest/uniuri"
 	"k8s.io/apimachinery/pkg/api/equality"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/uuid"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 // ActionPriority define action priority
@@ -191,6 +192,9 @@ const (
 	// Rebalancer
 	ActionTypeRebalancerGenerate ActionType = "RebalancerGenerate"
 	ActionTypeRebalancerCheck    ActionType = "RebalancerCheck"
+
+	// Resources
+	ActionTypeResourceSync ActionType = "ResourceSync"
 )
 
 const (
@@ -225,6 +229,8 @@ type Action struct {
 	Image string `json:"image,omitempty"`
 	// Params additional parameters used for action
 	Params map[string]string `json:"params,omitempty"`
+	// Locals additional storage for local variables which are produced during the action.
+	Locals PlanLocals `json:"locals,omitempty"`
 }
 
 // Equal compares two Actions
@@ -237,7 +243,8 @@ func (a Action) Equal(other Action) bool {
 		util.TimeCompareEqualPointer(a.StartTime, other.StartTime) &&
 		a.Reason == other.Reason &&
 		a.Image == other.Image &&
-		equality.Semantic.DeepEqual(a.Params, other.Params)
+		equality.Semantic.DeepEqual(a.Params, other.Params) &&
+		a.Locals.Equal(other.Locals)
 }
 
 // AddParam returns copy of action with set parameter

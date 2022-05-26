@@ -1,8 +1,23 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
-- (Feature) Add CoreV1 Endpoints Inspector
+- (Bugfix) Fix arangosync members state inspection
+- (Feature) (ACS) Improve Reconciliation Loop
+- (Bugfix) Allow missing Monitoring CRD
+- (Feature) (ACS) Add Resource plan
+- (Feature) Allow raw json value for license token-v2
+- (Update) Replace `beta.kubernetes.io/arch` to `kubernetes.io/arch` in Operator Chart
 - (Feature) Add operator shutdown handler for graceful termination
+
+## [1.2.12](https://github.com/arangodb/kube-arangodb/tree/1.2.12) (2022-05-10)
+- (Feature) Add CoreV1 Endpoints Inspector
+- (Feature) Add Current ArangoDeployment Inspector
+- (Refactor) Anonymous inspector functions
+- (Feature) Recursive OwnerReference discovery
+- (Maintenance) Add check make targets
+- (Feature) Create support for local variables in actions.
+- (Feature) Support for asynchronous ArangoD resquests.
+- (Feature) Change Restore in Cluster mode to Async Request
 
 ## [1.2.11](https://github.com/arangodb/kube-arangodb/tree/1.2.11) (2022-04-30)
 - (Bugfix) Orphan PVC are not removed

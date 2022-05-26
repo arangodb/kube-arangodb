@@ -39,12 +39,10 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/acs"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/upgrade"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var (
@@ -81,12 +79,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 	}
 
 	// Check deployment still exists
-	var updated *api.ArangoDeployment
-	err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctxReconciliation, func(ctxChild context.Context) error {
-		var err error
-		updated, err = d.deps.Client.Arango().DatabaseV1().ArangoDeployments(d.GetNamespace()).Get(ctxChild, deploymentName, meta.GetOptions{})
-		return err
-	})
+	updated, err := d.currentState.GetCurrentArangoDeployment()
 	if k8sutil.IsNotFound(err) {
 		// Deployment is gone
 		log.Info().Msg("Deployment is gone")
@@ -184,12 +177,12 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 		}
 	}
 
-	if err := acs.Inspect(ctx, d.apiObject, d.deps.Client, d.GetCachedStatus()); err != nil {
+	if err := d.acs.Inspect(ctx, d.apiObject, d.deps.Client, d.GetCachedStatus()); err != nil {
 		d.deps.Log.Warn().Err(err).Msgf("Unable to handle ACS objects")
 	}
 
 	// Cleanup terminated pods on the beginning of loop
-	if x, err := d.resources.CleanupTerminatedPods(ctx, d.GetCachedStatus()); err != nil {
+	if x, err := d.resources.CleanupTerminatedPods(ctx); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Pod cleanup failed")
 	} else {
 		nextInterval = nextInterval.ReduceTo(x)
@@ -353,7 +346,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	}
 
 	// At the end of the inspect, we cleanup terminated pods.
-	if x, err := d.resources.CleanupTerminatedPods(ctx, d.GetCachedStatus()); err != nil {
+	if x, err := d.resources.CleanupTerminatedPods(ctx); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Pod cleanup failed")
 	} else {
 		nextInterval = nextInterval.ReduceTo(x)

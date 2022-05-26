@@ -23,13 +23,11 @@ package inspector
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	ins "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoclustersynchronization/v1"
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func (p *arangoClusterSynchronizationsInspector) V1() (ins.Inspector, error) {
@@ -129,12 +127,9 @@ func (p *arangoClusterSynchronizationsInspectorV1) Read() ins.ReadInterface {
 	return p
 }
 
-func (p *arangoClusterSynchronizationsInspectorV1) Get(ctx context.Context, name string, opts metav1.GetOptions) (*api.ArangoClusterSynchronization, error) {
+func (p *arangoClusterSynchronizationsInspectorV1) Get(ctx context.Context, name string, opts meta.GetOptions) (*api.ArangoClusterSynchronization, error) {
 	if s, ok := p.GetSimple(name); !ok {
-		return nil, apiErrors.NewNotFound(schema.GroupResource{
-			Group:    deployment.ArangoDeploymentGroupName,
-			Resource: deployment.ArangoClusterSynchronizationResourcePlural,
-		}, name)
+		return nil, apiErrors.NewNotFound(ArangoClusterSynchronizationGR(), name)
 	} else {
 		return s, nil
 	}

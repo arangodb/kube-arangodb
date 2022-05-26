@@ -26,9 +26,15 @@ import (
 	"sync"
 	"time"
 
+	"github.com/rs/zerolog"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
-	"github.com/rs/zerolog"
+	"k8s.io/apimachinery/pkg/types"
+)
+
+const (
+	DefaultStartFailureGracePeriod = 10 * time.Second
 )
 
 func GetAllActions() []api.ActionType {
@@ -81,12 +87,12 @@ type ActionReloadCachedStatus interface {
 	Action
 
 	// ReloadComponents return cache components to be reloaded
-	ReloadComponents() []throttle.Component
+	ReloadComponents() (types.UID, []throttle.Component)
 }
 
-func getActionReloadCachedStatus(a Action) []throttle.Component {
+func getActionReloadCachedStatus(a Action) (types.UID, []throttle.Component) {
 	if c, ok := a.(ActionReloadCachedStatus); !ok {
-		return nil
+		return "", nil
 	} else {
 		return c.ReloadComponents()
 	}
@@ -126,7 +132,7 @@ func (a actionStartFailureGracePeriod) StartFailureGracePeriod() time.Duration {
 
 func getStartFailureGracePeriod(a Action) time.Duration {
 	if c, ok := a.(ActionStartFailureGracePeriod); !ok {
-		return 0
+		return DefaultStartFailureGracePeriod
 	} else {
 		return c.StartFailureGracePeriod()
 	}

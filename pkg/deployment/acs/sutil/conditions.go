@@ -23,6 +23,9 @@ package sutil
 import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 
 const (
-	DeploymentReadyCondition     api.ConditionType = "DeploymentReady"
-	KubernetesConnectedCondition api.ConditionType = "KubernetesConnected"
+	DeploymentReadyCondition       api.ConditionType = "DeploymentReady"
+	KubernetesConnectedCondition   api.ConditionType = "KubernetesConnected"
+	RemoteDeploymentReadyCondition api.ConditionType = "RemoteDeploymentReadyCondition"
+	RemoteCacheReadyCondition      api.ConditionType = "RemoteCacheReady"
+	ConnectionReadyCondition       api.ConditionType = "ConnectionReady"
 )

@@ -21,6 +21,9 @@
 package k8sutil
 
 import (
+	"encoding/base64"
+	"encoding/json"
+
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
@@ -56,8 +59,18 @@ func GetLicenseFromSecret(secret secret.Inspector, name string) (LicenseSecret, 
 	if v1, ok1 := s.Data[constants.SecretKeyV2License]; ok1 {
 		l.V2 = License(v1)
 	} else if v2, ok2 := s.Data[constants.SecretKeyV2Token]; ok2 {
-		l.V2 = License(v2)
+		licenseV2 := v2
+		// some customers put the raw JSON-encoded value, but operator and DB servers expect the base64-encoded value
+		if isJSONBytes(v2) {
+			base64.StdEncoding.Encode(v2, licenseV2)
+		}
+		l.V2 = License(licenseV2)
 	}
 
 	return l, true
+}
+
+func isJSONBytes(s []byte) bool {
+	var js json.RawMessage
+	return json.Unmarshal(s, &js) == nil
 }

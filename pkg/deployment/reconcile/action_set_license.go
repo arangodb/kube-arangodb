@@ -62,7 +62,7 @@ func (a *licenseSetAction) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	l, ok := k8sutil.GetLicenseFromSecret(a.actionCtx.GetCachedStatus(), spec.License.GetSecretName())
+	l, ok := k8sutil.GetLicenseFromSecret(a.actionCtx.ACS().CurrentClusterCache(), spec.License.GetSecretName())
 
 	if !ok {
 		return true, nil

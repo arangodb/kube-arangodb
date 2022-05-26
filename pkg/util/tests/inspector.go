@@ -21,19 +21,20 @@
 package tests
 
 import (
-	"testing"
-	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"context"
-	"github.com/stretchr/testify/require"
+	"testing"
+
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
+	"github.com/stretchr/testify/require"
 )
 
 const FakeNamespace = "fake"
 
 func NewInspector(t *testing.T, c kclient.Client) inspectorInterface.Inspector {
-	i := inspector.NewInspector(throttle.NewAlwaysThrottleComponents(), c, FakeNamespace)
+	i := inspector.NewInspector(throttle.NewAlwaysThrottleComponents(), c, FakeNamespace, FakeNamespace)
 	require.NoError(t, i.Refresh(context.Background()))
 
 	return i

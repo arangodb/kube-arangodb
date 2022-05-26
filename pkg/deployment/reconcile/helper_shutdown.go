@@ -48,12 +48,19 @@ func getShutdownHelper(a *api.Action, actionCtx ActionContext, log zerolog.Logge
 		return nil, api.MemberStatus{}, false
 	}
 
-	if ifPodUIDMismatch(m, *a, actionCtx.GetCachedStatus()) {
+	cache, ok := actionCtx.ACS().ClusterCache(m.ClusterID)
+	if !ok {
+		log.Warn().Str("pod-name", m.PodName).Msg("Cluster is not ready")
+
+		return nil, api.MemberStatus{}, false
+	}
+
+	if ifPodUIDMismatch(m, *a, cache) {
 		log.Error().Msg("Member UID is changed")
 		return NewActionSuccess(), m, true
 	}
 
-	pod, ok := actionCtx.GetCachedStatus().Pod().V1().GetSimple(m.PodName)
+	pod, ok := cache.Pod().V1().GetSimple(m.PodName)
 	if !ok {
 		log.Warn().Str("pod-name", m.PodName).Msg("pod is already gone")
 		// Pod does not exist, so create success action to finish it immediately.
@@ -97,10 +104,24 @@ func (s shutdownHelperAPI) Start(ctx context.Context) (bool, error) {
 		log.Warn().Msgf("Pod is empty")
 		return true, nil
 	}
+
+	cache, ok := s.actionCtx.ACS().ClusterCache(s.memberStatus.ClusterID)
+	if !ok {
+		return true, errors.Newf("Cluster is not ready")
+	}
+
 	// Remove finalizers, so Kubernetes will quickly terminate the pod
 	if !features.GracefulShutdown().Enabled() {
-		if err := s.actionCtx.RemovePodFinalizers(ctx, podName); err != nil {
-			return false, errors.WithStack(err)
+		pod, ok := cache.Pod().V1().GetSimple(podName)
+		if ok && len(pod.Finalizers) > 0 {
+			pod.Finalizers = nil
+
+			ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
+			defer cancel()
+
+			if _, err := cache.Client().Kubernetes().CoreV1().Pods(cache.Namespace()).Update(ctxChild, pod, meta.UpdateOptions{}); err != nil {
+				return false, err
+			}
 		}
 	}
 
@@ -128,7 +149,7 @@ func (s shutdownHelperAPI) Start(ctx context.Context) (bool, error) {
 		}
 	} else if group.IsArangosync() {
 		// Terminate pod
-		if err := s.actionCtx.DeletePod(ctx, podName, meta.DeleteOptions{}); err != nil {
+		if err := cache.Client().Kubernetes().CoreV1().Pods(cache.Namespace()).Delete(ctx, podName, meta.DeleteOptions{}); err != nil {
 			return false, errors.WithStack(err)
 		}
 	}
@@ -160,8 +181,13 @@ func (s shutdownHelperDelete) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
+	cache, ok := s.actionCtx.ACS().ClusterCache(s.memberStatus.ClusterID)
+	if !ok {
+		return true, errors.Newf("Cluster is not ready")
+	}
+
 	// Terminate pod
-	if err := s.actionCtx.DeletePod(ctx, podName, meta.DeleteOptions{}); err != nil {
+	if err := cache.Client().Kubernetes().CoreV1().Pods(cache.Namespace()).Delete(ctx, podName, meta.DeleteOptions{}); err != nil {
 		if !k8sutil.IsNotFound(err) {
 			return false, errors.WithStack(err)
 		}
@@ -179,13 +205,16 @@ func (s shutdownHelperDelete) CheckProgress(ctx context.Context) (bool, bool, er
 		return false, false, nil
 	}
 
+	cache, ok := s.actionCtx.ACS().ClusterCache(s.memberStatus.ClusterID)
+	if !ok {
+		log.Warn().Msg("Cluster is not ready")
+		return false, false, nil
+	}
+
 	podName := s.memberStatus.PodName
 	if podName != "" {
-		if _, err := s.actionCtx.GetPod(ctx, podName); err == nil {
+		if _, ok := cache.Pod().V1().GetSimple(podName); ok {
 			log.Warn().Msgf("Pod still exists")
-			return false, false, nil
-		} else if !k8sutil.IsNotFound(err) {
-			log.Error().Err(err).Msg("Unable to get pod")
 			return false, false, nil
 		}
 	}
@@ -212,14 +241,17 @@ func (s shutdownNow) Start(ctx context.Context) (bool, error) {
 // CheckProgress starts removing pod forcefully and checks if has it been removed.
 func (s shutdownNow) CheckProgress(ctx context.Context) (bool, bool, error) {
 	podName := s.memberStatus.PodName
-	pod, err := s.actionCtx.GetPod(ctx, podName)
-	if err != nil {
-		if k8sutil.IsNotFound(err) {
-			s.log.Info().Msg("Using shutdown now method completed because pod is gone")
-			return true, false, nil
-		}
 
-		return false, false, errors.Wrapf(err, "failed to get pod")
+	cache, ok := s.actionCtx.ACS().ClusterCache(s.memberStatus.ClusterID)
+	if !ok {
+		s.log.Warn().Msg("Cluster is not ready")
+		return false, false, nil
+	}
+
+	pod, ok := cache.Pod().V1().GetSimple(podName)
+	if !ok {
+		s.log.Info().Msg("Using shutdown now method completed because pod is gone")
+		return true, false, nil
 	}
 
 	if s.memberStatus.PodUID != pod.GetUID() {
@@ -229,8 +261,15 @@ func (s shutdownNow) CheckProgress(ctx context.Context) (bool, bool, error) {
 	}
 
 	// Remove finalizers forcefully.
-	if err := s.actionCtx.RemovePodFinalizers(ctx, podName); err != nil {
-		return false, false, errors.WithStack(err)
+	if len(pod.Finalizers) > 0 {
+		pod.Finalizers = nil
+
+		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
+		defer cancel()
+
+		if _, err := cache.Client().Kubernetes().CoreV1().Pods(cache.Namespace()).Update(ctxChild, pod, meta.UpdateOptions{}); err != nil {
+			return false, false, err
+		}
 	}
 
 	// Terminate pod.
@@ -238,7 +277,7 @@ func (s shutdownNow) CheckProgress(ctx context.Context) (bool, bool, error) {
 		// Leave one second to clean a PVC.
 		GracePeriodSeconds: util.NewInt64(1),
 	}
-	if err := s.actionCtx.DeletePod(ctx, podName, options); err != nil {
+	if err := cache.Client().Kubernetes().CoreV1().Pods(cache.Namespace()).Delete(ctx, podName, options); err != nil {
 		if !k8sutil.IsNotFound(err) {
 			return false, false, errors.WithStack(err)
 		}

@@ -25,7 +25,11 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/refresh"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/server"
 
+	"context"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoclustersynchronization"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangodeployment"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangotask"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/endpoints"
@@ -38,13 +42,29 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
+type Object interface {
+	meta.Object
+
+	GroupVersionKind() schema.GroupVersionKind
+}
+
 type Inspector interface {
+	SetClient(k kclient.Client)
 	Client() kclient.Client
+
 	Namespace() string
 
 	Initialised() bool
+
+	anonymous.Impl
+
+	IsOwnerOf(ctx context.Context, owner Object, obj meta.Object) bool
+
+	AnonymousObjects() []anonymous.Impl
 
 	refresh.Inspector
 	throttle.Inspector
@@ -59,6 +79,8 @@ type Inspector interface {
 	arangomember.Inspector
 	server.Inspector
 	endpoints.Inspector
+
+	arangodeployment.Inspector
 
 	node.Inspector
 	arangoclustersynchronization.Inspector

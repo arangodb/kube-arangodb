@@ -64,8 +64,13 @@ func (a actionRuntimeContainerArgsUpdate) Post(ctx context.Context) error {
 		return nil
 	}
 
+	cache, ok := a.actionCtx.ACS().ClusterCache(m.ClusterID)
+	if !ok {
+		return errors.Errorf("Client is not ready")
+	}
+
 	memberName := m.ArangoMemberName(a.actionCtx.GetName(), a.action.Group)
-	member, ok := a.actionCtx.GetCachedStatus().ArangoMember().V1().GetSimple(memberName)
+	member, ok := cache.ArangoMember().V1().GetSimple(memberName)
 	if !ok {
 		return errors.Errorf("ArangoMember %s not found", memberName)
 	}
@@ -129,6 +134,11 @@ func (a actionRuntimeContainerArgsUpdate) Start(ctx context.Context) (bool, erro
 		return true, nil
 	}
 
+	cache, ok := a.actionCtx.ACS().ClusterCache(m.ClusterID)
+	if !ok {
+		return true, errors.Errorf("Client is not ready")
+	}
+
 	if !m.Phase.IsReady() {
 		a.log.Info().Msg("Member is not ready, unable to run update operation")
 		return true, nil
@@ -140,12 +150,12 @@ func (a actionRuntimeContainerArgsUpdate) Start(ctx context.Context) (bool, erro
 	}
 
 	memberName := m.ArangoMemberName(a.actionCtx.GetName(), a.action.Group)
-	member, ok := a.actionCtx.GetCachedStatus().ArangoMember().V1().GetSimple(memberName)
+	member, ok := cache.ArangoMember().V1().GetSimple(memberName)
 	if !ok {
 		return false, errors.Errorf("ArangoMember %s not found", memberName)
 	}
 
-	pod, ok := a.actionCtx.GetCachedStatus().Pod().V1().GetSimple(m.PodName)
+	pod, ok := cache.Pod().V1().GetSimple(m.PodName)
 	if !ok {
 		a.log.Info().Str("podName", m.PodName).Msg("pod is not present")
 		return true, nil

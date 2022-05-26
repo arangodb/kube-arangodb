@@ -64,6 +64,14 @@ func GetRateLimiter(name string) flowcontrol.RateLimiter {
 	return l
 }
 
+func GetUnattachedRateLimiter() flowcontrol.RateLimiter {
+	return &rateLimiter{
+		limiter: rate.NewLimiter(rate.Limit(defaultQPS), defaultBurst),
+		clock:   clock{},
+		qps:     defaultQPS,
+	}
+}
+
 func SetDefaultBurst(q int) {
 	rateLimitersLock.Lock()
 	defer rateLimitersLock.Unlock()

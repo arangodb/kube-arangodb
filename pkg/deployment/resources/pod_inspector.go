@@ -31,7 +31,7 @@ import (
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 
 	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"strings"
 
@@ -108,7 +108,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 				nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
 				if !wasTerminated {
 					// Record termination time
-					now := metav1.Now()
+					now := meta.Now()
 					memberStatus.RecentTerminations = append(memberStatus.RecentTerminations, now)
 				}
 			}
@@ -173,7 +173,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 				nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
 				if !wasTerminated {
 					// Record termination time
-					now := metav1.Now()
+					now := meta.Now()
 					memberStatus.RecentTerminations = append(memberStatus.RecentTerminations, now)
 				}
 			}
@@ -327,7 +327,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 						if m.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Terminated", "") {
 							if !wasTerminated {
 								// Record termination time
-								now := metav1.Now()
+								now := meta.Now()
 								m.RecentTerminations = append(m.RecentTerminations, now)
 							}
 							// Save it
@@ -349,7 +349,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 						if m.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Does Not Exist", "") {
 							if !wasTerminated {
 								// Record termination time
-								now := metav1.Now()
+								now := meta.Now()
 								m.RecentTerminations = append(m.RecentTerminations, now)
 							}
 							updateMemberNeeded = true

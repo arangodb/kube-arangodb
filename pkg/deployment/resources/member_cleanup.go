@@ -25,7 +25,7 @@ import (
 	"time"
 
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
@@ -137,9 +137,9 @@ func (r *Resources) EnsureArangoMembers(ctx context.Context, cachedStatus inspec
 			if !c.Exists(ctx) {
 				// Create ArangoMember
 				obj := &api.ArangoMember{
-					ObjectMeta: metav1.ObjectMeta{
+					ObjectMeta: meta.ObjectMeta{
 						Name: name,
-						OwnerReferences: []metav1.OwnerReference{
+						OwnerReferences: []meta.OwnerReference{
 							obj.AsOwner(),
 						},
 					},
@@ -159,7 +159,7 @@ func (r *Resources) EnsureArangoMembers(ctx context.Context, cachedStatus inspec
 				if err := c.Update(ctx, func(m *api.ArangoMember) bool {
 					changed := false
 					if len(m.OwnerReferences) == 0 {
-						m.OwnerReferences = []metav1.OwnerReference{
+						m.OwnerReferences = []meta.OwnerReference{
 							obj.AsOwner(),
 						}
 						changed = true

@@ -29,7 +29,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 
 	"github.com/stretchr/testify/assert"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
@@ -45,7 +45,7 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 	// Default deployment
 	{
 		apiObject := &api.ArangoDeployment{
-			ObjectMeta: metav1.ObjectMeta{
+			ObjectMeta: meta.ObjectMeta{
 				Name:      "name",
 				Namespace: tests.FakeNamespace,
 			},
@@ -104,7 +104,7 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 	// Default+AutoUpgrade deployment
 	{
 		apiObject := &api.ArangoDeployment{
-			ObjectMeta: metav1.ObjectMeta{
+			ObjectMeta: meta.ObjectMeta{
 				Name:      "name",
 				Namespace: tests.FakeNamespace,
 			},
@@ -164,7 +164,7 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 	// Default+AutoUpgrade deployment for 3.6.0
 	{
 		apiObject := &api.ArangoDeployment{
-			ObjectMeta: metav1.ObjectMeta{
+			ObjectMeta: meta.ObjectMeta{
 				Name:      "name",
 				Namespace: tests.FakeNamespace,
 			},
@@ -224,7 +224,7 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 	// Default+TLS disabled deployment
 	{
 		apiObject := &api.ArangoDeployment{
-			ObjectMeta: metav1.ObjectMeta{
+			ObjectMeta: meta.ObjectMeta{
 				Name:      "name",
 				Namespace: tests.FakeNamespace,
 			},
@@ -284,7 +284,7 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 	// No authentication
 	{
 		apiObject := &api.ArangoDeployment{
-			ObjectMeta: metav1.ObjectMeta{
+			ObjectMeta: meta.ObjectMeta{
 				Name:      "name",
 				Namespace: tests.FakeNamespace,
 			},
@@ -343,7 +343,7 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 	// Custom args, RocksDB
 	{
 		apiObject := &api.ArangoDeployment{
-			ObjectMeta: metav1.ObjectMeta{
+			ObjectMeta: meta.ObjectMeta{
 				Name:      "name",
 				Namespace: tests.FakeNamespace,
 			},

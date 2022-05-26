@@ -33,18 +33,17 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 )
 
 func createMemberRecreationConditionsPlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
+	context PlanBuilderContext) api.Plan {
 	var p api.Plan
 
 	for _, m := range status.Members.AsList() {
 		message, recreate := EvaluateMemberRecreationCondition(ctx, log, apiObject, spec, status, m.Group, m.Member,
-			cachedStatus, context, isStorageClassChanged, isVolumeSizeChanged)
+			context, isStorageClassChanged, isVolumeSizeChanged)
 
 		if !recreate {
 			if _, ok := m.Member.Conditions.Get(api.MemberReplacementRequired); ok {
@@ -66,17 +65,17 @@ type MemberRecreationConditionEvaluator func(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	group api.ServerGroup, member api.MemberStatus,
-	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) (bool, string, error)
+	context PlanBuilderContext) (bool, string, error)
 
 func EvaluateMemberRecreationCondition(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	group api.ServerGroup, member api.MemberStatus,
-	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext, evaluators ...MemberRecreationConditionEvaluator) (string, bool) {
+	context PlanBuilderContext, evaluators ...MemberRecreationConditionEvaluator) (string, bool) {
 	args := make([]string, 0, len(evaluators))
 
 	for _, e := range evaluators {
-		ok, s, err := e(ctx, log, apiObject, spec, status, group, member, cachedStatus, context)
+		ok, s, err := e(ctx, log, apiObject, spec, status, group, member, context)
 		if err != nil {
 			// When one of an evaluator requires pod's replacement then it should be done.
 			continue
@@ -93,7 +92,7 @@ func EvaluateMemberRecreationCondition(ctx context.Context,
 // isStorageClassChanged returns true and reason when the member should be replaced.
 func isStorageClassChanged(_ context.Context, log zerolog.Logger, apiObject k8sutil.APIObject, spec api.DeploymentSpec,
 	_ api.DeploymentStatus, group api.ServerGroup, member api.MemberStatus,
-	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) (bool, string, error) {
+	context PlanBuilderContext) (bool, string, error) {
 	if spec.GetMode() == api.DeploymentModeSingle {
 		// Storage cannot be changed in single server deployments.
 		return false, "", nil
@@ -116,8 +115,13 @@ func isStorageClassChanged(_ context.Context, log zerolog.Logger, apiObject k8su
 		return false, "", nil
 	}
 
+	cache, ok := context.ACS().ClusterCache(member.ClusterID)
+	if !ok {
+		return false, "", nil
+	}
+
 	// Check if a storage class changed.
-	if pvc, ok := cachedStatus.PersistentVolumeClaim().V1().GetSimple(member.PersistentVolumeClaimName); !ok {
+	if pvc, ok := cache.PersistentVolumeClaim().V1().GetSimple(member.PersistentVolumeClaimName); !ok {
 		log.Warn().Str("role", group.AsRole()).Str("id", member.ID).Msg("Failed to get PVC")
 		return false, "", fmt.Errorf("failed to get PVC %s", member.PersistentVolumeClaimName)
 	} else {
@@ -141,7 +145,7 @@ func isStorageClassChanged(_ context.Context, log zerolog.Logger, apiObject k8su
 
 	// From here on it is known that the member requires replacement, so `true` must be returned.
 	// If pod does not exist then it will try next time.
-	if pod, ok := cachedStatus.Pod().V1().GetSimple(member.PodName); ok {
+	if pod, ok := cache.Pod().V1().GetSimple(member.PodName); ok {
 		if _, ok := pod.GetAnnotations()[deployment.ArangoDeploymentPodReplaceAnnotation]; !ok {
 			log.Warn().
 				Str("pod-name", member.PodName).
@@ -159,7 +163,7 @@ func isStorageClassChanged(_ context.Context, log zerolog.Logger, apiObject k8su
 // isVolumeSizeChanged returns true and reason when the member should be replaced.
 func isVolumeSizeChanged(_ context.Context, log zerolog.Logger, _ k8sutil.APIObject, spec api.DeploymentSpec,
 	_ api.DeploymentStatus, group api.ServerGroup, member api.MemberStatus,
-	cachedStatus inspectorInterface.Inspector, _ PlanBuilderContext) (bool, string, error) {
+	context PlanBuilderContext) (bool, string, error) {
 	if spec.GetMode() == api.DeploymentModeSingle {
 		// Storage cannot be changed in single server deployments.
 		return false, "", nil
@@ -175,7 +179,12 @@ func isVolumeSizeChanged(_ context.Context, log zerolog.Logger, _ k8sutil.APIObj
 		return false, "", nil
 	}
 
-	pvc, ok := cachedStatus.PersistentVolumeClaim().V1().GetSimple(member.PersistentVolumeClaimName)
+	cache, ok := context.ACS().ClusterCache(member.ClusterID)
+	if !ok {
+		return false, "", nil
+	}
+
+	pvc, ok := cache.PersistentVolumeClaim().V1().GetSimple(member.PersistentVolumeClaimName)
 	if !ok {
 		log.Warn().
 			Str("role", group.AsRole()).
@@ -202,7 +211,7 @@ func isVolumeSizeChanged(_ context.Context, log zerolog.Logger, _ k8sutil.APIObj
 
 	// From here on it is known that the member requires replacement, so `true` must be returned.
 	// If pod does not exist then it will try next time.
-	if pod, ok := cachedStatus.Pod().V1().GetSimple(member.PodName); ok {
+	if pod, ok := cache.Pod().V1().GetSimple(member.PodName); ok {
 		if _, ok := pod.GetAnnotations()[deployment.ArangoDeploymentPodReplaceAnnotation]; !ok {
 			log.Warn().Str("pod-name", member.PodName).
 				Msgf("try shrinking volume size, but %s", getRequiredReplaceMessage(member.PodName))

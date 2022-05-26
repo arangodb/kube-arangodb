@@ -32,12 +32,11 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 )
 
 // createCleanOutPlan creates clean out action if the server is cleaned out and the operator is not aware of it.
 func createCleanOutPlan(ctx context.Context, log zerolog.Logger, _ k8sutil.APIObject, spec api.DeploymentSpec,
-	status api.DeploymentStatus, _ inspectorInterface.Inspector, planCtx PlanBuilderContext) api.Plan {
+	status api.DeploymentStatus, planCtx PlanBuilderContext) api.Plan {
 
 	if spec.GetMode() != api.DeploymentModeCluster {
 		return nil

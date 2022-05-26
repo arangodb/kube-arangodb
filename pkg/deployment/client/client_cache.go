@@ -36,6 +36,8 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
+type ConnectionWrap func(c driver.Connection) driver.Connection
+
 type Cache interface {
 	GetAuth() conn.Auth
 
@@ -43,6 +45,7 @@ type Cache interface {
 
 	Get(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error)
 	GetDatabase(ctx context.Context) (driver.Client, error)
+	GetDatabaseWithWrap(ctx context.Context, wraps ...ConnectionWrap) (driver.Client, error)
 	GetAgency(ctx context.Context) (agency.Agency, error)
 }
 
@@ -142,6 +145,25 @@ func (cc *cache) GetDatabase(ctx context.Context) (driver.Client, error) {
 	} else {
 		return client, nil
 	}
+}
+
+func (cc *cache) GetDatabaseWithWrap(ctx context.Context, wraps ...ConnectionWrap) (driver.Client, error) {
+	c, err := cc.getDatabaseClient()
+	if err != nil {
+		return nil, err
+	}
+
+	conn := c.Connection()
+
+	for _, w := range wraps {
+		if w != nil {
+			conn = w(conn)
+		}
+	}
+
+	return driver.NewClient(driver.ClientConfig{
+		Connection: conn,
+	})
 }
 
 // GetAgency returns a cached client for the agency

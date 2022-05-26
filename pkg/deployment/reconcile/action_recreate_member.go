@@ -25,8 +25,6 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
-	kubeErrors "k8s.io/apimachinery/pkg/api/errors"
-
 	"github.com/rs/zerolog"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -64,15 +62,16 @@ func (a *actionRecreateMember) Start(ctx context.Context) (bool, error) {
 		return false, errors.Newf("expecting member to be present in list, but it is not")
 	}
 
+	cache, ok := a.actionCtx.ACS().ClusterCache(m.ClusterID)
+	if !ok {
+		return true, errors.Newf("Cluster is not ready")
+	}
+
 	switch g {
 	case api.ServerGroupDBServers, api.ServerGroupAgents: // Only DBServers and Agents use persistent data
-		_, err := a.actionCtx.GetPvc(ctx, m.PersistentVolumeClaimName)
-		if err != nil {
-			if kubeErrors.IsNotFound(err) {
-				return false, errors.Newf("PVC is missing %s. Members won't be recreated without old PV", m.PersistentVolumeClaimName)
-			}
-
-			return false, errors.WithStack(err)
+		_, ok := cache.PersistentVolumeClaim().V1().GetSimple(m.PersistentVolumeClaimName)
+		if !ok {
+			return false, errors.Newf("PVC is missing %s. Members won't be recreated without old PV", m.PersistentVolumeClaimName)
 		}
 	}
 

@@ -20,9 +20,14 @@
 
 package v1
 
-import monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+import (
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/gvk"
+	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+)
 
 type Inspector interface {
+	gvk.GVK
+
 	GetSimple(name string) (*monitoring.ServiceMonitor, bool)
 	Iterate(action Action, filters ...Filter) error
 	Read() ReadInterface

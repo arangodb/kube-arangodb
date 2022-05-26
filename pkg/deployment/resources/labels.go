@@ -26,11 +26,11 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	core "k8s.io/api/core/v1"
 	policy "k8s.io/api/policy/v1beta1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -152,7 +152,7 @@ func (r *Resources) EnsureServiceMonitorsLabels(ctx context.Context, cachedStatu
 	changed := false
 	i, err := cachedStatus.ServiceMonitor().V1()
 	if err != nil {
-		if apierrors.IsForbidden(err) {
+		if k8sutil.IsForbiddenOrNotFound(err) {
 			return nil
 		}
 		return err

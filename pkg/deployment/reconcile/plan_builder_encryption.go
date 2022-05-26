@@ -28,10 +28,8 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	core "k8s.io/api/core/v1"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
@@ -56,7 +54,7 @@ func skipEncryptionPlan(spec api.DeploymentSpec, status api.DeploymentStatus) bo
 func createEncryptionKeyStatusPropagatedFieldUpdate(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext, w WithPlanBuilder, builders ...planBuilder) api.Plan {
+	context PlanBuilderContext, w WithPlanBuilder, builders ...planBuilder) api.Plan {
 	if skipEncryptionPlan(spec, status) {
 		return nil
 	}
@@ -93,12 +91,12 @@ func createEncryptionKeyStatusPropagatedFieldUpdate(ctx context.Context,
 func createEncryptionKey(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
+	context PlanBuilderContext) api.Plan {
 	if skipEncryptionPlan(spec, status) {
 		return nil
 	}
 
-	secret, exists := cachedStatus.Secret().V1().GetSimple(spec.RocksDB.Encryption.GetKeySecretName())
+	secret, exists := context.ACS().CurrentClusterCache().Secret().V1().GetSimple(spec.RocksDB.Encryption.GetKeySecretName())
 	if !exists {
 		return nil
 	}
@@ -113,7 +111,7 @@ func createEncryptionKey(ctx context.Context,
 		return nil
 	}
 
-	keyfolder, exists := cachedStatus.Secret().V1().GetSimple(pod.GetEncryptionFolderSecretName(context.GetName()))
+	keyfolder, exists := context.ACS().CurrentClusterCache().Secret().V1().GetSimple(pod.GetEncryptionFolderSecretName(context.GetName()))
 	if !exists {
 		log.Error().Msgf("Encryption key folder does not exist")
 		return nil
@@ -147,12 +145,12 @@ func createEncryptionKey(ctx context.Context,
 func createEncryptionKeyStatusUpdate(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
+	context PlanBuilderContext) api.Plan {
 	if skipEncryptionPlan(spec, status) {
 		return nil
 	}
 
-	if createEncryptionKeyStatusUpdateRequired(log, spec, status, cachedStatus, context) {
+	if createEncryptionKeyStatusUpdateRequired(log, spec, status, context) {
 		return api.Plan{actions.NewClusterAction(api.ActionTypeEncryptionKeyStatusUpdate)}
 	}
 
@@ -161,12 +159,12 @@ func createEncryptionKeyStatusUpdate(ctx context.Context,
 }
 
 func createEncryptionKeyStatusUpdateRequired(log zerolog.Logger, spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) bool {
+	context PlanBuilderContext) bool {
 	if skipEncryptionPlan(spec, status) {
 		return false
 	}
 
-	keyfolder, exists := cachedStatus.Secret().V1().GetSimple(pod.GetEncryptionFolderSecretName(context.GetName()))
+	keyfolder, exists := context.ACS().CurrentClusterCache().Secret().V1().GetSimple(pod.GetEncryptionFolderSecretName(context.GetName()))
 	if !exists {
 		log.Error().Msgf("Encryption key folder does not exist")
 		return false
@@ -180,12 +178,12 @@ func createEncryptionKeyStatusUpdateRequired(log zerolog.Logger, spec api.Deploy
 func createEncryptionKeyCleanPlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
+	context PlanBuilderContext) api.Plan {
 	if skipEncryptionPlan(spec, status) {
 		return nil
 	}
 
-	keyfolder, exists := cachedStatus.Secret().V1().GetSimple(pod.GetEncryptionFolderSecretName(context.GetName()))
+	keyfolder, exists := context.ACS().CurrentClusterCache().Secret().V1().GetSimple(pod.GetEncryptionFolderSecretName(context.GetName()))
 	if !exists {
 		log.Error().Msgf("Encryption key folder does not exist")
 		return nil
@@ -201,7 +199,7 @@ func createEncryptionKeyCleanPlan(ctx context.Context,
 		return nil
 	}
 
-	secret, exists := cachedStatus.Secret().V1().GetSimple(spec.RocksDB.Encryption.GetKeySecretName())
+	secret, exists := context.ACS().CurrentClusterCache().Secret().V1().GetSimple(spec.RocksDB.Encryption.GetKeySecretName())
 	if !exists {
 		return nil
 	}

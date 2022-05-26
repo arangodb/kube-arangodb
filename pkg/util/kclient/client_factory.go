@@ -32,6 +32,10 @@ import (
 	"k8s.io/client-go/rest"
 )
 
+const (
+	unattachedFactoryID = "unattached-factory-id"
+)
+
 var (
 	factories     = map[string]*factory{}
 	factoriesLock sync.Mutex
@@ -64,6 +68,12 @@ func GetFactory(name string) Factory {
 	}
 
 	return factories[name]
+}
+
+func GetUnattachedFactory() Factory {
+	return &factory{
+		name: unattachedFactoryID,
+	}
 }
 
 type ConfigGetter func() (*rest.Config, string, error)
@@ -135,7 +145,11 @@ func (f *factory) refresh() error {
 		return nil
 	}
 
-	cfg.RateLimiter = GetRateLimiter(f.name)
+	if f.name == unattachedFactoryID {
+		cfg.RateLimiter = GetUnattachedRateLimiter()
+	} else {
+		cfg.RateLimiter = GetRateLimiter(f.name)
+	}
 
 	client, err := newClient(cfg)
 	if err != nil {

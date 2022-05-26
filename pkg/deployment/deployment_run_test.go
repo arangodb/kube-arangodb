@@ -179,7 +179,7 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 				image, ok := d.resources.SelectImage(d.apiObject.Spec, d.status.last)
 				require.True(t, ok)
 
-				template, err := d.resources.RenderPodTemplateForMember(context.Background(), d.GetCachedStatus(), d.apiObject.Spec, d.status.last, m.ID, image)
+				template, err := d.resources.RenderPodTemplateForMember(context.Background(), d.ACS(), d.apiObject.Spec, d.status.last, m.ID, image)
 				if err != nil {
 					return err
 				}

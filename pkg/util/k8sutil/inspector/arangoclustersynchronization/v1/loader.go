@@ -22,9 +22,12 @@ package v1
 
 import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/gvk"
 )
 
 type Inspector interface {
+	gvk.GVK
+
 	ListSimple() []*api.ArangoClusterSynchronization
 	GetSimple(name string) (*api.ArangoClusterSynchronization, bool)
 	Filter(filters ...Filter) []*api.ArangoClusterSynchronization

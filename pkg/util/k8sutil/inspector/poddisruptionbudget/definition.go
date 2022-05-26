@@ -21,6 +21,8 @@
 package poddisruptionbudget
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/gvk"
 	v1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/refresh"
@@ -32,6 +34,9 @@ type Inspector interface {
 
 type Definition interface {
 	refresh.Inspector
+
+	gvk.GK
+	anonymous.Impl
 
 	V1() (v1.Inspector, error)
 	V1Beta1() (v1beta1.Inspector, error)

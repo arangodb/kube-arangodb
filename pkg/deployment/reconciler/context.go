@@ -23,10 +23,13 @@ package reconciler
 import (
 	"context"
 
+	core "k8s.io/api/core/v1"
+
 	"github.com/arangodb/arangosync-client/client"
 	"github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/acs/sutil"
 	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -38,7 +41,6 @@ import (
 	servicev1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service/v1"
 	serviceaccountv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount/v1"
 	servicemonitorv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor/v1"
-	core "k8s.io/api/core/v1"
 )
 
 // ServerGroupIterator provides a helper to callback on every server
@@ -74,13 +76,13 @@ type DeploymentAgencyMaintenance interface {
 
 type DeploymentPodRenderer interface {
 	// RenderPodForMember Renders Pod definition for member
-	RenderPodForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error)
+	RenderPodForMember(ctx context.Context, acs sutil.ACS, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error)
 	// RenderPodTemplateForMember Renders PodTemplate definition for member
-	RenderPodTemplateForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.PodTemplateSpec, error)
+	RenderPodTemplateForMember(ctx context.Context, acs sutil.ACS, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.PodTemplateSpec, error)
 	// RenderPodForMemberFromCurrent Renders PodTemplate definition for member from current state
-	RenderPodForMemberFromCurrent(ctx context.Context, cachedStatus inspectorInterface.Inspector, memberID string) (*core.Pod, error)
+	RenderPodForMemberFromCurrent(ctx context.Context, acs sutil.ACS, memberID string) (*core.Pod, error)
 	// RenderPodTemplateForMemberFromCurrent Renders PodTemplate definition for member
-	RenderPodTemplateForMemberFromCurrent(ctx context.Context, cachedStatus inspectorInterface.Inspector, memberID string) (*core.PodTemplateSpec, error)
+	RenderPodTemplateForMemberFromCurrent(ctx context.Context, acs sutil.ACS, memberID string) (*core.PodTemplateSpec, error)
 
 	DeploymentEndpoints
 }
@@ -165,6 +167,10 @@ type DeploymentDatabaseClient interface {
 	// GetDatabaseClient returns a cached client for the entire database (cluster coordinators or single server),
 	// creating one if needed.
 	GetDatabaseClient(ctx context.Context) (driver.Client, error)
+
+	// GetDatabaseAsyncClient returns a cached client for the entire database (cluster coordinators or single server),
+	// creating one if needed. Only in AsyncMode
+	GetDatabaseAsyncClient(ctx context.Context) (driver.Client, error)
 }
 
 type DeploymentMemberClient interface {
@@ -187,4 +193,5 @@ type DeploymentClient interface {
 	DeploymentAgencyClient
 	DeploymentDatabaseClient
 	DeploymentMemberClient
+	DeploymentSyncClient
 }

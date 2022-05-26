@@ -29,19 +29,18 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/rs/zerolog"
 )
 
 func updateClusterLicense(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
+	context PlanBuilderContext) api.Plan {
 	if !spec.License.HasSecretName() {
 		return nil
 	}
 
-	l, ok := k8sutil.GetLicenseFromSecret(context.GetCachedStatus(), spec.License.GetSecretName())
+	l, ok := k8sutil.GetLicenseFromSecret(context.ACS().CurrentClusterCache(), spec.License.GetSecretName())
 	if !ok {
 		log.Trace().Str("secret", spec.Authentication.GetJWTSecretName()).Msgf("Unable to find license secret key")
 		return nil
