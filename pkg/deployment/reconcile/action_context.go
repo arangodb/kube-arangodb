@@ -175,6 +175,11 @@ func (ac *actionContext) GetAgencyClientsWithPredicate(ctx context.Context, pred
 	return ac.context.GetAgencyClientsWithPredicate(ctx, predicate)
 }
 
+// GetAgencyLeaderID returns a leader ID or empty string if a leader is not known.
+func (ac *actionContext) GetAgencyLeaderID() string {
+	return ac.context.GetAgencyLeaderID()
+}
+
 func (ac *actionContext) GetStatus() (api.DeploymentStatus, int32) {
 	return ac.context.GetStatus()
 }

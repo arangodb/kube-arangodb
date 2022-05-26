@@ -166,6 +166,10 @@ func (c *testContext) GetAgencyCache() (agencyCache.State, bool) {
 	return agencyCache.State{}, true
 }
 
+func (c *testContext) GetAgencyLeaderID() string {
+	return ""
+}
+
 func (c *testContext) SecretsModInterface() secretv1.ModInterface {
 	panic("implement me")
 }
