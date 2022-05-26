@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"testing"
+	"time"
 
 	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 	"github.com/rs/zerolog"
@@ -36,8 +37,6 @@ import (
 
 	"github.com/arangodb/arangosync-client/client"
 	"github.com/arangodb/go-driver/agency"
-
-	"time"
 
 	"github.com/arangodb/go-driver"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
@@ -308,7 +307,7 @@ func (c *testContext) GetServerClient(ctx context.Context, group api.ServerGroup
 	panic("implement me")
 }
 
-func (c *testContext) GetAgency(ctx context.Context) (agency.Agency, error) {
+func (c *testContext) GetAgency(_ context.Context, _ ...string) (agency.Agency, error) {
 	panic("implement me")
 }
 

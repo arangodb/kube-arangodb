@@ -7,6 +7,9 @@
 - (Feature) (ACS) Add Resource plan
 - (Feature) Allow raw json value for license token-v2
 - (Update) Replace `beta.kubernetes.io/arch` to `kubernetes.io/arch` in Operator Chart
+- (Feature) Add operator shutdown handler for graceful termination
+- (Feature) Add agency leader discovery
+- (Feature) Add `ACSDeploymentSynced` condition type and fix comparison of `SecretHashes` method
 - (Feature) Add RestartPolicyAlways to ArangoDeployment in order to restart ArangoDB on failure
 
 ## [1.2.12](https://github.com/arangodb/kube-arangodb/tree/1.2.12) (2022-05-10)

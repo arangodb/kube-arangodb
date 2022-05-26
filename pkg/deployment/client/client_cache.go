@@ -31,6 +31,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
+	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -46,7 +47,7 @@ type Cache interface {
 	Get(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error)
 	GetDatabase(ctx context.Context) (driver.Client, error)
 	GetDatabaseWithWrap(ctx context.Context, wraps ...ConnectionWrap) (driver.Client, error)
-	GetAgency(ctx context.Context) (agency.Agency, error)
+	GetAgency(ctx context.Context, agencyIDs ...string) (agency.Agency, error)
 }
 
 type CacheGen interface {
@@ -167,13 +168,19 @@ func (cc *cache) GetDatabaseWithWrap(ctx context.Context, wraps ...ConnectionWra
 }
 
 // GetAgency returns a cached client for the agency
-func (cc *cache) GetAgency(ctx context.Context) (agency.Agency, error) {
+func (cc *cache) GetAgency(_ context.Context, agencyIDs ...string) (agency.Agency, error) {
 	cc.mutex.Lock()
 	defer cc.mutex.Unlock()
 
 	// Not found, create a new client
 	var dnsNames []string
 	for _, m := range cc.in.GetStatusSnapshot().Members.Agents {
+		if len(agencyIDs) > 0 {
+			if !utils.StringList(agencyIDs).Has(m.ID) {
+				continue
+			}
+		}
+
 		endpoint, err := cc.in.GenerateMemberEndpoint(api.ServerGroupAgents, m)
 		if err != nil {
 			return nil, err
