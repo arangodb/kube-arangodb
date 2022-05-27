@@ -127,11 +127,6 @@ func (d *Deployment) GetStatus() (api.DeploymentStatus, int32) {
 	return d.getStatus()
 }
 
-// GetAgencyLeaderID returns a leader ID or empty string if a leader is not known.
-func (d *Deployment) GetAgencyLeaderID() string {
-	return d.agencyCache.GetLeaderID()
-}
-
 func (d *Deployment) getStatus() (api.DeploymentStatus, int32) {
 	obj := d.status.deploymentStatusObject
 	return *obj.last.DeepCopy(), obj.version

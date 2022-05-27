@@ -29,10 +29,12 @@ import (
 	"github.com/arangodb/go-driver/agency"
 )
 
-func getAgencyConfig(ctx context.Context, client agency.Agency) (*agencyConfig, error) {
-	conn := client.Connection()
+func GetAgencyConfig(ctx context.Context, client agency.Agency) (*Config, error) {
+	return GetAgencyConfigC(ctx, client.Connection())
+}
 
-	req, err := client.Connection().NewRequest(http.MethodGet, "/_api/agency/config")
+func GetAgencyConfigC(ctx context.Context, conn driver.Connection) (*Config, error) {
+	req, err := conn.NewRequest(http.MethodGet, "/_api/agency/config")
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +50,7 @@ func getAgencyConfig(ctx context.Context, client agency.Agency) (*agencyConfig, 
 		return nil, err
 	}
 
-	var c agencyConfig
+	var c Config
 
 	if err := json.Unmarshal(data, &c); err != nil {
 		return nil, err
@@ -57,7 +59,7 @@ func getAgencyConfig(ctx context.Context, client agency.Agency) (*agencyConfig, 
 	return &c, nil
 }
 
-type agencyConfig struct {
+type Config struct {
 	LeaderId string `json:"leaderId"`
 
 	CommitIndex uint64 `json:"commitIndex"`

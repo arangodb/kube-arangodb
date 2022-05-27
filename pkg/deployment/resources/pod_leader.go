@@ -43,7 +43,12 @@ func (r *Resources) EnsureLeader(ctx context.Context, cachedStatus inspectorInte
 		return nil
 	}
 
-	leaderID := r.context.GetAgencyLeaderID()
+	cache, ok := r.context.GetAgencyHealth()
+	if !ok {
+		return nil
+	}
+
+	leaderID := cache.LeaderID()
 	status, _ := r.context.GetStatus()
 	noLeader := len(leaderID) == 0
 	changed := false

@@ -175,11 +175,6 @@ func (ac *actionContext) GetAgencyClientsWithPredicate(ctx context.Context, pred
 	return ac.context.GetAgencyClientsWithPredicate(ctx, predicate)
 }
 
-// GetAgencyLeaderID returns a leader ID or empty string if a leader is not known.
-func (ac *actionContext) GetAgencyLeaderID() string {
-	return ac.context.GetAgencyLeaderID()
-}
-
 func (ac *actionContext) GetStatus() (api.DeploymentStatus, int32) {
 	return ac.context.GetStatus()
 }
@@ -190,6 +185,10 @@ func (ac *actionContext) GetStatusSnapshot() api.DeploymentStatus {
 
 func (ac *actionContext) GenerateMemberEndpoint(group api.ServerGroup, member api.MemberStatus) (string, error) {
 	return ac.context.GenerateMemberEndpoint(group, member)
+}
+
+func (ac *actionContext) GetAgencyHealth() (agencyCache.Health, bool) {
+	return ac.context.GetAgencyHealth()
 }
 
 func (ac *actionContext) GetAgencyCache() (agencyCache.State, bool) {
