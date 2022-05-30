@@ -29,6 +29,7 @@ import (
 	sharedv1 "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 
 	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var (
@@ -42,6 +43,14 @@ var (
 		shared.FoxxAppEphemeralVolumeName,
 		shared.TMPEphemeralVolumeName,
 	}
+)
+
+const (
+	ServerGroupSpecVolumeRenderParamDeploymentName      = "DEPLOYMENT_NAME"
+	ServerGroupSpecVolumeRenderParamDeploymentNamespace = "DEPLOYMENT_NAMESPACE"
+	ServerGroupSpecVolumeRenderParamMemberID            = "MEMBER_ID"
+	ServerGroupSpecVolumeRenderParamMemberRoleAbbr      = "ROLE_ABBR"
+	ServerGroupSpecVolumeRenderParamMemberRole          = "ROLE"
 )
 
 // IsRestrictedVolumeName check of volume name is restricted, for example for originally mounted volumes
@@ -91,6 +100,17 @@ func (s ServerGroupSpecVolumes) Validate() error {
 	return shared.WithErrors(validationErrors...)
 }
 
+// RenderVolumes render volumes
+func (s ServerGroupSpecVolumes) RenderVolumes(depl meta.Object, group ServerGroup, member MemberStatus) []core.Volume {
+	volumes := make([]core.Volume, len(s))
+
+	for id, volume := range s {
+		volumes[id] = volume.RenderVolume(depl, group, member)
+	}
+
+	return volumes
+}
+
 // Volumes create volumes
 func (s ServerGroupSpecVolumes) Volumes() []core.Volume {
 	volumes := make([]core.Volume, len(s))
@@ -115,6 +135,12 @@ type ServerGroupSpecVolume struct {
 
 	// EmptyDir
 	EmptyDir *ServerGroupSpecVolumeEmptyDir `json:"emptyDir,omitempty"`
+
+	// HostPath
+	HostPath *ServerGroupSpecVolumeHostPath `json:"hostPath,omitempty"`
+
+	// PersistentVolumeClaim
+	PersistentVolumeClaim *ServerGroupSpecVolumePersistentVolumeClaim `json:"persistentVolumeClaim,omitempty"`
 }
 
 // Validate if ServerGroupSpec volume is valid
@@ -128,8 +154,24 @@ func (s *ServerGroupSpecVolume) Validate() error {
 		shared.PrefixResourceErrors("secret", s.Secret.Validate()),
 		shared.PrefixResourceErrors("configMap", s.ConfigMap.Validate()),
 		shared.PrefixResourceErrors("emptyDir", s.EmptyDir.Validate()),
+		shared.PrefixResourceErrors("hostPath", s.HostPath.Validate()),
+		shared.PrefixResourceErrors("persistentVolumeClaim", s.PersistentVolumeClaim.Validate()),
 		s.validate(),
 	)
+}
+
+// RenderVolume create Pod Volume object with dynamic names
+func (s ServerGroupSpecVolume) RenderVolume(depl meta.Object, group ServerGroup, member MemberStatus) core.Volume {
+	return core.Volume{
+		Name: s.Name,
+		VolumeSource: core.VolumeSource{
+			ConfigMap:             s.ConfigMap.render(depl, group, member),
+			Secret:                s.Secret.render(depl, group, member),
+			EmptyDir:              s.EmptyDir.render(),
+			HostPath:              s.HostPath.render(depl, group, member),
+			PersistentVolumeClaim: s.PersistentVolumeClaim.render(depl, group, member),
+		},
+	}
 }
 
 // Volume create Pod Volume object
@@ -137,9 +179,11 @@ func (s ServerGroupSpecVolume) Volume() core.Volume {
 	return core.Volume{
 		Name: s.Name,
 		VolumeSource: core.VolumeSource{
-			ConfigMap: (*core.ConfigMapVolumeSource)(s.ConfigMap),
-			Secret:    (*core.SecretVolumeSource)(s.Secret),
-			EmptyDir:  (*core.EmptyDirVolumeSource)(s.EmptyDir),
+			ConfigMap:             (*core.ConfigMapVolumeSource)(s.ConfigMap),
+			Secret:                (*core.SecretVolumeSource)(s.Secret),
+			EmptyDir:              (*core.EmptyDirVolumeSource)(s.EmptyDir),
+			HostPath:              (*core.HostPathVolumeSource)(s.HostPath),
+			PersistentVolumeClaim: (*core.PersistentVolumeClaimVolumeSource)(s.PersistentVolumeClaim),
 		},
 	}
 }
@@ -173,35 +217,154 @@ func (s *ServerGroupSpecVolume) notNilFields() int {
 		i++
 	}
 
+	if s.HostPath != nil {
+		i++
+	}
+
+	if s.PersistentVolumeClaim != nil {
+		i++
+	}
+
 	return i
+}
+
+func renderVolumeResourceName(in string, depl meta.Object, group ServerGroup, member MemberStatus) string {
+	return shared.RenderResourceName(in, map[string]string{
+		ServerGroupSpecVolumeRenderParamDeploymentName:      depl.GetName(),
+		ServerGroupSpecVolumeRenderParamDeploymentNamespace: depl.GetNamespace(),
+		ServerGroupSpecVolumeRenderParamMemberID:            shared.StripArangodPrefix(member.ID),
+		ServerGroupSpecVolumeRenderParamMemberRole:          group.AsRole(),
+		ServerGroupSpecVolumeRenderParamMemberRoleAbbr:      group.AsRoleAbbreviated(),
+	})
 }
 
 type ServerGroupSpecVolumeSecret core.SecretVolumeSource
 
 func (s *ServerGroupSpecVolumeSecret) Validate() error {
-	if s == nil {
+	q := s.render(&ArangoDeployment{
+		ObjectMeta: meta.ObjectMeta{
+			Name:      "render",
+			Namespace: "render",
+		},
+	}, ServerGroupSingle, MemberStatus{
+		ID: "render",
+	})
+
+	if q == nil {
 		return nil
 	}
 
 	return shared.WithErrors(
-		shared.PrefixResourceError("secretName", sharedv1.AsKubernetesResourceName(&s.SecretName).Validate()),
+		shared.PrefixResourceError("secretName", sharedv1.AsKubernetesResourceName(&q.SecretName).Validate()),
 	)
+}
+
+func (s *ServerGroupSpecVolumeSecret) render(depl meta.Object, group ServerGroup, member MemberStatus) *core.SecretVolumeSource {
+	if s == nil {
+		return nil
+	}
+
+	var obj = core.SecretVolumeSource(*s)
+
+	obj.SecretName = renderVolumeResourceName(obj.SecretName, depl, group, member)
+
+	return &obj
 }
 
 type ServerGroupSpecVolumeConfigMap core.ConfigMapVolumeSource
 
 func (s *ServerGroupSpecVolumeConfigMap) Validate() error {
-	if s == nil {
+	q := s.render(&ArangoDeployment{
+		ObjectMeta: meta.ObjectMeta{
+			Name:      "render",
+			Namespace: "render",
+		},
+	}, ServerGroupSingle, MemberStatus{
+		ID: "render",
+	})
+
+	if q == nil {
 		return nil
 	}
 
 	return shared.WithErrors(
-		shared.PrefixResourceError("name", sharedv1.AsKubernetesResourceName(&s.Name).Validate()),
+		shared.PrefixResourceError("name", sharedv1.AsKubernetesResourceName(&q.Name).Validate()),
 	)
+}
+
+func (s *ServerGroupSpecVolumeConfigMap) render(depl meta.Object, group ServerGroup, member MemberStatus) *core.ConfigMapVolumeSource {
+	if s == nil {
+		return nil
+	}
+
+	var obj = core.ConfigMapVolumeSource(*s)
+
+	obj.Name = renderVolumeResourceName(obj.Name, depl, group, member)
+
+	return &obj
 }
 
 type ServerGroupSpecVolumeEmptyDir core.EmptyDirVolumeSource
 
 func (s *ServerGroupSpecVolumeEmptyDir) Validate() error {
 	return nil
+}
+
+func (s *ServerGroupSpecVolumeEmptyDir) render() *core.EmptyDirVolumeSource {
+	if s == nil {
+		return nil
+	}
+
+	return (*core.EmptyDirVolumeSource)(s)
+}
+
+type ServerGroupSpecVolumeHostPath core.HostPathVolumeSource
+
+func (s *ServerGroupSpecVolumeHostPath) Validate() error {
+	return nil
+}
+
+func (s *ServerGroupSpecVolumeHostPath) render(depl meta.Object, group ServerGroup, member MemberStatus) *core.HostPathVolumeSource {
+	if s == nil {
+		return nil
+	}
+
+	var obj = core.HostPathVolumeSource(*s)
+
+	obj.Path = renderVolumeResourceName(obj.Path, depl, group, member)
+
+	return &obj
+}
+
+type ServerGroupSpecVolumePersistentVolumeClaim core.PersistentVolumeClaimVolumeSource
+
+func (s *ServerGroupSpecVolumePersistentVolumeClaim) Validate() error {
+	q := s.render(&ArangoDeployment{
+		ObjectMeta: meta.ObjectMeta{
+			Name:      "render",
+			Namespace: "render",
+		},
+	}, ServerGroupSingle, MemberStatus{
+		ID: "render",
+	})
+
+	if q == nil {
+		return nil
+	}
+
+	return shared.WithErrors(
+		shared.PrefixResourceError("claimName", sharedv1.AsKubernetesResourceName(&q.ClaimName).Validate()),
+	)
+}
+
+func (s *ServerGroupSpecVolumePersistentVolumeClaim) render(depl meta.Object, group ServerGroup, member MemberStatus) *core.PersistentVolumeClaimVolumeSource {
+	if s == nil {
+		return nil
+	}
+
+	var obj = core.PersistentVolumeClaimVolumeSource(*s)
+
+	obj.ClaimName = renderVolumeResourceName(obj.ClaimName, depl, group, member)
+
+	return &obj
 }
