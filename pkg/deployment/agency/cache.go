@@ -34,7 +34,7 @@ import (
 type health struct {
 	leaderID string
 
-	offsets map[string]uint64
+	commitIndexes map[string]uint64
 }
 
 func (h health) LeaderID() string {
@@ -50,7 +50,7 @@ func (h health) IsHealthy() bool {
 	var globalCommitIndex uint64
 	first := true
 
-	for _, commitIndex := range h.offsets {
+	for _, commitIndex := range h.commitIndexes {
 		if first {
 			globalCommitIndex = commitIndex
 			first = false
@@ -200,7 +200,7 @@ func getLeader(ctx context.Context, clients []agency.Agency) (agency.Agency, *Co
 
 	var h health
 
-	h.offsets = make(map[string]uint64, cliLen)
+	h.commitIndexes = make(map[string]uint64, cliLen)
 	// Fetch all configs from agencies.
 	wg.Add(cliLen)
 	for i, cli := range clients {
@@ -226,7 +226,7 @@ func getLeader(ctx context.Context, clients []agency.Agency) (agency.Agency, *Co
 			configs[iLocal] = config
 			// Count leaders.
 			leaders[config.LeaderId]++
-			h.offsets[config.Configuration.ID] = config.CommitIndex
+			h.commitIndexes[config.Configuration.ID] = config.CommitIndex
 		}(i, cli)
 	}
 	wg.Wait()
