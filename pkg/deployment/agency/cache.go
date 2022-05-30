@@ -22,16 +22,61 @@ package agency
 
 import (
 	"context"
+	"fmt"
 	"sync"
+	"time"
 
 	"github.com/arangodb/go-driver/agency"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
+type health struct {
+	leaderID string
+
+	commitIndexes map[string]uint64
+}
+
+func (h health) LeaderID() string {
+	return h.leaderID
+}
+
+// IsHealthy returns true if all agencies have the same commit index.
+// Returns false when:
+// - agencies' list is empty.
+// - agencies have different commit indices.
+// - agencies have commit indices == 0.
+func (h health) IsHealthy() bool {
+	var globalCommitIndex uint64
+	first := true
+
+	for _, commitIndex := range h.commitIndexes {
+		if first {
+			globalCommitIndex = commitIndex
+			first = false
+		} else if commitIndex != globalCommitIndex {
+			return false
+		}
+	}
+
+	return globalCommitIndex != 0
+}
+
+// Health describes interface to check healthy of the environment.
+type Health interface {
+	// IsHealthy return true when environment is considered as healthy.
+	IsHealthy() bool
+
+	// LeaderID returns a leader ID or empty string if a leader is not known.
+	LeaderID() string
+}
+
 type Cache interface {
-	Reload(ctx context.Context, client agency.Agency) (uint64, error)
+	Reload(ctx context.Context, clients []agency.Agency) (uint64, error)
 	Data() (State, bool)
 	CommitIndex() uint64
+	// Health returns true when healthy object is available.
+	Health() (Health, bool)
 }
 
 func NewCache(mode *api.DeploymentMode) Cache {
@@ -57,7 +102,12 @@ func (c cacheSingle) CommitIndex() uint64 {
 	return 0
 }
 
-func (c cacheSingle) Reload(ctx context.Context, client agency.Agency) (uint64, error) {
+// Health returns always false for single cache.
+func (c cacheSingle) Health() (Health, bool) {
+	return nil, false
+}
+
+func (c cacheSingle) Reload(_ context.Context, _ []agency.Agency) (uint64, error) {
 	return 0, nil
 }
 
@@ -66,48 +116,161 @@ func (c cacheSingle) Data() (State, bool) {
 }
 
 type cache struct {
-	lock sync.Mutex
+	lock sync.RWMutex
 
 	valid bool
 
 	commitIndex uint64
 
 	data State
+
+	health Health
 }
 
 func (c *cache) CommitIndex() uint64 {
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+
 	return c.commitIndex
 }
 
 func (c *cache) Data() (State, bool) {
-	c.lock.Lock()
-	defer c.lock.Unlock()
+	c.lock.RLock()
+	defer c.lock.RUnlock()
 
 	return c.data, c.valid
 }
 
-func (c *cache) Reload(ctx context.Context, client agency.Agency) (uint64, error) {
+// Health returns always false for single cache.
+func (c *cache) Health() (Health, bool) {
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+
+	if c.health != nil {
+		return c.health, true
+	}
+
+	return nil, false
+}
+
+func (c *cache) Reload(ctx context.Context, clients []agency.Agency) (uint64, error) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	cfg, err := getAgencyConfig(ctx, client)
+	leaderCli, leaderConfig, health, err := getLeader(ctx, clients)
 	if err != nil {
+		// Invalidate a leader ID and agency state.
+		// In the next iteration leaderID will be sat because `valid` will be false.
 		c.valid = false
+
 		return 0, err
 	}
 
-	if cfg.CommitIndex == c.commitIndex && c.valid {
+	c.health = health
+	if leaderConfig.CommitIndex == c.commitIndex && c.valid {
 		// We are on same index, nothing to do
-		return cfg.CommitIndex, err
+		return leaderConfig.CommitIndex, nil
 	}
 
-	if data, err := loadState(ctx, client); err != nil {
+	// A leader should be known even if an agency state is invalid.
+	if data, err := loadState(ctx, leaderCli); err != nil {
 		c.valid = false
-		return cfg.CommitIndex, err
+		return leaderConfig.CommitIndex, err
 	} else {
 		c.data = data
 		c.valid = true
-		c.commitIndex = cfg.CommitIndex
-		return cfg.CommitIndex, nil
+		c.commitIndex = leaderConfig.CommitIndex
+		return leaderConfig.CommitIndex, nil
 	}
+}
+
+// getLeader returns config and client to a leader agency, and health to check if agencies are on the same page.
+// If there is no quorum for the leader then error is returned.
+func getLeader(ctx context.Context, clients []agency.Agency) (agency.Agency, *Config, Health, error) {
+	var mutex sync.Mutex
+	var anyError error
+	var wg sync.WaitGroup
+
+	cliLen := len(clients)
+	if cliLen == 0 {
+		return nil, nil, nil, errors.New("empty list of agencies' clients")
+	}
+	configs := make([]*Config, cliLen)
+	leaders := make(map[string]int, cliLen)
+
+	var h health
+
+	h.commitIndexes = make(map[string]uint64, cliLen)
+	// Fetch all configs from agencies.
+	wg.Add(cliLen)
+	for i, cli := range clients {
+		go func(iLocal int, cliLocal agency.Agency) {
+			defer wg.Done()
+
+			ctxLocal, cancel := context.WithTimeout(ctx, time.Second)
+			defer cancel()
+			config, err := GetAgencyConfig(ctxLocal, cliLocal)
+
+			mutex.Lock()
+			defer mutex.Unlock()
+
+			if err != nil {
+				anyError = err
+				return
+			} else if config == nil || config.LeaderId == "" {
+				anyError = fmt.Errorf("leader unknown for the agent %v", cliLocal.Connection().Endpoints())
+				return
+			}
+
+			// Write config on the same index where client is (It will be helpful later).
+			configs[iLocal] = config
+			// Count leaders.
+			leaders[config.LeaderId]++
+			h.commitIndexes[config.Configuration.ID] = config.CommitIndex
+		}(i, cli)
+	}
+	wg.Wait()
+
+	if anyError != nil {
+		return nil, nil, nil, wrapError(anyError, "not all agencies are responsive")
+	}
+
+	if len(leaders) == 0 {
+		return nil, nil, nil, wrapError(anyError, "failed to get config from agencies")
+	}
+
+	// Find the leader ID which has the most votes from all agencies.
+	maxVotes := 0
+	var leaderID string
+	for id, votes := range leaders {
+		if votes > maxVotes {
+			maxVotes = votes
+			leaderID = id
+		}
+	}
+
+	h.leaderID = leaderID
+
+	// Check if a leader has quorum from all possible agencies.
+	if maxVotes <= cliLen/2 {
+		message := fmt.Sprintf("no quorum for leader %s, votes %d of %d", leaderID, maxVotes, cliLen)
+		return nil, nil, nil, wrapError(anyError, message)
+	}
+
+	// From here on, a leader with quorum is known.
+	for i, config := range configs {
+		if config != nil && config.Configuration.ID == leaderID {
+			return clients[i], config, h, nil
+		}
+	}
+
+	return nil, nil, nil, wrapError(anyError, "the leader is not responsive")
+}
+
+func wrapError(err error, message string) error {
+	if err != nil {
+		return errors.WithMessage(err, message)
+	}
+
+	return errors.New(message)
 }

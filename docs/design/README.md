@@ -10,3 +10,4 @@
 - [Upgrading](./upgrading.md)
 - [Rotating Pods](./rotating.md)
 - [Maintenance](./maintenance.md)
+- [Additional configuration](./additional_configuration.md)

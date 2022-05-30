@@ -124,6 +124,7 @@ type DeploymentCachedStatus interface {
 
 type ArangoAgencyGet interface {
 	GetAgencyCache() (agencyCache.State, bool)
+	GetAgencyHealth() (agencyCache.Health, bool)
 }
 
 type ArangoAgency interface {
@@ -160,7 +161,7 @@ type DeploymentAgencyClient interface {
 	// GetAgencyClientsWithPredicate returns a client connection for every agency member which match condition.
 	GetAgencyClientsWithPredicate(ctx context.Context, predicate func(id string) bool) ([]driver.Connection, error)
 	// GetAgency returns a connection to the entire agency.
-	GetAgency(ctx context.Context) (agency.Agency, error)
+	GetAgency(ctx context.Context, agencyIDs ...string) (agency.Agency, error)
 }
 
 type DeploymentDatabaseClient interface {

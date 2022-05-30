@@ -28,4 +28,5 @@ const (
 	RemoteDeploymentReadyCondition api.ConditionType = "RemoteDeploymentReadyCondition"
 	RemoteCacheReadyCondition      api.ConditionType = "RemoteCacheReady"
 	ConnectionReadyCondition       api.ConditionType = "ConnectionReady"
+	ACSDeploymentSyncedCondition   api.ConditionType = "ACSDeploymentSynced"
 )
