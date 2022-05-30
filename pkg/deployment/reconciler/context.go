@@ -124,6 +124,7 @@ type DeploymentCachedStatus interface {
 
 type ArangoAgencyGet interface {
 	GetAgencyCache() (agencyCache.State, bool)
+	GetAgencyHealth() (agencyCache.Health, bool)
 }
 
 type ArangoAgency interface {

@@ -187,6 +187,10 @@ func (ac *actionContext) GenerateMemberEndpoint(group api.ServerGroup, member ap
 	return ac.context.GenerateMemberEndpoint(group, member)
 }
 
+func (ac *actionContext) GetAgencyHealth() (agencyCache.Health, bool) {
+	return ac.context.GetAgencyHealth()
+}
+
 func (ac *actionContext) GetAgencyCache() (agencyCache.State, bool) {
 	return ac.context.GetAgencyCache()
 }

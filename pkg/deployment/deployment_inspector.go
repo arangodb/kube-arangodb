@@ -188,6 +188,10 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 		nextInterval = nextInterval.ReduceTo(x)
 	}
 
+	if err := d.resources.EnsureLeader(ctx, d.GetCachedStatus()); err != nil {
+		return minInspectionInterval, errors.Wrapf(err, "Creating agency pod leader failed")
+	}
+
 	if err := d.resources.EnsureArangoMembers(ctx, d.GetCachedStatus()); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "ArangoMember creation failed")
 	}

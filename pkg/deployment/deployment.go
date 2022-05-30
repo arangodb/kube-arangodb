@@ -154,6 +154,10 @@ func (d *Deployment) GetAgencyCache() (agency.State, bool) {
 	return d.agencyCache.Data()
 }
 
+func (d *Deployment) GetAgencyHealth() (agency.Health, bool) {
+	return d.agencyCache.Health()
+}
+
 func (d *Deployment) RefreshAgencyCache(ctx context.Context) (uint64, error) {
 	if d.apiObject.Spec.Mode.Get() == api.DeploymentModeSingle {
 		return 0, nil
