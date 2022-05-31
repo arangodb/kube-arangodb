@@ -79,7 +79,7 @@ func GetCASecretName(apiObject k8sutil.APIObject) string {
 func (r *Resources) EnsureSecrets(ctx context.Context, log zerolog.Logger, cachedStatus inspectorInterface.Inspector) error {
 	start := time.Now()
 	spec := r.context.GetSpec()
-	secrets := r.context.SecretsModInterface()
+	secrets := cachedStatus.SecretsModInterface().V1()
 	status, _ := r.context.GetStatus()
 	apiObject := r.context.GetAPIObject()
 	deploymentName := apiObject.GetName()
@@ -554,7 +554,7 @@ func (r *Resources) getJWTSecret(spec api.DeploymentSpec) (string, error) {
 		return "", nil
 	}
 	secretName := spec.Authentication.GetJWTSecretName()
-	s, err := k8sutil.GetTokenSecret(context.Background(), r.context.GetCachedStatus().Secret().V1().Read(), secretName)
+	s, err := k8sutil.GetTokenSecret(context.Background(), r.context.ACS().CurrentClusterCache().Secret().V1().Read(), secretName)
 	if err != nil {
 		r.log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get JWT secret")
 		return "", errors.WithStack(err)
@@ -565,7 +565,7 @@ func (r *Resources) getJWTSecret(spec api.DeploymentSpec) (string, error) {
 // getSyncJWTSecret loads the JWT secret used for syncmasters from a Secret configured in apiObject.Spec.Sync.Authentication.JWTSecretName.
 func (r *Resources) getSyncJWTSecret(spec api.DeploymentSpec) (string, error) {
 	secretName := spec.Sync.Authentication.GetJWTSecretName()
-	s, err := k8sutil.GetTokenSecret(context.Background(), r.context.GetCachedStatus().Secret().V1().Read(), secretName)
+	s, err := k8sutil.GetTokenSecret(context.Background(), r.context.ACS().CurrentClusterCache().Secret().V1().Read(), secretName)
 	if err != nil {
 		r.log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get sync JWT secret")
 		return "", errors.WithStack(err)
@@ -576,7 +576,7 @@ func (r *Resources) getSyncJWTSecret(spec api.DeploymentSpec) (string, error) {
 // getSyncMonitoringToken loads the token secret used for monitoring sync masters & workers.
 func (r *Resources) getSyncMonitoringToken(spec api.DeploymentSpec) (string, error) {
 	secretName := spec.Sync.Monitoring.GetTokenSecretName()
-	s, err := k8sutil.GetTokenSecret(context.Background(), r.context.GetCachedStatus().Secret().V1().Read(), secretName)
+	s, err := k8sutil.GetTokenSecret(context.Background(), r.context.ACS().CurrentClusterCache().Secret().V1().Read(), secretName)
 	if err != nil {
 		r.log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get sync monitoring secret")
 		return "", errors.WithStack(err)

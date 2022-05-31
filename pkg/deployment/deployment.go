@@ -123,7 +123,6 @@ type Deployment struct {
 	inspectCRDTrigger         trigger.Trigger
 	updateDeploymentTrigger   trigger.Trigger
 	clientCache               deploymentClient.Cache
-	currentState              inspectorInterface.Inspector
 	agencyCache               agency.Cache
 	recentInspectionErrors    int
 	clusterScalingIntegration *clusterScalingIntegration
@@ -143,7 +142,7 @@ func (d *Deployment) WithArangoMember(cache inspectorInterface.Inspector, timeou
 }
 
 func (d *Deployment) WithCurrentArangoMember(name string) reconciler.ArangoMemberModContext {
-	return d.WithArangoMember(d.currentState, globals.GetGlobals().Timeouts().Kubernetes().Get(), name)
+	return d.WithArangoMember(d.acs.CurrentClusterCache(), globals.GetGlobals().Timeouts().Kubernetes().Get(), name)
 }
 
 func (d *Deployment) GetMembersState() memberState.StateInspector {
@@ -227,16 +226,15 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 	i := inspector.NewInspector(inspector.NewDefaultThrottle(), deps.Client, apiObject.GetNamespace(), apiObject.GetName())
 
 	d := &Deployment{
-		apiObject:    apiObject,
-		name:         apiObject.GetName(),
-		namespace:    apiObject.GetNamespace(),
-		config:       config,
-		deps:         deps,
-		eventCh:      make(chan *deploymentEvent, deploymentEventQueueSize),
-		stopCh:       make(chan struct{}),
-		agencyCache:  agency.NewCache(apiObject.Spec.Mode),
-		currentState: i,
-		acs:          acs.NewACS(apiObject.GetUID(), i),
+		apiObject:   apiObject,
+		name:        apiObject.GetName(),
+		namespace:   apiObject.GetNamespace(),
+		config:      config,
+		deps:        deps,
+		eventCh:     make(chan *deploymentEvent, deploymentEventQueueSize),
+		stopCh:      make(chan struct{}),
+		agencyCache: agency.NewCache(apiObject.Spec.Mode),
+		acs:         acs.NewACS(apiObject.GetUID(), i),
 	}
 
 	d.memberState = memberState.NewStateInspector(d)
@@ -348,7 +346,7 @@ func (d *Deployment) run() {
 	for {
 		select {
 		case <-d.stopCh:
-			err := d.currentState.Refresh(context.Background())
+			err := d.acs.CurrentClusterCache().Refresh(context.Background())
 			if err != nil {
 				log.Error().Err(err).Msg("Unable to get resources")
 			}
@@ -596,7 +594,7 @@ func (d *Deployment) isOwnerOf(obj meta.Object) bool {
 func (d *Deployment) lookForServiceMonitorCRD() {
 	var err error
 	if d.GetScope().IsNamespaced() {
-		_, err = d.currentState.ServiceMonitor().V1()
+		_, err = d.acs.CurrentClusterCache().ServiceMonitor().V1()
 		if k8sutil.IsForbiddenOrNotFound(err) {
 			return
 		}

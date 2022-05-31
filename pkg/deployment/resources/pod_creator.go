@@ -504,7 +504,7 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 
 		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
-		podName, uid, err := CreateArangoPod(ctxChild, r.context.PodsModInterface(), apiObject, spec, group, CreatePodFromTemplate(template.PodSpec))
+		podName, uid, err := CreateArangoPod(ctxChild, cachedStatus.PodsModInterface().V1(), apiObject, spec, group, CreatePodFromTemplate(template.PodSpec))
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -547,7 +547,7 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 				}
 			}
 			owner := apiObject.AsOwner()
-			_, err = createTLSServerCertificate(ctx, log, cachedStatus, r.context.SecretsModInterface(), names, spec.Sync.TLS, tlsKeyfileSecretName, &owner)
+			_, err = createTLSServerCertificate(ctx, log, cachedStatus, cachedStatus.SecretsModInterface().V1(), names, spec.Sync.TLS, tlsKeyfileSecretName, &owner)
 			if err != nil && !k8sutil.IsAlreadyExists(err) {
 				return errors.WithStack(errors.Wrapf(err, "Failed to create TLS keyfile secret"))
 			}
@@ -555,7 +555,7 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 
 		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
-		podName, uid, err := CreateArangoPod(ctxChild, r.context.PodsModInterface(), apiObject, spec, group, CreatePodFromTemplate(template.PodSpec))
+		podName, uid, err := CreateArangoPod(ctxChild, cachedStatus.PodsModInterface().V1(), apiObject, spec, group, CreatePodFromTemplate(template.PodSpec))
 		if err != nil {
 			return errors.WithStack(err)
 		}

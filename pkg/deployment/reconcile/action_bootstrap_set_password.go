@@ -147,7 +147,7 @@ func (a actionBootstrapSetPassword) ensureUserPasswordSecret(ctx context.Context
 		token := hex.EncodeToString(tokenData)
 		owner := a.actionCtx.GetAPIObject().AsOwner()
 
-		err := k8sutil.CreateBasicAuthSecret(ctx, a.actionCtx.SecretsModInterface(), secret, user, token, &owner)
+		err := k8sutil.CreateBasicAuthSecret(ctx, a.actionCtx.ACS().CurrentClusterCache().SecretsModInterface().V1(), secret, user, token, &owner)
 		if err != nil {
 			return "", err
 		}

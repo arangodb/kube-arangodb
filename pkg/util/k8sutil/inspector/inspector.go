@@ -33,6 +33,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangotask"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/endpoints"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/mods"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget"
@@ -85,4 +86,6 @@ type Inspector interface {
 	node.Inspector
 	arangoclustersynchronization.Inspector
 	arangotask.Inspector
+
+	mods.Mods
 }

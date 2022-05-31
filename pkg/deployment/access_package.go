@@ -65,7 +65,7 @@ func (d *Deployment) createAccessPackages(ctx context.Context) error {
 	}
 
 	// Remove all access packages that we did build, but are no longer needed
-	secretList := d.currentState.Secret().V1().ListSimple()
+	secretList := d.acs.CurrentClusterCache().Secret().V1().ListSimple()
 	for _, secret := range secretList {
 		if d.isOwnerOf(secret) {
 			if _, found := secret.Data[constants.SecretAccessPackageYaml]; found {
@@ -100,7 +100,7 @@ func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName strin
 	log := d.deps.Log
 	spec := d.apiObject.Spec
 
-	_, err := d.currentState.Secret().V1().Read().Get(ctx, apSecretName, metav1.GetOptions{})
+	_, err := d.acs.CurrentClusterCache().Secret().V1().Read().Get(ctx, apSecretName, metav1.GetOptions{})
 	if err == nil {
 		// Secret already exists
 		return nil
@@ -111,7 +111,7 @@ func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName strin
 
 	// Fetch client authentication CA
 	clientAuthSecretName := spec.Sync.Authentication.GetClientCASecretName()
-	clientAuthCert, clientAuthKey, _, err := k8sutil.GetCASecret(ctx, d.currentState.Secret().V1().Read(), clientAuthSecretName, nil)
+	clientAuthCert, clientAuthKey, _, err := k8sutil.GetCASecret(ctx, d.acs.CurrentClusterCache().Secret().V1().Read(), clientAuthSecretName, nil)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to get client-auth CA secret")
 		return errors.WithStack(err)
@@ -119,7 +119,7 @@ func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName strin
 
 	// Fetch TLS CA public key
 	tlsCASecretName := spec.Sync.TLS.GetCASecretName()
-	tlsCACert, err := k8sutil.GetCACertficateSecret(ctx, d.currentState.Secret().V1().Read(), tlsCASecretName)
+	tlsCACert, err := k8sutil.GetCACertficateSecret(ctx, d.acs.CurrentClusterCache().Secret().V1().Read(), tlsCASecretName)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to get TLS CA secret")
 		return errors.WithStack(err)

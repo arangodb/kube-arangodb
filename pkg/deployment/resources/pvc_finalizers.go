@@ -60,7 +60,7 @@ func (r *Resources) runPVCFinalizers(ctx context.Context, p *v1.PersistentVolume
 	}
 	// Remove finalizers (if needed)
 	if len(removalList) > 0 {
-		_, err := k8sutil.RemovePVCFinalizers(ctx, r.context.GetCachedStatus(), log, r.context.PersistentVolumeClaimsModInterface(), p, removalList, false)
+		_, err := k8sutil.RemovePVCFinalizers(ctx, r.context.ACS().CurrentClusterCache(), log, r.context.ACS().CurrentClusterCache().PersistentVolumeClaimsModInterface().V1(), p, removalList, false)
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to update PVC (to remove finalizers)")
 			return 0, errors.WithStack(err)
@@ -106,7 +106,7 @@ func (r *Resources) inspectFinalizerPVCMemberExists(ctx context.Context, log zer
 	if memberStatus.PodName != "" {
 		log.Info().Msg("Removing Pod of member, because PVC is being removed")
 		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-			return r.context.PodsModInterface().Delete(ctxChild, memberStatus.PodName, meta.DeleteOptions{})
+			return r.context.ACS().CurrentClusterCache().PodsModInterface().V1().Delete(ctxChild, memberStatus.PodName, meta.DeleteOptions{})
 		})
 		if err != nil && !k8sutil.IsNotFound(err) {
 			log.Debug().Err(err).Msg("Failed to delete pod")

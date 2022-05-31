@@ -78,7 +78,7 @@ func (i *inventory) Collect(m chan<- prometheus.Metric) {
 		for _, deployment := range deployments {
 			p.Push(i.deploymentsMetric.Gauge(1, deployment.GetNamespace(), deployment.GetName()))
 
-			if state := deployment.currentState; state != nil {
+			if state := deployment.acs.CurrentClusterCache(); state != nil {
 				t := state.GetThrottles()
 
 				for _, c := range throttle.AllComponents() {

@@ -55,7 +55,7 @@ func (a *renewTLSCACertificateAction) Start(ctx context.Context) (bool, error) {
 	}
 
 	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-		return a.actionCtx.SecretsModInterface().Delete(ctxChild, a.actionCtx.GetSpec().TLS.GetCASecretName(), meta.DeleteOptions{})
+		return a.actionCtx.ACS().CurrentClusterCache().SecretsModInterface().V1().Delete(ctxChild, a.actionCtx.GetSpec().TLS.GetCASecretName(), meta.DeleteOptions{})
 	})
 	if err != nil {
 		if !k8sutil.IsNotFound(err) {
