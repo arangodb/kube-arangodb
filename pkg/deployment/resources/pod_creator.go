@@ -26,7 +26,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
-	"net/url"
 	"path/filepath"
 	"strconv"
 	"sync"
@@ -530,22 +529,11 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 			// Create TLS secret
 			tlsKeyfileSecretName := k8sutil.CreateTLSKeyfileSecretName(apiObject.GetName(), role, m.ID)
 
-			names, err := tls.GetAltNames(spec.Sync.TLS)
+			names, err := tls.GetSyncAltNames(apiObject, spec, spec.Sync.TLS, group, m)
 			if err != nil {
 				return errors.WithStack(errors.Wrapf(err, "Failed to render alt names"))
 			}
 
-			names.AltNames = append(names.AltNames,
-				k8sutil.CreateSyncMasterClientServiceName(apiObject.GetName()),
-				k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(apiObject, spec.ClusterDomain),
-				k8sutil.CreatePodDNSNameWithDomain(apiObject, spec.ClusterDomain, role, m.ID),
-			)
-			masterEndpoint := spec.Sync.ExternalAccess.ResolveMasterEndpoint(k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(apiObject, spec.ClusterDomain), shared.ArangoSyncMasterPort)
-			for _, ep := range masterEndpoint {
-				if u, err := url.Parse(ep); err == nil {
-					names.AltNames = append(names.AltNames, u.Hostname())
-				}
-			}
 			owner := apiObject.AsOwner()
 			_, err = createTLSServerCertificate(ctx, log, cachedStatus, cachedStatus.SecretsModInterface().V1(), names, spec.Sync.TLS, tlsKeyfileSecretName, &owner)
 			if err != nil && !k8sutil.IsAlreadyExists(err) {
