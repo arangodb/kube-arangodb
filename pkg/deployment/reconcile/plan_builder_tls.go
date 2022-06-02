@@ -461,7 +461,7 @@ func createKeyfileRenewalPlanMode(
 func checkServerValidCertRequest(ctx context.Context, context PlanBuilderContext, apiObject k8sutil.APIObject, group api.ServerGroup, member api.MemberStatus, ca resources.Certificates) (*tls.ConnectionState, error) {
 	endpoint := fmt.Sprintf("https://%s:%d", k8sutil.CreatePodDNSNameWithDomain(apiObject, context.GetSpec().ClusterDomain, group.AsRole(), member.ID), shared.ArangoPort)
 	if group == api.ServerGroupSyncMasters {
-		endpoint = fmt.Sprintf("https://%s:%d/%s", k8sutil.CreatePodDNSNameWithDomain(apiObject, context.GetSpec().ClusterDomain, group.AsRole(), member.ID), shared.ArangoSyncMasterPort, "_api/version")
+		endpoint = fmt.Sprintf("https://%s:%d%s", k8sutil.CreatePodDNSNameWithDomain(apiObject, context.GetSpec().ClusterDomain, group.AsRole(), member.ID), shared.ArangoSyncMasterPort, shared.ArangoSyncStatusEndpoint)
 	}
 
 	tlsConfig := &tls.Config{
@@ -535,10 +535,10 @@ func keyfileRenewalRequired(ctx context.Context,
 				log.Debug().Err(v.Err).Str("type", reflect.TypeOf(v.Err).String()).Msgf("Validation of cert for %s failed, renewal is required", memberName)
 				return true, true
 			default:
-				log.Debug().Err(v.Err).Str("type", reflect.TypeOf(v.Err).String()).Msgf("Validation of cert for %s failed, but cert looks fine - we will continue", memberName)
+				log.Debug().Err(v.Err).Str("type", reflect.TypeOf(v.Err).String()).Msgf("Validation of cert for %s failed, but cert looks fine - continuing", memberName)
 			}
 		default:
-			log.Debug().Err(err).Str("type", reflect.TypeOf(err).String()).Msgf("Validation of cert for %s failed, we will try again next time", memberName)
+			log.Debug().Err(err).Str("type", reflect.TypeOf(err).String()).Msgf("Validation of cert for %s failed, will try again next time", memberName)
 		}
 		return false, false
 	}
@@ -560,10 +560,10 @@ func keyfileRenewalRequired(ctx context.Context,
 
 		// Verify AltNames
 		var altNames memberTls.KeyfileInput
-		if group.IsArangod() {
-			altNames, err = memberTls.GetServerAltNames(apiObject, spec, tls, service, group, member)
-		} else {
+		if group.IsArangosync() {
 			altNames, err = memberTls.GetSyncAltNames(apiObject, spec, tls, group, member)
+		} else {
+			altNames, err = memberTls.GetServerAltNames(apiObject, spec, tls, service, group, member)
 		}
 
 		if err != nil {
