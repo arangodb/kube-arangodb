@@ -19,6 +19,7 @@ rules:
       resourceNames:
         - "arangodeployments.database.arangodb.com"
         - "arangoclustersynchronizations.database.arangodb.com"
+        - "arangomembers.database.arangodb.com"
         - "arangotasks.database.arangodb.com"
 
 {{- end }}
