@@ -25,19 +25,19 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	core "k8s.io/api/core/v1"
 
 	"github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/jwt"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/probes"
-	core "k8s.io/api/core/v1"
 )
 
 type Probe interface {
@@ -400,9 +400,13 @@ func (r *Resources) probeBuilderReadinessCoreSelect() probeBuilder {
 	return r.probeBuilderReadinessCore
 }
 
-func (r *Resources) probeBuilderReadinessCoreOperator(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
+func (r *Resources) probeBuilderReadinessCoreOperator(spec api.DeploymentSpec, _ api.ServerGroup, _ driver.Version) (Probe, error) {
 	// /_admin/server/availability is the way to go, it is available since 3.3.9
-	args, err := r.probeCommand(spec, "/_admin/server/availability")
+	path := "/_admin/server/availability"
+	if features.FailoverLeadership().Enabled() && r.context.GetMode() == api.DeploymentModeActiveFailover {
+		path = "/_api/version"
+	}
+	args, err := r.probeCommand(spec, path)
 	if err != nil {
 		return nil, err
 	}
@@ -414,9 +418,12 @@ func (r *Resources) probeBuilderReadinessCoreOperator(spec api.DeploymentSpec, g
 	}, nil
 }
 
-func (r *Resources) probeBuilderReadinessCore(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
+func (r *Resources) probeBuilderReadinessCore(spec api.DeploymentSpec, _ api.ServerGroup, _ driver.Version) (Probe, error) {
 	// /_admin/server/availability is the way to go, it is available since 3.3.9
 	localPath := "/_admin/server/availability"
+	if features.FailoverLeadership().Enabled() && r.context.GetMode() == api.DeploymentModeActiveFailover {
+		localPath = "/_api/version"
+	}
 
 	authorization := ""
 	if spec.IsAuthenticated() {
