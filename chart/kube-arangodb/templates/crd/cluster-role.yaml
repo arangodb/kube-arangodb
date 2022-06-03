@@ -23,6 +23,7 @@ rules:
         - "arangotasks.database.arangodb.com"
         - "arangobackups.backup.arangodb.com"
         - "arangobackuppolicies.backup.arangodb.com"
+        - "arangojobs.apps.arangodb.com"
 
 {{- end }}
 {{- end }}
