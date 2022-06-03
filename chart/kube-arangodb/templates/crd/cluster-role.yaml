@@ -17,6 +17,7 @@ rules:
       resources: ["customresourcedefinitions"]
       verbs: ["get", "list", "watch", "update", "delete"]
       resourceNames:
+        - "arangodeployments.database.arangodb.com"
         - "arangoclustersynchronizations.database.arangodb.com"
         - "arangotasks.database.arangodb.com"
 
