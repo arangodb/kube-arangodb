@@ -29,13 +29,13 @@ import (
 )
 
 const (
-	kubernetesAnnotationMatch = ".*kubernetes\\.io/.*"
-	arangoAnnotationMatch     = ".*arangodb\\.com/.*"
+	kubernetesIOMatch = ".*kubernetes\\.io/.*"
+	arangoDBMatch     = ".*arangodb\\.com/.*"
 )
 
 var (
-	kubernetesAnnotationRegex *regexp.Regexp
-	arangoAnnotationRegex     *regexp.Regexp
+	kubernetesIORegex *regexp.Regexp
+	arangoDBRegex     *regexp.Regexp
 
 	reservedLabels = RestrictedList{
 		k8sutil.LabelKeyArangoDeployment,
@@ -124,24 +124,32 @@ func (r RestrictedList) Filter(m map[string]string) map[string]string {
 }
 
 func init() {
-	r, err := regexp.Compile(kubernetesAnnotationMatch)
+	r, err := regexp.Compile(kubernetesIOMatch)
 	if err != nil {
 		panic(err)
 	}
 
-	kubernetesAnnotationRegex = r
+	kubernetesIORegex = r
 
-	r, err = regexp.Compile(arangoAnnotationMatch)
+	r, err = regexp.Compile(arangoDBMatch)
 	if err != nil {
 		panic(err)
 	}
 
-	arangoAnnotationRegex = r
+	arangoDBRegex = r
 }
 
 func LabelsPatch(mode api.LabelsMode, expected map[string]string, actual map[string]string, ignored ...string) patch.Patch {
 	return getFieldPatch(mode, "labels", expected, actual, func(k, v string) bool {
 		if reservedLabels.IsRestricted(k) {
+			return true
+		}
+
+		if arangoDBRegex.MatchString(k) {
+			return true
+		}
+
+		if kubernetesIORegex.MatchString(k) {
 			return true
 		}
 
@@ -155,11 +163,11 @@ func LabelsPatch(mode api.LabelsMode, expected map[string]string, actual map[str
 
 func AnnotationsPatch(mode api.LabelsMode, expected map[string]string, actual map[string]string, ignored ...string) patch.Patch {
 	return getFieldPatch(mode, "annotations", expected, actual, func(k, v string) bool {
-		if kubernetesAnnotationRegex.MatchString(k) {
+		if kubernetesIORegex.MatchString(k) {
 			return true
 		}
 
-		if arangoAnnotationRegex.MatchString(k) {
+		if arangoDBRegex.MatchString(k) {
 			return true
 		}
 
