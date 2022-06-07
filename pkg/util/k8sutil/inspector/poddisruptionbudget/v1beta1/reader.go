@@ -23,16 +23,16 @@ package v1beta1
 import (
 	"context"
 
-	policy "k8s.io/api/policy/v1beta1"
+	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
 
 // ModInterface has methods to work with PodDisruptionBudget resources only for creation
 type ModInterface interface {
-	Create(ctx context.Context, poddisruptionbudget *policy.PodDisruptionBudget, opts meta.CreateOptions) (*policy.PodDisruptionBudget, error)
-	Update(ctx context.Context, poddisruptionbudget *policy.PodDisruptionBudget, opts meta.UpdateOptions) (*policy.PodDisruptionBudget, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts meta.PatchOptions, subresources ...string) (result *policy.PodDisruptionBudget, err error)
+	Create(ctx context.Context, poddisruptionbudget *policyv1beta1.PodDisruptionBudget, opts meta.CreateOptions) (*policyv1beta1.PodDisruptionBudget, error)
+	Update(ctx context.Context, poddisruptionbudget *policyv1beta1.PodDisruptionBudget, opts meta.UpdateOptions) (*policyv1beta1.PodDisruptionBudget, error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts meta.PatchOptions, subresources ...string) (result *policyv1beta1.PodDisruptionBudget, err error)
 	Delete(ctx context.Context, name string, opts meta.DeleteOptions) error
 }
 
@@ -44,5 +44,5 @@ type Interface interface {
 
 // ReadInterface has methods to work with PodDisruptionBudget resources with ReadOnly mode.
 type ReadInterface interface {
-	Get(ctx context.Context, name string, opts meta.GetOptions) (*policy.PodDisruptionBudget, error)
+	Get(ctx context.Context, name string, opts meta.GetOptions) (*policyv1beta1.PodDisruptionBudget, error)
 }
