@@ -13,6 +13,7 @@
 - (Feature) Add agency leader service
 - (Feature) Add HostPath and PVC Volume types and allow templating
 - (Feature) Replace mod
+- (Feature) OPS CLI with Arango Task
 
 ## [1.2.12](https://github.com/arangodb/kube-arangodb/tree/1.2.12) (2022-05-10)
 - (Feature) Add CoreV1 Endpoints Inspector

@@ -231,12 +231,15 @@ type Action struct {
 	Params map[string]string `json:"params,omitempty"`
 	// Locals additional storage for local variables which are produced during the action.
 	Locals PlanLocals `json:"locals,omitempty"`
+	// ID reference of the task involved in this action (if any)
+	TaskID types.UID `json:"taskID,omitempty"`
 }
 
 // Equal compares two Actions
 func (a Action) Equal(other Action) bool {
 	return a.ID == other.ID &&
 		a.Type == other.Type &&
+		a.SetID == other.SetID &&
 		a.MemberID == other.MemberID &&
 		a.Group == other.Group &&
 		util.TimeCompareEqual(a.CreationTime, other.CreationTime) &&
@@ -244,7 +247,8 @@ func (a Action) Equal(other Action) bool {
 		a.Reason == other.Reason &&
 		a.Image == other.Image &&
 		equality.Semantic.DeepEqual(a.Params, other.Params) &&
-		a.Locals.Equal(other.Locals)
+		a.Locals.Equal(other.Locals) &&
+		a.TaskID == other.TaskID
 }
 
 // AddParam returns copy of action with set parameter

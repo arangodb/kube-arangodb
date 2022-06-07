@@ -31,50 +31,39 @@ import (
 	"strings"
 	"time"
 
+	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/crd"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
+	"github.com/arangodb/kube-arangodb/pkg/operator"
+	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
+	"github.com/arangodb/kube-arangodb/pkg/server"
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilsError "github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
-	"github.com/gin-gonic/gin"
-
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
-
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
+	"github.com/arangodb/kube-arangodb/pkg/util/probe"
+	"github.com/arangodb/kube-arangodb/pkg/util/retry"
 	"github.com/arangodb/kube-arangodb/pkg/version"
 
-	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
-
-	"github.com/rs/zerolog/log"
-
-	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-
-	"github.com/arangodb/kube-arangodb/pkg/util"
-
-	utilsError "github.com/arangodb/kube-arangodb/pkg/util/errors"
-
+	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 	appsv1 "k8s.io/api/apps/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
 	v1core "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/record"
-
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/klog"
-
-	"github.com/arangodb/kube-arangodb/pkg/crd"
-	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
-	"github.com/arangodb/kube-arangodb/pkg/logging"
-	"github.com/arangodb/kube-arangodb/pkg/operator"
-	"github.com/arangodb/kube-arangodb/pkg/server"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
-	"github.com/arangodb/kube-arangodb/pkg/util/probe"
-	"github.com/arangodb/kube-arangodb/pkg/util/retry"
 )
 
 const (

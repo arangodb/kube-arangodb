@@ -146,6 +146,11 @@ BIN := $(BINDIR)/$(BINNAME)
 VBIN_LINUX_AMD64 := $(BINDIR)/$(RELEASE_MODE)/linux/amd64/$(BINNAME)
 VBIN_LINUX_ARM64 := $(BINDIR)/$(RELEASE_MODE)/linux/arm64/$(BINNAME)
 
+BIN_OPS_NAME := $(PROJECT)_ops
+BIN_OPS := $(BINDIR)/$(BIN_OPS_NAME)
+VBIN_OPS_LINUX_AMD64 := $(BINDIR)/$(RELEASE_MODE)/linux/amd64/$(BIN_OPS_NAME)
+VBIN_OPS_LINUX_ARM64 := $(BINDIR)/$(RELEASE_MODE)/linux/arm64/$(BIN_OPS_NAME)
+
 ifdef VERBOSE
 	TESTVERBOSEOPTIONS := -v
 endif
@@ -218,7 +223,7 @@ endif
 
 .PHONY: clean
 clean:
-	rm -Rf $(BIN) $(BINDIR) $(DASHBOARDDIR)/build $(DASHBOARDDIR)/node_modules $(VBIN_LINUX_AMD64) $(VBIN_LINUX_ARM64)
+	rm -Rf $(BIN) $(BINDIR) $(DASHBOARDDIR)/build $(DASHBOARDDIR)/node_modules $(VBIN_LINUX_AMD64) $(VBIN_LINUX_ARM64) $(VBIN_OPS_LINUX_AMD64) $(VBIN_OPS_LINUX_ARM64)
 
 .PHONY: check-vars
 check-vars:
@@ -276,14 +281,17 @@ bin-all: $(BIN) $(VBIN_LINUX_AMD64) $(VBIN_LINUX_ARM64)
 
 $(VBIN_LINUX_AMD64): $(SOURCES) dashboard/assets.go VERSION
 	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/linux/amd64
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build ${GOBUILDARGS} --tags "$(RELEASE_MODE)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(VBIN_LINUX_AMD64) ./
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build ${GOBUILDARGS} --tags "$(RELEASE_MODE)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(VBIN_LINUX_AMD64) ./cmd/main
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build ${GOBUILDARGS} --tags "$(RELEASE_MODE)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(VBIN_OPS_LINUX_AMD64) ./cmd/main-ops
 
 $(VBIN_LINUX_ARM64): $(SOURCES) dashboard/assets.go VERSION
 	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/linux/arm64
-	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build ${GOBUILDARGS} --tags "$(RELEASE_MODE)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(VBIN_LINUX_ARM64) ./
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build ${GOBUILDARGS} --tags "$(RELEASE_MODE)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(VBIN_LINUX_ARM64) ./cmd/main
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build ${GOBUILDARGS} --tags "$(RELEASE_MODE)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(VBIN_OPS_LINUX_ARM64) ./cmd/main-ops
 
 $(BIN): $(VBIN_LINUX_AMD64)
 	@cp "$(VBIN_LINUX_AMD64)" "$(BIN)"
+	@cp "$(VBIN_OPS_LINUX_AMD64)" "$(BIN_OPS)"
 
 .PHONY: docker
 docker: check-vars $(VBIN_LINUX_AMD64) $(VBIN_LINUX_ARM64)

@@ -25,6 +25,7 @@ RUN apk add --no-cache libc6-compat
 
 ADD ./LICENSE /licenses/LICENSE
 ADD bin/${RELEASE_MODE}/linux/${TARGETARCH}/arangodb_operator /usr/bin/arangodb_operator
+ADD bin/${RELEASE_MODE}/linux/${TARGETARCH}/arangodb_operator_ops /usr/bin/arangodb_operator_ops
 
 COPY --from=builder /go/bin/dlv /usr/bin/dlv
 
