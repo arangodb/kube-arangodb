@@ -314,7 +314,7 @@ func ensureGroupLabelsMap(kind string, obj meta.Object, spec api.DeploymentSpec,
 func ensureLabelsMap(kind string, obj meta.Object, spec api.DeploymentSpec,
 	patchCmd func(name string, d []byte) error) bool {
 	expected := spec.Labels
-	ignored := spec.AnnotationsIgnoreList
+	ignored := spec.LabelsIgnoreList
 
 	mode := spec.LabelsMode.Get(getDefaultMode(expected))
 
