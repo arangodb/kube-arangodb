@@ -27,9 +27,9 @@ import (
 	"testing"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/dchest/uniuri"
-	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
@@ -51,14 +51,10 @@ func generateDaemonSet(t *testing.T, podSpec core.PodSpec, lsSpec api.LocalStora
 		Spec: podSpec,
 	}
 
-	if _, err := client.Kubernetes().CoreV1().Pods(ns).Create(context.Background(), &pod, meta.CreateOptions{}); err != nil {
-		require.NoError(t, err)
-	}
-
-	image, pullPolicy, pullSecrets, err := getImage(log.Logger, ns, name, client.Kubernetes())
-	require.NoError(t, err)
+	lg := logging.NewDefaultFactory()
 
 	ls := &LocalStorage{
+		log: lg.RegisterAndGetLogger("test", logging.Info),
 		apiObject: &api.ArangoLocalStorage{
 			ObjectMeta: meta.ObjectMeta{
 				Name:      nameLS,
@@ -73,10 +69,18 @@ func generateDaemonSet(t *testing.T, podSpec core.PodSpec, lsSpec api.LocalStora
 			Namespace: ns,
 			PodName:   name,
 		},
-		image:            image,
-		imagePullSecrets: pullSecrets,
-		imagePullPolicy:  pullPolicy,
 	}
+
+	if _, err := client.Kubernetes().CoreV1().Pods(ns).Create(context.Background(), &pod, meta.CreateOptions{}); err != nil {
+		require.NoError(t, err)
+	}
+
+	image, pullPolicy, pullSecrets, err := ls.getImage(ns, name, client.Kubernetes())
+	require.NoError(t, err)
+
+	ls.image = image
+	ls.imagePullPolicy = pullPolicy
+	ls.imagePullSecrets = pullSecrets
 
 	err = ls.ensureDaemonSet(ls.apiObject)
 	require.NoError(t, err)

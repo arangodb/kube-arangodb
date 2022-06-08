@@ -29,14 +29,13 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
 )
 
 // createHighPlan considers the given specification & status and creates a plan to get the status in line with the specification.
 // If a plan already exists, the given plan is returned with false.
 // Otherwise the new plan is returned with a boolean true.
-func createHighPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIObject,
+func (r *Reconciler) createHighPlan(ctx context.Context, apiObject k8sutil.APIObject,
 	currentPlan api.Plan, spec api.DeploymentSpec,
 	status api.DeploymentStatus,
 	builderCtx PlanBuilderContext) (api.Plan, api.BackOff, bool) {
@@ -45,29 +44,28 @@ func createHighPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.A
 		return currentPlan, nil, false
 	}
 
-	r := recoverPlanAppender(log, newPlanAppender(NewWithPlanBuilder(ctx, log, apiObject, spec, status, builderCtx), status.BackOff, currentPlan).
-		ApplyIfEmpty(updateMemberPodTemplateSpec).
-		ApplyIfEmpty(updateMemberPhasePlan).
-		ApplyIfEmpty(createCleanOutPlan).
-		ApplyIfEmpty(updateMemberUpdateConditionsPlan).
-		ApplyIfEmpty(updateMemberRotationConditionsPlan).
-		ApplyIfEmpty(createMemberRecreationConditionsPlan).
-		ApplyIfEmpty(createRotateServerStoragePVCPendingResizeConditionPlan).
-		ApplyIfEmpty(createTopologyMemberUpdatePlan).
-		ApplyIfEmptyWithBackOff(LicenseCheck, 30*time.Second, updateClusterLicense).
-		ApplyIfEmpty(createTopologyMemberConditionPlan).
-		ApplyIfEmpty(createRebalancerCheckPlan).
-		ApplyWithBackOff(BackOffCheck, time.Minute, emptyPlanBuilder)).
-		Apply(createBackupInProgressConditionPlan). // Discover backups always
-		Apply(createMaintenanceConditionPlan).      // Discover maintenance always
-		Apply(cleanupConditions)                    // Cleanup Conditions
+	q := recoverPlanAppender(r.log, newPlanAppender(NewWithPlanBuilder(ctx, apiObject, spec, status, builderCtx), status.BackOff, currentPlan).
+		ApplyIfEmpty(r.updateMemberPodTemplateSpec).
+		ApplyIfEmpty(r.updateMemberPhasePlan).
+		ApplyIfEmpty(r.createCleanOutPlan).
+		ApplyIfEmpty(r.updateMemberUpdateConditionsPlan).
+		ApplyIfEmpty(r.updateMemberRotationConditionsPlan).
+		ApplyIfEmpty(r.createMemberRecreationConditionsPlan).
+		ApplyIfEmpty(r.createRotateServerStoragePVCPendingResizeConditionPlan).
+		ApplyIfEmpty(r.createTopologyMemberUpdatePlan).
+		ApplyIfEmptyWithBackOff(LicenseCheck, 30*time.Second, r.updateClusterLicense).
+		ApplyIfEmpty(r.createTopologyMemberConditionPlan).
+		ApplyIfEmpty(r.createRebalancerCheckPlan).
+		ApplyWithBackOff(BackOffCheck, time.Minute, r.emptyPlanBuilder)).
+		Apply(r.createBackupInProgressConditionPlan). // Discover backups always
+		Apply(r.createMaintenanceConditionPlan).      // Discover maintenance always
+		Apply(r.cleanupConditions)                    // Cleanup Conditions
 
-	return r.Plan(), r.BackOff(), true
+	return q.Plan(), q.BackOff(), true
 }
 
 // updateMemberPodTemplateSpec creates plan to update member Spec
-func updateMemberPodTemplateSpec(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+func (r *Reconciler) updateMemberPodTemplateSpec(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext) api.Plan {
 	var plan api.Plan
@@ -76,7 +74,7 @@ func updateMemberPodTemplateSpec(ctx context.Context,
 	status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
 		for _, m := range members {
 			if m.Phase != api.MemberPhaseNone {
-				if reason, changed := arangoMemberPodTemplateNeedsUpdate(ctx, log, apiObject, spec, group, status, m, context); changed {
+				if reason, changed := r.arangoMemberPodTemplateNeedsUpdate(ctx, apiObject, spec, group, status, m, context); changed {
 					plan = append(plan, actions.NewAction(api.ActionTypeArangoMemberUpdatePodSpec, group, m, reason))
 				}
 			}
@@ -89,8 +87,7 @@ func updateMemberPodTemplateSpec(ctx context.Context,
 }
 
 // updateMemberPhasePlan creates plan to update member phase
-func updateMemberPhasePlan(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+func (r *Reconciler) updateMemberPhasePlan(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext) api.Plan {
 	var plan api.Plan
@@ -129,8 +126,7 @@ func tlsRotateConditionAction(group api.ServerGroup, memberID string, reason str
 	return actions.NewAction(api.ActionTypeSetMemberCondition, group, withPredefinedMember(memberID), reason).AddParam(api.ConditionTypePendingTLSRotation.String(), "T")
 }
 
-func updateMemberUpdateConditionsPlan(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+func (r *Reconciler) updateMemberUpdateConditionsPlan(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext) api.Plan {
 	var plan api.Plan
@@ -154,15 +150,14 @@ func updateMemberUpdateConditionsPlan(ctx context.Context,
 
 		return nil
 	}); err != nil {
-		log.Err(err).Msgf("Error while generating update plan")
+		r.log.Err(err).Error("Error while generating update plan")
 		return nil
 	}
 
 	return plan
 }
 
-func updateMemberRotationConditionsPlan(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+func (r *Reconciler) updateMemberRotationConditionsPlan(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext) api.Plan {
 	var plan api.Plan
@@ -179,7 +174,7 @@ func updateMemberRotationConditionsPlan(ctx context.Context,
 				p = nil
 			}
 
-			if p, err := updateMemberRotationConditions(log, apiObject, spec, m, group, p, context); err != nil {
+			if p, err := r.updateMemberRotationConditions(apiObject, spec, m, group, p, context); err != nil {
 				return err
 			} else if len(p) > 0 {
 				plan = append(plan, p...)
@@ -188,14 +183,14 @@ func updateMemberRotationConditionsPlan(ctx context.Context,
 
 		return nil
 	}); err != nil {
-		log.Err(err).Msgf("Error while generating rotation plan")
+		r.log.Err(err).Error("Error while generating rotation plan")
 		return nil
 	}
 
 	return plan
 }
 
-func updateMemberRotationConditions(log zerolog.Logger, apiObject k8sutil.APIObject, spec api.DeploymentSpec, member api.MemberStatus, group api.ServerGroup, p *core.Pod, context PlanBuilderContext) (api.Plan, error) {
+func (r *Reconciler) updateMemberRotationConditions(apiObject k8sutil.APIObject, spec api.DeploymentSpec, member api.MemberStatus, group api.ServerGroup, p *core.Pod, context PlanBuilderContext) (api.Plan, error) {
 	if member.Conditions.IsTrue(api.ConditionTypeRestart) {
 		return nil, nil
 	}
@@ -205,16 +200,16 @@ func updateMemberRotationConditions(log zerolog.Logger, apiObject k8sutil.APIObj
 		return nil, nil
 	}
 
-	if m, _, reason, err := rotation.IsRotationRequired(log, context.ACS(), spec, member, group, p, arangoMember.Spec.Template, arangoMember.Status.Template); err != nil {
-		log.Error().Err(err).Msgf("Error while getting rotation details")
+	if m, _, reason, err := rotation.IsRotationRequired(context.ACS(), spec, member, group, p, arangoMember.Spec.Template, arangoMember.Status.Template); err != nil {
+		r.log.Err(err).Error("Error while getting rotation details")
 		return nil, err
 	} else {
 		switch m {
 		case rotation.EnforcedRotation:
 			if reason != "" {
-				log.Info().Bool("enforced", true).Msgf(reason)
+				r.log.Bool("enforced", true).Info(reason)
 			} else {
-				log.Info().Bool("enforced", true).Msgf("Unknown reason")
+				r.log.Bool("enforced", true).Info("Unknown reason")
 			}
 			// We need to do enforced rotation
 			return api.Plan{restartMemberConditionAction(group, member.ID, reason)}, nil
@@ -233,9 +228,9 @@ func updateMemberRotationConditions(log zerolog.Logger, apiObject k8sutil.APIObj
 			return api.Plan{actions.NewAction(api.ActionTypeArangoMemberUpdatePodStatus, group, member, "Propagating status of pod").AddParam(ActionTypeArangoMemberUpdatePodStatusChecksum, arangoMember.Spec.Template.GetChecksum())}, nil
 		case rotation.GracefulRotation:
 			if reason != "" {
-				log.Info().Bool("enforced", false).Msgf(reason)
+				r.log.Bool("enforced", false).Info(reason)
 			} else {
-				log.Info().Bool("enforced", false).Msgf("Unknown reason")
+				r.log.Bool("enforced", false).Info("Unknown reason")
 			}
 			// We need to do graceful rotation
 			if member.Conditions.IsTrue(api.ConditionTypePendingRestart) {

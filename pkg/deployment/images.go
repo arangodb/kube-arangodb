@@ -27,7 +27,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -37,6 +36,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -76,11 +76,11 @@ type ArangoSyncIdentity struct {
 }
 
 type imagesBuilder struct {
+	Log            logging.Logger
 	Context        resources.Context
 	APIObject      k8sutil.APIObject
 	Spec           api.DeploymentSpec
 	Status         api.DeploymentStatus
-	Log            zerolog.Logger
 	UpdateCRStatus func(status api.DeploymentStatus) error
 }
 
@@ -93,7 +93,7 @@ func (d *Deployment) ensureImages(ctx context.Context, apiObject *api.ArangoDepl
 		APIObject: apiObject,
 		Spec:      apiObject.Spec,
 		Status:    status,
-		Log:       d.deps.Log,
+		Log:       d.log,
 		UpdateCRStatus: func(status api.DeploymentStatus) error {
 			if err := d.UpdateStatus(ctx, status, lastVersion); err != nil {
 				return errors.WithStack(err)
@@ -132,10 +132,9 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 	role := shared.ImageIDAndVersionRole
 	id := fmt.Sprintf("%0x", sha1.Sum([]byte(image)))[:6]
 	podName := k8sutil.CreatePodName(ib.APIObject.GetName(), role, id, "")
-	log := ib.Log.With().
+	log := ib.Log.
 		Str("pod", podName).
-		Str("image", image).
-		Logger()
+		Str("image", image)
 
 	// Check if pod exists
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
@@ -150,20 +149,20 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 					return ib.Context.ACS().CurrentClusterCache().PodsModInterface().V1().Delete(ctxChild, podName, metav1.DeleteOptions{})
 				})
 				if err != nil && !k8sutil.IsNotFound(err) {
-					log.Warn().Err(err).Msg("Failed to delete Image ID Pod")
+					log.Err(err).Warn("Failed to delete Image ID Pod")
 					return false, nil
 				}
 			}
 			return false, nil
 		}
 		if !k8sutil.IsPodReady(pod) {
-			log.Debug().Msg("Image ID Pod is not yet ready")
+			log.Debug("Image ID Pod is not yet ready")
 			return true, nil
 		}
 
 		imageID, err := k8sutil.GetArangoDBImageIDFromPod(pod)
 		if err != nil {
-			log.Warn().Err(err).Msg("failed to get image ID from pod")
+			log.Err(err).Warn("failed to get image ID from pod")
 			return true, nil
 		}
 		if imageID == "" {
@@ -174,14 +173,14 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 		// Try fetching the ArangoDB version
 		client, err := arangod.CreateArangodImageIDClient(ctx, ib.APIObject, pod.Status.PodIP)
 		if err != nil {
-			log.Warn().Err(err).Msg("Failed to create Image ID Pod client")
+			log.Err(err).Warn("Failed to create Image ID Pod client")
 			return true, nil
 		}
 		ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 		defer cancel()
 		v, err := client.Version(ctxChild)
 		if err != nil {
-			log.Debug().Err(err).Msg("Failed to fetch version from Image ID Pod")
+			log.Err(err).Debug("Failed to fetch version from Image ID Pod")
 			return true, nil
 		}
 		version := v.Version
@@ -192,7 +191,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 			return ib.Context.ACS().CurrentClusterCache().PodsModInterface().V1().Delete(ctxChild, podName, metav1.DeleteOptions{})
 		})
 		if err != nil && !k8sutil.IsNotFound(err) {
-			log.Warn().Err(err).Msg("Failed to delete Image ID Pod")
+			log.Err(err).Warn("Failed to delete Image ID Pod")
 			return true, nil
 		}
 
@@ -204,14 +203,14 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 		}
 		ib.Status.Images.AddOrUpdate(info)
 		if err := ib.UpdateCRStatus(ib.Status); err != nil {
-			log.Warn().Err(err).Msg("Failed to save Image Info in CR status")
+			log.Err(err).Warn("Failed to save Image Info in CR status")
 			return true, errors.WithStack(err)
 		}
 		// We're done
-		log.Debug().
+		log.
 			Str("image-id", imageID).
 			Str("arangodb-version", string(version)).
-			Msg("Found image ID and ArangoDB version")
+			Debug("Found image ID and ArangoDB version")
 		return false, nil
 	}
 
@@ -231,7 +230,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 
 	pod, err = resources.RenderArangoPod(ctx, cachedStatus, ib.APIObject, role, id, podName, &imagePod)
 	if err != nil {
-		log.Debug().Err(err).Msg("Failed to render image ID pod")
+		log.Err(err).Debug("Failed to render image ID pod")
 		return true, errors.WithStack(err)
 	}
 
@@ -240,7 +239,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 		return err
 	})
 	if err != nil {
-		log.Debug().Err(err).Msg("Failed to create image ID pod")
+		log.Err(err).Debug("Failed to create image ID pod")
 		return true, errors.WithStack(err)
 	}
 	// Come back soon to inspect the pod

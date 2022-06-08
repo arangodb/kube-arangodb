@@ -31,29 +31,33 @@ import (
 	"strings"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
+	"github.com/gin-gonic/gin"
+
+	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
+
+	"github.com/arangodb/kube-arangodb/pkg/version"
+
+	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
+
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+
 	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/crd"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/operator"
-	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
 	"github.com/arangodb/kube-arangodb/pkg/server"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	utilsError "github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/probe"
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
-	"github.com/arangodb/kube-arangodb/pkg/version"
-
-	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 	appsv1 "k8s.io/api/apps/v1"
@@ -83,14 +87,15 @@ const (
 )
 
 var (
+	logger        = logging.Global().RegisterAndGetLogger("root", logging.Info)
+	eventRecorder = logging.Global().RegisterAndGetLogger("root-event-recorder", logging.Info)
+
 	cmdMain = cobra.Command{
 		Use: "arangodb_operator",
 		Run: executeMain,
 	}
 
 	logLevels     []string
-	cliLog        = logging.NewRootLogger()
-	logService    logging.Service
 	serverOptions struct {
 		host            string
 		port            int
@@ -157,13 +162,14 @@ func init() {
 	f.StringVar(&serverOptions.tlsSecretName, "server.tls-secret-name", "", "Name of secret containing tls.crt & tls.key for HTTPS server (if empty, self-signed certificate is used)")
 	f.StringVar(&serverOptions.adminSecretName, "server.admin-secret-name", defaultAdminSecretName, "Name of secret containing username + password for login to the dashboard")
 	f.BoolVar(&serverOptions.allowAnonymous, "server.allow-anonymous-access", false, "Allow anonymous access to the dashboard")
-	f.StringArrayVar(&logLevels, "log.level", []string{defaultLogLevel}, fmt.Sprintf("Set log levels in format <level> or <logger>=<level>. Possible loggers: %s", strings.Join(logging.LoggerNames(), ", ")))
+	f.StringArrayVar(&logLevels, "log.level", []string{defaultLogLevel}, fmt.Sprintf("Set log levels in format <level> or <logger>=<level>. Possible loggers: %s", strings.Join(logging.Global().Names(), ", ")))
 	f.BoolVar(&operatorOptions.enableDeployment, "operator.deployment", false, "Enable to run the ArangoDeployment operator")
 	f.BoolVar(&operatorOptions.enableDeploymentReplication, "operator.deployment-replication", false, "Enable to run the ArangoDeploymentReplication operator")
 	f.BoolVar(&operatorOptions.enableStorage, "operator.storage", false, "Enable to run the ArangoLocalStorage operator")
 	f.BoolVar(&operatorOptions.enableBackup, "operator.backup", false, "Enable to run the ArangoBackup operator")
 	f.BoolVar(&operatorOptions.enableApps, "operator.apps", false, "Enable to run the ArangoApps operator")
 	f.BoolVar(&operatorOptions.enableK2KClusterSync, "operator.k2k-cluster-sync", false, "Enable to run the ListSimple operator")
+	f.MarkDeprecated("operator.k2k-cluster-sync", "Enabled within deployment operator")
 	f.BoolVar(&operatorOptions.versionOnly, "operator.version", false, "Enable only version endpoint in Operator")
 	f.StringVar(&operatorOptions.alpineImage, "operator.alpine-image", UBIImageEnv.GetOrDefault(defaultAlpineImage), "Docker image used for alpine containers")
 	f.MarkDeprecated("operator.alpine-image", "Value is not used anymore")
@@ -205,9 +211,6 @@ func executeUsage(cmd *cobra.Command, args []string) {
 
 // Run the operator
 func executeMain(cmd *cobra.Command, args []string) {
-	// Set global logger
-	log.Logger = logging.NewRootLogger()
-
 	// Get environment
 	namespace := os.Getenv(constants.EnvOperatorPodNamespace)
 	name := os.Getenv(constants.EnvOperatorPodName)
@@ -228,20 +231,23 @@ func executeMain(cmd *cobra.Command, args []string) {
 
 	// Prepare log service
 	var err error
-	if err := logging.InitGlobalLogger(defaultLogLevel, logLevels); err != nil {
-		cliLog.Fatal().Err(err).Msg("Failed to initialize log service")
+
+	levels, err := logging.ParseLogLevelsFromArgs(logLevels)
+	if err != nil {
+		logger.Err(err).Fatal("Unable to parse log level")
 	}
 
-	logService = logging.GlobalLogger()
+	logging.Global().ApplyLogLevels(levels)
 
-	logService.ConfigureRootLogger(func(log zerolog.Logger) zerolog.Logger {
-		podNameParts := strings.Split(name, "-")
-		operatorID := podNameParts[len(podNameParts)-1]
-		cliLog = cliLog.With().Str("operator-id", operatorID).Logger()
-		return log.With().Str("operator-id", operatorID).Logger()
+	podNameParts := strings.Split(name, "-")
+	operatorID := podNameParts[len(podNameParts)-1]
+	logging.Global().RegisterWrappers(func(in *zerolog.Event) *zerolog.Event {
+		return in.Str("operator-id", operatorID)
 	})
 
-	klog.SetOutput(logService.MustGetLogger(logging.LoggerNameKLog))
+	kl := logging.Global().RegisterAndGetLogger("klog", logging.Info)
+
+	klog.SetOutput(kl.InfoIO())
 	klog.Info("nice to meet you")
 	klog.Flush()
 
@@ -249,46 +255,46 @@ func executeMain(cmd *cobra.Command, args []string) {
 	if !operatorOptions.enableDeployment && !operatorOptions.enableDeploymentReplication && !operatorOptions.enableStorage &&
 		!operatorOptions.enableBackup && !operatorOptions.enableApps && !operatorOptions.enableK2KClusterSync {
 		if !operatorOptions.versionOnly {
-			cliLog.Fatal().Err(err).Msg("Turn on --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync or any combination of these")
+			logger.Err(err).Fatal("Turn on --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync or any combination of these")
 		}
 	} else if operatorOptions.versionOnly {
-		cliLog.Fatal().Err(err).Msg("Options --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync cannot be enabled together with --operator.version")
+		logger.Err(err).Fatal("Options --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync cannot be enabled together with --operator.version")
 	}
 
 	// Log version
-	cliLog.Info().
+	logger.
 		Str("pod-name", name).
 		Str("pod-namespace", namespace).
-		Msgf("Starting arangodb-operator (%s), version %s build %s", version.GetVersionV1().Edition.Title(), version.GetVersionV1().Version, version.GetVersionV1().Build)
+		Info("Starting arangodb-operator (%s), version %s build %s", version.GetVersionV1().Edition.Title(), version.GetVersionV1().Version, version.GetVersionV1().Build)
 
 	// Check environment
 	if !operatorOptions.versionOnly {
 		if len(namespace) == 0 {
-			cliLog.Fatal().Msgf("%s environment variable missing", constants.EnvOperatorPodNamespace)
+			logger.Fatal("%s environment variable missing", constants.EnvOperatorPodNamespace)
 		}
 		if len(name) == 0 {
-			cliLog.Fatal().Msgf("%s environment variable missing", constants.EnvOperatorPodName)
+			logger.Fatal("%s environment variable missing", constants.EnvOperatorPodName)
 		}
 		if len(ip) == 0 {
-			cliLog.Fatal().Msgf("%s environment variable missing", constants.EnvOperatorPodIP)
+			logger.Fatal("%s environment variable missing", constants.EnvOperatorPodIP)
 		}
 
 		// Get host name
 		id, err := os.Hostname()
 		if err != nil {
-			cliLog.Fatal().Err(err).Msg("Failed to get hostname")
+			logger.Err(err).Fatal("Failed to get hostname")
 		}
 
 		client, ok := kclient.GetDefaultFactory().Client()
 		if !ok {
-			cliLog.Fatal().Msg("Failed to get client")
+			logger.Fatal("Failed to get client")
 		}
 
 		if crdOptions.install {
 			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 			defer cancel()
 
-			crd.EnsureCRD(ctx, logService.MustGetLogger("crd"), client)
+			crd.EnsureCRD(ctx, client)
 		}
 
 		secrets := client.Kubernetes().CoreV1().Secrets(namespace)
@@ -296,11 +302,11 @@ func executeMain(cmd *cobra.Command, args []string) {
 		// Create operator
 		cfg, deps, err := newOperatorConfigAndDeps(id+"-"+name, namespace, name)
 		if err != nil {
-			cliLog.Fatal().Err(err).Msg("Failed to create operator config & deps")
+			logger.Err(err).Fatal("Failed to create operator config & deps")
 		}
 		o, err := operator.NewOperator(cfg, deps)
 		if err != nil {
-			cliLog.Fatal().Err(err).Msg("Failed to create operator")
+			logger.Err(err).Fatal("Failed to create operator")
 		}
 
 		listenAddr := net.JoinHostPort(serverOptions.host, strconv.Itoa(serverOptions.port))
@@ -314,7 +320,6 @@ func executeMain(cmd *cobra.Command, args []string) {
 			AdminSecretName:    serverOptions.adminSecretName,
 			AllowAnonymous:     serverOptions.allowAnonymous,
 		}, server.Dependencies{
-			Log:           logService.MustGetLogger(logging.LoggerNameServer),
 			LivenessProbe: &livenessProbe,
 			Deployment: server.OperatorDependency{
 				Enabled: cfg.EnableDeployment,
@@ -344,9 +349,9 @@ func executeMain(cmd *cobra.Command, args []string) {
 
 			Secrets: secrets,
 		}); err != nil {
-			cliLog.Fatal().Err(err).Msg("Failed to create HTTP server")
+			logger.Err(err).Fatal("Failed to create HTTP server")
 		} else {
-			go utilsError.LogError(cliLog, "error while starting service", svr.Run)
+			go utilsError.LogError(logger, "error while starting service", svr.Run)
 		}
 
 		//	startChaos(context.Background(), cfg.KubeCli, cfg.Namespace, chaosLevel)
@@ -355,7 +360,7 @@ func executeMain(cmd *cobra.Command, args []string) {
 		o.Run()
 	} else {
 		if err := startVersionProcess(); err != nil {
-			cliLog.Fatal().Err(err).Msg("Failed to create HTTP server")
+			logger.Err(err).Fatal("Failed to create HTTP server")
 		}
 	}
 }
@@ -363,7 +368,7 @@ func executeMain(cmd *cobra.Command, args []string) {
 func startVersionProcess() error {
 	// Just expose version
 	listenAddr := net.JoinHostPort(serverOptions.host, strconv.Itoa(serverOptions.port))
-	cliLog.Info().Str("addr", listenAddr).Msgf("Starting version endpoint")
+	logger.Str("addr", listenAddr).Info("Starting version endpoint")
 
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
@@ -396,7 +401,7 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		return operator.Config{}, operator.Dependencies{}, errors.WithStack(fmt.Errorf("Failed to get my pod's service account: %s", err))
 	}
 
-	eventRecorder := createRecorder(cliLog, client.Kubernetes(), name, namespace)
+	eventRecorder := createRecorder(client.Kubernetes(), name, namespace)
 
 	scope, ok := scope.AsScope(operatorOptions.scope)
 	if !ok {
@@ -424,7 +429,6 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		ShutdownTimeout:             shutdownOptions.timeout,
 	}
 	deps := operator.Dependencies{
-		LogService:                 logService,
 		Client:                     client,
 		EventRecorder:              eventRecorder,
 		LivenessProbe:              &livenessProbe,
@@ -446,10 +450,10 @@ func getMyPodInfo(kubecli kubernetes.Interface, namespace, name string) (string,
 	op := func() error {
 		pod, err := kubecli.CoreV1().Pods(namespace).Get(context.Background(), name, metav1.GetOptions{})
 		if err != nil {
-			cliLog.Error().
+			logger.
 				Err(err).
 				Str("name", name).
-				Msg("Failed to get operator pod")
+				Error("Failed to get operator pod")
 			return errors.WithStack(err)
 		}
 		sa = pod.Spec.ServiceAccountName
@@ -468,10 +472,10 @@ func getMyPodInfo(kubecli kubernetes.Interface, namespace, name string) (string,
 	return image, sa, nil
 }
 
-func createRecorder(log zerolog.Logger, kubecli kubernetes.Interface, name, namespace string) record.EventRecorder {
+func createRecorder(kubecli kubernetes.Interface, name, namespace string) record.EventRecorder {
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(func(format string, args ...interface{}) {
-		log.Info().Msgf(format, args...)
+		eventRecorder.Info(format, args...)
 	})
 	eventBroadcaster.StartRecordingToSink(&v1core.EventSinkImpl{Interface: v1core.New(kubecli.CoreV1().RESTClient()).Events(namespace)})
 	combinedScheme := runtime.NewScheme()

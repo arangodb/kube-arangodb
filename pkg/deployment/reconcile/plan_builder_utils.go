@@ -28,18 +28,17 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/rs/zerolog"
 )
 
 // createRotateMemberPlan creates a plan to rotate (stop-recreate-start) an existing
 // member.
-func createRotateMemberPlan(log zerolog.Logger, member api.MemberStatus,
+func (r *Reconciler) createRotateMemberPlan(member api.MemberStatus,
 	group api.ServerGroup, spec api.DeploymentSpec, reason string) api.Plan {
-	log.Debug().
+	r.log.
 		Str("id", member.ID).
 		Str("role", group.AsRole()).
 		Str("reason", reason).
-		Msg("Creating rotation plan")
+		Debug("Creating rotation plan")
 	return createRotateMemberPlanWithAction(member, group, api.ActionTypeRotateMember, spec, reason)
 }
 
@@ -63,8 +62,7 @@ func createRotateMemberPlanWithAction(member api.MemberStatus,
 	return plan
 }
 
-func emptyPlanBuilder(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+func (r *Reconciler) emptyPlanBuilder(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext) api.Plan {
 	return nil

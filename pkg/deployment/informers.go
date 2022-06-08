@@ -44,7 +44,6 @@ func (d *Deployment) listenForPodEvents(stopCh <-chan struct{}) {
 	}
 
 	rw := k8sutil.NewResourceWatcher(
-		d.deps.Log,
 		d.deps.Client.Kubernetes().CoreV1().RESTClient(),
 		"pods",
 		d.apiObject.GetNamespace(),
@@ -89,7 +88,6 @@ func (d *Deployment) listenForPVCEvents(stopCh <-chan struct{}) {
 	}
 
 	rw := k8sutil.NewResourceWatcher(
-		d.deps.Log,
 		d.deps.Client.Kubernetes().CoreV1().RESTClient(),
 		"persistentvolumeclaims",
 		d.apiObject.GetNamespace(),
@@ -134,7 +132,6 @@ func (d *Deployment) listenForSecretEvents(stopCh <-chan struct{}) {
 	}
 
 	rw := k8sutil.NewResourceWatcher(
-		d.deps.Log,
 		d.deps.Client.Kubernetes().CoreV1().RESTClient(),
 		"secrets",
 		d.apiObject.GetNamespace(),
@@ -180,7 +177,6 @@ func (d *Deployment) listenForServiceEvents(stopCh <-chan struct{}) {
 	}
 
 	rw := k8sutil.NewResourceWatcher(
-		d.deps.Log,
 		d.deps.Client.Kubernetes().CoreV1().RESTClient(),
 		"services",
 		d.apiObject.GetNamespace(),
@@ -212,7 +208,6 @@ func (d *Deployment) listenForServiceEvents(stopCh <-chan struct{}) {
 // listenForCRDEvents keep listening for changes in CRDs until the given channel is closed.
 func (d *Deployment) listenForCRDEvents(stopCh <-chan struct{}) {
 	rw := k8sutil.NewResourceWatcher(
-		d.deps.Log,
 		d.deps.Client.KubernetesExtensions().ApiextensionsV1().RESTClient(),
 		"customresourcedefinitions",
 		"",

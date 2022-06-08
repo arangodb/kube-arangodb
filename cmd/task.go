@@ -21,7 +21,6 @@
 package cmd
 
 import (
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
@@ -57,9 +56,9 @@ var cmdTaskState = &cobra.Command{
 }
 
 func taskCreate(cmd *cobra.Command, args []string) {
-	log.Info().Msgf("TODO: create task")
+	logger.Info("TODO: create task")
 }
 
 func taskState(cmd *cobra.Command, args []string) {
-	log.Info().Msgf("TODO: check task state")
+	logger.Info("TODO: check task state")
 }

@@ -28,7 +28,6 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
-	"github.com/rs/zerolog"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	driver "github.com/arangodb/go-driver"
@@ -43,16 +42,18 @@ import (
 // prepareAgencyPodTermination checks if the given agency pod is allowed to terminate
 // and if so, prepares it for termination.
 // It returns nil if the pod is allowed to terminate, an error otherwise.
-func (r *Resources) prepareAgencyPodTermination(ctx context.Context, log zerolog.Logger, p *v1.Pod, memberStatus api.MemberStatus, updateMember func(api.MemberStatus) error) error {
+func (r *Resources) prepareAgencyPodTermination(ctx context.Context, p *v1.Pod, memberStatus api.MemberStatus, updateMember func(api.MemberStatus) error) error {
+	log := r.log.Str("section", "pod")
+
 	// Inspect member phase
 	if memberStatus.Phase.IsFailed() {
-		log.Debug().Msg("Pod is already failed, safe to remove agency serving finalizer")
+		log.Debug("Pod is already failed, safe to remove agency serving finalizer")
 		return nil
 	}
 	// Inspect deployment deletion state
 	apiObject := r.context.GetAPIObject()
 	if apiObject.GetDeletionTimestamp() != nil {
-		log.Debug().Msg("Entire deployment is being deleted, safe to remove agency serving finalizer")
+		log.Debug("Entire deployment is being deleted, safe to remove agency serving finalizer")
 		return nil
 	}
 
@@ -62,7 +63,7 @@ func (r *Resources) prepareAgencyPodTermination(ctx context.Context, log zerolog
 		if !r.context.GetScope().IsNamespaced() && p.Spec.NodeName != "" {
 			node, ok := nodes.GetSimple(p.Spec.NodeName)
 			if !ok {
-				log.Warn().Msg("Node not found")
+				log.Warn("Node not found")
 			} else if node.Spec.Unschedulable {
 				agentDataWillBeGone = true
 			}
@@ -74,7 +75,7 @@ func (r *Resources) prepareAgencyPodTermination(ctx context.Context, log zerolog
 	defer cancel()
 	pvc, err := r.context.ACS().CurrentClusterCache().PersistentVolumeClaim().V1().Read().Get(ctxChild, memberStatus.PersistentVolumeClaimName, meta.GetOptions{})
 	if err != nil {
-		log.Warn().Err(err).Msg("Failed to get PVC for member")
+		log.Err(err).Warn("Failed to get PVC for member")
 		return errors.WithStack(err)
 	}
 	if k8sutil.IsPersistentVolumeClaimMarkedForDeletion(pvc) {
@@ -83,27 +84,27 @@ func (r *Resources) prepareAgencyPodTermination(ctx context.Context, log zerolog
 
 	// Is this a simple pod restart?
 	if !agentDataWillBeGone {
-		log.Debug().Msg("Pod is just being restarted, safe to terminate agency pod")
+		log.Debug("Pod is just being restarted, safe to terminate agency pod")
 		return nil
 	}
 
 	// Inspect agency state
-	log.Debug().Msg("Agent data will be gone, so we will check agency serving status first")
+	log.Debug("Agent data will be gone, so we will check agency serving status first")
 	ctxChild, cancel = context.WithTimeout(ctx, time.Second*15)
 	defer cancel()
 	ctxLeader := agency.WithAllowNoLeader(ctxChild) // The ID we're checking may be the leader, so ignore situations where all other agents are followers
 
 	agencyConns, err := r.context.GetAgencyClientsWithPredicate(ctxLeader, func(id string) bool { return id != memberStatus.ID })
 	if err != nil {
-		log.Debug().Err(err).Msg("Failed to create member client")
+		log.Err(err).Debug("Failed to create member client")
 		return errors.WithStack(err)
 	}
 	if len(agencyConns) == 0 {
-		log.Debug().Err(err).Msg("No more remaining agents, we cannot delete this one")
+		log.Err(err).Debug("No more remaining agents, we cannot delete this one")
 		return errors.WithStack(errors.Newf("No more remaining agents"))
 	}
 	if err := agency.AreAgentsHealthy(ctxLeader, agencyConns); err != nil {
-		log.Debug().Err(err).Msg("Remaining agents are not healthy")
+		log.Err(err).Debug("Remaining agents are not healthy")
 		return errors.WithStack(err)
 	}
 
@@ -113,7 +114,7 @@ func (r *Resources) prepareAgencyPodTermination(ctx context.Context, log zerolog
 			return errors.WithStack(err)
 		}
 	}
-	log.Debug().Msg("Agent is ready to be completely recovered.")
+	log.Debug("Agent is ready to be completely recovered.")
 
 	return nil
 }
@@ -121,23 +122,25 @@ func (r *Resources) prepareAgencyPodTermination(ctx context.Context, log zerolog
 // prepareDBServerPodTermination checks if the given dbserver pod is allowed to terminate
 // and if so, prepares it for termination.
 // It returns nil if the pod is allowed to terminate, an error otherwise.
-func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerolog.Logger, p *v1.Pod, memberStatus api.MemberStatus, updateMember func(api.MemberStatus) error) error {
+func (r *Resources) prepareDBServerPodTermination(ctx context.Context, p *v1.Pod, memberStatus api.MemberStatus, updateMember func(api.MemberStatus) error) error {
+	log := r.log.Str("section", "pod")
+
 	// Inspect member phase
 	if memberStatus.Phase.IsFailed() {
-		log.Debug().Msg("Pod is already failed, safe to remove dbserver pod")
+		log.Debug("Pod is already failed, safe to remove dbserver pod")
 		return nil
 	}
 
 	// If pod is not member of cluster, do nothing
 	if !memberStatus.Conditions.IsTrue(api.ConditionTypeMemberOfCluster) {
-		log.Debug().Msg("Pod is not member of cluster")
+		log.Debug("Pod is not member of cluster")
 		return nil
 	}
 
 	// Inspect deployment deletion state
 	apiObject := r.context.GetAPIObject()
 	if apiObject.GetDeletionTimestamp() != nil {
-		log.Debug().Msg("Entire deployment is being deleted, safe to remove dbserver pod")
+		log.Debug("Entire deployment is being deleted, safe to remove dbserver pod")
 		return nil
 	}
 
@@ -146,7 +149,7 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 	if nodes, err := r.context.ACS().CurrentClusterCache().Node().V1(); err == nil {
 		node, ok := nodes.GetSimple(p.Spec.NodeName)
 		if !ok {
-			log.Warn().Msg("Node not found")
+			log.Warn("Node not found")
 		} else if node.Spec.Unschedulable {
 			if !r.context.GetSpec().IsNetworkAttachedVolumes() {
 				dbserverDataWillBeGone = true
@@ -159,7 +162,7 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 	defer cancel()
 	pvc, err := r.context.ACS().CurrentClusterCache().PersistentVolumeClaim().V1().Read().Get(ctxChild, memberStatus.PersistentVolumeClaimName, meta.GetOptions{})
 	if err != nil {
-		log.Warn().Err(err).Msg("Failed to get PVC for member")
+		log.Err(err).Warn("Failed to get PVC for member")
 		return errors.WithStack(err)
 	}
 	if k8sutil.IsPersistentVolumeClaimMarkedForDeletion(pvc) {
@@ -176,14 +179,14 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 	defer cancel()
 	c, err := r.context.GetDatabaseClient(ctxChild)
 	if err != nil {
-		log.Debug().Err(err).Msg("Failed to create member client")
+		log.Err(err).Debug("Failed to create member client")
 		return errors.WithStack(err)
 	}
 	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	cluster, err := c.Cluster(ctxChild)
 	if err != nil {
-		log.Debug().Err(err).Msg("Failed to access cluster")
+		log.Err(err).Debug("Failed to access cluster")
 
 		if r.context.GetSpec().Recovery.Get().GetAutoRecover() {
 			if c, ok := k8sutil.GetContainerStatusByName(p, shared.ServerContainerName); ok {
@@ -207,12 +210,12 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 				return errors.WithStack(err)
 			}
 		}
-		log.Debug().Msg("DBServer is cleaned out.")
+		log.Debug("DBServer is cleaned out.")
 		return nil
 	}
 	// Not cleaned out yet, check member status
 	if memberStatus.Conditions.IsTrue(api.ConditionTypeTerminated) {
-		log.Warn().Msg("Member is already terminated before it could resign or be cleaned out. Not good, but removing dbserver pod because we cannot do anything further")
+		log.Warn("Member is already terminated before it could resign or be cleaned out. Not good, but removing dbserver pod because we cannot do anything further")
 		// At this point we have to set CleanedOut to true,
 		// because we can no longer reason about the state in the agency and
 		// bringing back the dbserver again may result in an cleaned out server without us knowing
@@ -240,16 +243,16 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 		ctxJobID := driver.WithJobIDResponse(ctxChild, &jobID)
 		// Ensure the cleanout is triggered
 		if dbserverDataWillBeGone {
-			log.Debug().Msg("Server is not yet cleaned out. Triggering a clean out now")
+			log.Debug("Server is not yet cleaned out. Triggering a clean out now")
 			if err := cluster.CleanOutServer(ctxJobID, memberStatus.ID); err != nil {
-				log.Debug().Err(err).Msg("Failed to clean out server")
+				log.Err(err).Debug("Failed to clean out server")
 				return errors.WithStack(err)
 			}
 			memberStatus.Phase = api.MemberPhaseDrain
 		} else {
-			log.Debug().Msg("Temporary shutdown, resign leadership")
+			log.Debug("Temporary shutdown, resign leadership")
 			if err := cluster.ResignServer(ctxJobID, memberStatus.ID); err != nil {
-				log.Debug().Err(err).Msg("Failed to resign server")
+				log.Err(err).Debug("Failed to resign server")
 				return errors.WithStack(err)
 			}
 			memberStatus.Phase = api.MemberPhaseResign
@@ -266,25 +269,25 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 		defer cancel()
 		agency, err := r.context.GetAgency(ctxChild)
 		if err != nil {
-			log.Debug().Err(err).Msg("Failed to create agency client")
+			log.Err(err).Debug("Failed to create agency client")
 			return errors.WithStack(err)
 		}
 		ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 		defer cancel()
 		jobStatus, err := arangod.CleanoutServerJobStatus(ctxChild, memberStatus.CleanoutJobID, c, agency)
 		if err != nil {
-			log.Debug().Err(err).Msg("Failed to fetch job status")
+			log.Err(err).Debug("Failed to fetch job status")
 			return errors.WithStack(err)
 		}
 		if jobStatus.IsFailed() {
-			log.Warn().Str("reason", jobStatus.Reason()).Msg("Job failed")
+			log.Str("reason", jobStatus.Reason()).Warn("Job failed")
 			// Revert cleanout state
 			memberStatus.Phase = api.MemberPhaseCreated
 			memberStatus.CleanoutJobID = ""
 			if err := updateMember(memberStatus); err != nil {
 				return errors.WithStack(err)
 			}
-			log.Error().Msg("Cleanout/Resign server job failed, continue anyway")
+			log.Error("Cleanout/Resign server job failed, continue anyway")
 			return nil
 		}
 		if jobStatus.IsFinished() {
@@ -297,7 +300,7 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 		defer cancel()
 		agency, err := r.context.GetAgency(ctxChild)
 		if err != nil {
-			log.Debug().Err(err).Msg("Failed to create agency client")
+			log.Err(err).Debug("Failed to create agency client")
 			return errors.WithStack(err)
 		}
 
@@ -305,22 +308,22 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 		defer cancel()
 		jobStatus, err := arangod.CleanoutServerJobStatus(ctxChild, memberStatus.CleanoutJobID, c, agency)
 		if err != nil {
-			log.Debug().Err(err).Msg("Failed to fetch job status")
+			log.Err(err).Debug("Failed to fetch job status")
 			return errors.WithStack(err)
 		}
 		if jobStatus.IsFailed() {
-			log.Warn().Str("reason", jobStatus.Reason()).Msg("Resign Job failed")
+			log.Str("reason", jobStatus.Reason()).Warn("Resign Job failed")
 			// Revert cleanout state
 			memberStatus.Phase = api.MemberPhaseCreated
 			memberStatus.CleanoutJobID = ""
 			if err := updateMember(memberStatus); err != nil {
 				return errors.WithStack(err)
 			}
-			log.Error().Msg("Cleanout/Resign server job failed, continue anyway")
+			log.Error("Cleanout/Resign server job failed, continue anyway")
 			return nil
 		}
 		if jobStatus.IsFinished() {
-			log.Debug().Str("reason", jobStatus.Reason()).Msg("Resign Job finished")
+			log.Str("reason", jobStatus.Reason()).Debug("Resign Job finished")
 			memberStatus.CleanoutJobID = ""
 			memberStatus.Phase = api.MemberPhaseCreated
 			if err := updateMember(memberStatus); err != nil {

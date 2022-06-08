@@ -46,7 +46,6 @@ const (
 // ensureDaemonSet ensures that a daemonset is created for the given local storage.
 // If it already exists, it is updated.
 func (ls *LocalStorage) ensureDaemonSet(apiObject *api.ArangoLocalStorage) error {
-	log := ls.deps.Log
 	ns := ls.config.Namespace
 	c := core.Container{
 		Name:            "provisioner",
@@ -137,7 +136,7 @@ func (ls *LocalStorage) ensureDaemonSet(apiObject *api.ArangoLocalStorage) error
 		}
 	} else {
 		// We're done
-		log.Debug().Msg("Created DaemonSet")
+		ls.log.Debug("Created DaemonSet")
 		return nil
 	}
 
@@ -158,11 +157,11 @@ func (ls *LocalStorage) ensureDaemonSet(apiObject *api.ArangoLocalStorage) error
 			// Failed to update, try again
 			continue
 		} else if err != nil {
-			ls.deps.Log.Debug().Err(err).Msg("failed to patch DaemonSet spec")
+			ls.log.Err(err).Debug("failed to patch DaemonSet spec")
 			return errors.WithStack(errors.Newf("failed to patch DaemonSet spec: %v", err))
 		} else {
 			// Update was a success
-			log.Debug().Msg("Updated DaemonSet")
+			ls.log.Debug("Updated DaemonSet")
 			return nil
 		}
 	}

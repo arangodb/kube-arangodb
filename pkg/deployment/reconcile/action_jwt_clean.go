@@ -34,7 +34,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/rs/zerolog"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -42,10 +41,10 @@ func init() {
 	registerAction(api.ActionTypeJWTClean, newJWTClean, defaultTimeout)
 }
 
-func newJWTClean(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newJWTClean(action api.Action, actionCtx ActionContext) Action {
 	a := &jwtCleanAction{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -59,42 +58,42 @@ type jwtCleanAction struct {
 func (a *jwtCleanAction) Start(ctx context.Context) (bool, error) {
 	folder, err := ensureJWTFolderSupportFromAction(a.actionCtx)
 	if err != nil {
-		a.log.Error().Err(err).Msgf("Action not supported")
+		a.log.Err(err).Error("Action not supported")
 		return true, nil
 	}
 
 	if !folder {
-		a.log.Error().Msgf("Action not supported")
+		a.log.Error("Action not supported")
 		return true, nil
 	}
 
 	cleanToken, exists := a.action.Params[checksum]
 	if !exists {
-		a.log.Warn().Msgf("Key %s is missing in action", checksum)
+		a.log.Warn("Key %s is missing in action", checksum)
 		return true, nil
 	}
 
 	if cleanToken == pod.ActiveJWTKey {
-		a.log.Error().Msgf("Unable to remove active key")
+		a.log.Error("Unable to remove active key")
 		return true, nil
 	}
 
 	f, ok := a.actionCtx.ACS().CurrentClusterCache().Secret().V1().GetSimple(pod.JWTSecretFolder(a.actionCtx.GetName()))
 	if !ok {
-		a.log.Error().Msgf("Unable to get JWT folder info")
+		a.log.Error("Unable to get JWT folder info")
 		return true, nil
 	}
 
 	if key, ok := f.Data[pod.ActiveJWTKey]; !ok {
-		a.log.Info().Msgf("Active Key is required")
+		a.log.Info("Active Key is required")
 		return true, nil
 	} else if util.SHA256(key) == cleanToken {
-		a.log.Info().Msgf("Unable to remove active key")
+		a.log.Info("Unable to remove active key")
 		return true, nil
 	}
 
 	if _, ok := f.Data[cleanToken]; !ok {
-		a.log.Info().Msgf("KEy to be removed does not exist")
+		a.log.Info("KEy to be removed does not exist")
 		return true, nil
 	}
 
@@ -103,7 +102,7 @@ func (a *jwtCleanAction) Start(ctx context.Context) (bool, error) {
 
 	patch, err := p.Marshal()
 	if err != nil {
-		a.log.Error().Err(err).Msgf("Unable to encrypt patch")
+		a.log.Err(err).Error("Unable to encrypt patch")
 		return true, nil
 	}
 

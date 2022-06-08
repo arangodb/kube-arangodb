@@ -39,8 +39,6 @@ import (
 // - once in a while
 // Returns the delay until this function should be called again.
 func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.Duration) time.Duration {
-	log := dr.deps.Log
-
 	spec := dr.apiObject.Spec
 	nextInterval := lastInterval
 	hasError := false
@@ -48,12 +46,12 @@ func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.
 
 	// Add finalizers
 	if err := dr.addFinalizers(); err != nil {
-		log.Warn().Err(err).Msg("Failed to add finalizers")
+		dr.log.Err(err).Warn("Failed to add finalizers")
 	}
 
 	// Is the deployment in failed state, if so, give up.
 	if dr.status.Phase == api.DeploymentReplicationPhaseFailed {
-		log.Debug().Msg("Deployment replication is in Failed state.")
+		dr.log.Debug("Deployment replication is in Failed state.")
 		return nextInterval
 	}
 
@@ -61,14 +59,14 @@ func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.
 	if dr.apiObject.GetDeletionTimestamp() != nil {
 		// Deployment replication is triggered for deletion.
 		if err := dr.runFinalizers(ctx, dr.apiObject); err != nil {
-			log.Warn().Err(err).Msg("Failed to run finalizers")
+			dr.log.Err(err).Warn("Failed to run finalizers")
 			hasError = true
 		}
 	} else {
 		// Inspect configuration status
 		destClient, err := dr.createSyncMasterClient(spec.Destination)
 		if err != nil {
-			log.Warn().Err(err).Msg("Failed to create destination syncmaster client")
+			dr.log.Err(err).Warn("Failed to create destination syncmaster client")
 		} else {
 			// Fetch status of destination
 			updateStatusNeeded := false
@@ -76,17 +74,17 @@ func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.
 			cancelSyncNeeded := false
 			destEndpoint, err := destClient.Master().GetEndpoints(ctx)
 			if err != nil {
-				log.Warn().Err(err).Msg("Failed to fetch endpoints from destination syncmaster")
+				dr.log.Err(err).Warn("Failed to fetch endpoints from destination syncmaster")
 			}
 			destStatus, err := destClient.Master().Status(ctx)
 			if err != nil {
-				log.Warn().Err(err).Msg("Failed to fetch status from destination syncmaster")
+				dr.log.Err(err).Warn("Failed to fetch status from destination syncmaster")
 			} else {
 				// Inspect destination status
 				if destStatus.Status.IsActive() {
 					isIncomingEndpoint, err := dr.isIncomingEndpoint(destStatus, spec.Source)
 					if err != nil {
-						log.Warn().Err(err).Msg("Failed to check is-incoming-endpoint")
+						dr.log.Err(err).Warn("Failed to check is-incoming-endpoint")
 					} else {
 						if isIncomingEndpoint {
 							// Destination is correctly configured
@@ -96,7 +94,7 @@ func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.
 							updateStatusNeeded = true
 						} else {
 							// Sync is active, but from different source
-							log.Warn().Msg("Destination syncmaster is configured for different source")
+							dr.log.Warn("Destination syncmaster is configured for different source")
 							cancelSyncNeeded = true
 							if dr.status.Conditions.Update(api.ConditionTypeConfigured, false, "Invalid", "Destination syncmaster is configured for different source") {
 								updateStatusNeeded = true
@@ -115,17 +113,17 @@ func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.
 			// Inspect source
 			sourceClient, err := dr.createSyncMasterClient(spec.Source)
 			if err != nil {
-				log.Warn().Err(err).Msg("Failed to create source syncmaster client")
+				dr.log.Err(err).Warn("Failed to create source syncmaster client")
 			} else {
 				sourceStatus, err := sourceClient.Master().Status(ctx)
 				if err != nil {
-					log.Warn().Err(err).Msg("Failed to fetch status from source syncmaster")
+					dr.log.Err(err).Warn("Failed to fetch status from source syncmaster")
 				}
 
 				//if sourceStatus.Status.IsActive() {
 				outgoingID, hasOutgoingEndpoint, err := dr.hasOutgoingEndpoint(sourceStatus, spec.Destination, destEndpoint)
 				if err != nil {
-					log.Warn().Err(err).Msg("Failed to check has-outgoing-endpoint")
+					dr.log.Err(err).Warn("Failed to check has-outgoing-endpoint")
 				} else if hasOutgoingEndpoint {
 					// Destination is know in source
 					// Fetch shard status
@@ -133,14 +131,14 @@ func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.
 					updateStatusNeeded = true
 				} else {
 					// We cannot find the destination in the source status
-					log.Info().Err(err).Msg("Destination not yet known in source syncmasters")
+					dr.log.Err(err).Info("Destination not yet known in source syncmasters")
 				}
 			}
 
 			// Update status if needed
 			if updateStatusNeeded {
 				if err := dr.updateCRStatus(); err != nil {
-					log.Warn().Err(err).Msg("Failed to update status")
+					dr.log.Err(err).Warn("Failed to update status")
 					hasError = true
 				}
 			}
@@ -148,12 +146,12 @@ func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.
 			// Cancel sync if needed
 			if cancelSyncNeeded {
 				req := client.CancelSynchronizationRequest{}
-				log.Info().Msg("Canceling synchronization")
+				dr.log.Info("Canceling synchronization")
 				if _, err := destClient.Master().CancelSynchronization(ctx, req); err != nil {
-					log.Warn().Err(err).Msg("Failed to cancel synchronization")
+					dr.log.Err(err).Warn("Failed to cancel synchronization")
 					hasError = true
 				} else {
-					log.Info().Msg("Canceled synchronization")
+					dr.log.Info("Canceled synchronization")
 					nextInterval = time.Second * 10
 				}
 			}
@@ -162,24 +160,24 @@ func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.
 			if configureSyncNeeded {
 				source, err := dr.createArangoSyncEndpoint(spec.Source)
 				if err != nil {
-					log.Warn().Err(err).Msg("Failed to create syncmaster endpoint")
+					dr.log.Err(err).Warn("Failed to create syncmaster endpoint")
 					hasError = true
 				} else {
 					auth, err := dr.createArangoSyncTLSAuthentication(spec)
 					if err != nil {
-						log.Warn().Err(err).Msg("Failed to configure synchronization authentication")
+						dr.log.Err(err).Warn("Failed to configure synchronization authentication")
 						hasError = true
 					} else {
 						req := client.SynchronizationRequest{
 							Source:         source,
 							Authentication: auth,
 						}
-						log.Info().Msg("Configuring synchronization")
+						dr.log.Info("Configuring synchronization")
 						if err := destClient.Master().Synchronize(ctx, req); err != nil {
-							log.Warn().Err(err).Msg("Failed to configure synchronization")
+							dr.log.Err(err).Warn("Failed to configure synchronization")
 							hasError = true
 						} else {
-							log.Info().Msg("Configured synchronization")
+							dr.log.Info("Configured synchronization")
 							nextInterval = time.Second * 10
 						}
 					}

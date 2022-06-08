@@ -23,7 +23,6 @@ package reconcile
 import (
 	"context"
 
-	"github.com/rs/zerolog"
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -40,10 +39,10 @@ func init() {
 
 // newRemoveMemberAction creates a new Action that implements the given
 // planned RemoveMember action.
-func newRemoveMemberAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newRemoveMemberAction(action api.Action, actionCtx ActionContext) Action {
 	a := &actionRemoveMember{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -85,12 +84,12 @@ func (a *actionRemoveMember) Start(ctx context.Context) (bool, error) {
 		defer cancel()
 		if err := arangod.RemoveServerFromCluster(ctxChild, client.Connection(), driver.ServerID(m.ID)); err != nil {
 			if !driver.IsNotFound(err) && !driver.IsPreconditionFailed(err) {
-				a.log.Err(err).Str("member-id", m.ID).Msgf("Failed to remove server from cluster")
+				a.log.Err(err).Str("member-id", m.ID).Error("Failed to remove server from cluster")
 				// ignore this error, maybe all coordinators are failed and no connction to cluster is possible
 			} else if driver.IsPreconditionFailed(err) {
 				health := a.actionCtx.GetMembersState().Health()
 				if health.Error != nil {
-					a.log.Err(err).Str("member-id", m.ID).Msgf("Failed get cluster health")
+					a.log.Err(err).Str("member-id", m.ID).Error("Failed get cluster health")
 				}
 				// We don't care if not found
 				if record, ok := health.Members[driver.ServerID(m.ID)]; ok {
@@ -102,11 +101,11 @@ func (a *actionRemoveMember) Start(ctx context.Context) (bool, error) {
 							return false, errors.WithStack(errors.Newf("can not remove server from cluster. Not yet terminated. Retry later"))
 						}
 
-						a.log.Debug().Msg("dbserver has shut down")
+						a.log.Debug("dbserver has shut down")
 					}
 				}
 			} else {
-				a.log.Warn().Msgf("ignoring error: %s", err.Error())
+				a.log.Warn("ignoring error: %s", err.Error())
 			}
 		}
 	}

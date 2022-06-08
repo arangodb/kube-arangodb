@@ -36,7 +36,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jessevdk/go-assets"
 	prometheus "github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -64,7 +63,6 @@ type OperatorDependency struct {
 
 // Dependencies of the Server
 type Dependencies struct {
-	Log                   zerolog.Logger
 	LivenessProbe         *probe.LivenessProbe
 	Deployment            OperatorDependency
 	DeploymentReplication OperatorDependency
@@ -151,7 +149,7 @@ func NewServer(cli corev1.CoreV1Interface, cfg Config, deps Dependencies) (*Serv
 		cfg:        cfg,
 		deps:       deps,
 		httpServer: httpServer,
-		auth:       newServerAuthentication(deps.Log, deps.Secrets, cfg.AdminSecretName, cfg.AllowAnonymous),
+		auth:       newServerAuthentication(deps.Secrets, cfg.AdminSecretName, cfg.AllowAnonymous),
 	}
 
 	// Build router
@@ -220,7 +218,7 @@ func createAssetFileHandler(file *assets.File) func(c *gin.Context) {
 
 // Run the server until the program stops.
 func (s *Server) Run() error {
-	s.deps.Log.Info().Msgf("Serving on %s", s.httpServer.Addr)
+	serverLogger.Info("Serving on %s", s.httpServer.Addr)
 	if err := s.httpServer.ListenAndServeTLS("", ""); err != nil && err != http.ErrServerClosed {
 		return errors.WithStack(err)
 	}

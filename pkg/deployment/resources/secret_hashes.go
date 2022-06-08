@@ -50,12 +50,14 @@ func (r *Resources) ValidateSecretHashes(ctx context.Context, cachedStatus inspe
 	// validate performs a secret hash comparison for a single secret.
 	// Return true if all is good, false when the SecretChanged condition
 	// must be set.
+	log := r.log.Str("section", "secret-hashes")
+
 	validate := func(secretName string,
 		getExpectedHash func() string,
 		setExpectedHash func(string) error,
 		actionHashChanged func(Context, *core.Secret) error) (bool, error) {
 
-		log := r.log.With().Str("secret-name", secretName).Logger()
+		log := log.Str("secret-name", secretName)
 		expectedHash := getExpectedHash()
 		secret, hash, exists := r.getSecretHash(cachedStatus, secretName)
 		if expectedHash == "" {
@@ -66,7 +68,7 @@ func (r *Resources) ValidateSecretHashes(ctx context.Context, cachedStatus inspe
 			}
 			// Hash fetched succesfully, store it
 			if err := setExpectedHash(hash); err != nil {
-				log.Debug().Msg("Failed to save secret hash")
+				log.Debug("Failed to save secret hash")
 				return true, errors.WithStack(err)
 			}
 			return true, nil
@@ -74,24 +76,23 @@ func (r *Resources) ValidateSecretHashes(ctx context.Context, cachedStatus inspe
 		// Hash is set, it must match the current hash
 		if !exists {
 			// Fetching error failed for other reason.
-			log.Debug().Msg("Secret does not exist")
+			log.Debug("Secret does not exist")
 			// This is not good, return false so SecretsChanged condition will be set.
 			return false, nil
 		}
 		if hash != expectedHash {
 			// Oops, hash has changed
-			log.Debug().
-				Str("expected-hash", expectedHash).
+			log.Str("expected-hash", expectedHash).
 				Str("new-hash", hash).
-				Msg("Secret has changed.")
+				Debug("Secret has changed.")
 			if actionHashChanged != nil {
 				if err := actionHashChanged(r.context, secret); err != nil {
-					log.Debug().Msgf("failed to change secret. hash-changed-action returned error: %v", err)
+					log.Debug("failed to change secret. hash-changed-action returned error: %v", err)
 					return true, nil
 				}
 
 				if err := setExpectedHash(hash); err != nil {
-					log.Debug().Msg("Failed to change secret hash")
+					log.Debug("Failed to change secret hash")
 					return true, errors.WithStack(err)
 				}
 				return true, nil
@@ -105,7 +106,6 @@ func (r *Resources) ValidateSecretHashes(ctx context.Context, cachedStatus inspe
 
 	spec := r.context.GetSpec()
 	deploymentName := r.context.GetAPIObject().GetName()
-	log := r.log
 	var badSecretNames []string
 	status, lastVersion := r.context.GetStatus()
 	image := status.CurrentImage
@@ -205,9 +205,9 @@ func (r *Resources) ValidateSecretHashes(ctx context.Context, cachedStatus inspe
 		// We have invalid hashes, set the SecretsChanged condition
 		if status.Conditions.Update(api.ConditionTypeSecretsChanged, true,
 			"Secrets have changed", fmt.Sprintf("Found %d changed secrets", len(badSecretNames))) {
-			log.Warn().Msgf("Found %d changed secrets. Settings SecretsChanged condition", len(badSecretNames))
+			log.Warn("Found %d changed secrets. Settings SecretsChanged condition", len(badSecretNames))
 			if err := r.context.UpdateStatus(ctx, status, lastVersion); err != nil {
-				log.Error().Err(err).Msg("Failed to save SecretsChanged condition")
+				log.Err(err).Error("Failed to save SecretsChanged condition")
 				return errors.WithStack(err)
 			}
 			// Add an event about this
@@ -216,9 +216,9 @@ func (r *Resources) ValidateSecretHashes(ctx context.Context, cachedStatus inspe
 	} else {
 		// All good, we van remove the SecretsChanged condition
 		if status.Conditions.Remove(api.ConditionTypeSecretsChanged) {
-			log.Info().Msg("Resetting SecretsChanged condition")
+			log.Info("Resetting SecretsChanged condition")
 			if err := r.context.UpdateStatus(ctx, status, lastVersion); err != nil {
-				log.Error().Err(err).Msg("Failed to save SecretsChanged condition")
+				log.Err(err).Error("Failed to save SecretsChanged condition")
 				return errors.WithStack(err)
 			}
 			// Add an event about this

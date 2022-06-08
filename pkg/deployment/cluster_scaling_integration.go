@@ -33,15 +33,18 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
+var ciLogger = logging.Global().RegisterAndGetLogger("deployment-ci", logging.Info)
+
 // clusterScalingIntegration is a helper to communicate with the clusters
 // scaling UI.
 type clusterScalingIntegration struct {
-	log           zerolog.Logger
+	log           logging.Logger
 	depl          *Deployment
 	pendingUpdate struct {
 		mutex sync.Mutex
@@ -57,6 +60,10 @@ type clusterScalingIntegration struct {
 	}
 }
 
+func (ci *clusterScalingIntegration) WrapLogger(in *zerolog.Event) *zerolog.Event {
+	return in.Str("namespace", ci.depl.GetNamespace()).Str("name", ci.depl.Name())
+}
+
 const (
 	maxClusterBootstrapTime = time.Minute * 2 // Time we allow a cluster bootstrap to take, before we can do cluster inspections.
 )
@@ -64,9 +71,9 @@ const (
 // newClusterScalingIntegration creates a new clusterScalingIntegration.
 func newClusterScalingIntegration(depl *Deployment) *clusterScalingIntegration {
 	ci := &clusterScalingIntegration{
-		log:  depl.deps.Log,
 		depl: depl,
 	}
+	ci.log = ciLogger.WrapObj(ci)
 	ci.scaleEnabled.enabled = true
 	return ci
 }
@@ -108,13 +115,13 @@ func (ci *clusterScalingIntegration) checkScalingCluster(ctx context.Context, ex
 	safeToAskCluster, err := ci.updateClusterServerCount(ctx, expectSuccess)
 	if err != nil {
 		if expectSuccess {
-			ci.log.Debug().Err(err).Msg("Cluster update failed")
+			ci.log.Err(err).Debug("Cluster update failed")
 		}
 	} else if safeToAskCluster {
 		// Inspect once
 		if err := ci.inspectCluster(ctx, expectSuccess); err != nil {
 			if expectSuccess {
-				ci.log.Debug().Err(err).Msg("Cluster inspection failed")
+				ci.log.Err(err).Debug("Cluster inspection failed")
 			}
 		} else {
 			return true
@@ -163,7 +170,7 @@ func (ci *clusterScalingIntegration) inspectCluster(ctx context.Context, expectS
 	req, err := arangod.GetNumberOfServers(ctxChild, c.Connection())
 	if err != nil {
 		if expectSuccess {
-			log.Debug().Err(err).Msg("Failed to get number of servers")
+			log.Err(err).Debug("Failed to get number of servers")
 		}
 		return errors.WithStack(err)
 	}
@@ -220,13 +227,13 @@ func (ci *clusterScalingIntegration) inspectCluster(ctx context.Context, expectS
 	// 		min <= count <= max holds for the given server groups
 	if err := newSpec.Validate(); err != nil {
 		// Log failure & create event
-		log.Warn().Err(err).Msg("Validation of updated spec has failed")
+		log.Err(err).Warn("Validation of updated spec has failed")
 		ci.depl.CreateEvent(k8sutil.NewErrorEvent("Validation failed", err, apiObject))
 		// Restore original spec in cluster
 		ci.SendUpdateToCluster(current.Spec)
 	} else {
 		if err := ci.depl.updateCRSpec(ctx, *newSpec); err != nil {
-			log.Warn().Err(err).Msg("Failed to update current deployment")
+			log.Err(err).Warn("Failed to update current deployment")
 			return errors.WithStack(err)
 		}
 	}
@@ -269,7 +276,7 @@ func (ci *clusterScalingIntegration) updateClusterServerCount(ctx context.Contex
 	if coordinatorCount != lastNumberOfServers.GetCoordinators() || dbserverCount != lastNumberOfServers.GetDBServers() {
 		if err := ci.depl.SetNumberOfServers(ctx, coordinatorCountPtr, dbserverCountPtr); err != nil {
 			if expectSuccess {
-				log.Debug().Err(err).Msg("Failed to set number of servers")
+				log.Err(err).Debug("Failed to set number of servers")
 			}
 			return false, errors.WithStack(err)
 		}

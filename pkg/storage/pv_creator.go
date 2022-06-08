@@ -60,7 +60,6 @@ var (
 
 // createPVs creates a given number of PersistentVolume's.
 func (ls *LocalStorage) createPVs(ctx context.Context, apiObject *api.ArangoLocalStorage, unboundClaims []v1.PersistentVolumeClaim) error {
-	log := ls.deps.Log
 	// Find provisioner clients
 	clients, err := ls.createProvisionerClients()
 	if err != nil {
@@ -88,7 +87,7 @@ func (ls *LocalStorage) createPVs(ctx context.Context, apiObject *api.ArangoLoca
 			var err error
 			allowedClients, err = ls.filterAllowedNodes(nodeClientMap, deplName, role)
 			if err != nil {
-				log.Warn().Err(err).Msg("Failed to filter allowed nodes")
+				ls.log.Err(err).Warn("Failed to filter allowed nodes")
 				continue // We'll try this claim again later
 			}
 			if !enforceAniAffinity && len(allowedClients) == 0 {
@@ -107,7 +106,7 @@ func (ls *LocalStorage) createPVs(ctx context.Context, apiObject *api.ArangoLoca
 		}
 		// Create PV
 		if err := ls.createPV(ctx, apiObject, allowedClients, i, volSize, claim, deplName, role); err != nil {
-			log.Error().Err(err).Msg("Failed to create PersistentVolume")
+			ls.log.Err(err).Error("Failed to create PersistentVolume")
 		}
 	}
 
@@ -116,29 +115,28 @@ func (ls *LocalStorage) createPVs(ctx context.Context, apiObject *api.ArangoLoca
 
 // createPV creates a PersistentVolume.
 func (ls *LocalStorage) createPV(ctx context.Context, apiObject *api.ArangoLocalStorage, clients []provisioner.API, clientsOffset int, volSize int64, claim v1.PersistentVolumeClaim, deploymentName, role string) error {
-	log := ls.deps.Log
 	// Try clients
 	for clientIdx := 0; clientIdx < len(clients); clientIdx++ {
 		client := clients[(clientsOffset+clientIdx)%len(clients)]
 
 		// Try local path within client
 		for _, localPathRoot := range apiObject.Spec.LocalPath {
-			log := log.With().Str("local-path-root", localPathRoot).Logger()
+			log := ls.log.Str("local-path-root", localPathRoot)
 			info, err := client.GetInfo(ctx, localPathRoot)
 			if err != nil {
-				log.Error().Err(err).Msg("Failed to get client info")
+				log.Err(err).Error("Failed to get client info")
 				continue
 			}
 			if info.Available < volSize {
-				log.Debug().Msg("Not enough available size")
+				ls.log.Debug("Not enough available size")
 				continue
 			}
 			// Ok, prepare a directory
 			name := strings.ToLower(uniuri.New())
 			localPath := filepath.Join(localPathRoot, name)
-			log = log.With().Str("local-path", localPath).Logger()
+			log = ls.log.Str("local-path", localPath)
 			if err := client.Prepare(ctx, localPath); err != nil {
-				log.Error().Err(err).Msg("Failed to prepare local path")
+				log.Err(err).Error("Failed to prepare local path")
 				continue
 			}
 			// Create a volume
@@ -187,19 +185,19 @@ func (ls *LocalStorage) createPV(ctx context.Context, apiObject *api.ArangoLocal
 			// Attach PV to ArangoLocalStorage
 			pv.SetOwnerReferences(append(pv.GetOwnerReferences(), apiObject.AsOwner()))
 			if _, err := ls.deps.Client.Kubernetes().CoreV1().PersistentVolumes().Create(context.Background(), pv, metav1.CreateOptions{}); err != nil {
-				log.Error().Err(err).Msg("Failed to create PersistentVolume")
+				log.Err(err).Error("Failed to create PersistentVolume")
 				continue
 			}
-			log.Debug().
+			log.
 				Str("name", pvName).
 				Str("node-name", info.NodeName).
-				Msg("Created PersistentVolume")
+				Debug("Created PersistentVolume")
 
 			// Bind claim to volume
 			if err := ls.bindClaimToVolume(claim, pv.GetName()); err != nil {
 				// Try to delete the PV now
 				if err := ls.deps.Client.Kubernetes().CoreV1().PersistentVolumes().Delete(context.Background(), pv.GetName(), metav1.DeleteOptions{}); err != nil {
-					log.Error().Err(err).Msg("Failed to delete PV after binding PVC failed")
+					log.Err(err).Error("Failed to delete PV after binding PVC failed")
 				}
 				return errors.WithStack(err)
 			}
@@ -293,7 +291,7 @@ func (ls *LocalStorage) filterAllowedNodes(clients map[string]provisioner.API, d
 // bindClaimToVolume tries to bind the given claim to the volume with given name.
 // If the claim has been updated, the function retries several times.
 func (ls *LocalStorage) bindClaimToVolume(claim v1.PersistentVolumeClaim, volumeName string) error {
-	log := ls.deps.Log.With().Str("pvc-name", claim.GetName()).Str("volume-name", volumeName).Logger()
+	log := ls.log.Str("pvc-name", claim.GetName()).Str("volume-name", volumeName)
 	pvcs := ls.deps.Client.Kubernetes().CoreV1().PersistentVolumeClaims(claim.GetNamespace())
 
 	for attempt := 0; attempt < 10; attempt++ {
@@ -305,14 +303,14 @@ func (ls *LocalStorage) bindClaimToVolume(claim v1.PersistentVolumeClaim, volume
 		if k8sutil.IsNotFound(err) {
 			return errors.WithStack(err)
 		} else if err != nil {
-			log.Warn().Err(err).Msg("Failed to load updated PersistentVolumeClaim")
+			log.Err(err).Warn("Failed to load updated PersistentVolumeClaim")
 			continue
 		}
 
 		// Check claim. If already bound, bail out
 		if !pvcNeedsVolume(*updated) {
 			if updated.Spec.VolumeName == volumeName {
-				log.Info().Msg("PersistentVolumeClaim already bound to PersistentVolume")
+				log.Info("PersistentVolumeClaim already bound to PersistentVolume")
 				return nil
 			}
 			return errors.WithStack(errors.Newf("PersistentVolumeClaim '%s' no longer needs a volume", claim.GetName()))
@@ -322,15 +320,15 @@ func (ls *LocalStorage) bindClaimToVolume(claim v1.PersistentVolumeClaim, volume
 		updated.Spec.VolumeName = volumeName
 		if _, err := pvcs.Update(context.Background(), updated, metav1.UpdateOptions{}); k8sutil.IsConflict(err) {
 			// Claim modified already, retry
-			log.Debug().Err(err).Msg("PersistentVolumeClaim has been modified. Retrying.")
+			log.Err(err).Debug("PersistentVolumeClaim has been modified. Retrying.")
 		} else if err != nil {
-			log.Error().Err(err).Msg("Failed to bind PVC to volume")
+			log.Err(err).Error("Failed to bind PVC to volume")
 			return errors.WithStack(err)
 		}
-		log.Debug().Msg("Bound volume to PersistentVolumeClaim")
+		ls.log.Debug("Bound volume to PersistentVolumeClaim")
 		return nil
 	}
-	log.Error().Msg("All attempts to bind PVC to volume failed")
+	log.Error("All attempts to bind PVC to volume failed")
 	return errors.WithStack(errors.Newf("All attempts to bind PVC to volume failed"))
 }
 

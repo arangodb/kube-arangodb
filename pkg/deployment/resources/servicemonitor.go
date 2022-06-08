@@ -123,7 +123,7 @@ func (r *Resources) serviceMonitorSpec() (coreosv1.ServiceMonitorSpec, error) {
 // EnsureServiceMonitor creates or updates a ServiceMonitor.
 func (r *Resources) EnsureServiceMonitor(ctx context.Context) error {
 	// Some preparations:
-	log := r.log
+	log := r.log.Str("section", "service-monitor")
 	apiObject := r.context.GetAPIObject()
 	deploymentName := apiObject.GetName()
 	ns := apiObject.GetNamespace()
@@ -139,7 +139,7 @@ func (r *Resources) EnsureServiceMonitor(ctx context.Context) error {
 
 	client, ok := kclient.GetDefaultFactory().Client()
 	if !ok {
-		log.Error().Msgf("Cannot get a monitoring client.")
+		log.Error("Cannot get a monitoring client.")
 		return errors.Newf("Client not initialised")
 	}
 
@@ -176,13 +176,13 @@ func (r *Resources) EnsureServiceMonitor(ctx context.Context) error {
 				return err
 			})
 			if err != nil {
-				log.Error().Err(err).Msgf("Failed to create ServiceMonitor %s", serviceMonitorName)
+				log.Err(err).Error("Failed to create ServiceMonitor %s", serviceMonitorName)
 				return errors.WithStack(err)
 			}
-			log.Debug().Msgf("ServiceMonitor %s successfully created.", serviceMonitorName)
+			log.Debug("ServiceMonitor %s successfully created.", serviceMonitorName)
 			return nil
 		} else {
-			log.Error().Err(err).Msgf("Failed to get ServiceMonitor %s", serviceMonitorName)
+			log.Err(err).Error("Failed to get ServiceMonitor %s", serviceMonitorName)
 			return errors.WithStack(err)
 		}
 	}
@@ -196,11 +196,11 @@ func (r *Resources) EnsureServiceMonitor(ctx context.Context) error {
 		}
 	}
 	if !found {
-		log.Debug().Msgf("Found unneeded ServiceMonitor %s, but not owned by us, will not touch it", serviceMonitorName)
+		log.Debug("Found unneeded ServiceMonitor %s, but not owned by us, will not touch it", serviceMonitorName)
 		return nil
 	}
 	if wantMetrics {
-		log.Debug().Msgf("ServiceMonitor %s already found, ensuring it is fine.",
+		log.Debug("ServiceMonitor %s already found, ensuring it is fine.",
 			serviceMonitorName)
 
 		spec, err := r.serviceMonitorSpec()
@@ -209,7 +209,7 @@ func (r *Resources) EnsureServiceMonitor(ctx context.Context) error {
 		}
 
 		if equality.Semantic.DeepDerivative(spec, servMon.Spec) {
-			log.Debug().Msgf("ServiceMonitor %s already found and up to date.",
+			log.Debug("ServiceMonitor %s already found and up to date.",
 				serviceMonitorName)
 			return nil
 		}
@@ -231,9 +231,9 @@ func (r *Resources) EnsureServiceMonitor(ctx context.Context) error {
 		return serviceMonitors.Delete(ctxChild, serviceMonitorName, meta.DeleteOptions{})
 	})
 	if err == nil {
-		log.Debug().Msgf("Deleted ServiceMonitor %s", serviceMonitorName)
+		log.Debug("Deleted ServiceMonitor %s", serviceMonitorName)
 		return nil
 	}
-	log.Error().Err(err).Msgf("Could not delete ServiceMonitor %s.", serviceMonitorName)
+	log.Err(err).Error("Could not delete ServiceMonitor %s.", serviceMonitorName)
 	return errors.WithStack(err)
 }

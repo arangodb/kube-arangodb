@@ -28,7 +28,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -41,10 +40,10 @@ func init() {
 	registerAction(api.ActionTypeRuntimeContainerArgsLogLevelUpdate, runtimeContainerArgsUpdate, defaultTimeout)
 }
 
-func runtimeContainerArgsUpdate(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func runtimeContainerArgsUpdate(action api.Action, actionCtx ActionContext) Action {
 	a := &actionRuntimeContainerArgsUpdate{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -60,7 +59,7 @@ type actionRuntimeContainerArgsUpdate struct {
 func (a actionRuntimeContainerArgsUpdate) Post(ctx context.Context) error {
 	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !ok {
-		a.log.Info().Msg("member is gone already")
+		a.log.Info("member is gone already")
 		return nil
 	}
 
@@ -77,37 +76,37 @@ func (a actionRuntimeContainerArgsUpdate) Post(ctx context.Context) error {
 
 	containerName, ok := a.action.GetParam(rotation.ContainerName)
 	if !ok {
-		a.log.Warn().Msgf("Unable to find action's param %s", rotation.ContainerName)
+		a.log.Warn("Unable to find action's param %s", rotation.ContainerName)
 		return nil
 	}
 
-	log := a.log.With().Str("containerName", containerName).Logger()
+	log := a.log.Str("containerName", containerName)
 	updateMemberStatusArgs := func(obj *api.ArangoMember, s *api.ArangoMemberStatus) bool {
 		if obj.Spec.Template == nil || s.Template == nil ||
 			obj.Spec.Template.PodSpec == nil || s.Template.PodSpec == nil {
-			log.Info().Msgf("Nil Member definition")
+			log.Info("Nil Member definition")
 			return false
 		}
 
 		if len(obj.Spec.Template.PodSpec.Spec.Containers) != len(s.Template.PodSpec.Spec.Containers) {
-			log.Info().Msgf("Invalid size of containers")
+			log.Info("Invalid size of containers")
 			return false
 		}
 
 		for id := range obj.Spec.Template.PodSpec.Spec.Containers {
 			if obj.Spec.Template.PodSpec.Spec.Containers[id].Name == containerName {
 				if s.Template.PodSpec.Spec.Containers[id].Name != containerName {
-					log.Info().Msgf("Invalid order of containers")
+					log.Info("Invalid order of containers")
 					return false
 				}
 
 				s.Template.PodSpec.Spec.Containers[id].Command = obj.Spec.Template.PodSpec.Spec.Containers[id].Command
-				log.Info().Msgf("Updating container args")
+				log.Info("Updating container args")
 				return true
 			}
 		}
 
-		log.Info().Msgf("can not find the container")
+		log.Info("can not find the container")
 
 		return false
 	}
@@ -130,7 +129,7 @@ func (a *actionRuntimeContainerArgsUpdate) ReloadComponents() []throttle.Compone
 func (a actionRuntimeContainerArgsUpdate) Start(ctx context.Context) (bool, error) {
 	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !ok {
-		a.log.Info().Msg("member is gone already")
+		a.log.Info("member is gone already")
 		return true, nil
 	}
 
@@ -140,7 +139,7 @@ func (a actionRuntimeContainerArgsUpdate) Start(ctx context.Context) (bool, erro
 	}
 
 	if !m.Phase.IsReady() {
-		a.log.Info().Msg("Member is not ready, unable to run update operation")
+		a.log.Info("Member is not ready, unable to run update operation")
 		return true, nil
 	}
 
@@ -157,7 +156,7 @@ func (a actionRuntimeContainerArgsUpdate) Start(ctx context.Context) (bool, erro
 
 	pod, ok := cache.Pod().V1().GetSimple(m.PodName)
 	if !ok {
-		a.log.Info().Str("podName", m.PodName).Msg("pod is not present")
+		a.log.Str("podName", m.PodName).Info("pod is not present")
 		return true, nil
 	}
 
@@ -175,7 +174,7 @@ func (a actionRuntimeContainerArgsUpdate) Start(ctx context.Context) (bool, erro
 			return errors.WithMessage(err, "can not set log level")
 		}
 
-		a.log.Info().Interface("topics", topicsLogLevel).Msg("send log level to the ArangoDB")
+		a.log.Interface("topics", topicsLogLevel).Info("send log level to the ArangoDB")
 		return nil
 	}
 

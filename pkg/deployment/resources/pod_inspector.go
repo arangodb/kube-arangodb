@@ -67,11 +67,11 @@ func (r *Resources) handleRestartedPod(pod *core.Pod, memberStatus *api.MemberSt
 		previousTermination := containerStatus.LastTerminationState.Terminated
 		allowedRestartPeriod := time.Now().Add(terminationRestartPeriod)
 		if previousTermination != nil && !previousTermination.FinishedAt.Time.Before(allowedRestartPeriod) {
-			r.log.Debug().Str("pod-name", pod.GetName()).Msg("pod is continuously restarting - we will terminate it")
+			r.log.Str("pod-name", pod.GetName()).Debug("pod is continuously restarting - we will terminate it")
 			*markAsTerminated = true
 		} else {
 			*markAsTerminated = false
-			r.log.Debug().Str("pod-name", pod.GetName()).Msg("pod is restarting - we are not marking it as terminated yet..")
+			r.log.Str("pod-name", pod.GetName()).Debug("pod is restarting - we are not marking it as terminated yet..")
 		}
 	}
 }
@@ -80,7 +80,7 @@ func (r *Resources) handleRestartedPod(pod *core.Pod, memberStatus *api.MemberSt
 // the member status of the deployment accordingly.
 // Returns: Interval_till_next_inspection, error
 func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInterface.Inspector) (util.Interval, error) {
-	log := r.log
+	log := r.log.Str("section", "pod")
 	start := time.Now()
 	apiObject := r.context.GetAPIObject()
 	deploymentName := apiObject.GetName()
@@ -103,14 +103,14 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 
 		memberStatus, group, found := status.Members.MemberStatusByPodName(pod.GetName())
 		if !found {
-			log.Warn().Str("pod", pod.GetName()).Strs("existing-pods", status.Members.PodNames()).Msg("no memberstatus found for pod")
+			log.Str("pod", pod.GetName()).Strs("existing-pods", status.Members.PodNames()...).Warn("no memberstatus found for pod")
 			if k8sutil.IsPodMarkedForDeletion(pod) && len(pod.GetFinalizers()) > 0 {
 				// Strange, pod belongs to us, but we have no member for it.
 				// Remove all finalizers, so it can be removed.
-				log.Warn().Msg("Pod belongs to this deployment, but we don't know the member. Removing all finalizers")
-				_, err := k8sutil.RemovePodFinalizers(ctx, r.context.ACS().CurrentClusterCache(), log, cachedStatus.PodsModInterface().V1(), pod, pod.GetFinalizers(), false)
+				log.Warn("Pod belongs to this deployment, but we don't know the member. Removing all finalizers")
+				_, err := k8sutil.RemovePodFinalizers(ctx, r.context.ACS().CurrentClusterCache(), cachedStatus.PodsModInterface().V1(), pod, pod.GetFinalizers(), false)
 				if err != nil {
-					log.Debug().Err(err).Msg("Failed to update pod (to remove all finalizers)")
+					log.Err(err).Debug("Failed to update pod (to remove all finalizers)")
 					return errors.WithStack(err)
 				}
 			}
@@ -132,7 +132,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 			}
 
 			if markAsTerminated && memberStatus.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Succeeded", "") {
-				log.Debug().Str("pod-name", pod.GetName()).Msg("Updating member condition Terminated to true: Pod Succeeded")
+				log.Str("pod-name", pod.GetName()).Debug("Updating member condition Terminated to true: Pod Succeeded")
 				updateMemberStatusNeeded = true
 				nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
 
@@ -168,7 +168,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 
 						if c, ok := k8sutil.GetAnyContainerStatusByName(pod.Status.InitContainerStatuses, container); ok {
 							if t := c.State.Terminated; t != nil && t.ExitCode != 0 {
-								log.Warn().Str("member", memberStatus.ID).
+								log.Str("member", memberStatus.ID).
 									Str("pod", pod.GetName()).
 									Str("container", container).
 									Str("uid", string(pod.GetUID())).
@@ -178,7 +178,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 									Int32("signal", t.Signal).
 									Time("started", t.StartedAt.Time).
 									Time("finished", t.FinishedAt.Time).
-									Msgf("Pod failed in unexpected way: Init Container failed")
+									Warn("Pod failed in unexpected way: Init Container failed")
 							}
 						}
 					}
@@ -188,7 +188,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 					for _, container := range containers {
 						if c, ok := k8sutil.GetAnyContainerStatusByName(pod.Status.ContainerStatuses, container); ok {
 							if t := c.State.Terminated; t != nil && t.ExitCode != 0 {
-								log.Warn().Str("member", memberStatus.ID).
+								log.Str("member", memberStatus.ID).
 									Str("pod", pod.GetName()).
 									Str("container", container).
 									Str("uid", string(pod.GetUID())).
@@ -198,13 +198,13 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 									Int32("signal", t.Signal).
 									Time("started", t.StartedAt.Time).
 									Time("finished", t.FinishedAt.Time).
-									Msgf("Pod failed in unexpected way: Core Container failed")
+									Warn("Pod failed in unexpected way: Core Container failed")
 							}
 						}
 					}
 				}
 
-				log.Debug().Str("pod-name", pod.GetName()).Msg("Updating member condition Terminated to true: Pod Failed")
+				log.Str("pod-name", pod.GetName()).Debug("Updating member condition Terminated to true: Pod Failed")
 				updateMemberStatusNeeded = true
 				nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
 
@@ -222,7 +222,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 				l := addLabel(pod.Labels, k8sutil.LabelKeyArangoScheduled, "1")
 
 				if err := r.context.ApplyPatchOnPod(ctx, pod, patch.ItemReplace(patch.NewPath("metadata", "labels"), l)); err != nil {
-					log.Error().Err(err).Msgf("Unable to update scheduled labels")
+					log.Err(err).Error("Unable to update scheduled labels")
 				}
 			}
 		}
@@ -237,7 +237,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 				l = addLabel(l, k8sutil.LabelKeyArangoZone, tz)
 
 				if err := r.context.ApplyPatchOnPod(ctx, pod, patch.ItemReplace(patch.NewPath("metadata", "labels"), l)); err != nil {
-					log.Error().Err(err).Msgf("Unable to update topology labels")
+					log.Err(err).Error("Unable to update topology labels")
 				}
 			}
 		} else {
@@ -246,7 +246,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 				l = removeLabel(l, k8sutil.LabelKeyArangoZone)
 
 				if err := r.context.ApplyPatchOnPod(ctx, pod, patch.ItemReplace(patch.NewPath("metadata", "labels"), l)); err != nil {
-					log.Error().Err(err).Msgf("Unable to remove topology labels")
+					log.Err(err).Error("Unable to remove topology labels")
 				}
 			}
 		}
@@ -272,7 +272,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 			if anyOf(memberStatus.Conditions.Update(api.ConditionTypeReady, true, "Pod Ready", ""),
 				memberStatus.Conditions.Update(api.ConditionTypeStarted, true, "Pod Started", ""),
 				memberStatus.Conditions.Update(api.ConditionTypeServing, true, "Pod Serving", "")) {
-				log.Debug().Str("pod-name", pod.GetName()).Msg("Updating member condition Ready, Started & Serving to true")
+				log.Str("pod-name", pod.GetName()).Debug("Updating member condition Ready, Started & Serving to true")
 
 				if status.Topology.IsTopologyOwned(memberStatus.Topology) {
 					nodes, err := cachedStatus.Node().V1()
@@ -295,7 +295,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 			// Pod is not ready, but core containers are fine
 			if anyOf(memberStatus.Conditions.Update(api.ConditionTypeReady, false, "Pod Not Ready", ""),
 				memberStatus.Conditions.Update(api.ConditionTypeServing, true, "Pod is still serving", "")) {
-				log.Debug().Str("pod-name", pod.GetName()).Msg("Updating member condition Ready to false, while all core containers are ready")
+				log.Str("pod-name", pod.GetName()).Debug("Updating member condition Ready to false, while all core containers are ready")
 				updateMemberStatusNeeded = true
 				nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
 			}
@@ -303,7 +303,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 			// Pod is not ready
 			if anyOf(memberStatus.Conditions.Update(api.ConditionTypeReady, false, "Pod Not Ready", ""),
 				memberStatus.Conditions.Update(api.ConditionTypeServing, false, "Pod Core containers are not ready", strings.Join(coreContainers, ", "))) {
-				log.Debug().Str("pod-name", pod.GetName()).Msg("Updating member condition Ready & Serving to false")
+				log.Str("pod-name", pod.GetName()).Debug("Updating member condition Ready & Serving to false")
 				updateMemberStatusNeeded = true
 				nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
 			}
@@ -311,7 +311,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 
 		if k8sutil.IsPodNotScheduledFor(pod, podScheduleTimeout) {
 			// Pod cannot be scheduled for to long
-			log.Debug().Str("pod-name", pod.GetName()).Msg("Pod scheduling timeout")
+			log.Str("pod-name", pod.GetName()).Debug("Pod scheduling timeout")
 			podNamesWithScheduleTimeout = append(podNamesWithScheduleTimeout, pod.GetName())
 		} else if !k8sutil.IsPodScheduled(pod) {
 			unscheduledPodNames = append(unscheduledPodNames, pod.GetName())
@@ -320,7 +320,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 		if k8sutil.IsPodMarkedForDeletion(pod) {
 			if memberStatus.Conditions.Update(api.ConditionTypeTerminating, true, "Pod marked for deletion", "") {
 				updateMemberStatusNeeded = true
-				log.Debug().Str("pod-name", pod.GetName()).Msg("Pod marked as terminating")
+				log.Str("pod-name", pod.GetName()).Debug("Pod marked as terminating")
 			}
 			// Process finalizers
 			if x, err := r.runPodFinalizers(ctx, pod, memberStatus, func(m api.MemberStatus) error {
@@ -329,7 +329,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 				return nil
 			}); err != nil {
 				// Only log here, since we'll be called to try again.
-				log.Warn().Err(err).Msg("Failed to run pod finalizers")
+				log.Err(err).Warn("Failed to run pod finalizers")
 			} else {
 				nextInterval = nextInterval.ReduceTo(x)
 			}
@@ -352,11 +352,11 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 		for _, m := range members {
 			if podName := m.PodName; podName != "" {
 				if _, exists := cachedStatus.Pod().V1().GetSimple(podName); !exists {
-					log.Debug().Str("pod-name", podName).Msg("Does not exist")
+					log.Str("pod-name", podName).Debug("Does not exist")
 					switch m.Phase {
 					case api.MemberPhaseNone, api.MemberPhasePending:
 						// Do nothing
-						log.Debug().Str("pod-name", podName).Msg("PodPhase is None, waiting for the pod to be recreated")
+						log.Str("pod-name", podName).Debug("PodPhase is None, waiting for the pod to be recreated")
 					case api.MemberPhaseShuttingDown, api.MemberPhaseUpgrading, api.MemberPhaseFailed, api.MemberPhaseRotateStart, api.MemberPhaseRotating:
 						// Shutdown was intended, so not need to do anything here.
 						// Just mark terminated
@@ -373,7 +373,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 							}
 						}
 					default:
-						log.Debug().Str("pod-name", podName).Msg("Pod is gone")
+						log.Str("pod-name", podName).Debug("Pod is gone")
 						m.Phase = api.MemberPhaseNone // This is trigger a recreate of the pod.
 						// Create event
 						nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)

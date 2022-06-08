@@ -25,14 +25,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/rs/zerolog"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 )
 
 var (
@@ -117,23 +115,23 @@ func (p plannerResources) Set(deployment *api.DeploymentStatus, plan api.Plan) b
 // ExecutePlan tries to execute the plan as far as possible.
 // Returns true when it has to be called again soon.
 // False otherwise.
-func (d *Reconciler) ExecutePlan(ctx context.Context, cachedStatus inspectorInterface.Inspector) (bool, error) {
+func (d *Reconciler) ExecutePlan(ctx context.Context) (bool, error) {
 	var callAgain bool
 
-	if again, err := d.executePlanStatus(ctx, d.log, plannerHigh{}); err != nil {
+	if again, err := d.executePlanStatus(ctx, plannerHigh{}); err != nil {
 		return false, errors.WithStack(err)
 	} else if again {
 		callAgain = true
 	}
 
-	if again, err := d.executePlanStatus(ctx, d.log, plannerResources{}); err != nil {
-		d.log.Error().Err(err).Msg("Execution of plan failed")
+	if again, err := d.executePlanStatus(ctx, plannerResources{}); err != nil {
+		d.planLogger.Err(err).Error("Execution of plan failed")
 		return false, nil
 	} else if again {
 		callAgain = true
 	}
 
-	if again, err := d.executePlanStatus(ctx, d.log, plannerNormal{}); err != nil {
+	if again, err := d.executePlanStatus(ctx, plannerNormal{}); err != nil {
 		return false, errors.WithStack(err)
 	} else if again {
 		callAgain = true
@@ -142,7 +140,7 @@ func (d *Reconciler) ExecutePlan(ctx context.Context, cachedStatus inspectorInte
 	return callAgain, nil
 }
 
-func (d *Reconciler) executePlanStatus(ctx context.Context, log zerolog.Logger, pg planner) (bool, error) {
+func (d *Reconciler) executePlanStatus(ctx context.Context, pg planner) (bool, error) {
 	loopStatus, _ := d.context.GetStatus()
 
 	plan := pg.Get(&loopStatus)
@@ -151,15 +149,15 @@ func (d *Reconciler) executePlanStatus(ctx context.Context, log zerolog.Logger, 
 		return false, nil
 	}
 
-	newPlan, callAgain, err := d.executePlan(ctx, log, plan, pg)
+	newPlan, callAgain, err := d.executePlan(ctx, plan, pg)
 
 	// Refresh current status
 	loopStatus, lastVersion := d.context.GetStatus()
 
 	if pg.Set(&loopStatus, newPlan) {
-		log.Info().Msg("Updating plan")
+		d.planLogger.Info("Updating plan")
 		if err := d.context.UpdateStatus(ctx, loopStatus, lastVersion, true); err != nil {
-			log.Debug().Err(err).Msg("Failed to update CR status")
+			d.planLogger.Err(err).Debug("Failed to update CR status")
 			return false, errors.WithStack(err)
 		}
 	}
@@ -171,7 +169,7 @@ func (d *Reconciler) executePlanStatus(ctx context.Context, log zerolog.Logger, 
 	return callAgain, nil
 }
 
-func (d *Reconciler) executePlan(ctx context.Context, log zerolog.Logger, statusPlan api.Plan, pg planner) (newPlan api.Plan, callAgain bool, err error) {
+func (d *Reconciler) executePlan(ctx context.Context, statusPlan api.Plan, pg planner) (newPlan api.Plan, callAgain bool, err error) {
 	plan := statusPlan.DeepCopy()
 
 	for {
@@ -181,32 +179,10 @@ func (d *Reconciler) executePlan(ctx context.Context, log zerolog.Logger, status
 
 		// Take first action
 		planAction := plan[0]
-		logContext := log.With().
-			Int("plan-len", len(plan)).
-			Str("action-id", planAction.ID).
-			Str("action-type", string(planAction.Type)).
-			Str("group", planAction.Group.AsRole()).
-			Str("member-id", planAction.MemberID)
 
-		if status, _ := d.context.GetStatus(); status.Members.ContainsID(planAction.MemberID) {
-			if member, _, ok := status.Members.ElementByID(planAction.MemberID); ok {
-				logContext = logContext.Str("phase", string(member.Phase))
-			}
-		}
+		action, actionContext := d.createAction(planAction)
 
-		for k, v := range planAction.Params {
-			logContext = logContext.Str("param."+k, v)
-		}
-
-		for k, v := range planAction.Locals {
-			logContext = logContext.Str("local."+k.String(), v)
-		}
-
-		log := logContext.Logger()
-
-		action, actionContext := d.createAction(log, planAction)
-
-		done, abort, recall, retry, err := d.executeAction(ctx, log, planAction, action)
+		done, abort, recall, retry, err := d.executeAction(ctx, planAction, action)
 		if err != nil {
 			if retry {
 				return plan, true, nil
@@ -253,9 +229,9 @@ func (d *Reconciler) executePlan(ctx context.Context, log zerolog.Logger, status
 				if ok {
 					c.GetThrottles().Invalidate(components...)
 
-					log.Info().Msgf("Reloading cached status")
+					d.planLogger.Info("Reloading cached status")
 					if err := c.Refresh(ctx); err != nil {
-						log.Warn().Err(err).Msgf("Unable to reload cached status")
+						d.planLogger.Err(err).Warn("Unable to reload cached status")
 						return plan, recall, nil
 					}
 				}
@@ -263,12 +239,12 @@ func (d *Reconciler) executePlan(ctx context.Context, log zerolog.Logger, status
 
 			if newPlan, changed := getActionPlanAppender(action, plan); changed {
 				// Our actions have been added to the end of plan
-				log.Info().Msgf("Appending new plan items")
+				d.planLogger.Info("Appending new plan items")
 				return newPlan, true, nil
 			}
 
 			if err := getActionPost(action, ctx); err != nil {
-				log.Err(err).Msgf("Post action failed")
+				d.planLogger.Err(err).Error("Post action failed")
 				return nil, false, errors.WithStack(err)
 			}
 		} else {
@@ -288,23 +264,23 @@ func (d *Reconciler) executePlan(ctx context.Context, log zerolog.Logger, status
 	}
 }
 
-func (d *Reconciler) executeAction(ctx context.Context, log zerolog.Logger, planAction api.Action, action Action) (done, abort, callAgain, retry bool, err error) {
+func (d *Reconciler) executeAction(ctx context.Context, planAction api.Action, action Action) (done, abort, callAgain, retry bool, err error) {
 	if !planAction.IsStarted() {
 		// Not started yet
 		ready, err := action.Start(ctx)
 		if err != nil {
-			if d := getStartFailureGracePeriod(action); d > 0 && !planAction.CreationTime.IsZero() {
-				if time.Since(planAction.CreationTime.Time) < d {
-					log.Error().Err(err).Msg("Failed to start action, but still in grace period")
+			if g := getStartFailureGracePeriod(action); g > 0 && !planAction.CreationTime.IsZero() {
+				if time.Since(planAction.CreationTime.Time) < g {
+					d.planLogger.Err(err).Error("Failed to start action, but still in grace period")
 					return false, false, false, true, errors.WithStack(err)
 				}
 			}
-			log.Error().Err(err).Msg("Failed to start action")
+			d.planLogger.Err(err).Error("Failed to start action")
 			return false, false, false, false, errors.WithStack(err)
 		}
 
 		if ready {
-			log.Debug().Bool("ready", ready).Msg("Action Start completed")
+			d.planLogger.Bool("ready", ready).Debug("Action Start completed")
 			return true, false, false, false, nil
 		}
 
@@ -313,25 +289,25 @@ func (d *Reconciler) executeAction(ctx context.Context, log zerolog.Logger, plan
 	// First action of plan has been started, check its progress
 	ready, abort, err := action.CheckProgress(ctx)
 	if err != nil {
-		log.Debug().Err(err).Msg("Failed to check action progress")
+		d.planLogger.Err(err).Debug("Failed to check action progress")
 		return false, false, false, false, errors.WithStack(err)
 	}
 
-	log.Debug().
+	d.planLogger.
 		Bool("abort", abort).
 		Bool("ready", ready).
-		Msg("Action CheckProgress completed")
+		Debug("Action CheckProgress completed")
 
 	if ready {
 		return true, false, false, false, nil
 	}
 
 	if abort {
-		log.Warn().Msg("Action aborted. Removing the entire plan")
+		d.planLogger.Warn("Action aborted. Removing the entire plan")
 		d.context.CreateEvent(k8sutil.NewPlanAbortedEvent(d.context.GetAPIObject(), string(planAction.Type), planAction.MemberID, planAction.Group.AsRole()))
 		return false, true, false, false, nil
 	} else if time.Now().After(planAction.CreationTime.Add(GetActionTimeout(d.context.GetSpec(), planAction.Type))) {
-		log.Warn().Msg("Action not finished in time. Removing the entire plan")
+		d.planLogger.Warn("Action not finished in time. Removing the entire plan")
 		d.context.CreateEvent(k8sutil.NewPlanTimeoutEvent(d.context.GetAPIObject(), string(planAction.Type), planAction.MemberID, planAction.Group.AsRole()))
 		return false, true, false, false, nil
 	}
@@ -341,13 +317,13 @@ func (d *Reconciler) executeAction(ctx context.Context, log zerolog.Logger, plan
 }
 
 // createAction create action object based on action type
-func (d *Reconciler) createAction(log zerolog.Logger, action api.Action) (Action, ActionContext) {
-	actionCtx := newActionContext(log.With().Str("id", action.ID).Str("type", action.Type.String()).Logger(), d.context)
+func (d *Reconciler) createAction(action api.Action) (Action, ActionContext) {
+	actionCtx := newActionContext(d.log, d.context)
 
 	f, ok := getActionFactory(action.Type)
 	if !ok {
 		panic(fmt.Sprintf("Unknown action type '%s'", action.Type))
 	}
 
-	return f(log, action, actionCtx), actionCtx
+	return f(action, actionCtx), actionCtx
 }

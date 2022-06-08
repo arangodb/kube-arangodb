@@ -48,8 +48,11 @@ import (
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+var logger = logging.Global().RegisterAndGetLogger("backup-operator", logging.Info)
 
 const (
 	defaultArangoClientTimeout = 30 * time.Second
@@ -91,11 +94,11 @@ func (h *handler) start(stopCh <-chan struct{}) {
 		case <-stopCh:
 			return
 		case <-t.C:
-			log.Debug().Msgf("Refreshing database objects")
+			logger.Debug("Refreshing database objects")
 			if err := h.refresh(); err != nil {
 				log.Error().Err(err).Msgf("Unable to refresh database objects")
 			}
-			log.Debug().Msgf("Database objects refreshed")
+			logger.Debug("Database objects refreshed")
 		}
 	}
 }
@@ -242,7 +245,7 @@ func (h *handler) Handle(item operation.Item) error {
 
 	// Check if we should start finalizer
 	if b.DeletionTimestamp != nil {
-		log.Debug().Msgf("Finalizing %s %s/%s",
+		logger.Debug("Finalizing %s %s/%s",
 			item.Kind,
 			item.Namespace,
 			item.Name)
@@ -350,7 +353,7 @@ func (h *handler) Handle(item operation.Item) error {
 
 	b.Status = *status
 
-	log.Debug().Msgf("Updating %s %s/%s",
+	logger.Debug("Updating %s %s/%s",
 		item.Kind,
 		item.Namespace,
 		item.Name)

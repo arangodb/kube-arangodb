@@ -107,11 +107,11 @@ func cmdGetAgencyState(cmd *cobra.Command, _ []string) {
 	ctx := getInterruptionContext()
 	d, certCA, auth, err := getDeploymentAndCredentials(ctx, deploymentName)
 	if err != nil {
-		cliLog.Fatal().Err(err).Msg("failed to create basic data for the connection")
+		logger.Err(err).Fatal("failed to create basic data for the connection")
 	}
 
 	if d.Spec.GetMode() != api.DeploymentModeCluster {
-		cliLog.Fatal().Msgf("agency state does not work for the \"%s\" deployment \"%s\"", d.Spec.GetMode(),
+		logger.Fatal("agency state does not work for the \"%s\" deployment \"%s\"", d.Spec.GetMode(),
 			d.GetName())
 	}
 
@@ -120,7 +120,7 @@ func cmdGetAgencyState(cmd *cobra.Command, _ []string) {
 	conn := createClient([]string{endpoint}, certCA, auth, connection.ApplicationJSON)
 	leaderID, err := getAgencyLeader(ctx, conn)
 	if err != nil {
-		cliLog.Fatal().Err(err).Msg("failed to get leader ID")
+		logger.Err(err).Fatal("failed to get leader ID")
 	}
 
 	dnsLeaderName := k8sutil.CreatePodDNSName(d.GetObjectMeta(), api.ServerGroupAgents.AsRole(), leaderID)
@@ -131,7 +131,7 @@ func cmdGetAgencyState(cmd *cobra.Command, _ []string) {
 		defer body.Close()
 	}
 	if err != nil {
-		cliLog.Fatal().Err(err).Msg("can not get state of the agency")
+		logger.Err(err).Fatal("can not get state of the agency")
 	}
 
 	// Print and receive parallelly.
@@ -143,11 +143,11 @@ func cmdGetAgencyDump(cmd *cobra.Command, _ []string) {
 	ctx := getInterruptionContext()
 	d, certCA, auth, err := getDeploymentAndCredentials(ctx, deploymentName)
 	if err != nil {
-		cliLog.Fatal().Err(err).Msg("failed to create basic data for the connection")
+		logger.Err(err).Fatal("failed to create basic data for the connection")
 	}
 
 	if d.Spec.GetMode() != api.DeploymentModeCluster {
-		cliLog.Fatal().Msgf("agency dump does not work for the \"%s\" deployment \"%s\"", d.Spec.GetMode(),
+		logger.Fatal("agency dump does not work for the \"%s\" deployment \"%s\"", d.Spec.GetMode(),
 			d.GetName())
 	}
 
@@ -158,7 +158,7 @@ func cmdGetAgencyDump(cmd *cobra.Command, _ []string) {
 		defer body.Close()
 	}
 	if err != nil {
-		cliLog.Fatal().Err(err).Msg("can not get dump")
+		logger.Err(err).Fatal("can not get dump")
 	}
 
 	// Print and receive parallelly.

@@ -37,17 +37,16 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
-	"github.com/rs/zerolog"
 )
 
 func init() {
 	registerAction(api.ActionTypeCleanTLSCACertificate, newCleanTLSCACertificateAction, operationTLSCACertificateTimeout)
 }
 
-func newCleanTLSCACertificateAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newCleanTLSCACertificateAction(action api.Action, actionCtx ActionContext) Action {
 	a := &cleanTLSCACertificateAction{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -59,51 +58,51 @@ type cleanTLSCACertificateAction struct {
 }
 
 func (a *cleanTLSCACertificateAction) Start(ctx context.Context) (bool, error) {
-	a.log.Info().Msgf("Clean TLS Ca")
+	a.log.Info("Clean TLS Ca")
 	if !a.actionCtx.GetSpec().TLS.IsSecure() {
-		a.log.Info().Msgf("Insecure deployment")
+		a.log.Info("Insecure deployment")
 		return true, nil
 	}
 
 	certChecksum, exists := a.action.Params[checksum]
 	if !exists {
-		a.log.Warn().Msgf("Key %s is missing in action", checksum)
+		a.log.Warn("Key %s is missing in action", checksum)
 		return true, nil
 	}
 
 	caSecret, exists := a.actionCtx.ACS().CurrentClusterCache().Secret().V1().GetSimple(a.actionCtx.GetSpec().TLS.GetCASecretName())
 	if !exists {
-		a.log.Warn().Msgf("Secret %s is missing", a.actionCtx.GetSpec().TLS.GetCASecretName())
+		a.log.Warn("Secret %s is missing", a.actionCtx.GetSpec().TLS.GetCASecretName())
 		return true, nil
 	}
 
 	caFolder, exists := a.actionCtx.ACS().CurrentClusterCache().Secret().V1().GetSimple(resources.GetCASecretName(a.actionCtx.GetAPIObject()))
 	if !exists {
-		a.log.Warn().Msgf("Secret %s is missing", resources.GetCASecretName(a.actionCtx.GetAPIObject()))
+		a.log.Warn("Secret %s is missing", resources.GetCASecretName(a.actionCtx.GetAPIObject()))
 		return true, nil
 	}
 
-	ca, _, err := resources.GetKeyCertFromSecret(a.log, caSecret, resources.CACertName, resources.CAKeyName)
+	ca, _, err := resources.GetKeyCertFromSecret(caSecret, resources.CACertName, resources.CAKeyName)
 	if err != nil {
-		a.log.Warn().Err(err).Msgf("Cert %s is invalid", resources.GetCASecretName(a.actionCtx.GetAPIObject()))
+		a.log.Err(err).Warn("Cert %s is invalid", resources.GetCASecretName(a.actionCtx.GetAPIObject()))
 		return true, nil
 	}
 
 	caData, err := ca.ToPem()
 	if err != nil {
-		a.log.Warn().Err(err).Str("secret", resources.GetCASecretName(a.actionCtx.GetAPIObject())).Msgf("Unable to parse ca into pem")
+		a.log.Err(err).Str("secret", resources.GetCASecretName(a.actionCtx.GetAPIObject())).Warn("Unable to parse ca into pem")
 		return true, nil
 	}
 
 	caSha := util.SHA256(caData)
 
 	if caSha == certChecksum {
-		a.log.Warn().Msgf("Unable to remove current ca")
+		a.log.Warn("Unable to remove current ca")
 		return true, nil
 	}
 
 	if _, exists := caFolder.Data[certChecksum]; !exists {
-		a.log.Warn().Msgf("Cert missing")
+		a.log.Warn("Cert missing")
 		return true, nil
 	}
 
@@ -112,11 +111,11 @@ func (a *cleanTLSCACertificateAction) Start(ctx context.Context) (bool, error) {
 
 	patch, err := p.Marshal()
 	if err != nil {
-		a.log.Error().Err(err).Msgf("Unable to encrypt patch")
+		a.log.Err(err).Error("Unable to encrypt patch")
 		return true, nil
 	}
 
-	a.log.Info().Msgf("Removing key %s from truststore", certChecksum)
+	a.log.Info("Removing key %s from truststore", certChecksum)
 
 	err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		_, err := a.actionCtx.ACS().CurrentClusterCache().SecretsModInterface().V1().Patch(ctxChild, resources.GetCASecretName(a.actionCtx.GetAPIObject()), types.JSONPatchType, patch, meta.PatchOptions{})

@@ -328,7 +328,7 @@ func (r *Resources) RenderPodForMemberFromCurrent(ctx context.Context, acs sutil
 }
 
 func (r *Resources) RenderPodForMember(ctx context.Context, acs sutil.ACS, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error) {
-	log := r.log
+	log := r.log.Str("section", "member")
 	apiObject := r.context.GetAPIObject()
 	m, group, found := status.Members.ElementByID(memberID)
 	if !found {
@@ -383,7 +383,7 @@ func (r *Resources) RenderPodForMember(ctx context.Context, acs sutil.ACS, spec 
 	} else if group.IsArangosync() {
 		// Check image
 		if !imageInfo.Enterprise {
-			log.Debug().Str("image", spec.GetImage()).Msg("Image is not an enterprise image")
+			log.Str("image", spec.GetImage()).Debug("Image is not an enterprise image")
 			return nil, errors.WithStack(errors.Newf("Image '%s' does not contain an Enterprise version of ArangoDB", spec.GetImage()))
 		}
 		// Check if the sync image is overwritten by the SyncSpec
@@ -448,14 +448,14 @@ func (r *Resources) SelectImageForMember(spec api.DeploymentSpec, status api.Dep
 
 // createPodForMember creates all Pods listed in member status
 func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, arangoMember *api.ArangoMember, memberID string, imageNotFoundOnce *sync.Once) error {
-	log := r.log
+	log := r.log.Str("section", "member")
 	status, lastVersion := r.context.GetStatus()
 
 	// Select image
 	imageInfo, imageFound := r.SelectImage(spec, status)
 	if !imageFound {
 		imageNotFoundOnce.Do(func() {
-			log.Debug().Str("image", spec.GetImage()).Msg("Image ID is not known yet for image")
+			log.Str("image", spec.GetImage()).Debug("Image ID is not known yet for image")
 		})
 		return nil
 	}
@@ -517,11 +517,11 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 		// reset old sidecar values to nil
 		m.SideCarSpecs = nil
 
-		log.Debug().Str("pod-name", m.PodName).Msg("Created pod")
+		log.Str("pod-name", m.PodName).Debug("Created pod")
 		if m.Image == nil {
-			log.Debug().Str("pod-name", m.PodName).Msg("Created pod with default image")
+			log.Str("pod-name", m.PodName).Debug("Created pod with default image")
 		} else {
-			log.Debug().Str("pod-name", m.PodName).Msg("Created pod with predefined image")
+			log.Str("pod-name", m.PodName).Debug("Created pod with predefined image")
 		}
 	} else if group.IsArangosync() {
 		// Check monitoring token secret
@@ -547,7 +547,7 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		log.Debug().Str("pod-name", m.PodName).Msg("Created pod")
+		log.Str("pod-name", m.PodName).Debug("Created pod")
 
 		m.PodName = podName
 		m.PodUID = uid
@@ -568,7 +568,7 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 		}
 	}
 
-	r.log.Info().Str("pod", m.PodName).Msgf("Updating member")
+	log.Str("pod", m.PodName).Info("Updating member")
 	if err := status.Members.Update(m, group); err != nil {
 		return errors.WithStack(err)
 	}
@@ -688,6 +688,8 @@ func (r *Resources) EnsurePods(ctx context.Context, cachedStatus inspectorInterf
 	imageNotFoundOnce := &sync.Once{}
 	changed := false
 
+	log := r.log.Str("section", "member")
+
 	if err := iterator.ForeachServerGroup(func(group api.ServerGroup, groupSpec api.ServerGroupSpec, status *api.MemberStatusList) error {
 		for _, m := range *status {
 			if m.Phase != api.MemberPhasePending {
@@ -701,16 +703,16 @@ func (r *Resources) EnsurePods(ctx context.Context, cachedStatus inspectorInterf
 			}
 
 			if member.Status.Template == nil {
-				r.log.Warn().Msgf("Missing Template")
+				log.Warn("Missing Template")
 				// Template is missing, nothing to do
 				continue
 			}
 
-			r.log.Warn().Msgf("Ensuring pod")
+			log.Warn("Ensuring pod")
 
 			spec := r.context.GetSpec()
 			if err := r.createPodForMember(ctx, cachedStatus, spec, member, m.ID, imageNotFoundOnce); err != nil {
-				r.log.Warn().Err(err).Msgf("Ensuring pod failed")
+				log.Err(err).Warn("Ensuring pod failed")
 				return errors.WithStack(err)
 			}
 

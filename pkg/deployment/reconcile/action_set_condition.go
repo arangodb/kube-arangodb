@@ -24,8 +24,6 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/rs/zerolog"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
 
@@ -33,10 +31,10 @@ func init() {
 	registerAction(api.ActionTypeSetCondition, setCondition, defaultTimeout)
 }
 
-func setCondition(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func setCondition(action api.Action, actionCtx ActionContext) Action {
 	a := &actionSetCondition{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -51,7 +49,7 @@ type actionSetCondition struct {
 // Start starts the action for changing conditions on the provided member.
 func (a actionSetCondition) Start(ctx context.Context) (bool, error) {
 	if len(a.action.Params) == 0 {
-		a.log.Info().Msg("can not start the action with the empty list of conditions")
+		a.log.Info("can not start the action with the empty list of conditions")
 		return true, nil
 	}
 
@@ -59,7 +57,7 @@ func (a actionSetCondition) Start(ctx context.Context) (bool, error) {
 		changed := false
 		for condition, value := range a.action.Params {
 			if value == "" {
-				a.log.Debug().Msg("remove the condition")
+				a.log.Debug("remove the condition")
 
 				if s.Conditions.Remove(api.ConditionType(condition)) {
 					changed = true
@@ -67,11 +65,11 @@ func (a actionSetCondition) Start(ctx context.Context) (bool, error) {
 			} else {
 				set, err := strconv.ParseBool(value)
 				if err != nil {
-					a.log.Error().Err(err).Str("value", value).Msg("can not parse string to boolean")
+					a.log.Err(err).Str("value", value).Error("can not parse string to boolean")
 					continue
 				}
 
-				a.log.Debug().Msg("set the condition")
+				a.log.Debug("set the condition")
 
 				if s.Conditions.Update(api.ConditionType(condition), set, a.action.Reason, "action set the member condition") {
 					changed = true
@@ -80,7 +78,7 @@ func (a actionSetCondition) Start(ctx context.Context) (bool, error) {
 		}
 		return changed
 	}); err != nil {
-		a.log.Warn().Err(err).Msgf("Unable to set condition")
+		a.log.Err(err).Warn("Unable to set condition")
 		return true, nil
 	}
 

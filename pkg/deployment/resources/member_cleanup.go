@@ -48,8 +48,10 @@ var (
 
 // SyncMembersInCluster sets proper condition for all arangod members that belongs to the deployment.
 func (r *Resources) SyncMembersInCluster(ctx context.Context, health memberState.Health) error {
+	log := r.log.Str("section", "members")
+
 	if health.Error != nil {
-		r.log.Info().Err(health.Error).Msg("Health of the cluster is missing")
+		log.Err(health.Error).Info("Health of the cluster is missing")
 		return nil
 	}
 
@@ -71,8 +73,7 @@ func (r *Resources) SyncMembersInCluster(ctx context.Context, health memberState
 
 // syncMembersInCluster sets proper condition for all arangod members that are part of the cluster.
 func (r *Resources) syncMembersInCluster(ctx context.Context, health memberState.Health) error {
-	log := r.log
-
+	log := r.log.Str("section", "members")
 	serverFound := func(id string) bool {
 		_, found := health.Members[driver.ServerID(id)]
 		return found
@@ -87,35 +88,35 @@ func (r *Resources) syncMembersInCluster(ctx context.Context, health memberState
 			return nil
 		}
 		for _, m := range list {
-			log := log.With().Str("member", m.ID).Str("role", group.AsRole()).Logger()
+			log := log.Str("member", m.ID).Str("role", group.AsRole())
 			if serverFound(m.ID) {
 				// Member is (still) found, skip it
 				if m.Conditions.Update(api.ConditionTypeMemberOfCluster, true, "", "") {
 					if err := status.Members.Update(m, group); err != nil {
-						log.Warn().Err(err).Msg("Failed to update member")
+						log.Err(err).Warn("Failed to update member")
 					}
 					updateStatusNeeded = true
-					log.Debug().Msg("Updating MemberOfCluster condition to true")
+					log.Debug("Updating MemberOfCluster condition to true")
 				}
 				continue
 			} else if !m.Conditions.IsTrue(api.ConditionTypeMemberOfCluster) {
 				if m.Age() < minMemberAge {
-					log.Debug().Dur("age", m.Age()).Msg("Member is not yet recorded as member of cluster")
+					log.Dur("age", m.Age()).Debug("Member is not yet recorded as member of cluster")
 					continue
 				}
-				log.Warn().Msg("Member can not be found in cluster")
+				log.Warn("Member can not be found in cluster")
 			} else {
-				log.Info().Msg("Member is no longer part of the ArangoDB cluster")
+				log.Info("Member is no longer part of the ArangoDB cluster")
 			}
 		}
 		return nil
 	})
 
 	if updateStatusNeeded {
-		log.Debug().Msg("UpdateStatus needed")
+		log.Debug("UpdateStatus needed")
 
 		if err := r.context.UpdateStatus(ctx, status, lastVersion); err != nil {
-			log.Warn().Err(err).Msg("Failed to update deployment status")
+			log.Err(err).Warn("Failed to update deployment status")
 			return errors.WithStack(err)
 		}
 	}

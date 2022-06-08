@@ -47,10 +47,9 @@ func (r *Resilience) CheckMemberFailure(ctx context.Context) error {
 	updateStatusNeeded := false
 	if err := status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
 		for _, m := range list {
-			log := r.log.With().
+			log := r.log("member-failure").
 				Str("id", m.ID).
-				Str("role", group.AsRole()).
-				Logger()
+				Str("role", group.AsRole())
 
 			// Check if there are Members with Phase Upgrading or Rotation but no plan
 			switch m.Phase {
@@ -58,7 +57,7 @@ func (r *Resilience) CheckMemberFailure(ctx context.Context) error {
 				continue
 			case api.MemberPhaseUpgrading, api.MemberPhaseRotating, api.MemberPhaseCleanOut, api.MemberPhaseRotateStart:
 				if len(status.Plan) == 0 {
-					log.Error().Msgf("No plan but member is in phase %s - marking as failed", m.Phase)
+					log.Error("No plan but member is in phase %s - marking as failed", m.Phase)
 					m.Phase = api.MemberPhaseFailed
 					status.Members.Update(m, group)
 					updateStatusNeeded = true
@@ -78,14 +77,14 @@ func (r *Resilience) CheckMemberFailure(ctx context.Context) error {
 
 					failureAcceptable, reason, err := r.isMemberFailureAcceptable(ctx, group, m)
 					if err != nil {
-						log.Warn().Err(err).Msg("Failed to check is member failure is acceptable")
+						log.Err(err).Warn("Failed to check is member failure is acceptable")
 					} else if failureAcceptable {
-						log.Info().Msg("Member is not ready for long time, marking is failed")
+						log.Info("Member is not ready for long time, marking is failed")
 						m.Phase = api.MemberPhaseFailed
 						status.Members.Update(m, group)
 						updateStatusNeeded = true
 					} else {
-						log.Warn().Msgf("Member is not ready for long time, but it is not safe to mark it a failed because: %s", reason)
+						log.Warn("Member is not ready for long time, but it is not safe to mark it a failed because: %s", reason)
 					}
 				}
 			}
@@ -97,14 +96,14 @@ func (r *Resilience) CheckMemberFailure(ctx context.Context) error {
 					// Member has terminated too often in recent history.
 					failureAcceptable, reason, err := r.isMemberFailureAcceptable(ctx, group, m)
 					if err != nil {
-						log.Warn().Err(err).Msg("Failed to check is member failure is acceptable")
+						log.Err(err).Warn("Failed to check is member failure is acceptable")
 					} else if failureAcceptable {
-						log.Info().Msg("Member has terminated too often in recent history, marking is failed")
+						log.Info("Member has terminated too often in recent history, marking is failed")
 						m.Phase = api.MemberPhaseFailed
 						status.Members.Update(m, group)
 						updateStatusNeeded = true
 					} else {
-						log.Warn().Msgf("Member has terminated too often in recent history, but it is not safe to mark it a failed because: %s", reason)
+						log.Warn("Member has terminated too often in recent history, but it is not safe to mark it a failed because: %s", reason)
 					}
 				}
 			}

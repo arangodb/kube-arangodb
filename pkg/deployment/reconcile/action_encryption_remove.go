@@ -36,17 +36,16 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/rs/zerolog"
 )
 
 func init() {
 	registerAction(api.ActionTypeEncryptionKeyRemove, newEncryptionKeyRemove, defaultTimeout)
 }
 
-func newEncryptionKeyRemove(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newEncryptionKeyRemove(action api.Action, actionCtx ActionContext) Action {
 	a := &encryptionKeyRemoveAction{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -59,7 +58,7 @@ type encryptionKeyRemoveAction struct {
 
 func (a *encryptionKeyRemoveAction) Start(ctx context.Context) (bool, error) {
 	if err := ensureEncryptionSupport(a.actionCtx); err != nil {
-		a.log.Error().Err(err).Msgf("Action not supported")
+		a.log.Err(err).Error("Action not supported")
 		return true, nil
 	}
 
@@ -77,7 +76,7 @@ func (a *encryptionKeyRemoveAction) Start(ctx context.Context) (bool, error) {
 
 	patch, err := p.Marshal()
 	if err != nil {
-		a.log.Error().Err(err).Msgf("Unable to encrypt patch")
+		a.log.Err(err).Error("Unable to encrypt patch")
 		return true, nil
 	}
 

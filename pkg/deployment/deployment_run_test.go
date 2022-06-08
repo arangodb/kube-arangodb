@@ -31,8 +31,6 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
-	"github.com/rs/zerolog/log"
-
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	core "k8s.io/api/core/v1"
@@ -68,7 +66,7 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 		errs := 0
 		for {
 			require.NoError(t, d.acs.CurrentClusterCache().Refresh(context.Background()))
-			err := d.resources.EnsureSecrets(context.Background(), log.Logger, d.GetCachedStatus())
+			err := d.resources.EnsureSecrets(context.Background(), d.GetCachedStatus())
 			if err == nil {
 				break
 			}

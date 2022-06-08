@@ -20,11 +20,6 @@
 
 package utils
 
-// Causer define if error has another reason error
-type Causer interface {
-	Cause() error
-}
-
 // Temporary define if error implements temporary interface
 type Temporary interface {
 	Temporary() bool

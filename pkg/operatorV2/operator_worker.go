@@ -35,11 +35,11 @@ func (o *operator) processNextItem() bool {
 	defer func() {
 		// Recover from panic to not shutdown whole operator
 		if err := recover(); err != nil {
-			e := o.logger.Error()
+			e := loggerWorker.Str("type", "worker")
 
 			switch obj := err.(type) {
 			case error:
-				e = e.AnErr("err", obj)
+				e = e.Err(obj)
 			case string:
 				e = e.Str("err", obj)
 			case int:
@@ -48,7 +48,7 @@ func (o *operator) processNextItem() bool {
 				e.Interface("err", obj)
 			}
 
-			e.Msgf("Recovered from panic")
+			e.Error("Recovered from panic")
 		}
 	}()
 
@@ -61,7 +61,7 @@ func (o *operator) processNextItem() bool {
 	err := o.processObject(obj)
 
 	if err != nil {
-		o.logger.Error().Err(err).Interface("object", obj).Msgf("Error during object handling")
+		loggerWorker.Interface("object", obj).Error("Error during object handling")
 		return true
 	}
 
@@ -94,7 +94,7 @@ func (o *operator) processObject(obj interface{}) error {
 
 	o.objectProcessed.Inc()
 
-	o.logger.Trace().Msgf("Received Item Action: %s, Type: %s/%s/%s, Namespace: %s, Name: %s",
+	loggerWorker.Trace("Received Item Action: %s, Type: %s/%s/%s, Namespace: %s, Name: %s",
 		item.Operation,
 		item.Group,
 		item.Version,
@@ -107,7 +107,7 @@ func (o *operator) processObject(obj interface{}) error {
 		return errors.Newf("error syncing '%s': %s, requeuing", key, err.Error())
 	}
 
-	o.logger.Trace().Msgf("Processed Item Action: %s, Type: %s/%s/%s, Namespace: %s, Name: %s",
+	loggerWorker.Trace("Processed Item Action: %s, Type: %s/%s/%s, Namespace: %s, Name: %s",
 		item.Operation,
 		item.Group,
 		item.Version,

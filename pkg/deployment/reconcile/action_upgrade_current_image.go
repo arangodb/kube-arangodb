@@ -26,7 +26,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/rs/zerolog"
 )
 
 func init() {
@@ -35,10 +34,10 @@ func init() {
 
 // newSetCurrentImageAction creates a new Action that implements the given
 // planned SetCurrentImage action.
-func newSetCurrentImageAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newSetCurrentImageAction(action api.Action, actionCtx ActionContext) Action {
 	a := &setCurrentImageAction{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -63,16 +62,14 @@ func (a *setCurrentImageAction) Start(ctx context.Context) (bool, error) {
 // CheckProgress checks the progress of the action.
 // Returns true if the action is completely finished, false otherwise.
 func (a *setCurrentImageAction) CheckProgress(ctx context.Context) (bool, bool, error) {
-	log := a.log
-
 	imageInfo, found := a.actionCtx.GetImageInfo(a.action.Image)
 	if !found {
 		return false, false, nil
 	}
 	if err := a.actionCtx.SetCurrentImage(ctx, imageInfo); err != nil {
-		log.Error().Err(err).Msg("Unable to set current image")
+		a.log.Err(err).Error("Unable to set current image")
 		return false, false, nil
 	}
-	log.Info().Str("image", a.action.Image).Str("to", imageInfo.Image).Msg("Changed current main image")
+	a.log.Str("image", a.action.Image).Str("to", imageInfo.Image).Info("Changed current main image")
 	return true, false, nil
 }

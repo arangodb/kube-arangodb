@@ -23,11 +23,8 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/rs/zerolog/log"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/rs/zerolog"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 func init() {
@@ -40,10 +37,10 @@ const (
 
 // newArangoMemberUpdatePodStatusAction creates a new Action that implements the given
 // planned ArangoMemberUpdatePodStatus action.
-func newArangoMemberUpdatePodStatusAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newArangoMemberUpdatePodStatusAction(action api.Action, actionCtx ActionContext) Action {
 	a := &actionArangoMemberUpdatePodStatus{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -63,14 +60,14 @@ type actionArangoMemberUpdatePodStatus struct {
 func (a *actionArangoMemberUpdatePodStatus) Start(ctx context.Context) (bool, error) {
 	m, found := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !found {
-		log.Error().Msg("No such member")
+		a.log.Error("No such member")
 		return true, nil
 	}
 
 	member, ok := a.actionCtx.ACS().CurrentClusterCache().ArangoMember().V1().GetSimple(m.ArangoMemberName(a.actionCtx.GetName(), a.action.Group))
 	if !ok {
 		err := errors.Newf("ArangoMember not found")
-		log.Error().Err(err).Msg("ArangoMember not found")
+		a.log.Err(err).Error("ArangoMember not found")
 		return false, err
 	}
 
@@ -93,7 +90,7 @@ func (a *actionArangoMemberUpdatePodStatus) Start(ctx context.Context) (bool, er
 			}
 			return false
 		}); err != nil {
-			log.Err(err).Msg("Error while updating member")
+			a.log.Err(err).Error("Error while updating member")
 			return false, err
 		}
 	}

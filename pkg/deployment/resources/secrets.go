@@ -42,8 +42,6 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 
-	"github.com/rs/zerolog"
-
 	operatorErrors "github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	core "k8s.io/api/core/v1"
@@ -76,7 +74,7 @@ func GetCASecretName(apiObject k8sutil.APIObject) string {
 }
 
 // EnsureSecrets creates all secrets needed to run the given deployment
-func (r *Resources) EnsureSecrets(ctx context.Context, log zerolog.Logger, cachedStatus inspectorInterface.Inspector) error {
+func (r *Resources) EnsureSecrets(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
 	start := time.Now()
 	spec := r.context.GetSpec()
 	secrets := cachedStatus.SecretsModInterface().V1()
@@ -87,6 +85,8 @@ func (r *Resources) EnsureSecrets(ctx context.Context, log zerolog.Logger, cache
 	imageFound := status.CurrentImage != nil
 	defer metrics.SetDuration(inspectSecretsDurationGauges.WithLabelValues(deploymentName), start)
 	counterMetric := inspectedSecretsCounters.WithLabelValues(deploymentName)
+
+	log := r.log.Str("section", "secret")
 
 	members := status.Members.AsList()
 
@@ -509,7 +509,7 @@ func (r *Resources) ensureTLSCACertificateSecret(ctx context.Context, cachedStat
 		owner := apiObject.AsOwner()
 		deploymentName := apiObject.GetName()
 		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-			return createTLSCACertificate(ctxChild, r.log, secrets, spec, deploymentName, &owner)
+			return r.createTLSCACertificate(ctxChild, secrets, spec, deploymentName, &owner)
 		})
 		if k8sutil.IsAlreadyExists(err) {
 			// Secret added while we tried it also
@@ -533,7 +533,7 @@ func (r *Resources) ensureClientAuthCACertificateSecret(ctx context.Context, cac
 		owner := apiObject.AsOwner()
 		deploymentName := apiObject.GetName()
 		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-			return createClientAuthCACertificate(ctxChild, r.log, secrets, spec, deploymentName, &owner)
+			return r.createClientAuthCACertificate(ctxChild, secrets, spec, deploymentName, &owner)
 		})
 		if k8sutil.IsAlreadyExists(err) {
 			// Secret added while we tried it also
@@ -556,7 +556,7 @@ func (r *Resources) getJWTSecret(spec api.DeploymentSpec) (string, error) {
 	secretName := spec.Authentication.GetJWTSecretName()
 	s, err := k8sutil.GetTokenSecret(context.Background(), r.context.ACS().CurrentClusterCache().Secret().V1().Read(), secretName)
 	if err != nil {
-		r.log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get JWT secret")
+		r.log.Str("section", "jwt").Err(err).Str("secret-name", secretName).Debug("Failed to get JWT secret")
 		return "", errors.WithStack(err)
 	}
 	return s, nil
@@ -567,7 +567,7 @@ func (r *Resources) getSyncJWTSecret(spec api.DeploymentSpec) (string, error) {
 	secretName := spec.Sync.Authentication.GetJWTSecretName()
 	s, err := k8sutil.GetTokenSecret(context.Background(), r.context.ACS().CurrentClusterCache().Secret().V1().Read(), secretName)
 	if err != nil {
-		r.log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get sync JWT secret")
+		r.log.Str("section", "jwt").Err(err).Str("secret-name", secretName).Debug("Failed to get sync JWT secret")
 		return "", errors.WithStack(err)
 	}
 	return s, nil
@@ -578,7 +578,7 @@ func (r *Resources) getSyncMonitoringToken(spec api.DeploymentSpec) (string, err
 	secretName := spec.Sync.Monitoring.GetTokenSecretName()
 	s, err := k8sutil.GetTokenSecret(context.Background(), r.context.ACS().CurrentClusterCache().Secret().V1().Read(), secretName)
 	if err != nil {
-		r.log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get sync monitoring secret")
+		r.log.Str("section", "jwt").Err(err).Str("secret-name", secretName).Debug("Failed to get sync monitoring secret")
 		return "", errors.WithStack(err)
 	}
 	return s, nil

@@ -29,6 +29,7 @@ import (
 	"github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 
@@ -44,7 +45,7 @@ type StateInspector interface {
 
 	State() State
 
-	Log(logger zerolog.Logger)
+	Log(logger logging.Logger)
 }
 
 func NewStateInspector(client reconciler.DeploymentClient) StateInspector {
@@ -73,13 +74,13 @@ func (s *stateInspector) State() State {
 	return s.state
 }
 
-func (s *stateInspector) Log(logger zerolog.Logger) {
+func (s *stateInspector) Log(log logging.Logger) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
 	for m, s := range s.members {
 		if !s.IsReachable() {
-			s.Log(logger.Info()).Str("member", m).Msgf("Member is in invalid state")
+			log.WrapObj(s).Str("member", m).Info("Member is in invalid state")
 		}
 	}
 }
@@ -211,6 +212,6 @@ func (s State) IsReachable() bool {
 	return s.NotReachableErr == nil
 }
 
-func (s State) Log(event *zerolog.Event) *zerolog.Event {
+func (s State) WrapLogger(event *zerolog.Event) *zerolog.Event {
 	return event.Bool("reachable", s.IsReachable()).AnErr("reachableError", s.NotReachableErr)
 }

@@ -124,7 +124,7 @@ func newPDBV1(minAvail int, deplname string, group api.ServerGroup, owner meta.O
 func (r *Resources) ensurePDBForGroup(ctx context.Context, group api.ServerGroup, wantedMinAvail int) error {
 	deplName := r.context.GetAPIObject().GetName()
 	pdbName := PDBNameForGroup(deplName, group)
-	log := r.log.With().Str("group", group.AsRole()).Logger()
+	log := r.log.Str("section", "pdb").Str("group", group.AsRole())
 	pdbMod := r.context.ACS().CurrentClusterCache().PodDisruptionBudgetsModInterface()
 
 	for {
@@ -158,7 +158,7 @@ func (r *Resources) ensurePDBForGroup(ctx context.Context, group api.ServerGroup
 		if k8sutil.IsNotFound(err) {
 			if wantedMinAvail != 0 {
 				// No PDB found - create new.
-				log.Debug().Msg("Creating new PDB")
+				log.Debug("Creating new PDB")
 				err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 					var errInternal error
 
@@ -174,7 +174,7 @@ func (r *Resources) ensurePDBForGroup(ctx context.Context, group api.ServerGroup
 				})
 
 				if err != nil {
-					log.Error().Err(err).Msg("failed to create PDB")
+					log.Err(err).Error("failed to create PDB")
 					return errors.WithStack(err)
 				}
 			}
@@ -191,9 +191,9 @@ func (r *Resources) ensurePDBForGroup(ctx context.Context, group api.ServerGroup
 		}
 		// Update for PDBs is forbidden, thus one has to delete it and then create it again
 		// Otherwise delete it if wantedMinAvail is zero
-		log.Debug().Int("wanted-min-avail", wantedMinAvail).
+		log.Int("wanted-min-avail", wantedMinAvail).
 			Int("current-min-avail", minAvailable.IntValue()).
-			Msg("Recreating PDB")
+			Debug("Recreating PDB")
 
 		// Trigger deletion only if not already deleted.
 		if deletionTimestamp == nil {
@@ -206,18 +206,18 @@ func (r *Resources) ensurePDBForGroup(ctx context.Context, group api.ServerGroup
 				return pdbMod.V1Beta1().Delete(ctxChild, pdbName, meta.DeleteOptions{})
 			})
 			if err != nil && !k8sutil.IsNotFound(err) {
-				log.Error().Err(err).Msg("PDB deletion failed")
+				log.Err(err).Error("PDB deletion failed")
 				return errors.WithStack(err)
 			}
 		} else {
-			log.Debug().Msg("PDB already deleted")
+			log.Debug("PDB already deleted")
 		}
 		// Exit here if deletion was intended
 		if wantedMinAvail == 0 {
 			return nil
 		}
 
-		log.Debug().Msg("Retry loop for PDB")
+		log.Debug("Retry loop for PDB")
 		select {
 		case <-ctx.Done():
 			return ctx.Err()

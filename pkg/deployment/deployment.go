@@ -27,7 +27,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/rs/zerolog"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
@@ -48,6 +47,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resilience"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
@@ -72,7 +72,6 @@ type Config struct {
 
 // Dependencies holds dependent services for a Deployment
 type Dependencies struct {
-	Log           zerolog.Logger
 	EventRecorder record.EventRecorder
 
 	Client kclient.Client
@@ -104,6 +103,8 @@ type deploymentStatusObject struct {
 
 // Deployment is the in process state of an ArangoDeployment.
 type Deployment struct {
+	log logging.Logger
+
 	name      string
 	namespace string
 
@@ -237,14 +238,16 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 		acs:         acs.NewACS(apiObject.GetUID(), i),
 	}
 
+	d.log = logger.WrapObj(d)
+
 	d.memberState = memberState.NewStateInspector(d)
 
 	d.clientCache = deploymentClient.NewClientCache(d, conn.NewFactory(d.getAuth, d.getConnConfig))
 
 	d.status.last = *(apiObject.Status.DeepCopy())
-	d.reconciler = reconcile.NewReconciler(deps.Log, d)
-	d.resilience = resilience.NewResilience(deps.Log, d)
-	d.resources = resources.NewResources(deps.Log, d)
+	d.reconciler = reconcile.NewReconciler(apiObject.GetNamespace(), apiObject.GetName(), d)
+	d.resilience = resilience.NewResilience(apiObject.GetNamespace(), apiObject.GetName(), d)
+	d.resources = resources.NewResources(apiObject.GetNamespace(), apiObject.GetName(), d)
 	if d.status.last.AcceptedSpec == nil {
 		// We've validated the spec, so let's use it from now.
 		d.status.last.AcceptedSpec = apiObject.Spec.DeepCopy()
@@ -264,7 +267,7 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 		go ci.ListenForClusterEvents(d.stopCh)
 	}
 	if config.AllowChaos {
-		d.chaosMonkey = chaos.NewMonkey(deps.Log, d)
+		d.chaosMonkey = chaos.NewMonkey(apiObject.GetNamespace(), apiObject.GetName(), d)
 		go d.chaosMonkey.Run(d.stopCh)
 	}
 
@@ -283,7 +286,7 @@ func (d *Deployment) Update(apiObject *api.ArangoDeployment) {
 // Delete the deployment.
 // Called when the deployment was deleted by the user.
 func (d *Deployment) Delete() {
-	d.deps.Log.Info().Msg("deployment is deleted by user")
+	d.log.Info("deployment is deleted by user")
 	if atomic.CompareAndSwapInt32(&d.stopped, 0, 1) {
 		close(d.stopCh)
 	}
@@ -295,10 +298,10 @@ func (d *Deployment) send(ev *deploymentEvent) {
 	case d.eventCh <- ev:
 		l, ecap := len(d.eventCh), cap(d.eventCh)
 		if l > int(float64(ecap)*0.8) {
-			d.deps.Log.Warn().
+			d.log.
 				Int("used", l).
 				Int("capacity", ecap).
-				Msg("event queue buffer is almost full")
+				Warn("event queue buffer is almost full")
 		}
 	case <-d.stopCh:
 	}
@@ -308,7 +311,7 @@ func (d *Deployment) send(ev *deploymentEvent) {
 // It processes the event queue and polls the state of generated
 // resource on a regular basis.
 func (d *Deployment) run() {
-	log := d.deps.Log
+	log := d.log
 
 	// Create agency mapping
 	if err := d.createAgencyMapping(context.TODO()); err != nil {
@@ -331,32 +334,32 @@ func (d *Deployment) run() {
 		status, lastVersion := d.GetStatus()
 		status.Phase = api.DeploymentPhaseRunning
 		if err := d.UpdateStatus(context.TODO(), status, lastVersion); err != nil {
-			log.Warn().Err(err).Msg("update initial CR status failed")
+			log.Err(err).Warn("update initial CR status failed")
 		}
-		log.Info().Msg("start running...")
+		log.Info("start running...")
 	}
 
 	d.lookForServiceMonitorCRD()
 
 	// Execute inspection for first time without delay of 10s
-	log.Debug().Msg("Initially inspect deployment...")
+	log.Debug("Initially inspect deployment...")
 	inspectionInterval := d.inspectDeployment(minInspectionInterval)
-	log.Debug().Str("interval", inspectionInterval.String()).Msg("...deployment inspect started")
+	log.Str("interval", inspectionInterval.String()).Debug("...deployment inspect started")
 
 	for {
 		select {
 		case <-d.stopCh:
 			err := d.acs.CurrentClusterCache().Refresh(context.Background())
 			if err != nil {
-				log.Error().Err(err).Msg("Unable to get resources")
+				log.Err(err).Error("Unable to get resources")
 			}
 			// Remove finalizers from created resources
-			log.Info().Msg("Deployment removed, removing finalizers to prevent orphaned resources")
+			log.Info("Deployment removed, removing finalizers to prevent orphaned resources")
 			if _, err := d.removePodFinalizers(context.TODO(), d.GetCachedStatus()); err != nil {
-				log.Warn().Err(err).Msg("Failed to remove Pod finalizers")
+				log.Err(err).Warn("Failed to remove Pod finalizers")
 			}
 			if _, err := d.removePVCFinalizers(context.TODO(), d.GetCachedStatus()); err != nil {
-				log.Warn().Err(err).Msg("Failed to remove PVC finalizers")
+				log.Err(err).Warn("Failed to remove PVC finalizers")
 			}
 			// We're being stopped.
 			return
@@ -371,9 +374,9 @@ func (d *Deployment) run() {
 			}
 
 		case <-d.inspectTrigger.Done():
-			log.Debug().Msg("Inspect deployment...")
+			log.Debug("Inspect deployment...")
 			inspectionInterval = d.inspectDeployment(inspectionInterval)
-			log.Debug().Str("interval", inspectionInterval.String()).Msg("...inspected deployment")
+			log.Str("interval", inspectionInterval.String()).Debug("...inspected deployment")
 
 		case <-d.inspectCRDTrigger.Done():
 			d.lookForServiceMonitorCRD()
@@ -394,7 +397,7 @@ func (d *Deployment) run() {
 
 // handleArangoDeploymentUpdatedEvent is called when the deployment is updated by the user.
 func (d *Deployment) handleArangoDeploymentUpdatedEvent(ctx context.Context) error {
-	log := d.deps.Log.With().Str("deployment", d.apiObject.GetName()).Logger()
+	log := d.log.Str("deployment", d.apiObject.GetName())
 
 	// Get the most recent version of the deployment from the API server
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
@@ -402,7 +405,7 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent(ctx context.Context) err
 
 	current, err := d.deps.Client.Arango().DatabaseV1().ArangoDeployments(d.apiObject.GetNamespace()).Get(ctxChild, d.apiObject.GetName(), meta.GetOptions{})
 	if err != nil {
-		log.Debug().Err(err).Msg("Failed to get current version of deployment from API server")
+		log.Err(err).Debug("Failed to get current version of deployment from API server")
 		if k8sutil.IsNotFound(err) {
 			return nil
 		}
@@ -420,21 +423,21 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent(ctx context.Context) err
 
 	resetFields := specBefore.ResetImmutableFields(&newAPIObject.Spec)
 	if len(resetFields) > 0 {
-		log.Debug().Strs("fields", resetFields).Msg("Found modified immutable fields")
+		log.Strs("fields", resetFields...).Debug("Found modified immutable fields")
 		newAPIObject.Spec.SetDefaults(d.apiObject.GetName())
 	}
 	if err := newAPIObject.Spec.Validate(); err != nil {
 		d.CreateEvent(k8sutil.NewErrorEvent("Validation failed", err, d.apiObject))
 		// Try to reset object
 		if err := d.updateCRSpec(ctx, d.apiObject.Spec); err != nil {
-			log.Error().Err(err).Msg("Restore original spec failed")
+			log.Err(err).Error("Restore original spec failed")
 			d.CreateEvent(k8sutil.NewErrorEvent("Restore original failed", err, d.apiObject))
 		}
 		return nil
 	}
 	if len(resetFields) > 0 {
 		for _, fieldName := range resetFields {
-			log.Debug().Str("field", fieldName).Msg("Reset immutable field")
+			log.Str("field", fieldName).Debug("Reset immutable field")
 			d.CreateEvent(k8sutil.NewImmutableFieldEvent(fieldName, d.apiObject))
 		}
 	}
@@ -447,7 +450,7 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent(ctx context.Context) err
 	{
 		status, lastVersion := d.GetStatus()
 		if newAPIObject.Status.IsForceReload() {
-			log.Warn().Msg("Forced status reload!")
+			log.Warn("Forced status reload!")
 			status = newAPIObject.Status
 			status.ForceStatusReload = nil
 		}
@@ -516,7 +519,7 @@ func (d *Deployment) updateCRStatus(ctx context.Context, force ...bool) error {
 			continue
 		}
 		if err != nil {
-			d.deps.Log.Debug().Err(err).Msg("failed to patch ArangoDeployment status")
+			d.log.Err(err).Debug("failed to patch ArangoDeployment status")
 			return errors.WithStack(errors.Newf("failed to patch ArangoDeployment status: %v", err))
 		}
 	}
@@ -529,7 +532,7 @@ func (d *Deployment) updateCRSpec(ctx context.Context, newSpec api.DeploymentSpe
 
 	if len(force) == 0 || !force[0] {
 		if d.apiObject.Spec.Equal(&newSpec) {
-			d.deps.Log.Debug().Msg("Nothing to update in updateCRSpec")
+			d.log.Debug("Nothing to update in updateCRSpec")
 			// Nothing to update
 			return nil
 		}
@@ -572,7 +575,7 @@ func (d *Deployment) updateCRSpec(ctx context.Context, newSpec api.DeploymentSpe
 			}
 		}
 		if err != nil {
-			d.deps.Log.Debug().Err(err).Msg("failed to patch ArangoDeployment spec")
+			d.log.Err(err).Debug("failed to patch ArangoDeployment spec")
 			return errors.WithStack(errors.Newf("failed to patch ArangoDeployment spec: %v", err))
 		}
 	}
@@ -601,23 +604,23 @@ func (d *Deployment) lookForServiceMonitorCRD() {
 	} else {
 		_, err = d.deps.Client.KubernetesExtensions().ApiextensionsV1().CustomResourceDefinitions().Get(context.Background(), "servicemonitors.monitoring.coreos.com", meta.GetOptions{})
 	}
-	log := d.deps.Log
-	log.Debug().Msgf("Looking for ServiceMonitor CRD...")
+	log := d.log
+	log.Debug("Looking for ServiceMonitor CRD...")
 	if err == nil {
 		if !d.haveServiceMonitorCRD {
-			log.Info().Msgf("...have discovered ServiceMonitor CRD")
+			log.Info("...have discovered ServiceMonitor CRD")
 		}
 		d.haveServiceMonitorCRD = true
 		d.triggerInspection()
 		return
 	} else if k8sutil.IsNotFound(err) {
 		if d.haveServiceMonitorCRD {
-			log.Info().Msgf("...ServiceMonitor CRD no longer there")
+			log.Info("...ServiceMonitor CRD no longer there")
 		}
 		d.haveServiceMonitorCRD = false
 		return
 	}
-	log.Warn().Err(err).Msgf("Error when looking for ServiceMonitor CRD")
+	log.Err(err).Warn("Error when looking for ServiceMonitor CRD")
 }
 
 // SetNumberOfServers adjust number of DBservers and coordinators in arangod

@@ -28,8 +28,7 @@ import (
 
 // waitForCRD waits for the CustomResourceDefinition (created externally) to be ready.
 func (o *Operator) waitForCRD(crdName string, checkFn func() error) {
-	log := o.log
-	log.Debug().Msgf("Waiting for %s CRD to be ready - ", crdName)
+	o.log.Debug("Waiting for %s CRD to be ready - ", crdName)
 
 	for {
 		var err error = nil
@@ -44,11 +43,11 @@ func (o *Operator) waitForCRD(crdName string, checkFn func() error) {
 		if err == nil {
 			break
 		} else {
-			log.Error().Err(err).Msg("Resource initialization failed")
-			log.Info().Msgf("Retrying in %s...", initRetryWaitTime)
+			o.log.Err(err).Error("Resource initialization failed")
+			o.log.Info("Retrying in %s...", initRetryWaitTime)
 			time.Sleep(initRetryWaitTime)
 		}
 	}
 
-	log.Debug().Msg("CRDs ready")
+	o.log.Debug("CRDs ready")
 }

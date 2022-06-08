@@ -21,10 +21,14 @@
 package k8sutil
 
 import (
-	"github.com/rs/zerolog"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/cache"
+)
+
+var (
+	informerLogger = logging.Global().Get("kubernetes-informer")
 )
 
 // ResourceWatcher is a helper to watch for events in a specific type
@@ -35,7 +39,7 @@ type ResourceWatcher struct {
 
 // NewResourceWatcher creates a helper that watches for changes in a resource of a specific type.
 // If wraps the given handler functions, such that panics are caught and logged.
-func NewResourceWatcher(log zerolog.Logger, getter cache.Getter, resource, namespace string,
+func NewResourceWatcher(getter cache.Getter, resource, namespace string,
 	objType runtime.Object, h cache.ResourceEventHandlerFuncs) *ResourceWatcher {
 	source := cache.NewListWatchFromClient(
 		getter,
@@ -47,7 +51,7 @@ func NewResourceWatcher(log zerolog.Logger, getter cache.Getter, resource, names
 		AddFunc: func(obj interface{}) {
 			defer func() {
 				if err := recover(); err != nil {
-					log.Error().Interface("error", err).Msg("Recovered from panic")
+					informerLogger.Interface("error", err).Error("Recovered from panic")
 				}
 			}()
 			if h.AddFunc != nil {
@@ -57,7 +61,7 @@ func NewResourceWatcher(log zerolog.Logger, getter cache.Getter, resource, names
 		UpdateFunc: func(oldObj, newObj interface{}) {
 			defer func() {
 				if err := recover(); err != nil {
-					log.Error().Interface("error", err).Msg("Recovered from panic")
+					informerLogger.Interface("error", err).Error("Recovered from panic")
 				}
 			}()
 			if h.UpdateFunc != nil {
@@ -67,7 +71,7 @@ func NewResourceWatcher(log zerolog.Logger, getter cache.Getter, resource, names
 		DeleteFunc: func(obj interface{}) {
 			defer func() {
 				if err := recover(); err != nil {
-					log.Error().Interface("error", err).Msg("Recovered from panic")
+					informerLogger.Interface("error", err).Error("Recovered from panic")
 				}
 			}()
 			if h.DeleteFunc != nil {

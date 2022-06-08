@@ -63,26 +63,26 @@ func cmdLifecycleWaitCheck(cmd *cobra.Command, _ []string) {
 
 	deploymentName, err := cmd.Flags().GetString(ArgDeploymentName)
 	if err != nil {
-		cliLog.Fatal().Err(err).Msg(fmt.Sprintf("error parsing argument: %s", ArgDeploymentName))
+		logger.Err(err).Fatal("error parsing argument: %s", ArgDeploymentName)
 	}
 	watchTimeout, err := cmd.Flags().GetDuration(ArgDeploymentWatchTimeout)
 	if err != nil {
-		cliLog.Fatal().Err(err).Msg(fmt.Sprintf("error parsing argument: %s", ArgDeploymentWatchTimeout))
+		logger.Err(err).Fatal("error parsing argument: %s", ArgDeploymentWatchTimeout)
 	}
 
 	for {
 		d, err := getDeployment(ctx, os.Getenv(constants.EnvOperatorPodNamespace), deploymentName)
 		if err != nil {
-			cliLog.Fatal().Err(err).Msg(fmt.Sprintf("error getting ArangoDeployment: %s", d.Name))
+			logger.Err(err).Fatal(fmt.Sprintf("error getting ArangoDeployment: %s", d.Name))
 		}
 
 		isUpToDate, err := d.IsUpToDate()
 		if err != nil {
-			cliLog.Err(err).Msg(fmt.Sprintf("error checking Status for ArangoDeployment: %s", d.Name))
+			logger.Err(err).Error(fmt.Sprintf("error checking Status for ArangoDeployment: %s", d.Name))
 		}
 
 		if isUpToDate {
-			cliLog.Info().Msg(fmt.Sprintf("ArangoDeployment: %s is %s", d.Name, v1.ConditionTypeUpToDate))
+			logger.Info(fmt.Sprintf("ArangoDeployment: %s is %s", d.Name, v1.ConditionTypeUpToDate))
 			return
 		}
 
@@ -90,10 +90,10 @@ func cmdLifecycleWaitCheck(cmd *cobra.Command, _ []string) {
 		case <-ctx.Done():
 			return
 		case <-time.After(WatchCheckInterval):
-			cliLog.Info().Msg(fmt.Sprintf("ArangoDeployment: %s is not ready yet. Waiting...", d.Name))
+			logger.Info("ArangoDeployment: %s is not ready yet. Waiting...", d.Name)
 			continue
 		case <-time.After(watchTimeout):
-			cliLog.Error().Msg(fmt.Sprintf("ArangoDeployment: %s is not %s yet - operation timed out!", d.Name, v1.ConditionTypeUpToDate))
+			logger.Error("ArangoDeployment: %s is not %s yet - operation timed out!", d.Name, v1.ConditionTypeUpToDate)
 			return
 		}
 	}

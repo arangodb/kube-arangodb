@@ -29,7 +29,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/rs/zerolog"
 )
 
 var (
@@ -38,8 +37,7 @@ var (
 	}
 )
 
-func cleanupConditions(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+func (r *Reconciler) cleanupConditions(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	planCtx PlanBuilderContext) api.Plan {
 	var p api.Plan
@@ -53,8 +51,7 @@ func cleanupConditions(ctx context.Context,
 	return p
 }
 
-func createMaintenanceManagementPlan(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+func (r *Reconciler) createMaintenanceManagementPlan(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	planCtx PlanBuilderContext) api.Plan {
 	if spec.Mode.Get() == api.DeploymentModeSingle {
@@ -68,12 +65,12 @@ func createMaintenanceManagementPlan(ctx context.Context,
 
 	agencyState, agencyOK := planCtx.GetAgencyCache()
 	if !agencyOK {
-		log.Error().Msgf("Unable to get agency mode")
+		r.log.Error("Unable to get agency mode")
 		return nil
 	}
 
 	if agencyState.Target.HotBackup.Create.Exists() {
-		log.Info().Msgf("HotBackup in progress")
+		r.log.Info("HotBackup in progress")
 		return nil
 	}
 
@@ -82,7 +79,7 @@ func createMaintenanceManagementPlan(ctx context.Context,
 
 	if (cok && c.IsTrue()) != enabled {
 		// Condition not yet propagated
-		log.Info().Msgf("Condition not yet propagated")
+		r.log.Info("Condition not yet propagated")
 		return nil
 	}
 
@@ -96,12 +93,12 @@ func createMaintenanceManagementPlan(ctx context.Context,
 	}
 
 	if !enabled && spec.Database.GetMaintenance() {
-		log.Info().Msgf("Enabling maintenance mode")
+		r.log.Info("Enabling maintenance mode")
 		return api.Plan{actions.NewClusterAction(api.ActionTypeEnableMaintenance)}
 	}
 
 	if enabled && !spec.Database.GetMaintenance() {
-		log.Info().Msgf("Disabling maintenance mode")
+		r.log.Info("Disabling maintenance mode")
 		return api.Plan{actions.NewClusterAction(api.ActionTypeDisableMaintenance)}
 	}
 

@@ -18,32 +18,12 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package profiler
+package job
 
 import (
-	"time"
-
-	"github.com/rs/zerolog"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 )
 
-// Session is a single timed action
-type Session time.Time
-
-// Start a profiling session
-func Start() Session {
-	return Session(time.Now())
-}
-
-// Done with a profiling session, log when time is "long"
-func (t Session) Done(log zerolog.Logger, msg string) {
-	t.LogIf(log, time.Second/4, msg)
-}
-
-// LogIf logs the time taken since the start of the session, if that is longer
-// than the given minimum duration.
-func (t Session) LogIf(log zerolog.Logger, minLen time.Duration, msg string) {
-	interval := time.Since(time.Time(t))
-	if interval > minLen {
-		log.Debug().Str("time-taken", interval.String()).Msg("profiler: " + msg)
-	}
-}
+var (
+	logger = logging.Global().RegisterAndGetLogger("operator-arangojob-handler", logging.Info)
+)

@@ -24,7 +24,7 @@ import (
 	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/rs/zerolog"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 )
 
 func newPlanAppender(pb WithPlanBuilder, backoff api.BackOff, current api.Plan) PlanAppender {
@@ -35,7 +35,7 @@ func newPlanAppender(pb WithPlanBuilder, backoff api.BackOff, current api.Plan) 
 	}
 }
 
-func recoverPlanAppender(log zerolog.Logger, p PlanAppender) PlanAppender {
+func recoverPlanAppender(log logging.Logger, p PlanAppender) PlanAppender {
 	return planAppenderRecovery{
 		appender: p,
 		log:      log,
@@ -60,8 +60,8 @@ type PlanAppender interface {
 }
 
 type planAppenderRecovery struct {
+	log      logging.Logger
 	appender PlanAppender
-	log      zerolog.Logger
 }
 
 func (p planAppenderRecovery) BackOff() api.BackOff {
@@ -84,7 +84,7 @@ func (p planAppenderRecovery) create(ret func(in PlanAppender) PlanAppender) (r 
 	defer func() {
 		if e := recover(); e != nil {
 			r = p
-			p.log.Error().Interface("panic", e).Msgf("Recovering from panic")
+			p.log.Interface("panic", e).Error("Recovering from panic")
 		}
 	}()
 

@@ -23,7 +23,6 @@ package reconcile
 import (
 	"context"
 
-	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -33,10 +32,10 @@ func init() {
 	registerAction(api.ActionTypeSetMemberConditionV2, setMemberConditionV2, defaultTimeout)
 }
 
-func setMemberConditionV2(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func setMemberConditionV2(action api.Action, actionCtx ActionContext) Action {
 	a := &actionSetMemberConditionV2{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -52,13 +51,13 @@ type actionSetMemberConditionV2 struct {
 func (a actionSetMemberConditionV2) Start(ctx context.Context) (bool, error) {
 	at, ok := a.action.Params[setConditionActionV2KeyType]
 	if !ok {
-		a.log.Info().Msgf("key %s is missing in action definition", setConditionActionV2KeyType)
+		a.log.Info("key %s is missing in action definition", setConditionActionV2KeyType)
 		return true, nil
 	}
 
 	aa, ok := a.action.Params[setConditionActionV2KeyAction]
 	if !ok {
-		a.log.Info().Msgf("key %s is missing in action definition", setConditionActionV2KeyAction)
+		a.log.Info("key %s is missing in action definition", setConditionActionV2KeyAction)
 		return true, nil
 	}
 
@@ -80,14 +79,14 @@ func (a actionSetMemberConditionV2) Start(ctx context.Context) (bool, error) {
 					}
 				}
 
-				a.log.Info().Msg("can not set the condition because the member is gone already")
+				a.log.Info("can not set the condition because the member is gone already")
 				return nil
 			}, a.action.Group)
 
 			// If not found then false is returned.
 			return changed, nil
 		}); err != nil {
-			a.log.Warn().Err(err).Msgf("unable to update status")
+			a.log.Err(err).Warn("unable to update status")
 			return true, nil
 		}
 	case setConditionActionV2KeyTypeRemove:
@@ -102,18 +101,18 @@ func (a actionSetMemberConditionV2) Start(ctx context.Context) (bool, error) {
 					}
 				}
 
-				a.log.Info().Msg("can not remove the condition because the member is gone already")
+				a.log.Info("can not remove the condition because the member is gone already")
 				return nil
 			}, a.action.Group)
 
 			// If not found then false is returned.
 			return changed, nil
 		}); err != nil {
-			a.log.Warn().Err(err).Msgf("unable to update status")
+			a.log.Err(err).Warn("unable to update status")
 			return true, nil
 		}
 	default:
-		a.log.Info().Msgf("unknown type %s", at)
+		a.log.Info("unknown type %s", at)
 		return true, nil
 	}
 	return true, nil

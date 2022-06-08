@@ -28,7 +28,6 @@ import (
 	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/rs/zerolog"
 )
 
 func init() {
@@ -37,10 +36,10 @@ func init() {
 
 // newShutdownMemberAction creates a new Action that implements the given
 // planned ShutdownMember action.
-func newShutdownMemberAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newShutdownMemberAction(action api.Action, actionCtx ActionContext) Action {
 	a := &actionShutdownMember{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -55,7 +54,7 @@ type actionShutdownMember struct {
 // Returns true if the action is completely finished, false in case
 // the start time needs to be recorded and a ready condition needs to be checked.
 func (a *actionShutdownMember) Start(ctx context.Context) (bool, error) {
-	shutdown, m, ok := getShutdownHelper(&a.action, a.actionCtx, a.log)
+	shutdown, m, ok := getShutdownHelper(a.actionImpl)
 	if !ok {
 		return true, nil
 	}
@@ -77,7 +76,7 @@ func (a *actionShutdownMember) Start(ctx context.Context) (bool, error) {
 // CheckProgress checks the progress of the action.
 // Returns: ready, abort, error.
 func (a *actionShutdownMember) CheckProgress(ctx context.Context) (bool, bool, error) {
-	shutdown, _, ok := getShutdownHelper(&a.action, a.actionCtx, a.log)
+	shutdown, _, ok := getShutdownHelper(a.actionImpl)
 	if !ok {
 		return true, false, nil
 	}

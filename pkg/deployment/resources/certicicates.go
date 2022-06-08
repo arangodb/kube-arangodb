@@ -31,7 +31,6 @@ import (
 	"github.com/arangodb-helper/go-certificates"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 
-	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
 )
 
@@ -83,7 +82,8 @@ func (c Certificates) AsCertPool() *x509.CertPool {
 	return cp
 }
 
-func GetCertsFromData(log zerolog.Logger, caPem []byte) Certificates {
+func (r *Resources) GetCertsFromData(caPem []byte) Certificates {
+	log := r.log.Str("section", "tls")
 	certs := make([]*x509.Certificate, 0, 2)
 
 	for {
@@ -97,7 +97,7 @@ func GetCertsFromData(log zerolog.Logger, caPem []byte) Certificates {
 		cert, err := x509.ParseCertificate(pem.Bytes)
 		if err != nil {
 			// This error should be ignored
-			log.Error().Err(err).Msg("Unable to parse certificate")
+			log.Err(err).Error("Unable to parse certificate")
 			continue
 		}
 
@@ -107,25 +107,25 @@ func GetCertsFromData(log zerolog.Logger, caPem []byte) Certificates {
 	return certs
 }
 
-func GetCertsFromSecret(log zerolog.Logger, secret *core.Secret) Certificates {
+func (r *Resources) GetCertsFromSecret(secret *core.Secret) Certificates {
 	caPem, exists := secret.Data[core.ServiceAccountRootCAKey]
 	if !exists {
 		return nil
 	}
 
-	return GetCertsFromData(log, caPem)
+	return r.GetCertsFromData(caPem)
 }
 
-func GetKeyCertFromCache(log zerolog.Logger, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, certName, keyName string) (Certificates, interface{}, error) {
+func (r *Resources) GetKeyCertFromCache(cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, certName, keyName string) (Certificates, interface{}, error) {
 	caSecret, exists := cachedStatus.Secret().V1().GetSimple(spec.TLS.GetCASecretName())
 	if !exists {
 		return nil, nil, errors.Newf("CA Secret does not exists")
 	}
 
-	return GetKeyCertFromSecret(log, caSecret, keyName, certName)
+	return GetKeyCertFromSecret(caSecret, keyName, certName)
 }
 
-func GetKeyCertFromSecret(log zerolog.Logger, secret *core.Secret, certName, keyName string) (Certificates, interface{}, error) {
+func GetKeyCertFromSecret(secret *core.Secret, certName, keyName string) (Certificates, interface{}, error) {
 	ca, exists := secret.Data[certName]
 	if !exists {
 		return nil, nil, errors.Newf("Key %s missing in secret", certName)

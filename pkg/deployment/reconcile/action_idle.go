@@ -24,7 +24,6 @@ import (
 	"context"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/rs/zerolog"
 )
 
 func init() {
@@ -33,10 +32,10 @@ func init() {
 
 // newIdleAction creates a new Action that implements the given
 // planned Idle action.
-func newIdleAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newIdleAction(action api.Action, actionCtx ActionContext) Action {
 	a := &actionIdle{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
