@@ -33,6 +33,8 @@ const (
 	ArangoExporterInternalEndpointV2    = "/_admin/metrics/v2"
 	ArangoExporterDefaultEndpoint       = "/metrics"
 
+	ArangoSyncStatusEndpoint = "/_api/version"
+
 	// K8s constants
 	ClusterIPNone       = "None"
 	TopologyKeyHostname = "kubernetes.io/hostname"
