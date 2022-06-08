@@ -30,21 +30,20 @@ import (
 	"reflect"
 	"time"
 
-	memberTls "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-
 	"github.com/arangodb/go-driver"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
+	memberTls "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
+
 	"github.com/rs/zerolog"
 )
 
@@ -296,30 +295,29 @@ func createKeyfileRenewalPlanSynced(ctx context.Context,
 	}
 
 	var plan api.Plan
+	group := api.ServerGroupSyncMasters
 
-	status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
-		if group == api.ServerGroupSyncMasters {
-			for _, member := range members {
-				if !plan.IsEmpty() {
-					return nil
-				}
+	for _, statusMember := range status.Members.AsListInGroup(group) {
+		member := statusMember.Member
 
-				cache, ok := planCtx.ACS().ClusterCache(member.ClusterID)
-				if !ok {
-					continue
-				}
-
-				lCtx, c := context.WithTimeout(ctx, 500*time.Millisecond)
-				defer c()
-
-				if renew, _ := keyfileRenewalRequired(lCtx, log, apiObject, spec.Sync.TLS, spec, cache, planCtx, group, member, api.TLSRotateModeRecreate); renew {
-					log.Info().Msg("Renewal of keyfile required - Recreate (sync master)")
-					plan = append(plan, tlsRotateConditionAction(group, member.ID, "Restart sync master after keyfile removal"))
-				}
-			}
+		if !plan.IsEmpty() {
+			return nil
 		}
-		return nil
-	})
+
+		cache, ok := planCtx.ACS().ClusterCache(member.ClusterID)
+		if !ok {
+			continue
+		}
+
+		lCtx, c := context.WithTimeout(ctx, 500*time.Millisecond)
+		defer c()
+
+		if renew, _ := keyfileRenewalRequired(lCtx, log, apiObject, spec.Sync.TLS, spec, cache, planCtx, group, member, api.TLSRotateModeRecreate); renew {
+			log.Info().Msg("Renewal of keyfile required - Recreate (sync master)")
+			plan = append(plan, tlsRotateConditionAction(group, member.ID, "Restart sync master after keyfile removal"))
+		}
+	}
+
 	return plan
 }
 
