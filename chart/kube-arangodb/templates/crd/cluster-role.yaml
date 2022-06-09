@@ -21,6 +21,7 @@ rules:
         - "arangoclustersynchronizations.database.arangodb.com"
         - "arangomembers.database.arangodb.com"
         - "arangotasks.database.arangodb.com"
+        - "arangobackups.backup.arangodb.com"
 
 {{- end }}
 {{- end }}

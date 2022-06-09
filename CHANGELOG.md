@@ -5,6 +5,7 @@
 - (Bugfix) Fix labels propagation
 - (Feature) Add `ArangoDeployment` CRD auto-installer
 - (Feature) Add `ArangoMember` CRD auto-installer
+- (Feature) Add `ArangoBackup` CRD auto-installer
 
 ## [1.2.13](https://github.com/arangodb/kube-arangodb/tree/1.2.13) (2022-06-07)
 - (Bugfix) Fix arangosync members state inspection
