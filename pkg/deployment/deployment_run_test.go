@@ -67,7 +67,7 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 
 		errs := 0
 		for {
-			require.NoError(t, d.currentState.Refresh(context.Background()))
+			require.NoError(t, d.acs.CurrentClusterCache().Refresh(context.Background()))
 			err := d.resources.EnsureSecrets(context.Background(), log.Logger, d.GetCachedStatus())
 			if err == nil {
 				break
@@ -172,7 +172,7 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 					return err
 				}
 
-				require.NoError(t, d.currentState.Refresh(context.Background()))
+				require.NoError(t, d.acs.CurrentClusterCache().Refresh(context.Background()))
 
 				groupSpec := d.apiObject.Spec.GetServerGroupSpec(group)
 
@@ -217,7 +217,7 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 		}
 
 		// Act
-		require.NoError(t, d.currentState.Refresh(context.Background()))
+		require.NoError(t, d.acs.CurrentClusterCache().Refresh(context.Background()))
 		err = d.resources.EnsurePods(context.Background(), d.GetCachedStatus())
 
 		// Assert

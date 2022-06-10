@@ -70,7 +70,7 @@ func (r *Resources) InspectPVCs(ctx context.Context, cachedStatus inspectorInter
 				// Strange, pvc belongs to us, but we have no member for it.
 				// Remove all finalizers, so it can be removed.
 				log.Warn().Msg("PVC belongs to this deployment, but we don't know the member. Removing all finalizers")
-				_, err := k8sutil.RemovePVCFinalizers(ctx, r.context.GetCachedStatus(), log, r.context.PersistentVolumeClaimsModInterface(), pvc, pvc.GetFinalizers(), false)
+				_, err := k8sutil.RemovePVCFinalizers(ctx, r.context.ACS().CurrentClusterCache(), log, cachedStatus.PersistentVolumeClaimsModInterface().V1(), pvc, pvc.GetFinalizers(), false)
 				if err != nil {
 					log.Debug().Err(err).Msg("Failed to update PVC (to remove all finalizers)")
 					return errors.WithStack(err)
@@ -89,7 +89,7 @@ func (r *Resources) InspectPVCs(ctx context.Context, cachedStatus inspectorInter
 			}
 
 			err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-				_, err := r.context.PersistentVolumeClaimsModInterface().Patch(ctxChild, pvc.GetName(), types.JSONPatchType, d, meta.PatchOptions{})
+				_, err := cachedStatus.PersistentVolumeClaimsModInterface().V1().Patch(ctxChild, pvc.GetName(), types.JSONPatchType, d, meta.PatchOptions{})
 				return err
 			})
 

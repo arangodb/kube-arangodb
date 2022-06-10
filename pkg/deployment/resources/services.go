@@ -36,12 +36,13 @@ import (
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/rs/zerolog"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	servicev1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service/v1"
-	"github.com/rs/zerolog"
 )
 
 var (
@@ -49,8 +50,73 @@ var (
 	inspectServicesDurationGauges = metrics.MustRegisterGaugeVec(metricsComponent, "inspect_services_duration", "Amount of time taken by a single inspection of all Services for a deployment (in sec)", metrics.DeploymentName)
 )
 
+// createService returns service's object.
+func (r *Resources) createService(name, namespace string, owner meta.OwnerReference, targetPort int32,
+	selector map[string]string) *core.Service {
+
+	return &core.Service{
+		ObjectMeta: meta.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+			OwnerReferences: []meta.OwnerReference{
+				owner,
+			},
+		},
+		Spec: core.ServiceSpec{
+			Type: core.ServiceTypeClusterIP,
+			Ports: []core.ServicePort{
+				{
+					Name:       "server",
+					Protocol:   "TCP",
+					Port:       shared.ArangoPort,
+					TargetPort: intstr.IntOrString{IntVal: targetPort},
+				},
+			},
+			PublishNotReadyAddresses: true,
+			Selector:                 selector,
+		},
+	}
+}
+
+// adjustService checks whether service contains is valid and if not than it reconciles service.
+// Returns true if service is adjusted.
+func (r *Resources) adjustService(ctx context.Context, s *core.Service, targetPort int32, selector map[string]string) (error, bool) {
+	services := r.context.ACS().CurrentClusterCache().ServicesModInterface().V1()
+	spec := s.Spec.DeepCopy()
+
+	spec.Type = core.ServiceTypeClusterIP
+	spec.Ports = []core.ServicePort{
+		{
+			Name:       "server",
+			Protocol:   "TCP",
+			Port:       shared.ArangoPort,
+			TargetPort: intstr.IntOrString{IntVal: targetPort},
+		},
+	}
+	spec.PublishNotReadyAddresses = true
+	spec.Selector = selector
+	if equality.Semantic.DeepDerivative(*spec, s.Spec) {
+		// The service has not changed, so nothing should be changed.
+		return nil, false
+	}
+
+	s.Spec = *spec
+	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		_, err := services.Update(ctxChild, s, meta.UpdateOptions{})
+		return err
+	})
+	if err != nil {
+		return err, false
+	}
+
+	// The service has been changed.
+	return nil, true
+
+}
+
 // EnsureServices creates all services needed to service the deployment
 func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
+
 	log := r.log
 	start := time.Now()
 	apiObject := r.context.GetAPIObject()
@@ -62,7 +128,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 	counterMetric := inspectedServicesCounters.WithLabelValues(deploymentName)
 
 	// Fetch existing services
-	svcs := r.context.ServicesModInterface()
+	svcs := cachedStatus.ServicesModInterface().V1()
 
 	reconcileRequired := k8sutil.NewReconcile(cachedStatus)
 
@@ -85,29 +151,9 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 				return errors.Newf("Member %s not found", memberName)
 			}
 
+			selector := k8sutil.LabelsForMember(deploymentName, group.AsRole(), m.ID)
 			if s, ok := cachedStatus.Service().V1().GetSimple(member.GetName()); !ok {
-				s = &core.Service{
-					ObjectMeta: meta.ObjectMeta{
-						Name:      member.GetName(),
-						Namespace: member.GetNamespace(),
-						OwnerReferences: []meta.OwnerReference{
-							member.AsOwner(),
-						},
-					},
-					Spec: core.ServiceSpec{
-						Type: core.ServiceTypeClusterIP,
-						Ports: []core.ServicePort{
-							{
-								Name:       "server",
-								Protocol:   "TCP",
-								Port:       shared.ArangoPort,
-								TargetPort: intstr.IntOrString{IntVal: targetPort},
-							},
-						},
-						PublishNotReadyAddresses: true,
-						Selector:                 k8sutil.LabelsForMember(deploymentName, group.AsRole(), m.ID),
-					},
-				}
+				s := r.createService(member.GetName(), member.GetNamespace(), member.AsOwner(), targetPort, selector)
 
 				err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 					_, err := svcs.Create(ctxChild, s, meta.CreateOptions{})
@@ -122,33 +168,13 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 				reconcileRequired.Required()
 				continue
 			} else {
-				spec := s.Spec.DeepCopy()
-
-				spec.Type = core.ServiceTypeClusterIP
-				spec.Ports = []core.ServicePort{
-					{
-						Name:       "server",
-						Protocol:   "TCP",
-						Port:       shared.ArangoPort,
-						TargetPort: intstr.IntOrString{IntVal: targetPort},
-					},
-				}
-				spec.PublishNotReadyAddresses = true
-				spec.Selector = k8sutil.LabelsForMember(deploymentName, group.AsRole(), m.ID)
-
-				if !equality.Semantic.DeepDerivative(*spec, s.Spec) {
-					s.Spec = *spec
-
-					err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-						_, err := svcs.Update(ctxChild, s, meta.UpdateOptions{})
-						return err
-					})
-					if err != nil {
-						return err
+				if err, adjusted := r.adjustService(ctx, s, targetPort, selector); err == nil {
+					if adjusted {
+						reconcileRequired.Required()
 					}
-
-					reconcileRequired.Required()
-					continue
+					// Continue the loop.
+				} else {
+					return err
 				}
 			}
 		}

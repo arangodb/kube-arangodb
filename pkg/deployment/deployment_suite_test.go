@@ -480,20 +480,21 @@ func createTestDeployment(t *testing.T, config Config, arangoDeployment *api.Ara
 		Client:        kclient.NewStaticClient(kubernetesClientSet, kubernetesExtClientSet, arangoClientSet, monitoringClientSet),
 	}
 
+	i := inspector.NewInspector(throttle.NewAlwaysThrottleComponents(), deps.Client, arangoDeployment.GetNamespace(), arangoDeployment.GetName())
+
 	d := &Deployment{
-		apiObject:    arangoDeployment,
-		name:         arangoDeployment.GetName(),
-		namespace:    arangoDeployment.GetNamespace(),
-		config:       config,
-		deps:         deps,
-		eventCh:      make(chan *deploymentEvent, deploymentEventQueueSize),
-		stopCh:       make(chan struct{}),
-		currentState: inspector.NewInspector(throttle.NewAlwaysThrottleComponents(), deps.Client, arangoDeployment.GetNamespace(), arangoDeployment.GetName()),
+		apiObject: arangoDeployment,
+		name:      arangoDeployment.GetName(),
+		namespace: arangoDeployment.GetNamespace(),
+		config:    config,
+		deps:      deps,
+		eventCh:   make(chan *deploymentEvent, deploymentEventQueueSize),
+		stopCh:    make(chan struct{}),
 	}
 	d.clientCache = client.NewClientCache(d, conn.NewFactory(d.getAuth, d.getConnConfig))
-	d.acs = acs.NewACS("", d.currentState)
+	d.acs = acs.NewACS("", i)
 
-	require.NoError(t, d.currentState.Refresh(context.Background()))
+	require.NoError(t, d.acs.CurrentClusterCache().Refresh(context.Background()))
 
 	arangoDeployment.Spec.SetDefaults(arangoDeployment.GetName())
 	d.resources = resources.NewResources(deps.Log, d)

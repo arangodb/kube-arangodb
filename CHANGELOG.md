@@ -1,6 +1,16 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Feature) Add ArangoSync TLS based rotation
+- (Bugfix) Fix labels propagation
+- (Feature) Add `ArangoDeployment` CRD auto-installer
+- (Feature) Add `ArangoMember` CRD auto-installer
+- (Feature) Add `ArangoBackup` CRD auto-installer
+- (Feature) Add `ArangoBackupPolicy` CRD auto-installer
+- (Feature) Add `ArangoJob` CRD auto-installer
+- (Feature) Add RestartPolicyAlways to ArangoDeployment in order to restart ArangoDB on failure
+
+## [1.2.13](https://github.com/arangodb/kube-arangodb/tree/1.2.13) (2022-06-07)
 - (Bugfix) Fix arangosync members state inspection
 - (Feature) (ACS) Improve Reconciliation Loop
 - (Bugfix) Allow missing Monitoring CRD
@@ -10,7 +20,9 @@
 - (Feature) Add operator shutdown handler for graceful termination
 - (Feature) Add agency leader discovery
 - (Feature) Add `ACSDeploymentSynced` condition type and fix comparison of `SecretHashes` method
-- (Feature) Add RestartPolicyAlways to ArangoDeployment in order to restart ArangoDB on failure
+- (Feature) Add agency leader service
+- (Feature) Add HostPath and PVC Volume types and allow templating
+- (Feature) Replace mod
 
 ## [1.2.12](https://github.com/arangodb/kube-arangodb/tree/1.2.12) (2022-05-10)
 - (Feature) Add CoreV1 Endpoints Inspector

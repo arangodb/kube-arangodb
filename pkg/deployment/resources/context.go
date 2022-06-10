@@ -40,8 +40,6 @@ type Context interface {
 	reconciler.DeploymentAgencyMaintenance
 	reconciler.ArangoMemberContext
 	reconciler.DeploymentImageManager
-	reconciler.DeploymentModInterfaces
-	reconciler.DeploymentCachedStatus
 	reconciler.ArangoAgency
 	reconciler.ArangoApplier
 	reconciler.DeploymentInfoGetter

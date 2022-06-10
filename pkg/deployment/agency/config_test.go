@@ -67,7 +67,7 @@ func Test_Config_Unmarshal(t *testing.T) {
   "version": "3.10.0-devel"
 }`
 
-	var cfg agencyConfig
+	var cfg Config
 
 	require.NoError(t, json.Unmarshal([]byte(data), &cfg))
 

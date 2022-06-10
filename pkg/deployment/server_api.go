@@ -190,7 +190,7 @@ func (d *Deployment) StorageClasses() []string {
 // Empty string means that the database is not reachable outside the Kubernetes cluster.
 func (d *Deployment) DatabaseURL() string {
 	eaSvcName := k8sutil.CreateDatabaseExternalAccessServiceName(d.Name())
-	svc, err := d.currentState.Service().V1().Read().Get(context.Background(), eaSvcName, metav1.GetOptions{})
+	svc, err := d.acs.CurrentClusterCache().Service().V1().Read().Get(context.Background(), eaSvcName, metav1.GetOptions{})
 	if err != nil {
 		return ""
 	}
@@ -199,7 +199,7 @@ func (d *Deployment) DatabaseURL() string {
 		scheme = "http"
 	}
 	nodeFetcher := func() ([]*core.Node, error) {
-		if n, err := d.currentState.Node().V1(); err != nil {
+		if n, err := d.acs.CurrentClusterCache().Node().V1(); err != nil {
 			return nil, nil
 		} else {
 			return n.ListSimple(), nil

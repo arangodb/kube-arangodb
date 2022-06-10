@@ -27,14 +27,13 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	servicev1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service/v1"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
+	servicev1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service/v1"
 )
 
 // CreateHeadlessServiceName returns the name of the headless service for the given
@@ -65,6 +64,11 @@ func CreateSyncMasterClientServiceName(deploymentName string) string {
 // deployment name.
 func CreateExporterClientServiceName(deploymentName string) string {
 	return deploymentName + "-exporter"
+}
+
+// CreateAgentLeaderServiceName returns the name of the service used to access a leader agent.
+func CreateAgentLeaderServiceName(deploymentName string) string {
+	return deploymentName + "-agent"
 }
 
 // CreateExporterService

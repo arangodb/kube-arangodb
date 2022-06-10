@@ -72,14 +72,14 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 	deploymentName := d.GetName()
 	defer metrics.SetDuration(inspectDeploymentDurationGauges.WithLabelValues(deploymentName), start)
 
-	err := d.currentState.Refresh(ctxReconciliation)
+	err := d.acs.CurrentClusterCache().Refresh(ctxReconciliation)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to get resources")
 		return minInspectionInterval // Retry ASAP
 	}
 
 	// Check deployment still exists
-	updated, err := d.currentState.GetCurrentArangoDeployment()
+	updated, err := d.acs.CurrentClusterCache().GetCurrentArangoDeployment()
 	if k8sutil.IsNotFound(err) {
 		// Deployment is gone
 		log.Info().Msg("Deployment is gone")
@@ -186,6 +186,10 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 		return minInspectionInterval, errors.Wrapf(err, "Pod cleanup failed")
 	} else {
 		nextInterval = nextInterval.ReduceTo(x)
+	}
+
+	if err := d.resources.EnsureLeader(ctx, d.GetCachedStatus()); err != nil {
+		return minInspectionInterval, errors.Wrapf(err, "Creating agency pod leader failed")
 	}
 
 	if err := d.resources.EnsureArangoMembers(ctx, d.GetCachedStatus()); err != nil {

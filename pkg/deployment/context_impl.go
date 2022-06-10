@@ -624,37 +624,37 @@ func (d *Deployment) WithStatusUpdate(ctx context.Context, action reconciler.Dep
 }
 
 func (d *Deployment) SecretsModInterface() secretv1.ModInterface {
-	d.currentState.GetThrottles().Secret().Invalidate()
+	d.acs.CurrentClusterCache().GetThrottles().Secret().Invalidate()
 	return kclient.NewModInterface(d.deps.Client, d.namespace).Secrets()
 }
 
 func (d *Deployment) PodsModInterface() podv1.ModInterface {
-	d.currentState.GetThrottles().Pod().Invalidate()
+	d.acs.CurrentClusterCache().GetThrottles().Pod().Invalidate()
 	return kclient.NewModInterface(d.deps.Client, d.namespace).Pods()
 }
 
 func (d *Deployment) ServiceAccountsModInterface() serviceaccountv1.ModInterface {
-	d.currentState.GetThrottles().ServiceAccount().Invalidate()
+	d.acs.CurrentClusterCache().GetThrottles().ServiceAccount().Invalidate()
 	return kclient.NewModInterface(d.deps.Client, d.namespace).ServiceAccounts()
 }
 
 func (d *Deployment) ServicesModInterface() servicev1.ModInterface {
-	d.currentState.GetThrottles().Service().Invalidate()
+	d.acs.CurrentClusterCache().GetThrottles().Service().Invalidate()
 	return kclient.NewModInterface(d.deps.Client, d.namespace).Services()
 }
 
 func (d *Deployment) PersistentVolumeClaimsModInterface() persistentvolumeclaimv1.ModInterface {
-	d.currentState.GetThrottles().PersistentVolumeClaim().Invalidate()
+	d.acs.CurrentClusterCache().GetThrottles().PersistentVolumeClaim().Invalidate()
 	return kclient.NewModInterface(d.deps.Client, d.namespace).PersistentVolumeClaims()
 }
 
 func (d *Deployment) PodDisruptionBudgetsModInterface() poddisruptionbudgetv1beta1.ModInterface {
-	d.currentState.GetThrottles().PodDisruptionBudget().Invalidate()
+	d.acs.CurrentClusterCache().GetThrottles().PodDisruptionBudget().Invalidate()
 	return kclient.NewModInterface(d.deps.Client, d.namespace).PodDisruptionBudgets()
 }
 
 func (d *Deployment) ServiceMonitorsModInterface() servicemonitorv1.ModInterface {
-	d.currentState.GetThrottles().ServiceMonitor().Invalidate()
+	d.acs.CurrentClusterCache().GetThrottles().ServiceMonitor().Invalidate()
 	return kclient.NewModInterface(d.deps.Client, d.namespace).ServiceMonitors()
 }
 
@@ -679,7 +679,7 @@ func (d *Deployment) GetOwnedPods(ctx context.Context) ([]core.Pod, error) {
 }
 
 func (d *Deployment) GetCachedStatus() inspectorInterface.Inspector {
-	return d.currentState
+	return d.acs.CurrentClusterCache()
 }
 
 func (d *Deployment) ApplyPatchOnPod(ctx context.Context, pod *core.Pod, p ...patch.Item) error {

@@ -117,7 +117,7 @@ func (r *Resources) runPodFinalizers(ctx context.Context, p *v1.Pod, memberStatu
 	}
 	// Remove finalizers (if needed)
 	if len(removalList) > 0 {
-		if _, err := k8sutil.RemovePodFinalizers(ctx, r.context.GetCachedStatus(), log, r.context.PodsModInterface(), p, removalList, false); err != nil {
+		if _, err := k8sutil.RemovePodFinalizers(ctx, r.context.ACS().CurrentClusterCache(), log, r.context.ACS().CurrentClusterCache().PodsModInterface().V1(), p, removalList, false); err != nil {
 			log.Debug().Err(err).Msg("Failed to update pod (to remove finalizers)")
 			return 0, errors.WithStack(err)
 		}
@@ -147,7 +147,7 @@ func (r *Resources) inspectFinalizerPodAgencyServing(ctx context.Context, log ze
 	// of the agent, also remove the PVC
 	if memberStatus.Conditions.IsTrue(api.ConditionTypeAgentRecoveryNeeded) {
 		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-			return r.context.PersistentVolumeClaimsModInterface().Delete(ctxChild, memberStatus.PersistentVolumeClaimName, meta.DeleteOptions{})
+			return r.context.ACS().CurrentClusterCache().PersistentVolumeClaimsModInterface().V1().Delete(ctxChild, memberStatus.PersistentVolumeClaimName, meta.DeleteOptions{})
 		})
 		if err != nil && !k8sutil.IsNotFound(err) {
 			log.Warn().Err(err).Msg("Failed to delete PVC for member")
@@ -176,7 +176,7 @@ func (r *Resources) inspectFinalizerPodDrainDBServer(ctx context.Context, log ze
 	// If this DBServer is cleaned out, we need to remove the PVC.
 	if memberStatus.Conditions.IsTrue(api.ConditionTypeCleanedOut) || memberStatus.Phase == api.MemberPhaseDrain {
 		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-			return r.context.PersistentVolumeClaimsModInterface().Delete(ctxChild, memberStatus.PersistentVolumeClaimName, meta.DeleteOptions{})
+			return r.context.ACS().CurrentClusterCache().PersistentVolumeClaimsModInterface().V1().Delete(ctxChild, memberStatus.PersistentVolumeClaimName, meta.DeleteOptions{})
 		})
 		if err != nil && !k8sutil.IsNotFound(err) {
 			log.Warn().Err(err).Msg("Failed to delete PVC for member")

@@ -140,14 +140,14 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 	// Check if pod exists
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
-	pod, err := ib.Context.GetCachedStatus().Pod().V1().Read().Get(ctxChild, podName, metav1.GetOptions{})
+	pod, err := ib.Context.ACS().CurrentClusterCache().Pod().V1().Read().Get(ctxChild, podName, metav1.GetOptions{})
 	if err == nil {
 		// Pod found
 		if k8sutil.IsPodFailed(pod, utils.StringList{shared.ServerContainerName}) {
 			// Wait some time before deleting the pod
 			if time.Now().After(pod.GetCreationTimestamp().Add(30 * time.Second)) {
 				err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-					return ib.Context.PodsModInterface().Delete(ctxChild, podName, metav1.DeleteOptions{})
+					return ib.Context.ACS().CurrentClusterCache().PodsModInterface().V1().Delete(ctxChild, podName, metav1.DeleteOptions{})
 				})
 				if err != nil && !k8sutil.IsNotFound(err) {
 					log.Warn().Err(err).Msg("Failed to delete Image ID Pod")
@@ -189,7 +189,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 
 		// We have all the info we need now, kill the pod and store the image info.
 		err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-			return ib.Context.PodsModInterface().Delete(ctxChild, podName, metav1.DeleteOptions{})
+			return ib.Context.ACS().CurrentClusterCache().PodsModInterface().V1().Delete(ctxChild, podName, metav1.DeleteOptions{})
 		})
 		if err != nil && !k8sutil.IsNotFound(err) {
 			log.Warn().Err(err).Msg("Failed to delete Image ID Pod")
@@ -236,7 +236,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 	}
 
 	err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-		_, _, err := resources.CreateArangoPod(ctxChild, ib.Context.PodsModInterface(), ib.APIObject, ib.Spec, api.ServerGroupImageDiscovery, pod)
+		_, _, err := resources.CreateArangoPod(ctxChild, ib.Context.ACS().CurrentClusterCache().PodsModInterface().V1(), ib.APIObject, ib.Spec, api.ServerGroupImageDiscovery, pod)
 		return err
 	})
 	if err != nil {

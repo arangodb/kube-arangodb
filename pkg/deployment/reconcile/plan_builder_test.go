@@ -84,6 +84,11 @@ type testContext struct {
 	Inspector inspectorInterface.Inspector
 }
 
+func (c *testContext) GetAgencyHealth() (agencyCache.Health, bool) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (c *testContext) RenderPodForMember(ctx context.Context, acs sutil.ACS, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error) {
 	//TODO implement me
 	panic("implement me")

@@ -325,7 +325,7 @@ func TestEnsureImages(t *testing.T) {
 			_, err := d.deps.Client.Arango().DatabaseV1().ArangoDeployments(testNamespace).Create(context.Background(), d.apiObject, metav1.CreateOptions{})
 			require.NoError(t, err)
 
-			require.NoError(t, d.currentState.Refresh(context.Background()))
+			require.NoError(t, d.acs.CurrentClusterCache().Refresh(context.Background()))
 
 			// Act
 			retrySoon, _, err := d.ensureImages(context.Background(), d.apiObject, d.GetCachedStatus())

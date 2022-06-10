@@ -106,7 +106,7 @@ func newPDB(minAvail int, deplname string, group api.ServerGroup, owner meta.Own
 
 // ensurePDBForGroup ensure pdb for a specific server group, if wantMinAvail is zero, the PDB is removed and not recreated
 func (r *Resources) ensurePDBForGroup(ctx context.Context, group api.ServerGroup, wantedMinAvail int) error {
-	i, err := r.context.GetCachedStatus().PodDisruptionBudget().V1Beta1()
+	i, err := r.context.ACS().CurrentClusterCache().PodDisruptionBudget().V1Beta1()
 	if err != nil {
 		return err
 	}
@@ -128,7 +128,7 @@ func (r *Resources) ensurePDBForGroup(ctx context.Context, group api.ServerGroup
 				pdb := newPDB(wantedMinAvail, deplname, group, r.context.GetAPIObject().AsOwner())
 				log.Debug().Msg("Creating new PDB")
 				err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-					_, err := r.context.PodDisruptionBudgetsModInterface().Create(ctxChild, pdb, meta.CreateOptions{})
+					_, err := r.context.ACS().CurrentClusterCache().PodDisruptionBudgetsModInterface().V1Beta1().Create(ctxChild, pdb, meta.CreateOptions{})
 					return err
 				})
 				if err != nil {
@@ -153,7 +153,7 @@ func (r *Resources) ensurePDBForGroup(ctx context.Context, group api.ServerGroup
 			if pdb.GetDeletionTimestamp() == nil {
 				// Update the PDB
 				err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-					return r.context.PodDisruptionBudgetsModInterface().Delete(ctxChild, pdbname, meta.DeleteOptions{})
+					return r.context.ACS().CurrentClusterCache().PodDisruptionBudgetsModInterface().V1Beta1().Delete(ctxChild, pdbname, meta.DeleteOptions{})
 				})
 				if err != nil && !k8sutil.IsNotFound(err) {
 					log.Error().Err(err).Msg("PDB deletion failed")

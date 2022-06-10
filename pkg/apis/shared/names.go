@@ -31,8 +31,8 @@ var (
 	arangodPrefixes = []string{"CRDN-", "PRMR-", "AGNT-", "SNGL-"}
 )
 
-// stripArangodPrefix removes well know arangod ID prefixes from the given id.
-func stripArangodPrefix(id string) string {
+// StripArangodPrefix removes well know arangod ID prefixes from the given id.
+func StripArangodPrefix(id string) string {
 	for _, prefix := range arangodPrefixes {
 		if strings.HasPrefix(id, prefix) {
 			return id[len(prefix):]
@@ -75,11 +75,19 @@ func FixupResourceName(name string) string {
 // CreatePodHostName returns the hostname of the pod for a member with
 // a given id in a deployment with a given name.
 func CreatePodHostName(deploymentName, role, id string) string {
-	return deploymentName + "-" + role + "-" + stripArangodPrefix(id)
+	return deploymentName + "-" + role + "-" + StripArangodPrefix(id)
 }
 
 // CreatePersistentVolumeClaimName returns the name of the persistent volume claim for a member with
 // a given id in a deployment with a given name.
 func CreatePersistentVolumeClaimName(deploymentName, role, id string) string {
-	return deploymentName + "-" + role + "-" + stripArangodPrefix(id)
+	return deploymentName + "-" + role + "-" + StripArangodPrefix(id)
+}
+
+func RenderResourceName(in string, keys map[string]string) string {
+	for k, v := range keys {
+		in = strings.ReplaceAll(in, fmt.Sprintf("${%s}", k), v)
+	}
+
+	return in
 }

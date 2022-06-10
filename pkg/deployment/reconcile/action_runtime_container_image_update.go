@@ -194,7 +194,7 @@ func (a actionRuntimeContainerImageUpdate) Start(ctx context.Context) (bool, err
 			// Update pod image
 			pod.Spec.Containers[id].Image = image
 
-			if _, err := a.actionCtx.PodsModInterface().Update(ctx, pod, v1.UpdateOptions{}); err != nil {
+			if _, err := a.actionCtx.ACS().CurrentClusterCache().PodsModInterface().V1().Update(ctx, pod, v1.UpdateOptions{}); err != nil {
 				return true, err
 			}
 
