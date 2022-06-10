@@ -23,22 +23,20 @@ package resources
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-
+	core "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"strings"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
 )
 
@@ -48,10 +46,35 @@ var (
 )
 
 const (
-	podScheduleTimeout              = time.Minute                // How long we allow the schedule to take scheduling a pod.
+	podScheduleTimeout       = time.Minute       // How long we allow the schedule to take scheduling a pod.
+	terminationRestartPeriod = time.Second * -30 // If previous pod termination happened less than this time ago,
+	// we will mark the pod as scheduled for termination
 	recheckSoonPodInspectorInterval = util.Interval(time.Second) // Time between Pod inspection if we think something will change soon
 	maxPodInspectorInterval         = util.Interval(time.Hour)   // Maximum time between Pod inspection (if nothing else happens)
 )
+
+func (r *Resources) handleRestartedPod(pod *core.Pod, memberStatus *api.MemberStatus, wasTerminated, markAsTerminated *bool) {
+	containerStatus, exist := k8sutil.GetContainerStatusByName(pod, api.ServerGroupReservedContainerNameServer)
+	if exist && containerStatus.State.Terminated != nil {
+		// do not record termination time again in the code below
+		*wasTerminated = true
+
+		termination := containerStatus.State.Terminated.FinishedAt
+		if memberStatus.RecentTerminationsSince(termination.Time) == 0 {
+			memberStatus.RecentTerminations = append(memberStatus.RecentTerminations, termination)
+		}
+
+		previousTermination := containerStatus.LastTerminationState.Terminated
+		allowedRestartPeriod := time.Now().Add(terminationRestartPeriod)
+		if previousTermination != nil && !previousTermination.FinishedAt.Time.Before(allowedRestartPeriod) {
+			r.log.Debug().Str("pod-name", pod.GetName()).Msg("pod is continuously restarting - we will terminate it")
+			*markAsTerminated = true
+		} else {
+			*markAsTerminated = false
+			r.log.Debug().Str("pod-name", pod.GetName()).Msg("pod is restarting - we are not marking it as terminated yet..")
+		}
+	}
+}
 
 // InspectPods lists all pods that belong to the given deployment and updates
 // the member status of the deployment accordingly.
@@ -102,10 +125,17 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 		if k8sutil.IsPodSucceeded(pod, coreContainers) {
 			// Pod has terminated with exit code 0.
 			wasTerminated := memberStatus.Conditions.IsTrue(api.ConditionTypeTerminated)
-			if memberStatus.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Succeeded", "") {
+			markAsTerminated := true
+
+			if pod.Spec.RestartPolicy == core.RestartPolicyAlways && !wasTerminated {
+				r.handleRestartedPod(pod, &memberStatus, &wasTerminated, &markAsTerminated)
+			}
+
+			if markAsTerminated && memberStatus.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Succeeded", "") {
 				log.Debug().Str("pod-name", pod.GetName()).Msg("Updating member condition Terminated to true: Pod Succeeded")
 				updateMemberStatusNeeded = true
 				nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
+
 				if !wasTerminated {
 					// Record termination time
 					now := meta.Now()
@@ -115,7 +145,13 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 		} else if k8sutil.IsPodFailed(pod, coreContainers) {
 			// Pod has terminated with at least 1 container with a non-zero exit code.
 			wasTerminated := memberStatus.Conditions.IsTrue(api.ConditionTypeTerminated)
-			if memberStatus.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Failed", "") {
+			markAsTerminated := true
+
+			if pod.Spec.RestartPolicy == core.RestartPolicyAlways && !wasTerminated {
+				r.handleRestartedPod(pod, &memberStatus, &wasTerminated, &markAsTerminated)
+			}
+
+			if markAsTerminated && memberStatus.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Failed", "") {
 				if containers := k8sutil.GetFailedContainerNames(pod.Status.InitContainerStatuses); len(containers) > 0 {
 					for _, container := range containers {
 						switch container {
@@ -171,6 +207,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 				log.Debug().Str("pod-name", pod.GetName()).Msg("Updating member condition Terminated to true: Pod Failed")
 				updateMemberStatusNeeded = true
 				nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
+
 				if !wasTerminated {
 					// Record termination time
 					now := meta.Now()
