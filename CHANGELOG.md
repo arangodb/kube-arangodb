@@ -9,6 +9,7 @@
 - (Feature) Add `ArangoBackupPolicy` CRD auto-installer
 - (Feature) Add `ArangoJob` CRD auto-installer
 - (Feature) Add RestartPolicyAlways to ArangoDeployment in order to restart ArangoDB on failure
+- (Feature) Set a leader in active fail-over mode
 
 ## [1.2.13](https://github.com/arangodb/kube-arangodb/tree/1.2.13) (2022-06-07)
 - (Bugfix) Fix arangosync members state inspection

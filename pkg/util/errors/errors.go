@@ -37,11 +37,12 @@ import (
 )
 
 var (
-	Cause     = errs.Cause
-	New       = errs.New
-	WithStack = errs.WithStack
-	Wrap      = errs.Wrap
-	Wrapf     = errs.Wrapf
+	Cause        = errs.Cause
+	New          = errs.New
+	WithStack    = errs.WithStack
+	Wrap         = errs.Wrap
+	Wrapf        = errs.Wrapf
+	WithMessagef = errs.WithMessagef
 )
 
 func Newf(format string, args ...interface{}) error {
