@@ -25,14 +25,16 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 
+	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	core "k8s.io/api/core/v1"
+	policyv1 "k8s.io/api/policy/v1"
+	policyv1beta1 "k8s.io/api/policy/v1beta1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	core "k8s.io/api/core/v1"
-	policy "k8s.io/api/policy/v1beta1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 func (r *Resources) EnsureLabels(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
@@ -240,25 +242,47 @@ func (r *Resources) EnsurePersistentVolumeClaimsLabels(ctx context.Context, cach
 
 func (r *Resources) EnsurePodDisruptionBudgetsLabels(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
 	changed := false
-	i, err := cachedStatus.PodDisruptionBudget().V1Beta1()
-	if err != nil {
-		return err
-	}
-	if err := i.Iterate(func(budget *policy.PodDisruptionBudget) error {
-		if ensureLabelsMap(budget.Kind, budget, r.context.GetSpec(), func(name string, d []byte) error {
-			return globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-				_, err := cachedStatus.PodDisruptionBudgetsModInterface().V1Beta1().Patch(ctxChild, name, types.JSONPatchType, d, meta.PatchOptions{})
-				return err
-			})
-		}) {
-			changed = true
-		}
 
-		return nil
-	}, func(budget *policy.PodDisruptionBudget) bool {
-		return r.isChildResource(budget)
-	}); err != nil {
-		return err
+	if inspector, err := cachedStatus.PodDisruptionBudget().V1(); err == nil {
+		if err := inspector.Iterate(func(budget *policyv1.PodDisruptionBudget) error {
+			if ensureLabelsMap(budget.Kind, budget, r.context.GetSpec(), func(name string, d []byte) error {
+				return globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
+					_, err := cachedStatus.PodDisruptionBudgetsModInterface().V1().Patch(ctxChild, name,
+						types.JSONPatchType, d, meta.PatchOptions{})
+					return err
+				})
+			}) {
+				changed = true
+			}
+
+			return nil
+		}, func(budget *policyv1.PodDisruptionBudget) bool {
+			return r.isChildResource(budget)
+		}); err != nil {
+			return err
+		}
+	} else {
+		inspector, err := cachedStatus.PodDisruptionBudget().V1Beta1()
+		if err != nil {
+			return err
+		}
+		if err := inspector.Iterate(func(budget *policyv1beta1.PodDisruptionBudget) error {
+			if ensureLabelsMap(budget.Kind, budget, r.context.GetSpec(), func(name string, d []byte) error {
+				return globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
+					_, err := cachedStatus.PodDisruptionBudgetsModInterface().V1Beta1().Patch(ctxChild, name,
+						types.JSONPatchType, d, meta.PatchOptions{})
+					return err
+				})
+			}) {
+				changed = true
+			}
+
+			return nil
+		}, func(budget *policyv1beta1.PodDisruptionBudget) bool {
+			return r.isChildResource(budget)
+		}); err != nil {
+			return err
+		}
 	}
 
 	if changed {

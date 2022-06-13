@@ -129,7 +129,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 				nextInterval = inspectNextInterval
 				hasError = true
 
-				d.CreateEvent(k8sutil.NewErrorEvent("Reconcilation failed", err, d.apiObject))
+				d.CreateEvent(k8sutil.NewErrorEvent("Reconciliation failed", err, d.apiObject))
 			} else {
 				nextInterval = minInspectionInterval
 			}
@@ -189,7 +189,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	}
 
 	if err := d.resources.EnsureLeader(ctx, d.GetCachedStatus()); err != nil {
-		return minInspectionInterval, errors.Wrapf(err, "Creating agency pod leader failed")
+		return minInspectionInterval, errors.Wrapf(err, "Creating leaders failed")
 	}
 
 	if err := d.resources.EnsureArangoMembers(ctx, d.GetCachedStatus()); err != nil {

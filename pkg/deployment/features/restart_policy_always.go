@@ -18,21 +18,20 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1beta1
+package features
 
-import (
-	policyv1beta1 "k8s.io/api/policy/v1beta1"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/gvk"
-)
-
-type Inspector interface {
-	gvk.GVK
-
-	GetSimple(name string) (*policyv1beta1.PodDisruptionBudget, bool)
-	Iterate(action Action, filters ...Filter) error
-	Read() ReadInterface
+func init() {
+	registerFeature(restartPolicyAlways)
 }
 
-type Filter func(podDisruptionBudget *policyv1beta1.PodDisruptionBudget) bool
-type Action func(podDisruptionBudget *policyv1beta1.PodDisruptionBudget) error
+var restartPolicyAlways = &feature{
+	name:               "restart-policy-always",
+	description:        "Allow to restart containers with always restart policy",
+	version:            "3.6.0",
+	enterpriseRequired: false,
+	enabledByDefault:   false,
+}
+
+func RestartPolicyAlways() Feature {
+	return restartPolicyAlways
+}

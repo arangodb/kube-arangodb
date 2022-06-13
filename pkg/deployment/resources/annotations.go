@@ -23,21 +23,21 @@ package resources
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
-	"github.com/arangodb/kube-arangodb/pkg/util/collection"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/rs/zerolog/log"
+	core "k8s.io/api/core/v1"
+	policyv1 "k8s.io/api/policy/v1"
+	policyv1beta1 "k8s.io/api/policy/v1beta1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
+	"github.com/arangodb/kube-arangodb/pkg/util/collection"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/rs/zerolog/log"
-	core "k8s.io/api/core/v1"
-	policy "k8s.io/api/policy/v1beta1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 )
 
 type PatchFunc func(name string, d []byte) error
@@ -98,8 +98,15 @@ func (r *Resources) EnsureAnnotations(ctx context.Context, cachedStatus inspecto
 
 	patchPDB := func(name string, d []byte) error {
 		return globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			if _, err := cachedStatus.PodDisruptionBudget().V1(); err == nil {
+				_, err = cachedStatus.PodDisruptionBudgetsModInterface().V1().Patch(ctxChild, name,
+					types.JSONPatchType, d, meta.PatchOptions{})
+				return err
+			}
+
 			_, err := cachedStatus.PodDisruptionBudgetsModInterface().V1Beta1().Patch(ctxChild, name,
 				types.JSONPatchType, d, meta.PatchOptions{})
+
 			return err
 		})
 	}
@@ -206,15 +213,29 @@ func ensureServicesAnnotations(patch PatchFunc, cachedStatus inspectorInterface.
 	return nil
 }
 
-func ensurePdbsAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
-	i, err := cachedStatus.PodDisruptionBudget().V1Beta1()
+func ensurePdbsAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Inspector, kind, name, namespace string,
+	spec api.DeploymentSpec) error {
+	if inspector, err := cachedStatus.PodDisruptionBudget().V1(); err == nil {
+		if err := inspector.Iterate(func(podDisruptionBudget *policyv1.PodDisruptionBudget) error {
+			ensureAnnotationsMap(podDisruptionBudget.Kind, podDisruptionBudget, spec, patch)
+			return nil
+		}, func(podDisruptionBudget *policyv1.PodDisruptionBudget) bool {
+			return k8sutil.IsChildResource(kind, name, namespace, podDisruptionBudget)
+		}); err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	inspector, err := cachedStatus.PodDisruptionBudget().V1Beta1()
 	if err != nil {
 		return err
 	}
-	if err := i.Iterate(func(podDisruptionBudget *policy.PodDisruptionBudget) error {
+	if err := inspector.Iterate(func(podDisruptionBudget *policyv1beta1.PodDisruptionBudget) error {
 		ensureAnnotationsMap(podDisruptionBudget.Kind, podDisruptionBudget, spec, patch)
 		return nil
-	}, func(podDisruptionBudget *policy.PodDisruptionBudget) bool {
+	}, func(podDisruptionBudget *policyv1beta1.PodDisruptionBudget) bool {
 		return k8sutil.IsChildResource(kind, name, namespace, podDisruptionBudget)
 	}); err != nil {
 		return err
@@ -314,7 +335,7 @@ func ensureGroupLabelsMap(kind string, obj meta.Object, spec api.DeploymentSpec,
 func ensureLabelsMap(kind string, obj meta.Object, spec api.DeploymentSpec,
 	patchCmd func(name string, d []byte) error) bool {
 	expected := spec.Labels
-	ignored := spec.AnnotationsIgnoreList
+	ignored := spec.LabelsIgnoreList
 
 	mode := spec.LabelsMode.Get(getDefaultMode(expected))
 

@@ -18,20 +18,21 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1beta1
+package v1
 
 import (
+	policyv1 "k8s.io/api/policy/v1"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/gvk"
-	policy "k8s.io/api/policy/v1"
 )
 
 type Inspector interface {
 	gvk.GVK
 
-	GetSimple(name string) (*policy.PodDisruptionBudget, bool)
+	GetSimple(name string) (*policyv1.PodDisruptionBudget, bool)
 	Iterate(action Action, filters ...Filter) error
 	Read() ReadInterface
 }
 
-type Filter func(podDisruptionBudget *policy.PodDisruptionBudget) bool
-type Action func(podDisruptionBudget *policy.PodDisruptionBudget) error
+type Filter func(podDisruptionBudget *policyv1.PodDisruptionBudget) bool
+type Action func(podDisruptionBudget *policyv1.PodDisruptionBudget) error

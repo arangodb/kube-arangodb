@@ -25,6 +25,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 
 	"k8s.io/apimachinery/pkg/api/equality"
@@ -200,12 +201,17 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 	}
 
 	// Internal database client service
-	single := spec.GetMode().HasSingleServers()
+	var single, withLeader bool
+	if single = spec.GetMode().HasSingleServers(); single {
+		if spec.GetMode() == api.DeploymentModeActiveFailover && features.FailoverLeadership().Enabled() {
+			withLeader = true
+		}
+	}
 	counterMetric.Inc()
 	if _, exists := cachedStatus.Service().V1().GetSimple(k8sutil.CreateDatabaseClientServiceName(deploymentName)); !exists {
 		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
-		svcName, newlyCreated, err := k8sutil.CreateDatabaseClientService(ctxChild, svcs, apiObject, single, owner)
+		svcName, newlyCreated, err := k8sutil.CreateDatabaseClientService(ctxChild, svcs, apiObject, single, withLeader, owner)
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to create database client service")
 			return errors.WithStack(err)
@@ -230,7 +236,8 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 	if single {
 		role = "single"
 	}
-	if err := r.ensureExternalAccessServices(ctx, cachedStatus, svcs, eaServiceName, role, "database", shared.ArangoPort, false, spec.ExternalAccess, apiObject, log); err != nil {
+	if err := r.ensureExternalAccessServices(ctx, cachedStatus, svcs, eaServiceName, role, "database",
+		shared.ArangoPort, false, withLeader, spec.ExternalAccess, apiObject, log); err != nil {
 		return errors.WithStack(err)
 	}
 
@@ -239,7 +246,8 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 		counterMetric.Inc()
 		eaServiceName := k8sutil.CreateSyncMasterClientServiceName(deploymentName)
 		role := "syncmaster"
-		if err := r.ensureExternalAccessServices(ctx, cachedStatus, svcs, eaServiceName, role, "sync", shared.ArangoSyncMasterPort, true, spec.Sync.ExternalAccess.ExternalAccessSpec, apiObject, log); err != nil {
+		if err := r.ensureExternalAccessServices(ctx, cachedStatus, svcs, eaServiceName, role, "sync",
+			shared.ArangoSyncMasterPort, true, false, spec.Sync.ExternalAccess.ExternalAccessSpec, apiObject, log); err != nil {
 			return errors.WithStack(err)
 		}
 		status, lastVersion := r.context.GetStatus()
@@ -273,7 +281,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 
 // EnsureServices creates all services needed to service the deployment
 func (r *Resources) ensureExternalAccessServices(ctx context.Context, cachedStatus inspectorInterface.Inspector,
-	svcs servicev1.ModInterface, eaServiceName, svcRole, title string, port int, noneIsClusterIP bool,
+	svcs servicev1.ModInterface, eaServiceName, svcRole, title string, port int, noneIsClusterIP bool, withLeader bool,
 	spec api.ExternalAccessSpec, apiObject k8sutil.APIObject, log zerolog.Logger) error {
 	// Database external access service
 	createExternalAccessService := false
@@ -363,7 +371,8 @@ func (r *Resources) ensureExternalAccessServices(ctx context.Context, cachedStat
 		loadBalancerSourceRanges := spec.LoadBalancerSourceRanges
 		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
-		_, newlyCreated, err := k8sutil.CreateExternalAccessService(ctxChild, svcs, eaServiceName, svcRole, apiObject, eaServiceType, port, nodePort, loadBalancerIP, loadBalancerSourceRanges, apiObject.AsOwner())
+		_, newlyCreated, err := k8sutil.CreateExternalAccessService(ctxChild, svcs, eaServiceName, svcRole, apiObject,
+			eaServiceType, port, nodePort, loadBalancerIP, loadBalancerSourceRanges, apiObject.AsOwner(), withLeader)
 		if err != nil {
 			log.Debug().Err(err).Msgf("Failed to create %s external access service", title)
 			return errors.WithStack(err)

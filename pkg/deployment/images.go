@@ -279,6 +279,10 @@ func (i *ImageUpdatePod) GetContainerCreator() interfaces.ContainerCreator {
 	return i.containerCreator
 }
 
+func (i *ImageUpdatePod) GetRestartPolicy() core.RestartPolicy {
+	return core.RestartPolicyNever
+}
+
 func (i *ImageUpdatePod) GetAffinityRole() string {
 	return ""
 }
