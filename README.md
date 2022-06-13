@@ -97,6 +97,8 @@ Feature-wise production readiness table:
 | Operator Internal Metrics Exporter      | 1.2.0            | >= 3.7.0         | Community, Enterprise | Production   | True    | --deployment.feature.metrics-exporter      | N/A                                                                      |
 | Operator Internal Metrics Exporter      | 1.2.3            | >= 3.7.0         | Community, Enterprise | Production   | True    | --deployment.feature.metrics-exporter      | It is always enabled                                                     |
 | Operator Ephemeral Volumes              | 1.2.2            | >= 3.7.0         | Community, Enterprise | Alpha        | False   | --deployment.feature.ephemeral-volumes     | N/A                                                                      |
+| Pod RestartPolicyAlways                 | 1.2.13           | >= 3.7.0         | Community, Enterprise | Alpha        | False   | --deployment.feature.restart-policy-always | N/A                                                                      |
+| Active fail-over leadership             | 1.2.13           | >= 3.7.0         | Community, Enterprise | Production   | False   | --deployment.feature.failover-leadership   |                                                                          |
 
 ## Release notes for 0.3.16
 

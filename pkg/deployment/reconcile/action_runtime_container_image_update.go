@@ -22,14 +22,16 @@ package reconcile
 
 import (
 	"context"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/rs/zerolog"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+
+	"github.com/rs/zerolog"
+	core "k8s.io/api/core/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func init() {
@@ -257,9 +259,21 @@ func (a actionRuntimeContainerImageUpdate) CheckProgress(ctx context.Context) (b
 			return false, false, nil
 		}
 
-		// Pod wont get up and running
+		// Pod won't get up and running
 		return true, false, errors.Newf("Container %s failed during image replacement: (%d) %s: %s", name, s.ExitCode, s.Reason, s.Message)
 	} else if s := cstatus.State.Waiting; s != nil {
+		if pod.Spec.RestartPolicy == core.RestartPolicyAlways {
+			lastTermination := cstatus.LastTerminationState.Terminated
+			if lastTermination != nil {
+				allowedRestartPeriod := time.Now().Add(time.Second * -20)
+				if lastTermination.FinishedAt.Time.Before(allowedRestartPeriod) {
+					return true, false, errors.Newf("Container %s continuously failing during image replacement: (%d) %s: %s", name, lastTermination.ExitCode, lastTermination.Reason, lastTermination.Message)
+				} else {
+					a.log.Debug().Str("pod-name", pod.GetName()).Msg("pod is restarting - we are not marking it as terminated yet..")
+				}
+			}
+		}
+
 		// Pod is still pulling image or pending for pod start
 		return false, false, nil
 	} else if s := cstatus.State.Running; s != nil {

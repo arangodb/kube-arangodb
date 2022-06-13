@@ -526,7 +526,7 @@ func NewPod(deploymentName, role, id, podName string, podCreator interfaces.PodC
 		Spec: core.PodSpec{
 			Hostname:           hostname,
 			Subdomain:          CreateHeadlessServiceName(deploymentName),
-			RestartPolicy:      core.RestartPolicyNever,
+			RestartPolicy:      podCreator.GetRestartPolicy(),
 			Tolerations:        podCreator.GetTolerations(),
 			ServiceAccountName: podCreator.GetServiceAccountName(),
 			NodeSelector:       podCreator.GetNodeSelector(),
