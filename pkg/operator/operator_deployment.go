@@ -49,7 +49,7 @@ func (o *Operator) runDeployments(stop <-chan struct{}) {
 		o.log,
 		o.Client.Arango().DatabaseV1().RESTClient(),
 		deploymentType.ArangoDeploymentResourcePlural,
-		o.Config.Namespace,
+		o.Config.WatchNamespace,
 		&api.ArangoDeployment{},
 		cache.ResourceEventHandlerFuncs{
 			AddFunc:    o.onAddArangoDeployment,

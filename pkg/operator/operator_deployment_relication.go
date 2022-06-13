@@ -49,7 +49,7 @@ func (o *Operator) runDeploymentReplications(stop <-chan struct{}) {
 		o.log,
 		o.Dependencies.Client.Arango().ReplicationV1().RESTClient(),
 		replication2.ArangoDeploymentReplicationResourcePlural,
-		o.Config.Namespace,
+		o.Config.WatchNamespace,
 		&api.ArangoDeploymentReplication{},
 		cache.ResourceEventHandlerFuncs{
 			AddFunc:    o.onAddArangoDeploymentReplication,
@@ -201,7 +201,7 @@ func (o *Operator) handleDeploymentReplicationEvent(event *Event) error {
 // makeDeploymentReplicationConfigAndDeps creates a Config & Dependencies object for a new DeploymentReplication.
 func (o *Operator) makeDeploymentReplicationConfigAndDeps(apiObject *api.ArangoDeploymentReplication) (replication.Config, replication.Dependencies) {
 	cfg := replication.Config{
-		Namespace: o.Config.Namespace,
+		Namespace: o.Config.WatchNamespace,
 	}
 	deps := replication.Dependencies{
 		Log: o.Dependencies.LogService.MustGetLogger(logging.LoggerNameDeploymentReplication).With().
