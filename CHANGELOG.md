@@ -12,6 +12,7 @@
 - (Feature) Set a leader in active fail-over mode
 - (Feature) Use policy/v1 instead policy/v1beta1
 - (Feature) OPS CLI with Arango Task
+- (Bugfix) Allow ArangoBackup Creation during Upload state
 
 ## [1.2.13](https://github.com/arangodb/kube-arangodb/tree/1.2.13) (2022-06-07)
 - (Bugfix) Fix arangosync members state inspection

@@ -23,6 +23,7 @@ package backup
 import (
 	"github.com/arangodb/go-driver"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 
 func stateReadyHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.ArangoBackupStatus, error) {
@@ -71,21 +72,33 @@ func stateReadyHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.A
 	if backup.Spec.Upload != nil &&
 		(backup.Status.Backup.Uploaded == nil || (backup.Status.Backup.Uploaded != nil && !*backup.Status.Backup.Uploaded)) {
 		// Ensure that we can start upload process
-		running, err := isBackupRunning(backup, h.client.BackupV1().ArangoBackups(backup.Namespace))
+		states, err := countBackupStates(backup, h.client.BackupV1().ArangoBackups(backup.Namespace))
 		if err != nil {
 			return nil, err
 		}
 
-		if running {
-			return wrapUpdateStatus(backup,
-				updateStatusState(backupApi.ArangoBackupStateReady, "Upload process queued"),
-				updateStatusBackup(backupMeta),
-				updateStatusAvailable(true),
-			)
+		if l := states.get(backupApi.ArangoBackupStateUpload, backupApi.ArangoBackupStateUploading); globals.GetGlobals().Backup().ConcurrentUploads().Get() > len(l) {
+			// Check if there is no upload with same id
+			if len(l.filter(func(b *backupApi.ArangoBackup) bool {
+				if a1 := b.Status.Backup; a1 != nil {
+					if a2 := backup.Status.Backup; a2 != nil {
+						return a1.ID == a2.ID
+					}
+				}
+
+				return false
+			})) == 0 {
+
+				return wrapUpdateStatus(backup,
+					updateStatusState(backupApi.ArangoBackupStateUpload, ""),
+					updateStatusBackup(backupMeta),
+					updateStatusAvailable(true),
+				)
+			}
 		}
 
 		return wrapUpdateStatus(backup,
-			updateStatusState(backupApi.ArangoBackupStateUpload, ""),
+			updateStatusState(backupApi.ArangoBackupStateReady, "Upload process queued"),
 			updateStatusBackup(backupMeta),
 			updateStatusAvailable(true),
 		)
