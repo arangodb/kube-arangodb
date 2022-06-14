@@ -57,14 +57,19 @@ func GetLicenseFromSecret(secret secret.Inspector, name string) (LicenseSecret, 
 	}
 
 	if v1, ok1 := s.Data[constants.SecretKeyV2License]; ok1 {
-		l.V2 = License(v1)
+		// some customers put the raw JSON-encoded value, but operator and DB servers expect the base64-encoded value
+		if isJSONBytes(v1) {
+			l.V2 = License(base64.StdEncoding.EncodeToString(v1))
+		} else {
+			l.V2 = License(v1)
+		}
 	} else if v2, ok2 := s.Data[constants.SecretKeyV2Token]; ok2 {
-		licenseV2 := v2
 		// some customers put the raw JSON-encoded value, but operator and DB servers expect the base64-encoded value
 		if isJSONBytes(v2) {
-			base64.StdEncoding.Encode(v2, licenseV2)
+			l.V2 = License(base64.StdEncoding.EncodeToString(v2))
+		} else {
+			l.V2 = License(v2)
 		}
-		l.V2 = License(licenseV2)
 	}
 
 	return l, true

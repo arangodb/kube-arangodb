@@ -15,6 +15,7 @@
 - (Bugfix) Allow ArangoBackup Creation during Upload state
 - (Hotfix) Fix `ArangoDeployment` SubResource in CRD auto-installer
 - (Bugfix) Fix Operator Logger NPE
+- (Bugfix) Fix License RAW value discovery
 
 ## [1.2.13](https://github.com/arangodb/kube-arangodb/tree/1.2.13) (2022-06-07)
 - (Bugfix) Fix arangosync members state inspection
