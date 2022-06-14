@@ -25,10 +25,9 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/rs/zerolog"
 )
 
-func createResourcesPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIObject,
+func (r *Reconciler) createResourcesPlan(ctx context.Context, apiObject k8sutil.APIObject,
 	currentPlan api.Plan, spec api.DeploymentSpec,
 	status api.DeploymentStatus,
 	builderCtx PlanBuilderContext) (api.Plan, api.BackOff, bool) {
@@ -37,7 +36,7 @@ func createResourcesPlan(ctx context.Context, log zerolog.Logger, apiObject k8su
 		return currentPlan, nil, false
 	}
 
-	r := recoverPlanAppender(log, newPlanAppender(NewWithPlanBuilder(ctx, log, apiObject, spec, status, builderCtx), status.BackOff, currentPlan))
+	q := recoverPlanAppender(r.planLogger, newPlanAppender(NewWithPlanBuilder(ctx, apiObject, spec, status, builderCtx), status.BackOff, currentPlan))
 
-	return r.Plan(), r.BackOff(), true
+	return q.Plan(), q.BackOff(), true
 }

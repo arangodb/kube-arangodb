@@ -25,7 +25,6 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 
-	"github.com/rs/zerolog"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -40,68 +39,64 @@ import (
 // Returns true when member status exists.
 // There are 3 possibilities to shut down the pod: immediately, gracefully, standard kubernetes delete API.
 // When pod does not exist then success action (which always successes) is returned.
-func getShutdownHelper(a *api.Action, actionCtx ActionContext, log zerolog.Logger) (ActionCore, api.MemberStatus, bool) {
-	m, ok := actionCtx.GetMemberStatusByID(a.MemberID)
+func getShutdownHelper(a actionImpl) (ActionCore, api.MemberStatus, bool) {
+	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !ok {
-		log.Warn().Str("pod-name", m.PodName).Msg("member is already gone")
+		a.log.Str("pod-name", m.PodName).Warn("member is already gone")
 
 		return nil, api.MemberStatus{}, false
 	}
 
-	cache, ok := actionCtx.ACS().ClusterCache(m.ClusterID)
+	cache, ok := a.actionCtx.ACS().ClusterCache(m.ClusterID)
 	if !ok {
-		log.Warn().Str("pod-name", m.PodName).Msg("Cluster is not ready")
+		a.log.Str("pod-name", m.PodName).Warn("Cluster is not ready")
 
 		return nil, api.MemberStatus{}, false
 	}
 
-	if ifPodUIDMismatch(m, *a, cache) {
-		log.Error().Msg("Member UID is changed")
+	if ifPodUIDMismatch(m, a.action, cache) {
+		a.log.Error("Member UID is changed")
 		return NewActionSuccess(), m, true
 	}
 
 	pod, ok := cache.Pod().V1().GetSimple(m.PodName)
 	if !ok {
-		log.Warn().Str("pod-name", m.PodName).Msg("pod is already gone")
+		a.log.Str("pod-name", m.PodName).Warn("pod is already gone")
 		// Pod does not exist, so create success action to finish it immediately.
 		return NewActionSuccess(), m, true
 	}
 
 	if _, ok := pod.GetAnnotations()[deployment.ArangoDeploymentPodDeleteNow]; ok {
 		// The pod contains annotation, so pod must be deleted immediately.
-		return shutdownNow{action: a, actionCtx: actionCtx, log: log, memberStatus: m}, m, true
+		return shutdownNow{actionImpl: a, memberStatus: m}, m, true
 	}
 
 	if features.GracefulShutdown().Enabled() {
-		return shutdownHelperAPI{action: a, actionCtx: actionCtx, log: log, memberStatus: m}, m, true
+		return shutdownHelperAPI{actionImpl: a, memberStatus: m}, m, true
 	}
 
-	serverGroup := actionCtx.GetSpec().GetServerGroupSpec(a.Group)
+	serverGroup := a.actionCtx.GetSpec().GetServerGroupSpec(a.action.Group)
 
 	switch serverGroup.ShutdownMethod.Get() {
 	case api.ServerGroupShutdownMethodDelete:
-		return shutdownHelperDelete{action: a, actionCtx: actionCtx, log: log, memberStatus: m}, m, true
+		return shutdownHelperDelete{actionImpl: a, memberStatus: m}, m, true
 	default:
-		return shutdownHelperAPI{action: a, actionCtx: actionCtx, log: log, memberStatus: m}, m, true
+		return shutdownHelperAPI{actionImpl: a, memberStatus: m}, m, true
 	}
 }
 
 type shutdownHelperAPI struct {
-	log          zerolog.Logger
-	action       *api.Action
-	actionCtx    ActionContext
+	actionImpl
 	memberStatus api.MemberStatus
 }
 
 func (s shutdownHelperAPI) Start(ctx context.Context) (bool, error) {
-	log := s.log
-
-	log.Info().Msgf("Using API to shutdown member")
+	s.log.Info("Using API to shutdown member")
 
 	group := s.action.Group
 	podName := s.memberStatus.PodName
 	if podName == "" {
-		log.Warn().Msgf("Pod is empty")
+		s.log.Warn("Pod is empty")
 		return true, nil
 	}
 
@@ -131,11 +126,11 @@ func (s shutdownHelperAPI) Start(ctx context.Context) (bool, error) {
 		defer cancel()
 		c, err := s.actionCtx.GetServerClient(ctxChild, group, s.action.MemberID)
 		if err != nil {
-			log.Debug().Err(err).Msg("Failed to create member client")
+			s.log.Err(err).Debug("Failed to create member client")
 			return false, errors.WithStack(err)
 		}
 		removeFromCluster := false
-		log.Debug().Bool("removeFromCluster", removeFromCluster).Msg("Shutting down member")
+		s.log.Bool("removeFromCluster", removeFromCluster).Debug("Shutting down member")
 		ctxChild, cancel = context.WithTimeout(ctx, shutdownTimeout)
 		defer cancel()
 		if err := c.ShutdownV2(ctxChild, removeFromCluster, true); err != nil {
@@ -144,7 +139,7 @@ func (s shutdownHelperAPI) Start(ctx context.Context) (bool, error) {
 				// We're done
 				return true, nil
 			}
-			log.Debug().Err(err).Msg("Failed to shutdown member")
+			s.log.Err(err).Debug("Failed to shutdown member")
 			return false, errors.WithStack(err)
 		}
 	} else if group.IsArangosync() {
@@ -164,20 +159,16 @@ func (s shutdownHelperAPI) CheckProgress(_ context.Context) (bool, bool, error) 
 }
 
 type shutdownHelperDelete struct {
-	log          zerolog.Logger
-	action       *api.Action
-	actionCtx    ActionContext
+	actionImpl
 	memberStatus api.MemberStatus
 }
 
 func (s shutdownHelperDelete) Start(ctx context.Context) (bool, error) {
-	log := s.log
-
-	log.Info().Msgf("Using Pod Delete to shutdown member")
+	s.log.Info("Using Pod Delete to shutdown member")
 
 	podName := s.memberStatus.PodName
 	if podName == "" {
-		log.Warn().Msgf("Pod is empty")
+		s.log.Warn("Pod is empty")
 		return true, nil
 	}
 
@@ -198,23 +189,22 @@ func (s shutdownHelperDelete) Start(ctx context.Context) (bool, error) {
 
 func (s shutdownHelperDelete) CheckProgress(ctx context.Context) (bool, bool, error) {
 	// Check that pod is removed
-	log := s.log
 	if !s.memberStatus.Conditions.IsTrue(api.ConditionTypeTerminated) {
 		// Pod is not yet terminated
-		log.Warn().Msgf("Pod not yet terminated")
+		s.log.Warn("Pod not yet terminated")
 		return false, false, nil
 	}
 
 	cache, ok := s.actionCtx.ACS().ClusterCache(s.memberStatus.ClusterID)
 	if !ok {
-		log.Warn().Msg("Cluster is not ready")
+		s.log.Warn("Cluster is not ready")
 		return false, false, nil
 	}
 
 	podName := s.memberStatus.PodName
 	if podName != "" {
 		if _, ok := cache.Pod().V1().GetSimple(podName); ok {
-			log.Warn().Msgf("Pod still exists")
+			s.log.Warn("Pod still exists")
 			return false, false, nil
 		}
 	}
@@ -223,17 +213,15 @@ func (s shutdownHelperDelete) CheckProgress(ctx context.Context) (bool, bool, er
 }
 
 type shutdownNow struct {
-	action       *api.Action
-	actionCtx    ActionContext
+	actionImpl
 	memberStatus api.MemberStatus
-	log          zerolog.Logger
 }
 
 // Start starts removing pod forcefully.
 func (s shutdownNow) Start(ctx context.Context) (bool, error) {
 	// Check progress is used here because removing pod can start gracefully,
 	// and then it can be changed to force shutdown.
-	s.log.Info().Msg("Using shutdown now method")
+	s.log.Info("Using shutdown now method")
 	ready, _, err := s.CheckProgress(ctx)
 	return ready, err
 }
@@ -244,18 +232,18 @@ func (s shutdownNow) CheckProgress(ctx context.Context) (bool, bool, error) {
 
 	cache, ok := s.actionCtx.ACS().ClusterCache(s.memberStatus.ClusterID)
 	if !ok {
-		s.log.Warn().Msg("Cluster is not ready")
+		s.log.Warn("Cluster is not ready")
 		return false, false, nil
 	}
 
 	pod, ok := cache.Pod().V1().GetSimple(podName)
 	if !ok {
-		s.log.Info().Msg("Using shutdown now method completed because pod is gone")
+		s.log.Info("Using shutdown now method completed because pod is gone")
 		return true, false, nil
 	}
 
 	if s.memberStatus.PodUID != pod.GetUID() {
-		s.log.Info().Msg("Using shutdown now method completed because it is already rotated")
+		s.log.Info("Using shutdown now method completed because it is already rotated")
 		// The new pod has been started already.
 		return true, false, nil
 	}
@@ -283,6 +271,6 @@ func (s shutdownNow) CheckProgress(ctx context.Context) (bool, bool, error) {
 		}
 	}
 
-	s.log.Info().Msgf("Using shutdown now method completed")
+	s.log.Info("Using shutdown now method completed")
 	return true, false, nil
 }

@@ -26,13 +26,11 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
 )
 
 // createRotateServerStorageResizePlan creates plan to resize storage
-func createRotateServerStorageResizePlan(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+func (r *Reconciler) createRotateServerStorageResizePlan(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext) api.Plan {
 	var plan api.Plan
@@ -62,10 +60,10 @@ func createRotateServerStorageResizePlan(ctx context.Context,
 			// Load PVC
 			pvc, exists := cache.PersistentVolumeClaim().V1().GetSimple(m.PersistentVolumeClaimName)
 			if !exists {
-				log.Warn().
+				r.planLogger.
 					Str("role", group.AsRole()).
 					Str("id", m.ID).
-					Msg("Failed to get PVC")
+					Warn("Failed to get PVC")
 				continue
 			}
 
@@ -79,7 +77,7 @@ func createRotateServerStorageResizePlan(ctx context.Context,
 				if volumeSize, ok := pvc.Spec.Resources.Requests[core.ResourceStorage]; ok {
 					cmp := volumeSize.Cmp(requestedSize)
 					if cmp < 0 {
-						plan = append(plan, pvcResizePlan(log, group, groupSpec, m)...)
+						plan = append(plan, r.pvcResizePlan(group, groupSpec, m)...)
 					}
 				}
 			}
@@ -90,8 +88,7 @@ func createRotateServerStorageResizePlan(ctx context.Context,
 	return plan
 }
 
-func createRotateServerStoragePVCPendingResizeConditionPlan(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+func (r *Reconciler) createRotateServerStoragePVCPendingResizeConditionPlan(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext) api.Plan {
 	var plan api.Plan
@@ -120,7 +117,7 @@ func createRotateServerStoragePVCPendingResizeConditionPlan(ctx context.Context,
 	return plan
 }
 
-func pvcResizePlan(log zerolog.Logger, group api.ServerGroup, groupSpec api.ServerGroupSpec, member api.MemberStatus) api.Plan {
+func (r *Reconciler) pvcResizePlan(group api.ServerGroup, groupSpec api.ServerGroupSpec, member api.MemberStatus) api.Plan {
 	mode := groupSpec.VolumeResizeMode.Get()
 	switch mode {
 	case api.PVCResizeModeRuntime:
@@ -138,8 +135,8 @@ func pvcResizePlan(log zerolog.Logger, group api.ServerGroup, groupSpec api.Serv
 			actions.NewAction(api.ActionTypeWaitForMemberUp, group, member),
 		}
 	default:
-		log.Error().Str("server-group", group.AsRole()).Str("mode", mode.String()).
-			Msg("Requested mode is not supported")
+		r.planLogger.Str("server-group", group.AsRole()).Str("mode", mode.String()).
+			Error("Requested mode is not supported")
 		return nil
 	}
 }

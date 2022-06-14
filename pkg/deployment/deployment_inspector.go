@@ -57,13 +57,12 @@ var (
 // - once in a while
 // Returns the delay until this function should be called again.
 func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval {
-	log := d.deps.Log
 	start := time.Now()
 
 	ctxReconciliation, cancelReconciliation := globals.GetGlobalTimeouts().Reconciliation().WithTimeout(context.Background())
 	defer cancelReconciliation()
 	defer func() {
-		d.deps.Log.Info().Msgf("Inspect loop took %s", time.Since(start))
+		d.log.Info("Inspect loop took %s", time.Since(start))
 	}()
 
 	nextInterval := lastInterval
@@ -74,7 +73,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 
 	err := d.acs.CurrentClusterCache().Refresh(ctxReconciliation)
 	if err != nil {
-		log.Error().Err(err).Msg("Unable to get resources")
+		d.log.Err(err).Error("Unable to get resources")
 		return minInspectionInterval // Retry ASAP
 	}
 
@@ -82,7 +81,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 	updated, err := d.acs.CurrentClusterCache().GetCurrentArangoDeployment()
 	if k8sutil.IsNotFound(err) {
 		// Deployment is gone
-		log.Info().Msg("Deployment is gone")
+		d.log.Info("Deployment is gone")
 		d.Delete()
 		return nextInterval
 	} else if updated != nil && updated.GetDeletionTimestamp() != nil {
@@ -96,20 +95,20 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 		if updated != nil && updated.Annotations != nil {
 			if v, ok := updated.Annotations[deployment.ArangoDeploymentPodMaintenanceAnnotation]; ok && v == "true" {
 				// Disable checks if we will enter maintenance mode
-				log.Info().Str("deployment", deploymentName).Msg("Deployment in maintenance mode")
+				d.log.Str("deployment", deploymentName).Info("Deployment in maintenance mode")
 				return nextInterval
 			}
 		}
 		// Is the deployment in failed state, if so, give up.
 		if d.GetPhase() == api.DeploymentPhaseFailed {
-			log.Debug().Msg("Deployment is in Failed state.")
+			d.log.Debug("Deployment is in Failed state.")
 			return nextInterval
 		}
 
 		d.apiObject = updated
 
 		d.GetMembersState().RefreshState(ctxReconciliation, updated.Status.Members.AsList())
-		d.GetMembersState().Log(d.deps.Log)
+		d.GetMembersState().Log(d.log)
 		if err := d.WithStatusUpdateErr(ctxReconciliation, func(s *api.DeploymentStatus) (bool, error) {
 			if changed, err := upgrade.RunUpgrade(*updated, s, d.GetCachedStatus()); err != nil {
 				return false, err
@@ -153,7 +152,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	t := time.Now()
 
 	defer func() {
-		d.deps.Log.Info().Msgf("Reconciliation loop took %s", time.Since(t))
+		d.log.Info("Reconciliation loop took %s", time.Since(t))
 	}()
 
 	// Ensure that spec and status checksum are same
@@ -178,7 +177,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	}
 
 	if err := d.acs.Inspect(ctx, d.apiObject, d.deps.Client, d.GetCachedStatus()); err != nil {
-		d.deps.Log.Warn().Err(err).Msgf("Unable to handle ACS objects")
+		d.log.Err(err).Warn("Unable to handle ACS objects")
 	}
 
 	// Cleanup terminated pods on the beginning of loop
@@ -200,7 +199,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 		return minInspectionInterval, errors.Wrapf(err, "Service creation failed")
 	}
 
-	if err := d.resources.EnsureSecrets(ctx, d.deps.Log, d.GetCachedStatus()); err != nil {
+	if err := d.resources.EnsureSecrets(ctx, d.GetCachedStatus()); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Secret creation failed")
 	}
 
@@ -258,7 +257,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	inspectDeploymentAgencyFetches.WithLabelValues(d.GetName()).Inc()
 	if offset, err := d.RefreshAgencyCache(ctx); err != nil {
 		inspectDeploymentAgencyErrors.WithLabelValues(d.GetName()).Inc()
-		d.deps.Log.Err(err).Msgf("Unable to refresh agency")
+		d.log.Err(err).Error("Unable to refresh agency")
 	} else {
 		inspectDeploymentAgencyIndex.WithLabelValues(d.GetName()).Set(float64(offset))
 	}
@@ -278,10 +277,10 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 		}, true); err != nil {
 			return minInspectionInterval, errors.Wrapf(err, "Unable clean plan")
 		}
-	} else if err, updated := d.reconciler.CreatePlan(ctx, d.GetCachedStatus()); err != nil {
+	} else if err, updated := d.reconciler.CreatePlan(ctx); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Plan creation failed")
 	} else if updated {
-		d.deps.Log.Info().Msgf("Plan generated, reconciling")
+		d.log.Info("Plan generated, reconciling")
 		return minInspectionInterval, nil
 	}
 
@@ -331,7 +330,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	}
 
 	// Execute current step of scale/update plan
-	retrySoon, err := d.reconciler.ExecutePlan(ctx, d.GetCachedStatus())
+	retrySoon, err := d.reconciler.ExecutePlan(ctx)
 	if err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Plan execution failed")
 	}
@@ -420,14 +419,14 @@ func (d *Deployment) refreshMaintenanceTTL(ctx context.Context) {
 			if err := d.SetAgencyMaintenanceMode(ctx, true); err != nil {
 				return
 			}
-			d.deps.Log.Info().Msgf("Refreshed maintenance lock")
+			d.log.Info("Refreshed maintenance lock")
 		}
 	} else {
 		if condition.LastUpdateTime.Add(d.apiObject.Spec.Timeouts.GetMaintenanceGracePeriod()).Before(time.Now()) {
 			if err := d.SetAgencyMaintenanceMode(ctx, true); err != nil {
 				return
 			}
-			d.deps.Log.Info().Msgf("Refreshed maintenance lock")
+			d.log.Info("Refreshed maintenance lock")
 		}
 	}
 }
@@ -475,7 +474,7 @@ func (d *Deployment) triggerCRDInspection() {
 }
 
 func (d *Deployment) updateConditionWithHash(ctx context.Context, conditionType api.ConditionType, status bool, reason, message, hash string) error {
-	d.deps.Log.Info().Str("condition", string(conditionType)).Bool("status", status).Str("reason", reason).Str("message", message).Str("hash", hash).Msg("Updated condition")
+	d.log.Str("condition", string(conditionType)).Bool("status", status).Str("reason", reason).Str("message", message).Str("hash", hash).Info("Updated condition")
 	if err := d.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
 		return s.Conditions.UpdateWithHash(conditionType, status, reason, message, hash)
 	}); err != nil {

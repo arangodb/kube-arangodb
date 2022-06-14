@@ -47,7 +47,7 @@ const (
 // createAccessPackages creates a arangosync access packages specified
 // in spec.sync.externalAccess.accessPackageSecretNames.
 func (d *Deployment) createAccessPackages(ctx context.Context) error {
-	log := d.deps.Log
+	log := d.sectionLogger("access-package")
 	spec := d.apiObject.Spec
 
 	if !spec.Sync.IsEnabled() {
@@ -78,12 +78,12 @@ func (d *Deployment) createAccessPackages(ctx context.Context) error {
 						})
 					})
 					if err != nil && !k8sutil.IsNotFound(err) {
-						// Not serious enough to stop everything now, just log and create an event
-						log.Warn().Err(err).Msg("Failed to remove obsolete access package secret")
+						// Not serious enough to stop everything now, just sectionLogger and create an event
+						log.Err(err).Warn("Failed to remove obsolete access package secret")
 						d.CreateEvent(k8sutil.NewErrorEvent("Access Package cleanup failed", err, d.apiObject))
 					} else {
 						// Access package removed, notify user
-						log.Info().Str("secret-name", secret.GetName()).Msg("Removed access package Secret")
+						log.Str("secret-name", secret.GetName()).Info("Removed access package Secret")
 						d.CreateEvent(k8sutil.NewAccessPackageDeletedEvent(d.apiObject, secret.GetName()))
 					}
 				}
@@ -97,7 +97,7 @@ func (d *Deployment) createAccessPackages(ctx context.Context) error {
 // ensureAccessPackage creates an arangosync access package with given name
 // it is does not already exist.
 func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName string) error {
-	log := d.deps.Log
+	log := d.sectionLogger("access-package")
 	spec := d.apiObject.Spec
 
 	_, err := d.acs.CurrentClusterCache().Secret().V1().Read().Get(ctx, apSecretName, metav1.GetOptions{})
@@ -105,7 +105,7 @@ func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName strin
 		// Secret already exists
 		return nil
 	} else if !k8sutil.IsNotFound(err) {
-		log.Debug().Err(err).Str("name", apSecretName).Msg("Failed to get arangosync access package secret")
+		log.Err(err).Str("name", apSecretName).Debug("Failed to get arangosync access package secret")
 		return errors.WithStack(err)
 	}
 
@@ -113,7 +113,7 @@ func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName strin
 	clientAuthSecretName := spec.Sync.Authentication.GetClientCASecretName()
 	clientAuthCert, clientAuthKey, _, err := k8sutil.GetCASecret(ctx, d.acs.CurrentClusterCache().Secret().V1().Read(), clientAuthSecretName, nil)
 	if err != nil {
-		log.Debug().Err(err).Msg("Failed to get client-auth CA secret")
+		log.Err(err).Debug("Failed to get client-auth CA secret")
 		return errors.WithStack(err)
 	}
 
@@ -121,14 +121,14 @@ func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName strin
 	tlsCASecretName := spec.Sync.TLS.GetCASecretName()
 	tlsCACert, err := k8sutil.GetCACertficateSecret(ctx, d.acs.CurrentClusterCache().Secret().V1().Read(), tlsCASecretName)
 	if err != nil {
-		log.Debug().Err(err).Msg("Failed to get TLS CA secret")
+		log.Err(err).Debug("Failed to get TLS CA secret")
 		return errors.WithStack(err)
 	}
 
 	// Create keyfile
 	ca, err := certificates.LoadCAFromPEM(clientAuthCert, clientAuthKey)
 	if err != nil {
-		log.Debug().Err(err).Msg("Failed to parse client-auth CA")
+		log.Err(err).Debug("Failed to parse client-auth CA")
 		return errors.WithStack(err)
 	}
 
@@ -140,7 +140,7 @@ func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName strin
 	}
 	cert, key, err := certificates.CreateCertificate(options, &ca)
 	if err != nil {
-		log.Debug().Err(err).Msg("Failed to create client-auth keyfile")
+		log.Err(err).Debug("Failed to create client-auth keyfile")
 		return errors.WithStack(err)
 	}
 	keyfile := strings.TrimSpace(cert) + "\n" + strings.TrimSpace(key)
@@ -182,12 +182,12 @@ func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName strin
 	// Serialize secrets
 	keyfileYaml, err := yaml.Marshal(keyfileSecret)
 	if err != nil {
-		log.Debug().Err(err).Msg("Failed to encode client-auth keyfile Secret")
+		log.Err(err).Debug("Failed to encode client-auth keyfile Secret")
 		return errors.WithStack(err)
 	}
 	tlsCAYaml, err := yaml.Marshal(tlsCASecret)
 	if err != nil {
-		log.Debug().Err(err).Msg("Failed to encode TLS CA Secret")
+		log.Err(err).Debug("Failed to encode TLS CA Secret")
 		return errors.WithStack(err)
 	}
 	allYaml := strings.TrimSpace(string(keyfileYaml)) + "\n---\n" + strings.TrimSpace(string(tlsCAYaml))
@@ -211,12 +211,12 @@ func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName strin
 	})
 	if err != nil {
 		// Failed to create secret
-		log.Debug().Err(err).Str("secret-name", apSecretName).Msg("Failed to create access package Secret")
+		log.Err(err).Str("secret-name", apSecretName).Debug("Failed to create access package Secret")
 		return errors.WithStack(err)
 	}
 
-	// Write log entry & create event
-	log.Info().Str("secret-name", apSecretName).Msg("Created access package Secret")
+	// Write sectionLogger entry & create event
+	log.Str("secret-name", apSecretName).Info("Created access package Secret")
 	d.CreateEvent(k8sutil.NewAccessPackageCreatedEvent(d.apiObject, apSecretName))
 
 	return nil

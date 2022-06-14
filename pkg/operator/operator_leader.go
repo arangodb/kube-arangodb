@@ -28,13 +28,13 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
-	"github.com/rs/zerolog"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/leaderelection"
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/probe"
@@ -50,7 +50,7 @@ import (
 func (o *Operator) runLeaderElection(lockName, label string, onStart func(stop <-chan struct{}), readyProbe *probe.ReadyProbe) {
 	namespace := o.Config.Namespace
 	kubecli := o.Dependencies.Client.Kubernetes()
-	log := o.log.With().Str("lock-name", lockName).Logger()
+	log := o.log.Str("lock-name", lockName)
 	eventTarget := o.getLeaderElectionEventTarget(log)
 	recordEvent := func(reason, message string) {
 		if eventTarget != nil {
@@ -67,7 +67,7 @@ func (o *Operator) runLeaderElection(lockName, label string, onStart func(stop <
 			EventRecorder: o.Dependencies.EventRecorder,
 		})
 	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to create resource lock")
+		log.Err(err).Fatal("Failed to create resource lock")
 	}
 
 	ctx := context.Background()
@@ -81,18 +81,18 @@ func (o *Operator) runLeaderElection(lockName, label string, onStart func(stop <
 				recordEvent("Leader Election Won", fmt.Sprintf("Pod %s is running as leader", o.Config.PodName))
 				readyProbe.SetReady()
 				if err := o.setRoleLabel(log, label, constants.LabelRoleLeader); err != nil {
-					log.Error().Msg("Cannot set leader role on Pod. Terminating process")
+					log.Error("Cannot set leader role on Pod. Terminating process")
 					os.Exit(2)
 				}
 				onStart(ctx.Done())
 			},
 			OnStoppedLeading: func() {
 				recordEvent("Stop Leading", fmt.Sprintf("Pod %s is stopping to run as leader", o.Config.PodName))
-				log.Info().Msg("Stop leading. Terminating process")
+				log.Info("Stop leading. Terminating process")
 				os.Exit(1)
 			},
 			OnNewLeader: func(identity string) {
-				log.Info().Str("identity", identity).Msg("New leader detected")
+				log.Str("identity", identity).Info("New leader detected")
 				readyProbe.SetReady()
 			},
 		},
@@ -100,7 +100,7 @@ func (o *Operator) runLeaderElection(lockName, label string, onStart func(stop <
 }
 
 func (o *Operator) runWithoutLeaderElection(lockName, label string, onStart func(stop <-chan struct{}), readyProbe *probe.ReadyProbe) {
-	log := o.log.With().Str("lock-name", lockName).Logger()
+	log := o.log.Str("lock-name", lockName)
 	eventTarget := o.getLeaderElectionEventTarget(log)
 	recordEvent := func(reason, message string) {
 		if eventTarget != nil {
@@ -112,7 +112,7 @@ func (o *Operator) runWithoutLeaderElection(lockName, label string, onStart func
 	recordEvent("Leader Election Skipped", fmt.Sprintf("Pod %s is running as leader", o.Config.PodName))
 	readyProbe.SetReady()
 	if err := o.setRoleLabel(log, label, constants.LabelRoleLeader); err != nil {
-		log.Error().Msg("Cannot set leader role on Pod. Terminating process")
+		log.Error("Cannot set leader role on Pod. Terminating process")
 		os.Exit(2)
 	}
 	onStart(ctx.Done())
@@ -120,48 +120,48 @@ func (o *Operator) runWithoutLeaderElection(lockName, label string, onStart func
 
 // getLeaderElectionEventTarget returns the object that leader election related
 // events will be added to.
-func (o *Operator) getLeaderElectionEventTarget(log zerolog.Logger) runtime.Object {
+func (o *Operator) getLeaderElectionEventTarget(log logging.Logger) runtime.Object {
 	ns := o.Config.Namespace
 	kubecli := o.Dependencies.Client.Kubernetes()
 	pods := kubecli.CoreV1().Pods(ns)
-	log = log.With().Str("pod-name", o.Config.PodName).Logger()
+	log = log.Str("pod-name", o.Config.PodName)
 	pod, err := pods.Get(context.Background(), o.Config.PodName, metav1.GetOptions{})
 	if err != nil {
-		log.Error().Err(err).Msg("Cannot find Pod containing this operator")
+		log.Err(err).Error("Cannot find Pod containing this operator")
 		return nil
 	}
 	rSet, err := k8sutil.GetPodOwner(kubecli, pod, ns)
 	if err != nil {
-		log.Error().Err(err).Msg("Cannot find ReplicaSet owning the Pod containing this operator")
+		log.Err(err).Error("Cannot find ReplicaSet owning the Pod containing this operator")
 		return pod
 	}
 	if rSet == nil {
-		log.Error().Msg("Pod containing this operator has no ReplicaSet owner")
+		log.Error("Pod containing this operator has no ReplicaSet owner")
 		return pod
 	}
-	log = log.With().Str("replicaSet-name", rSet.Name).Logger()
+	log = log.Str("replicaSet-name", rSet.Name)
 	depl, err := k8sutil.GetReplicaSetOwner(kubecli, rSet, ns)
 	if err != nil {
-		log.Error().Err(err).Msg("Cannot find Deployment owning the ReplicataSet that owns the Pod containing this operator")
+		log.Err(err).Error("Cannot find Deployment owning the ReplicataSet that owns the Pod containing this operator")
 		return rSet
 	}
 	if rSet == nil {
-		log.Error().Msg("ReplicaSet that owns the Pod containing this operator has no Deployment owner")
+		log.Error("ReplicaSet that owns the Pod containing this operator has no Deployment owner")
 		return rSet
 	}
 	return depl
 }
 
 // setRoleLabel sets a label with key `role` and given value in the pod metadata.
-func (o *Operator) setRoleLabel(log zerolog.Logger, label, role string) error {
+func (o *Operator) setRoleLabel(log logging.Logger, label, role string) error {
 	ns := o.Config.Namespace
 	kubecli := o.Dependencies.Client.Kubernetes()
 	pods := kubecli.CoreV1().Pods(ns)
-	log = log.With().Str("pod-name", o.Config.PodName).Logger()
+	log = log.Str("pod-name", o.Config.PodName)
 	op := func() error {
 		pod, err := pods.Get(context.Background(), o.Config.PodName, metav1.GetOptions{})
 		if k8sutil.IsNotFound(err) {
-			log.Error().Err(err).Msg("Pod not found, so we cannot set its role label")
+			log.Err(err).Error("Pod not found, so we cannot set its role label")
 			return retry.Permanent(errors.WithStack(err))
 		} else if err != nil {
 			return errors.WithStack(err)
@@ -176,7 +176,7 @@ func (o *Operator) setRoleLabel(log zerolog.Logger, label, role string) error {
 			// Retry it
 			return errors.WithStack(err)
 		} else if err != nil {
-			log.Error().Err(err).Msg("Failed to update Pod wrt 'role' label")
+			log.Err(err).Error("Failed to update Pod wrt 'role' label")
 			return retry.Permanent(errors.WithStack(err))
 		}
 		return nil

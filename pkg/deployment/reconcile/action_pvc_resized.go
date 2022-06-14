@@ -25,7 +25,6 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
 )
 
@@ -35,10 +34,10 @@ func init() {
 
 // newRotateMemberAction creates a new Action that implements the given
 // planned RotateMember action.
-func newPVCResizedAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newPVCResizedAction(action api.Action, actionCtx ActionContext) Action {
 	a := &actionPVCResized{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -56,16 +55,15 @@ type actionPVCResized struct {
 // Returns: ready, abort, error.
 func (a *actionPVCResized) CheckProgress(ctx context.Context) (bool, bool, error) {
 	// Check that pod is removed
-	log := a.log
 	m, found := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !found {
-		log.Error().Msg("No such member")
+		a.log.Error("No such member")
 		return true, false, nil
 	}
 
 	cache, ok := a.actionCtx.ACS().ClusterCache(m.ClusterID)
 	if !ok {
-		log.Warn().Msg("Cluster is not ready")
+		a.log.Warn("Cluster is not ready")
 		return false, false, nil
 	}
 

@@ -26,6 +26,11 @@ import (
 	"github.com/rs/zerolog"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
+)
+
+var (
+	logger = logging.Global().RegisterAndGetLogger("action", logging.Info)
 )
 
 type actionEmpty struct {
@@ -50,41 +55,68 @@ func (e actionEmptyStart) Start(_ context.Context) (bool, error) {
 	return false, nil
 }
 
-func newActionImplDefRef(log zerolog.Logger, action api.Action, actionCtx ActionContext) actionImpl {
-	return newActionImpl(log, action, actionCtx, &action.MemberID)
+func newActionImplDefRef(action api.Action, actionCtx ActionContext) actionImpl {
+	return newActionImpl(action, actionCtx, &action.MemberID)
 }
 
-func newActionImpl(log zerolog.Logger, action api.Action, actionCtx ActionContext, memberIDRef *string) actionImpl {
+func newActionImpl(action api.Action, actionCtx ActionContext, memberIDRef *string) actionImpl {
 	if memberIDRef == nil {
 		panic("Action cannot have nil reference to member!")
 	}
 
-	return newBaseActionImpl(log, action, actionCtx, memberIDRef)
+	return newBaseActionImpl(action, actionCtx, memberIDRef)
 }
 
-func newBaseActionImplDefRef(log zerolog.Logger, action api.Action, actionCtx ActionContext) actionImpl {
-	return newBaseActionImpl(log, action, actionCtx, &action.MemberID)
+func newBaseActionImplDefRef(action api.Action, actionCtx ActionContext) actionImpl {
+	return newBaseActionImpl(action, actionCtx, &action.MemberID)
 }
 
-func newBaseActionImpl(log zerolog.Logger, action api.Action, actionCtx ActionContext, memberIDRef *string) actionImpl {
+func newBaseActionImpl(action api.Action, actionCtx ActionContext, memberIDRef *string) actionImpl {
 	if memberIDRef == nil {
 		panic("Action cannot have nil reference to member!")
 	}
 
-	return actionImpl{
-		log:         log,
+	a := actionImpl{
 		action:      action,
 		actionCtx:   actionCtx,
 		memberIDRef: memberIDRef,
 	}
+
+	a.log = logger.Wrap(a.wrap)
+
+	return a
 }
 
 type actionImpl struct {
-	log       zerolog.Logger
+	log       logging.Logger
 	action    api.Action
 	actionCtx ActionContext
 
 	memberIDRef *string
+}
+
+func (a actionImpl) wrap(in *zerolog.Event) *zerolog.Event {
+	in = in.
+		Str("action-id", a.action.ID).
+		Str("action-type", string(a.action.Type)).
+		Str("group", a.action.Group.AsRole()).
+		Str("member-id", a.action.MemberID)
+
+	if status, _ := a.actionCtx.GetStatus(); status.Members.ContainsID(a.action.MemberID) {
+		if member, _, ok := status.Members.ElementByID(a.action.MemberID); ok {
+			in = in.Str("phase", string(member.Phase))
+		}
+	}
+
+	for k, v := range a.action.Params {
+		in = in.Str("param."+k, v)
+	}
+
+	for k, v := range a.action.Locals {
+		in = in.Str("local."+k.String(), v)
+	}
+
+	return in
 }
 
 // MemberID returns the member ID used / created in the current action.

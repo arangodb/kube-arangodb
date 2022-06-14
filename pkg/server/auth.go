@@ -32,7 +32,7 @@ import (
 	"github.com/dchest/uniuri"
 	"github.com/gin-gonic/gin"
 
-	"github.com/rs/zerolog"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	typedv1 "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -43,8 +43,9 @@ const (
 	bearerPrefix        = "bearer "
 )
 
+var authLogger = logging.Global().RegisterAndGetLogger("server-authentication", logging.Info)
+
 type serverAuthentication struct {
-	log     zerolog.Logger
 	secrets typedv1.SecretInterface
 	admin   struct {
 		mutex    sync.Mutex
@@ -81,9 +82,8 @@ type loginResponse struct {
 
 // newServerAuthentication creates a new server authentication service
 // for the given arguments.
-func newServerAuthentication(log zerolog.Logger, secrets typedv1.SecretInterface, adminSecretName string, allowAnonymous bool) *serverAuthentication {
+func newServerAuthentication(secrets typedv1.SecretInterface, adminSecretName string, allowAnonymous bool) *serverAuthentication {
 	auth := &serverAuthentication{
-		log:             log,
 		secrets:         secrets,
 		adminSecretName: adminSecretName,
 		allowAnonymous:  allowAnonymous,
@@ -131,7 +131,7 @@ func (s *serverAuthentication) checkLogin(username, password string) error {
 	if expectedUsername == "" {
 		var err error
 		if expectedUsername, expectedPassword, err = s.fetchAdminSecret(); err != nil {
-			s.log.Error().Err(err).Msg("Failed to fetch secret")
+			authLogger.Err(err).Error("Failed to fetch secret")
 			return errors.WithStack(errors.Wrap(UnauthorizedError, "admin secret cannot be loaded"))
 		}
 	}
@@ -160,12 +160,12 @@ func (s *serverAuthentication) checkAuthentication(c *gin.Context) {
 	s.tokens.mutex.Lock()
 	defer s.tokens.mutex.Unlock()
 	if entry, found := s.tokens.tokens[token]; !found {
-		s.log.Debug().Str("token", token).Msg("Invalid token")
+		authLogger.Str("token", token).Debug("Invalid token")
 		sendError(c, errors.WithStack(errors.Wrap(UnauthorizedError, "invalid credentials")))
 		c.Abort()
 		return
 	} else if entry.IsExpired() {
-		s.log.Debug().Str("token", token).Msg("Token expired")
+		authLogger.Str("token", token).Debug("Token expired")
 		sendError(c, errors.WithStack(errors.Wrap(UnauthorizedError, "credentials expired")))
 		c.Abort()
 		return

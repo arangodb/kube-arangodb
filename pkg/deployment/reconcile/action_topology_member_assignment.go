@@ -22,17 +22,16 @@ package reconcile
 
 import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/rs/zerolog"
 )
 
 func init() {
 	registerAction(api.ActionTypeTopologyMemberAssignment, newTopologyMemberAssignment, defaultTimeout)
 }
 
-func newTopologyMemberAssignment(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newTopologyMemberAssignment(action api.Action, actionCtx ActionContext) Action {
 	a := &topologyMemberAssignment{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }

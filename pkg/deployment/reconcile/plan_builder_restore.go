@@ -29,13 +29,11 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/rs/zerolog"
 )
 
 const secretActionParam = "secret"
 
-func createRestorePlan(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+func (r *Reconciler) createRestorePlan(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext) api.Plan {
 	if spec.RestoreFrom == nil && status.Restore != nil {
@@ -47,17 +45,17 @@ func createRestorePlan(ctx context.Context,
 	if spec.RestoreFrom != nil && status.Restore == nil {
 		backup, err := context.GetBackup(ctx, spec.GetRestoreFrom())
 		if err != nil {
-			log.Warn().Err(err).Msg("Backup not found")
+			r.planLogger.Err(err).Warn("Backup not found")
 			return nil
 		}
 
 		if backup.Status.Backup == nil {
-			log.Warn().Msg("Backup not yet ready")
+			r.planLogger.Warn("Backup not yet ready")
 			return nil
 		}
 
 		if spec.RocksDB.IsEncrypted() {
-			if ok, p := createRestorePlanEncryption(ctx, log, spec, status, context); !ok {
+			if ok, p := r.createRestorePlanEncryption(ctx, spec, status, context); !ok {
 				return nil
 			} else if !p.IsEmpty() {
 				return p
@@ -65,7 +63,7 @@ func createRestorePlan(ctx context.Context,
 
 			if i := status.CurrentImage; i != nil && features.EncryptionRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
 				if !status.Hashes.Encryption.Propagated {
-					log.Warn().Msg("Backup not able to be restored in non propagated state")
+					r.planLogger.Warn("Backup not able to be restored in non propagated state")
 					return nil
 				}
 			}
@@ -90,7 +88,7 @@ func restorePlan(spec api.DeploymentSpec) api.Plan {
 	return p
 }
 
-func createRestorePlanEncryption(ctx context.Context, log zerolog.Logger, spec api.DeploymentSpec, status api.DeploymentStatus, builderCtx PlanBuilderContext) (bool, api.Plan) {
+func (r *Reconciler) createRestorePlanEncryption(ctx context.Context, spec api.DeploymentSpec, status api.DeploymentStatus, builderCtx PlanBuilderContext) (bool, api.Plan) {
 
 	if spec.RestoreEncryptionSecret != nil {
 		if !spec.RocksDB.IsEncrypted() {
@@ -110,12 +108,12 @@ func createRestorePlanEncryption(ctx context.Context, log zerolog.Logger, spec a
 		// Additional logic to do restore with encryption key
 		name, _, exists, err := pod.GetEncryptionKey(ctx, builderCtx.ACS().CurrentClusterCache().Secret().V1().Read(), secret)
 		if err != nil {
-			log.Err(err).Msgf("Unable to fetch encryption key")
+			r.planLogger.Err(err).Error("Unable to fetch encryption key")
 			return false, nil
 		}
 
 		if !exists {
-			log.Error().Msgf("Unable to fetch encryption key - key is empty or missing")
+			r.planLogger.Error("Unable to fetch encryption key - key is empty or missing")
 			return false, nil
 		}
 

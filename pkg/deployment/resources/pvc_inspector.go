@@ -50,7 +50,7 @@ const (
 // InspectPVCs lists all PVCs that belong to the given deployment and updates
 // the member status of the deployment accordingly.
 func (r *Resources) InspectPVCs(ctx context.Context, cachedStatus inspectorInterface.Inspector) (util.Interval, error) {
-	log := r.log
+	log := r.log.Str("section", "pvc")
 	start := time.Now()
 	nextInterval := maxPVCInspectorInterval
 	deploymentName := r.context.GetAPIObject().GetName()
@@ -65,14 +65,14 @@ func (r *Resources) InspectPVCs(ctx context.Context, cachedStatus inspectorInter
 		// Find member status
 		memberStatus, group, found := status.Members.MemberStatusByPVCName(pvc.GetName())
 		if !found {
-			log.Debug().Str("pvc", pvc.GetName()).Msg("no memberstatus found for PVC")
+			log.Str("pvc", pvc.GetName()).Debug("no memberstatus found for PVC")
 			if k8sutil.IsPersistentVolumeClaimMarkedForDeletion(pvc) && len(pvc.GetFinalizers()) > 0 {
 				// Strange, pvc belongs to us, but we have no member for it.
 				// Remove all finalizers, so it can be removed.
-				log.Warn().Msg("PVC belongs to this deployment, but we don't know the member. Removing all finalizers")
-				_, err := k8sutil.RemovePVCFinalizers(ctx, r.context.ACS().CurrentClusterCache(), log, cachedStatus.PersistentVolumeClaimsModInterface().V1(), pvc, pvc.GetFinalizers(), false)
+				log.Warn("PVC belongs to this deployment, but we don't know the member. Removing all finalizers")
+				_, err := k8sutil.RemovePVCFinalizers(ctx, r.context.ACS().CurrentClusterCache(), cachedStatus.PersistentVolumeClaimsModInterface().V1(), pvc, pvc.GetFinalizers(), false)
 				if err != nil {
-					log.Debug().Err(err).Msg("Failed to update PVC (to remove all finalizers)")
+					log.Err(err).Debug("Failed to update PVC (to remove all finalizers)")
 					return errors.WithStack(err)
 				}
 			}
@@ -84,7 +84,7 @@ func (r *Resources) InspectPVCs(ctx context.Context, cachedStatus inspectorInter
 			q := patch.NewPatch(patch.ItemReplace(patch.NewPath("metadata", "ownerReferences"), pvc.ObjectMeta.OwnerReferences))
 			d, err := q.Marshal()
 			if err != nil {
-				log.Debug().Err(err).Msg("Failed to prepare PVC patch (ownerReferences)")
+				log.Err(err).Debug("Failed to prepare PVC patch (ownerReferences)")
 				return errors.WithStack(err)
 			}
 
@@ -94,7 +94,7 @@ func (r *Resources) InspectPVCs(ctx context.Context, cachedStatus inspectorInter
 			})
 
 			if err != nil {
-				log.Debug().Err(err).Msg("Failed to update PVC (ownerReferences)")
+				log.Err(err).Debug("Failed to update PVC (ownerReferences)")
 				return errors.WithStack(err)
 			}
 		}
@@ -103,7 +103,7 @@ func (r *Resources) InspectPVCs(ctx context.Context, cachedStatus inspectorInter
 			// Process finalizers
 			if x, err := r.runPVCFinalizers(ctx, pvc, group, memberStatus); err != nil {
 				// Only log here, since we'll be called to try again.
-				log.Warn().Err(err).Msg("Failed to run PVC finalizers")
+				log.Err(err).Warn("Failed to run PVC finalizers")
 			} else {
 				nextInterval = nextInterval.ReduceTo(x)
 			}

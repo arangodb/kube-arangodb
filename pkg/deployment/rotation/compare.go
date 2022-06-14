@@ -26,7 +26,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
-	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	core "k8s.io/api/core/v1"
 )
 
@@ -52,7 +52,7 @@ func compareFuncs(builder api.ActionBuilder, f ...compareFunc) (mode Mode, plan 
 	return
 }
 
-func compare(log zerolog.Logger, deploymentSpec api.DeploymentSpec, member api.MemberStatus, group api.ServerGroup,
+func compare(deploymentSpec api.DeploymentSpec, member api.MemberStatus, group api.ServerGroup,
 	spec, status *api.ArangoMemberPodTemplate) (mode Mode, plan api.Plan, err error) {
 
 	if spec.Checksum == status.Checksum {

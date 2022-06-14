@@ -73,7 +73,7 @@ func (h *handler) Handle(item operation.Item) error {
 		if k8sutil.IsNotFound(err) {
 			return nil
 		}
-		h.operator.GetLogger().Error().Msgf("ArangoJob fetch error %v", err)
+		logger.Error("ArangoJob fetch error %v", err)
 		return err
 	}
 
@@ -86,7 +86,7 @@ func (h *handler) Handle(item operation.Item) error {
 
 	// Update status on object
 	if _, err = h.client.AppsV1().ArangoJobs(item.Namespace).UpdateStatus(context.Background(), job, meta.UpdateOptions{}); err != nil {
-		h.operator.GetLogger().Error().Msgf("ArangoJob status update error %v", err)
+		logger.Error("ArangoJob status update error %v", err)
 		return err
 	}
 
@@ -138,7 +138,7 @@ func (h *handler) prepareK8sJob(job *appsApi.ArangoJob) (*batchv1.Job, error) {
 
 	deployment, err := h.client.DatabaseV1().ArangoDeployments(job.Namespace).Get(context.Background(), job.Spec.ArangoDeploymentName, meta.GetOptions{})
 	if err != nil {
-		h.operator.GetLogger().Error().Msgf("ArangoDeployment fetch error %v", err)
+		logger.Error("ArangoDeployment fetch error %v", err)
 		return &k8sJob, err
 	}
 
@@ -157,7 +157,7 @@ func (h *handler) prepareK8sJob(job *appsApi.ArangoJob) (*batchv1.Job, error) {
 
 	executable, err := os.Executable()
 	if err != nil {
-		h.operator.GetLogger().Error().Msgf("reading Operator executable name error %v", err)
+		logger.Error("reading Operator executable name error %v", err)
 		return &k8sJob, err
 	}
 

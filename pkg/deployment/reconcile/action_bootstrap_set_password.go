@@ -33,17 +33,16 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/rs/zerolog"
 )
 
 func init() {
 	registerAction(api.ActionTypeBootstrapSetPassword, newBootstrapSetPasswordAction, defaultTimeout)
 }
 
-func newBootstrapSetPasswordAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newBootstrapSetPasswordAction(action api.Action, actionCtx ActionContext) Action {
 	a := &actionBootstrapSetPassword{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -59,11 +58,11 @@ func (a actionBootstrapSetPassword) Start(ctx context.Context) (bool, error) {
 	spec := a.actionCtx.GetSpec()
 
 	if user, ok := a.action.GetParam("user"); !ok {
-		a.log.Warn().Msgf("User param is not set in action")
+		a.log.Warn("User param is not set in action")
 		return true, nil
 	} else {
 		if secret, ok := spec.Bootstrap.PasswordSecretNames[user]; !ok {
-			a.log.Warn().Msgf("User does not exist in password hashes")
+			a.log.Warn("User does not exist in password hashes")
 			return true, nil
 		} else {
 			ctxChild, cancel := globals.GetGlobals().Timeouts().ArangoD().WithTimeout(ctx)
@@ -98,7 +97,7 @@ func (a actionBootstrapSetPassword) Start(ctx context.Context) (bool, error) {
 }
 
 func (a actionBootstrapSetPassword) setUserPassword(ctx context.Context, user, secret string) (string, error) {
-	a.log.Debug().Msgf("Bootstrapping user %s, secret %s", user, secret)
+	a.log.Debug("Bootstrapping user %s, secret %s", user, secret)
 
 	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()

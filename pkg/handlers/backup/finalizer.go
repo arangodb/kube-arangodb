@@ -26,7 +26,7 @@ import (
 	"github.com/arangodb/go-driver"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
-	"github.com/rs/zerolog/log"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -54,7 +54,7 @@ func (h *handler) finalize(backup *backupApi.ArangoBackup) error {
 	backup.Finalizers = finalizers.Remove(finalizersToRemove...)
 
 	if i := len(backup.Finalizers); i > 0 {
-		log.Warn().Msgf("After finalizing on object %s %s/%s finalizers left: %d",
+		logger.Warn("After finalizing on object %s %s/%s finalizers left: %d",
 			backup.GroupVersionKind().String(),
 			backup.Namespace,
 			backup.Name,
@@ -85,7 +85,7 @@ func (h *handler) finalizeBackup(backup *backupApi.ArangoBackup) error {
 			return nil
 		}
 
-		if c, ok := err.(utils.Causer); ok {
+		if c, ok := err.(errors.Causer); ok {
 			if apiErrors.IsNotFound(c.Cause()) {
 				return nil
 			}
@@ -120,7 +120,7 @@ func (h *handler) finalizeBackup(backup *backupApi.ArangoBackup) error {
 	}
 
 	if err = h.finalizeBackupAction(backup, client); err != nil {
-		log.Warn().Err(err).Msgf("Operation abort failed for %s %s/%s",
+		logger.Err(err).Warn("Operation abort failed for %s %s/%s",
 			backup.GroupVersionKind().String(),
 			backup.Namespace,
 			backup.Name)

@@ -38,17 +38,16 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
-	"github.com/rs/zerolog"
 )
 
 func init() {
 	registerAction(api.ActionTypeAppendTLSCACertificate, newAppendTLSCACertificateAction, operationTLSCACertificateTimeout)
 }
 
-func newAppendTLSCACertificateAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newAppendTLSCACertificateAction(action api.Action, actionCtx ActionContext) Action {
 	a := &appendTLSCACertificateAction{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -66,43 +65,43 @@ func (a *appendTLSCACertificateAction) Start(ctx context.Context) (bool, error) 
 
 	certChecksum, exists := a.action.Params[checksum]
 	if !exists {
-		a.log.Warn().Msgf("Key %s is missing in action", checksum)
+		a.log.Warn("Key %s is missing in action", checksum)
 		return true, nil
 	}
 
 	caSecret, exists := a.actionCtx.ACS().CurrentClusterCache().Secret().V1().GetSimple(a.actionCtx.GetSpec().TLS.GetCASecretName())
 	if !exists {
-		a.log.Warn().Msgf("Secret %s is missing", a.actionCtx.GetSpec().TLS.GetCASecretName())
+		a.log.Warn("Secret %s is missing", a.actionCtx.GetSpec().TLS.GetCASecretName())
 		return true, nil
 	}
 
 	caFolder, exists := a.actionCtx.ACS().CurrentClusterCache().Secret().V1().GetSimple(resources.GetCASecretName(a.actionCtx.GetAPIObject()))
 	if !exists {
-		a.log.Warn().Msgf("Secret %s is missing", resources.GetCASecretName(a.actionCtx.GetAPIObject()))
+		a.log.Warn("Secret %s is missing", resources.GetCASecretName(a.actionCtx.GetAPIObject()))
 		return true, nil
 	}
 
-	ca, _, err := resources.GetKeyCertFromSecret(a.log, caSecret, resources.CACertName, resources.CAKeyName)
+	ca, _, err := resources.GetKeyCertFromSecret(caSecret, resources.CACertName, resources.CAKeyName)
 	if err != nil {
-		a.log.Warn().Err(err).Msgf("Cert %s is invalid", resources.GetCASecretName(a.actionCtx.GetAPIObject()))
+		a.log.Err(err).Warn("Cert %s is invalid", resources.GetCASecretName(a.actionCtx.GetAPIObject()))
 		return true, nil
 	}
 
 	caData, err := ca.ToPem()
 	if err != nil {
-		a.log.Warn().Err(err).Str("secret", resources.GetCASecretName(a.actionCtx.GetAPIObject())).Msgf("Unable to parse ca into pem")
+		a.log.Err(err).Str("secret", resources.GetCASecretName(a.actionCtx.GetAPIObject())).Warn("Unable to parse ca into pem")
 		return true, nil
 	}
 
 	caSha := util.SHA256(caData)
 
 	if caSha != certChecksum {
-		a.log.Warn().Msgf("Cert changed")
+		a.log.Warn("Cert changed")
 		return true, nil
 	}
 
 	if _, exists := caFolder.Data[caSha]; exists {
-		a.log.Warn().Msgf("Cert already exists")
+		a.log.Warn("Cert already exists")
 		return true, nil
 	}
 
@@ -111,7 +110,7 @@ func (a *appendTLSCACertificateAction) Start(ctx context.Context) (bool, error) 
 
 	patch, err := p.Marshal()
 	if err != nil {
-		a.log.Error().Err(err).Msgf("Unable to encrypt patch")
+		a.log.Err(err).Error("Unable to encrypt patch")
 		return true, nil
 	}
 

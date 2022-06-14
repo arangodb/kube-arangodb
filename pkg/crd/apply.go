@@ -25,15 +25,17 @@ import (
 	"fmt"
 
 	"github.com/arangodb/go-driver"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
-	"github.com/rs/zerolog"
 	authorization "k8s.io/api/authorization/v1"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func EnsureCRD(ctx context.Context, log zerolog.Logger, client kclient.Client) {
+var logger = logging.Global().RegisterAndGetLogger("crd", logging.Info)
+
+func EnsureCRD(ctx context.Context, client kclient.Client) {
 	crdsLock.Lock()
 	defer crdsLock.Unlock()
 
@@ -41,21 +43,21 @@ func EnsureCRD(ctx context.Context, log zerolog.Logger, client kclient.Client) {
 		getAccess := verifyCRDAccess(ctx, client, crd, "get")
 
 		if !getAccess.Allowed {
-			log.Info().Str("crd", crd).Msgf("Get Operations is not allowed. Continue")
+			logger.Str("crd", crd).Info("Get Operations is not allowed. Continue")
 			continue
 		}
 
 		c, err := client.KubernetesExtensions().ApiextensionsV1().CustomResourceDefinitions().Get(ctx, crd, meta.GetOptions{})
 		if err != nil {
 			if !errors.IsNotFound(err) {
-				log.Warn().Err(err).Str("crd", crd).Msgf("Get Operations is not allowed due to error. Continue")
+				logger.Err(err).Str("crd", crd).Warn("Get Operations is not allowed due to error. Continue")
 				continue
 			}
 
 			createAccess := verifyCRDAccess(ctx, client, crd, "create")
 
 			if !createAccess.Allowed {
-				log.Info().Str("crd", crd).Msgf("Create Operations is not allowed but CRD is missing. Continue")
+				logger.Str("crd", crd).Info("Create Operations is not allowed but CRD is missing. Continue")
 				continue
 			}
 
@@ -70,18 +72,18 @@ func EnsureCRD(ctx context.Context, log zerolog.Logger, client kclient.Client) {
 			}
 
 			if _, err := client.KubernetesExtensions().ApiextensionsV1().CustomResourceDefinitions().Create(ctx, c, meta.CreateOptions{}); err != nil {
-				log.Warn().Err(err).Str("crd", crd).Msgf("Create Operations is not allowed due to error. Continue")
+				logger.Err(err).Str("crd", crd).Warn("Create Operations is not allowed due to error. Continue")
 				continue
 			}
 
-			log.Info().Str("crd", crd).Msgf("CRD Created")
+			logger.Str("crd", crd).Info("CRD Created")
 			continue
 		}
 
 		updateAccess := verifyCRDAccess(ctx, client, crd, "update")
 
 		if !updateAccess.Allowed {
-			log.Info().Str("crd", crd).Msgf("Update Operations is not allowed. Continue")
+			logger.Str("crd", crd).Info("Update Operations is not allowed. Continue")
 			continue
 		}
 
@@ -92,7 +94,7 @@ func EnsureCRD(ctx context.Context, log zerolog.Logger, client kclient.Client) {
 		if v, ok := c.ObjectMeta.Labels[Version]; ok {
 			if v != "" {
 				if !isUpdateRequired(spec.version, driver.Version(v)) {
-					log.Info().Str("crd", crd).Msgf("CRD Update not required")
+					logger.Str("crd", crd).Info("CRD Update not required")
 					continue
 				}
 			}
@@ -103,10 +105,10 @@ func EnsureCRD(ctx context.Context, log zerolog.Logger, client kclient.Client) {
 		c.Spec = spec.spec
 
 		if _, err := client.KubernetesExtensions().ApiextensionsV1().CustomResourceDefinitions().Update(ctx, c, meta.UpdateOptions{}); err != nil {
-			log.Warn().Err(err).Str("crd", crd).Msgf("Create Operations is not allowed due to error. Continue")
+			logger.Err(err).Str("crd", crd).Warn("Create Operations is not allowed due to error. Continue")
 			continue
 		}
-		log.Info().Str("crd", crd).Msgf("CRD Updated")
+		logger.Str("crd", crd).Info("CRD Updated")
 	}
 }
 

@@ -26,7 +26,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/rs/zerolog"
 )
 
 func init() {
@@ -35,10 +34,10 @@ func init() {
 
 // newSetCurrentImageAction creates a new Action that implements the given
 // planned SetCurrentImage action.
-func newSetCurrentMemberImageAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newSetCurrentMemberImageAction(action api.Action, actionCtx ActionContext) Action {
 	a := &setCurrentMemberImageAction{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -63,18 +62,16 @@ func (a *setCurrentMemberImageAction) Start(ctx context.Context) (bool, error) {
 // CheckProgress checks the progress of the action.
 // Returns true if the action is completely finished, false otherwise.
 func (a *setCurrentMemberImageAction) CheckProgress(ctx context.Context) (bool, bool, error) {
-	log := a.log
-
 	imageInfo, found := a.actionCtx.GetImageInfo(a.action.Image)
 	if !found {
-		log.Info().Msgf("Image not found")
+		a.log.Info("Image not found")
 		return true, false, nil
 	}
 
 	if err := a.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
 		m, g, found := s.Members.ElementByID(a.action.MemberID)
 		if !found {
-			log.Error().Msg("No such member")
+			a.log.Error("No such member")
 			return false
 		}
 
@@ -84,13 +81,13 @@ func (a *setCurrentMemberImageAction) CheckProgress(ctx context.Context) (bool, 
 		m.Image = &imageInfo
 
 		if err := s.Members.Update(m, g); err != nil {
-			log.Error().Msg("Member update failed")
+			a.log.Error("Member update failed")
 			return false
 		}
 
 		return true
 	}); err != nil {
-		log.Error().Msg("Member failed")
+		a.log.Error("Member failed")
 		return true, false, nil
 	}
 

@@ -20,19 +20,18 @@
 
 package resilience
 
-import "github.com/rs/zerolog"
-
 // Resilience is the service that inspects the overall state of the deployment
 // to improve resilience.
 type Resilience struct {
-	log     zerolog.Logger
-	context Context
+	namespace, name string
+	context         Context
 }
 
 // NewResilience creates a new resilience with given context.
-func NewResilience(log zerolog.Logger, context Context) *Resilience {
+func NewResilience(namespace, name string, context Context) *Resilience {
 	return &Resilience{
-		log:     log,
-		context: context,
+		namespace: namespace,
+		name:      name,
+		context:   context,
 	}
 }

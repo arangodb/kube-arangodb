@@ -30,7 +30,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner"
 	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner/service"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
@@ -63,26 +62,21 @@ func init() {
 // Run the provisioner
 func cmdStorageProvisionerRun(cmd *cobra.Command, args []string) {
 	var err error
-	if err := logging.InitGlobalLogger(defaultLogLevel, logLevels); err != nil {
-		cliLog.Fatal().Err(err).Msg("Failed to initialize log service")
-	}
-
-	logService = logging.GlobalLogger()
 
 	// Log version
 
-	cliLog.Info().Msgf("Starting arangodb local storage provisioner (%s), version %s build %s", version.GetVersionV1().Edition.Title(), version.GetVersionV1().Version, version.GetVersionV1().Build)
+	logger.Info("Starting arangodb local storage provisioner (%s), version %s build %s", version.GetVersionV1().Edition.Title(), version.GetVersionV1().Version, version.GetVersionV1().Build)
 
 	// Get environment
 	nodeName := os.Getenv(constants.EnvOperatorNodeName)
 	if len(nodeName) == 0 {
-		cliLog.Fatal().Msgf("%s environment variable missing", constants.EnvOperatorNodeName)
+		logger.Fatal("%s environment variable missing", constants.EnvOperatorNodeName)
 	}
 
-	config, deps := newProvisionerConfigAndDeps(nodeName)
-	p, err := service.New(config, deps)
+	config := newProvisionerConfigAndDeps(nodeName)
+	p, err := service.New(config)
 	if err != nil {
-		cliLog.Fatal().Err(err).Msg("Failed to create provisioner")
+		logger.Err(err).Fatal("Failed to create provisioner")
 	}
 
 	ctx := context.TODO()
@@ -90,14 +84,11 @@ func cmdStorageProvisionerRun(cmd *cobra.Command, args []string) {
 }
 
 // newProvisionerConfigAndDeps creates storage provisioner config & dependencies.
-func newProvisionerConfigAndDeps(nodeName string) (service.Config, service.Dependencies) {
+func newProvisionerConfigAndDeps(nodeName string) service.Config {
 	cfg := service.Config{
 		Address:  net.JoinHostPort("0.0.0.0", strconv.Itoa(storageProvisioner.port)),
 		NodeName: nodeName,
 	}
-	deps := service.Dependencies{
-		Log: logService.MustGetLogger(logging.LoggerNameProvisioner),
-	}
 
-	return cfg, deps
+	return cfg
 }

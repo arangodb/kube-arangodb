@@ -98,23 +98,22 @@ func init() {
 
 // Wait until all finalizers of the current pod have been removed.
 func cmdLifecyclePreStopRunFinalizer(cmd *cobra.Command, args []string) {
-
-	cliLog.Info().Msgf("Starting arangodb-operator (%s), lifecycle preStop, version %s build %s", version.GetVersionV1().Edition.Title(), version.GetVersionV1().Version, version.GetVersionV1().Build)
+	logger.Info("Starting arangodb-operator (%s), lifecycle preStop, version %s build %s", version.GetVersionV1().Edition.Title(), version.GetVersionV1().Version, version.GetVersionV1().Build)
 
 	// Get environment
 	namespace := os.Getenv(constants.EnvOperatorPodNamespace)
 	if len(namespace) == 0 {
-		cliLog.Fatal().Msgf("%s environment variable missing", constants.EnvOperatorPodNamespace)
+		logger.Fatal("%s environment variable missing", constants.EnvOperatorPodNamespace)
 	}
 	name := os.Getenv(constants.EnvOperatorPodName)
 	if len(name) == 0 {
-		cliLog.Fatal().Msgf("%s environment variable missing", constants.EnvOperatorPodName)
+		logger.Fatal("%s environment variable missing", constants.EnvOperatorPodName)
 	}
 
 	// Create kubernetes client
 	client, ok := kclient.GetDefaultFactory().Client()
 	if !ok {
-		cliLog.Fatal().Msg("Client not initialised")
+		logger.Fatal("Client not initialised")
 	}
 
 	pods := client.Kubernetes().CoreV1().Pods(namespace)
@@ -122,13 +121,13 @@ func cmdLifecyclePreStopRunFinalizer(cmd *cobra.Command, args []string) {
 	for {
 		p, err := pods.Get(context.Background(), name, metav1.GetOptions{})
 		if k8sutil.IsNotFound(err) {
-			cliLog.Warn().Msg("Pod not found")
+			logger.Warn("Pod not found")
 			return
 		} else if err != nil {
 			recentErrors++
-			cliLog.Error().Err(err).Msg("Failed to get pod")
+			logger.Err(err).Error("Failed to get pod")
 			if recentErrors > 20 {
-				cliLog.Fatal().Err(err).Msg("Too many recent errors")
+				logger.Err(err).Fatal("Too many recent errors")
 				return
 			}
 		} else {
@@ -136,10 +135,10 @@ func cmdLifecyclePreStopRunFinalizer(cmd *cobra.Command, args []string) {
 			finalizerCount := len(p.GetFinalizers())
 			if finalizerCount == 0 {
 				// No more finalizers, we're done
-				cliLog.Info().Msg("All finalizers gone, we can stop now")
+				logger.Info("All finalizers gone, we can stop now")
 				return
 			}
-			cliLog.Info().Msgf("Waiting for %d more finalizers to be removed", finalizerCount)
+			logger.Info("Waiting for %d more finalizers to be removed", finalizerCount)
 		}
 		// Wait a bit
 		time.Sleep(time.Second)
@@ -148,17 +147,17 @@ func cmdLifecyclePreStopRunFinalizer(cmd *cobra.Command, args []string) {
 
 // Copy the executable to a given place.
 func cmdLifecycleCopyRun(cmd *cobra.Command, args []string) {
-	cliLog.Info().Msgf("Starting arangodb-operator (%s), lifecycle copy, version %s build %s", version.GetVersionV1().Edition.Title(), version.GetVersionV1().Version, version.GetVersionV1().Build)
+	logger.Info("Starting arangodb-operator (%s), lifecycle copy, version %s build %s", version.GetVersionV1().Edition.Title(), version.GetVersionV1().Version, version.GetVersionV1().Build)
 
 	exePath, err := os.Executable()
 	if err != nil {
-		cliLog.Fatal().Err(err).Msg("Failed to get executable path")
+		logger.Err(err).Fatal("Failed to get executable path")
 	}
 
 	// Open source
 	rd, err := os.Open(exePath)
 	if err != nil {
-		cliLog.Fatal().Err(err).Msg("Failed to open executable file")
+		logger.Err(err).Fatal("Failed to open executable file")
 	}
 	defer rd.Close()
 
@@ -166,20 +165,20 @@ func cmdLifecycleCopyRun(cmd *cobra.Command, args []string) {
 	targetPath := filepath.Join(lifecycleCopyOptions.TargetDir, filepath.Base(exePath))
 	wr, err := os.Create(targetPath)
 	if err != nil {
-		cliLog.Fatal().Err(err).Msg("Failed to create target file")
+		logger.Err(err).Fatal("Failed to create target file")
 	}
 	defer wr.Close()
 
 	if _, err := io.Copy(wr, rd); err != nil {
-		cliLog.Fatal().Err(err).Msg("Failed to copy")
+		logger.Err(err).Fatal("Failed to copy")
 	}
 
 	// Set file mode
 	if err := os.Chmod(targetPath, 0755); err != nil {
-		cliLog.Fatal().Err(err).Msg("Failed to chmod")
+		logger.Err(err).Fatal("Failed to chmod")
 	}
 
-	cliLog.Info().Msgf("Executable copied to %s", targetPath)
+	logger.Info("Executable copied to %s", targetPath)
 }
 
 type cmdLifecyclePreStopRunPort struct {
@@ -193,17 +192,17 @@ func (c *cmdLifecyclePreStopRunPort) run(cmd *cobra.Command, args []string) erro
 	// Get environment
 	namespace := os.Getenv(constants.EnvOperatorPodNamespace)
 	if len(namespace) == 0 {
-		cliLog.Fatal().Msgf("%s environment variable missing", constants.EnvOperatorPodNamespace)
+		logger.Fatal("%s environment variable missing", constants.EnvOperatorPodNamespace)
 	}
 	name := os.Getenv(constants.EnvOperatorPodName)
 	if len(name) == 0 {
-		cliLog.Fatal().Msgf("%s environment variable missing", constants.EnvOperatorPodName)
+		logger.Fatal("%s environment variable missing", constants.EnvOperatorPodName)
 	}
 
 	// Create kubernetes client
 	client, ok := kclient.GetDefaultFactory().Client()
 	if !ok {
-		cliLog.Fatal().Msg("Client not initialised")
+		logger.Fatal("Client not initialised")
 	}
 
 	pods := client.Kubernetes().CoreV1().Pods(namespace)
@@ -221,13 +220,13 @@ func (c *cmdLifecyclePreStopRunPort) run(cmd *cobra.Command, args []string) erro
 
 		p, err := pods.Get(context.Background(), name, metav1.GetOptions{})
 		if k8sutil.IsNotFound(err) {
-			cliLog.Warn().Msg("Pod not found")
+			logger.Warn("Pod not found")
 			return nil
 		} else if err != nil {
 			recentErrors++
-			cliLog.Error().Err(err).Msg("Failed to get pod")
+			logger.Err(err).Error("Failed to get pod")
 			if recentErrors > 20 {
-				cliLog.Fatal().Err(err).Msg("Too many recent errors")
+				logger.Err(err).Fatal("Too many recent errors")
 				return nil
 			}
 		} else {

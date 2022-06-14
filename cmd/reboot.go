@@ -129,7 +129,7 @@ func runVolumeInspector(ctx context.Context, kube kubernetes.Interface, ns, name
 	}
 	defer func() {
 		if deletePVC {
-			cliLog.Debug().Str("pvc-name", claimname).Msg("deleting pvc")
+			logger.Str("pvc-name", claimname).Debug("deleting pvc")
 			kube.CoreV1().PersistentVolumeClaims(ns).Delete(context.Background(), claimname, metav1.DeleteOptions{})
 		}
 	}()
@@ -383,7 +383,7 @@ func cmdRebootRun(cmd *cobra.Command, args []string) {
 	// Create kubernetes client
 	client, ok := kclient.GetDefaultFactory().Client()
 	if !ok {
-		cliLog.Fatal().Msg("Failed to get client")
+		logger.Fatal("Failed to get client")
 	}
 
 	kubecli := client.Kubernetes()
@@ -392,12 +392,12 @@ func cmdRebootRun(cmd *cobra.Command, args []string) {
 
 	image, err := getMyImage(kubecli, namespace, podname)
 	if err != nil {
-		cliLog.Fatal().Err(err).Msg("failed to get my image")
+		logger.Err(err).Fatal("failed to get my image")
 	}
 
 	vinfo, err := preflightChecks(kubecli, volumes)
 	if err != nil {
-		cliLog.Fatal().Err(err).Msg("preflight checks failed")
+		logger.Err(err).Fatal("preflight checks failed")
 	}
 
 	var wg sync.WaitGroup
@@ -406,7 +406,7 @@ func cmdRebootRun(cmd *cobra.Command, args []string) {
 	received := 0
 
 	for _, volumeName := range volumes {
-		cliLog.Debug().Str("volume", volumeName).Msg("Starting inspection")
+		logger.Str("volume", volumeName).Debug("Starting inspection")
 		wg.Add(1)
 		go func(vn string) {
 			defer wg.Done()
@@ -424,9 +424,9 @@ func cmdRebootRun(cmd *cobra.Command, args []string) {
 		select {
 		case res := <-resultChan:
 			if res.Error != nil {
-				cliLog.Error().Err(res.Error).Msg("Inspection failed")
+				logger.Err(res.Error).Error("Inspection failed")
 			} else {
-				cliLog.Info().Str("claim", res.Claim).Str("uuid", res.UUID).Msg("Inspection completed")
+				logger.Str("claim", res.Claim).Str("uuid", res.UUID).Info("Inspection completed")
 			}
 			members[res.UUID] = res
 			received++
@@ -435,13 +435,13 @@ func cmdRebootRun(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	cliLog.Debug().Msg("results complete - generating ArangoDeployment resource")
+	logger.Debug("results complete - generating ArangoDeployment resource")
 
 	if err := createArangoDeployment(extcli, namespace, rebootOptions.DeploymentName, rebootOptions.ImageName, members); err != nil {
-		cliLog.Error().Err(err).Msg("failed to create deployment")
+		logger.Err(err).Error("failed to create deployment")
 	}
 
-	cliLog.Info().Msg("ArangoDeployment created.")
+	logger.Info("ArangoDeployment created.")
 
 	// Wait for everyone to be completed
 	wg.Wait()
@@ -481,6 +481,6 @@ func cmdRebootInspectRun(cmd *cobra.Command, args []string) {
 	})
 
 	if http.ListenAndServe(":8080", nil); err != nil {
-		cliLog.Fatal().Err(err).Msg("Failed to listen and serve")
+		logger.Err(err).Fatal("Failed to listen and serve")
 	}
 }

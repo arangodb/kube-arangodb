@@ -23,10 +23,8 @@ package rotation
 import (
 	"testing"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
-	"github.com/rs/zerolog/log"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
 )
@@ -49,7 +47,7 @@ func runTestCases(t *testing.T) func(tcs ...TestCase) {
 				pspec := newTemplateFromSpec(t, tc.spec, api.ServerGroupAgents, tc.deploymentSpec)
 				pstatus := newTemplateFromSpec(t, tc.status, api.ServerGroupAgents, tc.deploymentSpec)
 
-				mode, plan, err := compare(log.Logger, tc.deploymentSpec, api.MemberStatus{ID: "id"}, api.ServerGroupAgents, pspec, pstatus)
+				mode, plan, err := compare(tc.deploymentSpec, api.MemberStatus{ID: "id"}, api.ServerGroupAgents, pspec, pstatus)
 
 				if tc.expectedErr != "" {
 					require.Error(t, err)

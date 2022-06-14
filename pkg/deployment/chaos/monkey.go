@@ -25,27 +25,38 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/rs/zerolog"
+)
+
+var (
+	chaosMonkeyLogger = logging.Global().RegisterAndGetLogger("chaos-monkey", logging.Info)
 )
 
 // Monkey is the service that introduces chaos in the deployment
 // if allowed and enabled.
 type Monkey struct {
-	log     zerolog.Logger
-	context Context
+	namespace, name string
+	log             logging.Logger
+	context         Context
+}
+
+func (m Monkey) WrapLogger(in *zerolog.Event) *zerolog.Event {
+	return in.Str("namespace", m.namespace).Str("name", m.name)
 }
 
 // NewMonkey creates a new chaos monkey with given context.
-func NewMonkey(log zerolog.Logger, context Context) *Monkey {
-	log = log.With().Str("component", "chaos-monkey").Logger()
-	return &Monkey{
-		log:     log,
-		context: context,
+func NewMonkey(namespace, name string, context Context) *Monkey {
+	m := &Monkey{
+		context:   context,
+		namespace: namespace,
+		name:      name,
 	}
+	m.log = chaosMonkeyLogger.WrapObj(m)
+	return m
 }
 
 // Run the monkey until the given channel is closed.
@@ -61,7 +72,7 @@ func (m Monkey) Run(stopCh <-chan struct{}) {
 			if rand.Float64() < chance {
 				// Let's introduce pod chaos
 				if err := m.killRandomPod(ctx); err != nil {
-					log.Info().Err(err).Msg("Failed to kill random pod")
+					m.log.Err(err).Info("Failed to kill random pod")
 				}
 			}
 		}
@@ -87,7 +98,7 @@ func (m Monkey) killRandomPod(ctx context.Context) error {
 		return nil
 	}
 	p := pods[rand.Intn(len(pods))]
-	m.log.Info().Str("pod-name", p.GetName()).Msg("Killing pod")
+	m.log.Str("pod-name", p.GetName()).Info("Killing pod")
 	if err := m.context.DeletePod(ctx, p.GetName(), meta.DeleteOptions{}); err != nil {
 		return errors.WithStack(err)
 	}

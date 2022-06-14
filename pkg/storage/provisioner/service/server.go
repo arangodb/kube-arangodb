@@ -30,8 +30,7 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 
-	"github.com/rs/zerolog"
-
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner"
 )
 
@@ -40,7 +39,7 @@ const (
 )
 
 // runServer runs a HTTP server serving the given API
-func runServer(ctx context.Context, log zerolog.Logger, addr string, api provisioner.API) error {
+func runServer(ctx context.Context, log logging.Logger, addr string, api provisioner.API) error {
 	mux := httprouter.New()
 	mux.GET("/nodeinfo", getNodeInfoHandler(api))
 	mux.POST("/info", getInfoHandler(api))
@@ -55,7 +54,7 @@ func runServer(ctx context.Context, log zerolog.Logger, addr string, api provisi
 	serverErrors := make(chan error)
 	go func() {
 		defer close(serverErrors)
-		log.Info().Msgf("Listening on %s", addr)
+		log.Info("Listening on %s", addr)
 		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			serverErrors <- errors.WithStack(err)
 		}
@@ -66,7 +65,7 @@ func runServer(ctx context.Context, log zerolog.Logger, addr string, api provisi
 		return errors.WithStack(err)
 	case <-ctx.Done():
 		// Close server
-		log.Debug().Msg("Closing server...")
+		log.Debug("Closing server...")
 		httpServer.Close()
 		return nil
 	}

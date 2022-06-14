@@ -23,7 +23,6 @@ package reconcile
 import (
 	"context"
 
-	"github.com/rs/zerolog"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -39,10 +38,10 @@ func init() {
 
 // newKillMemberPodAction creates a new Action that implements the given
 // planned KillMemberPod action.
-func newKillMemberPodAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newKillMemberPodAction(action api.Action, actionCtx ActionContext) Action {
 	a := &actionKillMemberPod{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -61,10 +60,9 @@ func (a *actionKillMemberPod) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	log := a.log
 	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !ok {
-		log.Error().Msg("No such member")
+		a.log.Error("No such member")
 		return true, nil
 	}
 
@@ -74,12 +72,12 @@ func (a *actionKillMemberPod) Start(ctx context.Context) (bool, error) {
 	}
 
 	if ifPodUIDMismatch(m, a.action, cache) {
-		log.Error().Msg("Member UID is changed")
+		a.log.Error("Member UID is changed")
 		return true, nil
 	}
 
 	if err := cache.Client().Kubernetes().CoreV1().Pods(cache.Namespace()).Delete(ctx, m.PodName, meta.DeleteOptions{}); err != nil {
-		log.Error().Err(err).Msg("Unable to kill pod")
+		a.log.Err(err).Error("Unable to kill pod")
 		return true, nil
 	}
 
@@ -92,11 +90,9 @@ func (a *actionKillMemberPod) CheckProgress(ctx context.Context) (bool, bool, er
 	if !features.GracefulShutdown().Enabled() {
 		return true, false, nil
 	}
-
-	log := a.log
 	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !ok {
-		log.Error().Msg("No such member")
+		a.log.Error("No such member")
 		return true, false, nil
 	}
 
@@ -107,7 +103,7 @@ func (a *actionKillMemberPod) CheckProgress(ctx context.Context) (bool, bool, er
 
 	p, ok := cache.Pod().V1().GetSimple(m.PodName)
 	if !ok {
-		log.Error().Msg("No such member")
+		a.log.Error("No such member")
 		return true, false, nil
 	}
 

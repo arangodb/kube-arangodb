@@ -25,7 +25,6 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/rs/zerolog"
 )
 
 func init() {
@@ -33,10 +32,10 @@ func init() {
 }
 
 // newDisableScalingCluster creates the new action with disabling scaling DBservers and coordinators.
-func newDisableScalingCluster(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newDisableScalingCluster(action api.Action, actionCtx ActionContext) Action {
 	a := &actionDisableScalingCluster{}
 
-	a.actionImpl = newActionImpl(log, action, actionCtx, util.NewString(""))
+	a.actionImpl = newActionImpl(action, actionCtx, util.NewString(""))
 
 	return a
 }

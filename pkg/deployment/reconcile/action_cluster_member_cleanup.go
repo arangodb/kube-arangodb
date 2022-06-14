@@ -28,7 +28,6 @@ import (
 	"github.com/arangodb/go-driver"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/rs/zerolog"
 )
 
 func init() {
@@ -37,10 +36,10 @@ func init() {
 
 // newClusterMemberCleanupAction creates a new Action that implements the given
 // planned ClusterMemberCleanup action.
-func newClusterMemberCleanupAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newClusterMemberCleanupAction(action api.Action, actionCtx ActionContext) Action {
 	a := &actionClusterMemberCleanup{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -59,7 +58,7 @@ type actionClusterMemberCleanup struct {
 // the start time needs to be recorded and a ready condition needs to be checked.
 func (a *actionClusterMemberCleanup) Start(ctx context.Context) (bool, error) {
 	if err := a.start(ctx); err != nil {
-		a.log.Warn().Err(err).Msgf("Unable to clean cluster member")
+		a.log.Err(err).Warn("Unable to clean cluster member")
 	}
 
 	return true, nil

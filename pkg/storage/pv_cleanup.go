@@ -32,14 +32,17 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/trigger"
 )
 
+var pcLogger = logging.Global().RegisterAndGetLogger("deployment-storage-pc", logging.Info)
+
 type pvCleaner struct {
 	mutex        sync.Mutex
-	log          zerolog.Logger
+	log          logging.Logger
 	cli          kubernetes.Interface
 	items        []v1.PersistentVolume
 	trigger      trigger.Trigger
@@ -47,12 +50,15 @@ type pvCleaner struct {
 }
 
 // newPVCleaner creates a new cleaner of persistent volumes.
-func newPVCleaner(log zerolog.Logger, cli kubernetes.Interface, clientGetter func(nodeName string) (provisioner.API, error)) *pvCleaner {
-	return &pvCleaner{
-		log:          log,
+func newPVCleaner(cli kubernetes.Interface, clientGetter func(nodeName string) (provisioner.API, error)) *pvCleaner {
+	c := &pvCleaner{
 		cli:          cli,
 		clientGetter: clientGetter,
 	}
+
+	c.log = pcLogger.WrapObj(c)
+
+	return c
 }
 
 // Run continues cleaning PV's until the given channel is closed.
@@ -61,7 +67,7 @@ func (c *pvCleaner) Run(stopCh <-chan struct{}) {
 		delay := time.Hour
 		hasMore, err := c.cleanFirst()
 		if err != nil {
-			c.log.Error().Err(err).Msg("Failed to clean PersistentVolume")
+			c.log.Err(err).Error("Failed to clean PersistentVolume")
 		}
 		if hasMore {
 			delay = time.Millisecond * 5
@@ -127,8 +133,8 @@ func (c *pvCleaner) cleanFirst() (bool, error) {
 
 // clean tries to clean the given PV.
 func (c *pvCleaner) clean(pv v1.PersistentVolume) error {
-	log := c.log.With().Str("name", pv.GetName()).Logger()
-	log.Debug().Msg("Cleaning PersistentVolume")
+	log := c.log.Str("name", pv.GetName())
+	log.Debug("Cleaning PersistentVolume")
 
 	// Find local path
 	localSource := pv.Spec.PersistentVolumeSource.Local
@@ -144,27 +150,31 @@ func (c *pvCleaner) clean(pv v1.PersistentVolume) error {
 	}
 	client, err := c.clientGetter(nodeName)
 	if err != nil {
-		log.Debug().Err(err).Str("node", nodeName).Msg("Failed to get client for node")
+		log.Err(err).Str("node", nodeName).Debug("Failed to get client for node")
 		return errors.WithStack(err)
 	}
 
 	// Clean volume through client
 	ctx := context.Background()
 	if err := client.Remove(ctx, localPath); err != nil {
-		log.Debug().Err(err).
+		log.Err(err).
 			Str("node", nodeName).
 			Str("local-path", localPath).
-			Msg("Failed to remove local path")
+			Debug("Failed to remove local path")
 		return errors.WithStack(err)
 	}
 
 	// Remove persistent volume
 	if err := c.cli.CoreV1().PersistentVolumes().Delete(context.Background(), pv.GetName(), metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
-		log.Debug().Err(err).
+		log.Err(err).
 			Str("name", pv.GetName()).
-			Msg("Failed to remove PersistentVolume")
+			Debug("Failed to remove PersistentVolume")
 		return errors.WithStack(err)
 	}
 
 	return nil
+}
+
+func (c *pvCleaner) WrapLogger(in *zerolog.Event) *zerolog.Event {
+	return in
 }

@@ -24,17 +24,16 @@ import (
 	"context"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/rs/zerolog"
 )
 
 func init() {
 	registerAction(api.ActionTypeEncryptionKeyPropagated, newEncryptionKeyPropagated, defaultTimeout)
 }
 
-func newEncryptionKeyPropagated(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newEncryptionKeyPropagated(action api.Action, actionCtx ActionContext) Action {
 	a := &encryptionKeyPropagatedAction{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -48,7 +47,7 @@ type encryptionKeyPropagatedAction struct {
 func (a *encryptionKeyPropagatedAction) Start(ctx context.Context) (bool, error) {
 	propagatedFlag, exists := a.action.Params[propagated]
 	if !exists {
-		a.log.Error().Msgf("Propagated flag is missing")
+		a.log.Error("Propagated flag is missing")
 		return true, nil
 	}
 

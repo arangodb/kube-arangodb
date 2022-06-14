@@ -34,7 +34,6 @@ import (
 // released volumes.
 // Returns the number of available PV's.
 func (ls *LocalStorage) inspectPVs() (int, error) {
-	log := ls.deps.Log
 	list, err := ls.deps.Client.Kubernetes().CoreV1().PersistentVolumes().List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return 0, errors.WithStack(err)
@@ -54,10 +53,10 @@ func (ls *LocalStorage) inspectPVs() (int, error) {
 				// Let's clean it up
 				if ls.isOwnerOf(&pv) {
 					// Cleanup this volume
-					log.Debug().Str("name", pv.GetName()).Msg("Added PersistentVolume to cleaner")
+					ls.log.Str("name", pv.GetName()).Debug("Added PersistentVolume to cleaner")
 					ls.pvCleaner.Add(pv)
 				} else {
-					log.Debug().Str("name", pv.GetName()).Msg("PersistentVolume is not owned by us")
+					ls.log.Str("name", pv.GetName()).Debug("PersistentVolume is not owned by us")
 					availableVolumes++
 				}
 			} else {
@@ -66,10 +65,10 @@ func (ls *LocalStorage) inspectPVs() (int, error) {
 		case v1.VolumeReleased:
 			if ls.isOwnerOf(&pv) {
 				// Cleanup this volume
-				log.Debug().Str("name", pv.GetName()).Msg("Added PersistentVolume to cleaner")
+				ls.log.Str("name", pv.GetName()).Debug("Added PersistentVolume to cleaner")
 				ls.pvCleaner.Add(pv)
 			} else {
-				log.Debug().Str("name", pv.GetName()).Msg("PersistentVolume is not owned by us")
+				ls.log.Str("name", pv.GetName()).Debug("PersistentVolume is not owned by us")
 			}
 		}
 	}

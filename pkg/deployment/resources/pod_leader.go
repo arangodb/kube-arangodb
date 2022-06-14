@@ -49,6 +49,8 @@ func (r *Resources) EnsureLeader(ctx context.Context, cachedStatus inspectorInte
 		return nil
 	}
 
+	log := r.log.Str("section", "pod")
+
 	cache, ok := r.context.GetAgencyHealth()
 	if !ok {
 		return nil
@@ -77,11 +79,11 @@ func (r *Resources) EnsureLeader(ctx context.Context, cachedStatus inspectorInte
 
 					err := r.context.ApplyPatchOnPod(ctx, pod, patch.ItemReplace(patch.NewPath("metadata", "labels"), labels))
 					if err != nil {
-						r.log.Error().Err(err).Msgf("Unable to remove leader label")
+						log.Err(err).Error("Unable to remove leader label")
 						return err
 					}
 
-					r.log.Info().Msgf("leader label is removed from \"%s\" member", m.ID)
+					log.Warn("leader label is removed from \"%s\" member", m.ID)
 					changed = true
 				}
 
@@ -100,10 +102,10 @@ func (r *Resources) EnsureLeader(ctx context.Context, cachedStatus inspectorInte
 
 			err := r.context.ApplyPatchOnPod(ctx, pod, patch.ItemReplace(patch.NewPath("metadata", "labels"), labels))
 			if err != nil {
-				r.log.Error().Err(err).Msgf("Unable to update leader label")
+				log.Err(err).Error("Unable to update leader label")
 				return err
 			}
-			r.log.Info().Msgf("leader label is set on \"%s\" member", m.ID)
+			log.Warn("leader label is set on \"%s\" member", m.ID)
 			changed = true
 		}
 

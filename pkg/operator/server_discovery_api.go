@@ -26,10 +26,10 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
-	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/server"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
@@ -54,15 +54,15 @@ func (o *Operator) FindOtherOperators() []server.OperatorReference {
 	var result []server.OperatorReference
 	namespaces, err := o.Dependencies.Client.Kubernetes().CoreV1().Namespaces().List(context.Background(), metav1.ListOptions{})
 	if err != nil {
-		log.Warn().Err(err).Msg("Failed to list namespaces")
+		log.Err(err).Warn("Failed to list namespaces")
 	} else {
 		for _, ns := range namespaces.Items {
 			if ns.Name != o.Config.Namespace {
-				log.Debug().Str("namespace", ns.Name).Msg("inspecting namespace for operators")
+				log.Str("namespace", ns.Name).Debug("inspecting namespace for operators")
 				refs := o.findOtherOperatorsInNamespace(log, ns.Name, func(server.OperatorType) bool { return true })
 				result = append(result, refs...)
 			} else {
-				log.Debug().Str("namespace", ns.Name).Msg("skip inspecting my own namespace for operators")
+				log.Str("namespace", ns.Name).Debug("skip inspecting my own namespace for operators")
 			}
 		}
 	}
@@ -91,12 +91,12 @@ func (o *Operator) FindOtherOperators() []server.OperatorReference {
 }
 
 // findOtherOperatorsInNamespace looks up references to other operators in the given namespace.
-func (o *Operator) findOtherOperatorsInNamespace(log zerolog.Logger, namespace string, typePred func(server.OperatorType) bool) []server.OperatorReference {
-	log = log.With().Str("namespace", namespace).Logger()
+func (o *Operator) findOtherOperatorsInNamespace(log logging.Logger, namespace string, typePred func(server.OperatorType) bool) []server.OperatorReference {
+	log = log.Str("namespace", namespace)
 	var result []server.OperatorReference
 	services, err := o.Dependencies.Client.Kubernetes().CoreV1().Services(namespace).List(context.Background(), metav1.ListOptions{})
 	if err != nil {
-		log.Debug().Err(err).Msg("Failed to list services")
+		log.Err(err).Debug("Failed to list services")
 		return nil
 	}
 	nodeFetcher := func() ([]*core.Node, error) {
@@ -120,7 +120,7 @@ func (o *Operator) findOtherOperatorsInNamespace(log zerolog.Logger, namespace s
 		// Filter out unwanted services
 		selector := svc.Spec.Selector
 		if selector[roleKey] != roleLeader {
-			log.Debug().Str("service", svc.Name).Msg("Service has no leader role selector")
+			log.Str("service", svc.Name).Debug("Service has no leader role selector")
 			continue
 		}
 		var oType server.OperatorType
@@ -132,7 +132,7 @@ func (o *Operator) findOtherOperatorsInNamespace(log zerolog.Logger, namespace s
 		case appStorageOperator:
 			oType = server.OperatorTypeStorage
 		default:
-			log.Debug().Str("service", svc.Name).Msg("Service has no or invalid app selector")
+			log.Str("service", svc.Name).Debug("Service has no or invalid app selector")
 			continue
 		}
 		if !typePred(oType) {
@@ -144,7 +144,7 @@ func (o *Operator) findOtherOperatorsInNamespace(log zerolog.Logger, namespace s
 			if x, err := k8sutil.CreateServiceURL(svc, "https", nil, nodeFetcher); err == nil {
 				url = x
 			} else {
-				log.Warn().Err(err).Str("service", svc.Name).Msg("Failed to create URL for service")
+				log.Err(err).Str("service", svc.Name).Warn("Failed to create URL for service")
 			}
 		default:
 			// No suitable service type
@@ -157,6 +157,6 @@ func (o *Operator) findOtherOperatorsInNamespace(log zerolog.Logger, namespace s
 		})
 	}
 
-	log.Debug().Msgf("Found %d operator services", len(result))
+	log.Debug("Found %d operator services", len(result))
 	return result
 }

@@ -37,7 +37,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
 )
 
@@ -67,13 +66,12 @@ type upgradeDecision struct {
 }
 
 // createRotateOrUpgradePlan goes over all pods to check if an upgrade or rotate is needed.
-func createRotateOrUpgradePlan(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+func (r *Reconciler) createRotateOrUpgradePlan(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext) api.Plan {
 	var plan api.Plan
 
-	newPlan, idle := createRotateOrUpgradePlanInternal(log, apiObject, spec, status, context)
+	newPlan, idle := r.createRotateOrUpgradePlanInternal(apiObject, spec, status, context)
 	if idle {
 		plan = append(plan,
 			actions.NewClusterAction(api.ActionTypeIdle))
@@ -83,8 +81,7 @@ func createRotateOrUpgradePlan(ctx context.Context,
 	return plan
 }
 
-func createMarkToRemovePlan(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+func (r *Reconciler) createMarkToRemovePlan(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext) api.Plan {
 	var plan api.Plan
@@ -122,13 +119,13 @@ func createMarkToRemovePlan(ctx context.Context,
 	return plan
 }
 
-func createRotateOrUpgradePlanInternal(log zerolog.Logger, apiObject k8sutil.APIObject, spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext) (api.Plan, bool) {
-	decision := createRotateOrUpgradeDecision(log, spec, status, context)
+func (r *Reconciler) createRotateOrUpgradePlanInternal(apiObject k8sutil.APIObject, spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext) (api.Plan, bool) {
+	decision := r.createRotateOrUpgradeDecision(spec, status, context)
 
 	if decision.IsUpgrade() {
-		return createUpgradePlanInternalCondition(log, apiObject, spec, status, context, decision)
+		return r.createUpgradePlanInternalCondition(apiObject, spec, status, context, decision)
 	} else if decision.IsUpdate() {
-		return createUpdatePlanInternalCondition(log, apiObject, spec, status, decision, context)
+		return r.createUpdatePlanInternalCondition(apiObject, spec, status, decision, context)
 	} else {
 		upgradeCondition := status.Conditions.IsTrue(api.ConditionTypeUpgradeInProgress)
 		updateCondition := status.Conditions.IsTrue(api.ConditionTypeUpdateInProgress)
@@ -151,8 +148,8 @@ func createRotateOrUpgradePlanInternal(log zerolog.Logger, apiObject k8sutil.API
 	return nil, false
 }
 
-func createUpdatePlanInternalCondition(log zerolog.Logger, apiObject k8sutil.APIObject, spec api.DeploymentSpec, status api.DeploymentStatus, decision updateUpgradeDecisionMap, context PlanBuilderContext) (api.Plan, bool) {
-	plan, idle := createUpdatePlanInternal(log, apiObject, spec, status, decision, context)
+func (r *Reconciler) createUpdatePlanInternalCondition(apiObject k8sutil.APIObject, spec api.DeploymentSpec, status api.DeploymentStatus, decision updateUpgradeDecisionMap, context PlanBuilderContext) (api.Plan, bool) {
+	plan, idle := r.createUpdatePlanInternal(apiObject, spec, status, decision, context)
 
 	if idle || len(plan) > 0 {
 		if !status.Conditions.IsTrue(api.ConditionTypeUpdateInProgress) {
@@ -165,7 +162,7 @@ func createUpdatePlanInternalCondition(log zerolog.Logger, apiObject k8sutil.API
 	return plan, idle
 }
 
-func createUpdatePlanInternal(log zerolog.Logger, apiObject k8sutil.APIObject, spec api.DeploymentSpec, status api.DeploymentStatus, decision updateUpgradeDecisionMap, context PlanBuilderContext) (api.Plan, bool) {
+func (r *Reconciler) createUpdatePlanInternal(apiObject k8sutil.APIObject, spec api.DeploymentSpec, status api.DeploymentStatus, decision updateUpgradeDecisionMap, context PlanBuilderContext) (api.Plan, bool) {
 	// Update phase
 	for _, m := range status.Members.AsList() {
 		d := decision[m.Member.ID]
@@ -176,14 +173,14 @@ func createUpdatePlanInternal(log zerolog.Logger, apiObject k8sutil.APIObject, s
 		if !d.updateAllowed {
 			// Update is not allowed due to constraint
 			if !d.unsafeUpdateAllowed {
-				log.Info().Str("member", m.Member.ID).Str("Reason", d.updateMessage).Msg("Pod needs restart but cluster is not ready. Either some shards are not in sync or some member is not ready.")
+				r.planLogger.Str("member", m.Member.ID).Str("Reason", d.updateMessage).Info("Pod needs restart but cluster is not ready. Either some shards are not in sync or some member is not ready.")
 				continue
 			}
-			log.Info().Str("member", m.Member.ID).Str("Reason", d.updateMessage).Msg("Pod needs restart but cluster is not ready. Either some shards are not in sync or some member is not ready, but unsafe upgrade is allowed")
+			r.planLogger.Str("member", m.Member.ID).Str("Reason", d.updateMessage).Info("Pod needs restart but cluster is not ready. Either some shards are not in sync or some member is not ready, but unsafe upgrade is allowed")
 		}
 
 		if m.Member.Conditions.IsTrue(api.ConditionTypeRestart) {
-			return createRotateMemberPlan(log, m.Member, m.Group, spec, "Restart flag present"), false
+			return r.createRotateMemberPlan(m.Member, m.Group, spec, "Restart flag present"), false
 		}
 		arangoMember, ok := context.ACS().CurrentClusterCache().ArangoMember().V1().GetSimple(m.Member.ArangoMemberName(apiObject.GetName(), m.Group))
 		if !ok {
@@ -200,8 +197,8 @@ func createUpdatePlanInternal(log zerolog.Logger, apiObject k8sutil.APIObject, s
 			p = nil
 		}
 
-		if mode, p, reason, err := rotation.IsRotationRequired(log, context.ACS(), spec, m.Member, m.Group, p, arangoMember.Spec.Template, arangoMember.Status.Template); err != nil {
-			log.Err(err).Str("member", m.Member.ID).Msgf("Error while generating update plan")
+		if mode, p, reason, err := rotation.IsRotationRequired(context.ACS(), spec, m.Member, m.Group, p, arangoMember.Spec.Template, arangoMember.Status.Template); err != nil {
+			r.planLogger.Err(err).Str("member", m.Member.ID).Error("Error while generating update plan")
 			continue
 		} else if mode != rotation.InPlaceRotation {
 			return api.Plan{actions.NewAction(api.ActionTypeSetMemberCondition, m.Group, m.Member, "Cleaning update").
@@ -223,8 +220,8 @@ func createUpdatePlanInternal(log zerolog.Logger, apiObject k8sutil.APIObject, s
 	return nil, true
 }
 
-func createUpgradePlanInternalCondition(log zerolog.Logger, apiObject k8sutil.APIObject, spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext, decision updateUpgradeDecisionMap) (api.Plan, bool) {
-	plan, idle := createUpgradePlanInternal(log, apiObject, spec, status, context, decision)
+func (r *Reconciler) createUpgradePlanInternalCondition(apiObject k8sutil.APIObject, spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext, decision updateUpgradeDecisionMap) (api.Plan, bool) {
+	plan, idle := r.createUpgradePlanInternal(apiObject, spec, status, context, decision)
 
 	if idle || len(plan) > 0 {
 		if !status.Conditions.IsTrue(api.ConditionTypeUpgradeInProgress) {
@@ -237,7 +234,7 @@ func createUpgradePlanInternalCondition(log zerolog.Logger, apiObject k8sutil.AP
 	return plan, idle
 }
 
-func createUpgradePlanInternal(log zerolog.Logger, apiObject k8sutil.APIObject, spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext, decision updateUpgradeDecisionMap) (api.Plan, bool) {
+func (r *Reconciler) createUpgradePlanInternal(apiObject k8sutil.APIObject, spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext, decision updateUpgradeDecisionMap) (api.Plan, bool) {
 	for _, m := range status.Members.AsList() {
 		// Pre-check
 		d := decision[m.Member.ID]
@@ -283,24 +280,24 @@ func createUpgradePlanInternal(log zerolog.Logger, apiObject k8sutil.APIObject, 
 
 		if d.updateAllowed {
 			// We are fine, group is alive so we can proceed
-			log.Info().Str("member", m.Member.ID).Str("Reason", d.updateMessage).Msg("Upgrade allowed")
-			return createUpgradeMemberPlan(log, m.Member, m.Group, "Version upgrade", spec, status, !d.upgradeDecision.AutoUpgradeNeeded), false
+			r.planLogger.Str("member", m.Member.ID).Str("Reason", d.updateMessage).Info("Upgrade allowed")
+			return r.createUpgradeMemberPlan(m.Member, m.Group, "Version upgrade", spec, status, !d.upgradeDecision.AutoUpgradeNeeded), false
 		} else if d.unsafeUpdateAllowed {
-			log.Info().Str("member", m.Member.ID).Str("Reason", d.updateMessage).Msg("Pod needs upgrade but cluster is not ready. Either some shards are not in sync or some member is not ready, but unsafe upgrade is allowed")
-			return createUpgradeMemberPlan(log, m.Member, m.Group, "Version upgrade", spec, status, !d.upgradeDecision.AutoUpgradeNeeded), false
+			r.planLogger.Str("member", m.Member.ID).Str("Reason", d.updateMessage).Info("Pod needs upgrade but cluster is not ready. Either some shards are not in sync or some member is not ready, but unsafe upgrade is allowed")
+			return r.createUpgradeMemberPlan(m.Member, m.Group, "Version upgrade", spec, status, !d.upgradeDecision.AutoUpgradeNeeded), false
 		} else {
-			log.Info().Str("member", m.Member.ID).Str("Reason", d.updateMessage).Msg("Pod needs upgrade but cluster is not ready. Either some shards are not in sync or some member is not ready.")
+			r.planLogger.Str("member", m.Member.ID).Str("Reason", d.updateMessage).Info("Pod needs upgrade but cluster is not ready. Either some shards are not in sync or some member is not ready.")
 			return nil, true
 		}
 	}
 
-	log.Warn().Msg("Pod upgrade plan has been made, but it has been dropped due to missing flag")
+	r.planLogger.Warn("Pod upgrade plan has been made, but it has been dropped due to missing flag")
 	return nil, false
 }
 
 // podNeedsUpgrading decides if an upgrade of the pod is needed (to comply with
 // the given spec) and if that is allowed.
-func podNeedsUpgrading(log zerolog.Logger, status api.MemberStatus, spec api.DeploymentSpec, images api.ImageInfoList) upgradeDecision {
+func (r *Reconciler) podNeedsUpgrading(status api.MemberStatus, spec api.DeploymentSpec, images api.ImageInfoList) upgradeDecision {
 	currentImage, found := currentImageInfo(spec, images)
 	if !found {
 		// Hold rotation tasks - we do not know image
@@ -341,10 +338,10 @@ func podNeedsUpgrading(log zerolog.Logger, status api.MemberStatus, spec api.Dep
 	}
 	if specVersion.Major() != memberVersion.Major() || specVersion.Minor() != memberVersion.Minor() {
 		// Is allowed, with `--database.auto-upgrade`
-		log.Info().Str("spec-version", string(specVersion)).Str("pod-version", string(memberVersion)).
+		r.planLogger.Str("spec-version", string(specVersion)).Str("pod-version", string(memberVersion)).
 			Int("spec-version.major", specVersion.Major()).Int("spec-version.minor", specVersion.Minor()).
 			Int("pod-version.major", memberVersion.Major()).Int("pod-version.minor", memberVersion.Minor()).
-			Msg("Deciding to do a upgrade with --auto-upgrade")
+			Info("Deciding to do a upgrade with --auto-upgrade")
 		return upgradeDecision{
 			FromVersion:       memberVersion,
 			FromLicense:       memberLicense,
@@ -394,7 +391,7 @@ func memberImageInfo(spec api.DeploymentSpec, status api.MemberStatus, images ap
 	return api.ImageInfo{}, false
 }
 
-func getPodDetails(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIObject, spec api.DeploymentSpec,
+func (r *Reconciler) getPodDetails(ctx context.Context, apiObject k8sutil.APIObject, spec api.DeploymentSpec,
 	group api.ServerGroup, status api.DeploymentStatus, m api.MemberStatus,
 	planCtx PlanBuilderContext) (string, *core.Pod, *api.ArangoMember, bool) {
 	imageInfo, imageFound := planCtx.SelectImageForMember(spec, status, m)
@@ -412,13 +409,13 @@ func getPodDetails(ctx context.Context, log zerolog.Logger, apiObject k8sutil.AP
 
 	renderedPod, err := planCtx.RenderPodForMember(ctx, planCtx.ACS(), spec, status, m.ID, imageInfo)
 	if err != nil {
-		log.Err(err).Msg("Error while rendering pod")
+		r.planLogger.Err(err).Error("Error while rendering pod")
 		return "", nil, nil, false
 	}
 
 	checksum, err := resources.ChecksumArangoPod(groupSpec, renderedPod)
 	if err != nil {
-		log.Err(err).Msg("Error while getting pod checksum")
+		r.planLogger.Err(err).Error("Error while getting pod checksum")
 		return "", nil, nil, false
 	}
 
@@ -429,10 +426,10 @@ func getPodDetails(ctx context.Context, log zerolog.Logger, apiObject k8sutil.AP
 // given pod differs from what it should be according to the
 // given deployment spec.
 // When true is returned, a reason for the rotation is already returned.
-func arangoMemberPodTemplateNeedsUpdate(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIObject, spec api.DeploymentSpec,
+func (r *Reconciler) arangoMemberPodTemplateNeedsUpdate(ctx context.Context, apiObject k8sutil.APIObject, spec api.DeploymentSpec,
 	group api.ServerGroup, status api.DeploymentStatus, m api.MemberStatus,
 	planCtx PlanBuilderContext) (string, bool) {
-	checksum, _, member, valid := getPodDetails(ctx, log, apiObject, spec, group, status, m, planCtx)
+	checksum, _, member, valid := r.getPodDetails(ctx, apiObject, spec, group, status, m, planCtx)
 	if valid && !member.Spec.Template.EqualPodSpecChecksum(checksum) {
 		return "Pod Spec changed", true
 	}
@@ -487,18 +484,18 @@ func groupReadyForRestart(context PlanBuilderContext, status api.DeploymentStatu
 
 // createUpgradeMemberPlan creates a plan to upgrade (stop-recreateWithAutoUpgrade-stop-start) an existing
 // member.
-func createUpgradeMemberPlan(log zerolog.Logger, member api.MemberStatus,
+func (r *Reconciler) createUpgradeMemberPlan(member api.MemberStatus,
 	group api.ServerGroup, reason string, spec api.DeploymentSpec, status api.DeploymentStatus, rotateStatefull bool) api.Plan {
 	upgradeAction := api.ActionTypeUpgradeMember
 	if rotateStatefull || group.IsStateless() {
 		upgradeAction = api.ActionTypeRotateMember
 	}
-	log.Debug().
+	r.planLogger.
 		Str("id", member.ID).
 		Str("role", group.AsRole()).
 		Str("reason", reason).
 		Str("action", string(upgradeAction)).
-		Msg("Creating upgrade plan")
+		Info("Creating upgrade plan")
 
 	plan := createRotateMemberPlanWithAction(member, group, upgradeAction, spec, reason)
 

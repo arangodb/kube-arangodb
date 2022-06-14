@@ -22,7 +22,6 @@ package operator
 
 import (
 	deploymentType "github.com/arangodb/kube-arangodb/pkg/apis/deployment"
-	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	kwatch "k8s.io/apimachinery/pkg/watch"
@@ -46,7 +45,6 @@ var (
 // This registers a listener and waits until the process stops.
 func (o *Operator) runDeployments(stop <-chan struct{}) {
 	rw := k8sutil.NewResourceWatcher(
-		o.log,
 		o.Client.Arango().DatabaseV1().RESTClient(),
 		deploymentType.ArangoDeploymentResourcePlural,
 		o.Config.Namespace,
@@ -67,9 +65,9 @@ func (o *Operator) onAddArangoDeployment(obj interface{}) {
 	defer o.Dependencies.LivenessProbe.Unlock()
 
 	apiObject := obj.(*api.ArangoDeployment)
-	o.log.Debug().
+	o.log.
 		Str("name", apiObject.GetObjectMeta().GetName()).
-		Msg("ArangoDeployment added")
+		Debug("ArangoDeployment added")
 	o.syncArangoDeployment(apiObject)
 }
 
@@ -79,9 +77,9 @@ func (o *Operator) onUpdateArangoDeployment(oldObj, newObj interface{}) {
 	defer o.Dependencies.LivenessProbe.Unlock()
 
 	apiObject := newObj.(*api.ArangoDeployment)
-	o.log.Debug().
+	o.log.
 		Str("name", apiObject.GetObjectMeta().GetName()).
-		Msg("ArangoDeployment updated")
+		Debug("ArangoDeployment updated")
 	o.syncArangoDeployment(apiObject)
 }
 
@@ -95,18 +93,18 @@ func (o *Operator) onDeleteArangoDeployment(obj interface{}) {
 	if !ok {
 		tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
 		if !ok {
-			log.Error().Interface("event-object", obj).Msg("unknown object from ArangoDeployment delete event")
+			log.Interface("event-object", obj).Error("unknown object from ArangoDeployment delete event")
 			return
 		}
 		apiObject, ok = tombstone.Obj.(*api.ArangoDeployment)
 		if !ok {
-			log.Error().Interface("event-object", obj).Msg("Tombstone contained object that is not an ArangoDeployment")
+			log.Interface("event-object", obj).Error("Tombstone contained object that is not an ArangoDeployment")
 			return
 		}
 	}
-	log.Debug().
+	log.
 		Str("name", apiObject.GetObjectMeta().GetName()).
-		Msg("ArangoDeployment deleted")
+		Debug("ArangoDeployment deleted")
 	ev := &Event{
 		Type:       kwatch.Deleted,
 		Deployment: apiObject,
@@ -115,7 +113,7 @@ func (o *Operator) onDeleteArangoDeployment(obj interface{}) {
 	//	pt.start()
 	err := o.handleDeploymentEvent(ev)
 	if err != nil {
-		log.Warn().Err(err).Msg("Failed to handle event")
+		log.Err(err).Warn("Failed to handle event")
 	}
 	//pt.stop()
 }
@@ -136,7 +134,7 @@ func (o *Operator) syncArangoDeployment(apiObject *api.ArangoDeployment) {
 	//pt.start()
 	err := o.handleDeploymentEvent(ev)
 	if err != nil {
-		o.log.Warn().Err(err).Msg("Failed to handle event")
+		o.log.Err(err).Warn("Failed to handle event")
 	}
 	//pt.stop()
 }
@@ -167,7 +165,7 @@ func (o *Operator) handleDeploymentEvent(event *Event) error {
 			return errors.WithStack(errors.Wrapf(err, "invalid deployment spec. please fix the following problem with the deployment spec: %v", err))
 		}
 
-		cfg, deps := o.makeDeploymentConfigAndDeps(apiObject)
+		cfg, deps := o.makeDeploymentConfigAndDeps()
 		nc, err := deployment.New(cfg, deps, apiObject)
 		if err != nil {
 			return errors.WithStack(errors.Newf("failed to create deployment: %s", err))
@@ -199,7 +197,7 @@ func (o *Operator) handleDeploymentEvent(event *Event) error {
 }
 
 // makeDeploymentConfigAndDeps creates a Config & Dependencies object for a new Deployment.
-func (o *Operator) makeDeploymentConfigAndDeps(apiObject *api.ArangoDeployment) (deployment.Config, deployment.Dependencies) {
+func (o *Operator) makeDeploymentConfigAndDeps() (deployment.Config, deployment.Dependencies) {
 	cfg := deployment.Config{
 		ServiceAccount:            o.Config.ServiceAccount,
 		OperatorImage:             o.Config.OperatorImage,
@@ -209,9 +207,6 @@ func (o *Operator) makeDeploymentConfigAndDeps(apiObject *api.ArangoDeployment) 
 		Scope:                     o.Scope,
 	}
 	deps := deployment.Dependencies{
-		Log: o.Dependencies.LogService.MustGetLogger(logging.LoggerNameDeployment).With().
-			Str("deployment", apiObject.GetName()).
-			Logger(),
 		Client:        o.Client,
 		EventRecorder: o.EventRecorder,
 	}

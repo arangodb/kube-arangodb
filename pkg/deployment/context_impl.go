@@ -52,7 +52,6 @@ import (
 
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 
-	"github.com/rs/zerolog/log"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -75,6 +74,7 @@ import (
 	serviceaccountv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount/v1"
 	servicemonitorv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
+	"github.com/rs/zerolog/log"
 )
 
 var _ resources.Context = &Deployment{}
@@ -146,10 +146,10 @@ func (d *Deployment) UpdateStatus(ctx context.Context, status api.DeploymentStat
 func (d *Deployment) updateStatus(ctx context.Context, status api.DeploymentStatus, lastVersion int32, force ...bool) error {
 	if d.status.version != lastVersion {
 		// Status is obsolete
-		d.deps.Log.Error().
+		d.log.
 			Int32("expected-version", lastVersion).
 			Int32("actual-version", d.status.version).
-			Msg("UpdateStatus version conflict error.")
+			Error("UpdateStatus version conflict error.")
 		return errors.WithStack(errors.Newf("Status conflict error. Expected version %d, got %d", lastVersion, d.status.version))
 	}
 
@@ -174,7 +174,7 @@ func (d *Deployment) UpdateMember(ctx context.Context, member api.MemberStatus) 
 		return errors.WithStack(err)
 	}
 	if err := d.UpdateStatus(ctx, status, lastVersion); err != nil {
-		d.deps.Log.Debug().Err(err).Msg("Updating CR status failed")
+		d.log.Err(err).Debug("Updating CR status failed")
 		return errors.WithStack(err)
 	}
 	return nil
@@ -307,7 +307,7 @@ func (d *Deployment) getJWTFolderToken() (string, bool) {
 	if i := d.apiObject.Status.CurrentImage; i == nil || features.JWTRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
 		s, err := d.GetCachedStatus().Secret().V1().Read().Get(context.Background(), pod.JWTSecretFolder(d.GetName()), meta.GetOptions{})
 		if err != nil {
-			d.deps.Log.Error().Err(err).Msgf("Unable to get secret")
+			d.log.Err(err).Error("Unable to get secret")
 			return "", false
 		}
 
@@ -344,11 +344,10 @@ func (d *Deployment) getJWTToken() (string, bool) {
 // GetSyncServerClient returns a cached client for a specific arangosync server.
 func (d *Deployment) GetSyncServerClient(ctx context.Context, group api.ServerGroup, id string) (client.API, error) {
 	// Fetch monitoring token
-	log := d.deps.Log
 	secretName := d.apiObject.Spec.Sync.Monitoring.GetTokenSecretName()
 	monitoringToken, err := k8sutil.GetTokenSecret(ctx, d.GetCachedStatus().Secret().V1().Read(), secretName)
 	if err != nil {
-		log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get sync monitoring secret")
+		d.log.Err(err).Str("secret-name", secretName).Debug("Failed to get sync monitoring secret")
 		return nil, errors.WithStack(err)
 	}
 
@@ -368,7 +367,8 @@ func (d *Deployment) GetSyncServerClient(ctx context.Context, group api.ServerGr
 	}
 	auth := client.NewAuthentication(tlsAuth, "")
 	insecureSkipVerify := true
-	c, err := d.syncClientCache.GetClient(d.deps.Log, source, auth, insecureSkipVerify)
+	// TODO: Change logging system in sync client
+	c, err := d.syncClientCache.GetClient(log.Logger, source, auth, insecureSkipVerify)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -378,11 +378,10 @@ func (d *Deployment) GetSyncServerClient(ctx context.Context, group api.ServerGr
 // CreateMember adds a new member to the given group.
 // If ID is non-empty, it will be used, otherwise a new ID is created.
 func (d *Deployment) CreateMember(ctx context.Context, group api.ServerGroup, id string, mods ...reconcile.CreateMemberMod) (string, error) {
-	log := d.deps.Log
 	if err := d.WithStatusUpdateErr(ctx, func(s *api.DeploymentStatus) (bool, error) {
-		nid, err := createMember(log, s, group, id, d.apiObject, mods...)
+		nid, err := d.createMember(s, group, id, d.apiObject, mods...)
 		if err != nil {
-			log.Debug().Err(err).Str("group", group.AsRole()).Msg("Failed to create member")
+			d.log.Err(err).Str("group", group.AsRole()).Debug("Failed to create member")
 			return false, errors.WithStack(err)
 		}
 
@@ -407,12 +406,12 @@ func (d *Deployment) GetPod(ctx context.Context, podName string) (*core.Pod, err
 // DeletePod deletes a pod with given name in the namespace
 // of the deployment. If the pod does not exist, the error is ignored.
 func (d *Deployment) DeletePod(ctx context.Context, podName string, options meta.DeleteOptions) error {
-	log := d.deps.Log
+	log := d.log
 	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		return d.PodsModInterface().Delete(ctxChild, podName, options)
 	})
 	if err != nil && !k8sutil.IsNotFound(err) {
-		log.Debug().Err(err).Str("pod", podName).Msg("Failed to remove pod")
+		log.Err(err).Str("pod", podName).Debug("Failed to remove pod")
 		return errors.WithStack(err)
 	}
 	return nil
@@ -421,7 +420,7 @@ func (d *Deployment) DeletePod(ctx context.Context, podName string, options meta
 // CleanupPod deletes a given pod with force and explicit UID.
 // If the pod does not exist, the error is ignored.
 func (d *Deployment) CleanupPod(ctx context.Context, p *core.Pod) error {
-	log := d.deps.Log
+	log := d.log
 	podName := p.GetName()
 	options := meta.NewDeleteOptions(0)
 	options.Preconditions = meta.NewUIDPreconditions(string(p.GetUID()))
@@ -429,7 +428,7 @@ func (d *Deployment) CleanupPod(ctx context.Context, p *core.Pod) error {
 		return d.PodsModInterface().Delete(ctxChild, podName, *options)
 	})
 	if err != nil && !k8sutil.IsNotFound(err) {
-		log.Debug().Err(err).Str("pod", podName).Msg("Failed to cleanup pod")
+		log.Err(err).Str("pod", podName).Debug("Failed to cleanup pod")
 		return errors.WithStack(err)
 	}
 	return nil
@@ -438,8 +437,6 @@ func (d *Deployment) CleanupPod(ctx context.Context, p *core.Pod) error {
 // RemovePodFinalizers removes all the finalizers from the Pod with given name in the namespace
 // of the deployment. If the pod does not exist, the error is ignored.
 func (d *Deployment) RemovePodFinalizers(ctx context.Context, podName string) error {
-	log := d.deps.Log
-
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 	p, err := d.GetCachedStatus().Pod().V1().Read().Get(ctxChild, podName, meta.GetOptions{})
@@ -450,7 +447,7 @@ func (d *Deployment) RemovePodFinalizers(ctx context.Context, podName string) er
 		return errors.WithStack(err)
 	}
 
-	_, err = k8sutil.RemovePodFinalizers(ctx, d.GetCachedStatus(), log, d.PodsModInterface(), p, p.GetFinalizers(), true)
+	_, err = k8sutil.RemovePodFinalizers(ctx, d.GetCachedStatus(), d.PodsModInterface(), p, p.GetFinalizers(), true)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -460,12 +457,12 @@ func (d *Deployment) RemovePodFinalizers(ctx context.Context, podName string) er
 // DeletePvc deletes a persistent volume claim with given name in the namespace
 // of the deployment. If the pvc does not exist, the error is ignored.
 func (d *Deployment) DeletePvc(ctx context.Context, pvcName string) error {
-	log := d.deps.Log
+	log := d.log
 	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		return d.PersistentVolumeClaimsModInterface().Delete(ctxChild, pvcName, meta.DeleteOptions{})
 	})
 	if err != nil && !k8sutil.IsNotFound(err) {
-		log.Debug().Err(err).Str("pvc", pvcName).Msg("Failed to remove pvc")
+		log.Err(err).Str("pvc", pvcName).Debug("Failed to remove pvc")
 		return errors.WithStack(err)
 	}
 	return nil
@@ -509,7 +506,7 @@ func (d *Deployment) GetPvc(ctx context.Context, pvcName string) (*core.Persiste
 
 	pvc, err := d.GetCachedStatus().PersistentVolumeClaim().V1().Read().Get(ctxChild, pvcName, meta.GetOptions{})
 	if err != nil {
-		log.Debug().Err(err).Str("pvc-name", pvcName).Msg("Failed to get PVC")
+		d.log.Err(err).Str("pvc-name", pvcName).Debug("Failed to get PVC")
 		return nil, errors.WithStack(err)
 	}
 	return pvc, nil

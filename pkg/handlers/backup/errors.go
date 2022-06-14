@@ -94,7 +94,7 @@ func isTemporaryError(err error) bool {
 		}
 	}
 
-	if v, ok := err.(utils.Causer); ok {
+	if v, ok := err.(errors.Causer); ok {
 		return isTemporaryError(v.Cause())
 	}
 

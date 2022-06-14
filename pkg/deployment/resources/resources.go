@@ -20,22 +20,26 @@
 
 package resources
 
-import (
-	"github.com/rs/zerolog"
-)
+import "github.com/arangodb/kube-arangodb/pkg/logging"
 
 // Resources is a service that creates low level resources for members
 // and inspects low level resources, put the inspection result in members.
 type Resources struct {
-	log     zerolog.Logger
-	context Context
+	log             logging.Logger
+	namespace, name string
+	context         Context
 }
 
 // NewResources creates a new Resources service, used to
 // create and inspect low level resources such as pods and services.
-func NewResources(log zerolog.Logger, context Context) *Resources {
-	return &Resources{
-		log:     log,
-		context: context,
+func NewResources(namespace, name string, context Context) *Resources {
+	r := &Resources{
+		namespace: namespace,
+		name:      name,
+		context:   context,
 	}
+
+	r.log = logger.WrapObj(r)
+
+	return r
 }

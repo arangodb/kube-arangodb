@@ -30,13 +30,11 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/rs/zerolog"
 )
 
 const coordinatorHealthFailedTimeout time.Duration = time.Minute
 
-func createClusterOperationPlan(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+func (r *Reconciler) createClusterOperationPlan(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	planCtx PlanBuilderContext) api.Plan {
 
@@ -55,7 +53,7 @@ func createClusterOperationPlan(ctx context.Context,
 	defer cancel()
 	cluster, err := c.Cluster(ctxChild)
 	if err != nil {
-		log.Warn().Err(err).Msgf("Unable to get Cluster client")
+		r.log.Err(err).Warn("Unable to get Cluster client")
 		return nil
 	}
 
@@ -63,7 +61,7 @@ func createClusterOperationPlan(ctx context.Context,
 	defer cancel()
 	health, err := cluster.Health(ctxChild)
 	if err != nil {
-		log.Warn().Err(err).Msgf("Unable to get Cluster health")
+		r.log.Err(err).Warn("Unable to get Cluster health")
 		return nil
 	}
 

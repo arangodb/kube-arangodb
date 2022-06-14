@@ -26,7 +26,6 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
-	"github.com/rs/zerolog"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/arangosync-client/client"
@@ -62,24 +61,24 @@ func (dr *DeploymentReplication) addFinalizers() error {
 
 // runFinalizers goes through the list of ArangoDeploymentReplication finalizers to see if they can be removed.
 func (dr *DeploymentReplication) runFinalizers(ctx context.Context, p *api.ArangoDeploymentReplication) error {
-	log := dr.deps.Log.With().Str("replication-name", p.GetName()).Logger()
+	log := dr.log.Str("replication-name", p.GetName())
 	var removalList []string
 	for _, f := range p.ObjectMeta.GetFinalizers() {
 		switch f {
 		case constants.FinalizerDeplReplStopSync:
-			log.Debug().Msg("Inspecting stop-sync finalizer")
-			if err := dr.inspectFinalizerDeplReplStopSync(ctx, log, p); err == nil {
+			log.Debug("Inspecting stop-sync finalizer")
+			if err := dr.inspectFinalizerDeplReplStopSync(ctx, p); err == nil {
 				removalList = append(removalList, f)
 			} else {
-				log.Debug().Err(err).Str("finalizer", f).Msg("Cannot remove finalizer yet")
+				log.Err(err).Str("finalizer", f).Debug("Cannot remove finalizer yet")
 			}
 		}
 	}
 	// Remove finalizers (if needed)
 	if len(removalList) > 0 {
 		ignoreNotFound := false
-		if err := removeDeploymentReplicationFinalizers(log, dr.deps.Client.Arango(), p, removalList, ignoreNotFound); err != nil {
-			log.Debug().Err(err).Msg("Failed to update deployment replication (to remove finalizers)")
+		if err := removeDeploymentReplicationFinalizers(dr.deps.Client.Arango(), p, removalList, ignoreNotFound); err != nil {
+			log.Err(err).Debug("Failed to update deployment replication (to remove finalizers)")
 			return errors.WithStack(err)
 		}
 	}
@@ -88,10 +87,10 @@ func (dr *DeploymentReplication) runFinalizers(ctx context.Context, p *api.Arang
 
 // inspectFinalizerDeplReplStopSync checks the finalizer condition for stop-sync.
 // It returns nil if the finalizer can be removed.
-func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Context, log zerolog.Logger, p *api.ArangoDeploymentReplication) error {
+func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Context, p *api.ArangoDeploymentReplication) error {
 	// Inspect phase
 	if p.Status.Phase.IsFailed() {
-		log.Debug().Msg("Deployment replication is already failed, safe to remove stop-sync finalizer")
+		dr.log.Debug("Deployment replication is already failed, safe to remove stop-sync finalizer")
 		return nil
 	}
 
@@ -101,13 +100,13 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 	if name := p.Spec.Source.GetDeploymentName(); name != "" {
 		depl, err := depls.Get(context.Background(), name, metav1.GetOptions{})
 		if k8sutil.IsNotFound(err) {
-			log.Debug().Msg("Source deployment is gone. Abort enabled")
+			dr.log.Debug("Source deployment is gone. Abort enabled")
 			abort = true
 		} else if err != nil {
-			log.Warn().Err(err).Msg("Failed to get source deployment")
+			dr.log.Err(err).Warn("Failed to get source deployment")
 			return errors.WithStack(err)
 		} else if depl.GetDeletionTimestamp() != nil {
-			log.Debug().Msg("Source deployment is being deleted. Abort enabled")
+			dr.log.Debug("Source deployment is being deleted. Abort enabled")
 			abort = true
 		}
 	}
@@ -117,13 +116,13 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 	if name := p.Spec.Destination.GetDeploymentName(); name != "" {
 		depl, err := depls.Get(context.Background(), name, metav1.GetOptions{})
 		if k8sutil.IsNotFound(err) {
-			log.Debug().Msg("Destination deployment is gone. Source cleanup enabled")
+			dr.log.Debug("Destination deployment is gone. Source cleanup enabled")
 			cleanupSource = true
 		} else if err != nil {
-			log.Warn().Err(err).Msg("Failed to get destinaton deployment")
+			dr.log.Err(err).Warn("Failed to get destinaton deployment")
 			return errors.WithStack(err)
 		} else if depl.GetDeletionTimestamp() != nil {
-			log.Debug().Msg("Destination deployment is being deleted. Source cleanup enabled")
+			dr.log.Debug("Destination deployment is being deleted. Source cleanup enabled")
 			cleanupSource = true
 		}
 	}
@@ -142,7 +141,7 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 		// Destination still exists, stop/abort sync
 		destClient, err := dr.createSyncMasterClient(p.Spec.Destination)
 		if err != nil {
-			log.Warn().Err(err).Msg("Failed to create destination client")
+			dr.log.Err(err).Warn("Failed to create destination client")
 			return errors.WithStack(err)
 		}
 		req := client.CancelSynchronizationRequest{
@@ -150,13 +149,13 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 			Force:        abort,
 			ForceTimeout: time.Minute * 2,
 		}
-		log.Debug().Bool("abort", abort).Msg("Stopping synchronization...")
+		dr.log.Bool("abort", abort).Debug("Stopping synchronization...")
 		_, err = destClient.Master().CancelSynchronization(ctx, req)
 		if err != nil && !client.IsPreconditionFailed(err) {
-			log.Warn().Err(err).Bool("abort", abort).Msg("Failed to stop synchronization")
+			dr.log.Err(err).Bool("abort", abort).Warn("Failed to stop synchronization")
 			dr.status.CancelFailures++
 			if err := dr.updateCRStatus(); err != nil {
-				log.Warn().Err(err).Msg("Failed to update status to reflect cancel-failures increment")
+				dr.log.Err(err).Warn("Failed to update status to reflect cancel-failures increment")
 			}
 			return errors.WithStack(err)
 		}
@@ -165,7 +164,7 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 }
 
 // removeDeploymentReplicationFinalizers removes the given finalizers from the given DeploymentReplication.
-func removeDeploymentReplicationFinalizers(log zerolog.Logger, crcli versioned.Interface, p *api.ArangoDeploymentReplication, finalizers []string, ignoreNotFound bool) error {
+func removeDeploymentReplicationFinalizers(crcli versioned.Interface, p *api.ArangoDeploymentReplication, finalizers []string, ignoreNotFound bool) error {
 	repls := crcli.ReplicationV1().ArangoDeploymentReplications(p.GetNamespace())
 	getFunc := func() (metav1.Object, error) {
 		result, err := repls.Get(context.Background(), p.GetName(), metav1.GetOptions{})
@@ -183,7 +182,7 @@ func removeDeploymentReplicationFinalizers(log zerolog.Logger, crcli versioned.I
 		*p = *result
 		return nil
 	}
-	if _, err := k8sutil.RemoveFinalizers(log, finalizers, getFunc, updateFunc, ignoreNotFound); err != nil {
+	if _, err := k8sutil.RemoveFinalizers(finalizers, getFunc, updateFunc, ignoreNotFound); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil

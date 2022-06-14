@@ -29,17 +29,16 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/rs/zerolog"
 )
 
 func init() {
 	registerAction(api.ActionTypeLicenseSet, newLicenseSet, defaultTimeout)
 }
 
-func newLicenseSet(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newLicenseSet(action api.Action, actionCtx ActionContext) Action {
 	a := &licenseSetAction{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -53,12 +52,9 @@ type licenseSetAction struct {
 func (a *licenseSetAction) Start(ctx context.Context) (bool, error) {
 	ctxChild, cancel := globals.GetGlobals().Timeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
-
-	log := a.log
-
 	spec := a.actionCtx.GetSpec()
 	if !spec.License.HasSecretName() {
-		log.Error().Msg("License is not set")
+		a.log.Error("License is not set")
 		return true, nil
 	}
 
@@ -75,20 +71,20 @@ func (a *licenseSetAction) Start(ctx context.Context) (bool, error) {
 	group := a.action.Group
 	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !ok {
-		log.Error().Msg("No such member")
+		a.log.Error("No such member")
 		return true, nil
 	}
 
 	c, err := a.actionCtx.GetServerClient(ctxChild, group, m.ID)
 	if !ok {
-		log.Error().Err(err).Msg("Unable to get client")
+		a.log.Err(err).Error("Unable to get client")
 		return true, nil
 	}
 
 	client := client.NewClient(c.Connection())
 
 	if ok, err := licenseV2Compare(ctxChild, client, l.V2); err != nil {
-		log.Error().Err(err).Msg("Unable to verify license")
+		a.log.Err(err).Error("Unable to verify license")
 		return true, nil
 	} else if ok {
 		// Already latest license
@@ -96,7 +92,7 @@ func (a *licenseSetAction) Start(ctx context.Context) (bool, error) {
 	}
 
 	if err := client.SetLicense(ctxChild, string(l.V2), true); err != nil {
-		log.Error().Err(err).Msg("Unable to set license")
+		a.log.Err(err).Error("Unable to set license")
 		return true, nil
 	}
 

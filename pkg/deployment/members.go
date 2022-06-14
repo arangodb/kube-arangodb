@@ -31,7 +31,6 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
-	"github.com/rs/zerolog"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -83,8 +82,8 @@ func (d *Deployment) createAgencyMapping(ctx context.Context) error {
 // createMember creates member and adds it to the applicable member list.
 // Note: This does not create any pods of PVCs
 // Note: The updated status is not yet written to the apiserver.
-func createMember(log zerolog.Logger, status *api.DeploymentStatus, group api.ServerGroup, id string, apiObject *api.ArangoDeployment, mods ...reconcile.CreateMemberMod) (string, error) {
-	m, err := renderMember(log, status, group, id, apiObject)
+func (d *Deployment) createMember(status *api.DeploymentStatus, group api.ServerGroup, id string, apiObject *api.ArangoDeployment, mods ...reconcile.CreateMemberMod) (string, error) {
+	m, err := d.renderMember(status, group, id, apiObject)
 	if err != nil {
 		return "", err
 	}
@@ -102,7 +101,7 @@ func createMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 	return m.ID, nil
 }
 
-func renderMember(log zerolog.Logger, status *api.DeploymentStatus, group api.ServerGroup, id string, apiObject *api.ArangoDeployment) (*api.MemberStatus, error) {
+func (d *Deployment) renderMember(status *api.DeploymentStatus, group api.ServerGroup, id string, apiObject *api.ArangoDeployment) (*api.MemberStatus, error) {
 	if group == api.ServerGroupAgents {
 		if status.Agency == nil {
 			return nil, errors.New("Agency is not yet defined")
@@ -136,7 +135,7 @@ func renderMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 
 	switch group {
 	case api.ServerGroupSingle:
-		log.Debug().Str("id", id).Msg("Adding single server")
+		d.log.Str("id", id).Debug("Adding single server")
 		return &api.MemberStatus{
 			ID:                        id,
 			UID:                       uuid.NewUUID(),
@@ -148,7 +147,7 @@ func renderMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 			Architecture:              &arch,
 		}, nil
 	case api.ServerGroupAgents:
-		log.Debug().Str("id", id).Msg("Adding agent")
+		d.log.Str("id", id).Debug("Adding agent")
 		return &api.MemberStatus{
 			ID:                        id,
 			UID:                       uuid.NewUUID(),
@@ -160,7 +159,7 @@ func renderMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 			Architecture:              &arch,
 		}, nil
 	case api.ServerGroupDBServers:
-		log.Debug().Str("id", id).Msg("Adding dbserver")
+		d.log.Str("id", id).Debug("Adding dbserver")
 		return &api.MemberStatus{
 			ID:                        id,
 			UID:                       uuid.NewUUID(),
@@ -172,7 +171,7 @@ func renderMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 			Architecture:              &arch,
 		}, nil
 	case api.ServerGroupCoordinators:
-		log.Debug().Str("id", id).Msg("Adding coordinator")
+		d.log.Str("id", id).Debug("Adding coordinator")
 		return &api.MemberStatus{
 			ID:                        id,
 			UID:                       uuid.NewUUID(),
@@ -184,7 +183,7 @@ func renderMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 			Architecture:              &arch,
 		}, nil
 	case api.ServerGroupSyncMasters:
-		log.Debug().Str("id", id).Msg("Adding syncmaster")
+		d.log.Str("id", id).Debug("Adding syncmaster")
 		return &api.MemberStatus{
 			ID:                        id,
 			UID:                       uuid.NewUUID(),
@@ -196,7 +195,7 @@ func renderMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 			Architecture:              &arch,
 		}, nil
 	case api.ServerGroupSyncWorkers:
-		log.Debug().Str("id", id).Msg("Adding syncworker")
+		d.log.Str("id", id).Debug("Adding syncworker")
 		return &api.MemberStatus{
 			ID:                        id,
 			UID:                       uuid.NewUUID(),

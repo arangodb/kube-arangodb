@@ -28,18 +28,20 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/record"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
 	"github.com/arangodb/kube-arangodb/pkg/util/trigger"
+	"github.com/rs/zerolog"
 )
+
+var logger = logging.Global().RegisterAndGetLogger("deployment-storage", logging.Info)
 
 // Config holds configuration settings for a LocalStorage
 type Config struct {
@@ -50,7 +52,6 @@ type Config struct {
 
 // Dependencies holds dependent services for a LocalStorage
 type Dependencies struct {
-	Log           zerolog.Logger
 	Client        kclient.Client
 	EventRecorder record.EventRecorder
 }
@@ -81,6 +82,8 @@ const (
 
 // LocalStorage is the in process state of an ArangoLocalStorage.
 type LocalStorage struct {
+	log logging.Logger
+
 	apiObject *api.ArangoLocalStorage // API object
 	status    api.LocalStorageStatus  // Internal status of the CR
 	config    Config
@@ -112,7 +115,9 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoLocalStorage) (*
 		stopCh:    make(chan struct{}),
 	}
 
-	ls.pvCleaner = newPVCleaner(deps.Log, deps.Client.Kubernetes(), ls.GetClientByNodeName)
+	ls.log = logger.WrapObj(ls)
+
+	ls.pvCleaner = newPVCleaner(deps.Client.Kubernetes(), ls.GetClientByNodeName)
 
 	go ls.run()
 	go ls.listenForPvcEvents()
@@ -134,7 +139,7 @@ func (ls *LocalStorage) Update(apiObject *api.ArangoLocalStorage) {
 // Delete the local storage.
 // Called when the local storage was deleted by the user.
 func (ls *LocalStorage) Delete() {
-	ls.deps.Log.Info().Msg("local storage is deleted by user")
+	ls.log.Info("local storage is deleted by user")
 	if atomic.CompareAndSwapInt32(&ls.stopped, 0, 1) {
 		close(ls.stopCh)
 	}
@@ -146,10 +151,10 @@ func (ls *LocalStorage) send(ev *localStorageEvent) {
 	case ls.eventCh <- ev:
 		l, ecap := len(ls.eventCh), cap(ls.eventCh)
 		if l > int(float64(ecap)*0.8) {
-			ls.deps.Log.Warn().
+			ls.log.
 				Int("used", l).
 				Int("capacity", ecap).
-				Msg("event queue buffer is almost full")
+				Warn("event queue buffer is almost full")
 		}
 	case <-ls.stopCh:
 	}
@@ -159,7 +164,7 @@ func (ls *LocalStorage) send(ev *localStorageEvent) {
 // It processes the event queue and polls the state of generated
 // resource on a regular basis.
 func (ls *LocalStorage) run() {
-	//log := ls.deps.Log
+	//log := ls.log
 
 	// Find out my image
 	image, pullPolicy, pullSecrets, err := ls.getMyImage()
@@ -289,12 +294,12 @@ func (ls *LocalStorage) run() {
 
 // handleArangoLocalStorageUpdatedEvent is called when the local storage is updated by the user.
 func (ls *LocalStorage) handleArangoLocalStorageUpdatedEvent(event *localStorageEvent) error {
-	log := ls.deps.Log.With().Str("localStorage", event.LocalStorage.GetName()).Logger()
+	log := ls.log.Str("localStorage", event.LocalStorage.GetName())
 
 	// Get the most recent version of the local storage from the API server
 	current, err := ls.deps.Client.Arango().StorageV1alpha().ArangoLocalStorages().Get(context.Background(), ls.apiObject.GetName(), metav1.GetOptions{})
 	if err != nil {
-		log.Debug().Err(err).Msg("Failed to get current version of local storage from API server")
+		log.Err(err).Debug("Failed to get current version of local storage from API server")
 		if k8sutil.IsNotFound(err) {
 			return nil
 		}
@@ -306,20 +311,20 @@ func (ls *LocalStorage) handleArangoLocalStorageUpdatedEvent(event *localStorage
 	newAPIObject.Status = ls.status
 	resetFields := ls.apiObject.Spec.ResetImmutableFields(&newAPIObject.Spec)
 	if len(resetFields) > 0 {
-		log.Debug().Strs("fields", resetFields).Msg("Found modified immutable fields")
+		log.Strs("fields", resetFields...).Debug("Found modified immutable fields")
 	}
 	if err := newAPIObject.Spec.Validate(); err != nil {
 		ls.createEvent(k8sutil.NewErrorEvent("Validation failed", err, ls.apiObject))
 		// Try to reset object
 		if err := ls.updateCRSpec(ls.apiObject.Spec); err != nil {
-			log.Error().Err(err).Msg("Restore original spec failed")
+			log.Err(err).Error("Restore original spec failed")
 			ls.createEvent(k8sutil.NewErrorEvent("Restore original failed", err, ls.apiObject))
 		}
 		return nil
 	}
 	if len(resetFields) > 0 {
 		for _, fieldName := range resetFields {
-			log.Debug().Str("field", fieldName).Msg("Reset immutable field")
+			log.Str("field", fieldName).Debug("Reset immutable field")
 			ls.createEvent(k8sutil.NewImmutableFieldEvent(fieldName, ls.apiObject))
 		}
 	}
@@ -371,7 +376,7 @@ func (ls *LocalStorage) updateCRStatus() error {
 			}
 		}
 		if err != nil {
-			ls.deps.Log.Debug().Err(err).Msg("failed to patch ArangoLocalStorage status")
+			ls.log.Err(err).Debug("failed to patch ArangoLocalStorage status")
 			return errors.WithStack(errors.Newf("failed to patch ArangoLocalStorage status: %v", err))
 		}
 	}
@@ -405,7 +410,7 @@ func (ls *LocalStorage) updateCRSpec(newSpec api.LocalStorageSpec) error {
 			}
 		}
 		if err != nil {
-			ls.deps.Log.Debug().Err(err).Msg("failed to patch ArangoLocalStorage spec")
+			ls.log.Err(err).Debug("failed to patch ArangoLocalStorage spec")
 			return errors.WithStack(errors.Newf("failed to patch ArangoLocalStorage spec: %v", err))
 		}
 	}
@@ -413,7 +418,7 @@ func (ls *LocalStorage) updateCRSpec(newSpec api.LocalStorageSpec) error {
 
 // failOnError reports the given error and sets the local storage status to failed.
 func (ls *LocalStorage) failOnError(err error, msg string) {
-	log.Error().Err(err).Msg(msg)
+	ls.log.Err(err).Error(msg)
 	ls.status.Reason = err.Error()
 	ls.reportFailedStatus()
 }
@@ -421,8 +426,8 @@ func (ls *LocalStorage) failOnError(err error, msg string) {
 // reportFailedStatus sets the status of the local storage to Failed and keeps trying to forward
 // that to the API server.
 func (ls *LocalStorage) reportFailedStatus() {
-	log := ls.deps.Log
-	log.Info().Msg("local storage failed. Reporting failed reason...")
+	log := ls.log
+	log.Info("local storage failed. Reporting failed reason...")
 
 	op := func() error {
 		ls.status.State = api.LocalStorageStateFailed
@@ -433,7 +438,7 @@ func (ls *LocalStorage) reportFailedStatus() {
 		}
 
 		if !k8sutil.IsConflict(err) {
-			log.Warn().Err(err).Msg("retry report status: fail to update")
+			log.Err(err).Warn("retry report status: fail to update")
 			return errors.WithStack(err)
 		}
 
@@ -445,7 +450,7 @@ func (ls *LocalStorage) reportFailedStatus() {
 			if k8sutil.IsNotFound(err) {
 				return nil
 			}
-			log.Warn().Err(err).Msg("retry report status: fail to get latest version")
+			log.Err(err).Warn("retry report status: fail to get latest version")
 			return errors.WithStack(err)
 		}
 		ls.apiObject = depl
@@ -462,4 +467,8 @@ func (ls *LocalStorage) isOwnerOf(obj metav1.Object) bool {
 		return false
 	}
 	return ownerRefs[0].UID == ls.apiObject.UID
+}
+
+func (ls *LocalStorage) WrapLogger(in *zerolog.Event) *zerolog.Event {
+	return in.Str("namespace", ls.apiObject.GetNamespace()).Str("name", ls.apiObject.GetName())
 }

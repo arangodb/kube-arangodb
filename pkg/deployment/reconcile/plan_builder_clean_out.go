@@ -26,8 +26,6 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 
-	"github.com/rs/zerolog"
-
 	"github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
@@ -35,7 +33,7 @@ import (
 )
 
 // createCleanOutPlan creates clean out action if the server is cleaned out and the operator is not aware of it.
-func createCleanOutPlan(ctx context.Context, log zerolog.Logger, _ k8sutil.APIObject, spec api.DeploymentSpec,
+func (r *Reconciler) createCleanOutPlan(ctx context.Context, _ k8sutil.APIObject, spec api.DeploymentSpec,
 	status api.DeploymentStatus, planCtx PlanBuilderContext) api.Plan {
 
 	if spec.GetMode() != api.DeploymentModeCluster {
@@ -49,7 +47,7 @@ func createCleanOutPlan(ctx context.Context, log zerolog.Logger, _ k8sutil.APIOb
 
 	cluster, err := getCluster(ctx, planCtx)
 	if err != nil {
-		log.Warn().Err(err).Msgf("Unable to get cluster")
+		r.log.Err(err).Warn("Unable to get cluster")
 		return nil
 	}
 
@@ -57,7 +55,7 @@ func createCleanOutPlan(ctx context.Context, log zerolog.Logger, _ k8sutil.APIOb
 	defer cancel()
 	health, err := cluster.Health(ctxChild)
 	if err != nil {
-		log.Warn().Err(err).Msgf("Unable to get cluster health")
+		r.log.Err(err).Warn("Unable to get cluster health")
 		return nil
 	}
 
@@ -76,13 +74,13 @@ func createCleanOutPlan(ctx context.Context, log zerolog.Logger, _ k8sutil.APIOb
 			}
 
 			if isCleanedOut, err := cluster.IsCleanedOut(ctx, string(id)); err != nil {
-				log.Warn().Err(err).Str("id", string(id)).Msgf("Unable to get clean out status")
+				r.log.Err(err).Str("id", string(id)).Warn("Unable to get clean out status")
 				return nil
 			} else if isCleanedOut {
-				log.Info().
+				r.log.
 					Str("role", string(member.Role)).
 					Str("id", string(id)).
-					Msgf("server is cleaned out so operator must do the same")
+					Info("server is cleaned out so operator must do the same")
 
 				action := actions.NewAction(api.ActionTypeSetMemberCondition, api.ServerGroupDBServers, withPredefinedMember(string(id)),
 					"server is cleaned out so operator must do the same").

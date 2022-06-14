@@ -30,17 +30,16 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/rs/zerolog"
 )
 
 func init() {
 	registerAction(api.ActionTypeTLSKeyStatusUpdate, newTLSKeyStatusUpdate, defaultTimeout)
 }
 
-func newTLSKeyStatusUpdate(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newTLSKeyStatusUpdate(action api.Action, actionCtx ActionContext) Action {
 	a := &tlsKeyStatusUpdateAction{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -60,7 +59,7 @@ func (a *tlsKeyStatusUpdateAction) Start(ctx context.Context) (bool, error) {
 	defer cancel()
 	f, err := a.actionCtx.ACS().CurrentClusterCache().Secret().V1().Read().Get(ctxChild, resources.GetCASecretName(a.actionCtx.GetAPIObject()), meta.GetOptions{})
 	if err != nil {
-		a.log.Error().Err(err).Msgf("Unable to get folder info")
+		a.log.Err(err).Error("Unable to get folder info")
 		return true, nil
 	}
 

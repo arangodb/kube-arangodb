@@ -23,7 +23,6 @@ package deployment
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -34,7 +33,6 @@ import (
 	"github.com/arangodb/go-driver/jwt"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	monitoringFakeClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/fake"
-	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -475,7 +473,6 @@ func createTestDeployment(t *testing.T, config Config, arangoDeployment *api.Ara
 	arangoDeployment.Status.CurrentImage = &arangoDeployment.Status.Images[0]
 
 	deps := Dependencies{
-		Log:           zerolog.New(ioutil.Discard),
 		EventRecorder: eventRecorder,
 		Client:        kclient.NewStaticClient(kubernetesClientSet, kubernetesExtClientSet, arangoClientSet, monitoringClientSet),
 	}
@@ -490,6 +487,7 @@ func createTestDeployment(t *testing.T, config Config, arangoDeployment *api.Ara
 		deps:      deps,
 		eventCh:   make(chan *deploymentEvent, deploymentEventQueueSize),
 		stopCh:    make(chan struct{}),
+		log:       logger,
 	}
 	d.clientCache = client.NewClientCache(d, conn.NewFactory(d.getAuth, d.getConnConfig))
 	d.acs = acs.NewACS("", i)
@@ -497,7 +495,7 @@ func createTestDeployment(t *testing.T, config Config, arangoDeployment *api.Ara
 	require.NoError(t, d.acs.CurrentClusterCache().Refresh(context.Background()))
 
 	arangoDeployment.Spec.SetDefaults(arangoDeployment.GetName())
-	d.resources = resources.NewResources(deps.Log, d)
+	d.resources = resources.NewResources(arangoDeployment.GetNamespace(), arangoDeployment.GetName(), d)
 
 	return d, eventRecorder
 }

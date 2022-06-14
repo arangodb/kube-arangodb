@@ -32,11 +32,9 @@ import (
 	"github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
-	"github.com/rs/zerolog"
 )
 
-func createRotateTLSServerSNIPlan(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+func (r *Reconciler) createRotateTLSServerSNIPlan(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	planCtx PlanBuilderContext) api.Plan {
 	if !spec.TLS.IsSecure() {
@@ -54,7 +52,7 @@ func createRotateTLSServerSNIPlan(ctx context.Context,
 
 	fetchedSecrets, err := mapTLSSNIConfig(*sni, planCtx.ACS().CurrentClusterCache())
 	if err != nil {
-		log.Warn().Err(err).Msg("Unable to get SNI desired state")
+		r.planLogger.Err(err).Warn("Unable to get SNI desired state")
 		return nil
 	}
 
@@ -86,7 +84,7 @@ func createRotateTLSServerSNIPlan(ctx context.Context,
 				return err
 			})
 			if err != nil {
-				log.Info().Err(err).Msg("Unable to get client")
+				r.planLogger.Err(err).Info("Unable to get client")
 				continue
 			}
 
@@ -97,7 +95,7 @@ func createRotateTLSServerSNIPlan(ctx context.Context,
 				return err
 			})
 			if err != nil {
-				log.Info().Err(err).Msg("SNI compare failed")
+				r.planLogger.Err(err).Info("SNI compare failed")
 				return nil
 
 			} else if !ok {
@@ -108,7 +106,7 @@ func createRotateTLSServerSNIPlan(ctx context.Context,
 					plan = append(plan,
 						actions.NewAction(api.ActionTypeUpdateTLSSNI, group, m, "SNI Secret needs update"))
 				default:
-					log.Warn().Msg("SNI mode rotation is unknown")
+					r.planLogger.Warn("SNI mode rotation is unknown")
 					continue
 				}
 			}

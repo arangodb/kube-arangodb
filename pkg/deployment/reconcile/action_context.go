@@ -26,8 +26,6 @@ import (
 
 	"github.com/arangodb/arangosync-client/client"
 	"github.com/arangodb/go-driver/agency"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	core "k8s.io/api/core/v1"
 
 	"github.com/arangodb/go-driver"
@@ -37,6 +35,7 @@ import (
 	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/member"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
@@ -108,7 +107,7 @@ type ActionLocalsContext interface {
 }
 
 // newActionContext creates a new ActionContext implementation.
-func newActionContext(log zerolog.Logger, context Context) ActionContext {
+func newActionContext(log logging.Logger, context Context) ActionContext {
 	return &actionContext{
 		log:     log,
 		context: context,
@@ -118,7 +117,7 @@ func newActionContext(log zerolog.Logger, context Context) ActionContext {
 // actionContext implements ActionContext
 type actionContext struct {
 	context      Context
-	log          zerolog.Logger
+	log          logging.Logger
 	cachedStatus inspectorInterface.Inspector
 	locals       api.PlanLocals
 }
@@ -340,7 +339,7 @@ func (ac *actionContext) UpdateMember(ctx context.Context, member api.MemberStat
 		return errors.WithStack(err)
 	}
 	if err := ac.context.UpdateStatus(ctx, status, lastVersion); err != nil {
-		log.Debug().Err(err).Msg("Updating CR status failed")
+		ac.log.Err(err).Debug("Updating CR status failed")
 		return errors.WithStack(err)
 	}
 	return nil
@@ -354,7 +353,7 @@ func (ac *actionContext) RemoveMemberByID(ctx context.Context, id string) error 
 		return nil
 	}
 	if err := status.Members.RemoveByID(id, group); err != nil {
-		log.Debug().Err(err).Str("group", group.AsRole()).Msg("Failed to remove member")
+		ac.log.Err(err).Str("group", group.AsRole()).Debug("Failed to remove member")
 		return errors.WithStack(err)
 	}
 	// Save removed member

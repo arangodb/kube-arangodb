@@ -33,7 +33,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 
-	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
@@ -49,8 +48,8 @@ func newFakeHandler() *handler {
 	h := &handler{
 		client:        f,
 		kubeClient:    k,
-		eventRecorder: newEventInstance(event.NewEventRecorder(log.Logger, "mock", k)),
-		operator:      operator.NewOperator(log.Logger, "mock", "mock", "mock"),
+		eventRecorder: newEventInstance(event.NewEventRecorder("mock", k)),
+		operator:      operator.NewOperator("mock", "mock", "mock"),
 	}
 
 	return h

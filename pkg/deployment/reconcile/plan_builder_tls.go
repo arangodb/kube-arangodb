@@ -43,14 +43,11 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	memberTls "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
-
-	"github.com/rs/zerolog"
 )
 
 const CertificateRenewalMargin = 7 * 24 * time.Hour
 
-func createTLSStatusPropagatedFieldUpdate(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+func (r *Reconciler) createTLSStatusPropagatedFieldUpdate(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext, w WithPlanBuilder, builders ...planBuilder) api.Plan {
 	if !spec.TLS.IsSecure() {
@@ -83,15 +80,14 @@ func createTLSStatusPropagatedFieldUpdate(ctx context.Context,
 }
 
 // createTLSStatusUpdate creates plan to update ca info
-func createTLSStatusUpdate(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+func (r *Reconciler) createTLSStatusUpdate(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext) api.Plan {
 	if !spec.TLS.IsSecure() {
 		return nil
 	}
 
-	if createTLSStatusUpdateRequired(log, apiObject, spec, status, context) {
+	if r.createTLSStatusUpdateRequired(apiObject, spec, status, context) {
 		return api.Plan{actions.NewClusterAction(api.ActionTypeTLSKeyStatusUpdate, "Update status")}
 	}
 
@@ -99,8 +95,7 @@ func createTLSStatusUpdate(ctx context.Context,
 }
 
 // createTLSStatusUpdate creates plan to update ca info
-func createTLSStatusPropagated(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+func (r *Reconciler) createTLSStatusPropagated(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext) api.Plan {
 	if !spec.TLS.IsSecure() {
@@ -116,7 +111,7 @@ func createTLSStatusPropagated(ctx context.Context,
 	return nil
 }
 
-func createTLSStatusUpdateRequired(log zerolog.Logger, apiObject k8sutil.APIObject, spec api.DeploymentSpec,
+func (r *Reconciler) createTLSStatusUpdateRequired(apiObject k8sutil.APIObject, spec api.DeploymentSpec,
 	status api.DeploymentStatus, context PlanBuilderContext) bool {
 	if !spec.TLS.IsSecure() {
 		return false
@@ -124,7 +119,7 @@ func createTLSStatusUpdateRequired(log zerolog.Logger, apiObject k8sutil.APIObje
 
 	trusted, exists := context.ACS().CurrentClusterCache().Secret().V1().GetSimple(resources.GetCASecretName(apiObject))
 	if !exists {
-		log.Warn().Str("secret", resources.GetCASecretName(apiObject)).Msg("Folder with secrets does not exist")
+		r.planLogger.Str("secret", resources.GetCASecretName(apiObject)).Warn("Folder with secrets does not exist")
 		return false
 	}
 
@@ -152,8 +147,7 @@ func createTLSStatusUpdateRequired(log zerolog.Logger, apiObject k8sutil.APIObje
 }
 
 // createCAAppendPlan creates plan to append CA
-func createCAAppendPlan(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+func (r *Reconciler) createCAAppendPlan(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext) api.Plan {
 	if !spec.TLS.IsSecure() {
@@ -162,30 +156,30 @@ func createCAAppendPlan(ctx context.Context,
 
 	caSecret, exists := context.ACS().CurrentClusterCache().Secret().V1().GetSimple(spec.TLS.GetCASecretName())
 	if !exists {
-		log.Warn().Str("secret", spec.TLS.GetCASecretName()).Msg("CA Secret does not exists")
+		r.planLogger.Str("secret", spec.TLS.GetCASecretName()).Warn("CA Secret does not exists")
 		return nil
 	}
 
-	ca, _, err := resources.GetKeyCertFromSecret(log, caSecret, resources.CACertName, resources.CAKeyName)
+	ca, _, err := resources.GetKeyCertFromSecret(caSecret, resources.CACertName, resources.CAKeyName)
 	if err != nil {
-		log.Warn().Err(err).Str("secret", spec.TLS.GetCASecretName()).Msg("CA Secret does not contains Cert")
+		r.planLogger.Err(err).Str("secret", spec.TLS.GetCASecretName()).Warn("CA Secret does not contains Cert")
 		return nil
 	}
 
 	if len(ca) == 0 {
-		log.Warn().Str("secret", spec.TLS.GetCASecretName()).Msg("CA does not contain any certs")
+		r.planLogger.Str("secret", spec.TLS.GetCASecretName()).Warn("CA does not contain any certs")
 		return nil
 	}
 
 	trusted, exists := context.ACS().CurrentClusterCache().Secret().V1().GetSimple(resources.GetCASecretName(apiObject))
 	if !exists {
-		log.Warn().Str("secret", resources.GetCASecretName(apiObject)).Msg("Folder with secrets does not exist")
+		r.planLogger.Str("secret", resources.GetCASecretName(apiObject)).Warn("Folder with secrets does not exist")
 		return nil
 	}
 
 	caData, err := ca.ToPem()
 	if err != nil {
-		log.Warn().Err(err).Str("secret", spec.TLS.GetCASecretName()).Msg("Unable to parse cert")
+		r.planLogger.Err(err).Str("secret", spec.TLS.GetCASecretName()).Warn("Unable to parse cert")
 		return nil
 	}
 
@@ -200,8 +194,7 @@ func createCAAppendPlan(ctx context.Context,
 }
 
 // createCARenewalPlan creates plan to renew CA
-func createCARenewalPlan(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+func (r *Reconciler) createCARenewalPlan(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext) api.Plan {
 	if !spec.TLS.IsSecure() {
@@ -210,18 +203,18 @@ func createCARenewalPlan(ctx context.Context,
 
 	caSecret, exists := context.ACS().CurrentClusterCache().Secret().V1().GetSimple(spec.TLS.GetCASecretName())
 	if !exists {
-		log.Warn().Str("secret", spec.TLS.GetCASecretName()).Msg("CA Secret does not exists")
+		r.planLogger.Str("secret", spec.TLS.GetCASecretName()).Warn("CA Secret does not exists")
 		return nil
 	}
 
 	if !k8sutil.IsOwner(apiObject.AsOwner(), caSecret) {
-		log.Debug().Str("secret", spec.TLS.GetCASecretName()).Msg("CA Secret is not owned by Operator, we wont do anything")
+		r.planLogger.Str("secret", spec.TLS.GetCASecretName()).Debug("CA Secret is not owned by Operator, we wont do anything")
 		return nil
 	}
 
-	cas, _, err := resources.GetKeyCertFromSecret(log, caSecret, resources.CACertName, resources.CAKeyName)
+	cas, _, err := resources.GetKeyCertFromSecret(caSecret, resources.CACertName, resources.CAKeyName)
 	if err != nil {
-		log.Warn().Err(err).Str("secret", spec.TLS.GetCASecretName()).Msg("CA Secret does not contains Cert")
+		r.planLogger.Err(err).Str("secret", spec.TLS.GetCASecretName()).Warn("CA Secret does not contains Cert")
 		return nil
 	}
 
@@ -236,8 +229,7 @@ func createCARenewalPlan(ctx context.Context,
 }
 
 // createCACleanPlan creates plan to remove old CA's
-func createCACleanPlan(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+func (r *Reconciler) createCACleanPlan(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext) api.Plan {
 	if !spec.TLS.IsSecure() {
@@ -246,30 +238,30 @@ func createCACleanPlan(ctx context.Context,
 
 	caSecret, exists := context.ACS().CurrentClusterCache().Secret().V1().GetSimple(spec.TLS.GetCASecretName())
 	if !exists {
-		log.Warn().Str("secret", spec.TLS.GetCASecretName()).Msg("CA Secret does not exists")
+		r.planLogger.Str("secret", spec.TLS.GetCASecretName()).Warn("CA Secret does not exists")
 		return nil
 	}
 
-	ca, _, err := resources.GetKeyCertFromSecret(log, caSecret, resources.CACertName, resources.CAKeyName)
+	ca, _, err := resources.GetKeyCertFromSecret(caSecret, resources.CACertName, resources.CAKeyName)
 	if err != nil {
-		log.Warn().Err(err).Str("secret", spec.TLS.GetCASecretName()).Msg("CA Secret does not contains Cert")
+		r.planLogger.Err(err).Str("secret", spec.TLS.GetCASecretName()).Warn("CA Secret does not contains Cert")
 		return nil
 	}
 
 	if len(ca) == 0 {
-		log.Warn().Str("secret", spec.TLS.GetCASecretName()).Msg("CA does not contain any certs")
+		r.planLogger.Str("secret", spec.TLS.GetCASecretName()).Warn("CA does not contain any certs")
 		return nil
 	}
 
 	trusted, exists := context.ACS().CurrentClusterCache().Secret().V1().GetSimple(resources.GetCASecretName(apiObject))
 	if !exists {
-		log.Warn().Str("secret", resources.GetCASecretName(apiObject)).Msg("Folder with secrets does not exist")
+		r.planLogger.Str("secret", resources.GetCASecretName(apiObject)).Warn("Folder with secrets does not exist")
 		return nil
 	}
 
 	caData, err := ca.ToPem()
 	if err != nil {
-		log.Warn().Err(err).Str("secret", spec.TLS.GetCASecretName()).Msg("Unable to parse cert")
+		r.planLogger.Err(err).Str("secret", spec.TLS.GetCASecretName()).Warn("Unable to parse cert")
 		return nil
 	}
 
@@ -285,8 +277,7 @@ func createCACleanPlan(ctx context.Context,
 	return nil
 }
 
-func createKeyfileRenewalPlanSynced(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+func (r *Reconciler) createKeyfileRenewalPlanSynced(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	planCtx PlanBuilderContext) api.Plan {
 
@@ -312,8 +303,8 @@ func createKeyfileRenewalPlanSynced(ctx context.Context,
 		lCtx, c := context.WithTimeout(ctx, 500*time.Millisecond)
 		defer c()
 
-		if renew, _ := keyfileRenewalRequired(lCtx, log, apiObject, spec.Sync.TLS, spec, cache, planCtx, group, member, api.TLSRotateModeRecreate); renew {
-			log.Info().Msg("Renewal of keyfile required - Recreate (sync master)")
+		if renew, _ := r.keyfileRenewalRequired(lCtx, apiObject, spec.Sync.TLS, spec, cache, planCtx, group, member, api.TLSRotateModeRecreate); renew {
+			r.planLogger.Info("Renewal of keyfile required - Recreate (sync master)")
 			plan = append(plan, tlsRotateConditionAction(group, member.ID, "Restart sync master after keyfile removal"))
 		}
 	}
@@ -321,8 +312,7 @@ func createKeyfileRenewalPlanSynced(ctx context.Context,
 	return plan
 }
 
-func createKeyfileRenewalPlanDefault(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+func (r *Reconciler) createKeyfileRenewalPlanDefault(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	planCtx PlanBuilderContext) api.Plan {
 	if !spec.TLS.IsSecure() {
@@ -349,8 +339,8 @@ func createKeyfileRenewalPlanDefault(ctx context.Context,
 			lCtx, c := context.WithTimeout(ctx, 500*time.Millisecond)
 			defer c()
 
-			if renew, _ := keyfileRenewalRequired(lCtx, log, apiObject, spec.TLS, spec, cache, planCtx, group, member, api.TLSRotateModeRecreate); renew {
-				log.Info().Msg("Renewal of keyfile required - Recreate (server)")
+			if renew, _ := r.keyfileRenewalRequired(lCtx, apiObject, spec.TLS, spec, cache, planCtx, group, member, api.TLSRotateModeRecreate); renew {
+				r.planLogger.Info("Renewal of keyfile required - Recreate (server)")
 				plan = append(plan, tlsRotateConditionAction(group, member.ID, "Restart server after keyfile removal"))
 			}
 		}
@@ -361,8 +351,7 @@ func createKeyfileRenewalPlanDefault(ctx context.Context,
 	return plan
 }
 
-func createKeyfileRenewalPlanInPlace(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+func (r *Reconciler) createKeyfileRenewalPlanInPlace(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	planCtx PlanBuilderContext) api.Plan {
 	if !spec.TLS.IsSecure() {
@@ -385,8 +374,8 @@ func createKeyfileRenewalPlanInPlace(ctx context.Context,
 			lCtx, c := context.WithTimeout(ctx, 500*time.Millisecond)
 			defer c()
 
-			if renew, recreate := keyfileRenewalRequired(lCtx, log, apiObject, spec.TLS, spec, cache, planCtx, group, member, api.TLSRotateModeInPlace); renew {
-				log.Info().Msg("Renewal of keyfile required - InPlace (server)")
+			if renew, recreate := r.keyfileRenewalRequired(lCtx, apiObject, spec.TLS, spec, cache, planCtx, group, member, api.TLSRotateModeInPlace); renew {
+				r.planLogger.Info("Renewal of keyfile required - InPlace (server)")
 				if recreate {
 					plan = append(plan, actions.NewAction(api.ActionTypeCleanTLSKeyfileCertificate, group, member, "Remove server keyfile and enforce renewal"))
 				}
@@ -400,8 +389,7 @@ func createKeyfileRenewalPlanInPlace(ctx context.Context,
 	return plan
 }
 
-func createKeyfileRenewalPlan(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+func (r *Reconciler) createKeyfileRenewalPlan(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	planCtx PlanBuilderContext) api.Plan {
 	if !spec.TLS.IsSecure() {
@@ -411,13 +399,13 @@ func createKeyfileRenewalPlan(ctx context.Context,
 	gCtx, c := context.WithTimeout(ctx, 2*time.Second)
 	defer c()
 
-	plan := createKeyfileRenewalPlanSynced(gCtx, log, apiObject, spec, status, planCtx)
+	plan := r.createKeyfileRenewalPlanSynced(gCtx, apiObject, spec, status, planCtx)
 
 	switch createKeyfileRenewalPlanMode(spec, status) {
 	case api.TLSRotateModeInPlace:
-		plan = append(plan, createKeyfileRenewalPlanInPlace(gCtx, log, apiObject, spec, status, planCtx)...)
+		plan = append(plan, r.createKeyfileRenewalPlanInPlace(gCtx, apiObject, spec, status, planCtx)...)
 	default:
-		plan = append(plan, createKeyfileRenewalPlanDefault(gCtx, log, apiObject, spec, status, planCtx)...)
+		plan = append(plan, r.createKeyfileRenewalPlanDefault(gCtx, apiObject, spec, status, planCtx)...)
 	}
 
 	return plan
@@ -495,8 +483,7 @@ func checkServerValidCertRequest(ctx context.Context, context PlanBuilderContext
 }
 
 // keyfileRenewalRequired checks if a keyfile renewal is required and if recreation should be made
-func keyfileRenewalRequired(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject, tls api.TLSSpec,
+func (r *Reconciler) keyfileRenewalRequired(ctx context.Context, apiObject k8sutil.APIObject, tls api.TLSSpec,
 	spec api.DeploymentSpec, cachedStatus inspectorInterface.Inspector,
 	context PlanBuilderContext,
 	group api.ServerGroup, member api.MemberStatus, mode api.TLSRotateMode) (bool, bool) {
@@ -508,19 +495,19 @@ func keyfileRenewalRequired(ctx context.Context,
 
 	service, ok := cachedStatus.Service().V1().GetSimple(memberName)
 	if !ok {
-		log.Warn().Str("service", memberName).Msg("Service does not exists")
+		r.planLogger.Str("service", memberName).Warn("Service does not exists")
 		return false, false
 	}
 
 	caSecret, exists := cachedStatus.Secret().V1().GetSimple(tls.GetCASecretName())
 	if !exists {
-		log.Warn().Str("secret", tls.GetCASecretName()).Msg("CA Secret does not exists")
+		r.planLogger.Str("secret", tls.GetCASecretName()).Warn("CA Secret does not exists")
 		return false, false
 	}
 
-	ca, _, err := resources.GetKeyCertFromSecret(log, caSecret, resources.CACertName, resources.CAKeyName)
+	ca, _, err := resources.GetKeyCertFromSecret(caSecret, resources.CACertName, resources.CAKeyName)
 	if err != nil {
-		log.Warn().Err(err).Str("secret", tls.GetCASecretName()).Msg("CA Secret does not contains Cert")
+		r.planLogger.Err(err).Str("secret", tls.GetCASecretName()).Warn("CA Secret does not contains Cert")
 		return false, false
 	}
 
@@ -530,13 +517,13 @@ func keyfileRenewalRequired(ctx context.Context,
 		case *url.Error:
 			switch v.Err.(type) {
 			case x509.UnknownAuthorityError, x509.CertificateInvalidError:
-				log.Debug().Err(v.Err).Str("type", reflect.TypeOf(v.Err).String()).Msgf("Validation of cert for %s failed, renewal is required", memberName)
+				r.planLogger.Err(v.Err).Str("type", reflect.TypeOf(v.Err).String()).Debug("Validation of cert for %s failed, renewal is required", memberName)
 				return true, true
 			default:
-				log.Debug().Err(v.Err).Str("type", reflect.TypeOf(v.Err).String()).Msgf("Validation of cert for %s failed, but cert looks fine - continuing", memberName)
+				r.planLogger.Err(v.Err).Str("type", reflect.TypeOf(v.Err).String()).Debug("Validation of cert for %s failed, but cert looks fine - continuing", memberName)
 			}
 		default:
-			log.Debug().Err(err).Str("type", reflect.TypeOf(err).String()).Msgf("Validation of cert for %s failed, will try again next time", memberName)
+			r.planLogger.Err(err).Str("type", reflect.TypeOf(err).String()).Debug("Validation of cert for %s failed, will try again next time", memberName)
 		}
 		return false, false
 	}
@@ -552,7 +539,7 @@ func keyfileRenewalRequired(ctx context.Context,
 		}
 
 		if time.Now().Add(CertificateRenewalMargin).After(cert.NotAfter) {
-			log.Info().Msg("Renewal margin exceeded")
+			r.planLogger.Info("Renewal margin exceeded")
 			return true, true
 		}
 
@@ -565,7 +552,7 @@ func keyfileRenewalRequired(ctx context.Context,
 		}
 
 		if err != nil {
-			log.Warn().Msg("Unable to render alt names")
+			r.planLogger.Warn("Unable to render alt names")
 			return false, false
 		}
 
@@ -576,9 +563,9 @@ func keyfileRenewalRequired(ctx context.Context,
 		}
 
 		if a := util.DiffStrings(altNames.AltNames, dnsNames); len(a) > 0 {
-			log.Info().Strs("AltNames Current", cert.DNSNames).
-				Strs("AltNames Expected", altNames.AltNames).
-				Msgf("Alt names are different")
+			r.planLogger.Strs("AltNames Current", cert.DNSNames...).
+				Strs("AltNames Expected", altNames.AltNames...).
+				Info("Alt names are different")
 			return true, true
 		}
 	}
@@ -587,33 +574,33 @@ func keyfileRenewalRequired(ctx context.Context,
 	if mode == api.TLSRotateModeInPlace && group.IsArangod() {
 		conn, err := context.GetServerClient(ctx, group, member.ID)
 		if err != nil {
-			log.Warn().Err(err).Msg("Unable to get client")
+			r.planLogger.Err(err).Warn("Unable to get client")
 			return false, false
 		}
 
 		s, exists := cachedStatus.Secret().V1().GetSimple(k8sutil.CreateTLSKeyfileSecretName(apiObject.GetName(), group.AsRole(), member.ID))
 		if !exists {
-			log.Warn().Msg("Keyfile secret is missing")
+			r.planLogger.Warn("Keyfile secret is missing")
 			return false, false
 		}
 
 		c := client.NewClient(conn.Connection())
 		tls, err := c.GetTLS(ctx)
 		if err != nil {
-			log.Warn().Err(err).Msg("Unable to get tls details")
+			r.planLogger.Err(err).Warn("Unable to get tls details")
 			return false, false
 		}
 
 		keyfile, ok := s.Data[constants.SecretTLSKeyfile]
 		if !ok {
-			log.Warn().Msg("Keyfile secret is invalid")
+			r.planLogger.Warn("Keyfile secret is invalid")
 			return false, false
 		}
 
 		keyfileSha := util.SHA256(keyfile)
 
 		if tls.Result.KeyFile.GetSHA().Checksum() != keyfileSha {
-			log.Debug().Str("current", tls.Result.KeyFile.GetSHA().Checksum()).Str("desired", keyfileSha).Msg("Unable to get tls details")
+			r.planLogger.Str("current", tls.Result.KeyFile.GetSHA().Checksum()).Str("desired", keyfileSha).Debug("Unable to get tls details")
 			return true, false
 		}
 	}

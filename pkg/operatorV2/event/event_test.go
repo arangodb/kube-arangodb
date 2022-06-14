@@ -25,8 +25,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/rs/zerolog/log"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
@@ -39,7 +37,7 @@ func Test_Event_Handler(t *testing.T) {
 	// Arrange
 	c := fake.NewSimpleClientset()
 
-	recorder := NewEventRecorder(log.Logger, "mock", c)
+	recorder := NewEventRecorder("mock", c)
 
 	group := string(uuid.NewUUID())
 	version := "v1"

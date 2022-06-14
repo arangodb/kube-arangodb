@@ -26,8 +26,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/rs/zerolog"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	"k8s.io/apimachinery/pkg/types"
@@ -114,8 +112,8 @@ func wrapActionStartFailureGracePeriod(action Action, failureGracePeriod time.Du
 }
 
 func withActionStartFailureGracePeriod(in actionFactory, failureGracePeriod time.Duration) actionFactory {
-	return func(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
-		return wrapActionStartFailureGracePeriod(in(log, action, actionCtx), failureGracePeriod)
+	return func(action api.Action, actionCtx ActionContext) Action {
+		return wrapActionStartFailureGracePeriod(in(action, actionCtx), failureGracePeriod)
 	}
 }
 
@@ -154,7 +152,7 @@ func getActionPlanAppender(a Action, plan api.Plan) (api.Plan, bool) {
 	}
 }
 
-type actionFactory func(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action
+type actionFactory func(action api.Action, actionCtx ActionContext) Action
 
 var (
 	definedActions     = map[api.ActionType]actionFactory{}

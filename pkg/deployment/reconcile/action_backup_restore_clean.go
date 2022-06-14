@@ -24,17 +24,16 @@ import (
 	"context"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/rs/zerolog"
 )
 
 func init() {
 	registerAction(api.ActionTypeBackupRestoreClean, newBackupRestoreCleanAction, backupRestoreTimeout)
 }
 
-func newBackupRestoreCleanAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newBackupRestoreCleanAction(action api.Action, actionCtx ActionContext) Action {
 	a := &actionBackupRestoreClean{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }

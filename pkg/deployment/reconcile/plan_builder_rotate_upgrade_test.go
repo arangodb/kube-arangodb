@@ -26,7 +26,6 @@ import (
 	"github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 )
 
@@ -100,9 +99,11 @@ func Test_RotateUpgrade_Condition(t *testing.T) {
 		},
 	}
 
+	r := newTestReconciler()
+
 	for n, c := range testCases {
 		t.Run(n, func(t *testing.T) {
-			c.verify(t, podNeedsUpgrading(log.Logger, c.status, c.spec, c.images))
+			c.verify(t, r.podNeedsUpgrading(c.status, c.spec, c.images))
 		})
 	}
 }

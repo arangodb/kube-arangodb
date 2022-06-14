@@ -27,7 +27,6 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/rs/zerolog"
 )
 
 type planGenerationOutput struct {
@@ -37,7 +36,7 @@ type planGenerationOutput struct {
 	planner planner
 }
 
-type planGeneratorFunc func(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIObject,
+type planGeneratorFunc func(ctx context.Context, apiObject k8sutil.APIObject,
 	currentPlan api.Plan, spec api.DeploymentSpec,
 	status api.DeploymentStatus,
 	builderCtx PlanBuilderContext) (api.Plan, api.BackOff, bool)
@@ -51,7 +50,7 @@ func (d *Reconciler) generatePlanFunc(gen planGeneratorFunc, planner planner) pl
 		spec := d.context.GetSpec()
 		status, _ := d.context.GetStatus()
 		builderCtx := newPlanBuilderContext(d.context)
-		newPlan, backoffs, changed := gen(ctx, d.log, apiObject, planner.Get(&status), spec, status, builderCtx)
+		newPlan, backoffs, changed := gen(ctx, apiObject, planner.Get(&status), spec, status, builderCtx)
 
 		return planGenerationOutput{
 			plan:    newPlan,
@@ -85,9 +84,9 @@ func (d *Reconciler) generatePlan(ctx context.Context, generators ...planGenerat
 				action := result.plan[id]
 				d.context.CreateEvent(k8sutil.NewPlanAppendEvent(d.context.GetAPIObject(), action.Type.String(), action.Group.AsRole(), action.MemberID, action.Reason))
 				if r := action.Reason; r != "" {
-					d.log.Info().Str("Action", action.Type.String()).
+					d.log.Str("Action", action.Type.String()).
 						Str("Role", action.Group.AsRole()).Str("Member", action.MemberID).
-						Str("Type", strings.Title(result.planner.Type())).Msgf(r)
+						Str("Type", strings.Title(result.planner.Type())).Info(r)
 				}
 			}
 
