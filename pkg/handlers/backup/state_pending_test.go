@@ -78,6 +78,44 @@ func Test_State_Pending_OneBackupObject(t *testing.T) {
 	checkBackup(t, newObj, backupApi.ArangoBackupStateScheduled, false)
 }
 
+func Test_State_Pending_WithUploadRunning(t *testing.T) {
+	// Arrange
+	handler, _ := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
+
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStatePending)
+
+	uploading := newArangoBackup(deployment.GetName(), deployment.GetNamespace(), string(uuid.NewUUID()), backupApi.ArangoBackupStateUploading)
+
+	// Act
+	createArangoDeployment(t, handler, deployment)
+	createArangoBackup(t, handler, obj, uploading)
+
+	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+
+	// Assert
+	newObj := refreshArangoBackup(t, handler, obj)
+	checkBackup(t, newObj, backupApi.ArangoBackupStateScheduled, false)
+}
+
+func Test_State_Pending_WithScheduled(t *testing.T) {
+	// Arrange
+	handler, _ := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
+
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStatePending)
+
+	uploading := newArangoBackup(deployment.GetName(), deployment.GetNamespace(), string(uuid.NewUUID()), backupApi.ArangoBackupStateScheduled)
+
+	// Act
+	createArangoDeployment(t, handler, deployment)
+	createArangoBackup(t, handler, obj, uploading)
+
+	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+
+	// Assert
+	newObj := refreshArangoBackup(t, handler, obj)
+	checkBackup(t, newObj, backupApi.ArangoBackupStatePending, false)
+}
+
 func Test_State_Pending_MultipleBackupObjectWithLimitation(t *testing.T) {
 	// Arrange
 	handler, _ := newErrorsFakeHandler(mockErrorsArangoClientBackup{})

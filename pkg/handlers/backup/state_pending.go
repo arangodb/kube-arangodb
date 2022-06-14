@@ -30,12 +30,12 @@ func statePendingHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi
 		return nil, err
 	}
 
-	running, err := isBackupRunning(backup, h.client.BackupV1().ArangoBackups(backup.Namespace))
+	states, err := countBackupStates(backup, h.client.BackupV1().ArangoBackups(backup.Namespace))
 	if err != nil {
 		return nil, err
 	}
 
-	if running {
+	if l := states.get(backupApi.ArangoBackupStateScheduled, backupApi.ArangoBackupStateCreate, backupApi.ArangoBackupStateDownload, backupApi.ArangoBackupStateDownloading); len(l) > 0 {
 		return wrapUpdateStatus(backup,
 			updateStatusState(backupApi.ArangoBackupStatePending, "backup already in process"))
 	}
