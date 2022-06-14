@@ -53,9 +53,6 @@ func init() {
 					},
 					Served:  true,
 					Storage: true,
-					Subresources: &apiextensions.CustomResourceSubresources{
-						Status: &apiextensions.CustomResourceSubresourceStatus{},
-					},
 				},
 				{
 					Name: "v1alpha",
