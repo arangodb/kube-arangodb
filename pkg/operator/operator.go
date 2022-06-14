@@ -63,6 +63,8 @@ const (
 	initRetryWaitTime = 30 * time.Second
 )
 
+var logger = logging.Global().RegisterAndGetLogger("operator", logging.Info)
+
 type operatorV2type string
 
 const (
@@ -129,6 +131,7 @@ func NewOperator(config Config, deps Dependencies) (*Operator, error) {
 		deploymentReplications: make(map[string]*replication.DeploymentReplication),
 		localStorages:          make(map[string]*storage.LocalStorage),
 	}
+	o.log = logger.WrapObj(o)
 	return o, nil
 }
 
@@ -310,4 +313,8 @@ func (o *Operator) onStartOperatorV2(operatorType operatorV2type, stop <-chan st
 	o.Dependencies.BackupProbe.SetReady()
 
 	<-stop
+}
+
+func (o *Operator) WrapLogger(in *zerolog.Event) *zerolog.Event {
+	return in.Str("namespace", o.Namespace)
 }
