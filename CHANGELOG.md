@@ -40,6 +40,7 @@
 - (Bugfix) Infinite loop fix in ArangoD AsyncClient
 - (Bugfix) Add Panic Handler
 - (Bugfix) Unify yaml packages
+- (Feature) Add 'crd install' subcommand
 
 ## [1.2.13](https://github.com/arangodb/kube-arangodb/tree/1.2.13) (2022-06-07)
 - (Bugfix) Fix arangosync members state inspection
