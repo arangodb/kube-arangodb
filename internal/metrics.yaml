@@ -1,0 +1,35 @@
+---
+  
+documentation: docs/generated/metrics
+destination: pkg/generated/metric_descriptions
+
+namespaces:
+  arangodb_operator:
+    agency:
+      index:
+        shortDescription: "Current index of the agency cache"
+        description: "Current index of the agency cache"
+        type: "Gauge"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+      fetches:
+        shortDescription: "Current count of agency cache fetches"
+        description: "Current count of agency cache fetches"
+        type: "Count"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+      errors:
+        shortDescription: "Current count of agency cache fetch errors"
+        description: "Current count of agency cache fetch errors"
+        type: "Count"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"

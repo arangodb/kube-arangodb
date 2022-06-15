@@ -254,12 +254,12 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 		nextInterval = interval
 	}
 
-	inspectDeploymentAgencyFetches.WithLabelValues(d.GetName()).Inc()
+	d.metrics.agency.fetches++
 	if offset, err := d.RefreshAgencyCache(ctx); err != nil {
-		inspectDeploymentAgencyErrors.WithLabelValues(d.GetName()).Inc()
+		d.metrics.agency.errors++
 		d.log.Err(err).Error("Unable to refresh agency")
 	} else {
-		inspectDeploymentAgencyIndex.WithLabelValues(d.GetName()).Set(float64(offset))
+		d.metrics.agency.index = offset
 	}
 
 	// Refresh maintenance lock
