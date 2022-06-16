@@ -22,15 +22,16 @@ package metric_descriptions
 
 import (
 	"sync"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
 )
 
 var (
-	descriptions []metrics.Description
+	descriptions     []metrics.Description
 	descriptionsLock sync.Mutex
 )
 
-func registerDescription( d ... metrics.Description) {
+func registerDescription(d ...metrics.Description) {
 	if len(d) == 0 {
 		return
 	}
@@ -41,7 +42,7 @@ func registerDescription( d ... metrics.Description) {
 	descriptions = append(descriptions, d...)
 }
 
-func Descriptions (c metrics.PushDescription) {
+func Descriptions(c metrics.PushDescription) {
 	descriptionsLock.Lock()
 	defer descriptionsLock.Unlock()
 

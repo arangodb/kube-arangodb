@@ -24,10 +24,10 @@ import (
 	"sync"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/generated/metric_descriptions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/arangodb/kube-arangodb/pkg/generated/metric_descriptions"
 )
 
 const (
