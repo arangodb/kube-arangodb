@@ -531,3 +531,8 @@ check-community:
 
 _check:
 	@$(MAKE) fmt license-verify linter run-unit-tests bin
+
+generate-documentation: generate-go-documentation fmt
+
+generate-go-documentation:
+	ROOT=$(ROOT) go test --count=1 "$(REPOPATH)/internal/..."
