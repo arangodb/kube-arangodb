@@ -25,6 +25,7 @@ rules:
         - "arangobackups.backup.arangodb.com"
         - "arangobackuppolicies.backup.arangodb.com"
         - "arangojobs.apps.arangodb.com"
+        - "arangolocalstorages.storage.arangodb.com"
 
 {{- end }}
 {{- end }}
