@@ -37,6 +37,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -66,7 +67,7 @@ type ContainerIdentity struct {
 // ArangoDIdentity helps to resolve the ArangoD identity, e.g.: image ID, version of the entrypoint.
 type ArangoDIdentity struct {
 	interfaces.ContainerCreator
-	License   api.LicenseSpec
+	License   *string
 	ipAddress string
 }
 
@@ -214,6 +215,16 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 		return false, nil
 	}
 
+	// Find license
+	var license *string
+	if s := ib.Spec.License; s.HasSecretName() {
+		if secret, ok := cachedStatus.Secret().V1().GetSimple(s.GetSecretName()); ok {
+			if _, ok := secret.Data[constants.SecretKeyToken]; ok {
+				license = util.NewString(s.GetSecretName())
+			}
+		}
+	}
+
 	imagePod := ImageUpdatePod{
 		spec:      ib.Spec,
 		apiObject: ib.APIObject,
@@ -223,7 +234,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 				image:           image,
 				imagePullPolicy: ib.Spec.GetImagePullPolicy(),
 			},
-			License:   ib.Spec.License,
+			License:   license,
 			ipAddress: ib.Spec.GetListenAddr(),
 		},
 	}
@@ -443,9 +454,10 @@ func (a *ArangoDIdentity) GetArgs() ([]string, error) {
 func (a *ArangoDIdentity) GetEnvs() []core.EnvVar {
 	env := make([]core.EnvVar, 0)
 
-	if a.License.HasSecretName() {
+	// Add advanced check for license
+	if l := a.License; l != nil {
 		env = append(env, k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoLicenseKey,
-			a.License.GetSecretName(), constants.SecretKeyToken))
+			*l, constants.SecretKeyToken))
 	}
 
 	if len(env) > 0 {
