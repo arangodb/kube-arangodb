@@ -31,7 +31,6 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
@@ -95,7 +94,9 @@ func (r *Resources) serviceMonitorSpec() (coreosv1.ServiceMonitorSpec, error) {
 
 		endpoint.BearerTokenSecret.Name = *spec.Metrics.Authentication.JWTTokenSecretName
 		endpoint.BearerTokenSecret.Key = constants.SecretKeyToken
-		endpoint.Path = shared.ArangoExporterInternalEndpoint
+
+		version := r.context.GetMembersState().State().Version.Version
+		endpoint.Path = getArangoExporterInternalEndpoint(version)
 
 		return coreosv1.ServiceMonitorSpec{
 			JobLabel: "k8s-app",
