@@ -21,7 +21,59 @@
 package agency
 
 type StateTarget struct {
+	// Jobs Section
+
+	JobToDo     Jobs `json:"ToDo,omitempty"`
+	JobPending  Jobs `json:"Pending,omitempty"`
+	JobFailed   Jobs `json:"Failed,omitempty"`
+	JobFinished Jobs `json:"Finished,omitempty"`
+
+	// Servers Section
+
+	CleanedServers Servers `json:"CleanedServers,omitempty"`
+
+	// HotBackup section
+
 	HotBackup StateTargetHotBackup `json:"HotBackup,omitempty"`
+}
+
+func (s StateTarget) GetJob(id JobID) (Job, JobPhase) {
+	if v, ok := s.JobToDo[id]; ok {
+		return v, JobPhaseToDo
+	}
+	if v, ok := s.JobPending[id]; ok {
+		return v, JobPhasePending
+	}
+	if v, ok := s.JobFailed[id]; ok {
+		return v, JobPhaseFailed
+	}
+	if v, ok := s.JobFinished[id]; ok {
+		return v, JobPhaseFinished
+	}
+
+	return Job{}, JobPhaseUnknown
+}
+
+func (s StateTarget) GetJobIDs() []JobID {
+	r := make([]JobID, 0, len(s.JobToDo)+len(s.JobPending)+len(s.JobFinished)+len(s.JobFailed))
+
+	for k := range s.JobToDo {
+		r = append(r, k)
+	}
+
+	for k := range s.JobPending {
+		r = append(r, k)
+	}
+
+	for k := range s.JobFinished {
+		r = append(r, k)
+	}
+
+	for k := range s.JobFailed {
+		r = append(r, k)
+	}
+
+	return r
 }
 
 type StateTargetHotBackup struct {

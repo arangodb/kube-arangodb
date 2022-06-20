@@ -22,15 +22,12 @@ package reconcile
 
 import (
 	"context"
-	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	driver "github.com/arangodb/go-driver"
-	"github.com/arangodb/go-driver/agency"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
 
@@ -85,12 +82,12 @@ func (a *actionWaitForMemberUp) CheckProgress(ctx context.Context) (bool, bool, 
 		return a.checkProgressSingle(ctxChild)
 	case api.DeploymentModeActiveFailover:
 		if a.action.Group == api.ServerGroupAgents {
-			return a.checkProgressAgent(ctxChild)
+			return a.checkProgressAgent()
 		}
 		return a.checkProgressSingleInActiveFailover(ctxChild)
 	default:
 		if a.action.Group == api.ServerGroupAgents {
-			return a.checkProgressAgent(ctxChild)
+			return a.checkProgressAgent()
 		}
 		return a.checkProgressCluster()
 	}
@@ -128,23 +125,13 @@ func (a *actionWaitForMemberUp) checkProgressSingleInActiveFailover(ctx context.
 
 // checkProgressAgent checks the progress of the action in the case
 // of an agent.
-func (a *actionWaitForMemberUp) checkProgressAgent(ctx context.Context) (bool, bool, error) {
-	clients, err := a.actionCtx.GetAgencyClients(ctx)
-	if err != nil {
-		a.log.Err(err).Debug("Failed to create agency clients")
+func (a *actionWaitForMemberUp) checkProgressAgent() (bool, bool, error) {
+	agencyHealth, ok := a.actionCtx.GetAgencyHealth()
+	if !ok {
+		a.log.Debug("Agency health fetch failed")
 		return false, false, nil
 	}
-
-	for _, a := range clients {
-		a.Endpoints()
-	}
-
-	shortCtx, c := context.WithTimeout(ctx, 3*time.Second)
-	defer c()
-
-	shortCtx = agency.WithAllowDifferentLeaderEndpoints(shortCtx)
-
-	if err := agency.AreAgentsHealthy(shortCtx, clients); err != nil {
+	if err := agencyHealth.Healthy(); err != nil {
 		a.log.Err(err).Debug("Not all agents are ready")
 		return false, false, nil
 	}

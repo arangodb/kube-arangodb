@@ -472,7 +472,7 @@ func groupReadyForRestart(context PlanBuilderContext, status api.DeploymentStatu
 			return false, "Unable to get agency cache"
 		}
 
-		blockingRestartShards := agency.GetDBServerBlockingRestartShards(agencyState, member.ID)
+		blockingRestartShards := agency.GetDBServerBlockingRestartShards(agencyState, agency.Server(member.ID))
 
 		if s := len(blockingRestartShards); s > 0 {
 			return false, fmt.Sprintf("There are %d shards which are blocking restart", s)

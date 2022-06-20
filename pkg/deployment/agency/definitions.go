@@ -38,6 +38,13 @@ const (
 
 	SupervisionKey            = "Supervision"
 	SupervisionMaintenanceKey = "Maintenance"
+
+	TargetJobToDoKey     = "ToDo"
+	TargetJobPendingKey  = "Pending"
+	TargetJobFailedKey   = "Failed"
+	TargetJobFinishedKey = "Finished"
+
+	TargetCleanedServersKey = "CleanedServers"
 )
 
 func GetAgencyKey(parts ...string) string {

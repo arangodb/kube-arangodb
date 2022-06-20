@@ -25,7 +25,6 @@ import (
 	"time"
 
 	"github.com/arangodb/arangosync-client/client"
-	"github.com/arangodb/go-driver/agency"
 	core "k8s.io/api/core/v1"
 
 	"github.com/arangodb/go-driver"
@@ -162,10 +161,6 @@ func (ac *actionContext) GetNamespace() string {
 	return ac.context.GetNamespace()
 }
 
-func (ac *actionContext) GetAgencyClientsWithPredicate(ctx context.Context, predicate func(id string) bool) ([]driver.Connection, error) {
-	return ac.context.GetAgencyClientsWithPredicate(ctx, predicate)
-}
-
 func (ac *actionContext) GetStatus() (api.DeploymentStatus, int32) {
 	return ac.context.GetStatus()
 }
@@ -270,24 +265,6 @@ func (ac *actionContext) GetServerClient(ctx context.Context, group api.ServerGr
 		return nil, errors.WithStack(err)
 	}
 	return c, nil
-}
-
-// GetAgencyClients returns a client connection for every agency member.
-func (ac *actionContext) GetAgencyClients(ctx context.Context) ([]driver.Connection, error) {
-	c, err := ac.context.GetAgencyClients(ctx)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return c, nil
-}
-
-// GetAgency returns a connection to the agency.
-func (ac *actionContext) GetAgency(ctx context.Context, agencyIDs ...string) (agency.Agency, error) {
-	a, err := ac.context.GetAgency(ctx, agencyIDs...)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return a, nil
 }
 
 // GetSyncServerClient returns a cached client for a specific arangosync server.

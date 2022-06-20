@@ -22,7 +22,6 @@ package resources
 
 import (
 	"context"
-	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 
@@ -31,10 +30,9 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	driver "github.com/arangodb/go-driver"
-	"github.com/arangodb/go-driver/agency"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	v1 "k8s.io/api/core/v1"
 )
@@ -42,7 +40,7 @@ import (
 // prepareAgencyPodTermination checks if the given agency pod is allowed to terminate
 // and if so, prepares it for termination.
 // It returns nil if the pod is allowed to terminate, an error otherwise.
-func (r *Resources) prepareAgencyPodTermination(ctx context.Context, p *v1.Pod, memberStatus api.MemberStatus, updateMember func(api.MemberStatus) error) error {
+func (r *Resources) prepareAgencyPodTermination(p *v1.Pod, memberStatus api.MemberStatus, updateMember func(api.MemberStatus) error) error {
 	log := r.log.Str("section", "pod")
 
 	// Inspect member phase
@@ -71,12 +69,10 @@ func (r *Resources) prepareAgencyPodTermination(ctx context.Context, p *v1.Pod, 
 	}
 
 	// Check PVC
-	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
-	defer cancel()
-	pvc, err := r.context.ACS().CurrentClusterCache().PersistentVolumeClaim().V1().Read().Get(ctxChild, memberStatus.PersistentVolumeClaimName, meta.GetOptions{})
-	if err != nil {
-		log.Err(err).Warn("Failed to get PVC for member")
-		return errors.WithStack(err)
+	pvc, ok := r.context.ACS().CurrentClusterCache().PersistentVolumeClaim().V1().GetSimple(memberStatus.PersistentVolumeClaimName)
+	if !ok {
+		log.Warn("Failed to get PVC for member")
+		return errors.Newf("Failed to get PVC for member")
 	}
 	if k8sutil.IsPersistentVolumeClaimMarkedForDeletion(pvc) {
 		agentDataWillBeGone = true
@@ -90,24 +86,16 @@ func (r *Resources) prepareAgencyPodTermination(ctx context.Context, p *v1.Pod, 
 
 	// Inspect agency state
 	log.Debug("Agent data will be gone, so we will check agency serving status first")
-	ctxChild, cancel = context.WithTimeout(ctx, time.Second*15)
-	defer cancel()
-	ctxLeader := agency.WithAllowNoLeader(ctxChild) // The ID we're checking may be the leader, so ignore situations where all other agents are followers
 
-	agencyConns, err := r.context.GetAgencyClientsWithPredicate(ctxLeader, func(id string) bool { return id != memberStatus.ID })
-	if err != nil {
-		log.Err(err).Debug("Failed to create member client")
-		return errors.WithStack(err)
+	agencyHealth, ok := r.context.GetAgencyHealth()
+	if !ok {
+		log.Debug("Agency health fetch failed")
+		return errors.Newf("Agency health fetch failed")
 	}
-	if len(agencyConns) == 0 {
-		log.Err(err).Debug("No more remaining agents, we cannot delete this one")
-		return errors.WithStack(errors.Newf("No more remaining agents"))
+	if err := agencyHealth.Healthy(); err != nil {
+		log.Err(err).Debug("Agency is not healthy. Cannot delete this one")
+		return errors.WithStack(errors.Newf("Agency is not healthy"))
 	}
-	if err := agency.AreAgentsHealthy(ctxLeader, agencyConns); err != nil {
-		log.Err(err).Debug("Remaining agents are not healthy")
-		return errors.WithStack(err)
-	}
-
 	// Complete agent recovery is needed, since data is already gone or not accessible
 	if memberStatus.Conditions.Update(api.ConditionTypeAgentRecoveryNeeded, true, "Data Gone", "") {
 		if err := updateMember(memberStatus); err != nil {
@@ -265,22 +253,15 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, p *v1.Pod
 		}
 	} else if memberStatus.Phase == api.MemberPhaseDrain {
 		// Check the job progress
-		ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-		defer cancel()
-		agency, err := r.context.GetAgency(ctxChild)
-		if err != nil {
-			log.Err(err).Debug("Failed to create agency client")
-			return errors.WithStack(err)
+		cache, ok := r.context.GetAgencyCache()
+		if !ok {
+			return errors.Newf("AgencyCache is not ready")
 		}
-		ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-		defer cancel()
-		jobStatus, err := arangod.CleanoutServerJobStatus(ctxChild, memberStatus.CleanoutJobID, c, agency)
-		if err != nil {
-			log.Err(err).Debug("Failed to fetch job status")
-			return errors.WithStack(err)
-		}
-		if jobStatus.IsFailed() {
-			log.Str("reason", jobStatus.Reason()).Warn("Job failed")
+
+		details, jobStatus := cache.Target.GetJob(agency.JobID(memberStatus.CleanoutJobID))
+		switch jobStatus {
+		case agency.JobPhaseFailed:
+			log.Str("reason", details.Reason).Warn("Job failed")
 			// Revert cleanout state
 			memberStatus.Phase = api.MemberPhaseCreated
 			memberStatus.CleanoutJobID = ""
@@ -289,30 +270,21 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, p *v1.Pod
 			}
 			log.Error("Cleanout/Resign server job failed, continue anyway")
 			return nil
-		}
-		if jobStatus.IsFinished() {
+		case agency.JobPhaseFinished:
 			memberStatus.CleanoutJobID = ""
 			memberStatus.Phase = api.MemberPhaseCreated
 		}
 	} else if memberStatus.Phase == api.MemberPhaseResign {
 		// Check the job progress
-		ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-		defer cancel()
-		agency, err := r.context.GetAgency(ctxChild)
-		if err != nil {
-			log.Err(err).Debug("Failed to create agency client")
-			return errors.WithStack(err)
+		cache, ok := r.context.GetAgencyCache()
+		if !ok {
+			return errors.Newf("AgencyCache is not ready")
 		}
 
-		ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-		defer cancel()
-		jobStatus, err := arangod.CleanoutServerJobStatus(ctxChild, memberStatus.CleanoutJobID, c, agency)
-		if err != nil {
-			log.Err(err).Debug("Failed to fetch job status")
-			return errors.WithStack(err)
-		}
-		if jobStatus.IsFailed() {
-			log.Str("reason", jobStatus.Reason()).Warn("Resign Job failed")
+		details, jobStatus := cache.Target.GetJob(agency.JobID(memberStatus.CleanoutJobID))
+		switch jobStatus {
+		case agency.JobPhaseFailed:
+			log.Str("reason", details.Reason).Warn("Resign Job failed")
 			// Revert cleanout state
 			memberStatus.Phase = api.MemberPhaseCreated
 			memberStatus.CleanoutJobID = ""
@@ -321,9 +293,8 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, p *v1.Pod
 			}
 			log.Error("Cleanout/Resign server job failed, continue anyway")
 			return nil
-		}
-		if jobStatus.IsFinished() {
-			log.Str("reason", jobStatus.Reason()).Debug("Resign Job finished")
+		case agency.JobPhaseFinished:
+			log.Str("reason", details.Reason).Debug("Resign Job finished")
 			memberStatus.CleanoutJobID = ""
 			memberStatus.Phase = api.MemberPhaseCreated
 			if err := updateMember(memberStatus); err != nil {

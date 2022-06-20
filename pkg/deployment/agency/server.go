@@ -20,4 +20,28 @@
 
 package agency
 
-type Shards map[string]Servers
+type Server string
+
+type Servers []Server
+
+func (s Servers) Contains(id Server) bool {
+	for _, q := range s {
+		if q == id {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (s Servers) Join(ids Servers) Servers {
+	r := make(Servers, 0, len(s))
+
+	for _, id := range ids {
+		if s.Contains(id) {
+			r = append(r, id)
+		}
+	}
+
+	return r
+}

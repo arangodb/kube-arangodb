@@ -21,24 +21,24 @@
 package agency
 
 type ShardGeneratorInterface interface {
-	WithPlan(servers ...string) ShardGeneratorInterface
-	WithCurrent(servers ...string) ShardGeneratorInterface
+	WithPlan(servers ...Server) ShardGeneratorInterface
+	WithCurrent(servers ...Server) ShardGeneratorInterface
 	Add() CollectionGeneratorInterface
 }
 
 type shardGenerator struct {
 	col collectionGenerator
 
-	plan    []string
-	current []string
+	plan    Servers
+	current Servers
 }
 
-func (s shardGenerator) WithPlan(servers ...string) ShardGeneratorInterface {
+func (s shardGenerator) WithPlan(servers ...Server) ShardGeneratorInterface {
 	s.plan = servers
 	return s
 }
 
-func (s shardGenerator) WithCurrent(servers ...string) ShardGeneratorInterface {
+func (s shardGenerator) WithCurrent(servers ...Server) ShardGeneratorInterface {
 	s.current = servers
 	return s
 }

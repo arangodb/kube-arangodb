@@ -160,7 +160,7 @@ type KubernetesEventGenerator interface {
 }
 
 type DeploymentClient interface {
-	DeploymentAgencyClient
+	//DeploymentAgencyClient
 	DeploymentDatabaseClient
 	DeploymentMemberClient
 	DeploymentSyncClient

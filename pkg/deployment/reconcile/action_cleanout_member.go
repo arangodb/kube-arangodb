@@ -29,7 +29,7 @@ import (
 
 	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 )
 
 func init() {
@@ -118,58 +118,19 @@ func (a *actionCleanoutMember) CheckProgress(ctx context.Context) (bool, bool, e
 		return true, false, nil
 	}
 
-	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	c, err := a.actionCtx.GetDatabaseClient(ctxChild)
-	if err != nil {
-		a.log.Err(err).Debug("Failed to create database client")
+	cache, ok := a.actionCtx.GetAgencyCache()
+	if !ok {
+		a.log.Debug("AgencyCache is not ready")
 		return false, false, nil
 	}
 
-	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	cluster, err := c.Cluster(ctxChild)
-	if err != nil {
-		a.log.Err(err).Debug("Failed to access cluster")
-		return false, false, nil
-	}
-
-	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	cleanedOut, err := cluster.IsCleanedOut(ctxChild, a.action.MemberID)
-	if err != nil {
-		a.log.Err(err).Debug("IsCleanedOut failed")
-		return false, false, nil
-	}
-	if !cleanedOut {
+	if !cache.Target.CleanedServers.Contains(agency.Server(a.action.MemberID)) {
 		// We're not done yet, check job status
 		a.log.Debug("IsCleanedOut returned false")
 
-		ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-		defer cancel()
-		c, err := a.actionCtx.GetDatabaseClient(ctxChild)
-		if err != nil {
-			a.log.Err(err).Debug("Failed to create database client")
-			return false, false, nil
-		}
-
-		ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-		defer cancel()
-		agency, err := a.actionCtx.GetAgency(ctxChild)
-		if err != nil {
-			a.log.Err(err).Debug("Failed to create agency client")
-			return false, false, nil
-		}
-
-		ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-		defer cancel()
-		jobStatus, err := arangod.CleanoutServerJobStatus(ctxChild, m.CleanoutJobID, c, agency)
-		if err != nil {
-			a.log.Err(err).Debug("Failed to fetch cleanout job status")
-			return false, false, nil
-		}
-		if jobStatus.IsFailed() {
-			a.log.Str("reason", jobStatus.Reason()).Warn("Cleanout Job failed. Aborting plan")
+		details, jobStatus := cache.Target.GetJob(agency.JobID(m.CleanoutJobID))
+		if jobStatus == agency.JobPhaseFailed {
+			a.log.Str("reason", details.Reason).Warn("Cleanout Job failed. Aborting plan")
 			// Revert cleanout state
 			m.Phase = api.MemberPhaseCreated
 			m.CleanoutJobID = ""
