@@ -46,6 +46,9 @@ var agencyDump39Satellite []byte
 //go:embed testdata/agency_dump.3.9.hotbackup.json
 var agencyDump39HotBackup []byte
 
+//go:embed testdata/agency_dump.3.9.jobs.json
+var agencyDump39Jobs []byte
+
 var (
 	data = map[string][]byte{
 		"3.6":           agencyDump36,
@@ -64,6 +67,44 @@ func Test_Unmarshal_MultiVersion(t *testing.T) {
 			require.NoError(t, json.Unmarshal(data, &s))
 		})
 	}
+}
+
+func Test_Unmarshal_Jobs(t *testing.T) {
+	var s DumpState
+	require.NoError(t, json.Unmarshal(agencyDump39Jobs, &s))
+
+	require.Len(t, s.Agency.Arango.Target.JobToDo, 2)
+	require.Len(t, s.Agency.Arango.Target.JobFailed, 3)
+	require.Len(t, s.Agency.Arango.Target.JobPending, 1)
+	require.Len(t, s.Agency.Arango.Target.JobFinished, 4)
+
+	t.Run("Check GetJob", func(t *testing.T) {
+		t.Run("Unknown", func(t *testing.T) {
+			j, s := s.Agency.Arango.Target.GetJob("955400")
+			require.Equal(t, JobPhaseUnknown, s)
+			require.Equal(t, "", j.Type)
+		})
+		t.Run("Failed", func(t *testing.T) {
+			j, s := s.Agency.Arango.Target.GetJob("955410")
+			require.Equal(t, JobPhaseFailed, s)
+			require.Equal(t, "resignLeadership", j.Type)
+		})
+		t.Run("ToDo", func(t *testing.T) {
+			j, s := s.Agency.Arango.Target.GetJob("955430")
+			require.Equal(t, JobPhaseToDo, s)
+			require.Equal(t, "resignLeadership", j.Type)
+		})
+		t.Run("Pending", func(t *testing.T) {
+			j, s := s.Agency.Arango.Target.GetJob("955420")
+			require.Equal(t, JobPhasePending, s)
+			require.Equal(t, "resignLeadership", j.Type)
+		})
+		t.Run("Finished", func(t *testing.T) {
+			j, s := s.Agency.Arango.Target.GetJob("955440")
+			require.Equal(t, JobPhaseFinished, s)
+			require.Equal(t, "resignLeadership", j.Type)
+		})
+	})
 }
 
 func Test_Unmarshal_LongData(t *testing.T) {
@@ -107,14 +148,14 @@ func Test_IsDBServerInSync(t *testing.T) {
 			t.Run("InSync", func(t *testing.T) {
 				for _, server := range tc.inSync {
 					t.Run(server, func(t *testing.T) {
-						require.Len(t, GetDBServerBlockingRestartShards(s, server), 0, "server %s should be in sync", server)
+						require.Len(t, GetDBServerBlockingRestartShards(s, Server(server)), 0, "server %s should be in sync", server)
 					})
 				}
 			})
 			t.Run("NotInSync", func(t *testing.T) {
 				for _, server := range tc.notInSync {
 					t.Run(server, func(t *testing.T) {
-						require.NotEqual(t, GetDBServerBlockingRestartShards(s, server), 0, "server %s should not be in sync", server)
+						require.NotEqual(t, GetDBServerBlockingRestartShards(s, Server(server)), 0, "server %s should not be in sync", server)
 					})
 				}
 			})
@@ -215,10 +256,10 @@ func Test_IsDBServerReadyToRestart(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			s := GenerateState(t, tc.generator)
 			for _, server := range tc.ready {
-				require.Len(t, s.Filter(FilterDBServerShardRestart(server)), 0, "server %s should be in sync", server)
+				require.Len(t, s.Filter(FilterDBServerShardRestart(Server(server))), 0, "server %s should be in sync", server)
 			}
 			for _, server := range tc.notReady {
-				require.NotEqual(t, len(s.Filter(FilterDBServerShardRestart(server))), 0, "server %s should not be in sync", server)
+				require.NotEqual(t, len(s.Filter(FilterDBServerShardRestart(Server(server)))), 0, "server %s should not be in sync", server)
 			}
 		})
 	}

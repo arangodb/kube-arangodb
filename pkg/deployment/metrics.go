@@ -120,7 +120,7 @@ func (i *inventory) Collect(m chan<- prometheus.Metric) {
 										db,
 										name,
 										shard,
-										server,
+										string(server),
 									}
 
 									if id == 0 {

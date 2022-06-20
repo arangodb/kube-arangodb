@@ -22,7 +22,7 @@ package agency
 
 type StatePlanCollections map[string]StatePlanDBCollections
 
-func (a StatePlanCollections) IsDBServerInDatabases(name string) bool {
+func (a StatePlanCollections) IsDBServerInDatabases(name Server) bool {
 	for _, collections := range a {
 		if collections.IsDBServerInCollections(name) {
 			return true
@@ -33,7 +33,7 @@ func (a StatePlanCollections) IsDBServerInDatabases(name string) bool {
 
 type StatePlanDBCollections map[string]StatePlanCollection
 
-func (a StatePlanDBCollections) IsDBServerInCollections(name string) bool {
+func (a StatePlanDBCollections) IsDBServerInCollections(name Server) bool {
 	for _, collection := range a {
 		if collection.IsDBServerInShards(name) {
 			return true
@@ -108,7 +108,7 @@ func (a StatePlanCollection) GetName(d string) string {
 	return *a.Name
 }
 
-func (a *StatePlanCollection) IsDBServerInShards(name string) bool {
+func (a *StatePlanCollection) IsDBServerInShards(name Server) bool {
 	if a == nil {
 		return false
 	}

@@ -30,7 +30,8 @@ import (
 // Context provides methods to the resilience package.
 type Context interface {
 	reconciler.DeploymentDatabaseClient
-	reconciler.DeploymentAgencyClient
+	reconciler.ArangoAgency
+
 	// GetSpec returns the current specification of the deployment
 	GetSpec() api.DeploymentSpec
 	// GetStatus returns the current status of the deployment

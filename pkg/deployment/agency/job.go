@@ -20,4 +20,21 @@
 
 package agency
 
-type Shards map[string]Servers
+type JobPhase string
+
+var (
+	JobPhaseUnknown  JobPhase = ""
+	JobPhaseToDo     JobPhase = "ToDo"
+	JobPhasePending  JobPhase = "Pending"
+	JobPhaseFailed   JobPhase = "Failed"
+	JobPhaseFinished JobPhase = "Finished"
+)
+
+type JobID string
+
+type Jobs map[JobID]Job
+
+type Job struct {
+	Type   string `json:"type,omitempty"`
+	Reason string `json:"reason,omitempty"`
+}

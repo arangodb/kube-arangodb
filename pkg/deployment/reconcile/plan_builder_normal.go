@@ -25,6 +25,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -120,7 +121,7 @@ func (r *Reconciler) createMemberFailedRestorePlan(ctx context.Context, apiObjec
 					continue
 				}
 
-				if agencyState.Plan.Collections.IsDBServerInDatabases(m.ID) {
+				if agencyState.Plan.Collections.IsDBServerInDatabases(agency.Server(m.ID)) {
 					// DBServer still exists in agency plan! Will not be removed, but needs to be recreated
 					memberLog.Info("Recreating DBServer - it cannot be removed gracefully")
 					plan = append(plan,

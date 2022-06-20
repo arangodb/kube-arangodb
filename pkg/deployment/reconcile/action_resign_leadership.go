@@ -26,10 +26,10 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 
 	"github.com/arangodb/go-driver"
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 )
 
 func init() {
@@ -122,7 +122,8 @@ func (a *actionResignLeadership) CheckProgress(ctx context.Context) (bool, bool,
 		return true, false, nil
 	}
 
-	if agencyState, agencyOK := a.actionCtx.GetAgencyCache(); !agencyOK {
+	agencyState, agencyOK := a.actionCtx.GetAgencyCache()
+	if !agencyOK {
 		a.log.Error("Unable to get maintenance mode")
 		return false, false, nil
 	} else if agencyState.Supervision.Maintenance.Exists() {
@@ -135,50 +136,24 @@ func (a *actionResignLeadership) CheckProgress(ctx context.Context) (bool, bool,
 		return true, false, nil
 	}
 
-	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	agency, err := a.actionCtx.GetAgency(ctxChild)
-	if err != nil {
-		a.log.Err(err).Debug("Failed to create agency client")
-		return false, false, nil
-	}
-
-	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	c, err := a.actionCtx.GetDatabaseClient(ctxChild)
-	if err != nil {
-		a.log.Err(err).Debug("Failed to create member client")
-		return false, false, nil
-	}
-
-	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	jobStatus, err := arangod.CleanoutServerJobStatus(ctxChild, m.CleanoutJobID, c, agency)
-	if err != nil {
-		if driver.IsNotFound(err) {
-			a.log.Err(err).Debug("Job not found, but proceeding")
-			return true, false, nil
-		}
-		a.log.Err(err).Debug("Failed to fetch job status")
-		return false, false, errors.WithStack(err)
-	}
-
-	if jobStatus.IsFailed() {
+	_, jobStatus := agencyState.Target.GetJob(agency.JobID(m.CleanoutJobID))
+	switch jobStatus {
+	case agency.JobPhaseFailed:
 		m.CleanoutJobID = ""
 		if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
 			return false, false, errors.WithStack(err)
 		}
 		a.log.Error("Resign server job failed")
 		return true, false, nil
-	}
-
-	if jobStatus.IsFinished() {
+	case agency.JobPhaseFinished:
 		m.CleanoutJobID = ""
 		if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
 			return false, false, errors.WithStack(err)
 		}
 		return true, false, nil
+	case agency.JobPhaseUnknown:
+		a.log.Debug("Job not found, but proceeding")
+		return true, false, nil
 	}
-
 	return false, false, nil
 }

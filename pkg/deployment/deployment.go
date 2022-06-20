@@ -163,20 +163,26 @@ func (d *Deployment) RefreshAgencyCache(ctx context.Context) (uint64, error) {
 		return 0, nil
 	}
 
-	lCtx, c := globals.GetGlobalTimeouts().Agency().WithTimeout(ctx)
-	defer c()
+	if info := d.apiObject.Status.Agency; info != nil {
+		if size := info.Size; size != nil {
+			lCtx, c := globals.GetGlobalTimeouts().Agency().WithTimeout(ctx)
+			defer c()
 
-	var clients []agencydriver.Agency
-	for _, m := range d.GetStatusSnapshot().Members.Agents {
-		a, err := d.GetAgency(lCtx, m.ID)
-		if err != nil {
-			return 0, err
+			var clients []agencydriver.Agency
+			for _, m := range d.GetStatusSnapshot().Members.Agents {
+				a, err := d.GetAgency(lCtx, m.ID)
+				if err != nil {
+					return 0, err
+				}
+
+				clients = append(clients, a)
+			}
+
+			return d.agencyCache.Reload(lCtx, int(*size), clients)
 		}
-
-		clients = append(clients, a)
 	}
 
-	return d.agencyCache.Reload(lCtx, clients)
+	return 0, errors.Newf("Agency not yet established")
 }
 
 func (d *Deployment) SetAgencyMaintenanceMode(ctx context.Context, enabled bool) error {

@@ -27,5 +27,5 @@ type StateCurrentDBCollections map[string]StateCurrentDBCollection
 type StateCurrentDBCollection map[string]StateCurrentDBShard
 
 type StateCurrentDBShard struct {
-	Servers ShardServers `json:"servers,omitempty"`
+	Servers Servers `json:"servers,omitempty"`
 }

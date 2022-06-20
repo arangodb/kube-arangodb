@@ -100,7 +100,7 @@ func (a *actionWaitForMemberInSync) checkCluster() (bool, error) {
 			return false, nil
 		}
 
-		notInSyncShards := agency.GetDBServerShardsNotInSync(agencyState, a.MemberID())
+		notInSyncShards := agency.GetDBServerShardsNotInSync(agencyState, agency.Server(a.MemberID()))
 
 		if len(notInSyncShards) > 0 {
 			a.log.Str("mode", "cluster").Str("member", a.MemberID()).Int("shard", len(notInSyncShards)).Info("DBServer contains not in sync shards")
