@@ -121,7 +121,7 @@ func (r *Reconciler) createMemberFailedRestorePlan(ctx context.Context, apiObjec
 					continue
 				}
 
-				if agencyState.Plan.Collections.IsDBServerInDatabases(agency.Server(m.ID)) {
+				if agencyState.Plan.Collections.IsDBServerPresent(agency.Server(m.ID)) {
 					// DBServer still exists in agency plan! Will not be removed, but needs to be recreated
 					memberLog.Info("Recreating DBServer - it cannot be removed gracefully")
 					plan = append(plan,

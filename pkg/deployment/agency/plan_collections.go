@@ -22,7 +22,7 @@ package agency
 
 type StatePlanCollections map[string]StatePlanDBCollections
 
-func (a StatePlanCollections) IsDBServerInDatabases(name Server) bool {
+func (a StatePlanCollections) IsDBServerPresent(name Server) bool {
 	for _, collections := range a {
 		if collections.IsDBServerInCollections(name) {
 			return true
