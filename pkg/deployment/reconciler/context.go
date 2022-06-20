@@ -27,7 +27,6 @@ import (
 
 	"github.com/arangodb/arangosync-client/client"
 	"github.com/arangodb/go-driver"
-	"github.com/arangodb/go-driver/agency"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/acs/sutil"
 	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency"
@@ -124,15 +123,6 @@ type ArangoApplier interface {
 	ApplyPatch(ctx context.Context, p ...patch.Item) error
 }
 
-type DeploymentAgencyClient interface {
-	// GetAgencyClients returns a client connection for every agency member.
-	GetAgencyClients(ctx context.Context) ([]driver.Connection, error)
-	// GetAgencyClientsWithPredicate returns a client connection for every agency member which match condition.
-	GetAgencyClientsWithPredicate(ctx context.Context, predicate func(id string) bool) ([]driver.Connection, error)
-	// GetAgency returns a connection to the entire agency.
-	GetAgency(ctx context.Context, agencyIDs ...string) (agency.Agency, error)
-}
-
 type DeploymentDatabaseClient interface {
 	// GetDatabaseClient returns a cached client for the entire database (cluster coordinators or single server),
 	// creating one if needed.
@@ -160,7 +150,6 @@ type KubernetesEventGenerator interface {
 }
 
 type DeploymentClient interface {
-	//DeploymentAgencyClient
 	DeploymentDatabaseClient
 	DeploymentMemberClient
 	DeploymentSyncClient
