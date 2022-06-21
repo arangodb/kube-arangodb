@@ -24,12 +24,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 )
 
 const (
@@ -74,10 +72,8 @@ func (r *Resilience) CheckMemberFailure(ctx context.Context) error {
 				if m.IsNotReadySince(time.Now().Add(-notReadySinceGracePeriod)) {
 					// Member has terminated too often in recent history.
 
-					failureAcceptable, reason, err := r.isMemberFailureAcceptable(ctx, group, m)
-					if err != nil {
-						log.Err(err).Warn("Failed to check is member failure is acceptable")
-					} else if failureAcceptable {
+					failureAcceptable, reason := r.isMemberFailureAcceptable(group, m)
+					if failureAcceptable {
 						log.Info("Member is not ready for long time, marking is failed")
 						m.Phase = api.MemberPhaseFailed
 						status.Members.Update(m, group)
@@ -93,10 +89,8 @@ func (r *Resilience) CheckMemberFailure(ctx context.Context) error {
 				count := m.RecentTerminationsSince(time.Now().Add(-recentTerminationsSinceGracePeriod))
 				if count >= recentTerminationThreshold {
 					// Member has terminated too often in recent history.
-					failureAcceptable, reason, err := r.isMemberFailureAcceptable(ctx, group, m)
-					if err != nil {
-						log.Err(err).Warn("Failed to check is member failure is acceptable")
-					} else if failureAcceptable {
+					failureAcceptable, reason := r.isMemberFailureAcceptable(group, m)
+					if failureAcceptable {
 						log.Info("Member has terminated too often in recent history, marking is failed")
 						m.Phase = api.MemberPhaseFailed
 						status.Members.Update(m, group)
@@ -123,42 +117,46 @@ func (r *Resilience) CheckMemberFailure(ctx context.Context) error {
 
 // isMemberFailureAcceptable checks if it is currently acceptable to switch the phase of the given member
 // to failed, which means that it will be replaced.
-// Return: failureAcceptable, notAcceptableReason, error
-func (r *Resilience) isMemberFailureAcceptable(ctx context.Context, group api.ServerGroup, m api.MemberStatus) (bool, string, error) {
+// Return: failureAcceptable, notAcceptableReason
+func (r *Resilience) isMemberFailureAcceptable(group api.ServerGroup, m api.MemberStatus) (bool, string) {
 
 	switch group {
 	case api.ServerGroupAgents:
 		agencyHealth, ok := r.context.GetAgencyHealth()
 		if !ok {
-			return false, "AgencyHealth is not present", nil
+			return false, "AgencyHealth is not present"
 		}
 
 		if err := agencyHealth.Healthy(); err != nil {
-			return false, err.Error(), nil
+			return false, err.Error()
 		}
 
-		return true, "", nil
+		return true, ""
 	case api.ServerGroupDBServers:
-		ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-		defer cancel()
-		client, err := r.context.GetDatabaseClient(ctxChild)
-		if err != nil {
-			return false, "", errors.WithStack(err)
+		agencyState, ok := r.context.GetAgencyCache()
+		if !ok {
+			return false, "AgencyHealth is not present"
 		}
-		if err := arangod.IsDBServerEmpty(ctx, m.ID, client); err != nil {
-			return false, err.Error(), nil
+
+		if agencyState.Plan.Collections.IsDBServerPresent(agency.Server(m.ID)) {
+			return false, "DBServer still in Plan"
 		}
-		return true, "", nil
+
+		if agencyState.Current.Collections.IsDBServerPresent(agency.Server(m.ID)) {
+			return false, "DBServer still in Current"
+		}
+
+		return true, ""
 	case api.ServerGroupCoordinators:
 		// Coordinators can be replaced at will
-		return true, "", nil
+		return true, ""
 	case api.ServerGroupSyncMasters, api.ServerGroupSyncWorkers:
 		// Sync masters & workers can be replaced at will
-		return true, "", nil
+		return true, ""
 	case api.ServerGroupSingle:
-		return false, "ServerGroupSingle can not marked as a failed", nil
+		return false, "ServerGroupSingle can not marked as a failed"
 	default:
 		// TODO
-		return false, "TODO", nil
+		return false, "TODO"
 	}
 }
