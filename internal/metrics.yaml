@@ -5,6 +5,76 @@ destination: pkg/generated/metric_descriptions
 
 namespaces:
   arangodb_operator:
+    agency_cache:
+      present:
+        shortDescription: "Determines if local agency cache is present"
+        description: "Determines if local agency cache is present"
+        type: "Gauge"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+      health_present:
+        shortDescription: "Determines if local agency cache health is present"
+        description: "Determines if local agency cache health is present"
+        type: "Gauge"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+      serving:
+        shortDescription: "Determines if agency is serving"
+        description: "Determines if agency is serving"
+        type: "Gauge"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+      healthy:
+        shortDescription: "Determines if agency is healthy"
+        description: "Determines if agency is healthy"
+        type: "Gauge"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+      member_serving:
+        shortDescription: "Determines if agency member is reachable"
+        description: "Determines if agency member is reachable"
+        type: "Gauge"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+          - key: agent
+            description: "Agent ID"
+      member_commit_offset:
+        shortDescription: "Determines agency member commit offset"
+        description: "Determines agency member commit offset. Set to -1 if Agent is not reachable"
+        type: "Gauge"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+          - key: agent
+            description: "Agent ID"
+      leaders:
+        shortDescription: "Determines agency leader vote count"
+        description: "Determines agency leader vote count. Should be always one"
+        type: "Gauge"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+          - key: agent
+            description: "Agent ID"
     agency:
       index:
         shortDescription: "Current index of the agency cache"
