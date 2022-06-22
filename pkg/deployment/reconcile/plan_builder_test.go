@@ -85,6 +85,11 @@ type testContext struct {
 	Inspector inspectorInterface.Inspector
 }
 
+func (c *testContext) GetNextTask(ctx context.Context) (*api.ArangoTask, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (c *testContext) GetAgencyHealth() (agencyCache.Health, bool) {
 	//TODO implement me
 	panic("implement me")

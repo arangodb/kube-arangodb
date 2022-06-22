@@ -26,8 +26,10 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	ins "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangotask/v1"
+
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 func (p *arangoTasksInspector) V1() (ins.Inspector, error) {
@@ -97,6 +99,15 @@ func (p *arangoTasksInspectorV1) GetSimple(name string) (*api.ArangoTask, bool) 
 	}
 
 	return arangoTask, true
+}
+
+func (p *arangoTasksInspectorV1) GetSimpleById(id types.UID) (*api.ArangoTask, bool) {
+	for _, task := range p.arangoTasks {
+		if task.UID == id {
+			return task, true
+		}
+	}
+	return nil, false
 }
 
 func (p *arangoTasksInspectorV1) Iterate(action ins.Action, filters ...ins.Filter) error {

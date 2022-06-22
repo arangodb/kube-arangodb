@@ -18,39 +18,39 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1
+package reconcile
 
 import (
-	"k8s.io/apimachinery/pkg/types"
+	"context"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/gvk"
 )
 
-type Inspector interface {
-	gvk.GVK
-
-	ListSimple() []*api.ArangoTask
-	GetSimple(name string) (*api.ArangoTask, bool)
-	GetSimpleById(id types.UID) (*api.ArangoTask, bool)
-	Filter(filters ...Filter) []*api.ArangoTask
-	Iterate(action Action, filters ...Filter) error
-	Read() ReadInterface
+func init() {
+	registerAction(api.ActionTypePing, newPing, pingTimeout)
 }
 
-type Filter func(at *api.ArangoTask) bool
-type Action func(at *api.ArangoTask) error
+func newPing(action api.Action, actionCtx ActionContext) Action {
+	a := &pingDbServerAction{}
 
-func FilterObject(at *api.ArangoTask, filters ...Filter) bool {
-	for _, f := range filters {
-		if f == nil {
-			continue
-		}
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
-		if !f(at) {
-			return false
-		}
+	return a
+}
+
+type pingDbServerAction struct {
+	actionImpl
+}
+
+func (a *pingDbServerAction) Start(ctx context.Context) (bool, error) {
+	if a.action.TaskID == "" {
+		a.log.Error("taskName parameter is missing")
+		return true, nil
 	}
 
-	return true
+	return false, nil
+}
+
+func (a *pingDbServerAction) CheckProgress(ctx context.Context) (bool, bool, error) {
+	return true, false, nil
 }

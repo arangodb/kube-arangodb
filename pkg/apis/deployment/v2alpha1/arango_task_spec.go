@@ -24,6 +24,11 @@ import "encoding/json"
 
 type ArangoTaskType string
 
+const (
+	// ArangoTaskPingType send ping to the db server
+	ArangoTaskPingType ArangoTaskType = "Ping"
+)
+
 type ArangoTaskDetails []byte
 
 func (a ArangoTaskDetails) MarshalJSON() ([]byte, error) {
@@ -68,7 +73,12 @@ var _ json.Unmarshaler = &ArangoTaskDetails{}
 var _ json.Marshaler = ArangoTaskDetails{}
 
 type ArangoTaskSpec struct {
-	Type ArangoTaskType `json:"type,omitempty"`
+	Type           ArangoTaskType    `json:"type,required"`
+	DeploymentName string            `json:"deploymentName,required"`
+	Details        ArangoTaskDetails `json:"details,omitempty"`
+}
 
-	Details ArangoTaskDetails `json:"details,omitempty"`
+type ArangoTaskPing struct {
+	DurationSeconds int `json:"durationSeconds"`
+	Counts          int `json:"counts"`
 }

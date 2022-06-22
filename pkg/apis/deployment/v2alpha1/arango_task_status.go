@@ -31,8 +31,12 @@ const (
 )
 
 type ArangoTaskStatus struct {
-	AcceptedSpec *ArangoTaskSpec `json:"acceptedSpec,omitempty"`
+	AcceptedSpec *ArangoTaskSpec     `json:"acceptedSpec,omitempty"`
+	State        ArangoTaskState     `json:"state,omitempty"`
+	ActionsState []ArangoActionState `json:"actionsState,omitempty"`
+}
 
-	State   ArangoTaskState   `json:"state,omitempty"`
-	Details ArangoTaskDetails `json:"details,omitempty"`
+type ArangoActionState struct {
+	ActionId string          `json:"actionId,omitempty"`
+	State    ArangoTaskState `json:"state,omitempty"`
 }
