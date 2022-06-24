@@ -1057,7 +1057,6 @@ func TestCreatePlan(t *testing.T) {
 			ExpectedPlan: []api.Action{
 				actions.NewAction(api.ActionTypeRemoveMember, api.ServerGroupCoordinators, withPredefinedMember("id")),
 				actions.NewAction(api.ActionTypeAddMember, api.ServerGroupCoordinators, withPredefinedMember("")),
-				actions.NewAction(api.ActionTypeWaitForMemberUp, api.ServerGroupCoordinators, withPredefinedMember(api.MemberIDPreviousAction)),
 			},
 			ExpectedLog: "Creating member replacement plan because member has failed",
 		},
@@ -1076,7 +1075,6 @@ func TestCreatePlan(t *testing.T) {
 			ExpectedPlan: []api.Action{
 				actions.NewAction(api.ActionTypeRemoveMember, api.ServerGroupDBServers, withPredefinedMember("id")),
 				actions.NewAction(api.ActionTypeAddMember, api.ServerGroupDBServers, withPredefinedMember("")),
-				actions.NewAction(api.ActionTypeWaitForMemberUp, api.ServerGroupDBServers, withPredefinedMember(api.MemberIDPreviousAction)),
 			},
 			ExpectedLog: "Creating member replacement plan because member has failed",
 		},

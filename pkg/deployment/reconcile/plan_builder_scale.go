@@ -119,9 +119,7 @@ func (r *Reconciler) createReplaceMemberPlan(ctx context.Context, apiObject k8su
 			if member.Conditions.IsTrue(api.ConditionTypeMarkedToRemove) {
 				switch group {
 				case api.ServerGroupDBServers:
-					plan = append(plan, actions.NewAction(api.ActionTypeAddMember, group, withPredefinedMember("")).
-						AddParam(api.ActionTypeWaitForMemberInSync.String(), "").
-						AddParam(api.ActionTypeWaitForMemberUp.String(), ""))
+					plan = append(plan, actions.NewAction(api.ActionTypeAddMember, group, withPredefinedMember("")))
 					r.planLogger.
 						Str("role", group.AsRole()).
 						Debug("Creating replacement plan")
@@ -134,9 +132,7 @@ func (r *Reconciler) createReplaceMemberPlan(ctx context.Context, apiObject k8su
 					return nil
 				case api.ServerGroupAgents:
 					plan = append(plan, actions.NewAction(api.ActionTypeRemoveMember, group, member),
-						actions.NewAction(api.ActionTypeAddMember, group, withPredefinedMember("")).
-							AddParam(api.ActionTypeWaitForMemberInSync.String(), "").
-							AddParam(api.ActionTypeWaitForMemberUp.String(), ""))
+						actions.NewAction(api.ActionTypeAddMember, group, withPredefinedMember("")))
 					r.planLogger.
 						Str("role", group.AsRole()).
 						Debug("Creating replacement plan")

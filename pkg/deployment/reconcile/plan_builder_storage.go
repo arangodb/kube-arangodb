@@ -133,6 +133,7 @@ func (r *Reconciler) pvcResizePlan(group api.ServerGroup, groupSpec api.ServerGr
 			actions.NewAction(api.ActionTypePVCResized, group, member),
 			actions.NewAction(api.ActionTypeRotateStopMember, group, member),
 			actions.NewAction(api.ActionTypeWaitForMemberUp, group, member),
+			actions.NewAction(api.ActionTypeWaitForMemberInSync, group, member),
 		}
 	default:
 		r.planLogger.Str("server-group", group.AsRole()).Str("mode", mode.String()).

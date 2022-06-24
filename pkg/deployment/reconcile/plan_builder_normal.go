@@ -149,7 +149,6 @@ func (r *Reconciler) createMemberFailedRestorePlan(ctx context.Context, apiObjec
 					plan = append(plan,
 						actions.NewAction(api.ActionTypeRemoveMember, group, m),
 						actions.NewAction(api.ActionTypeAddMember, group, withPredefinedMember("")),
-						actions.NewAction(api.ActionTypeWaitForMemberUp, group, withPredefinedMember(api.MemberIDPreviousAction)),
 					)
 				} else {
 					memberLog.Info("Restoring old member. Recreation is disabled for group")
