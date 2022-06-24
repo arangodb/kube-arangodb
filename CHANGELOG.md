@@ -22,6 +22,7 @@
 - (Bugfix) Allow missing `token` key in License secret
 - (Feature) Unify agency access
 - (Feature) Change DBServer Cleanup Logic
+- (Feature) Set Logger format
 
 ## [1.2.13](https://github.com/arangodb/kube-arangodb/tree/1.2.13) (2022-06-07)
 - (Bugfix) Fix arangosync members state inspection

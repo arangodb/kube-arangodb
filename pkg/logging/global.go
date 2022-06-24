@@ -20,9 +20,18 @@
 
 package logging
 
-import "github.com/rs/zerolog/log"
+import (
+	"os"
+	"time"
 
-var global = NewFactory(log.Logger)
+	"github.com/rs/zerolog"
+)
+
+var global = NewFactory(zerolog.New(zerolog.ConsoleWriter{
+	Out:        os.Stdout,
+	TimeFormat: time.RFC3339Nano,
+	NoColor:    true,
+}).With().Timestamp().Logger())
 
 func Global() Factory {
 	return global
