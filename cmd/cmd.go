@@ -45,6 +45,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/klog"
 
+	"github.com/arangodb/kube-arangodb/pkg/api"
 	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/crd"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
@@ -68,8 +69,12 @@ import (
 const (
 	defaultServerHost           = "0.0.0.0"
 	defaultServerPort           = 8528
+	defaultAPIHTTPPort          = 8628
+	defaultAPIGRPCPort          = 8728
 	defaultLogLevel             = "debug"
 	defaultAdminSecretName      = "arangodb-operator-dashboard"
+	defaultAPIJWTSecretName     = "arangodb-operator-api-jwt"
+	defaultAPIJWTKeySecretName  = "arangodb-operator-api-jwt-key"
 	defaultAlpineImage          = "alpine:3.7"
 	defaultMetricsExporterImage = "arangodb/arangodb-exporter:0.1.6"
 	defaultArangoImage          = "arangodb/arangodb:latest"
@@ -97,6 +102,14 @@ var (
 		tlsSecretName   string
 		adminSecretName string // Name of basic authentication secret containing the admin username+password of the dashboard
 		allowAnonymous  bool   // If set, anonymous access to dashboard is allowed
+	}
+	apiOptions struct {
+		enabled          bool
+		httpPort         int
+		grpcPort         int
+		jwtSecretName    string
+		jwtKeySecretName string
+		tlsSecretName    string
 	}
 	operatorOptions struct {
 		enableDeployment            bool // Run deployment operator
@@ -158,6 +171,12 @@ func init() {
 	f.StringVar(&serverOptions.adminSecretName, "server.admin-secret-name", defaultAdminSecretName, "Name of secret containing username + password for login to the dashboard")
 	f.BoolVar(&serverOptions.allowAnonymous, "server.allow-anonymous-access", false, "Allow anonymous access to the dashboard")
 	f.StringArrayVar(&logLevels, "log.level", []string{defaultLogLevel}, fmt.Sprintf("Set log levels in format <level> or <logger>=<level>. Possible loggers: %s", strings.Join(logging.Global().Names(), ", ")))
+	f.BoolVar(&apiOptions.enabled, "api.enabled", true, "Enable operator HTTP and gRPC API")
+	f.IntVar(&apiOptions.httpPort, "api.http-port", defaultAPIHTTPPort, "HTTP API port to listen on")
+	f.IntVar(&apiOptions.grpcPort, "api.grpc-port", defaultAPIGRPCPort, "gRPC API port to listen on")
+	f.StringVar(&apiOptions.tlsSecretName, "api.tls-secret-name", "", "Name of secret containing tls.crt & tls.key for HTTPS API (if empty, self-signed certificate is used)")
+	f.StringVar(&apiOptions.jwtSecretName, "api.jwt-secret-name", defaultAPIJWTSecretName, "Name of secret which will contain JWT to authenticate API requests.")
+	f.StringVar(&apiOptions.jwtKeySecretName, "api.jwt-key-secret-name", defaultAPIJWTKeySecretName, "Name of secret containing key used to sign JWT. If there is no such secret present, value will be saved here")
 	f.BoolVar(&operatorOptions.enableDeployment, "operator.deployment", false, "Enable to run the ArangoDeployment operator")
 	f.BoolVar(&operatorOptions.enableDeploymentReplication, "operator.deployment-replication", false, "Enable to run the ArangoDeploymentReplication operator")
 	f.BoolVar(&operatorOptions.enableStorage, "operator.storage", false, "Enable to run the ArangoLocalStorage operator")
@@ -306,6 +325,37 @@ func executeMain(cmd *cobra.Command, args []string) {
 			logger.Err(err).Fatal("Failed to create operator")
 		}
 
+		if apiOptions.enabled {
+			apiServerCfg := api.ServerConfig{
+				Namespace:        namespace,
+				ServerName:       name,
+				ServerAltNames:   []string{ip},
+				HTTPAddress:      net.JoinHostPort("0.0.0.0", strconv.Itoa(apiOptions.httpPort)),
+				GRPCAddress:      net.JoinHostPort("0.0.0.0", strconv.Itoa(apiOptions.grpcPort)),
+				TLSSecretName:    apiOptions.tlsSecretName,
+				JWTSecretName:    apiOptions.jwtSecretName,
+				JWTKeySecretName: apiOptions.jwtKeySecretName,
+				LivelinessProbe:  &livenessProbe,
+				ProbeDeployment: api.ReadinessProbeConfig{
+					Enabled: cfg.EnableDeployment,
+					Probe:   &deploymentProbe,
+				},
+				ProbeDeploymentReplication: api.ReadinessProbeConfig{
+					Enabled: cfg.EnableDeploymentReplication,
+					Probe:   &deploymentReplicationProbe,
+				},
+				ProbeStorage: api.ReadinessProbeConfig{
+					Enabled: cfg.EnableStorage,
+					Probe:   &storageProbe,
+				},
+			}
+			apiServer, err := api.NewServer(client.Kubernetes().CoreV1(), apiServerCfg)
+			if err != nil {
+				logger.Err(err).Fatal("Failed to create API server")
+			}
+			go utilsError.LogError(logger, "while running API server", apiServer.Run)
+		}
+
 		listenAddr := net.JoinHostPort(serverOptions.host, strconv.Itoa(serverOptions.port))
 		if svr, err := server.NewServer(client.Kubernetes().CoreV1(), server.Config{
 			Namespace:          namespace,
@@ -348,7 +398,7 @@ func executeMain(cmd *cobra.Command, args []string) {
 		}); err != nil {
 			logger.Err(err).Fatal("Failed to create HTTP server")
 		} else {
-			go utilsError.LogError(logger, "error while starting service", svr.Run)
+			go utilsError.LogError(logger, "error while starting server", svr.Run)
 		}
 
 		//	startChaos(context.Background(), cfg.KubeCli, cfg.Namespace, chaosLevel)

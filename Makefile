@@ -89,6 +89,14 @@ else
 	COMPILE_DEBUG_FLAGS :=
 endif
 
+PROTOC_VERSION := 21.1
+ifeq ($(shell uname),Darwin)
+	PROTOC_ARCHIVE_SUFFIX := osx-universal_binary
+else
+	PROTOC_ARCHIVE_SUFFIX := linux-x86_64
+endif
+PROTOC_URL := https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/protoc-${PROTOC_VERSION}-${PROTOC_ARCHIVE_SUFFIX}.zip
+
 ifeq ($(MANIFESTSUFFIX),-)
 	# Release setting
 	MANIFESTSUFFIX :=
@@ -167,6 +175,8 @@ else
 LINT_EXCLUDES+=.*\.enterprise\.go$$
 endif
 
+PROTOSOURCES := $(shell find ./ -type f  -name '*.proto' $(foreach EXCLUDE_DIR,$(EXCLUDE_DIRS), ! -path "*/$(EXCLUDE_DIR)/*") | sort)
+
 .DEFAULT_GOAL := all
 .PHONY: all
 all: check-vars verify-generated build
@@ -185,7 +195,7 @@ allall: all
 .PHONY: license-verify
 license-verify:
 	@echo ">> Verify license of files"
-	@$(GOPATH)/bin/addlicense -f "./tools/codegen/license-header.txt" -check $(SOURCES)
+	@$(GOPATH)/bin/addlicense -f "./tools/codegen/license-header.txt" -check $(SOURCES) $(PROTOSOURCES)
 
 .PHONY: fmt
 fmt:
@@ -196,7 +206,7 @@ fmt:
 .PHONY: license
 license:
 	@echo ">> Ensuring license of files"
-	@$(GOPATH)/bin/addlicense -f "./tools/codegen/license-header.txt" $(SOURCES)
+	@$(GOPATH)/bin/addlicense -f "./tools/codegen/license-header.txt" $(SOURCES) $(PROTOSOURCES)
 
 .PHONY: fmt-verify
 fmt-verify: license-verify
@@ -243,6 +253,10 @@ update-generated:
 	@mkdir -p $(ORGDIR)
 	@ln -s -f $(SCRIPTDIR) $(ORGDIR)/kube-arangodb
 	@sed -e 's/^/\/\/ /' -e 's/ *$$//' $(ROOTDIR)/tools/codegen/license-header.txt > $(ROOTDIR)/tools/codegen/boilerplate.go.txt
+	$(GOBUILDDIR)/bin/protoc -I.:$(GOBUILDDIR)/include/ \
+			--go_out=. --go_opt=paths=source_relative \
+	 		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
+	 		$(PROTOSOURCES)
 	GOPATH=$(GOBUILDDIR) $(VENDORDIR)/k8s.io/code-generator/generate-groups.sh  \
 			"all" \
 			"github.com/arangodb/kube-arangodb/pkg/generated" \
@@ -464,6 +478,10 @@ tools: update-vendor
 	@GOBIN=$(GOPATH)/bin go install github.com/jessevdk/go-assets-builder@b8483521738fd2198ecfc378067a4e8a6079f8e5
 	@echo ">> Fetching gci"
 	@GOBIN=$(GOPATH)/bin go install github.com/daixiang0/gci@v0.3.0
+	@echo ">> Downloading protobuf compiler..."
+	@curl -L ${PROTOC_URL} -o $(GOPATH)/protoc.zip
+	@echo ">> Unzipping protobuf compiler..."
+	@unzip -o $(GOPATH)/protoc.zip -d $(GOPATH)/
 
 .PHONY: vendor
 vendor:
