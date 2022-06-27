@@ -239,7 +239,6 @@ func (d *Reconciler) executePlan(ctx context.Context, statusPlan api.Plan, pg pl
 
 			if newPlan, changed := getActionPlanAppender(action, plan); changed {
 				// Our actions have been added to the end of plan
-				d.planLogger.Info("Appending new plan items")
 				return newPlan, true, nil
 			}
 
@@ -265,35 +264,45 @@ func (d *Reconciler) executePlan(ctx context.Context, statusPlan api.Plan, pg pl
 }
 
 func (d *Reconciler) executeAction(ctx context.Context, planAction api.Action, action Action) (done, abort, callAgain, retry bool, err error) {
+	log := d.planLogger.Str("action", string(planAction.Type)).Str("member", planAction.MemberID)
+
 	if !planAction.IsStarted() {
 		// Not started yet
 		ready, err := action.Start(ctx)
 		if err != nil {
 			if g := getStartFailureGracePeriod(action); g > 0 && !planAction.CreationTime.IsZero() {
 				if time.Since(planAction.CreationTime.Time) < g {
-					d.planLogger.Err(err).Error("Failed to start action, but still in grace period")
+					log.Err(err).Error("Failed to start action, but still in grace period")
 					return false, false, false, true, errors.WithStack(err)
 				}
 			}
-			d.planLogger.Err(err).Error("Failed to start action")
+			log.Err(err).Error("Failed to start action")
 			return false, false, false, false, errors.WithStack(err)
 		}
 
 		if ready {
-			d.planLogger.Bool("ready", ready).Debug("Action Start completed")
+			log.Bool("ready", ready).Info("Action Start completed")
 			return true, false, false, false, nil
 		}
+		log.Bool("ready", ready).Info("Action Started")
 
 		return false, false, true, false, nil
 	}
+
+	if t := planAction.StartTime; t != nil {
+		if tm := t.Time; !tm.IsZero() {
+			log = log.SinceStart("duration", tm)
+		}
+	}
+
 	// First action of plan has been started, check its progress
 	ready, abort, err := action.CheckProgress(ctx)
 	if err != nil {
-		d.planLogger.Err(err).Debug("Failed to check action progress")
+		log.Err(err).Debug("Failed to check action progress")
 		return false, false, false, false, errors.WithStack(err)
 	}
 
-	d.planLogger.
+	log.
 		Bool("abort", abort).
 		Bool("ready", ready).
 		Debug("Action CheckProgress completed")
@@ -303,11 +312,11 @@ func (d *Reconciler) executeAction(ctx context.Context, planAction api.Action, a
 	}
 
 	if abort {
-		d.planLogger.Warn("Action aborted. Removing the entire plan")
+		log.Warn("Action aborted. Removing the entire plan")
 		d.context.CreateEvent(k8sutil.NewPlanAbortedEvent(d.context.GetAPIObject(), string(planAction.Type), planAction.MemberID, planAction.Group.AsRole()))
 		return false, true, false, false, nil
 	} else if time.Now().After(planAction.CreationTime.Add(GetActionTimeout(d.context.GetSpec(), planAction.Type))) {
-		d.planLogger.Warn("Action not finished in time. Removing the entire plan")
+		log.Warn("Action not finished in time. Removing the entire plan")
 		d.context.CreateEvent(k8sutil.NewPlanTimeoutEvent(d.context.GetAPIObject(), string(planAction.Type), planAction.MemberID, planAction.Group.AsRole()))
 		return false, true, false, false, nil
 	}

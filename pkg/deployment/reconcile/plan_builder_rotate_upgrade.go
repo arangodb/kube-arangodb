@@ -477,6 +477,16 @@ func groupReadyForRestart(context PlanBuilderContext, status api.DeploymentStatu
 		if s := len(blockingRestartShards); s > 0 {
 			return false, fmt.Sprintf("There are %d shards which are blocking restart", s)
 		}
+	case api.ServerGroupAgents:
+		agencyHealth, ok := context.GetAgencyHealth()
+		if !ok {
+			// Unable to get agency state, do not restart
+			return false, "Unable to get agency cache"
+		}
+
+		if err := agencyHealth.Healthy(); err != nil {
+			return false, fmt.Sprintf("Restart of agent is not allowed due to: %s", err.Error())
+		}
 	}
 
 	return true, "Restart allowed"

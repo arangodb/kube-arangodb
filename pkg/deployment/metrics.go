@@ -70,7 +70,7 @@ func (i *inventory) Describe(descs chan<- *prometheus.Desc) {
 	pd := metrics.NewPushDescription(descs)
 	pd.Push(i.deploymentsMetric, i.deploymentMetricsMembersMetric, i.deploymentAgencyStateMetric, i.deploymentShardLeadersMetric, i.deploymentShardsMetric, i.operatorStateRefreshMetric)
 
-	pd.Push(metric_descriptions.ArangodbOperatorAgencyErrors(), metric_descriptions.ArangodbOperatorAgencyFetches(), metric_descriptions.ArangodbOperatorAgencyIndex())
+	metric_descriptions.Descriptions(pd)
 }
 
 func (i *inventory) Collect(m chan<- prometheus.Metric) {
@@ -160,4 +160,17 @@ func (d *Deployment) CollectMetrics(m metrics.PushMetric) {
 	m.Push(metric_descriptions.ArangodbOperatorAgencyErrors().Gauge(float64(d.metrics.agency.errors), d.namespace, d.name))
 	m.Push(metric_descriptions.ArangodbOperatorAgencyFetches().Gauge(float64(d.metrics.agency.fetches), d.namespace, d.name))
 	m.Push(metric_descriptions.ArangodbOperatorAgencyIndex().Gauge(float64(d.metrics.agency.index), d.namespace, d.name))
+
+	if c := d.agencyCache; c != nil {
+		m.Push(metric_descriptions.ArangodbOperatorAgencyCachePresent().Gauge(1, d.namespace, d.name))
+		if h, ok := c.Health(); ok {
+			m.Push(metric_descriptions.ArangodbOperatorAgencyCacheHealthPresent().Gauge(1, d.namespace, d.name))
+
+			h.CollectMetrics(m)
+		} else {
+			m.Push(metric_descriptions.ArangodbOperatorAgencyCacheHealthPresent().Gauge(0, d.namespace, d.name))
+		}
+	} else {
+		m.Push(metric_descriptions.ArangodbOperatorAgencyCachePresent().Gauge(0, d.namespace, d.name))
+	}
 }

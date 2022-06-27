@@ -106,6 +106,16 @@ func (a *actionWaitForMemberInSync) checkCluster() (bool, error) {
 			a.log.Str("mode", "cluster").Str("member", a.MemberID()).Int("shard", len(notInSyncShards)).Info("DBServer contains not in sync shards")
 			return false, nil
 		}
+	case api.ServerGroupAgents:
+		agencyHealth, ok := a.actionCtx.GetAgencyHealth()
+		if !ok {
+			a.log.Str("mode", "cluster").Str("member", a.MemberID()).Info("AgencyHealth is missing")
+			return false, nil
+		}
+		if err := agencyHealth.Healthy(); err != nil {
+			a.log.Str("mode", "cluster").Str("member", a.MemberID()).Err(err).Info("Agency is not yet synchronized")
+			return false, nil
+		}
 	}
 	return true, nil
 }

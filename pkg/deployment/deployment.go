@@ -176,17 +176,19 @@ func (d *Deployment) RefreshAgencyCache(ctx context.Context) (uint64, error) {
 			lCtx, c := globals.GetGlobalTimeouts().Agency().WithTimeout(ctx)
 			defer c()
 
-			var clients []agencydriver.Agency
+			rsize := int(*size)
+
+			clients := make(map[string]agencydriver.Agency)
 			for _, m := range d.GetStatusSnapshot().Members.Agents {
 				a, err := d.GetAgency(lCtx, m.ID)
 				if err != nil {
 					return 0, err
 				}
 
-				clients = append(clients, a)
+				clients[m.ID] = a
 			}
 
-			return d.agencyCache.Reload(lCtx, int(*size), clients)
+			return d.agencyCache.Reload(lCtx, rsize, clients)
 		}
 	}
 
@@ -248,7 +250,7 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 		deps:        deps,
 		eventCh:     make(chan *deploymentEvent, deploymentEventQueueSize),
 		stopCh:      make(chan struct{}),
-		agencyCache: agency.NewCache(apiObject.Spec.Mode),
+		agencyCache: agency.NewCache(apiObject.GetNamespace(), apiObject.GetName(), apiObject.Spec.Mode),
 		acs:         acs.NewACS(apiObject.GetUID(), i),
 	}
 
