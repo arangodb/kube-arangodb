@@ -24,6 +24,7 @@ import (
 	"sync"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/generated/metric_descriptions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
 	"github.com/prometheus/client_golang/prometheus"
@@ -66,7 +67,10 @@ func (i *inventory) Describe(descs chan<- *prometheus.Desc) {
 	i.lock.Lock()
 	defer i.lock.Unlock()
 
-	metrics.NewPushDescription(descs).Push(i.deploymentsMetric, i.deploymentMetricsMembersMetric, i.deploymentAgencyStateMetric, i.deploymentShardLeadersMetric, i.deploymentShardsMetric, i.operatorStateRefreshMetric)
+	pd := metrics.NewPushDescription(descs)
+	pd.Push(i.deploymentsMetric, i.deploymentMetricsMembersMetric, i.deploymentAgencyStateMetric, i.deploymentShardLeadersMetric, i.deploymentShardsMetric, i.operatorStateRefreshMetric)
+
+	pd.Push(metric_descriptions.ArangodbOperatorAgencyErrors(), metric_descriptions.ArangodbOperatorAgencyFetches(), metric_descriptions.ArangodbOperatorAgencyIndex())
 }
 
 func (i *inventory) Collect(m chan<- prometheus.Metric) {
@@ -77,6 +81,8 @@ func (i *inventory) Collect(m chan<- prometheus.Metric) {
 	for _, deployments := range i.deployments {
 		for _, deployment := range deployments {
 			p.Push(i.deploymentsMetric.Gauge(1, deployment.GetNamespace(), deployment.GetName()))
+
+			deployment.CollectMetrics(p)
 
 			if state := deployment.acs.CurrentClusterCache(); state != nil {
 				t := state.GetThrottles()
@@ -148,4 +154,10 @@ func (i *inventory) Add(d *Deployment) {
 	}
 
 	i.deployments[namespace][name] = d
+}
+
+func (d *Deployment) CollectMetrics(m metrics.PushMetric) {
+	m.Push(metric_descriptions.ArangodbOperatorAgencyErrors().Gauge(float64(d.metrics.agency.errors), d.namespace, d.name))
+	m.Push(metric_descriptions.ArangodbOperatorAgencyFetches().Gauge(float64(d.metrics.agency.fetches), d.namespace, d.name))
+	m.Push(metric_descriptions.ArangodbOperatorAgencyIndex().Gauge(float64(d.metrics.agency.index), d.namespace, d.name))
 }

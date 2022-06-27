@@ -18,12 +18,33 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package deployment
+package metric_descriptions
 
-import "github.com/arangodb/kube-arangodb/pkg/metrics"
+import (
+	"sync"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
+)
 
 var (
-	inspectDeploymentAgencyIndex   = metrics.MustRegisterGaugeVec(metricsComponent, "inspect_deployment_agency_index", "Index of the agency cache", metrics.DeploymentName)
-	inspectDeploymentAgencyFetches = metrics.MustRegisterCounterVec(metricsComponent, "inspect_deployment_agency_fetches", "Number of agency fetches", metrics.DeploymentName)
-	inspectDeploymentAgencyErrors  = metrics.MustRegisterCounterVec(metricsComponent, "inspect_deployment_agency_errors", "Number of agency errors", metrics.DeploymentName)
+	descriptions     []metrics.Description
+	descriptionsLock sync.Mutex
 )
+
+func registerDescription(d ...metrics.Description) {
+	if len(d) == 0 {
+		return
+	}
+
+	descriptionsLock.Lock()
+	defer descriptionsLock.Unlock()
+
+	descriptions = append(descriptions, d...)
+}
+
+func Descriptions(c metrics.PushDescription) {
+	descriptionsLock.Lock()
+	defer descriptionsLock.Unlock()
+
+	c.Push(descriptions...)
+}
