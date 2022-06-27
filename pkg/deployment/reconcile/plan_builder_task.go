@@ -22,9 +22,9 @@ package reconcile
 
 import (
 	"context"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
