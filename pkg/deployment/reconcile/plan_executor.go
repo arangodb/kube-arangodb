@@ -207,9 +207,7 @@ func (d *Reconciler) executePlan(ctx context.Context, statusPlan api.Plan, pg pl
 
 		// Take first action
 		planAction := plan[0]
-
 		action, actionContext := d.createAction(planAction)
-		task := d.getTaskFromAction(ctx, planAction)
 
 		done, abort, recall, retry, err := d.executeAction(ctx, planAction, action)
 		if err != nil {
@@ -222,7 +220,7 @@ func (d *Reconciler) executePlan(ctx context.Context, statusPlan api.Plan, pg pl
 
 			actionsFailedMetrics.WithLabelValues(d.context.GetName(), planAction.Type.String(), pg.Type()).Inc()
 
-			d.updateTaskStatus(ctx, planAction, task, api.ArangoTaskFailedState)
+			d.updateTaskStatus(ctx, planAction, api.ArangoTaskFailedState)
 			return nil, false, errors.WithStack(err)
 		}
 
@@ -233,12 +231,12 @@ func (d *Reconciler) executePlan(ctx context.Context, statusPlan api.Plan, pg pl
 
 			actionsFailedMetrics.WithLabelValues(d.context.GetName(), planAction.Type.String(), pg.Type()).Inc()
 
-			d.updateTaskStatus(ctx, planAction, task, api.ArangoTaskFailedState)
+			d.updateTaskStatus(ctx, planAction, api.ArangoTaskFailedState)
 			return nil, true, nil
 		}
 
 		if done {
-			d.updateTaskStatus(ctx, planAction, task, api.ArangoTaskSuccessState)
+			d.updateTaskStatus(ctx, planAction, api.ArangoTaskSuccessState)
 
 			if planAction.IsStarted() {
 				// The below metrics was increased in the previous iteration, so it should be decreased now.
@@ -282,7 +280,7 @@ func (d *Reconciler) executePlan(ctx context.Context, statusPlan api.Plan, pg pl
 				return nil, false, errors.WithStack(err)
 			}
 		} else {
-			d.updateTaskStatus(ctx, planAction, task, api.ArangoTaskRunningState)
+			d.updateTaskStatus(ctx, planAction, api.ArangoTaskRunningState)
 			if !plan[0].IsStarted() {
 				// The action has been started in this iteration, but it is not finished yet.
 				actionsCurrentPlan.WithLabelValues(d.context.GetName(), planAction.Group.AsRole(), planAction.MemberID,
@@ -373,27 +371,26 @@ func (d *Reconciler) createAction(action api.Action) (Action, ActionContext) {
 	return f(action, actionCtx), actionCtx
 }
 
-func (d *Reconciler) getTaskFromAction(ctx context.Context, action api.Action) *api.ArangoTask {
+func (d *Reconciler) updateTaskStatus(ctx context.Context, action api.Action, state api.ArangoTaskState) {
 	if action.TaskID == "" {
-		return nil
+		return
 	}
 
-	tasks, err := d.context.ACS().Cache().ArangoTask().V1()
+	err := d.context.ACS().Cache().ArangoTask().Refresh(ctx)
+	if err != nil {
+		d.log.Err(err).Error("Failed to refresh ArangoTask")
+		return
+	}
+
+	tasksCache, err := d.context.ACS().Cache().ArangoTask().V1()
 	if err != nil {
 		d.log.Err(err).Error("Failed to get ArangoTask cache")
-		return nil
+		return
 	}
 
-	task, exist := tasks.GetSimpleById(action.TaskID)
+	task, exist := tasksCache.GetSimpleById(action.TaskID)
 	if !exist {
 		d.log.Error("ArangoTask not found")
-		return nil
-	}
-	return task
-}
-
-func (d *Reconciler) updateTaskStatus(ctx context.Context, action api.Action, task *api.ArangoTask, state api.ArangoTaskState) {
-	if task == nil {
 		return
 	}
 
@@ -410,7 +407,6 @@ func (d *Reconciler) updateTaskStatus(ctx context.Context, action api.Action, ta
 	}
 
 	cache := d.context.ACS().CurrentClusterCache()
-	var err error
 	if task, err = cache.Client().Arango().DatabaseV1().ArangoTasks(cache.Namespace()).UpdateStatus(ctx, task, metav1.UpdateOptions{}); err != nil {
 		if err != nil {
 			d.log.Err(err).Error("Failed to update ArangoTask")
