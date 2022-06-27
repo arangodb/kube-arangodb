@@ -22,6 +22,7 @@ package reconcile
 
 import (
 	"context"
+	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
@@ -52,5 +53,38 @@ func (a *pingAction) Start(ctx context.Context) (bool, error) {
 }
 
 func (a *pingAction) CheckProgress(ctx context.Context) (bool, bool, error) {
+	if a.action.TaskID == "" {
+		a.log.Error("taskName parameter is missing")
+		return false, true, nil
+	}
+
+	tasksCache, err := a.actionCtx.ACS().Cache().ArangoTask().V1()
+	if err != nil {
+		a.log.Err(err).Error("Failed to get ArangoTask cache")
+		return false, false, err
+	}
+
+	task, exist := tasksCache.GetSimpleByID(a.action.TaskID)
+	if !exist {
+		a.log.Error("ArangoTask not found")
+		return false, false, err
+	}
+
+	if task.Spec.Details != nil {
+		pingBody := api.ArangoTaskPing{}
+		if err := task.Spec.Details.Get(&pingBody); err != nil {
+			a.log.Err(err).Error("Failed to parse ArangoTaskPing content")
+			return false, false, err
+		}
+
+		if pingBody.DurationSeconds != 0 {
+			a.log.Info("Checking ArangoTaskPing duration limits")
+			upTo := a.action.CreationTime.Add(time.Duration(pingBody.DurationSeconds) * time.Second)
+			if time.Now().Before(upTo) {
+				return false, false, nil
+			}
+		}
+	}
+
 	return true, false, nil
 }

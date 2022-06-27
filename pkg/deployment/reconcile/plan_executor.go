@@ -396,6 +396,10 @@ func (d *Reconciler) updateTaskStatus(ctx context.Context, action api.Action, st
 
 	task.Status.State = state
 
+	if task.Status.AcceptedSpec == nil {
+		task.Status.AcceptedSpec = &task.Spec
+	}
+
 	ind := sort.Search(len(task.Status.ActionsState), func(i int) bool {
 		return task.Status.ActionsState[i].ActionId == action.ID
 	})

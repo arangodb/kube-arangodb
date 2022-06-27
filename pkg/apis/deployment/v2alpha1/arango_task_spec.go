@@ -73,8 +73,8 @@ var _ json.Unmarshaler = &ArangoTaskDetails{}
 var _ json.Marshaler = ArangoTaskDetails{}
 
 type ArangoTaskSpec struct {
-	Type           ArangoTaskType    `json:"type,required"`
-	DeploymentName string            `json:"deploymentName,required"`
+	Type           ArangoTaskType    `json:"type"`
+	DeploymentName string            `json:"deploymentName"`
 	Details        ArangoTaskDetails `json:"details,omitempty"`
 }
 
