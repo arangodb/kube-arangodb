@@ -195,6 +195,11 @@ const (
 
 	// Resources
 	ActionTypeResourceSync ActionType = "ResourceSync"
+
+	// ArangoTask actions
+
+	// ActionTypePing is a mock to check if the action flow is working
+	ActionTypePing ActionType = "Ping"
 )
 
 const (
@@ -324,6 +329,12 @@ func NewActionBuilder(group ServerGroup, memberID string) ActionBuilder {
 // action.
 func (a Action) SetImage(image string) Action {
 	a.Image = image
+	return a
+}
+
+// SetTaskID sets the TaskID field to the given value and returns the modified action.
+func (a Action) SetTaskID(taskID types.UID) Action {
+	a.TaskID = taskID
 	return a
 }
 

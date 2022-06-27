@@ -21,6 +21,8 @@
 package v1
 
 import (
+	"k8s.io/apimachinery/pkg/types"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/gvk"
 )
@@ -30,6 +32,7 @@ type Inspector interface {
 
 	ListSimple() []*api.ArangoTask
 	GetSimple(name string) (*api.ArangoTask, bool)
+	GetSimpleByID(id types.UID) (*api.ArangoTask, bool)
 	Filter(filters ...Filter) []*api.ArangoTask
 	Iterate(action Action, filters ...Filter) error
 	Read() ReadInterface

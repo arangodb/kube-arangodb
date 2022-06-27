@@ -40,5 +40,9 @@ const (
 // get the status in line with the specification.
 // If a plan already exists, nothing is done.
 func (d *Reconciler) CreatePlan(ctx context.Context) (error, bool) {
-	return d.generatePlan(ctx, d.generatePlanFunc(d.createHighPlan, plannerHigh{}), d.generatePlanFunc(d.createResourcesPlan, plannerResources{}), d.generatePlanFunc(d.createNormalPlan, plannerNormal{}))
+	return d.generatePlan(ctx, d.generatePlanFunc(d.createHighPlan, plannerHigh{}),
+		d.generatePlanFunc(d.createResourcesPlan, plannerResources{}),
+		d.generatePlanFunc(d.createNormalPlan, plannerNormal{}),
+		d.generatePlanFunc(d.createTaskPlan, plannerTask{}),
+	)
 }

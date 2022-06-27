@@ -63,4 +63,6 @@ type Context interface {
 	GetBackup(ctx context.Context, backup string) (*backupApi.ArangoBackup, error)
 	// GetAuthentication return authentication for members
 	GetAuthentication() conn.Auth
+	// GetNextTask returns the next task to be executed
+	GetNextTask(ctx context.Context) (*api.ArangoTask, error)
 }

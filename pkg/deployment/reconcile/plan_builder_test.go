@@ -36,9 +36,9 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/arangodb/arangosync-client/client"
+	"github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
 
-	"github.com/arangodb/go-driver"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/acs"
@@ -81,8 +81,13 @@ type testContext struct {
 	PVC              *core.PersistentVolumeClaim
 	PVCErr           error
 	RecordedEvent    *k8sutil.Event
+	ArangoTask       *api.ArangoTask
 
 	Inspector inspectorInterface.Inspector
+}
+
+func (c *testContext) GetNextTask(ctx context.Context) (*api.ArangoTask, error) {
+	return c.ArangoTask, nil
 }
 
 func (c *testContext) GetAgencyHealth() (agencyCache.Health, bool) {
@@ -691,6 +696,7 @@ type testCase struct {
 	ExpectedError    error
 	ExpectedPlan     api.Plan
 	ExpectedHighPlan api.Plan
+	ExpectedTaskPlan api.Plan
 	ExpectedLog      string
 	ExpectedEvent    *k8sutil.Event
 
@@ -755,6 +761,17 @@ func TestCreatePlan(t *testing.T) {
 	}
 	addAgentsToStatus(t, &deploymentTemplate.Status, 3)
 	deploymentTemplate.Spec.SetDefaults("createPlanTest")
+
+	arangoTaskTemplate := &api.ArangoTask{
+		ObjectMeta: meta.ObjectMeta{
+			Name:      "test_task",
+			Namespace: tests.FakeNamespace,
+		},
+		Spec: api.ArangoTaskSpec{
+			Type:           api.ArangoTaskPingType,
+			DeploymentName: "test_depl",
+		},
+	}
 
 	testCases := []testCase{
 		{
@@ -1168,6 +1185,18 @@ func TestCreatePlan(t *testing.T) {
 			},
 			ExpectedLog: "Creating scale-down plan",
 		},
+		{
+			Name: "ArangoTask - ping type",
+			context: &testContext{
+				ArangoDeployment: deploymentTemplate.DeepCopy(),
+				ArangoTask:       arangoTaskTemplate,
+			},
+
+			ExpectedTaskPlan: []api.Action{
+				actions.NewClusterAction(api.ActionTypePing, "Pinging database server"),
+			},
+			ExpectedLog: "Pinging database server",
+		},
 	}
 
 	for _, testCase := range testCases {
@@ -1235,6 +1264,17 @@ func TestCreatePlan(t *testing.T) {
 				assert.Equal(t, v.Group, status.Plan[i].Group)
 				if v.Reason != "*" {
 					assert.Equal(t, v.Reason, status.Plan[i].Reason)
+				}
+			}
+
+			if len(testCase.ExpectedTaskPlan) > 0 {
+				require.Len(t, status.TaskPlan, len(testCase.ExpectedTaskPlan))
+				for i, v := range testCase.ExpectedTaskPlan {
+					assert.Equal(t, v.Type, status.TaskPlan[i].Type)
+					assert.Equal(t, v.Group, status.TaskPlan[i].Group)
+					if v.Reason != "*" {
+						assert.Equal(t, v.Reason, status.TaskPlan[i].Reason)
+					}
 				}
 			}
 		})

@@ -23,6 +23,7 @@ package reconcile
 import (
 	"context"
 	"fmt"
+	"sort"
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -112,6 +113,26 @@ func (p plannerResources) Set(deployment *api.DeploymentStatus, plan api.Plan) b
 	return false
 }
 
+type plannerTask struct {
+}
+
+func (p plannerTask) Type() string {
+	return "task"
+}
+
+func (p plannerTask) Get(deployment *api.DeploymentStatus) api.Plan {
+	return deployment.TaskPlan
+}
+
+func (p plannerTask) Set(deployment *api.DeploymentStatus, plan api.Plan) bool {
+	if !deployment.TaskPlan.Equal(plan) {
+		deployment.TaskPlan = plan
+		return true
+	}
+
+	return false
+}
+
 // ExecutePlan tries to execute the plan as far as possible.
 // Returns true when it has to be called again soon.
 // False otherwise.
@@ -132,6 +153,13 @@ func (d *Reconciler) ExecutePlan(ctx context.Context) (bool, error) {
 	}
 
 	if again, err := d.executePlanStatus(ctx, plannerNormal{}); err != nil {
+		return false, errors.WithStack(err)
+	} else if again {
+		callAgain = true
+	}
+
+	if again, err := d.executePlanStatus(ctx, plannerTask{}); err != nil {
+		d.planLogger.Err(err).Error("Execution of task plan failed")
 		return false, errors.WithStack(err)
 	} else if again {
 		callAgain = true
@@ -179,7 +207,6 @@ func (d *Reconciler) executePlan(ctx context.Context, statusPlan api.Plan, pg pl
 
 		// Take first action
 		planAction := plan[0]
-
 		action, actionContext := d.createAction(planAction)
 
 		done, abort, recall, retry, err := d.executeAction(ctx, planAction, action)
@@ -192,6 +219,8 @@ func (d *Reconciler) executePlan(ctx context.Context, statusPlan api.Plan, pg pl
 				planAction.Type.String(), pg.Type()).Set(0.0)
 
 			actionsFailedMetrics.WithLabelValues(d.context.GetName(), planAction.Type.String(), pg.Type()).Inc()
+
+			d.updateTaskStatus(ctx, planAction, api.ArangoTaskFailedState)
 			return nil, false, errors.WithStack(err)
 		}
 
@@ -201,10 +230,14 @@ func (d *Reconciler) executePlan(ctx context.Context, statusPlan api.Plan, pg pl
 				planAction.Type.String(), pg.Type()).Set(0.0)
 
 			actionsFailedMetrics.WithLabelValues(d.context.GetName(), planAction.Type.String(), pg.Type()).Inc()
+
+			d.updateTaskStatus(ctx, planAction, api.ArangoTaskFailedState)
 			return nil, true, nil
 		}
 
 		if done {
+			d.updateTaskStatus(ctx, planAction, api.ArangoTaskSuccessState)
+
 			if planAction.IsStarted() {
 				// The below metrics was increased in the previous iteration, so it should be decreased now.
 				// If the action hasn't been started in this iteration then the metrics have not been increased.
@@ -247,6 +280,7 @@ func (d *Reconciler) executePlan(ctx context.Context, statusPlan api.Plan, pg pl
 				return nil, false, errors.WithStack(err)
 			}
 		} else {
+			d.updateTaskStatus(ctx, planAction, api.ArangoTaskRunningState)
 			if !plan[0].IsStarted() {
 				// The action has been started in this iteration, but it is not finished yet.
 				actionsCurrentPlan.WithLabelValues(d.context.GetName(), planAction.Group.AsRole(), planAction.MemberID,
@@ -335,4 +369,52 @@ func (d *Reconciler) createAction(action api.Action) (Action, ActionContext) {
 	}
 
 	return f(action, actionCtx), actionCtx
+}
+
+func (d *Reconciler) updateTaskStatus(ctx context.Context, action api.Action, state api.ArangoTaskState) {
+	if action.TaskID == "" {
+		return
+	}
+
+	err := d.context.ACS().Cache().ArangoTask().Refresh(ctx)
+	if err != nil {
+		d.log.Err(err).Error("Failed to refresh ArangoTask")
+		return
+	}
+
+	tasksCache, err := d.context.ACS().Cache().ArangoTask().V1()
+	if err != nil {
+		d.log.Err(err).Error("Failed to get ArangoTask cache")
+		return
+	}
+
+	task, exist := tasksCache.GetSimpleByID(action.TaskID)
+	if !exist {
+		d.log.Error("ArangoTask not found")
+		return
+	}
+
+	task.Status.State = state
+
+	if task.Status.AcceptedSpec == nil {
+		task.Status.AcceptedSpec = &task.Spec
+	}
+
+	ind := sort.Search(len(task.Status.ActionsState), func(i int) bool {
+		return task.Status.ActionsState[i].ActionId == action.ID
+	})
+
+	if ind < len(task.Status.ActionsState) && task.Status.ActionsState[ind].ActionId == action.ID {
+		task.Status.ActionsState[ind].State = state
+	} else {
+		task.Status.ActionsState = append(task.Status.ActionsState, api.ArangoActionState{ActionId: action.ID, State: state})
+	}
+
+	cache := d.context.ACS().CurrentClusterCache()
+	if task, err = cache.Client().Arango().DatabaseV1().ArangoTasks(cache.Namespace()).UpdateStatus(ctx, task, metav1.UpdateOptions{}); err != nil {
+		if err != nil {
+			d.log.Err(err).Error("Failed to update ArangoTask")
+			return
+		}
+	}
 }

@@ -23,20 +23,21 @@ package reconcile
 import "time"
 
 const (
+	defaultTimeout = time.Minute * 10
+
 	addMemberTimeout                 = time.Minute * 10
+	backupRestoreTimeout             = time.Minute * 15
 	cleanoutMemberTimeout            = time.Hour * 12
-	removeMemberTimeout              = time.Minute * 15
-	recreateMemberTimeout            = time.Minute * 15
 	operationTLSCACertificateTimeout = time.Minute * 30
-	rotateMemberTimeout              = time.Minute * 15
+	pingTimeout                      = time.Minute * 15
 	pvcResizeTimeout                 = time.Minute * 30
 	pvcResizedTimeout                = time.Minute * 15
-	backupRestoreTimeout             = time.Minute * 15
+	recreateMemberTimeout            = time.Minute * 15
+	removeMemberTimeout              = time.Minute * 15
+	rotateMemberTimeout              = time.Minute * 15
 	shutdownMemberTimeout            = time.Minute * 30
+	shutdownTimeout                  = time.Second * 15
+	tlsSNIUpdateTimeout              = time.Minute * 10
 	upgradeMemberTimeout             = time.Hour * 6
 	waitForMemberUpTimeout           = time.Minute * 30
-	tlsSNIUpdateTimeout              = time.Minute * 10
-	defaultTimeout                   = time.Minute * 10
-
-	shutdownTimeout = time.Second * 15
 )
