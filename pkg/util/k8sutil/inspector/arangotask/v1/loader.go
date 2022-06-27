@@ -32,7 +32,7 @@ type Inspector interface {
 
 	ListSimple() []*api.ArangoTask
 	GetSimple(name string) (*api.ArangoTask, bool)
-	GetSimpleById(id types.UID) (*api.ArangoTask, bool)
+	GetSimpleByID(id types.UID) (*api.ArangoTask, bool)
 	Filter(filters ...Filter) []*api.ArangoTask
 	Iterate(action Action, filters ...Filter) error
 	Read() ReadInterface

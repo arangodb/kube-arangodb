@@ -101,7 +101,7 @@ func (p *arangoTasksInspectorV1) GetSimple(name string) (*api.ArangoTask, bool) 
 	return arangoTask, true
 }
 
-func (p *arangoTasksInspectorV1) GetSimpleById(id types.UID) (*api.ArangoTask, bool) {
+func (p *arangoTasksInspectorV1) GetSimpleByID(id types.UID) (*api.ArangoTask, bool) {
 	for _, task := range p.arangoTasks {
 		if task.UID == id {
 			return task, true

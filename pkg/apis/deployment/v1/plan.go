@@ -198,7 +198,7 @@ const (
 
 	// ArangoTask actions
 
-	// ActionTypePing it a mock to check if the action flow is working
+	// ActionTypePing is a mock to check if the action flow is working
 	ActionTypePing ActionType = "Ping"
 )
 

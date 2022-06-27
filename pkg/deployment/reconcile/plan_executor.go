@@ -388,7 +388,7 @@ func (d *Reconciler) updateTaskStatus(ctx context.Context, action api.Action, st
 		return
 	}
 
-	task, exist := tasksCache.GetSimpleById(action.TaskID)
+	task, exist := tasksCache.GetSimpleByID(action.TaskID)
 	if !exist {
 		d.log.Error("ArangoTask not found")
 		return

@@ -31,18 +31,18 @@ func init() {
 }
 
 func newPing(action api.Action, actionCtx ActionContext) Action {
-	a := &pingDbServerAction{}
+	a := &pingAction{}
 
 	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
 
-type pingDbServerAction struct {
+type pingAction struct {
 	actionImpl
 }
 
-func (a *pingDbServerAction) Start(ctx context.Context) (bool, error) {
+func (a *pingAction) Start(ctx context.Context) (bool, error) {
 	if a.action.TaskID == "" {
 		a.log.Error("taskName parameter is missing")
 		return true, nil
@@ -51,6 +51,6 @@ func (a *pingDbServerAction) Start(ctx context.Context) (bool, error) {
 	return false, nil
 }
 
-func (a *pingDbServerAction) CheckProgress(ctx context.Context) (bool, bool, error) {
+func (a *pingAction) CheckProgress(ctx context.Context) (bool, bool, error) {
 	return true, false, nil
 }
