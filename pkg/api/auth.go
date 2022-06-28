@@ -48,6 +48,7 @@ func (a *authorization) isValid(token string) bool {
 	return t.Valid
 }
 
+// ensureHTTPAuth ensure a valid token exists within HTTP request header
 func (a *authorization) ensureHTTPAuth(c *gin.Context) {
 	h := c.Request.Header.Values("Authorization")
 	bearerToken := extractBearerToken(h)

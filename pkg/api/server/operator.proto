@@ -27,11 +27,7 @@ package server;
 import "google/api/annotations.proto";
 
 service Operator {
-  rpc GetVersion (Empty) returns (Version) {
-    option (google.api.http) = {
-      get: "/api/v1/version"
-    };
-  }
+  rpc GetVersion (Empty) returns (Version) {}
 }
 
 message Empty {}
