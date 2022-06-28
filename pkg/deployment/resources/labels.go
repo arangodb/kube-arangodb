@@ -40,7 +40,7 @@ import (
 func (r *Resources) EnsureLabels(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
 	log := r.log.Str("section", "labels")
 
-	log.Debug("Ensure labels")
+	log.Trace("Ensure labels")
 
 	if err := r.EnsureSecretLabels(ctx, cachedStatus); err != nil {
 		return err
