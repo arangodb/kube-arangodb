@@ -24,8 +24,6 @@ option go_package = "github.com/arangodb/kube-arangodb/pkg/api/server";
 
 package server;
 
-import "google/api/annotations.proto";
-
 service Operator {
   rpc GetVersion (Empty) returns (Version) {}
 }
