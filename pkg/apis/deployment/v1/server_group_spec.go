@@ -620,14 +620,16 @@ func (s *ServerGroupSpec) SetDefaults(group ServerGroup, used bool, mode Deploym
 	}
 }
 
-// setDefaultsFromResourceList fills unspecified fields with a value from given source spec.
-func setDefaultsFromResourceList(s *core.ResourceList, source core.ResourceList) {
+// setStorageDefaultsFromResourceList fills unspecified storage-type fields with a value from given source spec.
+func setStorageDefaultsFromResourceList(s *core.ResourceList, source core.ResourceList) {
 	for k, v := range source {
 		if *s == nil {
 			*s = make(core.ResourceList)
 		}
 		if _, found := (*s)[k]; !found {
-			(*s)[k] = v
+			if k != core.ResourceCPU && k != core.ResourceMemory {
+				(*s)[k] = v
+			}
 		}
 	}
 }
@@ -658,8 +660,8 @@ func (s *ServerGroupSpec) SetDefaultsFrom(source ServerGroupSpec) {
 	if s.NodeSelector == nil {
 		s.NodeSelector = source.NodeSelector
 	}
-	setDefaultsFromResourceList(&s.Resources.Limits, source.Resources.Limits)
-	setDefaultsFromResourceList(&s.Resources.Requests, source.Resources.Requests)
+	setStorageDefaultsFromResourceList(&s.Resources.Limits, source.Resources.Limits)
+	setStorageDefaultsFromResourceList(&s.Resources.Requests, source.Resources.Requests)
 	if s.VolumeClaimTemplate == nil {
 		s.VolumeClaimTemplate = source.VolumeClaimTemplate.DeepCopy()
 	}
