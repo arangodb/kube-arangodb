@@ -30,6 +30,6 @@ type LifecycleSpec struct {
 
 // SetDefaultsFrom fills unspecified fields with a value from given source spec.
 func (s *LifecycleSpec) SetDefaultsFrom(source LifecycleSpec) {
-	setDefaultsFromResourceList(&s.Resources.Limits, source.Resources.Limits)
-	setDefaultsFromResourceList(&s.Resources.Requests, source.Resources.Requests)
+	setStorageDefaultsFromResourceList(&s.Resources.Limits, source.Resources.Limits)
+	setStorageDefaultsFromResourceList(&s.Resources.Requests, source.Resources.Requests)
 }
