@@ -57,6 +57,8 @@ require (
 	k8s.io/klog v1.0.0
 )
 
+require github.com/arangodb/rebalancer v0.1.1 // indirect
+
 require (
 	github.com/arangodb/go-velocypack v0.0.0-20200318135517-5af53c29c67e // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
