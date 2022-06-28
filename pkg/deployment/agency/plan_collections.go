@@ -60,6 +60,7 @@ type StatePlanCollection struct {
 	MinReplicationFactor *int               `json:"minReplicationFactor,omitempty"`
 	WriteConcern         *int               `json:"writeConcern,omitempty"`
 	ReplicationFactor    *ReplicationFactor `json:"replicationFactor,omitempty"`
+	DistributeShardsLike *string            `json:"distributeShardsLike,omitempty"`
 }
 
 func (a *StatePlanCollection) GetReplicationFactor(shard string) ReplicationFactor {

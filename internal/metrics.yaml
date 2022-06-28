@@ -103,3 +103,49 @@ namespaces:
             description: "Deployment Namespace"
           - key: name
             description: "Deployment Name"
+    rebalancer:
+      enabled:
+        shortDescription: "Determines if rebalancer is enabled"
+        description: "Determines if rebalancer is enabled"
+        type: "Gauge"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+      moves_generated:
+        shortDescription: "Define how many moves were generated"
+        description: "Define how many moves were generated"
+        type: "Counter"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+      moves_succeeded:
+        shortDescription: "Define how many moves succeeded"
+        description: "Define how many moves succeeded"
+        type: "Counter"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+      moves_failed:
+        shortDescription: "Define how many moves failed"
+        description: "Define how many moves failed"
+        type: "Counter"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+      moves_current:
+        shortDescription: "Define how many moves are currently in progress"
+        description: "Define how many moves are currently in progress"
+        type: "Gauge"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"

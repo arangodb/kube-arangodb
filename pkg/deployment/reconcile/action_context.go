@@ -56,6 +56,8 @@ type ActionContext interface {
 
 	sutil.ACSGetter
 
+	Metrics() *Metrics
+
 	ActionLocalsContext
 
 	// GetMemberStatusByID returns the current member status
@@ -106,10 +108,11 @@ type ActionLocalsContext interface {
 }
 
 // newActionContext creates a new ActionContext implementation.
-func newActionContext(log logging.Logger, context Context) ActionContext {
+func newActionContext(log logging.Logger, context Context, metrics *Metrics) ActionContext {
 	return &actionContext{
 		log:     log,
 		context: context,
+		metrics: metrics,
 	}
 }
 
@@ -119,6 +122,11 @@ type actionContext struct {
 	log          logging.Logger
 	cachedStatus inspectorInterface.Inspector
 	locals       api.PlanLocals
+	metrics      *Metrics
+}
+
+func (ac *actionContext) Metrics() *Metrics {
+	return ac.metrics
 }
 
 func (ac *actionContext) ACS() sutil.ACS {

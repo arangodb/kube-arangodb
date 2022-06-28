@@ -116,40 +116,76 @@ func (p plannerResources) Set(deployment *api.DeploymentStatus, plan api.Plan) b
 // Returns true when it has to be called again soon.
 // False otherwise.
 func (d *Reconciler) ExecutePlan(ctx context.Context) (bool, error) {
-	var callAgain bool
+	execution := 0
 
-	if again, err := d.executePlanStatus(ctx, plannerHigh{}); err != nil {
-		return false, errors.WithStack(err)
-	} else if again {
-		callAgain = true
+	var retrySoon bool
+
+	for {
+		if execution >= 32 {
+			return retrySoon, nil
+		}
+
+		execution++
+
+		if retrySoonCall, recall, err := d.executePlanInLoop(ctx); err != nil {
+			return false, err
+		} else {
+			retrySoon = retrySoon || retrySoonCall
+			if recall {
+				continue
+			}
+		}
+
+		break
 	}
 
-	if again, err := d.executePlanStatus(ctx, plannerResources{}); err != nil {
-		d.planLogger.Err(err).Error("Execution of plan failed")
-		return false, nil
-	} else if again {
-		callAgain = true
-	}
-
-	if again, err := d.executePlanStatus(ctx, plannerNormal{}); err != nil {
-		return false, errors.WithStack(err)
-	} else if again {
-		callAgain = true
-	}
-
-	return callAgain, nil
+	return retrySoon, nil
 }
 
-func (d *Reconciler) executePlanStatus(ctx context.Context, pg planner) (bool, error) {
+// ExecutePlan tries to execute the plan as far as possible.
+// Returns true when it has to be called again soon.
+// False otherwise.
+func (d *Reconciler) executePlanInLoop(ctx context.Context) (bool, bool, error) {
+	var callAgain bool
+	var callInLoop bool
+
+	if again, inLoop, err := d.executePlanStatus(ctx, plannerHigh{}); err != nil {
+		d.planLogger.Err(err).Error("Execution of plan failed")
+		return false, false, errors.WithStack(err)
+	} else {
+		callAgain = callAgain || again
+		callInLoop = callInLoop || inLoop
+	}
+
+	if again, inLoop, err := d.executePlanStatus(ctx, plannerResources{}); err != nil {
+		d.planLogger.Err(err).Error("Execution of plan failed")
+		return false, false, nil
+	} else {
+		callAgain = callAgain || again
+		callInLoop = callInLoop || inLoop
+	}
+
+	if again, inLoop, err := d.executePlanStatus(ctx, plannerNormal{}); err != nil {
+		d.planLogger.Err(err).Error("Execution of plan failed")
+		return false, false, errors.WithStack(err)
+	} else {
+		callAgain = callAgain || again
+		callInLoop = callInLoop || inLoop
+	}
+
+	return callAgain, callInLoop, nil
+}
+
+func (d *Reconciler) executePlanStatus(ctx context.Context, pg planner) (bool, bool, error) {
 	loopStatus, _ := d.context.GetStatus()
 
 	plan := pg.Get(&loopStatus)
 
 	if len(plan) == 0 {
-		return false, nil
+		return false, false, nil
 	}
 
-	newPlan, callAgain, err := d.executePlan(ctx, plan, pg)
+	newPlan, callAgain, callInLoop, err := d.executePlan(ctx, plan, pg)
 
 	// Refresh current status
 	loopStatus, lastVersion := d.context.GetStatus()
@@ -158,23 +194,23 @@ func (d *Reconciler) executePlanStatus(ctx context.Context, pg planner) (bool, e
 		d.planLogger.Info("Updating plan")
 		if err := d.context.UpdateStatus(ctx, loopStatus, lastVersion, true); err != nil {
 			d.planLogger.Err(err).Debug("Failed to update CR status")
-			return false, errors.WithStack(err)
+			return false, false, errors.WithStack(err)
 		}
 	}
 
 	if err != nil {
-		return false, err
+		return false, false, err
 	}
 
-	return callAgain, nil
+	return callAgain, callInLoop, nil
 }
 
-func (d *Reconciler) executePlan(ctx context.Context, statusPlan api.Plan, pg planner) (newPlan api.Plan, callAgain bool, err error) {
+func (d *Reconciler) executePlan(ctx context.Context, statusPlan api.Plan, pg planner) (newPlan api.Plan, callAgain, callInLoop bool, err error) {
 	plan := statusPlan.DeepCopy()
 
 	for {
 		if len(plan) == 0 {
-			return nil, false, nil
+			return nil, false, false, nil
 		}
 
 		// Take first action
@@ -185,14 +221,14 @@ func (d *Reconciler) executePlan(ctx context.Context, statusPlan api.Plan, pg pl
 		done, abort, recall, retry, err := d.executeAction(ctx, planAction, action)
 		if err != nil {
 			if retry {
-				return plan, true, nil
+				return plan, true, false, nil
 			}
 			// The Plan will be cleaned up, so no actions will be in the queue.
 			actionsCurrentPlan.WithLabelValues(d.context.GetName(), planAction.Group.AsRole(), planAction.MemberID,
 				planAction.Type.String(), pg.Type()).Set(0.0)
 
 			actionsFailedMetrics.WithLabelValues(d.context.GetName(), planAction.Type.String(), pg.Type()).Inc()
-			return nil, false, errors.WithStack(err)
+			return nil, false, false, errors.WithStack(err)
 		}
 
 		if abort {
@@ -201,7 +237,7 @@ func (d *Reconciler) executePlan(ctx context.Context, statusPlan api.Plan, pg pl
 				planAction.Type.String(), pg.Type()).Set(0.0)
 
 			actionsFailedMetrics.WithLabelValues(d.context.GetName(), planAction.Type.String(), pg.Type()).Inc()
-			return nil, true, nil
+			return nil, true, false, nil
 		}
 
 		if done {
@@ -232,19 +268,19 @@ func (d *Reconciler) executePlan(ctx context.Context, statusPlan api.Plan, pg pl
 					d.planLogger.Info("Reloading cached status")
 					if err := c.Refresh(ctx); err != nil {
 						d.planLogger.Err(err).Warn("Unable to reload cached status")
-						return plan, recall, nil
+						return plan, recall, false, nil
 					}
 				}
 			}
 
 			if newPlan, changed := getActionPlanAppender(action, plan); changed {
 				// Our actions have been added to the end of plan
-				return newPlan, true, nil
+				return newPlan, false, true, nil
 			}
 
 			if err := getActionPost(action, ctx); err != nil {
 				d.planLogger.Err(err).Error("Post action failed")
-				return nil, false, errors.WithStack(err)
+				return nil, false, false, errors.WithStack(err)
 			}
 		} else {
 			if !plan[0].IsStarted() {
@@ -258,13 +294,14 @@ func (d *Reconciler) executePlan(ctx context.Context, statusPlan api.Plan, pg pl
 
 			plan[0].Locals.Merge(actionContext.CurrentLocals())
 
-			return plan, recall, nil
+			return plan, recall, false, nil
 		}
 	}
 }
 
 func (d *Reconciler) executeAction(ctx context.Context, planAction api.Action, action Action) (done, abort, callAgain, retry bool, err error) {
 	log := d.planLogger.Str("action", string(planAction.Type)).Str("member", planAction.MemberID)
+	log.Info("Executing action")
 
 	if !planAction.IsStarted() {
 		// Not started yet
@@ -327,7 +364,7 @@ func (d *Reconciler) executeAction(ctx context.Context, planAction api.Action, a
 
 // createAction create action object based on action type
 func (d *Reconciler) createAction(action api.Action) (Action, ActionContext) {
-	actionCtx := newActionContext(d.log, d.context)
+	actionCtx := newActionContext(d.log, d.context, &d.metrics)
 
 	f, ok := getActionFactory(action.Type)
 	if !ok {

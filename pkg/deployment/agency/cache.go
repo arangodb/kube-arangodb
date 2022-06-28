@@ -333,7 +333,9 @@ func getLeader(ctx context.Context, size int, clients map[string]agency.Agency) 
 	for id := range names {
 		if h.leaderID == h.names[id] {
 			h.leader = clients[names[id]].Connection()
-			return clients[names[id]], configs[id], h, nil
+			if cfg := configs[id]; cfg != nil {
+				return clients[names[id]], cfg, h, nil
+			}
 		}
 	}
 

@@ -18,4 +18,18 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package agency
+package metric_descriptions
+
+import "github.com/arangodb/kube-arangodb/pkg/util/metrics"
+
+var (
+	arangodbOperatorRebalancerEnabled = metrics.NewDescription("arangodb_operator_rebalancer_enabled", "Determines if rebalancer is enabled", []string{`namespace`, `name`}, nil)
+)
+
+func init() {
+	registerDescription(arangodbOperatorRebalancerEnabled)
+}
+
+func ArangodbOperatorRebalancerEnabled() metrics.Description {
+	return arangodbOperatorRebalancerEnabled
+}
