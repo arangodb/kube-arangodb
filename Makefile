@@ -165,7 +165,7 @@ endif
 
 EXCLUDE_DIRS := vendor .gobuild deps tools pkg/generated/clientset pkg/generated/informers pkg/generated/listers
 EXCLUDE_FILES := *generated.deepcopy.go
-SOURCES_QUERY := find ./ -type f -name '*.go' $(foreach EXCLUDE_DIR,$(EXCLUDE_DIRS), ! -path "*/$(EXCLUDE_DIR)/*") $(foreach EXCLUDE_FILE,$(EXCLUDE_FILES), ! -path "*/$(EXCLUDE_FILE)")
+SOURCES_QUERY := find ./ -type f -name '*.go' ! -name '*.pb.go' $(foreach EXCLUDE_DIR,$(EXCLUDE_DIRS), ! -path "*/$(EXCLUDE_DIR)/*") $(foreach EXCLUDE_FILE,$(EXCLUDE_FILES), ! -path "*/$(EXCLUDE_FILE)")
 SOURCES := $(shell $(SOURCES_QUERY))
 DASHBOARDSOURCES := $(shell find $(DASHBOARDDIR)/src -name '*.js') $(DASHBOARDDIR)/package.json
 LINT_EXCLUDES:=
@@ -254,6 +254,7 @@ update-generated:
 	@ln -s -f $(SCRIPTDIR) $(ORGDIR)/kube-arangodb
 	@sed -e 's/^/\/\/ /' -e 's/ *$$//' $(ROOTDIR)/tools/codegen/license-header.txt > $(ROOTDIR)/tools/codegen/boilerplate.go.txt
 	$(GOBUILDDIR)/bin/protoc -I.:$(GOBUILDDIR)/include/ \
+	PATH=$(PATH):$(GOBUILDDIR)/bin $(GOBUILDDIR)/bin/protoc -I.:$(GOBUILDDIR)/include/ \
 			--go_out=. --go_opt=paths=source_relative \
 	 		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
 	 		$(PROTOSOURCES)
@@ -482,6 +483,9 @@ tools: update-vendor
 	@curl -L ${PROTOC_URL} -o $(GOPATH)/protoc.zip
 	@echo ">> Unzipping protobuf compiler..."
 	@unzip -o $(GOPATH)/protoc.zip -d $(GOPATH)/
+	@echo ">> Fetching protoc go plugins..."
+	@GOBIN=$(GOPATH)/bin go install github.com/golang/protobuf/protoc-gen-go@v1.5.2
+	@GOBIN=$(GOPATH)/bin go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
 
 .PHONY: vendor
 vendor:
