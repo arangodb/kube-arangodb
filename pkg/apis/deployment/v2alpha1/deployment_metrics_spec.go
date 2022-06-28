@@ -148,8 +148,8 @@ func (s *MetricsSpec) SetDefaultsFrom(source MetricsSpec) {
 	if s.Authentication.JWTTokenSecretName == nil {
 		s.Authentication.JWTTokenSecretName = util.NewStringOrNil(source.Authentication.JWTTokenSecretName)
 	}
-	setDefaultsFromResourceList(&s.Resources.Limits, source.Resources.Limits)
-	setDefaultsFromResourceList(&s.Resources.Requests, source.Resources.Requests)
+	setStorageDefaultsFromResourceList(&s.Resources.Limits, source.Resources.Limits)
+	setStorageDefaultsFromResourceList(&s.Resources.Requests, source.Resources.Requests)
 }
 
 // Validate the given spec
