@@ -30,7 +30,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const AllLevels = "all"
+const TopicAll = "all"
 
 type Factory interface {
 	Get(name string) Logger
@@ -110,7 +110,7 @@ func (f *factory) ApplyLogLevels(in map[string]Level) {
 	f.lock.Lock()
 	defer f.lock.Unlock()
 
-	if def, ok := in[AllLevels]; ok {
+	if def, ok := in[TopicAll]; ok {
 		// Apply with default log level
 
 		for k := range f.loggers {

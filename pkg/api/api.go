@@ -94,7 +94,7 @@ func NewServer(cli typedCore.CoreV1Interface, cfg ServerConfig) (*Server, error)
 		),
 		grpcAddress: cfg.GRPCAddress,
 	}
-	handler, err := buildHTTPHandler(cfg, auth)
+	handler, err := buildHTTPHandler(s, cfg, auth)
 	if err != nil {
 		return nil, err
 	}

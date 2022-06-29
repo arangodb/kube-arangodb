@@ -32,3 +32,7 @@ const (
 	Error = Level(zerolog.ErrorLevel)
 	Fatal = Level(zerolog.FatalLevel)
 )
+
+func (l Level) String() string {
+	return zerolog.Level(l).String()
+}

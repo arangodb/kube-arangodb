@@ -18,45 +18,16 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package logging
+package api
 
 import (
-	"strings"
-
-	"github.com/rs/zerolog"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 )
 
-func ParseLogLevelsFromArgs(in []string) (map[string]Level, error) {
-	r := make(map[string]Level)
-
-	for _, level := range in {
-		z := strings.SplitN(level, "=", 2)
-
-		switch len(z) {
-		case 1:
-			l, err := ParseLogLevel(z[0])
-			if err != nil {
-				return nil, err
-			}
-
-			r[TopicAll] = l
-		case 2:
-			l, err := ParseLogLevel(z[1])
-			if err != nil {
-				return nil, err
-			}
-
-			r[z[0]] = l
-		}
-	}
-
-	return r, nil
+func (s *Server) getLogLevelsByTopics() map[string]logging.Level {
+	return logging.Global().LogLevels()
 }
 
-func ParseLogLevel(in string) (Level, error) {
-	l, err := zerolog.ParseLevel(strings.ToLower(in))
-	if err != nil {
-		return Debug, err
-	}
-	return Level(l), nil
+func (s *Server) setLogLevelsByTopics(logLevels map[string]logging.Level) {
+	logging.Global().ApplyLogLevels(logLevels)
 }
