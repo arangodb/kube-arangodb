@@ -390,9 +390,9 @@ func (d *Deployment) run() {
 			}
 
 		case <-d.inspectTrigger.Done():
-			log.Debug("Inspect deployment...")
+			log.Trace("Inspect deployment...")
 			inspectionInterval = d.inspectDeployment(inspectionInterval)
-			log.Str("interval", inspectionInterval.String()).Debug("...inspected deployment")
+			log.Str("interval", inspectionInterval.String()).Trace("...inspected deployment")
 
 		case <-d.inspectCRDTrigger.Done():
 			d.lookForServiceMonitorCRD()
@@ -548,7 +548,7 @@ func (d *Deployment) updateCRSpec(ctx context.Context, newSpec api.DeploymentSpe
 
 	if len(force) == 0 || !force[0] {
 		if d.apiObject.Spec.Equal(&newSpec) {
-			d.log.Debug("Nothing to update in updateCRSpec")
+			d.log.Trace("Nothing to update in updateCRSpec")
 			// Nothing to update
 			return nil
 		}

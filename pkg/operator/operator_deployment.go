@@ -77,9 +77,7 @@ func (o *Operator) onUpdateArangoDeployment(oldObj, newObj interface{}) {
 	defer o.Dependencies.LivenessProbe.Unlock()
 
 	apiObject := newObj.(*api.ArangoDeployment)
-	o.log.
-		Str("name", apiObject.GetObjectMeta().GetName()).
-		Debug("ArangoDeployment updated")
+	o.log.Str("name", apiObject.GetObjectMeta().GetName()).Trace("ArangoDeployment updated")
 	o.syncArangoDeployment(apiObject)
 }
 

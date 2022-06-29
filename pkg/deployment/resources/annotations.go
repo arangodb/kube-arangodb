@@ -44,7 +44,7 @@ type PatchFunc func(name string, d []byte) error
 func (r *Resources) EnsureAnnotations(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
 	log := r.log.Str("section", "annotations")
 
-	log.Info("Ensuring annotations")
+	log.Trace("Ensuring annotations")
 
 	patchSecret := func(name string, d []byte) error {
 		return globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {

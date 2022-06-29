@@ -62,7 +62,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 	ctxReconciliation, cancelReconciliation := globals.GetGlobalTimeouts().Reconciliation().WithTimeout(context.Background())
 	defer cancelReconciliation()
 	defer func() {
-		d.log.Info("Inspect loop took %s", time.Since(start))
+		d.log.Trace("Inspect loop took %s", time.Since(start))
 	}()
 
 	nextInterval := lastInterval
@@ -152,7 +152,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	t := time.Now()
 
 	defer func() {
-		d.log.Info("Reconciliation loop took %s", time.Since(t))
+		d.log.Trace("Reconciliation loop took %s", time.Since(t))
 	}()
 
 	// Ensure that spec and status checksum are same

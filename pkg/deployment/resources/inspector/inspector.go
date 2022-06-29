@@ -344,14 +344,14 @@ func (i *inspectorState) refreshInThreads(ctx context.Context, threads int, load
 	logger := logger.Str("namespace", i.namespace).Str("name", i.deploymentName)
 
 	start := time.Now()
-	logger.Debug("Pre-inspector refresh start")
+	logger.Trace("Pre-inspector refresh start")
 	d, err := i.client.Arango().DatabaseV1().ArangoDeployments(i.namespace).Get(context.Background(), i.deploymentName, meta.GetOptions{})
 	n.deploymentResult = &inspectorStateDeploymentResult{
 		depl: d,
 		err:  err,
 	}
 
-	logger.Debug("Inspector refresh start")
+	logger.Trace("Inspector refresh start")
 
 	for id := range loaders {
 		go func(id int) {
@@ -362,14 +362,14 @@ func (i *inspectorState) refreshInThreads(ctx context.Context, threads int, load
 			t := n.throttles.Get(c)
 
 			if !t.Throttle() {
-				logger.Str("component", string(c)).Debug("Inspector refresh skipped")
+				logger.Str("component", string(c)).Trace("Inspector refresh skipped")
 				return
 			}
 
-			logger.Str("component", string(c)).Debug("Inspector refresh")
+			logger.Str("component", string(c)).Trace("Inspector refresh")
 
 			defer func() {
-				logger.Str("component", string(c)).SinceStart("duration", start).Debug("Inspector done")
+				logger.Str("component", string(c)).SinceStart("duration", start).Trace("Inspector done")
 				t.Delay()
 			}()
 
@@ -384,7 +384,7 @@ func (i *inspectorState) refreshInThreads(ctx context.Context, threads int, load
 
 	m.Wait()
 
-	logger.SinceStart("duration", start).Debug("Inspector refresh done")
+	logger.SinceStart("duration", start).Trace("Inspector refresh done")
 
 	for id := range loaders {
 		if err := loaders[id].Verify(n); err != nil {
