@@ -110,26 +110,19 @@ func (f *factory) ApplyLogLevels(in map[string]Level) {
 	f.lock.Lock()
 	defer f.lock.Unlock()
 
-	if def, ok := in[TopicAll]; ok {
-		// Apply with default log level
-
-		for k := range f.loggers {
-			if ov, ok := in[k]; ok {
-				// Override in place
-				l := f.root.Level(zerolog.Level(ov))
-				f.loggers[k] = &l
-			} else {
-				// Override in place
-				l := f.root.Level(zerolog.Level(def))
-				f.loggers[k] = &l
+	if newLevel, ok := in[TopicAll]; ok {
+		for topic, oldLogger := range f.loggers {
+			if oldLogger.GetLevel() != zerolog.Level(newLevel) {
+				l := f.root.Level(zerolog.Level(newLevel))
+				f.loggers[topic] = &l
 			}
 		}
-	} else {
-		for k := range f.loggers {
-			if ov, ok := in[k]; ok {
-				// Override in place
-				l := f.root.Level(zerolog.Level(ov))
-				f.loggers[k] = &l
+	}
+	for topic, oldLogger := range f.loggers {
+		if newLevel, ok := in[topic]; ok {
+			if oldLogger.GetLevel() != zerolog.Level(newLevel) {
+				l := f.root.Level(zerolog.Level(newLevel))
+				f.loggers[topic] = &l
 			}
 		}
 	}
