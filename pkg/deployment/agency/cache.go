@@ -57,29 +57,29 @@ func (h health) Leader() (driver.Connection, bool) {
 
 func (h health) CollectMetrics(m metrics.PushMetric) {
 	if err := h.Serving(); err == nil {
-		m.Push(metric_descriptions.ArangodbOperatorAgencyCacheServing().Gauge(1, h.namespace, h.name))
+		m.Push(metric_descriptions.ArangodbOperatorAgencyCacheServingGauge(1, h.namespace, h.name))
 	} else {
-		m.Push(metric_descriptions.ArangodbOperatorAgencyCacheServing().Gauge(0, h.namespace, h.name))
+		m.Push(metric_descriptions.ArangodbOperatorAgencyCacheServingGauge(0, h.namespace, h.name))
 	}
 
 	if err := h.Healthy(); err == nil {
-		m.Push(metric_descriptions.ArangodbOperatorAgencyCacheHealthy().Gauge(1, h.namespace, h.name))
+		m.Push(metric_descriptions.ArangodbOperatorAgencyCacheHealthyGauge(1, h.namespace, h.name))
 	} else {
-		m.Push(metric_descriptions.ArangodbOperatorAgencyCacheHealthy().Gauge(0, h.namespace, h.name))
+		m.Push(metric_descriptions.ArangodbOperatorAgencyCacheHealthyGauge(0, h.namespace, h.name))
 	}
 
 	for _, name := range h.names {
 		if i, ok := h.commitIndexes[name]; ok {
-			m.Push(metric_descriptions.ArangodbOperatorAgencyCacheMemberServing().Gauge(1, h.namespace, h.name, name),
-				metric_descriptions.ArangodbOperatorAgencyCacheMemberCommitOffset().Gauge(float64(i), h.namespace, h.name, name))
+			m.Push(metric_descriptions.ArangodbOperatorAgencyCacheMemberServingGauge(1, h.namespace, h.name, name),
+				metric_descriptions.ArangodbOperatorAgencyCacheMemberCommitOffsetGauge(float64(i), h.namespace, h.name, name))
 		} else {
-			m.Push(metric_descriptions.ArangodbOperatorAgencyCacheMemberServing().Gauge(0, h.namespace, h.name, name),
-				metric_descriptions.ArangodbOperatorAgencyCacheMemberCommitOffset().Gauge(-1, h.namespace, h.name, name))
+			m.Push(metric_descriptions.ArangodbOperatorAgencyCacheMemberServingGauge(0, h.namespace, h.name, name),
+				metric_descriptions.ArangodbOperatorAgencyCacheMemberCommitOffsetGauge(-1, h.namespace, h.name, name))
 		}
 	}
 
 	for k, l := range h.election {
-		m.Push(metric_descriptions.ArangodbOperatorAgencyCacheLeaders().Gauge(float64(l), h.namespace, h.name, k))
+		m.Push(metric_descriptions.ArangodbOperatorAgencyCacheLeadersGauge(float64(l), h.namespace, h.name, k))
 	}
 }
 

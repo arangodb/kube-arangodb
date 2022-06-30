@@ -33,3 +33,7 @@ func init() {
 func ArangodbOperatorAgencyCacheMemberCommitOffset() metrics.Description {
 	return arangodbOperatorAgencyCacheMemberCommitOffset
 }
+
+func ArangodbOperatorAgencyCacheMemberCommitOffsetGauge(value float64, namespace string, name string, agent string) metrics.Metric {
+	return ArangodbOperatorAgencyCacheMemberCommitOffset().Gauge(value, namespace, name, agent)
+}

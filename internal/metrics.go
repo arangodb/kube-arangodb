@@ -112,8 +112,9 @@ type Alerting struct {
 }
 
 type Label struct {
-	Key         string `json:"key" yaml:"key"`
-	Description string `json:"description" yaml:"description"`
+	Key         string  `json:"key" yaml:"key"`
+	Description string  `json:"description" yaml:"description"`
+	Type        *string `json:"type" yaml:"type"`
 }
 
 func GenerateMetricsDocumentation(root string, in MetricsDoc) error {
@@ -323,12 +324,32 @@ func generateMetricsGO(root string, in MetricsDoc) error {
 					}
 				}
 
+				var keys []string
+				var params []string
+
+				params = append(params, "value float64")
+				keys = append(keys, "value")
+
+				for _, label := range details.Labels {
+					k := strings.ToLower(label.Key)
+					keys = append(keys, k)
+
+					if t := label.Type; t != nil {
+						params = append(params, fmt.Sprintf("%s %s", k, *t))
+					} else {
+						params = append(params, fmt.Sprintf("%s string", k))
+					}
+				}
+
 				if err := i.Execute(out, map[string]interface{}{
 					"name":             mname,
 					"fname":            strings.Join(fnameParts, ""),
 					"ename":            strings.Join(tparts, ""),
 					"shortDescription": details.ShortDescription,
 					"labels":           generateLabels(details.Labels),
+					"type":             details.Type,
+					"fparams":          strings.Join(params, ", "),
+					"fkeys":            strings.Join(keys, ", "),
 				}); err != nil {
 					return err
 				}
