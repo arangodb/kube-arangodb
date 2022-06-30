@@ -1,8 +1,8 @@
-# arangodb_operator_agency_errors (Counter)
+# arangodb_operator_rebalancer_moves_current (Gauge)
 
 ## Description
 
-Current count of agency cache fetch errors
+Define how many moves are currently in progress
 
 ## Labels
 

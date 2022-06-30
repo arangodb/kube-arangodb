@@ -1,8 +1,8 @@
-# arangodb_operator_agency_errors (Counter)
+# arangodb_operator_rebalancer_enabled (Gauge)
 
 ## Description
 
-Current count of agency cache fetch errors
+Determines if rebalancer is enabled
 
 ## Labels
 

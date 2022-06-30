@@ -23,17 +23,17 @@ package metric_descriptions
 import "github.com/arangodb/kube-arangodb/pkg/util/metrics"
 
 var (
-	arangodbOperatorAgencyFetches = metrics.NewDescription("arangodb_operator_agency_fetches", "Current count of agency cache fetches", []string{`namespace`, `name`}, nil)
+	arangodbOperatorRebalancerEnabled = metrics.NewDescription("arangodb_operator_rebalancer_enabled", "Determines if rebalancer is enabled", []string{`namespace`, `name`}, nil)
 )
 
 func init() {
-	registerDescription(arangodbOperatorAgencyFetches)
+	registerDescription(arangodbOperatorRebalancerEnabled)
 }
 
-func ArangodbOperatorAgencyFetches() metrics.Description {
-	return arangodbOperatorAgencyFetches
+func ArangodbOperatorRebalancerEnabled() metrics.Description {
+	return arangodbOperatorRebalancerEnabled
 }
 
-func ArangodbOperatorAgencyFetchesCounter(value float64, namespace string, name string) metrics.Metric {
-	return ArangodbOperatorAgencyFetches().Gauge(value, namespace, name)
+func ArangodbOperatorRebalancerEnabledGauge(value float64, namespace string, name string) metrics.Metric {
+	return ArangodbOperatorRebalancerEnabled().Gauge(value, namespace, name)
 }

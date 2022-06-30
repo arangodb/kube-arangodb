@@ -39,6 +39,8 @@ type Reconciler struct {
 	log             logging.Logger
 	planLogger      logging.Logger
 	context         Context
+
+	metrics Metrics
 }
 
 // NewReconciler creates a new reconciler with given context.

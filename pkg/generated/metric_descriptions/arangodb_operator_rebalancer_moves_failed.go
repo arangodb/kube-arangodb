@@ -18,4 +18,22 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package agency
+package metric_descriptions
+
+import "github.com/arangodb/kube-arangodb/pkg/util/metrics"
+
+var (
+	arangodbOperatorRebalancerMovesFailed = metrics.NewDescription("arangodb_operator_rebalancer_moves_failed", "Define how many moves failed", []string{`namespace`, `name`}, nil)
+)
+
+func init() {
+	registerDescription(arangodbOperatorRebalancerMovesFailed)
+}
+
+func ArangodbOperatorRebalancerMovesFailed() metrics.Description {
+	return arangodbOperatorRebalancerMovesFailed
+}
+
+func ArangodbOperatorRebalancerMovesFailedCounter(value float64, namespace string, name string) metrics.Metric {
+	return ArangodbOperatorRebalancerMovesFailed().Gauge(value, namespace, name)
+}

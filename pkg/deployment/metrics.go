@@ -157,8 +157,8 @@ func (i *inventory) Add(d *Deployment) {
 }
 
 func (d *Deployment) CollectMetrics(m metrics.PushMetric) {
-	m.Push(metric_descriptions.ArangodbOperatorAgencyErrorsCount(float64(d.metrics.agency.errors), d.namespace, d.name))
-	m.Push(metric_descriptions.ArangodbOperatorAgencyFetchesCount(float64(d.metrics.agency.fetches), d.namespace, d.name))
+	m.Push(metric_descriptions.ArangodbOperatorAgencyErrorsCounter(float64(d.metrics.agency.errors), d.namespace, d.name))
+	m.Push(metric_descriptions.ArangodbOperatorAgencyFetchesCounter(float64(d.metrics.agency.fetches), d.namespace, d.name))
 	m.Push(metric_descriptions.ArangodbOperatorAgencyIndexGauge(float64(d.metrics.agency.index), d.namespace, d.name))
 
 	if c := d.agencyCache; c != nil {
@@ -172,5 +172,9 @@ func (d *Deployment) CollectMetrics(m metrics.PushMetric) {
 		}
 	} else {
 		m.Push(metric_descriptions.ArangodbOperatorAgencyCachePresentGauge(0, d.namespace, d.name))
+	}
+
+	if c := d.reconciler; c != nil {
+		c.CollectMetrics(m)
 	}
 }
