@@ -189,7 +189,7 @@ GOLANGCI_ENABLED=deadcode gosimple govet ineffassign staticcheck structcheck typ
 .PHONY: license-verify
 license-verify:
 	@echo ">> Verify license of files"
-	@$(GOPATH)/bin/addlicense -f "./tools/codegen/boilerplate.go.txt" -check $(SOURCES)
+	@$(GOPATH)/bin/addlicense -f "./tools/codegen/license-header.txt" -check $(SOURCES)
 
 .PHONY: fmt
 fmt:
@@ -199,7 +199,7 @@ fmt:
 .PHONY: license
 license:
 	@echo ">> Ensuring license of files"
-	@$(GOPATH)/bin/addlicense -f "./tools/codegen/boilerplate.go.txt" $(SOURCES)
+	@$(GOPATH)/bin/addlicense -f "./tools/codegen/license-header.txt" $(SOURCES)
 
 .PHONY: fmt-verify
 fmt-verify: license-verify
@@ -245,6 +245,7 @@ update-generated:
 	@rm -fr $(ORGDIR)
 	@mkdir -p $(ORGDIR)
 	@ln -s -f $(SCRIPTDIR) $(ORGDIR)/kube-arangodb
+	@sed -e 's/^/\/\/ /' -e 's/ *$$//' $(ROOTDIR)/tools/codegen/license-header.txt > $(ROOTDIR)/tools/codegen/boilerplate.go.txt
 	GOPATH=$(GOBUILDDIR) $(VENDORDIR)/k8s.io/code-generator/generate-groups.sh  \
 			"all" \
 			"github.com/arangodb/kube-arangodb/pkg/generated" \
