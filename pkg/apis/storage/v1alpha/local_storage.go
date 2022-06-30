@@ -45,7 +45,7 @@ type ArangoLocalStorage struct {
 	meta.TypeMeta   `json:",inline"`
 	meta.ObjectMeta `json:"metadata,omitempty"`
 	Spec            LocalStorageSpec   `json:"spec"`
-	Status            LocalStorageStatus `json:"status"`
+	Status          LocalStorageStatus `json:"status"`
 }
 
 // AsOwner creates an OwnerReference for the given storage

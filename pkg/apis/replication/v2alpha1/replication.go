@@ -45,7 +45,7 @@ type ArangoDeploymentReplication struct {
 	meta.TypeMeta   `json:",inline"`
 	meta.ObjectMeta `json:"metadata,omitempty"`
 	Spec            DeploymentReplicationSpec   `json:"spec"`
-	Status            DeploymentReplicationStatus `json:"status"`
+	Status          DeploymentReplicationStatus `json:"status"`
 }
 
 // AsOwner creates an OwnerReference for the given replication

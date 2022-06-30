@@ -45,7 +45,7 @@ type ArangoJob struct {
 	meta.TypeMeta   `json:",inline"`
 	meta.ObjectMeta `json:"metadata,omitempty"`
 	Spec            ArangoJobSpec     `json:"spec,omitempty"`
-	Status            batchv1.JobStatus `json:"status,omitempty"`
+	Status          batchv1.JobStatus `json:"status,omitempty"`
 }
 
 // AsOwner creates an OwnerReference for the given job
