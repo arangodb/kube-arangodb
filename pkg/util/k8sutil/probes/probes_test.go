@@ -24,7 +24,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 )
 
 func TestCreate(t *testing.T) {
@@ -45,13 +45,13 @@ func TestCreate(t *testing.T) {
 	assert.Equal(t, probe.Handler.HTTPGet.HTTPHeaders[0].Name, "Authorization")
 	assert.Equal(t, probe.Handler.HTTPGet.HTTPHeaders[0].Value, secret)
 	assert.Equal(t, probe.Handler.HTTPGet.Port.IntValue(), 8529)
-	assert.Equal(t, probe.Handler.HTTPGet.Scheme, v1.URISchemeHTTP)
+	assert.Equal(t, probe.Handler.HTTPGet.Scheme, core.URISchemeHTTP)
 
 	// https
 	config = HTTPProbeConfig{path, true, secret, 0, 0, 0, 0, 0, 0}
 	probe = config.Create()
 
-	assert.Equal(t, probe.Handler.HTTPGet.Scheme, v1.URISchemeHTTPS)
+	assert.Equal(t, probe.Handler.HTTPGet.Scheme, core.URISchemeHTTPS)
 
 	// http, custom timing
 	config = HTTPProbeConfig{path, false, secret, 0, 1, 2, 3, 4, 5}

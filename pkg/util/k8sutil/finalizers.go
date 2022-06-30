@@ -32,7 +32,7 @@ import (
 	persistentvolumeclaimv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim/v1"
 	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
 	core "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
@@ -42,22 +42,22 @@ const (
 // RemovePodFinalizers removes the given finalizers from the given pod.
 func RemovePodFinalizers(ctx context.Context, cachedStatus pod.Inspector, c podv1.ModInterface, p *core.Pod,
 	finalizers []string, ignoreNotFound bool) (int, error) {
-	getFunc := func() (metav1.Object, error) {
+	getFunc := func() (meta.Object, error) {
 		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
 
-		result, err := cachedStatus.Pod().V1().Read().Get(ctxChild, p.GetName(), metav1.GetOptions{})
+		result, err := cachedStatus.Pod().V1().Read().Get(ctxChild, p.GetName(), meta.GetOptions{})
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
 		return result, nil
 	}
-	updateFunc := func(updated metav1.Object) error {
+	updateFunc := func(updated meta.Object) error {
 		updatedPod := updated.(*core.Pod)
 		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
 
-		result, err := c.Update(ctxChild, updatedPod, metav1.UpdateOptions{})
+		result, err := c.Update(ctxChild, updatedPod, meta.UpdateOptions{})
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -74,22 +74,22 @@ func RemovePodFinalizers(ctx context.Context, cachedStatus pod.Inspector, c podv
 // RemovePVCFinalizers removes the given finalizers from the given PVC.
 func RemovePVCFinalizers(ctx context.Context, cachedStatus persistentvolumeclaim.Inspector, c persistentvolumeclaimv1.ModInterface,
 	p *core.PersistentVolumeClaim, finalizers []string, ignoreNotFound bool) (int, error) {
-	getFunc := func() (metav1.Object, error) {
+	getFunc := func() (meta.Object, error) {
 		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
 
-		result, err := cachedStatus.PersistentVolumeClaim().V1().Read().Get(ctxChild, p.GetName(), metav1.GetOptions{})
+		result, err := cachedStatus.PersistentVolumeClaim().V1().Read().Get(ctxChild, p.GetName(), meta.GetOptions{})
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
 		return result, nil
 	}
-	updateFunc := func(updated metav1.Object) error {
+	updateFunc := func(updated meta.Object) error {
 		updatedPVC := updated.(*core.PersistentVolumeClaim)
 		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
 
-		result, err := c.Update(ctxChild, updatedPVC, metav1.UpdateOptions{})
+		result, err := c.Update(ctxChild, updatedPVC, meta.UpdateOptions{})
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -107,7 +107,7 @@ func RemovePVCFinalizers(ctx context.Context, cachedStatus persistentvolumeclaim
 // The functions tries to get the object using the provided get function,
 // then remove the given finalizers and update the update using the given update function.
 // In case of an update conflict, the functions tries again.
-func RemoveFinalizers(finalizers []string, getFunc func() (metav1.Object, error), updateFunc func(metav1.Object) error, ignoreNotFound bool) (int, error) {
+func RemoveFinalizers(finalizers []string, getFunc func() (meta.Object, error), updateFunc func(meta.Object) error, ignoreNotFound bool) (int, error) {
 	attempts := 0
 	for {
 		attempts++

@@ -26,8 +26,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner"
 	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner/mocks"
@@ -36,31 +36,31 @@ import (
 // TestCreateValidEndpointList tests createValidEndpointList.
 func TestCreateValidEndpointList(t *testing.T) {
 	tests := []struct {
-		Input    *v1.EndpointsList
+		Input    *core.EndpointsList
 		Expected []string
 	}{
 		{
-			Input:    &v1.EndpointsList{},
+			Input:    &core.EndpointsList{},
 			Expected: []string{},
 		},
 		{
-			Input: &v1.EndpointsList{
-				Items: []v1.Endpoints{
-					v1.Endpoints{
-						Subsets: []v1.EndpointSubset{
-							v1.EndpointSubset{
-								Addresses: []v1.EndpointAddress{
-									v1.EndpointAddress{
+			Input: &core.EndpointsList{
+				Items: []core.Endpoints{
+					core.Endpoints{
+						Subsets: []core.EndpointSubset{
+							core.EndpointSubset{
+								Addresses: []core.EndpointAddress{
+									core.EndpointAddress{
 										IP: "1.2.3.4",
 									},
 								},
 							},
-							v1.EndpointSubset{
-								Addresses: []v1.EndpointAddress{
-									v1.EndpointAddress{
+							core.EndpointSubset{
+								Addresses: []core.EndpointAddress{
+									core.EndpointAddress{
 										IP: "5.6.7.8",
 									},
-									v1.EndpointAddress{
+									core.EndpointAddress{
 										IP: "9.10.11.12",
 									},
 								},
@@ -127,20 +127,20 @@ func TestCreateNodeClientMap(t *testing.T) {
 // TestGetDeploymentInfo tests getDeploymentInfo.
 func TestGetDeploymentInfo(t *testing.T) {
 	tests := []struct {
-		Input                       v1.PersistentVolumeClaim
+		Input                       core.PersistentVolumeClaim
 		ExpectedDeploymentName      string
 		ExpectedRole                string
 		ExpectedEnforceAntiAffinity bool
 	}{
 		{
-			Input:                       v1.PersistentVolumeClaim{},
+			Input:                       core.PersistentVolumeClaim{},
 			ExpectedDeploymentName:      "",
 			ExpectedRole:                "",
 			ExpectedEnforceAntiAffinity: false,
 		},
 		{
-			Input: v1.PersistentVolumeClaim{
-				ObjectMeta: metav1.ObjectMeta{
+			Input: core.PersistentVolumeClaim{
+				ObjectMeta: meta.ObjectMeta{
 					Annotations: map[string]string{
 						"database.arangodb.com/enforce-anti-affinity": "true",
 					},
@@ -155,8 +155,8 @@ func TestGetDeploymentInfo(t *testing.T) {
 			ExpectedEnforceAntiAffinity: true,
 		},
 		{
-			Input: v1.PersistentVolumeClaim{
-				ObjectMeta: metav1.ObjectMeta{
+			Input: core.PersistentVolumeClaim{
+				ObjectMeta: meta.ObjectMeta{
 					Annotations: map[string]string{
 						"database.arangodb.com/enforce-anti-affinity": "false",
 					},
@@ -171,8 +171,8 @@ func TestGetDeploymentInfo(t *testing.T) {
 			ExpectedEnforceAntiAffinity: false,
 		},
 		{
-			Input: v1.PersistentVolumeClaim{
-				ObjectMeta: metav1.ObjectMeta{
+			Input: core.PersistentVolumeClaim{
+				ObjectMeta: meta.ObjectMeta{
 					Annotations: map[string]string{
 						"database.arangodb.com/enforce-anti-affinity": "wrong",
 					},

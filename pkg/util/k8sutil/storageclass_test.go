@@ -33,7 +33,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/storage/v1"
 	er "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 	k8stesting "k8s.io/client-go/testing"
 )
@@ -47,14 +47,14 @@ func TestStorageClassIsDefault(t *testing.T) {
 		{
 			Name: "Storage class without annotations",
 			StorageClass: v1.StorageClass{
-				ObjectMeta: metav1.ObjectMeta{},
+				ObjectMeta: meta.ObjectMeta{},
 			},
 			IsDefault: false,
 		},
 		{
 			Name: "Storage class with empty annotations",
 			StorageClass: v1.StorageClass{
-				ObjectMeta: metav1.ObjectMeta{
+				ObjectMeta: meta.ObjectMeta{
 					Annotations: map[string]string{},
 				},
 			},
@@ -63,7 +63,7 @@ func TestStorageClassIsDefault(t *testing.T) {
 		{
 			Name: "Storage class without default",
 			StorageClass: v1.StorageClass{
-				ObjectMeta: metav1.ObjectMeta{
+				ObjectMeta: meta.ObjectMeta{
 					Annotations: map[string]string{
 						annStorageClassIsDefault: "false",
 					},
@@ -74,7 +74,7 @@ func TestStorageClassIsDefault(t *testing.T) {
 		{
 			Name: "Storage class with invalid value in annotation",
 			StorageClass: v1.StorageClass{
-				ObjectMeta: metav1.ObjectMeta{
+				ObjectMeta: meta.ObjectMeta{
 					Annotations: map[string]string{
 						annStorageClassIsDefault: "foo",
 					},
@@ -85,7 +85,7 @@ func TestStorageClassIsDefault(t *testing.T) {
 		{
 			Name: "Default storage class exits",
 			StorageClass: v1.StorageClass{
-				ObjectMeta: metav1.ObjectMeta{
+				ObjectMeta: meta.ObjectMeta{
 					Annotations: map[string]string{
 						annStorageClassIsDefault: "true",
 					},
@@ -162,11 +162,11 @@ func TestPatchStorageClassIsDefault(t *testing.T) {
 			clientSet := fake.NewSimpleClientset()
 			storageSet := clientSet.StorageV1()
 			_, err = storageSet.StorageClasses().Create(context.Background(), &v1.StorageClass{
-				TypeMeta: metav1.TypeMeta{},
-				ObjectMeta: metav1.ObjectMeta{
+				TypeMeta: meta.TypeMeta{},
+				ObjectMeta: meta.ObjectMeta{
 					Name: "test",
 				},
-			}, metav1.CreateOptions{})
+			}, meta.CreateOptions{})
 			require.NoError(t, err)
 
 			if testCase.Reactor != nil {

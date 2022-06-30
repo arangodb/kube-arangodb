@@ -36,8 +36,8 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 
 	"github.com/spf13/cobra"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb-helper/go-certificates"
 	"github.com/arangodb/go-driver/jwt"
@@ -314,16 +314,16 @@ func getCACertificate(ctx context.Context, secrets secretv1.ReadInterface, name 
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 
-	s, err := secrets.Get(ctxChild, name, metav1.GetOptions{})
+	s, err := secrets.Get(ctxChild, name, meta.GetOptions{})
 	if err != nil {
 		return nil, errors.WithMessage(err, fmt.Sprintf("failed to get secret \"%s\"", name))
 	}
 
-	if data, ok := s.Data[v1.ServiceAccountRootCAKey]; ok {
+	if data, ok := s.Data[core.ServiceAccountRootCAKey]; ok {
 		return certificates.LoadCertPool(string(data))
 	}
 
-	return nil, errors.New(fmt.Sprintf("the \"%s\" does not exist in the secret \"%s\"", v1.ServiceAccountRootCAKey,
+	return nil, errors.New(fmt.Sprintf("the \"%s\" does not exist in the secret \"%s\"", core.ServiceAccountRootCAKey,
 		name))
 }
 
@@ -341,7 +341,7 @@ func getDeployment(ctx context.Context, namespace, deplName string) (api.ArangoD
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 
-	deployments, err := extCli.DatabaseV1().ArangoDeployments(namespace).List(ctxChild, metav1.ListOptions{})
+	deployments, err := extCli.DatabaseV1().ArangoDeployments(namespace).List(ctxChild, meta.ListOptions{})
 	if err != nil {
 		if api.IsNotFound(err) {
 			return api.ArangoDeployment{}, errors.WithMessage(err, "there are no deployments")

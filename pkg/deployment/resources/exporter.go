@@ -29,27 +29,27 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 )
 
 // ArangodbExporterContainer creates metrics container
 func ArangodbExporterContainer(image string, args []string, livenessProbe *probes.HTTPProbeConfig,
-	resources v1.ResourceRequirements, securityContext *v1.SecurityContext,
-	spec api.DeploymentSpec) v1.Container {
+	resources core.ResourceRequirements, securityContext *core.SecurityContext,
+	spec api.DeploymentSpec) core.Container {
 
-	c := v1.Container{
+	c := core.Container{
 		Name:    shared.ExporterContainerName,
 		Image:   image,
 		Command: append([]string{"/app/arangodb-exporter"}, args...),
-		Ports: []v1.ContainerPort{
+		Ports: []core.ContainerPort{
 			{
 				Name:          "exporter",
 				ContainerPort: int32(spec.Metrics.GetPort()),
-				Protocol:      v1.ProtocolTCP,
+				Protocol:      core.ProtocolTCP,
 			},
 		},
 		Resources:       k8sutil.ExtractPodResourceRequirement(resources),
-		ImagePullPolicy: v1.PullIfNotPresent,
+		ImagePullPolicy: core.PullIfNotPresent,
 		SecurityContext: securityContext,
 	}
 

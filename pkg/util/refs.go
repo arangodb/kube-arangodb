@@ -23,7 +23,7 @@ package util
 import (
 	"time"
 
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 )
 
 // NewString returns a reference to a string with given value.
@@ -195,12 +195,12 @@ func DurationOrDefault(input *time.Duration, defaultValue ...time.Duration) time
 }
 
 // NewPullPolicy returns a reference to a pull policy with given value.
-func NewPullPolicy(input v1.PullPolicy) *v1.PullPolicy {
+func NewPullPolicy(input core.PullPolicy) *core.PullPolicy {
 	return &input
 }
 
 // NewPullPolicyOrNil returns nil if input is nil, otherwise returns a clone of the given value.
-func NewPullPolicyOrNil(input *v1.PullPolicy) *v1.PullPolicy {
+func NewPullPolicyOrNil(input *core.PullPolicy) *core.PullPolicy {
 	if input == nil {
 		return nil
 	}
@@ -208,7 +208,7 @@ func NewPullPolicyOrNil(input *v1.PullPolicy) *v1.PullPolicy {
 }
 
 // PullPolicyOrDefault returns the default value (or 0) if input is nil, otherwise returns the referenced value.
-func PullPolicyOrDefault(input *v1.PullPolicy, defaultValue ...v1.PullPolicy) v1.PullPolicy {
+func PullPolicyOrDefault(input *core.PullPolicy, defaultValue ...core.PullPolicy) core.PullPolicy {
 	if input == nil {
 		if len(defaultValue) > 0 {
 			return defaultValue[0]

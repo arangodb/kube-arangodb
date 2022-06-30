@@ -36,7 +36,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/version"
 
 	"github.com/spf13/cobra"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
@@ -119,7 +119,7 @@ func cmdLifecyclePreStopRunFinalizer(cmd *cobra.Command, args []string) {
 	pods := client.Kubernetes().CoreV1().Pods(namespace)
 	recentErrors := 0
 	for {
-		p, err := pods.Get(context.Background(), name, metav1.GetOptions{})
+		p, err := pods.Get(context.Background(), name, meta.GetOptions{})
 		if k8sutil.IsNotFound(err) {
 			logger.Warn("Pod not found")
 			return
@@ -218,7 +218,7 @@ func (c *cmdLifecyclePreStopRunPort) run(cmd *cobra.Command, args []string) erro
 
 		conn.Close()
 
-		p, err := pods.Get(context.Background(), name, metav1.GetOptions{})
+		p, err := pods.Get(context.Background(), name, meta.GetOptions{})
 		if k8sutil.IsNotFound(err) {
 			logger.Warn("Pod not found")
 			return nil

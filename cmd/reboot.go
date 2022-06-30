@@ -41,9 +41,9 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	corev1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/kubernetes"
 )
@@ -103,71 +103,71 @@ func runVolumeInspector(ctx context.Context, kube kubernetes.Interface, ns, name
 
 	deletePVC := true
 	claimname := "arangodb-reboot-pvc-" + name
-	pvcspec := corev1.PersistentVolumeClaim{
-		ObjectMeta: metav1.ObjectMeta{
+	pvcspec := core.PersistentVolumeClaim{
+		ObjectMeta: meta.ObjectMeta{
 			Name: claimname,
 			Labels: map[string]string{
 				"app":      "arangodb",
 				"rebooted": "yes",
 			},
 		},
-		Spec: corev1.PersistentVolumeClaimSpec{
-			AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+		Spec: core.PersistentVolumeClaimSpec{
+			AccessModes: []core.PersistentVolumeAccessMode{core.ReadWriteOnce},
 			VolumeName:  name,
-			Resources: corev1.ResourceRequirements{
-				Requests: corev1.ResourceList{
-					corev1.ResourceStorage: *resource.NewQuantity(1024*1024*1024, resource.DecimalSI),
+			Resources: core.ResourceRequirements{
+				Requests: core.ResourceList{
+					core.ResourceStorage: *resource.NewQuantity(1024*1024*1024, resource.DecimalSI),
 				},
 			},
 			StorageClassName: util.NewString(storageClassName),
 		},
 	}
 
-	_, err := kube.CoreV1().PersistentVolumeClaims(ns).Create(context.Background(), &pvcspec, metav1.CreateOptions{})
+	_, err := kube.CoreV1().PersistentVolumeClaims(ns).Create(context.Background(), &pvcspec, meta.CreateOptions{})
 	if err != nil {
 		return "", "", errors.Wrap(err, "failed to create pvc")
 	}
 	defer func() {
 		if deletePVC {
 			logger.Str("pvc-name", claimname).Debug("deleting pvc")
-			kube.CoreV1().PersistentVolumeClaims(ns).Delete(context.Background(), claimname, metav1.DeleteOptions{})
+			kube.CoreV1().PersistentVolumeClaims(ns).Delete(context.Background(), claimname, meta.DeleteOptions{})
 		}
 	}()
 
 	podname := "arangodb-reboot-pod-" + name
-	podspec := corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
+	podspec := core.Pod{
+		ObjectMeta: meta.ObjectMeta{
 			Name: podname,
 		},
-		Spec: corev1.PodSpec{
-			RestartPolicy: corev1.RestartPolicyNever,
-			Containers: []corev1.Container{
-				corev1.Container{
+		Spec: core.PodSpec{
+			RestartPolicy: core.RestartPolicyNever,
+			Containers: []core.Container{
+				core.Container{
 					Name:            "inspector",
 					Image:           image,
-					ImagePullPolicy: corev1.PullAlways,
+					ImagePullPolicy: core.PullAlways,
 					Command:         []string{"arangodb_operator"},
 					Args:            []string{"reboot", "inspect"},
-					Env: []corev1.EnvVar{
-						corev1.EnvVar{
+					Env: []core.EnvVar{
+						core.EnvVar{
 							Name:  constants.EnvOperatorPodNamespace,
 							Value: ns,
 						},
 					},
-					VolumeMounts: []corev1.VolumeMount{
-						corev1.VolumeMount{
+					VolumeMounts: []core.VolumeMount{
+						core.VolumeMount{
 							MountPath: "/data",
 							Name:      "data",
 						},
 					},
-					Ports: []corev1.ContainerPort{
-						corev1.ContainerPort{
+					Ports: []core.ContainerPort{
+						core.ContainerPort{
 							ContainerPort: 8080,
 						},
 					},
-					ReadinessProbe: &corev1.Probe{
-						Handler: corev1.Handler{
-							HTTPGet: &corev1.HTTPGetAction{
+					ReadinessProbe: &core.Probe{
+						Handler: core.Handler{
+							HTTPGet: &core.HTTPGetAction{
 								Path: "/info",
 								Port: intstr.FromInt(8080),
 							},
@@ -175,19 +175,19 @@ func runVolumeInspector(ctx context.Context, kube kubernetes.Interface, ns, name
 					},
 				},
 			},
-			Volumes: []corev1.Volume{
+			Volumes: []core.Volume{
 				k8sutil.CreateVolumeWithPersitantVolumeClaim("data", claimname),
 			},
 		},
 	}
 
-	_, err = kube.CoreV1().Pods(ns).Create(context.Background(), &podspec, metav1.CreateOptions{})
+	_, err = kube.CoreV1().Pods(ns).Create(context.Background(), &podspec, meta.CreateOptions{})
 	if err != nil {
 		return "", "", errors.Wrap(err, "failed to create pod")
 	}
-	defer kube.CoreV1().Pods(ns).Delete(context.Background(), podname, metav1.DeleteOptions{})
+	defer kube.CoreV1().Pods(ns).Delete(context.Background(), podname, meta.DeleteOptions{})
 
-	podwatch, err := kube.CoreV1().Pods(ns).Watch(context.Background(), metav1.ListOptions{FieldSelector: fields.OneTermEqualSelector("metadata.name", podname).String()})
+	podwatch, err := kube.CoreV1().Pods(ns).Watch(context.Background(), meta.ListOptions{FieldSelector: fields.OneTermEqualSelector("metadata.name", podname).String()})
 	if err != nil {
 		return "", "", errors.Wrap(err, "failed to watch for pod")
 	}
@@ -204,18 +204,18 @@ func runVolumeInspector(ctx context.Context, kube kubernetes.Interface, ns, name
 			}
 
 			// get the pod
-			pod, ok := ev.Object.(*corev1.Pod)
+			pod, ok := ev.Object.(*core.Pod)
 			if !ok {
 				return "", "", fmt.Errorf("failed to get pod")
 			}
 
 			switch pod.Status.Phase {
-			case corev1.PodFailed:
+			case core.PodFailed:
 				return "", "", fmt.Errorf("pod failed: %s", pod.Status.Reason)
-			case corev1.PodRunning:
+			case core.PodRunning:
 				podReady := false
 				for _, c := range pod.Status.Conditions {
-					if c.Type == corev1.PodReady && c.Status == corev1.ConditionTrue {
+					if c.Type == core.PodReady && c.Status == core.ConditionTrue {
 						podReady = true
 					}
 				}
@@ -264,22 +264,22 @@ func doVolumeInspection(ctx context.Context, kube kubernetes.Interface, ns, name
 }
 
 func checkVolumeAvailable(kube kubernetes.Interface, vname string) (VolumeInfo, error) {
-	volume, err := kube.CoreV1().PersistentVolumes().Get(context.Background(), vname, metav1.GetOptions{})
+	volume, err := kube.CoreV1().PersistentVolumes().Get(context.Background(), vname, meta.GetOptions{})
 	if err != nil {
 		return VolumeInfo{}, errors.Wrapf(err, "failed to GET volume %s", vname)
 	}
 
 	switch volume.Status.Phase {
-	case corev1.VolumeAvailable:
+	case core.VolumeAvailable:
 		break
-	case corev1.VolumeReleased:
+	case core.VolumeReleased:
 		// we have to remove the claim reference
 		volume.Spec.ClaimRef = nil
-		if _, err := kube.CoreV1().PersistentVolumes().Update(context.Background(), volume, metav1.UpdateOptions{}); err != nil {
+		if _, err := kube.CoreV1().PersistentVolumes().Update(context.Background(), volume, meta.UpdateOptions{}); err != nil {
 			return VolumeInfo{}, errors.Wrapf(err, "failed to remove claim reference")
 		}
 	default:
-		return VolumeInfo{}, fmt.Errorf("Volume %s phase is %s, expected %s", vname, volume.Status.Phase, corev1.VolumeAvailable)
+		return VolumeInfo{}, fmt.Errorf("Volume %s phase is %s, expected %s", vname, volume.Status.Phase, core.VolumeAvailable)
 	}
 
 	return VolumeInfo{StorageClassName: volume.Spec.StorageClassName}, nil
@@ -306,7 +306,7 @@ func preflightChecks(kube kubernetes.Interface, volumes []string) (VolumeListInf
 }
 
 func getMyImage(kube kubernetes.Interface, ns, name string) (string, error) {
-	pod, err := kube.CoreV1().Pods(ns).Get(context.Background(), name, metav1.GetOptions{})
+	pod, err := kube.CoreV1().Pods(ns).Get(context.Background(), name, meta.GetOptions{})
 	if err != nil {
 		return "", err
 	}
@@ -330,7 +330,7 @@ func createArangoDeployment(cli acli.Interface, ns, deplname, arangoimage string
 	}
 
 	depl := deplv1.ArangoDeployment{
-		ObjectMeta: metav1.ObjectMeta{
+		ObjectMeta: meta.ObjectMeta{
 			Name: deplname,
 		},
 		Spec: deplv1.DeploymentSpec{
@@ -367,7 +367,7 @@ func createArangoDeployment(cli acli.Interface, ns, deplname, arangoimage string
 		})
 	}
 
-	if _, err := cli.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), &depl, metav1.CreateOptions{}); err != nil {
+	if _, err := cli.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), &depl, meta.CreateOptions{}); err != nil {
 		return errors.Wrap(err, "failed to create ArangoDeployment")
 	}
 

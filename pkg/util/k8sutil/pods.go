@@ -30,7 +30,7 @@ import (
 
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
 
@@ -518,7 +518,7 @@ func NewPod(deploymentName, role, id, podName string, podCreator interfaces.PodC
 
 	hostname := shared.CreatePodHostName(deploymentName, role, id)
 	p := core.Pod{
-		ObjectMeta: metav1.ObjectMeta{
+		ObjectMeta: meta.ObjectMeta{
 			Name:       podName,
 			Labels:     LabelsForMember(deploymentName, role, id),
 			Finalizers: podCreator.GetFinalizers(),
@@ -562,10 +562,10 @@ func GetPodSpecChecksum(podSpec core.PodSpec) (string, error) {
 // If the pod already exists, nil is returned.
 // If another error occurs, that error is returned.
 func CreatePod(ctx context.Context, c podv1.ModInterface, pod *core.Pod, ns string,
-	owner metav1.OwnerReference) (string, types.UID, error) {
+	owner meta.OwnerReference) (string, types.UID, error) {
 	AddOwnerRefToObject(pod.GetObjectMeta(), &owner)
 
-	if createdPod, err := c.Create(ctx, pod, metav1.CreateOptions{}); err != nil {
+	if createdPod, err := c.Create(ctx, pod, meta.CreateOptions{}); err != nil {
 		if IsAlreadyExists(err) {
 			return pod.GetName(), "", nil // If pod exists do not return any error but do not record UID (enforced rotation)
 		}

@@ -23,7 +23,7 @@ package k8sutil
 import (
 	"testing"
 
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/stretchr/testify/assert"
@@ -31,11 +31,11 @@ import (
 )
 
 func TestCreateAffinity(t *testing.T) {
-	expectedNodeAffinity := &v1.NodeAffinity{
-		RequiredDuringSchedulingIgnoredDuringExecution: &v1.NodeSelector{
-			NodeSelectorTerms: []v1.NodeSelectorTerm{
+	expectedNodeAffinity := &core.NodeAffinity{
+		RequiredDuringSchedulingIgnoredDuringExecution: &core.NodeSelector{
+			NodeSelectorTerms: []core.NodeSelectorTerm{
 				{
-					MatchExpressions: []v1.NodeSelectorRequirement{
+					MatchExpressions: []core.NodeSelectorRequirement{
 						{
 							Key:      shared.NodeArchAffinityLabel,
 							Operator: "In",

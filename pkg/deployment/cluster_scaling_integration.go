@@ -30,7 +30,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/rs/zerolog"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
@@ -212,7 +212,7 @@ func (ci *clusterScalingIntegration) inspectCluster(ctx context.Context, expectS
 	apiObject := ci.depl.apiObject
 	ctxChild, cancel = globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
-	current, err := ci.depl.deps.Client.Arango().DatabaseV1().ArangoDeployments(apiObject.Namespace).Get(ctxChild, apiObject.Name, metav1.GetOptions{})
+	current, err := ci.depl.deps.Client.Arango().DatabaseV1().ArangoDeployments(apiObject.Namespace).Get(ctxChild, apiObject.Name, meta.GetOptions{})
 	if err != nil {
 		return errors.WithStack(err)
 	}

@@ -27,7 +27,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 )
 
 // MemberStatusList is a list of MemberStatus entries
@@ -227,7 +227,7 @@ func (l MemberStatusList) AllMembersReady() bool {
 }
 
 // AllConditionTrueSince returns true if all members satisfy the condition since the given period
-func (l MemberStatusList) AllConditionTrueSince(cond ConditionType, status v1.ConditionStatus, period time.Duration) bool {
+func (l MemberStatusList) AllConditionTrueSince(cond ConditionType, status core.ConditionStatus, period time.Duration) bool {
 	for _, x := range l {
 		if c, ok := x.Conditions.Get(cond); ok {
 			if c.Status == status && c.LastTransitionTime.Time.Add(period).Before(time.Now()) {

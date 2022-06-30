@@ -182,10 +182,6 @@ allall: all
 # Tip: Run `eval $(minikube docker-env)` before calling make if you're developing on minikube.
 #
 
-GOLANGCI_ENABLED=deadcode gosimple govet ineffassign staticcheck structcheck typecheck unconvert unparam unused varcheck
-#GOLANGCI_ENABLED=gocyclo goconst golint maligned errcheck interfacer megacheck
-#GOLANGCI_ENABLED+=dupl - disable dupl check
-
 .PHONY: license-verify
 license-verify:
 	@echo ">> Verify license of files"
@@ -208,11 +204,11 @@ fmt-verify: license-verify
 
 .PHONY: linter
 linter:
-	$(GOPATH)/bin/golangci-lint run --build-tags "$(RELEASE_MODE)" --no-config --issues-exit-code=1 --deadline=30m --exclude-use-default=false \
-	--disable-all $(foreach EXCLUDE_DIR,$(EXCLUDE_DIRS),--skip-dirs $(EXCLUDE_DIR)) \
-	$(foreach MODE,$(GOLANGCI_ENABLED),--enable $(MODE)) \
-	$(foreach LINT_EXCLUDE,$(LINT_EXCLUDES),--exclude '$(LINT_EXCLUDE)') \
-	./...
+	$(GOPATH)/bin/golangci-lint run --build-tags "$(RELEASE_MODE)" $(foreach LINT_EXCLUDE,$(LINT_EXCLUDES),--exclude '$(LINT_EXCLUDE)') ./...
+
+.PHONY: linter-fix
+linter-fix:
+	$(GOPATH)/bin/golangci-lint run --fix --build-tags "$(RELEASE_MODE)" $(foreach LINT_EXCLUDE,$(LINT_EXCLUDES),--exclude '$(LINT_EXCLUDE)') ./...
 
 .PHONY: build
 build: docker manifests

@@ -24,7 +24,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -67,16 +67,16 @@ func TestDeploymentSpecResetImmutableFields(t *testing.T) {
 			nil,
 		},
 		{
-			DeploymentSpec{ImagePullPolicy: util.NewPullPolicy(v1.PullAlways)},
-			DeploymentSpec{ImagePullPolicy: util.NewPullPolicy(v1.PullNever)},
-			DeploymentSpec{ImagePullPolicy: util.NewPullPolicy(v1.PullNever)},
+			DeploymentSpec{ImagePullPolicy: util.NewPullPolicy(core.PullAlways)},
+			DeploymentSpec{ImagePullPolicy: util.NewPullPolicy(core.PullNever)},
+			DeploymentSpec{ImagePullPolicy: util.NewPullPolicy(core.PullNever)},
 			false,
 			nil,
 		},
 		{
-			DeploymentSpec{ImagePullPolicy: util.NewPullPolicy(v1.PullAlways)},
-			DeploymentSpec{ImagePullPolicy: util.NewPullPolicy(v1.PullNever)},
-			DeploymentSpec{ImagePullPolicy: util.NewPullPolicy(v1.PullNever)},
+			DeploymentSpec{ImagePullPolicy: util.NewPullPolicy(core.PullAlways)},
+			DeploymentSpec{ImagePullPolicy: util.NewPullPolicy(core.PullNever)},
+			DeploymentSpec{ImagePullPolicy: util.NewPullPolicy(core.PullNever)},
 			true,
 			nil,
 		},

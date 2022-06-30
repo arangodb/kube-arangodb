@@ -24,32 +24,32 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // TestAddOwnerRefToObject tests AddOwnerRefToObject.
 func TestAddOwnerRefToObject(t *testing.T) {
-	p := &v1.Pod{}
+	p := &core.Pod{}
 	AddOwnerRefToObject(p, nil)
 	assert.Len(t, p.GetOwnerReferences(), 0)
 
-	AddOwnerRefToObject(p, &metav1.OwnerReference{})
+	AddOwnerRefToObject(p, &meta.OwnerReference{})
 	assert.Len(t, p.GetOwnerReferences(), 1)
 }
 
 // UpdateOwnerRefToObjectIfNeeded tests UpdateOwnerRefToObjectIfNeeded.
 func TestUpdateOwnerRefToObjectIfNeeded(t *testing.T) {
-	p := &v1.Pod{}
+	p := &core.Pod{}
 	result := UpdateOwnerRefToObjectIfNeeded(p, nil)
 	assert.Len(t, p.GetOwnerReferences(), 0)
 	assert.False(t, result)
 
-	result = UpdateOwnerRefToObjectIfNeeded(p, &metav1.OwnerReference{})
+	result = UpdateOwnerRefToObjectIfNeeded(p, &meta.OwnerReference{})
 	assert.Len(t, p.GetOwnerReferences(), 1)
 	assert.True(t, result)
 
-	result = UpdateOwnerRefToObjectIfNeeded(p, &metav1.OwnerReference{})
+	result = UpdateOwnerRefToObjectIfNeeded(p, &meta.OwnerReference{})
 	assert.Len(t, p.GetOwnerReferences(), 1)
 	assert.False(t, result)
 }

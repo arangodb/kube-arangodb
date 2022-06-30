@@ -28,8 +28,8 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/record"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
@@ -70,8 +70,8 @@ const (
 type localStorageEvent struct {
 	Type                  localStorageEventType
 	LocalStorage          *api.ArangoLocalStorage
-	PersistentVolume      *v1.PersistentVolume
-	PersistentVolumeClaim *v1.PersistentVolumeClaim
+	PersistentVolume      *core.PersistentVolume
+	PersistentVolumeClaim *core.PersistentVolumeClaim
 }
 
 const (
@@ -94,8 +94,8 @@ type LocalStorage struct {
 	stopped int32
 
 	image            string
-	imagePullPolicy  v1.PullPolicy
-	imagePullSecrets []v1.LocalObjectReference
+	imagePullPolicy  core.PullPolicy
+	imagePullSecrets []core.LocalObjectReference
 
 	inspectTrigger trigger.Trigger
 	pvCleaner      *pvCleaner
@@ -297,7 +297,7 @@ func (ls *LocalStorage) handleArangoLocalStorageUpdatedEvent(event *localStorage
 	log := ls.log.Str("localStorage", event.LocalStorage.GetName())
 
 	// Get the most recent version of the local storage from the API server
-	current, err := ls.deps.Client.Arango().StorageV1alpha().ArangoLocalStorages().Get(context.Background(), ls.apiObject.GetName(), metav1.GetOptions{})
+	current, err := ls.deps.Client.Arango().StorageV1alpha().ArangoLocalStorages().Get(context.Background(), ls.apiObject.GetName(), meta.GetOptions{})
 	if err != nil {
 		log.Err(err).Debug("Failed to get current version of local storage from API server")
 		if k8sutil.IsNotFound(err) {
@@ -359,7 +359,7 @@ func (ls *LocalStorage) updateCRStatus() error {
 	for {
 		attempt++
 		update.Status = ls.status
-		newAPIObject, err := ls.deps.Client.Arango().StorageV1alpha().ArangoLocalStorages().Update(context.Background(), update, metav1.UpdateOptions{})
+		newAPIObject, err := ls.deps.Client.Arango().StorageV1alpha().ArangoLocalStorages().Update(context.Background(), update, meta.UpdateOptions{})
 		if err == nil {
 			// Update internal object
 			ls.apiObject = newAPIObject
@@ -369,7 +369,7 @@ func (ls *LocalStorage) updateCRStatus() error {
 			// API object may have been changed already,
 			// Reload api object and try again
 			var current *api.ArangoLocalStorage
-			current, err = ls.deps.Client.Arango().StorageV1alpha().ArangoLocalStorages().Get(context.Background(), update.GetName(), metav1.GetOptions{})
+			current, err = ls.deps.Client.Arango().StorageV1alpha().ArangoLocalStorages().Get(context.Background(), update.GetName(), meta.GetOptions{})
 			if err == nil {
 				update = current.DeepCopy()
 				continue
@@ -393,7 +393,7 @@ func (ls *LocalStorage) updateCRSpec(newSpec api.LocalStorageSpec) error {
 		attempt++
 		update.Spec = newSpec
 		update.Status = ls.status
-		newAPIObject, err := ls.deps.Client.Arango().StorageV1alpha().ArangoLocalStorages().Update(context.Background(), update, metav1.UpdateOptions{})
+		newAPIObject, err := ls.deps.Client.Arango().StorageV1alpha().ArangoLocalStorages().Update(context.Background(), update, meta.UpdateOptions{})
 		if err == nil {
 			// Update internal object
 			ls.apiObject = newAPIObject
@@ -403,7 +403,7 @@ func (ls *LocalStorage) updateCRSpec(newSpec api.LocalStorageSpec) error {
 			// API object may have been changed already,
 			// Reload api object and try again
 			var current *api.ArangoLocalStorage
-			current, err = ls.deps.Client.Arango().StorageV1alpha().ArangoLocalStorages().Get(context.Background(), update.GetName(), metav1.GetOptions{})
+			current, err = ls.deps.Client.Arango().StorageV1alpha().ArangoLocalStorages().Get(context.Background(), update.GetName(), meta.GetOptions{})
 			if err == nil {
 				update = current.DeepCopy()
 				continue
@@ -442,7 +442,7 @@ func (ls *LocalStorage) reportFailedStatus() {
 			return errors.WithStack(err)
 		}
 
-		depl, err := ls.deps.Client.Arango().StorageV1alpha().ArangoLocalStorages().Get(context.Background(), ls.apiObject.Name, metav1.GetOptions{})
+		depl, err := ls.deps.Client.Arango().StorageV1alpha().ArangoLocalStorages().Get(context.Background(), ls.apiObject.Name, meta.GetOptions{})
 		if err != nil {
 			// Update (PUT) will return conflict even if object is deleted since we have UID set in object.
 			// Because it will check UID first and return something like:
@@ -461,7 +461,7 @@ func (ls *LocalStorage) reportFailedStatus() {
 }
 
 // isOwnerOf returns true if the given object belong to this local storage.
-func (ls *LocalStorage) isOwnerOf(obj metav1.Object) bool {
+func (ls *LocalStorage) isOwnerOf(obj meta.Object) bool {
 	ownerRefs := obj.GetOwnerReferences()
 	if len(ownerRefs) < 1 {
 		return false

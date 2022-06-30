@@ -35,7 +35,7 @@ import (
 	monitoringFakeClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/fake"
 	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 	recordfake "k8s.io/client-go/tools/record"
 
@@ -456,7 +456,7 @@ func createTestDeployment(t *testing.T, config Config, arangoDeployment *api.Ara
 	monitoringClientSet := monitoringFakeClient.NewSimpleClientset()
 	arangoClientSet := arangofake.NewSimpleClientset()
 
-	arangoDeployment.ObjectMeta = metav1.ObjectMeta{
+	arangoDeployment.ObjectMeta = meta.ObjectMeta{
 		Name:      testDeploymentName,
 		Namespace: testNamespace,
 	}
@@ -562,11 +562,11 @@ func (testCase *testCaseStruct) createTestPodData(deployment *Deployment, group 
 	podName := k8sutil.CreatePodName(testDeploymentName, group.AsRoleAbbreviated(), memberStatus.ID,
 		resources.CreatePodSuffix(testCase.ArangoDeployment.Spec))
 
-	testCase.ExpectedPod.ObjectMeta = metav1.ObjectMeta{
+	testCase.ExpectedPod.ObjectMeta = meta.ObjectMeta{
 		Name:      podName,
 		Namespace: testNamespace,
 		Labels:    k8sutil.LabelsForMember(testDeploymentName, group.AsRole(), memberStatus.ID),
-		OwnerReferences: []metav1.OwnerReference{
+		OwnerReferences: []meta.OwnerReference{
 			testCase.ArangoDeployment.AsOwner(),
 		},
 		Finalizers: finalizers(group),

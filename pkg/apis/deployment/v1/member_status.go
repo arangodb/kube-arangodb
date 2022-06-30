@@ -28,8 +28,8 @@ import (
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // MemberStatus holds the current status of a single member (server)
@@ -48,7 +48,7 @@ type MemberStatus struct {
 	// Phase holds the current lifetime phase of this member
 	Phase MemberPhase `json:"phase"`
 	// CreatedAt holds the creation timestamp of this member.
-	CreatedAt metav1.Time `json:"created-at"`
+	CreatedAt meta.Time `json:"created-at"`
 	// PersistentVolumeClaimName holds the name of the persistent volume claim used for this member (if any).
 	PersistentVolumeClaimName string `json:"persistentVolumeClaimName,omitempty"`
 	// PodName holds the name of the Pod that currently runs this member
@@ -61,7 +61,7 @@ type MemberStatus struct {
 	Conditions ConditionList `json:"conditions,omitempty"`
 	// RecentTerminatons holds the times when this member was recently terminated.
 	// First entry is the oldest. (do not add omitempty, since we want to be able to switch from a list to an empty list)
-	RecentTerminations []metav1.Time `json:"recent-terminations"`
+	RecentTerminations []meta.Time `json:"recent-terminations"`
 	// IsInitialized is set after the very first time a pod was created for this member.
 	// After that, DBServers must have a UUID field or fail.
 	IsInitialized bool `json:"initialized"`
@@ -86,7 +86,7 @@ type MemberStatus struct {
 
 	// deprecated
 	// SideCarSpecs contains list of specifications specified for side cars
-	SideCarSpecs map[string]v1.Container `json:"sidecars-specs,omitempty"`
+	SideCarSpecs map[string]core.Container `json:"sidecars-specs,omitempty"`
 }
 
 // Equal checks for equality
@@ -165,7 +165,7 @@ func (s MemberStatus) IsNotReadySince(timestamp time.Time) bool {
 	cond, found := s.Conditions.Get(ConditionTypeReady)
 	if found {
 		// B
-		return cond.Status != v1.ConditionTrue && cond.LastTransitionTime.Time.Before(timestamp)
+		return cond.Status != core.ConditionTrue && cond.LastTransitionTime.Time.Before(timestamp)
 	}
 	// A
 	return s.CreatedAt.Time.Before(timestamp)

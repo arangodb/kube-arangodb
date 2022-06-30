@@ -27,12 +27,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // TestCreatePodDNSName tests CreatePodDNSName.
 func TestCreatePodDNSName(t *testing.T) {
-	depl := &metav1.ObjectMeta{
+	depl := &meta.ObjectMeta{
 		Name:      "test",
 		Namespace: "ns",
 	}
@@ -42,7 +42,7 @@ func TestCreatePodDNSName(t *testing.T) {
 
 // TestCreateDatabaseClientServiceDNSName tests CreateDatabaseClientServiceDNSName.
 func TestCreateDatabaseClientServiceDNSName(t *testing.T) {
-	depl := &metav1.ObjectMeta{
+	depl := &meta.ObjectMeta{
 		Name:      "test",
 		Namespace: "ns",
 	}
@@ -51,7 +51,7 @@ func TestCreateDatabaseClientServiceDNSName(t *testing.T) {
 }
 
 func TestCreatePodDNSNameWithDomain(t *testing.T) {
-	depl := &metav1.ObjectMeta{
+	depl := &meta.ObjectMeta{
 		Name:      "test",
 		Namespace: "ns",
 	}

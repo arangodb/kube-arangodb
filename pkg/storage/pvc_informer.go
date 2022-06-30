@@ -21,7 +21,7 @@
 package storage
 
 import (
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/cache"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -29,14 +29,14 @@ import (
 
 // listenForPvcEvents keep listening for changes in PVC's until the given channel is closed.
 func (ls *LocalStorage) listenForPvcEvents() {
-	getPvc := func(obj interface{}) (*v1.PersistentVolumeClaim, bool) {
-		pvc, ok := obj.(*v1.PersistentVolumeClaim)
+	getPvc := func(obj interface{}) (*core.PersistentVolumeClaim, bool) {
+		pvc, ok := obj.(*core.PersistentVolumeClaim)
 		if !ok {
 			tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
 			if !ok {
 				return nil, false
 			}
-			pvc, ok = tombstone.Obj.(*v1.PersistentVolumeClaim)
+			pvc, ok = tombstone.Obj.(*core.PersistentVolumeClaim)
 			return pvc, ok
 		}
 		return pvc, true
@@ -46,7 +46,7 @@ func (ls *LocalStorage) listenForPvcEvents() {
 		ls.deps.Client.Kubernetes().CoreV1().RESTClient(),
 		"persistentvolumeclaims",
 		"", //ls.apiObject.GetNamespace(),
-		&v1.PersistentVolumeClaim{},
+		&core.PersistentVolumeClaim{},
 		cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
 				if pvc, ok := getPvc(obj); ok {

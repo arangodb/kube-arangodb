@@ -34,13 +34,13 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 )
 
 // prepareAgencyPodTermination checks if the given agency pod is allowed to terminate
 // and if so, prepares it for termination.
 // It returns nil if the pod is allowed to terminate, an error otherwise.
-func (r *Resources) prepareAgencyPodTermination(p *v1.Pod, memberStatus api.MemberStatus, updateMember func(api.MemberStatus) error) error {
+func (r *Resources) prepareAgencyPodTermination(p *core.Pod, memberStatus api.MemberStatus, updateMember func(api.MemberStatus) error) error {
 	log := r.log.Str("section", "pod")
 
 	// Inspect member phase
@@ -110,7 +110,7 @@ func (r *Resources) prepareAgencyPodTermination(p *v1.Pod, memberStatus api.Memb
 // prepareDBServerPodTermination checks if the given dbserver pod is allowed to terminate
 // and if so, prepares it for termination.
 // It returns nil if the pod is allowed to terminate, an error otherwise.
-func (r *Resources) prepareDBServerPodTermination(ctx context.Context, p *v1.Pod, memberStatus api.MemberStatus, updateMember func(api.MemberStatus) error) error {
+func (r *Resources) prepareDBServerPodTermination(ctx context.Context, p *core.Pod, memberStatus api.MemberStatus, updateMember func(api.MemberStatus) error) error {
 	log := r.log.Str("section", "pod")
 
 	// Inspect member phase

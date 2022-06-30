@@ -21,18 +21,18 @@
 package v1alpha
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // ArangoLocalStorageList is a list of ArangoDB local storage providers.
 type ArangoLocalStorageList struct {
-	metav1.TypeMeta `json:",inline"`
+	meta.TypeMeta `json:",inline"`
 	// Standard list metadata
 	// More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
-	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []ArangoLocalStorage `json:"items"`
+	meta.ListMeta `json:"metadata,omitempty"`
+	Items         []ArangoLocalStorage `json:"items"`
 }
 
 // +genclient
@@ -42,15 +42,15 @@ type ArangoLocalStorageList struct {
 // ArangoLocalStorage contains the entire Kubernetes info for an ArangoDB
 // local storage provider.
 type ArangoLocalStorage struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              LocalStorageSpec   `json:"spec"`
-	Status            LocalStorageStatus `json:"status"`
+	meta.TypeMeta   `json:",inline"`
+	meta.ObjectMeta `json:"metadata,omitempty"`
+	Spec            LocalStorageSpec   `json:"spec"`
+	Status          LocalStorageStatus `json:"status"`
 }
 
 // AsOwner creates an OwnerReference for the given storage
-func (d *ArangoLocalStorage) AsOwner() metav1.OwnerReference {
-	return metav1.OwnerReference{
+func (d *ArangoLocalStorage) AsOwner() meta.OwnerReference {
+	return meta.OwnerReference{
 		APIVersion: SchemeGroupVersion.String(),
 		Kind:       ArangoLocalStorageResourceKind,
 		Name:       d.Name,

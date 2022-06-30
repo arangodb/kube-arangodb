@@ -24,7 +24,7 @@ import (
 	"context"
 	"time"
 
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
@@ -58,7 +58,7 @@ func (r *Resources) InspectPVCs(ctx context.Context, cachedStatus inspectorInter
 
 	// Update member status from all pods found
 	status, _ := r.context.GetStatus()
-	if err := cachedStatus.PersistentVolumeClaim().V1().Iterate(func(pvc *v1.PersistentVolumeClaim) error {
+	if err := cachedStatus.PersistentVolumeClaim().V1().Iterate(func(pvc *core.PersistentVolumeClaim) error {
 		// PVC belongs to this deployment, update metric
 		inspectedPVCsCounters.WithLabelValues(deploymentName).Inc()
 

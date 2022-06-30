@@ -33,8 +33,8 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/arangodb/kube-arangodb/pkg/logging"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	typedv1 "k8s.io/client-go/kubernetes/typed/core/v1"
 )
 
@@ -98,18 +98,18 @@ func (s *serverAuthentication) fetchAdminSecret() (string, string, error) {
 	if s.adminSecretName == "" {
 		return "", "", errors.WithStack(errors.Newf("No admin secret name specified"))
 	}
-	secret, err := s.secrets.Get(context.Background(), s.adminSecretName, metav1.GetOptions{})
+	secret, err := s.secrets.Get(context.Background(), s.adminSecretName, meta.GetOptions{})
 	if err != nil {
 		return "", "", errors.WithStack(err)
 	}
 	var username, password string
-	if raw, found := secret.Data[v1.BasicAuthUsernameKey]; !found {
-		return "", "", errors.WithStack(errors.Newf("Secret '%s' contains no '%s' field", s.adminSecretName, v1.BasicAuthUsernameKey))
+	if raw, found := secret.Data[core.BasicAuthUsernameKey]; !found {
+		return "", "", errors.WithStack(errors.Newf("Secret '%s' contains no '%s' field", s.adminSecretName, core.BasicAuthUsernameKey))
 	} else {
 		username = string(raw)
 	}
-	if raw, found := secret.Data[v1.BasicAuthPasswordKey]; !found {
-		return "", "", errors.WithStack(errors.Newf("Secret '%s' contains no '%s' field", s.adminSecretName, v1.BasicAuthPasswordKey))
+	if raw, found := secret.Data[core.BasicAuthPasswordKey]; !found {
+		return "", "", errors.WithStack(errors.Newf("Secret '%s' contains no '%s' field", s.adminSecretName, core.BasicAuthPasswordKey))
 	} else {
 		password = string(raw)
 	}

@@ -22,18 +22,18 @@ package v2alpha1
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/replication"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // ArangoDeploymentReplicationList is a list of ArangoDB deployment replications.
 type ArangoDeploymentReplicationList struct {
-	metav1.TypeMeta `json:",inline"`
+	meta.TypeMeta `json:",inline"`
 	// Standard list metadata
 	// More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
-	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []ArangoDeploymentReplication `json:"items"`
+	meta.ListMeta `json:"metadata,omitempty"`
+	Items         []ArangoDeploymentReplication `json:"items"`
 }
 
 // +genclient
@@ -42,16 +42,16 @@ type ArangoDeploymentReplicationList struct {
 // ArangoDeploymentReplication contains the entire Kubernetes info for an ArangoDB
 // local storage provider.
 type ArangoDeploymentReplication struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              DeploymentReplicationSpec   `json:"spec"`
-	Status            DeploymentReplicationStatus `json:"status"`
+	meta.TypeMeta   `json:",inline"`
+	meta.ObjectMeta `json:"metadata,omitempty"`
+	Spec            DeploymentReplicationSpec   `json:"spec"`
+	Status          DeploymentReplicationStatus `json:"status"`
 }
 
 // AsOwner creates an OwnerReference for the given replication
-func (d *ArangoDeploymentReplication) AsOwner() metav1.OwnerReference {
+func (d *ArangoDeploymentReplication) AsOwner() meta.OwnerReference {
 	trueVar := true
-	return metav1.OwnerReference{
+	return meta.OwnerReference{
 		APIVersion:         SchemeGroupVersion.String(),
 		Kind:               replication.ArangoDeploymentReplicationResourceKind,
 		Name:               d.Name,
