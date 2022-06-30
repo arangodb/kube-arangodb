@@ -1,12 +1,31 @@
 # Metrics
 
-TODO:
+## Integration with Prometheus Operator
 
-- Investigate prometheus annotations wrt metrics
-    - see https://github.com/prometheus/prometheus/blob/master/documentation/examples/prometheus-kubernetes.yml
-    - `prometheus.io/scrape`: Only scrape services that have a value of `true`
-    - `prometheus.io/scheme`: If the metrics endpoint is secured then you will need
-    - `prometheus.io/path`: If the metrics path is not `/metrics` override this.
-    - `prometheus.io/port`: If the metrics are exposed on a different port to the
+Assuming that you have [Prometheus Operator](https://prometheus-operator.dev/) installed in your cluster (`monitoring` namespace),
+and kube-arangodb installed in `default` namespace, you can easily configure the integration with ArangoDB operator.
 
-- Add prometheus compatible `/metrics` endpoint to `arangod`
+The easiest way to do that is to create new a ServiceMonitor:
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: arango-deployment-operator
+  namespace: monitoring
+  labels:
+    prometheus: kube-prometheus
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kube-arangodb
+  namespaceSelector:
+    matchNames:
+    - default
+  endpoints:
+  - port: server
+    scheme: https
+    tlsConfig:
+      insecureSkipVerify: true
+```
+
+You also can see the example of Grafana dashboard at `examples/metrics` folder of this repo.
