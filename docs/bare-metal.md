@@ -1,6 +1,6 @@
 # ArangoDB on bare metal Kubernetes
 
-A not of warning for lack of a better word upfront: Kubernetes is
+A note of warning for lack of a better word upfront: Kubernetes is
 awesome and powerful. As with awesome and powerful things, there is
 infinite ways of setting up a k8s cluster. With great flexibility
 comes great complexity. There are infinite ways of hitting barriers.

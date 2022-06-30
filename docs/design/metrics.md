@@ -1,12 +1,30 @@
 # Metrics
 
-TODO:
+Operator provides metrics in a format supported by [Prometheus](https://prometheus.io/).
 
-- Investigate prometheus annotations wrt metrics
-    - see https://github.com/prometheus/prometheus/blob/master/documentation/examples/prometheus-kubernetes.yml
-    - `prometheus.io/scrape`: Only scrape services that have a value of `true`
-    - `prometheus.io/scheme`: If the metrics endpoint is secured then you will need
-    - `prometheus.io/path`: If the metrics path is not `/metrics` override this.
-    - `prometheus.io/port`: If the metrics are exposed on a different port to the
+The metrics are exposed via HTTP API. Default URL: `https://<operator-endpoint-ip>:8528/metrics`.
 
-- Add prometheus compatible `/metrics` endpoint to `arangod`
+For a full list of available metrics, see [here](./../generated/metrics/README.md).
+
+
+## Setting up integration with standard Prometheus installation (no TLS)
+
+After creating operator deployment, you must configure Prometheus using a configuration file that instructs it
+about which targets to scrape.
+To do so, add a new scrape job to your prometheus.yaml config:
+```yaml
+scrape_configs:
+  - job_name:       'arangodb-operator'
+
+    scrape_interval: 10s # scrape every 10 seconds.
+
+    scheme: 'https'
+    # ignore TLS errors as operator uses self-signed certificate
+    tls_config:
+      insecure_skip_verify: true
+
+    static_configs:
+      - targets:
+          - "<operator-endpoint-ip>:8528"
+```
+
