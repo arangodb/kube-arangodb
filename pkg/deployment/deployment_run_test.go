@@ -38,7 +38,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func runTestCases(t *testing.T, testCases ...testCaseStruct) {
@@ -104,7 +104,7 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 		}
 
 		// Create custom resource in the fake kubernetes API
-		_, err := d.deps.Client.Arango().DatabaseV1().ArangoDeployments(testNamespace).Create(context.Background(), d.apiObject, metav1.CreateOptions{})
+		_, err := d.deps.Client.Arango().DatabaseV1().ArangoDeployments(testNamespace).Create(context.Background(), d.apiObject, meta.CreateOptions{})
 		require.NoError(t, err)
 
 		if testCase.Resources != nil {
@@ -143,7 +143,7 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 			for _, m := range list {
 
 				member := api.ArangoMember{
-					ObjectMeta: metav1.ObjectMeta{
+					ObjectMeta: meta.ObjectMeta{
 						Namespace: d.GetNamespace(),
 						Name:      m.ArangoMemberName(d.GetName(), group),
 					},
@@ -160,13 +160,13 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 				}
 
 				s := core.Service{
-					ObjectMeta: metav1.ObjectMeta{
+					ObjectMeta: meta.ObjectMeta{
 						Name:      member.GetName(),
 						Namespace: member.GetNamespace(),
 					},
 				}
 
-				if _, err := d.ServicesModInterface().Create(context.Background(), &s, metav1.CreateOptions{}); err != nil {
+				if _, err := d.ServicesModInterface().Create(context.Background(), &s, meta.CreateOptions{}); err != nil {
 					return err
 				}
 
@@ -228,7 +228,7 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 		}
 
 		require.NoError(t, err)
-		pods, err := d.deps.Client.Kubernetes().CoreV1().Pods(testNamespace).List(context.Background(), metav1.ListOptions{})
+		pods, err := d.deps.Client.Kubernetes().CoreV1().Pods(testNamespace).List(context.Background(), meta.ListOptions{})
 		require.NoError(t, err)
 		require.Len(t, pods.Items, 1)
 		if util.BoolOrDefault(testCase.CompareChecksum, true) {

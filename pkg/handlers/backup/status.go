@@ -30,7 +30,7 @@ import (
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/backup/state"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type updateStatusFunc func(status *backupApi.ArangoBackupStatus)
@@ -52,7 +52,7 @@ func updateStatus(backup *backupApi.ArangoBackup, update ...updateStatusFunc) *b
 func updateStatusState(state state.State, template string, a ...interface{}) updateStatusFunc {
 	return func(status *backupApi.ArangoBackupStatus) {
 		if status.State != state {
-			status.Time = v1.Now()
+			status.Time = meta.Now()
 		}
 		status.State = state
 		status.Message = fmt.Sprintf(template, a...)
@@ -144,7 +144,7 @@ func createBackupFromMeta(backupMeta driver.BackupMeta, old *backupApi.ArangoBac
 	obj.Keys = keysToHashList(backupMeta.Keys)
 	obj.PotentiallyInconsistent = util.NewBool(backupMeta.PotentiallyInconsistent)
 	obj.SizeInBytes = backupMeta.SizeInBytes
-	obj.CreationTimestamp = v1.Time{
+	obj.CreationTimestamp = meta.Time{
 		Time: backupMeta.DateTime,
 	}
 	obj.NumberOfDBServers = backupMeta.NumberOfDBServers

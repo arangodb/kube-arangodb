@@ -24,21 +24,21 @@ import (
 	"context"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // inspectPVCs queries all PVC's and checks if there is a need to
 // build new persistent volumes.
 // Returns the PVC's that need a volume.
-func (ls *LocalStorage) inspectPVCs() ([]v1.PersistentVolumeClaim, error) {
+func (ls *LocalStorage) inspectPVCs() ([]core.PersistentVolumeClaim, error) {
 	ns := ls.apiObject.GetNamespace()
-	list, err := ls.deps.Client.Kubernetes().CoreV1().PersistentVolumeClaims(ns).List(context.Background(), metav1.ListOptions{})
+	list, err := ls.deps.Client.Kubernetes().CoreV1().PersistentVolumeClaims(ns).List(context.Background(), meta.ListOptions{})
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 	spec := ls.apiObject.Spec
-	var result []v1.PersistentVolumeClaim
+	var result []core.PersistentVolumeClaim
 	for _, pvc := range list.Items {
 		if !pvcMatchesStorageClass(pvc, spec.StorageClass.Name, spec.StorageClass.IsDefault) {
 			continue
@@ -53,7 +53,7 @@ func (ls *LocalStorage) inspectPVCs() ([]v1.PersistentVolumeClaim, error) {
 
 // pvcMatchesStorageClass checks if the given pvc requests a volume
 // of the given storage class.
-func pvcMatchesStorageClass(pvc v1.PersistentVolumeClaim, storageClassName string, isDefault bool) bool {
+func pvcMatchesStorageClass(pvc core.PersistentVolumeClaim, storageClassName string, isDefault bool) bool {
 	scn := pvc.Spec.StorageClassName
 	if scn == nil {
 		// No storage class specified, default is used
@@ -63,6 +63,6 @@ func pvcMatchesStorageClass(pvc v1.PersistentVolumeClaim, storageClassName strin
 }
 
 // pvcNeedsVolume checks if the given pvc is in need of a persistent volume.
-func pvcNeedsVolume(pvc v1.PersistentVolumeClaim) bool {
-	return pvc.Status.Phase == v1.ClaimPending
+func pvcNeedsVolume(pvc core.PersistentVolumeClaim) bool {
+	return pvc.Status.Phase == core.ClaimPending
 }

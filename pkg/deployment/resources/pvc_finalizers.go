@@ -28,7 +28,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -42,7 +42,7 @@ const (
 )
 
 // runPVCFinalizers goes through the list of PVC finalizers to see if they can be removed.
-func (r *Resources) runPVCFinalizers(ctx context.Context, p *v1.PersistentVolumeClaim, group api.ServerGroup,
+func (r *Resources) runPVCFinalizers(ctx context.Context, p *core.PersistentVolumeClaim, group api.ServerGroup,
 	memberStatus api.MemberStatus) (util.Interval, error) {
 	log := r.log.Str("section", "pvc").Str("pvc-name", p.GetName())
 	var removalList []string

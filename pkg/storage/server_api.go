@@ -26,7 +26,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/server"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // Name returns the name of the local storage resource
@@ -63,7 +63,7 @@ func (ls *LocalStorage) StorageClassIsDefault() bool {
 
 // Volumes returns all volumes created by the local storage resource
 func (ls *LocalStorage) Volumes() []server.Volume {
-	list, err := ls.deps.Client.Kubernetes().CoreV1().PersistentVolumes().List(context.Background(), metav1.ListOptions{})
+	list, err := ls.deps.Client.Kubernetes().CoreV1().PersistentVolumes().List(context.Background(), meta.ListOptions{})
 	if err != nil {
 		ls.log.Err(err).Error("Failed to list persistent volumes")
 		return nil

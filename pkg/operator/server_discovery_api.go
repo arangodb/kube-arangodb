@@ -27,7 +27,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	core "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/server"
@@ -52,7 +52,7 @@ func (o *Operator) FindOtherOperators() []server.OperatorReference {
 
 	log := o.log
 	var result []server.OperatorReference
-	namespaces, err := o.Dependencies.Client.Kubernetes().CoreV1().Namespaces().List(context.Background(), metav1.ListOptions{})
+	namespaces, err := o.Dependencies.Client.Kubernetes().CoreV1().Namespaces().List(context.Background(), meta.ListOptions{})
 	if err != nil {
 		log.Err(err).Warn("Failed to list namespaces")
 	} else {
@@ -94,7 +94,7 @@ func (o *Operator) FindOtherOperators() []server.OperatorReference {
 func (o *Operator) findOtherOperatorsInNamespace(log logging.Logger, namespace string, typePred func(server.OperatorType) bool) []server.OperatorReference {
 	log = log.Str("namespace", namespace)
 	var result []server.OperatorReference
-	services, err := o.Dependencies.Client.Kubernetes().CoreV1().Services(namespace).List(context.Background(), metav1.ListOptions{})
+	services, err := o.Dependencies.Client.Kubernetes().CoreV1().Services(namespace).List(context.Background(), meta.ListOptions{})
 	if err != nil {
 		log.Err(err).Debug("Failed to list services")
 		return nil
@@ -103,7 +103,7 @@ func (o *Operator) findOtherOperatorsInNamespace(log logging.Logger, namespace s
 		if o.Scope.IsNamespaced() {
 			return nil, nil
 		}
-		result, err := o.Dependencies.Client.Kubernetes().CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
+		result, err := o.Dependencies.Client.Kubernetes().CoreV1().Nodes().List(context.Background(), meta.ListOptions{})
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}

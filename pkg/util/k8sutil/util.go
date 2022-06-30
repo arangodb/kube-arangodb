@@ -21,7 +21,7 @@
 package k8sutil
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 )
 
@@ -51,14 +51,14 @@ const (
 )
 
 // AddOwnerRefToObject adds given owner reference to given object
-func AddOwnerRefToObject(obj metav1.Object, ownerRef *metav1.OwnerReference) {
+func AddOwnerRefToObject(obj meta.Object, ownerRef *meta.OwnerReference) {
 	if ownerRef != nil {
 		obj.SetOwnerReferences(append(obj.GetOwnerReferences(), *ownerRef))
 	}
 }
 
 // UpdateOwnerRefToObjectIfNeeded add given owner reference to given object if it does not exist yet
-func UpdateOwnerRefToObjectIfNeeded(obj metav1.Object, ownerRef *metav1.OwnerReference) bool {
+func UpdateOwnerRefToObjectIfNeeded(obj meta.Object, ownerRef *meta.OwnerReference) bool {
 	if ownerRef != nil {
 		for _, existingOwnerRef := range obj.GetOwnerReferences() {
 			if existingOwnerRef.UID == ownerRef.UID {
@@ -132,15 +132,15 @@ func LabelsForLocalStorage(localStorageName, role string) map[string]string {
 }
 
 // DeploymentListOpt creates a ListOptions matching all labels for the given deployment name.
-func DeploymentListOpt(deploymentName string) metav1.ListOptions {
-	return metav1.ListOptions{
+func DeploymentListOpt(deploymentName string) meta.ListOptions {
+	return meta.ListOptions{
 		LabelSelector: labels.SelectorFromSet(LabelsForDeployment(deploymentName, "")).String(),
 	}
 }
 
 // LocalStorageListOpt creates a ListOptions matching all labels for the given local storage name.
-func LocalStorageListOpt(localStorageName, role string) metav1.ListOptions {
-	return metav1.ListOptions{
+func LocalStorageListOpt(localStorageName, role string) meta.ListOptions {
+	return meta.ListOptions{
 		LabelSelector: labels.SelectorFromSet(LabelsForLocalStorage(localStorageName, role)).String(),
 	}
 }

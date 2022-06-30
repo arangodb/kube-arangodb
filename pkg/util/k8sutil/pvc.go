@@ -26,22 +26,22 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	persistentvolumeclaimv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim/v1"
 )
 
 // IsPersistentVolumeClaimMarkedForDeletion returns true if the pvc has been marked for deletion.
-func IsPersistentVolumeClaimMarkedForDeletion(pvc *v1.PersistentVolumeClaim) bool {
+func IsPersistentVolumeClaimMarkedForDeletion(pvc *core.PersistentVolumeClaim) bool {
 	return pvc.DeletionTimestamp != nil
 }
 
 // IsPersistentVolumeClaimFileSystemResizePending returns true if the pvc has FileSystemResizePending set to true
-func IsPersistentVolumeClaimFileSystemResizePending(pvc *v1.PersistentVolumeClaim) bool {
+func IsPersistentVolumeClaimFileSystemResizePending(pvc *core.PersistentVolumeClaim) bool {
 	for _, c := range pvc.Status.Conditions {
-		if c.Type == v1.PersistentVolumeClaimFileSystemResizePending && c.Status == v1.ConditionTrue {
+		if c.Type == core.PersistentVolumeClaimFileSystemResizePending && c.Status == core.ConditionTrue {
 			return true
 		}
 	}
@@ -49,12 +49,12 @@ func IsPersistentVolumeClaimFileSystemResizePending(pvc *v1.PersistentVolumeClai
 }
 
 // ExtractStorageResourceRequirement filters resource requirements for Pods.
-func ExtractStorageResourceRequirement(resources v1.ResourceRequirements) v1.ResourceRequirements {
+func ExtractStorageResourceRequirement(resources core.ResourceRequirements) core.ResourceRequirements {
 
-	filterStorage := func(list v1.ResourceList) v1.ResourceList {
-		newlist := make(v1.ResourceList)
+	filterStorage := func(list core.ResourceList) core.ResourceList {
+		newlist := make(core.ResourceList)
 		for k, v := range list {
-			if k != v1.ResourceStorage && k != "iops" {
+			if k != core.ResourceStorage && k != "iops" {
 				continue
 			}
 			newlist[k] = v
@@ -62,7 +62,7 @@ func ExtractStorageResourceRequirement(resources v1.ResourceRequirements) v1.Res
 		return newlist
 	}
 
-	return v1.ResourceRequirements{
+	return core.ResourceRequirements{
 		Limits:   filterStorage(resources.Limits),
 		Requests: filterStorage(resources.Requests),
 	}
@@ -72,12 +72,12 @@ func ExtractStorageResourceRequirement(resources v1.ResourceRequirements) v1.Res
 // If the pvc already exists, nil is returned.
 // If another error occurs, that error is returned.
 func CreatePersistentVolumeClaim(ctx context.Context, pvcs persistentvolumeclaimv1.ModInterface, pvcName, deploymentName,
-	storageClassName, role string, enforceAntiAffinity bool, resources v1.ResourceRequirements,
-	vct *v1.PersistentVolumeClaim, finalizers []string, owner metav1.OwnerReference) error {
+	storageClassName, role string, enforceAntiAffinity bool, resources core.ResourceRequirements,
+	vct *core.PersistentVolumeClaim, finalizers []string, owner meta.OwnerReference) error {
 	labels := LabelsForDeployment(deploymentName, role)
-	volumeMode := v1.PersistentVolumeFilesystem
-	pvc := &v1.PersistentVolumeClaim{
-		ObjectMeta: metav1.ObjectMeta{
+	volumeMode := core.PersistentVolumeFilesystem
+	pvc := &core.PersistentVolumeClaim{
+		ObjectMeta: meta.ObjectMeta{
 			Name:       pvcName,
 			Labels:     labels,
 			Finalizers: finalizers,
@@ -87,9 +87,9 @@ func CreatePersistentVolumeClaim(ctx context.Context, pvcs persistentvolumeclaim
 		},
 	}
 	if vct == nil {
-		pvc.Spec = v1.PersistentVolumeClaimSpec{
-			AccessModes: []v1.PersistentVolumeAccessMode{
-				v1.ReadWriteOnce,
+		pvc.Spec = core.PersistentVolumeClaimSpec{
+			AccessModes: []core.PersistentVolumeAccessMode{
+				core.ReadWriteOnce,
 			},
 			VolumeMode: &volumeMode,
 			Resources:  ExtractStorageResourceRequirement(resources),
@@ -102,7 +102,7 @@ func CreatePersistentVolumeClaim(ctx context.Context, pvcs persistentvolumeclaim
 		pvc.Spec.StorageClassName = &storageClassName
 	}
 	AddOwnerRefToObject(pvc.GetObjectMeta(), &owner)
-	if _, err := pvcs.Create(ctx, pvc, metav1.CreateOptions{}); err != nil && !IsAlreadyExists(err) {
+	if _, err := pvcs.Create(ctx, pvc, meta.CreateOptions{}); err != nil && !IsAlreadyExists(err) {
 		return errors.WithStack(err)
 	}
 	return nil

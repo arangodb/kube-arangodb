@@ -28,8 +28,8 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/rs/zerolog"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/arangodb/kube-arangodb/pkg/logging"
@@ -44,7 +44,7 @@ type pvCleaner struct {
 	mutex        sync.Mutex
 	log          logging.Logger
 	cli          kubernetes.Interface
-	items        []v1.PersistentVolume
+	items        []core.PersistentVolume
 	trigger      trigger.Trigger
 	clientGetter func(nodeName string) (provisioner.API, error)
 }
@@ -86,7 +86,7 @@ func (c *pvCleaner) Run(stopCh <-chan struct{}) {
 }
 
 // Add the given volume to the list of items to clean.
-func (c *pvCleaner) Add(pv v1.PersistentVolume) {
+func (c *pvCleaner) Add(pv core.PersistentVolume) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -105,7 +105,7 @@ func (c *pvCleaner) Add(pv v1.PersistentVolume) {
 // cleanFirst tries to clean the first PV in the list.
 // Returns (hasMore, error)
 func (c *pvCleaner) cleanFirst() (bool, error) {
-	var first *v1.PersistentVolume
+	var first *core.PersistentVolume
 	c.mutex.Lock()
 	if len(c.items) > 0 {
 		first = &c.items[0]
@@ -132,7 +132,7 @@ func (c *pvCleaner) cleanFirst() (bool, error) {
 }
 
 // clean tries to clean the given PV.
-func (c *pvCleaner) clean(pv v1.PersistentVolume) error {
+func (c *pvCleaner) clean(pv core.PersistentVolume) error {
 	log := c.log.Str("name", pv.GetName())
 	log.Debug("Cleaning PersistentVolume")
 
@@ -165,7 +165,7 @@ func (c *pvCleaner) clean(pv v1.PersistentVolume) error {
 	}
 
 	// Remove persistent volume
-	if err := c.cli.CoreV1().PersistentVolumes().Delete(context.Background(), pv.GetName(), metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
+	if err := c.cli.CoreV1().PersistentVolumes().Delete(context.Background(), pv.GetName(), meta.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
 		log.Err(err).
 			Str("name", pv.GetName()).
 			Debug("Failed to remove PersistentVolume")

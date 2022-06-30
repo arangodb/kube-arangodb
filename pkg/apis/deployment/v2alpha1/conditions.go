@@ -23,7 +23,7 @@ package v2alpha1
 import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	core "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // ConditionType is a strongly typed condition name
@@ -117,9 +117,9 @@ type Condition struct {
 	// Status of the condition, one of True, False, Unknown.
 	Status core.ConditionStatus `json:"status"`
 	// The last time this condition was updated.
-	LastUpdateTime metav1.Time `json:"lastUpdateTime,omitempty"`
+	LastUpdateTime meta.Time `json:"lastUpdateTime,omitempty"`
 	// Last time the condition transitioned from one status to another.
-	LastTransitionTime metav1.Time `json:"lastTransitionTime,omitempty"`
+	LastTransitionTime meta.Time `json:"lastTransitionTime,omitempty"`
 	// The reason for the condition's last transition.
 	Reason string `json:"reason,omitempty"`
 	// A human readable message indicating details about the transition.
@@ -205,7 +205,7 @@ func (list *ConditionList) Touch(conditionType ConditionType) bool {
 	src := *list
 	for i, x := range src {
 		if x.Type == conditionType {
-			src[i].LastUpdateTime = metav1.Now()
+			src[i].LastUpdateTime = meta.Now()
 			return true
 		}
 	}
@@ -234,7 +234,7 @@ func (list *ConditionList) update(conditionType ConditionType, status bool, reas
 
 	if index == -1 {
 		// Not found
-		now := metav1.Now()
+		now := meta.Now()
 		*list = append(src, Condition{
 			Type:               conditionType,
 			LastUpdateTime:     now,
@@ -250,14 +250,14 @@ func (list *ConditionList) update(conditionType ConditionType, status bool, reas
 	if src[index].Status != statusX {
 		// Transition to another status
 		src[index].Status = statusX
-		now := metav1.Now()
+		now := meta.Now()
 		src[index].LastTransitionTime = now
 		src[index].LastUpdateTime = now
 		src[index].Reason = reason
 		src[index].Message = message
 		src[index].Hash = hash
 	} else if src[index].Reason != reason || src[index].Message != message || src[index].Hash != hash {
-		src[index].LastUpdateTime = metav1.Now()
+		src[index].LastUpdateTime = meta.Now()
 		src[index].Reason = reason
 		src[index].Message = message
 		src[index].Hash = hash

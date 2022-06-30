@@ -22,7 +22,7 @@ package v1
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
@@ -39,8 +39,8 @@ var (
 
 // ArangoBackupList is a list of ArangoDB backups.
 type ArangoBackupList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
+	meta.TypeMeta `json:",inline"`
+	meta.ListMeta `json:"metadata,omitempty"`
 
 	Items []ArangoBackup `json:"items"`
 }
@@ -50,8 +50,8 @@ type ArangoBackupList struct {
 
 // ArangoBackup contains definition and status of the ArangoDB Backup.
 type ArangoBackup struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
+	meta.TypeMeta   `json:",inline"`
+	meta.ObjectMeta `json:"metadata,omitempty"`
 
 	Spec   ArangoBackupSpec   `json:"spec"`
 	Status ArangoBackupStatus `json:"status"`

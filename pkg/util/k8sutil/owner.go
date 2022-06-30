@@ -25,19 +25,19 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
 // GetPodOwner returns the ReplicaSet that owns the given Pod.
 // If the Pod has no owner of the owner is not a ReplicaSet, nil is returned.
-func GetPodOwner(kubecli kubernetes.Interface, pod *v1.Pod, ns string) (*appsv1.ReplicaSet, error) {
+func GetPodOwner(kubecli kubernetes.Interface, pod *core.Pod, ns string) (*appsv1.ReplicaSet, error) {
 	for _, ref := range pod.GetOwnerReferences() {
 		if ref.Kind == "ReplicaSet" {
 			rSets := kubecli.AppsV1().ReplicaSets(pod.GetNamespace())
-			rSet, err := rSets.Get(context.Background(), ref.Name, metav1.GetOptions{})
+			rSet, err := rSets.Get(context.Background(), ref.Name, meta.GetOptions{})
 			if err != nil {
 				return nil, errors.WithStack(err)
 			}
@@ -53,7 +53,7 @@ func GetReplicaSetOwner(kubecli kubernetes.Interface, rSet *appsv1.ReplicaSet, n
 	for _, ref := range rSet.GetOwnerReferences() {
 		if ref.Kind == "Deployment" {
 			depls := kubecli.AppsV1().Deployments(rSet.GetNamespace())
-			depl, err := depls.Get(context.Background(), ref.Name, metav1.GetOptions{})
+			depl, err := depls.Get(context.Background(), ref.Name, meta.GetOptions{})
 			if err != nil {
 				return nil, errors.WithStack(err)
 			}

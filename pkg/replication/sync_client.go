@@ -30,7 +30,7 @@ import (
 	certificates "github.com/arangodb-helper/go-certificates"
 	"github.com/arangodb/arangosync-client/client"
 	"github.com/arangodb/arangosync-client/tasks"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
@@ -108,7 +108,7 @@ func (dr *DeploymentReplication) createArangoSyncEndpoint(epSpec api.EndpointSpe
 	if epSpec.HasDeploymentName() {
 		deploymentName := epSpec.GetDeploymentName()
 		depls := dr.deps.Client.Arango().DatabaseV1().ArangoDeployments(dr.apiObject.GetNamespace())
-		depl, err := depls.Get(context.Background(), deploymentName, metav1.GetOptions{})
+		depl, err := depls.Get(context.Background(), deploymentName, meta.GetOptions{})
 		if err != nil {
 			dr.log.Err(err).Str("deployment", deploymentName).Debug("Failed to get deployment")
 			return nil, errors.WithStack(err)
@@ -167,7 +167,7 @@ func (dr *DeploymentReplication) getEndpointSecretNames(epSpec api.EndpointSpec)
 	if epSpec.HasDeploymentName() {
 		deploymentName := epSpec.GetDeploymentName()
 		depls := dr.deps.Client.Arango().DatabaseV1().ArangoDeployments(dr.apiObject.GetNamespace())
-		depl, err := depls.Get(context.Background(), deploymentName, metav1.GetOptions{})
+		depl, err := depls.Get(context.Background(), deploymentName, meta.GetOptions{})
 		if err != nil {
 			dr.log.Err(err).Str("deployment", deploymentName).Debug("Failed to get deployment")
 			return "", "", "", "", errors.WithStack(err)

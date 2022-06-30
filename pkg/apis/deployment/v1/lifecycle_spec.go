@@ -21,11 +21,11 @@
 package v1
 
 import (
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 )
 
 type LifecycleSpec struct {
-	Resources v1.ResourceRequirements `json:"resources,omitempty"`
+	Resources core.ResourceRequirements `json:"resources,omitempty"`
 }
 
 // SetDefaultsFrom fills unspecified fields with a value from given source spec.

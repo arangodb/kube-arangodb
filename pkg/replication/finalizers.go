@@ -26,7 +26,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/arangosync-client/client"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
@@ -98,7 +98,7 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 	abort := dr.status.CancelFailures > maxCancelFailures
 	depls := dr.deps.Client.Arango().DatabaseV1().ArangoDeployments(p.GetNamespace())
 	if name := p.Spec.Source.GetDeploymentName(); name != "" {
-		depl, err := depls.Get(context.Background(), name, metav1.GetOptions{})
+		depl, err := depls.Get(context.Background(), name, meta.GetOptions{})
 		if k8sutil.IsNotFound(err) {
 			dr.log.Debug("Source deployment is gone. Abort enabled")
 			abort = true
@@ -114,7 +114,7 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 	// Inspect deployment deletion state in destination
 	cleanupSource := false
 	if name := p.Spec.Destination.GetDeploymentName(); name != "" {
-		depl, err := depls.Get(context.Background(), name, metav1.GetOptions{})
+		depl, err := depls.Get(context.Background(), name, meta.GetOptions{})
 		if k8sutil.IsNotFound(err) {
 			dr.log.Debug("Destination deployment is gone. Source cleanup enabled")
 			cleanupSource = true
@@ -166,16 +166,16 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 // removeDeploymentReplicationFinalizers removes the given finalizers from the given DeploymentReplication.
 func removeDeploymentReplicationFinalizers(crcli versioned.Interface, p *api.ArangoDeploymentReplication, finalizers []string, ignoreNotFound bool) error {
 	repls := crcli.ReplicationV1().ArangoDeploymentReplications(p.GetNamespace())
-	getFunc := func() (metav1.Object, error) {
-		result, err := repls.Get(context.Background(), p.GetName(), metav1.GetOptions{})
+	getFunc := func() (meta.Object, error) {
+		result, err := repls.Get(context.Background(), p.GetName(), meta.GetOptions{})
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
 		return result, nil
 	}
-	updateFunc := func(updated metav1.Object) error {
+	updateFunc := func(updated meta.Object) error {
 		updatedRepl := updated.(*api.ArangoDeploymentReplication)
-		result, err := repls.Update(context.Background(), updatedRepl, metav1.UpdateOptions{})
+		result, err := repls.Update(context.Background(), updatedRepl, meta.UpdateOptions{})
 		if err != nil {
 			return errors.WithStack(err)
 		}

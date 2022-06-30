@@ -24,7 +24,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 	"github.com/stretchr/testify/require"
@@ -32,23 +32,23 @@ import (
 
 // TestIsPodReady tests IsPodReady.
 func TestIsPodReady(t *testing.T) {
-	assert.False(t, IsPodReady(&v1.Pod{}))
-	assert.False(t, IsPodReady(&v1.Pod{
-		Status: v1.PodStatus{
-			Conditions: []v1.PodCondition{
-				v1.PodCondition{
-					Type:   v1.PodReady,
-					Status: v1.ConditionFalse,
+	assert.False(t, IsPodReady(&core.Pod{}))
+	assert.False(t, IsPodReady(&core.Pod{
+		Status: core.PodStatus{
+			Conditions: []core.PodCondition{
+				core.PodCondition{
+					Type:   core.PodReady,
+					Status: core.ConditionFalse,
 				},
 			},
 		},
 	}))
-	assert.True(t, IsPodReady(&v1.Pod{
-		Status: v1.PodStatus{
-			Conditions: []v1.PodCondition{
-				v1.PodCondition{
-					Type:   v1.PodReady,
-					Status: v1.ConditionTrue,
+	assert.True(t, IsPodReady(&core.Pod{
+		Status: core.PodStatus{
+			Conditions: []core.PodCondition{
+				core.PodCondition{
+					Type:   core.PodReady,
+					Status: core.ConditionTrue,
 				},
 			},
 		},
@@ -58,7 +58,7 @@ func TestIsPodReady(t *testing.T) {
 // TestIsPodFailed tests IsPodFailed.
 func TestIsPodFailed(t *testing.T) {
 	type args struct {
-		pod            *v1.Pod
+		pod            *core.Pod
 		coreContainers utils.StringList
 	}
 	tests := map[string]struct {
@@ -67,23 +67,23 @@ func TestIsPodFailed(t *testing.T) {
 	}{
 		"empty pod": {
 			args: args{
-				pod: &v1.Pod{},
+				pod: &core.Pod{},
 			},
 		},
 		"pod is running": {
 			args: args{
-				pod: &v1.Pod{
-					Status: v1.PodStatus{
-						Phase: v1.PodRunning,
+				pod: &core.Pod{
+					Status: core.PodStatus{
+						Phase: core.PodRunning,
 					},
 				},
 			},
 		},
 		"pod is failed": {
 			args: args{
-				pod: &v1.Pod{
-					Status: v1.PodStatus{
-						Phase: v1.PodFailed,
+				pod: &core.Pod{
+					Status: core.PodStatus{
+						Phase: core.PodFailed,
 					},
 				},
 			},
@@ -91,13 +91,13 @@ func TestIsPodFailed(t *testing.T) {
 		},
 		"one core container failed": {
 			args: args{
-				pod: &v1.Pod{
-					Status: v1.PodStatus{
-						ContainerStatuses: []v1.ContainerStatus{
+				pod: &core.Pod{
+					Status: core.PodStatus{
+						ContainerStatuses: []core.ContainerStatus{
 							{
 								Name: "core_container",
-								State: v1.ContainerState{
-									Terminated: &v1.ContainerStateTerminated{
+								State: core.ContainerState{
+									Terminated: &core.ContainerStateTerminated{
 										ExitCode: 1,
 									},
 								},
@@ -111,13 +111,13 @@ func TestIsPodFailed(t *testing.T) {
 		},
 		"one non-core container failed": {
 			args: args{
-				pod: &v1.Pod{
-					Status: v1.PodStatus{
-						ContainerStatuses: []v1.ContainerStatus{
+				pod: &core.Pod{
+					Status: core.PodStatus{
+						ContainerStatuses: []core.ContainerStatus{
 							{
 								Name: "non_core_container",
-								State: v1.ContainerState{
-									Terminated: &v1.ContainerStateTerminated{
+								State: core.ContainerState{
+									Terminated: &core.ContainerStateTerminated{
 										ExitCode: 1,
 									},
 								},
@@ -130,13 +130,13 @@ func TestIsPodFailed(t *testing.T) {
 		},
 		"one core container succeeded": {
 			args: args{
-				pod: &v1.Pod{
-					Status: v1.PodStatus{
-						ContainerStatuses: []v1.ContainerStatus{
+				pod: &core.Pod{
+					Status: core.PodStatus{
+						ContainerStatuses: []core.ContainerStatus{
 							{
 								Name: "core_container",
-								State: v1.ContainerState{
-									Terminated: &v1.ContainerStateTerminated{
+								State: core.ContainerState{
+									Terminated: &core.ContainerStateTerminated{
 										ExitCode: 0,
 									},
 								},
@@ -149,19 +149,19 @@ func TestIsPodFailed(t *testing.T) {
 		},
 		"first core container succeeded and second is still running": {
 			args: args{
-				pod: &v1.Pod{
-					Status: v1.PodStatus{
-						ContainerStatuses: []v1.ContainerStatus{
+				pod: &core.Pod{
+					Status: core.PodStatus{
+						ContainerStatuses: []core.ContainerStatus{
 							{
 								Name: "core_container1",
-								State: v1.ContainerState{
-									Running: &v1.ContainerStateRunning{},
+								State: core.ContainerState{
+									Running: &core.ContainerStateRunning{},
 								},
 							},
 							{
 								Name: "core_container2",
-								State: v1.ContainerState{
-									Terminated: &v1.ContainerStateTerminated{
+								State: core.ContainerState{
+									Terminated: &core.ContainerStateTerminated{
 										ExitCode: 0,
 									},
 								},
@@ -175,21 +175,21 @@ func TestIsPodFailed(t *testing.T) {
 		},
 		"all containers succeeded": {
 			args: args{
-				pod: &v1.Pod{
-					Status: v1.PodStatus{
-						ContainerStatuses: []v1.ContainerStatus{
+				pod: &core.Pod{
+					Status: core.PodStatus{
+						ContainerStatuses: []core.ContainerStatus{
 							{
 								Name: "core_container1",
-								State: v1.ContainerState{
-									Terminated: &v1.ContainerStateTerminated{
+								State: core.ContainerState{
+									Terminated: &core.ContainerStateTerminated{
 										ExitCode: 0,
 									},
 								},
 							},
 							{
 								Name: "core_container2",
-								State: v1.ContainerState{
-									Terminated: &v1.ContainerStateTerminated{
+								State: core.ContainerState{
+									Terminated: &core.ContainerStateTerminated{
 										ExitCode: 0,
 									},
 								},
@@ -212,7 +212,7 @@ func TestIsPodFailed(t *testing.T) {
 
 func TestIsPodSucceeded(t *testing.T) {
 	type args struct {
-		pod            *v1.Pod
+		pod            *core.Pod
 		coreContainers utils.StringList
 	}
 	tests := map[string]struct {
@@ -221,14 +221,14 @@ func TestIsPodSucceeded(t *testing.T) {
 	}{
 		"empty pod": {
 			args: args{
-				pod: &v1.Pod{},
+				pod: &core.Pod{},
 			},
 		},
 		"pod is succeeded": {
 			args: args{
-				pod: &v1.Pod{
-					Status: v1.PodStatus{
-						Phase: v1.PodSucceeded,
+				pod: &core.Pod{
+					Status: core.PodStatus{
+						Phase: core.PodSucceeded,
 					},
 				},
 			},
@@ -236,21 +236,21 @@ func TestIsPodSucceeded(t *testing.T) {
 		},
 		"all core containers succeeded": {
 			args: args{
-				pod: &v1.Pod{
-					Status: v1.PodStatus{
-						ContainerStatuses: []v1.ContainerStatus{
+				pod: &core.Pod{
+					Status: core.PodStatus{
+						ContainerStatuses: []core.ContainerStatus{
 							{
 								Name: "core_container1",
-								State: v1.ContainerState{
-									Terminated: &v1.ContainerStateTerminated{
+								State: core.ContainerState{
+									Terminated: &core.ContainerStateTerminated{
 										ExitCode: 0,
 									},
 								},
 							},
 							{
 								Name: "core_container2",
-								State: v1.ContainerState{
-									Terminated: &v1.ContainerStateTerminated{
+								State: core.ContainerState{
+									Terminated: &core.ContainerStateTerminated{
 										ExitCode: 0,
 									},
 								},
@@ -267,16 +267,16 @@ func TestIsPodSucceeded(t *testing.T) {
 		},
 		"non-core container succeeded": {
 			args: args{
-				pod: &v1.Pod{
-					Status: v1.PodStatus{
-						ContainerStatuses: []v1.ContainerStatus{
+				pod: &core.Pod{
+					Status: core.PodStatus{
+						ContainerStatuses: []core.ContainerStatus{
 							{
 								Name: "core_container1",
 							},
 							{
 								Name: "non-core_container",
-								State: v1.ContainerState{
-									Terminated: &v1.ContainerStateTerminated{
+								State: core.ContainerState{
+									Terminated: &core.ContainerStateTerminated{
 										ExitCode: 0,
 									},
 								},
@@ -289,13 +289,13 @@ func TestIsPodSucceeded(t *testing.T) {
 		},
 		"the only one core container succeeded": {
 			args: args{
-				pod: &v1.Pod{
-					Status: v1.PodStatus{
-						ContainerStatuses: []v1.ContainerStatus{
+				pod: &core.Pod{
+					Status: core.PodStatus{
+						ContainerStatuses: []core.ContainerStatus{
 							{
 								Name: "core_container1",
-								State: v1.ContainerState{
-									Terminated: &v1.ContainerStateTerminated{
+								State: core.ContainerState{
+									Terminated: &core.ContainerStateTerminated{
 										ExitCode: 0,
 									},
 								},

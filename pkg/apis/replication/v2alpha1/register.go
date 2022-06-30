@@ -22,7 +22,7 @@ package v2alpha1
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/replication"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
@@ -50,6 +50,6 @@ func addKnownTypes(s *runtime.Scheme) error {
 		&ArangoDeploymentReplication{},
 		&ArangoDeploymentReplicationList{},
 	)
-	metav1.AddToGroupVersion(s, SchemeGroupVersion)
+	meta.AddToGroupVersion(s, SchemeGroupVersion)
 	return nil
 }

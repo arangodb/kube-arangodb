@@ -25,7 +25,7 @@ import (
 	"sort"
 
 	core "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
@@ -190,7 +190,7 @@ func (d *Deployment) StorageClasses() []string {
 // Empty string means that the database is not reachable outside the Kubernetes cluster.
 func (d *Deployment) DatabaseURL() string {
 	eaSvcName := k8sutil.CreateDatabaseExternalAccessServiceName(d.Name())
-	svc, err := d.acs.CurrentClusterCache().Service().V1().Read().Get(context.Background(), eaSvcName, metav1.GetOptions{})
+	svc, err := d.acs.CurrentClusterCache().Service().V1().Read().Get(context.Background(), eaSvcName, meta.GetOptions{})
 	if err != nil {
 		return ""
 	}

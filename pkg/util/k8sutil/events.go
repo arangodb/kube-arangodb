@@ -26,8 +26,8 @@ import (
 
 	driver "github.com/arangodb/go-driver"
 	upgraderules "github.com/arangodb/go-upgrade-rules"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -42,15 +42,15 @@ type Event struct {
 // APIObject helps to abstract an object from our custom API.
 type APIObject interface {
 	runtime.Object
-	metav1.Object
+	meta.Object
 	// AsOwner creates an OwnerReference for the given deployment
-	AsOwner() metav1.OwnerReference
+	AsOwner() meta.OwnerReference
 }
 
 // NewMemberAddEvent creates an event indicating that a member was added.
 func NewMemberAddEvent(memberName, role string, apiObject APIObject) *Event {
 	event := newDeploymentEvent(apiObject)
-	event.Type = v1.EventTypeNormal
+	event.Type = core.EventTypeNormal
 	event.Reason = fmt.Sprintf("New %s Added", strings.Title(role))
 	event.Message = fmt.Sprintf("New %s %s added to deployment", role, memberName)
 	return event
@@ -59,7 +59,7 @@ func NewMemberAddEvent(memberName, role string, apiObject APIObject) *Event {
 // NewMemberRemoveEvent creates an event indicating that an existing member was removed.
 func NewMemberRemoveEvent(memberName, role string, apiObject APIObject) *Event {
 	event := newDeploymentEvent(apiObject)
-	event.Type = v1.EventTypeNormal
+	event.Type = core.EventTypeNormal
 	event.Reason = fmt.Sprintf("%s Removed", strings.Title(role))
 	event.Message = fmt.Sprintf("Existing %s %s removed from the deployment", role, memberName)
 	return event
@@ -68,7 +68,7 @@ func NewMemberRemoveEvent(memberName, role string, apiObject APIObject) *Event {
 // NewPodCreatedEvent creates an event indicating that a pod has been created
 func NewPodCreatedEvent(podName, role string, apiObject APIObject) *Event {
 	event := newDeploymentEvent(apiObject)
-	event.Type = v1.EventTypeNormal
+	event.Type = core.EventTypeNormal
 	event.Reason = fmt.Sprintf("Pod Of %s Created", strings.Title(role))
 	event.Message = fmt.Sprintf("Pod %s of member %s is created", podName, role)
 	return event
@@ -77,7 +77,7 @@ func NewPodCreatedEvent(podName, role string, apiObject APIObject) *Event {
 // NewPodGoneEvent creates an event indicating that a pod is missing
 func NewPodGoneEvent(podName, role string, apiObject APIObject) *Event {
 	event := newDeploymentEvent(apiObject)
-	event.Type = v1.EventTypeNormal
+	event.Type = core.EventTypeNormal
 	event.Reason = fmt.Sprintf("Pod Of %s Gone", strings.Title(role))
 	event.Message = fmt.Sprintf("Pod %s of member %s is gone", podName, role)
 	return event
@@ -87,7 +87,7 @@ func NewPodGoneEvent(podName, role string, apiObject APIObject) *Event {
 // that is immutable.
 func NewImmutableFieldEvent(fieldName string, apiObject APIObject) *Event {
 	event := newDeploymentEvent(apiObject)
-	event.Type = v1.EventTypeNormal
+	event.Type = core.EventTypeNormal
 	event.Reason = "Immutable Field Change"
 	event.Message = fmt.Sprintf("Changing field %s is not possible. It has been reset to its original value.", fieldName)
 	return event
@@ -96,7 +96,7 @@ func NewImmutableFieldEvent(fieldName string, apiObject APIObject) *Event {
 // NewPodsSchedulingFailureEvent creates an event indicating that one of more cannot be scheduled.
 func NewPodsSchedulingFailureEvent(unscheduledPodNames []string, apiObject APIObject) *Event {
 	event := newDeploymentEvent(apiObject)
-	event.Type = v1.EventTypeNormal
+	event.Type = core.EventTypeNormal
 	event.Reason = "Pods Scheduling Failure"
 	event.Message = fmt.Sprintf("One or more pods are not scheduled in time. Pods: %v", unscheduledPodNames)
 	return event
@@ -106,7 +106,7 @@ func NewPodsSchedulingFailureEvent(unscheduledPodNames []string, apiObject APIOb
 // pod scheduling has been resolved.
 func NewPodsSchedulingResolvedEvent(apiObject APIObject) *Event {
 	event := newDeploymentEvent(apiObject)
-	event.Type = v1.EventTypeNormal
+	event.Type = core.EventTypeNormal
 	event.Reason = "Pods Scheduling Resolved"
 	event.Message = "All pods have been scheduled"
 	return event
@@ -115,7 +115,7 @@ func NewPodsSchedulingResolvedEvent(apiObject APIObject) *Event {
 // NewSecretsChangedEvent creates an event indicating that one of more secrets have changed.
 func NewSecretsChangedEvent(changedSecretNames []string, apiObject APIObject) *Event {
 	event := newDeploymentEvent(apiObject)
-	event.Type = v1.EventTypeNormal
+	event.Type = core.EventTypeNormal
 	event.Reason = "Secrets changed"
 	event.Message = fmt.Sprintf("Found %d changed secrets. You must revert them before the operator can continue. Secrets: %v", len(changedSecretNames), changedSecretNames)
 	return event
@@ -125,7 +125,7 @@ func NewSecretsChangedEvent(changedSecretNames []string, apiObject APIObject) *E
 // to their original values.
 func NewSecretsRestoredEvent(apiObject APIObject) *Event {
 	event := newDeploymentEvent(apiObject)
-	event.Type = v1.EventTypeNormal
+	event.Type = core.EventTypeNormal
 	event.Reason = "Secrets restored"
 	event.Message = "All secrets have been restored to their original value"
 	return event
@@ -135,7 +135,7 @@ func NewSecretsRestoredEvent(apiObject APIObject) *Event {
 // has been created.
 func NewAccessPackageCreatedEvent(apiObject APIObject, apSecretName string) *Event {
 	event := newDeploymentEvent(apiObject)
-	event.Type = v1.EventTypeNormal
+	event.Type = core.EventTypeNormal
 	event.Reason = "Access package created"
 	event.Message = fmt.Sprintf("An access package named %s has been created", apSecretName)
 	return event
@@ -145,7 +145,7 @@ func NewAccessPackageCreatedEvent(apiObject APIObject, apSecretName string) *Eve
 // has been deleted.
 func NewAccessPackageDeletedEvent(apiObject APIObject, apSecretName string) *Event {
 	event := newDeploymentEvent(apiObject)
-	event.Type = v1.EventTypeNormal
+	event.Type = core.EventTypeNormal
 	event.Reason = "Access package deleted"
 	event.Message = fmt.Sprintf("An access package named %s has been deleted", apSecretName)
 	return event
@@ -154,7 +154,7 @@ func NewAccessPackageDeletedEvent(apiObject APIObject, apSecretName string) *Eve
 // NewPlanAppendEvent creates an event indicating that an item on a reconciliation plan has been added
 func NewPlanAppendEvent(apiObject APIObject, itemType, memberID, role, reason string) *Event {
 	event := newDeploymentEvent(apiObject)
-	event.Type = v1.EventTypeNormal
+	event.Type = core.EventTypeNormal
 	event.Reason = "Plan Action added"
 	msg := fmt.Sprintf("A plan item of type %s", itemType)
 	if role != "" {
@@ -172,7 +172,7 @@ func NewPlanAppendEvent(apiObject APIObject, itemType, memberID, role, reason st
 // finish before its deadline.
 func NewPlanTimeoutEvent(apiObject APIObject, itemType, memberID, role string) *Event {
 	event := newDeploymentEvent(apiObject)
-	event.Type = v1.EventTypeNormal
+	event.Type = core.EventTypeNormal
 	event.Reason = "Reconciliation Plan Timeout"
 	event.Message = fmt.Sprintf("A plan item of type %s or member %s with role %s did not finish in time", itemType, memberID, role)
 	return event
@@ -182,7 +182,7 @@ func NewPlanTimeoutEvent(apiObject APIObject, itemType, memberID, role string) *
 // the entire plan.
 func NewPlanAbortedEvent(apiObject APIObject, itemType, memberID, role string) *Event {
 	event := newDeploymentEvent(apiObject)
-	event.Type = v1.EventTypeNormal
+	event.Type = core.EventTypeNormal
 	event.Reason = "Reconciliation Plan Aborted"
 	event.Message = fmt.Sprintf("A plan item of type %s or member %s with role %s wants to abort the plan", itemType, memberID, role)
 	return event
@@ -192,7 +192,7 @@ func NewPlanAbortedEvent(apiObject APIObject, itemType, memberID, role string) *
 // but this is not possible for the given reason.
 func NewCannotChangeStorageClassEvent(apiObject APIObject, memberID, role, subReason string) *Event {
 	event := newDeploymentEvent(apiObject)
-	event.Type = v1.EventTypeNormal
+	event.Type = core.EventTypeNormal
 	event.Reason = fmt.Sprintf("%s Member StorageClass Cannot Change", strings.Title(role))
 	event.Message = fmt.Sprintf("Member %s with role %s should use a different StorageClass, but is cannot because: %s", memberID, role, subReason)
 	return event
@@ -202,7 +202,7 @@ func NewCannotChangeStorageClassEvent(apiObject APIObject, memberID, role, subRe
 // is currently not allowed.
 func NewDowntimeNotAllowedEvent(apiObject APIObject, operation string) *Event {
 	event := newDeploymentEvent(apiObject)
-	event.Type = v1.EventTypeNormal
+	event.Type = core.EventTypeNormal
 	event.Reason = "Downtime Operation Postponed"
 	event.Message = fmt.Sprintf("The '%s' operation is postponed because downtime it not allowed. Set `spec.downtimeAllowed` to true to execute this operation", operation)
 	return event
@@ -211,7 +211,7 @@ func NewDowntimeNotAllowedEvent(apiObject APIObject, operation string) *Event {
 // NewPVCResizedEvent creates an event indicating that a PVC has been resized
 func NewPVCResizedEvent(apiObject APIObject, pvcname string) *Event {
 	event := newDeploymentEvent(apiObject)
-	event.Type = v1.EventTypeNormal
+	event.Type = core.EventTypeNormal
 	event.Reason = "PVC Resized"
 	event.Message = fmt.Sprintf("The persistent volume claim %s has been resized", pvcname)
 	return event
@@ -220,7 +220,7 @@ func NewPVCResizedEvent(apiObject APIObject, pvcname string) *Event {
 // NewCannotShrinkVolumeEvent creates an event indicating that the user tried to shrink a PVC
 func NewCannotShrinkVolumeEvent(apiObject APIObject, pvcname string) *Event {
 	event := newDeploymentEvent(apiObject)
-	event.Type = v1.EventTypeNormal
+	event.Type = core.EventTypeNormal
 	event.Reason = "PVC Shrinked"
 	event.Message = fmt.Sprintf("The persistent volume claim %s can not be shrinked", pvcname)
 	return event
@@ -231,7 +231,7 @@ func NewUpgradeNotAllowedEvent(apiObject APIObject,
 	fromVersion, toVersion driver.Version,
 	fromLicense, toLicense upgraderules.License) *Event {
 	event := newDeploymentEvent(apiObject)
-	event.Type = v1.EventTypeNormal
+	event.Type = core.EventTypeNormal
 	formatLicense := func(l upgraderules.License) string {
 		if l == upgraderules.LicenseCommunity {
 			return "Community Edition"
@@ -259,7 +259,7 @@ func NewUpgradeNotAllowedEvent(apiObject APIObject,
 // NewErrorEvent creates an even of type error.
 func NewErrorEvent(reason string, err error, apiObject APIObject) *Event {
 	event := newDeploymentEvent(apiObject)
-	event.Type = v1.EventTypeWarning
+	event.Type = core.EventTypeWarning
 	event.Reason = strings.Title(reason)
 	event.Message = err.Error()
 	return event

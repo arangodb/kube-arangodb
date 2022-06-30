@@ -61,8 +61,8 @@ import (
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
 	v1core "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -448,7 +448,7 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 func getMyPodInfo(kubecli kubernetes.Interface, namespace, name string) (string, string, error) {
 	var image, sa string
 	op := func() error {
-		pod, err := kubecli.CoreV1().Pods(namespace).Get(context.Background(), name, metav1.GetOptions{})
+		pod, err := kubecli.CoreV1().Pods(namespace).Get(context.Background(), name, meta.GetOptions{})
 		if err != nil {
 			logger.
 				Err(err).
@@ -480,7 +480,7 @@ func createRecorder(kubecli kubernetes.Interface, name, namespace string) record
 	eventBroadcaster.StartRecordingToSink(&v1core.EventSinkImpl{Interface: v1core.New(kubecli.CoreV1().RESTClient()).Events(namespace)})
 	combinedScheme := runtime.NewScheme()
 	scheme.AddToScheme(combinedScheme)
-	v1.AddToScheme(combinedScheme)
+	core.AddToScheme(combinedScheme)
 	appsv1.AddToScheme(combinedScheme)
-	return eventBroadcaster.NewRecorder(combinedScheme, v1.EventSource{Component: name})
+	return eventBroadcaster.NewRecorder(combinedScheme, core.EventSource{Component: name})
 }

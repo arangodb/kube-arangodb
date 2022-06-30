@@ -27,15 +27,15 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 var apiObjectForTest = api.ArangoDeployment{
-	ObjectMeta: metav1.ObjectMeta{
+	ObjectMeta: meta.ObjectMeta{
 		Name:      "Willy",
 		Namespace: "Wonka",
 	},
@@ -48,32 +48,32 @@ func TestMemberAddEvent(t *testing.T) {
 	event := k8sutil.NewMemberAddEvent("name", "role", &apiObjectForTest)
 	assert.Equal(t, event.Reason, "New Role Added")
 	assert.Equal(t, event.Message, "New role name added to deployment")
-	assert.Equal(t, event.Type, v1.EventTypeNormal)
+	assert.Equal(t, event.Type, core.EventTypeNormal)
 }
 
 func TestMemberRemoveEvent(t *testing.T) {
 	event := k8sutil.NewMemberRemoveEvent("name", "role", &apiObjectForTest)
 	assert.Equal(t, event.Reason, "Role Removed")
 	assert.Equal(t, event.Message, "Existing role name removed from the deployment")
-	assert.Equal(t, event.Type, v1.EventTypeNormal)
+	assert.Equal(t, event.Type, core.EventTypeNormal)
 }
 
 func TestPodGoneEvent(t *testing.T) {
 	event := k8sutil.NewPodGoneEvent("name", "role", &apiObjectForTest)
 	assert.Equal(t, event.Reason, "Pod Of Role Gone")
 	assert.Equal(t, event.Message, "Pod name of member role is gone")
-	assert.Equal(t, event.Type, v1.EventTypeNormal)
+	assert.Equal(t, event.Type, core.EventTypeNormal)
 }
 
 func TestImmutableFieldEvent(t *testing.T) {
 	event := k8sutil.NewImmutableFieldEvent("name", &apiObjectForTest)
 	assert.Equal(t, event.Reason, "Immutable Field Change")
 	assert.Equal(t, event.Message, "Changing field name is not possible. It has been reset to its original value.")
-	assert.Equal(t, event.Type, v1.EventTypeNormal)
+	assert.Equal(t, event.Type, core.EventTypeNormal)
 }
 
 func TestErrorEvent(t *testing.T) {
 	event := k8sutil.NewErrorEvent("reason", errors.New("something"), &apiObjectForTest)
 	assert.Equal(t, event.Reason, "Reason")
-	assert.Equal(t, event.Type, v1.EventTypeWarning)
+	assert.Equal(t, event.Type, core.EventTypeWarning)
 }

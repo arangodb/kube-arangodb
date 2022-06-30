@@ -28,8 +28,8 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/leaderelection"
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
@@ -54,7 +54,7 @@ func (o *Operator) runLeaderElection(lockName, label string, onStart func(stop <
 	eventTarget := o.getLeaderElectionEventTarget(log)
 	recordEvent := func(reason, message string) {
 		if eventTarget != nil {
-			o.Dependencies.EventRecorder.Event(eventTarget, v1.EventTypeNormal, reason, message)
+			o.Dependencies.EventRecorder.Event(eventTarget, core.EventTypeNormal, reason, message)
 		}
 	}
 	rl, err := resourcelock.New(resourcelock.EndpointsResourceLock,
@@ -104,7 +104,7 @@ func (o *Operator) runWithoutLeaderElection(lockName, label string, onStart func
 	eventTarget := o.getLeaderElectionEventTarget(log)
 	recordEvent := func(reason, message string) {
 		if eventTarget != nil {
-			o.Dependencies.EventRecorder.Event(eventTarget, v1.EventTypeNormal, reason, message)
+			o.Dependencies.EventRecorder.Event(eventTarget, core.EventTypeNormal, reason, message)
 		}
 	}
 	ctx := context.Background()
@@ -125,7 +125,7 @@ func (o *Operator) getLeaderElectionEventTarget(log logging.Logger) runtime.Obje
 	kubecli := o.Dependencies.Client.Kubernetes()
 	pods := kubecli.CoreV1().Pods(ns)
 	log = log.Str("pod-name", o.Config.PodName)
-	pod, err := pods.Get(context.Background(), o.Config.PodName, metav1.GetOptions{})
+	pod, err := pods.Get(context.Background(), o.Config.PodName, meta.GetOptions{})
 	if err != nil {
 		log.Err(err).Error("Cannot find Pod containing this operator")
 		return nil
@@ -159,7 +159,7 @@ func (o *Operator) setRoleLabel(log logging.Logger, label, role string) error {
 	pods := kubecli.CoreV1().Pods(ns)
 	log = log.Str("pod-name", o.Config.PodName)
 	op := func() error {
-		pod, err := pods.Get(context.Background(), o.Config.PodName, metav1.GetOptions{})
+		pod, err := pods.Get(context.Background(), o.Config.PodName, meta.GetOptions{})
 		if k8sutil.IsNotFound(err) {
 			log.Err(err).Error("Pod not found, so we cannot set its role label")
 			return retry.Permanent(errors.WithStack(err))
@@ -172,7 +172,7 @@ func (o *Operator) setRoleLabel(log logging.Logger, label, role string) error {
 		}
 		labels[label] = role
 		pod.ObjectMeta.SetLabels(labels)
-		if _, err := pods.Update(context.Background(), pod, metav1.UpdateOptions{}); k8sutil.IsConflict(err) {
+		if _, err := pods.Update(context.Background(), pod, meta.UpdateOptions{}); k8sutil.IsConflict(err) {
 			// Retry it
 			return errors.WithStack(err)
 		} else if err != nil {

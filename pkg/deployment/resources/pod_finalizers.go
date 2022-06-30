@@ -28,7 +28,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -45,7 +45,7 @@ const (
 
 // runPodFinalizers goes through the list of pod finalizers to see if they can be removed.
 // Returns: Interval_till_next_inspection, error
-func (r *Resources) runPodFinalizers(ctx context.Context, p *v1.Pod, memberStatus api.MemberStatus, updateMember func(api.MemberStatus) error) (util.Interval, error) {
+func (r *Resources) runPodFinalizers(ctx context.Context, p *core.Pod, memberStatus api.MemberStatus, updateMember func(api.MemberStatus) error) (util.Interval, error) {
 	log := r.log.Str("section", "pod").Str("pod-name", p.GetName())
 	var removalList []string
 
@@ -130,7 +130,7 @@ func (r *Resources) runPodFinalizers(ctx context.Context, p *v1.Pod, memberStatu
 
 // inspectFinalizerPodAgencyServing checks the finalizer condition for agency-serving.
 // It returns nil if the finalizer can be removed.
-func (r *Resources) inspectFinalizerPodAgencyServing(ctx context.Context, p *v1.Pod, memberStatus api.MemberStatus, updateMember func(api.MemberStatus) error) error {
+func (r *Resources) inspectFinalizerPodAgencyServing(ctx context.Context, p *core.Pod, memberStatus api.MemberStatus, updateMember func(api.MemberStatus) error) error {
 	log := r.log.Str("section", "agency")
 	if err := r.prepareAgencyPodTermination(p, memberStatus, func(update api.MemberStatus) error {
 		if err := updateMember(update); err != nil {
@@ -161,7 +161,7 @@ func (r *Resources) inspectFinalizerPodAgencyServing(ctx context.Context, p *v1.
 
 // inspectFinalizerPodDrainDBServer checks the finalizer condition for drain-dbserver.
 // It returns nil if the finalizer can be removed.
-func (r *Resources) inspectFinalizerPodDrainDBServer(ctx context.Context, p *v1.Pod, memberStatus api.MemberStatus, updateMember func(api.MemberStatus) error) error {
+func (r *Resources) inspectFinalizerPodDrainDBServer(ctx context.Context, p *core.Pod, memberStatus api.MemberStatus, updateMember func(api.MemberStatus) error) error {
 	log := r.log.Str("section", "pod")
 	if err := r.prepareDBServerPodTermination(ctx, p, memberStatus, func(update api.MemberStatus) error {
 		if err := updateMember(update); err != nil {

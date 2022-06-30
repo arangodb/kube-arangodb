@@ -25,7 +25,7 @@ import (
 	"fmt"
 	"time"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
@@ -252,7 +252,7 @@ func (d *Reconciler) executePlan(ctx context.Context, statusPlan api.Plan, pg pl
 				actionsCurrentPlan.WithLabelValues(d.context.GetName(), planAction.Group.AsRole(), planAction.MemberID,
 					planAction.Type.String(), pg.Type()).Inc()
 
-				now := metav1.Now()
+				now := meta.Now()
 				plan[0].StartTime = &now
 			}
 

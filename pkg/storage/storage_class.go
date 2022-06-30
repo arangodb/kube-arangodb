@@ -24,9 +24,9 @@ import (
 	"context"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	corev1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 	v1 "k8s.io/api/storage/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -41,9 +41,9 @@ var (
 func (l *LocalStorage) ensureStorageClass(apiObject *api.ArangoLocalStorage) error {
 	spec := apiObject.Spec.StorageClass
 	bindingMode := v1.VolumeBindingWaitForFirstConsumer
-	reclaimPolicy := corev1.PersistentVolumeReclaimRetain
+	reclaimPolicy := core.PersistentVolumeReclaimRetain
 	sc := &v1.StorageClass{
-		ObjectMeta: metav1.ObjectMeta{
+		ObjectMeta: meta.ObjectMeta{
 			Name: spec.Name,
 		},
 		ReclaimPolicy:     &reclaimPolicy,
@@ -53,7 +53,7 @@ func (l *LocalStorage) ensureStorageClass(apiObject *api.ArangoLocalStorage) err
 	// Note: We do not attach the StorageClass to the apiObject (OwnerRef) because many
 	// ArangoLocalStorage resource may use the same StorageClass.
 	cli := l.deps.Client.Kubernetes().StorageV1()
-	if _, err := cli.StorageClasses().Create(context.Background(), sc, metav1.CreateOptions{}); k8sutil.IsAlreadyExists(err) {
+	if _, err := cli.StorageClasses().Create(context.Background(), sc, meta.CreateOptions{}); k8sutil.IsAlreadyExists(err) {
 		l.log.
 			Str("storageclass", sc.GetName()).
 			Debug("StorageClass already exists")
@@ -70,7 +70,7 @@ func (l *LocalStorage) ensureStorageClass(apiObject *api.ArangoLocalStorage) err
 
 	if apiObject.Spec.StorageClass.IsDefault {
 		// UnMark current default (if any)
-		list, err := cli.StorageClasses().List(context.Background(), metav1.ListOptions{})
+		list, err := cli.StorageClasses().List(context.Background(), meta.ListOptions{})
 		if err != nil {
 			l.log.Err(err).Debug("Listing StorageClasses failed")
 			return errors.WithStack(err)

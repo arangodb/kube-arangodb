@@ -23,7 +23,7 @@ package v2alpha1
 import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 )
 
 // ExternalAccessType specifies the type of external access provides for the deployment
@@ -47,12 +47,12 @@ func (t ExternalAccessType) IsNodePort() bool     { return t == ExternalAccessTy
 
 // AsServiceType returns the k8s ServiceType for this ExternalAccessType.
 // If type is "Auto", ServiceTypeLoadBalancer is returned.
-func (t ExternalAccessType) AsServiceType() v1.ServiceType {
+func (t ExternalAccessType) AsServiceType() core.ServiceType {
 	switch t {
 	case ExternalAccessTypeLoadBalancer, ExternalAccessTypeAuto:
-		return v1.ServiceTypeLoadBalancer
+		return core.ServiceTypeLoadBalancer
 	case ExternalAccessTypeNodePort:
-		return v1.ServiceTypeNodePort
+		return core.ServiceTypeNodePort
 	default:
 		return ""
 	}

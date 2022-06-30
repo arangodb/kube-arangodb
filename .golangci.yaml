@@ -1,0 +1,34 @@
+---
+
+run:
+  issues-exit-code: 3
+  timeout: 30m
+  skip-dirs:
+    - vendor
+    - .gobuild
+    - deps
+    - tools
+
+linters:
+  disable-all: true
+  enable:
+    - deadcode
+    - gosimple 
+    - govet 
+    - ineffassign 
+    - staticcheck 
+    - structcheck 
+    - typecheck 
+    - unconvert 
+    - unparam 
+    - unused 
+    - varcheck
+    - importas
+
+linters-settings:
+  importas:
+    alias:
+      - pkg: k8s.io/api/core/v1
+        alias: core
+      - pkg: k8s.io/apimachinery/pkg/apis/meta/v1
+        alias: meta

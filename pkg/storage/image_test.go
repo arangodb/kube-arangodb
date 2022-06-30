@@ -27,8 +27,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // TestGetMyImage tests getMyImage() method
@@ -36,23 +36,23 @@ func TestGetMyImage(t *testing.T) {
 	testNamespace := "testNs"
 	testPodName := "testPodname"
 	testImage := "test-image"
-	testPullSecrets := []v1.LocalObjectReference{
+	testPullSecrets := []core.LocalObjectReference{
 		{
 			Name: "custom-docker",
 		},
 	}
 
-	pod := v1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
+	pod := core.Pod{
+		ObjectMeta: meta.ObjectMeta{
 			Name:      testPodName,
 			Namespace: testNamespace,
 		},
-		Spec: v1.PodSpec{
-			Containers: []v1.Container{
+		Spec: core.PodSpec{
+			Containers: []core.Container{
 				{
 					Name:            "test",
 					Image:           testImage,
-					ImagePullPolicy: v1.PullAlways,
+					ImagePullPolicy: core.PullAlways,
 				},
 			},
 			ImagePullSecrets: testPullSecrets,
@@ -70,13 +70,13 @@ func TestGetMyImage(t *testing.T) {
 	}
 
 	// prepare mock
-	if _, err := ls.deps.Client.Kubernetes().CoreV1().Pods(testNamespace).Create(context.Background(), &pod, metav1.CreateOptions{}); err != nil {
+	if _, err := ls.deps.Client.Kubernetes().CoreV1().Pods(testNamespace).Create(context.Background(), &pod, meta.CreateOptions{}); err != nil {
 		require.NoError(t, err)
 	}
 
 	image, pullPolicy, pullSecrets, err := ls.getMyImage()
 	require.NoError(t, err)
 	require.Equal(t, image, testImage)
-	require.Equal(t, pullPolicy, v1.PullAlways)
+	require.Equal(t, pullPolicy, core.PullAlways)
 	require.Equal(t, pullSecrets, testPullSecrets)
 }

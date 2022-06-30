@@ -24,7 +24,7 @@ package v2alpha1
 import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 )
 
 // MetricsAuthenticationSpec contains spec for authentication with arangodb
@@ -74,7 +74,7 @@ type MetricsSpec struct {
 	// deprecated
 	Image          *string                   `json:"image,omitempty"`
 	Authentication MetricsAuthenticationSpec `json:"authentication,omitempty"`
-	Resources      v1.ResourceRequirements   `json:"resources,omitempty"`
+	Resources      core.ResourceRequirements `json:"resources,omitempty"`
 	// deprecated
 	Mode *MetricsMode `json:"mode,omitempty"`
 	TLS  *bool        `json:"tls,omitempty"`

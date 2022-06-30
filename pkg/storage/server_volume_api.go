@@ -22,10 +22,10 @@ package storage
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/server"
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 )
 
-type serverVolume v1.PersistentVolume
+type serverVolume core.PersistentVolume
 
 // Name returns the name of the volume
 func (v serverVolume) Name() string {
@@ -37,9 +37,9 @@ func (v serverVolume) StateColor() server.StateColor {
 	switch v.Status.Phase {
 	default:
 		return server.StateYellow
-	case v1.VolumeBound:
+	case core.VolumeBound:
 		return server.StateGreen
-	case v1.VolumeFailed:
+	case core.VolumeFailed:
 		return server.StateRed
 	}
 }
@@ -51,7 +51,7 @@ func (v serverVolume) NodeName() string {
 
 // Capacity returns the capacity of the volume in human readable form
 func (v serverVolume) Capacity() string {
-	c, found := v.Spec.Capacity[v1.ResourceStorage]
+	c, found := v.Spec.Capacity[core.ResourceStorage]
 	if found {
 		return c.String()
 	}

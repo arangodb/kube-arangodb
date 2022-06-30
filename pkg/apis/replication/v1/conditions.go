@@ -21,8 +21,8 @@
 package v1
 
 import (
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // ConditionType is a strongly typed condition name
@@ -40,11 +40,11 @@ type Condition struct {
 	// Type of  condition.
 	Type ConditionType `json:"type"`
 	// Status of the condition, one of True, False, Unknown.
-	Status v1.ConditionStatus `json:"status"`
+	Status core.ConditionStatus `json:"status"`
 	// The last time this condition was updated.
-	LastUpdateTime metav1.Time `json:"lastUpdateTime,omitempty"`
+	LastUpdateTime meta.Time `json:"lastUpdateTime,omitempty"`
 	// Last time the condition transitioned from one status to another.
-	LastTransitionTime metav1.Time `json:"lastTransitionTime,omitempty"`
+	LastTransitionTime meta.Time `json:"lastTransitionTime,omitempty"`
 	// The reason for the condition's last transition.
 	Reason string `json:"reason,omitempty"`
 	// A human readable message indicating details about the transition.
@@ -58,7 +58,7 @@ type ConditionList []Condition
 // IsTrue return true when a condition with given type exists and its status is `True`.
 func (list ConditionList) IsTrue(conditionType ConditionType) bool {
 	c, found := list.Get(conditionType)
-	return found && c.Status == v1.ConditionTrue
+	return found && c.Status == core.ConditionTrue
 }
 
 // Get a condition by type.
@@ -77,22 +77,22 @@ func (list ConditionList) Get(conditionType ConditionType) (Condition, bool) {
 // Returns true when changes were made, false otherwise.
 func (list *ConditionList) Update(conditionType ConditionType, status bool, reason, message string) bool {
 	src := *list
-	statusX := v1.ConditionFalse
+	statusX := core.ConditionFalse
 	if status {
-		statusX = v1.ConditionTrue
+		statusX = core.ConditionTrue
 	}
 	for i, x := range src {
 		if x.Type == conditionType {
 			if x.Status != statusX {
 				// Transition to another status
 				src[i].Status = statusX
-				now := metav1.Now()
+				now := meta.Now()
 				src[i].LastTransitionTime = now
 				src[i].LastUpdateTime = now
 				src[i].Reason = reason
 				src[i].Message = message
 			} else if x.Reason != reason || x.Message != message {
-				src[i].LastUpdateTime = metav1.Now()
+				src[i].LastUpdateTime = meta.Now()
 				src[i].Reason = reason
 				src[i].Message = message
 			} else {
@@ -102,7 +102,7 @@ func (list *ConditionList) Update(conditionType ConditionType, status bool, reas
 		}
 	}
 	// Not found
-	now := metav1.Now()
+	now := meta.Now()
 	*list = append(src, Condition{
 		Type:               conditionType,
 		LastUpdateTime:     now,

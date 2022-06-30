@@ -27,7 +27,6 @@ import (
 	"time"
 
 	core "k8s.io/api/core/v1"
-	v1 "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -92,7 +91,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 	var podNamesWithScheduleTimeout []string
 	var unscheduledPodNames []string
 
-	err := cachedStatus.Pod().V1().Iterate(func(pod *v1.Pod) error {
+	err := cachedStatus.Pod().V1().Iterate(func(pod *core.Pod) error {
 		if k8sutil.IsArangoDBImageIDAndVersionPod(pod) {
 			// Image ID pods are not relevant to inspect here
 			return nil

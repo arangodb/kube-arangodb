@@ -30,7 +30,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
 	core "k8s.io/api/core/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func init() {
@@ -193,7 +193,7 @@ func (a actionRuntimeContainerImageUpdate) Start(ctx context.Context) (bool, err
 			// Update pod image
 			pod.Spec.Containers[id].Image = image
 
-			if _, err := a.actionCtx.ACS().CurrentClusterCache().PodsModInterface().V1().Update(ctx, pod, v1.UpdateOptions{}); err != nil {
+			if _, err := a.actionCtx.ACS().CurrentClusterCache().PodsModInterface().V1().Update(ctx, pod, meta.UpdateOptions{}); err != nil {
 				return true, err
 			}
 

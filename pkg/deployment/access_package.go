@@ -31,8 +31,8 @@ import (
 
 	certificates "github.com/arangodb-helper/go-certificates"
 
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -74,8 +74,8 @@ func (d *Deployment) createAccessPackages(ctx context.Context) error {
 				if _, wanted := apNameMap[secret.GetName()]; !wanted {
 					// We found an obsolete access package secret. Remove it.
 					err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-						return d.SecretsModInterface().Delete(ctxChild, secret.GetName(), metav1.DeleteOptions{
-							Preconditions: &metav1.Preconditions{UID: &secret.UID},
+						return d.SecretsModInterface().Delete(ctxChild, secret.GetName(), meta.DeleteOptions{
+							Preconditions: &meta.Preconditions{UID: &secret.UID},
 						})
 					})
 					if err != nil && !k8sutil.IsNotFound(err) {
@@ -101,7 +101,7 @@ func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName strin
 	log := d.sectionLogger("access-package")
 	spec := d.apiObject.Spec
 
-	_, err := d.acs.CurrentClusterCache().Secret().V1().Read().Get(ctx, apSecretName, metav1.GetOptions{})
+	_, err := d.acs.CurrentClusterCache().Secret().V1().Read().Get(ctx, apSecretName, meta.GetOptions{})
 	if err == nil {
 		// Secret already exists
 		return nil
@@ -147,12 +147,12 @@ func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName strin
 	keyfile := strings.TrimSpace(cert) + "\n" + strings.TrimSpace(key)
 
 	// Create secrets (in memory)
-	keyfileSecret := v1.Secret{
-		TypeMeta: metav1.TypeMeta{
+	keyfileSecret := core.Secret{
+		TypeMeta: meta.TypeMeta{
 			APIVersion: "v1",
 			Kind:       "Secret",
 		},
-		ObjectMeta: metav1.ObjectMeta{
+		ObjectMeta: meta.ObjectMeta{
 			Name: apSecretName + "-auth",
 			Labels: map[string]string{
 				labelKeyOriginalDeployment: d.apiObject.GetName(),
@@ -163,12 +163,12 @@ func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName strin
 		},
 		Type: "Opaque",
 	}
-	tlsCASecret := v1.Secret{
-		TypeMeta: metav1.TypeMeta{
+	tlsCASecret := core.Secret{
+		TypeMeta: meta.TypeMeta{
 			APIVersion: "v1",
 			Kind:       "Secret",
 		},
-		ObjectMeta: metav1.ObjectMeta{
+		ObjectMeta: meta.ObjectMeta{
 			Name: apSecretName + "-ca",
 			Labels: map[string]string{
 				labelKeyOriginalDeployment: d.apiObject.GetName(),
@@ -194,8 +194,8 @@ func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName strin
 	allYaml := strings.TrimSpace(string(keyfileYaml)) + "\n---\n" + strings.TrimSpace(string(tlsCAYaml))
 
 	// Create secret containing access package
-	secret := &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
+	secret := &core.Secret{
+		ObjectMeta: meta.ObjectMeta{
 			Name: apSecretName,
 		},
 		Data: map[string][]byte{
@@ -207,7 +207,7 @@ func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName strin
 	// Attach secret to owner
 	secret.SetOwnerReferences(append(secret.GetOwnerReferences(), d.apiObject.AsOwner()))
 	err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-		_, err := d.SecretsModInterface().Create(ctxChild, secret, metav1.CreateOptions{})
+		_, err := d.SecretsModInterface().Create(ctxChild, secret, meta.CreateOptions{})
 		return err
 	})
 	if err != nil {

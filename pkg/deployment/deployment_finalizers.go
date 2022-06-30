@@ -29,7 +29,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
@@ -58,7 +58,7 @@ func (d *Deployment) runDeploymentFinalizers(ctx context.Context, cachedStatus i
 	depls := d.deps.Client.Arango().DatabaseV1().ArangoDeployments(d.GetNamespace())
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
-	updated, err := depls.Get(ctxChild, d.apiObject.GetName(), metav1.GetOptions{})
+	updated, err := depls.Get(ctxChild, d.apiObject.GetName(), meta.GetOptions{})
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -108,22 +108,22 @@ func (d *Deployment) inspectRemoveChildFinalizers(ctx context.Context, _ *api.Ar
 func removeDeploymentFinalizers(ctx context.Context, cli versioned.Interface,
 	depl *api.ArangoDeployment, finalizers []string) error {
 	depls := cli.DatabaseV1().ArangoDeployments(depl.GetNamespace())
-	getFunc := func() (metav1.Object, error) {
+	getFunc := func() (meta.Object, error) {
 		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
 
-		result, err := depls.Get(ctxChild, depl.GetName(), metav1.GetOptions{})
+		result, err := depls.Get(ctxChild, depl.GetName(), meta.GetOptions{})
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
 		return result, nil
 	}
-	updateFunc := func(updated metav1.Object) error {
+	updateFunc := func(updated meta.Object) error {
 		updatedDepl := updated.(*api.ArangoDeployment)
 		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
 
-		result, err := depls.Update(ctxChild, updatedDepl, metav1.UpdateOptions{})
+		result, err := depls.Update(ctxChild, updatedDepl, meta.UpdateOptions{})
 		if err != nil {
 			return errors.WithStack(err)
 		}

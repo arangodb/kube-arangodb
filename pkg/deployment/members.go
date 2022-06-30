@@ -31,7 +31,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
@@ -139,7 +139,7 @@ func (d *Deployment) renderMember(status *api.DeploymentStatus, group api.Server
 		return &api.MemberStatus{
 			ID:                        id,
 			UID:                       uuid.NewUUID(),
-			CreatedAt:                 metav1.Now(),
+			CreatedAt:                 meta.Now(),
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: shared.CreatePersistentVolumeClaimName(deploymentName, role, id),
 			PodName:                   "",
@@ -151,7 +151,7 @@ func (d *Deployment) renderMember(status *api.DeploymentStatus, group api.Server
 		return &api.MemberStatus{
 			ID:                        id,
 			UID:                       uuid.NewUUID(),
-			CreatedAt:                 metav1.Now(),
+			CreatedAt:                 meta.Now(),
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: shared.CreatePersistentVolumeClaimName(deploymentName, role, id),
 			PodName:                   "",
@@ -163,7 +163,7 @@ func (d *Deployment) renderMember(status *api.DeploymentStatus, group api.Server
 		return &api.MemberStatus{
 			ID:                        id,
 			UID:                       uuid.NewUUID(),
-			CreatedAt:                 metav1.Now(),
+			CreatedAt:                 meta.Now(),
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: shared.CreatePersistentVolumeClaimName(deploymentName, role, id),
 			PodName:                   "",
@@ -175,7 +175,7 @@ func (d *Deployment) renderMember(status *api.DeploymentStatus, group api.Server
 		return &api.MemberStatus{
 			ID:                        id,
 			UID:                       uuid.NewUUID(),
-			CreatedAt:                 metav1.Now(),
+			CreatedAt:                 meta.Now(),
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: "",
 			PodName:                   "",
@@ -187,7 +187,7 @@ func (d *Deployment) renderMember(status *api.DeploymentStatus, group api.Server
 		return &api.MemberStatus{
 			ID:                        id,
 			UID:                       uuid.NewUUID(),
-			CreatedAt:                 metav1.Now(),
+			CreatedAt:                 meta.Now(),
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: "",
 			PodName:                   "",
@@ -199,7 +199,7 @@ func (d *Deployment) renderMember(status *api.DeploymentStatus, group api.Server
 		return &api.MemberStatus{
 			ID:                        id,
 			UID:                       uuid.NewUUID(),
-			CreatedAt:                 metav1.Now(),
+			CreatedAt:                 meta.Now(),
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: "",
 			PodName:                   "",

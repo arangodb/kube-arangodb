@@ -26,7 +26,7 @@ import (
 	core "k8s.io/api/core/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func appendDeploymentClusterDomain(dns string, domain *string) string {
@@ -39,13 +39,13 @@ func appendDeploymentClusterDomain(dns string, domain *string) string {
 
 // CreatePodDNSName returns the DNS of a pod with a given role & id in
 // a given deployment.
-func CreatePodDNSName(deployment metav1.Object, role, id string) string {
+func CreatePodDNSName(deployment meta.Object, role, id string) string {
 	return fmt.Sprintf("%s.%s.%s.svc", shared.CreatePodHostName(deployment.GetName(), role, id), CreateHeadlessServiceName(deployment.GetName()), deployment.GetNamespace())
 }
 
 // CreatePodDNSName returns the DNS of a pod with a given role & id in
 // a given deployment.
-func CreatePodDNSNameWithDomain(deployment metav1.Object, domain *string, role, id string) string {
+func CreatePodDNSNameWithDomain(deployment meta.Object, domain *string, role, id string) string {
 	return appendDeploymentClusterDomain(CreatePodDNSName(deployment, role, id), domain)
 }
 
@@ -60,21 +60,21 @@ func CreateServiceDNSNameWithDomain(svc *core.Service, domain *string) string {
 }
 
 // CreateDatabaseClientServiceDNSNameWithDomain returns the DNS of the database client service.
-func CreateDatabaseClientServiceDNSNameWithDomain(deployment metav1.Object, domain *string) string {
+func CreateDatabaseClientServiceDNSNameWithDomain(deployment meta.Object, domain *string) string {
 	return appendDeploymentClusterDomain(CreateDatabaseClientServiceDNSName(deployment), domain)
 }
 
 // CreateDatabaseClientServiceDNSName returns the DNS of the database client service.
-func CreateDatabaseClientServiceDNSName(deployment metav1.Object) string {
+func CreateDatabaseClientServiceDNSName(deployment meta.Object) string {
 	return fmt.Sprintf("%s.%s.svc", CreateDatabaseClientServiceName(deployment.GetName()), deployment.GetNamespace())
 }
 
 // CreateSyncMasterClientServiceDNSNameWithDomain returns the DNS of the syncmaster client service.
-func CreateSyncMasterClientServiceDNSNameWithDomain(deployment metav1.Object, domain *string) string {
+func CreateSyncMasterClientServiceDNSNameWithDomain(deployment meta.Object, domain *string) string {
 	return appendDeploymentClusterDomain(CreateSyncMasterClientServiceDNSName(deployment), domain)
 }
 
 // CreateSyncMasterClientServiceDNSName returns the DNS of the syncmaster client service.
-func CreateSyncMasterClientServiceDNSName(deployment metav1.Object) string {
+func CreateSyncMasterClientServiceDNSName(deployment meta.Object) string {
 	return fmt.Sprintf("%s.%s.svc", CreateSyncMasterClientServiceName(deployment.GetName()), deployment.GetNamespace())
 }

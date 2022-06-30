@@ -37,7 +37,7 @@ import (
 	"github.com/jessevdk/go-assets"
 	prometheus "github.com/prometheus/client_golang/prometheus/promhttp"
 	core "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
 	"github.com/arangodb/kube-arangodb/dashboard"
@@ -107,7 +107,7 @@ func NewServer(cli corev1.CoreV1Interface, cfg Config, deps Dependencies) (*Serv
 	var cert, key string
 	if cfg.TLSSecretName != "" && cfg.TLSSecretNamespace != "" {
 		// Load TLS certificate from secret
-		s, err := cli.Secrets(cfg.TLSSecretNamespace).Get(context.Background(), cfg.TLSSecretName, metav1.GetOptions{})
+		s, err := cli.Secrets(cfg.TLSSecretNamespace).Get(context.Background(), cfg.TLSSecretName, meta.GetOptions{})
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}

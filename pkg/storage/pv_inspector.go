@@ -26,15 +26,15 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // inspectPVs queries all PersistentVolume's and triggers a cleanup for
 // released volumes.
 // Returns the number of available PV's.
 func (ls *LocalStorage) inspectPVs() (int, error) {
-	list, err := ls.deps.Client.Kubernetes().CoreV1().PersistentVolumes().List(context.Background(), metav1.ListOptions{})
+	list, err := ls.deps.Client.Kubernetes().CoreV1().PersistentVolumes().List(context.Background(), meta.ListOptions{})
 	if err != nil {
 		return 0, errors.WithStack(err)
 	}
@@ -47,7 +47,7 @@ func (ls *LocalStorage) inspectPVs() (int, error) {
 			continue
 		}
 		switch pv.Status.Phase {
-		case v1.VolumeAvailable:
+		case core.VolumeAvailable:
 			// Is this an old volume?
 			if pv.GetObjectMeta().GetCreationTimestamp().Time.Before(cleanupBeforeTimestamp) {
 				// Let's clean it up
@@ -62,7 +62,7 @@ func (ls *LocalStorage) inspectPVs() (int, error) {
 			} else {
 				availableVolumes++
 			}
-		case v1.VolumeReleased:
+		case core.VolumeReleased:
 			if ls.isOwnerOf(&pv) {
 				// Cleanup this volume
 				ls.log.Str("name", pv.GetName()).Debug("Added PersistentVolume to cleaner")

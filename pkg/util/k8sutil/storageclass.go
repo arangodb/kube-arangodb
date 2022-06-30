@@ -29,7 +29,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
 	v1 "k8s.io/api/storage/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	storagev1 "k8s.io/client-go/kubernetes/typed/storage/v1"
 )
 
@@ -53,7 +53,7 @@ func PatchStorageClassIsDefault(cli storagev1.StorageV1Interface, name string, i
 	stcs := cli.StorageClasses()
 	op := func() error {
 		// Fetch current version of StorageClass
-		current, err := stcs.Get(context.Background(), name, metav1.GetOptions{})
+		current, err := stcs.Get(context.Background(), name, meta.GetOptions{})
 		if IsNotFound(err) {
 			return retry.Permanent(errors.WithStack(err))
 		} else if err != nil {
@@ -68,7 +68,7 @@ func PatchStorageClassIsDefault(cli storagev1.StorageV1Interface, name string, i
 		current.SetAnnotations(ann)
 
 		// Save StorageClass
-		if _, err := stcs.Update(context.Background(), current, metav1.UpdateOptions{}); IsConflict(err) {
+		if _, err := stcs.Update(context.Background(), current, meta.UpdateOptions{}); IsConflict(err) {
 			// StorageClass has been modified since we read it
 			return errors.WithStack(err)
 		} else if err != nil {

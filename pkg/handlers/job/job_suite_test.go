@@ -35,7 +35,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	batchv1 "k8s.io/api/batch/v1"
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/client-go/kubernetes/fake"
@@ -114,16 +114,16 @@ func newArangoJob(name, namespace, deployment string) *appsApi.ArangoJob {
 		Spec: appsApi.ArangoJobSpec{
 			ArangoDeploymentName: deployment,
 			JobTemplate: &batchv1.JobSpec{
-				Template: v1.PodTemplateSpec{
-					Spec: v1.PodSpec{
-						Containers: []v1.Container{
+				Template: core.PodTemplateSpec{
+					Spec: core.PodSpec{
+						Containers: []core.Container{
 							{
 								Image: "perl",
 								Name:  "pi",
 								Args:  []string{"perl", "-Mbignum=bpi", "-wle", "print bpi(2000)"},
 							},
 						},
-						RestartPolicy: v1.RestartPolicyNever,
+						RestartPolicy: core.RestartPolicyNever,
 					},
 				},
 			},
