@@ -82,12 +82,12 @@ func (m *MetricsRebalancer) AddSuccesses(i int) {
 
 func (r *Reconciler) CollectMetrics(m metrics.PushMetric) {
 	if r.metrics.Rebalancer.enabled {
-		m.Push(metric_descriptions.ArangodbOperatorRebalancerEnabled().Gauge(1, r.namespace, r.name))
-		m.Push(metric_descriptions.ArangodbOperatorRebalancerMovesCurrent().Gauge(float64(r.metrics.Rebalancer.current), r.namespace, r.name))
-		m.Push(metric_descriptions.ArangodbOperatorRebalancerMovesGenerated().Gauge(float64(r.metrics.Rebalancer.moves), r.namespace, r.name))
-		m.Push(metric_descriptions.ArangodbOperatorRebalancerMovesSucceeded().Gauge(float64(r.metrics.Rebalancer.succeeded), r.namespace, r.name))
-		m.Push(metric_descriptions.ArangodbOperatorRebalancerMovesFailed().Gauge(float64(r.metrics.Rebalancer.failed), r.namespace, r.name))
+		m.Push(metric_descriptions.ArangodbOperatorRebalancerEnabledGauge(1, r.namespace, r.name))
+		m.Push(metric_descriptions.ArangodbOperatorRebalancerMovesCurrentGauge(float64(r.metrics.Rebalancer.current), r.namespace, r.name))
+		m.Push(metric_descriptions.ArangodbOperatorRebalancerMovesGeneratedCounter(float64(r.metrics.Rebalancer.moves), r.namespace, r.name))
+		m.Push(metric_descriptions.ArangodbOperatorRebalancerMovesSucceededCounter(float64(r.metrics.Rebalancer.succeeded), r.namespace, r.name))
+		m.Push(metric_descriptions.ArangodbOperatorRebalancerMovesFailedCounter(float64(r.metrics.Rebalancer.failed), r.namespace, r.name))
 	} else {
-		m.Push(metric_descriptions.ArangodbOperatorRebalancerEnabled().Gauge(0, r.namespace, r.name))
+		m.Push(metric_descriptions.ArangodbOperatorRebalancerEnabledGauge(0, r.namespace, r.name))
 	}
 }

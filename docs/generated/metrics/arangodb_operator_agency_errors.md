@@ -1,4 +1,4 @@
-# arangodb_operator_agency_errors (Count)
+# arangodb_operator_agency_errors (Counter)
 
 ## Description
 

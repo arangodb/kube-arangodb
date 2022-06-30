@@ -34,6 +34,6 @@ func ArangodbOperatorAgencyErrors() metrics.Description {
 	return arangodbOperatorAgencyErrors
 }
 
-func ArangodbOperatorAgencyErrorsCount(value float64, namespace string, name string) metrics.Metric {
+func ArangodbOperatorAgencyErrorsCounter(value float64, namespace string, name string) metrics.Metric {
 	return ArangodbOperatorAgencyErrors().Gauge(value, namespace, name)
 }

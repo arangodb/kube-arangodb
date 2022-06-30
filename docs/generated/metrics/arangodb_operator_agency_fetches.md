@@ -1,4 +1,4 @@
-# arangodb_operator_agency_fetches (Count)
+# arangodb_operator_agency_fetches (Counter)
 
 ## Description
 

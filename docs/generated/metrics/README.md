@@ -4,8 +4,8 @@
 
 |                                                      Name                                                       |     Namespace     |    Group     |  Type   | Description                                        |
 |:---------------------------------------------------------------------------------------------------------------:|:-----------------:|:------------:|:-------:|:---------------------------------------------------|
-|                     [arangodb_operator_agency_errors](./arangodb_operator_agency_errors.md)                     | arangodb_operator |    agency    |  Count  | Current count of agency cache fetch errors         |
-|                    [arangodb_operator_agency_fetches](./arangodb_operator_agency_fetches.md)                    | arangodb_operator |    agency    |  Count  | Current count of agency cache fetches              |
+|                     [arangodb_operator_agency_errors](./arangodb_operator_agency_errors.md)                     | arangodb_operator |    agency    | Counter | Current count of agency cache fetch errors         |
+|                    [arangodb_operator_agency_fetches](./arangodb_operator_agency_fetches.md)                    | arangodb_operator |    agency    | Counter | Current count of agency cache fetches              |
 |                      [arangodb_operator_agency_index](./arangodb_operator_agency_index.md)                      | arangodb_operator |    agency    |  Gauge  | Current index of the agency cache                  |
 |       [arangodb_operator_agency_cache_health_present](./arangodb_operator_agency_cache_health_present.md)       | arangodb_operator | agency_cache |  Gauge  | Determines if local agency cache health is present |
 |              [arangodb_operator_agency_cache_healthy](./arangodb_operator_agency_cache_healthy.md)              | arangodb_operator | agency_cache |  Gauge  | Determines if agency is healthy                    |

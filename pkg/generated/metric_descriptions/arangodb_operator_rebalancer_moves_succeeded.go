@@ -33,3 +33,7 @@ func init() {
 func ArangodbOperatorRebalancerMovesSucceeded() metrics.Description {
 	return arangodbOperatorRebalancerMovesSucceeded
 }
+
+func ArangodbOperatorRebalancerMovesSucceededCounter(value float64, namespace string, name string) metrics.Metric {
+	return ArangodbOperatorRebalancerMovesSucceeded().Gauge(value, namespace, name)
+}

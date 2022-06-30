@@ -88,7 +88,7 @@ namespaces:
       fetches:
         shortDescription: "Current count of agency cache fetches"
         description: "Current count of agency cache fetches"
-        type: "Count"
+        type: "Counter"
         labels:
           - key: namespace
             description: "Deployment Namespace"
@@ -97,7 +97,7 @@ namespaces:
       errors:
         shortDescription: "Current count of agency cache fetch errors"
         description: "Current count of agency cache fetch errors"
-        type: "Count"
+        type: "Counter"
         labels:
           - key: namespace
             description: "Deployment Namespace"
