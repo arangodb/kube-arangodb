@@ -33,3 +33,7 @@ func init() {
 func {{ .ename }}() metrics.Description {
     return {{ .fname }}
 }
+
+func {{ .ename }}{{ .type }}({{ .fparams }}) metrics.Metric {
+    return {{ .ename }}().Gauge({{ .fkeys }})
+}

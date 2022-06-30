@@ -33,3 +33,7 @@ func init() {
 func ArangodbOperatorAgencyCacheServing() metrics.Description {
 	return arangodbOperatorAgencyCacheServing
 }
+
+func ArangodbOperatorAgencyCacheServingGauge(value float64, namespace string, name string) metrics.Metric {
+	return ArangodbOperatorAgencyCacheServing().Gauge(value, namespace, name)
+}
