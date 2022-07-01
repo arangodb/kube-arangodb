@@ -67,7 +67,13 @@ You also can see the example of Grafana dashboard at `examples/metrics` folder o
 ## ArangoDB metrics
 
 The operator can run sidecar containers for ArangoDB deployments of type `Cluster` which expose metrics in Prometheus format.
-Edit your `ArangoDeployment` resource, setting `spec.metrics.enabled` to true to enable ArangoDB metrics.
+Edit your `ArangoDeployment` resource, setting `spec.metrics.enabled` to true to enable ArangoDB metrics:
+```yaml
+spec:
+  metrics:
+    enabled: true
+```
+
 The operator will run a sidecar container for every cluster component.
 In addition to the sidecar containers the operator will deploy a `Service` to access the exporter ports (from within the k8s cluster),
 and a resource of type `ServiceMonitor`, provided the corresponding custom resource definition is deployed in the k8s cluster.
@@ -87,5 +93,22 @@ serviceMonitorSelector:
       metrics: prometheus
 ```
 would automatically select all pods of all ArangoDB cluster deployments which have metrics enabled.
+
+By default, the sidecar metrics exporters are using TLS for all connections. You can disable the TLS by specifying
+```yaml
+spec:
+  metrics:
+    enabled: true
+    tls: false
+```
+
+You can fine-tune the monitored metrics by specifying `ArangoDeployment` annotations. Example:
+```yaml
+spec:
+  annotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '9101'
+    prometheus.io/scrape_interval: '5s'
+```
 
 See the [list of exposed ArangoDB metrics](https://www.arangodb.com/docs/stable/http/administration-and-monitoring-metrics.html#list-of-exposed-metrics)
