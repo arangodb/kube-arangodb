@@ -23,6 +23,8 @@ package resources
 import (
 	"sync"
 
+	"fmt"
+
 	"github.com/arangodb/kube-arangodb/pkg/generated/metric_descriptions"
 	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
 )
@@ -144,19 +146,19 @@ func (d *Resources) CollectMetrics(m metrics.PushMetric) {
 		// Containers
 		for container, restarts := range info.ContainerRestarts {
 			for code, count := range restarts {
-				m.Push(metric_descriptions.ArangodbOperatorMembersUnexpectedContainerExitCodesCounter(float64(count), d.namespace, d.name, member, container, "container", string(code)))
+				m.Push(metric_descriptions.ArangodbOperatorMembersUnexpectedContainerExitCodesCounter(float64(count), d.namespace, d.name, member, container, "container", fmt.Sprintf("%d", code)))
 			}
 		}
 		// InitContainers
 		for container, restarts := range info.InitContainerRestarts {
 			for code, count := range restarts {
-				m.Push(metric_descriptions.ArangodbOperatorMembersUnexpectedContainerExitCodesCounter(float64(count), d.namespace, d.name, member, container, "initContainer", string(code)))
+				m.Push(metric_descriptions.ArangodbOperatorMembersUnexpectedContainerExitCodesCounter(float64(count), d.namespace, d.name, member, container, "initContainer", fmt.Sprintf("%d", code)))
 			}
 		}
 		// EphemeralContainers
 		for container, restarts := range info.EphemeralContainerRestarts {
 			for code, count := range restarts {
-				m.Push(metric_descriptions.ArangodbOperatorMembersUnexpectedContainerExitCodesCounter(float64(count), d.namespace, d.name, member, container, "ephemeralContainer", string(code)))
+				m.Push(metric_descriptions.ArangodbOperatorMembersUnexpectedContainerExitCodesCounter(float64(count), d.namespace, d.name, member, container, "ephemeralContainer", fmt.Sprintf("%d", code)))
 			}
 		}
 	}
