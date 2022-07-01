@@ -8,6 +8,7 @@ For a full list of available metrics, see [here](./../generated/metrics/README.m
 
 #### Contents
 - [Integration with standard Prometheus installation (no TLS)](#Integration-with-standard-Prometheus-installation-no-TLS)
+- [Integration with standard Prometheus installation (TLS)](#Integration-with-standard-Prometheus-installation-TLS)
 - [Integration with Prometheus Operator](#Integration-with-Prometheus-Operator)
 - [Exposing ArangoDB metrics](#ArangoDB-metrics)
 
@@ -30,6 +31,38 @@ scrape_configs:
     static_configs:
       - targets:
           - "<operator-endpoint-ip>:8528"
+```
+
+## Integration with standard Prometheus installation (TLS)
+
+By default, the operator uses self-signed certificate for its server API.
+To use your own certificate, you need to create k8s secret containing certificate and provide secret name to operator.
+
+Create k8s secret (in same namespace where the operator is running):
+```shell
+kubectl create secret tls my-own-certificate --cert ./cert.crt  --key ./cert.key
+```
+Then edit the operator deployment definition (`kubectl edit deployments.apps`) to use your secret for its server API:
+```
+spec:
+  # ...
+  containers:
+  # ...
+    args:
+    - --server.tls-secret-name=my-own-certificate
+    # ...
+```
+Wait for operator pods to restart.
+
+Now update Prometheus config to use your certificate for operator scrape job:
+```yaml
+tls_config:
+  # if you are using self-signed certificate, just specify CA certificate:
+  ca_file: /etc/prometheus/rootCA.crt
+  
+  # otherwise, specify the generated client certificate and key:
+  cert_file: /etc/prometheus/cert.crt
+  key_file: /etc/prometheus/cert.key
 ```
 
 ## Integration with Prometheus Operator
