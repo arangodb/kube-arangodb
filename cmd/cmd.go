@@ -43,6 +43,19 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
+	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
+	"github.com/spf13/cobra"
+	flag "github.com/spf13/pflag"
+	appsv1 "k8s.io/api/apps/v1"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/kubernetes"
+	typedCore "k8s.io/client-go/kubernetes/typed/core/v1"
+	"k8s.io/client-go/tools/record"
+	"k8s.io/klog"
+
 	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/crd"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
@@ -56,18 +69,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/probe"
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
-	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
-	"github.com/spf13/cobra"
-	flag "github.com/spf13/pflag"
-	appsv1 "k8s.io/api/apps/v1"
-	core "k8s.io/api/core/v1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/kubernetes"
-	v1core "k8s.io/client-go/kubernetes/typed/core/v1"
-	"k8s.io/client-go/tools/record"
-	"k8s.io/klog"
 )
 
 const (
@@ -477,7 +478,7 @@ func createRecorder(kubecli kubernetes.Interface, name, namespace string) record
 	eventBroadcaster.StartLogging(func(format string, args ...interface{}) {
 		eventRecorder.Info(format, args...)
 	})
-	eventBroadcaster.StartRecordingToSink(&v1core.EventSinkImpl{Interface: v1core.New(kubecli.CoreV1().RESTClient()).Events(namespace)})
+	eventBroadcaster.StartRecordingToSink(&typedCore.EventSinkImpl{Interface: typedCore.New(kubecli.CoreV1().RESTClient()).Events(namespace)})
 	combinedScheme := runtime.NewScheme()
 	scheme.AddToScheme(combinedScheme)
 	core.AddToScheme(combinedScheme)
