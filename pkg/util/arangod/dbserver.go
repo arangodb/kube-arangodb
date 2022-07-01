@@ -23,11 +23,10 @@ package arangod
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	driver "github.com/arangodb/go-driver"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	driver "github.com/arangodb/go-driver"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 
 // IsDBServerEmpty checks if the dbserver identified by the given ID no longer has any

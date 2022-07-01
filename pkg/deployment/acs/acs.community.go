@@ -24,11 +24,12 @@ package acs
 import (
 	"context"
 
+	"k8s.io/apimachinery/pkg/types"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/acs/sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 func NewACS(main types.UID, cache inspectorInterface.Inspector) sutil.ACS {

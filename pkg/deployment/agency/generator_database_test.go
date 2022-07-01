@@ -25,9 +25,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/dchest/uniuri"
 	"github.com/stretchr/testify/require"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 func NewDatabaseRandomGenerator() DatabaseGeneratorInterface {

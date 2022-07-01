@@ -23,12 +23,12 @@ package k8sutil
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
-
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 // GetPodOwner returns the ReplicaSet that owns the given Pod.

@@ -24,9 +24,8 @@ import (
 	"net"
 	"net/url"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 // ExternalAccessSpec holds configuration for the external access provided for the deployment.

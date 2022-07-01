@@ -23,9 +23,10 @@ package v1
 import (
 	"runtime"
 
-	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/pkg/errors"
 	core "k8s.io/api/core/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 )
 
 type ArangoDeploymentArchitecture []ArangoDeploymentArchitectureType

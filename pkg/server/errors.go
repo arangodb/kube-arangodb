@@ -23,9 +23,9 @@ package server
 import (
 	"net/http"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
 	"github.com/gin-gonic/gin"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 var (

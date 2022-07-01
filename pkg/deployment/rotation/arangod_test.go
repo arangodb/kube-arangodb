@@ -23,11 +23,10 @@ package rotation
 import (
 	"testing"
 
-	"github.com/arangodb/kube-arangodb/pkg/util"
+	core "k8s.io/api/core/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/topology"
-
-	core "k8s.io/api/core/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 func Test_ArangoD_SchedulerName(t *testing.T) {

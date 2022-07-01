@@ -27,11 +27,6 @@ import (
 	"strings"
 	"time"
 
-	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
-	"github.com/arangodb/kube-arangodb/pkg/version"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
 	"github.com/gin-gonic/gin"
 	"github.com/jessevdk/go-assets"
 	prometheus "github.com/prometheus/client_golang/prometheus/promhttp"
@@ -42,7 +37,10 @@ import (
 	"github.com/arangodb-helper/go-certificates"
 
 	"github.com/arangodb/kube-arangodb/dashboard"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 	"github.com/arangodb/kube-arangodb/pkg/util/probe"
+	"github.com/arangodb/kube-arangodb/pkg/version"
 )
 
 // Config settings for the Server

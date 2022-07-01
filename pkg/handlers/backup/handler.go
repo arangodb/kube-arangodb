@@ -26,30 +26,25 @@ import (
 	"sync"
 	"time"
 
-	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
-	"github.com/arangodb/kube-arangodb/pkg/util"
-
-	"github.com/arangodb/go-driver"
-	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
+	"github.com/rs/zerolog/log"
+	apiErrors "k8s.io/apimachinery/pkg/api/errors"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
-
-	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
-	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
-
 	"k8s.io/client-go/kubernetes"
 
-	apiErrors "k8s.io/apimachinery/pkg/api/errors"
+	"github.com/arangodb/go-driver"
 
-	"github.com/rs/zerolog/log"
-
+	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
+	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
+	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 var logger = logging.Global().RegisterAndGetLogger("backup-operator", logging.Info)

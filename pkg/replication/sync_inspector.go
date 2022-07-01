@@ -25,10 +25,10 @@ import (
 	"sort"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
 	"github.com/arangodb/arangosync-client/client"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 // inspectDeploymentReplication inspects the entire deployment replication

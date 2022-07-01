@@ -23,11 +23,12 @@ package deployment
 import (
 	"testing"
 
+	core "k8s.io/api/core/v1"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	core "k8s.io/api/core/v1"
 )
 
 func modifyAffinity(group string, required bool, role string, mods ...func(a *core.Affinity)) *core.Affinity { // nolint:unparam

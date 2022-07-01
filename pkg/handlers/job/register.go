@@ -21,14 +21,14 @@
 package job
 
 import (
+	"k8s.io/client-go/kubernetes"
+
 	"github.com/arangodb/kube-arangodb/pkg/apis/apps"
 	appsApi "github.com/arangodb/kube-arangodb/pkg/apis/apps/v1"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	arangoInformer "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
-
-	"k8s.io/client-go/kubernetes"
 )
 
 func newEventInstance(eventRecorder event.Recorder) event.RecorderInstance {

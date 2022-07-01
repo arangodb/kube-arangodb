@@ -24,10 +24,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
+	"github.com/stretchr/testify/require"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
-	"github.com/stretchr/testify/require"
+	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 )
 
 func Test_State_DownloadError_Reschedule(t *testing.T) {

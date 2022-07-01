@@ -21,10 +21,9 @@
 package resources
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 )
 
 // ValidateLicenseKeySecret checks if the licens key secret exists and is valid

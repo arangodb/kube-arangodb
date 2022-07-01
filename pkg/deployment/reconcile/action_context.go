@@ -24,10 +24,11 @@ import (
 	"context"
 	"time"
 
-	"github.com/arangodb/arangosync-client/client"
 	core "k8s.io/api/core/v1"
 
+	"github.com/arangodb/arangosync-client/client"
 	"github.com/arangodb/go-driver"
+
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/acs/sutil"

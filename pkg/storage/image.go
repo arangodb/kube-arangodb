@@ -23,10 +23,11 @@ package storage
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 // getMyImage fetched the docker image from my own pod

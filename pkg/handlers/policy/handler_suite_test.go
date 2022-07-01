@@ -25,20 +25,18 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
-	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
-
-	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
-	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
-
-	"k8s.io/client-go/kubernetes/fake"
-
-	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
-	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	fakeClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/fake"
 	"github.com/stretchr/testify/require"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
+	"k8s.io/client-go/kubernetes/fake"
+
+	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
+	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	fakeClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/fake"
+	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
+	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 )
 
 func newFakeHandler() *handler {

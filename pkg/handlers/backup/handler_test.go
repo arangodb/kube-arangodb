@@ -23,10 +23,10 @@ package backup
 import (
 	"testing"
 
-	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
-
 	"github.com/stretchr/testify/require"
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
+
+	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 )
 
 func Test_ObjectNotFound(t *testing.T) {

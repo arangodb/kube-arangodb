@@ -23,8 +23,9 @@ package server
 import (
 	"net/http"
 
-	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/gin-gonic/gin"
+
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 )
 
 var serverLogger = logging.Global().RegisterAndGetLogger("server", logging.Info)

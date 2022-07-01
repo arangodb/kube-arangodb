@@ -23,9 +23,9 @@ package arangod
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
 	driver "github.com/arangodb/go-driver"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 // NumberOfServers is the JSON structure return for the numberOfServers API call.

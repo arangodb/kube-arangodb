@@ -26,11 +26,11 @@ import (
 	"os"
 	"time"
 
+	"github.com/spf13/cobra"
+
 	v1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-
-	"github.com/spf13/cobra"
 )
 
 const (

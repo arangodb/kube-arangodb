@@ -21,10 +21,11 @@
 package k8sutil
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/cache"
+
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 )
 
 var (

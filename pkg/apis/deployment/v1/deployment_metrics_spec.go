@@ -22,9 +22,10 @@
 package v1
 
 import (
+	core "k8s.io/api/core/v1"
+
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	core "k8s.io/api/core/v1"
 )
 
 // MetricsAuthenticationSpec contains spec for authentication with arangodb

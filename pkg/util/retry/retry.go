@@ -24,9 +24,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
 	"github.com/cenkalti/backoff"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 type permanentError struct {

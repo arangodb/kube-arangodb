@@ -27,6 +27,7 @@ import (
 
 	"github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 

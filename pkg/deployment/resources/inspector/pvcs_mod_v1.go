@@ -23,11 +23,12 @@ package inspector
 import (
 	"context"
 
-	persistentVolumeClaimv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim/v1"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	typedCore "k8s.io/client-go/kubernetes/typed/core/v1"
+
+	persistentVolumeClaimv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim/v1"
 )
 
 func (p persistentVolumeClaimsMod) V1() persistentVolumeClaimv1.ModInterface {

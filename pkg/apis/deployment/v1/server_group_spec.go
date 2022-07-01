@@ -25,16 +25,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
-
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	arangodOptions "github.com/arangodb/kube-arangodb/pkg/util/arangod/options"
 	arangosyncOptions "github.com/arangodb/kube-arangodb/pkg/util/arangosync/options"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 // ServerGroupShutdownMethod enum of possible shutdown methods

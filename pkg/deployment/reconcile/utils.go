@@ -24,16 +24,16 @@ import (
 	"context"
 	"sort"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
 	core "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/arangodb/go-driver"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 func secretKeysToListWithPrefix(s *core.Secret) []string {

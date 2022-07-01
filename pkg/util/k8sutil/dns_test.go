@@ -23,11 +23,10 @@ package k8sutil
 import (
 	"testing"
 
-	"github.com/arangodb/kube-arangodb/pkg/util"
-
 	"github.com/stretchr/testify/assert"
-
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 // TestCreatePodDNSName tests CreatePodDNSName.

@@ -21,8 +21,9 @@
 package resilience
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/rs/zerolog"
+
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 )
 
 var (

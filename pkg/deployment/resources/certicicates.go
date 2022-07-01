@@ -25,13 +25,13 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
+	core "k8s.io/api/core/v1"
 
 	"github.com/arangodb-helper/go-certificates"
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 
-	core "k8s.io/api/core/v1"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 )
 
 type Certificates []*x509.Certificate

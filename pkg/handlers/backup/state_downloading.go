@@ -23,10 +23,10 @@ package backup
 import (
 	"fmt"
 
-	"github.com/arangodb/kube-arangodb/pkg/util"
-
 	"github.com/arangodb/go-driver"
+
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 func stateDownloadingHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.ArangoBackupStatus, error) {

@@ -26,14 +26,15 @@ import (
 	"strings"
 	"testing"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
-	"github.com/arangodb/kube-arangodb/pkg/logging"
-	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/dchest/uniuri"
 	"github.com/stretchr/testify/require"
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	api "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
 func generateDaemonSet(t *testing.T, podSpec core.PodSpec, lsSpec api.LocalStorageSpec) (*LocalStorage, *apps.DaemonSet) {

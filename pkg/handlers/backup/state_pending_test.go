@@ -25,14 +25,12 @@ import (
 	"sync"
 	"testing"
 
-	deploymentType "github.com/arangodb/kube-arangodb/pkg/apis/deployment"
-
+	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/util/uuid"
 
-	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
-
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
-	"github.com/stretchr/testify/require"
+	deploymentType "github.com/arangodb/kube-arangodb/pkg/apis/deployment"
+	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 )
 
 func Test_State_Pending_Common(t *testing.T) {

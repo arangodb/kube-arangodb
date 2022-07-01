@@ -23,11 +23,11 @@ package backup
 import (
 	"net/http"
 
-	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
-
 	"github.com/arangodb/go-driver"
+
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 )
 
 var (

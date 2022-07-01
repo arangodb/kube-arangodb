@@ -28,35 +28,27 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
+	jg "github.com/golang-jwt/jwt"
+	core "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/equality"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
 
-	"github.com/arangodb/kube-arangodb/pkg/util"
-
-	operatorErrors "github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	core "k8s.io/api/core/v1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	secretv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
-	jg "github.com/golang-jwt/jwt"
-	"k8s.io/apimachinery/pkg/api/equality"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
 )
 
 var (
@@ -223,7 +215,7 @@ func (r *Resources) ensureTokenSecretFolder(ctx context.Context, cachedStatus in
 				return err
 			}
 
-			return operatorErrors.Reconcile()
+			return errors.Reconcile()
 		}
 
 		if _, ok := f.Data[pod.ActiveJWTKey]; !ok {
@@ -335,7 +327,7 @@ func (r *Resources) createSecretWithMod(ctx context.Context, secrets secretv1.Mo
 		return errors.WithStack(err)
 	}
 
-	return operatorErrors.Reconcile()
+	return errors.Reconcile()
 }
 
 func (r *Resources) createSecretWithKey(ctx context.Context, secrets secretv1.ModInterface, secretName, keyName string, value []byte) error {
@@ -362,7 +354,7 @@ func (r *Resources) createTokenSecret(ctx context.Context, secrets secretv1.ModI
 		return errors.WithStack(err)
 	}
 
-	return operatorErrors.Reconcile()
+	return errors.Reconcile()
 }
 
 func (r *Resources) ensureEncryptionKeyfolderSecret(ctx context.Context, cachedStatus inspectorInterface.Inspector, secrets secretv1.ModInterface, keyfileSecretName, secretName string) error {
@@ -422,7 +414,7 @@ func AppendKeyfileToKeyfolder(ctx context.Context, cachedStatus inspectorInterfa
 			return errors.WithStack(err)
 		}
 
-		return operatorErrors.Reconcile()
+		return errors.Reconcile()
 	}
 
 	return nil
@@ -458,7 +450,7 @@ func (r *Resources) ensureExporterTokenSecret(ctx context.Context, cachedStatus 
 			}
 		}
 
-		return operatorErrors.Reconcile()
+		return errors.Reconcile()
 	}
 	return nil
 }
@@ -519,7 +511,7 @@ func (r *Resources) ensureTLSCACertificateSecret(ctx context.Context, cachedStat
 			return errors.WithStack(err)
 		}
 
-		return operatorErrors.Reconcile()
+		return errors.Reconcile()
 	}
 	return nil
 }
@@ -543,7 +535,7 @@ func (r *Resources) ensureClientAuthCACertificateSecret(ctx context.Context, cac
 			return errors.WithStack(err)
 		}
 
-		return operatorErrors.Reconcile()
+		return errors.Reconcile()
 	}
 	return nil
 }

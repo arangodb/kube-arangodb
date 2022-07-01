@@ -28,9 +28,10 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/arangodb/go-driver"
 	httpdriver "github.com/arangodb/go-driver/http"
-	"github.com/stretchr/testify/require"
 )
 
 func NewServer(t *testing.T) Server {

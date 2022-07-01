@@ -24,8 +24,9 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/arangodb/go-driver"
 	"github.com/spf13/cobra"
+
+	"github.com/arangodb/go-driver"
 )
 
 var features = map[string]Feature{}

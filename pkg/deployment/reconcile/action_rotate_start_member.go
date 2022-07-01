@@ -22,10 +22,9 @@ package reconcile
 
 import (
 	"context"
+	"time"
 
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"

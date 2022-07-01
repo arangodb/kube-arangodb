@@ -23,11 +23,12 @@ package rotation
 import (
 	"encoding/json"
 
+	"github.com/rs/zerolog/log"
+	core "k8s.io/api/core/v1"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
-	"github.com/rs/zerolog/log"
-	core "k8s.io/api/core/v1"
 )
 
 type compareFuncGen func(deploymentSpec api.DeploymentSpec, group api.ServerGroup, spec, status *core.PodSpec) compareFunc

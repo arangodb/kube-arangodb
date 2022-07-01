@@ -24,13 +24,12 @@ import (
 	"context"
 	"os"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
 	"github.com/rs/zerolog"
 	"golang.org/x/sys/unix"
 
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 var logger = logging.Global().RegisterAndGetLogger("deployment-storage-service", logging.Info)

@@ -25,9 +25,9 @@ import (
 	"sort"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
 	core "k8s.io/api/core/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 // MemberStatusList is a list of MemberStatus entries

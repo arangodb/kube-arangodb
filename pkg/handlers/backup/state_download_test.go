@@ -23,9 +23,10 @@ package backup
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
-	"github.com/stretchr/testify/require"
 )
 
 func Test_State_Download_Common(t *testing.T) {

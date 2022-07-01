@@ -22,12 +22,10 @@ package reconcile
 
 import (
 	"context"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
 	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 func init() {

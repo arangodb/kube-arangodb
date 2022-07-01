@@ -22,6 +22,7 @@ package arangod
 
 import (
 	driver "github.com/arangodb/go-driver"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 

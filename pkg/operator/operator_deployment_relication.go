@@ -21,15 +21,14 @@
 package operator
 
 import (
-	replication2 "github.com/arangodb/kube-arangodb/pkg/apis/replication"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
 	kwatch "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
 
+	replication2 "github.com/arangodb/kube-arangodb/pkg/apis/replication"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/replication"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
