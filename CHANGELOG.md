@@ -28,6 +28,7 @@
 - (Bugfix) Extend Agency HealthCheck for replace
 - (Bugfix) Allow to remove resources (CPU & Memory) on the managed pods
 - (Bugfix) Add DistributeShardsLike support
+- (Feature) Member restarts metric
 
 ## [1.2.13](https://github.com/arangodb/kube-arangodb/tree/1.2.13) (2022-06-07)
 - (Bugfix) Fix arangosync members state inspection

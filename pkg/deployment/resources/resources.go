@@ -28,6 +28,8 @@ type Resources struct {
 	log             logging.Logger
 	namespace, name string
 	context         Context
+
+	metrics Metrics
 }
 
 // NewResources creates a new Resources service, used to

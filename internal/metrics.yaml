@@ -149,3 +149,21 @@ namespaces:
             description: "Deployment Namespace"
           - key: name
             description: "Deployment Name"
+    members:
+      unexpected_container_exit_codes:
+        shortDescription: "Counter of unexpected restarts in pod (Containers/InitContainers/EphemeralContainers)"
+        description: "Counter of unexpected restarts in pod (Containers/InitContainers/EphemeralContainers)"
+        type: "Counter"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+          - key: member
+            description: "Member ID"
+          - key: container
+            description: "Container Name"
+          - key: container_type
+            description: "Container/InitContainer/EphemeralContainer"
+          - key: code
+            description: "ExitCode"
