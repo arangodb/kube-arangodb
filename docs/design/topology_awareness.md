@@ -25,7 +25,7 @@ According to the above example we can see that:
 
 ## Requirements
 
-- It does not work in a single mode of a deployment.
+- It does not work in a `Single` mode of a deployment.
   The `spec.mode` of the Kubernetes resource ArangoDeployment can not be set to `Single`.
 - Kube-ArangoDB version should be at least 1.2.10 and enterprise version.
 
