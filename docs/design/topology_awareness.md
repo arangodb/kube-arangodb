@@ -143,7 +143,7 @@ which means that pod can not be assigned to zone `1` and `2`.
 
 #### A node affinity
 
-A pod which belongs to the member can have a node affinity rules. If a pod does not have it then it means that it will have pod's affinities. 
+A pod which belongs to the member can have a node affinity rules. If a pod does not have it then it will have pod affinities. 
 Example:
 ```yaml
 spec:
