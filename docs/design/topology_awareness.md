@@ -114,7 +114,7 @@ metadata:
     deployment.arangodb.com/zone: "0"
 ```
 
-#### A pod anti affinity
+#### Pod anti-affinity
 
 A pod which belongs to the member should have a new pod anti affinity rules. 
 Example:
