@@ -168,7 +168,7 @@ spec:
 
 #### A pod affinity
 
-A pod which belongs to the member can have a pod affinity rules. If a pod does not have it then it means that it will have node's affinity.
+A pod which belongs to the member can have a pod affinity rules. If a pod does not have it then it will have node affinity.
 Example:
 ```yaml
 spec:
