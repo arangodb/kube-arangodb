@@ -166,7 +166,7 @@ spec:
             - ...
 ```
 
-#### A pod affinity
+#### Pod affinity
 
 A pod which belongs to the member can have a pod affinity rules. If a pod does not have it then it will have node affinity.
 Example:
