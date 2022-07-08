@@ -7,7 +7,7 @@ in different zones. For the time being, there are 3 groups of pods that can be d
 tries to distribute them in different zones in a cluster, so there can not
 be a situation where many pods of the same group exist in one zone and there are no
 pods in other zones. It would lead to many issues when a zone with many pods failed.
-When Kube-ArangoDB operator must add a new pod but all zones contain this group of pods
+When Kube-ArangoDB operator is going to add a new pod, but all zones already contain a pod of this group,
 then a zone will be chosen with the least number of pods from the specific group.
 
 #### Example 
