@@ -1,12 +1,12 @@
 # Topology awareness
 
 ## Table of contents
-1. [Overview](#Overview)
-2. [Requirements](#Requirements)
-3. [Enable/Disable topology](#How to enable/disable topology awareness for the ArangoDeployment)
-4. [Check topology](#How to check which ArangoDB members are assigned to the topology)
+1. [Overview](#1)
+2. [Requirements](#2)
+3. [Enable/Disable topology](#3)
+4. [Check topology](#4)
 
-## Overview
+## Overview <a name="1"></a>
 
 Topology awareness is responsible for the even distribution of groups of pods across nodes in the cluster.
 A distribution should be done by the zone, so thanks to that if one of the zone fails there are other working pods
@@ -15,13 +15,13 @@ in different zones. For the time being, there are 3 groups of pods that can be d
 tries to distribute them in different zones in a cluster, so there can not
 be a situation where many pods of the same group exist in one zone and there are no
 pods in other zones. It would lead to many issues when a zone with many pods failed.
-When Kube-ArangoDB operator must add a new pod but all zones contain this group of pods
-then a zone will be chosen with the least number of pods from the specific group.
+When Kube-ArangoDB operator is going to add a new pod, but all zones already contain a pod of this group,
+it will choose the zone with the fewest number of pods of this group.
 
-#### Example 
+#### Example
 Let's say we have two zones (uswest-1, uswest-2) and we would like to distribute ArangoDB cluster 
 with 3 coordinators, 3 agents, and 3 DB servers. First coordinator, agent, and DB server would go to random zone (e.g. uswest-1).
-Second coordinator must be assigned to the `uswest-2` zone, because the zone `uswest-1` contains already one coordinator.
+Second coordinator must be assigned to the `uswest-2` zone, because the zone `uswest-1` already contains one coordinator.
 The same happens for the second agent and the second DB server. Third coordinator can be placed randomly 
 because each of the zone contains exactly one coordinator, so after this operation one of the zone should have 2 coordinators 
 and second zone should have 1 coordinator. The same applies to agents and DB servers.
@@ -31,13 +31,13 @@ According to the above example we can see that:
 - agents should not be placed in the same zone with other agents, unless ALL zones contain agents.
 - DB servers should not be placed in the same zone with other DB servers, unless ALL zones contain DB servers.
 
-## Requirements
+## Requirements <a name="2"></a>
 
-- It does not work in a single mode of a deployment.
+- It does not work in a `Single` mode of a deployment.
   The `spec.mode` of the Kubernetes resource ArangoDeployment can not be set to `Single`.
 - Kube-ArangoDB version should be at least 1.2.10 and enterprise version.
 
-## How to enable/disable topology awareness for the ArangoDeployment
+## How to enable/disable topology awareness for the ArangoDeployment <a name="3"></a>
 
 Enable topology:
 ```yaml
@@ -56,7 +56,7 @@ spec:
 ```
 or remove `spec.topology` object.
 
-## How to check which ArangoDB members are assigned to the topology
+## How to check which ArangoDB members are assigned to the topology <a name="4"></a>
 
 #### Topology aware
 
@@ -122,7 +122,7 @@ metadata:
     deployment.arangodb.com/zone: "0"
 ```
 
-#### A pod anti affinity
+#### Pod anti-affinity
 
 A pod which belongs to the member should have a new pod anti affinity rules. 
 Example:
@@ -149,9 +149,9 @@ spec:
 ```
 which means that pod can not be assigned to zone `1` and `2`.
 
-#### A node affinity
+#### Node affinity
 
-A pod which belongs to the member can have a node affinity rules. If a pod does not have it then it means that it will have pod's affinities. 
+A pod which belongs to the member can have a node affinity rules. If a pod does not have it then it will have pod affinities. 
 Example:
 ```yaml
 spec:
@@ -174,9 +174,9 @@ spec:
             - ...
 ```
 
-#### A pod affinity
+#### Pod affinity
 
-A pod which belongs to the member can have a pod affinity rules. If a pod does not have it then it means that it will have node's affinity.
+A pod which belongs to the member can have a pod affinity rules. If a pod does not have it then it will have node affinity.
 Example:
 ```yaml
 spec:
