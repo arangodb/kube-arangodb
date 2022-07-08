@@ -1,3 +1,11 @@
+# Topology awareness
+
+## Table of contents
+1. [Overview](#Overview)
+2. [Requirements](#Requirements)
+3. [Enable/Disable topology](#How to enable/disable topology awareness for the ArangoDeployment)
+4. [Check topology](#How to check which ArangoDB members are assigned to the topology)
+
 ## Overview
 
 Topology awareness is responsible for the even distribution of groups of pods across nodes in the cluster.
