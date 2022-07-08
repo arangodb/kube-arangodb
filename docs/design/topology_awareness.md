@@ -13,7 +13,7 @@ then a zone will be chosen with the least number of pods from the specific group
 #### Example 
 Let's say we have two zones (uswest-1, uswest-2) and we would like to distribute ArangoDB cluster 
 with 3 coordinators, 3 agents, and 3 DB servers. First coordinator, agent, and DB server would go to random zone (e.g. uswest-1).
-Second coordinator must be assigned to the `uswest-2` zone, because the zone `uswest-1` contains already one coordinator.
+Second coordinator must be assigned to the `uswest-2` zone, because the zone `uswest-1` already contains one coordinator.
 The same happens for the second agent and the second DB server. Third coordinator can be placed randomly 
 because each of the zone contains exactly one coordinator, so after this operation one of the zone should have 2 coordinators 
 and second zone should have 1 coordinator. The same applies to agents and DB servers.
