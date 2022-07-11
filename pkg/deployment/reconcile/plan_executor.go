@@ -30,6 +30,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors/panics"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -305,7 +306,7 @@ func (d *Reconciler) executeAction(ctx context.Context, planAction api.Action, a
 
 	if !planAction.IsStarted() {
 		// Not started yet
-		ready, err := action.Start(ctx)
+		ready, err := d.executeActionStart(ctx, action)
 		if err != nil {
 			if g := getStartFailureGracePeriod(action); g > 0 && !planAction.CreationTime.IsZero() {
 				if time.Since(planAction.CreationTime.Time) < g {
@@ -333,7 +334,7 @@ func (d *Reconciler) executeAction(ctx context.Context, planAction api.Action, a
 	}
 
 	// First action of plan has been started, check its progress
-	ready, abort, err := action.CheckProgress(ctx)
+	ready, abort, err := d.executeActionCheckProgress(ctx, action)
 	if err != nil {
 		log.Err(err).Debug("Failed to check action progress")
 		return false, false, false, false, errors.WithStack(err)
@@ -360,6 +361,24 @@ func (d *Reconciler) executeAction(ctx context.Context, planAction api.Action, a
 
 	// Timeout not yet expired, come back soon
 	return false, false, true, false, nil
+}
+
+func (d *Reconciler) executeActionCheckProgress(ctx context.Context, action Action) (ready bool, abort bool, retErr error) {
+	retErr = panics.RecoverWithSection("ActionProgress", func() (err error) {
+		ready, abort, err = action.CheckProgress(ctx)
+		return
+	})
+
+	return
+}
+
+func (d *Reconciler) executeActionStart(ctx context.Context, action Action) (done bool, retErr error) {
+	retErr = panics.RecoverWithSection("ActionStart", func() (err error) {
+		done, err = action.Start(ctx)
+		return
+	})
+
+	return
 }
 
 // createAction create action object based on action type
