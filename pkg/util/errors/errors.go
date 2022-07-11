@@ -45,6 +45,16 @@ var (
 	WithMessagef = errs.WithMessagef
 )
 
+func CauseWithNil(err error) error {
+	if nerr := Cause(err); err == nil {
+		return nil
+	} else if nerr == err {
+		return nil
+	} else {
+		return CauseWithNil(nerr)
+	}
+}
+
 func Newf(format string, args ...interface{}) error {
 	return New(fmt.Sprintf(format, args...))
 }
