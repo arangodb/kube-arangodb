@@ -51,7 +51,7 @@ func CauseWithNil(err error) error {
 	} else if nerr == err {
 		return nil
 	} else {
-		return CauseWithNil(nerr)
+		return nerr
 	}
 }
 
