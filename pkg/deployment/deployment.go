@@ -137,13 +137,7 @@ type Deployment struct {
 
 	memberState memberState.StateInspector
 
-	metrics struct {
-		agency struct {
-			errors  uint64
-			fetches uint64
-			index   uint64
-		}
-	}
+	metrics Metrics
 }
 
 func (d *Deployment) WithArangoMember(cache inspectorInterface.Inspector, timeout time.Duration, name string) reconciler.ArangoMemberModContext {

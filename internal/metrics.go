@@ -331,7 +331,17 @@ func generateMetricsGO(root string, in MetricsDoc) error {
 				keys = append(keys, "value")
 
 				for _, label := range details.Labels {
-					k := strings.ToLower(label.Key)
+					v := strings.Split(strings.ToLower(label.Key), "_")
+					for id := range v {
+						if id == 0 {
+							continue
+						}
+
+						v[id] = strings.Title(v[id])
+					}
+
+					k := strings.Join(v, "")
+
 					keys = append(keys, k)
 
 					if t := label.Type; t != nil {

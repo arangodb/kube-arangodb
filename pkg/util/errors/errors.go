@@ -45,6 +45,20 @@ var (
 	WithMessagef = errs.WithMessagef
 )
 
+// CauseWithNil returns Cause of an error.
+// If error returned by Cause is same (no Causer interface implemented), function will return nil instead
+func CauseWithNil(err error) error {
+	if nerr := Cause(err); err == nil {
+		return nil
+	} else if nerr == err {
+		// Cause returns same error if error object does not implement Causer interface
+		// To prevent infinite loops in usage CauseWithNil will return nil in this case
+		return nil
+	} else {
+		return nerr
+	}
+}
+
 func Newf(format string, args ...interface{}) error {
 	return New(fmt.Sprintf(format, args...))
 }

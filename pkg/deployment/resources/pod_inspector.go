@@ -178,6 +178,8 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 									Time("started", t.StartedAt.Time).
 									Time("finished", t.FinishedAt.Time).
 									Warn("Pod failed in unexpected way: Init Container failed")
+
+								r.metrics.IncMemberInitContainerRestarts(memberStatus.ID, container, t.ExitCode)
 							}
 						}
 					}
@@ -198,6 +200,8 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 									Time("started", t.StartedAt.Time).
 									Time("finished", t.FinishedAt.Time).
 									Warn("Pod failed in unexpected way: Core Container failed")
+
+								r.metrics.IncMemberContainerRestarts(memberStatus.ID, container, t.ExitCode)
 							}
 						}
 					}

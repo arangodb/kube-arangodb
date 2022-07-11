@@ -18,30 +18,20 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package resources
+package conn
 
-import "github.com/arangodb/kube-arangodb/pkg/logging"
+import (
+	"testing"
 
-// Resources is a service that creates low level resources for members
-// and inspects low level resources, put the inspection result in members.
-type Resources struct {
-	log             logging.Logger
-	namespace, name string
-	context         Context
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/stretchr/testify/require"
+)
 
-	metrics Metrics
+func Test_IsAsyncErrorNotFound_Loop(t *testing.T) {
+	require.False(t, IsAsyncErrorNotFound(errors.Newf("Error")))
 }
 
-// NewResources creates a new Resources service, used to
-// create and inspect low level resources such as pods and services.
-func NewResources(namespace, name string, context Context) *Resources {
-	r := &Resources{
-		namespace: namespace,
-		name:      name,
-		context:   context,
-	}
-
-	r.log = logger.WrapObj(r)
-
-	return r
+func Test_IsAsyncJobInProgress_Loop(t *testing.T) {
+	_, ok := IsAsyncJobInProgress(errors.Newf("Error"))
+	require.False(t, ok)
 }
