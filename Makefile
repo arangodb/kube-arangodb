@@ -155,8 +155,9 @@ ifdef VERBOSE
 	TESTVERBOSEOPTIONS := -v
 endif
 
-EXCLUDE_DIRS := vendor .gobuild deps tools
-SOURCES_QUERY := find ./ -type f -name '*.go' $(foreach EXCLUDE_DIR,$(EXCLUDE_DIRS), ! -path "*/$(EXCLUDE_DIR)/*")
+EXCLUDE_DIRS := vendor .gobuild deps tools pkg/generated
+EXCLUDE_FILES := *generated.deepcopy.go
+SOURCES_QUERY := find ./ -type f -name '*.go' $(foreach EXCLUDE_DIR,$(EXCLUDE_DIRS), ! -path "*/$(EXCLUDE_DIR)/*") $(foreach EXCLUDE_FILE,$(EXCLUDE_FILES), ! -path "*/$(EXCLUDE_FILE)")
 SOURCES := $(shell $(SOURCES_QUERY))
 DASHBOARDSOURCES := $(shell find $(DASHBOARDDIR)/src -name '*.js') $(DASHBOARDDIR)/package.json
 LINT_EXCLUDES:=
@@ -165,7 +166,6 @@ LINT_EXCLUDES+=.*\.community\.go$$
 else
 LINT_EXCLUDES+=.*\.enterprise\.go$$
 endif
-
 
 .DEFAULT_GOAL := all
 .PHONY: all
@@ -191,6 +191,7 @@ license-verify:
 fmt:
 	@echo ">> Ensuring style of files"
 	@$(GOPATH)/bin/goimports -w $(SOURCES)
+	@$(GOPATH)/bin/gci write -s "standard" -s "default" -s "prefix(github.com/arangodb)" -s "prefix(github.com/arangodb/kube-arangodb)" $(SOURCES)  
 
 .PHONY: license
 license:
@@ -461,6 +462,8 @@ tools: update-vendor
 	@GOBIN=$(GOPATH)/bin go install github.com/google/addlicense@6d92264d717064f28b32464f0f9693a5b4ef0239
 	@echo ">> Fetching GO Assets Builder"
 	@GOBIN=$(GOPATH)/bin go install github.com/jessevdk/go-assets-builder@b8483521738fd2198ecfc378067a4e8a6079f8e5
+	@echo ">> Fetching gci"
+	@GOBIN=$(GOPATH)/bin go install github.com/daixiang0/gci@v0.3.0
 
 .PHONY: vendor
 vendor:

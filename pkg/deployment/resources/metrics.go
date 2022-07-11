@@ -21,9 +21,8 @@
 package resources
 
 import (
-	"sync"
-
 	"fmt"
+	"sync"
 
 	"github.com/arangodb/kube-arangodb/pkg/generated/metric_descriptions"
 	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
