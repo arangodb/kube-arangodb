@@ -24,8 +24,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/stretchr/testify/require"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
 func Test_Apply(t *testing.T) {

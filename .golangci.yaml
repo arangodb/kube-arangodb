@@ -24,11 +24,21 @@ linters:
     - unused 
     - varcheck
     - importas
+    - gci
 
 linters-settings:
   importas:
+    no-unaliased: true
     alias:
       - pkg: k8s.io/api/core/v1
         alias: core
       - pkg: k8s.io/apimachinery/pkg/apis/meta/v1
         alias: meta
+      - pkg: k8s.io/client-go/kubernetes/typed/core/v1
+        alias: typedCore
+  gci:
+    sections:
+      - standard
+      - default
+      - prefix(github.com/arangodb)
+      - prefix(github.com/arangodb/kube-arangodb)

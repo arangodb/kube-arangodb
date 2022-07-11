@@ -21,13 +21,13 @@
 package operator
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	kwatch "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/storage"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 

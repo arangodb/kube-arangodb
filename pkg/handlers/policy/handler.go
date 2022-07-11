@@ -26,19 +26,16 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
-	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
-
-	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
-
-	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
-
-	"k8s.io/client-go/kubernetes"
-
-	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
-	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/robfig/cron"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+
+	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
+	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
+	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 )
 
 const (

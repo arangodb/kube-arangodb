@@ -24,10 +24,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 const (

@@ -21,9 +21,10 @@
 package v2alpha1
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/util"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 // ConditionType is a strongly typed condition name

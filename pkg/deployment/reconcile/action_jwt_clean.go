@@ -23,18 +23,16 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"k8s.io/apimachinery/pkg/types"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 func init() {

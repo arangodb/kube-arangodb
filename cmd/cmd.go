@@ -31,31 +31,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
 	"github.com/gin-gonic/gin"
-
-	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
-
-	"github.com/arangodb/kube-arangodb/pkg/version"
-
-	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
-
-	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/crd"
-	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
-	"github.com/arangodb/kube-arangodb/pkg/logging"
-	"github.com/arangodb/kube-arangodb/pkg/operator"
-	"github.com/arangodb/kube-arangodb/pkg/server"
-	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-	utilsError "github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
-	"github.com/arangodb/kube-arangodb/pkg/util/probe"
-	"github.com/arangodb/kube-arangodb/pkg/util/retry"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
@@ -65,9 +41,28 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
-	v1core "k8s.io/client-go/kubernetes/typed/core/v1"
+	typedCore "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/klog"
+
+	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/crd"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
+	"github.com/arangodb/kube-arangodb/pkg/operator"
+	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
+	"github.com/arangodb/kube-arangodb/pkg/server"
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilsError "github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
+	"github.com/arangodb/kube-arangodb/pkg/util/probe"
+	"github.com/arangodb/kube-arangodb/pkg/util/retry"
+	"github.com/arangodb/kube-arangodb/pkg/version"
 )
 
 const (
@@ -477,7 +472,7 @@ func createRecorder(kubecli kubernetes.Interface, name, namespace string) record
 	eventBroadcaster.StartLogging(func(format string, args ...interface{}) {
 		eventRecorder.Info(format, args...)
 	})
-	eventBroadcaster.StartRecordingToSink(&v1core.EventSinkImpl{Interface: v1core.New(kubecli.CoreV1().RESTClient()).Events(namespace)})
+	eventBroadcaster.StartRecordingToSink(&typedCore.EventSinkImpl{Interface: typedCore.New(kubecli.CoreV1().RESTClient()).Events(namespace)})
 	combinedScheme := runtime.NewScheme()
 	scheme.AddToScheme(combinedScheme)
 	core.AddToScheme(combinedScheme)

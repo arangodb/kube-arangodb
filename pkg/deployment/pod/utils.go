@@ -21,12 +21,13 @@
 package pod
 
 import (
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
-	core "k8s.io/api/core/v1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func GenerateMemberEndpoint(services service.Inspector, apiObject meta.Object, spec api.DeploymentSpec, group api.ServerGroup, member api.MemberStatus) (string, error) {

@@ -24,13 +24,15 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/arangodb/go-driver"
-	"github.com/arangodb/kube-arangodb/pkg/logging"
-	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	authorization "k8s.io/api/authorization/v1"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/arangodb/go-driver"
+
+	"github.com/arangodb/kube-arangodb/pkg/logging"
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
 var logger = logging.Global().RegisterAndGetLogger("crd", logging.Info)

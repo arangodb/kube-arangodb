@@ -23,11 +23,12 @@ package inspector
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	ins "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor/v1"
 	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	ins "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor/v1"
 )
 
 func (p *serviceMonitorsInspector) V1() (ins.Inspector, error) {

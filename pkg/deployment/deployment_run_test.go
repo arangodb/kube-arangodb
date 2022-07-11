@@ -26,19 +26,17 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	core "k8s.io/api/core/v1"
-
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 func runTestCases(t *testing.T, testCases ...testCaseStruct) {

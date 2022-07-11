@@ -24,9 +24,10 @@ import (
 	"context"
 	"sort"
 
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/server"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // Name returns the name of the local storage resource

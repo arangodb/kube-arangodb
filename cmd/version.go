@@ -23,8 +23,9 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/arangodb/kube-arangodb/pkg/version"
 	"github.com/spf13/cobra"
+
+	"github.com/arangodb/kube-arangodb/pkg/version"
 )
 
 func init() {

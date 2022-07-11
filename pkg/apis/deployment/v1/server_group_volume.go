@@ -23,13 +23,12 @@ package v1
 import (
 	"fmt"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	sharedv1 "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
-
-	core "k8s.io/api/core/v1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 var (

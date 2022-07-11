@@ -24,12 +24,12 @@ import (
 	"os"
 	"testing"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/stretchr/testify/assert"
-
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/validation/field"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 var (

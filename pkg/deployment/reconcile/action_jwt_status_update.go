@@ -25,15 +25,12 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 const (

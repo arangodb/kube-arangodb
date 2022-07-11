@@ -23,8 +23,9 @@ package v1
 import (
 	"testing"
 
-	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 func TestRocksDBSpecValidate(t *testing.T) {

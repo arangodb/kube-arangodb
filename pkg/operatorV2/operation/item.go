@@ -23,8 +23,9 @@ package operation
 import (
 	"strings"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 // Operation declares operation string representation

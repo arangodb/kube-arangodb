@@ -27,20 +27,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/stretchr/testify/assert"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/stretchr/testify/require"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 const (

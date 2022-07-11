@@ -29,19 +29,21 @@ import (
 	"strings"
 	"testing"
 
-	driver "github.com/arangodb/go-driver"
-	"github.com/arangodb/go-driver/jwt"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	monitoringFakeClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/fake"
 	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
+	extfake "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/fake"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 	recordfake "k8s.io/client-go/tools/record"
 
+	driver "github.com/arangodb/go-driver"
+	"github.com/arangodb/go-driver/jwt"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/acs"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	arangofake "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/fake"
@@ -51,7 +53,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/probes"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
-	extfake "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/fake"
 )
 
 const (

@@ -25,11 +25,11 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/rs/zerolog"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/rs/zerolog"
 )
 
 var (

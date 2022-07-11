@@ -23,8 +23,9 @@ package conn
 import (
 	"testing"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/stretchr/testify/require"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 func Test_IsAsyncErrorNotFound_Loop(t *testing.T) {

@@ -21,10 +21,10 @@
 package v1
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/apis/apps"
-
 	batchv1 "k8s.io/api/batch/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/apis/apps"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

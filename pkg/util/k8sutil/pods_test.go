@@ -24,10 +24,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
-	"github.com/stretchr/testify/require"
 )
 
 // TestIsPodReady tests IsPodReady.

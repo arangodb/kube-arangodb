@@ -23,10 +23,11 @@ package sutil
 import (
 	"context"
 
+	"k8s.io/apimachinery/pkg/types"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 type ACSGetter interface {

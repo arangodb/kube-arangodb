@@ -23,11 +23,12 @@ package inspector
 import (
 	"context"
 
-	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	typedCore "k8s.io/client-go/kubernetes/typed/core/v1"
+
+	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
 )
 
 func (p podsMod) V1() podv1.ModInterface {

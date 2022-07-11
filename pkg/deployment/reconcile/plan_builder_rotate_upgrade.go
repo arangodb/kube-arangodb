@@ -22,22 +22,21 @@ package reconcile
 
 import (
 	"context"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
-
 	"fmt"
+
+	core "k8s.io/api/core/v1"
 
 	"github.com/arangodb/go-driver"
 	upgraderules "github.com/arangodb/go-upgrade-rules"
+
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	core "k8s.io/api/core/v1"
 )
 
 var (

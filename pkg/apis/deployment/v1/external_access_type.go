@@ -21,9 +21,9 @@
 package v1
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
 	core "k8s.io/api/core/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 // ExternalAccessType specifies the type of external access provides for the deployment

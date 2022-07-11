@@ -28,13 +28,15 @@ import (
 	"os"
 	"path"
 
-	"github.com/arangodb/go-driver/jwt"
-	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+
+	"github.com/arangodb/go-driver/jwt"
+
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 )
 
 var (

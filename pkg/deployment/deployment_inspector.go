@@ -24,25 +24,17 @@ import (
 	"context"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
-
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
-
-	operatorErrors "github.com/arangodb/kube-arangodb/pkg/util/errors"
-
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/upgrade"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 )
 
 var (
@@ -124,7 +116,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 
 		inspectNextInterval, err := d.inspectDeploymentWithError(ctxReconciliation, nextInterval)
 		if err != nil {
-			if !operatorErrors.IsReconcile(err) {
+			if !errors.IsReconcile(err) {
 				nextInterval = inspectNextInterval
 				hasError = true
 

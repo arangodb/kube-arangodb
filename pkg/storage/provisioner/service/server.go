@@ -26,12 +26,11 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
 	"github.com/julienschmidt/httprouter"
 
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 const (

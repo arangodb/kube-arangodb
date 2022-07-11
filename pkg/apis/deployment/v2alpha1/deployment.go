@@ -21,9 +21,10 @@
 package v2alpha1
 
 import (
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

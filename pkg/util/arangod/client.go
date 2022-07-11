@@ -28,17 +28,16 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	typedCore "k8s.io/client-go/kubernetes/typed/core/v1"
 
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/http"
 	"github.com/arangodb/go-driver/jwt"
-	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -115,7 +114,7 @@ var (
 )
 
 // CreateArangodClient creates a go-driver client for a specific member in the given group.
-func CreateArangodClient(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, group api.ServerGroup, id string) (driver.Client, error) {
+func CreateArangodClient(ctx context.Context, cli typedCore.CoreV1Interface, apiObject *api.ArangoDeployment, group api.ServerGroup, id string) (driver.Client, error) {
 	// Create connection
 	dnsName := k8sutil.CreatePodDNSNameWithDomain(apiObject, apiObject.Spec.ClusterDomain, group.AsRole(), id)
 	c, err := createArangodClientForDNSName(ctx, cli, apiObject, dnsName, false)
@@ -126,7 +125,7 @@ func CreateArangodClient(ctx context.Context, cli corev1.CoreV1Interface, apiObj
 }
 
 // CreateArangodDatabaseClient creates a go-driver client for accessing the entire cluster (or single server).
-func CreateArangodDatabaseClient(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, shortTimeout bool) (driver.Client, error) {
+func CreateArangodDatabaseClient(ctx context.Context, cli typedCore.CoreV1Interface, apiObject *api.ArangoDeployment, shortTimeout bool) (driver.Client, error) {
 	// Create connection
 	dnsName := k8sutil.CreateDatabaseClientServiceDNSNameWithDomain(apiObject, apiObject.Spec.ClusterDomain)
 	c, err := createArangodClientForDNSName(ctx, cli, apiObject, dnsName, shortTimeout)
@@ -148,7 +147,7 @@ func CreateArangodImageIDClient(ctx context.Context, deployment k8sutil.APIObjec
 }
 
 // CreateArangodClientForDNSName creates a go-driver client for a given DNS name.
-func createArangodClientForDNSName(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, dnsName string, shortTimeout bool) (driver.Client, error) {
+func createArangodClientForDNSName(ctx context.Context, cli typedCore.CoreV1Interface, apiObject *api.ArangoDeployment, dnsName string, shortTimeout bool) (driver.Client, error) {
 	connConfig := createArangodHTTPConfigForDNSNames(apiObject, []string{dnsName}, shortTimeout)
 	// TODO deal with TLS with proper CA checking
 	conn, err := http.NewConnection(connConfig)
@@ -197,7 +196,7 @@ func createArangodHTTPConfigForDNSNames(apiObject *api.ArangoDeployment, dnsName
 }
 
 // createArangodClientAuthentication creates a go-driver authentication for the servers in the given deployment.
-func createArangodClientAuthentication(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment) (driver.Authentication, error) {
+func createArangodClientAuthentication(ctx context.Context, cli typedCore.CoreV1Interface, apiObject *api.ArangoDeployment) (driver.Authentication, error) {
 	if apiObject != nil && apiObject.Spec.IsAuthenticated() {
 		// Authentication is enabled.
 		// Should we skip using it?

@@ -23,8 +23,9 @@ package crd
 import (
 	"testing"
 
-	"github.com/arangodb/go-driver"
 	"github.com/stretchr/testify/require"
+
+	"github.com/arangodb/go-driver"
 )
 
 func Test_Versions(t *testing.T) {

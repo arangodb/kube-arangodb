@@ -22,7 +22,6 @@ package util
 
 import (
 	"math"
-
 	"time"
 
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"

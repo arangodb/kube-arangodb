@@ -24,10 +24,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 // inspectPVs queries all PersistentVolume's and triggers a cleanup for

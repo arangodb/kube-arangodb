@@ -24,11 +24,12 @@ import (
 	"fmt"
 	"strings"
 
-	driver "github.com/arangodb/go-driver"
-	upgraderules "github.com/arangodb/go-upgrade-rules"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+
+	driver "github.com/arangodb/go-driver"
+	upgraderules "github.com/arangodb/go-upgrade-rules"
 )
 
 // Event is used to create events using an EventRecorder.

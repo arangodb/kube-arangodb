@@ -22,6 +22,7 @@ package backup
 
 import (
 	"github.com/arangodb/go-driver"
+
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 )
 

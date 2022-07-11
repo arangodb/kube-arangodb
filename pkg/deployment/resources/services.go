@@ -25,22 +25,19 @@ import (
 	"strings"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
-	"k8s.io/apimachinery/pkg/api/equality"
-	"k8s.io/apimachinery/pkg/util/intstr"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-
 	core "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/equality"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	servicev1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service/v1"
 )
 

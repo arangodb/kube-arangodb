@@ -25,14 +25,13 @@ import (
 	"crypto/sha256"
 	"fmt"
 
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
 	"github.com/arangodb/go-driver"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 )
 
 func mapTLSSNIConfig(sni api.TLSSNISpec, cachedStatus inspectorInterface.Inspector) (map[string]string, error) {

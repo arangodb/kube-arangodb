@@ -23,10 +23,12 @@ package reconcile
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/arangodb/go-driver"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/stretchr/testify/require"
 )
 
 func Test_RotateUpgrade_Condition(t *testing.T) {

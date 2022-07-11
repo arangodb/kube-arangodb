@@ -21,10 +21,11 @@
 package pod
 
 import (
+	core "k8s.io/api/core/v1"
+
 	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
-	core "k8s.io/api/core/v1"
 )
 
 func AutoUpgrade() Builder {

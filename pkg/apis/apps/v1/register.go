@@ -21,11 +21,11 @@
 package v1
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/apis/apps"
-
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+
+	"github.com/arangodb/kube-arangodb/pkg/apis/apps"
 )
 
 const (

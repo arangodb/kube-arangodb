@@ -24,9 +24,10 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/pkg/errors"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
-	"github.com/pkg/errors"
 )
 
 var (

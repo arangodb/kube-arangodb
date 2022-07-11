@@ -23,8 +23,9 @@ package v1
 import (
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/robfig/cron"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 func (a *ArangoBackupPolicy) Validate() error {

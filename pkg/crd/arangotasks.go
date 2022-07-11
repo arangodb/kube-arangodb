@@ -21,8 +21,9 @@
 package crd
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/util"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 func init() {

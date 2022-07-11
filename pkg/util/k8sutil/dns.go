@@ -24,9 +24,9 @@ import (
 	"fmt"
 
 	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func appendDeploymentClusterDomain(dns string, domain *string) string {

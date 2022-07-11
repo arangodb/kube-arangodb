@@ -24,13 +24,14 @@ import (
 	"fmt"
 	"sort"
 
-	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/go-driver"
+
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/backup/state"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type updateStatusFunc func(status *backupApi.ArangoBackupStatus)

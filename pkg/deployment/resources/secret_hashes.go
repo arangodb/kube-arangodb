@@ -28,17 +28,14 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-
 	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 )
 
 // ValidateSecretHashes checks the hash of used secrets

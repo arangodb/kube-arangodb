@@ -25,12 +25,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"k8s.io/apimachinery/pkg/util/uuid"
 
 	"github.com/arangodb/go-driver"
+
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"k8s.io/apimachinery/pkg/util/uuid"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 const (

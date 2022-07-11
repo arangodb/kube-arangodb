@@ -23,10 +23,10 @@ package rotation
 import (
 	"reflect"
 
+	core "k8s.io/api/core/v1"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-
-	core "k8s.io/api/core/v1"
 )
 
 func podCompare(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *core.PodSpec) compareFunc {

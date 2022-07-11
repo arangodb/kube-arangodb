@@ -28,6 +28,7 @@ import (
 
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"

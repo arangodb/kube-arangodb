@@ -23,11 +23,12 @@ package inspector
 import (
 	"context"
 
-	secretv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	typedCore "k8s.io/client-go/kubernetes/typed/core/v1"
+
+	secretv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
 )
 
 func (p secretsMod) V1() secretv1.ModInterface {

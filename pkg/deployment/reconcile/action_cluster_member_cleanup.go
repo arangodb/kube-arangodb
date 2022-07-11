@@ -23,11 +23,10 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
 	"github.com/arangodb/go-driver"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 
 func init() {

@@ -25,9 +25,11 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/arangodb/go-driver"
-	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 	"github.com/stretchr/testify/require"
+
+	"github.com/arangodb/go-driver"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 )
 
 func Test_Async(t *testing.T) {

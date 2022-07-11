@@ -25,18 +25,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	certificates "github.com/arangodb-helper/go-certificates"
-
+	"gopkg.in/yaml.v3"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	certificates "github.com/arangodb-helper/go-certificates"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"gopkg.in/yaml.v3"
 )
 
 const (

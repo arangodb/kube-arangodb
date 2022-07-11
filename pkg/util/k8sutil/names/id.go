@@ -24,8 +24,9 @@ import (
 	"fmt"
 	"strings"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/dchest/uniuri"
+
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
 
 func GetArangodID(group api.ServerGroup) string {

@@ -31,7 +31,14 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/pkg/errors"
+	"github.com/spf13/cobra"
+	core "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/client-go/kubernetes"
 
 	deplv1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	acli "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
@@ -39,13 +46,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
-	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
-	core "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/fields"
-	"k8s.io/client-go/kubernetes"
 )
 
 var (

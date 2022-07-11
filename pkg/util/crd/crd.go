@@ -24,12 +24,11 @@ import (
 	"context"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
 )
 

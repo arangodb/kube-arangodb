@@ -34,6 +34,7 @@ import (
 	"time"
 
 	"github.com/arangodb/go-driver"
+
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 )

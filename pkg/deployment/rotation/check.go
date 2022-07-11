@@ -23,12 +23,13 @@ package rotation
 import (
 	"time"
 
+	core "k8s.io/api/core/v1"
+
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/acs/sutil"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-	core "k8s.io/api/core/v1"
 )
 
 type Mode int

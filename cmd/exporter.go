@@ -28,11 +28,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/exporter"
-	"github.com/arangodb/kube-arangodb/pkg/util"
-
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+
+	"github.com/arangodb/kube-arangodb/pkg/exporter"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 var (

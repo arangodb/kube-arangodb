@@ -33,8 +33,6 @@ import (
 	"strconv"
 	"syscall"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
 	"github.com/spf13/cobra"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -42,10 +40,12 @@ import (
 	"github.com/arangodb-helper/go-certificates"
 	"github.com/arangodb/go-driver/jwt"
 	"github.com/arangodb/go-driver/v2/connection"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	secretv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"

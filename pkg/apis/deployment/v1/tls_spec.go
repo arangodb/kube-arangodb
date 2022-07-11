@@ -23,10 +23,9 @@ package v1
 import (
 	"net"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/validation"
 )
 

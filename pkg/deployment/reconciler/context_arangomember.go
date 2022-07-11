@@ -24,10 +24,11 @@ import (
 	"context"
 	"time"
 
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type ArangoMemberCreateFunc func(obj *api.ArangoMember)

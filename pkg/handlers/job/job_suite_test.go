@@ -24,6 +24,13 @@ import (
 	"context"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+	batchv1 "k8s.io/api/batch/v1"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/uuid"
+	"k8s.io/client-go/kubernetes/fake"
+
 	"github.com/arangodb/kube-arangodb/pkg/apis/apps"
 	appsApi "github.com/arangodb/kube-arangodb/pkg/apis/apps/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
@@ -32,13 +39,6 @@ import (
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
-
-	"github.com/stretchr/testify/require"
-	batchv1 "k8s.io/api/batch/v1"
-	core "k8s.io/api/core/v1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/uuid"
-	"k8s.io/client-go/kubernetes/fake"
 )
 
 func newFakeHandler() *handler {

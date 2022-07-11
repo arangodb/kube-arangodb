@@ -24,12 +24,13 @@ import (
 	"context"
 	"testing"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
-	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
 func Test_SecretConfigGetter(t *testing.T) {

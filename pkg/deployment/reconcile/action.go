@@ -26,9 +26,10 @@ import (
 	"sync"
 	"time"
 
+	"k8s.io/apimachinery/pkg/types"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 const (

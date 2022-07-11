@@ -25,17 +25,17 @@ import (
 	"net"
 	"strconv"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/rs/zerolog/log"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	certificates "github.com/arangodb-helper/go-certificates"
 	"github.com/arangodb/arangosync-client/client"
 	"github.com/arangodb/arangosync-client/tasks"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/rs/zerolog/log"
 )
 
 // createSyncMasterClient creates an arangosync client for the given endpoint.

@@ -24,19 +24,17 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
-	"github.com/stretchr/testify/assert"
 )
 
 // TestCreateArangodArgsSingle tests createArangodArgs for single server.

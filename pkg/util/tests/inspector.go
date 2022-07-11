@@ -24,11 +24,12 @@ import (
 	"context"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
-	"github.com/stretchr/testify/require"
 )
 
 const FakeNamespace = "fake"

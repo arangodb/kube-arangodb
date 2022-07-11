@@ -27,15 +27,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
 	"github.com/dchest/uniuri"
 	"github.com/gin-gonic/gin"
-
-	"github.com/arangodb/kube-arangodb/pkg/logging"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	typedv1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	typedCore "k8s.io/client-go/kubernetes/typed/core/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/logging"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 const (
@@ -46,7 +45,7 @@ const (
 var authLogger = logging.Global().RegisterAndGetLogger("server-authentication", logging.Info)
 
 type serverAuthentication struct {
-	secrets typedv1.SecretInterface
+	secrets typedCore.SecretInterface
 	admin   struct {
 		mutex    sync.Mutex
 		username string
@@ -82,7 +81,7 @@ type loginResponse struct {
 
 // newServerAuthentication creates a new server authentication service
 // for the given arguments.
-func newServerAuthentication(secrets typedv1.SecretInterface, adminSecretName string, allowAnonymous bool) *serverAuthentication {
+func newServerAuthentication(secrets typedCore.SecretInterface, adminSecretName string, allowAnonymous bool) *serverAuthentication {
 	auth := &serverAuthentication{
 		secrets:         secrets,
 		adminSecretName: adminSecretName,

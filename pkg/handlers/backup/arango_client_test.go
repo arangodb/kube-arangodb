@@ -25,11 +25,11 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/stretchr/testify/require"
 
 	"github.com/arangodb/go-driver"
 
-	"github.com/stretchr/testify/require"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 func Test_Errors_Temporary(t *testing.T) {

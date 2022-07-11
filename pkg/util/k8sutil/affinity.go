@@ -21,9 +21,10 @@
 package k8sutil
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 )
 
 // CreateAffinity creates pod anti-affinity for the given role.

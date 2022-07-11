@@ -32,6 +32,7 @@ import (
 	errs "github.com/pkg/errors"
 
 	driver "github.com/arangodb/go-driver"
+
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 )
 

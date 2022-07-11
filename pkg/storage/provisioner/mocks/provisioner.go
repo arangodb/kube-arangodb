@@ -23,11 +23,10 @@ package mocks
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
 	"github.com/stretchr/testify/mock"
 
 	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 type Provisioner interface {
