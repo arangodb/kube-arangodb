@@ -48,7 +48,7 @@ func StripArangodPrefix(id string) string {
 // FixupResourceName ensures that the given name
 // complies with kubernetes name requirements.
 // If the name is too long or contains invalid characters,
-// it will be adjusted and a hash with be added.
+// it will be adjusted and a hash will be added.
 func FixupResourceName(name string) string {
 	sb := strings.Builder{}
 	needHash := len(name) > qualifiedNameMaxLength
