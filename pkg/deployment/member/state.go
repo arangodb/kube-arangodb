@@ -26,11 +26,13 @@ import (
 
 	"github.com/rs/zerolog"
 
+	"github.com/arangodb/arangosync-client/client"
 	"github.com/arangodb/go-driver"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 
@@ -40,6 +42,13 @@ type StateInspectorGetter interface {
 
 type StateInspector interface {
 	RefreshState(ctx context.Context, members api.DeploymentStatusMemberElements)
+
+	// GetMemberClient returns member connection to an ArangoDB server.
+	GetMemberClient(id string) (driver.Client, error)
+
+	// GetMemberSyncClient returns member connection to an ArangoSync server.
+	GetMemberSyncClient(id string) (client.API, error)
+
 	MemberState(id string) (State, bool)
 
 	Health() Health
@@ -164,6 +173,7 @@ func (s *stateInspector) fetchArangosyncMemberState(ctx context.Context, m api.D
 				"arangosync-build": v.Build,
 			},
 		}
+		state.syncClient = c
 	}
 	return state
 }
@@ -180,8 +190,41 @@ func (s *stateInspector) fetchServerMemberState(ctx context.Context, m api.Deplo
 		state.NotReachableErr = err
 	} else {
 		state.Version = v
+		state.client = c
 	}
 	return state
+}
+
+// GetMemberClient returns member client to a server.
+func (s *stateInspector) GetMemberClient(id string) (driver.Client, error) {
+	if state, ok := s.MemberState(id); ok {
+		if state.NotReachableErr != nil {
+			// ArangoDB client can be set, but it might be old value.
+			return nil, state.NotReachableErr
+		}
+
+		if state.client != nil {
+			return state.client, nil
+		}
+	}
+
+	return nil, errors.Newf("failed to get ArangoDB member client: %s", id)
+}
+
+// GetMemberSyncClient returns member client to a server.
+func (s *stateInspector) GetMemberSyncClient(id string) (client.API, error) {
+	if state, ok := s.MemberState(id); ok {
+		if state.NotReachableErr != nil {
+			// ArangoSync client can be set, but it might be old value.
+			return nil, state.NotReachableErr
+		}
+
+		if state.syncClient != nil {
+			return state.syncClient, nil
+		}
+	}
+
+	return nil, errors.Newf("failed to get ArangoSync member client: %s", id)
 }
 
 func (s *stateInspector) MemberState(id string) (State, bool) {
@@ -203,10 +246,16 @@ type Health struct {
 	Error error
 }
 
+// State describes a state of a member.
 type State struct {
+	// NotReachableErr set to non-nil if a member is not reachable.
 	NotReachableErr error
-
+	// Version of this specific member.
 	Version driver.VersionInfo
+	// client to this specific ArangoDB member.
+	client driver.Client
+	// client to this specific ArangoSync member.
+	syncClient client.API
 }
 
 func (s State) IsReachable() bool {

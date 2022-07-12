@@ -48,9 +48,7 @@ type refreshTLSKeyfileCertificateAction struct {
 }
 
 func (a *refreshTLSKeyfileCertificateAction) CheckProgress(ctx context.Context) (bool, bool, error) {
-	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	c, err := a.actionCtx.GetServerClient(ctxChild, a.action.Group, a.action.MemberID)
+	c, err := a.actionCtx.GetMembersState().GetMemberClient(a.action.MemberID)
 	if err != nil {
 		a.log.Err(err).Warn("Unable to get client")
 		return true, false, nil
@@ -72,7 +70,7 @@ func (a *refreshTLSKeyfileCertificateAction) CheckProgress(ctx context.Context) 
 
 	client := client.NewClient(c.Connection())
 
-	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	e, err := client.RefreshTLS(ctxChild)
 	if err != nil {

@@ -55,15 +55,14 @@ func (a *encryptionKeyRefreshAction) Start(ctx context.Context) (bool, error) {
 func (a *encryptionKeyRefreshAction) CheckProgress(ctx context.Context) (bool, bool, error) {
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
-	keyfolder, err := a.actionCtx.ACS().CurrentClusterCache().Secret().V1().Read().Get(ctxChild, pod.GetEncryptionFolderSecretName(a.actionCtx.GetName()), meta.GetOptions{})
+	keyFolder, err := a.actionCtx.ACS().CurrentClusterCache().Secret().V1().Read().Get(ctxChild,
+		pod.GetEncryptionFolderSecretName(a.actionCtx.GetName()), meta.GetOptions{})
 	if err != nil {
 		a.log.Err(err).Error("Unable to fetch encryption folder")
 		return true, false, nil
 	}
 
-	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	c, err := a.actionCtx.GetServerClient(ctxChild, a.action.Group, a.action.MemberID)
+	c, err := a.actionCtx.GetMembersState().GetMemberClient(a.action.MemberID)
 	if err != nil {
 		a.log.Err(err).Warn("Unable to get client")
 		return true, false, nil
@@ -78,7 +77,7 @@ func (a *encryptionKeyRefreshAction) CheckProgress(ctx context.Context) (bool, b
 		return true, false, nil
 	}
 
-	if !e.Result.KeysPresent(keyfolder.Data) {
+	if !e.Result.KeysPresent(keyFolder.Data) {
 		return false, false, nil
 	}
 

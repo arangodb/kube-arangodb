@@ -35,7 +35,6 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/arangodb/arangosync-client/client"
 	"github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
 
@@ -137,16 +136,6 @@ func (c *testContext) GetMode() api.DeploymentMode {
 }
 
 func (c *testContext) GetNamespace() string {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (c *testContext) GetAgencyClients(ctx context.Context) ([]driver.Connection, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (c *testContext) GetAgencyClientsWithPredicate(ctx context.Context, predicate func(id string) bool) ([]driver.Connection, error) {
 	//TODO implement me
 	panic("implement me")
 }
@@ -309,15 +298,7 @@ func (c *testContext) GetDatabaseClient(ctx context.Context) (driver.Client, err
 	return nil, errors.Newf("Client Not Found")
 }
 
-func (c *testContext) GetServerClient(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error) {
-	panic("implement me")
-}
-
 func (c *testContext) GetAgency(_ context.Context, _ ...string) (agency.Agency, error) {
-	panic("implement me")
-}
-
-func (c *testContext) GetSyncServerClient(ctx context.Context, group api.ServerGroup, id string) (client.API, error) {
 	panic("implement me")
 }
 

@@ -110,7 +110,7 @@ func (a *actionWaitForMemberUp) checkProgressSingle(ctx context.Context) (bool, 
 // checkProgressSingleInActiveFailover checks the progress of the action in the case
 // of a single server as part of an active failover deployment.
 func (a *actionWaitForMemberUp) checkProgressSingleInActiveFailover(ctx context.Context) (bool, bool, error) {
-	c, err := a.actionCtx.GetServerClient(ctx, a.action.Group, a.action.MemberID)
+	c, err := a.actionCtx.GetMembersState().GetMemberClient(a.action.MemberID)
 	if err != nil {
 		a.log.Err(err).Debug("Failed to create database client")
 		return false, false, nil
@@ -174,7 +174,7 @@ func (a *actionWaitForMemberUp) checkProgressCluster() (bool, bool, error) {
 // checkProgressArangoSync checks the progress of the action in the case
 // of a sync master / worker.
 func (a *actionWaitForMemberUp) checkProgressArangoSync(ctx context.Context) (bool, bool, error) {
-	c, err := a.actionCtx.GetSyncServerClient(ctx, a.action.Group, a.action.MemberID)
+	c, err := a.actionCtx.GetMembersState().GetMemberSyncClient(a.action.MemberID)
 	if err != nil {
 		a.log.Err(err).Debug("Failed to create arangosync client")
 		return false, false, nil

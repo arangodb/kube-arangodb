@@ -248,9 +248,7 @@ func (a actionRuntimeContainerArgsUpdate) setLogLevel(ctx context.Context, logLe
 		return nil
 	}
 
-	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	cli, err := a.actionCtx.GetServerClient(ctxChild, a.action.Group, a.action.MemberID)
+	cli, err := a.actionCtx.GetMembersState().GetMemberClient(a.action.MemberID)
 	if err != nil {
 		return err
 	}
@@ -265,7 +263,7 @@ func (a actionRuntimeContainerArgsUpdate) setLogLevel(ctx context.Context, logLe
 		return err
 	}
 
-	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	resp, err := conn.Do(ctxChild, req)
 	if err != nil {

@@ -82,11 +82,7 @@ func (r *Resources) syncMembersInCluster(ctx context.Context, health memberState
 	status, lastVersion := r.context.GetStatus()
 	updateStatusNeeded := false
 
-	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
-		if group != api.ServerGroupCoordinators && group != api.ServerGroupDBServers {
-			// We're not interested in these other groups
-			return nil
-		}
+	status.Members.ForeachServerInGroups(func(group api.ServerGroup, list api.MemberStatusList) error {
 		for _, m := range list {
 			log := log.Str("member", m.ID).Str("role", group.AsRole())
 			if serverFound(m.ID) {
@@ -110,7 +106,7 @@ func (r *Resources) syncMembersInCluster(ctx context.Context, health memberState
 			}
 		}
 		return nil
-	})
+	}, api.ServerGroupCoordinators, api.ServerGroupDBServers)
 
 	if updateStatusNeeded {
 		log.Debug("UpdateStatus needed")

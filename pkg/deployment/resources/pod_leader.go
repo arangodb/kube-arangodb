@@ -181,7 +181,7 @@ func (r *Resources) getSingleServerLeaderID(ctx context.Context) (string, error)
 			go func(id string) {
 				defer wg.Done()
 				err := globals.GetGlobalTimeouts().ArangoD().RunWithTimeout(ctxCancel, func(ctxChild context.Context) error {
-					c, err := r.context.GetServerClient(ctxChild, api.ServerGroupSingle, id)
+					c, err := r.context.GetMembersState().GetMemberClient(id)
 					if err != nil {
 						return err
 					}

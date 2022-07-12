@@ -79,7 +79,8 @@ func (r *Reconciler) createRotateTLSServerSNIPlan(ctx context.Context, apiObject
 			var c driver.Client
 			err := globals.GetGlobalTimeouts().ArangoD().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				var err error
-				c, err = planCtx.GetServerClient(ctxChild, group, m.ID)
+				c, err = planCtx.GetMembersState().GetMemberClient(m.ID)
+
 				return err
 			})
 			if err != nil {
