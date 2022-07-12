@@ -538,16 +538,8 @@ func (d *Deployment) RenderPodForMember(ctx context.Context, acs sutil.ACS, spec
 	return d.resources.RenderPodForMember(ctx, acs, spec, status, memberID, imageInfo)
 }
 
-func (d *Deployment) RenderPodForMemberFromCurrent(ctx context.Context, acs sutil.ACS, memberID string) (*core.Pod, error) {
-	return d.resources.RenderPodForMemberFromCurrent(ctx, acs, memberID)
-}
-
 func (d *Deployment) RenderPodTemplateForMember(ctx context.Context, acs sutil.ACS, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.PodTemplateSpec, error) {
 	return d.resources.RenderPodTemplateForMember(ctx, acs, spec, status, memberID, imageInfo)
-}
-
-func (d *Deployment) RenderPodTemplateForMemberFromCurrent(ctx context.Context, acs sutil.ACS, memberID string) (*core.PodTemplateSpec, error) {
-	return d.resources.RenderPodTemplateForMemberFromCurrent(ctx, acs, memberID)
 }
 
 func (d *Deployment) SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool) {

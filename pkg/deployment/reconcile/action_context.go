@@ -227,14 +227,6 @@ func (ac *actionContext) GetAgencyCache() (agencyCache.State, bool) {
 	return ac.context.GetAgencyCache()
 }
 
-func (ac *actionContext) RenderPodForMemberFromCurrent(ctx context.Context, acs sutil.ACS, memberID string) (*core.Pod, error) {
-	return ac.context.RenderPodForMemberFromCurrent(ctx, acs, memberID)
-}
-
-func (ac *actionContext) RenderPodTemplateForMemberFromCurrent(ctx context.Context, acs sutil.ACS, memberID string) (*core.PodTemplateSpec, error) {
-	return ac.context.RenderPodTemplateForMemberFromCurrent(ctx, acs, memberID)
-}
-
 func (ac *actionContext) SetAgencyMaintenanceMode(ctx context.Context, enabled bool) error {
 	return ac.context.SetAgencyMaintenanceMode(ctx, enabled)
 }

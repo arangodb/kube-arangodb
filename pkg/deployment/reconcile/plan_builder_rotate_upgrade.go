@@ -24,8 +24,6 @@ import (
 	"context"
 	"fmt"
 
-	core "k8s.io/api/core/v1"
-
 	"github.com/arangodb/go-driver"
 	upgraderules "github.com/arangodb/go-upgrade-rules"
 
@@ -389,16 +387,16 @@ func memberImageInfo(spec api.DeploymentSpec, status api.MemberStatus, images ap
 
 func (r *Reconciler) getPodDetails(ctx context.Context, apiObject k8sutil.APIObject, spec api.DeploymentSpec,
 	group api.ServerGroup, status api.DeploymentStatus, m api.MemberStatus,
-	planCtx PlanBuilderContext) (string, *core.Pod, *api.ArangoMember, bool) {
+	planCtx PlanBuilderContext) (string, *api.ArangoMember, bool) {
 	imageInfo, imageFound := planCtx.SelectImageForMember(spec, status, m)
 	if !imageFound {
 		// Image is not found, so rotation is not needed
-		return "", nil, nil, false
+		return "", nil, false
 	}
 
 	member, ok := planCtx.ACS().CurrentClusterCache().ArangoMember().V1().GetSimple(m.ArangoMemberName(apiObject.GetName(), group))
 	if !ok {
-		return "", nil, nil, false
+		return "", nil, false
 	}
 
 	groupSpec := spec.GetServerGroupSpec(group)
@@ -406,16 +404,16 @@ func (r *Reconciler) getPodDetails(ctx context.Context, apiObject k8sutil.APIObj
 	renderedPod, err := planCtx.RenderPodForMember(ctx, planCtx.ACS(), spec, status, m.ID, imageInfo)
 	if err != nil {
 		r.planLogger.Err(err).Error("Error while rendering pod")
-		return "", nil, nil, false
+		return "", nil, false
 	}
 
 	checksum, err := resources.ChecksumArangoPod(groupSpec, renderedPod)
 	if err != nil {
 		r.planLogger.Err(err).Error("Error while getting pod checksum")
-		return "", nil, nil, false
+		return "", nil, false
 	}
 
-	return checksum, renderedPod, member, true
+	return checksum, member, true
 }
 
 // arangoMemberPodTemplateNeedsUpdate returns true when the specification of the
@@ -425,7 +423,7 @@ func (r *Reconciler) getPodDetails(ctx context.Context, apiObject k8sutil.APIObj
 func (r *Reconciler) arangoMemberPodTemplateNeedsUpdate(ctx context.Context, apiObject k8sutil.APIObject, spec api.DeploymentSpec,
 	group api.ServerGroup, status api.DeploymentStatus, m api.MemberStatus,
 	planCtx PlanBuilderContext) (string, bool) {
-	checksum, _, member, valid := r.getPodDetails(ctx, apiObject, spec, group, status, m, planCtx)
+	checksum, member, valid := r.getPodDetails(ctx, apiObject, spec, group, status, m, planCtx)
 	if valid && !member.Spec.Template.EqualPodSpecChecksum(checksum) {
 		return "Pod Spec changed", true
 	}
