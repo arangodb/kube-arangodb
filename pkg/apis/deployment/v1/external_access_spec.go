@@ -41,8 +41,11 @@ type ExternalAccessSpec struct {
 	// cloud-provider does not support the feature.
 	// More info: https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/
 	LoadBalancerSourceRanges []string `json:"loadBalancerSourceRanges,omitempty"`
-	// Advertised Endpoint is passed to the coordinators/single servers for advertising a specific endpoint
+	// AdvertisedEndpoint is passed to the coordinators/single servers for advertising a specific endpoint
 	AdvertisedEndpoint *string `json:"advertisedEndpoint,omitempty"`
+	// ManagedServiceNames keeps names of services which are not managed by KubeArangoDB.
+	// It is only relevant when type of service is `managed`.
+	ManagedServiceNames []string `json:"managedServiceNames,omitempty"`
 }
 
 // GetType returns the value of type.
@@ -63,6 +66,11 @@ func (s ExternalAccessSpec) GetLoadBalancerIP() string {
 // GetAdvertisedEndpoint returns the advertised endpoint or empty string if none was specified
 func (s ExternalAccessSpec) GetAdvertisedEndpoint() string {
 	return util.StringOrDefault(s.AdvertisedEndpoint)
+}
+
+// GetManagedServiceNames returns a list of managed service names.
+func (s ExternalAccessSpec) GetManagedServiceNames() []string {
+	return s.ManagedServiceNames
 }
 
 // HasAdvertisedEndpoint return whether an advertised endpoint was specified or not
@@ -109,6 +117,9 @@ func (s *ExternalAccessSpec) SetDefaultsFrom(source ExternalAccessSpec) {
 	}
 	if s.AdvertisedEndpoint == nil {
 		s.AdvertisedEndpoint = source.AdvertisedEndpoint
+	}
+	if s.ManagedServiceNames == nil && len(source.ManagedServiceNames) > 0 {
+		s.ManagedServiceNames = append([]string{}, source.ManagedServiceNames...)
 	}
 }
 
