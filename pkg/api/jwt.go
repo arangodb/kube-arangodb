@@ -27,7 +27,7 @@ import (
 	"time"
 
 	jg "github.com/golang-jwt/jwt"
-	core "k8s.io/client-go/kubernetes/typed/core/v1"
+	typedCore "k8s.io/client-go/kubernetes/typed/core/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
@@ -38,7 +38,7 @@ import (
 // ensureJWT ensure that JWT signing key exists or creates a new one.
 // It also saves new token into secret if it is not present.
 // Returns JWT signing key.
-func ensureJWT(cli core.CoreV1Interface, cfg ServerConfig) (string, error) {
+func ensureJWT(cli typedCore.CoreV1Interface, cfg ServerConfig) (string, error) {
 	secrets := cli.Secrets(cfg.Namespace)
 
 	signingKey, err := k8sutil.GetTokenSecret(context.Background(), secrets, cfg.JWTKeySecretName)

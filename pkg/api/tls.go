@@ -30,6 +30,7 @@ import (
 	typedCore "k8s.io/client-go/kubernetes/typed/core/v1"
 
 	"github.com/arangodb-helper/go-certificates"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
