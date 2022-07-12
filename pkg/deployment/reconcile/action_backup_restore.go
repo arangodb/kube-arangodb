@@ -22,6 +22,7 @@ package reconcile
 
 import (
 	"context"
+	"time"
 
 	"github.com/arangodb/go-driver"
 
@@ -203,6 +204,16 @@ func (a actionBackupRestore) CheckProgress(ctx context.Context) (bool, bool, err
 			// Retry
 			return false, false, nil
 		}
+
+		// Add wait grace period for restore jobs - async job creation is asynchronous
+		if ok := conn.IsAsyncErrorNotFound(restoreError); ok {
+			if s := a.action.StartTime; s != nil && !s.Time.IsZero() {
+				if time.Since(s.Time) < 10*time.Second {
+					// Retry
+					return false, false, nil
+				}
+			}
+		}
 	}
 
 	// Restore is done
@@ -214,6 +225,7 @@ func (a actionBackupRestore) CheckProgress(ctx context.Context) (bool, bool, err
 		}
 
 		if restoreError != nil {
+			a.log.Err(restoreError).Error("Restore failed")
 			result.State = api.DeploymentRestoreStateRestoreFailed
 			result.Message = restoreError.Error()
 		}
