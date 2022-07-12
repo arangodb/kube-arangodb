@@ -76,7 +76,7 @@ func (r *Reconciler) CheckDeployment(ctx context.Context) error {
 				}
 
 				if err := cache.Client().Kubernetes().CoreV1().Secrets(cache.Namespace()).Delete(ctx, m.PodName, meta.DeleteOptions{}); err != nil {
-					r.log.Err(err).Error("Failed to delete pod")
+					r.log.Err(err).Error("Failed to delete secret")
 				}
 				m.Phase = api.MemberPhaseNone
 
