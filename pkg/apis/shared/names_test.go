@@ -24,10 +24,18 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 func Test_Names(t *testing.T) {
 	t.Run("Empty", func(t *testing.T) {
 		require.EqualError(t, ValidateResourceName(""), "Name '' is not a valid resource name")
+	})
+	t.Run("Pod name is valid", func(t *testing.T) {
+		name := CreatePodHostName("the-matrix-db", "arangodb-coordinator", "CRDN-549cznuy")
+		require.Empty(t, validation.IsQualifiedName(name))
+
+		name = CreatePodHostName("the-matrix-application-db-instance", "arangodb-coordinator", "CRDN-549cznuy")
+		require.Empty(t, validation.IsQualifiedName(name))
 	})
 }

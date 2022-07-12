@@ -31,6 +31,10 @@ var (
 	arangodPrefixes = []string{"CRDN-", "PRMR-", "AGNT-", "SNGL-"}
 )
 
+const (
+	qualifiedNameMaxLength int = 63
+)
+
 // StripArangodPrefix removes well know arangod ID prefixes from the given id.
 func StripArangodPrefix(id string) string {
 	for _, prefix := range arangodPrefixes {
@@ -43,13 +47,11 @@ func StripArangodPrefix(id string) string {
 
 // FixupResourceName ensures that the given name
 // complies with kubernetes name requirements.
-// If the name is to long or contains invalid characters,
-// if will be adjusted and a hash with be added.
+// If the name is too long or contains invalid characters,
+// it will be adjusted and a hash with be added.
 func FixupResourceName(name string) string {
-	maxLen := 63
-
 	sb := strings.Builder{}
-	needHash := len(name) > maxLen
+	needHash := len(name) > qualifiedNameMaxLength
 	for _, ch := range name {
 		if unicode.IsDigit(ch) || unicode.IsLower(ch) || ch == '-' {
 			sb.WriteRune(ch)
@@ -64,8 +66,8 @@ func FixupResourceName(name string) string {
 	if needHash {
 		hash := sha1.Sum([]byte(name))
 		h := fmt.Sprintf("-%0x", hash[:3])
-		if len(result)+len(h) > maxLen {
-			result = result[:maxLen-(len(h))]
+		if len(result)+len(h) > qualifiedNameMaxLength {
+			result = result[:qualifiedNameMaxLength-(len(h))]
 		}
 		result = result + h
 	}
@@ -75,7 +77,13 @@ func FixupResourceName(name string) string {
 // CreatePodHostName returns the hostname of the pod for a member with
 // a given id in a deployment with a given name.
 func CreatePodHostName(deploymentName, role, id string) string {
-	return deploymentName + "-" + role + "-" + StripArangodPrefix(id)
+	suffix := "-" + role + "-" + StripArangodPrefix(id)
+	maxDeplNameLen := qualifiedNameMaxLength - len(suffix)
+	// shorten deployment name part if resulting name is too big:
+	if maxDeplNameLen > 1 && len(deploymentName) > maxDeplNameLen {
+		deploymentName = deploymentName[:maxDeplNameLen-1]
+	}
+	return deploymentName + suffix
 }
 
 // CreatePersistentVolumeClaimName returns the name of the persistent volume claim for a member with
