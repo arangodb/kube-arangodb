@@ -25,9 +25,9 @@ import (
 	"strings"
 	"time"
 
-	"gopkg.in/yaml.v2"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/yaml"
 
 	certificates "github.com/arangodb-helper/go-certificates"
 
