@@ -1,6 +1,10 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Bugfix) Ensure pod names not too long
+- (Refactor) Use cached member's clients
+
+## [1.2.14](https://github.com/arangodb/kube-arangodb/tree/1.2.14) (2022-07-14)
 - (Feature) Add ArangoSync TLS based rotation
 - (Bugfix) Fix labels propagation
 - (Feature) Add `ArangoDeployment` CRD auto-installer
@@ -31,7 +35,7 @@
 - (Feature) Member restarts metric
 - (Bugfix) Infinite loop fix in ArangoD AsyncClient
 - (Bugfix) Add Panic Handler
-- (Refactor) Use cached member's clients 
+- (Bugfix) Unify yaml packages
 
 ## [1.2.13](https://github.com/arangodb/kube-arangodb/tree/1.2.13) (2022-06-07)
 - (Bugfix) Fix arangosync members state inspection

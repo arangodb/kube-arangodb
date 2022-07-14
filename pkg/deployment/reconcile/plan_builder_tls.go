@@ -292,7 +292,7 @@ func (r *Reconciler) createKeyfileRenewalPlanSynced(ctx context.Context, apiObje
 		member := statusMember.Member
 
 		if !plan.IsEmpty() {
-			return nil
+			continue
 		}
 
 		cache, ok := planCtx.ACS().ClusterCache(member.ClusterID)
