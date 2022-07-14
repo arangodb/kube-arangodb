@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.2.14](https://github.com/arangodb/kube-arangodb/tree/1.2.14) (2022-07-14)
 - (Feature) Add ArangoSync TLS based rotation
 - (Bugfix) Fix labels propagation
 - (Feature) Add `ArangoDeployment` CRD auto-installer
