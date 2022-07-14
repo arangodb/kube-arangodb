@@ -25,7 +25,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	batchv1 "k8s.io/api/batch/v1"
+	batch "k8s.io/api/batch/v1"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
@@ -86,7 +86,7 @@ func createArangoJob(t *testing.T, h *handler, jobs ...*appsApi.ArangoJob) {
 	}
 }
 
-func createK8sJob(t *testing.T, h *handler, jobs ...*batchv1.Job) {
+func createK8sJob(t *testing.T, h *handler, jobs ...*batch.Job) {
 	for _, job := range jobs {
 		_, err := h.kubeClient.BatchV1().Jobs(job.Namespace).Create(context.Background(), job, meta.CreateOptions{})
 		require.NoError(t, err)
@@ -113,7 +113,7 @@ func newArangoJob(name, namespace, deployment string) *appsApi.ArangoJob {
 		},
 		Spec: appsApi.ArangoJobSpec{
 			ArangoDeploymentName: deployment,
-			JobTemplate: &batchv1.JobSpec{
+			JobTemplate: &batch.JobSpec{
 				Template: core.PodTemplateSpec{
 					Spec: core.PodSpec{
 						Containers: []core.Container{
@@ -145,8 +145,8 @@ func newArangoDeployment(name, namespace string) *deploymentApi.ArangoDeployment
 	}
 }
 
-func newK8sJob(name, namespace string) *batchv1.Job {
-	return &batchv1.Job{
+func newK8sJob(name, namespace string) *batch.Job {
+	return &batch.Job{
 		ObjectMeta: meta.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,

@@ -24,7 +24,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	batchv1 "k8s.io/api/batch/v1"
+	batch "k8s.io/api/batch/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
 
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
@@ -93,5 +93,5 @@ func Test_Job_Create_Error_If_Deployment_Not_Exist(t *testing.T) {
 	// Assert
 	newJob := refreshArangoJob(t, handler, job)
 	require.True(t, len(newJob.Status.Conditions) == 1)
-	require.True(t, newJob.Status.Conditions[0].Type == batchv1.JobFailed)
+	require.True(t, newJob.Status.Conditions[0].Type == batch.JobFailed)
 }
