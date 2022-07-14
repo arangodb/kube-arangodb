@@ -66,15 +66,13 @@ func (t *tlsSNIUpdate) CheckProgress(ctx context.Context) (bool, bool, error) {
 		return true, false, nil
 	}
 
-	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	c, err := t.actionCtx.GetServerClient(ctxChild, t.action.Group, t.action.MemberID)
+	c, err := t.actionCtx.GetMembersState().GetMemberClient(t.action.MemberID)
 	if err != nil {
 		t.log.Err(err).Warn("Unable to get client")
 		return true, false, nil
 	}
 
-	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	if ok, err := compareTLSSNIConfig(ctxChild, c.Connection(), fetchedSecrets, true); err != nil {
 		t.log.Err(err).Warn("Unable to compare TLS config")

@@ -260,10 +260,7 @@ func (r *Reconciler) isEncryptionKeyUpToDate(ctx context.Context, status api.Dep
 	}
 
 	log := r.log.Str("group", group.AsRole()).Str("member", m.ID)
-
-	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	c, err := planCtx.GetServerClient(ctxChild, group, m.ID)
+	c, err := planCtx.GetMembersState().GetMemberClient(m.ID)
 	if err != nil {
 		log.Err(err).Warn("Unable to get client")
 		return false, true
@@ -271,7 +268,7 @@ func (r *Reconciler) isEncryptionKeyUpToDate(ctx context.Context, status api.Dep
 
 	client := client.NewClient(c.Connection())
 
-	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	e, err := client.GetEncryption(ctxChild)
 	if err != nil {

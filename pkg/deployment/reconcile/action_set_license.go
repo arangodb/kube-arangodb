@@ -66,14 +66,13 @@ func (a *licenseSetAction) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	group := a.action.Group
 	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !ok {
 		a.log.Error("No such member")
 		return true, nil
 	}
 
-	c, err := a.actionCtx.GetServerClient(ctxChild, group, m.ID)
+	c, err := a.actionCtx.GetMembersState().GetMemberClient(m.ID)
 	if !ok {
 		a.log.Err(err).Error("Unable to get client")
 		return true, nil

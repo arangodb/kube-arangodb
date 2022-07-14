@@ -45,7 +45,6 @@ type Context interface {
 	reconciler.ArangoApplier
 	reconciler.DeploymentInfoGetter
 	reconciler.DeploymentClient
-	reconciler.DeploymentSyncClient
 	reconciler.KubernetesEventGenerator
 
 	member.StateInspectorGetter

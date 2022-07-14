@@ -26,7 +26,6 @@ import (
 
 	core "k8s.io/api/core/v1"
 
-	"github.com/arangodb/arangosync-client/client"
 	"github.com/arangodb/go-driver"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
@@ -50,8 +49,7 @@ type ActionContext interface {
 	reconciler.DeploymentPodRenderer
 	reconciler.ArangoAgencyGet
 	reconciler.DeploymentInfoGetter
-	reconciler.DeploymentClient
-	reconciler.DeploymentSyncClient
+	reconciler.DeploymentDatabaseClient
 
 	member.StateInspectorGetter
 
@@ -261,24 +259,6 @@ func (ac *actionContext) GetSpec() api.DeploymentSpec {
 // creating one if needed.
 func (ac *actionContext) GetDatabaseClient(ctx context.Context) (driver.Client, error) {
 	c, err := ac.context.GetDatabaseClient(ctx)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return c, nil
-}
-
-// GetServerClient returns a cached client for a specific server.
-func (ac *actionContext) GetServerClient(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error) {
-	c, err := ac.context.GetServerClient(ctx, group, id)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return c, nil
-}
-
-// GetSyncServerClient returns a cached client for a specific arangosync server.
-func (ac *actionContext) GetSyncServerClient(ctx context.Context, group api.ServerGroup, id string) (client.API, error) {
-	c, err := ac.context.GetSyncServerClient(ctx, group, id)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

@@ -121,16 +121,14 @@ func (s shutdownHelperAPI) Start(ctx context.Context) (bool, error) {
 
 	if group.IsArangod() {
 		// Invoke shutdown endpoint
-		ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-		defer cancel()
-		c, err := s.actionCtx.GetServerClient(ctxChild, group, s.action.MemberID)
+		c, err := s.actionCtx.GetMembersState().GetMemberClient(s.action.MemberID)
 		if err != nil {
 			s.log.Err(err).Debug("Failed to create member client")
 			return false, errors.WithStack(err)
 		}
 		removeFromCluster := false
 		s.log.Bool("removeFromCluster", removeFromCluster).Debug("Shutting down member")
-		ctxChild, cancel = context.WithTimeout(ctx, shutdownTimeout)
+		ctxChild, cancel := context.WithTimeout(ctx, shutdownTimeout)
 		defer cancel()
 		if err := c.ShutdownV2(ctxChild, removeFromCluster, true); err != nil {
 			// Shutdown failed. Let's check if we're already done
