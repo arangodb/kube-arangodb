@@ -38,6 +38,8 @@ linters-settings:
         alias: typedCore
       - pkg: k8s.io/api/apps/v1
         alias: apps
+      - pkg: k8s.io/api/batch/v1
+        alias: batch
   gci:
     sections:
       - standard

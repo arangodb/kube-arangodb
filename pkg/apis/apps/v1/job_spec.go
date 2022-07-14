@@ -20,9 +20,9 @@
 
 package v1
 
-import batchv1 "k8s.io/api/batch/v1"
+import batch "k8s.io/api/batch/v1"
 
 type ArangoJobSpec struct {
-	ArangoDeploymentName string           `json:"arangoDeploymentName"`
-	JobTemplate          *batchv1.JobSpec `json:"jobTemplate,omitempty"`
+	ArangoDeploymentName string         `json:"arangoDeploymentName"`
+	JobTemplate          *batch.JobSpec `json:"jobTemplate,omitempty"`
 }

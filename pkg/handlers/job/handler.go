@@ -26,7 +26,7 @@ import (
 	"os"
 	"reflect"
 
-	batchv1 "k8s.io/api/batch/v1"
+	batch "k8s.io/api/batch/v1"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -92,12 +92,12 @@ func (h *handler) Handle(item operation.Item) error {
 	return nil
 }
 
-func (h *handler) createFailedJobStatusWithEvent(msg string, job *appsApi.ArangoJob) batchv1.JobStatus {
+func (h *handler) createFailedJobStatusWithEvent(msg string, job *appsApi.ArangoJob) batch.JobStatus {
 	h.eventRecorder.Warning(job, jobError, msg)
-	return batchv1.JobStatus{
-		Conditions: []batchv1.JobCondition{
+	return batch.JobStatus{
+		Conditions: []batch.JobCondition{
 			{
-				Type:    batchv1.JobFailed,
+				Type:    batch.JobFailed,
 				Status:  core.ConditionUnknown,
 				Message: msg,
 			},
@@ -105,7 +105,7 @@ func (h *handler) createFailedJobStatusWithEvent(msg string, job *appsApi.Arango
 	}
 }
 
-func (h *handler) processArangoJob(job *appsApi.ArangoJob) batchv1.JobStatus {
+func (h *handler) processArangoJob(job *appsApi.ArangoJob) batch.JobStatus {
 	existingJob, err := h.kubeClient.BatchV1().Jobs(job.Namespace).Get(context.Background(), job.Name, meta.GetOptions{})
 	if err != nil {
 		if k8sutil.IsNotFound(err) {
@@ -127,8 +127,8 @@ func (h *handler) processArangoJob(job *appsApi.ArangoJob) batchv1.JobStatus {
 	return existingJob.Status
 }
 
-func (h *handler) prepareK8sJob(job *appsApi.ArangoJob) (*batchv1.Job, error) {
-	k8sJob := batchv1.Job{}
+func (h *handler) prepareK8sJob(job *appsApi.ArangoJob) (*batch.Job, error) {
+	k8sJob := batch.Job{}
 	k8sJob.Name = job.Name
 	k8sJob.Namespace = job.Namespace
 	k8sJob.Spec = *job.Spec.JobTemplate
