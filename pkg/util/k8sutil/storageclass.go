@@ -25,7 +25,7 @@ import (
 	"strconv"
 	"time"
 
-	v1 "k8s.io/api/storage/v1"
+	storage "k8s.io/api/storage/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	storagev1 "k8s.io/client-go/kubernetes/typed/storage/v1"
 
@@ -39,7 +39,7 @@ var (
 
 // StorageClassIsDefault returns true if the given storage class is marked default,
 // false otherwise.
-func StorageClassIsDefault(sc *v1.StorageClass) bool {
+func StorageClassIsDefault(sc *storage.StorageClass) bool {
 	if value, found := sc.GetObjectMeta().GetAnnotations()[annStorageClassIsDefault]; found {
 		if boolValue, err := strconv.ParseBool(value); err == nil && boolValue {
 			return true

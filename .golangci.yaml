@@ -40,6 +40,8 @@ linters-settings:
         alias: apps
       - pkg: k8s.io/api/batch/v1
         alias: batch
+      - pkg: k8s.io/api/storage/v1
+        alias: storage
   gci:
     sections:
       - standard
