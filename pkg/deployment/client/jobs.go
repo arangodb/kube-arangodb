@@ -35,7 +35,7 @@ func (c *client) DeleteExpiredJobs(ctx context.Context, timeout time.Duration) e
 		return err
 	}
 
-	req.SetQuery("stamp", fmt.Sprintf("%d", time.Now().Add(-1*timeout).Unix()))
+	req.SetQuery("stamp", fmt.Sprintf("%d", time.Now().UTC().Add(-1*timeout).Unix()))
 
 	resp, err := c.c.Do(ctx, req)
 	if err != nil {
