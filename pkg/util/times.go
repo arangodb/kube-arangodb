@@ -27,6 +27,8 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const TimeLayout = time.RFC3339
+
 // TimeCompareEqual compares two times, allowing an error of 1s
 func TimeCompareEqual(a, b meta.Time) bool {
 	return math.Abs(a.Time.Sub(b.Time).Seconds()) <= 1
@@ -45,7 +47,7 @@ func TimeCompareEqualPointer(a, b *meta.Time) bool {
 
 func TimeAgencyLayouts() []string {
 	return []string{
-		time.RFC3339,
+		TimeLayout,
 	}
 }
 

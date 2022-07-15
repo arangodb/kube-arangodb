@@ -21,7 +21,7 @@
 package v1
 
 import (
-	batchv1 "k8s.io/api/batch/v1"
+	batch "k8s.io/api/batch/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/apps"
@@ -44,8 +44,8 @@ type ArangoJobList struct {
 type ArangoJob struct {
 	meta.TypeMeta   `json:",inline"`
 	meta.ObjectMeta `json:"metadata,omitempty"`
-	Spec            ArangoJobSpec     `json:"spec,omitempty"`
-	Status          batchv1.JobStatus `json:"status,omitempty"`
+	Spec            ArangoJobSpec   `json:"spec,omitempty"`
+	Status          batch.JobStatus `json:"status,omitempty"`
 }
 
 // AsOwner creates an OwnerReference for the given job

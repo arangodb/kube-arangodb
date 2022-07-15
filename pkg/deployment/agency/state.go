@@ -31,7 +31,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func loadState(ctx context.Context, client agency.Agency) (State, error) {
+func (c *cache) loadState(ctx context.Context, client agency.Agency) (State, error) {
 	conn := client.Connection()
 
 	req, err := client.Connection().NewRequest(http.MethodPost, "/_api/agency/read")
@@ -67,25 +67,17 @@ func loadState(ctx context.Context, client agency.Agency) (State, error) {
 		return State{}, err
 	}
 
-	var c StateRoots
+	var r StateRoots
 
-	if err := json.Unmarshal(data, &c); err != nil {
+	if err := json.Unmarshal(data, &r); err != nil {
 		return State{}, err
 	}
 
-	if len(c) != 1 {
+	if len(r) != 1 {
 		return State{}, errors.Newf("Invalid response size")
 	}
 
-	state := c[0].Arango
-
-	if _, ok := state.Current.Collections["_system"]; !ok {
-		return State{}, errors.Newf("Unable to find system database (invalid data)")
-	}
-
-	if _, ok := state.Plan.Collections["_system"]; !ok {
-		return State{}, errors.Newf("Unable to find system database (invalid data)")
-	}
+	state := r[0].Arango
 
 	return state, nil
 }

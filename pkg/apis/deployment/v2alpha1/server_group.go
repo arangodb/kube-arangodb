@@ -107,6 +107,13 @@ var (
 		ServerGroupSyncMasters,
 		ServerGroupSyncWorkers,
 	}
+	// AllArangoDServerGroups contains a constant list of all ArangoD server groups
+	AllArangoDServerGroups = []ServerGroup{
+		ServerGroupAgents,
+		ServerGroupSingle,
+		ServerGroupDBServers,
+		ServerGroupCoordinators,
+	}
 )
 
 // AsRole returns the "role" value for the given group.

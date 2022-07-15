@@ -69,7 +69,7 @@ func (r *Reconciler) updateClusterLicense(ctx context.Context, apiObject k8sutil
 	ctxChild, cancel := globals.GetGlobals().Timeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 
-	c, err := context.GetServerClient(ctxChild, member.Group, member.Member.ID)
+	c, err := context.GetMembersState().GetMemberClient(member.Member.ID)
 	if err != nil {
 		r.log.Err(err).Error("Unable to get client")
 		return nil

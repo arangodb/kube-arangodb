@@ -292,7 +292,7 @@ func (r *Reconciler) createKeyfileRenewalPlanSynced(ctx context.Context, apiObje
 		member := statusMember.Member
 
 		if !plan.IsEmpty() {
-			return nil
+			continue
 		}
 
 		cache, ok := planCtx.ACS().ClusterCache(member.ClusterID)
@@ -572,7 +572,7 @@ func (r *Reconciler) keyfileRenewalRequired(ctx context.Context, apiObject k8sut
 
 	// Ensure secret is propagated only on 3.7.0+ enterprise and inplace mode
 	if mode == api.TLSRotateModeInPlace && group.IsArangod() {
-		conn, err := context.GetServerClient(ctx, group, member.ID)
+		conn, err := context.GetMembersState().GetMemberClient(member.ID)
 		if err != nil {
 			r.planLogger.Err(err).Warn("Unable to get client")
 			return false, false

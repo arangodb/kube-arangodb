@@ -25,6 +25,7 @@ import (
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/acs/sutil"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/member"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 )
@@ -37,8 +38,10 @@ type PlanBuilderContext interface {
 	reconciler.DeploymentPodRenderer
 	reconciler.DeploymentImageManager
 	reconciler.ArangoAgencyGet
-	reconciler.DeploymentClient
+	reconciler.DeploymentDatabaseClient
 	reconciler.KubernetesEventGenerator
+
+	member.StateInspectorGetter
 
 	sutil.ACSGetter
 	// GetAuthentication return authentication for members

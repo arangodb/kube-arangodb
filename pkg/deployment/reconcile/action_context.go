@@ -26,7 +26,6 @@ import (
 
 	core "k8s.io/api/core/v1"
 
-	"github.com/arangodb/arangosync-client/client"
 	"github.com/arangodb/go-driver"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
@@ -36,6 +35,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/member"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
@@ -50,8 +50,7 @@ type ActionContext interface {
 	reconciler.DeploymentPodRenderer
 	reconciler.ArangoAgencyGet
 	reconciler.DeploymentInfoGetter
-	reconciler.DeploymentClient
-	reconciler.DeploymentSyncClient
+	reconciler.DeploymentDatabaseClient
 
 	member.StateInspectorGetter
 
@@ -106,6 +105,11 @@ type ActionLocalsContext interface {
 
 	Get(action api.Action, key api.PlanLocalKey) (string, bool)
 	Add(key api.PlanLocalKey, value string, override bool) bool
+
+	SetTime(key api.PlanLocalKey, t time.Time) bool
+	GetTime(action api.Action, key api.PlanLocalKey) (time.Time, bool)
+
+	BackoffExecution(action api.Action, key api.PlanLocalKey, duration time.Duration) bool
 }
 
 // newActionContext creates a new ActionContext implementation.
@@ -144,6 +148,39 @@ func (ac *actionContext) CurrentLocals() api.PlanLocals {
 
 func (ac *actionContext) Get(action api.Action, key api.PlanLocalKey) (string, bool) {
 	return ac.locals.GetWithParent(action.Locals, key)
+}
+
+func (ac *actionContext) BackoffExecution(action api.Action, key api.PlanLocalKey, duration time.Duration) bool {
+	t, ok := ac.GetTime(action, key)
+	if !ok {
+		// Reset as zero time
+		t = time.Time{}
+	}
+
+	if t.IsZero() || time.Since(t) > duration {
+		// Execution is needed
+		ac.SetTime(key, time.Now())
+		return true
+	}
+
+	return false
+}
+
+func (ac *actionContext) SetTime(key api.PlanLocalKey, t time.Time) bool {
+	return ac.Add(key, t.Format(util.TimeLayout), true)
+}
+
+func (ac *actionContext) GetTime(action api.Action, key api.PlanLocalKey) (time.Time, bool) {
+	s, ok := ac.locals.GetWithParent(action.Locals, key)
+	if !ok {
+		return time.Time{}, false
+	}
+
+	if t, err := time.Parse(util.TimeLayout, s); err != nil {
+		return time.Time{}, false
+	} else {
+		return t, true
+	}
 }
 
 func (ac *actionContext) Add(key api.PlanLocalKey, value string, override bool) bool {
@@ -261,24 +298,6 @@ func (ac *actionContext) GetSpec() api.DeploymentSpec {
 // creating one if needed.
 func (ac *actionContext) GetDatabaseClient(ctx context.Context) (driver.Client, error) {
 	c, err := ac.context.GetDatabaseClient(ctx)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return c, nil
-}
-
-// GetServerClient returns a cached client for a specific server.
-func (ac *actionContext) GetServerClient(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error) {
-	c, err := ac.context.GetServerClient(ctx, group, id)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return c, nil
-}
-
-// GetSyncServerClient returns a cached client for a specific arangosync server.
-func (ac *actionContext) GetSyncServerClient(ctx context.Context, group api.ServerGroup, id string) (client.API, error) {
-	c, err := ac.context.GetSyncServerClient(ctx, group, id)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

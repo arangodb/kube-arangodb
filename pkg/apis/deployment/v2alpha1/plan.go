@@ -364,7 +364,7 @@ func (p Plan) IsEmpty() bool {
 	return len(p) == 0
 }
 
-// Add add action at the end of plan
+// After add action at the end of plan
 func (p Plan) After(action ...Action) Plan {
 	n := Plan{}
 
@@ -375,7 +375,7 @@ func (p Plan) After(action ...Action) Plan {
 	return n
 }
 
-// Prefix add action at the beginning of plan
+// Before add action at the beginning of plan
 func (p Plan) Before(action ...Action) Plan {
 	n := Plan{}
 
@@ -386,7 +386,7 @@ func (p Plan) Before(action ...Action) Plan {
 	return n
 }
 
-// Prefix add action at the beginning of plan
+// Wrap wraps plan with actions
 func (p Plan) Wrap(before, after Action) Plan {
 	n := Plan{}
 

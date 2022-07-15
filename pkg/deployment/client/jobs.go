@@ -18,24 +18,33 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package shared
+package client
 
 import (
-	"testing"
-
-	"github.com/stretchr/testify/require"
-	"k8s.io/apimachinery/pkg/util/validation"
+	"context"
+	"fmt"
+	"net/http"
+	"time"
 )
 
-func Test_Names(t *testing.T) {
-	t.Run("Empty", func(t *testing.T) {
-		require.EqualError(t, ValidateResourceName(""), "Name '' is not a valid resource name")
-	})
-	t.Run("Pod name is valid", func(t *testing.T) {
-		name := CreatePodHostName("the-matrix-db", "arangodb-coordinator", "CRDN-549cznuy")
-		require.Empty(t, validation.IsQualifiedName(name))
+const DeleteExpiredJobsURL = "/_api/job/expired"
 
-		name = CreatePodHostName("the-matrix-application-db-instance", "arangodb-coordinator", "CRDN-549cznuy")
-		require.Empty(t, validation.IsQualifiedName(name))
-	})
+func (c *client) DeleteExpiredJobs(ctx context.Context, timeout time.Duration) error {
+	req, err := c.c.NewRequest(http.MethodDelete, DeleteExpiredJobsURL)
+	if err != nil {
+		return err
+	}
+
+	req.SetQuery("stamp", fmt.Sprintf("%d", time.Now().UTC().Add(-1*timeout).Unix()))
+
+	resp, err := c.c.Do(ctx, req)
+	if err != nil {
+		return err
+	}
+
+	if err := resp.CheckStatus(http.StatusOK); err != nil {
+		return err
+	}
+
+	return nil
 }

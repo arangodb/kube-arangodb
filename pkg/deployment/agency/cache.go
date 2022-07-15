@@ -24,11 +24,14 @@ import (
 	"context"
 	"sync"
 
+	"github.com/rs/zerolog"
+
 	"github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/generated/metric_descriptions"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
@@ -164,10 +167,14 @@ func NewCache(namespace, name string, mode *api.DeploymentMode) Cache {
 }
 
 func NewAgencyCache(namespace, name string) Cache {
-	return &cache{
+	c := &cache{
 		namespace: namespace,
 		name:      name,
 	}
+
+	c.log = logger.WrapObj(c)
+
+	return c
 }
 
 func NewSingleCache() Cache {
@@ -197,6 +204,8 @@ func (c cacheSingle) Data() (State, bool) {
 type cache struct {
 	namespace, name string
 
+	log logging.Logger
+
 	lock sync.RWMutex
 
 	valid bool
@@ -206,6 +215,10 @@ type cache struct {
 	data State
 
 	health Health
+}
+
+func (c *cache) WrapLogger(in *zerolog.Event) *zerolog.Event {
+	return in.Str("namespace", c.namespace).Str("name", c.name)
 }
 
 func (c *cache) CommitIndex() uint64 {
@@ -238,7 +251,7 @@ func (c *cache) Reload(ctx context.Context, size int, clients map[string]agency.
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	leaderCli, leaderConfig, health, err := getLeader(ctx, size, clients)
+	leaderCli, leaderConfig, health, err := c.getLeader(ctx, size, clients)
 	if err != nil {
 		// Invalidate a leader ID and agency state.
 		// In the next iteration leaderID will be sat because `valid` will be false.
@@ -258,7 +271,7 @@ func (c *cache) Reload(ctx context.Context, size int, clients map[string]agency.
 	}
 
 	// A leader should be known even if an agency state is invalid.
-	if data, err := loadState(ctx, leaderCli); err != nil {
+	if data, err := c.loadState(ctx, leaderCli); err != nil {
 		c.valid = false
 		return leaderConfig.CommitIndex, err
 	} else {
@@ -271,7 +284,7 @@ func (c *cache) Reload(ctx context.Context, size int, clients map[string]agency.
 
 // getLeader returns config and client to a leader agency, and health to check if agencies are on the same page.
 // If there is no quorum for the leader then error is returned.
-func getLeader(ctx context.Context, size int, clients map[string]agency.Agency) (agency.Agency, *Config, health, error) {
+func (c *cache) getLeader(ctx context.Context, size int, clients map[string]agency.Agency) (agency.Agency, *Config, health, error) {
 	configs := make([]*Config, len(clients))
 	errs := make([]error, len(clients))
 	names := make([]string, 0, len(clients))
@@ -324,11 +337,11 @@ func getLeader(ctx context.Context, size int, clients map[string]agency.Agency) 
 		}
 	}
 	if err := h.Serving(); err != nil {
-		logger.Err(err).Warn("Agency Not serving")
+		c.log.Err(err).Warn("Agency Not serving")
 		return nil, nil, h, err
 	}
 	if err := h.Healthy(); err != nil {
-		logger.Err(err).Warn("Agency Not healthy")
+		c.log.Err(err).Debug("Agency Not healthy")
 	}
 
 	for id := range names {
