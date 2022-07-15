@@ -203,30 +203,6 @@ func (d *Deployment) GetAuthentication() conn.Auth {
 	return d.clientCache.GetAuth()
 }
 
-// GetAgencyClients returns a client connection for every agency member.
-func (d *Deployment) GetAgencyClients(ctx context.Context) ([]driver.Connection, error) {
-	return d.GetAgencyClientsWithPredicate(ctx, nil)
-}
-
-// GetAgencyClientsWithPredicate returns a client connection for every agency member.
-// If the given predicate is not nil, only agents are included where the given predicate returns true.
-func (d *Deployment) GetAgencyClientsWithPredicate(ctx context.Context, predicate func(id string) bool) ([]driver.Connection, error) {
-	agencyMembers := d.status.last.Members.Agents
-	result := make([]driver.Connection, 0, len(agencyMembers))
-	for _, m := range agencyMembers {
-		if predicate != nil && !predicate(m.ID) {
-			continue
-		}
-		client, err := d.GetServerClient(ctx, api.ServerGroupAgents, m.ID)
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
-		conn := client.Connection()
-		result = append(result, conn)
-	}
-	return result, nil
-}
-
 // GetAgency returns a connection to the agency.
 func (d *Deployment) GetAgency(ctx context.Context, agencyIDs ...string) (agency.Agency, error) {
 	return d.clientCache.GetAgency(ctx, agencyIDs...)
@@ -544,7 +520,7 @@ func (d *Deployment) EnableScalingCluster(ctx context.Context) error {
 	return d.clusterScalingIntegration.EnableScalingCluster(ctx)
 }
 
-// GetAgencyPlan returns agency plan
+// GetAgencyData returns agency plan.
 func (d *Deployment) GetAgencyData(ctx context.Context, i interface{}, keyParts ...string) error {
 	a, err := d.GetAgency(ctx)
 	if err != nil {

@@ -31,60 +31,72 @@ import (
 )
 
 // createRotateServerStorageResizePlan creates plan to resize storage
-func (r *Reconciler) createRotateServerStorageResizePlan(ctx context.Context, apiObject k8sutil.APIObject,
+func (r *Reconciler) createRotateServerStorageResizePlanRuntime(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext) api.Plan {
+	return r.createRotateServerStorageResizePlanInternal(spec, status, context, api.PVCResizeModeRuntime)
+}
+
+func (r *Reconciler) createRotateServerStorageResizePlanRotate(ctx context.Context, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	context PlanBuilderContext) api.Plan {
+	return r.createRotateServerStorageResizePlanInternal(spec, status, context, api.PVCResizeModeRotate)
+}
+
+func (r *Reconciler) createRotateServerStorageResizePlanInternal(spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext, mode api.PVCResizeMode) api.Plan {
 	var plan api.Plan
 
-	status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
-		for _, m := range members {
-			cache, ok := context.ACS().ClusterCache(m.ClusterID)
-			if !ok {
-				// Do not work without cache
-				continue
-			}
-			if m.Phase != api.MemberPhaseCreated {
-				// Only make changes when phase is created
-				continue
-			}
-			if m.PersistentVolumeClaimName == "" {
-				// Plan is irrelevant without PVC
-				continue
-			}
-			groupSpec := spec.GetServerGroupSpec(group)
+	for _, member := range status.Members.AsList() {
+		cache, ok := context.ACS().ClusterCache(member.Member.ClusterID)
+		if !ok {
+			// Do not work without cache
+			continue
+		}
+		if member.Member.Phase != api.MemberPhaseCreated {
+			// Only make changes when phase is created
+			continue
+		}
+		if member.Member.PersistentVolumeClaimName == "" {
+			// Plan is irrelevant without PVC
+			continue
+		}
+		groupSpec := spec.GetServerGroupSpec(member.Group)
 
-			if !plan.IsEmpty() && groupSpec.VolumeResizeMode.Get() == api.PVCResizeModeRotate {
-				// Only 1 change at a time
-				return nil
-			}
+		if groupSpec.VolumeResizeMode.Get() != mode {
+			continue
+		}
 
-			// Load PVC
-			pvc, exists := cache.PersistentVolumeClaim().V1().GetSimple(m.PersistentVolumeClaimName)
-			if !exists {
-				r.planLogger.
-					Str("role", group.AsRole()).
-					Str("id", m.ID).
-					Warn("Failed to get PVC")
-				continue
-			}
+		if !plan.IsEmpty() && groupSpec.VolumeResizeMode.Get() == api.PVCResizeModeRotate {
+			// Only 1 change at a time
+			continue
+		}
 
-			var res core.ResourceList
-			if groupSpec.HasVolumeClaimTemplate() {
-				res = groupSpec.GetVolumeClaimTemplate().Spec.Resources.Requests
-			} else {
-				res = groupSpec.Resources.Requests
-			}
-			if requestedSize, ok := res[core.ResourceStorage]; ok {
-				if volumeSize, ok := pvc.Spec.Resources.Requests[core.ResourceStorage]; ok {
-					cmp := volumeSize.Cmp(requestedSize)
-					if cmp < 0 {
-						plan = append(plan, r.pvcResizePlan(group, groupSpec, m)...)
-					}
+		// Load PVC
+		pvc, exists := cache.PersistentVolumeClaim().V1().GetSimple(member.Member.PersistentVolumeClaimName)
+		if !exists {
+			r.planLogger.
+				Str("role", member.Group.AsRole()).
+				Str("id", member.Member.ID).
+				Warn("Failed to get PVC")
+			continue
+		}
+
+		var res core.ResourceList
+		if groupSpec.HasVolumeClaimTemplate() {
+			res = groupSpec.GetVolumeClaimTemplate().Spec.Resources.Requests
+		} else {
+			res = groupSpec.Resources.Requests
+		}
+		if requestedSize, ok := res[core.ResourceStorage]; ok {
+			if volumeSize, ok := pvc.Spec.Resources.Requests[core.ResourceStorage]; ok {
+				cmp := volumeSize.Cmp(requestedSize)
+				if cmp < 0 {
+					// Here we need to do proper calculation
+					plan = append(plan, r.pvcResizePlan(member.Group, member.Member, mode)...)
 				}
 			}
 		}
-		return nil
-	})
+	}
 
 	return plan
 }
@@ -118,8 +130,7 @@ func (r *Reconciler) createRotateServerStoragePVCPendingResizeConditionPlan(ctx 
 	return plan
 }
 
-func (r *Reconciler) pvcResizePlan(group api.ServerGroup, groupSpec api.ServerGroupSpec, member api.MemberStatus) api.Plan {
-	mode := groupSpec.VolumeResizeMode.Get()
+func (r *Reconciler) pvcResizePlan(group api.ServerGroup, member api.MemberStatus, mode api.PVCResizeMode) api.Plan {
 	switch mode {
 	case api.PVCResizeModeRuntime:
 		return api.Plan{

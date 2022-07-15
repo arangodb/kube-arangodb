@@ -34,7 +34,7 @@ import (
 
 // createHighPlan considers the given specification & status and creates a plan to get the status in line with the specification.
 // If a plan already exists, the given plan is returned with false.
-// Otherwise the new plan is returned with a boolean true.
+// Otherwise, the new plan is returned with a boolean true.
 func (r *Reconciler) createHighPlan(ctx context.Context, apiObject k8sutil.APIObject,
 	currentPlan api.Plan, spec api.DeploymentSpec,
 	status api.DeploymentStatus,
@@ -52,6 +52,7 @@ func (r *Reconciler) createHighPlan(ctx context.Context, apiObject k8sutil.APIOb
 		ApplyIfEmpty(r.updateMemberRotationConditionsPlan).
 		ApplyIfEmpty(r.createMemberRecreationConditionsPlan).
 		ApplyIfEmpty(r.createRotateServerStoragePVCPendingResizeConditionPlan).
+		ApplyIfEmpty(r.createRotateServerStorageResizePlanRuntime).
 		ApplyIfEmpty(r.createTopologyMemberUpdatePlan).
 		ApplyIfEmptyWithBackOff(LicenseCheck, 30*time.Second, r.updateClusterLicense).
 		ApplyIfEmpty(r.createTopologyMemberConditionPlan).

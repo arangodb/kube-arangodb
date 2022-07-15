@@ -36,7 +36,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
-	appsv1 "k8s.io/api/apps/v1"
+	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -476,6 +476,6 @@ func createRecorder(kubecli kubernetes.Interface, name, namespace string) record
 	combinedScheme := runtime.NewScheme()
 	scheme.AddToScheme(combinedScheme)
 	core.AddToScheme(combinedScheme)
-	appsv1.AddToScheme(combinedScheme)
+	apps.AddToScheme(combinedScheme)
 	return eventBroadcaster.NewRecorder(combinedScheme, core.EventSource{Component: name})
 }

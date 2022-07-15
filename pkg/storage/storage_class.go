@@ -24,7 +24,7 @@ import (
 	"context"
 
 	core "k8s.io/api/core/v1"
-	v1 "k8s.io/api/storage/v1"
+	storage "k8s.io/api/storage/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
@@ -40,9 +40,9 @@ var (
 // If such a class already exists, the create is ignored.
 func (l *LocalStorage) ensureStorageClass(apiObject *api.ArangoLocalStorage) error {
 	spec := apiObject.Spec.StorageClass
-	bindingMode := v1.VolumeBindingWaitForFirstConsumer
+	bindingMode := storage.VolumeBindingWaitForFirstConsumer
 	reclaimPolicy := core.PersistentVolumeReclaimRetain
-	sc := &v1.StorageClass{
+	sc := &storage.StorageClass{
 		ObjectMeta: meta.ObjectMeta{
 			Name: spec.Name,
 		},

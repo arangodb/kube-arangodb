@@ -70,7 +70,7 @@ func (r *Reconciler) createNormalPlan(ctx context.Context, apiObject k8sutil.API
 		ApplySubPlanIfEmpty(r.createTLSStatusPropagatedFieldUpdate, r.createCARenewalPlan).
 		ApplySubPlanIfEmpty(r.createTLSStatusPropagatedFieldUpdate, r.createCAAppendPlan).
 		ApplyIfEmpty(r.createKeyfileRenewalPlan).
-		ApplyIfEmpty(r.createRotateServerStorageResizePlan).
+		ApplyIfEmpty(r.createRotateServerStorageResizePlanRotate).
 		ApplySubPlanIfEmpty(r.createTLSStatusPropagatedFieldUpdate, r.createRotateTLSServerSNIPlan).
 		ApplyIfEmpty(r.createRestorePlan).
 		ApplySubPlanIfEmpty(r.createEncryptionKeyStatusPropagatedFieldUpdate, r.createEncryptionKeyCleanPlan).

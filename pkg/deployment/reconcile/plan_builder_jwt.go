@@ -233,7 +233,7 @@ func (r *Reconciler) isJWTTokenUpToDate(ctx context.Context, status api.Deployme
 
 	log := r.planLogger.Str("group", group.AsRole()).Str("member", m.ID)
 
-	c, err := context.GetServerClient(ctx, group, m.ID)
+	c, err := context.GetMembersState().GetMemberClient(m.ID)
 	if err != nil {
 		log.Err(err).Warn("Unable to get client")
 		return false, true

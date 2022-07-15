@@ -23,6 +23,7 @@ package client
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/arangodb/go-driver"
 )
@@ -44,6 +45,8 @@ type Client interface {
 
 	GetJWT(ctx context.Context) (JWTDetails, error)
 	RefreshJWT(ctx context.Context) (JWTDetails, error)
+
+	DeleteExpiredJobs(ctx context.Context, timeout time.Duration) error
 }
 
 type client struct {
