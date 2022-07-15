@@ -35,6 +35,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/member"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
@@ -104,6 +105,11 @@ type ActionLocalsContext interface {
 
 	Get(action api.Action, key api.PlanLocalKey) (string, bool)
 	Add(key api.PlanLocalKey, value string, override bool) bool
+
+	SetTime(key api.PlanLocalKey, t time.Time) bool
+	GetTime(action api.Action, key api.PlanLocalKey) (time.Time, bool)
+
+	BackoffExecution(action api.Action, key api.PlanLocalKey, duration time.Duration) bool
 }
 
 // newActionContext creates a new ActionContext implementation.
@@ -142,6 +148,39 @@ func (ac *actionContext) CurrentLocals() api.PlanLocals {
 
 func (ac *actionContext) Get(action api.Action, key api.PlanLocalKey) (string, bool) {
 	return ac.locals.GetWithParent(action.Locals, key)
+}
+
+func (ac *actionContext) BackoffExecution(action api.Action, key api.PlanLocalKey, duration time.Duration) bool {
+	t, ok := ac.GetTime(action, key)
+	if !ok {
+		// Reset as zero time
+		t = time.Time{}
+	}
+
+	if t.IsZero() || time.Since(t) > duration {
+		// Execution is needed
+		ac.SetTime(key, time.Now())
+		return true
+	}
+
+	return false
+}
+
+func (ac *actionContext) SetTime(key api.PlanLocalKey, t time.Time) bool {
+	return ac.Add(key, t.Format(util.TimeLayout), true)
+}
+
+func (ac *actionContext) GetTime(action api.Action, key api.PlanLocalKey) (time.Time, bool) {
+	s, ok := ac.locals.GetWithParent(action.Locals, key)
+	if !ok {
+		return time.Time{}, false
+	}
+
+	if t, err := time.Parse(util.TimeLayout, s); err != nil {
+		return time.Time{}, false
+	} else {
+		return t, true
+	}
 }
 
 func (ac *actionContext) Add(key api.PlanLocalKey, value string, override bool) bool {

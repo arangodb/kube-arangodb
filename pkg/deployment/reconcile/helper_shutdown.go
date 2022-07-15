@@ -22,16 +22,24 @@ package reconcile
 
 import (
 	"context"
+	"time"
 
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+)
+
+const (
+	actionShutdownJobExpiredTermination        api.PlanLocalKey = "expiredJobTerminationCheck"
+	actionShutdownJobExpiredTerminationDelay                    = 10 * time.Second
+	ActionShutdownJobExpiredTerminationTimeout                  = time.Minute
 )
 
 // getShutdownHelper returns an action to shut down a pod according to the settings.
@@ -150,9 +158,28 @@ func (s shutdownHelperAPI) Start(ctx context.Context) (bool, error) {
 }
 
 // CheckProgress returns true when pod is terminated.
-func (s shutdownHelperAPI) CheckProgress(_ context.Context) (bool, bool, error) {
-	terminated := s.memberStatus.Conditions.IsTrue(api.ConditionTypeTerminated)
-	return terminated, false, nil
+func (s shutdownHelperAPI) CheckProgress(ctx context.Context) (bool, bool, error) {
+	if s.memberStatus.Conditions.IsTrue(api.ConditionTypeTerminated) {
+		return true, false, nil
+	}
+
+	if s.action.Group == s.actionCtx.GetMode().ServingGroup() {
+		if s.actionCtx.BackoffExecution(s.action, actionShutdownJobExpiredTermination, actionShutdownJobExpiredTerminationDelay) {
+			// Lets try to run termination
+			c, err := s.actionCtx.GetMembersState().GetMemberClient(s.action.MemberID)
+			if err != nil {
+				s.log.Err(err).Warn("Failed to create member client")
+			} else {
+				internal := client.NewClient(c.Connection())
+
+				if err := internal.DeleteExpiredJobs(ctx, ActionShutdownJobExpiredTerminationTimeout); err != nil {
+					s.log.Err(err).Warn("Unable to kill async jobs on member")
+				}
+			}
+		}
+	}
+
+	return false, false, nil
 }
 
 type shutdownHelperDelete struct {
