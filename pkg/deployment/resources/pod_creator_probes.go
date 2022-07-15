@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	core "k8s.io/api/core/v1"
 
@@ -280,19 +281,12 @@ func (r *Resources) probeBuilderStartupCoreOperator(spec api.DeploymentSpec, gro
 		return nil, err
 	}
 
-	var retries int32
-
-	switch group {
-	case api.ServerGroupDBServers:
-		retries = 6 * 60 * 60 / 5 // Wait 6 hours for wal replay
-	default:
-		retries = 60
-	}
+	retries, periodSeconds := getProbeRetries(group)
 
 	return &probes.CMDProbeConfig{
 		Command:             args,
 		FailureThreshold:    retries,
-		PeriodSeconds:       5,
+		PeriodSeconds:       periodSeconds,
 		InitialDelaySeconds: 1,
 	}, nil
 }
@@ -316,16 +310,8 @@ func (r *Resources) probeBuilderLivenessCore(spec api.DeploymentSpec, group api.
 	}, nil
 }
 
-func (r *Resources) probeBuilderStartupCore(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
-
-	var retries int32
-
-	switch group {
-	case api.ServerGroupDBServers:
-		retries = 6 * 60 * 60 / 5 // Wait 6 hours for wal replay
-	default:
-		retries = 60
-	}
+func (r *Resources) probeBuilderStartupCore(spec api.DeploymentSpec, group api.ServerGroup, _ driver.Version) (Probe, error) {
+	retries, periodSeconds := getProbeRetries(group)
 
 	authorization := ""
 	if spec.IsAuthenticated() {
@@ -343,7 +329,7 @@ func (r *Resources) probeBuilderStartupCore(spec api.DeploymentSpec, group api.S
 		Secure:              spec.IsSecure(),
 		Authorization:       authorization,
 		FailureThreshold:    retries,
-		PeriodSeconds:       5,
+		PeriodSeconds:       periodSeconds,
 		InitialDelaySeconds: 1,
 	}, nil
 }
@@ -482,7 +468,7 @@ func (r *Resources) probeBuilderLivenessSync(spec api.DeploymentSpec, group api.
 	}, nil
 }
 
-func (r *Resources) probeBuilderStartupSync(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
+func (r *Resources) probeBuilderStartupSync(spec api.DeploymentSpec, group api.ServerGroup, _ driver.Version) (Probe, error) {
 	authorization := ""
 	port := shared.ArangoSyncMasterPort
 	if group == api.ServerGroupSyncWorkers {
@@ -515,4 +501,20 @@ func (r *Resources) probeBuilderStartupSync(spec api.DeploymentSpec, group api.S
 		Authorization: authorization,
 		Port:          port,
 	}, nil
+}
+
+// getProbeRetries returns how many attempts should be performed and what is the period in seconds between these attempts.
+func getProbeRetries(group api.ServerGroup) (int32, int32) {
+	// Set default values.
+	period, howLong := 5*time.Second, 300*time.Second
+
+	if group == api.ServerGroupDBServers {
+		// Wait 6 hours (in seconds) for WAL replay.
+		howLong = 6 * time.Hour
+	} else if group == api.ServerGroupCoordinators {
+		// Coordinator should wait for agents, but agents could take more time to spin up.
+		howLong = time.Hour
+	}
+
+	return int32(howLong / period), int32(period / time.Second)
 }

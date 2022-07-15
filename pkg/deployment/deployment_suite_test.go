@@ -147,6 +147,16 @@ func createTestReadinessProbe(mode string, secure bool, authorization string) *c
 	return p
 }
 
+func createTestStartupProbe(mode string, secure bool, authorization string, failureThreshold int32) *core.Probe {
+	p := getProbeCreator(mode)(secure, authorization, "/_api/version", shared.ArangoPort).Create()
+
+	p.InitialDelaySeconds = 1
+	p.PeriodSeconds = 5
+	p.FailureThreshold = failureThreshold
+
+	return p
+}
+
 type probeCreator func(secure bool, authorization, endpoint string, port int) resources.Probe
 
 const (
@@ -575,6 +585,21 @@ func (testCase *testCaseStruct) createTestPodData(deployment *Deployment, group 
 
 	groupSpec := testCase.ArangoDeployment.Spec.GetServerGroupSpec(group)
 	testCase.ExpectedPod.Spec.Tolerations = deployment.resources.CreatePodTolerations(group, groupSpec)
+
+	if group == api.ServerGroupCoordinators || group == api.ServerGroupDBServers {
+		// Set default startup probes.
+		isSecure := deployment.GetSpec().IsSecure()
+		var auth string
+		var retries int32 = 720 // one hour divide by 5.
+		if group == api.ServerGroupDBServers {
+			retries = 4320 // 6 hours divide by 5.
+		}
+		if deployment.GetSpec().IsAuthenticated() {
+			auth, _ = createTestToken(deployment, testCase, []string{"/_api/version"})
+		}
+
+		testCase.ExpectedPod.Spec.Containers[0].StartupProbe = createTestStartupProbe(httpProbe, isSecure, auth, retries)
+	}
 
 	// Add image info
 	if member, group, ok := deployment.apiObject.Status.Members.ElementByID(memberStatus.ID); ok {
