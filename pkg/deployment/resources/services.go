@@ -28,11 +28,13 @@ import (
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
@@ -231,8 +233,8 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 	if single {
 		role = "single"
 	}
-	if err := r.ensureExternalAccessServices(ctx, cachedStatus, svcs, eaServiceName, role, "database",
-		shared.ArangoPort, false, withLeader, spec.ExternalAccess, apiObject); err != nil {
+	if err := r.ensureExternalAccessServices(ctx, cachedStatus, svcs, eaServiceName, role, shared.ArangoPort,
+		false, withLeader, spec.ExternalAccess, apiObject); err != nil {
 		return errors.WithStack(err)
 	}
 
@@ -240,8 +242,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 		// External (and internal) Sync master service
 		counterMetric.Inc()
 		eaServiceName := k8sutil.CreateSyncMasterClientServiceName(deploymentName)
-		role := "syncmaster"
-		if err := r.ensureExternalAccessServices(ctx, cachedStatus, svcs, eaServiceName, role, "sync",
+		if err := r.ensureExternalAccessServices(ctx, cachedStatus, svcs, eaServiceName, api.ServerGroupSyncMastersString,
 			shared.ArangoSyncMasterPort, true, false, spec.Sync.ExternalAccess.ExternalAccessSpec, apiObject); err != nil {
 			return errors.WithStack(err)
 		}
@@ -274,13 +275,18 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 	return reconcileRequired.Reconcile(ctx)
 }
 
-// EnsureServices creates all services needed to service the deployment
+// ensureExternalAccessServices ensures all services needed for a deployment.
 func (r *Resources) ensureExternalAccessServices(ctx context.Context, cachedStatus inspectorInterface.Inspector,
-	svcs servicev1.ModInterface, eaServiceName, svcRole, title string, port int, noneIsClusterIP bool, withLeader bool,
+	svcs servicev1.ModInterface, eaServiceName, svcRole string, port int, noneIsClusterIP bool, withLeader bool,
 	spec api.ExternalAccessSpec, apiObject k8sutil.APIObject) error {
-	log := r.log.Str("section", "service-ea")
 
-	// Database external access service
+	if spec.GetType().IsManaged() {
+		// Managed services should not be created or removed by the operator.
+		return r.ensureExternalAccessManagedServices(ctx, cachedStatus, svcs, eaServiceName, svcRole, spec, apiObject,
+			withLeader)
+	}
+
+	log := r.log.Str("section", "service-ea").Str("role", svcRole).Str("service", eaServiceName)
 	createExternalAccessService := false
 	deleteExternalAccessService := false
 	eaServiceType := spec.GetType().AsServiceType() // Note: Type auto defaults to ServiceTypeLoadBalancer
@@ -307,7 +313,7 @@ func (r *Resources) ensureExternalAccessServices(ctx context.Context, cachedStat
 				// See if LoadBalancer has been configured & the service is "old enough"
 				oldEnoughTimestamp := time.Now().Add(-1 * time.Minute) // How long does the load-balancer provisioner have to act.
 				if len(existing.Status.LoadBalancer.Ingress) == 0 && existing.GetObjectMeta().GetCreationTimestamp().Time.Before(oldEnoughTimestamp) {
-					log.Str("service", eaServiceName).Info("LoadBalancerIP of %s external access service is not set, switching to NodePort", title)
+					log.Info("LoadBalancerIP of external access service is not set, switching to NodePort")
 					createExternalAccessService = true
 					eaServiceType = core.ServiceTypeNodePort
 					deleteExternalAccessService = true // Remove the LoadBalancer ex service, then add the NodePort one
@@ -340,7 +346,7 @@ func (r *Resources) ensureExternalAccessServices(ctx context.Context, cachedStat
 				return err
 			})
 			if err != nil {
-				log.Err(err).Debug("Failed to update %s external access service", title)
+				log.Err(err).Debug("Failed to update external access service")
 				return errors.WithStack(err)
 			}
 		}
@@ -352,12 +358,12 @@ func (r *Resources) ensureExternalAccessServices(ctx context.Context, cachedStat
 	}
 
 	if deleteExternalAccessService {
-		log.Str("service", eaServiceName).Info("Removing obsolete %s external access service", title)
+		log.Info("Removing obsolete external access service")
 		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 			return svcs.Delete(ctxChild, eaServiceName, meta.DeleteOptions{})
 		})
 		if err != nil {
-			log.Err(err).Debug("Failed to remove %s external access service", title)
+			log.Err(err).Debug("Failed to remove external access service")
 			return errors.WithStack(err)
 		}
 	}
@@ -371,12 +377,88 @@ func (r *Resources) ensureExternalAccessServices(ctx context.Context, cachedStat
 		_, newlyCreated, err := k8sutil.CreateExternalAccessService(ctxChild, svcs, eaServiceName, svcRole, apiObject,
 			eaServiceType, port, nodePort, loadBalancerIP, loadBalancerSourceRanges, apiObject.AsOwner(), withLeader)
 		if err != nil {
-			log.Err(err).Debug("Failed to create %s external access service", title)
+			log.Err(err).Debug("Failed to create external access service")
 			return errors.WithStack(err)
 		}
 		if newlyCreated {
-			log.Str("service", eaServiceName).Debug("Created %s external access service", title)
+			log.Debug("Created %s external access service")
 		}
 	}
 	return nil
+}
+
+// ensureExternalAccessServices ensures if there are correct selectors on a managed services.
+// If hardcoded external service names are not on the list of managed services then it will be checked additionally.
+func (r *Resources) ensureExternalAccessManagedServices(ctx context.Context, cachedStatus inspectorInterface.Inspector,
+	services servicev1.ModInterface, eaServiceName, svcRole string, spec api.ExternalAccessSpec,
+	apiObject k8sutil.APIObject, withLeader bool) error {
+
+	log := r.log.Str("section", "service-ea").Str("role", svcRole).Str("service", eaServiceName)
+	managedServiceNames := spec.GetManagedServiceNames()
+	deploymentName := apiObject.GetName()
+	var selector map[string]string
+	if withLeader {
+		selector = k8sutil.LabelsForLeaderMember(deploymentName, svcRole, "")
+	} else {
+		selector = k8sutil.LabelsForDeployment(deploymentName, svcRole)
+	}
+
+	// Check if hardcoded service has correct selector.
+	if svc, ok := cachedStatus.Service().V1().GetSimple(eaServiceName); !ok {
+		// Hardcoded service (e.g. <deplname>-ea or <deplname>-sync) is not mandatory in `managed` type.
+		if len(managedServiceNames) == 0 {
+			log.Warn("the field \"spec.externalAccess.managedServiceNames\" should be provided for \"managed\" service type")
+			return nil
+		}
+	} else if changed, err := ensureManagedServiceSelector(ctx, selector, svc, services); err != nil {
+		return errors.WithMessage(err, "failed to ensure service selector")
+	} else if changed {
+		log.Info("selector applied to the managed service \"%s\"", svc.GetName())
+	}
+
+	for _, svcName := range managedServiceNames {
+		if svcName == eaServiceName {
+			// Hardcoded service has been applied before this loop.
+			continue
+		}
+
+		svc, ok := cachedStatus.Service().V1().GetSimple(svcName)
+		if !ok {
+			log.Warn("managed service \"%s\" should have existed", svcName)
+			continue
+		}
+
+		if changed, err := ensureManagedServiceSelector(ctx, selector, svc, services); err != nil {
+			return errors.WithMessage(err, "failed to ensure service selector")
+		} else if changed {
+			log.Info("selector applied to the managed service \"%s\"", svcName)
+		}
+	}
+
+	return nil
+}
+
+// ensureManagedServiceSelector ensures if there is correct selector on a service.
+func ensureManagedServiceSelector(ctx context.Context, selector map[string]string, svc *core.Service,
+	services servicev1.ModInterface) (bool, error) {
+	for key, value := range selector {
+		if currentValue, ok := svc.Spec.Selector[key]; ok && value == currentValue {
+			continue
+		}
+
+		p := patch.NewPatch()
+		p.ItemReplace(patch.NewPath("spec", "selector"), selector)
+		data, err := p.Marshal()
+		if err != nil {
+			return false, errors.WithMessage(err, "failed to marshal service selector")
+		}
+
+		if _, err = services.Patch(ctx, svc.GetName(), types.JSONPatchType, data, meta.PatchOptions{}); err != nil {
+			return false, errors.WithMessage(err, "failed to patch service selector")
+		}
+
+		return true, nil
+	}
+
+	return false, nil
 }

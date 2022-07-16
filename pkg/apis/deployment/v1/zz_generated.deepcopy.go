@@ -1517,6 +1517,11 @@ func (in *ExternalAccessSpec) DeepCopyInto(out *ExternalAccessSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.ManagedServiceNames != nil {
+		in, out := &in.ManagedServiceNames, &out.ManagedServiceNames
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 
