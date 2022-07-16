@@ -1017,8 +1017,14 @@ func TestCreatePlan(t *testing.T) {
 				}
 				ad.Status.Members.Agents[0].Phase = api.MemberPhaseFailed
 				ad.Status.Members.Agents[0].ID = "id"
+				for i := range ad.Status.Members.Coordinators {
+					ad.Status.Members.Coordinators[i].Phase = api.MemberPhaseCreated
+				}
+				for i := range ad.Status.Members.DBServers {
+					ad.Status.Members.DBServers[i].Phase = api.MemberPhaseCreated
+				}
 			},
-			ExpectedPlan: []api.Action{
+			ExpectedHighPlan: []api.Action{
 				actions.NewAction(api.ActionTypeRecreateMember, api.ServerGroupAgents, withPredefinedMember("id")),
 			},
 			ExpectedLog: "Restoring old member. For agency members recreation of PVC is not supported - to prevent DataLoss",
@@ -1038,6 +1044,8 @@ func TestCreatePlan(t *testing.T) {
 			ExpectedPlan: []api.Action{
 				actions.NewAction(api.ActionTypeRemoveMember, api.ServerGroupCoordinators, withPredefinedMember("id")),
 				actions.NewAction(api.ActionTypeAddMember, api.ServerGroupCoordinators, withPredefinedMember("")),
+				actions.NewAction(api.ActionTypeWaitForMemberUp, api.ServerGroupCoordinators,
+					withPredefinedMember(api.MemberIDPreviousAction)),
 			},
 			ExpectedLog: "Creating member replacement plan because member has failed",
 		},
@@ -1056,6 +1064,8 @@ func TestCreatePlan(t *testing.T) {
 			ExpectedPlan: []api.Action{
 				actions.NewAction(api.ActionTypeRemoveMember, api.ServerGroupDBServers, withPredefinedMember("id")),
 				actions.NewAction(api.ActionTypeAddMember, api.ServerGroupDBServers, withPredefinedMember("")),
+				actions.NewAction(api.ActionTypeWaitForMemberUp, api.ServerGroupDBServers,
+					withPredefinedMember(api.MemberIDPreviousAction)),
 			},
 			ExpectedLog: "Creating member replacement plan because member has failed",
 		},

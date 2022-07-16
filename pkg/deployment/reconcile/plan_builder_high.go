@@ -57,6 +57,7 @@ func (r *Reconciler) createHighPlan(ctx context.Context, apiObject k8sutil.APIOb
 		ApplyIfEmptyWithBackOff(LicenseCheck, 30*time.Second, r.updateClusterLicense).
 		ApplyIfEmpty(r.createTopologyMemberConditionPlan).
 		ApplyIfEmpty(r.createRebalancerCheckPlan).
+		ApplyIfEmpty(r.createMemberFailedRestoreHighPlan).
 		ApplyWithBackOff(BackOffCheck, time.Minute, r.emptyPlanBuilder)).
 		Apply(r.createBackupInProgressConditionPlan). // Discover backups always
 		Apply(r.createMaintenanceConditionPlan).      // Discover maintenance always
