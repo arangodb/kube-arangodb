@@ -289,7 +289,7 @@ func executeMain(cmd *cobra.Command, args []string) {
 			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 			defer cancel()
 
-			crd.EnsureCRD(ctx, client)
+			_ = crd.EnsureCRD(ctx, client, true)
 		}
 
 		secrets := client.Kubernetes().CoreV1().Secrets(namespace)
