@@ -74,7 +74,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 	if k8sutil.IsNotFound(err) {
 		// Deployment is gone
 		d.log.Info("Deployment is gone")
-		d.Delete()
+		d.Stop()
 		return nextInterval
 	} else if updated != nil && updated.GetDeletionTimestamp() != nil {
 		// Deployment is marked for deletion

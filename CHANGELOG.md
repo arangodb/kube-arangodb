@@ -10,6 +10,7 @@
 - (Feature) Add 'crd install' subcommand
 - (Bugfix) Fix `internal` metrics mode
 - (Bugfix) Create agency dump if auth is disabled
+- (Bugfix) Prevent deployment removal in case of invalid K8S API response
 
 ## [1.2.14](https://github.com/arangodb/kube-arangodb/tree/1.2.14) (2022-07-14)
 - (Feature) Add ArangoSync TLS based rotation

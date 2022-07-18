@@ -293,9 +293,9 @@ func (d *Deployment) Update(apiObject *api.ArangoDeployment) {
 	})
 }
 
-// Delete the deployment.
+// Stop the deployment.
 // Called when the deployment was deleted by the user.
-func (d *Deployment) Delete() {
+func (d *Deployment) Stop() {
 	d.log.Info("deployment is deleted by user")
 	if atomic.CompareAndSwapInt32(&d.stopped, 0, 1) {
 		close(d.stopCh)
@@ -359,18 +359,6 @@ func (d *Deployment) run() {
 	for {
 		select {
 		case <-d.stopCh:
-			err := d.acs.CurrentClusterCache().Refresh(context.Background())
-			if err != nil {
-				log.Err(err).Error("Unable to get resources")
-			}
-			// Remove finalizers from created resources
-			log.Info("Deployment removed, removing finalizers to prevent orphaned resources")
-			if _, err := d.removePodFinalizers(context.TODO(), d.GetCachedStatus()); err != nil {
-				log.Err(err).Warn("Failed to remove Pod finalizers")
-			}
-			if _, err := d.removePVCFinalizers(context.TODO(), d.GetCachedStatus()); err != nil {
-				log.Err(err).Warn("Failed to remove PVC finalizers")
-			}
 			// We're being stopped.
 			return
 
