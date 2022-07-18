@@ -28,7 +28,7 @@ In default mode metrics provided by ArangoDB `_admin/metrics` (<=3.7) or `_admin
 
 There are several ways to configure Prometheus to fetch metrics from the ArangoDB Exporter.
 
-Below you're find a sample Prometheus configuration file that can be used to fetch
+Below you will find a sample Prometheus configuration file that can be used to fetch
 metrics from an ArangoDB exporter listening on localhost port 9101 (without TLS).
 
 ```yaml

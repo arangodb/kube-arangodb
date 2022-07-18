@@ -41,7 +41,8 @@ func (m MetricsMode) New() *MetricsMode {
 	return &m
 }
 
-// deprecated
+// GetMetricsEndpoint
+// Deprecated
 func (m MetricsMode) GetMetricsEndpoint() string {
 	switch m {
 	case MetricsModeInternal:
@@ -52,12 +53,14 @@ func (m MetricsMode) GetMetricsEndpoint() string {
 }
 
 const (
-	// deprecated
 	// MetricsModeExporter exporter mode for old exporter type
+	// Deprecated
 	MetricsModeExporter MetricsMode = "exporter"
-	// deprecated
+	// MetricsModeSidecar
+	// Deprecated
 	MetricsModeSidecar MetricsMode = "sidecar"
-	// deprecated
+	// MetricsModeInternal
+	// Deprecated
 	MetricsModeInternal MetricsMode = "internal"
 )
 
@@ -106,14 +109,14 @@ func (s *MetricsSpec) IsEnabled() bool {
 	return util.BoolOrDefault(s.Enabled, false)
 }
 
-// deprecated
 // HasImage returns whether a image was specified or not
+// Deprecated
 func (s *MetricsSpec) HasImage() bool {
 	return s.Image != nil
 }
 
-// deprecated
 // GetImage returns the Image or empty string
+// Deprecated
 func (s *MetricsSpec) GetImage() string {
 	return util.StringOrDefault(s.Image)
 }

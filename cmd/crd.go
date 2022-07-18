@@ -18,22 +18,50 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package crd
+package cmd
 
 import (
 	"context"
-	"testing"
+	"os"
+	"time"
 
-	"github.com/stretchr/testify/require"
+	"github.com/spf13/cobra"
 
+	"github.com/arangodb/kube-arangodb/pkg/crd"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
-func Test_Apply(t *testing.T) {
-	t.Run("Ensure CRD exists", func(t *testing.T) {
-		c, ok := kclient.GetDefaultFactory().Client()
-		require.True(t, ok)
+var (
+	cmdCRD = &cobra.Command{
+		Use:   "crd",
+		Run:   executeUsage,
+		Short: "CRD operations",
+	}
+	cmdCRDInstall = &cobra.Command{
+		Use:   "install",
+		Run:   cmdCRDInstallRun,
+		Short: "Install and update all required CRDs",
+	}
+)
 
-		_ = EnsureCRD(context.Background(), c, true)
-	})
+func init() {
+	cmdMain.AddCommand(cmdCRD)
+	cmdOps.AddCommand(cmdCRD)
+
+	cmdCRD.AddCommand(cmdCRDInstall)
+}
+
+func cmdCRDInstallRun(cmd *cobra.Command, args []string) {
+	client, ok := kclient.GetDefaultFactory().Client()
+	if !ok {
+		logger.Fatal("Failed to get client")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	err := crd.EnsureCRD(ctx, client, false)
+	if err != nil {
+		os.Exit(1)
+	}
 }
