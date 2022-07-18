@@ -185,7 +185,7 @@ func (o *Operator) handleDeploymentEvent(event *Event) error {
 		if !ok {
 			return errors.WithStack(errors.Newf("unsafe state. deployment (%s) was never created but we received event (%s)", apiObject.Name, event.Type))
 		}
-		depl.Delete()
+		depl.Stop()
 		delete(o.deployments, apiObject.Name)
 		deploymentsDeleted.Inc()
 		deploymentsCurrent.Set(float64(len(o.deployments)))
