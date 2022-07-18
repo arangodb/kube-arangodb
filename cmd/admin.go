@@ -211,10 +211,12 @@ func getDeploymentAndCredentials(ctx context.Context,
 		return
 	}
 
-	auth, err = getJWTTokenFromSecrets(ctx, secrets, d.Spec.Authentication.GetJWTSecretName())
-	if err != nil {
-		err = errors.WithMessage(err, "failed to get JWT token")
-		return
+	if d.Spec.IsAuthenticated() {
+		auth, err = getJWTTokenFromSecrets(ctx, secrets, d.Spec.Authentication.GetJWTSecretName())
+		if err != nil {
+			err = errors.WithMessage(err, "failed to get JWT token")
+			return
+		}
 	}
 
 	return

@@ -7,6 +7,7 @@
 - (Feature) Remove forgotten ArangoDB jobs during restart
 - (Feature) Add support for managed services
 - (Feature) Recreation member in the high plan
+- (Bugfix) Create agency dump if auth is disabled
 
 ## [1.2.14](https://github.com/arangodb/kube-arangodb/tree/1.2.14) (2022-07-14)
 - (Feature) Add ArangoSync TLS based rotation
