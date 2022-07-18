@@ -9,6 +9,7 @@
 - (Feature) Recreation member in the high plan
 - (Feature) Add 'crd install' subcommand
 - (Bugfix) Fix `internal` metrics mode
+- (Bugfix) Create agency dump if auth is disabled
 - (Bugfix) Prevent member removal in case of high
 
 ## [1.2.14](https://github.com/arangodb/kube-arangodb/tree/1.2.14) (2022-07-14)
