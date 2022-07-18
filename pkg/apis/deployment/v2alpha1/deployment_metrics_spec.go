@@ -53,13 +53,13 @@ func (m MetricsMode) GetMetricsEndpoint() string {
 }
 
 const (
-	// MetricsModeExporter exporter mode for old exporter type
+	// MetricsModeExporter starts sidecar container with
 	// Deprecated
 	MetricsModeExporter MetricsMode = "exporter"
-	// MetricsModeSidecar
+	// MetricsModeSidecar behaves exactly the same as MetricsModeExporter
 	// Deprecated
 	MetricsModeSidecar MetricsMode = "sidecar"
-	// MetricsModeInternal
+	// MetricsModeInternal exposes metrics using ArangoD endpoint
 	// Deprecated
 	MetricsModeInternal MetricsMode = "internal"
 )
