@@ -344,7 +344,7 @@ func (m *MemberArangoDPod) GetServiceAccountName() string {
 }
 
 func (m *MemberArangoDPod) GetSidecars(pod *core.Pod) error {
-	if m.spec.Metrics.IsEnabled() {
+	if m.spec.Metrics.IsEnabled() && m.spec.Metrics.Mode.Get() != api.MetricsModeInternal {
 		var c *core.Container
 
 		pod.Labels[k8sutil.LabelKeyArangoExporter] = "yes"

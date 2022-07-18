@@ -7,6 +7,8 @@
 - (Feature) Remove forgotten ArangoDB jobs during restart
 - (Feature) Add support for managed services
 - (Feature) Recreation member in the high plan
+- (Feature) Add 'crd install' subcommand
+- (Bugfix) Fix `internal` metrics mode
 - (Bugfix) Prevent member removal in case of high
 
 ## [1.2.14](https://github.com/arangodb/kube-arangodb/tree/1.2.14) (2022-07-14)
@@ -41,7 +43,6 @@
 - (Bugfix) Infinite loop fix in ArangoD AsyncClient
 - (Bugfix) Add Panic Handler
 - (Bugfix) Unify yaml packages
-- (Feature) Add 'crd install' subcommand
 
 ## [1.2.13](https://github.com/arangodb/kube-arangodb/tree/1.2.13) (2022-06-07)
 - (Bugfix) Fix arangosync members state inspection
