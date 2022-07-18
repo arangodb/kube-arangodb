@@ -34,7 +34,7 @@ const (
 	LabelKeyApp = "app"
 	// LabelKeyRole is the key of the label used to store the role of the resource in
 	LabelKeyRole = "role"
-	// LabelKeyArangoExporter is the key of the label used to indicate that a exporter is present
+	// LabelKeyArangoExporter is the key of the label used to indicate that an exporter is present
 	LabelKeyArangoExporter = "arango_exporter"
 	// LabelKeyArangoMember is the key of the label used to store the ArangoDeployment member ID in
 	LabelKeyArangoMember = "deployment.arangodb.com/member"
