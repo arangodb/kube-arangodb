@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.2.15](https://github.com/arangodb/kube-arangodb/tree/1.2.15) (2022-07-20)
 - (Bugfix) Ensure pod names not too long
 - (Refactor) Use cached member's clients
 - (Feature) Move PVC resize action to high-priority plan
