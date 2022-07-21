@@ -20,7 +20,10 @@
 
 package v1
 
+import "github.com/arangodb/kube-arangodb/pkg/util"
+
 type ServerGroupStatus struct {
+	Index *int `json:"index,omitempty"`
 }
 
 func (s *ServerGroupStatus) Equal(b *ServerGroupStatus) bool {
@@ -32,5 +35,5 @@ func (s *ServerGroupStatus) Equal(b *ServerGroupStatus) bool {
 		return false
 	}
 
-	return true
+	return util.CompareIntp(s.Index, b.Index)
 }

@@ -153,6 +153,8 @@ type ServerGroupSpec struct {
 	AllowMemberRecreation *bool `json:"allowMemberRecreation,omitempty"`
 	// TerminationGracePeriodSeconds override default TerminationGracePeriodSeconds for pods - via silent rotation
 	TerminationGracePeriodSeconds *int64 `json:"terminationGracePeriodSeconds,omitempty"`
+	// IndexMethod define group Indexing method
+	IndexMethod *ServerGroupIndexMethod `json:"indexMethod,omitempty"`
 }
 
 // ServerGroupSpecSecurityContext contains specification for pod security context
@@ -539,6 +541,7 @@ func (s *ServerGroupSpec) validate() error {
 		shared.PrefixResourceError("volumes", s.Volumes.Validate()),
 		shared.PrefixResourceError("volumeMounts", s.VolumeMounts.Validate()),
 		shared.PrefixResourceError("initContainers", s.InitContainers.Validate()),
+		shared.PrefixResourceError("IndexMethod", s.IndexMethod.Validate()),
 		s.validateVolumes(),
 	)
 }

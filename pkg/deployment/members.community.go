@@ -23,8 +23,19 @@ package deployment
 
 import (
 	"context"
+
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/names"
 )
 
 func (d *Deployment) createInitialTopology(ctx context.Context) error {
 	return nil
+}
+
+func (d *Deployment) renderMemberID(spec api.DeploymentSpec, status *api.DeploymentStatus, groupStatus *api.ServerGroupStatus, group api.ServerGroup) string {
+	for {
+		if id := names.GetArangodID(group); !status.Members.ContainsID(id) {
+			return id
+		}
+	}
 }

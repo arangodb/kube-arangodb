@@ -30,12 +30,11 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/names"
 )
 
 func (d *Deployment) createAgencyMapping(ctx context.Context) error {
 	spec := d.GetSpec()
-	status, _ := d.GetStatus()
+	status := d.GetStatusSnapshot()
 
 	if !spec.Mode.HasAgents() {
 		return nil
@@ -65,12 +64,15 @@ func (d *Deployment) createAgencyMapping(ctx context.Context) error {
 		i.IDs = append(i.IDs, agents[id].ID)
 	}
 
+	agentsStatus := status.GetServerGroupStatus(api.ServerGroupAgents)
+
 	for len(i.IDs) < *spec.Agents.Count {
-		i.IDs = append(i.IDs, names.GetArangodID(api.ServerGroupAgents))
+		i.IDs = append(i.IDs, d.renderMemberID(spec, &status, &agentsStatus, api.ServerGroupAgents))
 	}
 
 	return d.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
 		s.Agency = &i
+		s.UpdateServerGroupStatus(api.ServerGroupAgents, agentsStatus)
 		return true
 	})
 }
@@ -78,8 +80,10 @@ func (d *Deployment) createAgencyMapping(ctx context.Context) error {
 // createMember creates member and adds it to the applicable member list.
 // Note: This does not create any pods of PVCs
 // Note: The updated status is not yet written to the apiserver.
-func (d *Deployment) createMember(status *api.DeploymentStatus, group api.ServerGroup, id string, apiObject *api.ArangoDeployment, mods ...reconcile.CreateMemberMod) (string, error) {
-	m, err := d.renderMember(status, group, id, apiObject)
+func (d *Deployment) createMember(spec api.DeploymentSpec, status *api.DeploymentStatus, group api.ServerGroup, id string, apiObject *api.ArangoDeployment, mods ...reconcile.CreateMemberMod) (string, error) {
+	gs := status.GetServerGroupStatus(group)
+
+	m, err := d.renderMember(spec, status, &gs, group, id, apiObject)
 	if err != nil {
 		return "", err
 	}
@@ -94,10 +98,12 @@ func (d *Deployment) createMember(status *api.DeploymentStatus, group api.Server
 		return "", err
 	}
 
+	status.UpdateServerGroupStatus(group, gs)
+
 	return m.ID, nil
 }
 
-func (d *Deployment) renderMember(status *api.DeploymentStatus, group api.ServerGroup, id string, apiObject *api.ArangoDeployment) (*api.MemberStatus, error) {
+func (d *Deployment) renderMember(spec api.DeploymentSpec, status *api.DeploymentStatus, groupStatus *api.ServerGroupStatus, group api.ServerGroup, id string, apiObject *api.ArangoDeployment) (*api.MemberStatus, error) {
 	if group == api.ServerGroupAgents {
 		if status.Agency == nil {
 			return nil, errors.New("Agency is not yet defined")
@@ -113,13 +119,7 @@ func (d *Deployment) renderMember(status *api.DeploymentStatus, group api.Server
 		}
 	} else {
 		if id == "" {
-			for {
-				id = names.GetArangodID(group)
-				if !status.Members.ContainsID(id) {
-					break
-				}
-				// Duplicate, try again
-			}
+			id = d.renderMemberID(spec, status, groupStatus, group)
 		}
 	}
 	if id == "" {

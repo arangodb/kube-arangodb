@@ -346,7 +346,7 @@ func (d *Deployment) GetSyncServerClient(ctx context.Context, group api.ServerGr
 // If ID is non-empty, it will be used, otherwise a new ID is created.
 func (d *Deployment) CreateMember(ctx context.Context, group api.ServerGroup, id string, mods ...reconcile.CreateMemberMod) (string, error) {
 	if err := d.WithStatusUpdateErr(ctx, func(s *api.DeploymentStatus) (bool, error) {
-		nid, err := d.createMember(s, group, id, d.apiObject, mods...)
+		nid, err := d.createMember(d.GetSpec(), s, group, id, d.apiObject, mods...)
 		if err != nil {
 			d.log.Err(err).Str("group", group.AsRole()).Debug("Failed to create member")
 			return false, errors.WithStack(err)
