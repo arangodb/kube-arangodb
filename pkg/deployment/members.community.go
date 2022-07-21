@@ -32,7 +32,7 @@ func (d *Deployment) createInitialTopology(ctx context.Context) error {
 	return nil
 }
 
-func (d *Deployment) renderMemberID(spec api.DeploymentSpec, status *api.DeploymentStatus, groupStatus *api.ServerGroupStatus, group api.ServerGroup) string {
+func (d *Deployment) renderMemberID(_ api.DeploymentSpec, status *api.DeploymentStatus, _ *api.ServerGroupStatus, group api.ServerGroup) string {
 	for {
 		if id := names.GetArangodID(group); !status.Members.ContainsID(id) {
 			return id
