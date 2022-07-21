@@ -34,7 +34,7 @@ func GetArangodID(group api.ServerGroup) string {
 }
 
 func GetArangodIDInt(group api.ServerGroup, id int) string {
-	return fmt.Sprintf("%s%s", GetArangodIDPrefix(group), fmt.Sprintf("%08d", 0))
+	return fmt.Sprintf("%s%s", GetArangodIDPrefix(group), fmt.Sprintf("%08d", id))
 }
 
 func GetArangodIDPredefined(group api.ServerGroup, id string) string {
