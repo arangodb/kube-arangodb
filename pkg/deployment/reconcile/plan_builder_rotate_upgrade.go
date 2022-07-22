@@ -85,36 +85,33 @@ func (r *Reconciler) createMarkToRemovePlan(ctx context.Context, apiObject k8sut
 	context PlanBuilderContext) api.Plan {
 	var plan api.Plan
 
-	status.Members.ForeachServerInGroups(func(group api.ServerGroup, members api.MemberStatusList) error {
-		for _, m := range members {
-			if m.Phase != api.MemberPhaseCreated || m.PodName == "" {
-				// Only rotate when phase is created
-				continue
-			}
+	for _, e := range status.Members.AsListInGroups(rotationByAnnotationOrder...) {
+		m := e.Member
+		group := e.Group
+		if m.Phase != api.MemberPhaseCreated || m.PodName == "" {
+			// Only rotate when phase is created
+			continue
+		}
 
-			cache, ok := context.ACS().ClusterCache(m.ClusterID)
-			if !ok {
-				continue
-			}
+		cache, ok := context.ACS().ClusterCache(m.ClusterID)
+		if !ok {
+			continue
+		}
 
-			pod, found := cache.Pod().V1().GetSimple(m.PodName)
-			if !found {
-				continue
-			}
+		pod, found := cache.Pod().V1().GetSimple(m.PodName)
+		if !found {
+			continue
+		}
 
-			if pod.Annotations != nil {
-				if _, ok := pod.Annotations[deployment.ArangoDeploymentPodReplaceAnnotation]; ok && (group == api.ServerGroupDBServers || group == api.ServerGroupAgents || group == api.ServerGroupCoordinators) {
-					if !m.Conditions.IsTrue(api.ConditionTypeMarkedToRemove) {
-						plan = append(plan, actions.NewAction(api.ActionTypeMarkToRemoveMember, group, m, "Replace flag present"))
-						continue
-					}
+		if pod.Annotations != nil {
+			if _, ok := pod.Annotations[deployment.ArangoDeploymentPodReplaceAnnotation]; ok && (group == api.ServerGroupDBServers || group == api.ServerGroupAgents || group == api.ServerGroupCoordinators) {
+				if !m.Conditions.IsTrue(api.ConditionTypeMarkedToRemove) {
+					plan = append(plan, actions.NewAction(api.ActionTypeMarkToRemoveMember, group, m, "Replace flag present"))
+					continue
 				}
 			}
 		}
-
-		return nil
-	}, rotationByAnnotationOrder...)
-
+	}
 	return plan
 }
 

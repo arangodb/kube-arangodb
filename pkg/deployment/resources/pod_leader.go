@@ -61,65 +61,56 @@ func (r *Resources) EnsureLeader(ctx context.Context, cachedStatus inspectorInte
 	noLeader := len(leaderID) == 0
 	changed := false
 	group := api.ServerGroupAgents
-	agencyServers := func(group api.ServerGroup, list api.MemberStatusList) error {
-		for _, m := range list {
-			pod, exist := cachedStatus.Pod().V1().GetSimple(m.PodName)
-			if !exist {
-				continue
-			}
-
-			labels := pod.GetLabels()
-			if noLeader || m.ID != leaderID {
-				// Unset a leader when:
-				// - leader is unknown.
-				// - leader does not belong to the current pod.
-
-				if _, ok := labels[k8sutil.LabelKeyArangoLeader]; ok {
-					delete(labels, k8sutil.LabelKeyArangoLeader)
-
-					err := r.context.ApplyPatchOnPod(ctx, pod, patch.ItemReplace(patch.NewPath("metadata", "labels"), labels))
-					if err != nil {
-						log.Err(err).Error("Unable to remove leader label")
-						return err
-					}
-
-					log.Warn("leader label is removed from \"%s\" member", m.ID)
-					changed = true
-				}
-
-				continue
-			}
-
-			// From here on it is known that there is a leader, and it should be attached to the current pod.
-			if value, ok := labels[k8sutil.LabelKeyArangoLeader]; !ok {
-				labels = addLabel(labels, k8sutil.LabelKeyArangoLeader, "true")
-			} else if value != "true" {
-				labels = addLabel(labels, k8sutil.LabelKeyArangoLeader, "true")
-			} else {
-				// A pod is already a leader, so nothing to change.
-				continue
-			}
-
-			err := r.context.ApplyPatchOnPod(ctx, pod, patch.ItemReplace(patch.NewPath("metadata", "labels"), labels))
-			if err != nil {
-				log.Err(err).Error("Unable to update leader label")
-				return err
-			}
-			log.Warn("leader label is set on \"%s\" member", m.ID)
-			changed = true
+	for _, e := range status.Members.AsListInGroup(group) {
+		pod, exist := cachedStatus.Pod().V1().GetSimple(e.Member.PodName)
+		if !exist {
+			continue
 		}
 
-		return nil
-	}
+		labels := pod.GetLabels()
+		if noLeader || e.Member.ID != leaderID {
+			// Unset a leader when:
+			// - leader is unknown.
+			// - leader does not belong to the current pod.
 
-	if err := status.Members.ForeachServerInGroups(agencyServers, group); err != nil {
-		return err
+			if _, ok := labels[k8sutil.LabelKeyArangoLeader]; ok {
+				delete(labels, k8sutil.LabelKeyArangoLeader)
+
+				err := r.context.ApplyPatchOnPod(ctx, pod, patch.ItemReplace(patch.NewPath("metadata", "labels"), labels))
+				if err != nil {
+					log.Err(err).Error("Unable to remove leader label")
+					return err
+				}
+
+				log.Warn("leader label is removed from \"%s\" member", e.Member.ID)
+				changed = true
+			}
+
+			continue
+		}
+
+		// From here on it is known that there is a leader, and it should be attached to the current pod.
+		if value, ok := labels[k8sutil.LabelKeyArangoLeader]; !ok {
+			labels = addLabel(labels, k8sutil.LabelKeyArangoLeader, "true")
+		} else if value != "true" {
+			labels = addLabel(labels, k8sutil.LabelKeyArangoLeader, "true")
+		} else {
+			// A pod is already a leader, so nothing to change.
+			continue
+		}
+
+		err := r.context.ApplyPatchOnPod(ctx, pod, patch.ItemReplace(patch.NewPath("metadata", "labels"), labels))
+		if err != nil {
+			log.Err(err).Error("Unable to update leader label")
+			return err
+		}
+		log.Warn("leader label is set on \"%s\" member", e.Member.ID)
+		changed = true
 	}
 
 	if changed {
 		return errors.Reconcile()
 	}
-	changed = false
 
 	if noLeader {
 		// There is no leader agency so service may not exist, or it can exist with empty list of endpoints.
@@ -165,56 +156,42 @@ func (r *Resources) getSingleServerLeaderID(ctx context.Context) (string, error)
 	var leaderID string
 	var anyError error
 
-	dbServers := func(group api.ServerGroup, list api.MemberStatusList) error {
-		if len(list) == 0 {
-			return nil
-		}
-		ctxCancel, cancel := context.WithCancel(ctx)
-		defer func() {
-			cancel()
-		}()
+	ctxCancel, cancel := context.WithCancel(ctx)
+	defer cancel()
 
-		// Fetch availability of each single server.
-		var wg sync.WaitGroup
-		wg.Add(len(list))
-		for _, m := range list {
-			go func(id string) {
-				defer wg.Done()
-				err := globals.GetGlobalTimeouts().ArangoD().RunWithTimeout(ctxCancel, func(ctxChild context.Context) error {
-					c, err := r.context.GetMembersState().GetMemberClient(id)
-					if err != nil {
-						return err
-					}
-
-					if available, err := isServerAvailable(ctxChild, c); err != nil {
-						return err
-					} else if !available {
-						return errors.New("not available")
-					}
-
-					// Other requests can be interrupted, because a leader is known already.
-					cancel()
-					mutex.Lock()
-					leaderID = id
-					mutex.Unlock()
-					return nil
-				})
-
+	var wg sync.WaitGroup
+	for _, m := range status.Members.Single {
+		wg.Add(1)
+		go func(id string) {
+			defer wg.Done()
+			err := globals.GetGlobalTimeouts().ArangoD().RunWithTimeout(ctxCancel, func(ctxChild context.Context) error {
+				c, err := r.context.GetMembersState().GetMemberClient(id)
 				if err != nil {
-					mutex.Lock()
-					anyError = err
-					mutex.Unlock()
+					return err
 				}
-			}(m.ID)
-		}
-		wg.Wait()
 
-		return nil
-	}
+				if available, err := isServerAvailable(ctxChild, c); err != nil {
+					return err
+				} else if !available {
+					return errors.New("not available")
+				}
 
-	if err := status.Members.ForeachServerInGroups(dbServers, api.ServerGroupSingle); err != nil {
-		return "", err
+				// Other requests can be interrupted, because a leader is known already.
+				cancel()
+				mutex.Lock()
+				leaderID = id
+				mutex.Unlock()
+				return nil
+			})
+
+			if err != nil {
+				mutex.Lock()
+				anyError = err
+				mutex.Unlock()
+			}
+		}(m.ID)
 	}
+	wg.Wait()
 
 	if len(leaderID) > 0 {
 		return leaderID, nil
@@ -240,43 +217,35 @@ func (r *Resources) ensureSingleServerLeader(ctx context.Context, cachedStatus i
 		}
 	}
 
-	singleServers := func(group api.ServerGroup, list api.MemberStatusList) error {
-		for _, m := range list {
-			pod, exist := cachedStatus.Pod().V1().GetSimple(m.PodName)
-			if !exist {
+	status, _ := r.context.GetStatus()
+	for _, m := range status.Members.Single {
+		pod, exist := cachedStatus.Pod().V1().GetSimple(m.PodName)
+		if !exist {
+			continue
+		}
+
+		labels := pod.GetLabels()
+		if enabled && m.ID == leaderID {
+			if value, ok := labels[k8sutil.LabelKeyArangoLeader]; ok && value == "true" {
+				// Single server is available, and it has a leader label.
 				continue
 			}
 
-			labels := pod.GetLabels()
-			if enabled && m.ID == leaderID {
-				if value, ok := labels[k8sutil.LabelKeyArangoLeader]; ok && value == "true" {
-					// Single server is available, and it has a leader label.
-					continue
-				}
-
-				labels = addLabel(labels, k8sutil.LabelKeyArangoLeader, "true")
-			} else {
-				if _, ok := labels[k8sutil.LabelKeyArangoLeader]; !ok {
-					// Single server is not available, and it does not have a leader label.
-					continue
-				}
-
-				delete(labels, k8sutil.LabelKeyArangoLeader)
+			labels = addLabel(labels, k8sutil.LabelKeyArangoLeader, "true")
+		} else {
+			if _, ok := labels[k8sutil.LabelKeyArangoLeader]; !ok {
+				// Single server is not available, and it does not have a leader label.
+				continue
 			}
 
-			err := r.context.ApplyPatchOnPod(ctx, pod, patch.ItemReplace(patch.NewPath("metadata", "labels"), labels))
-			if err != nil {
-				return errors.WithMessagef(err, "unable to change leader label for pod %s", m.PodName)
-			}
-			changed = true
+			delete(labels, k8sutil.LabelKeyArangoLeader)
 		}
 
-		return nil
-	}
-
-	status, _ := r.context.GetStatus()
-	if err := status.Members.ForeachServerInGroups(singleServers, api.ServerGroupSingle); err != nil {
-		return err
+		err := r.context.ApplyPatchOnPod(ctx, pod, patch.ItemReplace(patch.NewPath("metadata", "labels"), labels))
+		if err != nil {
+			return errors.WithMessagef(err, "unable to change leader label for pod %s", m.PodName)
+		}
+		changed = true
 	}
 
 	if changed {

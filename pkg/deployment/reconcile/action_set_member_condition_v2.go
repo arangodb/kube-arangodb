@@ -70,20 +70,15 @@ func (a actionSetMemberConditionV2) Start(ctx context.Context) (bool, error) {
 
 		if err := a.actionCtx.WithStatusUpdateErr(ctx, func(s *api.DeploymentStatus) (bool, error) {
 			var changed bool
-
-			s.Members.ForServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
-				for i := range members {
-					if members[i].ID == a.action.MemberID {
-						changed = members[i].Conditions.UpdateWithHash(api.ConditionType(aa), as, ar, am, ah)
-						return nil
-					}
+			for _, m := range s.Members.MembersOfGroup(a.action.Group) {
+				if m.ID == a.action.MemberID {
+					changed = m.Conditions.UpdateWithHash(api.ConditionType(aa), as, ar, am, ah)
+					break
 				}
-
+			}
+			if !changed {
 				a.log.Info("can not set the condition because the member is gone already")
-				return nil
-			}, a.action.Group)
-
-			// If not found then false is returned.
+			}
 			return changed, nil
 		}); err != nil {
 			a.log.Err(err).Warn("unable to update status")
@@ -92,20 +87,15 @@ func (a actionSetMemberConditionV2) Start(ctx context.Context) (bool, error) {
 	case setConditionActionV2KeyTypeRemove:
 		if err := a.actionCtx.WithStatusUpdateErr(ctx, func(s *api.DeploymentStatus) (bool, error) {
 			var changed bool
-
-			s.Members.ForServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
-				for i := range members {
-					if members[i].ID == a.action.MemberID {
-						changed = members[i].Conditions.Remove(api.ConditionType(aa))
-						return nil
-					}
+			for _, m := range s.Members.MembersOfGroup(a.action.Group) {
+				if m.ID == a.action.MemberID {
+					changed = m.Conditions.Remove(api.ConditionType(aa))
+					break
 				}
-
+			}
+			if !changed {
 				a.log.Info("can not remove the condition because the member is gone already")
-				return nil
-			}, a.action.Group)
-
-			// If not found then false is returned.
+			}
 			return changed, nil
 		}); err != nil {
 			a.log.Err(err).Warn("unable to update status")

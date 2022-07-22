@@ -57,13 +57,15 @@ func (r *Reconciler) createMemberFailedRestoreInternal(_ context.Context, _ k8su
 	agencyState, agencyOK := context.GetAgencyCache()
 
 	// Check for members in failed state.
-	status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
+	for _, group := range api.AllServerGroups {
+		members := status.Members.MembersOfGroup(group)
 		failed := 0
 		for _, m := range members {
 			if m.Phase == api.MemberPhaseFailed {
 				failed++
 			}
 		}
+
 		for _, m := range members {
 			if m.Phase != api.MemberPhaseFailed || len(plan) > 0 {
 				continue
@@ -116,8 +118,7 @@ func (r *Reconciler) createMemberFailedRestoreInternal(_ context.Context, _ k8su
 				}
 			}
 		}
-		return nil
-	})
+	}
 
 	if len(plan) == 0 && !agencyOK {
 		r.log.Warn("unable to build further plan without access to agency")

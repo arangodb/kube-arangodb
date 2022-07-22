@@ -202,21 +202,17 @@ func (r *Reconciler) areJWTTokensUpToDate(ctx context.Context, status api.Deploy
 	gCtx, c := context.WithTimeout(ctx, 2*time.Second)
 	defer c()
 
-	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
-		for _, m := range list {
-			nCtx, c := context.WithTimeout(gCtx, 500*time.Millisecond)
-			defer c()
-			if updateRequired, failedMember := r.isJWTTokenUpToDate(nCtx, status, planCtx, group, m, folder); failedMember {
-				failed = true
-				continue
-			} else if updateRequired {
-				plan = append(plan, actions.NewAction(api.ActionTypeJWTRefresh, group, m))
-				continue
-			}
+	for _, e := range status.Members.AsList() {
+		nCtx, c := context.WithTimeout(gCtx, 500*time.Millisecond)
+		defer c()
+		if updateRequired, failedMember := r.isJWTTokenUpToDate(nCtx, status, planCtx, e.Group, e.Member, folder); failedMember {
+			failed = true
+			continue
+		} else if updateRequired {
+			plan = append(plan, actions.NewAction(api.ActionTypeJWTRefresh, e.Group, e.Member))
+			continue
 		}
-
-		return nil
-	})
+	}
 
 	return
 }

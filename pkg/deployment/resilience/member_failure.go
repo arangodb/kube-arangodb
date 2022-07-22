@@ -41,70 +41,68 @@ const (
 func (r *Resilience) CheckMemberFailure(ctx context.Context) error {
 	status, lastVersion := r.context.GetStatus()
 	updateStatusNeeded := false
-	if err := status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
-		for _, m := range list {
-			log := r.log("member-failure").
-				Str("id", m.ID).
-				Str("role", group.AsRole())
 
-			// Check if there are Members with Phase Upgrading or Rotation but no plan
-			switch m.Phase {
-			case api.MemberPhaseNone, api.MemberPhasePending:
-				continue
-			case api.MemberPhaseUpgrading, api.MemberPhaseRotating, api.MemberPhaseCleanOut, api.MemberPhaseRotateStart:
-				if len(status.Plan) == 0 {
-					log.Error("No plan but member is in phase %s - marking as failed", m.Phase)
+	for _, e := range status.Members.AsList() {
+		m := e.Member
+		group := e.Group
+		log := r.log("member-failure").
+			Str("id", m.ID).
+			Str("role", group.AsRole())
+
+		// Check if there are Members with Phase Upgrading or Rotation but no plan
+		switch m.Phase {
+		case api.MemberPhaseNone, api.MemberPhasePending:
+			continue
+		case api.MemberPhaseUpgrading, api.MemberPhaseRotating, api.MemberPhaseCleanOut, api.MemberPhaseRotateStart:
+			if len(status.Plan) == 0 {
+				log.Error("No plan but member is in phase %s - marking as failed", m.Phase)
+				m.Phase = api.MemberPhaseFailed
+				status.Members.Update(m, group)
+				updateStatusNeeded = true
+			}
+		}
+
+		// Check if pod is ready
+		if m.Conditions.IsTrue(api.ConditionTypeReady) {
+			// Pod is now ready, so we're not looking further
+			continue
+		}
+
+		// Check not ready for a long time
+		if !m.Phase.IsFailed() {
+			if m.IsNotReadySince(time.Now().Add(-notReadySinceGracePeriod)) {
+				// Member has terminated too often in recent history.
+
+				failureAcceptable, reason := r.isMemberFailureAcceptable(group, m)
+				if failureAcceptable {
+					log.Info("Member is not ready for long time, marking is failed")
 					m.Phase = api.MemberPhaseFailed
 					status.Members.Update(m, group)
 					updateStatusNeeded = true
-				}
-			}
-
-			// Check if pod is ready
-			if m.Conditions.IsTrue(api.ConditionTypeReady) {
-				// Pod is now ready, so we're not looking further
-				continue
-			}
-
-			// Check not ready for a long time
-			if !m.Phase.IsFailed() {
-				if m.IsNotReadySince(time.Now().Add(-notReadySinceGracePeriod)) {
-					// Member has terminated too often in recent history.
-
-					failureAcceptable, reason := r.isMemberFailureAcceptable(group, m)
-					if failureAcceptable {
-						log.Info("Member is not ready for long time, marking is failed")
-						m.Phase = api.MemberPhaseFailed
-						status.Members.Update(m, group)
-						updateStatusNeeded = true
-					} else {
-						log.Warn("Member is not ready for long time, but it is not safe to mark it a failed because: %s", reason)
-					}
-				}
-			}
-
-			// Check recent terminations
-			if !m.Phase.IsFailed() {
-				count := m.RecentTerminationsSince(time.Now().Add(-recentTerminationsSinceGracePeriod))
-				if count >= recentTerminationThreshold {
-					// Member has terminated too often in recent history.
-					failureAcceptable, reason := r.isMemberFailureAcceptable(group, m)
-					if failureAcceptable {
-						log.Info("Member has terminated too often in recent history, marking is failed")
-						m.Phase = api.MemberPhaseFailed
-						status.Members.Update(m, group)
-						updateStatusNeeded = true
-					} else {
-						log.Warn("Member has terminated too often in recent history, but it is not safe to mark it a failed because: %s", reason)
-					}
+				} else {
+					log.Warn("Member is not ready for long time, but it is not safe to mark it a failed because: %s", reason)
 				}
 			}
 		}
 
-		return nil
-	}); err != nil {
-		return errors.WithStack(err)
+		// Check recent terminations
+		if !m.Phase.IsFailed() {
+			count := m.RecentTerminationsSince(time.Now().Add(-recentTerminationsSinceGracePeriod))
+			if count >= recentTerminationThreshold {
+				// Member has terminated too often in recent history.
+				failureAcceptable, reason := r.isMemberFailureAcceptable(group, m)
+				if failureAcceptable {
+					log.Info("Member has terminated too often in recent history, marking is failed")
+					m.Phase = api.MemberPhaseFailed
+					status.Members.Update(m, group)
+					updateStatusNeeded = true
+				} else {
+					log.Warn("Member has terminated too often in recent history, but it is not safe to mark it a failed because: %s", reason)
+				}
+			}
+		}
 	}
+
 	if updateStatusNeeded {
 		if err := r.context.UpdateStatus(ctx, status, lastVersion); err != nil {
 			return errors.WithStack(err)

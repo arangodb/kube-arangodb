@@ -67,13 +67,9 @@ func (r *Reconciler) createClusterOperationPlan(ctx context.Context, apiObject k
 
 	membersHealth := health.Health
 
-	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
-		for _, m := range list {
-			delete(membersHealth, driver.ServerID(m.ID))
-		}
-
-		return nil
-	})
+	for _, e := range status.Members.AsList() {
+		delete(membersHealth, driver.ServerID(e.Member.ID))
+	}
 
 	if len(membersHealth) == 0 {
 		return nil

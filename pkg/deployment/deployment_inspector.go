@@ -359,26 +359,22 @@ func (d *Deployment) isUpToDateStatus(status api.DeploymentStatus) (upToDate boo
 
 	if !status.Conditions.Check(api.ConditionTypeReachable).Exists().IsTrue().Evaluate() {
 		upToDate = false
+		return
 	}
 
-	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
-		if !upToDate {
-			return nil
+	for _, m := range status.Members.AsList() {
+		member := m.Member
+		if member.Conditions.IsTrue(api.ConditionTypeRestart) || member.Conditions.IsTrue(api.ConditionTypePendingRestart) {
+			upToDate = false
+			reason = "Pending restarts on members"
+			return
 		}
-		for _, member := range list {
-			if member.Conditions.IsTrue(api.ConditionTypeRestart) || member.Conditions.IsTrue(api.ConditionTypePendingRestart) {
-				upToDate = false
-				reason = "Pending restarts on members"
-				return nil
-			}
-			if member.Conditions.IsTrue(api.ConditionTypePVCResizePending) {
-				upToDate = false
-				reason = "PVC is resizing"
-				return nil
-			}
+		if member.Conditions.IsTrue(api.ConditionTypePVCResizePending) {
+			upToDate = false
+			reason = "PVC is resizing"
+			return
 		}
-		return nil
-	})
+	}
 
 	return
 }

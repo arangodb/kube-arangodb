@@ -131,55 +131,49 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 	reconcileRequired := k8sutil.NewReconcile(cachedStatus)
 
 	// Ensure member services
-	if err := status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
+	for _, e := range status.Members.AsList() {
 		var targetPort int32 = shared.ArangoPort
 
-		switch group {
+		switch e.Group {
 		case api.ServerGroupSyncMasters:
 			targetPort = shared.ArangoSyncMasterPort
 		case api.ServerGroupSyncWorkers:
 			targetPort = shared.ArangoSyncWorkerPort
 		}
 
-		for _, m := range list {
-			memberName := m.ArangoMemberName(r.context.GetAPIObject().GetName(), group)
+		memberName := e.Member.ArangoMemberName(r.context.GetAPIObject().GetName(), e.Group)
 
-			member, ok := cachedStatus.ArangoMember().V1().GetSimple(memberName)
-			if !ok {
-				return errors.Newf("Member %s not found", memberName)
-			}
-
-			selector := k8sutil.LabelsForMember(deploymentName, group.AsRole(), m.ID)
-			if s, ok := cachedStatus.Service().V1().GetSimple(member.GetName()); !ok {
-				s := r.createService(member.GetName(), member.GetNamespace(), member.AsOwner(), targetPort, selector)
-
-				err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-					_, err := svcs.Create(ctxChild, s, meta.CreateOptions{})
-					return err
-				})
-				if err != nil {
-					if !k8sutil.IsConflict(err) {
-						return err
-					}
-				}
-
-				reconcileRequired.Required()
-				continue
-			} else {
-				if err, adjusted := r.adjustService(ctx, s, targetPort, selector); err == nil {
-					if adjusted {
-						reconcileRequired.Required()
-					}
-					// Continue the loop.
-				} else {
-					return err
-				}
-			}
+		member, ok := cachedStatus.ArangoMember().V1().GetSimple(memberName)
+		if !ok {
+			return errors.Newf("Member %s not found", memberName)
 		}
 
-		return nil
-	}); err != nil {
-		return err
+		selector := k8sutil.LabelsForMember(deploymentName, e.Group.AsRole(), e.Member.ID)
+		if s, ok := cachedStatus.Service().V1().GetSimple(member.GetName()); !ok {
+			s := r.createService(member.GetName(), member.GetNamespace(), member.AsOwner(), targetPort, selector)
+
+			err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
+				_, err := svcs.Create(ctxChild, s, meta.CreateOptions{})
+				return err
+			})
+			if err != nil {
+				if !k8sutil.IsConflict(err) {
+					return err
+				}
+			}
+
+			reconcileRequired.Required()
+			continue
+		} else {
+			if err, adjusted := r.adjustService(ctx, s, targetPort, selector); err == nil {
+				if adjusted {
+					reconcileRequired.Required()
+				}
+				// Continue the loop.
+			} else {
+				return err
+			}
+		}
 	}
 
 	// Headless service
