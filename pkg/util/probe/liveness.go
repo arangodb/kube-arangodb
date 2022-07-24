@@ -24,6 +24,8 @@ import (
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/timer"
 )
 
 const (
@@ -83,7 +85,7 @@ func (p *LivenessProbe) waitUntilNotLocked(timeout time.Duration) bool {
 		select {
 		case <-w:
 			// continue
-		case <-time.After(time.Until(deadline)):
+		case <-timer.After(time.Until(deadline)):
 			// Timeout
 			return false
 		}

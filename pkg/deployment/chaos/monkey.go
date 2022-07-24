@@ -23,13 +23,13 @@ package chaos
 import (
 	"context"
 	"math/rand"
-	"time"
 
 	"github.com/rs/zerolog"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/timer"
 )
 
 var (
@@ -78,7 +78,7 @@ func (m Monkey) Run(stopCh <-chan struct{}) {
 		}
 
 		select {
-		case <-time.After(spec.Chaos.GetInterval()):
+		case <-timer.After(spec.Chaos.GetInterval()):
 			// Continue
 		case <-stopCh:
 			// We're done

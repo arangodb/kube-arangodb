@@ -37,6 +37,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
+	"github.com/arangodb/kube-arangodb/pkg/util/timer"
 	"github.com/arangodb/kube-arangodb/pkg/util/trigger"
 )
 
@@ -279,7 +280,7 @@ func (ls *LocalStorage) run() {
 				recentInspectionErrors = 0
 			}
 
-		case <-time.After(inspectionInterval):
+		case <-timer.After(inspectionInterval):
 			// Trigger inspection
 			ls.inspectTrigger.Trigger()
 			// Backoff with next interval

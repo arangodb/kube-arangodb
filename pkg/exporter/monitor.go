@@ -37,6 +37,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
+	"github.com/arangodb/kube-arangodb/pkg/util/timer"
 )
 
 const (
@@ -92,7 +93,7 @@ func (m monitor) UpdateMonitorStatus(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			return
-		case <-time.After(sleep):
+		case <-timer.After(sleep):
 			continue
 		}
 	}

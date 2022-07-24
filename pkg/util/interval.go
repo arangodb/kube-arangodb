@@ -22,6 +22,8 @@ package util
 
 import (
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/timer"
 )
 
 // Interval is a specialization of Duration so we can add some
@@ -60,5 +62,5 @@ func (i Interval) Backoff(factor float64, maxInt Interval) Interval {
 // After waits for the interval to elapse and then sends the current time
 // on the returned channel.
 func (i Interval) After() <-chan time.Time {
-	return time.After(time.Duration(i))
+	return timer.After(time.Duration(i))
 }
