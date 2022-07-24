@@ -11,7 +11,7 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: arango-deployment-operator
+      app.kubernetes.io/name: kube-arangodb
   namespaceSelector:
     matchNames:
     - default
