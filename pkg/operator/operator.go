@@ -57,6 +57,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/probe"
+	"github.com/arangodb/kube-arangodb/pkg/util/timer"
 )
 
 const (
@@ -200,7 +201,7 @@ func (o *Operator) handleShutdown() {
 	case <-shutdownCh:
 		o.log.Info("All deployments terminated, exiting.")
 		return
-	case <-time.After(o.Config.ShutdownTimeout):
+	case <-timer.After(o.Config.ShutdownTimeout):
 		o.log.Info("Timeout reached before all deployments terminated, exiting.")
 		return
 	}

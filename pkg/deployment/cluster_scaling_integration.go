@@ -35,6 +35,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/timer"
 )
 
 var ciLogger = logging.Global().RegisterAndGetLogger("deployment-ci", logging.Info)
@@ -143,7 +144,7 @@ func (ci *clusterScalingIntegration) ListenForClusterEvents(stopCh <-chan struct
 		}
 
 		select {
-		case <-time.After(time.Second * 2):
+		case <-timer.After(time.Second * 2):
 			// Continue
 		case <-stopCh:
 			// We're done

@@ -38,6 +38,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
+	"github.com/arangodb/kube-arangodb/pkg/util/timer"
 	"github.com/arangodb/kube-arangodb/pkg/util/trigger"
 )
 
@@ -178,7 +179,7 @@ func (dr *DeploymentReplication) run() {
 		case <-dr.inspectTrigger.Done():
 			inspectionInterval = dr.inspectDeploymentReplication(inspectionInterval)
 
-		case <-time.After(inspectionInterval):
+		case <-timer.After(inspectionInterval):
 			// Trigger inspection
 			dr.inspectTrigger.Trigger()
 			// Backoff with next interval

@@ -34,6 +34,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/timer"
 )
 
 func min(a int, b int) int {
@@ -220,7 +221,7 @@ func (r *Resources) ensurePDBForGroup(ctx context.Context, group api.ServerGroup
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-		case <-time.After(time.Second):
+		case <-timer.After(time.Second):
 		}
 	}
 }

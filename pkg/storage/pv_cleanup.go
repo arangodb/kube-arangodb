@@ -34,6 +34,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/timer"
 	"github.com/arangodb/kube-arangodb/pkg/util/trigger"
 )
 
@@ -78,7 +79,7 @@ func (c *pvCleaner) Run(stopCh <-chan struct{}) {
 			return
 		case <-c.trigger.Done():
 			// Continue
-		case <-time.After(delay):
+		case <-timer.After(delay):
 			// Continue
 		}
 	}
