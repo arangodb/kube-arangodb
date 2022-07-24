@@ -73,17 +73,13 @@ func (r *Reconciler) updateMemberPodTemplateSpec(ctx context.Context, apiObject 
 	var plan api.Plan
 
 	// Update member specs
-	status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
-		for _, m := range members {
-			if m.Phase != api.MemberPhaseNone {
-				if reason, changed := r.arangoMemberPodTemplateNeedsUpdate(ctx, apiObject, spec, group, status, m, context); changed {
-					plan = append(plan, actions.NewAction(api.ActionTypeArangoMemberUpdatePodSpec, group, m, reason))
-				}
+	for _, e := range status.Members.AsList() {
+		if e.Member.Phase != api.MemberPhaseNone {
+			if reason, changed := r.arangoMemberPodTemplateNeedsUpdate(ctx, apiObject, spec, e.Group, status, e.Member, context); changed {
+				plan = append(plan, actions.NewAction(api.ActionTypeArangoMemberUpdatePodSpec, e.Group, e.Member, reason))
 			}
 		}
-
-		return nil
-	})
+	}
 
 	return plan
 }
@@ -94,24 +90,18 @@ func (r *Reconciler) updateMemberPhasePlan(ctx context.Context, apiObject k8suti
 	context PlanBuilderContext) api.Plan {
 	var plan api.Plan
 
-	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
-		for _, m := range list {
-			if m.Phase == api.MemberPhaseNone {
-				var p api.Plan
-
-				p = append(p,
-					actions.NewAction(api.ActionTypeArangoMemberUpdatePodSpec, group, m, "Propagating spec of pod"),
-					actions.NewAction(api.ActionTypeArangoMemberUpdatePodStatus, group, m, "Propagating status of pod"))
-
-				p = append(p, actions.NewAction(api.ActionTypeMemberPhaseUpdate, group, m,
-					"Move to Pending phase").AddParam(actionTypeMemberPhaseUpdatePhaseKey, api.MemberPhasePending.String()))
-
-				plan = append(plan, p...)
-			}
+	for _, e := range status.Members.AsList() {
+		if e.Member.Phase == api.MemberPhaseNone {
+			var p api.Plan
+			p = append(p,
+				actions.NewAction(api.ActionTypeArangoMemberUpdatePodSpec, e.Group, e.Member, "Propagating spec of pod"),
+				actions.NewAction(api.ActionTypeArangoMemberUpdatePodStatus, e.Group, e.Member, "Propagating status of pod"),
+				actions.NewAction(api.ActionTypeMemberPhaseUpdate, e.Group, e.Member,
+					"Move to Pending phase").AddParam(actionTypeMemberPhaseUpdatePhaseKey, api.MemberPhasePending.String()),
+			)
+			plan = append(plan, p...)
 		}
-
-		return nil
-	})
+	}
 
 	return plan
 }
@@ -133,27 +123,20 @@ func (r *Reconciler) updateMemberUpdateConditionsPlan(ctx context.Context, apiOb
 	context PlanBuilderContext) api.Plan {
 	var plan api.Plan
 
-	if err := status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
-		for _, m := range list {
-			if m.Conditions.IsTrue(api.ConditionTypeUpdating) {
-				// We are in updating phase
-				if status.Plan.IsEmpty() {
-					// If plan is empty then something went wrong
-					plan = append(plan,
-						actions.NewAction(api.ActionTypeSetMemberCondition, group, m, "Clean update actions after failure").
-							AddParam(api.ConditionTypePendingUpdate.String(), "").
-							AddParam(api.ConditionTypeUpdating.String(), "").
-							AddParam(api.ConditionTypeUpdateFailed.String(), "T").
-							AddParam(api.ConditionTypePendingRestart.String(), "T"),
-					)
-				}
+	for _, e := range status.Members.AsList() {
+		if e.Member.Conditions.IsTrue(api.ConditionTypeUpdating) {
+			// We are in updating phase
+			if status.Plan.IsEmpty() {
+				// If plan is empty then something went wrong
+				plan = append(plan,
+					actions.NewAction(api.ActionTypeSetMemberCondition, e.Group, e.Member, "Clean update actions after failure").
+						AddParam(api.ConditionTypePendingUpdate.String(), "").
+						AddParam(api.ConditionTypeUpdating.String(), "").
+						AddParam(api.ConditionTypeUpdateFailed.String(), "T").
+						AddParam(api.ConditionTypePendingRestart.String(), "T"),
+				)
 			}
 		}
-
-		return nil
-	}); err != nil {
-		r.log.Err(err).Error("Error while generating update plan")
-		return nil
 	}
 
 	return plan
@@ -164,29 +147,23 @@ func (r *Reconciler) updateMemberRotationConditionsPlan(ctx context.Context, api
 	context PlanBuilderContext) api.Plan {
 	var plan api.Plan
 
-	if err := status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
-		for _, m := range list {
-			cache, ok := context.ACS().ClusterCache(m.ClusterID)
-			if !ok {
-				continue
-			}
-
-			p, ok := cache.Pod().V1().GetSimple(m.PodName)
-			if !ok {
-				p = nil
-			}
-
-			if p, err := r.updateMemberRotationConditions(apiObject, spec, m, group, p, context); err != nil {
-				return err
-			} else if len(p) > 0 {
-				plan = append(plan, p...)
-			}
+	for _, e := range status.Members.AsList() {
+		cache, ok := context.ACS().ClusterCache(e.Member.ClusterID)
+		if !ok {
+			continue
 		}
 
-		return nil
-	}); err != nil {
-		r.log.Err(err).Error("Error while generating rotation plan")
-		return nil
+		p, ok := cache.Pod().V1().GetSimple(e.Member.PodName)
+		if !ok {
+			p = nil
+		}
+
+		if p, err := r.updateMemberRotationConditions(apiObject, spec, e.Member, e.Group, p, context); err != nil {
+			r.log.Err(err).Error("Error while generating rotation plan")
+			return nil
+		} else if len(p) > 0 {
+			plan = append(plan, p...)
+		}
 	}
 
 	return plan

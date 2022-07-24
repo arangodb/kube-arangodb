@@ -84,10 +84,13 @@ func (ds DeploymentStatusMembers) ElementByID(id string) (MemberStatus, ServerGr
 // ForeachServerGroup calls the given callback for all server groups.
 // If the callback returns an error, this error is returned and the callback is
 // not called for the remaining groups.
+// Deprecated. Use AsList instead
 func (ds DeploymentStatusMembers) ForeachServerGroup(cb MemberStatusFunc) error {
 	return ds.ForeachServerInGroups(cb, AllServerGroups...)
 }
 
+// ForeachServerInGroups calls the given callback for specified server groups.
+// Deprecated. Use AsListInGroups instead
 func (ds DeploymentStatusMembers) ForeachServerInGroups(cb MemberStatusFunc, groups ...ServerGroup) error {
 	for _, group := range groups {
 		if err := ds.ForServerGroup(cb, group); err != nil {
@@ -98,6 +101,8 @@ func (ds DeploymentStatusMembers) ForeachServerInGroups(cb MemberStatusFunc, gro
 	return nil
 }
 
+// ForServerGroup calls the given callback for specified server group.
+// Deprecated. Use AsListInGroup or MembersOfGroup
 func (ds DeploymentStatusMembers) ForServerGroup(cb MemberStatusFunc, group ServerGroup) error {
 	switch group {
 	case ServerGroupSingle:
@@ -292,14 +297,11 @@ func (ds DeploymentStatusMembers) MembersOfGroup(group ServerGroup) MemberStatus
 func (ds DeploymentStatusMembers) PodNames() []string {
 	var n []string
 
-	ds.ForeachServerGroup(func(group ServerGroup, list MemberStatusList) error {
-		for _, m := range list {
-			if m.PodName != "" {
-				n = append(n, m.PodName)
-			}
+	for _, m := range ds.AsList() {
+		if m.Member.PodName != "" {
+			n = append(n, m.Member.PodName)
 		}
-		return nil
-	})
+	}
 
 	return n
 }

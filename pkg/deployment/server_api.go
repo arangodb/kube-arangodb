@@ -66,20 +66,17 @@ func (d *Deployment) StateColor() server.StateColor {
 		allGood = false
 	}
 	status, _ := d.GetStatus()
-	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
-		for _, m := range list {
-			switch m.Phase {
-			case api.MemberPhaseFailed:
-				failed = true
-			case api.MemberPhaseCreated:
-				// Should be ok now
-			default:
-				// Something is going on
-				allGood = true
-			}
+	for _, m := range status.Members.AsList() {
+		switch m.Member.Phase {
+		case api.MemberPhaseFailed:
+			failed = true
+		case api.MemberPhaseCreated:
+			// Should be ok now
+		default:
+			// Something is going on
+			allGood = true
 		}
-		return nil
-	})
+	}
 	if failed {
 		return server.StateRed
 	}
@@ -94,34 +91,22 @@ func (d *Deployment) StateColor() server.StateColor {
 
 // PodCount returns the number of pods for the deployment
 func (d *Deployment) PodCount() int {
-	count := 0
 	status, _ := d.GetStatus()
-	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
-		for _, m := range list {
-			if m.PodName != "" {
-				count++
-			}
-		}
-		return nil
-	})
-	return count
+	return len(status.Members.PodNames())
 }
 
 // ReadyPodCount returns the number of pods for the deployment that are in ready state
 func (d *Deployment) ReadyPodCount() int {
 	count := 0
 	status, _ := d.GetStatus()
-	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
-		for _, m := range list {
-			if m.PodName == "" {
-				continue
-			}
-			if m.Conditions.IsTrue(api.ConditionTypeReady) {
-				count++
-			}
+	for _, e := range status.Members.AsList() {
+		if e.Member.PodName == "" {
+			continue
 		}
-		return nil
-	})
+		if e.Member.Conditions.IsTrue(api.ConditionTypeReady) {
+			count++
+		}
+	}
 	return count
 }
 
@@ -129,14 +114,11 @@ func (d *Deployment) ReadyPodCount() int {
 func (d *Deployment) VolumeCount() int {
 	count := 0
 	status, _ := d.GetStatus()
-	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
-		for _, m := range list {
-			if m.PersistentVolumeClaimName != "" {
-				count++
-			}
+	for _, e := range status.Members.AsList() {
+		if e.Member.PersistentVolumeClaimName != "" {
+			count++
 		}
-		return nil
-	})
+	}
 	return count
 }
 
@@ -145,22 +127,19 @@ func (d *Deployment) ReadyVolumeCount() int {
 	count := 0
 	status, _ := d.GetStatus()
 	pvcs, _ := d.GetOwnedPVCs() // Ignore errors on purpose
-	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
-		for _, m := range list {
-			if m.PersistentVolumeClaimName == "" {
-				continue
-			}
-			// Find status
-			for _, pvc := range pvcs {
-				if pvc.Name == m.PersistentVolumeClaimName {
-					if pvc.Status.Phase == core.ClaimBound {
-						count++
-					}
+	for _, e := range status.Members.AsList() {
+		if e.Member.PersistentVolumeClaimName == "" {
+			continue
+		}
+		// Find status
+		for _, pvc := range pvcs {
+			if pvc.Name == e.Member.PersistentVolumeClaimName {
+				if pvc.Status.Phase == core.ClaimBound {
+					count++
 				}
 			}
 		}
-		return nil
-	})
+	}
 	return count
 }
 
@@ -229,7 +208,9 @@ func (d *Deployment) DatabaseVersion() (string, string) {
 func (d *Deployment) Members() map[api.ServerGroup][]server.Member {
 	result := make(map[api.ServerGroup][]server.Member)
 	status, _ := d.GetStatus()
-	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
+
+	for _, group := range api.AllServerGroups {
+		list := status.Members.MembersOfGroup(group)
 		members := make([]server.Member, len(list))
 		for i, m := range list {
 			members[i] = member{
@@ -241,7 +222,7 @@ func (d *Deployment) Members() map[api.ServerGroup][]server.Member {
 		if len(members) > 0 {
 			result[group] = members
 		}
-		return nil
-	})
+	}
+
 	return result
 }

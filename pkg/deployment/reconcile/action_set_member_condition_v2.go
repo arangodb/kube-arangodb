@@ -69,44 +69,52 @@ func (a actionSetMemberConditionV2) Start(ctx context.Context) (bool, error) {
 		as := a.action.Params[setConditionActionV2KeyStatus] == string(core.ConditionTrue)
 
 		if err := a.actionCtx.WithStatusUpdateErr(ctx, func(s *api.DeploymentStatus) (bool, error) {
-			var changed bool
+			status, g, ok := s.Members.ElementByID(a.action.MemberID)
+			if !ok {
+				a.log.Info("can not set the condition because the member is gone already")
+				return false, nil
+			}
 
-			s.Members.ForServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
-				for i := range members {
-					if members[i].ID == a.action.MemberID {
-						changed = members[i].Conditions.UpdateWithHash(api.ConditionType(aa), as, ar, am, ah)
-						return nil
-					}
+			if g != a.action.Group {
+				a.log.Info("can not set the condition because of invalid groups")
+				return false, nil
+			}
+
+			if status.Conditions.UpdateWithHash(api.ConditionType(aa), as, ar, am, ah) {
+				if err := s.Members.Update(status, g); err != nil {
+					return false, err
 				}
 
-				a.log.Info("can not set the condition because the member is gone already")
-				return nil
-			}, a.action.Group)
+				return true, nil
+			}
 
-			// If not found then false is returned.
-			return changed, nil
+			return false, nil
 		}); err != nil {
 			a.log.Err(err).Warn("unable to update status")
 			return true, nil
 		}
 	case setConditionActionV2KeyTypeRemove:
 		if err := a.actionCtx.WithStatusUpdateErr(ctx, func(s *api.DeploymentStatus) (bool, error) {
-			var changed bool
+			status, g, ok := s.Members.ElementByID(a.action.MemberID)
+			if !ok {
+				a.log.Info("can not set the condition because the member is gone already")
+				return false, nil
+			}
 
-			s.Members.ForServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
-				for i := range members {
-					if members[i].ID == a.action.MemberID {
-						changed = members[i].Conditions.Remove(api.ConditionType(aa))
-						return nil
-					}
+			if g != a.action.Group {
+				a.log.Info("can not set the condition because of invalid groups")
+				return false, nil
+			}
+
+			if status.Conditions.Remove(api.ConditionType(aa)) {
+				if err := s.Members.Update(status, g); err != nil {
+					return false, err
 				}
 
-				a.log.Info("can not remove the condition because the member is gone already")
-				return nil
-			}, a.action.Group)
+				return true, nil
+			}
 
-			// If not found then false is returned.
-			return changed, nil
+			return false, nil
 		}); err != nil {
 			a.log.Err(err).Warn("unable to update status")
 			return true, nil

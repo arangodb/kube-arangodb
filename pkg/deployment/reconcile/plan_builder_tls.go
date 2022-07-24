@@ -288,9 +288,7 @@ func (r *Reconciler) createKeyfileRenewalPlanSynced(ctx context.Context, apiObje
 	var plan api.Plan
 	group := api.ServerGroupSyncMasters
 
-	for _, statusMember := range status.Members.AsListInGroup(group) {
-		member := statusMember.Member
-
+	for _, member := range status.Members.MembersOfGroup(group) {
 		if !plan.IsEmpty() {
 			continue
 		}
@@ -321,32 +319,21 @@ func (r *Reconciler) createKeyfileRenewalPlanDefault(ctx context.Context, apiObj
 
 	var plan api.Plan
 
-	status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
-		if !group.IsArangod() {
-			return nil
+	for _, e := range status.Members.AsListInGroups(api.AllArangoDServerGroups...) {
+		cache, ok := planCtx.ACS().ClusterCache(e.Member.ClusterID)
+		if !ok {
+			continue
 		}
 
-		for _, member := range members {
-			if !plan.IsEmpty() {
-				return nil
-			}
+		lCtx, c := context.WithTimeout(ctx, 500*time.Millisecond)
+		defer c()
 
-			cache, ok := planCtx.ACS().ClusterCache(member.ClusterID)
-			if !ok {
-				continue
-			}
-
-			lCtx, c := context.WithTimeout(ctx, 500*time.Millisecond)
-			defer c()
-
-			if renew, _ := r.keyfileRenewalRequired(lCtx, apiObject, spec.TLS, spec, cache, planCtx, group, member, api.TLSRotateModeRecreate); renew {
-				r.planLogger.Info("Renewal of keyfile required - Recreate (server)")
-				plan = append(plan, tlsRotateConditionAction(group, member.ID, "Restart server after keyfile removal"))
-			}
+		if renew, _ := r.keyfileRenewalRequired(lCtx, apiObject, spec.TLS, spec, cache, planCtx, e.Group, e.Member, api.TLSRotateModeRecreate); renew {
+			r.planLogger.Info("Renewal of keyfile required - Recreate (server)")
+			plan = append(plan, tlsRotateConditionAction(e.Group, e.Member.ID, "Restart server after keyfile removal"))
+			break
 		}
-
-		return nil
-	})
+	}
 
 	return plan
 }
@@ -360,31 +347,23 @@ func (r *Reconciler) createKeyfileRenewalPlanInPlace(ctx context.Context, apiObj
 
 	var plan api.Plan
 
-	status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
-		if !group.IsArangod() {
-			return nil
+	for _, e := range status.Members.AsListInGroups(api.AllArangoDServerGroups...) {
+		cache, ok := planCtx.ACS().ClusterCache(e.Member.ClusterID)
+		if !ok {
+			continue
 		}
 
-		for _, member := range members {
-			cache, ok := planCtx.ACS().ClusterCache(member.ClusterID)
-			if !ok {
-				continue
-			}
+		lCtx, c := context.WithTimeout(ctx, 500*time.Millisecond)
+		defer c()
 
-			lCtx, c := context.WithTimeout(ctx, 500*time.Millisecond)
-			defer c()
-
-			if renew, recreate := r.keyfileRenewalRequired(lCtx, apiObject, spec.TLS, spec, cache, planCtx, group, member, api.TLSRotateModeInPlace); renew {
-				r.planLogger.Info("Renewal of keyfile required - InPlace (server)")
-				if recreate {
-					plan = append(plan, actions.NewAction(api.ActionTypeCleanTLSKeyfileCertificate, group, member, "Remove server keyfile and enforce renewal"))
-				}
-				plan = append(plan, actions.NewAction(api.ActionTypeRefreshTLSKeyfileCertificate, group, member, "Renew Member Keyfile"))
+		if renew, recreate := r.keyfileRenewalRequired(lCtx, apiObject, spec.TLS, spec, cache, planCtx, e.Group, e.Member, api.TLSRotateModeInPlace); renew {
+			r.planLogger.Info("Renewal of keyfile required - InPlace (server)")
+			if recreate {
+				plan = append(plan, actions.NewAction(api.ActionTypeCleanTLSKeyfileCertificate, e.Group, e.Member, "Remove server keyfile and enforce renewal"))
 			}
+			plan = append(plan, actions.NewAction(api.ActionTypeRefreshTLSKeyfileCertificate, e.Group, e.Member, "Renew Member Keyfile"))
 		}
-
-		return nil
-	})
+	}
 
 	return plan
 }
@@ -419,27 +398,19 @@ func createKeyfileRenewalPlanMode(
 
 	mode := spec.TLS.Mode.Get()
 
-	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
+	for _, e := range status.Members.AsList() {
 		if mode != api.TLSRotateModeInPlace {
-			return nil
+			break
 		}
 
-		for _, member := range list {
-			if mode != api.TLSRotateModeInPlace {
-				return nil
-			}
-
-			if i, ok := status.Images.GetByImageID(member.ImageID); !ok {
+		if i, ok := status.Images.GetByImageID(e.Member.ImageID); !ok {
+			mode = api.TLSRotateModeRecreate
+		} else {
+			if !features.TLSRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
 				mode = api.TLSRotateModeRecreate
-			} else {
-				if !features.TLSRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
-					mode = api.TLSRotateModeRecreate
-				}
 			}
 		}
-
-		return nil
-	})
+	}
 
 	return mode
 }

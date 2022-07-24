@@ -116,44 +116,41 @@ func (r *Reconciler) createReplaceMemberPlan(ctx context.Context, apiObject k8su
 	var plan api.Plan
 
 	// Replace is only allowed for Coordinators, DBServers & Agents
-	status.Members.ForeachServerInGroups(func(group api.ServerGroup, list api.MemberStatusList) error {
-		for _, member := range list {
-			if !plan.IsEmpty() {
-				return nil
-			}
-			if member.Conditions.IsTrue(api.ConditionTypeMarkedToRemove) {
-				ready, message := groupReadyForRestart(context, status, member, group)
-				if !ready {
-					r.planLogger.Str("member", member.ID).Str("role", group.AsRole()).Str("message", message).Warn("Unable to recreate member")
-					continue
-				}
-
-				switch group {
-				case api.ServerGroupDBServers:
-					plan = append(plan, actions.NewAction(api.ActionTypeAddMember, group, withPredefinedMember("")))
-					r.planLogger.
-						Str("role", group.AsRole()).
-						Debug("Creating replacement plan")
-					return nil
-				case api.ServerGroupCoordinators:
-					plan = append(plan, actions.NewAction(api.ActionTypeRemoveMember, group, member))
-					r.planLogger.
-						Str("role", group.AsRole()).
-						Debug("Creating replacement plan")
-					return nil
-				case api.ServerGroupAgents:
-					plan = append(plan, actions.NewAction(api.ActionTypeRemoveMember, group, member),
-						actions.NewAction(api.ActionTypeAddMember, group, withPredefinedMember("")))
-					r.planLogger.
-						Str("role", group.AsRole()).
-						Debug("Creating replacement plan")
-					return nil
-				}
-			}
+	for _, e := range status.Members.AsListInGroups(api.ServerGroupAgents, api.ServerGroupDBServers, api.ServerGroupCoordinators) {
+		if !plan.IsEmpty() {
+			break
 		}
 
-		return nil
-	}, api.ServerGroupAgents, api.ServerGroupDBServers, api.ServerGroupCoordinators)
+		member := e.Member
+		group := e.Group
+
+		if member.Conditions.IsTrue(api.ConditionTypeMarkedToRemove) {
+			ready, message := groupReadyForRestart(context, status, member, group)
+			if !ready {
+				r.planLogger.Str("member", member.ID).Str("role", group.AsRole()).Str("message", message).Warn("Unable to recreate member")
+				continue
+			}
+
+			switch group {
+			case api.ServerGroupDBServers:
+				plan = append(plan, actions.NewAction(api.ActionTypeAddMember, group, withPredefinedMember("")))
+				r.planLogger.
+					Str("role", group.AsRole()).
+					Debug("Creating replacement plan")
+			case api.ServerGroupCoordinators:
+				plan = append(plan, actions.NewAction(api.ActionTypeRemoveMember, group, member))
+				r.planLogger.
+					Str("role", group.AsRole()).
+					Debug("Creating replacement plan")
+			case api.ServerGroupAgents:
+				plan = append(plan, actions.NewAction(api.ActionTypeRemoveMember, group, member),
+					actions.NewAction(api.ActionTypeAddMember, group, withPredefinedMember("")))
+				r.planLogger.
+					Str("role", group.AsRole()).
+					Debug("Creating replacement plan")
+			}
+		}
+	}
 
 	return plan
 }

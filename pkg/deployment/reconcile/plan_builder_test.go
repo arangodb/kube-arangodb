@@ -977,14 +977,10 @@ func TestCreatePlan(t *testing.T) {
 					},
 				}
 
-				require.NoError(t, c.context.ArangoDeployment.Status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
-					for _, m := range list {
-						m.Phase = api.MemberPhaseCreated
-						require.NoError(t, c.context.ArangoDeployment.Status.Members.Update(m, group))
-					}
-
-					return nil
-				}))
+				for _, e := range c.context.ArangoDeployment.Status.Members.AsList() {
+					e.Member.Phase = api.MemberPhaseCreated
+					require.NoError(t, c.context.ArangoDeployment.Status.Members.Update(e.Member, e.Group))
+				}
 			},
 			context: &testContext{
 				ArangoDeployment: deploymentTemplate.DeepCopy(),

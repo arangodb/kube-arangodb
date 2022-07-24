@@ -124,93 +124,87 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 		}
 
 		// Set Pending phase
-		require.NoError(t, d.status.last.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
-			for _, m := range list {
-				if m.Phase == api.MemberPhaseNone {
-					m.Phase = api.MemberPhasePending
-					if err := d.status.last.Members.Update(m, group); err != nil {
-						return err
-					}
-				}
+		for _, e := range d.status.last.Members.AsList() {
+			m := e.Member
+			if m.Phase == api.MemberPhaseNone {
+				m.Phase = api.MemberPhasePending
+				require.NoError(t, d.status.last.Members.Update(m, e.Group))
 			}
-			return nil
-		}))
+		}
 
 		// Set members
-		if err := d.status.last.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
-			for _, m := range list {
-
-				member := api.ArangoMember{
-					ObjectMeta: meta.ObjectMeta{
-						Namespace: d.GetNamespace(),
-						Name:      m.ArangoMemberName(d.GetName(), group),
-					},
-					Spec: api.ArangoMemberSpec{
-						Group: group,
-						ID:    m.ID,
-					},
-				}
-
-				c := d.WithCurrentArangoMember(m.ArangoMemberName(d.GetName(), group))
-
-				if err := c.Create(context.Background(), &member); err != nil {
-					return err
-				}
-
-				s := core.Service{
-					ObjectMeta: meta.ObjectMeta{
-						Name:      member.GetName(),
-						Namespace: member.GetNamespace(),
-					},
-				}
-
-				if _, err := d.ServicesModInterface().Create(context.Background(), &s, meta.CreateOptions{}); err != nil {
-					return err
-				}
-
-				require.NoError(t, d.acs.CurrentClusterCache().Refresh(context.Background()))
-
-				groupSpec := d.apiObject.Spec.GetServerGroupSpec(group)
-
-				image, ok := d.resources.SelectImage(d.apiObject.Spec, d.status.last)
-				require.True(t, ok)
-
-				template, err := d.resources.RenderPodTemplateForMember(context.Background(), d.ACS(), d.apiObject.Spec, d.status.last, m.ID, image)
-				if err != nil {
-					return err
-				}
-
-				checksum, err := resources.ChecksumArangoPod(groupSpec, resources.CreatePodFromTemplate(template))
-				require.NoError(t, err)
-
-				podTemplate, err := api.GetArangoMemberPodTemplate(template, checksum)
-				require.NoError(t, err)
-
-				member.Status.Template = podTemplate
-				member.Spec.Template = podTemplate
-
-				if err := c.Update(context.Background(), func(obj *api.ArangoMember) bool {
-					obj.Spec.Template = podTemplate
-					return true
-				}); err != nil {
-					return err
-				}
-
-				if err := c.UpdateStatus(context.Background(), func(obj *api.ArangoMember, s *api.ArangoMemberStatus) bool {
-					s.Template = podTemplate
-					return true
-				}); err != nil {
-					return err
-				}
+		var loopErr error
+		for _, e := range d.status.last.Members.AsList() {
+			m := e.Member
+			group := e.Group
+			member := api.ArangoMember{
+				ObjectMeta: meta.ObjectMeta{
+					Namespace: d.GetNamespace(),
+					Name:      m.ArangoMemberName(d.GetName(), group),
+				},
+				Spec: api.ArangoMemberSpec{
+					Group: group,
+					ID:    m.ID,
+				},
 			}
 
-			return nil
-		}); err != nil {
-			if testCase.ExpectedError != nil && assert.EqualError(t, err, testCase.ExpectedError.Error()) {
-				return
+			c := d.WithCurrentArangoMember(m.ArangoMemberName(d.GetName(), group))
+
+			if loopErr = c.Create(context.Background(), &member); loopErr != nil {
+				break
 			}
+
+			s := core.Service{
+				ObjectMeta: meta.ObjectMeta{
+					Name:      member.GetName(),
+					Namespace: member.GetNamespace(),
+				},
+			}
+
+			if _, loopErr = d.ServicesModInterface().Create(context.Background(), &s, meta.CreateOptions{}); loopErr != nil {
+				break
+			}
+
+			require.NoError(t, d.acs.CurrentClusterCache().Refresh(context.Background()))
+
+			groupSpec := d.apiObject.Spec.GetServerGroupSpec(group)
+
+			image, ok := d.resources.SelectImage(d.apiObject.Spec, d.status.last)
+			require.True(t, ok)
+
+			var template *core.PodTemplateSpec
+			template, loopErr = d.resources.RenderPodTemplateForMember(context.Background(), d.ACS(), d.apiObject.Spec, d.status.last, m.ID, image)
+			if loopErr != nil {
+				break
+			}
+
+			checksum, err := resources.ChecksumArangoPod(groupSpec, resources.CreatePodFromTemplate(template))
 			require.NoError(t, err)
+
+			podTemplate, err := api.GetArangoMemberPodTemplate(template, checksum)
+			require.NoError(t, err)
+
+			member.Status.Template = podTemplate
+			member.Spec.Template = podTemplate
+
+			if loopErr = c.Update(context.Background(), func(obj *api.ArangoMember) bool {
+				obj.Spec.Template = podTemplate
+				return true
+			}); loopErr != nil {
+				break
+			}
+
+			if loopErr = c.UpdateStatus(context.Background(), func(obj *api.ArangoMember, s *api.ArangoMemberStatus) bool {
+				s.Template = podTemplate
+				return true
+			}); loopErr != nil {
+				break
+			}
 		}
+		if loopErr != nil && testCase.ExpectedError != nil && assert.EqualError(t, loopErr, testCase.ExpectedError.Error()) {
+			return
+		}
+		require.NoError(t, err)
 
 		// Act
 		require.NoError(t, d.acs.CurrentClusterCache().Refresh(context.Background()))

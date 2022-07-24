@@ -226,12 +226,11 @@ func (r *Reconciler) createEncryptionKeyCleanPlan(ctx context.Context, apiObject
 func (r *Reconciler) areEncryptionKeysUpToDate(ctx context.Context, spec api.DeploymentSpec,
 	status api.DeploymentStatus, context PlanBuilderContext, folder *core.Secret) (plan api.Plan, failed bool) {
 
-	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
+	for _, group := range api.AllServerGroups {
 		if !pod.GroupEncryptionSupported(spec.Mode.Get(), group) {
-			return nil
+			continue
 		}
-
-		for _, m := range list {
+		for _, m := range status.Members.MembersOfGroup(group) {
 			if updateRequired, failedMember := r.isEncryptionKeyUpToDate(ctx, status, context, group, m, folder); failedMember {
 				failed = true
 				continue
@@ -240,9 +239,7 @@ func (r *Reconciler) areEncryptionKeysUpToDate(ctx context.Context, spec api.Dep
 				continue
 			}
 		}
-
-		return nil
-	})
+	}
 
 	return
 }

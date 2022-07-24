@@ -56,15 +56,14 @@ func (r *Reconciler) createRotateTLSServerSNIPlan(ctx context.Context, apiObject
 	}
 
 	var plan api.Plan
-	status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
+	for _, group := range api.AllServerGroups {
 		if !pod.GroupSNISupported(spec.Mode.Get(), group) {
-			return nil
+			continue
 		}
-
-		for _, m := range members {
+		for _, m := range status.Members.MembersOfGroup(group) {
 			if !plan.IsEmpty() {
 				// Only 1 member at a time
-				return nil
+				break
 			}
 
 			if m.Phase != api.MemberPhaseCreated {
@@ -96,8 +95,7 @@ func (r *Reconciler) createRotateTLSServerSNIPlan(ctx context.Context, apiObject
 			})
 			if err != nil {
 				r.planLogger.Err(err).Info("SNI compare failed")
-				return nil
-
+				break
 			} else if !ok {
 				switch spec.TLS.Mode.Get() {
 				case api.TLSRotateModeRecreate:
@@ -111,7 +109,6 @@ func (r *Reconciler) createRotateTLSServerSNIPlan(ctx context.Context, apiObject
 				}
 			}
 		}
-		return nil
-	})
+	}
 	return plan
 }
