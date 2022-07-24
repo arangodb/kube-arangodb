@@ -291,34 +291,6 @@ func (r *Resources) RenderPodTemplateForMember(ctx context.Context, acs sutil.AC
 	}
 }
 
-func (r *Resources) RenderPodTemplateForMemberFromCurrent(ctx context.Context, acs sutil.ACS, memberID string) (*core.PodTemplateSpec, error) {
-	if p, err := r.RenderPodForMemberFromCurrent(ctx, acs, memberID); err != nil {
-		return nil, err
-	} else {
-		return &core.PodTemplateSpec{
-			ObjectMeta: p.ObjectMeta,
-			Spec:       p.Spec,
-		}, nil
-	}
-}
-
-func (r *Resources) RenderPodForMemberFromCurrent(ctx context.Context, acs sutil.ACS, memberID string) (*core.Pod, error) {
-	spec := r.context.GetSpec()
-	status, _ := r.context.GetStatus()
-
-	member, _, ok := status.Members.ElementByID(memberID)
-	if !ok {
-		return nil, errors.Newf("Member not found")
-	}
-
-	imageInfo, imageFound := r.SelectImageForMember(spec, status, member)
-	if !imageFound {
-		return nil, errors.Newf("ImageInfo not found")
-	}
-
-	return r.RenderPodForMember(ctx, acs, spec, status, member.ID, imageInfo)
-}
-
 func (r *Resources) RenderPodForMember(ctx context.Context, acs sutil.ACS, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error) {
 	log := r.log.Str("section", "member")
 	apiObject := r.context.GetAPIObject()

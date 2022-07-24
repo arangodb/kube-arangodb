@@ -71,10 +71,6 @@ type DeploymentPodRenderer interface {
 	RenderPodForMember(ctx context.Context, acs sutil.ACS, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error)
 	// RenderPodTemplateForMember Renders PodTemplate definition for member
 	RenderPodTemplateForMember(ctx context.Context, acs sutil.ACS, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.PodTemplateSpec, error)
-	// RenderPodForMemberFromCurrent Renders PodTemplate definition for member from current state
-	RenderPodForMemberFromCurrent(ctx context.Context, acs sutil.ACS, memberID string) (*core.Pod, error)
-	// RenderPodTemplateForMemberFromCurrent Renders PodTemplate definition for member
-	RenderPodTemplateForMemberFromCurrent(ctx context.Context, acs sutil.ACS, memberID string) (*core.PodTemplateSpec, error)
 
 	DeploymentEndpoints
 }

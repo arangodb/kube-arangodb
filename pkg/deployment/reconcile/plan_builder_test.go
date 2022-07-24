@@ -95,16 +95,6 @@ func (c *testContext) RenderPodForMember(ctx context.Context, acs sutil.ACS, spe
 }
 
 func (c *testContext) RenderPodTemplateForMember(ctx context.Context, acs sutil.ACS, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.PodTemplateSpec, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (c *testContext) RenderPodForMemberFromCurrent(ctx context.Context, acs sutil.ACS, memberID string) (*core.Pod, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (c *testContext) RenderPodTemplateForMemberFromCurrent(ctx context.Context, acs sutil.ACS, memberID string) (*core.PodTemplateSpec, error) {
 	return &core.PodTemplateSpec{}, nil
 }
 
@@ -944,7 +934,10 @@ func TestCreatePlan(t *testing.T) {
 			},
 			Extender: func(t *testing.T, r *Reconciler, c *testCase) {
 				// Add ArangoMember
-				template, err := newPlanBuilderContext(r.context).RenderPodTemplateForMemberFromCurrent(context.Background(), c.context.ACS(), c.context.ArangoDeployment.Status.Members.Agents[0].ID)
+				imageInfo, _ := c.context.SelectImage(c.context.ArangoDeployment.Spec, c.context.ArangoDeployment.Status)
+				template, err := newPlanBuilderContext(r.context).RenderPodTemplateForMember(context.Background(), c.context.ACS(),
+					c.context.ArangoDeployment.Spec, c.context.ArangoDeployment.Status,
+					c.context.ArangoDeployment.Status.Members.Agents[0].ID, imageInfo)
 				require.NoError(t, err)
 
 				checksum, err := resources.ChecksumArangoPod(c.context.ArangoDeployment.Spec.Agents, resources.CreatePodFromTemplate(template))
