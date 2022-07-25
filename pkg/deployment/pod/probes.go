@@ -62,12 +62,12 @@ var probeMap = map[api.ServerGroup]probes{
 		readiness: newProbe(true, false),
 	},
 	api.ServerGroupDBServers: {
-		startup:   newProbe(true, false),
+		startup:   newProbe(true, true),
 		liveness:  newProbe(true, true),
 		readiness: newProbe(true, false),
 	},
 	api.ServerGroupCoordinators: {
-		startup:   newProbe(true, false),
+		startup:   newProbe(true, true),
 		liveness:  newProbe(true, false),
 		readiness: newProbe(true, true),
 	},
