@@ -22,18 +22,16 @@ package resources
 
 import (
 	"context"
-	"net/http"
 	"sync"
 
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	"github.com/arangodb/go-driver"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -170,7 +168,7 @@ func (r *Resources) getSingleServerLeaderID(ctx context.Context) (string, error)
 					return err
 				}
 
-				if available, err := isServerAvailable(ctxChild, c); err != nil {
+				if available, err := arangod.IsServerAvailable(ctxChild, c); err != nil {
 					return err
 				} else if !available {
 					return errors.New("not available")
@@ -310,24 +308,4 @@ func (r *Resources) ensureSingleServerLeaderServices(ctx context.Context, cached
 	}
 
 	return nil
-}
-
-// isServerAvailable returns true when server is available.
-// In active fail-over mode one of the server should be available.
-func isServerAvailable(ctx context.Context, c driver.Client) (bool, error) {
-	req, err := c.Connection().NewRequest("GET", "_admin/server/availability")
-	if err != nil {
-		return false, errors.WithStack(err)
-	}
-
-	resp, err := c.Connection().Do(ctx, req)
-	if err != nil {
-		return false, errors.WithStack(err)
-	}
-
-	if err := resp.CheckStatus(http.StatusOK, http.StatusServiceUnavailable); err != nil {
-		return false, errors.WithStack(err)
-	}
-
-	return resp.StatusCode() == http.StatusOK, nil
 }

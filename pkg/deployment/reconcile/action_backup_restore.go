@@ -132,9 +132,7 @@ func (a actionBackupRestore) restoreAsync(ctx context.Context, backup *backupApi
 }
 
 func (a actionBackupRestore) restoreSync(ctx context.Context, backup *backupApi.ArangoBackup) (bool, error) {
-	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	dbc, err := a.actionCtx.GetDatabaseClient(ctxChild)
+	dbc, err := a.actionCtx.GetMembersState().State().GetDatabaseClient()
 	if err != nil {
 		a.log.Err(err).Debug("Failed to create database client")
 		return false, nil

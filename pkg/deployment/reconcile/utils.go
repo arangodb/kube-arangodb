@@ -54,14 +54,12 @@ func secretKeysToList(s *core.Secret) []string {
 
 // getCluster returns the cluster connection.
 func getCluster(ctx context.Context, planCtx PlanBuilderContext) (driver.Cluster, error) {
-	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	c, err := planCtx.GetDatabaseClient(ctxChild)
+	c, err := planCtx.GetMembersState().State().GetDatabaseClient()
 	if err != nil {
 		return nil, errors.WithStack(errors.Wrapf(err, "Unable to get database client"))
 	}
 
-	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	cluster, err := c.Cluster(ctxChild)
 	if err != nil {

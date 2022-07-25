@@ -22,6 +22,7 @@ package arangod
 
 import (
 	"context"
+	"net/http"
 
 	driver "github.com/arangodb/go-driver"
 
@@ -75,4 +76,24 @@ func IsDBServerEmpty(ctx context.Context, id string, client driver.Client) error
 	}
 	// DBServer is not used in any shard of any database
 	return nil
+}
+
+// IsServerAvailable returns true when server is available.
+// In active fail-over mode one of the server should be available.
+func IsServerAvailable(ctx context.Context, c driver.Client) (bool, error) {
+	req, err := c.Connection().NewRequest("GET", "_admin/server/availability")
+	if err != nil {
+		return false, errors.WithStack(err)
+	}
+
+	resp, err := c.Connection().Do(ctx, req)
+	if err != nil {
+		return false, errors.WithStack(err)
+	}
+
+	if err := resp.CheckStatus(http.StatusOK, http.StatusServiceUnavailable); err != nil {
+		return false, errors.WithStack(err)
+	}
+
+	return resp.StatusCode() == http.StatusOK, nil
 }

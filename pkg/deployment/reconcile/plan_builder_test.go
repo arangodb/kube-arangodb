@@ -35,6 +35,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
+	"github.com/arangodb/arangosync-client/client"
 	"github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
 
@@ -82,6 +83,7 @@ type testContext struct {
 	RecordedEvent    *k8sutil.Event
 
 	Inspector inspectorInterface.Inspector
+	state     member.StateInspector
 }
 
 func (c *testContext) GetAgencyHealth() (agencyCache.Health, bool) {
@@ -116,8 +118,7 @@ func (c *testContext) WithCurrentArangoMember(name string) reconciler.ArangoMemb
 }
 
 func (c *testContext) GetMembersState() member.StateInspector {
-	//TODO implement me
-	panic("implement me")
+	return c.state
 }
 
 func (c *testContext) GetMode() api.DeploymentMode {
@@ -282,10 +283,6 @@ func (c *testContext) UpdateStatus(_ context.Context, status api.DeploymentStatu
 
 func (c *testContext) UpdateMember(_ context.Context, member api.MemberStatus) error {
 	panic("implement me")
-}
-
-func (c *testContext) GetDatabaseClient(ctx context.Context) (driver.Client, error) {
-	return nil, errors.Newf("Client Not Found")
 }
 
 func (c *testContext) GetAgency(_ context.Context, _ ...string) (agency.Agency, error) {
@@ -666,7 +663,6 @@ type testCase struct {
 	ExpectedEvent    *k8sutil.Event
 
 	kclient.FakeDataInput
-
 	Extender func(t *testing.T, r *Reconciler, c *testCase)
 }
 
@@ -1160,6 +1156,11 @@ func TestCreatePlan(t *testing.T) {
 			i := testCase.Inspector(t)
 
 			testCase.context.Inspector = i
+			testCase.context.state = &FakeStateInspector{
+				state: member.State{
+					NotReachableErr: errors.New("Client Not Found"),
+				},
+			}
 
 			h := &LastLogRecord{t: t}
 			logger := logging.NewFactory(zerolog.New(ioutil.Discard).Hook(h)).RegisterAndGetLogger("test", logging.Debug)
@@ -1219,4 +1220,42 @@ func TestCreatePlan(t *testing.T) {
 			}
 		})
 	}
+}
+
+type FakeStateInspector struct {
+	state member.State
+}
+
+func (FakeStateInspector) RefreshState(_ context.Context, _ api.DeploymentStatusMemberElements) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (FakeStateInspector) GetMemberClient(_ string) (driver.Client, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (FakeStateInspector) GetMemberSyncClient(_ string) (client.API, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (FakeStateInspector) MemberState(_ string) (member.State, bool) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (FakeStateInspector) Health() (member.Health, bool) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (f FakeStateInspector) State() member.State {
+	return f.state
+}
+
+func (FakeStateInspector) Log(_ logging.Logger) {
+	//TODO implement me
+	panic("implement me")
 }
