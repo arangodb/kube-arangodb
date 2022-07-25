@@ -33,7 +33,7 @@ func init() {
 func newEnableMaintenanceAction(action api.Action, actionCtx ActionContext) Action {
 	a := &actionEnableMaintenance{}
 
-	a.actionImpl = newActionImpl(action, actionCtx, &a.newMemberID)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -43,8 +43,6 @@ type actionEnableMaintenance struct {
 	actionImpl
 
 	actionEmptyCheckProgress
-
-	newMemberID string
 }
 
 func (a *actionEnableMaintenance) Start(ctx context.Context) (bool, error) {

@@ -524,7 +524,7 @@ func withSecureWrap(member api.MemberStatus,
 		// In this case we skip resign leadership but we enable maintenance
 		return withMaintenanceStart(plan...)
 	} else {
-		return withResignLeadership(group, member, "ResignLeadership", plan...)
+		return withMemberMaintenance(group, member, "ResignLeadership", plan...)
 	}
 }
 

@@ -61,6 +61,7 @@ func (r *Reconciler) createNormalPlan(ctx context.Context, apiObject k8sutil.API
 		ApplyIfEmpty(r.createReplaceMemberPlan).
 		// Check for the need to rotate one or more members
 		ApplyIfEmpty(r.createMarkToRemovePlan).
+		ApplyIfEmpty(r.createMemberMaintenanceManagementPlan).
 		ApplyIfEmpty(r.createRotateOrUpgradePlan).
 		// Disable maintenance if upgrade process was done. Upgrade task throw IDLE Action if upgrade is pending
 		ApplyIfEmpty(r.createMaintenanceManagementPlan).

@@ -42,6 +42,24 @@ func withMaintenanceStart(plan ...api.Action) api.Plan {
 		actions.NewClusterAction(api.ActionTypeEnableMaintenance, "Enable maintenance before actions"))
 }
 
+func withMemberMaintenance(group api.ServerGroup, member api.MemberStatus, reason string, plan ...api.Action) api.Plan {
+	if member.Image == nil {
+		return plan
+	}
+
+	if group != api.ServerGroupDBServers {
+		return plan
+	}
+
+	if !features.Version310().Enabled() {
+		return plan
+	}
+
+	return withResignLeadership(group, member, reason, plan...).
+		Wrap(actions.NewAction(api.ActionTypeEnableMemberMaintenance, group, member, reason),
+			actions.NewAction(api.ActionTypeDisableMemberMaintenance, group, member, reason))
+}
+
 func withResignLeadership(group api.ServerGroup, member api.MemberStatus, reason string, plan ...api.Action) api.Plan {
 	if member.Image == nil {
 		return plan

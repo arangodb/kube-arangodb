@@ -18,31 +18,14 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package reconcile
+package versions
 
-import (
-	"context"
+import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-)
+func MemberMaintenance(in api.ImageInfo) bool {
+	return memberMaintenanceChecker(NewCheck(in)).Evaluate()
+}
 
-var (
-	ObsoleteClusterConditions = []api.ConditionType{
-		api.ConditionTypeMaintenanceMode,
-	}
-)
-
-func (r *Reconciler) cleanupConditions(ctx context.Context, apiObject k8sutil.APIObject,
-	spec api.DeploymentSpec, status api.DeploymentStatus,
-	planCtx PlanBuilderContext) api.Plan {
-	var p api.Plan
-
-	for _, c := range ObsoleteClusterConditions {
-		if _, ok := status.Conditions.Get(c); ok {
-			p = append(p, removeConditionActionV2("Cleanup Condition", c))
-		}
-	}
-
-	return p
+func memberMaintenanceChecker(in Check) Check {
+	return in.AboveOrEqual("3.10.0")
 }

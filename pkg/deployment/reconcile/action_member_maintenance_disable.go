@@ -21,28 +21,17 @@
 package reconcile
 
 import (
-	"context"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
-var (
-	ObsoleteClusterConditions = []api.ConditionType{
-		api.ConditionTypeMaintenanceMode,
-	}
-)
+func init() {
+	registerAction(api.ActionTypeDisableMemberMaintenance, newDisableMemberMaintenanceAction, defaultTimeout)
+}
 
-func (r *Reconciler) cleanupConditions(ctx context.Context, apiObject k8sutil.APIObject,
-	spec api.DeploymentSpec, status api.DeploymentStatus,
-	planCtx PlanBuilderContext) api.Plan {
-	var p api.Plan
+func newDisableMemberMaintenanceAction(action api.Action, actionCtx ActionContext) Action {
+	a := &actionDisableMemberMaintenance{}
 
-	for _, c := range ObsoleteClusterConditions {
-		if _, ok := status.Conditions.Get(c); ok {
-			p = append(p, removeConditionActionV2("Cleanup Condition", c))
-		}
-	}
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
-	return p
+	return a
 }
