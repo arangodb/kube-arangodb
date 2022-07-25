@@ -199,7 +199,7 @@ func (r *Reconciler) isVolumeSizeChanged(_ context.Context, _ k8sutil.APIObject,
 		return false, "", nil
 	}
 
-	if group != api.ServerGroupDBServers {
+	if group != api.ServerGroupDBServers && group != api.ServerGroupAgents {
 		r.log.
 			Str("pvc-storage-size", volumeSize.String()).
 			Str("requested-size", requestedSize.String()).
