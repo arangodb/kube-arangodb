@@ -31,7 +31,6 @@ import (
 
 const (
 	recentTerminationsSinceGracePeriod = time.Minute * 10
-	notReadySinceGracePeriod           = time.Minute * 5
 	recentTerminationThreshold         = 5
 )
 
@@ -66,23 +65,6 @@ func (r *Resilience) CheckMemberFailure(ctx context.Context) error {
 		if m.Conditions.IsTrue(api.ConditionTypeReady) {
 			// Pod is now ready, so we're not looking further
 			continue
-		}
-
-		// Check not ready for a long time
-		if !m.Phase.IsFailed() {
-			if m.IsNotReadySince(time.Now().Add(-notReadySinceGracePeriod)) {
-				// Member has terminated too often in recent history.
-
-				failureAcceptable, reason := r.isMemberFailureAcceptable(group, m)
-				if failureAcceptable {
-					log.Info("Member is not ready for long time, marking is failed")
-					m.Phase = api.MemberPhaseFailed
-					status.Members.Update(m, group)
-					updateStatusNeeded = true
-				} else {
-					log.Warn("Member is not ready for long time, but it is not safe to mark it a failed because: %s", reason)
-				}
-			}
 		}
 
 		// Check recent terminations
