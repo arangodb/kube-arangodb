@@ -12,3 +12,4 @@
 - [Maintenance](./maintenance.md)
 - [Additional configuration](./additional_configuration.md)
 - [Topology awareness](./topology_awareness.md)
+- [Configuring timezone](./configuring_tz.md)

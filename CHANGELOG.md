@@ -7,6 +7,7 @@
 - (Bugfix) Memory leaks due to incorrect time.After function usage
 - (Feature) Add startup probe for coordinators
 - (Feature) Use only connections for healthy members
+- (Documentation) Add docs on setting timezone for containers
 
 ## [1.2.15](https://github.com/arangodb/kube-arangodb/tree/1.2.15) (2022-07-20)
 - (Bugfix) Ensure pod names not too long
