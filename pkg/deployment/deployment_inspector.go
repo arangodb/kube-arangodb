@@ -336,8 +336,10 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	}
 
 	// Inspect deployment for synced members
-	if err := d.resources.SyncMembersInCluster(ctx, d.GetMembersState().Health()); err != nil {
-		return minInspectionInterval, errors.Wrapf(err, "Removed member cleanup failed")
+	if health, ok := d.GetMembersState().Health(); ok {
+		if err := d.resources.SyncMembersInCluster(ctx, health); err != nil {
+			return minInspectionInterval, errors.Wrapf(err, "Removed member cleanup failed")
+		}
 	}
 
 	// At the end of the inspect, we cleanup terminated pods.

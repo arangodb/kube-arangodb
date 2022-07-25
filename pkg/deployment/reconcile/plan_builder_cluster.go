@@ -42,14 +42,12 @@ func (r *Reconciler) createClusterOperationPlan(ctx context.Context, apiObject k
 		return nil
 	}
 
-	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	c, err := planCtx.GetDatabaseClient(ctxChild)
+	c, err := planCtx.GetMembersState().State().GetDatabaseClient()
 	if err != nil {
 		return nil
 	}
 
-	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	cluster, err := c.Cluster(ctxChild)
 	if err != nil {

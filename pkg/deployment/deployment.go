@@ -194,9 +194,7 @@ func (d *Deployment) SetAgencyMaintenanceMode(ctx context.Context, enabled bool)
 		return nil
 	}
 
-	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	client, err := d.GetDatabaseClient(ctxChild)
+	client, err := d.GetMembersState().State().GetDatabaseClient()
 	if err != nil {
 		return err
 	}

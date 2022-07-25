@@ -64,9 +64,7 @@ func (a *actionResignLeadership) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	client, err := a.actionCtx.GetDatabaseClient(ctxChild)
+	client, err := a.actionCtx.GetMembersState().State().GetDatabaseClient()
 	if err != nil {
 		a.log.Err(err).Error("Unable to get client")
 		return true, errors.WithStack(err)
@@ -83,7 +81,7 @@ func (a *actionResignLeadership) Start(ctx context.Context) (bool, error) {
 			return true, nil
 		}
 
-		ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
+		ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 		defer cancel()
 		cluster, err := client.Cluster(ctxChild)
 		if err != nil {

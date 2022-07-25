@@ -24,7 +24,7 @@ import "time"
 
 const (
 	DefaultKubernetesTimeout     = 2 * time.Second
-	DefaultArangoDTimeout        = time.Second * 10
+	DefaultArangoDTimeout        = time.Second * 5
 	DefaultArangoDAgencyTimeout  = time.Second * 10
 	DefaultArangoDCheckTimeout   = time.Second * 2
 	DefaultReconciliationTimeout = time.Minute
