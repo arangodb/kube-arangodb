@@ -171,18 +171,29 @@ func (d *Deployment) UpdateMember(ctx context.Context, member api.MemberStatus) 
 	return nil
 }
 
-// GetDatabaseClient returns a cached client for the entire database (cluster coordinators or single server),
-// creating one if needed.
-func (d *Deployment) GetDatabaseClient(ctx context.Context) (driver.Client, error) {
-	c, err := d.clientCache.GetDatabase(ctx)
+// GetDatabaseWithWrap wraps client to the database with provided connection.
+func (d *Deployment) GetDatabaseWithWrap(wrappers ...conn.ConnectionWrap) (driver.Client, error) {
+	c, err := d.GetMembersState().State().GetDatabaseClient()
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	return c, nil
+
+	conn := c.Connection()
+
+	for _, w := range wrappers {
+		if w != nil {
+			conn = w(conn)
+		}
+	}
+
+	return driver.NewClient(driver.ClientConfig{
+		Connection: conn,
+	})
 }
 
+// GetDatabaseAsyncClient returns asynchronous client to the database.
 func (d *Deployment) GetDatabaseAsyncClient(ctx context.Context) (driver.Client, error) {
-	c, err := d.clientCache.GetDatabaseWithWrap(ctx, conn.NewAsyncConnection)
+	c, err := d.GetDatabaseWithWrap(conn.NewAsyncConnection)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

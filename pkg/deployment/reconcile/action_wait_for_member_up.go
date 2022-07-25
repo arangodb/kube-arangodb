@@ -95,7 +95,7 @@ func (a *actionWaitForMemberUp) CheckProgress(ctx context.Context) (bool, bool, 
 // checkProgressSingle checks the progress of the action in the case
 // of a single server.
 func (a *actionWaitForMemberUp) checkProgressSingle(ctx context.Context) (bool, bool, error) {
-	c, err := a.actionCtx.GetDatabaseClient(ctx)
+	c, err := a.actionCtx.GetMembersState().State().GetDatabaseClient()
 	if err != nil {
 		a.log.Err(err).Debug("Failed to create database client")
 		return false, false, nil
@@ -143,7 +143,7 @@ func (a *actionWaitForMemberUp) checkProgressAgent() (bool, bool, error) {
 // checkProgressCluster checks the progress of the action in the case
 // of a cluster deployment (coordinator/dbserver).
 func (a *actionWaitForMemberUp) checkProgressCluster() (bool, bool, error) {
-	h := a.actionCtx.GetMembersState().Health()
+	h, _ := a.actionCtx.GetMembersState().Health()
 	if h.Error != nil {
 		a.log.Err(h.Error).Debug("Cluster health is missing")
 		return false, false, nil

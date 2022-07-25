@@ -66,15 +66,13 @@ func (a *actionCleanoutMember) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	c, err := a.actionCtx.GetDatabaseClient(ctxChild)
+	c, err := a.actionCtx.GetMembersState().State().GetDatabaseClient()
 	if err != nil {
 		a.log.Err(err).Debug("Failed to create member client")
 		return false, errors.WithStack(err)
 	}
 
-	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	cluster, err := c.Cluster(ctxChild)
 	if err != nil {

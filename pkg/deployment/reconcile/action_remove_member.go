@@ -74,21 +74,19 @@ func (a *actionRemoveMember) Start(ctx context.Context) (bool, error) {
 
 	// For safety, remove from cluster
 	if a.action.Group == api.ServerGroupCoordinators || a.action.Group == api.ServerGroupDBServers {
-		ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-		defer cancel()
-		client, err := a.actionCtx.GetDatabaseClient(ctxChild)
+		client, err := a.actionCtx.GetMembersState().State().GetDatabaseClient()
 		if err != nil {
 			return false, errors.WithStack(err)
 		}
 
-		ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
+		ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 		defer cancel()
 		if err := arangod.RemoveServerFromCluster(ctxChild, client.Connection(), driver.ServerID(m.ID)); err != nil {
 			if !driver.IsNotFound(err) && !driver.IsPreconditionFailed(err) {
 				a.log.Err(err).Str("member-id", m.ID).Error("Failed to remove server from cluster")
 				// ignore this error, maybe all coordinators are failed and no connection to cluster is possible
 			} else if driver.IsPreconditionFailed(err) {
-				health := a.actionCtx.GetMembersState().Health()
+				health, _ := a.actionCtx.GetMembersState().Health()
 				if health.Error != nil {
 					a.log.Err(err).Str("member-id", m.ID).Error("Failed get cluster health")
 				}

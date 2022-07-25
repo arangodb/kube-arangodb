@@ -277,23 +277,13 @@ func (ac *actionContext) CreateEvent(evt *k8sutil.Event) {
 	ac.context.CreateEvent(evt)
 }
 
-// Gets the specified mode of deployment
+// GetMode gets the specified mode of deployment.
 func (ac *actionContext) GetMode() api.DeploymentMode {
 	return ac.context.GetSpec().GetMode()
 }
 
 func (ac *actionContext) GetSpec() api.DeploymentSpec {
 	return ac.context.GetSpec()
-}
-
-// GetDatabaseClient returns a cached client for the entire database (cluster coordinators or single server),
-// creating one if needed.
-func (ac *actionContext) GetDatabaseClient(ctx context.Context) (driver.Client, error) {
-	c, err := ac.context.GetDatabaseClient(ctx)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return c, nil
 }
 
 // GetMemberStatusByID returns the current member status

@@ -162,9 +162,7 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, p *core.P
 	}
 
 	// Inspect cleaned out state
-	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	c, err := r.context.GetDatabaseClient(ctxChild)
+	c, err := r.context.GetMembersState().State().GetDatabaseClient()
 	if err != nil {
 		log.Err(err).Debug("Failed to create member client")
 		return errors.WithStack(err)

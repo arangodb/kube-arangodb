@@ -22,6 +22,7 @@ package member
 
 import (
 	"context"
+	"math/rand"
 	"sync"
 
 	"github.com/rs/zerolog"
@@ -32,6 +33,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
@@ -51,33 +53,44 @@ type StateInspector interface {
 
 	MemberState(id string) (State, bool)
 
-	Health() Health
+	// Health returns health of members and boolean value which describes if it was possible to fetch health.
+	Health() (Health, bool)
 
 	State() State
 
 	Log(logger logging.Logger)
 }
 
-func NewStateInspector(client reconciler.DeploymentClient) StateInspector {
+// NewStateInspector creates a new deployment inspector.
+func NewStateInspector(deployment reconciler.DeploymentGetter) StateInspector {
 	return &stateInspector{
-		client: client,
+		deployment: deployment,
 	}
 }
 
+// stateInspector provides cache for a deployment.
 type stateInspector struct {
-	lock sync.Mutex
-
+	// lock protects internal fields of this structure.
+	lock sync.RWMutex
+	// members stores information about specific members of a deployment.
 	members map[string]State
-
+	// state stores information about a deployment.
 	state State
-
+	// health stores information about healthiness of a deployment.
 	health Health
-
-	client reconciler.DeploymentClient
+	// deployment provides a deployment resources.
+	deployment reconciler.DeploymentGetter
 }
 
-func (s *stateInspector) Health() Health {
-	return s.health
+// Health returns health of members and true or, it returns false when fetching cluster health
+// is not possible (fail-over, single).
+func (s *stateInspector) Health() (Health, bool) {
+	if s.health.Error == nil && s.health.Members == nil {
+		// The health is not ready in the cluster mode, or it will never be ready in fail-over or single mode.
+		return Health{}, false
+	}
+
+	return s.health, true
 }
 
 func (s *stateInspector) State() State {
@@ -85,8 +98,8 @@ func (s *stateInspector) State() State {
 }
 
 func (s *stateInspector) Log(log logging.Logger) {
-	s.lock.Lock()
-	defer s.lock.Unlock()
+	s.lock.RLock()
+	defer s.lock.RUnlock()
 
 	for m, s := range s.members {
 		if !s.IsReachable() {
@@ -99,47 +112,105 @@ func (s *stateInspector) RefreshState(ctx context.Context, members api.Deploymen
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	results := make([]State, len(members))
-
-	nctx, cancel := globals.GetGlobalTimeouts().ArangoDCheck().WithTimeout(ctx)
-	defer cancel()
-
-	members.ForEach(func(id int) {
-		if members[id].Group.IsArangosync() {
-			results[id] = s.fetchArangosyncMemberState(nctx, members[id])
-		} else {
-			results[id] = s.fetchServerMemberState(nctx, members[id])
-		}
-	})
-
-	gctx, cancel := globals.GetGlobalTimeouts().ArangoDCheck().WithTimeout(ctx)
-	defer cancel()
-
 	var cs State
 	var h Health
 
-	c, err := s.client.GetDatabaseClient(ctx)
-	if err != nil {
-		cs.NotReachableErr = err
-	} else {
-		v, err := c.Version(gctx)
-		if err != nil {
-			cs.NotReachableErr = err
-		} else {
-			cs.Version = v
+	results := make([]State, len(members))
+	clients := make([]driver.Client, 0, 3)
+	mode := s.deployment.GetMode()
+	servingGroup := mode.ServingGroup()
+	members.ForEach(func(id int) {
+		ctxChild, cancel := globals.GetGlobalTimeouts().ArangoDCheck().WithTimeout(ctx)
+		defer cancel()
+
+		if members[id].Group.IsArangosync() {
+			results[id] = s.fetchArangosyncMemberState(ctxChild, members[id])
+			return
 		}
 
-		hctx, cancel := globals.GetGlobalTimeouts().ArangoDCheck().WithTimeout(ctx)
-		defer cancel()
-		if cluster, err := c.Cluster(hctx); err != nil {
-			h.Error = err
-		} else {
-			if health, err := cluster.Health(hctx); err != nil {
-				h.Error = err
+		state := s.fetchServerMemberState(ctxChild, members[id])
+		if state.IsReachable() && members[id].Group == servingGroup &&
+			members[id].Member.Conditions.IsTrue(api.ConditionTypeServing) &&
+			!members[id].Member.Conditions.IsTrue(api.ConditionTypeTerminating) {
+			// Create slice with reachable clients (it does not mean that they are healthy).
+			// In the cluster mode it will be checked later which client is healthy.
+			if mode == api.DeploymentModeActiveFailover {
+				globals.GetGlobalTimeouts().ArangoDCheck().RunWithTimeout(ctx, func(ctxChild context.Context) error {
+					if found, _ := arangod.IsServerAvailable(ctxChild, state.client); found {
+						// Don't check error.
+						// If error occurs then `clients` slice will be empty and the error `ArangoDB is not reachable`
+						// will be returned.
+						clients = append(clients, state.client)
+					}
+					return nil
+				})
+			} else {
+				clients = append(clients, state.client)
+			}
+			cs.Version = state.Version
+		}
+
+		results[id] = state
+	})
+
+	if len(clients) > 0 && mode.IsCluster() {
+		// Get random reachable client.
+		cli := clients[rand.Intn(len(clients))]
+		// Clean all clients and rebuild it only with healthy clients.
+		clients = clients[:0]
+
+		// Fetch health only in cluster mode.
+		h.Error = globals.GetGlobalTimeouts().ArangoDCheck().RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			if cluster, err := cli.Cluster(ctxChild); err != nil {
+				return err
+			} else if health, err := cluster.Health(ctxChild); err != nil {
+				return err
 			} else {
 				h.Members = health.Health
 			}
+
+			// Find ArangoDB (not ArangoSync) members which are not healthy and mark them accordingly.
+			for i, m := range members {
+				health, ok := h.Members[driver.ServerID(m.Member.ID)]
+				if ok && health.SyncStatus == driver.ServerSyncStatusServing && health.Status == driver.ServerStatusGood {
+					if m.Group == servingGroup {
+						clients = append(clients, results[i].client)
+					}
+					continue
+				}
+
+				if results[i].NotReachableErr != nil {
+					if ok {
+						results[i].NotReachableErr = errors.Newf("member is not healthy "+
+							"because syncStatus is %s and status is %s", health.SyncStatus, health.Status)
+					} else {
+						results[i].NotReachableErr = errors.Newf("member is unknown in ArangoDB healthy status")
+					}
+				}
+			}
+
+			return nil
+		})
+
+		if h.Error != nil {
+			for i := range results {
+				if results[i].NotReachableErr != nil {
+					// A member already encountered an error.
+					continue
+				}
+				if results[i].syncClient != nil {
+					// ArangoSync Member is considered as healthy when version can be fetched.
+					continue
+				}
+				results[i].NotReachableErr = errors.Wrapf(h.Error, "cluster healthy is unknown")
+			}
 		}
+	}
+
+	if len(clients) > 0 {
+		cs.client = clients[rand.Intn(len(clients))]
+	} else {
+		cs.NotReachableErr = errors.New("ArangoDB is not reachable")
 	}
 
 	current := map[string]State{}
@@ -155,7 +226,7 @@ func (s *stateInspector) RefreshState(ctx context.Context, members api.Deploymen
 
 func (s *stateInspector) fetchArangosyncMemberState(ctx context.Context, m api.DeploymentStatusMemberElement) State {
 	var state State
-	c, err := s.client.GetSyncServerClient(ctx, m.Group, m.Member.ID)
+	c, err := s.deployment.GetSyncServerClient(ctx, m.Group, m.Member.ID)
 	if err != nil {
 		state.NotReachableErr = err
 		return state
@@ -180,7 +251,7 @@ func (s *stateInspector) fetchArangosyncMemberState(ctx context.Context, m api.D
 
 func (s *stateInspector) fetchServerMemberState(ctx context.Context, m api.DeploymentStatusMemberElement) State {
 	var state State
-	c, err := s.client.GetServerClient(ctx, m.Group, m.Member.ID)
+	c, err := s.deployment.GetServerClient(ctx, m.Group, m.Member.ID)
 	if err != nil {
 		state.NotReachableErr = err
 		return state
@@ -228,8 +299,8 @@ func (s *stateInspector) GetMemberSyncClient(id string) (client.API, error) {
 }
 
 func (s *stateInspector) MemberState(id string) (State, bool) {
-	s.lock.Lock()
-	defer s.lock.Unlock()
+	s.lock.RLock()
+	defer s.lock.RUnlock()
 
 	if s.members == nil {
 		return State{}, false
@@ -240,9 +311,12 @@ func (s *stateInspector) MemberState(id string) (State, bool) {
 	return v, ok
 }
 
+// Health describes a cluster health. In the fail-over or single mode fields members and error will be nil.
+// In the cluster mode only one field should be set: error or members.
 type Health struct {
+	// Members is a map of members of the cluster.
 	Members map[driver.ServerID]driver.ServerHealth
-
+	// Errors is set when it is not possible to fetch a cluster info.
 	Error error
 }
 
@@ -256,6 +330,19 @@ type State struct {
 	client driver.Client
 	// client to this specific ArangoSync member.
 	syncClient client.API
+}
+
+// GetDatabaseClient returns client to the database.
+func (s State) GetDatabaseClient() (driver.Client, error) {
+	if s.client != nil {
+		return s.client, nil
+	}
+
+	if s.NotReachableErr != nil {
+		return nil, s.NotReachableErr
+	}
+
+	return nil, errors.Newf("ArangoDB is not reachable")
 }
 
 func (s State) IsReachable() bool {

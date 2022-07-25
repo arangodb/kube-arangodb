@@ -98,9 +98,7 @@ func (a actionBootstrapSetPassword) Start(ctx context.Context) (bool, error) {
 func (a actionBootstrapSetPassword) setUserPassword(ctx context.Context, user, secret string) (string, error) {
 	a.log.Debug("Bootstrapping user %s, secret %s", user, secret)
 
-	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	client, err := a.actionCtx.GetDatabaseClient(ctxChild)
+	client, err := a.actionCtx.GetMembersState().State().GetDatabaseClient()
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
@@ -111,7 +109,7 @@ func (a actionBootstrapSetPassword) setUserPassword(ctx context.Context, user, s
 	}
 
 	// Obtain the user
-	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	if u, err := client.User(ctxChild, user); err != nil {
 		if !driver.IsNotFound(err) {
