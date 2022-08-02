@@ -268,7 +268,6 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 		err := d.acs.CurrentClusterCache().Refresh(context.Background())
 		if err != nil {
 			d.log.Err(err).Error("Unable to get resources from ACS")
-			return d, err
 		}
 	}
 
