@@ -18,31 +18,37 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package reconcile
+package client
 
 import (
-	"context"
-
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"encoding/json"
+	"time"
 )
 
-var (
-	ObsoleteClusterConditions = []api.ConditionType{
-		api.ConditionTypeMaintenanceMode,
+func SetSeconds(i int) Seconds {
+	return Seconds(time.Second * time.Duration(i))
+}
+
+type Seconds time.Duration
+
+func (s Seconds) Ptr() *Seconds {
+	return &s
+}
+
+func (s *Seconds) UnmarshalJSON(bytes []byte) error {
+	var i int
+
+	if err := json.Unmarshal(bytes, &i); err != nil {
+		return err
 	}
-)
 
-func (r *Reconciler) cleanupConditions(ctx context.Context, apiObject k8sutil.APIObject,
-	spec api.DeploymentSpec, status api.DeploymentStatus,
-	planCtx PlanBuilderContext) api.Plan {
-	var p api.Plan
+	*s = Seconds(time.Second * time.Duration(i))
 
-	for _, c := range ObsoleteClusterConditions {
-		if _, ok := status.Conditions.Get(c); ok {
-			p = append(p, removeConditionActionV2("Cleanup Condition", c))
-		}
-	}
+	return nil
+}
 
-	return p
+func (s Seconds) MarshalJSON() ([]byte, error) {
+	i := int(time.Duration(s) / time.Second)
+
+	return json.Marshal(i)
 }

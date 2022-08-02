@@ -11,6 +11,7 @@
 - (Bugfix) Check serving servers
 - (Documentation) Add docs on setting timezone for containers
 - (Bugfix) Ensure that client cache is initialized before using it
+- (Feature) (DBServer Maintenance) Agency adjustments
 
 ## [1.2.15](https://github.com/arangodb/kube-arangodb/tree/1.2.15) (2022-07-20)
 - (Bugfix) Ensure pod names not too long

@@ -16,7 +16,8 @@
 // limitations under the License.
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
-//
+//go:build !enterprise
+// +build !enterprise
 
 package reconcile
 
@@ -27,22 +28,8 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
-var (
-	ObsoleteClusterConditions = []api.ConditionType{
-		api.ConditionTypeMaintenanceMode,
-	}
-)
-
-func (r *Reconciler) cleanupConditions(ctx context.Context, apiObject k8sutil.APIObject,
+func (r *Reconciler) createMemberMaintenanceManagementPlan(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	planCtx PlanBuilderContext) api.Plan {
-	var p api.Plan
-
-	for _, c := range ObsoleteClusterConditions {
-		if _, ok := status.Conditions.Get(c); ok {
-			p = append(p, removeConditionActionV2("Cleanup Condition", c))
-		}
-	}
-
-	return p
+	return nil
 }

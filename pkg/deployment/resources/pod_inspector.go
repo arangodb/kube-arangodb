@@ -30,6 +30,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -86,6 +87,8 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 	var events []*k8sutil.Event
 	nextInterval := maxPodInspectorInterval // Large by default, will be made smaller if needed in the rest of the function
 	defer metrics.SetDuration(inspectPodsDurationGauges.WithLabelValues(deploymentName), start)
+
+	agencyCache, agencyCachePresent := r.context.GetAgencyCache()
 
 	status, lastVersion := r.context.GetStatus()
 	var podNamesWithScheduleTimeout []string
@@ -264,6 +267,21 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 				}
 			} else {
 				if memberStatus.Conditions.Update(api.ConditionTypeReachable, false, "ArangoDB is not reachable", "") {
+					updateMemberStatusNeeded = true
+					nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
+				}
+			}
+		}
+
+		// Member Maintenance
+		if agencyCachePresent {
+			if agencyCache.Current.MaintenanceServers.InMaintenance(agency.Server(memberStatus.ID)) {
+				if memberStatus.Conditions.Update(api.ConditionTypeMemberMaintenanceMode, true, "ArangoDB Member maintenance enabled", "") {
+					updateMemberStatusNeeded = true
+					nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
+				}
+			} else {
+				if memberStatus.Conditions.Remove(api.ConditionTypeMemberMaintenanceMode) {
 					updateMemberStatusNeeded = true
 					nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
 				}

@@ -18,31 +18,20 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package reconcile
+package features
 
-import (
-	"context"
+func init() {
+	registerFeature(version310)
+}
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-)
+var version310 = &feature{
+	name:               "version.3-10",
+	description:        "Enable support for 3.10 features",
+	version:            "3.10.0",
+	enterpriseRequired: false,
+	enabledByDefault:   false,
+}
 
-var (
-	ObsoleteClusterConditions = []api.ConditionType{
-		api.ConditionTypeMaintenanceMode,
-	}
-)
-
-func (r *Reconciler) cleanupConditions(ctx context.Context, apiObject k8sutil.APIObject,
-	spec api.DeploymentSpec, status api.DeploymentStatus,
-	planCtx PlanBuilderContext) api.Plan {
-	var p api.Plan
-
-	for _, c := range ObsoleteClusterConditions {
-		if _, ok := status.Conditions.Get(c); ok {
-			p = append(p, removeConditionActionV2("Cleanup Condition", c))
-		}
-	}
-
-	return p
+func Version310() Feature {
+	return version310
 }

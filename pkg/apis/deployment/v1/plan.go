@@ -154,6 +154,10 @@ const (
 	ActionTypeDisableMaintenance ActionType = "DisableMaintenance"
 	// ActionTypeSetMaintenanceCondition sets maintenance condition.
 	ActionTypeSetMaintenanceCondition ActionType = "SetMaintenanceCondition"
+	// ActionTypeEnableMemberMaintenance enables maintenance on cluster member.
+	ActionTypeEnableMemberMaintenance ActionType = "EnableMemberMaintenance"
+	// ActionTypeDisableMemberMaintenance disables maintenance on cluster member.
+	ActionTypeDisableMemberMaintenance ActionType = "DisableMemberMaintenance"
 	// ActionTypeBootstrapUpdate update bootstrap status to true
 	ActionTypeBootstrapUpdate ActionType = "BootstrapUpdate"
 	// ActionTypeBootstrapSetPassword set password to the bootstrapped user

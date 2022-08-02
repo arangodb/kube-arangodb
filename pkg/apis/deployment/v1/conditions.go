@@ -69,6 +69,8 @@ const (
 	// ConditionTypeUpgradeFailed indicates that upgrade failed
 	ConditionTypeUpgradeFailed ConditionType = "UpgradeFailed"
 
+	// ConditionTypeMemberMaintenanceMode indicates that Maintenance is enabled on particular member
+	ConditionTypeMemberMaintenanceMode ConditionType = "MemberMaintenanceMode"
 	// ConditionTypeMaintenanceMode indicates that Maintenance is enabled
 	ConditionTypeMaintenanceMode ConditionType = "MaintenanceMode"
 
