@@ -235,7 +235,7 @@ func (r *Reconciler) isJWTTokenUpToDate(ctx context.Context, status api.Deployme
 		return false, true
 	}
 
-	if updateRequired, err := isMemberJWTTokenInvalid(ctx, client.NewClient(c.Connection()), folder.Data, false); err != nil {
+	if updateRequired, err := isMemberJWTTokenInvalid(ctx, client.NewClient(c.Connection(), log), folder.Data, false); err != nil {
 		log.Err(err).Warn("JWT UpToDate Check failed")
 		return false, true
 	} else if updateRequired {

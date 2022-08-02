@@ -78,7 +78,7 @@ func (a *licenseSetAction) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	client := client.NewClient(c.Connection())
+	client := client.NewClient(c.Connection(), a.log)
 
 	if ok, err := licenseV2Compare(ctxChild, client, l.V2); err != nil {
 		a.log.Err(err).Error("Unable to verify license")

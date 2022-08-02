@@ -64,7 +64,7 @@ func (a *jwtRefreshAction) CheckProgress(ctx context.Context) (bool, bool, error
 
 	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
-	if invalid, err := isMemberJWTTokenInvalid(ctxChild, client.NewClient(c.Connection()), folder.Data, true); err != nil {
+	if invalid, err := isMemberJWTTokenInvalid(ctxChild, client.NewClient(c.Connection(), a.log), folder.Data, true); err != nil {
 		a.log.Err(err).Warn("Error while getting JWT Status")
 		return true, false, nil
 	} else if invalid {

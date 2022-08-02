@@ -26,9 +26,15 @@ import (
 	"time"
 
 	"github.com/arangodb/go-driver"
+
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 )
 
-func NewClient(c driver.Connection) Client {
+func NewClient(c driver.Connection, log logging.Logger) Client {
+	if log != nil {
+		c = loggerConnection(c, log)
+	}
+
 	return &client{
 		c: c,
 	}

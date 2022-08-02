@@ -29,6 +29,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
@@ -66,8 +67,8 @@ func mapTLSSNIConfig(sni api.TLSSNISpec, cachedStatus inspectorInterface.Inspect
 	return fetchedSecrets, nil
 }
 
-func compareTLSSNIConfig(ctx context.Context, c driver.Connection, m map[string]string, refresh bool) (bool, error) {
-	tlsClient := client.NewClient(c)
+func compareTLSSNIConfig(ctx context.Context, log logging.Logger, c driver.Connection, m map[string]string, refresh bool) (bool, error) {
+	tlsClient := client.NewClient(c, log)
 
 	f := tlsClient.GetTLS
 	if refresh {
