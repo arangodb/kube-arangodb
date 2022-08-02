@@ -263,6 +263,14 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 
 	localInventory.Add(d)
 
+	if !d.acs.CurrentClusterCache().Initialised() {
+		d.log.Warn("ACS cache not yet initialised")
+		err := d.acs.CurrentClusterCache().Refresh(context.Background())
+		if err != nil {
+			d.log.Err(err).Error("Unable to get resources from ACS")
+		}
+	}
+
 	go d.run()
 	go d.listenForPodEvents(d.stopCh)
 	go d.listenForPVCEvents(d.stopCh)
