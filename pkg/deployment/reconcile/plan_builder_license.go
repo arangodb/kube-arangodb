@@ -75,7 +75,7 @@ func (r *Reconciler) updateClusterLicense(ctx context.Context, apiObject k8sutil
 		return nil
 	}
 
-	internalClient := client.NewClient(c.Connection())
+	internalClient := client.NewClient(c.Connection(), r.log)
 
 	if ok, err := licenseV2Compare(ctxChild, internalClient, l.V2); err != nil {
 		r.log.Err(err).Error("Unable to verify license")

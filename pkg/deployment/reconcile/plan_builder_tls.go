@@ -555,7 +555,7 @@ func (r *Reconciler) keyfileRenewalRequired(ctx context.Context, apiObject k8sut
 			return false, false
 		}
 
-		c := client.NewClient(conn.Connection())
+		c := client.NewClient(conn.Connection(), r.log)
 		tls, err := c.GetTLS(ctx)
 		if err != nil {
 			r.planLogger.Err(err).Warn("Unable to get tls details")

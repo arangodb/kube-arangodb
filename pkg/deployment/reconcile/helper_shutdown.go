@@ -170,7 +170,7 @@ func (s shutdownHelperAPI) CheckProgress(ctx context.Context) (bool, bool, error
 			if err != nil {
 				s.log.Err(err).Warn("Failed to create member client")
 			} else {
-				internal := client.NewClient(c.Connection())
+				internal := client.NewClient(c.Connection(), s.log)
 
 				if err := internal.DeleteExpiredJobs(ctx, ActionShutdownJobExpiredTerminationTimeout); err != nil {
 					s.log.Err(err).Warn("Unable to kill async jobs on member")

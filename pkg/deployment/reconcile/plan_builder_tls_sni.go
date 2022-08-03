@@ -90,7 +90,7 @@ func (r *Reconciler) createRotateTLSServerSNIPlan(ctx context.Context, apiObject
 			var ok bool
 			err = globals.GetGlobalTimeouts().ArangoD().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				var err error
-				ok, err = compareTLSSNIConfig(ctxChild, c.Connection(), fetchedSecrets, false)
+				ok, err = compareTLSSNIConfig(ctxChild, r.log, c.Connection(), fetchedSecrets, false)
 				return err
 			})
 			if err != nil {

@@ -74,7 +74,7 @@ func (t *tlsSNIUpdate) CheckProgress(ctx context.Context) (bool, bool, error) {
 
 	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
-	if ok, err := compareTLSSNIConfig(ctxChild, c.Connection(), fetchedSecrets, true); err != nil {
+	if ok, err := compareTLSSNIConfig(ctxChild, t.log, c.Connection(), fetchedSecrets, true); err != nil {
 		t.log.Err(err).Warn("Unable to compare TLS config")
 		return true, false, nil
 	} else {

@@ -68,7 +68,7 @@ func (a *encryptionKeyRefreshAction) CheckProgress(ctx context.Context) (bool, b
 		return true, false, nil
 	}
 
-	client := client.NewClient(c.Connection())
+	client := client.NewClient(c.Connection(), a.log)
 	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	e, err := client.RefreshEncryption(ctxChild)

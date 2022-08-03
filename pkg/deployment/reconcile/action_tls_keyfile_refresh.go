@@ -68,7 +68,7 @@ func (a *refreshTLSKeyfileCertificateAction) CheckProgress(ctx context.Context) 
 
 	keyfileSha := util.SHA256(keyfile)
 
-	client := client.NewClient(c.Connection())
+	client := client.NewClient(c.Connection(), a.log)
 
 	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()

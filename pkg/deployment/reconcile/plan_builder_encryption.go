@@ -263,7 +263,7 @@ func (r *Reconciler) isEncryptionKeyUpToDate(ctx context.Context, status api.Dep
 		return false, true
 	}
 
-	client := client.NewClient(c.Connection())
+	client := client.NewClient(c.Connection(), log)
 
 	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
