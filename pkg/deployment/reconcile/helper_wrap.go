@@ -42,7 +42,7 @@ func withMaintenanceStart(plan ...api.Action) api.Plan {
 		actions.NewClusterAction(api.ActionTypeEnableMaintenance, "Enable maintenance before actions"))
 }
 
-func withMemberMaintenance(group api.ServerGroup, member api.MemberStatus, reason string, plan ...api.Action) api.Plan {
+func withMemberMaintenance(group api.ServerGroup, member api.MemberStatus, reason string, plan api.Plan) api.Plan {
 	if member.Image == nil {
 		return plan
 	}
@@ -55,12 +55,11 @@ func withMemberMaintenance(group api.ServerGroup, member api.MemberStatus, reaso
 		return plan
 	}
 
-	return withResignLeadership(group, member, reason, plan...).
-		Wrap(actions.NewAction(api.ActionTypeEnableMemberMaintenance, group, member, reason),
-			actions.NewAction(api.ActionTypeDisableMemberMaintenance, group, member, reason))
+	return plan.Wrap(actions.NewAction(api.ActionTypeEnableMemberMaintenance, group, member, reason),
+		actions.NewAction(api.ActionTypeDisableMemberMaintenance, group, member, reason))
 }
 
-func withResignLeadership(group api.ServerGroup, member api.MemberStatus, reason string, plan ...api.Action) api.Plan {
+func withResignLeadership(group api.ServerGroup, member api.MemberStatus, reason string, plan api.Plan) api.Plan {
 	if member.Image == nil {
 		return plan
 	}
