@@ -13,6 +13,7 @@
 - (Bugfix) Ensure that client cache is initialized before using it
 - (Feature) (DBServer Maintenance) Agency adjustments
 - (Logging) Internal client trace
+- (QA) Member maintenance feature
 
 ## [1.2.15](https://github.com/arangodb/kube-arangodb/tree/1.2.15) (2022-07-20)
 - (Bugfix) Ensure pod names not too long
