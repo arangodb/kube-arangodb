@@ -59,6 +59,8 @@ func createRotateMemberPlanWithAction(member api.MemberStatus,
 		actions.NewAction(api.ActionTypeWaitForMemberInSync, group, member),
 	)
 
+	plan = withMemberMaintenance(group, member, "Enable member maintenance", plan)
+
 	return plan
 }
 

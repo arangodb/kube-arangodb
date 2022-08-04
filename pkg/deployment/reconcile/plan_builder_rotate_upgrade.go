@@ -510,7 +510,7 @@ func (r *Reconciler) createUpgradeMemberPlan(member api.MemberStatus,
 		plan = plan.Before(actions.NewClusterAction(api.ActionTypeSetCurrentImage, reason).SetImage(spec.GetImage()))
 	}
 
-	return withSecureWrap(member, group, spec, plan...)
+	return plan
 }
 
 func withSecureWrap(member api.MemberStatus,
@@ -524,7 +524,7 @@ func withSecureWrap(member api.MemberStatus,
 		// In this case we skip resign leadership but we enable maintenance
 		return withMaintenanceStart(plan...)
 	} else {
-		return withMemberMaintenance(group, member, "ResignLeadership", plan...)
+		return withResignLeadership(group, member, "ResignLeadership", plan)
 	}
 }
 
