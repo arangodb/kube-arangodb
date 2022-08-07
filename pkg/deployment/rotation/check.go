@@ -87,7 +87,7 @@ func IsRotationRequired(acs sutil.ACS, spec api.DeploymentSpec, member api.Membe
 
 	// Check if pod details are propagated
 	if pod != nil {
-		if member.PodUID != pod.UID {
+		if member.Pod.GetUID() != pod.UID {
 			reason = "Pod UID does not match, this pod is not managed by Operator. Recreating"
 			mode = EnforcedRotation
 			return
@@ -100,7 +100,7 @@ func IsRotationRequired(acs sutil.ACS, spec api.DeploymentSpec, member api.Membe
 		}
 	}
 
-	if member.PodSpecVersion == "" {
+	if p := member.Pod; p != nil && p.SpecVersion == "" {
 		reason = "Pod Spec Version is nil - recreating pod"
 		mode = EnforcedRotation
 		return

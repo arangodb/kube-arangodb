@@ -298,8 +298,8 @@ func (ds DeploymentStatusMembers) PodNames() []string {
 	var n []string
 
 	for _, m := range ds.AsList() {
-		if m.Member.PodName != "" {
-			n = append(n, m.Member.PodName)
+		if name := m.Member.Pod.GetName(); name != "" {
+			n = append(n, name)
 		}
 	}
 

@@ -153,9 +153,9 @@ func (a actionRuntimeContainerArgsUpdate) Start(ctx context.Context) (bool, erro
 		return false, errors.Errorf("ArangoMember %s not found", memberName)
 	}
 
-	pod, ok := cache.Pod().V1().GetSimple(m.PodName)
+	pod, ok := cache.Pod().V1().GetSimple(m.Pod.GetName())
 	if !ok {
-		a.log.Str("podName", m.PodName).Info("pod is not present")
+		a.log.Str("podName", m.Pod.GetName()).Info("pod is not present")
 		return true, nil
 	}
 

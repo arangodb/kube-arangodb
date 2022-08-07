@@ -108,9 +108,9 @@ func (a *actionRemoveMember) Start(ctx context.Context) (bool, error) {
 			}
 		}
 	}
-	if m.PodName != "" {
+	if p := m.Pod.GetName(); p != "" {
 		// Remove the pod (if any)
-		if err := cache.Client().Kubernetes().CoreV1().Pods(cache.Namespace()).Delete(ctx, m.PodName, meta.DeleteOptions{}); err != nil {
+		if err := cache.Client().Kubernetes().CoreV1().Pods(cache.Namespace()).Delete(ctx, p, meta.DeleteOptions{}); err != nil {
 			if !apiErrors.IsNotFound(err) {
 				return false, errors.WithStack(err)
 			}

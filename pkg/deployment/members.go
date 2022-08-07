@@ -138,7 +138,6 @@ func (d *Deployment) renderMember(spec api.DeploymentSpec, status *api.Deploymen
 			CreatedAt:                 meta.Now(),
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: shared.CreatePersistentVolumeClaimName(deploymentName, role, id),
-			PodName:                   "",
 			Image:                     apiObject.Status.CurrentImage,
 			Architecture:              &arch,
 		}, nil
@@ -150,7 +149,6 @@ func (d *Deployment) renderMember(spec api.DeploymentSpec, status *api.Deploymen
 			CreatedAt:                 meta.Now(),
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: shared.CreatePersistentVolumeClaimName(deploymentName, role, id),
-			PodName:                   "",
 			Image:                     apiObject.Status.CurrentImage,
 			Architecture:              &arch,
 		}, nil
@@ -162,7 +160,6 @@ func (d *Deployment) renderMember(spec api.DeploymentSpec, status *api.Deploymen
 			CreatedAt:                 meta.Now(),
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: shared.CreatePersistentVolumeClaimName(deploymentName, role, id),
-			PodName:                   "",
 			Image:                     apiObject.Status.CurrentImage,
 			Architecture:              &arch,
 		}, nil
@@ -174,7 +171,6 @@ func (d *Deployment) renderMember(spec api.DeploymentSpec, status *api.Deploymen
 			CreatedAt:                 meta.Now(),
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: "",
-			PodName:                   "",
 			Image:                     apiObject.Status.CurrentImage,
 			Architecture:              &arch,
 		}, nil
@@ -186,7 +182,6 @@ func (d *Deployment) renderMember(spec api.DeploymentSpec, status *api.Deploymen
 			CreatedAt:                 meta.Now(),
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: "",
-			PodName:                   "",
 			Image:                     apiObject.Status.CurrentImage,
 			Architecture:              &arch,
 		}, nil
@@ -198,7 +193,6 @@ func (d *Deployment) renderMember(spec api.DeploymentSpec, status *api.Deploymen
 			CreatedAt:                 meta.Now(),
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: "",
-			PodName:                   "",
 			Image:                     apiObject.Status.CurrentImage,
 			Architecture:              &arch,
 		}, nil

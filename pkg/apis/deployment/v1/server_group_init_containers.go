@@ -32,13 +32,14 @@ const (
 	ServerGroupReservedInitContainerNameLifecycle    = "init-lifecycle"
 	ServerGroupReservedInitContainerNameUUID         = "uuid"
 	ServerGroupReservedInitContainerNameWait         = "wait"
+	ServerGroupReservedInitContainerNameStartup      = "arango-init-startup"
 	ServerGroupReservedInitContainerNameUpgrade      = "upgrade"
 	ServerGroupReservedInitContainerNameVersionCheck = "version-check"
 )
 
 func IsReservedServerGroupInitContainerName(name string) bool {
 	switch name {
-	case ServerGroupReservedInitContainerNameLifecycle, ServerGroupReservedInitContainerNameUUID, ServerGroupReservedInitContainerNameUpgrade, ServerGroupReservedInitContainerNameVersionCheck:
+	case ServerGroupReservedInitContainerNameLifecycle, ServerGroupReservedInitContainerNameUUID, ServerGroupReservedInitContainerNameUpgrade, ServerGroupReservedInitContainerNameVersionCheck, ServerGroupReservedInitContainerNameStartup:
 		return true
 	default:
 		return false

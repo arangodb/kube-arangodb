@@ -61,6 +61,7 @@ var _ interfaces.PodCreator = &MemberSyncPod{}
 var _ interfaces.ContainerCreator = &ArangoSyncContainer{}
 
 type MemberSyncPod struct {
+	podName                string
 	tlsKeyfileSecretName   string
 	clientAuthCASecretName string
 	masterJWTSecretName    string

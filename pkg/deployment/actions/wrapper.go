@@ -58,7 +58,7 @@ func actionWrap(a api.Action, member *api.MemberStatus, wrap ...actionWrapper) a
 func actionWrapMemberUID(a api.Action, member *api.MemberStatus) api.Action {
 	switch a.Type {
 	case api.ActionTypeShutdownMember, api.ActionTypeKillMemberPod, api.ActionTypeRotateStartMember, api.ActionTypeUpgradeMember:
-		if q := member.PodUID; q != "" {
+		if q := member.Pod.GetUID(); q != "" {
 			return a.AddParam(api.ParamPodUID, string(q))
 		}
 		return a

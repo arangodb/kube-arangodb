@@ -77,11 +77,11 @@ func ifPodUIDMismatch(m api.MemberStatus, a api.Action, i pod.Inspector) bool {
 
 	u := types.UID(ut)
 
-	if m.PodName == "" {
+	if m.Pod.GetName() == "" {
 		return false
 	}
 
-	p, ok := i.Pod().V1().GetSimple(m.PodName)
+	p, ok := i.Pod().V1().GetSimple(m.Pod.GetName())
 	if !ok {
 		return true
 	}

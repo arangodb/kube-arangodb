@@ -372,7 +372,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 	for _, e := range status.Members.AsList() {
 		m := e.Member
 		group := e.Group
-		if podName := m.PodName; podName != "" {
+		if podName := m.Pod.GetName(); podName != "" {
 			if _, exists := cachedStatus.Pod().V1().GetSimple(podName); !exists {
 				log.Str("pod-name", podName).Debug("Does not exist")
 				switch m.Phase {

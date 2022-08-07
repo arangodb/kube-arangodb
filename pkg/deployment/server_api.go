@@ -100,7 +100,7 @@ func (d *Deployment) ReadyPodCount() int {
 	count := 0
 	status, _ := d.GetStatus()
 	for _, e := range status.Members.AsList() {
-		if e.Member.PodName == "" {
+		if e.Member.Pod.GetName() == "" {
 			continue
 		}
 		if e.Member.Conditions.IsTrue(api.ConditionTypeReady) {

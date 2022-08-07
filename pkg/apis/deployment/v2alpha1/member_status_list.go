@@ -78,7 +78,7 @@ func (l MemberStatusList) ElementByID(id string) (MemberStatus, bool) {
 // If no such element exists, an empty element and false is returned.
 func (l MemberStatusList) ElementByPodName(podName string) (MemberStatus, bool) {
 	for i, x := range l {
-		if x.PodName == podName {
+		if x.Pod.GetName() == podName {
 			return l[i], true
 		}
 	}

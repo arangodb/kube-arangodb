@@ -86,7 +86,7 @@ func (r *Reconciler) createMarkToRemovePlan(ctx context.Context, apiObject k8sut
 	for _, e := range status.Members.AsListInGroups(rotationByAnnotationOrder...) {
 		m := e.Member
 		group := e.Group
-		if m.Phase != api.MemberPhaseCreated || m.PodName == "" {
+		if m.Phase != api.MemberPhaseCreated || m.Pod.GetName() == "" {
 			// Only rotate when phase is created
 			continue
 		}
@@ -96,7 +96,7 @@ func (r *Reconciler) createMarkToRemovePlan(ctx context.Context, apiObject k8sut
 			continue
 		}
 
-		pod, found := cache.Pod().V1().GetSimple(m.PodName)
+		pod, found := cache.Pod().V1().GetSimple(m.Pod.GetName())
 		if !found {
 			continue
 		}
@@ -186,7 +186,7 @@ func (r *Reconciler) createUpdatePlanInternal(apiObject k8sutil.APIObject, spec 
 			continue
 		}
 
-		p, ok := cache.Pod().V1().GetSimple(m.Member.PodName)
+		p, ok := cache.Pod().V1().GetSimple(m.Member.Pod.GetName())
 		if !ok {
 			p = nil
 		}

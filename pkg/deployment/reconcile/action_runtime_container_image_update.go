@@ -153,7 +153,7 @@ func (a actionRuntimeContainerImageUpdate) Start(ctx context.Context) (bool, err
 		return false, err
 	}
 
-	pod, ok := cache.Pod().V1().GetSimple(m.PodName)
+	pod, ok := cache.Pod().V1().GetSimple(m.Pod.GetName())
 	if !ok {
 		a.log.Info("pod is not present")
 		return true, nil
@@ -221,7 +221,7 @@ func (a actionRuntimeContainerImageUpdate) CheckProgress(ctx context.Context) (b
 		return false, false, nil
 	}
 
-	pod, ok := cache.Pod().V1().GetSimple(m.PodName)
+	pod, ok := cache.Pod().V1().GetSimple(m.Pod.GetName())
 	if !ok {
 		a.log.Info("pod is not present")
 		return true, false, nil

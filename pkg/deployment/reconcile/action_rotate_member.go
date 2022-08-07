@@ -101,7 +101,7 @@ func (a *actionRotateMember) CheckProgress(ctx context.Context) (bool, bool, err
 	defer cancel()
 
 	// Pod is terminated, we can now remove it
-	if err := cache.Client().Kubernetes().CoreV1().Pods(cache.Namespace()).Delete(ctxChild, m.PodName, meta.DeleteOptions{}); err != nil {
+	if err := cache.Client().Kubernetes().CoreV1().Pods(cache.Namespace()).Delete(ctxChild, m.Pod.GetName(), meta.DeleteOptions{}); err != nil {
 		if !k8sutil.IsNotFound(err) {
 			a.log.Err(err).Error("Unable to delete pod")
 			return false, false, nil

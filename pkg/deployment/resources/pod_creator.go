@@ -322,17 +322,16 @@ func (r *Resources) RenderPodForMember(ctx context.Context, acs sutil.ACS, spec 
 	role := group.AsRole()
 	roleAbbr := group.AsRoleAbbreviated()
 
-	newMember := m.DeepCopy()
-
-	newMember.PodName = k8sutil.CreatePodName(apiObject.GetName(), roleAbbr, newMember.ID, CreatePodSuffix(spec))
+	podName := k8sutil.CreatePodName(apiObject.GetName(), roleAbbr, m.ID, CreatePodSuffix(spec))
 
 	var podCreator interfaces.PodCreator
 	if group.IsArangod() {
 		// Prepare arguments
-		autoUpgrade := newMember.Conditions.IsTrue(api.ConditionTypeAutoUpgrade) || spec.Upgrade.Get().AutoUpgrade
+		autoUpgrade := m.Conditions.IsTrue(api.ConditionTypeAutoUpgrade) || spec.Upgrade.Get().AutoUpgrade
 
 		podCreator = &MemberArangoDPod{
-			status:           *newMember,
+			podName:          podName,
+			status:           m,
 			groupSpec:        groupSpec,
 			spec:             spec,
 			group:            group,
@@ -357,6 +356,7 @@ func (r *Resources) RenderPodForMember(ctx context.Context, acs sutil.ACS, spec 
 		}
 
 		podCreator = &MemberSyncPod{
+			podName:      podName,
 			groupSpec:    groupSpec,
 			spec:         spec,
 			group:        group,
@@ -364,13 +364,13 @@ func (r *Resources) RenderPodForMember(ctx context.Context, acs sutil.ACS, spec 
 			imageInfo:    imageInfo,
 			arangoMember: *member,
 			apiObject:    apiObject,
-			memberStatus: *newMember,
+			memberStatus: m,
 		}
 	} else {
 		return nil, errors.Newf("unable to render Pod")
 	}
 
-	pod, err := RenderArangoPod(ctx, cache, apiObject, role, newMember.ID, newMember.PodName, podCreator)
+	pod, err := RenderArangoPod(ctx, cache, apiObject, role, m.ID, podName, podCreator)
 	if err != nil {
 		return nil, err
 	}
@@ -455,7 +455,6 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 	// Update pod name
 	role := group.AsRole()
 
-	m.PodName = template.PodSpec.GetName()
 	newPhase := api.MemberPhaseCreated
 	// Create pod
 	if group.IsArangod() {
@@ -472,20 +471,26 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 			return errors.WithStack(err)
 		}
 
-		m.PodName = podName
-		m.PodUID = uid
-		m.PodSpecVersion = template.PodSpecChecksum
+		var pod api.MemberPodStatus
+
+		pod.Name = podName
+		pod.UID = uid
+		pod.SpecVersion = template.PodSpecChecksum
+
+		m.Pod = &pod
+		m.Pod.Propagate(&m)
+
 		m.ArangoVersion = m.Image.ArangoDBVersion
 		m.ImageID = m.Image.ImageID
 
 		// reset old sidecar values to nil
 		m.SideCarSpecs = nil
 
-		log.Str("pod-name", m.PodName).Debug("Created pod")
+		log.Str("pod-name", pod.Name).Debug("Created pod")
 		if m.Image == nil {
-			log.Str("pod-name", m.PodName).Debug("Created pod with default image")
+			log.Str("pod-name", pod.Name).Debug("Created pod with default image")
 		} else {
-			log.Str("pod-name", m.PodName).Debug("Created pod with predefined image")
+			log.Str("pod-name", pod.Name).Debug("Created pod with predefined image")
 		}
 	} else if group.IsArangosync() {
 		// Check monitoring token secret
@@ -511,11 +516,17 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		log.Str("pod-name", m.PodName).Debug("Created pod")
 
-		m.PodName = podName
-		m.PodUID = uid
-		m.PodSpecVersion = template.PodSpecChecksum
+		var pod api.MemberPodStatus
+
+		pod.Name = podName
+		pod.UID = uid
+		pod.SpecVersion = template.PodSpecChecksum
+
+		m.Pod = &pod
+		m.Pod.Propagate(&m)
+
+		log.Str("pod-name", pod.Name).Debug("Created pod")
 	}
 
 	member.GetPhaseExecutor().Execute(r.context.GetAPIObject(), spec, group, &m, api.Action{}, newPhase)
@@ -532,7 +543,7 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 		}
 	}
 
-	log.Str("pod", m.PodName).Info("Updating member")
+	log.Str("pod", m.Pod.GetName()).Info("Updating member")
 	if err := status.Members.Update(m, group); err != nil {
 		return errors.WithStack(err)
 	}
@@ -540,7 +551,7 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 		return errors.WithStack(err)
 	}
 	// Create event
-	r.context.CreateEvent(k8sutil.NewPodCreatedEvent(m.PodName, role, apiObject))
+	r.context.CreateEvent(k8sutil.NewPodCreatedEvent(m.Pod.GetName(), role, apiObject))
 
 	return nil
 }

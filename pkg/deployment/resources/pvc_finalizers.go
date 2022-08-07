@@ -102,10 +102,10 @@ func (r *Resources) inspectFinalizerPVCMemberExists(ctx context.Context, group a
 	}
 
 	// Member still exists, let's trigger a delete of it
-	if memberStatus.PodName != "" {
+	if memberStatus.Pod.GetName() != "" {
 		log.Info("Removing Pod of member, because PVC is being removed")
 		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-			return r.context.ACS().CurrentClusterCache().PodsModInterface().V1().Delete(ctxChild, memberStatus.PodName, meta.DeleteOptions{})
+			return r.context.ACS().CurrentClusterCache().PodsModInterface().V1().Delete(ctxChild, memberStatus.Pod.GetName(), meta.DeleteOptions{})
 		})
 		if err != nil && !k8sutil.IsNotFound(err) {
 			log.Err(err).Debug("Failed to delete pod")

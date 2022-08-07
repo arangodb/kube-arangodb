@@ -144,16 +144,16 @@ func (r *Reconciler) isStorageClassChanged(_ context.Context, apiObject k8sutil.
 
 	// From here on it is known that the member requires replacement, so `true` must be returned.
 	// If pod does not exist then it will try next time.
-	if pod, ok := cache.Pod().V1().GetSimple(member.PodName); ok {
+	if pod, ok := cache.Pod().V1().GetSimple(member.Pod.GetName()); ok {
 		if _, ok := pod.GetAnnotations()[deployment.ArangoDeploymentPodReplaceAnnotation]; !ok {
 			r.log.
-				Str("pod-name", member.PodName).
+				Str("pod-name", member.Pod.GetName()).
 				Str("server-group", group.AsRole()).
-				Warn("try changing a storage class name, but %s", getRequiredReplaceMessage(member.PodName))
+				Warn("try changing a storage class name, but %s", getRequiredReplaceMessage(member.Pod.GetName()))
 			// No return here.
 		}
 	} else {
-		return false, "", fmt.Errorf("failed to get pod %s", member.PodName)
+		return false, "", fmt.Errorf("failed to get pod %s", member.Pod.GetName())
 	}
 
 	return true, "Storage class has changed", nil
@@ -210,14 +210,14 @@ func (r *Reconciler) isVolumeSizeChanged(_ context.Context, _ k8sutil.APIObject,
 
 	// From here on it is known that the member requires replacement, so `true` must be returned.
 	// If pod does not exist then it will try next time.
-	if pod, ok := cache.Pod().V1().GetSimple(member.PodName); ok {
+	if pod, ok := cache.Pod().V1().GetSimple(member.Pod.GetName()); ok {
 		if _, ok := pod.GetAnnotations()[deployment.ArangoDeploymentPodReplaceAnnotation]; !ok {
-			r.log.Str("pod-name", member.PodName).
-				Warn("try shrinking volume size, but %s", getRequiredReplaceMessage(member.PodName))
+			r.log.Str("pod-name", member.Pod.GetName()).
+				Warn("try shrinking volume size, but %s", getRequiredReplaceMessage(member.Pod.GetName()))
 			// No return here.
 		}
 	} else {
-		return false, "", fmt.Errorf("failed to get pod %s", member.PodName)
+		return false, "", fmt.Errorf("failed to get pod %s", member.Pod.GetName())
 	}
 
 	return true, "Volume is shrunk", nil
