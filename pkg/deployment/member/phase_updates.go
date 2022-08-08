@@ -52,7 +52,9 @@ var phase = phaseMap{
 			m.RID = uuid.NewUUID()
 
 			// Clean Pod details
-			m.Pod = nil
+			if m.Pod != nil {
+				m.Pod.UID = ""
+			}
 			m.Pod.Propagate(m)
 
 			// Add ClusterID
