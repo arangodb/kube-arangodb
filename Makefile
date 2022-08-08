@@ -191,7 +191,13 @@ license-verify:
 fmt:
 	@echo ">> Ensuring style of files"
 	@$(GOPATH)/bin/goimports -w $(SOURCES)
-	@$(GOPATH)/bin/gci write -s "standard" -s "default" -s "prefix(github.com/arangodb)" -s "prefix(github.com/arangodb/kube-arangodb)" $(SOURCES)  
+	@$(GOPATH)/bin/gci write -s "standard" -s "default" -s "prefix(github.com/arangodb)" -s "prefix(github.com/arangodb/kube-arangodb)" $(SOURCES) 
+
+.PHONY: fmt-generated
+fmt-generated:
+	@echo ">> Ensuring style of generated files"
+	@$(GOPATH)/bin/goimports -w $(ROOT)/pkg/generated/timezones/*.go $(ROOT)/pkg/generated/metric_descriptions/*.go
+	@$(GOPATH)/bin/gci write -s "standard" -s "default" -s "prefix(github.com/arangodb)" -s "prefix(github.com/arangodb/kube-arangodb)" $(ROOT)/pkg/generated/timezones/*.go $(ROOT)/pkg/generated/metric_descriptions/*.go
 
 .PHONY: license
 license:
@@ -532,7 +538,7 @@ check-community:
 _check:
 	@$(MAKE) fmt license-verify linter run-unit-tests bin
 
-generate-documentation: generate-go-documentation fmt
+generate-documentation: generate-go-documentation fmt-generated
 
 generate-go-documentation:
 	ROOT=$(ROOT) go test --count=1 "$(REPOPATH)/internal/..."

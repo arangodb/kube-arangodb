@@ -18,22 +18,33 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package metric_descriptions
+package timezones
 
-import "github.com/arangodb/kube-arangodb/pkg/util/metrics"
+import "time"
 
-var (
-	arangodbOperatorEnginePanicsRecovered = metrics.NewDescription("arangodb_operator_engine_panics_recovered", "Number of Panics recovered inside Operator reconciliation loop", []string{`section`}, nil)
-)
-
-func init() {
-	registerDescription(arangodbOperatorEnginePanicsRecovered)
+type Timezone struct {
+    Name string
+    Offset time.Duration
+    Zone string
 }
 
-func ArangodbOperatorEnginePanicsRecovered() metrics.Description {
-	return arangodbOperatorEnginePanicsRecovered
+func GetZoneTimezone(zone string) (string, bool) {
+    for tz, v := range timezones {
+        if v.Zone == zone {
+            return tz, true
+        }
+    }
+    
+    return "", false
 }
 
-func ArangodbOperatorEnginePanicsRecoveredCounter(value float64, section string) metrics.Metric {
-	return ArangodbOperatorEnginePanicsRecovered().Gauge(value, section)
+func GetTimezone(timezone string) (Timezone, bool) {
+    v, ok := timezones[timezone]
+    return v, ok
+}
+
+var timezones = map[string]Timezone{
+{{- range .timezones }}
+    "{{ .Name }}": { Name: "{{ .Name }}", Offset: {{ .Offset }} * time.Minute, Zone: "{{ .Zone }}" },
+{{- end }}
 }
