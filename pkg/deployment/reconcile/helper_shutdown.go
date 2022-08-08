@@ -49,14 +49,14 @@ const (
 func getShutdownHelper(a actionImpl) (ActionCore, api.MemberStatus, bool) {
 	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !ok {
-		a.log.Str("pod-name", m.PodName).Warn("member is already gone")
+		a.log.Str("pod-name", m.Pod.GetName()).Warn("member is already gone")
 
 		return nil, api.MemberStatus{}, false
 	}
 
 	cache, ok := a.actionCtx.ACS().ClusterCache(m.ClusterID)
 	if !ok {
-		a.log.Str("pod-name", m.PodName).Warn("Cluster is not ready")
+		a.log.Str("pod-name", m.Pod.GetName()).Warn("Cluster is not ready")
 
 		return nil, api.MemberStatus{}, false
 	}
@@ -66,9 +66,9 @@ func getShutdownHelper(a actionImpl) (ActionCore, api.MemberStatus, bool) {
 		return NewActionSuccess(), m, true
 	}
 
-	pod, ok := cache.Pod().V1().GetSimple(m.PodName)
+	pod, ok := cache.Pod().V1().GetSimple(m.Pod.GetName())
 	if !ok {
-		a.log.Str("pod-name", m.PodName).Warn("pod is already gone")
+		a.log.Str("pod-name", m.Pod.GetName()).Warn("pod is already gone")
 		// Pod does not exist, so create success action to finish it immediately.
 		return NewActionSuccess(), m, true
 	}
@@ -101,7 +101,7 @@ func (s shutdownHelperAPI) Start(ctx context.Context) (bool, error) {
 	s.log.Info("Using API to shutdown member")
 
 	group := s.action.Group
-	podName := s.memberStatus.PodName
+	podName := s.memberStatus.Pod.GetName()
 	if podName == "" {
 		s.log.Warn("Pod is empty")
 		return true, nil
@@ -190,7 +190,7 @@ type shutdownHelperDelete struct {
 func (s shutdownHelperDelete) Start(ctx context.Context) (bool, error) {
 	s.log.Info("Using Pod Delete to shutdown member")
 
-	podName := s.memberStatus.PodName
+	podName := s.memberStatus.Pod.GetName()
 	if podName == "" {
 		s.log.Warn("Pod is empty")
 		return true, nil
@@ -225,7 +225,7 @@ func (s shutdownHelperDelete) CheckProgress(ctx context.Context) (bool, bool, er
 		return false, false, nil
 	}
 
-	podName := s.memberStatus.PodName
+	podName := s.memberStatus.Pod.GetName()
 	if podName != "" {
 		if _, ok := cache.Pod().V1().GetSimple(podName); ok {
 			s.log.Warn("Pod still exists")
@@ -252,7 +252,7 @@ func (s shutdownNow) Start(ctx context.Context) (bool, error) {
 
 // CheckProgress starts removing pod forcefully and checks if has it been removed.
 func (s shutdownNow) CheckProgress(ctx context.Context) (bool, bool, error) {
-	podName := s.memberStatus.PodName
+	podName := s.memberStatus.Pod.GetName()
 
 	cache, ok := s.actionCtx.ACS().ClusterCache(s.memberStatus.ClusterID)
 	if !ok {
@@ -266,7 +266,7 @@ func (s shutdownNow) CheckProgress(ctx context.Context) (bool, bool, error) {
 		return true, false, nil
 	}
 
-	if s.memberStatus.PodUID != pod.GetUID() {
+	if s.memberStatus.Pod.GetUID() != pod.GetUID() {
 		s.log.Info("Using shutdown now method completed because it is already rotated")
 		// The new pod has been started already.
 		return true, false, nil

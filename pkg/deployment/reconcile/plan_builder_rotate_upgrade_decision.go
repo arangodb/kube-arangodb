@@ -71,7 +71,7 @@ func (r *Reconciler) createRotateOrUpgradeDecision(spec api.DeploymentSpec, stat
 }
 
 func (r *Reconciler) createRotateOrUpgradeDecisionMember(spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext, element api.DeploymentStatusMemberElement) (d updateUpgradeDecision) {
-	if element.Member.Phase == api.MemberPhaseCreated && element.Member.PodName != "" {
+	if element.Member.Phase == api.MemberPhaseCreated && element.Member.Pod.GetName() != "" {
 		// Only upgrade when phase is created
 
 		// Got pod, compare it with what it should be

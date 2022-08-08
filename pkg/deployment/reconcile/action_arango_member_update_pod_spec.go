@@ -137,7 +137,7 @@ func (a *actionArangoMemberUpdatePodSpec) Start(ctx context.Context) (bool, erro
 	}
 
 	if err := c.UpdateStatus(ctx, func(member *api.ArangoMember, status *api.ArangoMemberStatus) bool {
-		if (status.Template == nil || status.Template.PodSpec == nil) && (m.PodSpecVersion == "" || m.PodSpecVersion == template.PodSpecChecksum) {
+		if (status.Template == nil || status.Template.PodSpec == nil) && (m.Pod == nil || m.Pod.SpecVersion == "" || m.Pod.SpecVersion == template.PodSpecChecksum) {
 			status.Template = template.DeepCopy()
 		}
 

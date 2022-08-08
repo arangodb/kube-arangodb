@@ -50,6 +50,7 @@ var _ interfaces.PodCreator = &MemberArangoDPod{}
 var _ interfaces.ContainerCreator = &ArangoDContainer{}
 
 type MemberArangoDPod struct {
+	podName          string
 	status           api.MemberStatus
 	groupSpec        api.ServerGroupSpec
 	spec             api.DeploymentSpec

@@ -47,7 +47,7 @@ func (m member) ID() string {
 
 func (m member) PodName() string {
 	if status, found := m.status(); found {
-		return status.PodName
+		return status.Pod.GetName()
 	}
 	return ""
 }

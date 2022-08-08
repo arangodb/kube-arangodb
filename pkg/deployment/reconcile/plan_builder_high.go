@@ -153,7 +153,7 @@ func (r *Reconciler) updateMemberRotationConditionsPlan(ctx context.Context, api
 			continue
 		}
 
-		p, ok := cache.Pod().V1().GetSimple(e.Member.PodName)
+		p, ok := cache.Pod().V1().GetSimple(e.Member.Pod.GetName())
 		if !ok {
 			p = nil
 		}

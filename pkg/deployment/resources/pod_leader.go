@@ -60,7 +60,7 @@ func (r *Resources) EnsureLeader(ctx context.Context, cachedStatus inspectorInte
 	changed := false
 	group := api.ServerGroupAgents
 	for _, e := range status.Members.AsListInGroup(group) {
-		pod, exist := cachedStatus.Pod().V1().GetSimple(e.Member.PodName)
+		pod, exist := cachedStatus.Pod().V1().GetSimple(e.Member.Pod.GetName())
 		if !exist {
 			continue
 		}
@@ -217,7 +217,7 @@ func (r *Resources) ensureSingleServerLeader(ctx context.Context, cachedStatus i
 
 	status, _ := r.context.GetStatus()
 	for _, m := range status.Members.Single {
-		pod, exist := cachedStatus.Pod().V1().GetSimple(m.PodName)
+		pod, exist := cachedStatus.Pod().V1().GetSimple(m.Pod.GetName())
 		if !exist {
 			continue
 		}
@@ -241,7 +241,7 @@ func (r *Resources) ensureSingleServerLeader(ctx context.Context, cachedStatus i
 
 		err := r.context.ApplyPatchOnPod(ctx, pod, patch.ItemReplace(patch.NewPath("metadata", "labels"), labels))
 		if err != nil {
-			return errors.WithMessagef(err, "unable to change leader label for pod %s", m.PodName)
+			return errors.WithMessagef(err, "unable to change leader label for pod %s", m.Pod.GetName())
 		}
 		changed = true
 	}

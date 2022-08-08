@@ -76,7 +76,7 @@ func (a *actionKillMemberPod) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	if err := cache.Client().Kubernetes().CoreV1().Pods(cache.Namespace()).Delete(ctx, m.PodName, meta.DeleteOptions{}); err != nil {
+	if err := cache.Client().Kubernetes().CoreV1().Pods(cache.Namespace()).Delete(ctx, m.Pod.GetName(), meta.DeleteOptions{}); err != nil {
 		a.log.Err(err).Error("Unable to kill pod")
 		return true, nil
 	}
@@ -101,7 +101,7 @@ func (a *actionKillMemberPod) CheckProgress(ctx context.Context) (bool, bool, er
 		return false, false, errors.Newf("Client is not ready")
 	}
 
-	p, ok := cache.Pod().V1().GetSimple(m.PodName)
+	p, ok := cache.Pod().V1().GetSimple(m.Pod.GetName())
 	if !ok {
 		a.log.Error("No such member")
 		return true, false, nil

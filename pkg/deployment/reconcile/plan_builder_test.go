@@ -373,10 +373,12 @@ func (c *testContext) GetStatus() (api.DeploymentStatus, int32) {
 func addAgentsToStatus(t *testing.T, status *api.DeploymentStatus, count int) {
 	for i := 0; i < count; i++ {
 		require.NoError(t, status.Members.Add(api.MemberStatus{
-			ID:             fmt.Sprintf("AGNT-%d", i),
-			PodName:        fmt.Sprintf("agnt-depl-xxx-%d", i),
-			PodSpecVersion: "random",
-			Phase:          api.MemberPhaseCreated,
+			ID: fmt.Sprintf("AGNT-%d", i),
+			Pod: &api.MemberPodStatus{
+				Name:        fmt.Sprintf("agnt-depl-xxx-%d", i),
+				SpecVersion: "random",
+			},
+			Phase: api.MemberPhaseCreated,
 			Conditions: []api.Condition{
 				{
 					Type:   api.ConditionTypeReady,
@@ -427,8 +429,10 @@ func TestCreatePlanSingleScale(t *testing.T) {
 	// Test with 1 single member
 	status.Members.Single = api.MemberStatusList{
 		api.MemberStatus{
-			ID:      "id",
-			PodName: "something",
+			ID: "id",
+			Pod: &api.MemberPodStatus{
+				Name: "something",
+			},
 		},
 	}
 	newPlan, _, changed = r.createNormalPlan(ctx, depl, nil, spec, status, c)
@@ -444,12 +448,16 @@ func TestCreatePlanSingleScale(t *testing.T) {
 	// Test with 2 single members (which should not happen) and try to scale down
 	status.Members.Single = api.MemberStatusList{
 		api.MemberStatus{
-			ID:      "id1",
-			PodName: "something1",
+			ID: "id1",
+			Pod: &api.MemberPodStatus{
+				Name: "something1",
+			},
 		},
 		api.MemberStatus{
-			ID:      "id1",
-			PodName: "something1",
+			ID: "id1",
+			Pod: &api.MemberPodStatus{
+				Name: "something1",
+			},
 		},
 	}
 	newPlan, _, changed = r.createNormalPlan(ctx, depl, nil, spec, status, c)
@@ -490,8 +498,10 @@ func TestCreatePlanActiveFailoverScale(t *testing.T) {
 	// Test with 1 single member
 	status.Members.Single = api.MemberStatusList{
 		api.MemberStatus{
-			ID:      "id",
-			PodName: "something",
+			ID: "id",
+			Pod: &api.MemberPodStatus{
+				Name: "something",
+			},
 		},
 	}
 	newPlan, _, changed = r.createNormalPlan(ctx, depl, nil, spec, status, c)
@@ -503,20 +513,28 @@ func TestCreatePlanActiveFailoverScale(t *testing.T) {
 	// Test scaling down from 4 members to 2
 	status.Members.Single = api.MemberStatusList{
 		api.MemberStatus{
-			ID:      "id1",
-			PodName: "something1",
+			ID: "id1",
+			Pod: &api.MemberPodStatus{
+				Name: "something1",
+			},
 		},
 		api.MemberStatus{
-			ID:      "id2",
-			PodName: "something2",
+			ID: "id2",
+			Pod: &api.MemberPodStatus{
+				Name: "something2",
+			},
 		},
 		api.MemberStatus{
-			ID:      "id3",
-			PodName: "something3",
+			ID: "id3",
+			Pod: &api.MemberPodStatus{
+				Name: "something3",
+			},
 		},
 		api.MemberStatus{
-			ID:      "id4",
-			PodName: "something4",
+			ID: "id4",
+			Pod: &api.MemberPodStatus{
+				Name: "something4",
+			},
 		},
 	}
 	newPlan, _, changed = r.createNormalPlan(ctx, depl, nil, spec, status, c)
@@ -572,18 +590,24 @@ func TestCreatePlanClusterScale(t *testing.T) {
 	// Test with 2 dbservers & 1 coordinator
 	status.Members.DBServers = api.MemberStatusList{
 		api.MemberStatus{
-			ID:      "db1",
-			PodName: "something1",
+			ID: "db1",
+			Pod: &api.MemberPodStatus{
+				Name: "something1",
+			},
 		},
 		api.MemberStatus{
-			ID:      "db2",
-			PodName: "something2",
+			ID: "db2",
+			Pod: &api.MemberPodStatus{
+				Name: "something2",
+			},
 		},
 	}
 	status.Members.Coordinators = api.MemberStatusList{
 		api.MemberStatus{
-			ID:      "cr1",
-			PodName: "coordinator1",
+			ID: "cr1",
+			Pod: &api.MemberPodStatus{
+				Name: "coordinator1",
+			},
 		},
 	}
 	newPlan, _, changed = r.createNormalPlan(ctx, depl, nil, spec, status, c)
@@ -599,26 +623,36 @@ func TestCreatePlanClusterScale(t *testing.T) {
 	// Now scale down
 	status.Members.DBServers = api.MemberStatusList{
 		api.MemberStatus{
-			ID:      "db1",
-			PodName: "something1",
+			ID: "db1",
+			Pod: &api.MemberPodStatus{
+				Name: "something1",
+			},
 		},
 		api.MemberStatus{
-			ID:      "db2",
-			PodName: "something2",
+			ID: "db2",
+			Pod: &api.MemberPodStatus{
+				Name: "something2",
+			},
 		},
 		api.MemberStatus{
-			ID:      "db3",
-			PodName: "something3",
+			ID: "db3",
+			Pod: &api.MemberPodStatus{
+				Name: "something3",
+			},
 		},
 	}
 	status.Members.Coordinators = api.MemberStatusList{
 		api.MemberStatus{
-			ID:      "cr1",
-			PodName: "coordinator1",
+			ID: "cr1",
+			Pod: &api.MemberPodStatus{
+				Name: "coordinator1",
+			},
 		},
 		api.MemberStatus{
-			ID:      "cr2",
-			PodName: "coordinator2",
+			ID: "cr2",
+			Pod: &api.MemberPodStatus{
+				Name: "coordinator2",
+			},
 		},
 	}
 	spec.DBServers.Count = util.NewInt(1)
@@ -675,30 +709,42 @@ func TestCreatePlan(t *testing.T) {
 	// Arrange
 	threeCoordinators := api.MemberStatusList{
 		{
-			ID:      "1",
-			PodName: "coordinator1",
+			ID: "1",
+			Pod: &api.MemberPodStatus{
+				Name: "coordinator1",
+			},
 		},
 		{
-			ID:      "2",
-			PodName: "coordinator2",
+			ID: "2",
+			Pod: &api.MemberPodStatus{
+				Name: "coordinator2",
+			},
 		},
 		{
-			ID:      "3",
-			PodName: "coordinator3",
+			ID: "3",
+			Pod: &api.MemberPodStatus{
+				Name: "coordinator3",
+			},
 		},
 	}
 	threeDBServers := api.MemberStatusList{
 		{
-			ID:      "1",
-			PodName: "dbserver1",
+			ID: "1",
+			Pod: &api.MemberPodStatus{
+				Name: "dbserver1",
+			},
 		},
 		{
-			ID:      "2",
-			PodName: "dbserver2",
+			ID: "2",
+			Pod: &api.MemberPodStatus{
+				Name: "dbserver2",
+			},
 		},
 		{
-			ID:      "3",
-			PodName: "dbserver3",
+			ID: "3",
+			Pod: &api.MemberPodStatus{
+				Name: "dbserver3",
+			},
 		},
 	}
 
@@ -959,9 +1005,9 @@ func TestCreatePlan(t *testing.T) {
 				}
 
 				c.Pods = map[string]*core.Pod{
-					c.context.ArangoDeployment.Status.Members.Agents[0].PodName: {
+					c.context.ArangoDeployment.Status.Members.Agents[0].Pod.GetName(): {
 						ObjectMeta: meta.ObjectMeta{
-							Name: c.context.ArangoDeployment.Status.Members.Agents[0].PodName,
+							Name: c.context.ArangoDeployment.Status.Members.Agents[0].Pod.GetName(),
 						},
 					},
 				}

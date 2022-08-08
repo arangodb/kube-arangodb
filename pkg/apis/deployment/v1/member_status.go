@@ -52,12 +52,6 @@ type MemberStatus struct {
 	CreatedAt meta.Time `json:"created-at"`
 	// PersistentVolumeClaimName holds the name of the persistent volume claim used for this member (if any).
 	PersistentVolumeClaimName string `json:"persistentVolumeClaimName,omitempty"`
-	// PodName holds the name of the Pod that currently runs this member
-	PodName string `json:"podName,omitempty"`
-	// PodUID holds the UID of the Pod that currently runs this member
-	PodUID types.UID `json:"podUID,omitempty"`
-	// PodSpecVersion holds the checksum of Pod spec that currently runs this member. Used to rotate pods
-	PodSpecVersion string `json:"podSpecVersion,omitempty"`
 	// Conditions specific to this member
 	Conditions ConditionList `json:"conditions,omitempty"`
 	// RecentTerminatons holds the times when this member was recently terminated.
@@ -84,10 +78,20 @@ type MemberStatus struct {
 	Endpoint *string `json:"endpoint,omitempty"`
 	// Topology define topology member status assignment
 	Topology *TopologyMemberStatus `json:"topology,omitempty"`
+	Pod      *MemberPodStatus      `json:"pod,omitempty"`
 
 	// deprecated
 	// SideCarSpecs contains list of specifications specified for side cars
 	SideCarSpecs map[string]core.Container `json:"sidecars-specs,omitempty"`
+	// deprecated
+	// PodName holds the name of the Pod that currently runs this member
+	PodName string `json:"podName,omitempty"`
+	// deprecated
+	// PodUID holds the UID of the Pod that currently runs this member
+	PodUID types.UID `json:"podUID,omitempty"`
+	// deprecated
+	// PodSpecVersion holds the checksum of Pod spec that currently runs this member. Used to rotate pods
+	PodSpecVersion string `json:"podSpecVersion,omitempty"`
 }
 
 // Equal checks for equality
@@ -99,7 +103,7 @@ func (s MemberStatus) Equal(other MemberStatus) bool {
 		s.Phase == other.Phase &&
 		util.TimeCompareEqual(s.CreatedAt, other.CreatedAt) &&
 		s.PersistentVolumeClaimName == other.PersistentVolumeClaimName &&
-		s.PodName == other.PodName &&
+		s.Pod.Equal(other.Pod) &&
 		s.Conditions.Equal(other.Conditions) &&
 		s.IsInitialized == other.IsInitialized &&
 		s.CleanoutJobID == other.CleanoutJobID &&
