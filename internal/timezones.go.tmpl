@@ -20,12 +20,27 @@
 
 package timezones
 
-import "time"
+import (
+	"time"
+	"encoding/base64"
+)
 
 type Timezone struct {
     Name string
     Offset time.Duration
     Zone string
+    
+    Parent string
+}
+
+func (t Timezone) GetData() ([]byte, bool) {
+    if d, ok := timezonesData[t.Name]; ok {
+		if d, err := base64.StdEncoding.DecodeString(d); err == nil {
+			return d, true
+		}
+    }
+    
+	return nil, false
 }
 
 func GetZoneTimezone(zone string) (string, bool) {
@@ -43,8 +58,14 @@ func GetTimezone(timezone string) (Timezone, bool) {
     return v, ok
 }
 
+var timezonesData = map[string]string{
+{{- range .timezoneDatas }}
+    "{{ .Name }}": "{{ .Data }}",
+{{- end }}
+}
+
 var timezones = map[string]Timezone{
 {{- range .timezones }}
-    "{{ .Name }}": { Name: "{{ .Name }}", Offset: {{ .Offset }} * time.Minute, Zone: "{{ .Zone }}" },
+    "{{ .Name }}": { Name: "{{ .Name }}", Offset: {{ .Offset }} * time.Minute, Zone: "{{ .Zone }}", Parent: "{{ .Parent }}" },
 {{- end }}
 }

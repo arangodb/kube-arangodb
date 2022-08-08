@@ -22,10 +22,12 @@ package internal
 
 import (
 	_ "embed"
+	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"sort"
 	"strings"
 	"text/template"
@@ -39,6 +41,12 @@ type Timezone struct {
 	Name   string
 	Offset int64
 	Zone   string
+	Parent string
+}
+
+type TimezoneData struct {
+	Name string
+	Data string
 }
 
 func RenderTimezones(root string) error {
@@ -64,8 +72,11 @@ func RenderTimezones(root string) error {
 		return err
 	}
 
+	tzs, data := ListTimezones()
+
 	if err := i.Execute(out, map[string]interface{}{
-		"timezones": ListTimezones(),
+		"timezones":     tzs,
+		"timezoneDatas": data,
 	}); err != nil {
 		return err
 	}
@@ -77,7 +88,7 @@ func RenderTimezones(root string) error {
 	return nil
 }
 
-func ListTimezones() []Timezone {
+func ListTimezones() ([]Timezone, []TimezoneData) {
 	var zoneDirs = []string{
 		// Update path according to your OS
 		"/usr/share/zoneinfo/",
@@ -86,6 +97,8 @@ func ListTimezones() []Timezone {
 	}
 
 	zones := map[string]time.Time{}
+	datas := map[string]string{}
+	dataMaps := map[string]string{}
 
 	now := time.Now()
 
@@ -98,35 +111,78 @@ func ListTimezones() []Timezone {
 		}
 
 		for _, file := range files {
-			if !file.IsDir() {
-				continue
-			}
-
 			fn := file.Name()
-			if fn[0] != strings.ToUpper(fn)[0] {
-				continue
-			}
+			if !file.IsDir() {
+				loc, err := time.LoadLocation(fn)
+				if err != nil {
+					continue
+				}
+				if file.Mode()&os.ModeSymlink != os.ModeSymlink {
+					data, err := ioutil.ReadFile(path.Join(zoneDir, fn))
+					if err == nil {
+						datas[fn] = base64.StdEncoding.EncodeToString(data)
+						dataMaps[fn] = fn
+					}
+				} else {
+					target, err := os.Readlink(path.Join(zoneDir, fn))
+					if err == nil {
+						real, err := filepath.Abs(path.Join(zoneDir, target))
+						if err == nil {
+							dataMaps[fn] = strings.TrimLeft(real, zoneDir)
+						}
+					}
+				}
+				zones[fn] = now.In(loc)
+			} else {
+				if fn[0] != strings.ToUpper(fn)[0] {
+					continue
+				}
 
-			if fn[1:] != strings.ToLower(fn)[1:] {
-				continue
-			}
+				if fn[1:] != strings.ToLower(fn)[1:] {
+					continue
+				}
 
-			subFiles, err := ioutil.ReadDir(path.Join(zoneDir, fn))
-			if err != nil {
-				continue
-			}
-
-			for _, subFile := range subFiles {
-				zn := fmt.Sprintf("%s/%s", fn, subFile.Name())
-
-				loc, err := time.LoadLocation(zn)
+				subFiles, err := ioutil.ReadDir(path.Join(zoneDir, fn))
 				if err != nil {
 					continue
 				}
 
-				zones[zn] = now.In(loc)
+				for _, subFile := range subFiles {
+					zn := fmt.Sprintf("%s/%s", fn, subFile.Name())
+					loc, err := time.LoadLocation(zn)
+					if err != nil {
+						continue
+					}
+
+					if subFile.Mode()&os.ModeSymlink != os.ModeSymlink {
+						data, err := ioutil.ReadFile(path.Join(zoneDir, zn))
+						if err == nil {
+							datas[zn] = base64.StdEncoding.EncodeToString(data)
+							dataMaps[zn] = zn
+						}
+					} else {
+						target, err := os.Readlink(path.Join(zoneDir, zn))
+						if err == nil {
+							real, err := filepath.Abs(path.Join(zoneDir, fn, target))
+							if err == nil {
+								dataMaps[zn] = strings.TrimLeft(real, zoneDir)
+							}
+						}
+					}
+
+					zones[zn] = now.In(loc)
+				}
 			}
 		}
+	}
+
+	var tzData []TimezoneData
+
+	for tz, data := range datas {
+		tzData = append(tzData, TimezoneData{
+			Name: tz,
+			Data: data,
+		})
 	}
 
 	for tz, t := range zones {
@@ -135,6 +191,7 @@ func ListTimezones() []Timezone {
 			Name:   tz,
 			Offset: (int64(o) * int64(time.Second)) / int64(time.Minute),
 			Zone:   q,
+			Parent: dataMaps[tz],
 		})
 	}
 
@@ -142,5 +199,9 @@ func ListTimezones() []Timezone {
 		return tzs[i].Name < tzs[j].Name
 	})
 
-	return tzs
+	sort.Slice(tzData, func(i, j int) bool {
+		return tzData[i].Name < tzData[j].Name
+	})
+
+	return tzs, tzData
 }
