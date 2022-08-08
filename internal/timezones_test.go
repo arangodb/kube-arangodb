@@ -18,22 +18,17 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package metric_descriptions
+package internal
 
-import "github.com/arangodb/kube-arangodb/pkg/util/metrics"
+import (
+	"os"
+	"testing"
 
-var (
-	arangodbOperatorEnginePanicsRecovered = metrics.NewDescription("arangodb_operator_engine_panics_recovered", "Number of Panics recovered inside Operator reconciliation loop", []string{`section`}, nil)
+	"github.com/stretchr/testify/require"
 )
 
-func init() {
-	registerDescription(arangodbOperatorEnginePanicsRecovered)
-}
-
-func ArangodbOperatorEnginePanicsRecovered() metrics.Description {
-	return arangodbOperatorEnginePanicsRecovered
-}
-
-func ArangodbOperatorEnginePanicsRecoveredCounter(value float64, section string) metrics.Metric {
-	return ArangodbOperatorEnginePanicsRecovered().Gauge(value, section)
+func Test_GenerateTimezones(t *testing.T) {
+	root := os.Getenv("ROOT")
+	require.NotEmpty(t, root)
+	require.NoError(t, RenderTimezones(root))
 }
