@@ -186,7 +186,9 @@ func init() {
 	f.IntVar(&operatorKubernetesOptions.burst, "kubernetes.burst", kclient.DefaultBurst, "Burst for the k8s API")
 	f.BoolVar(&crdOptions.install, "crd.install", true, "Install missing CRD if access is possible")
 	f.IntVar(&operatorBackup.concurrentUploads, "backup-concurrent-uploads", globals.DefaultBackupConcurrentUploads, "Number of concurrent uploads per deployment")
-	features.Init(&cmdMain)
+	if err := features.Init(&cmdMain); err != nil {
+		panic(err.Error())
+	}
 }
 
 func Execute() int {

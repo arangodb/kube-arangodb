@@ -33,6 +33,7 @@ type Feature interface {
 	Enabled() bool
 	EnabledPointer() *bool
 	Deprecated() (bool, string)
+	Hidden() bool
 	Supported(v driver.Version, enterprise bool) bool
 }
 
@@ -42,6 +43,11 @@ type feature struct {
 	enterpriseRequired, enabledByDefault, enabled bool
 	deprecated                                    string
 	constValue                                    *bool
+	hidden                                        bool
+}
+
+func (f feature) Hidden() bool {
+	return f.hidden
 }
 
 func (f feature) Supported(v driver.Version, enterprise bool) bool {
