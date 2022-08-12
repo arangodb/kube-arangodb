@@ -29,7 +29,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-func podCompare(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *core.PodSpec) compareFunc {
+func podCompare(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *core.PodSpec) comparePodFunc {
 	return func(builder api.ActionBuilder) (mode Mode, plan api.Plan, err error) {
 		if spec.SchedulerName != status.SchedulerName {
 			status.SchedulerName = spec.SchedulerName
@@ -45,7 +45,7 @@ func podCompare(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *core.PodS
 	}
 }
 
-func affinityCompare(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *core.PodSpec) compareFunc {
+func affinityCompare(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *core.PodSpec) comparePodFunc {
 	return func(builder api.ActionBuilder) (mode Mode, plan api.Plan, e error) {
 		if specC, err := util.SHA256FromJSON(spec.Affinity); err != nil {
 			e = err

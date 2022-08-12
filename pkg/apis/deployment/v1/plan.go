@@ -199,7 +199,8 @@ const (
 	ActionTypeRebalancerClean    ActionType = "RebalancerClean"
 
 	// Resources
-	ActionTypeResourceSync ActionType = "ResourceSync"
+	ActionTypeResourceSync  ActionType = "ResourceSync"
+	ActionTypeTimezoneCMSet ActionType = "TimezoneCMSet"
 )
 
 const (

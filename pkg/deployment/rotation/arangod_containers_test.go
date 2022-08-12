@@ -35,12 +35,14 @@ func Test_ArangoDContainers_SidecarImages(t *testing.T) {
 	testCases := []TestCase{
 		{
 			name:   "Sidecar Image Update",
-			spec:   buildPodSpec(addContainer(shared.ServerContainerName, nil), addSidecarWithImage("sidecar", "local:1.0")),
-			status: buildPodSpec(addContainer(shared.ServerContainerName, nil), addSidecarWithImage("sidecar", "local:2.0")),
+			spec:   buildPodSpec(addContainer(shared.ServerContainerName), addSidecarWithImage("sidecar", "local:1.0")),
+			status: buildPodSpec(addContainer(shared.ServerContainerName), addSidecarWithImage("sidecar", "local:2.0")),
 
-			expectedMode: InPlaceRotation,
-			expectedPlan: api.Plan{
-				actions.NewClusterAction(api.ActionTypeRuntimeContainerImageUpdate),
+			TestCaseOverride: TestCaseOverride{
+				expectedMode: InPlaceRotation,
+				expectedPlan: api.Plan{
+					actions.NewClusterAction(api.ActionTypeRuntimeContainerImageUpdate),
+				},
 			},
 		},
 		{
@@ -48,9 +50,11 @@ func Test_ArangoDContainers_SidecarImages(t *testing.T) {
 			spec:   buildPodSpec(addSidecarWithImage("sidecar1", "local:1.0"), addSidecarWithImage("sidecar", "local:1.0")),
 			status: buildPodSpec(addSidecarWithImage("sidecar1", "local:1.0"), addSidecarWithImage("sidecar", "local:2.0")),
 
-			expectedMode: InPlaceRotation,
-			expectedPlan: api.Plan{
-				actions.NewClusterAction(api.ActionTypeRuntimeContainerImageUpdate),
+			TestCaseOverride: TestCaseOverride{
+				expectedMode: InPlaceRotation,
+				expectedPlan: api.Plan{
+					actions.NewClusterAction(api.ActionTypeRuntimeContainerImageUpdate),
+				},
 			},
 		},
 	}
@@ -63,34 +67,38 @@ func Test_InitContainers(t *testing.T) {
 		testCases := []TestCase{
 			{
 				name: "Same containers",
-				spec: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, nil), addInitContainer("sidecar", func(c *core.Container) {
+				spec: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID), addInitContainer("sidecar", func(c *core.Container) {
 					c.Image = "local:1.0"
 				})),
-				status: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, nil), addInitContainer("sidecar", func(c *core.Container) {
+				status: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID), addInitContainer("sidecar", func(c *core.Container) {
 					c.Image = "local:1.0"
 				})),
 
-				expectedMode: SkippedRotation,
+				TestCaseOverride: TestCaseOverride{
+					expectedMode: SkippedRotation,
+				},
 
-				deploymentSpec: buildDeployment(func(depl *api.DeploymentSpec) {
-					depl.Agents.InitContainers = &api.ServerGroupInitContainers{
+				groupSpec: buildGroupSpec(func(depl *api.ServerGroupSpec) {
+					depl.InitContainers = &api.ServerGroupInitContainers{
 						Mode: api.ServerGroupInitContainerIgnoreMode.New(),
 					}
 				}),
 			},
 			{
 				name: "Containers with different image",
-				spec: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, nil), addInitContainer("sidecar", func(c *core.Container) {
+				spec: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID), addInitContainer("sidecar", func(c *core.Container) {
 					c.Image = "local:1.0"
 				})),
-				status: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, nil), addInitContainer("sidecar", func(c *core.Container) {
+				status: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID), addInitContainer("sidecar", func(c *core.Container) {
 					c.Image = "local:2.0"
 				})),
 
-				expectedMode: SilentRotation,
+				TestCaseOverride: TestCaseOverride{
+					expectedMode: SilentRotation,
+				},
 
-				deploymentSpec: buildDeployment(func(depl *api.DeploymentSpec) {
-					depl.Agents.InitContainers = &api.ServerGroupInitContainers{
+				groupSpec: buildGroupSpec(func(depl *api.ServerGroupSpec) {
+					depl.InitContainers = &api.ServerGroupInitContainers{
 						Mode: api.ServerGroupInitContainerIgnoreMode.New(),
 					}
 				}),
@@ -104,17 +112,19 @@ func Test_InitContainers(t *testing.T) {
 		testCases := []TestCase{
 			{
 				name: "Containers with different image but init rotation enforced",
-				spec: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, nil), addInitContainer("sidecar", func(c *core.Container) {
+				spec: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID), addInitContainer("sidecar", func(c *core.Container) {
 					c.Image = "local:1.0"
 				})),
-				status: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, nil), addInitContainer("sidecar", func(c *core.Container) {
+				status: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID), addInitContainer("sidecar", func(c *core.Container) {
 					c.Image = "local:2.0"
 				})),
 
-				expectedMode: GracefulRotation,
+				TestCaseOverride: TestCaseOverride{
+					expectedMode: GracefulRotation,
+				},
 
-				deploymentSpec: buildDeployment(func(depl *api.DeploymentSpec) {
-					depl.Agents.InitContainers = &api.ServerGroupInitContainers{
+				groupSpec: buildGroupSpec(func(depl *api.ServerGroupSpec) {
+					depl.InitContainers = &api.ServerGroupInitContainers{
 						Mode: api.ServerGroupInitContainerUpdateMode.New(),
 					}
 				}),
@@ -132,10 +142,12 @@ func Test_InitContainers(t *testing.T) {
 					c.Image = "local:1.0"
 				})),
 
-				expectedMode: SilentRotation,
+				TestCaseOverride: TestCaseOverride{
+					expectedMode: SilentRotation,
+				},
 
-				deploymentSpec: buildDeployment(func(depl *api.DeploymentSpec) {
-					depl.Agents.InitContainers = &api.ServerGroupInitContainers{
+				groupSpec: buildGroupSpec(func(depl *api.ServerGroupSpec) {
+					depl.InitContainers = &api.ServerGroupInitContainers{
 						Mode: api.ServerGroupInitContainerUpdateMode.New(),
 					}
 				}),
@@ -151,10 +163,12 @@ func Test_InitContainers(t *testing.T) {
 					c.Image = "local:2.0"
 				})),
 
-				expectedMode: SilentRotation,
+				TestCaseOverride: TestCaseOverride{
+					expectedMode: SilentRotation,
+				},
 
-				deploymentSpec: buildDeployment(func(depl *api.DeploymentSpec) {
-					depl.Agents.InitContainers = &api.ServerGroupInitContainers{
+				groupSpec: buildGroupSpec(func(depl *api.ServerGroupSpec) {
+					depl.InitContainers = &api.ServerGroupInitContainers{
 						Mode: api.ServerGroupInitContainerUpdateMode.New(),
 					}
 				}),
@@ -174,10 +188,12 @@ func Test_InitContainers(t *testing.T) {
 					c.Image = "local:1.0"
 				})),
 
-				expectedMode: SilentRotation,
+				TestCaseOverride: TestCaseOverride{
+					expectedMode: SilentRotation,
+				},
 
-				deploymentSpec: buildDeployment(func(depl *api.DeploymentSpec) {
-					depl.Agents.InitContainers = &api.ServerGroupInitContainers{
+				groupSpec: buildGroupSpec(func(depl *api.ServerGroupSpec) {
+					depl.InitContainers = &api.ServerGroupInitContainers{
 						Mode: api.ServerGroupInitContainerUpdateMode.New(),
 					}
 				}),
@@ -197,10 +213,12 @@ func Test_InitContainers(t *testing.T) {
 					c.Image = "local:2.0"
 				})),
 
-				expectedMode: GracefulRotation,
+				TestCaseOverride: TestCaseOverride{
+					expectedMode: GracefulRotation,
+				},
 
-				deploymentSpec: buildDeployment(func(depl *api.DeploymentSpec) {
-					depl.Agents.InitContainers = &api.ServerGroupInitContainers{
+				groupSpec: buildGroupSpec(func(depl *api.ServerGroupSpec) {
+					depl.InitContainers = &api.ServerGroupInitContainers{
 						Mode: api.ServerGroupInitContainerUpdateMode.New(),
 					}
 				}),
@@ -263,8 +281,10 @@ func Test_Container_Args(t *testing.T) {
 			name: "Only log level arguments of the Sidecar have been changed",
 			spec: buildPodSpec(addContainerWithCommand("sidecar",
 				[]string{"--log.level=INFO", "--log.level=requests=error"})),
-			status:       buildPodSpec(addContainerWithCommand("sidecar", []string{"--log.level=INFO"})),
-			expectedMode: GracefulRotation,
+			status: buildPodSpec(addContainerWithCommand("sidecar", []string{"--log.level=INFO"})),
+			TestCaseOverride: TestCaseOverride{
+				expectedMode: GracefulRotation,
+			},
 		},
 	}
 
@@ -293,7 +313,9 @@ func Test_Container_Ports(t *testing.T) {
 					},
 				}
 			})),
-			expectedMode: SilentRotation,
+			TestCaseOverride: TestCaseOverride{
+				expectedMode: SilentRotation,
+			},
 		},
 		{
 			name: "Ports of sidecar pod changed",
@@ -315,7 +337,9 @@ func Test_Container_Ports(t *testing.T) {
 					},
 				}
 			})),
-			expectedMode: GracefulRotation,
+			TestCaseOverride: TestCaseOverride{
+				expectedMode: GracefulRotation,
+			},
 		},
 	}
 

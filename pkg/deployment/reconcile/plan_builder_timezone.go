@@ -24,22 +24,28 @@ import (
 	"context"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
-const (
-	// Component name for reconciliation of this package
-	reconciliationComponent = "deployment_reconciliation"
-)
+func (r *Reconciler) createTimezoneUpdatePlan(ctx context.Context, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	context PlanBuilderContext) api.Plan {
+	if !features.Timezone().Enabled() {
+		return nil
+	}
 
-const (
-	BackOffCheck  api.BackOffKey = "check"
-	LicenseCheck  api.BackOffKey = "license"
-	TimezoneCheck api.BackOffKey = "timezone"
-)
+	secrets := context.ACS().CurrentClusterCache().Secret().V1()
 
-// CreatePlan considers the current specification & status of the deployment creates a plan to
-// get the status in line with the specification.
-// If a plan already exists, nothing is done.
-func (d *Reconciler) CreatePlan(ctx context.Context) (error, bool) {
-	return d.generatePlan(ctx, d.generatePlanFunc(d.createHighPlan, plannerHigh{}), d.generatePlanFunc(d.createResourcesPlan, plannerResources{}), d.generatePlanFunc(d.createNormalPlan, plannerNormal{}))
+	tz, ok := GetTimezone(context.GetSpec().Timezone)
+	if !ok {
+		return nil
+	}
+
+	if IsTimezoneValid(secrets, context.GetName(), tz) {
+		return nil
+	}
+
+	return api.Plan{actions.NewClusterAction(api.ActionTypeTimezoneCMSet, "Update timezone")}
 }

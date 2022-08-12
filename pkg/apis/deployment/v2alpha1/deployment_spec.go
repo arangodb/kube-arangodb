@@ -171,6 +171,8 @@ type DeploymentSpec struct {
 
 	// Architecture definition of supported architectures
 	Architecture ArangoDeploymentArchitecture `json:"architecture,omitempty"`
+
+	Timezone *string `json:"timezone,omitempty"`
 }
 
 // GetAllowMemberRecreation returns member recreation policy based on group and settings
