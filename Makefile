@@ -165,7 +165,7 @@ endif
 
 EXCLUDE_DIRS := vendor .gobuild deps tools pkg/generated/clientset pkg/generated/informers pkg/generated/listers
 EXCLUDE_FILES := *generated.deepcopy.go
-SOURCES_QUERY := find ./ -type f -name '*.go' $(foreach EXCLUDE_DIR,$(EXCLUDE_DIRS), ! -path "*/$(EXCLUDE_DIR)/*") $(foreach EXCLUDE_FILE,$(EXCLUDE_FILES), ! -path "*/$(EXCLUDE_FILE)")
+SOURCES_QUERY := find ./ -type f -name '*.go' ! -name '*.pb.go' $(foreach EXCLUDE_DIR,$(EXCLUDE_DIRS), ! -path "*/$(EXCLUDE_DIR)/*") $(foreach EXCLUDE_FILE,$(EXCLUDE_FILES), ! -path "*/$(EXCLUDE_FILE)")
 SOURCES := $(shell $(SOURCES_QUERY))
 DASHBOARDSOURCES := $(shell find $(DASHBOARDDIR)/src -name '*.js') $(DASHBOARDDIR)/package.json
 LINT_EXCLUDES:=
@@ -253,10 +253,6 @@ update-generated:
 	@mkdir -p $(ORGDIR)
 	@ln -s -f $(SCRIPTDIR) $(ORGDIR)/kube-arangodb
 	@sed -e 's/^/\/\/ /' -e 's/ *$$//' $(ROOTDIR)/tools/codegen/license-header.txt > $(ROOTDIR)/tools/codegen/boilerplate.go.txt
-	PATH=$(PATH):$(GOBUILDDIR)/bin $(GOBUILDDIR)/bin/protoc -I.:$(GOBUILDDIR)/include/ \
-			--go_out=. --go_opt=paths=source_relative \
-	 		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
-	 		$(PROTOSOURCES)
 	GOPATH=$(GOBUILDDIR) $(VENDORDIR)/k8s.io/code-generator/generate-groups.sh  \
 			"all" \
 			"github.com/arangodb/kube-arangodb/pkg/generated" \
@@ -553,5 +549,13 @@ check-community:
 _check:
 	@$(MAKE) fmt license-verify linter run-unit-tests bin
 
+generate: generate-internal generate-proto fmt
+
 generate-internal:
 	ROOT=$(ROOT) go test --count=1 "$(REPOPATH)/internal/..."
+	
+generate-proto:
+	PATH=$(PATH):$(GOBUILDDIR)/bin $(GOBUILDDIR)/bin/protoc -I.:$(GOBUILDDIR)/include/ \
+			--go_out=. --go_opt=paths=source_relative \
+			--go-grpc_out=. --go-grpc_opt=paths=source_relative \
+			$(PROTOSOURCES)

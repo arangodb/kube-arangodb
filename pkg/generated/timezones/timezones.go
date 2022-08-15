@@ -34,7 +34,7 @@ type Timezone struct {
 }
 
 func (t Timezone) GetData() ([]byte, bool) {
-	if d, ok := timezonesData[t.Parent]; ok {
+	if d, ok := timezonesData[t.Name]; ok {
 		if d, err := base64.StdEncoding.DecodeString(d); err == nil {
 			return d, true
 		}
