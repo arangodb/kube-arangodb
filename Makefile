@@ -89,6 +89,14 @@ else
 	COMPILE_DEBUG_FLAGS :=
 endif
 
+PROTOC_VERSION := 21.1
+ifeq ($(shell uname),Darwin)
+	PROTOC_ARCHIVE_SUFFIX := osx-universal_binary
+else
+	PROTOC_ARCHIVE_SUFFIX := linux-x86_64
+endif
+PROTOC_URL := https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/protoc-${PROTOC_VERSION}-${PROTOC_ARCHIVE_SUFFIX}.zip
+
 ifeq ($(MANIFESTSUFFIX),-)
 	# Release setting
 	MANIFESTSUFFIX :=
@@ -157,7 +165,7 @@ endif
 
 EXCLUDE_DIRS := vendor .gobuild deps tools pkg/generated/clientset pkg/generated/informers pkg/generated/listers
 EXCLUDE_FILES := *generated.deepcopy.go
-SOURCES_QUERY := find ./ -type f -name '*.go' $(foreach EXCLUDE_DIR,$(EXCLUDE_DIRS), ! -path "*/$(EXCLUDE_DIR)/*") $(foreach EXCLUDE_FILE,$(EXCLUDE_FILES), ! -path "*/$(EXCLUDE_FILE)")
+SOURCES_QUERY := find ./ -type f -name '*.go' ! -name '*.pb.go' $(foreach EXCLUDE_DIR,$(EXCLUDE_DIRS), ! -path "*/$(EXCLUDE_DIR)/*") $(foreach EXCLUDE_FILE,$(EXCLUDE_FILES), ! -path "*/$(EXCLUDE_FILE)")
 SOURCES := $(shell $(SOURCES_QUERY))
 DASHBOARDSOURCES := $(shell find $(DASHBOARDDIR)/src -name '*.js') $(DASHBOARDDIR)/package.json
 LINT_EXCLUDES:=
@@ -166,6 +174,8 @@ LINT_EXCLUDES+=.*\.community\.go$$
 else
 LINT_EXCLUDES+=.*\.enterprise\.go$$
 endif
+
+PROTOSOURCES := $(shell find ./ -type f  -name '*.proto' $(foreach EXCLUDE_DIR,$(EXCLUDE_DIRS), ! -path "*/$(EXCLUDE_DIR)/*") | sort)
 
 .DEFAULT_GOAL := all
 .PHONY: all
@@ -185,7 +195,7 @@ allall: all
 .PHONY: license-verify
 license-verify:
 	@echo ">> Verify license of files"
-	@$(GOPATH)/bin/addlicense -f "./tools/codegen/license-header.txt" -check $(SOURCES)
+	@$(GOPATH)/bin/addlicense -f "./tools/codegen/license-header.txt" -check $(SOURCES) $(PROTOSOURCES)
 
 .PHONY: fmt
 fmt:
@@ -196,7 +206,7 @@ fmt:
 .PHONY: license
 license:
 	@echo ">> Ensuring license of files"
-	@$(GOPATH)/bin/addlicense -f "./tools/codegen/license-header.txt" $(SOURCES)
+	@$(GOPATH)/bin/addlicense -f "./tools/codegen/license-header.txt" $(SOURCES) $(PROTOSOURCES)
 
 .PHONY: fmt-verify
 fmt-verify: license-verify
@@ -464,6 +474,13 @@ tools: update-vendor
 	@GOBIN=$(GOPATH)/bin go install github.com/jessevdk/go-assets-builder@b8483521738fd2198ecfc378067a4e8a6079f8e5
 	@echo ">> Fetching gci"
 	@GOBIN=$(GOPATH)/bin go install github.com/daixiang0/gci@v0.3.0
+	@echo ">> Downloading protobuf compiler..."
+	@curl -L ${PROTOC_URL} -o $(GOPATH)/protoc.zip
+	@echo ">> Unzipping protobuf compiler..."
+	@unzip -o $(GOPATH)/protoc.zip -d $(GOPATH)/
+	@echo ">> Fetching protoc go plugins..."
+	@GOBIN=$(GOPATH)/bin go install github.com/golang/protobuf/protoc-gen-go@v1.5.2
+	@GOBIN=$(GOPATH)/bin go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
 
 .PHONY: vendor
 vendor:
@@ -532,5 +549,13 @@ check-community:
 _check:
 	@$(MAKE) fmt license-verify linter run-unit-tests bin
 
+generate: generate-internal generate-proto fmt
+
 generate-internal:
 	ROOT=$(ROOT) go test --count=1 "$(REPOPATH)/internal/..."
+	
+generate-proto:
+	PATH=$(PATH):$(GOBUILDDIR)/bin $(GOBUILDDIR)/bin/protoc -I.:$(GOBUILDDIR)/include/ \
+			--go_out=. --go_opt=paths=source_relative \
+			--go-grpc_out=. --go-grpc_opt=paths=source_relative \
+			$(PROTOSOURCES)
