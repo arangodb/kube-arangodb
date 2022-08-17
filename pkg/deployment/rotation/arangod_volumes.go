@@ -122,7 +122,7 @@ func compareServerContainerVolumeMounts(ds api.DeploymentSpec, g api.ServerGroup
 
 		for k, v := range diff {
 			switch k {
-			case shared.ArangoDTimezoneVolumeName, shared.ArangoDLocaltimeVolumeName:
+			case shared.ArangoDTimezoneVolumeName:
 				// We are fine, should be just replaced
 				if v.a == nil {
 					// we remove volume
@@ -144,10 +144,10 @@ func compareServerContainerVolumeMounts(ds api.DeploymentSpec, g api.ServerGroup
 }
 
 type volumeMountDiff struct {
-	a, b *core.VolumeMount
+	a, b []*core.VolumeMount
 }
 
-func getVolumeMountsDiffFromPods(a, b map[string]*core.VolumeMount) map[string]volumeMountDiff {
+func getVolumeMountsDiffFromPods(a, b map[string][]*core.VolumeMount) map[string]volumeMountDiff {
 	d := map[string]volumeMountDiff{}
 
 	for k := range a {
@@ -177,13 +177,13 @@ func getVolumeMountsDiffFromPods(a, b map[string]*core.VolumeMount) map[string]v
 	return d
 }
 
-func mapVolumeMounts(a *core.Container) map[string]*core.VolumeMount {
-	n := make(map[string]*core.VolumeMount, len(a.VolumeMounts))
+func mapVolumeMounts(a *core.Container) map[string][]*core.VolumeMount {
+	n := make(map[string][]*core.VolumeMount, len(a.VolumeMounts))
 
 	for id := range a.VolumeMounts {
 		v := &a.VolumeMounts[id]
 
-		n[v.Name] = v
+		n[v.Name] = append(n[v.Name], v)
 	}
 
 	return n

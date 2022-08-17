@@ -68,7 +68,7 @@ func (t timezone) Volumes(i Input) ([]core.Volume, []core.VolumeMount) {
 			},
 		}, []core.VolumeMount{
 			{
-				Name:      shared.ArangoDLocaltimeVolumeName,
+				Name:      shared.ArangoDTimezoneVolumeName,
 				ReadOnly:  true,
 				MountPath: "/etc/localtime",
 				SubPath:   TimezoneDataKey,
