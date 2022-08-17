@@ -61,6 +61,13 @@ func IsTimezoneValid(cache secretv1.Inspector, name string, timezone timezones.T
 		} else {
 			return false
 		}
+		if v, ok := s.Data[pod.TimezoneTZKey]; ok {
+			if string(v) != timezone.Zone {
+				return false
+			}
+		} else {
+			return false
+		}
 	} else {
 		return false
 	}

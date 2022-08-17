@@ -34,6 +34,7 @@ import (
 const (
 	TimezoneNameKey string = "name"
 	TimezoneDataKey string = "data"
+	TimezoneTZKey   string = "timezone"
 )
 
 func TimezoneSecret(name string) string {
@@ -67,10 +68,16 @@ func (t timezone) Volumes(i Input) ([]core.Volume, []core.VolumeMount) {
 			},
 		}, []core.VolumeMount{
 			{
-				Name:      shared.ArangoDTimezoneVolumeName,
+				Name:      shared.ArangoDLocaltimeVolumeName,
 				ReadOnly:  true,
 				MountPath: "/etc/localtime",
 				SubPath:   TimezoneDataKey,
+			},
+			{
+				Name:      shared.ArangoDTimezoneVolumeName,
+				ReadOnly:  true,
+				MountPath: "/etc/timezone",
+				SubPath:   TimezoneTZKey,
 			},
 		}
 }

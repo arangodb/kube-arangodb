@@ -83,6 +83,7 @@ func (a *timezoneCMSetAction) Start(ctx context.Context) (bool, error) {
 
 		data[pod.TimezoneNameKey] = base64.StdEncoding.EncodeToString([]byte(tz.Name))
 		data[pod.TimezoneDataKey] = base64.StdEncoding.EncodeToString(tzd)
+		data[pod.TimezoneTZKey] = base64.StdEncoding.EncodeToString([]byte(tz.Name))
 
 		p := patch.NewPatch()
 		p.ItemReplace(patch.NewPath("data"), data)
@@ -116,6 +117,7 @@ func (a *timezoneCMSetAction) Start(ctx context.Context) (bool, error) {
 			Data: map[string][]byte{
 				pod.TimezoneNameKey: []byte(tz.Name),
 				pod.TimezoneDataKey: tzd,
+				pod.TimezoneTZKey:   []byte(tz.Zone),
 			},
 			Type: core.SecretTypeOpaque,
 		}

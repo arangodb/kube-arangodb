@@ -122,7 +122,7 @@ func compareServerContainerVolumeMounts(ds api.DeploymentSpec, g api.ServerGroup
 
 		for k, v := range diff {
 			switch k {
-			case shared.ArangoDTimezoneVolumeName:
+			case shared.ArangoDTimezoneVolumeName, shared.ArangoDLocaltimeVolumeName:
 				// We are fine, should be just replaced
 				if v.a == nil {
 					// we remove volume
