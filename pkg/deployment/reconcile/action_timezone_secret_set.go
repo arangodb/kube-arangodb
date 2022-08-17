@@ -38,7 +38,7 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeTimezoneCMSet, newTimezoneCMSetAction, operationTLSCACertificateTimeout)
+	registerAction(api.ActionTypeTimezoneSecretSet, newTimezoneCMSetAction, operationTLSCACertificateTimeout)
 }
 
 func newTimezoneCMSetAction(action api.Action, actionCtx ActionContext) Action {

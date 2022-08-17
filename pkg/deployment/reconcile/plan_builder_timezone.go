@@ -47,5 +47,5 @@ func (r *Reconciler) createTimezoneUpdatePlan(ctx context.Context, apiObject k8s
 		return nil
 	}
 
-	return api.Plan{actions.NewClusterAction(api.ActionTypeTimezoneCMSet, "Update timezone")}
+	return api.Plan{actions.NewClusterAction(api.ActionTypeTimezoneSecretSet, "Update timezone")}
 }
