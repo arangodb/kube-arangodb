@@ -47,6 +47,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f
 	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c
+	google.golang.org/genproto v0.0.0-20220617124728-180714bec0ad // indirect
 	google.golang.org/grpc v1.47.0
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	k8s.io/api v0.21.10
@@ -54,11 +55,6 @@ require (
 	k8s.io/apimachinery v0.21.10
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/klog v1.0.0
-)
-
-require (
-	github.com/arangodb/rebalancer v0.1.1 // indirect
-	google.golang.org/genproto v0.0.0-20220617124728-180714bec0ad // indirect
 )
 
 require (

@@ -1080,6 +1080,11 @@ func (in *DeploymentSpec) DeepCopyInto(out *DeploymentSpec) {
 		*out = make(ArangoDeploymentArchitecture, len(*in))
 		copy(*out, *in)
 	}
+	if in.Timezone != nil {
+		in, out := &in.Timezone, &out.Timezone
+		*out = new(string)
+		**out = **in
+	}
 	return
 }
 
@@ -1181,6 +1186,11 @@ func (in *DeploymentStatus) DeepCopyInto(out *DeploymentStatus) {
 	if in.Version != nil {
 		in, out := &in.Version, &out.Version
 		*out = new(Version)
+		**out = **in
+	}
+	if in.Timezone != nil {
+		in, out := &in.Timezone, &out.Timezone
+		*out = new(string)
 		**out = **in
 	}
 	if in.Single != nil {

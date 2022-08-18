@@ -56,6 +56,7 @@ const (
 	LifecycleVolumeName             = "lifecycle"
 	FoxxAppEphemeralVolumeName      = "ephemeral-apps"
 	TMPEphemeralVolumeName          = "ephemeral-tmp"
+	ArangoDTimezoneVolumeName       = "arangod-timezone"
 	RocksdbEncryptionVolumeName     = "rocksdb-encryption"
 	ExporterJWTVolumeName           = "exporter-jwt"
 	ArangodVolumeMountDir           = "/data"

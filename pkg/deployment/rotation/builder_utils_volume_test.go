@@ -18,25 +18,27 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package logging
+package rotation
 
-import "github.com/rs/zerolog"
+import core "k8s.io/api/core/v1"
 
-type Level zerolog.Level
+type podVolumeSpecBuilder func(in *core.Volume)
 
-func (l Level) New() *Level {
-	return &l
+func addVolume(name string, builders ...podVolumeSpecBuilder) podSpecBuilder {
+	return func(pod *core.PodTemplateSpec) {
+		var v core.Volume
+		v.Name = name
+
+		for _, b := range builders {
+			b(&v)
+		}
+
+		pod.Spec.Volumes = append(pod.Spec.Volumes, v)
+	}
 }
 
-const (
-	Trace = Level(zerolog.TraceLevel)
-	Debug = Level(zerolog.DebugLevel)
-	Info  = Level(zerolog.InfoLevel)
-	Warn  = Level(zerolog.WarnLevel)
-	Error = Level(zerolog.ErrorLevel)
-	Fatal = Level(zerolog.FatalLevel)
-)
-
-func (l Level) String() string {
-	return zerolog.Level(l).String()
+func addVolumeConfigMapSource(cm *core.ConfigMapVolumeSource) podVolumeSpecBuilder {
+	return func(in *core.Volume) {
+		in.ConfigMap = cm.DeepCopy()
+	}
 }

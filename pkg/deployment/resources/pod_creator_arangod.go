@@ -590,6 +590,8 @@ func CreateArangoDVolumes(status api.MemberStatus, input pod.Input, spec api.Dep
 	// SNI
 	volumes.Append(pod.SNI(), input)
 
+	volumes.Append(pod.Timezone(), input)
+
 	if len(groupSpec.Volumes) > 0 {
 		volumes.AddVolume(groupSpec.Volumes.RenderVolumes(input.ApiObject, input.Group, status)...)
 	}

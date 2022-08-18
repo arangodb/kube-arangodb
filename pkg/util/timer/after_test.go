@@ -18,25 +18,13 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package logging
+package timer
 
-import "github.com/rs/zerolog"
-
-type Level zerolog.Level
-
-func (l Level) New() *Level {
-	return &l
-}
-
-const (
-	Trace = Level(zerolog.TraceLevel)
-	Debug = Level(zerolog.DebugLevel)
-	Info  = Level(zerolog.InfoLevel)
-	Warn  = Level(zerolog.WarnLevel)
-	Error = Level(zerolog.ErrorLevel)
-	Fatal = Level(zerolog.FatalLevel)
+import (
+	"testing"
+	"time"
 )
 
-func (l Level) String() string {
-	return zerolog.Level(l).String()
+func Test_After(t *testing.T) {
+	<-After(250 * time.Millisecond)
 }

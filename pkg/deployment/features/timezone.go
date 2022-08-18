@@ -18,25 +18,20 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package logging
+package features
 
-import "github.com/rs/zerolog"
-
-type Level zerolog.Level
-
-func (l Level) New() *Level {
-	return &l
+func init() {
+	registerFeature(timezone)
 }
 
-const (
-	Trace = Level(zerolog.TraceLevel)
-	Debug = Level(zerolog.DebugLevel)
-	Info  = Level(zerolog.InfoLevel)
-	Warn  = Level(zerolog.WarnLevel)
-	Error = Level(zerolog.ErrorLevel)
-	Fatal = Level(zerolog.FatalLevel)
-)
+var timezone = &feature{
+	name:               "timezone-management",
+	description:        "Enable timezone management for pods",
+	version:            "3.6.0",
+	enterpriseRequired: false,
+	enabledByDefault:   false,
+}
 
-func (l Level) String() string {
-	return zerolog.Level(l).String()
+func Timezone() Feature {
+	return timezone
 }

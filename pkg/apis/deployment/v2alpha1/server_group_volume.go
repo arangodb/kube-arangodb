@@ -41,6 +41,7 @@ var (
 		shared.LifecycleVolumeName,
 		shared.FoxxAppEphemeralVolumeName,
 		shared.TMPEphemeralVolumeName,
+		shared.ArangoDTimezoneVolumeName,
 	}
 )
 

@@ -91,6 +91,8 @@ type DeploymentStatus struct {
 
 	Version *Version `json:"version,omitempty"`
 
+	Timezone *string `json:"timezone,omitempty"`
+
 	Single       *ServerGroupStatus `json:"single,omitempty"`
 	Agents       *ServerGroupStatus `json:"agents,omitempty"`
 	DBServers    *ServerGroupStatus `json:"dbservers,omitempty"`
@@ -126,7 +128,8 @@ func (ds *DeploymentStatus) Equal(other DeploymentStatus) bool {
 		ds.DBServers.Equal(other.DBServers) &&
 		ds.Coordinators.Equal(other.Coordinators) &&
 		ds.SyncMasters.Equal(other.SyncMasters) &&
-		ds.SyncWorkers.Equal(other.SyncWorkers)
+		ds.SyncWorkers.Equal(other.SyncWorkers) &&
+		util.CompareStringPointers(ds.Timezone, other.Timezone)
 }
 
 // IsForceReload returns true if ForceStatusReload is set to true

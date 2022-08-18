@@ -31,16 +31,38 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 )
 
-type compareFuncGen func(deploymentSpec api.DeploymentSpec, group api.ServerGroup, spec, status *core.PodSpec) compareFunc
-type compareFunc func(builder api.ActionBuilder) (mode Mode, plan api.Plan, err error)
+type comparePodFuncGen func(deploymentSpec api.DeploymentSpec, group api.ServerGroup, spec, status *core.PodSpec) comparePodFunc
+type comparePodFunc func(builder api.ActionBuilder) (mode Mode, plan api.Plan, err error)
 
-func generator(deploymentSpec api.DeploymentSpec, group api.ServerGroup, spec, status *core.PodSpec) func(c compareFuncGen) compareFunc {
-	return func(c compareFuncGen) compareFunc {
+func podFuncGenerator(deploymentSpec api.DeploymentSpec, group api.ServerGroup, spec, status *core.PodSpec) func(c comparePodFuncGen) comparePodFunc {
+	return func(c comparePodFuncGen) comparePodFunc {
 		return c(deploymentSpec, group, spec, status)
 	}
 }
 
-func compareFuncs(builder api.ActionBuilder, f ...compareFunc) (mode Mode, plan api.Plan, err error) {
+type comparePodContainerFuncGen func(deploymentSpec api.DeploymentSpec, group api.ServerGroup, spec, status *core.Container) comparePodContainerFunc
+type comparePodContainerFunc func(builder api.ActionBuilder) (mode Mode, plan api.Plan, err error)
+
+func podContainerFuncGenerator(deploymentSpec api.DeploymentSpec, group api.ServerGroup, spec, status *core.Container) func(c comparePodContainerFuncGen) comparePodContainerFunc {
+	return func(c comparePodContainerFuncGen) comparePodContainerFunc {
+		return c(deploymentSpec, group, spec, status)
+	}
+}
+
+func comparePodContainer(builder api.ActionBuilder, f ...comparePodContainerFunc) (mode Mode, plan api.Plan, err error) {
+	for _, q := range f {
+		if m, p, err := q(builder); err != nil {
+			return 0, nil, err
+		} else {
+			mode = mode.And(m)
+			plan = append(plan, p...)
+		}
+	}
+
+	return
+}
+
+func comparePod(builder api.ActionBuilder, f ...comparePodFunc) (mode Mode, plan api.Plan, err error) {
 	for _, q := range f {
 		if m, p, err := q(builder); err != nil {
 			return 0, nil, err
@@ -69,9 +91,9 @@ func compare(deploymentSpec api.DeploymentSpec, member api.MemberStatus, group a
 	// Try to fill fields
 	b := actions.NewActionBuilderWrap(group, member)
 
-	g := generator(deploymentSpec, group, &spec.PodSpec.Spec, &podStatus.Spec)
+	g := podFuncGenerator(deploymentSpec, group, &spec.PodSpec.Spec, &podStatus.Spec)
 
-	if m, p, err := compareFuncs(b, g(podCompare), g(affinityCompare), g(containersCompare), g(initContainersCompare)); err != nil {
+	if m, p, err := comparePod(b, g(podCompare), g(affinityCompare), g(comparePodVolumes), g(containersCompare), g(initContainersCompare)); err != nil {
 		log.Err(err).Msg("Error while getting pod diff")
 		return SkippedRotation, nil, err
 	} else {
