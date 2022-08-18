@@ -16,6 +16,7 @@
 - (QA) Member maintenance feature
 - (Feature) Extract Pod Details
 - (Feature) Add Timezone management
+- (Bugfix) Always recreate DBServers if they have a leader on it.
 
 ## [1.2.15](https://github.com/arangodb/kube-arangodb/tree/1.2.15) (2022-07-20)
 - (Bugfix) Ensure pod names not too long

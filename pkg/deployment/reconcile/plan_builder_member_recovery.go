@@ -80,6 +80,13 @@ func (r *Reconciler) createMemberFailedRestoreInternal(_ context.Context, _ k8su
 					continue
 				}
 
+				if agencyState.Plan.Collections.IsDBServerLeader(agency.Server(m.ID)) {
+					memberLog.Info("Recreating leader DBServer - it cannot be removed gracefully")
+					plan = append(plan, actions.NewAction(api.ActionTypeRecreateMember, group, m))
+
+					continue
+				}
+
 				if c := spec.DBServers.GetCount(); c <= len(members)-failed {
 					// There are more or equal alive members than current count. A member should not be recreated.
 					continue

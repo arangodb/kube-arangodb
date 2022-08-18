@@ -31,11 +31,29 @@ func (a StatePlanCollections) IsDBServerPresent(name Server) bool {
 	return false
 }
 
+func (a StatePlanCollections) IsDBServerLeader(name Server) bool {
+	for _, collections := range a {
+		if collections.IsDBServerLeaderInCollections(name) {
+			return true
+		}
+	}
+	return false
+}
+
 type StatePlanDBCollections map[string]StatePlanCollection
 
 func (a StatePlanDBCollections) IsDBServerInCollections(name Server) bool {
 	for _, collection := range a {
 		if collection.IsDBServerInShards(name) {
+			return true
+		}
+	}
+	return false
+}
+
+func (a StatePlanDBCollections) IsDBServerLeaderInCollections(name Server) bool {
+	for _, collection := range a {
+		if collection.IsDBServerLeader(name) {
 			return true
 		}
 	}
@@ -116,6 +134,22 @@ func (a *StatePlanCollection) IsDBServerInShards(name Server) bool {
 
 	for _, planShards := range a.Shards {
 		if planShards.Contains(name) {
+			return true
+		}
+	}
+	return false
+}
+
+func (a *StatePlanCollection) IsDBServerLeader(name Server) bool {
+	if a == nil {
+		return false
+	}
+
+	for _, servers := range a.Shards {
+		if len(servers) == 0 {
+			continue
+		}
+		if servers[0] == name {
 			return true
 		}
 	}
