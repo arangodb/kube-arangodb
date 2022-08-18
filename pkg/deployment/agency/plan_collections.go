@@ -146,6 +146,9 @@ func (a *StatePlanCollection) IsDBServerLeader(name Server) bool {
 	}
 
 	for _, servers := range a.Shards {
+		if len(servers) == 0 {
+			continue
+		}
 		if servers[0] == name {
 			return true
 		}
