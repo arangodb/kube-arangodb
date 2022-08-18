@@ -90,7 +90,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 
 	agencyCache, agencyCachePresent := r.context.GetAgencyCache()
 
-	status, lastVersion := r.context.GetStatus()
+	status := r.context.GetStatus()
 	var podNamesWithScheduleTimeout []string
 	var unscheduledPodNames []string
 
@@ -445,7 +445,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 	}
 
 	// Save status
-	if err := r.context.UpdateStatus(ctx, status, lastVersion); err != nil {
+	if err := r.context.UpdateStatus(ctx, status); err != nil {
 		return 0, errors.WithStack(err)
 	}
 

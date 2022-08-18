@@ -102,7 +102,7 @@ func (a actionImpl) wrap(in *zerolog.Event) *zerolog.Event {
 		Str("group", a.action.Group.AsRole()).
 		Str("member-id", a.action.MemberID)
 
-	if status, _ := a.actionCtx.GetStatus(); status.Members.ContainsID(a.action.MemberID) {
+	if status := a.actionCtx.GetStatus(); status.Members.ContainsID(a.action.MemberID) {
 		if member, _, ok := status.Members.ElementByID(a.action.MemberID); ok {
 			in = in.Str("phase", string(member.Phase))
 		}

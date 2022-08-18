@@ -284,9 +284,9 @@ func (dr *DeploymentReplication) updateCRStatus() error {
 	}
 }
 
-// Update the spec part of the API object (d.apiObject)
+// Update the spec part of the API object (d.currentObject)
 // to the given object, while preserving the status.
-// On success, d.apiObject is updated.
+// On success, d.currentObject is updated.
 func (dr *DeploymentReplication) updateCRSpec(newSpec api.DeploymentReplicationSpec) error {
 	log := dr.log
 	repls := dr.deps.Client.Arango().ReplicationV1().ArangoDeploymentReplications(dr.apiObject.GetNamespace())

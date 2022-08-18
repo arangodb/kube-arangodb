@@ -382,9 +382,9 @@ func (ls *LocalStorage) updateCRStatus() error {
 	}
 }
 
-// Update the spec part of the API object (d.apiObject)
+// Update the spec part of the API object (d.currentObject)
 // to the given object, while preserving the status.
-// On success, d.apiObject is updated.
+// On success, d.currentObject is updated.
 func (ls *LocalStorage) updateCRSpec(newSpec api.LocalStorageSpec) error {
 	// Send update to API server
 	update := ls.apiObject.DeepCopy()

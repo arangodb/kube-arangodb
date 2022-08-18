@@ -62,7 +62,7 @@ func (r *Reconciler) WrapLogger(in *zerolog.Event) *zerolog.Event {
 // CheckDeployment checks for obviously broken things and fixes them immediately
 func (r *Reconciler) CheckDeployment(ctx context.Context) error {
 	spec := r.context.GetSpec()
-	status, _ := r.context.GetStatus()
+	status := r.context.GetStatus()
 
 	if spec.GetMode().HasCoordinators() {
 		// Check if there are coordinators

@@ -87,15 +87,15 @@ type imagesBuilder struct {
 // ensureImages creates pods needed to detect ImageID for specified images.
 // Returns: retrySoon, error
 func (d *Deployment) ensureImages(ctx context.Context, apiObject *api.ArangoDeployment, cachedStatus inspectorInterface.Inspector) (bool, bool, error) {
-	status, lastVersion := d.GetStatus()
+	status := d.GetStatus()
 	ib := imagesBuilder{
 		Context:   d,
 		APIObject: apiObject,
-		Spec:      apiObject.Spec,
+		Spec:      apiObject.GetAcceptedSpec(),
 		Status:    status,
 		Log:       d.log,
 		UpdateCRStatus: func(status api.DeploymentStatus) error {
-			if err := d.UpdateStatus(ctx, status, lastVersion); err != nil {
+			if err := d.UpdateStatus(ctx, status); err != nil {
 				return errors.WithStack(err)
 			}
 			return nil

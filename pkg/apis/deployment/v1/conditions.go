@@ -64,6 +64,8 @@ const (
 	ConditionTypeTerminating ConditionType = "Terminating"
 	// ConditionTypeUpToDate indicates that the deployment is up to date.
 	ConditionTypeUpToDate ConditionType = "UpToDate"
+	// ConditionTypeSpecAccepted indicates that the deployment spec has been accepted.
+	ConditionTypeSpecAccepted ConditionType = "SpecAccepted"
 	// ConditionTypeMarkedToRemove indicates that the member is marked to be removed.
 	ConditionTypeMarkedToRemove ConditionType = "MarkedToRemove"
 	// ConditionTypeUpgradeFailed indicates that upgrade failed

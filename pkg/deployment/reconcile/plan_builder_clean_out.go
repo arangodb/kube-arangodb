@@ -22,13 +22,9 @@ package reconcile
 
 import (
 	"context"
-	"strconv"
-
-	"github.com/arangodb/go-driver"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -40,53 +36,23 @@ func (r *Reconciler) createCleanOutPlan(ctx context.Context, _ k8sutil.APIObject
 		return nil
 	}
 
-	if !status.Conditions.IsTrue(api.ConditionTypeUpToDate) {
-		// Do not consider to mark cleanedout servers when changes are propagating
-		return nil
-	}
-
-	cluster, err := getCluster(ctx, planCtx)
-	if err != nil {
-		r.log.Err(err).Warn("Unable to get cluster")
-		return nil
-	}
-
-	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	health, err := cluster.Health(ctxChild)
-	if err != nil {
-		r.log.Err(err).Warn("Unable to get cluster health")
-		return nil
-	}
-
 	var plan api.Plan
 
-	for id, member := range health.Health {
-		switch member.Role {
-		case driver.ServerRoleDBServer:
-			memberStatus, ok := status.Members.DBServers.ElementByID(string(id))
-			if !ok {
-				continue
-			}
+	cache, ok := planCtx.GetAgencyCache()
+	if !ok {
+		r.log.Debug("AgencyCache is not ready")
+		return nil
+	}
 
-			if memberStatus.Conditions.IsTrue(api.ConditionTypeCleanedOut) {
-				continue
-			}
+	for _, m := range status.Members.AsListInGroup(api.ServerGroupDBServers) {
+		cleanedStatus := m.Member.Conditions.IsTrue(api.ConditionTypeCleanedOut)
+		cleanedAgency := cache.Target.CleanedServers.Contains(agency.Server(m.Member.ID))
 
-			if isCleanedOut, err := cluster.IsCleanedOut(ctx, string(id)); err != nil {
-				r.log.Err(err).Str("id", string(id)).Warn("Unable to get clean out status")
-				return nil
-			} else if isCleanedOut {
-				r.log.
-					Str("role", string(member.Role)).
-					Str("id", string(id)).
-					Info("server is cleaned out so operator must do the same")
-
-				action := actions.NewAction(api.ActionTypeSetMemberCondition, api.ServerGroupDBServers, withPredefinedMember(string(id)),
-					"server is cleaned out so operator must do the same").
-					AddParam(string(api.ConditionTypeCleanedOut), strconv.FormatBool(true))
-
-				plan = append(plan, action)
+		if cleanedStatus != cleanedAgency {
+			if cleanedAgency {
+				plan = append(plan, updateMemberConditionActionV2("DBServer cleaned", api.ConditionTypeCleanedOut, m.Group, m.Member.ID, true, "DBServer cleaned", "DBServer cleaned", ""))
+			} else {
+				plan = append(plan, removeMemberConditionActionV2("DBServer is not cleaned", api.ConditionTypeCleanedOut, m.Group, m.Member.ID))
 			}
 		}
 	}

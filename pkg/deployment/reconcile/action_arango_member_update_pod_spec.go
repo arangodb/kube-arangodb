@@ -57,7 +57,7 @@ type actionArangoMemberUpdatePodSpec struct {
 // the start time needs to be recorded and a ready condition needs to be checked.
 func (a *actionArangoMemberUpdatePodSpec) Start(ctx context.Context) (bool, error) {
 	spec := a.actionCtx.GetSpec()
-	status := a.actionCtx.GetStatusSnapshot()
+	status := a.actionCtx.GetStatus()
 
 	m, found := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !found {

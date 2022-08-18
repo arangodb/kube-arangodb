@@ -31,12 +31,34 @@ type Metrics struct {
 		Fetches uint64
 		Index   uint64
 	}
+
+	Errors struct {
+		DeploymentValidationErrors, DeploymentImmutableErrors uint64
+	}
+
+	Deployment struct {
+		Accepted, UpToDate bool
+	}
 }
 
 func (d *Deployment) CollectMetrics(m metrics.PushMetric) {
 	m.Push(metric_descriptions.ArangodbOperatorAgencyErrorsCounter(float64(d.metrics.Agency.Errors), d.namespace, d.name))
 	m.Push(metric_descriptions.ArangodbOperatorAgencyFetchesCounter(float64(d.metrics.Agency.Fetches), d.namespace, d.name))
 	m.Push(metric_descriptions.ArangodbOperatorAgencyIndexGauge(float64(d.metrics.Agency.Index), d.namespace, d.name))
+
+	m.Push(metric_descriptions.ArangodbOperatorResourcesArangodeploymentValidationErrorsCounter(float64(d.metrics.Errors.DeploymentValidationErrors), d.namespace, d.name))
+	m.Push(metric_descriptions.ArangodbOperatorResourcesArangodeploymentImmutableErrorsCounter(float64(d.metrics.Errors.DeploymentValidationErrors), d.namespace, d.name))
+
+	if d.metrics.Deployment.Accepted {
+		m.Push(metric_descriptions.ArangodbOperatorResourcesArangodeploymentAcceptedGauge(1, d.namespace, d.name))
+	} else {
+		m.Push(metric_descriptions.ArangodbOperatorResourcesArangodeploymentAcceptedGauge(0, d.namespace, d.name))
+	}
+	if d.metrics.Deployment.UpToDate {
+		m.Push(metric_descriptions.ArangodbOperatorResourcesArangodeploymentUptodateGauge(1, d.namespace, d.name))
+	} else {
+		m.Push(metric_descriptions.ArangodbOperatorResourcesArangodeploymentUptodateGauge(0, d.namespace, d.name))
+	}
 
 	if c := d.agencyCache; c != nil {
 		m.Push(metric_descriptions.ArangodbOperatorAgencyCachePresentGauge(1, d.namespace, d.name))

@@ -80,7 +80,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 		// Deployment is marked for deletion
 		if err := d.runDeploymentFinalizers(ctxReconciliation, d.GetCachedStatus()); err != nil {
 			hasError = true
-			d.CreateEvent(k8sutil.NewErrorEvent("ArangoDeployment finalizer inspection failed", err, d.apiObject))
+			d.CreateEvent(k8sutil.NewErrorEvent("ArangoDeployment finalizer inspection failed", err, d.currentObject))
 		}
 	} else {
 		// Check if maintenance annotation is set
@@ -91,13 +91,55 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 				return nextInterval
 			}
 		}
+
+		if ensureFinalizers(updated) {
+			if err := d.ApplyPatch(ctxReconciliation, patch.ItemReplace(patch.NewPath("metadata", "finalizers"), updated.Finalizers)); err != nil {
+				d.log.Err(err).Debug("Unable to set finalizers")
+			}
+		}
+
+		if canProceed, changed, err := d.acceptNewSpec(ctxReconciliation, updated); err != nil {
+			d.log.Err(err).Debug("Verification of deployment failed")
+
+			if !canProceed {
+				return minInspectionInterval // Retry ASAP
+			}
+		} else if changed {
+			d.log.Info("Accepted new spec")
+			// Notify cluster of desired server count
+			if ci := d.clusterScalingIntegration; ci != nil {
+				if c := d.currentObjectStatus; c != nil {
+					if a := c.AcceptedSpec; a != nil {
+						if c.Conditions.IsTrue(api.ConditionTypeUpToDate) {
+							ci.SendUpdateToCluster(*a)
+						}
+					}
+				}
+			}
+			return minInspectionInterval // Retry ASAP
+		} else if !canProceed {
+			d.log.Err(err).Error("Cannot proceed with reconciliation")
+			return minInspectionInterval // Retry ASAP
+		}
+
+		// Ensure that status is up to date
+		if !d.currentObjectStatus.Equal(updated.Status) {
+			if err := d.updateCRStatus(ctxReconciliation, *d.currentObjectStatus); err != nil {
+				d.log.Err(err).Error("Unable to refresh status")
+				return minInspectionInterval // Retry ASAP
+			}
+		}
+
+		d.currentObject = updated
+
+		d.metrics.Deployment.Accepted = updated.Status.Conditions.IsTrue(api.ConditionTypeSpecAccepted)
+		d.metrics.Deployment.UpToDate = updated.Status.Conditions.IsTrue(api.ConditionTypeUpToDate)
+
 		// Is the deployment in failed state, if so, give up.
 		if d.GetPhase() == api.DeploymentPhaseFailed {
 			d.log.Debug("Deployment is in Failed state.")
 			return nextInterval
 		}
-
-		d.apiObject = updated
 
 		d.GetMembersState().RefreshState(ctxReconciliation, updated.Status.Members.AsList())
 		d.GetMembersState().Log(d.log)
@@ -108,7 +150,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 				return changed, nil
 			}
 		}); err != nil {
-			d.CreateEvent(k8sutil.NewErrorEvent("Upgrade failed", err, d.apiObject))
+			d.CreateEvent(k8sutil.NewErrorEvent("Upgrade failed", err, d.currentObject))
 			nextInterval = minInspectionInterval
 			d.recentInspectionErrors++
 			return nextInterval.ReduceTo(maxInspectionInterval)
@@ -120,7 +162,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 				nextInterval = inspectNextInterval
 				hasError = true
 
-				d.CreateEvent(k8sutil.NewErrorEvent("Reconciliation failed", err, d.apiObject))
+				d.CreateEvent(k8sutil.NewErrorEvent("Reconciliation failed", err, d.currentObject))
 			} else {
 				nextInterval = minInspectionInterval
 			}
@@ -148,27 +190,47 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	}()
 
 	// Ensure that spec and status checksum are same
-	spec := d.GetSpec()
-	status, _ := d.getStatus()
+	currentSpec := d.currentObject.Spec
+	status := d.GetStatus()
 
 	nextInterval = lastInterval
 	inspectError = nil
 
-	checksum, err := spec.Checksum()
+	currentChecksum, err := currentSpec.Checksum()
 	if err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Calculation of spec failed")
 	} else {
+		condition, exists := status.Conditions.Get(api.ConditionTypeSpecAccepted)
+		if v := status.AcceptedSpecVersion; (v == nil || currentChecksum != *v) && (!exists || condition.IsTrue()) {
+			if err = d.updateConditionWithHash(ctx, api.ConditionTypeSpecAccepted, false, "Spec Changed", "Spec Object changed. Waiting to be accepted", currentChecksum); err != nil {
+				return minInspectionInterval, errors.Wrapf(err, "Unable to update SpecAccepted condition")
+			}
+
+			return minInspectionInterval, nil // Retry ASAP
+		} else if v != nil {
+			if *v == currentChecksum && !condition.IsTrue() {
+				if err = d.updateConditionWithHash(ctx, api.ConditionTypeSpecAccepted, true, "Spec Accepted", "Spec Object accepted", currentChecksum); err != nil {
+					return minInspectionInterval, errors.Wrapf(err, "Unable to update SpecAccepted condition")
+				}
+
+				return minInspectionInterval, nil // Retry ASAP
+			}
+		}
+	}
+
+	if !status.Conditions.IsTrue(api.ConditionTypeSpecAccepted) {
 		condition, exists := status.Conditions.Get(api.ConditionTypeUpToDate)
-		if checksum != status.AppliedVersion && (!exists || condition.IsTrue()) {
-			if err = d.updateConditionWithHash(ctx, api.ConditionTypeUpToDate, false, "Spec Changed", "Spec Object changed. Waiting until plan will be applied", checksum); err != nil {
+		if !exists || condition.IsTrue() {
+			if err = d.updateConditionWithHash(ctx, api.ConditionTypeUpToDate, false, "Spec Changed", "Spec Object changed. Waiting until plan will be applied", currentChecksum); err != nil {
 				return minInspectionInterval, errors.Wrapf(err, "Unable to update UpToDate condition")
+
 			}
 
 			return minInspectionInterval, nil // Retry ASAP
 		}
 	}
 
-	if err := d.acs.Inspect(ctx, d.apiObject, d.deps.Client, d.GetCachedStatus()); err != nil {
+	if err := d.acs.Inspect(ctx, d.currentObject, d.deps.Client, d.GetCachedStatus()); err != nil {
 		d.log.Err(err).Warn("Unable to handle ACS objects")
 	}
 
@@ -211,7 +273,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	}
 
 	// Ensure we have image info
-	if retrySoon, exists, err := d.ensureImages(ctx, d.apiObject, d.GetCachedStatus()); err != nil {
+	if retrySoon, exists, err := d.ensureImages(ctx, d.currentObject, d.GetCachedStatus()); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Image detection failed")
 	} else if retrySoon || !exists {
 		return minInspectionInterval, nil
@@ -258,7 +320,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	d.refreshMaintenanceTTL(ctx)
 
 	// Create scale/update plan
-	if _, ok := d.apiObject.Annotations[deployment.ArangoDeploymentPlanCleanAnnotation]; ok {
+	if _, ok := d.currentObject.Annotations[deployment.ArangoDeploymentPlanCleanAnnotation]; ok {
 		if err := d.ApplyPatch(ctx, patch.ItemRemove(patch.NewPath("metadata", "annotations", deployment.ArangoDeploymentPlanCleanAnnotation))); err != nil {
 			return minInspectionInterval, errors.Wrapf(err, "Unable to create remove annotation patch")
 		}
@@ -266,7 +328,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 		if err := d.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
 			s.Plan = nil
 			return true
-		}, true); err != nil {
+		}); err != nil {
 			return minInspectionInterval, errors.Wrapf(err, "Unable clean plan")
 		}
 	} else if err, updated := d.reconciler.CreatePlan(ctx); err != nil {
@@ -292,20 +354,20 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 		}
 	}
 
-	if d.apiObject.Status.IsPlanEmpty() && status.AppliedVersion != checksum {
+	if v := status.AcceptedSpecVersion; v != nil && d.currentObject.Status.IsPlanEmpty() && status.AppliedVersion != *v {
 		if err := d.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
-			s.AppliedVersion = checksum
+			s.AppliedVersion = *v
 			return true
 		}); err != nil {
 			return minInspectionInterval, errors.Wrapf(err, "Unable to update UpToDate condition")
 		}
 
 		return minInspectionInterval, nil
-	} else if status.AppliedVersion == checksum {
+	} else {
 		isUpToDate, reason := d.isUpToDateStatus(status)
 
 		if !isUpToDate && status.Conditions.IsTrue(api.ConditionTypeUpToDate) {
-			if err = d.updateConditionWithHash(ctx, api.ConditionTypeUpToDate, false, reason, "There are pending operations in plan or members are in restart process", checksum); err != nil {
+			if err = d.updateConditionWithHash(ctx, api.ConditionTypeUpToDate, false, reason, "There are pending operations in plan or members are in restart process", *v); err != nil {
 				return minInspectionInterval, errors.Wrapf(err, "Unable to update UpToDate condition")
 			}
 
@@ -313,7 +375,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 		}
 
 		if isUpToDate && !status.Conditions.IsTrue(api.ConditionTypeUpToDate) {
-			if err = d.updateConditionWithHash(ctx, api.ConditionTypeUpToDate, true, "Spec is Up To Date", "Spec is Up To Date", checksum); err != nil {
+			if err = d.updateConditionWithHash(ctx, api.ConditionTypeUpToDate, true, "Spec is Up To Date", "Spec is Up To Date", *v); err != nil {
 				return minInspectionInterval, errors.Wrapf(err, "Unable to update UpToDate condition")
 			}
 
@@ -359,6 +421,18 @@ func (d *Deployment) isUpToDateStatus(status api.DeploymentStatus) (upToDate boo
 
 	upToDate = true
 
+	if v := status.AcceptedSpecVersion; v == nil || status.AppliedVersion != *v {
+		upToDate = false
+		reason = "Spec is not accepted"
+		return
+	}
+
+	if !status.Conditions.Check(api.ConditionTypeSpecAccepted).Exists().IsTrue().Evaluate() {
+		upToDate = false
+		reason = "Spec is not accepted"
+		return
+	}
+
 	if !status.Conditions.Check(api.ConditionTypeReachable).Exists().IsTrue().Evaluate() {
 		upToDate = false
 		return
@@ -382,7 +456,7 @@ func (d *Deployment) isUpToDateStatus(status api.DeploymentStatus) (upToDate boo
 }
 
 func (d *Deployment) refreshMaintenanceTTL(ctx context.Context) {
-	if d.apiObject.Spec.Mode.Get() == api.DeploymentModeSingle {
+	if d.GetSpec().Mode.Get() == api.DeploymentModeSingle {
 		return
 	}
 
@@ -396,7 +470,9 @@ func (d *Deployment) refreshMaintenanceTTL(ctx context.Context) {
 		return
 	}
 
-	condition, ok := d.status.last.Conditions.Get(api.ConditionTypeMaintenance)
+	status := d.GetStatus()
+
+	condition, ok := status.Conditions.Get(api.ConditionTypeMaintenance)
 	maintenance := agencyState.Supervision.Maintenance
 
 	if !ok || !condition.IsTrue() {
@@ -405,14 +481,14 @@ func (d *Deployment) refreshMaintenanceTTL(ctx context.Context) {
 
 	// Check GracePeriod
 	if t, ok := maintenance.Time(); ok {
-		if time.Until(t) < time.Hour-d.apiObject.Spec.Timeouts.GetMaintenanceGracePeriod() {
+		if time.Until(t) < time.Hour-d.GetSpec().Timeouts.GetMaintenanceGracePeriod() {
 			if err := d.SetAgencyMaintenanceMode(ctx, true); err != nil {
 				return
 			}
 			d.log.Info("Refreshed maintenance lock")
 		}
 	} else {
-		if condition.LastUpdateTime.Add(d.apiObject.Spec.Timeouts.GetMaintenanceGracePeriod()).Before(time.Now()) {
+		if condition.LastUpdateTime.Add(d.GetSpec().Timeouts.GetMaintenanceGracePeriod()).Before(time.Now()) {
 			if err := d.SetAgencyMaintenanceMode(ctx, true); err != nil {
 				return
 			}

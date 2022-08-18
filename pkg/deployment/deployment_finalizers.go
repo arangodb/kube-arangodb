@@ -34,18 +34,34 @@ import (
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 )
 
+var expectedFinalizers = []string{
+	constants.FinalizerDeplRemoveChildFinalizers,
+}
+
 // ensureFinalizers adds all required finalizers to the given deployment (in memory).
 func ensureFinalizers(depl *api.ArangoDeployment) bool {
+	fx := make(map[string]bool, len(expectedFinalizers))
+
+	st := len(depl.Finalizers)
+
+	for _, fn := range expectedFinalizers {
+		fx[fn] = false
+	}
+
 	for _, f := range depl.GetFinalizers() {
-		if f == constants.FinalizerDeplRemoveChildFinalizers {
-			// Finalizer already set
-			return false
+		if _, ok := fx[f]; ok {
+			fx[f] = true
 		}
 	}
-	// Set finalizers
-	depl.SetFinalizers(append(depl.GetFinalizers(), constants.FinalizerDeplRemoveChildFinalizers))
 
-	return true
+	for _, fn := range expectedFinalizers {
+		if !fx[fn] {
+			depl.Finalizers = append(depl.Finalizers, fn)
+		}
+	}
+
+	// Set finalizers
+	return st != len(depl.Finalizers)
 }
 
 // runDeploymentFinalizers goes through the list of ArangoDeployoment finalizers to see if they can be removed.
@@ -55,7 +71,7 @@ func (d *Deployment) runDeploymentFinalizers(ctx context.Context, cachedStatus i
 	depls := d.deps.Client.Arango().DatabaseV1().ArangoDeployments(d.GetNamespace())
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
-	updated, err := depls.Get(ctxChild, d.apiObject.GetName(), meta.GetOptions{})
+	updated, err := depls.Get(ctxChild, d.currentObject.GetName(), meta.GetOptions{})
 	if err != nil {
 		return errors.WithStack(err)
 	}

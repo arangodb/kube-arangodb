@@ -34,6 +34,9 @@ type DeploymentStatus struct {
 	// AppliedVersion defines checksum of applied spec
 	AppliedVersion string `json:"appliedVersion"`
 
+	// AcceptedSpecVersion defines checksum of accepted spec
+	AcceptedSpecVersion *string `json:"acceptedSpecVersion,omitempty"`
+
 	// ServiceName holds the name of the Service a client can use (inside the k8s cluster)
 	// to access ArangoDB.
 	ServiceName string `json:"serviceName,omitempty"`
@@ -117,6 +120,7 @@ func (ds *DeploymentStatus) Equal(other DeploymentStatus) bool {
 		ds.Plan.Equal(other.Plan) &&
 		ds.HighPriorityPlan.Equal(other.HighPriorityPlan) &&
 		ds.ResourcesPlan.Equal(other.ResourcesPlan) &&
+		util.CompareStringPointers(ds.AcceptedSpecVersion, other.AcceptedSpecVersion) &&
 		ds.AcceptedSpec.Equal(other.AcceptedSpec) &&
 		ds.SecretHashes.Equal(other.SecretHashes) &&
 		ds.Agency.Equal(other.Agency) &&

@@ -57,7 +57,7 @@ func (r *Resources) InspectPVCs(ctx context.Context, cachedStatus inspectorInter
 	defer metrics.SetDuration(inspectPVCsDurationGauges.WithLabelValues(deploymentName), start)
 
 	// Update member status from all pods found
-	status, _ := r.context.GetStatus()
+	status := r.context.GetStatus()
 	if err := cachedStatus.PersistentVolumeClaim().V1().Iterate(func(pvc *core.PersistentVolumeClaim) error {
 		// PVC belongs to this deployment, update metric
 		inspectedPVCsCounters.WithLabelValues(deploymentName).Inc()

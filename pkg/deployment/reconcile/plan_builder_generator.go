@@ -48,7 +48,7 @@ func (d *Reconciler) generatePlanFunc(gen planGeneratorFunc, planner planner) pl
 		// Create plan
 		apiObject := d.context.GetAPIObject()
 		spec := d.context.GetSpec()
-		status, _ := d.context.GetStatus()
+		status := d.context.GetStatus()
 		builderCtx := newPlanBuilderContext(d.context)
 		newPlan, backoffs, changed := gen(ctx, apiObject, planner.Get(&status), spec, status, builderCtx)
 

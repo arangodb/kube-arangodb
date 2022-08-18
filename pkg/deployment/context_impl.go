@@ -80,12 +80,12 @@ func (d *Deployment) GetBackup(ctx context.Context, backup string) (*backupApi.A
 
 // GetAPIObject returns the deployment as k8s object.
 func (d *Deployment) GetAPIObject() k8sutil.APIObject {
-	return d.apiObject
+	return d.currentObject
 }
 
 // GetServerGroupIterator returns the deployment as ServerGroupIterator.
 func (d *Deployment) GetServerGroupIterator() reconciler.ServerGroupIterator {
-	return d.apiObject
+	return d.currentObject
 }
 
 func (d *Deployment) GetScope() scope.Scope {
@@ -104,59 +104,45 @@ func (d *Deployment) GetNamespace() string {
 
 // GetPhase returns the current phase of the deployment
 func (d *Deployment) GetPhase() api.DeploymentPhase {
-	return d.status.last.Phase
+	return d.currentObject.Status.Phase
 }
 
 // GetSpec returns the current specification
 func (d *Deployment) GetSpec() api.DeploymentSpec {
-	return d.apiObject.Spec
+	d.currentObjectLock.RLock()
+	defer d.currentObjectLock.RUnlock()
+
+	if s := d.currentObject.Status.AcceptedSpec; s == nil {
+		return d.currentObject.Spec
+	} else {
+		return *s
+	}
 }
 
 // GetStatus returns the current status of the deployment
 // together with the current version of that status.
-func (d *Deployment) GetStatus() (api.DeploymentStatus, int32) {
-	return d.getStatus()
-}
+func (d *Deployment) GetStatus() api.DeploymentStatus {
+	d.currentObjectLock.RLock()
+	defer d.currentObjectLock.RUnlock()
 
-func (d *Deployment) getStatus() (api.DeploymentStatus, int32) {
-	obj := d.status.deploymentStatusObject
-	return *obj.last.DeepCopy(), obj.version
+	if s := d.currentObjectStatus; s == nil {
+		return api.DeploymentStatus{}
+	} else {
+		return *s.DeepCopy()
+	}
 }
 
 // UpdateStatus replaces the status of the deployment with the given status and
 // updates the resources in k8s.
 // If the given last version does not match the actual last version of the status object,
 // an error is returned.
-func (d *Deployment) UpdateStatus(ctx context.Context, status api.DeploymentStatus, lastVersion int32, force ...bool) error {
-	d.status.mutex.Lock()
-	defer d.status.mutex.Unlock()
-
-	return d.updateStatus(ctx, status, lastVersion, force...)
-}
-
-func (d *Deployment) updateStatus(ctx context.Context, status api.DeploymentStatus, lastVersion int32, force ...bool) error {
-	if d.status.version != lastVersion {
-		// Status is obsolete
-		d.log.
-			Int32("expected-version", lastVersion).
-			Int32("actual-version", d.status.version).
-			Error("UpdateStatus version conflict error.")
-		return errors.WithStack(errors.Newf("Status conflict error. Expected version %d, got %d", lastVersion, d.status.version))
-	}
-
-	d.status.deploymentStatusObject = deploymentStatusObject{
-		version: d.status.deploymentStatusObject.version + 1,
-		last:    *status.DeepCopy(),
-	}
-	if err := d.updateCRStatus(ctx, force...); err != nil {
-		return errors.WithStack(err)
-	}
-	return nil
+func (d *Deployment) UpdateStatus(ctx context.Context, status api.DeploymentStatus) error {
+	return d.updateCRStatus(ctx, status)
 }
 
 // UpdateMember updates the deployment status wrt the given member.
 func (d *Deployment) UpdateMember(ctx context.Context, member api.MemberStatus) error {
-	status, lastVersion := d.GetStatus()
+	status := d.GetStatus()
 	_, group, found := status.Members.ElementByID(member.ID)
 	if !found {
 		return errors.WithStack(errors.Newf("Member %s not found", member.ID))
@@ -164,7 +150,7 @@ func (d *Deployment) UpdateMember(ctx context.Context, member api.MemberStatus) 
 	if err := status.Members.Update(member, group); err != nil {
 		return errors.WithStack(err)
 	}
-	if err := d.UpdateStatus(ctx, status, lastVersion); err != nil {
+	if err := d.UpdateStatus(ctx, status); err != nil {
 		d.log.Err(err).Debug("Updating CR status failed")
 		return errors.WithStack(err)
 	}
@@ -233,7 +219,7 @@ func (d *Deployment) getConnConfig() (http.ConnectionConfig, error) {
 		ExpectContinueTimeout: 1 * time.Second,
 	}
 
-	if d.apiObject.Spec.TLS.IsSecure() {
+	if d.GetSpec().TLS.IsSecure() {
 		transport.TLSClientConfig = &tls.Config{
 			InsecureSkipVerify: true,
 		}
@@ -248,7 +234,7 @@ func (d *Deployment) getConnConfig() (http.ConnectionConfig, error) {
 }
 
 func (d *Deployment) getAuth() (driver.Authentication, error) {
-	if !d.apiObject.Spec.Authentication.IsAuthenticated() {
+	if !d.GetSpec().Authentication.IsAuthenticated() {
 		return nil, nil
 	}
 
@@ -260,7 +246,7 @@ func (d *Deployment) getAuth() (driver.Authentication, error) {
 	var found bool
 
 	// Check if we can find token in folder
-	if i := d.apiObject.Status.CurrentImage; i == nil || features.JWTRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
+	if i := d.currentObject.Status.CurrentImage; i == nil || features.JWTRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
 		secret, found = d.getJWTFolderToken()
 	}
 
@@ -282,7 +268,7 @@ func (d *Deployment) getAuth() (driver.Authentication, error) {
 }
 
 func (d *Deployment) getJWTFolderToken() (string, bool) {
-	if i := d.apiObject.Status.CurrentImage; i == nil || features.JWTRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
+	if i := d.currentObject.Status.CurrentImage; i == nil || features.JWTRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
 		s, err := d.GetCachedStatus().Secret().V1().Read().Get(context.Background(), pod.JWTSecretFolder(d.GetName()), meta.GetOptions{})
 		if err != nil {
 			d.log.Err(err).Error("Unable to get secret")
@@ -306,7 +292,7 @@ func (d *Deployment) getJWTFolderToken() (string, bool) {
 }
 
 func (d *Deployment) getJWTToken() (string, bool) {
-	s, err := d.GetCachedStatus().Secret().V1().Read().Get(context.Background(), d.apiObject.Spec.Authentication.GetJWTSecretName(), meta.GetOptions{})
+	s, err := d.GetCachedStatus().Secret().V1().Read().Get(context.Background(), d.GetSpec().Authentication.GetJWTSecretName(), meta.GetOptions{})
 	if err != nil {
 		return "", false
 	}
@@ -322,7 +308,7 @@ func (d *Deployment) getJWTToken() (string, bool) {
 // GetSyncServerClient returns a cached client for a specific arangosync server.
 func (d *Deployment) GetSyncServerClient(ctx context.Context, group api.ServerGroup, id string) (client.API, error) {
 	// Fetch monitoring token
-	secretName := d.apiObject.Spec.Sync.Monitoring.GetTokenSecretName()
+	secretName := d.GetSpec().Sync.Monitoring.GetTokenSecretName()
 	monitoringToken, err := k8sutil.GetTokenSecret(ctx, d.GetCachedStatus().Secret().V1().Read(), secretName)
 	if err != nil {
 		d.log.Err(err).Str("secret-name", secretName).Debug("Failed to get sync monitoring secret")
@@ -330,7 +316,7 @@ func (d *Deployment) GetSyncServerClient(ctx context.Context, group api.ServerGr
 	}
 
 	// Fetch server DNS name
-	dnsName := k8sutil.CreatePodDNSNameWithDomain(d.apiObject, d.apiObject.Spec.ClusterDomain, group.AsRole(), id)
+	dnsName := k8sutil.CreatePodDNSNameWithDomain(d.currentObject, d.GetSpec().ClusterDomain, group.AsRole(), id)
 
 	// Build client
 	port := shared.ArangoSyncMasterPort
@@ -357,7 +343,7 @@ func (d *Deployment) GetSyncServerClient(ctx context.Context, group api.ServerGr
 // If ID is non-empty, it will be used, otherwise a new ID is created.
 func (d *Deployment) CreateMember(ctx context.Context, group api.ServerGroup, id string, mods ...reconcile.CreateMemberMod) (string, error) {
 	if err := d.WithStatusUpdateErr(ctx, func(s *api.DeploymentStatus) (bool, error) {
-		nid, err := d.createMember(d.GetSpec(), s, group, id, d.apiObject, mods...)
+		nid, err := d.createMember(d.GetSpec(), s, group, id, d.currentObject, mods...)
 		if err != nil {
 			d.log.Err(err).Str("group", group.AsRole()).Debug("Failed to create member")
 			return false, errors.WithStack(err)
@@ -371,7 +357,7 @@ func (d *Deployment) CreateMember(ctx context.Context, group api.ServerGroup, id
 	}
 
 	// Create event about it
-	d.CreateEvent(k8sutil.NewMemberAddEvent(id, group.AsRole(), d.apiObject))
+	d.CreateEvent(k8sutil.NewMemberAddEvent(id, group.AsRole(), d.currentObject))
 
 	return id, nil
 }
@@ -565,11 +551,8 @@ func (d *Deployment) GetArangoImage() string {
 	return d.config.ArangoImage
 }
 
-func (d *Deployment) WithStatusUpdateErr(ctx context.Context, action reconciler.DeploymentStatusUpdateErrFunc, force ...bool) error {
-	d.status.mutex.Lock()
-	defer d.status.mutex.Unlock()
-
-	status, version := d.getStatus()
+func (d *Deployment) WithStatusUpdateErr(ctx context.Context, action reconciler.DeploymentStatusUpdateErrFunc) error {
+	status := d.GetStatus()
 
 	changed, err := action(&status)
 
@@ -581,13 +564,13 @@ func (d *Deployment) WithStatusUpdateErr(ctx context.Context, action reconciler.
 		return nil
 	}
 
-	return d.updateStatus(ctx, status, version, force...)
+	return d.updateCRStatus(ctx, status)
 }
 
-func (d *Deployment) WithStatusUpdate(ctx context.Context, action reconciler.DeploymentStatusUpdateFunc, force ...bool) error {
+func (d *Deployment) WithStatusUpdate(ctx context.Context, action reconciler.DeploymentStatusUpdateFunc) error {
 	return d.WithStatusUpdateErr(ctx, func(s *api.DeploymentStatus) (bool, error) {
 		return action(s), nil
-	}, force...)
+	})
 }
 
 func (d *Deployment) SecretsModInterface() secretv1.ModInterface {
@@ -671,14 +654,6 @@ func (d *Deployment) GenerateMemberEndpoint(group api.ServerGroup, member api.Me
 	cache := d.GetCachedStatus()
 
 	return pod.GenerateMemberEndpoint(cache, d.GetAPIObject(), d.GetSpec(), group, member)
-}
-
-func (d *Deployment) GetStatusSnapshot() api.DeploymentStatus {
-	s, _ := d.GetStatus()
-
-	z := s.DeepCopy()
-
-	return *z
 }
 
 func (d *Deployment) ACS() sutil.ACS {

@@ -46,7 +46,7 @@ func (d *Deployment) listenForPodEvents(stopCh <-chan struct{}) {
 	rw := k8sutil.NewResourceWatcher(
 		d.deps.Client.Kubernetes().CoreV1().RESTClient(),
 		"pods",
-		d.apiObject.GetNamespace(),
+		d.currentObject.GetNamespace(),
 		&core.Pod{},
 		cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
@@ -90,7 +90,7 @@ func (d *Deployment) listenForPVCEvents(stopCh <-chan struct{}) {
 	rw := k8sutil.NewResourceWatcher(
 		d.deps.Client.Kubernetes().CoreV1().RESTClient(),
 		"persistentvolumeclaims",
-		d.apiObject.GetNamespace(),
+		d.currentObject.GetNamespace(),
 		&core.PersistentVolumeClaim{},
 		cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
@@ -134,7 +134,7 @@ func (d *Deployment) listenForSecretEvents(stopCh <-chan struct{}) {
 	rw := k8sutil.NewResourceWatcher(
 		d.deps.Client.Kubernetes().CoreV1().RESTClient(),
 		"secrets",
-		d.apiObject.GetNamespace(),
+		d.currentObject.GetNamespace(),
 		&core.Secret{},
 		cache.ResourceEventHandlerFuncs{
 			// Note: For secrets we look at all of them because they do not have to be owned by this deployment.
@@ -179,7 +179,7 @@ func (d *Deployment) listenForServiceEvents(stopCh <-chan struct{}) {
 	rw := k8sutil.NewResourceWatcher(
 		d.deps.Client.Kubernetes().CoreV1().RESTClient(),
 		"services",
-		d.apiObject.GetNamespace(),
+		d.currentObject.GetNamespace(),
 		&core.Service{},
 		cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {

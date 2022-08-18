@@ -94,7 +94,7 @@ func (i *inventory) Collect(m chan<- prometheus.Metric) {
 			}
 
 			spec := deployment.GetSpec()
-			status, _ := deployment.GetStatus()
+			status := deployment.GetStatus()
 
 			for _, member := range status.Members.AsList() {
 				p.Push(i.deploymentMetricsMembersMetric.Gauge(1, deployment.GetNamespace(), deployment.GetName(), member.Group.AsRole(), member.Member.ID))

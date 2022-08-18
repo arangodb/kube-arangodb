@@ -110,13 +110,13 @@ func cmdGetAgencyState(cmd *cobra.Command, _ []string) {
 		logger.Err(err).Fatal("failed to create basic data for the connection")
 	}
 
-	if d.Spec.GetMode() != api.DeploymentModeCluster {
-		logger.Fatal("agency state does not work for the \"%s\" deployment \"%s\"", d.Spec.GetMode(),
+	if d.GetAcceptedSpec().GetMode() != api.DeploymentModeCluster {
+		logger.Fatal("agency state does not work for the \"%s\" deployment \"%s\"", d.GetAcceptedSpec().GetMode(),
 			d.GetName())
 	}
 
 	dnsName := k8sutil.CreatePodDNSName(d.GetObjectMeta(), api.ServerGroupAgents.AsRole(), d.Status.Members.Agents[0].ID)
-	endpoint := getArangoEndpoint(d.Spec.IsSecure(), dnsName)
+	endpoint := getArangoEndpoint(d.GetAcceptedSpec().IsSecure(), dnsName)
 	conn := createClient([]string{endpoint}, certCA, auth, connection.ApplicationJSON)
 	leaderID, err := getAgencyLeader(ctx, conn)
 	if err != nil {
@@ -124,7 +124,7 @@ func cmdGetAgencyState(cmd *cobra.Command, _ []string) {
 	}
 
 	dnsLeaderName := k8sutil.CreatePodDNSName(d.GetObjectMeta(), api.ServerGroupAgents.AsRole(), leaderID)
-	leaderEndpoint := getArangoEndpoint(d.Spec.IsSecure(), dnsLeaderName)
+	leaderEndpoint := getArangoEndpoint(d.GetAcceptedSpec().IsSecure(), dnsLeaderName)
 	conn = createClient([]string{leaderEndpoint}, certCA, auth, connection.PlainText)
 	body, err := getAgencyState(ctx, conn)
 	if body != nil {
@@ -146,12 +146,12 @@ func cmdGetAgencyDump(cmd *cobra.Command, _ []string) {
 		logger.Err(err).Fatal("failed to create basic data for the connection")
 	}
 
-	if d.Spec.GetMode() != api.DeploymentModeCluster {
-		logger.Fatal("agency dump does not work for the \"%s\" deployment \"%s\"", d.Spec.GetMode(),
+	if d.GetAcceptedSpec().GetMode() != api.DeploymentModeCluster {
+		logger.Fatal("agency dump does not work for the \"%s\" deployment \"%s\"", d.GetAcceptedSpec().GetMode(),
 			d.GetName())
 	}
 
-	endpoint := getArangoEndpoint(d.Spec.IsSecure(), k8sutil.CreateDatabaseClientServiceDNSName(d.GetObjectMeta()))
+	endpoint := getArangoEndpoint(d.GetAcceptedSpec().IsSecure(), k8sutil.CreateDatabaseClientServiceDNSName(d.GetObjectMeta()))
 	conn := createClient([]string{endpoint}, certCA, auth, connection.ApplicationJSON)
 	body, err := getAgencyDump(ctx, conn)
 	if body != nil {
@@ -205,14 +205,14 @@ func getDeploymentAndCredentials(ctx context.Context,
 	}
 
 	var secrets = kubeCli.CoreV1().Secrets(d.GetNamespace())
-	certCA, err = getCACertificate(ctx, secrets, d.Spec.TLS.GetCASecretName())
+	certCA, err = getCACertificate(ctx, secrets, d.GetAcceptedSpec().TLS.GetCASecretName())
 	if err != nil {
 		err = errors.WithMessage(err, "failed to get CA certificate")
 		return
 	}
 
-	if d.Spec.IsAuthenticated() {
-		auth, err = getJWTTokenFromSecrets(ctx, secrets, d.Spec.Authentication.GetJWTSecretName())
+	if d.GetAcceptedSpec().IsAuthenticated() {
+		auth, err = getJWTTokenFromSecrets(ctx, secrets, d.GetAcceptedSpec().Authentication.GetJWTSecretName())
 		if err != nil {
 			err = errors.WithMessage(err, "failed to get JWT token")
 			return

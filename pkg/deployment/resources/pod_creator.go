@@ -413,7 +413,7 @@ func (r *Resources) SelectImageForMember(spec api.DeploymentSpec, status api.Dep
 // createPodForMember creates all Pods listed in member status
 func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, arangoMember *api.ArangoMember, memberID string, imageNotFoundOnce *sync.Once) error {
 	log := r.log.Str("section", "member")
-	status, lastVersion := r.context.GetStatus()
+	status := r.context.GetStatus()
 
 	// Select image
 	imageInfo, imageFound := r.SelectImage(spec, status)
@@ -547,7 +547,7 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 	if err := status.Members.Update(m, group); err != nil {
 		return errors.WithStack(err)
 	}
-	if err := r.context.UpdateStatus(ctx, status, lastVersion); err != nil {
+	if err := r.context.UpdateStatus(ctx, status); err != nil {
 		return errors.WithStack(err)
 	}
 	// Create event
@@ -659,13 +659,13 @@ func ChecksumArangoPod(groupSpec api.ServerGroupSpec, pod *core.Pod) (string, er
 // EnsurePods creates all Pods listed in member status
 func (r *Resources) EnsurePods(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
 	iterator := r.context.GetServerGroupIterator()
-	deploymentStatus, _ := r.context.GetStatus()
+	deploymentStatus := r.context.GetStatus()
 	imageNotFoundOnce := &sync.Once{}
 	changed := false
 
 	log := r.log.Str("section", "member")
 
-	if err := iterator.ForeachServerGroup(func(group api.ServerGroup, groupSpec api.ServerGroupSpec, status *api.MemberStatusList) error {
+	if err := iterator.ForeachServerGroupAccepted(func(group api.ServerGroup, groupSpec api.ServerGroupSpec, status *api.MemberStatusList) error {
 		for _, m := range *status {
 			if m.Phase != api.MemberPhasePending {
 				continue
