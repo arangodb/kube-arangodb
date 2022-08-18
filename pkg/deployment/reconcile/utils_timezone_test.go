@@ -18,21 +18,20 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package logging
+package reconcile
 
-import "github.com/rs/zerolog"
+import (
+	"testing"
 
-type Level zerolog.Level
+	"github.com/stretchr/testify/require"
 
-func (l Level) New() *Level {
-	return &l
-}
-
-const (
-	Trace = Level(zerolog.TraceLevel)
-	Debug = Level(zerolog.DebugLevel)
-	Info  = Level(zerolog.InfoLevel)
-	Warn  = Level(zerolog.WarnLevel)
-	Error = Level(zerolog.ErrorLevel)
-	Fatal = Level(zerolog.FatalLevel)
+	"github.com/arangodb/kube-arangodb/pkg/generated/timezones"
 )
+
+func Test_Timezone_Default(t *testing.T) {
+	tz, ok := timezones.GetTimezone(defaultTimezone)
+	require.True(t, ok)
+
+	_, ok = tz.GetData()
+	require.True(t, ok)
+}

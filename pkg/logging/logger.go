@@ -53,8 +53,10 @@ func NewDefaultFactory() Factory {
 
 func NewFactory(root zerolog.Logger) Factory {
 	return &factory{
-		root:    root,
-		loggers: map[string]*zerolog.Logger{},
+		root:     root,
+		loggers:  map[string]*zerolog.Logger{},
+		defaults: map[string]Level{},
+		levels:   map[string]Level{},
 	}
 }
 
@@ -66,6 +68,9 @@ type factory struct {
 	wrappers []Wrap
 
 	loggers map[string]*zerolog.Logger
+
+	defaults map[string]Level
+	levels   map[string]Level
 }
 
 func (f *factory) Names() []string {
@@ -110,27 +115,39 @@ func (f *factory) ApplyLogLevels(in map[string]Level) {
 	f.lock.Lock()
 	defer f.lock.Unlock()
 
-	if def, ok := in[AllLevels]; ok {
-		// Apply with default log level
+	z := make(map[string]Level, len(in))
 
-		for k := range f.loggers {
-			if ov, ok := in[k]; ok {
-				// Override in place
-				l := f.root.Level(zerolog.Level(ov))
-				f.loggers[k] = &l
-			} else {
-				// Override in place
-				l := f.root.Level(zerolog.Level(def))
-				f.loggers[k] = &l
-			}
+	for k, v := range in {
+		z[k] = v
+	}
+
+	f.levels = z
+
+	for k := range f.loggers {
+		f.applyForLogger(k)
+	}
+}
+
+func (f *factory) applyForLogger(name string) {
+	if def, ok := f.levels[AllLevels]; ok {
+		if ov, ok := f.levels[name]; ok {
+			// override on logger level
+			l := f.root.Level(zerolog.Level(ov))
+			f.loggers[name] = &l
+		} else {
+			// override on global level
+			l := f.root.Level(zerolog.Level(def))
+			f.loggers[name] = &l
 		}
 	} else {
-		for k := range f.loggers {
-			if ov, ok := in[k]; ok {
-				// Override in place
-				l := f.root.Level(zerolog.Level(ov))
-				f.loggers[k] = &l
-			}
+		if ov, ok := f.levels[name]; ok {
+			// override on logger level
+			l := f.root.Level(zerolog.Level(ov))
+			f.loggers[name] = &l
+		} else {
+			// override on global level
+			l := f.root.Level(zerolog.Level(f.defaults[name]))
+			f.loggers[name] = &l
 		}
 	}
 }
@@ -143,8 +160,8 @@ func (f *factory) RegisterLogger(name string, level Level) bool {
 		return false
 	}
 
-	l := f.root.Level(zerolog.Level(level))
-	f.loggers[name] = &l
+	f.defaults[name] = level
+	f.applyForLogger(name)
 
 	return true
 }

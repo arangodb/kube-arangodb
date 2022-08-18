@@ -23,6 +23,7 @@ package rotation
 import (
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 
@@ -36,7 +37,7 @@ const (
 	ContainerImage = "image"
 )
 
-func containersCompare(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *core.PodSpec) compareFunc {
+func containersCompare(ds api.DeploymentSpec, g api.ServerGroup, spec, status *core.PodSpec) comparePodFunc {
 	return func(builder api.ActionBuilder) (mode Mode, plan api.Plan, err error) {
 		a, b := spec.Containers, status.Containers
 
@@ -54,6 +55,16 @@ func containersCompare(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *co
 
 						bc.Command = ac.Command
 						mode = mode.And(InPlaceRotation)
+					}
+
+					g := podContainerFuncGenerator(ds, g, ac, bc)
+
+					if m, p, err := comparePodContainer(builder, g(compareServerContainerVolumeMounts)); err != nil {
+						log.Err(err).Msg("Error while getting pod diff")
+						return SkippedRotation, nil, err
+					} else {
+						mode = mode.And(m)
+						plan = append(plan, p...)
 					}
 
 					if !equality.Semantic.DeepEqual(ac.Env, bc.Env) {
@@ -97,7 +108,7 @@ func containersCompare(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *co
 	}
 }
 
-func initContainersCompare(deploymentSpec api.DeploymentSpec, group api.ServerGroup, spec, status *core.PodSpec) compareFunc {
+func initContainersCompare(deploymentSpec api.DeploymentSpec, group api.ServerGroup, spec, status *core.PodSpec) comparePodFunc {
 	return func(builder api.ActionBuilder) (Mode, api.Plan, error) {
 		gs := deploymentSpec.GetServerGroupSpec(group)
 

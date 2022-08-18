@@ -40,7 +40,9 @@ func Test_ArangoD_SchedulerName(t *testing.T) {
 				pod.Spec.SchedulerName = "new"
 			}),
 
-			expectedMode: SilentRotation,
+			TestCaseOverride: TestCaseOverride{
+				expectedMode: SilentRotation,
+			},
 		},
 		{
 			name: "Change SchedulerName into Empty",
@@ -51,7 +53,9 @@ func Test_ArangoD_SchedulerName(t *testing.T) {
 				pod.Spec.SchedulerName = ""
 			}),
 
-			expectedMode: SilentRotation,
+			TestCaseOverride: TestCaseOverride{
+				expectedMode: SilentRotation,
+			},
 		},
 		{
 			name: "SchedulerName equals",
@@ -62,7 +66,9 @@ func Test_ArangoD_SchedulerName(t *testing.T) {
 				pod.Spec.SchedulerName = ""
 			}),
 
-			expectedMode: SkippedRotation,
+			TestCaseOverride: TestCaseOverride{
+				expectedMode: SkippedRotation,
+			},
 		},
 	}
 
@@ -80,7 +86,9 @@ func Test_ArangoD_TerminationGracePeriodSeconds(t *testing.T) {
 				pod.Spec.TerminationGracePeriodSeconds = util.NewInt64(30)
 			}),
 
-			expectedMode: SilentRotation,
+			TestCaseOverride: TestCaseOverride{
+				expectedMode: SilentRotation,
+			},
 		},
 		{
 			name: "Remove",
@@ -91,7 +99,9 @@ func Test_ArangoD_TerminationGracePeriodSeconds(t *testing.T) {
 				pod.Spec.TerminationGracePeriodSeconds = nil
 			}),
 
-			expectedMode: SilentRotation,
+			TestCaseOverride: TestCaseOverride{
+				expectedMode: SilentRotation,
+			},
 		},
 		{
 			name: "Update",
@@ -102,7 +112,9 @@ func Test_ArangoD_TerminationGracePeriodSeconds(t *testing.T) {
 				pod.Spec.TerminationGracePeriodSeconds = util.NewInt64(30)
 			}),
 
-			expectedMode: SilentRotation,
+			TestCaseOverride: TestCaseOverride{
+				expectedMode: SilentRotation,
+			},
 		},
 	}
 
@@ -137,7 +149,9 @@ func Test_ArangoD_Affinity(t *testing.T) {
 			status: buildPodSpec(func(pod *core.PodTemplateSpec) {
 			}),
 
-			expectedMode: GracefulRotation,
+			TestCaseOverride: TestCaseOverride{
+				expectedMode: GracefulRotation,
+			},
 		},
 		{
 			name: "Add affinity",
@@ -165,7 +179,9 @@ func Test_ArangoD_Affinity(t *testing.T) {
 				}
 			}),
 
-			expectedMode: GracefulRotation,
+			TestCaseOverride: TestCaseOverride{
+				expectedMode: GracefulRotation,
+			},
 		},
 		{
 			name: "Change affinity",
@@ -212,7 +228,9 @@ func Test_ArangoD_Affinity(t *testing.T) {
 				}
 			}),
 
-			expectedMode: SilentRotation,
+			TestCaseOverride: TestCaseOverride{
+				expectedMode: SilentRotation,
+			},
 		},
 		{
 			name: "Change affinity archs",
@@ -259,7 +277,9 @@ func Test_ArangoD_Affinity(t *testing.T) {
 				}
 			}),
 
-			expectedMode: GracefulRotation,
+			TestCaseOverride: TestCaseOverride{
+				expectedMode: GracefulRotation,
+			},
 		},
 		{
 			name: "Change affinity archs - swap arch order",
@@ -306,7 +326,9 @@ func Test_ArangoD_Affinity(t *testing.T) {
 				}
 			}),
 
-			expectedMode: SilentRotation,
+			TestCaseOverride: TestCaseOverride{
+				expectedMode: SilentRotation,
+			},
 		},
 	}
 
@@ -328,7 +350,9 @@ func Test_ArangoD_Labels(t *testing.T) {
 				}
 			}),
 
-			expectedMode: SkippedRotation,
+			TestCaseOverride: TestCaseOverride{
+				expectedMode: SkippedRotation,
+			},
 		},
 		{
 			name: "Remove label",
@@ -343,7 +367,9 @@ func Test_ArangoD_Labels(t *testing.T) {
 				pod.Labels = map[string]string{}
 			}),
 
-			expectedMode: SkippedRotation,
+			TestCaseOverride: TestCaseOverride{
+				expectedMode: SkippedRotation,
+			},
 		},
 		{
 			name: "Change label",
@@ -360,7 +386,9 @@ func Test_ArangoD_Labels(t *testing.T) {
 				}
 			}),
 
-			expectedMode: SkippedRotation,
+			TestCaseOverride: TestCaseOverride{
+				expectedMode: SkippedRotation,
+			},
 		},
 	}
 
@@ -385,7 +413,9 @@ func Test_ArangoD_Envs_Zone(t *testing.T) {
 				}
 			})),
 
-			expectedMode: SilentRotation,
+			TestCaseOverride: TestCaseOverride{
+				expectedMode: SilentRotation,
+			},
 		},
 		{
 			name: "Remove Zone env",
@@ -403,7 +433,9 @@ func Test_ArangoD_Envs_Zone(t *testing.T) {
 				c.Env = []core.EnvVar{}
 			})),
 
-			expectedMode: SilentRotation,
+			TestCaseOverride: TestCaseOverride{
+				expectedMode: SilentRotation,
+			},
 		},
 		{
 			name: "Update Zone env",
@@ -426,7 +458,9 @@ func Test_ArangoD_Envs_Zone(t *testing.T) {
 				}
 			})),
 
-			expectedMode: SilentRotation,
+			TestCaseOverride: TestCaseOverride{
+				expectedMode: SilentRotation,
+			},
 		},
 		{
 			name: "Update other env",
@@ -453,7 +487,9 @@ func Test_ArangoD_Envs_Zone(t *testing.T) {
 				}
 			})),
 
-			expectedMode: GracefulRotation,
+			TestCaseOverride: TestCaseOverride{
+				expectedMode: GracefulRotation,
+			},
 		},
 	}
 
