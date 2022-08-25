@@ -42,10 +42,10 @@ func (r *Resources) EnsurePVCs(ctx context.Context, cachedStatus inspectorInterf
 	deploymentName := apiObject.GetName()
 	owner := apiObject.AsOwner()
 	iterator := r.context.GetServerGroupIterator()
-	status, _ := r.context.GetStatus()
+	status := r.context.GetStatus()
 	enforceAntiAffinity := r.context.GetSpec().GetEnvironment().IsProduction()
 
-	if err := iterator.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
+	if err := iterator.ForeachServerGroupAccepted(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
 		for _, m := range *status {
 			if m.PersistentVolumeClaimName == "" {
 				continue

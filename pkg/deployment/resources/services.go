@@ -118,7 +118,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 	log := r.log.Str("section", "service")
 	start := time.Now()
 	apiObject := r.context.GetAPIObject()
-	status, _ := r.context.GetStatus()
+	status := r.context.GetStatus()
 	deploymentName := apiObject.GetName()
 	owner := apiObject.AsOwner()
 	spec := r.context.GetSpec()
@@ -211,10 +211,10 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 			log.Str("service", svcName).Debug("Created database client service")
 		}
 		{
-			status, lastVersion := r.context.GetStatus()
+			status := r.context.GetStatus()
 			if status.ServiceName != svcName {
 				status.ServiceName = svcName
-				if err := r.context.UpdateStatus(ctx, status, lastVersion); err != nil {
+				if err := r.context.UpdateStatus(ctx, status); err != nil {
 					return errors.WithStack(err)
 				}
 			}
@@ -240,10 +240,10 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 			shared.ArangoSyncMasterPort, true, false, spec.Sync.ExternalAccess.ExternalAccessSpec, apiObject); err != nil {
 			return errors.WithStack(err)
 		}
-		status, lastVersion := r.context.GetStatus()
+		status := r.context.GetStatus()
 		if status.SyncServiceName != eaServiceName {
 			status.SyncServiceName = eaServiceName
-			if err := r.context.UpdateStatus(ctx, status, lastVersion); err != nil {
+			if err := r.context.UpdateStatus(ctx, status); err != nil {
 				return errors.WithStack(err)
 			}
 		}
@@ -257,10 +257,10 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 			log.Err(err).Debug("Failed to create %s exporter service", name)
 			return errors.WithStack(err)
 		}
-		status, lastVersion := r.context.GetStatus()
+		status := r.context.GetStatus()
 		if status.ExporterServiceName != name {
 			status.ExporterServiceName = name
-			if err := r.context.UpdateStatus(ctx, status, lastVersion); err != nil {
+			if err := r.context.UpdateStatus(ctx, status); err != nil {
 				return errors.WithStack(err)
 			}
 		}

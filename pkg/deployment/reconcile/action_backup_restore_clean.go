@@ -54,7 +54,7 @@ func (a actionBackupRestoreClean) Start(ctx context.Context) (bool, error) {
 
 		s.Restore = nil
 		return true
-	}, true); err != nil {
+	}); err != nil {
 		return false, err
 	}
 

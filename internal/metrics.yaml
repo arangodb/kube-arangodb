@@ -149,6 +149,43 @@ namespaces:
             description: "Deployment Namespace"
           - key: name
             description: "Deployment Name"
+    resources:
+      arangodeployment_validation_errors:
+        shortDescription: "Counter for deployment validation errors"
+        description: "Counter for deployment validation errors"
+        type: "Counter"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+      arangodeployment_immutable_errors:
+        shortDescription: "Counter for deployment immutable errors"
+        description: "Counter for deployment immutable errors"
+        type: "Counter"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+      arangodeployment_accepted:
+        shortDescription: "Defines if ArangoDeployment has been accepted"
+        description: "Defines if ArangoDeployment has been accepted"
+        type: "Gauge"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+      arangodeployment_uptodate:
+        shortDescription: "Defines if ArangoDeployment is uptodate"
+        description: "Defines if ArangoDeployment is uptodate"
+        type: "Gauge"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
     members:
       unexpected_container_exit_codes:
         shortDescription: "Counter of unexpected restarts in pod (Containers/InitContainers/EphemeralContainers)"

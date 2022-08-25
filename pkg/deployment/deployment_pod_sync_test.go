@@ -46,7 +46,7 @@ func TestEnsurePod_Sync_Error(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						SyncMasters: api.MemberStatusList{
 							firstSyncMaster,
@@ -65,7 +65,7 @@ func TestEnsurePod_Sync_Error(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						SyncMasters: api.MemberStatusList{
 							firstSyncMaster,
@@ -88,7 +88,7 @@ func TestEnsurePod_Sync_Error(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						SyncMasters: api.MemberStatusList{
 							firstSyncMaster,
@@ -122,7 +122,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						SyncMasters: api.MemberStatusList{
 							firstSyncMaster,
@@ -150,7 +150,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						SyncMasters: api.MemberStatusList{
 							firstSyncMaster,
@@ -178,7 +178,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						SyncMasters: api.MemberStatusList{
 							firstSyncMaster,
@@ -214,7 +214,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						SyncMasters: api.MemberStatusList{
 							firstSyncMaster,
@@ -305,7 +305,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						SyncMasters: api.MemberStatusList{
 							firstSyncMaster,
@@ -407,7 +407,7 @@ func TestEnsurePod_Sync_Worker(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						SyncWorkers: api.MemberStatusList{
 							firstSyncWorker,

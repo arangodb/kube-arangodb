@@ -79,7 +79,7 @@ func (r *Resources) syncMembersInCluster(ctx context.Context, health memberState
 		return found
 	}
 
-	status, lastVersion := r.context.GetStatus()
+	status := r.context.GetStatus()
 	updateStatusNeeded := false
 
 	for _, e := range status.Members.AsListInGroups(api.ServerGroupCoordinators, api.ServerGroupDBServers) {
@@ -110,7 +110,7 @@ func (r *Resources) syncMembersInCluster(ctx context.Context, health memberState
 	if updateStatusNeeded {
 		log.Debug("UpdateStatus needed")
 
-		if err := r.context.UpdateStatus(ctx, status, lastVersion); err != nil {
+		if err := r.context.UpdateStatus(ctx, status); err != nil {
 			log.Err(err).Warn("Failed to update deployment status")
 			return errors.WithStack(err)
 		}
@@ -121,7 +121,7 @@ func (r *Resources) syncMembersInCluster(ctx context.Context, health memberState
 
 func (r *Resources) EnsureArangoMembers(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
 	// Create all missing arangomembers
-	s, _ := r.context.GetStatus()
+	s := r.context.GetStatus()
 	obj := r.context.GetAPIObject()
 
 	for _, e := range s.Members.AsList() {

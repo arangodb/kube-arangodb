@@ -23,6 +23,7 @@ package deployment
 import (
 	"context"
 	"net/http"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -40,6 +41,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/chaos"
 	deploymentClient "github.com/arangodb/kube-arangodb/pkg/deployment/client"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	memberState "github.com/arangodb/kube-arangodb/pkg/deployment/member"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile"
@@ -96,11 +98,6 @@ const (
 	maxInspectionInterval    = 10 * util.Interval(time.Second)       // Ensure we inspect the generated resources no less than with this interval
 )
 
-type deploymentStatusObject struct {
-	version int32
-	last    api.DeploymentStatus // Internal status copy of the CR
-}
-
 // Deployment is the in process state of an ArangoDeployment.
 type Deployment struct {
 	log logging.Logger
@@ -108,11 +105,10 @@ type Deployment struct {
 	name      string
 	namespace string
 
-	apiObject *api.ArangoDeployment // API object
-	status    struct {
-		mutex sync.Mutex
-		deploymentStatusObject
-	}
+	currentObject       *api.ArangoDeployment
+	currentObjectStatus *api.DeploymentStatus
+	currentObjectLock   sync.RWMutex
+
 	config Config
 	deps   Dependencies
 
@@ -161,11 +157,11 @@ func (d *Deployment) GetAgencyHealth() (agency.Health, bool) {
 }
 
 func (d *Deployment) RefreshAgencyCache(ctx context.Context) (uint64, error) {
-	if d.apiObject.Spec.Mode.Get() == api.DeploymentModeSingle {
+	if d.GetSpec().Mode.Get() == api.DeploymentModeSingle {
 		return 0, nil
 	}
 
-	if info := d.apiObject.Status.Agency; info != nil {
+	if info := d.currentObject.Status.Agency; info != nil {
 		if size := info.Size; size != nil {
 			lCtx, c := globals.GetGlobalTimeouts().Agency().WithTimeout(ctx)
 			defer c()
@@ -173,7 +169,7 @@ func (d *Deployment) RefreshAgencyCache(ctx context.Context) (uint64, error) {
 			rsize := int(*size)
 
 			clients := make(map[string]agencydriver.Agency)
-			for _, m := range d.GetStatusSnapshot().Members.Agents {
+			for _, m := range d.GetStatus().Members.Agents {
 				a, err := d.GetAgency(lCtx, m.ID)
 				if err != nil {
 					return 0, err
@@ -235,15 +231,16 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 	i := inspector.NewInspector(inspector.NewDefaultThrottle(), deps.Client, apiObject.GetNamespace(), apiObject.GetName())
 
 	d := &Deployment{
-		apiObject:   apiObject,
-		name:        apiObject.GetName(),
-		namespace:   apiObject.GetNamespace(),
-		config:      config,
-		deps:        deps,
-		eventCh:     make(chan *deploymentEvent, deploymentEventQueueSize),
-		stopCh:      make(chan struct{}),
-		agencyCache: agency.NewCache(apiObject.GetNamespace(), apiObject.GetName(), apiObject.Spec.Mode),
-		acs:         acs.NewACS(apiObject.GetUID(), i),
+		currentObject:       apiObject,
+		currentObjectStatus: apiObject.Status.DeepCopy(),
+		name:                apiObject.GetName(),
+		namespace:           apiObject.GetNamespace(),
+		config:              config,
+		deps:                deps,
+		eventCh:             make(chan *deploymentEvent, deploymentEventQueueSize),
+		stopCh:              make(chan struct{}),
+		agencyCache:         agency.NewCache(apiObject.GetNamespace(), apiObject.GetName(), apiObject.GetAcceptedSpec().Mode),
+		acs:                 acs.NewACS(apiObject.GetUID(), i),
 	}
 
 	d.log = logger.WrapObj(d)
@@ -252,14 +249,9 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 
 	d.clientCache = deploymentClient.NewClientCache(d, conn.NewFactory(d.getAuth, d.getConnConfig))
 
-	d.status.last = *(apiObject.Status.DeepCopy())
 	d.reconciler = reconcile.NewReconciler(apiObject.GetNamespace(), apiObject.GetName(), d)
 	d.resilience = resilience.NewResilience(apiObject.GetNamespace(), apiObject.GetName(), d)
 	d.resources = resources.NewResources(apiObject.GetNamespace(), apiObject.GetName(), d)
-	if d.status.last.AcceptedSpec == nil {
-		// We've validated the spec, so let's use it from now.
-		d.status.last.AcceptedSpec = apiObject.Spec.DeepCopy()
-	}
 
 	localInventory.Add(d)
 
@@ -277,7 +269,7 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 	go d.listenForSecretEvents(d.stopCh)
 	go d.listenForServiceEvents(d.stopCh)
 	go d.listenForCRDEvents(d.stopCh)
-	if apiObject.Spec.GetMode() == api.DeploymentModeCluster {
+	if apiObject.GetAcceptedSpec().GetMode() == api.DeploymentModeCluster {
 		ci := newClusterScalingIntegration(d)
 		d.clusterScalingIntegration = ci
 		go ci.ListenForClusterEvents(d.stopCh)
@@ -347,9 +339,9 @@ func (d *Deployment) run() {
 			d.CreateEvent(k8sutil.NewErrorEvent("Failed to create initial topology", err, d.GetAPIObject()))
 		}
 
-		status, lastVersion := d.GetStatus()
+		status := d.GetStatus()
 		status.Phase = api.DeploymentPhaseRunning
-		if err := d.UpdateStatus(context.TODO(), status, lastVersion); err != nil {
+		if err := d.UpdateStatus(context.TODO(), status); err != nil {
 			log.Err(err).Warn("update initial CR status failed")
 		}
 		log.Info("start running...")
@@ -361,6 +353,15 @@ func (d *Deployment) run() {
 	log.Debug("Initially inspect deployment...")
 	inspectionInterval := d.inspectDeployment(minInspectionInterval)
 	log.Str("interval", inspectionInterval.String()).Debug("...deployment inspect started")
+
+	if ci := d.clusterScalingIntegration; ci != nil {
+		if c := d.currentObjectStatus; c != nil {
+			if a := c.AcceptedSpec; a != nil {
+				log.Debug("Send initial CI update")
+				ci.SendUpdateToCluster(*a)
+			}
+		}
+	}
 
 	for {
 		select {
@@ -386,10 +387,7 @@ func (d *Deployment) run() {
 			d.lookForServiceMonitorCRD()
 		case <-d.updateDeploymentTrigger.Done():
 			inspectionInterval = minInspectionInterval
-			if err := d.handleArangoDeploymentUpdatedEvent(context.TODO()); err != nil {
-				d.CreateEvent(k8sutil.NewErrorEvent("Failed to handle deployment update", err, d.GetAPIObject()))
-			}
-
+			d.handleArangoDeploymentUpdatedEvent()
 		case <-inspectionInterval.After():
 			// Trigger inspection
 			d.inspectTrigger.Trigger()
@@ -399,80 +397,102 @@ func (d *Deployment) run() {
 	}
 }
 
-// handleArangoDeploymentUpdatedEvent is called when the deployment is updated by the user.
-func (d *Deployment) handleArangoDeploymentUpdatedEvent(ctx context.Context) error {
-	log := d.log.Str("deployment", d.apiObject.GetName())
+// validateNewSpec returns (canProceed, changed, error)
+func (d *Deployment) acceptNewSpec(ctx context.Context, depl *api.ArangoDeployment) (bool, bool, error) {
+	spec := depl.Spec.DeepCopy()
 
-	// Get the most recent version of the deployment from the API server
-	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
-	defer cancel()
-
-	current, err := d.deps.Client.Arango().DatabaseV1().ArangoDeployments(d.apiObject.GetNamespace()).Get(ctxChild, d.apiObject.GetName(), meta.GetOptions{})
+	origChecksum, err := spec.Checksum()
 	if err != nil {
-		log.Err(err).Debug("Failed to get current version of deployment from API server")
-		if k8sutil.IsNotFound(err) {
-			return nil
-		}
-		return errors.WithStack(err)
+		return false, false, err
 	}
 
-	specBefore := d.apiObject.Spec
-	status := d.status.last
-	if d.status.last.AcceptedSpec != nil {
-		specBefore = *status.AcceptedSpec.DeepCopy()
-	}
-	newAPIObject := current.DeepCopy()
-	newAPIObject.Spec.SetDefaultsFrom(specBefore)
-	newAPIObject.Spec.SetDefaults(d.apiObject.GetName())
+	// Set defaults to the spec
+	spec.SetDefaults(d.name)
 
-	resetFields := specBefore.ResetImmutableFields(&newAPIObject.Spec)
-	if len(resetFields) > 0 {
-		log.Strs("fields", resetFields...).Debug("Found modified immutable fields")
-		newAPIObject.Spec.SetDefaults(d.apiObject.GetName())
-	}
-	if err := newAPIObject.Spec.Validate(); err != nil {
-		d.CreateEvent(k8sutil.NewErrorEvent("Validation failed", err, d.apiObject))
-		// Try to reset object
-		if err := d.updateCRSpec(ctx, d.apiObject.Spec); err != nil {
-			log.Err(err).Error("Restore original spec failed")
-			d.CreateEvent(k8sutil.NewErrorEvent("Restore original failed", err, d.apiObject))
-		}
-		return nil
-	}
-	if len(resetFields) > 0 {
-		for _, fieldName := range resetFields {
-			log.Str("field", fieldName).Debug("Reset immutable field")
-			d.CreateEvent(k8sutil.NewImmutableFieldEvent(fieldName, d.apiObject))
+	if features.DeploymentSpecDefaultsRestore().Enabled() {
+		if accepted := depl.Status.AcceptedSpec; accepted != nil {
+			spec.SetDefaultsFrom(*accepted)
 		}
 	}
 
-	// Save updated spec
-	if err := d.updateCRSpec(ctx, newAPIObject.Spec); err != nil {
-		return errors.WithStack(errors.Newf("failed to update ArangoDeployment spec: %v", err))
+	checksum, err := spec.Checksum()
+	if err != nil {
+		return false, false, err
 	}
-	// Save updated accepted spec
-	{
-		status, lastVersion := d.GetStatus()
-		if newAPIObject.Status.IsForceReload() {
-			log.Warn("Forced status reload!")
-			status = newAPIObject.Status
-			status.ForceStatusReload = nil
-		}
-		status.AcceptedSpec = newAPIObject.Spec.DeepCopy()
-		if err := d.UpdateStatus(ctx, status, lastVersion); err != nil {
-			return errors.WithStack(errors.Newf("failed to update ArangoDeployment status: %v", err))
+
+	if features.DeploymentSpecDefaultsRestore().Enabled() {
+		if origChecksum != checksum {
+			// Set defaults in deployment
+			if err := d.updateCRSpec(ctx, *spec); err != nil {
+				return false, false, err
+			}
+
+			return false, true, nil
 		}
 	}
 
-	// Notify cluster of desired server count
-	if ci := d.clusterScalingIntegration; ci != nil {
-		ci.SendUpdateToCluster(d.apiObject.Spec)
-	}
+	if accepted := depl.Status.AcceptedSpec; accepted == nil {
+		// There is no last status, it is fresh one
+		if err := spec.Validate(); err != nil {
+			d.metrics.Errors.DeploymentValidationErrors++
+			return false, false, err
+		}
 
+		// Update accepted spec
+		if err := d.patchAcceptedSpec(ctx, spec, origChecksum); err != nil {
+			return false, false, err
+		}
+
+		// Reconcile with new accepted spec
+		return false, true, nil
+	} else {
+		// If we are equal then proceed
+		acceptedChecksum, err := accepted.Checksum()
+		if err != nil {
+			return false, false, err
+		}
+
+		if acceptedChecksum == checksum {
+			return true, false, nil
+		}
+
+		// We have already accepted spec, verify immutable part
+		if fields := accepted.ResetImmutableFields(spec); len(fields) > 0 {
+			d.metrics.Errors.DeploymentImmutableErrors += uint64(len(fields))
+			if features.DeploymentSpecDefaultsRestore().Enabled() {
+				d.log.Error("Restoring immutable fields: %s", strings.Join(fields, ", "))
+
+				// In case of enabled, do restore
+				if err := d.updateCRSpec(ctx, *spec); err != nil {
+					return false, false, err
+				}
+
+				return false, true, nil
+			}
+
+			// We have immutable fields, throw an error and proceed
+			return true, false, errors.Newf("Immutable fields cannot be changed: %s", strings.Join(fields, ", "))
+		}
+
+		// Update accepted spec
+		if err := d.patchAcceptedSpec(ctx, spec, origChecksum); err != nil {
+			return false, false, err
+		}
+
+		// Reconcile with new accepted spec
+		return false, true, nil
+	}
+}
+
+func (d *Deployment) patchAcceptedSpec(ctx context.Context, spec *api.DeploymentSpec, checksum string) error {
+	return d.ApplyPatch(ctx, patch.ItemReplace(patch.NewPath("status", "accepted-spec"), spec),
+		patch.ItemReplace(patch.NewPath("status", "acceptedSpecVersion"), checksum))
+}
+
+// handleArangoDeploymentUpdatedEvent is called when the deployment is updated by the user.
+func (d *Deployment) handleArangoDeploymentUpdatedEvent() {
 	// Trigger inspect
 	d.inspectTrigger.Trigger()
-
-	return nil
 }
 
 // CreateEvent creates a given event.
@@ -481,108 +501,12 @@ func (d *Deployment) CreateEvent(evt *k8sutil.Event) {
 	d.deps.EventRecorder.Event(evt.InvolvedObject, evt.Type, evt.Reason, evt.Message)
 }
 
-// Update the status of the API object from the internal status
-func (d *Deployment) updateCRStatus(ctx context.Context, force ...bool) error {
-	if len(force) == 0 || !force[0] {
-		if d.apiObject.Status.Equal(d.status.last) {
-			// Nothing has changed
-			return nil
-		}
-	}
-
-	// Send update to API server
-	depls := d.deps.Client.Arango().DatabaseV1().ArangoDeployments(d.GetNamespace())
-	attempt := 0
-	for {
-		attempt++
-		q := patch.NewPatch(patch.ItemReplace(patch.NewPath("status"), d.status.last))
-
-		if d.apiObject.GetDeletionTimestamp() == nil {
-			if ensureFinalizers(d.apiObject) {
-				q.ItemAdd(patch.NewPath("metadata", "finalizers"), d.apiObject.Finalizers)
-			}
-		}
-
-		var newAPIObject *api.ArangoDeployment
-		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-			p, err := q.Marshal()
-			if err != nil {
-				return err
-			}
-
-			newAPIObject, err = depls.Patch(ctxChild, d.GetName(), types.JSONPatchType, p, meta.PatchOptions{})
-
-			return err
-		})
-		if err == nil {
-			// Update internal object
-			d.apiObject = newAPIObject
-			return nil
-		}
-		if attempt < 10 {
-			continue
-		}
-		if err != nil {
-			d.log.Err(err).Debug("failed to patch ArangoDeployment status")
-			return errors.WithStack(errors.Newf("failed to patch ArangoDeployment status: %v", err))
-		}
-	}
+func (d *Deployment) updateCRStatus(ctx context.Context, status api.DeploymentStatus) error {
+	return d.ApplyPatch(ctx, patch.ItemReplace(patch.NewPath("status"), status))
 }
 
-// Update the spec part of the API object (d.apiObject)
-// to the given object, while preserving the status.
-// On success, d.apiObject is updated.
-func (d *Deployment) updateCRSpec(ctx context.Context, newSpec api.DeploymentSpec, force ...bool) error {
-
-	if len(force) == 0 || !force[0] {
-		if d.apiObject.Spec.Equal(&newSpec) {
-			d.log.Trace("Nothing to update in updateCRSpec")
-			// Nothing to update
-			return nil
-		}
-	}
-
-	// Send update to API server
-	update := d.apiObject.DeepCopy()
-	attempt := 0
-	for {
-		attempt++
-		update.Spec = newSpec
-		update.Status = d.status.last
-		ns := d.apiObject.GetNamespace()
-		var newAPIObject *api.ArangoDeployment
-		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-			var err error
-			newAPIObject, err = d.deps.Client.Arango().DatabaseV1().ArangoDeployments(ns).Update(ctxChild, update, meta.UpdateOptions{})
-
-			return err
-		})
-		if err == nil {
-			// Update internal object
-			d.apiObject = newAPIObject
-			return nil
-		}
-		if attempt < 10 && k8sutil.IsConflict(err) {
-			// API object may have been changed already,
-			// Reload api object and try again
-			var current *api.ArangoDeployment
-
-			err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-				var err error
-				current, err = d.deps.Client.Arango().DatabaseV1().ArangoDeployments(ns).Get(ctxChild, update.GetName(), meta.GetOptions{})
-
-				return err
-			})
-			if err == nil {
-				update = current.DeepCopy()
-				continue
-			}
-		}
-		if err != nil {
-			d.log.Err(err).Debug("failed to patch ArangoDeployment spec")
-			return errors.WithStack(errors.Newf("failed to patch ArangoDeployment spec: %v", err))
-		}
-	}
+func (d *Deployment) updateCRSpec(ctx context.Context, spec api.DeploymentSpec) error {
+	return d.ApplyPatch(ctx, patch.ItemReplace(patch.NewPath("spec"), spec))
 }
 
 // isOwnerOf returns true if the given object belong to this deployment.
@@ -591,7 +515,7 @@ func (d *Deployment) isOwnerOf(obj meta.Object) bool {
 	if len(ownerRefs) < 1 {
 		return false
 	}
-	return ownerRefs[0].UID == d.apiObject.UID
+	return ownerRefs[0].UID == d.currentObject.UID
 }
 
 // lookForServiceMonitorCRD checks if there is a CRD for the ServiceMonitor
@@ -647,23 +571,52 @@ func (d *Deployment) SetNumberOfServers(ctx context.Context, noCoordinators, noD
 }
 
 func (d *Deployment) ApplyPatch(ctx context.Context, p ...patch.Item) error {
-	parser := patch.Patch(p)
+	if len(p) == 0 {
+		return nil
+	}
 
-	data, err := parser.Marshal()
+	d.currentObjectLock.Lock()
+	defer d.currentObjectLock.Unlock()
+
+	return d.applyPatch(ctx, p...)
+}
+
+func (d *Deployment) applyPatch(ctx context.Context, p ...patch.Item) error {
+	depls := d.deps.Client.Arango().DatabaseV1().ArangoDeployments(d.GetNamespace())
+
+	if len(p) == 0 {
+		return nil
+	}
+
+	pd, err := patch.NewPatch(p...).Marshal()
 	if err != nil {
 		return err
 	}
 
-	c := d.deps.Client.Arango().DatabaseV1().ArangoDeployments(d.apiObject.GetNamespace())
+	attempt := 0
+	for {
+		attempt++
 
-	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
-	defer cancel()
-	depl, err := c.Patch(ctxChild, d.apiObject.GetName(), types.JSONPatchType, data, meta.PatchOptions{})
-	if err != nil {
-		return err
+		var newAPIObject *api.ArangoDeployment
+		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			newAPIObject, err = depls.Patch(ctxChild, d.GetName(), types.JSONPatchType, pd, meta.PatchOptions{})
+
+			return err
+		})
+		if err == nil {
+			// Update internal object
+
+			d.currentObject = newAPIObject.DeepCopy()
+			d.currentObjectStatus = newAPIObject.Status.DeepCopy()
+
+			return nil
+		}
+		if attempt < 10 {
+			continue
+		}
+		if err != nil {
+			d.log.Err(err).Debug("failed to patch ArangoDeployment")
+			return errors.WithStack(errors.Newf("failed to patch ArangoDeployment: %v", err))
+		}
 	}
-
-	d.apiObject = depl
-
-	return nil
 }

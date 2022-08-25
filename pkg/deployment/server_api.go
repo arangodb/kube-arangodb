@@ -36,12 +36,12 @@ import (
 
 // Name returns the name of the deployment.
 func (d *Deployment) Name() string {
-	return d.apiObject.Name
+	return d.currentObject.Name
 }
 
 // Namespace returns the namespace that contains the deployment.
 func (d *Deployment) Namespace() string {
-	return d.apiObject.Namespace
+	return d.currentObject.Namespace
 }
 
 // GetMode returns the mode of the deployment.
@@ -65,7 +65,7 @@ func (d *Deployment) StateColor() server.StateColor {
 	if d.VolumeCount() != d.ReadyVolumeCount() {
 		allGood = false
 	}
-	status, _ := d.GetStatus()
+	status := d.GetStatus()
 	for _, m := range status.Members.AsList() {
 		switch m.Member.Phase {
 		case api.MemberPhaseFailed:
@@ -91,14 +91,14 @@ func (d *Deployment) StateColor() server.StateColor {
 
 // PodCount returns the number of pods for the deployment
 func (d *Deployment) PodCount() int {
-	status, _ := d.GetStatus()
+	status := d.GetStatus()
 	return len(status.Members.PodNames())
 }
 
 // ReadyPodCount returns the number of pods for the deployment that are in ready state
 func (d *Deployment) ReadyPodCount() int {
 	count := 0
-	status, _ := d.GetStatus()
+	status := d.GetStatus()
 	for _, e := range status.Members.AsList() {
 		if e.Member.Pod.GetName() == "" {
 			continue
@@ -113,7 +113,7 @@ func (d *Deployment) ReadyPodCount() int {
 // VolumeCount returns the number of volumes for the deployment
 func (d *Deployment) VolumeCount() int {
 	count := 0
-	status, _ := d.GetStatus()
+	status := d.GetStatus()
 	for _, e := range status.Members.AsList() {
 		if e.Member.PersistentVolumeClaimName != "" {
 			count++
@@ -125,7 +125,7 @@ func (d *Deployment) VolumeCount() int {
 // ReadyVolumeCount returns the number of volumes for the deployment that are in ready state
 func (d *Deployment) ReadyVolumeCount() int {
 	count := 0
-	status, _ := d.GetStatus()
+	status := d.GetStatus()
 	pvcs, _ := d.GetOwnedPVCs() // Ignore errors on purpose
 	for _, e := range status.Members.AsList() {
 		if e.Member.PersistentVolumeClaimName == "" {
@@ -197,7 +197,7 @@ func (d *Deployment) DatabaseURL() string {
 // DatabaseVersion returns the version used by the deployment
 // Returns versionNumber, licenseType
 func (d *Deployment) DatabaseVersion() (string, string) {
-	status, _ := d.GetStatus()
+	status := d.GetStatus()
 	if current := status.CurrentImage; current != nil {
 		return string(current.ArangoDBVersion), memberState.GetImageLicense(status.CurrentImage)
 	}
@@ -207,7 +207,7 @@ func (d *Deployment) DatabaseVersion() (string, string) {
 // Members returns all members of the deployment by role.
 func (d *Deployment) Members() map[api.ServerGroup][]server.Member {
 	result := make(map[api.ServerGroup][]server.Member)
-	status, _ := d.GetStatus()
+	status := d.GetStatus()
 
 	for _, group := range api.AllServerGroups {
 		list := status.Members.MembersOfGroup(group)

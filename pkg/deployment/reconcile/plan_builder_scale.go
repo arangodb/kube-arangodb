@@ -25,6 +25,8 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -84,7 +86,7 @@ func (r *Reconciler) createScalePlan(status api.DeploymentStatus, members api.Me
 			Debug("Creating scale-up plan")
 	} else if len(members) > count {
 		// Note, we scale down 1 member at a time
-		if m, err := members.SelectMemberToRemove(topologyMissingMemberToRemoveSelector(status.Topology), topologyAwarenessMemberToRemoveSelector(group, status.Topology)); err != nil {
+		if m, err := members.SelectMemberToRemove(getCleanedServer(context), topologyMissingMemberToRemoveSelector(status.Topology), topologyAwarenessMemberToRemoveSelector(group, status.Topology)); err != nil {
 			r.planLogger.Err(err).Str("role", group.AsRole()).Warn("Failed to select member to remove")
 		} else {
 			ready, message := groupReadyForRestart(context, status, m, group)
@@ -157,4 +159,17 @@ func (r *Reconciler) createReplaceMemberPlan(ctx context.Context, apiObject k8su
 
 func filterScaleUP(a api.Action) bool {
 	return a.Type == api.ActionTypeAddMember
+}
+
+func getCleanedServer(ctx reconciler.ArangoAgencyGet) api.MemberToRemoveSelector {
+	return func(m api.MemberStatusList) (string, error) {
+		if a, ok := ctx.GetAgencyCache(); ok {
+			for _, member := range m {
+				if a.Target.CleanedServers.Contains(agency.Server(member.ID)) {
+					return member.ID, nil
+				}
+			}
+		}
+		return "", nil
+	}
 }

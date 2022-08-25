@@ -80,6 +80,11 @@ func (r *Reconciler) createMemberFailedRestoreInternal(_ context.Context, _ k8su
 					continue
 				}
 
+				if agencyState.Target.CleanedServers.Contains(agency.Server(m.ID)) {
+					memberLog.Info("Member is CleanedOut")
+					continue
+				}
+
 				if agencyState.Plan.Collections.IsDBServerLeader(agency.Server(m.ID)) {
 					memberLog.Info("Recreating leader DBServer - it cannot be removed gracefully")
 					plan = append(plan, actions.NewAction(api.ActionTypeRecreateMember, group, m))

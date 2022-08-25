@@ -91,7 +91,7 @@ func (r *Resources) runPodFinalizers(ctx context.Context, p *core.Pod, memberSta
 				break
 			}
 
-			s, _ := r.context.GetStatus()
+			s := r.context.GetStatus()
 			_, group, ok := s.Members.ElementByID(memberStatus.ID)
 			if !ok {
 				continue

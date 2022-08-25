@@ -42,7 +42,7 @@ const (
 )
 
 func ensureJWTFolderSupportFromAction(actionCtx ActionContext) (bool, error) {
-	return ensureJWTFolderSupport(actionCtx.GetSpec(), actionCtx.GetStatusSnapshot())
+	return ensureJWTFolderSupport(actionCtx.GetSpec(), actionCtx.GetStatus())
 }
 
 func ensureJWTFolderSupport(spec api.DeploymentSpec, status api.DeploymentStatus) (bool, error) {

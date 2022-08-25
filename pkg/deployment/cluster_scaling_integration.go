@@ -26,15 +26,13 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
-	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/timer"
 )
 
@@ -91,10 +89,14 @@ func (ci *clusterScalingIntegration) checkScalingCluster(ctx context.Context, ex
 	defer ci.scaleEnabled.mutex.Unlock()
 
 	if !ci.depl.config.ScalingIntegrationEnabled {
-		return false
+		if err := ci.cleanClusterServers(ctx); err != nil {
+			ci.log.Err(err).Debug("Clean failed")
+			return false
+		}
+		return true
 	}
 
-	status, _ := ci.depl.GetStatus()
+	status := ci.depl.GetStatus()
 
 	if !ci.scaleEnabled.enabled {
 		// Check if it is possible to turn on scaling without any issue
@@ -107,6 +109,10 @@ func (ci *clusterScalingIntegration) checkScalingCluster(ctx context.Context, ex
 
 	if ci.depl.GetPhase() != api.DeploymentPhaseRunning || !ci.scaleEnabled.enabled {
 		// Deployment must be in running state and scaling must be enabled
+		return false
+	}
+
+	if !status.Conditions.IsTrue(api.ConditionTypeUpToDate) {
 		return false
 	}
 
@@ -151,6 +157,32 @@ func (ci *clusterScalingIntegration) ListenForClusterEvents(stopCh <-chan struct
 			return
 		}
 	}
+}
+
+func (ci *clusterScalingIntegration) cleanClusterServers(ctx context.Context) error {
+	log := ci.log
+
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
+	defer cancel()
+	c, err := ci.depl.clientCache.GetDatabase(ctxChild)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	req, err := arangod.GetNumberOfServers(ctxChild, c.Connection())
+	if err != nil {
+		log.Err(err).Debug("Failed to get number of servers")
+		return errors.WithStack(err)
+	}
+
+	if req.Coordinators != nil || req.DBServers != nil {
+		if err := arangod.CleanNumberOfServers(ctx, c.Connection()); err != nil {
+			log.Err(err).Debug("Failed to clean number of servers")
+			return errors.WithStack(err)
+		}
+	}
+
+	return nil
 }
 
 // Perform a single inspection of the cluster
@@ -208,35 +240,18 @@ func (ci *clusterScalingIntegration) inspectCluster(ctx context.Context, expectS
 		return nil
 	}
 	// Let's update the spec
-	apiObject := ci.depl.apiObject
-	ctxChild, cancel = globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
-	defer cancel()
-	current, err := ci.depl.deps.Client.Arango().DatabaseV1().ArangoDeployments(apiObject.Namespace).Get(ctxChild, apiObject.Name, meta.GetOptions{})
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	newSpec := current.Spec.DeepCopy()
+	p := make([]patch.Item, 0, 2)
 	if coordinatorsChanged {
-		newSpec.Coordinators.Count = util.NewInt(req.GetCoordinators())
-	}
-	if dbserversChanged {
-		newSpec.DBServers.Count = util.NewInt(req.GetDBServers())
-	}
-	// Validate will additionally check if
-	// 		min <= count <= max holds for the given server groups
-	if err := newSpec.Validate(); err != nil {
-		// Log failure & create event
-		log.Err(err).Warn("Validation of updated spec has failed")
-		ci.depl.CreateEvent(k8sutil.NewErrorEvent("Validation failed", err, apiObject))
-		// Restore original spec in cluster
-		ci.SendUpdateToCluster(current.Spec)
-	} else {
-		if err := ci.depl.updateCRSpec(ctx, *newSpec); err != nil {
-			log.Err(err).Warn("Failed to update current deployment")
-			return errors.WithStack(err)
+		if min, max, expected := ci.depl.GetSpec().Coordinators.GetMinCount(), ci.depl.GetSpec().Coordinators.GetMaxCount(), req.GetCoordinators(); min <= expected && expected <= max {
+			p = append(p, patch.ItemReplace(patch.NewPath("spec", "coordinators", "count"), expected))
 		}
 	}
-	return nil
+	if dbserversChanged {
+		if min, max, expected := ci.depl.GetSpec().DBServers.GetMinCount(), ci.depl.GetSpec().DBServers.GetMaxCount(), req.GetDBServers(); min <= expected && expected <= max {
+			p = append(p, patch.ItemReplace(patch.NewPath("spec", "dbservers", "count"), expected))
+		}
+	}
+	return ci.depl.ApplyPatch(ctx, p...)
 }
 
 // updateClusterServerCount updates the intended number of servers of the cluster.
@@ -274,6 +289,7 @@ func (ci *clusterScalingIntegration) updateClusterServerCount(ctx context.Contex
 	// This is to prevent unneseccary updates that may override some values written by the WebUI (in the case of a update loop)
 	if coordinatorCount != lastNumberOfServers.GetCoordinators() || dbserverCount != lastNumberOfServers.GetDBServers() {
 		if err := ci.depl.SetNumberOfServers(ctx, coordinatorCountPtr, dbserverCountPtr); err != nil {
+			log.Debug("Setting number of servers %d/%d", coordinatorCount, dbserverCount)
 			if expectSuccess {
 				log.Err(err).Debug("Failed to set number of servers")
 			}
@@ -342,6 +358,6 @@ func (ci *clusterScalingIntegration) setNumberOfServers(ctx context.Context) err
 }
 
 func (ci *clusterScalingIntegration) getNumbersOfServers() (int, int) {
-	status, _ := ci.depl.getStatus()
+	status := ci.depl.GetStatus()
 	return len(status.Members.Coordinators), len(status.Members.DBServers)
 }

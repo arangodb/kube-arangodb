@@ -140,7 +140,7 @@ func (c *testContext) ApplyPatch(ctx context.Context, p ...patch.Item) error {
 }
 
 func (c *testContext) GetStatusSnapshot() api.DeploymentStatus {
-	s, _ := c.GetStatus()
+	s := c.GetStatus()
 	return *s.DeepCopy()
 }
 
@@ -184,7 +184,7 @@ func (c *testContext) ArangoMembersModInterface() arangomemberv1.ModInterface {
 	panic("implement me")
 }
 
-func (c *testContext) WithStatusUpdateErr(ctx context.Context, action reconciler.DeploymentStatusUpdateErrFunc, force ...bool) error {
+func (c *testContext) WithStatusUpdateErr(ctx context.Context, action reconciler.DeploymentStatusUpdateErrFunc) error {
 	_, err := action(&c.ArangoDeployment.Status)
 	return err
 }
@@ -221,7 +221,7 @@ func (c *testContext) SetAgencyMaintenanceMode(ctx context.Context, enabled bool
 	panic("implement me")
 }
 
-func (c *testContext) WithStatusUpdate(ctx context.Context, action reconciler.DeploymentStatusUpdateFunc, force ...bool) error {
+func (c *testContext) WithStatusUpdate(ctx context.Context, action reconciler.DeploymentStatusUpdateFunc) error {
 	action(&c.ArangoDeployment.Status)
 	return nil
 }
@@ -276,7 +276,7 @@ func (c *testContext) GetSpec() api.DeploymentSpec {
 	return c.ArangoDeployment.Spec
 }
 
-func (c *testContext) UpdateStatus(_ context.Context, status api.DeploymentStatus, lastVersion int32, force ...bool) error {
+func (c *testContext) UpdateStatus(_ context.Context, status api.DeploymentStatus) error {
 	c.ArangoDeployment.Status = status
 	return nil
 }
@@ -366,8 +366,8 @@ func (c *testContext) GetExpectedPodArguments(apiObject meta.Object, deplSpec ap
 }
 
 // GetStatus returns the current status of the deployment
-func (c *testContext) GetStatus() (api.DeploymentStatus, int32) {
-	return c.ArangoDeployment.Status, 0
+func (c *testContext) GetStatus() api.DeploymentStatus {
+	return c.ArangoDeployment.Status
 }
 
 func addAgentsToStatus(t *testing.T, status *api.DeploymentStatus, count int) {
@@ -1243,7 +1243,7 @@ func TestCreatePlan(t *testing.T) {
 			}
 
 			require.NoError(t, err)
-			status, _ := testCase.context.GetStatus()
+			status := testCase.context.GetStatus()
 
 			if len(testCase.ExpectedHighPlan) > 0 {
 				require.Len(t, status.HighPriorityPlan, len(testCase.ExpectedHighPlan))

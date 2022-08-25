@@ -93,6 +93,29 @@ func SetNumberOfServers(ctx context.Context, conn driver.Connection, noCoordinat
 	return nil
 }
 
+// CleanNumberOfServers removes the server count
+func CleanNumberOfServers(ctx context.Context, conn driver.Connection) error {
+	req, err := conn.NewRequest("PUT", "_admin/cluster/numberOfServers")
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	input := map[string]interface{}{
+		"numberOfCoordinators": nil,
+		"numberOfDBServers":    nil,
+	}
+	if _, err := req.SetBody(input); err != nil {
+		return errors.WithStack(err)
+	}
+	resp, err := conn.Do(ctx, req)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	if err := resp.CheckStatus(200); err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
 // RemoveServerFromCluster tries to remove a coordinator or DBServer from the cluster.
 func RemoveServerFromCluster(ctx context.Context, conn driver.Connection, id driver.ServerID) error {
 	req, err := conn.NewRequest("POST", "_admin/cluster/removeServer")

@@ -18,16 +18,21 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package resilience
+package features
 
-import (
-	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
-)
+func init() {
+	registerFeature(deploymentSpecDefaultsRestore)
+}
 
-// Context provides methods to the resilience package.
-type Context interface {
-	reconciler.DeploymentDatabaseClient
-	reconciler.ArangoAgency
-	reconciler.DeploymentInfoGetter
-	reconciler.DeploymentStatusUpdate
+var deploymentSpecDefaultsRestore = &feature{
+	name:               "deployment-spec-defaults-restore",
+	description:        "Restore defaults from last accepted state of deployment",
+	version:            "3.6.0",
+	enterpriseRequired: false,
+	enabledByDefault:   true,
+	hidden:             true,
+}
+
+func DeploymentSpecDefaultsRestore() Feature {
+	return deploymentSpecDefaultsRestore
 }

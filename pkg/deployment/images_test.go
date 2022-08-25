@@ -424,7 +424,7 @@ func TestEnsureImages(t *testing.T) {
 			// Arrange
 			d, _ := createTestDeployment(t, Config{}, testCase.ArangoDeployment)
 
-			d.status.last = api.DeploymentStatus{
+			d.currentObjectStatus = &api.DeploymentStatus{
 				Images: createTestImages(false),
 			}
 
@@ -434,13 +434,13 @@ func TestEnsureImages(t *testing.T) {
 			}
 
 			// Create custom resource in the fake kubernetes API
-			_, err := d.deps.Client.Arango().DatabaseV1().ArangoDeployments(testNamespace).Create(context.Background(), d.apiObject, meta.CreateOptions{})
+			_, err := d.deps.Client.Arango().DatabaseV1().ArangoDeployments(testNamespace).Create(context.Background(), d.currentObject, meta.CreateOptions{})
 			require.NoError(t, err)
 
 			require.NoError(t, d.acs.CurrentClusterCache().Refresh(context.Background()))
 
 			// Act
-			retrySoon, _, err := d.ensureImages(context.Background(), d.apiObject, d.GetCachedStatus())
+			retrySoon, _, err := d.ensureImages(context.Background(), d.currentObject, d.GetCachedStatus())
 
 			// Assert
 			assert.EqualValues(t, testCase.RetrySoon, retrySoon)

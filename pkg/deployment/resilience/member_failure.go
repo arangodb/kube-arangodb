@@ -38,7 +38,7 @@ const (
 // - They are frequently restarted
 // - They cannot be scheduled for a long time (TODO)
 func (r *Resilience) CheckMemberFailure(ctx context.Context) error {
-	status, lastVersion := r.context.GetStatus()
+	status := r.context.GetStatus()
 	updateStatusNeeded := false
 
 	for _, e := range status.Members.AsList() {
@@ -86,7 +86,7 @@ func (r *Resilience) CheckMemberFailure(ctx context.Context) error {
 	}
 
 	if updateStatusNeeded {
-		if err := r.context.UpdateStatus(ctx, status, lastVersion); err != nil {
+		if err := r.context.UpdateStatus(ctx, status); err != nil {
 			return errors.WithStack(err)
 		}
 	}

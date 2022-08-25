@@ -116,7 +116,7 @@ var (
 // CreateArangodClient creates a go-driver client for a specific member in the given group.
 func CreateArangodClient(ctx context.Context, cli typedCore.CoreV1Interface, apiObject *api.ArangoDeployment, group api.ServerGroup, id string) (driver.Client, error) {
 	// Create connection
-	dnsName := k8sutil.CreatePodDNSNameWithDomain(apiObject, apiObject.Spec.ClusterDomain, group.AsRole(), id)
+	dnsName := k8sutil.CreatePodDNSNameWithDomain(apiObject, apiObject.GetAcceptedSpec().ClusterDomain, group.AsRole(), id)
 	c, err := createArangodClientForDNSName(ctx, cli, apiObject, dnsName, false)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -127,7 +127,7 @@ func CreateArangodClient(ctx context.Context, cli typedCore.CoreV1Interface, api
 // CreateArangodDatabaseClient creates a go-driver client for accessing the entire cluster (or single server).
 func CreateArangodDatabaseClient(ctx context.Context, cli typedCore.CoreV1Interface, apiObject *api.ArangoDeployment, shortTimeout bool) (driver.Client, error) {
 	// Create connection
-	dnsName := k8sutil.CreateDatabaseClientServiceDNSNameWithDomain(apiObject, apiObject.Spec.ClusterDomain)
+	dnsName := k8sutil.CreateDatabaseClientServiceDNSNameWithDomain(apiObject, apiObject.GetAcceptedSpec().ClusterDomain)
 	c, err := createArangodClientForDNSName(ctx, cli, apiObject, dnsName, shortTimeout)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -178,7 +178,7 @@ func createArangodHTTPConfigForDNSNames(apiObject *api.ArangoDeployment, dnsName
 	if shortTimeout {
 		transport = sharedHTTPTransportShortTimeout
 	}
-	if apiObject != nil && apiObject.Spec.IsSecure() {
+	if apiObject != nil && apiObject.GetAcceptedSpec().IsSecure() {
 		scheme = "https"
 		transport = sharedHTTPSTransport
 		if shortTimeout {
@@ -197,14 +197,14 @@ func createArangodHTTPConfigForDNSNames(apiObject *api.ArangoDeployment, dnsName
 
 // createArangodClientAuthentication creates a go-driver authentication for the servers in the given deployment.
 func createArangodClientAuthentication(ctx context.Context, cli typedCore.CoreV1Interface, apiObject *api.ArangoDeployment) (driver.Authentication, error) {
-	if apiObject != nil && apiObject.Spec.IsAuthenticated() {
+	if apiObject != nil && apiObject.GetAcceptedSpec().IsAuthenticated() {
 		// Authentication is enabled.
 		// Should we skip using it?
 		if ctx.Value(skipAuthenticationKey{}) == nil {
 			secrets := cli.Secrets(apiObject.GetNamespace())
 			ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 			defer cancel()
-			s, err := k8sutil.GetTokenSecret(ctxChild, secrets, apiObject.Spec.Authentication.GetJWTSecretName())
+			s, err := k8sutil.GetTokenSecret(ctxChild, secrets, apiObject.GetAcceptedSpec().Authentication.GetJWTSecretName())
 			if err != nil {
 				return nil, errors.WithStack(err)
 			}

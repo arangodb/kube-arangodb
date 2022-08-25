@@ -199,20 +199,20 @@ func (ac *actionContext) GetMembersState() member.StateInspector {
 	return ac.context.GetMembersState()
 }
 
-func (ac *actionContext) UpdateStatus(ctx context.Context, status api.DeploymentStatus, lastVersion int32, force ...bool) error {
-	return ac.context.UpdateStatus(ctx, status, lastVersion, force...)
+func (ac *actionContext) UpdateStatus(ctx context.Context, status api.DeploymentStatus) error {
+	return ac.context.UpdateStatus(ctx, status)
 }
 
 func (ac *actionContext) GetNamespace() string {
 	return ac.context.GetNamespace()
 }
 
-func (ac *actionContext) GetStatus() (api.DeploymentStatus, int32) {
+func (ac *actionContext) GetStatus() api.DeploymentStatus {
 	return ac.context.GetStatus()
 }
 
 func (ac *actionContext) GetStatusSnapshot() api.DeploymentStatus {
-	return ac.context.GetStatusSnapshot()
+	return ac.context.GetStatus()
 }
 
 func (ac *actionContext) GenerateMemberEndpoint(group api.ServerGroup, member api.MemberStatus) (string, error) {
@@ -255,12 +255,12 @@ func (ac *actionContext) GetBackup(ctx context.Context, backup string) (*backupA
 	return ac.context.GetBackup(ctx, backup)
 }
 
-func (ac *actionContext) WithStatusUpdateErr(ctx context.Context, action reconciler.DeploymentStatusUpdateErrFunc, force ...bool) error {
-	return ac.context.WithStatusUpdateErr(ctx, action, force...)
+func (ac *actionContext) WithStatusUpdateErr(ctx context.Context, action reconciler.DeploymentStatusUpdateErrFunc) error {
+	return ac.context.WithStatusUpdateErr(ctx, action)
 }
 
-func (ac *actionContext) WithStatusUpdate(ctx context.Context, action reconciler.DeploymentStatusUpdateFunc, force ...bool) error {
-	return ac.context.WithStatusUpdate(ctx, action, force...)
+func (ac *actionContext) WithStatusUpdate(ctx context.Context, action reconciler.DeploymentStatusUpdateFunc) error {
+	return ac.context.WithStatusUpdate(ctx, action)
 }
 
 func (ac *actionContext) UpdateClusterCondition(ctx context.Context, conditionType api.ConditionType, status bool, reason, message string) error {
@@ -291,7 +291,7 @@ func (ac *actionContext) GetSpec() api.DeploymentSpec {
 // Returns member status, true when found, or false
 // when no such member is found.
 func (ac *actionContext) GetMemberStatusByID(id string) (api.MemberStatus, bool) {
-	status, _ := ac.context.GetStatus()
+	status := ac.context.GetStatus()
 	m, _, ok := status.Members.ElementByID(id)
 	return m, ok
 }
@@ -301,7 +301,7 @@ func (ac *actionContext) GetMemberStatusByID(id string) (api.MemberStatus, bool)
 // Returns member status, true when found, or false
 // when no such member is found.
 func (ac *actionContext) GetMemberStatusAndGroupByID(id string) (api.MemberStatus, api.ServerGroup, bool) {
-	status, _ := ac.context.GetStatus()
+	status := ac.context.GetStatus()
 	return status.Members.ElementByID(id)
 }
 
@@ -317,7 +317,7 @@ func (ac *actionContext) CreateMember(ctx context.Context, group api.ServerGroup
 
 // UpdateMember updates the deployment status wrt the given member.
 func (ac *actionContext) UpdateMember(ctx context.Context, member api.MemberStatus) error {
-	status, lastVersion := ac.context.GetStatus()
+	status := ac.context.GetStatus()
 	_, group, found := status.Members.ElementByID(member.ID)
 	if !found {
 		return errors.WithStack(errors.Newf("Member %s not found", member.ID))
@@ -325,7 +325,7 @@ func (ac *actionContext) UpdateMember(ctx context.Context, member api.MemberStat
 	if err := status.Members.Update(member, group); err != nil {
 		return errors.WithStack(err)
 	}
-	if err := ac.context.UpdateStatus(ctx, status, lastVersion); err != nil {
+	if err := ac.context.UpdateStatus(ctx, status); err != nil {
 		ac.log.Err(err).Debug("Updating CR status failed")
 		return errors.WithStack(err)
 	}
@@ -334,7 +334,7 @@ func (ac *actionContext) UpdateMember(ctx context.Context, member api.MemberStat
 
 // RemoveMemberByID removes a member with given id.
 func (ac *actionContext) RemoveMemberByID(ctx context.Context, id string) error {
-	status, lastVersion := ac.context.GetStatus()
+	status := ac.context.GetStatus()
 	_, group, found := status.Members.ElementByID(id)
 	if !found {
 		return nil
@@ -344,7 +344,7 @@ func (ac *actionContext) RemoveMemberByID(ctx context.Context, id string) error 
 		return errors.WithStack(err)
 	}
 	// Save removed member
-	if err := ac.context.UpdateStatus(ctx, status, lastVersion); err != nil {
+	if err := ac.context.UpdateStatus(ctx, status); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil
@@ -353,14 +353,14 @@ func (ac *actionContext) RemoveMemberByID(ctx context.Context, id string) error 
 // GetImageInfo returns the image info for an image with given name.
 // Returns: (info, infoFound)
 func (ac *actionContext) GetImageInfo(imageName string) (api.ImageInfo, bool) {
-	status, _ := ac.context.GetStatus()
+	status := ac.context.GetStatus()
 	return status.Images.GetByImage(imageName)
 }
 
 // GetImageInfo returns the image info for an current image.
 // Returns: (info, infoFound)
 func (ac *actionContext) GetCurrentImageInfo() (api.ImageInfo, bool) {
-	status, _ := ac.context.GetStatus()
+	status := ac.context.GetStatus()
 
 	if status.CurrentImage == nil {
 		return api.ImageInfo{}, false
@@ -378,7 +378,7 @@ func (ac *actionContext) SetCurrentImage(ctx context.Context, imageInfo api.Imag
 			return true
 		}
 		return false
-	}, true)
+	})
 }
 
 // DisableScalingCluster disables scaling DBservers and coordinators
