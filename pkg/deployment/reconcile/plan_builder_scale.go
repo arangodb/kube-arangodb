@@ -140,13 +140,13 @@ func (r *Reconciler) createReplaceMemberPlan(ctx context.Context, apiObject k8su
 					Str("role", group.AsRole()).
 					Debug("Creating replacement plan")
 			case api.ServerGroupCoordinators:
-				plan = append(plan, actions.NewAction(api.ActionTypeRemoveMember, group, member))
+				plan = append(plan, cleanOutMember(group, member)...)
 				r.planLogger.
 					Str("role", group.AsRole()).
 					Debug("Creating replacement plan")
 			case api.ServerGroupAgents:
-				plan = append(plan, actions.NewAction(api.ActionTypeRemoveMember, group, member),
-					actions.NewAction(api.ActionTypeAddMember, group, withPredefinedMember("")))
+				plan = append(plan, cleanOutMember(group, member)...)
+				plan = append(plan, actions.NewAction(api.ActionTypeAddMember, group, withPredefinedMember("")))
 				r.planLogger.
 					Str("role", group.AsRole()).
 					Debug("Creating replacement plan")
