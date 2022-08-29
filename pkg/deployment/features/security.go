@@ -32,6 +32,18 @@ var ephemeralVolumes = &feature{
 	enabledByDefault:   false,
 }
 
+var sensitiveInformationProtection = &feature{
+	name:               "sensitive-information-protection",
+	description:        "Hide sensitive information from metrics and logs",
+	version:            "3.7.0",
+	enterpriseRequired: false,
+	enabledByDefault:   false,
+}
+
 func EphemeralVolumes() Feature {
 	return ephemeralVolumes
+}
+
+func SensitiveInformationProtection() Feature {
+	return sensitiveInformationProtection
 }

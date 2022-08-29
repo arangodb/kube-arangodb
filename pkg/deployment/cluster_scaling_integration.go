@@ -79,7 +79,7 @@ func newClusterScalingIntegration(depl *Deployment) *clusterScalingIntegration {
 func (ci *clusterScalingIntegration) SendUpdateToCluster(spec api.DeploymentSpec) {
 	ci.pendingUpdate.mutex.Lock()
 	defer ci.pendingUpdate.mutex.Unlock()
-	ci.pendingUpdate.spec = &spec
+	ci.pendingUpdate.spec = spec.DeepCopy()
 }
 
 // checkScalingCluster checks if inspection
@@ -112,10 +112,6 @@ func (ci *clusterScalingIntegration) checkScalingCluster(ctx context.Context, ex
 		return false
 	}
 
-	if !status.Conditions.IsTrue(api.ConditionTypeUpToDate) {
-		return false
-	}
-
 	// Update cluster with our state
 	safeToAskCluster, err := ci.updateClusterServerCount(ctx, expectSuccess)
 	if err != nil {
@@ -135,7 +131,7 @@ func (ci *clusterScalingIntegration) checkScalingCluster(ctx context.Context, ex
 	return false
 }
 
-// listenForClusterEvents keep listening for changes entered in the UI of the cluster.
+// ListenForClusterEvents keep listening for changes entered in the UI of the cluster.
 func (ci *clusterScalingIntegration) ListenForClusterEvents(stopCh <-chan struct{}) {
 	start := time.Now()
 	goodInspections := 0
@@ -176,6 +172,7 @@ func (ci *clusterScalingIntegration) cleanClusterServers(ctx context.Context) er
 	}
 
 	if req.Coordinators != nil || req.DBServers != nil {
+		log.Debug("Clean number of servers")
 		if err := arangod.CleanNumberOfServers(ctx, c.Connection()); err != nil {
 			log.Err(err).Debug("Failed to clean number of servers")
 			return errors.WithStack(err)
@@ -261,6 +258,7 @@ func (ci *clusterScalingIntegration) updateClusterServerCount(ctx context.Contex
 	ci.pendingUpdate.mutex.Lock()
 	spec := ci.pendingUpdate.spec
 	ci.pendingUpdate.mutex.Unlock()
+
 	if spec == nil {
 		// Nothing pending
 		return true, nil
@@ -288,8 +286,8 @@ func (ci *clusterScalingIntegration) updateClusterServerCount(ctx context.Contex
 
 	// This is to prevent unneseccary updates that may override some values written by the WebUI (in the case of a update loop)
 	if coordinatorCount != lastNumberOfServers.GetCoordinators() || dbserverCount != lastNumberOfServers.GetDBServers() {
+		log.Debug("Setting number of servers %d/%d", coordinatorCount, dbserverCount)
 		if err := ci.depl.SetNumberOfServers(ctx, coordinatorCountPtr, dbserverCountPtr); err != nil {
-			log.Debug("Setting number of servers %d/%d", coordinatorCount, dbserverCount)
 			if expectSuccess {
 				log.Err(err).Debug("Failed to set number of servers")
 			}

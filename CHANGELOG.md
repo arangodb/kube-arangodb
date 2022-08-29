@@ -19,6 +19,7 @@
 - (Bugfix) Always recreate DBServers if they have a leader on it.
 - (Feature) Immutable spec
 - (Bugfix) Proper agent cleanout
+- (Bugfix) Fix ClusterScaling integration
 
 ## [1.2.15](https://github.com/arangodb/kube-arangodb/tree/1.2.15) (2022-07-20)
 - (Bugfix) Ensure pod names not too long
