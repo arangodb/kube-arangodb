@@ -27,6 +27,7 @@
 - (Feature) Sensitive information protection
 - (Bugfix) Propagate SecurityContext to the ID Containers
 - (Bugfix) Fix for enabling all features
+- (Feature) Add new field to DeploymentReplicationStatus with details on DC2DC sync status
 
 ## [1.2.15](https://github.com/arangodb/kube-arangodb/tree/1.2.15) (2022-07-20)
 - (Bugfix) Ensure pod names not too long

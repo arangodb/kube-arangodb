@@ -28,7 +28,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/rs/zerolog/log"
 	core "k8s.io/api/core/v1"
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -331,8 +330,7 @@ func (d *Deployment) GetSyncServerClient(ctx context.Context, group api.ServerGr
 	}
 	auth := client.NewAuthentication(tlsAuth, "")
 	insecureSkipVerify := true
-	// TODO: Change logging system in sync client
-	c, err := d.syncClientCache.GetClient(log.Logger, source, auth, insecureSkipVerify)
+	c, err := d.syncClientCache.GetClient(client.NewExternalEndpoints(source), auth, insecureSkipVerify)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
