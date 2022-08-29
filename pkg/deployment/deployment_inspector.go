@@ -106,16 +106,6 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 			}
 		} else if changed {
 			d.log.Info("Accepted new spec")
-			// Notify cluster of desired server count
-			if ci := d.clusterScalingIntegration; ci != nil {
-				if c := d.currentObjectStatus; c != nil {
-					if a := c.AcceptedSpec; a != nil {
-						if c.Conditions.IsTrue(api.ConditionTypeUpToDate) {
-							ci.SendUpdateToCluster(*a)
-						}
-					}
-				}
-			}
 			return minInspectionInterval // Retry ASAP
 		} else if !canProceed {
 			d.log.Err(err).Error("Cannot proceed with reconciliation")
@@ -375,6 +365,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 		}
 
 		if isUpToDate && !status.Conditions.IsTrue(api.ConditionTypeUpToDate) {
+			d.sendCIUpdate()
 			if err = d.updateConditionWithHash(ctx, api.ConditionTypeUpToDate, true, "Spec is Up To Date", "Spec is Up To Date", *v); err != nil {
 				return minInspectionInterval, errors.Wrapf(err, "Unable to update UpToDate condition")
 			}
@@ -412,6 +403,16 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	}
 
 	return
+}
+
+func (d *Deployment) sendCIUpdate() {
+	if ci := d.clusterScalingIntegration; ci != nil {
+		if c := d.currentObjectStatus; c != nil {
+			if a := c.AcceptedSpec; a != nil {
+				ci.SendUpdateToCluster(*a)
+			}
+		}
+	}
 }
 
 func (d *Deployment) isUpToDateStatus(status api.DeploymentStatus) (upToDate bool, reason string) {

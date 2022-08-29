@@ -354,14 +354,7 @@ func (d *Deployment) run() {
 	inspectionInterval := d.inspectDeployment(minInspectionInterval)
 	log.Str("interval", inspectionInterval.String()).Debug("...deployment inspect started")
 
-	if ci := d.clusterScalingIntegration; ci != nil {
-		if c := d.currentObjectStatus; c != nil {
-			if a := c.AcceptedSpec; a != nil {
-				log.Debug("Send initial CI update")
-				ci.SendUpdateToCluster(*a)
-			}
-		}
-	}
+	d.sendCIUpdate()
 
 	for {
 		select {
