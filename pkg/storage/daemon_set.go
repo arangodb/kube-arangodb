@@ -25,17 +25,15 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	"github.com/arangodb/kube-arangodb/pkg/util"
-
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -46,7 +44,6 @@ const (
 // ensureDaemonSet ensures that a daemonset is created for the given local storage.
 // If it already exists, it is updated.
 func (ls *LocalStorage) ensureDaemonSet(apiObject *api.ArangoLocalStorage) error {
-	log := ls.deps.Log
 	ns := ls.config.Namespace
 	c := core.Container{
 		Name:            "provisioner",
@@ -137,7 +134,7 @@ func (ls *LocalStorage) ensureDaemonSet(apiObject *api.ArangoLocalStorage) error
 		}
 	} else {
 		// We're done
-		log.Debug().Msg("Created DaemonSet")
+		ls.log.Debug("Created DaemonSet")
 		return nil
 	}
 
@@ -158,11 +155,11 @@ func (ls *LocalStorage) ensureDaemonSet(apiObject *api.ArangoLocalStorage) error
 			// Failed to update, try again
 			continue
 		} else if err != nil {
-			ls.deps.Log.Debug().Err(err).Msg("failed to patch DaemonSet spec")
+			ls.log.Err(err).Debug("failed to patch DaemonSet spec")
 			return errors.WithStack(errors.Newf("failed to patch DaemonSet spec: %v", err))
 		} else {
 			// Update was a success
-			log.Debug().Msg("Updated DaemonSet")
+			ls.log.Debug("Updated DaemonSet")
 			return nil
 		}
 	}

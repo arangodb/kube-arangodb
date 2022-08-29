@@ -33,19 +33,19 @@ import (
 	"strconv"
 	"syscall"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
 	"github.com/spf13/cobra"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb-helper/go-certificates"
 	"github.com/arangodb/go-driver/jwt"
 	"github.com/arangodb/go-driver/v2/connection"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	secretv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
@@ -107,31 +107,31 @@ func cmdGetAgencyState(cmd *cobra.Command, _ []string) {
 	ctx := getInterruptionContext()
 	d, certCA, auth, err := getDeploymentAndCredentials(ctx, deploymentName)
 	if err != nil {
-		cliLog.Fatal().Err(err).Msg("failed to create basic data for the connection")
+		logger.Err(err).Fatal("failed to create basic data for the connection")
 	}
 
-	if d.Spec.GetMode() != api.DeploymentModeCluster {
-		cliLog.Fatal().Msgf("agency state does not work for the \"%s\" deployment \"%s\"", d.Spec.GetMode(),
+	if d.GetAcceptedSpec().GetMode() != api.DeploymentModeCluster {
+		logger.Fatal("agency state does not work for the \"%s\" deployment \"%s\"", d.GetAcceptedSpec().GetMode(),
 			d.GetName())
 	}
 
 	dnsName := k8sutil.CreatePodDNSName(d.GetObjectMeta(), api.ServerGroupAgents.AsRole(), d.Status.Members.Agents[0].ID)
-	endpoint := getArangoEndpoint(d.Spec.IsSecure(), dnsName)
+	endpoint := getArangoEndpoint(d.GetAcceptedSpec().IsSecure(), dnsName)
 	conn := createClient([]string{endpoint}, certCA, auth, connection.ApplicationJSON)
 	leaderID, err := getAgencyLeader(ctx, conn)
 	if err != nil {
-		cliLog.Fatal().Err(err).Msg("failed to get leader ID")
+		logger.Err(err).Fatal("failed to get leader ID")
 	}
 
 	dnsLeaderName := k8sutil.CreatePodDNSName(d.GetObjectMeta(), api.ServerGroupAgents.AsRole(), leaderID)
-	leaderEndpoint := getArangoEndpoint(d.Spec.IsSecure(), dnsLeaderName)
+	leaderEndpoint := getArangoEndpoint(d.GetAcceptedSpec().IsSecure(), dnsLeaderName)
 	conn = createClient([]string{leaderEndpoint}, certCA, auth, connection.PlainText)
 	body, err := getAgencyState(ctx, conn)
 	if body != nil {
 		defer body.Close()
 	}
 	if err != nil {
-		cliLog.Fatal().Err(err).Msg("can not get state of the agency")
+		logger.Err(err).Fatal("can not get state of the agency")
 	}
 
 	// Print and receive parallelly.
@@ -143,22 +143,22 @@ func cmdGetAgencyDump(cmd *cobra.Command, _ []string) {
 	ctx := getInterruptionContext()
 	d, certCA, auth, err := getDeploymentAndCredentials(ctx, deploymentName)
 	if err != nil {
-		cliLog.Fatal().Err(err).Msg("failed to create basic data for the connection")
+		logger.Err(err).Fatal("failed to create basic data for the connection")
 	}
 
-	if d.Spec.GetMode() != api.DeploymentModeCluster {
-		cliLog.Fatal().Msgf("agency dump does not work for the \"%s\" deployment \"%s\"", d.Spec.GetMode(),
+	if d.GetAcceptedSpec().GetMode() != api.DeploymentModeCluster {
+		logger.Fatal("agency dump does not work for the \"%s\" deployment \"%s\"", d.GetAcceptedSpec().GetMode(),
 			d.GetName())
 	}
 
-	endpoint := getArangoEndpoint(d.Spec.IsSecure(), k8sutil.CreateDatabaseClientServiceDNSName(d.GetObjectMeta()))
+	endpoint := getArangoEndpoint(d.GetAcceptedSpec().IsSecure(), k8sutil.CreateDatabaseClientServiceDNSName(d.GetObjectMeta()))
 	conn := createClient([]string{endpoint}, certCA, auth, connection.ApplicationJSON)
 	body, err := getAgencyDump(ctx, conn)
 	if body != nil {
 		defer body.Close()
 	}
 	if err != nil {
-		cliLog.Fatal().Err(err).Msg("can not get dump")
+		logger.Err(err).Fatal("can not get dump")
 	}
 
 	// Print and receive parallelly.
@@ -205,16 +205,18 @@ func getDeploymentAndCredentials(ctx context.Context,
 	}
 
 	var secrets = kubeCli.CoreV1().Secrets(d.GetNamespace())
-	certCA, err = getCACertificate(ctx, secrets, d.Spec.TLS.GetCASecretName())
+	certCA, err = getCACertificate(ctx, secrets, d.GetAcceptedSpec().TLS.GetCASecretName())
 	if err != nil {
 		err = errors.WithMessage(err, "failed to get CA certificate")
 		return
 	}
 
-	auth, err = getJWTTokenFromSecrets(ctx, secrets, d.Spec.Authentication.GetJWTSecretName())
-	if err != nil {
-		err = errors.WithMessage(err, "failed to get JWT token")
-		return
+	if d.GetAcceptedSpec().IsAuthenticated() {
+		auth, err = getJWTTokenFromSecrets(ctx, secrets, d.GetAcceptedSpec().Authentication.GetJWTSecretName())
+		if err != nil {
+			err = errors.WithMessage(err, "failed to get JWT token")
+			return
+		}
 	}
 
 	return
@@ -314,16 +316,16 @@ func getCACertificate(ctx context.Context, secrets secretv1.ReadInterface, name 
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 
-	s, err := secrets.Get(ctxChild, name, metav1.GetOptions{})
+	s, err := secrets.Get(ctxChild, name, meta.GetOptions{})
 	if err != nil {
 		return nil, errors.WithMessage(err, fmt.Sprintf("failed to get secret \"%s\"", name))
 	}
 
-	if data, ok := s.Data[v1.ServiceAccountRootCAKey]; ok {
+	if data, ok := s.Data[core.ServiceAccountRootCAKey]; ok {
 		return certificates.LoadCertPool(string(data))
 	}
 
-	return nil, errors.New(fmt.Sprintf("the \"%s\" does not exist in the secret \"%s\"", v1.ServiceAccountRootCAKey,
+	return nil, errors.New(fmt.Sprintf("the \"%s\" does not exist in the secret \"%s\"", core.ServiceAccountRootCAKey,
 		name))
 }
 
@@ -341,7 +343,7 @@ func getDeployment(ctx context.Context, namespace, deplName string) (api.ArangoD
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 
-	deployments, err := extCli.DatabaseV1().ArangoDeployments(namespace).List(ctxChild, metav1.ListOptions{})
+	deployments, err := extCli.DatabaseV1().ArangoDeployments(namespace).List(ctxChild, meta.ListOptions{})
 	if err != nil {
 		if api.IsNotFound(err) {
 			return api.ArangoDeployment{}, errors.WithMessage(err, "there are no deployments")

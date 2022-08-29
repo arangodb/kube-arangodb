@@ -21,14 +21,13 @@
 package operator
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/logging"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	kwatch "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/storage"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -44,7 +43,6 @@ var (
 // This registers a listener and waits until the process stops.
 func (o *Operator) runLocalStorages(stop <-chan struct{}) {
 	rw := k8sutil.NewResourceWatcher(
-		o.log,
 		o.Dependencies.Client.Arango().StorageV1alpha().RESTClient(),
 		api.ArangoLocalStorageResourcePlural,
 		"", //o.Config.Namespace,
@@ -65,9 +63,9 @@ func (o *Operator) onAddArangoLocalStorage(obj interface{}) {
 	defer o.Dependencies.LivenessProbe.Unlock()
 
 	apiObject := obj.(*api.ArangoLocalStorage)
-	o.log.Debug().
+	o.log.
 		Str("name", apiObject.GetObjectMeta().GetName()).
-		Msg("ArangoLocalStorage added")
+		Debug("ArangoLocalStorage added")
 	o.syncArangoLocalStorage(apiObject)
 }
 
@@ -77,9 +75,9 @@ func (o *Operator) onUpdateArangoLocalStorage(oldObj, newObj interface{}) {
 	defer o.Dependencies.LivenessProbe.Unlock()
 
 	apiObject := newObj.(*api.ArangoLocalStorage)
-	o.log.Debug().
+	o.log.
 		Str("name", apiObject.GetObjectMeta().GetName()).
-		Msg("ArangoLocalStorage updated")
+		Debug("ArangoLocalStorage updated")
 	o.syncArangoLocalStorage(apiObject)
 }
 
@@ -93,18 +91,18 @@ func (o *Operator) onDeleteArangoLocalStorage(obj interface{}) {
 	if !ok {
 		tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
 		if !ok {
-			log.Error().Interface("event-object", obj).Msg("unknown object from ArangoLocalStorage delete event")
+			log.Interface("event-object", obj).Error("unknown object from ArangoLocalStorage delete event")
 			return
 		}
 		apiObject, ok = tombstone.Obj.(*api.ArangoLocalStorage)
 		if !ok {
-			log.Error().Interface("event-object", obj).Msg("Tombstone contained object that is not an ArangoLocalStorage")
+			log.Interface("event-object", obj).Error("Tombstone contained object that is not an ArangoLocalStorage")
 			return
 		}
 	}
-	log.Debug().
+	log.
 		Str("name", apiObject.GetObjectMeta().GetName()).
-		Msg("ArangoLocalStorage deleted")
+		Debug("ArangoLocalStorage deleted")
 	ev := &Event{
 		Type:         kwatch.Deleted,
 		LocalStorage: apiObject,
@@ -113,7 +111,7 @@ func (o *Operator) onDeleteArangoLocalStorage(obj interface{}) {
 	//	pt.start()
 	err := o.handleLocalStorageEvent(ev)
 	if err != nil {
-		log.Warn().Err(err).Msg("Failed to handle event")
+		log.Err(err).Warn("Failed to handle event")
 	}
 	//pt.stop()
 }
@@ -134,7 +132,7 @@ func (o *Operator) syncArangoLocalStorage(apiObject *api.ArangoLocalStorage) {
 	//pt.start()
 	err := o.handleLocalStorageEvent(ev)
 	if err != nil {
-		o.log.Warn().Err(err).Msg("Failed to handle event")
+		o.log.Err(err).Warn("Failed to handle event")
 	}
 	//pt.stop()
 }
@@ -165,7 +163,7 @@ func (o *Operator) handleLocalStorageEvent(event *Event) error {
 			return errors.WithStack(errors.Newf("unsafe state. local storage (%s) was created before but we received event (%s)", apiObject.Name, event.Type))
 		}
 
-		cfg, deps := o.makeLocalStorageConfigAndDeps(apiObject)
+		cfg, deps := o.makeLocalStorageConfigAndDeps()
 		stg, err := storage.New(cfg, deps, apiObject)
 		if err != nil {
 			return errors.WithStack(errors.Newf("failed to create local storage: %s", err))
@@ -197,16 +195,13 @@ func (o *Operator) handleLocalStorageEvent(event *Event) error {
 }
 
 // makeLocalStorageConfigAndDeps creates a Config & Dependencies object for a new LocalStorage.
-func (o *Operator) makeLocalStorageConfigAndDeps(apiObject *api.ArangoLocalStorage) (storage.Config, storage.Dependencies) {
+func (o *Operator) makeLocalStorageConfigAndDeps() (storage.Config, storage.Dependencies) {
 	cfg := storage.Config{
 		Namespace:      o.Config.Namespace,
 		PodName:        o.Config.PodName,
 		ServiceAccount: o.Config.ServiceAccount,
 	}
 	deps := storage.Dependencies{
-		Log: o.Dependencies.LogService.MustGetLogger(logging.LoggerNameStorage).With().
-			Str("localStorage", apiObject.GetName()).
-			Logger(),
 		Client:        o.Client,
 		EventRecorder: o.Dependencies.EventRecorder,
 	}

@@ -1,6 +1,71 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Feature) Add ArangoDeployment ServerGroupStatus
+- (Feature) (EE) Ordered Member IDs
+- (Refactor) Deprecate ForeachServerGroup, ForeachServerInGroups and ForServerGroup functions and refactor code accordingly
+- (Bugfix) Memory leaks due to incorrect time.After function usage
+- (Feature) Add startup probe for coordinators
+- (Feature) Use only connections for healthy members
+- (Feature) Set condition to shrink agent volume size
+- (Bugfix) Check serving servers
+- (Documentation) Add docs on setting timezone for containers
+- (Bugfix) Ensure that client cache is initialized before using it
+- (Feature) (DBServer Maintenance) Agency adjustments
+- (Logging) Internal client trace
+- (QA) Member maintenance feature
+- (Feature) Extract Pod Details
+- (Feature) Add Timezone management
+- (Bugfix) Always recreate DBServers if they have a leader on it.
+- (Feature) Immutable spec
+
+## [1.2.15](https://github.com/arangodb/kube-arangodb/tree/1.2.15) (2022-07-20)
+- (Bugfix) Ensure pod names not too long
+- (Refactor) Use cached member's clients
+- (Feature) Move PVC resize action to high-priority plan
+- (Feature) Remove forgotten ArangoDB jobs during restart
+- (Feature) Add support for managed services
+- (Feature) Recreation member in the high plan
+- (Feature) Add 'crd install' subcommand
+- (Bugfix) Fix `internal` metrics mode
+- (Bugfix) Create agency dump if auth is disabled
+- (Bugfix) Prevent deployment removal in case of invalid K8S API response
+
+## [1.2.14](https://github.com/arangodb/kube-arangodb/tree/1.2.14) (2022-07-14)
+- (Feature) Add ArangoSync TLS based rotation
+- (Bugfix) Fix labels propagation
+- (Feature) Add `ArangoDeployment` CRD auto-installer
+- (Feature) Add `ArangoMember` CRD auto-installer
+- (Feature) Add `ArangoBackup` CRD auto-installer
+- (Feature) Add `ArangoBackupPolicy` CRD auto-installer
+- (Feature) Add `ArangoJob` CRD auto-installer
+- (Feature) Add RestartPolicyAlways to ArangoDeployment in order to restart ArangoDB on failure
+- (Feature) Set a leader in active fail-over mode
+- (Feature) Use policy/v1 instead policy/v1beta1
+- (Feature) OPS CLI with Arango Task
+- (Bugfix) Allow ArangoBackup Creation during Upload state
+- (Hotfix) Fix `ArangoDeployment` SubResource in CRD auto-installer
+- (Bugfix) Fix Operator Logger NPE
+- (Bugfix) Fix License RAW value discovery
+- (Refactor) Optimize go.mod entries
+- (Feature) Add `ArangoLocalStorage` CRD auto-installer
+- (Feature) Add `ArangoDeploymentReplication` CRD auto-installer
+- (Bugfix) Allow missing `token` key in License secret
+- (Feature) Unify agency access
+- (Feature) Change DBServer Cleanup Logic
+- (Feature) Set Logger format
+- (Bugfix) Ensure Wait actions to be present after AddMember
+- (Documentation) Refactor metrics (Part 1)
+- (Bugfix) Extend Agency HealthCheck for replace
+- (Bugfix) Allow to remove resources (CPU & Memory) on the managed pods
+- (Bugfix) Add DistributeShardsLike support
+- (Feature) Member restarts metric
+- (Bugfix) Infinite loop fix in ArangoD AsyncClient
+- (Bugfix) Add Panic Handler
+- (Bugfix) Unify yaml packages
+- (Feature) Add new GRPC and HTTP API
+
+## [1.2.13](https://github.com/arangodb/kube-arangodb/tree/1.2.13) (2022-06-07)
 - (Bugfix) Fix arangosync members state inspection
 - (Feature) (ACS) Improve Reconciliation Loop
 - (Bugfix) Allow missing Monitoring CRD

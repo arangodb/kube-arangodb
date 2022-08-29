@@ -23,9 +23,10 @@ package member
 import (
 	"time"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
+
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
 
 const (
@@ -51,7 +52,10 @@ var phase = phaseMap{
 			m.RID = uuid.NewUUID()
 
 			// Clean Pod details
-			m.PodUID = ""
+			if m.Pod != nil {
+				m.Pod.UID = ""
+			}
+			m.Pod.Propagate(m)
 
 			// Add ClusterID
 			if m.ClusterID == "" {

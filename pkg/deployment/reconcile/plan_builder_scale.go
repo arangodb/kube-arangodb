@@ -25,19 +25,18 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/rs/zerolog"
 )
 
-func createScaleUPMemberPlan(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+func (r *Reconciler) createScaleUPMemberPlan(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext) api.Plan {
-	return createScaleMemberPlan(ctx, log, apiObject, spec, status, context).Filter(filterScaleUP)
+	return r.createScaleMemberPlan(ctx, apiObject, spec, status, context).Filter(filterScaleUP)
 }
 
-func createScaleMemberPlan(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+func (r *Reconciler) createScaleMemberPlan(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext) api.Plan {
 
@@ -46,32 +45,32 @@ func createScaleMemberPlan(ctx context.Context,
 	switch spec.GetMode() {
 	case api.DeploymentModeSingle:
 		// Never scale down
-		plan = append(plan, createScalePlan(log, status, status.Members.Single, api.ServerGroupSingle, 1).Filter(filterScaleUP)...)
+		plan = append(plan, r.createScalePlan(status, status.Members.Single, api.ServerGroupSingle, 1, context).Filter(filterScaleUP)...)
 	case api.DeploymentModeActiveFailover:
 		// Only scale agents & singles
 		if a := status.Agency; a != nil && a.Size != nil {
-			plan = append(plan, createScalePlan(log, status, status.Members.Agents, api.ServerGroupAgents, int(*a.Size)).Filter(filterScaleUP)...)
+			plan = append(plan, r.createScalePlan(status, status.Members.Agents, api.ServerGroupAgents, int(*a.Size), context).Filter(filterScaleUP)...)
 		}
-		plan = append(plan, createScalePlan(log, status, status.Members.Single, api.ServerGroupSingle, spec.Single.GetCount())...)
+		plan = append(plan, r.createScalePlan(status, status.Members.Single, api.ServerGroupSingle, spec.Single.GetCount(), context)...)
 	case api.DeploymentModeCluster:
 		// Scale agents, dbservers, coordinators
 		if a := status.Agency; a != nil && a.Size != nil {
-			plan = append(plan, createScalePlan(log, status, status.Members.Agents, api.ServerGroupAgents, int(*a.Size)).Filter(filterScaleUP)...)
+			plan = append(plan, r.createScalePlan(status, status.Members.Agents, api.ServerGroupAgents, int(*a.Size), context).Filter(filterScaleUP)...)
 		}
-		plan = append(plan, createScalePlan(log, status, status.Members.DBServers, api.ServerGroupDBServers, spec.DBServers.GetCount())...)
-		plan = append(plan, createScalePlan(log, status, status.Members.Coordinators, api.ServerGroupCoordinators, spec.Coordinators.GetCount())...)
+		plan = append(plan, r.createScalePlan(status, status.Members.DBServers, api.ServerGroupDBServers, spec.DBServers.GetCount(), context)...)
+		plan = append(plan, r.createScalePlan(status, status.Members.Coordinators, api.ServerGroupCoordinators, spec.Coordinators.GetCount(), context)...)
 	}
 	if spec.GetMode().SupportsSync() {
 		// Scale syncmasters & syncworkers
-		plan = append(plan, createScalePlan(log, status, status.Members.SyncMasters, api.ServerGroupSyncMasters, spec.SyncMasters.GetCount())...)
-		plan = append(plan, createScalePlan(log, status, status.Members.SyncWorkers, api.ServerGroupSyncWorkers, spec.SyncWorkers.GetCount())...)
+		plan = append(plan, r.createScalePlan(status, status.Members.SyncMasters, api.ServerGroupSyncMasters, spec.SyncMasters.GetCount(), context)...)
+		plan = append(plan, r.createScalePlan(status, status.Members.SyncWorkers, api.ServerGroupSyncWorkers, spec.SyncWorkers.GetCount(), context)...)
 	}
 
 	return plan
 }
 
 // createScalePlan creates a scaling plan for a single server group
-func createScalePlan(log zerolog.Logger, status api.DeploymentStatus, members api.MemberStatusList, group api.ServerGroup, count int) api.Plan {
+func (r *Reconciler) createScalePlan(status api.DeploymentStatus, members api.MemberStatusList, group api.ServerGroup, count int, context PlanBuilderContext) api.Plan {
 	var plan api.Plan
 	if len(members) < count {
 		// Scale up
@@ -79,82 +78,98 @@ func createScalePlan(log zerolog.Logger, status api.DeploymentStatus, members ap
 		for i := 0; i < toAdd; i++ {
 			plan = append(plan, actions.NewAction(api.ActionTypeAddMember, group, withPredefinedMember("")))
 		}
-		log.Debug().
+		r.planLogger.
 			Int("count", count).
 			Int("actual-count", len(members)).
 			Int("delta", toAdd).
 			Str("role", group.AsRole()).
-			Msg("Creating scale-up plan")
+			Debug("Creating scale-up plan")
 	} else if len(members) > count {
 		// Note, we scale down 1 member at a time
-		if m, err := members.SelectMemberToRemove(topologyMissingMemberToRemoveSelector(status.Topology), topologyAwarenessMemberToRemoveSelector(group, status.Topology)); err != nil {
-			log.Warn().Err(err).Str("role", group.AsRole()).Msg("Failed to select member to remove")
+		if m, err := members.SelectMemberToRemove(getCleanedServer(context), topologyMissingMemberToRemoveSelector(status.Topology), topologyAwarenessMemberToRemoveSelector(group, status.Topology)); err != nil {
+			r.planLogger.Err(err).Str("role", group.AsRole()).Warn("Failed to select member to remove")
 		} else {
+			ready, message := groupReadyForRestart(context, status, m, group)
+			if !ready {
+				r.planLogger.Str("member", m.ID).Str("role", group.AsRole()).Str("message", message).Warn("Unable to ScaleDown member")
+				return nil
+			}
 
-			log.Debug().
+			r.planLogger.
 				Str("member-id", m.ID).
 				Str("phase", string(m.Phase)).
-				Msg("Found member to remove")
+				Debug("Found member to remove")
 			plan = append(plan, cleanOutMember(group, m)...)
-			log.Debug().
+			r.planLogger.
 				Int("count", count).
 				Int("actual-count", len(members)).
 				Str("role", group.AsRole()).
 				Str("member-id", m.ID).
-				Msg("Creating scale-down plan")
+				Debug("Creating scale-down plan")
 		}
 	}
 	return plan
 }
 
-func createReplaceMemberPlan(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+func (r *Reconciler) createReplaceMemberPlan(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext) api.Plan {
 
 	var plan api.Plan
 
 	// Replace is only allowed for Coordinators, DBServers & Agents
-	status.Members.ForeachServerInGroups(func(group api.ServerGroup, list api.MemberStatusList) error {
-		for _, member := range list {
-			if !plan.IsEmpty() {
-				return nil
-			}
-			if member.Conditions.IsTrue(api.ConditionTypeMarkedToRemove) {
-				switch group {
-				case api.ServerGroupDBServers:
-					plan = append(plan, actions.NewAction(api.ActionTypeAddMember, group, withPredefinedMember("")).
-						AddParam(api.ActionTypeWaitForMemberInSync.String(), "").
-						AddParam(api.ActionTypeWaitForMemberUp.String(), ""))
-					log.Debug().
-						Str("role", group.AsRole()).
-						Msg("Creating replacement plan")
-					return nil
-				case api.ServerGroupCoordinators:
-					plan = append(plan, actions.NewAction(api.ActionTypeRemoveMember, group, member))
-					log.Debug().
-						Str("role", group.AsRole()).
-						Msg("Creating replacement plan")
-					return nil
-				case api.ServerGroupAgents:
-					plan = append(plan, actions.NewAction(api.ActionTypeRemoveMember, group, member),
-						actions.NewAction(api.ActionTypeAddMember, group, withPredefinedMember("")).
-							AddParam(api.ActionTypeWaitForMemberInSync.String(), "").
-							AddParam(api.ActionTypeWaitForMemberUp.String(), ""))
-					log.Debug().
-						Str("role", group.AsRole()).
-						Msg("Creating replacement plan")
-					return nil
-				}
-			}
+	for _, e := range status.Members.AsListInGroups(api.ServerGroupAgents, api.ServerGroupDBServers, api.ServerGroupCoordinators) {
+		if !plan.IsEmpty() {
+			break
 		}
 
-		return nil
-	}, api.ServerGroupAgents, api.ServerGroupDBServers, api.ServerGroupCoordinators)
+		member := e.Member
+		group := e.Group
+
+		if member.Conditions.IsTrue(api.ConditionTypeMarkedToRemove) {
+			ready, message := groupReadyForRestart(context, status, member, group)
+			if !ready {
+				r.planLogger.Str("member", member.ID).Str("role", group.AsRole()).Str("message", message).Warn("Unable to recreate member")
+				continue
+			}
+
+			switch group {
+			case api.ServerGroupDBServers:
+				plan = append(plan, actions.NewAction(api.ActionTypeAddMember, group, withPredefinedMember("")))
+				r.planLogger.
+					Str("role", group.AsRole()).
+					Debug("Creating replacement plan")
+			case api.ServerGroupCoordinators:
+				plan = append(plan, actions.NewAction(api.ActionTypeRemoveMember, group, member))
+				r.planLogger.
+					Str("role", group.AsRole()).
+					Debug("Creating replacement plan")
+			case api.ServerGroupAgents:
+				plan = append(plan, actions.NewAction(api.ActionTypeRemoveMember, group, member),
+					actions.NewAction(api.ActionTypeAddMember, group, withPredefinedMember("")))
+				r.planLogger.
+					Str("role", group.AsRole()).
+					Debug("Creating replacement plan")
+			}
+		}
+	}
 
 	return plan
 }
 
 func filterScaleUP(a api.Action) bool {
 	return a.Type == api.ActionTypeAddMember
+}
+
+func getCleanedServer(ctx reconciler.ArangoAgencyGet) api.MemberToRemoveSelector {
+	return func(m api.MemberStatusList) (string, error) {
+		if a, ok := ctx.GetAgencyCache(); ok {
+			for _, member := range m {
+				if a.Target.CleanedServers.Contains(agency.Server(member.ID)) {
+					return member.ID, nil
+				}
+			}
+		}
+		return "", nil
+	}
 }

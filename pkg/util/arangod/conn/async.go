@@ -26,9 +26,12 @@ import (
 	"path"
 
 	"github.com/arangodb/go-driver"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
+
+type ConnectionWrap func(c driver.Connection) driver.Connection
 
 func NewAsyncConnection(c driver.Connection) driver.Connection {
 	return async{

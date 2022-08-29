@@ -96,6 +96,18 @@ func (m DeploymentMode) IsCluster() bool {
 	return m == DeploymentModeCluster
 }
 
+// ServingGroup returns mode serving group
+func (m DeploymentMode) ServingGroup() ServerGroup {
+	switch m {
+	case DeploymentModeCluster:
+		return ServerGroupCoordinators
+	case DeploymentModeSingle, DeploymentModeActiveFailover:
+		return ServerGroupSingle
+	default:
+		return ServerGroupUnknown
+	}
+}
+
 // NewMode returns a reference to a string with given value.
 func NewMode(input DeploymentMode) *DeploymentMode {
 	return &input

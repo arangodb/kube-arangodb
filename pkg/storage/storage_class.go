@@ -23,12 +23,12 @@ package storage
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/api/storage/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	core "k8s.io/api/core/v1"
+	storage "k8s.io/api/storage/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -39,12 +39,11 @@ var (
 // ensureStorageClass creates a storage class for the given local storage.
 // If such a class already exists, the create is ignored.
 func (l *LocalStorage) ensureStorageClass(apiObject *api.ArangoLocalStorage) error {
-	log := l.deps.Log
 	spec := apiObject.Spec.StorageClass
-	bindingMode := v1.VolumeBindingWaitForFirstConsumer
-	reclaimPolicy := corev1.PersistentVolumeReclaimRetain
-	sc := &v1.StorageClass{
-		ObjectMeta: metav1.ObjectMeta{
+	bindingMode := storage.VolumeBindingWaitForFirstConsumer
+	reclaimPolicy := core.PersistentVolumeReclaimRetain
+	sc := &storage.StorageClass{
+		ObjectMeta: meta.ObjectMeta{
 			Name: spec.Name,
 		},
 		ReclaimPolicy:     &reclaimPolicy,
@@ -54,26 +53,26 @@ func (l *LocalStorage) ensureStorageClass(apiObject *api.ArangoLocalStorage) err
 	// Note: We do not attach the StorageClass to the apiObject (OwnerRef) because many
 	// ArangoLocalStorage resource may use the same StorageClass.
 	cli := l.deps.Client.Kubernetes().StorageV1()
-	if _, err := cli.StorageClasses().Create(context.Background(), sc, metav1.CreateOptions{}); k8sutil.IsAlreadyExists(err) {
-		log.Debug().
+	if _, err := cli.StorageClasses().Create(context.Background(), sc, meta.CreateOptions{}); k8sutil.IsAlreadyExists(err) {
+		l.log.
 			Str("storageclass", sc.GetName()).
-			Msg("StorageClass already exists")
+			Debug("StorageClass already exists")
 	} else if err != nil {
-		log.Debug().Err(err).
+		l.log.Err(err).
 			Str("storageclass", sc.GetName()).
-			Msg("Failed to create StorageClass")
+			Debug("Failed to create StorageClass")
 		return errors.WithStack(err)
 	} else {
-		log.Debug().
+		l.log.
 			Str("storageclass", sc.GetName()).
-			Msg("StorageClass created")
+			Debug("StorageClass created")
 	}
 
 	if apiObject.Spec.StorageClass.IsDefault {
 		// UnMark current default (if any)
-		list, err := cli.StorageClasses().List(context.Background(), metav1.ListOptions{})
+		list, err := cli.StorageClasses().List(context.Background(), meta.ListOptions{})
 		if err != nil {
-			log.Debug().Err(err).Msg("Listing StorageClasses failed")
+			l.log.Err(err).Debug("Listing StorageClasses failed")
 			return errors.WithStack(err)
 		}
 		for _, scX := range list.Items {
@@ -82,28 +81,28 @@ func (l *LocalStorage) ensureStorageClass(apiObject *api.ArangoLocalStorage) err
 			}
 			// Mark storage class as non-default
 			if err := k8sutil.PatchStorageClassIsDefault(cli, scX.GetName(), false); err != nil {
-				log.Debug().
+				l.log.
 					Err(err).
 					Str("storageclass", scX.GetName()).
-					Msg("Failed to mark StorageClass as not-default")
+					Debug("Failed to mark StorageClass as not-default")
 				return errors.WithStack(err)
 			}
-			log.Debug().
+			l.log.
 				Str("storageclass", scX.GetName()).
-				Msg("Marked StorageClass as not-default")
+				Debug("Marked StorageClass as not-default")
 		}
 
 		// Mark StorageClass default
 		if err := k8sutil.PatchStorageClassIsDefault(cli, sc.GetName(), true); err != nil {
-			log.Debug().
+			l.log.
 				Err(err).
 				Str("storageclass", sc.GetName()).
-				Msg("Failed to mark StorageClass as default")
+				Debug("Failed to mark StorageClass as default")
 			return errors.WithStack(err)
 		}
-		log.Debug().
+		l.log.
 			Str("storageclass", sc.GetName()).
-			Msg("Marked StorageClass as default")
+			Debug("Marked StorageClass as default")
 	}
 
 	return nil

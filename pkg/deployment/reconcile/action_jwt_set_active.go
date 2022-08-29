@@ -24,31 +24,27 @@ import (
 	"context"
 	"encoding/base64"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"k8s.io/apimachinery/pkg/types"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/rs/zerolog"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 func init() {
 	registerAction(api.ActionTypeJWTSetActive, newJWTSetActive, defaultTimeout)
 }
 
-func newJWTSetActive(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newJWTSetActive(action api.Action, actionCtx ActionContext) Action {
 	a := &jwtSetActiveAction{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -62,30 +58,30 @@ type jwtSetActiveAction struct {
 func (a *jwtSetActiveAction) Start(ctx context.Context) (bool, error) {
 	folder, err := ensureJWTFolderSupportFromAction(a.actionCtx)
 	if err != nil {
-		a.log.Error().Err(err).Msgf("Action not supported")
+		a.log.Err(err).Error("Action not supported")
 		return true, nil
 	}
 
 	if !folder {
-		a.log.Error().Msgf("Action not supported")
+		a.log.Error("Action not supported")
 		return true, nil
 	}
 
 	toActiveChecksum, exists := a.action.Params[checksum]
 	if !exists {
-		a.log.Warn().Msgf("Key %s is missing in action", checksum)
+		a.log.Warn("Key %s is missing in action", checksum)
 		return true, nil
 	}
 
 	f, ok := a.actionCtx.ACS().CurrentClusterCache().Secret().V1().GetSimple(pod.JWTSecretFolder(a.actionCtx.GetName()))
 	if !ok {
-		a.log.Error().Msgf("Unable to get JWT folder info")
+		a.log.Error("Unable to get JWT folder info")
 		return true, nil
 	}
 
 	toActiveData, toActivePresent := f.Data[toActiveChecksum]
 	if !toActivePresent {
-		a.log.Error().Msgf("JWT key which is desired to be active is not anymore in secret")
+		a.log.Error("JWT key which is desired to be active is not anymore in secret")
 		return true, nil
 	}
 
@@ -93,7 +89,7 @@ func (a *jwtSetActiveAction) Start(ctx context.Context) (bool, error) {
 	tokenKeyData, token := f.Data[constants.SecretKeyToken]
 
 	if util.SHA256(activeKeyData) == toActiveChecksum && util.SHA256(activeKeyData) == util.SHA256(tokenKeyData) {
-		a.log.Info().Msgf("Desired JWT is already active")
+		a.log.Info("Desired JWT is already active")
 		return true, nil
 	}
 
@@ -114,7 +110,7 @@ func (a *jwtSetActiveAction) Start(ctx context.Context) (bool, error) {
 
 	patch, err := p.Marshal()
 	if err != nil {
-		a.log.Error().Err(err).Msgf("Unable to encrypt patch")
+		a.log.Err(err).Error("Unable to encrypt patch")
 		return true, nil
 	}
 

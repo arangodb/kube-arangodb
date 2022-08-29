@@ -34,6 +34,10 @@ const (
 
 type ReplicationFactor int
 
+func (r *ReplicationFactor) IsNil() bool {
+	return r == nil
+}
+
 func (r *ReplicationFactor) IsUnknown() bool {
 	if r == nil {
 		return false

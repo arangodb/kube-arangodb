@@ -24,25 +24,17 @@ import (
 	"context"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
-
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
-
-	operatorErrors "github.com/arangodb/kube-arangodb/pkg/util/errors"
-
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/upgrade"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 )
 
 var (
@@ -57,13 +49,12 @@ var (
 // - once in a while
 // Returns the delay until this function should be called again.
 func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval {
-	log := d.deps.Log
 	start := time.Now()
 
 	ctxReconciliation, cancelReconciliation := globals.GetGlobalTimeouts().Reconciliation().WithTimeout(context.Background())
 	defer cancelReconciliation()
 	defer func() {
-		d.deps.Log.Info().Msgf("Inspect loop took %s", time.Since(start))
+		d.log.Trace("Inspect loop took %s", time.Since(start))
 	}()
 
 	nextInterval := lastInterval
@@ -74,7 +65,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 
 	err := d.acs.CurrentClusterCache().Refresh(ctxReconciliation)
 	if err != nil {
-		log.Error().Err(err).Msg("Unable to get resources")
+		d.log.Err(err).Error("Unable to get resources")
 		return minInspectionInterval // Retry ASAP
 	}
 
@@ -82,34 +73,76 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 	updated, err := d.acs.CurrentClusterCache().GetCurrentArangoDeployment()
 	if k8sutil.IsNotFound(err) {
 		// Deployment is gone
-		log.Info().Msg("Deployment is gone")
-		d.Delete()
+		d.log.Info("Deployment is gone")
+		d.Stop()
 		return nextInterval
 	} else if updated != nil && updated.GetDeletionTimestamp() != nil {
 		// Deployment is marked for deletion
 		if err := d.runDeploymentFinalizers(ctxReconciliation, d.GetCachedStatus()); err != nil {
 			hasError = true
-			d.CreateEvent(k8sutil.NewErrorEvent("ArangoDeployment finalizer inspection failed", err, d.apiObject))
+			d.CreateEvent(k8sutil.NewErrorEvent("ArangoDeployment finalizer inspection failed", err, d.currentObject))
 		}
 	} else {
 		// Check if maintenance annotation is set
 		if updated != nil && updated.Annotations != nil {
 			if v, ok := updated.Annotations[deployment.ArangoDeploymentPodMaintenanceAnnotation]; ok && v == "true" {
 				// Disable checks if we will enter maintenance mode
-				log.Info().Str("deployment", deploymentName).Msg("Deployment in maintenance mode")
+				d.log.Str("deployment", deploymentName).Info("Deployment in maintenance mode")
 				return nextInterval
 			}
 		}
+
+		if ensureFinalizers(updated) {
+			if err := d.ApplyPatch(ctxReconciliation, patch.ItemReplace(patch.NewPath("metadata", "finalizers"), updated.Finalizers)); err != nil {
+				d.log.Err(err).Debug("Unable to set finalizers")
+			}
+		}
+
+		if canProceed, changed, err := d.acceptNewSpec(ctxReconciliation, updated); err != nil {
+			d.log.Err(err).Debug("Verification of deployment failed")
+
+			if !canProceed {
+				return minInspectionInterval // Retry ASAP
+			}
+		} else if changed {
+			d.log.Info("Accepted new spec")
+			// Notify cluster of desired server count
+			if ci := d.clusterScalingIntegration; ci != nil {
+				if c := d.currentObjectStatus; c != nil {
+					if a := c.AcceptedSpec; a != nil {
+						if c.Conditions.IsTrue(api.ConditionTypeUpToDate) {
+							ci.SendUpdateToCluster(*a)
+						}
+					}
+				}
+			}
+			return minInspectionInterval // Retry ASAP
+		} else if !canProceed {
+			d.log.Err(err).Error("Cannot proceed with reconciliation")
+			return minInspectionInterval // Retry ASAP
+		}
+
+		// Ensure that status is up to date
+		if !d.currentObjectStatus.Equal(updated.Status) {
+			if err := d.updateCRStatus(ctxReconciliation, *d.currentObjectStatus); err != nil {
+				d.log.Err(err).Error("Unable to refresh status")
+				return minInspectionInterval // Retry ASAP
+			}
+		}
+
+		d.currentObject = updated
+
+		d.metrics.Deployment.Accepted = updated.Status.Conditions.IsTrue(api.ConditionTypeSpecAccepted)
+		d.metrics.Deployment.UpToDate = updated.Status.Conditions.IsTrue(api.ConditionTypeUpToDate)
+
 		// Is the deployment in failed state, if so, give up.
 		if d.GetPhase() == api.DeploymentPhaseFailed {
-			log.Debug().Msg("Deployment is in Failed state.")
+			d.log.Debug("Deployment is in Failed state.")
 			return nextInterval
 		}
 
-		d.apiObject = updated
-
 		d.GetMembersState().RefreshState(ctxReconciliation, updated.Status.Members.AsList())
-		d.GetMembersState().Log(d.deps.Log)
+		d.GetMembersState().Log(d.log)
 		if err := d.WithStatusUpdateErr(ctxReconciliation, func(s *api.DeploymentStatus) (bool, error) {
 			if changed, err := upgrade.RunUpgrade(*updated, s, d.GetCachedStatus()); err != nil {
 				return false, err
@@ -117,7 +150,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 				return changed, nil
 			}
 		}); err != nil {
-			d.CreateEvent(k8sutil.NewErrorEvent("Upgrade failed", err, d.apiObject))
+			d.CreateEvent(k8sutil.NewErrorEvent("Upgrade failed", err, d.currentObject))
 			nextInterval = minInspectionInterval
 			d.recentInspectionErrors++
 			return nextInterval.ReduceTo(maxInspectionInterval)
@@ -125,11 +158,11 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 
 		inspectNextInterval, err := d.inspectDeploymentWithError(ctxReconciliation, nextInterval)
 		if err != nil {
-			if !operatorErrors.IsReconcile(err) {
+			if !errors.IsReconcile(err) {
 				nextInterval = inspectNextInterval
 				hasError = true
 
-				d.CreateEvent(k8sutil.NewErrorEvent("Reconcilation failed", err, d.apiObject))
+				d.CreateEvent(k8sutil.NewErrorEvent("Reconciliation failed", err, d.currentObject))
 			} else {
 				nextInterval = minInspectionInterval
 			}
@@ -153,32 +186,52 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	t := time.Now()
 
 	defer func() {
-		d.deps.Log.Info().Msgf("Reconciliation loop took %s", time.Since(t))
+		d.log.Trace("Reconciliation loop took %s", time.Since(t))
 	}()
 
 	// Ensure that spec and status checksum are same
-	spec := d.GetSpec()
-	status, _ := d.getStatus()
+	currentSpec := d.currentObject.Spec
+	status := d.GetStatus()
 
 	nextInterval = lastInterval
 	inspectError = nil
 
-	checksum, err := spec.Checksum()
+	currentChecksum, err := currentSpec.Checksum()
 	if err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Calculation of spec failed")
 	} else {
+		condition, exists := status.Conditions.Get(api.ConditionTypeSpecAccepted)
+		if v := status.AcceptedSpecVersion; (v == nil || currentChecksum != *v) && (!exists || condition.IsTrue()) {
+			if err = d.updateConditionWithHash(ctx, api.ConditionTypeSpecAccepted, false, "Spec Changed", "Spec Object changed. Waiting to be accepted", currentChecksum); err != nil {
+				return minInspectionInterval, errors.Wrapf(err, "Unable to update SpecAccepted condition")
+			}
+
+			return minInspectionInterval, nil // Retry ASAP
+		} else if v != nil {
+			if *v == currentChecksum && !condition.IsTrue() {
+				if err = d.updateConditionWithHash(ctx, api.ConditionTypeSpecAccepted, true, "Spec Accepted", "Spec Object accepted", currentChecksum); err != nil {
+					return minInspectionInterval, errors.Wrapf(err, "Unable to update SpecAccepted condition")
+				}
+
+				return minInspectionInterval, nil // Retry ASAP
+			}
+		}
+	}
+
+	if !status.Conditions.IsTrue(api.ConditionTypeSpecAccepted) {
 		condition, exists := status.Conditions.Get(api.ConditionTypeUpToDate)
-		if checksum != status.AppliedVersion && (!exists || condition.IsTrue()) {
-			if err = d.updateConditionWithHash(ctx, api.ConditionTypeUpToDate, false, "Spec Changed", "Spec Object changed. Waiting until plan will be applied", checksum); err != nil {
+		if !exists || condition.IsTrue() {
+			if err = d.updateConditionWithHash(ctx, api.ConditionTypeUpToDate, false, "Spec Changed", "Spec Object changed. Waiting until plan will be applied", currentChecksum); err != nil {
 				return minInspectionInterval, errors.Wrapf(err, "Unable to update UpToDate condition")
+
 			}
 
 			return minInspectionInterval, nil // Retry ASAP
 		}
 	}
 
-	if err := d.acs.Inspect(ctx, d.apiObject, d.deps.Client, d.GetCachedStatus()); err != nil {
-		d.deps.Log.Warn().Err(err).Msgf("Unable to handle ACS objects")
+	if err := d.acs.Inspect(ctx, d.currentObject, d.deps.Client, d.GetCachedStatus()); err != nil {
+		d.log.Err(err).Warn("Unable to handle ACS objects")
 	}
 
 	// Cleanup terminated pods on the beginning of loop
@@ -189,7 +242,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	}
 
 	if err := d.resources.EnsureLeader(ctx, d.GetCachedStatus()); err != nil {
-		return minInspectionInterval, errors.Wrapf(err, "Creating agency pod leader failed")
+		return minInspectionInterval, errors.Wrapf(err, "Creating leaders failed")
 	}
 
 	if err := d.resources.EnsureArangoMembers(ctx, d.GetCachedStatus()); err != nil {
@@ -200,7 +253,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 		return minInspectionInterval, errors.Wrapf(err, "Service creation failed")
 	}
 
-	if err := d.resources.EnsureSecrets(ctx, d.deps.Log, d.GetCachedStatus()); err != nil {
+	if err := d.resources.EnsureSecrets(ctx, d.GetCachedStatus()); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Secret creation failed")
 	}
 
@@ -220,7 +273,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	}
 
 	// Ensure we have image info
-	if retrySoon, exists, err := d.ensureImages(ctx, d.apiObject, d.GetCachedStatus()); err != nil {
+	if retrySoon, exists, err := d.ensureImages(ctx, d.currentObject, d.GetCachedStatus()); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Image detection failed")
 	} else if retrySoon || !exists {
 		return minInspectionInterval, nil
@@ -255,19 +308,19 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 		nextInterval = interval
 	}
 
-	inspectDeploymentAgencyFetches.WithLabelValues(d.GetName()).Inc()
+	d.metrics.Agency.Fetches++
 	if offset, err := d.RefreshAgencyCache(ctx); err != nil {
-		inspectDeploymentAgencyErrors.WithLabelValues(d.GetName()).Inc()
-		d.deps.Log.Err(err).Msgf("Unable to refresh agency")
+		d.metrics.Agency.Errors++
+		d.log.Err(err).Error("Unable to refresh agency")
 	} else {
-		inspectDeploymentAgencyIndex.WithLabelValues(d.GetName()).Set(float64(offset))
+		d.metrics.Agency.Index = offset
 	}
 
 	// Refresh maintenance lock
 	d.refreshMaintenanceTTL(ctx)
 
 	// Create scale/update plan
-	if _, ok := d.apiObject.Annotations[deployment.ArangoDeploymentPlanCleanAnnotation]; ok {
+	if _, ok := d.currentObject.Annotations[deployment.ArangoDeploymentPlanCleanAnnotation]; ok {
 		if err := d.ApplyPatch(ctx, patch.ItemRemove(patch.NewPath("metadata", "annotations", deployment.ArangoDeploymentPlanCleanAnnotation))); err != nil {
 			return minInspectionInterval, errors.Wrapf(err, "Unable to create remove annotation patch")
 		}
@@ -275,13 +328,13 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 		if err := d.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
 			s.Plan = nil
 			return true
-		}, true); err != nil {
+		}); err != nil {
 			return minInspectionInterval, errors.Wrapf(err, "Unable clean plan")
 		}
-	} else if err, updated := d.reconciler.CreatePlan(ctx, d.GetCachedStatus()); err != nil {
+	} else if err, updated := d.reconciler.CreatePlan(ctx); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Plan creation failed")
 	} else if updated {
-		d.deps.Log.Info().Msgf("Plan generated, reconciling")
+		d.log.Info("Plan generated, reconciling")
 		return minInspectionInterval, nil
 	}
 
@@ -301,20 +354,20 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 		}
 	}
 
-	if d.apiObject.Status.IsPlanEmpty() && status.AppliedVersion != checksum {
+	if v := status.AcceptedSpecVersion; v != nil && d.currentObject.Status.IsPlanEmpty() && status.AppliedVersion != *v {
 		if err := d.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
-			s.AppliedVersion = checksum
+			s.AppliedVersion = *v
 			return true
 		}); err != nil {
 			return minInspectionInterval, errors.Wrapf(err, "Unable to update UpToDate condition")
 		}
 
 		return minInspectionInterval, nil
-	} else if status.AppliedVersion == checksum {
+	} else {
 		isUpToDate, reason := d.isUpToDateStatus(status)
 
 		if !isUpToDate && status.Conditions.IsTrue(api.ConditionTypeUpToDate) {
-			if err = d.updateConditionWithHash(ctx, api.ConditionTypeUpToDate, false, reason, "There are pending operations in plan or members are in restart process", checksum); err != nil {
+			if err = d.updateConditionWithHash(ctx, api.ConditionTypeUpToDate, false, reason, "There are pending operations in plan or members are in restart process", *v); err != nil {
 				return minInspectionInterval, errors.Wrapf(err, "Unable to update UpToDate condition")
 			}
 
@@ -322,7 +375,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 		}
 
 		if isUpToDate && !status.Conditions.IsTrue(api.ConditionTypeUpToDate) {
-			if err = d.updateConditionWithHash(ctx, api.ConditionTypeUpToDate, true, "Spec is Up To Date", "Spec is Up To Date", checksum); err != nil {
+			if err = d.updateConditionWithHash(ctx, api.ConditionTypeUpToDate, true, "Spec is Up To Date", "Spec is Up To Date", *v); err != nil {
 				return minInspectionInterval, errors.Wrapf(err, "Unable to update UpToDate condition")
 			}
 
@@ -331,7 +384,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	}
 
 	// Execute current step of scale/update plan
-	retrySoon, err := d.reconciler.ExecutePlan(ctx, d.GetCachedStatus())
+	retrySoon, err := d.reconciler.ExecutePlan(ctx)
 	if err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Plan execution failed")
 	}
@@ -345,8 +398,10 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	}
 
 	// Inspect deployment for synced members
-	if err := d.resources.SyncMembersInCluster(ctx, d.GetMembersState().Health()); err != nil {
-		return minInspectionInterval, errors.Wrapf(err, "Removed member cleanup failed")
+	if health, ok := d.GetMembersState().Health(); ok {
+		if err := d.resources.SyncMembersInCluster(ctx, health); err != nil {
+			return minInspectionInterval, errors.Wrapf(err, "Removed member cleanup failed")
+		}
 	}
 
 	// At the end of the inspect, we cleanup terminated pods.
@@ -366,34 +421,42 @@ func (d *Deployment) isUpToDateStatus(status api.DeploymentStatus) (upToDate boo
 
 	upToDate = true
 
-	if !status.Conditions.Check(api.ConditionTypeReachable).Exists().IsTrue().Evaluate() {
+	if v := status.AcceptedSpecVersion; v == nil || status.AppliedVersion != *v {
 		upToDate = false
+		reason = "Spec is not accepted"
+		return
 	}
 
-	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
-		if !upToDate {
-			return nil
+	if !status.Conditions.Check(api.ConditionTypeSpecAccepted).Exists().IsTrue().Evaluate() {
+		upToDate = false
+		reason = "Spec is not accepted"
+		return
+	}
+
+	if !status.Conditions.Check(api.ConditionTypeReachable).Exists().IsTrue().Evaluate() {
+		upToDate = false
+		return
+	}
+
+	for _, m := range status.Members.AsList() {
+		member := m.Member
+		if member.Conditions.IsTrue(api.ConditionTypeRestart) || member.Conditions.IsTrue(api.ConditionTypePendingRestart) {
+			upToDate = false
+			reason = "Pending restarts on members"
+			return
 		}
-		for _, member := range list {
-			if member.Conditions.IsTrue(api.ConditionTypeRestart) || member.Conditions.IsTrue(api.ConditionTypePendingRestart) {
-				upToDate = false
-				reason = "Pending restarts on members"
-				return nil
-			}
-			if member.Conditions.IsTrue(api.ConditionTypePVCResizePending) {
-				upToDate = false
-				reason = "PVC is resizing"
-				return nil
-			}
+		if member.Conditions.IsTrue(api.ConditionTypePVCResizePending) {
+			upToDate = false
+			reason = "PVC is resizing"
+			return
 		}
-		return nil
-	})
+	}
 
 	return
 }
 
 func (d *Deployment) refreshMaintenanceTTL(ctx context.Context) {
-	if d.apiObject.Spec.Mode.Get() == api.DeploymentModeSingle {
+	if d.GetSpec().Mode.Get() == api.DeploymentModeSingle {
 		return
 	}
 
@@ -407,7 +470,9 @@ func (d *Deployment) refreshMaintenanceTTL(ctx context.Context) {
 		return
 	}
 
-	condition, ok := d.status.last.Conditions.Get(api.ConditionTypeMaintenance)
+	status := d.GetStatus()
+
+	condition, ok := status.Conditions.Get(api.ConditionTypeMaintenance)
 	maintenance := agencyState.Supervision.Maintenance
 
 	if !ok || !condition.IsTrue() {
@@ -416,18 +481,18 @@ func (d *Deployment) refreshMaintenanceTTL(ctx context.Context) {
 
 	// Check GracePeriod
 	if t, ok := maintenance.Time(); ok {
-		if time.Until(t) < time.Hour-d.apiObject.Spec.Timeouts.GetMaintenanceGracePeriod() {
+		if time.Until(t) < time.Hour-d.GetSpec().Timeouts.GetMaintenanceGracePeriod() {
 			if err := d.SetAgencyMaintenanceMode(ctx, true); err != nil {
 				return
 			}
-			d.deps.Log.Info().Msgf("Refreshed maintenance lock")
+			d.log.Info("Refreshed maintenance lock")
 		}
 	} else {
-		if condition.LastUpdateTime.Add(d.apiObject.Spec.Timeouts.GetMaintenanceGracePeriod()).Before(time.Now()) {
+		if condition.LastUpdateTime.Add(d.GetSpec().Timeouts.GetMaintenanceGracePeriod()).Before(time.Now()) {
 			if err := d.SetAgencyMaintenanceMode(ctx, true); err != nil {
 				return
 			}
-			d.deps.Log.Info().Msgf("Refreshed maintenance lock")
+			d.log.Info("Refreshed maintenance lock")
 		}
 	}
 }
@@ -475,7 +540,7 @@ func (d *Deployment) triggerCRDInspection() {
 }
 
 func (d *Deployment) updateConditionWithHash(ctx context.Context, conditionType api.ConditionType, status bool, reason, message, hash string) error {
-	d.deps.Log.Info().Str("condition", string(conditionType)).Bool("status", status).Str("reason", reason).Str("message", message).Str("hash", hash).Msg("Updated condition")
+	d.log.Str("condition", string(conditionType)).Bool("status", status).Str("reason", reason).Str("message", message).Str("hash", hash).Info("Updated condition")
 	if err := d.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
 		return s.Conditions.UpdateWithHash(conditionType, status, reason, message, hash)
 	}); err != nil {

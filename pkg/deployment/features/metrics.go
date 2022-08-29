@@ -36,6 +36,7 @@ var metricsExporter = &feature{
 	enabledByDefault:   true,
 	deprecated:         "It is always set to True",
 	constValue:         util.NewBool(true),
+	hidden:             true,
 }
 
 // deprecated

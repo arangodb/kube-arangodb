@@ -25,12 +25,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/retry"
-	v1 "k8s.io/api/storage/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	storage "k8s.io/api/storage/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	storagev1 "k8s.io/client-go/kubernetes/typed/storage/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/retry"
 )
 
 var (
@@ -39,7 +39,7 @@ var (
 
 // StorageClassIsDefault returns true if the given storage class is marked default,
 // false otherwise.
-func StorageClassIsDefault(sc *v1.StorageClass) bool {
+func StorageClassIsDefault(sc *storage.StorageClass) bool {
 	if value, found := sc.GetObjectMeta().GetAnnotations()[annStorageClassIsDefault]; found {
 		if boolValue, err := strconv.ParseBool(value); err == nil && boolValue {
 			return true
@@ -53,7 +53,7 @@ func PatchStorageClassIsDefault(cli storagev1.StorageV1Interface, name string, i
 	stcs := cli.StorageClasses()
 	op := func() error {
 		// Fetch current version of StorageClass
-		current, err := stcs.Get(context.Background(), name, metav1.GetOptions{})
+		current, err := stcs.Get(context.Background(), name, meta.GetOptions{})
 		if IsNotFound(err) {
 			return retry.Permanent(errors.WithStack(err))
 		} else if err != nil {
@@ -68,7 +68,7 @@ func PatchStorageClassIsDefault(cli storagev1.StorageV1Interface, name string, i
 		current.SetAnnotations(ann)
 
 		// Save StorageClass
-		if _, err := stcs.Update(context.Background(), current, metav1.UpdateOptions{}); IsConflict(err) {
+		if _, err := stcs.Update(context.Background(), current, meta.UpdateOptions{}); IsConflict(err) {
 			// StorageClass has been modified since we read it
 			return errors.WithStack(err)
 		} else if err != nil {

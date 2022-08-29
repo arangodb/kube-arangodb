@@ -23,24 +23,22 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
-	"github.com/rs/zerolog"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 
 func init() {
 	registerAction(api.ActionTypeEncryptionKeyRefresh, newEncryptionKeyRefresh, defaultTimeout)
 }
 
-func newEncryptionKeyRefresh(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newEncryptionKeyRefresh(action api.Action, actionCtx ActionContext) Action {
 	a := &encryptionKeyRefreshAction{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -57,30 +55,29 @@ func (a *encryptionKeyRefreshAction) Start(ctx context.Context) (bool, error) {
 func (a *encryptionKeyRefreshAction) CheckProgress(ctx context.Context) (bool, bool, error) {
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
-	keyfolder, err := a.actionCtx.ACS().CurrentClusterCache().Secret().V1().Read().Get(ctxChild, pod.GetEncryptionFolderSecretName(a.actionCtx.GetName()), meta.GetOptions{})
+	keyFolder, err := a.actionCtx.ACS().CurrentClusterCache().Secret().V1().Read().Get(ctxChild,
+		pod.GetEncryptionFolderSecretName(a.actionCtx.GetName()), meta.GetOptions{})
 	if err != nil {
-		a.log.Err(err).Msgf("Unable to fetch encryption folder")
+		a.log.Err(err).Error("Unable to fetch encryption folder")
 		return true, false, nil
 	}
 
-	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	c, err := a.actionCtx.GetServerClient(ctxChild, a.action.Group, a.action.MemberID)
+	c, err := a.actionCtx.GetMembersState().GetMemberClient(a.action.MemberID)
 	if err != nil {
-		a.log.Warn().Err(err).Msg("Unable to get client")
+		a.log.Err(err).Warn("Unable to get client")
 		return true, false, nil
 	}
 
-	client := client.NewClient(c.Connection())
+	client := client.NewClient(c.Connection(), a.log)
 	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	e, err := client.RefreshEncryption(ctxChild)
 	if err != nil {
-		a.log.Warn().Err(err).Msg("Unable to refresh encryption")
+		a.log.Err(err).Warn("Unable to refresh encryption")
 		return true, false, nil
 	}
 
-	if !e.Result.KeysPresent(keyfolder.Data) {
+	if !e.Result.KeysPresent(keyFolder.Data) {
 		return false, false, nil
 	}
 

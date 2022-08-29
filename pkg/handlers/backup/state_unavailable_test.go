@@ -23,11 +23,12 @@ package backup
 import (
 	"testing"
 
-	"github.com/arangodb/go-driver"
-	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/stretchr/testify/require"
 
+	"github.com/arangodb/go-driver"
+
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 )
 
 func Test_State_Unavailable_Common(t *testing.T) {

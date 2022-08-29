@@ -31,56 +31,37 @@ import (
 
 	errs "github.com/pkg/errors"
 
-	"github.com/rs/zerolog"
-
 	driver "github.com/arangodb/go-driver"
+
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 )
 
 var (
-	Cause     = errs.Cause
-	New       = errs.New
-	WithStack = errs.WithStack
-	Wrap      = errs.Wrap
-	Wrapf     = errs.Wrapf
+	Cause        = errs.Cause
+	New          = errs.New
+	WithStack    = errs.WithStack
+	Wrap         = errs.Wrap
+	Wrapf        = errs.Wrapf
+	WithMessage  = errs.WithMessage
+	WithMessagef = errs.WithMessagef
 )
+
+// CauseWithNil returns Cause of an error.
+// If error returned by Cause is same (no Causer interface implemented), function will return nil instead
+func CauseWithNil(err error) error {
+	if nerr := Cause(err); err == nil {
+		return nil
+	} else if nerr == err {
+		// Cause returns same error if error object does not implement Causer interface
+		// To prevent infinite loops in usage CauseWithNil will return nil in this case
+		return nil
+	} else {
+		return nerr
+	}
+}
 
 func Newf(format string, args ...interface{}) error {
 	return New(fmt.Sprintf(format, args...))
-}
-
-// WithMessage annotates err with a new message.
-// The messages of given error is hidden.
-// If err is nil, WithMessage returns nil.
-func WithMessage(err error, message string) error {
-	if err == nil {
-		return nil
-	}
-	return &withMessage{
-		cause: err,
-		msg:   message,
-	}
-}
-
-type withMessage struct {
-	cause error
-	msg   string
-}
-
-func (w *withMessage) Error() string { return w.msg }
-func (w *withMessage) Cause() error  { return w.cause }
-
-func (w *withMessage) Format(s fmt.State, verb rune) {
-	switch verb {
-	case 'v':
-		if s.Flag('+') {
-			fmt.Fprintf(s, "%+v\n", w.Cause())
-			io.WriteString(s, w.msg)
-			return
-		}
-		fallthrough
-	case 's', 'q':
-		io.WriteString(s, w.Error())
-	}
 }
 
 type timeout interface {
@@ -207,13 +188,13 @@ func libCause(err error) (bool, error) {
 	}
 }
 
-func LogError(logger zerolog.Logger, msg string, f func() error) {
+func LogError(logger logging.Logger, msg string, f func() error) {
 	if err := f(); err != nil {
-		logger.Error().Err(err).Msg(msg)
+		logger.Err(err).Error(msg)
 	}
 }
 
-type causer interface {
+type Causer interface {
 	Cause() error
 }
 
@@ -226,7 +207,7 @@ func IsReconcile(err error) bool {
 		return true
 	}
 
-	if c, ok := err.(causer); ok {
+	if c, ok := err.(Causer); ok {
 		return IsReconcile(c.Cause())
 	}
 

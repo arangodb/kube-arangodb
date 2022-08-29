@@ -23,30 +23,25 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-
 	"k8s.io/apimachinery/pkg/types"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/rs/zerolog"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 func init() {
 	registerAction(api.ActionTypeEncryptionKeyRemove, newEncryptionKeyRemove, defaultTimeout)
 }
 
-func newEncryptionKeyRemove(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newEncryptionKeyRemove(action api.Action, actionCtx ActionContext) Action {
 	a := &encryptionKeyRemoveAction{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -59,7 +54,7 @@ type encryptionKeyRemoveAction struct {
 
 func (a *encryptionKeyRemoveAction) Start(ctx context.Context) (bool, error) {
 	if err := ensureEncryptionSupport(a.actionCtx); err != nil {
-		a.log.Error().Err(err).Msgf("Action not supported")
+		a.log.Err(err).Error("Action not supported")
 		return true, nil
 	}
 
@@ -77,7 +72,7 @@ func (a *encryptionKeyRemoveAction) Start(ctx context.Context) (bool, error) {
 
 	patch, err := p.Marshal()
 	if err != nil {
-		a.log.Error().Err(err).Msgf("Unable to encrypt patch")
+		a.log.Err(err).Error("Unable to encrypt patch")
 		return true, nil
 	}
 

@@ -23,15 +23,14 @@ package deployment
 import (
 	"testing"
 
+	core "k8s.io/api/core/v1"
+
 	"github.com/arangodb/go-driver"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-
-	"github.com/arangodb/kube-arangodb/pkg/util"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	core "k8s.io/api/core/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 func createTestDiscoveredImages(image, version, id string) api.ImageInfoList {
@@ -64,7 +63,7 @@ func TestEnsurePod_ArangoDB_ImagePropagation(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						Agents: api.MemberStatusList{
 							firstAgentStatus,
@@ -116,7 +115,7 @@ func TestEnsurePod_ArangoDB_ImagePropagation(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						Agents: api.MemberStatusList{
 							firstAgentStatus,
@@ -168,7 +167,7 @@ func TestEnsurePod_ArangoDB_ImagePropagation(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						Agents: api.MemberStatusList{
 							firstAgentStatus,

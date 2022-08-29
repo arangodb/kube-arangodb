@@ -24,10 +24,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
-
 	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 )
 
 const (

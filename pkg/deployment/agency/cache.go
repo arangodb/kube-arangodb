@@ -22,73 +22,159 @@ package agency
 
 import (
 	"context"
-	"fmt"
 	"sync"
-	"time"
 
+	"github.com/rs/zerolog"
+
+	"github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/generated/metric_descriptions"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
 )
 
 type health struct {
-	leaderID string
+	namespace, name string
 
+	leaderID string
+	leader   driver.Connection
+
+	agencySize int
+
+	names         []string
 	commitIndexes map[string]uint64
+	leaders       map[string]string
+	election      map[string]int
+}
+
+func (h health) Leader() (driver.Connection, bool) {
+	if l := h.leader; l != nil {
+		return l, true
+	}
+
+	return nil, false
+}
+
+func (h health) CollectMetrics(m metrics.PushMetric) {
+	if err := h.Serving(); err == nil {
+		m.Push(metric_descriptions.ArangodbOperatorAgencyCacheServingGauge(1, h.namespace, h.name))
+	} else {
+		m.Push(metric_descriptions.ArangodbOperatorAgencyCacheServingGauge(0, h.namespace, h.name))
+	}
+
+	if err := h.Healthy(); err == nil {
+		m.Push(metric_descriptions.ArangodbOperatorAgencyCacheHealthyGauge(1, h.namespace, h.name))
+	} else {
+		m.Push(metric_descriptions.ArangodbOperatorAgencyCacheHealthyGauge(0, h.namespace, h.name))
+	}
+
+	for _, name := range h.names {
+		if i, ok := h.commitIndexes[name]; ok {
+			m.Push(metric_descriptions.ArangodbOperatorAgencyCacheMemberServingGauge(1, h.namespace, h.name, name),
+				metric_descriptions.ArangodbOperatorAgencyCacheMemberCommitOffsetGauge(float64(i), h.namespace, h.name, name))
+		} else {
+			m.Push(metric_descriptions.ArangodbOperatorAgencyCacheMemberServingGauge(0, h.namespace, h.name, name),
+				metric_descriptions.ArangodbOperatorAgencyCacheMemberCommitOffsetGauge(-1, h.namespace, h.name, name))
+		}
+	}
+
+	for k, l := range h.election {
+		m.Push(metric_descriptions.ArangodbOperatorAgencyCacheLeadersGauge(float64(l), h.namespace, h.name, k))
+	}
 }
 
 func (h health) LeaderID() string {
 	return h.leaderID
 }
 
-// IsHealthy returns true if all agencies have the same commit index.
-// Returns false when:
-// - agencies' list is empty.
-// - agencies have different commit indices.
-// - agencies have commit indices == 0.
-func (h health) IsHealthy() bool {
-	var globalCommitIndex uint64
-	first := true
+// Healthy returns nil if all agencies have the same commit index.
+func (h health) Healthy() error {
+	if err := h.Serving(); err != nil {
+		return err
+	}
 
-	for _, commitIndex := range h.commitIndexes {
-		if first {
-			globalCommitIndex = commitIndex
-			first = false
-		} else if commitIndex != globalCommitIndex {
-			return false
+	if h.election[h.leaderID] != h.agencySize {
+		return errors.Newf("Not all agents are in quorum")
+	}
+
+	index := h.commitIndexes[h.leaderID]
+	if index == 0 {
+		return errors.Newf("Agency CommitIndex is zero")
+	}
+
+	for k, v := range h.commitIndexes {
+		if v != index {
+			return errors.Newf("Agent %s is behind in CommitIndex", k)
 		}
 	}
 
-	return globalCommitIndex != 0
+	return nil
+}
+
+func (h health) Serving() error {
+	if h.agencySize == 0 {
+		return errors.Newf("Empty agents list")
+	}
+
+	if len(h.election) == 0 {
+		return errors.Newf("No Leader")
+	} else if len(h.election) > 1 {
+		return errors.Newf("Multiple leaders")
+	}
+
+	if len(h.leaders) <= h.agencySize/2 {
+		return errors.Newf("Quorum is not present")
+	}
+
+	return nil
 }
 
 // Health describes interface to check healthy of the environment.
 type Health interface {
-	// IsHealthy return true when environment is considered as healthy.
-	IsHealthy() bool
+	// Healthy return nil when environment is considered as healthy.
+	Healthy() error
+
+	// Serving return nil when environment is considered as responsive, but not fully healthy.
+	Serving() error
 
 	// LeaderID returns a leader ID or empty string if a leader is not known.
 	LeaderID() string
+
+	// Leader returns connection to the Agency leader
+	Leader() (driver.Connection, bool)
+
+	CollectMetrics(m metrics.PushMetric)
 }
 
 type Cache interface {
-	Reload(ctx context.Context, clients []agency.Agency) (uint64, error)
+	Reload(ctx context.Context, size int, clients map[string]agency.Agency) (uint64, error)
 	Data() (State, bool)
 	CommitIndex() uint64
 	// Health returns true when healthy object is available.
 	Health() (Health, bool)
 }
 
-func NewCache(mode *api.DeploymentMode) Cache {
+func NewCache(namespace, name string, mode *api.DeploymentMode) Cache {
 	if mode.Get() == api.DeploymentModeSingle {
 		return NewSingleCache()
 	}
 
-	return NewAgencyCache()
+	return NewAgencyCache(namespace, name)
 }
 
-func NewAgencyCache() Cache {
-	return &cache{}
+func NewAgencyCache(namespace, name string) Cache {
+	c := &cache{
+		namespace: namespace,
+		name:      name,
+	}
+
+	c.log = logger.WrapObj(c)
+
+	return c
 }
 
 func NewSingleCache() Cache {
@@ -107,7 +193,7 @@ func (c cacheSingle) Health() (Health, bool) {
 	return nil, false
 }
 
-func (c cacheSingle) Reload(_ context.Context, _ []agency.Agency) (uint64, error) {
+func (c cacheSingle) Reload(_ context.Context, _ int, _ map[string]agency.Agency) (uint64, error) {
 	return 0, nil
 }
 
@@ -116,6 +202,10 @@ func (c cacheSingle) Data() (State, bool) {
 }
 
 type cache struct {
+	namespace, name string
+
+	log logging.Logger
+
 	lock sync.RWMutex
 
 	valid bool
@@ -125,6 +215,10 @@ type cache struct {
 	data State
 
 	health Health
+}
+
+func (c *cache) WrapLogger(in *zerolog.Event) *zerolog.Event {
+	return in.Str("namespace", c.namespace).Str("name", c.name)
 }
 
 func (c *cache) CommitIndex() uint64 {
@@ -153,18 +247,22 @@ func (c *cache) Health() (Health, bool) {
 	return nil, false
 }
 
-func (c *cache) Reload(ctx context.Context, clients []agency.Agency) (uint64, error) {
+func (c *cache) Reload(ctx context.Context, size int, clients map[string]agency.Agency) (uint64, error) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	leaderCli, leaderConfig, health, err := getLeader(ctx, clients)
+	leaderCli, leaderConfig, health, err := c.getLeader(ctx, size, clients)
 	if err != nil {
 		// Invalidate a leader ID and agency state.
 		// In the next iteration leaderID will be sat because `valid` will be false.
 		c.valid = false
+		c.health = nil
 
 		return 0, err
 	}
+
+	health.namespace = c.namespace
+	health.name = c.name
 
 	c.health = health
 	if leaderConfig.CommitIndex == c.commitIndex && c.valid {
@@ -173,7 +271,7 @@ func (c *cache) Reload(ctx context.Context, clients []agency.Agency) (uint64, er
 	}
 
 	// A leader should be known even if an agency state is invalid.
-	if data, err := loadState(ctx, leaderCli); err != nil {
+	if data, err := c.loadState(ctx, leaderCli); err != nil {
 		c.valid = false
 		return leaderConfig.CommitIndex, err
 	} else {
@@ -186,91 +284,74 @@ func (c *cache) Reload(ctx context.Context, clients []agency.Agency) (uint64, er
 
 // getLeader returns config and client to a leader agency, and health to check if agencies are on the same page.
 // If there is no quorum for the leader then error is returned.
-func getLeader(ctx context.Context, clients []agency.Agency) (agency.Agency, *Config, Health, error) {
-	var mutex sync.Mutex
-	var anyError error
+func (c *cache) getLeader(ctx context.Context, size int, clients map[string]agency.Agency) (agency.Agency, *Config, health, error) {
+	configs := make([]*Config, len(clients))
+	errs := make([]error, len(clients))
+	names := make([]string, 0, len(clients))
+	for k := range clients {
+		names = append(names, k)
+	}
+
 	var wg sync.WaitGroup
 
-	cliLen := len(clients)
-	if cliLen == 0 {
-		return nil, nil, nil, errors.New("empty list of agencies' clients")
-	}
-	configs := make([]*Config, cliLen)
-	leaders := make(map[string]int, cliLen)
-
-	var h health
-
-	h.commitIndexes = make(map[string]uint64, cliLen)
-	// Fetch all configs from agencies.
-	wg.Add(cliLen)
-	for i, cli := range clients {
-		go func(iLocal int, cliLocal agency.Agency) {
+	// Fetch Agency config
+	for i := range names {
+		wg.Add(1)
+		go func(id int) {
 			defer wg.Done()
 
-			ctxLocal, cancel := context.WithTimeout(ctx, time.Second)
+			ctxLocal, cancel := globals.GetGlobals().Timeouts().Agency().WithTimeout(ctx)
 			defer cancel()
-			config, err := GetAgencyConfig(ctxLocal, cliLocal)
-
-			mutex.Lock()
-			defer mutex.Unlock()
+			config, err := GetAgencyConfig(ctxLocal, clients[names[id]])
 
 			if err != nil {
-				anyError = err
-				return
-			} else if config == nil || config.LeaderId == "" {
-				anyError = fmt.Errorf("leader unknown for the agent %v", cliLocal.Connection().Endpoints())
+				errs[id] = err
 				return
 			}
 
 			// Write config on the same index where client is (It will be helpful later).
-			configs[iLocal] = config
-			// Count leaders.
-			leaders[config.LeaderId]++
-			h.commitIndexes[config.Configuration.ID] = config.CommitIndex
-		}(i, cli)
+			configs[id] = config
+		}(i)
 	}
 	wg.Wait()
 
-	if anyError != nil {
-		return nil, nil, nil, wrapError(anyError, "not all agencies are responsive")
+	var h health
+
+	h.agencySize = size
+	h.names = names
+	h.commitIndexes = make(map[string]uint64, len(clients))
+	h.leaders = make(map[string]string, len(clients))
+	h.election = make(map[string]int, len(clients))
+
+	for id := range configs {
+		if config := configs[id]; config != nil {
+			name := config.Configuration.ID
+			if name == h.names[id] {
+				h.commitIndexes[name] = config.CommitIndex
+				if config.LeaderId != "" {
+					h.leaders[name] = config.LeaderId
+					h.election[config.LeaderId]++
+					h.leaderID = config.LeaderId
+				}
+			}
+		}
+	}
+	if err := h.Serving(); err != nil {
+		c.log.Err(err).Warn("Agency Not serving")
+		return nil, nil, h, err
+	}
+	if err := h.Healthy(); err != nil {
+		c.log.Err(err).Debug("Agency Not healthy")
 	}
 
-	if len(leaders) == 0 {
-		return nil, nil, nil, wrapError(anyError, "failed to get config from agencies")
-	}
-
-	// Find the leader ID which has the most votes from all agencies.
-	maxVotes := 0
-	var leaderID string
-	for id, votes := range leaders {
-		if votes > maxVotes {
-			maxVotes = votes
-			leaderID = id
+	for id := range names {
+		if h.leaderID == h.names[id] {
+			h.leader = clients[names[id]].Connection()
+			if cfg := configs[id]; cfg != nil {
+				return clients[names[id]], cfg, h, nil
+			}
 		}
 	}
 
-	h.leaderID = leaderID
-
-	// Check if a leader has quorum from all possible agencies.
-	if maxVotes <= cliLen/2 {
-		message := fmt.Sprintf("no quorum for leader %s, votes %d of %d", leaderID, maxVotes, cliLen)
-		return nil, nil, nil, wrapError(anyError, message)
-	}
-
-	// From here on, a leader with quorum is known.
-	for i, config := range configs {
-		if config != nil && config.Configuration.ID == leaderID {
-			return clients[i], config, h, nil
-		}
-	}
-
-	return nil, nil, nil, wrapError(anyError, "the leader is not responsive")
-}
-
-func wrapError(err error, message string) error {
-	if err != nil {
-		return errors.WithMessage(err, message)
-	}
-
-	return errors.New(message)
+	return nil, nil, h, errors.Newf("Unable to find agent")
 }

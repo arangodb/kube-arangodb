@@ -21,21 +21,22 @@
 package k8sutil
 
 import (
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // CreateAffinity creates pod anti-affinity for the given role.
 // role contains the name of the role to configure any-affinity with.
 // affinityWithRole contains the role to configure affinity with.
-func CreateAffinity(deploymentName, role string, required bool, affinityWithRole string) *v1.Affinity {
-	a := &v1.Affinity{
-		NodeAffinity: &v1.NodeAffinity{
-			RequiredDuringSchedulingIgnoredDuringExecution: &v1.NodeSelector{
-				NodeSelectorTerms: []v1.NodeSelectorTerm{
+func CreateAffinity(deploymentName, role string, required bool, affinityWithRole string) *core.Affinity {
+	a := &core.Affinity{
+		NodeAffinity: &core.NodeAffinity{
+			RequiredDuringSchedulingIgnoredDuringExecution: &core.NodeSelector{
+				NodeSelectorTerms: []core.NodeSelectorTerm{
 					{
-						MatchExpressions: []v1.NodeSelectorRequirement{
+						MatchExpressions: []core.NodeSelectorRequirement{
 							{
 								Key:      shared.NodeArchAffinityLabel,
 								Operator: "In",
@@ -46,40 +47,40 @@ func CreateAffinity(deploymentName, role string, required bool, affinityWithRole
 				},
 			},
 		},
-		PodAntiAffinity: &v1.PodAntiAffinity{},
+		PodAntiAffinity: &core.PodAntiAffinity{},
 	}
 	labels := LabelsForDeployment(deploymentName, role)
-	labelSelector := &metav1.LabelSelector{
+	labelSelector := &meta.LabelSelector{
 		MatchLabels: labels,
 	}
 	if required {
-		a.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution = append(a.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution, v1.PodAffinityTerm{
+		a.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution = append(a.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution, core.PodAffinityTerm{
 			LabelSelector: labelSelector,
 			TopologyKey:   shared.TopologyKeyHostname,
 		})
 	} else {
-		a.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution = append(a.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution, v1.WeightedPodAffinityTerm{
+		a.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution = append(a.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution, core.WeightedPodAffinityTerm{
 			Weight: 1,
-			PodAffinityTerm: v1.PodAffinityTerm{
+			PodAffinityTerm: core.PodAffinityTerm{
 				LabelSelector: labelSelector,
 				TopologyKey:   shared.TopologyKeyHostname,
 			},
 		})
 	}
 	if affinityWithRole != "" {
-		a.PodAffinity = &v1.PodAffinity{}
-		labelSelector := &metav1.LabelSelector{
+		a.PodAffinity = &core.PodAffinity{}
+		labelSelector := &meta.LabelSelector{
 			MatchLabels: LabelsForDeployment(deploymentName, affinityWithRole),
 		}
 		if required {
-			a.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution = append(a.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution, v1.PodAffinityTerm{
+			a.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution = append(a.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution, core.PodAffinityTerm{
 				LabelSelector: labelSelector,
 				TopologyKey:   shared.TopologyKeyHostname,
 			})
 		} else {
-			a.PodAffinity.PreferredDuringSchedulingIgnoredDuringExecution = append(a.PodAffinity.PreferredDuringSchedulingIgnoredDuringExecution, v1.WeightedPodAffinityTerm{
+			a.PodAffinity.PreferredDuringSchedulingIgnoredDuringExecution = append(a.PodAffinity.PreferredDuringSchedulingIgnoredDuringExecution, core.WeightedPodAffinityTerm{
 				Weight: 1,
-				PodAffinityTerm: v1.PodAffinityTerm{
+				PodAffinityTerm: core.PodAffinityTerm{
 					LabelSelector: labelSelector,
 					TopologyKey:   shared.TopologyKeyHostname,
 				},

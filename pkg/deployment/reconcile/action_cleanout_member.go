@@ -23,15 +23,12 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
 	driver "github.com/arangodb/go-driver"
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/rs/zerolog"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 
 func init() {
@@ -40,10 +37,10 @@ func init() {
 
 // newCleanOutMemberAction creates a new Action that implements the given
 // planned CleanOutMember action.
-func newCleanOutMemberAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newCleanOutMemberAction(action api.Action, actionCtx ActionContext) Action {
 	a := &actionCleanoutMember{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -68,21 +65,18 @@ func (a *actionCleanoutMember) Start(ctx context.Context) (bool, error) {
 		// We wanted to remove and it is already gone. All ok
 		return true, nil
 	}
-	log := a.log
 
-	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	c, err := a.actionCtx.GetDatabaseClient(ctxChild)
+	c, err := a.actionCtx.GetMembersState().State().GetDatabaseClient()
 	if err != nil {
-		log.Debug().Err(err).Msg("Failed to create member client")
+		a.log.Err(err).Debug("Failed to create member client")
 		return false, errors.WithStack(err)
 	}
 
-	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	cluster, err := c.Cluster(ctxChild)
 	if err != nil {
-		log.Debug().Err(err).Msg("Failed to access cluster")
+		a.log.Err(err).Debug("Failed to access cluster")
 		return false, errors.WithStack(err)
 	}
 
@@ -95,10 +89,10 @@ func (a *actionCleanoutMember) Start(ctx context.Context) (bool, error) {
 			// Member not found, it could be that it never connected to the cluster
 			return true, nil
 		}
-		log.Debug().Err(err).Msg("Failed to cleanout member")
+		a.log.Err(err).Debug("Failed to cleanout member")
 		return false, errors.WithStack(err)
 	}
-	log.Debug().Str("job-id", jobID).Msg("Cleanout member started")
+	a.log.Str("job-id", jobID).Debug("Cleanout member started")
 	// Update status
 	m.Phase = api.MemberPhaseCleanOut
 	m.CleanoutJobID = jobID
@@ -111,7 +105,6 @@ func (a *actionCleanoutMember) Start(ctx context.Context) (bool, error) {
 // CheckProgress checks the progress of the action.
 // Returns: ready, abort, error.
 func (a *actionCleanoutMember) CheckProgress(ctx context.Context) (bool, bool, error) {
-	log := a.log
 	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !ok {
 		// We wanted to remove and it is already gone. All ok
@@ -122,58 +115,19 @@ func (a *actionCleanoutMember) CheckProgress(ctx context.Context) (bool, bool, e
 		return true, false, nil
 	}
 
-	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	c, err := a.actionCtx.GetDatabaseClient(ctxChild)
-	if err != nil {
-		log.Debug().Err(err).Msg("Failed to create database client")
+	cache, ok := a.actionCtx.GetAgencyCache()
+	if !ok {
+		a.log.Debug("AgencyCache is not ready")
 		return false, false, nil
 	}
 
-	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	cluster, err := c.Cluster(ctxChild)
-	if err != nil {
-		log.Debug().Err(err).Msg("Failed to access cluster")
-		return false, false, nil
-	}
-
-	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	cleanedOut, err := cluster.IsCleanedOut(ctxChild, a.action.MemberID)
-	if err != nil {
-		log.Debug().Err(err).Msg("IsCleanedOut failed")
-		return false, false, nil
-	}
-	if !cleanedOut {
+	if !cache.Target.CleanedServers.Contains(agency.Server(a.action.MemberID)) {
 		// We're not done yet, check job status
-		log.Debug().Msg("IsCleanedOut returned false")
+		a.log.Debug("IsCleanedOut returned false")
 
-		ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-		defer cancel()
-		c, err := a.actionCtx.GetDatabaseClient(ctxChild)
-		if err != nil {
-			log.Debug().Err(err).Msg("Failed to create database client")
-			return false, false, nil
-		}
-
-		ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-		defer cancel()
-		agency, err := a.actionCtx.GetAgency(ctxChild)
-		if err != nil {
-			log.Debug().Err(err).Msg("Failed to create agency client")
-			return false, false, nil
-		}
-
-		ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-		defer cancel()
-		jobStatus, err := arangod.CleanoutServerJobStatus(ctxChild, m.CleanoutJobID, c, agency)
-		if err != nil {
-			log.Debug().Err(err).Msg("Failed to fetch cleanout job status")
-			return false, false, nil
-		}
-		if jobStatus.IsFailed() {
-			log.Warn().Str("reason", jobStatus.Reason()).Msg("Cleanout Job failed. Aborting plan")
+		details, jobStatus := cache.Target.GetJob(agency.JobID(m.CleanoutJobID))
+		if jobStatus == agency.JobPhaseFailed {
+			a.log.Str("reason", details.Reason).Warn("Cleanout Job failed. Aborting plan")
 			// Revert cleanout state
 			m.Phase = api.MemberPhaseCreated
 			m.CleanoutJobID = ""

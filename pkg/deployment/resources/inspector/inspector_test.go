@@ -25,11 +25,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/refresh"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
-	"github.com/stretchr/testify/require"
 )
 
 type loaderTestDefinition struct {

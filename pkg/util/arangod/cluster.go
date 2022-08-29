@@ -23,9 +23,9 @@ package arangod
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
 	driver "github.com/arangodb/go-driver"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 // NumberOfServers is the JSON structure return for the numberOfServers API call.
@@ -79,6 +79,29 @@ func SetNumberOfServers(ctx context.Context, conn driver.Connection, noCoordinat
 	input := NumberOfServers{
 		Coordinators: noCoordinators,
 		DBServers:    noDBServers,
+	}
+	if _, err := req.SetBody(input); err != nil {
+		return errors.WithStack(err)
+	}
+	resp, err := conn.Do(ctx, req)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	if err := resp.CheckStatus(200); err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
+// CleanNumberOfServers removes the server count
+func CleanNumberOfServers(ctx context.Context, conn driver.Connection) error {
+	req, err := conn.NewRequest("PUT", "_admin/cluster/numberOfServers")
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	input := map[string]interface{}{
+		"numberOfCoordinators": nil,
+		"numberOfDBServers":    nil,
 	}
 	if _, err := req.SetBody(input); err != nil {
 		return errors.WithStack(err)

@@ -24,24 +24,19 @@ import (
 	"context"
 	"math"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
+	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/collection"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
+	"github.com/arangodb/kube-arangodb/pkg/util/collection"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	core "k8s.io/api/core/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 )
 
 const (
@@ -66,6 +61,7 @@ var _ interfaces.PodCreator = &MemberSyncPod{}
 var _ interfaces.ContainerCreator = &ArangoSyncContainer{}
 
 type MemberSyncPod struct {
+	podName                string
 	tlsKeyfileSecretName   string
 	clientAuthCASecretName string
 	masterJWTSecretName    string
@@ -310,6 +306,13 @@ func (m *MemberSyncPod) GetContainerCreator() interfaces.ContainerCreator {
 		masterJWTSecretName:    m.masterJWTSecretName,
 		clusterJWTSecretName:   m.clusterJWTSecretName,
 	}
+}
+
+func (m *MemberSyncPod) GetRestartPolicy() core.RestartPolicy {
+	if features.RestartPolicyAlways().Enabled() {
+		return core.RestartPolicyAlways
+	}
+	return core.RestartPolicyNever
 }
 
 // Init initializes the arangosync pod.

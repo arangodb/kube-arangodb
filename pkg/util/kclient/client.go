@@ -24,10 +24,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/arangodb/kube-arangodb/pkg/util"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
-	"k8s.io/client-go/rest"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 const Kubeconfig util.EnvironmentVariable = "KUBECONFIG"

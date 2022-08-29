@@ -19,6 +19,14 @@ spec:
       port: 8528
       protocol: TCP
       targetPort: 8528
+    - name: http-api
+      port: 8628
+      protocol: TCP
+      targetPort: 8628
+    - name: grpc-api
+      port: 8728
+      protocol: TCP
+      targetPort: 8728
   selector:
     app.kubernetes.io/name: {{ template "kube-arangodb.name" . }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}

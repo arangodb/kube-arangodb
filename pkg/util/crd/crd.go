@@ -24,12 +24,11 @@ import (
 	"context"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
 )
 
@@ -44,7 +43,7 @@ func WaitReady(check func() error) error {
 // WaitCRDReady waits for a custom resource definition with given name to be ready.
 func WaitCRDReady(clientset apiextensionsclient.Interface, crdName string) error {
 	op := func() error {
-		crd, err := clientset.ApiextensionsV1().CustomResourceDefinitions().Get(context.Background(), crdName, metav1.GetOptions{})
+		crd, err := clientset.ApiextensionsV1().CustomResourceDefinitions().Get(context.Background(), crdName, meta.GetOptions{})
 		if err != nil {
 			return errors.WithStack(err)
 		}

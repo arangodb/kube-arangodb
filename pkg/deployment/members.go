@@ -23,26 +23,20 @@ package deployment
 import (
 	"context"
 
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/names"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	"github.com/rs/zerolog"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 func (d *Deployment) createAgencyMapping(ctx context.Context) error {
 	spec := d.GetSpec()
-	status, _ := d.GetStatus()
+	status := d.GetStatus()
 
-	if !spec.Mode.HasAgents() {
+	if !spec.Mode.Get().HasAgents() {
 		return nil
 	}
 
@@ -70,12 +64,15 @@ func (d *Deployment) createAgencyMapping(ctx context.Context) error {
 		i.IDs = append(i.IDs, agents[id].ID)
 	}
 
+	agentsStatus := status.GetServerGroupStatus(api.ServerGroupAgents)
+
 	for len(i.IDs) < *spec.Agents.Count {
-		i.IDs = append(i.IDs, names.GetArangodID(api.ServerGroupAgents))
+		i.IDs = append(i.IDs, d.renderMemberID(spec, &status, &agentsStatus, api.ServerGroupAgents))
 	}
 
 	return d.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
 		s.Agency = &i
+		s.UpdateServerGroupStatus(api.ServerGroupAgents, agentsStatus)
 		return true
 	})
 }
@@ -83,8 +80,10 @@ func (d *Deployment) createAgencyMapping(ctx context.Context) error {
 // createMember creates member and adds it to the applicable member list.
 // Note: This does not create any pods of PVCs
 // Note: The updated status is not yet written to the apiserver.
-func createMember(log zerolog.Logger, status *api.DeploymentStatus, group api.ServerGroup, id string, apiObject *api.ArangoDeployment, mods ...reconcile.CreateMemberMod) (string, error) {
-	m, err := renderMember(log, status, group, id, apiObject)
+func (d *Deployment) createMember(spec api.DeploymentSpec, status *api.DeploymentStatus, group api.ServerGroup, id string, apiObject *api.ArangoDeployment, mods ...reconcile.CreateMemberMod) (string, error) {
+	gs := status.GetServerGroupStatus(group)
+
+	m, err := d.renderMember(spec, status, &gs, group, id, apiObject)
 	if err != nil {
 		return "", err
 	}
@@ -99,10 +98,12 @@ func createMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 		return "", err
 	}
 
+	status.UpdateServerGroupStatus(group, gs)
+
 	return m.ID, nil
 }
 
-func renderMember(log zerolog.Logger, status *api.DeploymentStatus, group api.ServerGroup, id string, apiObject *api.ArangoDeployment) (*api.MemberStatus, error) {
+func (d *Deployment) renderMember(spec api.DeploymentSpec, status *api.DeploymentStatus, groupStatus *api.ServerGroupStatus, group api.ServerGroup, id string, apiObject *api.ArangoDeployment) (*api.MemberStatus, error) {
 	if group == api.ServerGroupAgents {
 		if status.Agency == nil {
 			return nil, errors.New("Agency is not yet defined")
@@ -118,13 +119,7 @@ func renderMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 		}
 	} else {
 		if id == "" {
-			for {
-				id = names.GetArangodID(group)
-				if !status.Members.ContainsID(id) {
-					break
-				}
-				// Duplicate, try again
-			}
+			id = d.renderMemberID(spec, status, groupStatus, group)
 		}
 	}
 	if id == "" {
@@ -132,78 +127,72 @@ func renderMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 	}
 	deploymentName := apiObject.GetName()
 	role := group.AsRole()
-	arch := apiObject.Spec.Architecture.GetDefault()
+	arch := apiObject.GetAcceptedSpec().Architecture.GetDefault()
 
 	switch group {
 	case api.ServerGroupSingle:
-		log.Debug().Str("id", id).Msg("Adding single server")
+		d.log.Str("id", id).Debug("Adding single server")
 		return &api.MemberStatus{
 			ID:                        id,
 			UID:                       uuid.NewUUID(),
-			CreatedAt:                 metav1.Now(),
+			CreatedAt:                 meta.Now(),
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: shared.CreatePersistentVolumeClaimName(deploymentName, role, id),
-			PodName:                   "",
 			Image:                     apiObject.Status.CurrentImage,
 			Architecture:              &arch,
 		}, nil
 	case api.ServerGroupAgents:
-		log.Debug().Str("id", id).Msg("Adding agent")
+		d.log.Str("id", id).Debug("Adding agent")
 		return &api.MemberStatus{
 			ID:                        id,
 			UID:                       uuid.NewUUID(),
-			CreatedAt:                 metav1.Now(),
+			CreatedAt:                 meta.Now(),
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: shared.CreatePersistentVolumeClaimName(deploymentName, role, id),
-			PodName:                   "",
 			Image:                     apiObject.Status.CurrentImage,
 			Architecture:              &arch,
 		}, nil
 	case api.ServerGroupDBServers:
-		log.Debug().Str("id", id).Msg("Adding dbserver")
+		d.log.Str("id", id).Debug("Adding dbserver")
 		return &api.MemberStatus{
 			ID:                        id,
 			UID:                       uuid.NewUUID(),
-			CreatedAt:                 metav1.Now(),
+			CreatedAt:                 meta.Now(),
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: shared.CreatePersistentVolumeClaimName(deploymentName, role, id),
-			PodName:                   "",
 			Image:                     apiObject.Status.CurrentImage,
 			Architecture:              &arch,
 		}, nil
 	case api.ServerGroupCoordinators:
-		log.Debug().Str("id", id).Msg("Adding coordinator")
+		d.log.Str("id", id).Debug("Adding coordinator")
 		return &api.MemberStatus{
 			ID:                        id,
 			UID:                       uuid.NewUUID(),
-			CreatedAt:                 metav1.Now(),
+			CreatedAt:                 meta.Now(),
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: "",
-			PodName:                   "",
 			Image:                     apiObject.Status.CurrentImage,
 			Architecture:              &arch,
 		}, nil
 	case api.ServerGroupSyncMasters:
-		log.Debug().Str("id", id).Msg("Adding syncmaster")
+		d.log.Str("id", id).Debug("Adding syncmaster")
 		return &api.MemberStatus{
 			ID:                        id,
 			UID:                       uuid.NewUUID(),
-			CreatedAt:                 metav1.Now(),
+			CreatedAt:                 meta.Now(),
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: "",
-			PodName:                   "",
 			Image:                     apiObject.Status.CurrentImage,
 			Architecture:              &arch,
 		}, nil
 	case api.ServerGroupSyncWorkers:
-		log.Debug().Str("id", id).Msg("Adding syncworker")
+		d.log.Str("id", id).Debug("Adding syncworker")
 		return &api.MemberStatus{
 			ID:                        id,
 			UID:                       uuid.NewUUID(),
-			CreatedAt:                 metav1.Now(),
+			CreatedAt:                 meta.Now(),
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: "",
-			PodName:                   "",
 			Image:                     apiObject.Status.CurrentImage,
 			Architecture:              &arch,
 		}, nil

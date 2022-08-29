@@ -11,3 +11,4 @@ deps/
 **/enterprise/**
 enterprise.mk
 local/
+tools/codegen/boilerplate.go.txt

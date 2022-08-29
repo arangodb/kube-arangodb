@@ -28,37 +28,27 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
+	jg "github.com/golang-jwt/jwt"
+	core "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/equality"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
 
-	"github.com/arangodb/kube-arangodb/pkg/util"
-
-	"github.com/rs/zerolog"
-
-	operatorErrors "github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	core "k8s.io/api/core/v1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	secretv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
-	jg "github.com/golang-jwt/jwt"
-	"k8s.io/apimachinery/pkg/api/equality"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
 )
 
 var (
@@ -76,17 +66,19 @@ func GetCASecretName(apiObject k8sutil.APIObject) string {
 }
 
 // EnsureSecrets creates all secrets needed to run the given deployment
-func (r *Resources) EnsureSecrets(ctx context.Context, log zerolog.Logger, cachedStatus inspectorInterface.Inspector) error {
+func (r *Resources) EnsureSecrets(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
 	start := time.Now()
 	spec := r.context.GetSpec()
 	secrets := cachedStatus.SecretsModInterface().V1()
-	status, _ := r.context.GetStatus()
+	status := r.context.GetStatus()
 	apiObject := r.context.GetAPIObject()
 	deploymentName := apiObject.GetName()
 	image := status.CurrentImage
 	imageFound := status.CurrentImage != nil
 	defer metrics.SetDuration(inspectSecretsDurationGauges.WithLabelValues(deploymentName), start)
 	counterMetric := inspectedSecretsCounters.WithLabelValues(deploymentName)
+
+	log := r.log.Str("section", "secret")
 
 	members := status.Members.AsList()
 
@@ -223,7 +215,7 @@ func (r *Resources) ensureTokenSecretFolder(ctx context.Context, cachedStatus in
 				return err
 			}
 
-			return operatorErrors.Reconcile()
+			return errors.Reconcile()
 		}
 
 		if _, ok := f.Data[pod.ActiveJWTKey]; !ok {
@@ -335,7 +327,7 @@ func (r *Resources) createSecretWithMod(ctx context.Context, secrets secretv1.Mo
 		return errors.WithStack(err)
 	}
 
-	return operatorErrors.Reconcile()
+	return errors.Reconcile()
 }
 
 func (r *Resources) createSecretWithKey(ctx context.Context, secrets secretv1.ModInterface, secretName, keyName string, value []byte) error {
@@ -362,7 +354,7 @@ func (r *Resources) createTokenSecret(ctx context.Context, secrets secretv1.ModI
 		return errors.WithStack(err)
 	}
 
-	return operatorErrors.Reconcile()
+	return errors.Reconcile()
 }
 
 func (r *Resources) ensureEncryptionKeyfolderSecret(ctx context.Context, cachedStatus inspectorInterface.Inspector, secrets secretv1.ModInterface, keyfileSecretName, secretName string) error {
@@ -422,7 +414,7 @@ func AppendKeyfileToKeyfolder(ctx context.Context, cachedStatus inspectorInterfa
 			return errors.WithStack(err)
 		}
 
-		return operatorErrors.Reconcile()
+		return errors.Reconcile()
 	}
 
 	return nil
@@ -458,7 +450,7 @@ func (r *Resources) ensureExporterTokenSecret(ctx context.Context, cachedStatus 
 			}
 		}
 
-		return operatorErrors.Reconcile()
+		return errors.Reconcile()
 	}
 	return nil
 }
@@ -509,7 +501,7 @@ func (r *Resources) ensureTLSCACertificateSecret(ctx context.Context, cachedStat
 		owner := apiObject.AsOwner()
 		deploymentName := apiObject.GetName()
 		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-			return createTLSCACertificate(ctxChild, r.log, secrets, spec, deploymentName, &owner)
+			return r.createTLSCACertificate(ctxChild, secrets, spec, deploymentName, &owner)
 		})
 		if k8sutil.IsAlreadyExists(err) {
 			// Secret added while we tried it also
@@ -519,7 +511,7 @@ func (r *Resources) ensureTLSCACertificateSecret(ctx context.Context, cachedStat
 			return errors.WithStack(err)
 		}
 
-		return operatorErrors.Reconcile()
+		return errors.Reconcile()
 	}
 	return nil
 }
@@ -533,7 +525,7 @@ func (r *Resources) ensureClientAuthCACertificateSecret(ctx context.Context, cac
 		owner := apiObject.AsOwner()
 		deploymentName := apiObject.GetName()
 		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-			return createClientAuthCACertificate(ctxChild, r.log, secrets, spec, deploymentName, &owner)
+			return r.createClientAuthCACertificate(ctxChild, secrets, spec, deploymentName, &owner)
 		})
 		if k8sutil.IsAlreadyExists(err) {
 			// Secret added while we tried it also
@@ -543,7 +535,7 @@ func (r *Resources) ensureClientAuthCACertificateSecret(ctx context.Context, cac
 			return errors.WithStack(err)
 		}
 
-		return operatorErrors.Reconcile()
+		return errors.Reconcile()
 	}
 	return nil
 }
@@ -556,7 +548,7 @@ func (r *Resources) getJWTSecret(spec api.DeploymentSpec) (string, error) {
 	secretName := spec.Authentication.GetJWTSecretName()
 	s, err := k8sutil.GetTokenSecret(context.Background(), r.context.ACS().CurrentClusterCache().Secret().V1().Read(), secretName)
 	if err != nil {
-		r.log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get JWT secret")
+		r.log.Str("section", "jwt").Err(err).Str("secret-name", secretName).Debug("Failed to get JWT secret")
 		return "", errors.WithStack(err)
 	}
 	return s, nil
@@ -567,7 +559,7 @@ func (r *Resources) getSyncJWTSecret(spec api.DeploymentSpec) (string, error) {
 	secretName := spec.Sync.Authentication.GetJWTSecretName()
 	s, err := k8sutil.GetTokenSecret(context.Background(), r.context.ACS().CurrentClusterCache().Secret().V1().Read(), secretName)
 	if err != nil {
-		r.log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get sync JWT secret")
+		r.log.Str("section", "jwt").Err(err).Str("secret-name", secretName).Debug("Failed to get sync JWT secret")
 		return "", errors.WithStack(err)
 	}
 	return s, nil
@@ -578,7 +570,7 @@ func (r *Resources) getSyncMonitoringToken(spec api.DeploymentSpec) (string, err
 	secretName := spec.Sync.Monitoring.GetTokenSecretName()
 	s, err := k8sutil.GetTokenSecret(context.Background(), r.context.ACS().CurrentClusterCache().Secret().V1().Read(), secretName)
 	if err != nil {
-		r.log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get sync monitoring secret")
+		r.log.Str("section", "jwt").Err(err).Str("secret-name", secretName).Debug("Failed to get sync monitoring secret")
 		return "", errors.WithStack(err)
 	}
 	return s, nil

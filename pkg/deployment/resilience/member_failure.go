@@ -24,18 +24,13 @@ import (
 	"context"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	"github.com/arangodb/go-driver/agency"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 const (
 	recentTerminationsSinceGracePeriod = time.Minute * 10
-	notReadySinceGracePeriod           = time.Minute * 5
 	recentTerminationThreshold         = 5
 )
 
@@ -43,79 +38,55 @@ const (
 // - They are frequently restarted
 // - They cannot be scheduled for a long time (TODO)
 func (r *Resilience) CheckMemberFailure(ctx context.Context) error {
-	status, lastVersion := r.context.GetStatus()
+	status := r.context.GetStatus()
 	updateStatusNeeded := false
-	if err := status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
-		for _, m := range list {
-			log := r.log.With().
-				Str("id", m.ID).
-				Str("role", group.AsRole()).
-				Logger()
 
-			// Check if there are Members with Phase Upgrading or Rotation but no plan
-			switch m.Phase {
-			case api.MemberPhaseNone, api.MemberPhasePending:
-				continue
-			case api.MemberPhaseUpgrading, api.MemberPhaseRotating, api.MemberPhaseCleanOut, api.MemberPhaseRotateStart:
-				if len(status.Plan) == 0 {
-					log.Error().Msgf("No plan but member is in phase %s - marking as failed", m.Phase)
-					m.Phase = api.MemberPhaseFailed
-					status.Members.Update(m, group)
-					updateStatusNeeded = true
-				}
-			}
+	for _, e := range status.Members.AsList() {
+		m := e.Member
+		group := e.Group
+		log := r.log("member-failure").
+			Str("id", m.ID).
+			Str("role", group.AsRole())
 
-			// Check if pod is ready
-			if m.Conditions.IsTrue(api.ConditionTypeReady) {
-				// Pod is now ready, so we're not looking further
-				continue
-			}
-
-			// Check not ready for a long time
-			if !m.Phase.IsFailed() {
-				if m.IsNotReadySince(time.Now().Add(-notReadySinceGracePeriod)) {
-					// Member has terminated too often in recent history.
-
-					failureAcceptable, reason, err := r.isMemberFailureAcceptable(ctx, group, m)
-					if err != nil {
-						log.Warn().Err(err).Msg("Failed to check is member failure is acceptable")
-					} else if failureAcceptable {
-						log.Info().Msg("Member is not ready for long time, marking is failed")
-						m.Phase = api.MemberPhaseFailed
-						status.Members.Update(m, group)
-						updateStatusNeeded = true
-					} else {
-						log.Warn().Msgf("Member is not ready for long time, but it is not safe to mark it a failed because: %s", reason)
-					}
-				}
-			}
-
-			// Check recent terminations
-			if !m.Phase.IsFailed() {
-				count := m.RecentTerminationsSince(time.Now().Add(-recentTerminationsSinceGracePeriod))
-				if count >= recentTerminationThreshold {
-					// Member has terminated too often in recent history.
-					failureAcceptable, reason, err := r.isMemberFailureAcceptable(ctx, group, m)
-					if err != nil {
-						log.Warn().Err(err).Msg("Failed to check is member failure is acceptable")
-					} else if failureAcceptable {
-						log.Info().Msg("Member has terminated too often in recent history, marking is failed")
-						m.Phase = api.MemberPhaseFailed
-						status.Members.Update(m, group)
-						updateStatusNeeded = true
-					} else {
-						log.Warn().Msgf("Member has terminated too often in recent history, but it is not safe to mark it a failed because: %s", reason)
-					}
-				}
+		// Check if there are Members with Phase Upgrading or Rotation but no plan
+		switch m.Phase {
+		case api.MemberPhaseNone, api.MemberPhasePending:
+			continue
+		case api.MemberPhaseUpgrading, api.MemberPhaseRotating, api.MemberPhaseCleanOut, api.MemberPhaseRotateStart:
+			if len(status.Plan) == 0 {
+				log.Error("No plan but member is in phase %s - marking as failed", m.Phase)
+				m.Phase = api.MemberPhaseFailed
+				status.Members.Update(m, group)
+				updateStatusNeeded = true
 			}
 		}
 
-		return nil
-	}); err != nil {
-		return errors.WithStack(err)
+		// Check if pod is ready
+		if m.Conditions.IsTrue(api.ConditionTypeReady) {
+			// Pod is now ready, so we're not looking further
+			continue
+		}
+
+		// Check recent terminations
+		if !m.Phase.IsFailed() {
+			count := m.RecentTerminationsSince(time.Now().Add(-recentTerminationsSinceGracePeriod))
+			if count >= recentTerminationThreshold {
+				// Member has terminated too often in recent history.
+				failureAcceptable, reason := r.isMemberFailureAcceptable(group, m)
+				if failureAcceptable {
+					log.Info("Member has terminated too often in recent history, marking is failed")
+					m.Phase = api.MemberPhaseFailed
+					status.Members.Update(m, group)
+					updateStatusNeeded = true
+				} else {
+					log.Warn("Member has terminated too often in recent history, but it is not safe to mark it a failed because: %s", reason)
+				}
+			}
+		}
 	}
+
 	if updateStatusNeeded {
-		if err := r.context.UpdateStatus(ctx, status, lastVersion); err != nil {
+		if err := r.context.UpdateStatus(ctx, status); err != nil {
 			return errors.WithStack(err)
 		}
 	}
@@ -125,41 +96,46 @@ func (r *Resilience) CheckMemberFailure(ctx context.Context) error {
 
 // isMemberFailureAcceptable checks if it is currently acceptable to switch the phase of the given member
 // to failed, which means that it will be replaced.
-// Return: failureAcceptable, notAcceptableReason, error
-func (r *Resilience) isMemberFailureAcceptable(ctx context.Context, group api.ServerGroup, m api.MemberStatus) (bool, string, error) {
+// Return: failureAcceptable, notAcceptableReason
+func (r *Resilience) isMemberFailureAcceptable(group api.ServerGroup, m api.MemberStatus) (bool, string) {
 
 	switch group {
 	case api.ServerGroupAgents:
-		// All good when remaining agents are health
-		ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-		defer cancel()
-		clients, err := r.context.GetAgencyClientsWithPredicate(ctxChild, func(id string) bool { return id != m.ID })
-		if err != nil {
-			return false, "", errors.WithStack(err)
+		agencyHealth, ok := r.context.GetAgencyHealth()
+		if !ok {
+			return false, "AgencyHealth is not present"
 		}
-		if err := agency.AreAgentsHealthy(ctx, clients); err != nil {
-			return false, err.Error(), nil
+
+		if err := agencyHealth.Healthy(); err != nil {
+			return false, err.Error()
 		}
-		return true, "", nil
+
+		return true, ""
 	case api.ServerGroupDBServers:
-		ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-		defer cancel()
-		client, err := r.context.GetDatabaseClient(ctxChild)
-		if err != nil {
-			return false, "", errors.WithStack(err)
+		agencyState, ok := r.context.GetAgencyCache()
+		if !ok {
+			return false, "AgencyHealth is not present"
 		}
-		if err := arangod.IsDBServerEmpty(ctx, m.ID, client); err != nil {
-			return false, err.Error(), nil
+
+		if agencyState.Plan.Collections.IsDBServerPresent(agency.Server(m.ID)) {
+			return false, "DBServer still in Plan"
 		}
-		return true, "", nil
+
+		if agencyState.Current.Collections.IsDBServerPresent(agency.Server(m.ID)) {
+			return false, "DBServer still in Current"
+		}
+
+		return true, ""
 	case api.ServerGroupCoordinators:
 		// Coordinators can be replaced at will
-		return true, "", nil
+		return true, ""
 	case api.ServerGroupSyncMasters, api.ServerGroupSyncWorkers:
 		// Sync masters & workers can be replaced at will
-		return true, "", nil
+		return true, ""
+	case api.ServerGroupSingle:
+		return false, "ServerGroupSingle can not marked as a failed"
 	default:
 		// TODO
-		return false, "TODO", nil
+		return false, "TODO"
 	}
 }

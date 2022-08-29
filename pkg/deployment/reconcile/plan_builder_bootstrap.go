@@ -26,11 +26,9 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/rs/zerolog"
 )
 
-func createBootstrapPlan(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+func (r *Reconciler) createBootstrapPlan(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext) api.Plan {
 	if !status.Conditions.IsTrue(api.ConditionTypeReady) {

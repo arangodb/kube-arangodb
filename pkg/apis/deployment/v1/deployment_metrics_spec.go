@@ -22,9 +22,10 @@
 package v1
 
 import (
+	core "k8s.io/api/core/v1"
+
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	v1 "k8s.io/api/core/v1"
 )
 
 // MetricsAuthenticationSpec contains spec for authentication with arangodb
@@ -40,7 +41,8 @@ func (m MetricsMode) New() *MetricsMode {
 	return &m
 }
 
-// deprecated
+// GetMetricsEndpoint
+// Deprecated
 func (m MetricsMode) GetMetricsEndpoint() string {
 	switch m {
 	case MetricsModeInternal:
@@ -51,12 +53,14 @@ func (m MetricsMode) GetMetricsEndpoint() string {
 }
 
 const (
-	// deprecated
-	// MetricsModeExporter exporter mode for old exporter type
+	// MetricsModeExporter starts sidecar container with
+	// Deprecated
 	MetricsModeExporter MetricsMode = "exporter"
-	// deprecated
+	// MetricsModeSidecar behaves exactly the same as MetricsModeExporter
+	// Deprecated
 	MetricsModeSidecar MetricsMode = "sidecar"
-	// deprecated
+	// MetricsModeInternal exposes metrics using ArangoD endpoint
+	// Deprecated
 	MetricsModeInternal MetricsMode = "internal"
 )
 
@@ -74,7 +78,7 @@ type MetricsSpec struct {
 	// deprecated
 	Image          *string                   `json:"image,omitempty"`
 	Authentication MetricsAuthenticationSpec `json:"authentication,omitempty"`
-	Resources      v1.ResourceRequirements   `json:"resources,omitempty"`
+	Resources      core.ResourceRequirements `json:"resources,omitempty"`
 	// deprecated
 	Mode *MetricsMode `json:"mode,omitempty"`
 	TLS  *bool        `json:"tls,omitempty"`
@@ -105,14 +109,14 @@ func (s *MetricsSpec) IsEnabled() bool {
 	return util.BoolOrDefault(s.Enabled, false)
 }
 
-// deprecated
 // HasImage returns whether a image was specified or not
+// Deprecated
 func (s *MetricsSpec) HasImage() bool {
 	return s.Image != nil
 }
 
-// deprecated
 // GetImage returns the Image or empty string
+// Deprecated
 func (s *MetricsSpec) GetImage() string {
 	return util.StringOrDefault(s.Image)
 }
@@ -148,8 +152,8 @@ func (s *MetricsSpec) SetDefaultsFrom(source MetricsSpec) {
 	if s.Authentication.JWTTokenSecretName == nil {
 		s.Authentication.JWTTokenSecretName = util.NewStringOrNil(source.Authentication.JWTTokenSecretName)
 	}
-	setDefaultsFromResourceList(&s.Resources.Limits, source.Resources.Limits)
-	setDefaultsFromResourceList(&s.Resources.Requests, source.Resources.Requests)
+	setStorageDefaultsFromResourceList(&s.Resources.Limits, source.Resources.Limits)
+	setStorageDefaultsFromResourceList(&s.Resources.Requests, source.Resources.Requests)
 }
 
 // Validate the given spec

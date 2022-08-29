@@ -23,20 +23,23 @@ package resources
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	core "k8s.io/api/core/v1"
-	policy "k8s.io/api/policy/v1beta1"
+	policyv1 "k8s.io/api/policy/v1"
+	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 )
 
 func (r *Resources) EnsureLabels(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
-	r.log.Info().Msgf("Ensuring labels")
+	log := r.log.Str("section", "labels")
+
+	log.Trace("Ensure labels")
 
 	if err := r.EnsureSecretLabels(ctx, cachedStatus); err != nil {
 		return err
@@ -72,7 +75,7 @@ func (r *Resources) EnsureLabels(ctx context.Context, cachedStatus inspectorInte
 func (r *Resources) EnsureSecretLabels(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
 	changed := false
 	if err := cachedStatus.Secret().V1().Iterate(func(secret *core.Secret) error {
-		if ensureLabelsMap(secret.Kind, secret, r.context.GetSpec(), func(name string, d []byte) error {
+		if r.ensureLabelsMap(secret.Kind, secret, r.context.GetSpec(), func(name string, d []byte) error {
 			return globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				_, err := cachedStatus.SecretsModInterface().V1().Patch(ctxChild,
 					name, types.JSONPatchType, d, meta.PatchOptions{})
@@ -99,7 +102,7 @@ func (r *Resources) EnsureSecretLabels(ctx context.Context, cachedStatus inspect
 func (r *Resources) EnsureServiceAccountsLabels(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
 	changed := false
 	if err := cachedStatus.ServiceAccount().V1().Iterate(func(serviceAccount *core.ServiceAccount) error {
-		if ensureLabelsMap(serviceAccount.Kind, serviceAccount, r.context.GetSpec(), func(name string, d []byte) error {
+		if r.ensureLabelsMap(serviceAccount.Kind, serviceAccount, r.context.GetSpec(), func(name string, d []byte) error {
 			return globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				_, err := cachedStatus.ServiceAccountsModInterface().V1().Patch(ctxChild, name, types.JSONPatchType, d, meta.PatchOptions{})
 				return err
@@ -125,7 +128,7 @@ func (r *Resources) EnsureServiceAccountsLabels(ctx context.Context, cachedStatu
 func (r *Resources) EnsureServicesLabels(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
 	changed := false
 	if err := cachedStatus.Service().V1().Iterate(func(service *core.Service) error {
-		if ensureLabelsMap(service.Kind, service, r.context.GetSpec(), func(name string, d []byte) error {
+		if r.ensureLabelsMap(service.Kind, service, r.context.GetSpec(), func(name string, d []byte) error {
 			return globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				_, err := cachedStatus.ServicesModInterface().V1().Patch(ctxChild, name, types.JSONPatchType, d, meta.PatchOptions{})
 				return err
@@ -158,7 +161,7 @@ func (r *Resources) EnsureServiceMonitorsLabels(ctx context.Context, cachedStatu
 		return err
 	}
 	if err := i.Iterate(func(serviceMonitor *monitoring.ServiceMonitor) error {
-		if ensureLabelsMap(serviceMonitor.Kind, serviceMonitor, r.context.GetSpec(), func(name string, d []byte) error {
+		if r.ensureLabelsMap(serviceMonitor.Kind, serviceMonitor, r.context.GetSpec(), func(name string, d []byte) error {
 			return globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				_, err := cachedStatus.ServiceMonitorsModInterface().V1().Patch(ctxChild, name, types.JSONPatchType, d, meta.PatchOptions{})
 				return err
@@ -184,7 +187,7 @@ func (r *Resources) EnsureServiceMonitorsLabels(ctx context.Context, cachedStatu
 func (r *Resources) EnsurePodsLabels(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
 	changed := false
 	if err := cachedStatus.Pod().V1().Iterate(func(pod *core.Pod) error {
-		if ensureGroupLabelsMap(pod.Kind, pod, r.context.GetSpec(), func(name string, d []byte) error {
+		if r.ensureGroupLabelsMap(pod.Kind, pod, r.context.GetSpec(), func(name string, d []byte) error {
 			return globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				_, err := cachedStatus.PodsModInterface().V1().Patch(ctxChild, name, types.JSONPatchType, d, meta.PatchOptions{})
 				return err
@@ -211,7 +214,7 @@ func (r *Resources) EnsurePersistentVolumeClaimsLabels(ctx context.Context, cach
 	changed := false
 
 	actionFn := func(persistentVolumeClaim *core.PersistentVolumeClaim) error {
-		if ensureGroupLabelsMap(persistentVolumeClaim.Kind, persistentVolumeClaim, r.context.GetSpec(), func(name string, d []byte) error {
+		if r.ensureGroupLabelsMap(persistentVolumeClaim.Kind, persistentVolumeClaim, r.context.GetSpec(), func(name string, d []byte) error {
 			return globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				_, err := cachedStatus.PersistentVolumeClaimsModInterface().V1().Patch(ctxChild, name, types.JSONPatchType, d, meta.PatchOptions{})
 				return err
@@ -240,25 +243,47 @@ func (r *Resources) EnsurePersistentVolumeClaimsLabels(ctx context.Context, cach
 
 func (r *Resources) EnsurePodDisruptionBudgetsLabels(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
 	changed := false
-	i, err := cachedStatus.PodDisruptionBudget().V1Beta1()
-	if err != nil {
-		return err
-	}
-	if err := i.Iterate(func(budget *policy.PodDisruptionBudget) error {
-		if ensureLabelsMap(budget.Kind, budget, r.context.GetSpec(), func(name string, d []byte) error {
-			return globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-				_, err := cachedStatus.PodDisruptionBudgetsModInterface().V1Beta1().Patch(ctxChild, name, types.JSONPatchType, d, meta.PatchOptions{})
-				return err
-			})
-		}) {
-			changed = true
-		}
 
-		return nil
-	}, func(budget *policy.PodDisruptionBudget) bool {
-		return r.isChildResource(budget)
-	}); err != nil {
-		return err
+	if inspector, err := cachedStatus.PodDisruptionBudget().V1(); err == nil {
+		if err := inspector.Iterate(func(budget *policyv1.PodDisruptionBudget) error {
+			if r.ensureLabelsMap(budget.Kind, budget, r.context.GetSpec(), func(name string, d []byte) error {
+				return globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
+					_, err := cachedStatus.PodDisruptionBudgetsModInterface().V1().Patch(ctxChild, name,
+						types.JSONPatchType, d, meta.PatchOptions{})
+					return err
+				})
+			}) {
+				changed = true
+			}
+
+			return nil
+		}, func(budget *policyv1.PodDisruptionBudget) bool {
+			return r.isChildResource(budget)
+		}); err != nil {
+			return err
+		}
+	} else {
+		inspector, err := cachedStatus.PodDisruptionBudget().V1Beta1()
+		if err != nil {
+			return err
+		}
+		if err := inspector.Iterate(func(budget *policyv1beta1.PodDisruptionBudget) error {
+			if r.ensureLabelsMap(budget.Kind, budget, r.context.GetSpec(), func(name string, d []byte) error {
+				return globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
+					_, err := cachedStatus.PodDisruptionBudgetsModInterface().V1Beta1().Patch(ctxChild, name,
+						types.JSONPatchType, d, meta.PatchOptions{})
+					return err
+				})
+			}) {
+				changed = true
+			}
+
+			return nil
+		}, func(budget *policyv1beta1.PodDisruptionBudget) bool {
+			return r.isChildResource(budget)
+		}); err != nil {
+			return err
+		}
 	}
 
 	if changed {

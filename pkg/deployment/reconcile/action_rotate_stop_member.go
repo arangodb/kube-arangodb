@@ -23,10 +23,8 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/rs/zerolog"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 func init() {
@@ -35,10 +33,10 @@ func init() {
 
 // newRotateStopMemberAction creates a new Action that implements the given
 // planned RotateStopMember action.
-func newRotateStopMemberAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newRotateStopMemberAction(action api.Action, actionCtx ActionContext) Action {
 	a := &actionRotateStopMember{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -56,10 +54,9 @@ type actionRotateStopMember struct {
 // Returns true if the action is completely finished, false in case
 // the start time needs to be recorded and a ready condition needs to be checked.
 func (a *actionRotateStopMember) Start(ctx context.Context) (bool, error) {
-	log := a.log
 	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !ok {
-		log.Error().Msg("No such member")
+		a.log.Error("No such member")
 	}
 
 	m.Phase = api.MemberPhaseNone

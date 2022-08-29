@@ -23,26 +23,27 @@ package inspector
 import (
 	"context"
 
-	podDisruptionBudgetv1beta1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget/v1beta1"
-	policy "k8s.io/api/policy/v1beta1"
+	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	policyTyped "k8s.io/client-go/kubernetes/typed/policy/v1beta1"
+	policytypedv1beta1 "k8s.io/client-go/kubernetes/typed/policy/v1beta1"
+
+	podsisruptionbudgetv1beta1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget/v1beta1"
 )
 
-func (p podDisruptionBudgetsMod) V1Beta1() podDisruptionBudgetv1beta1.ModInterface {
-	return podDisruptionBudgetsModV1(p)
+func (p podDisruptionBudgetsMod) V1Beta1() podsisruptionbudgetv1beta1.ModInterface {
+	return podDisruptionBudgetsModV1Beta1(p)
 }
 
-type podDisruptionBudgetsModV1 struct {
+type podDisruptionBudgetsModV1Beta1 struct {
 	i *inspectorState
 }
 
-func (p podDisruptionBudgetsModV1) client() policyTyped.PodDisruptionBudgetInterface {
+func (p podDisruptionBudgetsModV1Beta1) client() policytypedv1beta1.PodDisruptionBudgetInterface {
 	return p.i.Client().Kubernetes().PolicyV1beta1().PodDisruptionBudgets(p.i.Namespace())
 }
 
-func (p podDisruptionBudgetsModV1) Create(ctx context.Context, podDisruptionBudget *policy.PodDisruptionBudget, opts meta.CreateOptions) (*policy.PodDisruptionBudget, error) {
+func (p podDisruptionBudgetsModV1Beta1) Create(ctx context.Context, podDisruptionBudget *policyv1beta1.PodDisruptionBudget, opts meta.CreateOptions) (*policyv1beta1.PodDisruptionBudget, error) {
 	if podDisruptionBudget, err := p.client().Create(ctx, podDisruptionBudget, opts); err != nil {
 		return podDisruptionBudget, err
 	} else {
@@ -51,7 +52,7 @@ func (p podDisruptionBudgetsModV1) Create(ctx context.Context, podDisruptionBudg
 	}
 }
 
-func (p podDisruptionBudgetsModV1) Update(ctx context.Context, podDisruptionBudget *policy.PodDisruptionBudget, opts meta.UpdateOptions) (*policy.PodDisruptionBudget, error) {
+func (p podDisruptionBudgetsModV1Beta1) Update(ctx context.Context, podDisruptionBudget *policyv1beta1.PodDisruptionBudget, opts meta.UpdateOptions) (*policyv1beta1.PodDisruptionBudget, error) {
 	if podDisruptionBudget, err := p.client().Update(ctx, podDisruptionBudget, opts); err != nil {
 		return podDisruptionBudget, err
 	} else {
@@ -60,7 +61,7 @@ func (p podDisruptionBudgetsModV1) Update(ctx context.Context, podDisruptionBudg
 	}
 }
 
-func (p podDisruptionBudgetsModV1) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts meta.PatchOptions, subresources ...string) (result *policy.PodDisruptionBudget, err error) {
+func (p podDisruptionBudgetsModV1Beta1) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts meta.PatchOptions, subresources ...string) (result *policyv1beta1.PodDisruptionBudget, err error) {
 	if podDisruptionBudget, err := p.client().Patch(ctx, name, pt, data, opts, subresources...); err != nil {
 		return podDisruptionBudget, err
 	} else {
@@ -69,7 +70,7 @@ func (p podDisruptionBudgetsModV1) Patch(ctx context.Context, name string, pt ty
 	}
 }
 
-func (p podDisruptionBudgetsModV1) Delete(ctx context.Context, name string, opts meta.DeleteOptions) error {
+func (p podDisruptionBudgetsModV1Beta1) Delete(ctx context.Context, name string, opts meta.DeleteOptions) error {
 	if err := p.client().Delete(ctx, name, opts); err != nil {
 		return err
 	} else {

@@ -23,10 +23,8 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/rs/zerolog"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 func init() {
@@ -35,10 +33,10 @@ func init() {
 
 // newUpgradeMemberAction creates a new Action that implements the given
 // planned UpgradeMember action.
-func newUpgradeMemberAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newUpgradeMemberAction(action api.Action, actionCtx ActionContext) Action {
 	a := &actionUpgradeMember{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -53,10 +51,9 @@ type actionUpgradeMember struct {
 // Returns true if the action is completely finished, false in case
 // the start time needs to be recorded and a ready condition needs to be checked.
 func (a *actionUpgradeMember) Start(ctx context.Context) (bool, error) {
-	log := a.log
 	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !ok {
-		log.Error().Msg("No such member")
+		a.log.Error("No such member")
 	}
 	// Set AutoUpgrade condition
 	m.Conditions.Update(api.ConditionTypeAutoUpgrade, true, "Upgrading", "AutoUpgrade on first restart")
@@ -76,10 +73,9 @@ func (a *actionUpgradeMember) Start(ctx context.Context) (bool, error) {
 // Returns true if the action is completely finished, false otherwise.
 func (a *actionUpgradeMember) CheckProgress(ctx context.Context) (bool, bool, error) {
 	// Check that pod is removed
-	log := a.log
 	m, found := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !found {
-		log.Error().Msg("No such member")
+		a.log.Error("No such member")
 		return true, false, nil
 	}
 
@@ -100,7 +96,7 @@ func (a *actionUpgradeMember) CheckProgress(ctx context.Context) (bool, bool, er
 	if isUpgrading {
 		if m.Conditions.IsTrue(api.ConditionTypeTerminated) {
 			if m.Conditions.IsTrue(api.ConditionTypeUpgradeFailed) {
-				a.log.Error().Msgf("Upgrade of member failed")
+				a.log.Error("Upgrade of member failed")
 			}
 			// Invalidate plan
 			m.Phase = ""
@@ -115,14 +111,10 @@ func (a *actionUpgradeMember) CheckProgress(ctx context.Context) (bool, bool, er
 				return false, true, nil
 			}
 
-			log.Error().Msgf("Upgrade failed")
+			a.log.Error("Upgrade failed")
 			return false, true, nil
 		}
 	}
-
-	log = log.With().
-		Str("pod-name", m.PodName).
-		Bool("is-upgrading", isUpgrading).Logger()
 
 	act := actionWaitForMemberUp{
 		actionImpl: a.actionImpl,

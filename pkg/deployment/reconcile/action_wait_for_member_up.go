@@ -22,18 +22,12 @@ package reconcile
 
 import (
 	"context"
-	"time"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	driver "github.com/arangodb/go-driver"
-	"github.com/arangodb/go-driver/agency"
-
-	"github.com/rs/zerolog"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 
 func init() {
@@ -42,10 +36,10 @@ func init() {
 
 // newWaitForMemberUpAction creates a new Action that implements the given
 // planned WaitForMemberUp action.
-func newWaitForMemberUpAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newWaitForMemberUpAction(action api.Action, actionCtx ActionContext) Action {
 	a := &actionWaitForMemberUp{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -72,7 +66,7 @@ func (a *actionWaitForMemberUp) Start(ctx context.Context) (bool, error) {
 func (a *actionWaitForMemberUp) CheckProgress(ctx context.Context) (bool, bool, error) {
 	member, ok := a.actionCtx.GetMemberStatusByID(a.MemberID())
 	if !ok || member.Phase == api.MemberPhaseFailed {
-		a.log.Debug().Msg("Member in failed phase")
+		a.log.Debug("Member in failed phase")
 		return true, false, nil
 	}
 
@@ -87,12 +81,12 @@ func (a *actionWaitForMemberUp) CheckProgress(ctx context.Context) (bool, bool, 
 		return a.checkProgressSingle(ctxChild)
 	case api.DeploymentModeActiveFailover:
 		if a.action.Group == api.ServerGroupAgents {
-			return a.checkProgressAgent(ctxChild)
+			return a.checkProgressAgent()
 		}
 		return a.checkProgressSingleInActiveFailover(ctxChild)
 	default:
 		if a.action.Group == api.ServerGroupAgents {
-			return a.checkProgressAgent(ctxChild)
+			return a.checkProgressAgent()
 		}
 		return a.checkProgressCluster()
 	}
@@ -101,15 +95,13 @@ func (a *actionWaitForMemberUp) CheckProgress(ctx context.Context) (bool, bool, 
 // checkProgressSingle checks the progress of the action in the case
 // of a single server.
 func (a *actionWaitForMemberUp) checkProgressSingle(ctx context.Context) (bool, bool, error) {
-	log := a.log
-
-	c, err := a.actionCtx.GetDatabaseClient(ctx)
+	c, err := a.actionCtx.GetMembersState().State().GetDatabaseClient()
 	if err != nil {
-		log.Debug().Err(err).Msg("Failed to create database client")
+		a.log.Err(err).Debug("Failed to create database client")
 		return false, false, nil
 	}
 	if _, err := c.Version(ctx); err != nil {
-		log.Debug().Err(err).Msg("Failed to get version")
+		a.log.Err(err).Debug("Failed to get version")
 		return false, false, nil
 	}
 	return true, false, nil
@@ -118,14 +110,13 @@ func (a *actionWaitForMemberUp) checkProgressSingle(ctx context.Context) (bool, 
 // checkProgressSingleInActiveFailover checks the progress of the action in the case
 // of a single server as part of an active failover deployment.
 func (a *actionWaitForMemberUp) checkProgressSingleInActiveFailover(ctx context.Context) (bool, bool, error) {
-	log := a.log
-	c, err := a.actionCtx.GetServerClient(ctx, a.action.Group, a.action.MemberID)
+	c, err := a.actionCtx.GetMembersState().GetMemberClient(a.action.MemberID)
 	if err != nil {
-		log.Debug().Err(err).Msg("Failed to create database client")
+		a.log.Err(err).Debug("Failed to create database client")
 		return false, false, nil
 	}
 	if _, err := c.Version(ctx); err != nil {
-		log.Debug().Err(err).Msg("Failed to get version")
+		a.log.Err(err).Debug("Failed to get version")
 		return false, false, nil
 	}
 	return true, false, nil
@@ -133,29 +124,18 @@ func (a *actionWaitForMemberUp) checkProgressSingleInActiveFailover(ctx context.
 
 // checkProgressAgent checks the progress of the action in the case
 // of an agent.
-func (a *actionWaitForMemberUp) checkProgressAgent(ctx context.Context) (bool, bool, error) {
-	log := a.log
-	clients, err := a.actionCtx.GetAgencyClients(ctx)
-	if err != nil {
-		log.Debug().Err(err).Msg("Failed to create agency clients")
+func (a *actionWaitForMemberUp) checkProgressAgent() (bool, bool, error) {
+	agencyHealth, ok := a.actionCtx.GetAgencyHealth()
+	if !ok {
+		a.log.Debug("Agency health fetch failed")
+		return false, false, nil
+	}
+	if err := agencyHealth.Healthy(); err != nil {
+		a.log.Err(err).Debug("Not all agents are ready")
 		return false, false, nil
 	}
 
-	for _, a := range clients {
-		a.Endpoints()
-	}
-
-	shortCtx, c := context.WithTimeout(ctx, 3*time.Second)
-	defer c()
-
-	shortCtx = agency.WithAllowDifferentLeaderEndpoints(shortCtx)
-
-	if err := agency.AreAgentsHealthy(shortCtx, clients); err != nil {
-		log.Debug().Err(err).Msg("Not all agents are ready")
-		return false, false, nil
-	}
-
-	log.Debug().Msg("Agency is happy")
+	a.log.Debug("Agency is happy")
 
 	return true, false, nil
 }
@@ -163,29 +143,28 @@ func (a *actionWaitForMemberUp) checkProgressAgent(ctx context.Context) (bool, b
 // checkProgressCluster checks the progress of the action in the case
 // of a cluster deployment (coordinator/dbserver).
 func (a *actionWaitForMemberUp) checkProgressCluster() (bool, bool, error) {
-	log := a.log
-	h := a.actionCtx.GetMembersState().Health()
+	h, _ := a.actionCtx.GetMembersState().Health()
 	if h.Error != nil {
-		log.Debug().Err(h.Error).Msg("Cluster health is missing")
+		a.log.Err(h.Error).Debug("Cluster health is missing")
 		return false, false, nil
 	}
 	sh, found := h.Members[driver.ServerID(a.action.MemberID)]
 	if !found {
-		log.Debug().Msg("Member not yet found in cluster health")
+		a.log.Debug("Member not yet found in cluster health")
 		return false, false, nil
 	}
 	if sh.Status != driver.ServerStatusGood {
-		log.Debug().Str("status", string(sh.Status)).Msg("Member set status not yet good")
+		a.log.Str("status", string(sh.Status)).Debug("Member set status not yet good")
 		return false, false, nil
 	}
 	// Wait for the member to become ready from a kubernetes point of view
 	// otherwise the coordinators may be rotated to fast and thus none of them
 	// is ready resulting in a short downtime
 	if m, found := a.actionCtx.GetMemberStatusByID(a.MemberID()); !found {
-		log.Error().Msg("No such member")
+		a.log.Error("No such member")
 		return false, true, nil
 	} else if !m.Conditions.IsTrue(api.ConditionTypeReady) {
-		log.Debug().Msg("Member not yet ready")
+		a.log.Debug("Member not yet ready")
 		return false, false, nil
 	}
 
@@ -195,14 +174,13 @@ func (a *actionWaitForMemberUp) checkProgressCluster() (bool, bool, error) {
 // checkProgressArangoSync checks the progress of the action in the case
 // of a sync master / worker.
 func (a *actionWaitForMemberUp) checkProgressArangoSync(ctx context.Context) (bool, bool, error) {
-	log := a.log
-	c, err := a.actionCtx.GetSyncServerClient(ctx, a.action.Group, a.action.MemberID)
+	c, err := a.actionCtx.GetMembersState().GetMemberSyncClient(a.action.MemberID)
 	if err != nil {
-		log.Debug().Err(err).Msg("Failed to create arangosync client")
+		a.log.Err(err).Debug("Failed to create arangosync client")
 		return false, false, nil
 	}
 	if err := c.Health(ctx); err != nil {
-		log.Debug().Err(err).Msg("Health not ok yet")
+		a.log.Err(err).Debug("Health not ok yet")
 		return false, false, nil
 	}
 	return true, false, nil

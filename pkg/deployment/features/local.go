@@ -24,8 +24,9 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/arangodb/go-driver"
 	"github.com/spf13/cobra"
+
+	"github.com/arangodb/go-driver"
 )
 
 var features = map[string]Feature{}
@@ -53,7 +54,7 @@ var internalCMD = &cobra.Command{
 	Run:   cmdRun,
 }
 
-func Init(cmd *cobra.Command) {
+func Init(cmd *cobra.Command) error {
 	featuresLock.Lock()
 	defer featuresLock.Unlock()
 
@@ -79,12 +80,21 @@ func Init(cmd *cobra.Command) {
 		}
 
 		featureName := fmt.Sprintf("deployment.feature.%s", feature.Name())
+		f.BoolVar(feature.EnabledPointer(), featureName, feature.EnabledByDefault(), z)
 		if ok, reason := feature.Deprecated(); ok {
-			f.MarkDeprecated(featureName, reason)
+			if err := f.MarkDeprecated(featureName, reason); err != nil {
+				return err
+			}
 		}
 
-		f.BoolVar(feature.EnabledPointer(), featureName, feature.EnabledByDefault(), z)
+		if feature.Hidden() {
+			if err := f.MarkHidden(featureName); err != nil {
+				return err
+			}
+		}
 	}
+
+	return nil
 }
 
 func cmdRun(_ *cobra.Command, _ []string) {

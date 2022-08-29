@@ -23,10 +23,10 @@ package backup
 import (
 	"strings"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
 	"github.com/arangodb/go-driver"
+
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 func newTemporaryError(err error) error {
@@ -94,7 +94,7 @@ func isTemporaryError(err error) bool {
 		}
 	}
 
-	if v, ok := err.(utils.Causer); ok {
+	if v, ok := err.(errors.Causer); ok {
 		return isTemporaryError(v.Cause())
 	}
 

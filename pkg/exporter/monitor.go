@@ -34,8 +34,10 @@ import (
 	"time"
 
 	"github.com/arangodb/go-driver"
+
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	"github.com/rs/zerolog/log"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
+	"github.com/arangodb/kube-arangodb/pkg/util/timer"
 )
 
 const (
@@ -44,12 +46,14 @@ const (
 	failRefreshInterval    = time.Second * 15
 )
 
+var logger = logging.Global().RegisterAndGetLogger("monitor", logging.Info)
+
 var currentMembersStatus atomic.Value
 
 func NewMonitor(arangodbEndpoint string, auth Authentication, sslVerify bool, timeout time.Duration) *monitor {
 	uri, err := setPath(arangodbEndpoint, shared.ArangoExporterClusterHealthEndpoint)
 	if err != nil {
-		log.Error().Err(err).Msgf("Fatal")
+		logger.Err(err).Error("Fatal")
 		os.Exit(1)
 	}
 
@@ -71,14 +75,14 @@ func (m monitor) UpdateMonitorStatus(ctx context.Context) {
 
 		health, err := m.GetClusterHealth()
 		if err != nil {
-			log.Error().Err(err).Msg("GetClusterHealth error")
+			logger.Err(err).Error("GetClusterHealth error")
 			sleep = failRefreshInterval
 		} else {
 			var output strings.Builder
 			for key, value := range health.Health {
 				entry, err := m.GetMemberStatus(key, value)
 				if err != nil {
-					log.Error().Err(err).Msg("GetMemberStatus error")
+					logger.Err(err).Error("GetMemberStatus error")
 					sleep = failRefreshInterval
 				}
 				output.WriteString(entry)
@@ -89,7 +93,7 @@ func (m monitor) UpdateMonitorStatus(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			return
-		case <-time.After(sleep):
+		case <-timer.After(sleep):
 			continue
 		}
 	}

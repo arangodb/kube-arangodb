@@ -23,11 +23,8 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	"github.com/rs/zerolog"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 func init() {
@@ -36,10 +33,10 @@ func init() {
 
 // newRecreateMemberAction creates a new Action that implements the given
 // planned RecreateMember action.
-func newRecreateMemberAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newRecreateMemberAction(action api.Action, actionCtx ActionContext) Action {
 	a := &actionRecreateMember{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }

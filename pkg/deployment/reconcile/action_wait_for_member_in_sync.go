@@ -23,12 +23,9 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util"
-
-	"github.com/rs/zerolog"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 func init() {
@@ -37,10 +34,10 @@ func init() {
 
 // newWaitForMemberUpAction creates a new Action that implements the given
 // planned WaitForShardInSync action.
-func newWaitForMemberInSync(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newWaitForMemberInSync(action api.Action, actionCtx ActionContext) Action {
 	a := &actionWaitForMemberInSync{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -64,7 +61,7 @@ func (a *actionWaitForMemberInSync) Start(ctx context.Context) (bool, error) {
 func (a *actionWaitForMemberInSync) CheckProgress(_ context.Context) (bool, bool, error) {
 	member, ok := a.actionCtx.GetMemberStatusByID(a.MemberID())
 	if !ok || member.Phase == api.MemberPhaseFailed {
-		a.log.Debug().Msg("Member in failed phase")
+		a.log.Debug("Member in failed phase")
 		return true, false, nil
 	}
 
@@ -98,14 +95,24 @@ func (a *actionWaitForMemberInSync) checkCluster() (bool, error) {
 	case api.ServerGroupDBServers:
 		agencyState, ok := a.actionCtx.GetAgencyCache()
 		if !ok {
-			a.log.Info().Str("mode", "cluster").Str("member", a.MemberID()).Msgf("AgencyCache is missing")
+			a.log.Str("mode", "cluster").Str("member", a.MemberID()).Info("AgencyCache is missing")
 			return false, nil
 		}
 
-		notInSyncShards := agency.GetDBServerShardsNotInSync(agencyState, a.MemberID())
+		notInSyncShards := agency.GetDBServerShardsNotInSync(agencyState, agency.Server(a.MemberID()))
 
 		if len(notInSyncShards) > 0 {
-			a.log.Info().Str("mode", "cluster").Str("member", a.MemberID()).Int("shard", len(notInSyncShards)).Msgf("DBServer contains not in sync shards")
+			a.log.Str("mode", "cluster").Str("member", a.MemberID()).Int("shard", len(notInSyncShards)).Info("DBServer contains not in sync shards")
+			return false, nil
+		}
+	case api.ServerGroupAgents:
+		agencyHealth, ok := a.actionCtx.GetAgencyHealth()
+		if !ok {
+			a.log.Str("mode", "cluster").Str("member", a.MemberID()).Info("AgencyHealth is missing")
+			return false, nil
+		}
+		if err := agencyHealth.Healthy(); err != nil {
+			a.log.Str("mode", "cluster").Str("member", a.MemberID()).Err(err).Info("Agency is not yet synchronized")
 			return false, nil
 		}
 	}

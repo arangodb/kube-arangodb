@@ -24,12 +24,21 @@ import (
 	"fmt"
 	"strings"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/dchest/uniuri"
+
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
 
 func GetArangodID(group api.ServerGroup) string {
-	return fmt.Sprintf("%s%s", GetArangodIDPrefix(group), strings.ToLower(uniuri.NewLen(8)))
+	return GetArangodIDPredefined(group, strings.ToLower(uniuri.NewLen(8)))
+}
+
+func GetArangodIDInt(group api.ServerGroup, id int) string {
+	return fmt.Sprintf("%s%s", GetArangodIDPrefix(group), fmt.Sprintf("%08d", id))
+}
+
+func GetArangodIDPredefined(group api.ServerGroup, id string) string {
+	return fmt.Sprintf("%s%s", GetArangodIDPrefix(group), id)
 }
 
 // GetArangodIDPrefix returns the prefix required ID's of arangod servers

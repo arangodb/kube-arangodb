@@ -25,16 +25,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/yaml"
 
 	certificates "github.com/arangodb-helper/go-certificates"
-	"github.com/ghodss/yaml"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -47,8 +46,8 @@ const (
 // createAccessPackages creates a arangosync access packages specified
 // in spec.sync.externalAccess.accessPackageSecretNames.
 func (d *Deployment) createAccessPackages(ctx context.Context) error {
-	log := d.deps.Log
-	spec := d.apiObject.Spec
+	log := d.sectionLogger("access-package")
+	spec := d.GetSpec()
 
 	if !spec.Sync.IsEnabled() {
 		// We're only relevant when sync is enabled
@@ -73,18 +72,18 @@ func (d *Deployment) createAccessPackages(ctx context.Context) error {
 				if _, wanted := apNameMap[secret.GetName()]; !wanted {
 					// We found an obsolete access package secret. Remove it.
 					err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-						return d.SecretsModInterface().Delete(ctxChild, secret.GetName(), metav1.DeleteOptions{
-							Preconditions: &metav1.Preconditions{UID: &secret.UID},
+						return d.SecretsModInterface().Delete(ctxChild, secret.GetName(), meta.DeleteOptions{
+							Preconditions: &meta.Preconditions{UID: &secret.UID},
 						})
 					})
 					if err != nil && !k8sutil.IsNotFound(err) {
-						// Not serious enough to stop everything now, just log and create an event
-						log.Warn().Err(err).Msg("Failed to remove obsolete access package secret")
-						d.CreateEvent(k8sutil.NewErrorEvent("Access Package cleanup failed", err, d.apiObject))
+						// Not serious enough to stop everything now, just sectionLogger and create an event
+						log.Err(err).Warn("Failed to remove obsolete access package secret")
+						d.CreateEvent(k8sutil.NewErrorEvent("Access Package cleanup failed", err, d.currentObject))
 					} else {
 						// Access package removed, notify user
-						log.Info().Str("secret-name", secret.GetName()).Msg("Removed access package Secret")
-						d.CreateEvent(k8sutil.NewAccessPackageDeletedEvent(d.apiObject, secret.GetName()))
+						log.Str("secret-name", secret.GetName()).Info("Removed access package Secret")
+						d.CreateEvent(k8sutil.NewAccessPackageDeletedEvent(d.currentObject, secret.GetName()))
 					}
 				}
 			}
@@ -97,15 +96,15 @@ func (d *Deployment) createAccessPackages(ctx context.Context) error {
 // ensureAccessPackage creates an arangosync access package with given name
 // it is does not already exist.
 func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName string) error {
-	log := d.deps.Log
-	spec := d.apiObject.Spec
+	log := d.sectionLogger("access-package")
+	spec := d.GetSpec()
 
-	_, err := d.acs.CurrentClusterCache().Secret().V1().Read().Get(ctx, apSecretName, metav1.GetOptions{})
+	_, err := d.acs.CurrentClusterCache().Secret().V1().Read().Get(ctx, apSecretName, meta.GetOptions{})
 	if err == nil {
 		// Secret already exists
 		return nil
 	} else if !k8sutil.IsNotFound(err) {
-		log.Debug().Err(err).Str("name", apSecretName).Msg("Failed to get arangosync access package secret")
+		log.Err(err).Str("name", apSecretName).Debug("Failed to get arangosync access package secret")
 		return errors.WithStack(err)
 	}
 
@@ -113,7 +112,7 @@ func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName strin
 	clientAuthSecretName := spec.Sync.Authentication.GetClientCASecretName()
 	clientAuthCert, clientAuthKey, _, err := k8sutil.GetCASecret(ctx, d.acs.CurrentClusterCache().Secret().V1().Read(), clientAuthSecretName, nil)
 	if err != nil {
-		log.Debug().Err(err).Msg("Failed to get client-auth CA secret")
+		log.Err(err).Debug("Failed to get client-auth CA secret")
 		return errors.WithStack(err)
 	}
 
@@ -121,14 +120,14 @@ func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName strin
 	tlsCASecretName := spec.Sync.TLS.GetCASecretName()
 	tlsCACert, err := k8sutil.GetCACertficateSecret(ctx, d.acs.CurrentClusterCache().Secret().V1().Read(), tlsCASecretName)
 	if err != nil {
-		log.Debug().Err(err).Msg("Failed to get TLS CA secret")
+		log.Err(err).Debug("Failed to get TLS CA secret")
 		return errors.WithStack(err)
 	}
 
 	// Create keyfile
 	ca, err := certificates.LoadCAFromPEM(clientAuthCert, clientAuthKey)
 	if err != nil {
-		log.Debug().Err(err).Msg("Failed to parse client-auth CA")
+		log.Err(err).Debug("Failed to parse client-auth CA")
 		return errors.WithStack(err)
 	}
 
@@ -140,21 +139,21 @@ func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName strin
 	}
 	cert, key, err := certificates.CreateCertificate(options, &ca)
 	if err != nil {
-		log.Debug().Err(err).Msg("Failed to create client-auth keyfile")
+		log.Err(err).Debug("Failed to create client-auth keyfile")
 		return errors.WithStack(err)
 	}
 	keyfile := strings.TrimSpace(cert) + "\n" + strings.TrimSpace(key)
 
 	// Create secrets (in memory)
-	keyfileSecret := v1.Secret{
-		TypeMeta: metav1.TypeMeta{
+	keyfileSecret := core.Secret{
+		TypeMeta: meta.TypeMeta{
 			APIVersion: "v1",
 			Kind:       "Secret",
 		},
-		ObjectMeta: metav1.ObjectMeta{
+		ObjectMeta: meta.ObjectMeta{
 			Name: apSecretName + "-auth",
 			Labels: map[string]string{
-				labelKeyOriginalDeployment: d.apiObject.GetName(),
+				labelKeyOriginalDeployment: d.currentObject.GetName(),
 			},
 		},
 		Data: map[string][]byte{
@@ -162,15 +161,15 @@ func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName strin
 		},
 		Type: "Opaque",
 	}
-	tlsCASecret := v1.Secret{
-		TypeMeta: metav1.TypeMeta{
+	tlsCASecret := core.Secret{
+		TypeMeta: meta.TypeMeta{
 			APIVersion: "v1",
 			Kind:       "Secret",
 		},
-		ObjectMeta: metav1.ObjectMeta{
+		ObjectMeta: meta.ObjectMeta{
 			Name: apSecretName + "-ca",
 			Labels: map[string]string{
-				labelKeyOriginalDeployment: d.apiObject.GetName(),
+				labelKeyOriginalDeployment: d.currentObject.GetName(),
 			},
 		},
 		Data: map[string][]byte{
@@ -182,19 +181,19 @@ func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName strin
 	// Serialize secrets
 	keyfileYaml, err := yaml.Marshal(keyfileSecret)
 	if err != nil {
-		log.Debug().Err(err).Msg("Failed to encode client-auth keyfile Secret")
+		log.Err(err).Debug("Failed to encode client-auth keyfile Secret")
 		return errors.WithStack(err)
 	}
 	tlsCAYaml, err := yaml.Marshal(tlsCASecret)
 	if err != nil {
-		log.Debug().Err(err).Msg("Failed to encode TLS CA Secret")
+		log.Err(err).Debug("Failed to encode TLS CA Secret")
 		return errors.WithStack(err)
 	}
 	allYaml := strings.TrimSpace(string(keyfileYaml)) + "\n---\n" + strings.TrimSpace(string(tlsCAYaml))
 
 	// Create secret containing access package
-	secret := &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
+	secret := &core.Secret{
+		ObjectMeta: meta.ObjectMeta{
 			Name: apSecretName,
 		},
 		Data: map[string][]byte{
@@ -204,20 +203,20 @@ func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName strin
 		},
 	}
 	// Attach secret to owner
-	secret.SetOwnerReferences(append(secret.GetOwnerReferences(), d.apiObject.AsOwner()))
+	secret.SetOwnerReferences(append(secret.GetOwnerReferences(), d.currentObject.AsOwner()))
 	err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-		_, err := d.SecretsModInterface().Create(ctxChild, secret, metav1.CreateOptions{})
+		_, err := d.SecretsModInterface().Create(ctxChild, secret, meta.CreateOptions{})
 		return err
 	})
 	if err != nil {
 		// Failed to create secret
-		log.Debug().Err(err).Str("secret-name", apSecretName).Msg("Failed to create access package Secret")
+		log.Err(err).Str("secret-name", apSecretName).Debug("Failed to create access package Secret")
 		return errors.WithStack(err)
 	}
 
-	// Write log entry & create event
-	log.Info().Str("secret-name", apSecretName).Msg("Created access package Secret")
-	d.CreateEvent(k8sutil.NewAccessPackageCreatedEvent(d.apiObject, apSecretName))
+	// Write sectionLogger entry & create event
+	log.Str("secret-name", apSecretName).Info("Created access package Secret")
+	d.CreateEvent(k8sutil.NewAccessPackageCreatedEvent(d.currentObject, apSecretName))
 
 	return nil
 }

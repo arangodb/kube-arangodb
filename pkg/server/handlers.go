@@ -24,7 +24,11 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 )
+
+var serverLogger = logging.Global().RegisterAndGetLogger("server", logging.Info)
 
 type operatorsResponse struct {
 	PodName               string              `json:"pod"`
@@ -60,6 +64,6 @@ func (s *Server) handleGetOperators(c *gin.Context) {
 		Storage:               s.deps.Storage.Probe.IsReady(),
 		Other:                 s.deps.Operators.FindOtherOperators(),
 	}
-	s.deps.Log.Info().Interface("result", result).Msg("handleGetOperators")
+	serverLogger.Interface("result", result).Info("handleGetOperators")
 	c.JSON(http.StatusOK, result)
 }

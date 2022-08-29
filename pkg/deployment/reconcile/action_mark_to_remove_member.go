@@ -24,17 +24,16 @@ import (
 	"context"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/rs/zerolog"
 )
 
 func init() {
 	registerAction(api.ActionTypeMarkToRemoveMember, newMarkToRemoveMemberAction, addMemberTimeout)
 }
 
-func newMarkToRemoveMemberAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newMarkToRemoveMemberAction(action api.Action, actionCtx ActionContext) Action {
 	a := &actionMarkToRemove{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -67,7 +66,7 @@ func (a *actionMarkToRemove) Start(ctx context.Context) (bool, error) {
 		}
 
 		if err := s.Members.Update(member, group); err != nil {
-			a.log.Warn().Err(err).Str("Member", member.ID).Msgf("Unable to update member")
+			a.log.Err(err).Str("Member", member.ID).Warn("Unable to update member")
 			return false
 		}
 

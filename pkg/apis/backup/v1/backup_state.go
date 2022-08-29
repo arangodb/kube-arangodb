@@ -21,8 +21,9 @@
 package v1
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/handlers/backup/state"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/handlers/backup/state"
 )
 
 const (

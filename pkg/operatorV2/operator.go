@@ -24,17 +24,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/rs/zerolog"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
-
 	"github.com/prometheus/client_golang/prometheus"
-
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
+
+	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 // Starter interface used by Operator to start new GoRoutines
@@ -59,17 +55,14 @@ type Operator interface {
 
 	EnqueueItem(item operation.Item)
 	ProcessItem(item operation.Item) error
-
-	GetLogger() *zerolog.Logger
 }
 
 // NewOperator creates new operator
-func NewOperator(logger zerolog.Logger, name, namespace, image string) Operator {
+func NewOperator(name, namespace, image string) Operator {
 	o := &operator{
 		name:      name,
 		namespace: namespace,
 		image:     image,
-		logger:    logger,
 		workqueue: workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), name),
 	}
 
@@ -83,8 +76,6 @@ type operator struct {
 	lock sync.Mutex
 
 	started bool
-
-	logger zerolog.Logger
 
 	name      string
 	namespace string
@@ -188,10 +179,6 @@ func (o *operator) RegisterInformer(informer cache.SharedIndexInformer, group, v
 	return nil
 }
 
-func (o *operator) GetLogger() *zerolog.Logger {
-	return &o.logger
-}
-
 func (o *operator) Start(threadiness int, stopCh <-chan struct{}) error {
 	o.lock.Lock()
 	defer o.lock.Unlock()
@@ -207,14 +194,14 @@ func (o *operator) Start(threadiness int, stopCh <-chan struct{}) error {
 
 func (o *operator) start(threadiness int, stopCh <-chan struct{}) error {
 	// Execute pre checks
-	o.logger.Info().Msgf("Executing Lifecycle PreStart")
+	logger.Info("Executing Lifecycle PreStart")
 	for _, handler := range o.handlers {
 		if err := ExecLifecyclePreStart(handler); err != nil {
 			return err
 		}
 	}
 
-	o.logger.Info().Msgf("Starting informers")
+	logger.Info("Starting informers")
 	for _, starter := range o.starters {
 		starter.Start(stopCh)
 	}
@@ -223,12 +210,12 @@ func (o *operator) start(threadiness int, stopCh <-chan struct{}) error {
 		return err
 	}
 
-	o.logger.Info().Msgf("Starting workers")
+	logger.Info("Starting workers")
 	for i := 0; i < threadiness; i++ {
 		go wait.Until(o.worker, time.Second, stopCh)
 	}
 
-	o.logger.Info().Msgf("Operator started")
+	logger.Info("Operator started")
 	return nil
 }
 

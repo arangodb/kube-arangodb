@@ -24,9 +24,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
 	"github.com/cenkalti/backoff"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 type permanentError struct {
@@ -48,15 +48,11 @@ func Permanent(err error) error {
 }
 
 func isPermanent(err error) (*permanentError, bool) {
-	type causer interface {
-		Cause() error
-	}
-
 	for err != nil {
 		if pe, ok := err.(*permanentError); ok {
 			return pe, true
 		}
-		cause, ok := err.(causer)
+		cause, ok := err.(errors.Causer)
 		if !ok {
 			break
 		}

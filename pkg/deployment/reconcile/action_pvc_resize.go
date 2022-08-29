@@ -23,13 +23,13 @@ package reconcile
 import (
 	"context"
 
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/rs/zerolog"
-	core "k8s.io/api/core/v1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func init() {
@@ -38,10 +38,10 @@ func init() {
 
 // newRotateMemberAction creates a new Action that implements the given
 // planned RotateMember action.
-func newPVCResizeAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newPVCResizeAction(action api.Action, actionCtx ActionContext) Action {
 	a := &actionPVCResize{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -56,12 +56,11 @@ type actionPVCResize struct {
 // Returns true if the action is completely finished, false in case
 // the start time needs to be recorded and a ready condition needs to be checked.
 func (a *actionPVCResize) Start(ctx context.Context) (bool, error) {
-	log := a.log
 	group := a.action.Group
 	groupSpec := a.actionCtx.GetSpec().GetServerGroupSpec(group)
 	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !ok {
-		log.Error().Msg("No such member")
+		a.log.Error("No such member")
 		return true, nil
 	}
 
@@ -111,16 +110,15 @@ func (a *actionPVCResize) Start(ctx context.Context) (bool, error) {
 // Returns: ready, abort, error.
 func (a *actionPVCResize) CheckProgress(ctx context.Context) (bool, bool, error) {
 	// Check that pod is removed
-	log := a.log
 	m, found := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !found {
-		log.Error().Msg("No such member")
+		a.log.Error("No such member")
 		return true, false, nil
 	}
 
 	cache, ok := a.actionCtx.ACS().ClusterCache(m.ClusterID)
 	if !ok {
-		log.Warn().Msg("Cluster is not ready")
+		a.log.Warn("Cluster is not ready")
 		return false, false, nil
 	}
 

@@ -24,14 +24,15 @@ import (
 	"context"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	policyv1 "k8s.io/api/policy/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 )
 
 func init() {
@@ -50,7 +51,7 @@ func (p podDisruptionBudgetsInspectorLoader) Component() throttle.Component {
 func (p podDisruptionBudgetsInspectorLoader) Load(ctx context.Context, i *inspectorState) {
 	var q podDisruptionBudgetsInspector
 
-	if i.versionInfo.Major() == 128 && i.versionInfo.Minor() >= 21 { // Above 1.21, disable temporally
+	if i.versionInfo.CompareTo("1.21") >= 0 {
 		p.loadV1(ctx, i, &q)
 
 		q.v1beta1 = &podDisruptionBudgetsInspectorV1Beta1{

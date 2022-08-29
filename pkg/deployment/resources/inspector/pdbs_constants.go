@@ -21,13 +21,13 @@
 package inspector
 
 import (
-	policy "k8s.io/api/policy/v1"
+	policyv1 "k8s.io/api/policy/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 // PodDisruptionBudget
 const (
-	PodDisruptionBudgetGroup          = policy.GroupName
+	PodDisruptionBudgetGroup          = policyv1.GroupName
 	PodDisruptionBudgetResource       = "poddisruptionbudgets"
 	PodDisruptionBudgetKind           = "PodDisruptionBudget"
 	PodDisruptionBudgetVersionV1Beta1 = "v1beta1"

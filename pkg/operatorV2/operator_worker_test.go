@@ -23,8 +23,6 @@ package operator
 import (
 	"testing"
 
-	"github.com/rs/zerolog/log"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/util/uuid"
@@ -33,7 +31,7 @@ import (
 func Test_Worker_Empty(t *testing.T) {
 	// Arrange
 	name := string(uuid.NewUUID())
-	o := NewOperator(log.Logger, name, name, name)
+	o := NewOperator(name, name, name)
 
 	stopCh := make(chan struct{})
 
@@ -53,7 +51,7 @@ func Test_Worker_Empty(t *testing.T) {
 func Test_Worker_CatchAll(t *testing.T) {
 	// Arrange
 	name := string(uuid.NewUUID())
-	o := NewOperator(log.Logger, name, name, name)
+	o := NewOperator(name, name, name)
 
 	stopCh := make(chan struct{})
 
@@ -82,7 +80,7 @@ func Test_Worker_CatchAll(t *testing.T) {
 func Test_Worker_EnsureFirstProcessStopLoop(t *testing.T) {
 	// Arrange
 	name := string(uuid.NewUUID())
-	o := NewOperator(log.Logger, name, name, name)
+	o := NewOperator(name, name, name)
 
 	stopCh := make(chan struct{})
 
@@ -116,7 +114,7 @@ func Test_Worker_EnsureFirstProcessStopLoop(t *testing.T) {
 func Test_Worker_EnsureObjectIsProcessedBySecondHandler(t *testing.T) {
 	// Arrange
 	name := string(uuid.NewUUID())
-	o := NewOperator(log.Logger, name, name, name)
+	o := NewOperator(name, name, name)
 
 	stopCh := make(chan struct{})
 

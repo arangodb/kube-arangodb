@@ -22,19 +22,20 @@ package util
 
 import (
 	"math"
-
 	"time"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const TimeLayout = time.RFC3339
+
 // TimeCompareEqual compares two times, allowing an error of 1s
-func TimeCompareEqual(a, b metav1.Time) bool {
+func TimeCompareEqual(a, b meta.Time) bool {
 	return math.Abs(a.Time.Sub(b.Time).Seconds()) <= 1
 }
 
 // TimeCompareEqualPointer compares two times, allowing an error of 1s
-func TimeCompareEqualPointer(a, b *metav1.Time) bool {
+func TimeCompareEqualPointer(a, b *meta.Time) bool {
 	if a == nil || b == nil {
 		return false
 	} else if a == b {
@@ -46,7 +47,7 @@ func TimeCompareEqualPointer(a, b *metav1.Time) bool {
 
 func TimeAgencyLayouts() []string {
 	return []string{
-		time.RFC3339,
+		TimeLayout,
 	}
 }
 

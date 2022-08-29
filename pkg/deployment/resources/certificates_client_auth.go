@@ -25,10 +25,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/rs/zerolog"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	certificates "github.com/arangodb-helper/go-certificates"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -41,8 +41,8 @@ const (
 
 // createClientAuthCACertificate creates a client authentication CA certificate and stores it in a secret with name
 // specified in the given spec.
-func createClientAuthCACertificate(ctx context.Context, log zerolog.Logger, secrets secretv1.ModInterface, spec api.SyncAuthenticationSpec, deploymentName string, ownerRef *meta.OwnerReference) error {
-	log = log.With().Str("secret", spec.GetClientCASecretName()).Logger()
+func (r *Resources) createClientAuthCACertificate(ctx context.Context, secrets secretv1.ModInterface, spec api.SyncAuthenticationSpec, deploymentName string, ownerRef *meta.OwnerReference) error {
+	log := r.log.Str("section", "secrets")
 	options := certificates.CreateCertificateOptions{
 		CommonName:   fmt.Sprintf("%s Client Authentication Root Certificate", deploymentName),
 		ValidFrom:    time.Now(),
@@ -53,17 +53,17 @@ func createClientAuthCACertificate(ctx context.Context, log zerolog.Logger, secr
 	}
 	cert, priv, err := certificates.CreateCertificate(options, nil)
 	if err != nil {
-		log.Debug().Err(err).Msg("Failed to create CA certificate")
+		log.Err(err).Str("name", spec.GetClientCASecretName()).Debug("Failed to create CA certificate")
 		return errors.WithStack(err)
 	}
 	if err := k8sutil.CreateCASecret(ctx, secrets, spec.GetClientCASecretName(), cert, priv, ownerRef); err != nil {
 		if k8sutil.IsAlreadyExists(err) {
-			log.Debug().Msg("CA Secret already exists")
+			log.Debug("CA Secret already exists")
 		} else {
-			log.Debug().Err(err).Msg("Failed to create CA Secret")
+			log.Err(err).Str("name", spec.GetClientCASecretName()).Debug("Failed to create CA Secret")
 		}
 		return errors.WithStack(err)
 	}
-	log.Debug().Msg("Created CA Secret")
+	log.Str("name", spec.GetClientCASecretName()).Debug("Created CA Secret")
 	return nil
 }

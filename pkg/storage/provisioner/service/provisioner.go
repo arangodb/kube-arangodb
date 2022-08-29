@@ -24,13 +24,15 @@ import (
 	"context"
 	"os"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
 	"github.com/rs/zerolog"
 	"golang.org/x/sys/unix"
 
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
+
+var logger = logging.Global().RegisterAndGetLogger("deployment-storage-service", logging.Info)
 
 // Config for the storage provisioner
 type Config struct {
@@ -38,23 +40,25 @@ type Config struct {
 	NodeName string // Name of the run I'm running now
 }
 
-// Dependencies for the storage provisioner
-type Dependencies struct {
-	Log zerolog.Logger
-}
-
 // Provisioner implements a Local storage provisioner
 type Provisioner struct {
+	Log logging.Logger
 	Config
-	Dependencies
 }
 
 // New creates a new local storage provisioner
-func New(config Config, deps Dependencies) (*Provisioner, error) {
-	return &Provisioner{
-		Config:       config,
-		Dependencies: deps,
-	}, nil
+func New(config Config) (*Provisioner, error) {
+	p := &Provisioner{
+		Config: config,
+	}
+
+	p.Log = logger.WrapObj(p)
+
+	return p, nil
+}
+
+func (p *Provisioner) WrapLogger(in *zerolog.Event) *zerolog.Event {
+	return in
 }
 
 // Run the provisioner until the given context is canceled.
@@ -72,12 +76,12 @@ func (p *Provisioner) GetNodeInfo(ctx context.Context) (provisioner.NodeInfo, er
 // GetInfo fetches information from the filesystem containing
 // the given local path.
 func (p *Provisioner) GetInfo(ctx context.Context, localPath string) (provisioner.Info, error) {
-	log := p.Log.With().Str("local-path", localPath).Logger()
+	log := p.Log.Str("local-path", localPath)
 
-	log.Debug().Msg("gettting info for local path")
+	log.Debug("gettting info for local path")
 	statfs := &unix.Statfs_t{}
 	if err := unix.Statfs(localPath, statfs); err != nil {
-		log.Error().Err(err).Msg("Statfs failed")
+		log.Err(err).Error("Statfs failed")
 		return provisioner.Info{}, errors.WithStack(err)
 	}
 
@@ -87,11 +91,11 @@ func (p *Provisioner) GetInfo(ctx context.Context, localPath string) (provisione
 	// Capacity is total block count * fragment size
 	capacity := int64(statfs.Blocks) * statfs.Bsize // nolint:typecheck
 
-	log.Debug().
+	log.
 		Str("node-name", p.NodeName).
 		Int64("capacity", capacity).
 		Int64("available", available).
-		Msg("Returning info for local path")
+		Debug("Returning info for local path")
 	return provisioner.Info{
 		NodeInfo: provisioner.NodeInfo{
 			NodeName: p.NodeName,
@@ -103,22 +107,22 @@ func (p *Provisioner) GetInfo(ctx context.Context, localPath string) (provisione
 
 // Prepare a volume at the given local path
 func (p *Provisioner) Prepare(ctx context.Context, localPath string) error {
-	log := p.Log.With().Str("local-path", localPath).Logger()
-	log.Debug().Msg("preparing local path")
+	log := p.Log.Str("local-path", localPath)
+	log.Debug("preparing local path")
 
 	// Make sure directory is empty
 	if err := os.RemoveAll(localPath); err != nil && !os.IsNotExist(err) {
-		log.Error().Err(err).Msg("Failed to clean existing directory")
+		log.Err(err).Error("Failed to clean existing directory")
 		return errors.WithStack(err)
 	}
 	// Make sure directory exists
 	if err := os.MkdirAll(localPath, 0755); err != nil {
-		log.Error().Err(err).Msg("Failed to make directory")
+		log.Err(err).Error("Failed to make directory")
 		return errors.WithStack(err)
 	}
 	// Set access rights
 	if err := os.Chmod(localPath, 0777); err != nil {
-		log.Error().Err(err).Msg("Failed to set directory access")
+		log.Err(err).Error("Failed to set directory access")
 		return errors.WithStack(err)
 	}
 	return nil
@@ -126,12 +130,12 @@ func (p *Provisioner) Prepare(ctx context.Context, localPath string) error {
 
 // Remove a volume with the given local path
 func (p *Provisioner) Remove(ctx context.Context, localPath string) error {
-	log := p.Log.With().Str("local-path", localPath).Logger()
-	log.Debug().Msg("cleanup local path")
+	log := p.Log.Str("local-path", localPath)
+	log.Debug("cleanup local path")
 
 	// Make sure directory is empty
 	if err := os.RemoveAll(localPath); err != nil && !os.IsNotExist(err) {
-		log.Error().Err(err).Msg("Failed to clean directory")
+		log.Err(err).Error("Failed to clean directory")
 		return errors.WithStack(err)
 	}
 	return nil

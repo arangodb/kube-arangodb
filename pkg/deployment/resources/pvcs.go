@@ -23,11 +23,10 @@ package resources
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 )
@@ -43,10 +42,10 @@ func (r *Resources) EnsurePVCs(ctx context.Context, cachedStatus inspectorInterf
 	deploymentName := apiObject.GetName()
 	owner := apiObject.AsOwner()
 	iterator := r.context.GetServerGroupIterator()
-	status, _ := r.context.GetStatus()
+	status := r.context.GetStatus()
 	enforceAntiAffinity := r.context.GetSpec().GetEnvironment().IsProduction()
 
-	if err := iterator.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
+	if err := iterator.ForeachServerGroupAccepted(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
 		for _, m := range *status {
 			if m.PersistentVolumeClaimName == "" {
 				continue

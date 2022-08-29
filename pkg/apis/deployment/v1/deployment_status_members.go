@@ -24,6 +24,9 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
+// MemberStatusFunc is a callback which is used to traverse a specific group of servers and check their status.
+type MemberStatusFunc func(group ServerGroup, list MemberStatusList) error
+
 // DeploymentStatusMembers holds the member status of all server groups
 type DeploymentStatusMembers struct {
 	Single       MemberStatusList `json:"single,omitempty"`
@@ -81,11 +84,14 @@ func (ds DeploymentStatusMembers) ElementByID(id string) (MemberStatus, ServerGr
 // ForeachServerGroup calls the given callback for all server groups.
 // If the callback returns an error, this error is returned and the callback is
 // not called for the remaining groups.
-func (ds DeploymentStatusMembers) ForeachServerGroup(cb func(group ServerGroup, list MemberStatusList) error) error {
+// Deprecated. Use AsList instead
+func (ds DeploymentStatusMembers) ForeachServerGroup(cb MemberStatusFunc) error {
 	return ds.ForeachServerInGroups(cb, AllServerGroups...)
 }
 
-func (ds DeploymentStatusMembers) ForeachServerInGroups(cb func(group ServerGroup, list MemberStatusList) error, groups ...ServerGroup) error {
+// ForeachServerInGroups calls the given callback for specified server groups.
+// Deprecated. Use AsListInGroups instead
+func (ds DeploymentStatusMembers) ForeachServerInGroups(cb MemberStatusFunc, groups ...ServerGroup) error {
 	for _, group := range groups {
 		if err := ds.ForServerGroup(cb, group); err != nil {
 			return err
@@ -95,7 +101,9 @@ func (ds DeploymentStatusMembers) ForeachServerInGroups(cb func(group ServerGrou
 	return nil
 }
 
-func (ds DeploymentStatusMembers) ForServerGroup(cb func(group ServerGroup, list MemberStatusList) error, group ServerGroup) error {
+// ForServerGroup calls the given callback for specified server group.
+// Deprecated. Use AsListInGroup or MembersOfGroup
+func (ds DeploymentStatusMembers) ForServerGroup(cb MemberStatusFunc, group ServerGroup) error {
 	switch group {
 	case ServerGroupSingle:
 		if err := cb(ServerGroupSingle, ds.Single); err != nil {
@@ -289,14 +297,11 @@ func (ds DeploymentStatusMembers) MembersOfGroup(group ServerGroup) MemberStatus
 func (ds DeploymentStatusMembers) PodNames() []string {
 	var n []string
 
-	ds.ForeachServerGroup(func(group ServerGroup, list MemberStatusList) error {
-		for _, m := range list {
-			if m.PodName != "" {
-				n = append(n, m.PodName)
-			}
+	for _, m := range ds.AsList() {
+		if name := m.Member.Pod.GetName(); name != "" {
+			n = append(n, name)
 		}
-		return nil
-	})
+	}
 
 	return n
 }

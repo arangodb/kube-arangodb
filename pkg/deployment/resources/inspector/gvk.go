@@ -21,12 +21,13 @@
 package inspector
 
 import (
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	core "k8s.io/api/core/v1"
 	policyv1 "k8s.io/api/policy/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
 
 func ExtractGVKFromObject(in interface{}) (schema.GroupVersionKind, bool) {

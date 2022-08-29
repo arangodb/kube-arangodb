@@ -24,41 +24,11 @@ import (
 	"github.com/arangodb/go-driver"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/probes"
-
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	v1 "k8s.io/api/core/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/probes"
 )
-
-// ArangodbExporterContainer creates metrics container
-func ArangodbExporterContainer(image string, args []string, livenessProbe *probes.HTTPProbeConfig,
-	resources v1.ResourceRequirements, securityContext *v1.SecurityContext,
-	spec api.DeploymentSpec) v1.Container {
-
-	c := v1.Container{
-		Name:    shared.ExporterContainerName,
-		Image:   image,
-		Command: append([]string{"/app/arangodb-exporter"}, args...),
-		Ports: []v1.ContainerPort{
-			{
-				Name:          "exporter",
-				ContainerPort: int32(spec.Metrics.GetPort()),
-				Protocol:      v1.ProtocolTCP,
-			},
-		},
-		Resources:       k8sutil.ExtractPodResourceRequirement(resources),
-		ImagePullPolicy: v1.PullIfNotPresent,
-		SecurityContext: securityContext,
-	}
-
-	if livenessProbe != nil {
-		c.LivenessProbe = livenessProbe.Create()
-	}
-
-	return c
-}
 
 func createInternalExporterArgs(spec api.DeploymentSpec, groupSpec api.ServerGroupSpec, version driver.Version) []string {
 	tokenpath := filepath.Join(shared.ExporterJWTVolumeMountDir, constants.SecretKeyToken)
@@ -68,10 +38,7 @@ func createInternalExporterArgs(spec api.DeploymentSpec, groupSpec api.ServerGro
 		options.Add("--arangodb.jwt-file", tokenpath)
 	}
 
-	path := shared.ArangoExporterInternalEndpoint
-	if version.CompareTo("3.8.0") >= 0 {
-		path = shared.ArangoExporterInternalEndpointV2
-	}
+	path := getArangoExporterInternalEndpoint(version)
 
 	if port := groupSpec.InternalPort; port == nil {
 		scheme := "http"
@@ -93,6 +60,14 @@ func createInternalExporterArgs(spec api.DeploymentSpec, groupSpec api.ServerGro
 	}
 
 	return options.Sort().AsArgs()
+}
+
+func getArangoExporterInternalEndpoint(version driver.Version) string {
+	path := shared.ArangoExporterInternalEndpoint
+	if version.CompareTo("3.8.0") >= 0 {
+		path = shared.ArangoExporterInternalEndpointV2
+	}
+	return path
 }
 
 func createExporterLivenessProbe(isSecure bool) *probes.HTTPProbeConfig {

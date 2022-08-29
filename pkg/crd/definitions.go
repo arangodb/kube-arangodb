@@ -23,9 +23,11 @@ package crd
 import (
 	"sync"
 
-	"github.com/arangodb/go-driver"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+
+	"github.com/arangodb/go-driver"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 const Version = "arangodb.com/version"

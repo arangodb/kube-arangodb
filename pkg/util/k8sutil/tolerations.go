@@ -23,7 +23,7 @@ package k8sutil
 import (
 	"time"
 
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 )
 
 const (
@@ -40,8 +40,8 @@ type TolerationDuration struct {
 
 // NewNoExecuteToleration is a helper to create a Toleration with
 // Key=key, Operator='Exists' Effect='NoExecute', TolerationSeconds=tolerationDuration.Seconds().
-func NewNoExecuteToleration(key string, duration TolerationDuration) v1.Toleration {
-	t := v1.Toleration{
+func NewNoExecuteToleration(key string, duration TolerationDuration) core.Toleration {
+	t := core.Toleration{
 		Key:      key,
 		Operator: "Exists",
 		Effect:   "NoExecute",
@@ -54,9 +54,9 @@ func NewNoExecuteToleration(key string, duration TolerationDuration) v1.Tolerati
 }
 
 // AddTolerationIfNotFound adds the given tolerations, if no such toleration has been set in the given source.
-func AddTolerationIfNotFound(source []v1.Toleration, toAdd v1.Toleration) []v1.Toleration {
+func AddTolerationIfNotFound(source []core.Toleration, toAdd core.Toleration) []core.Toleration {
 	if len(source) == 0 {
-		return []v1.Toleration{
+		return []core.Toleration{
 			toAdd,
 		}
 	}

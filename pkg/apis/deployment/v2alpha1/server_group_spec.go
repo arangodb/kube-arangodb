@@ -25,16 +25,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
-
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	arangodOptions "github.com/arangodb/kube-arangodb/pkg/util/arangod/options"
 	arangosyncOptions "github.com/arangodb/kube-arangodb/pkg/util/arangosync/options"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 // ServerGroupShutdownMethod enum of possible shutdown methods
@@ -155,6 +153,8 @@ type ServerGroupSpec struct {
 	AllowMemberRecreation *bool `json:"allowMemberRecreation,omitempty"`
 	// TerminationGracePeriodSeconds override default TerminationGracePeriodSeconds for pods - via silent rotation
 	TerminationGracePeriodSeconds *int64 `json:"terminationGracePeriodSeconds,omitempty"`
+	// IndexMethod define group Indexing method
+	IndexMethod *ServerGroupIndexMethod `json:"indexMethod,omitempty"`
 }
 
 // ServerGroupSpecSecurityContext contains specification for pod security context
@@ -541,6 +541,7 @@ func (s *ServerGroupSpec) validate() error {
 		shared.PrefixResourceError("volumes", s.Volumes.Validate()),
 		shared.PrefixResourceError("volumeMounts", s.VolumeMounts.Validate()),
 		shared.PrefixResourceError("initContainers", s.InitContainers.Validate()),
+		shared.PrefixResourceError("IndexMethod", s.IndexMethod.Validate()),
 		s.validateVolumes(),
 	)
 }
@@ -620,14 +621,16 @@ func (s *ServerGroupSpec) SetDefaults(group ServerGroup, used bool, mode Deploym
 	}
 }
 
-// setDefaultsFromResourceList fills unspecified fields with a value from given source spec.
-func setDefaultsFromResourceList(s *core.ResourceList, source core.ResourceList) {
+// setStorageDefaultsFromResourceList fills unspecified storage-type fields with a value from given source spec.
+func setStorageDefaultsFromResourceList(s *core.ResourceList, source core.ResourceList) {
 	for k, v := range source {
 		if *s == nil {
 			*s = make(core.ResourceList)
 		}
 		if _, found := (*s)[k]; !found {
-			(*s)[k] = v
+			if k != core.ResourceCPU && k != core.ResourceMemory {
+				(*s)[k] = v
+			}
 		}
 	}
 }
@@ -658,8 +661,8 @@ func (s *ServerGroupSpec) SetDefaultsFrom(source ServerGroupSpec) {
 	if s.NodeSelector == nil {
 		s.NodeSelector = source.NodeSelector
 	}
-	setDefaultsFromResourceList(&s.Resources.Limits, source.Resources.Limits)
-	setDefaultsFromResourceList(&s.Resources.Requests, source.Resources.Requests)
+	setStorageDefaultsFromResourceList(&s.Resources.Limits, source.Resources.Limits)
+	setStorageDefaultsFromResourceList(&s.Resources.Requests, source.Resources.Requests)
 	if s.VolumeClaimTemplate == nil {
 		s.VolumeClaimTemplate = source.VolumeClaimTemplate.DeepCopy()
 	}

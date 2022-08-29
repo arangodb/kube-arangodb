@@ -24,8 +24,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/rs/zerolog"
-
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
@@ -33,11 +31,10 @@ import (
 )
 
 // NewEventRecorder creates new event recorder
-func NewEventRecorder(logger zerolog.Logger, name string, kubeClientSet kubernetes.Interface) Recorder {
+func NewEventRecorder(name string, kubeClientSet kubernetes.Interface) Recorder {
 	return &eventRecorder{
 		kubeClientSet: kubeClientSet,
 		name:          name,
-		logger:        logger,
 	}
 }
 
@@ -51,7 +48,6 @@ type Recorder interface {
 type eventRecorder struct {
 	name          string
 	kubeClientSet kubernetes.Interface
-	logger        zerolog.Logger
 }
 
 func (e *eventRecorder) newEvent(group, version, kind string, object meta.Object, eventType, reason, message string) *core.Event {
@@ -91,19 +87,19 @@ func (e *eventRecorder) newObjectReference(group, version, kind string, object m
 func (e *eventRecorder) event(group, version, kind string, object meta.Object, eventType, reason, message string) {
 	_, err := e.kubeClientSet.CoreV1().Events(object.GetNamespace()).Create(context.Background(), e.newEvent(group, version, kind, object, eventType, reason, message), meta.CreateOptions{})
 	if err != nil {
-		e.logger.Warn().Err(err).
+		logger.Err(err).
 			Str("APIVersion", fmt.Sprintf("%s/%s", group, version)).
 			Str("Kind", kind).
 			Str("Object", fmt.Sprintf("%s/%s", object.GetNamespace(), object.GetName())).
-			Msgf("Unable to send event")
+			Warn("Unable to send event")
 		return
 	}
 
-	e.logger.Info().
+	logger.
 		Str("APIVersion", fmt.Sprintf("%s/%s", group, version)).
 		Str("Kind", kind).
 		Str("Object", fmt.Sprintf("%s/%s", object.GetNamespace(), object.GetName())).
-		Msgf("Event send %s - %s - %s", eventType, reason, message)
+		Info("Event send %s - %s - %s", eventType, reason, message)
 }
 
 func (e *eventRecorder) NewInstance(group, version, kind string) RecorderInstance {

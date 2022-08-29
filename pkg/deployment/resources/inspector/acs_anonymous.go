@@ -21,8 +21,9 @@
 package inspector
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
 )
 
 func (p *arangoClusterSynchronizationsInspector) Anonymous(gvk schema.GroupVersionKind) (anonymous.Interface, bool) {

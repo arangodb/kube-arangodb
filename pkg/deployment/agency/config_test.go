@@ -21,55 +21,20 @@
 package agency
 
 import (
+	_ "embed"
 	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
 
-func Test_Config_Unmarshal(t *testing.T) {
-	data := `{
-  "term": 0,
-  "leaderId": "AGNT-fd0f4fc7-b60b-44bb-9f5e-5fc91f708f82",
-  "commitIndex": 94,
-  "lastCompactionAt": 0,
-  "nextCompactionAfter": 500,
-  "lastAcked": {
-    "AGNT-fd0f4fc7-b60b-44bb-9f5e-5fc91f708f82": {
-      "lastAckedTime": 0,
-      "lastAckedIndex": 94
-    }
-  },
-  "configuration": {
-    "pool": {
-      "AGNT-fd0f4fc7-b60b-44bb-9f5e-5fc91f708f82": "tcp://[::1]:4001"
-    },
-    "active": [
-      "AGNT-fd0f4fc7-b60b-44bb-9f5e-5fc91f708f82"
-    ],
-    "id": "AGNT-fd0f4fc7-b60b-44bb-9f5e-5fc91f708f82",
-    "agency size": 1,
-    "pool size": 1,
-    "endpoint": "tcp://[::1]:4001",
-    "min ping": 1,
-    "max ping": 5,
-    "timeoutMult": 1,
-    "supervision": true,
-    "supervision frequency": 1,
-    "compaction step size": 500,
-    "compaction keep size": 50000,
-    "supervision grace period": 10,
-    "supervision ok threshold": 5,
-    "version": 2,
-    "startup": "origin"
-  },
-  "engine": "rocksdb",
-  "version": "3.10.0-devel"
-}`
+//go:embed testdata/config.json
+var config []byte
 
+func Test_Config_Unmarshal(t *testing.T) {
 	var cfg Config
 
-	require.NoError(t, json.Unmarshal([]byte(data), &cfg))
+	require.NoError(t, json.Unmarshal(config, &cfg))
 
 	require.Equal(t, "AGNT-fd0f4fc7-b60b-44bb-9f5e-5fc91f708f82", cfg.LeaderId)
 	require.Equal(t, uint64(94), cfg.CommitIndex)

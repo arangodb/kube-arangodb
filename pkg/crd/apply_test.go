@@ -24,9 +24,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
-	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
 func Test_Apply(t *testing.T) {
@@ -34,6 +34,6 @@ func Test_Apply(t *testing.T) {
 		c, ok := kclient.GetDefaultFactory().Client()
 		require.True(t, ok)
 
-		EnsureCRD(context.Background(), log.Logger, c)
+		_ = EnsureCRD(context.Background(), c, true)
 	})
 }

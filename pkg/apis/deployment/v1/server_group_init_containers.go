@@ -21,24 +21,25 @@
 package v1
 
 import (
+	core "k8s.io/api/core/v1"
+
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	sharedv1 "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	core "k8s.io/api/core/v1"
 )
 
 const (
 	ServerGroupReservedInitContainerNameLifecycle    = "init-lifecycle"
 	ServerGroupReservedInitContainerNameUUID         = "uuid"
 	ServerGroupReservedInitContainerNameWait         = "wait"
+	ServerGroupReservedInitContainerNameStartup      = "arango-init-startup"
 	ServerGroupReservedInitContainerNameUpgrade      = "upgrade"
 	ServerGroupReservedInitContainerNameVersionCheck = "version-check"
 )
 
 func IsReservedServerGroupInitContainerName(name string) bool {
 	switch name {
-	case ServerGroupReservedInitContainerNameLifecycle, ServerGroupReservedInitContainerNameUUID, ServerGroupReservedInitContainerNameUpgrade, ServerGroupReservedInitContainerNameVersionCheck:
+	case ServerGroupReservedInitContainerNameLifecycle, ServerGroupReservedInitContainerNameUUID, ServerGroupReservedInitContainerNameUpgrade, ServerGroupReservedInitContainerNameVersionCheck, ServerGroupReservedInitContainerNameStartup:
 		return true
 	default:
 		return false

@@ -23,11 +23,12 @@ package deployment
 import (
 	"testing"
 
+	core "k8s.io/api/core/v1"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	core "k8s.io/api/core/v1"
 )
 
 func TestEnsurePod_ArangoDB_Features(t *testing.T) {
@@ -42,7 +43,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						DBServers: api.MemberStatusList{
 							firstDBServerStatus,
@@ -50,7 +51,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 					},
 					Images: createTestImages(false),
 				}
-				deployment.status.last.Members.DBServers[0].IsInitialized = true
+				deployment.currentObjectStatus.Members.DBServers[0].IsInitialized = true
 
 				testCase.createTestPodData(deployment, api.ServerGroupDBServers, firstDBServerStatus)
 			},
@@ -101,7 +102,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						DBServers: api.MemberStatusList{
 							firstDBServerStatus,
@@ -109,9 +110,9 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 					},
 					Images: createTestImages(false),
 				}
-				deployment.status.last.Members.DBServers[0].IsInitialized = true
+				deployment.currentObjectStatus.Members.DBServers[0].IsInitialized = true
 
-				deployment.apiObject.Spec.Features = &api.DeploymentFeatures{
+				deployment.currentObject.Spec.Features = &api.DeploymentFeatures{
 					FoxxQueues: util.NewBool(false),
 				}
 
@@ -164,7 +165,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						Coordinators: api.MemberStatusList{
 							firstCoordinatorStatus,
@@ -172,7 +173,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 					},
 					Images: createTestImages(false),
 				}
-				deployment.status.last.Members.Coordinators[0].IsInitialized = true
+				deployment.currentObjectStatus.Members.Coordinators[0].IsInitialized = true
 
 				testCase.createTestPodData(deployment, api.ServerGroupCoordinators, firstCoordinatorStatus)
 			},
@@ -223,7 +224,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						Coordinators: api.MemberStatusList{
 							firstCoordinatorStatus,
@@ -231,9 +232,9 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 					},
 					Images: createTestImages(false),
 				}
-				deployment.status.last.Members.Coordinators[0].IsInitialized = true
+				deployment.currentObjectStatus.Members.Coordinators[0].IsInitialized = true
 
-				deployment.apiObject.Spec.Features = &api.DeploymentFeatures{
+				deployment.currentObject.Spec.Features = &api.DeploymentFeatures{
 					FoxxQueues: util.NewBool(false),
 				}
 
@@ -286,7 +287,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						Coordinators: api.MemberStatusList{
 							firstCoordinatorStatus,
@@ -294,9 +295,9 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 					},
 					Images: createTestImages(false),
 				}
-				deployment.status.last.Members.Coordinators[0].IsInitialized = true
+				deployment.currentObjectStatus.Members.Coordinators[0].IsInitialized = true
 
-				deployment.apiObject.Spec.Features = &api.DeploymentFeatures{
+				deployment.currentObject.Spec.Features = &api.DeploymentFeatures{
 					FoxxQueues: util.NewBool(true),
 				}
 
@@ -349,7 +350,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						Single: api.MemberStatusList{
 							singleStatus,
@@ -357,7 +358,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 					},
 					Images: createTestImages(false),
 				}
-				deployment.status.last.Members.Single[0].IsInitialized = true
+				deployment.currentObjectStatus.Members.Single[0].IsInitialized = true
 
 				testCase.createTestPodData(deployment, api.ServerGroupSingle, singleStatus)
 
@@ -410,7 +411,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						Single: api.MemberStatusList{
 							singleStatus,
@@ -418,9 +419,9 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 					},
 					Images: createTestImages(false),
 				}
-				deployment.status.last.Members.Single[0].IsInitialized = true
+				deployment.currentObjectStatus.Members.Single[0].IsInitialized = true
 
-				deployment.apiObject.Spec.Features = &api.DeploymentFeatures{
+				deployment.currentObject.Spec.Features = &api.DeploymentFeatures{
 					FoxxQueues: util.NewBool(false),
 				}
 
@@ -475,7 +476,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						Single: api.MemberStatusList{
 							singleStatus,
@@ -483,9 +484,9 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 					},
 					Images: createTestImages(false),
 				}
-				deployment.status.last.Members.Single[0].IsInitialized = true
+				deployment.currentObjectStatus.Members.Single[0].IsInitialized = true
 
-				deployment.apiObject.Spec.Features = &api.DeploymentFeatures{
+				deployment.currentObject.Spec.Features = &api.DeploymentFeatures{
 					FoxxQueues: util.NewBool(true),
 				}
 

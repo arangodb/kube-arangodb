@@ -25,7 +25,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 
@@ -35,15 +34,15 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
-func createMemberRecreationConditionsPlan(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+func (r *Reconciler) createMemberRecreationConditionsPlan(ctx context.Context,
+	apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext) api.Plan {
 	var p api.Plan
 
 	for _, m := range status.Members.AsList() {
-		message, recreate := EvaluateMemberRecreationCondition(ctx, log, apiObject, spec, status, m.Group, m.Member,
-			context, isStorageClassChanged, isVolumeSizeChanged)
+		message, recreate := EvaluateMemberRecreationCondition(ctx, apiObject, spec, status, m.Group, m.Member,
+			context, r.isStorageClassChanged, r.isVolumeSizeChanged)
 
 		if !recreate {
 			if _, ok := m.Member.Conditions.Get(api.MemberReplacementRequired); ok {
@@ -62,20 +61,20 @@ func createMemberRecreationConditionsPlan(ctx context.Context,
 }
 
 type MemberRecreationConditionEvaluator func(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+	apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	group api.ServerGroup, member api.MemberStatus,
 	context PlanBuilderContext) (bool, string, error)
 
 func EvaluateMemberRecreationCondition(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+	apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	group api.ServerGroup, member api.MemberStatus,
 	context PlanBuilderContext, evaluators ...MemberRecreationConditionEvaluator) (string, bool) {
 	args := make([]string, 0, len(evaluators))
 
 	for _, e := range evaluators {
-		ok, s, err := e(ctx, log, apiObject, spec, status, group, member, context)
+		ok, s, err := e(ctx, apiObject, spec, status, group, member, context)
 		if err != nil {
 			// When one of an evaluator requires pod's replacement then it should be done.
 			continue
@@ -90,7 +89,7 @@ func EvaluateMemberRecreationCondition(ctx context.Context,
 }
 
 // isStorageClassChanged returns true and reason when the member should be replaced.
-func isStorageClassChanged(_ context.Context, log zerolog.Logger, apiObject k8sutil.APIObject, spec api.DeploymentSpec,
+func (r *Reconciler) isStorageClassChanged(_ context.Context, apiObject k8sutil.APIObject, spec api.DeploymentSpec,
 	_ api.DeploymentStatus, group api.ServerGroup, member api.MemberStatus,
 	context PlanBuilderContext) (bool, string, error) {
 	if spec.GetMode() == api.DeploymentModeSingle {
@@ -122,7 +121,7 @@ func isStorageClassChanged(_ context.Context, log zerolog.Logger, apiObject k8su
 
 	// Check if a storage class changed.
 	if pvc, ok := cache.PersistentVolumeClaim().V1().GetSimple(member.PersistentVolumeClaimName); !ok {
-		log.Warn().Str("role", group.AsRole()).Str("id", member.ID).Msg("Failed to get PVC")
+		r.log.Str("role", group.AsRole()).Str("id", member.ID).Warn("Failed to get PVC")
 		return false, "", fmt.Errorf("failed to get PVC %s", member.PersistentVolumeClaimName)
 	} else {
 		pvcClassName := util.StringOrDefault(pvc.Spec.StorageClassName)
@@ -145,23 +144,23 @@ func isStorageClassChanged(_ context.Context, log zerolog.Logger, apiObject k8su
 
 	// From here on it is known that the member requires replacement, so `true` must be returned.
 	// If pod does not exist then it will try next time.
-	if pod, ok := cache.Pod().V1().GetSimple(member.PodName); ok {
+	if pod, ok := cache.Pod().V1().GetSimple(member.Pod.GetName()); ok {
 		if _, ok := pod.GetAnnotations()[deployment.ArangoDeploymentPodReplaceAnnotation]; !ok {
-			log.Warn().
-				Str("pod-name", member.PodName).
+			r.log.
+				Str("pod-name", member.Pod.GetName()).
 				Str("server-group", group.AsRole()).
-				Msgf("try changing a storage class name, but %s", getRequiredReplaceMessage(member.PodName))
+				Warn("try changing a storage class name, but %s", getRequiredReplaceMessage(member.Pod.GetName()))
 			// No return here.
 		}
 	} else {
-		return false, "", fmt.Errorf("failed to get pod %s", member.PodName)
+		return false, "", fmt.Errorf("failed to get pod %s", member.Pod.GetName())
 	}
 
 	return true, "Storage class has changed", nil
 }
 
 // isVolumeSizeChanged returns true and reason when the member should be replaced.
-func isVolumeSizeChanged(_ context.Context, log zerolog.Logger, _ k8sutil.APIObject, spec api.DeploymentSpec,
+func (r *Reconciler) isVolumeSizeChanged(_ context.Context, _ k8sutil.APIObject, spec api.DeploymentSpec,
 	_ api.DeploymentStatus, group api.ServerGroup, member api.MemberStatus,
 	context PlanBuilderContext) (bool, string, error) {
 	if spec.GetMode() == api.DeploymentModeSingle {
@@ -186,10 +185,10 @@ func isVolumeSizeChanged(_ context.Context, log zerolog.Logger, _ k8sutil.APIObj
 
 	pvc, ok := cache.PersistentVolumeClaim().V1().GetSimple(member.PersistentVolumeClaimName)
 	if !ok {
-		log.Warn().
+		r.log.
 			Str("role", group.AsRole()).
 			Str("id", member.ID).
-			Msg("Failed to get PVC")
+			Warn("Failed to get PVC")
 
 		return false, "", fmt.Errorf("failed to get PVC %s", member.PersistentVolumeClaimName)
 	}
@@ -200,25 +199,25 @@ func isVolumeSizeChanged(_ context.Context, log zerolog.Logger, _ k8sutil.APIObj
 		return false, "", nil
 	}
 
-	if group != api.ServerGroupDBServers {
-		log.Error().
+	if group != api.ServerGroupDBServers && group != api.ServerGroupAgents {
+		r.log.
 			Str("pvc-storage-size", volumeSize.String()).
 			Str("requested-size", requestedSize.String()).
-			Msgf("Volume size should not shrink, because it is not possible for \"%s\"", group.AsRole())
+			Warn("Volume size should not shrink, because it is not possible for \"%s\"", group.AsRole())
 
 		return false, "", nil
 	}
 
 	// From here on it is known that the member requires replacement, so `true` must be returned.
 	// If pod does not exist then it will try next time.
-	if pod, ok := cache.Pod().V1().GetSimple(member.PodName); ok {
+	if pod, ok := cache.Pod().V1().GetSimple(member.Pod.GetName()); ok {
 		if _, ok := pod.GetAnnotations()[deployment.ArangoDeploymentPodReplaceAnnotation]; !ok {
-			log.Warn().Str("pod-name", member.PodName).
-				Msgf("try shrinking volume size, but %s", getRequiredReplaceMessage(member.PodName))
+			r.log.Str("pod-name", member.Pod.GetName()).
+				Warn("try shrinking volume size, but %s", getRequiredReplaceMessage(member.Pod.GetName()))
 			// No return here.
 		}
 	} else {
-		return false, "", fmt.Errorf("failed to get pod %s", member.PodName)
+		return false, "", fmt.Errorf("failed to get pod %s", member.Pod.GetName())
 	}
 
 	return true, "Volume is shrunk", nil

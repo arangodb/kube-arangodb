@@ -27,20 +27,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/stretchr/testify/require"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 const (
@@ -54,7 +51,7 @@ type testCaseImageUpdate struct {
 	After            func(*testing.T, *Deployment)
 	ExpectedError    error
 	RetrySoon        bool
-	ExpectedPod      v1.Pod
+	ExpectedPod      core.Pod
 }
 
 func TestEnsureImages(t *testing.T) {
@@ -82,29 +79,29 @@ func TestEnsureImages(t *testing.T) {
 				},
 			},
 			RetrySoon: true,
-			ExpectedPod: v1.Pod{
-				Spec: v1.PodSpec{
-					Volumes: []v1.Volume{
+			ExpectedPod: core.Pod{
+				Spec: core.PodSpec{
+					Volumes: []core.Volume{
 						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
 					},
-					Containers: []v1.Container{
+					Containers: []core.Container{
 						{
 							Name:    shared.ServerContainerName,
 							Image:   testNewImage,
 							Command: createTestCommandForImageUpdatePod(),
 							Ports:   createTestPorts(),
-							Resources: v1.ResourceRequirements{
-								Limits:   make(v1.ResourceList),
-								Requests: make(v1.ResourceList),
+							Resources: core.ResourceRequirements{
+								Limits:   make(core.ResourceList),
+								Requests: make(core.ResourceList),
 							},
-							VolumeMounts: []v1.VolumeMount{
+							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
-							ImagePullPolicy: v1.PullIfNotPresent,
+							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
 					},
-					RestartPolicy:                 v1.RestartPolicyNever,
+					RestartPolicy:                 core.RestartPolicyNever,
 					Tolerations:                   getTestTolerations(),
 					TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
 					Hostname:                      hostname,
@@ -115,7 +112,23 @@ func TestEnsureImages(t *testing.T) {
 			},
 		},
 		{
-			Name: "Image not been changed with license",
+			Before: func(t *testing.T, deployment *Deployment) {
+				c := deployment.acs.CurrentClusterCache()
+
+				s := &core.Secret{
+					ObjectMeta: meta.ObjectMeta{
+						Name:      testLicense,
+						Namespace: testNamespace,
+					},
+					Data: map[string][]byte{
+						constants.SecretKeyToken: []byte("data"),
+					},
+				}
+
+				_, err := c.SecretsModInterface().V1().Create(context.Background(), s, meta.CreateOptions{})
+				require.NoError(t, err)
+			},
+			Name: "Image not been changed with license (proper one)",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
 					Image: util.NewString(testNewImage),
@@ -125,33 +138,132 @@ func TestEnsureImages(t *testing.T) {
 				},
 			},
 			RetrySoon: true,
-			ExpectedPod: v1.Pod{
-				Spec: v1.PodSpec{
-					Volumes: []v1.Volume{
+			ExpectedPod: core.Pod{
+				Spec: core.PodSpec{
+					Volumes: []core.Volume{
 						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
 					},
-					Containers: []v1.Container{
+					Containers: []core.Container{
 						{
 							Name:    shared.ServerContainerName,
 							Image:   testNewImage,
 							Command: createTestCommandForImageUpdatePod(),
 							Ports:   createTestPorts(),
-							Env: []v1.EnvVar{
+							Env: []core.EnvVar{
 								k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoLicenseKey,
 									testLicense, constants.SecretKeyToken),
 							},
-							Resources: v1.ResourceRequirements{
-								Limits:   make(v1.ResourceList),
-								Requests: make(v1.ResourceList),
+							Resources: core.ResourceRequirements{
+								Limits:   make(core.ResourceList),
+								Requests: make(core.ResourceList),
 							},
-							VolumeMounts: []v1.VolumeMount{
+							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
-							ImagePullPolicy: v1.PullIfNotPresent,
+							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
 					},
-					RestartPolicy:                 v1.RestartPolicyNever,
+					RestartPolicy:                 core.RestartPolicyNever,
+					Tolerations:                   getTestTolerations(),
+					TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
+					Hostname:                      hostname,
+					Subdomain:                     testDeploymentName + "-int",
+					Affinity: k8sutil.CreateAffinity(testDeploymentName,
+						shared.ImageIDAndVersionRole, false, ""),
+				},
+			},
+		},
+		{
+			Name: "Image not been changed with license (missing one)",
+			ArangoDeployment: &api.ArangoDeployment{
+				Spec: api.DeploymentSpec{
+					Image: util.NewString(testNewImage),
+					License: api.LicenseSpec{
+						SecretName: util.NewString(testLicense),
+					},
+				},
+			},
+			RetrySoon: true,
+			ExpectedPod: core.Pod{
+				Spec: core.PodSpec{
+					Volumes: []core.Volume{
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
+					},
+					Containers: []core.Container{
+						{
+							Name:    shared.ServerContainerName,
+							Image:   testNewImage,
+							Command: createTestCommandForImageUpdatePod(),
+							Ports:   createTestPorts(),
+							Resources: core.ResourceRequirements{
+								Limits:   make(core.ResourceList),
+								Requests: make(core.ResourceList),
+							},
+							VolumeMounts: []core.VolumeMount{
+								k8sutil.ArangodVolumeMount(),
+							},
+							ImagePullPolicy: core.PullIfNotPresent,
+							SecurityContext: securityContext.NewSecurityContext(),
+						},
+					},
+					RestartPolicy:                 core.RestartPolicyNever,
+					Tolerations:                   getTestTolerations(),
+					TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
+					Hostname:                      hostname,
+					Subdomain:                     testDeploymentName + "-int",
+					Affinity: k8sutil.CreateAffinity(testDeploymentName,
+						shared.ImageIDAndVersionRole, false, ""),
+				},
+			},
+		},
+		{
+			Before: func(t *testing.T, deployment *Deployment) {
+				c := deployment.acs.CurrentClusterCache()
+
+				s := &core.Secret{
+					ObjectMeta: meta.ObjectMeta{
+						Name:      testLicense,
+						Namespace: testNamespace,
+					},
+				}
+
+				_, err := c.SecretsModInterface().V1().Create(context.Background(), s, meta.CreateOptions{})
+				require.NoError(t, err)
+			},
+			Name: "Image not been changed with license (missing key)",
+			ArangoDeployment: &api.ArangoDeployment{
+				Spec: api.DeploymentSpec{
+					Image: util.NewString(testNewImage),
+					License: api.LicenseSpec{
+						SecretName: util.NewString(testLicense),
+					},
+				},
+			},
+			RetrySoon: true,
+			ExpectedPod: core.Pod{
+				Spec: core.PodSpec{
+					Volumes: []core.Volume{
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
+					},
+					Containers: []core.Container{
+						{
+							Name:    shared.ServerContainerName,
+							Image:   testNewImage,
+							Command: createTestCommandForImageUpdatePod(),
+							Ports:   createTestPorts(),
+							Resources: core.ResourceRequirements{
+								Limits:   make(core.ResourceList),
+								Requests: make(core.ResourceList),
+							},
+							VolumeMounts: []core.VolumeMount{
+								k8sutil.ArangodVolumeMount(),
+							},
+							ImagePullPolicy: core.PullIfNotPresent,
+							SecurityContext: securityContext.NewSecurityContext(),
+						},
+					},
+					RestartPolicy:                 core.RestartPolicyNever,
 					Tolerations:                   getTestTolerations(),
 					TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
 					Hostname:                      hostname,
@@ -169,18 +281,18 @@ func TestEnsureImages(t *testing.T) {
 				},
 			},
 			Before: func(t *testing.T, deployment *Deployment) {
-				pod := v1.Pod{
-					ObjectMeta: metav1.ObjectMeta{
+				pod := core.Pod{
+					ObjectMeta: meta.ObjectMeta{
 						Name:              k8sutil.CreatePodName(testDeploymentName, shared.ImageIDAndVersionRole, id, ""),
-						CreationTimestamp: metav1.Now(),
+						CreationTimestamp: meta.Now(),
 					},
-					Spec: v1.PodSpec{},
-					Status: v1.PodStatus{
-						Phase: v1.PodFailed,
+					Spec: core.PodSpec{},
+					Status: core.PodStatus{
+						Phase: core.PodFailed,
 					},
 				}
 
-				_, err := deployment.PodsModInterface().Create(context.Background(), &pod, metav1.CreateOptions{})
+				_, err := deployment.PodsModInterface().Create(context.Background(), &pod, meta.CreateOptions{})
 				require.NoError(t, err)
 			},
 			After: func(t *testing.T, deployment *Deployment) {
@@ -196,15 +308,15 @@ func TestEnsureImages(t *testing.T) {
 				},
 			},
 			Before: func(t *testing.T, deployment *Deployment) {
-				pod := v1.Pod{
-					ObjectMeta: metav1.ObjectMeta{
+				pod := core.Pod{
+					ObjectMeta: meta.ObjectMeta{
 						Name: k8sutil.CreatePodName(testDeploymentName, shared.ImageIDAndVersionRole, id, ""),
 					},
-					Status: v1.PodStatus{
-						Phase: v1.PodFailed,
+					Status: core.PodStatus{
+						Phase: core.PodFailed,
 					},
 				}
-				_, err := deployment.PodsModInterface().Create(context.Background(), &pod, metav1.CreateOptions{})
+				_, err := deployment.PodsModInterface().Create(context.Background(), &pod, meta.CreateOptions{})
 				require.NoError(t, err)
 			},
 			After: func(t *testing.T, deployment *Deployment) {
@@ -221,19 +333,19 @@ func TestEnsureImages(t *testing.T) {
 			},
 			RetrySoon: true,
 			Before: func(t *testing.T, deployment *Deployment) {
-				pod := v1.Pod{
-					ObjectMeta: metav1.ObjectMeta{
+				pod := core.Pod{
+					ObjectMeta: meta.ObjectMeta{
 						Name: k8sutil.CreatePodName(testDeploymentName, shared.ImageIDAndVersionRole, id, ""),
 					},
-					Status: v1.PodStatus{
-						Conditions: []v1.PodCondition{
+					Status: core.PodStatus{
+						Conditions: []core.PodCondition{
 							{
-								Type: v1.PodScheduled,
+								Type: core.PodScheduled,
 							},
 						},
 					},
 				}
-				_, err := deployment.PodsModInterface().Create(context.Background(), &pod, metav1.CreateOptions{})
+				_, err := deployment.PodsModInterface().Create(context.Background(), &pod, meta.CreateOptions{})
 				require.NoError(t, err)
 			},
 			After: func(t *testing.T, deployment *Deployment) {
@@ -250,20 +362,20 @@ func TestEnsureImages(t *testing.T) {
 			},
 			RetrySoon: true,
 			Before: func(t *testing.T, deployment *Deployment) {
-				pod := v1.Pod{
-					ObjectMeta: metav1.ObjectMeta{
+				pod := core.Pod{
+					ObjectMeta: meta.ObjectMeta{
 						Name: k8sutil.CreatePodName(testDeploymentName, shared.ImageIDAndVersionRole, id, ""),
 					},
-					Status: v1.PodStatus{
-						Conditions: []v1.PodCondition{
+					Status: core.PodStatus{
+						Conditions: []core.PodCondition{
 							{
-								Type:   v1.PodReady,
-								Status: v1.ConditionTrue,
+								Type:   core.PodReady,
+								Status: core.ConditionTrue,
 							},
 						},
 					},
 				}
-				_, err := deployment.PodsModInterface().Create(context.Background(), &pod, metav1.CreateOptions{})
+				_, err := deployment.PodsModInterface().Create(context.Background(), &pod, meta.CreateOptions{})
 				require.NoError(t, err)
 			},
 			After: func(t *testing.T, deployment *Deployment) {
@@ -280,23 +392,23 @@ func TestEnsureImages(t *testing.T) {
 			},
 			RetrySoon: true,
 			Before: func(t *testing.T, deployment *Deployment) {
-				pod := v1.Pod{
-					ObjectMeta: metav1.ObjectMeta{
+				pod := core.Pod{
+					ObjectMeta: meta.ObjectMeta{
 						Name: k8sutil.CreatePodName(testDeploymentName, shared.ImageIDAndVersionRole, id, ""),
 					},
-					Status: v1.PodStatus{
-						Conditions: []v1.PodCondition{
+					Status: core.PodStatus{
+						Conditions: []core.PodCondition{
 							{
-								Type:   v1.PodReady,
-								Status: v1.ConditionTrue,
+								Type:   core.PodReady,
+								Status: core.ConditionTrue,
 							},
 						},
-						ContainerStatuses: []v1.ContainerStatus{
+						ContainerStatuses: []core.ContainerStatus{
 							{},
 						},
 					},
 				}
-				_, err := deployment.PodsModInterface().Create(context.Background(), &pod, metav1.CreateOptions{})
+				_, err := deployment.PodsModInterface().Create(context.Background(), &pod, meta.CreateOptions{})
 				require.NoError(t, err)
 			},
 			After: func(t *testing.T, deployment *Deployment) {
@@ -312,7 +424,7 @@ func TestEnsureImages(t *testing.T) {
 			// Arrange
 			d, _ := createTestDeployment(t, Config{}, testCase.ArangoDeployment)
 
-			d.status.last = api.DeploymentStatus{
+			d.currentObjectStatus = &api.DeploymentStatus{
 				Images: createTestImages(false),
 			}
 
@@ -322,13 +434,13 @@ func TestEnsureImages(t *testing.T) {
 			}
 
 			// Create custom resource in the fake kubernetes API
-			_, err := d.deps.Client.Arango().DatabaseV1().ArangoDeployments(testNamespace).Create(context.Background(), d.apiObject, metav1.CreateOptions{})
+			_, err := d.deps.Client.Arango().DatabaseV1().ArangoDeployments(testNamespace).Create(context.Background(), d.currentObject, meta.CreateOptions{})
 			require.NoError(t, err)
 
 			require.NoError(t, d.acs.CurrentClusterCache().Refresh(context.Background()))
 
 			// Act
-			retrySoon, _, err := d.ensureImages(context.Background(), d.apiObject, d.GetCachedStatus())
+			retrySoon, _, err := d.ensureImages(context.Background(), d.currentObject, d.GetCachedStatus())
 
 			// Assert
 			assert.EqualValues(t, testCase.RetrySoon, retrySoon)
@@ -340,7 +452,7 @@ func TestEnsureImages(t *testing.T) {
 			require.NoError(t, err)
 
 			if len(testCase.ExpectedPod.Spec.Containers) > 0 {
-				pods, err := d.deps.Client.Kubernetes().CoreV1().Pods(testNamespace).List(context.Background(), metav1.ListOptions{})
+				pods, err := d.deps.Client.Kubernetes().CoreV1().Pods(testNamespace).List(context.Background(), meta.ListOptions{})
 				require.NoError(t, err)
 				require.Len(t, pods.Items, 1)
 				require.Equal(t, testCase.ExpectedPod.Spec, pods.Items[0].Spec)
@@ -368,14 +480,14 @@ func createTestCommandForImageUpdatePod() []string {
 	}
 }
 
-func getTestTolerations() []v1.Toleration {
+func getTestTolerations() []core.Toleration {
 
 	shortDur := k8sutil.TolerationDuration{
 		Forever:  false,
 		TimeSpan: time.Second * 5,
 	}
 
-	return []v1.Toleration{
+	return []core.Toleration{
 		k8sutil.NewNoExecuteToleration(k8sutil.TolerationKeyNodeNotReady, shortDur),
 		k8sutil.NewNoExecuteToleration(k8sutil.TolerationKeyNodeUnreachable, shortDur),
 		k8sutil.NewNoExecuteToleration(k8sutil.TolerationKeyNodeAlphaUnreachable, shortDur),

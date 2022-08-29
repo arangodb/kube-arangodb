@@ -23,20 +23,18 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/rs/zerolog"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 
 func init() {
 	registerAction(api.ActionTypeUpdateTLSSNI, newTLSSNIUpdate, tlsSNIUpdateTimeout)
 }
 
-func newTLSSNIUpdate(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newTLSSNIUpdate(action api.Action, actionCtx ActionContext) Action {
 	a := &tlsSNIUpdate{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -64,22 +62,20 @@ func (t *tlsSNIUpdate) CheckProgress(ctx context.Context) (bool, bool, error) {
 
 	fetchedSecrets, err := mapTLSSNIConfig(*sni, t.actionCtx.ACS().CurrentClusterCache())
 	if err != nil {
-		t.log.Warn().Err(err).Msg("Unable to get SNI desired state")
+		t.log.Err(err).Warn("Unable to get SNI desired state")
+		return true, false, nil
+	}
+
+	c, err := t.actionCtx.GetMembersState().GetMemberClient(t.action.MemberID)
+	if err != nil {
+		t.log.Err(err).Warn("Unable to get client")
 		return true, false, nil
 	}
 
 	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
-	c, err := t.actionCtx.GetServerClient(ctxChild, t.action.Group, t.action.MemberID)
-	if err != nil {
-		t.log.Warn().Err(err).Msg("Unable to get client")
-		return true, false, nil
-	}
-
-	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	if ok, err := compareTLSSNIConfig(ctxChild, c.Connection(), fetchedSecrets, true); err != nil {
-		t.log.Warn().Err(err).Msg("Unable to compare TLS config")
+	if ok, err := compareTLSSNIConfig(ctxChild, t.log, c.Connection(), fetchedSecrets, true); err != nil {
+		t.log.Err(err).Warn("Unable to compare TLS config")
 		return true, false, nil
 	} else {
 		return ok, false, nil

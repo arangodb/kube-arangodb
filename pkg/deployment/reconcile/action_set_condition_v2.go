@@ -23,7 +23,6 @@ package reconcile
 import (
 	"context"
 
-	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -45,10 +44,10 @@ const (
 	setConditionActionV2KeyHash    string = "hash"
 )
 
-func setConditionV2(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func setConditionV2(action api.Action, actionCtx ActionContext) Action {
 	a := &actionSetConditionV2{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -64,13 +63,13 @@ type actionSetConditionV2 struct {
 func (a actionSetConditionV2) Start(ctx context.Context) (bool, error) {
 	at, ok := a.action.Params[setConditionActionV2KeyType]
 	if !ok {
-		a.log.Info().Msgf("key %s is missing in action definition", setConditionActionV2KeyType)
+		a.log.Info("key %s is missing in action definition", setConditionActionV2KeyType)
 		return true, nil
 	}
 
 	aa, ok := a.action.Params[setConditionActionV2KeyAction]
 	if !ok {
-		a.log.Info().Msgf("key %s is missing in action definition", setConditionActionV2KeyAction)
+		a.log.Info("key %s is missing in action definition", setConditionActionV2KeyAction)
 		return true, nil
 	}
 
@@ -84,18 +83,18 @@ func (a actionSetConditionV2) Start(ctx context.Context) (bool, error) {
 		if err := a.actionCtx.WithStatusUpdateErr(ctx, func(s *api.DeploymentStatus) (bool, error) {
 			return s.Conditions.UpdateWithHash(api.ConditionType(aa), as, ar, am, ah), nil
 		}); err != nil {
-			a.log.Warn().Err(err).Msgf("unable to update status")
+			a.log.Err(err).Warn("unable to update status")
 			return true, nil
 		}
 	case setConditionActionV2KeyTypeRemove:
 		if err := a.actionCtx.WithStatusUpdateErr(ctx, func(s *api.DeploymentStatus) (bool, error) {
 			return s.Conditions.Remove(api.ConditionType(aa)), nil
 		}); err != nil {
-			a.log.Warn().Err(err).Msgf("unable to update status")
+			a.log.Err(err).Warn("unable to update status")
 			return true, nil
 		}
 	default:
-		a.log.Info().Msgf("unknown type %s", at)
+		a.log.Info("unknown type %s", at)
 		return true, nil
 	}
 	return true, nil

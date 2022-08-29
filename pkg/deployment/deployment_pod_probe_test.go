@@ -23,11 +23,12 @@ package deployment
 import (
 	"testing"
 
+	core "k8s.io/api/core/v1"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	core "k8s.io/api/core/v1"
 )
 
 func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
@@ -42,7 +43,7 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						Agents: api.MemberStatusList{
 							firstAgentStatus,
@@ -99,7 +100,7 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						Agents: api.MemberStatusList{
 							firstAgentStatus,
@@ -157,7 +158,7 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						Agents: api.MemberStatusList{
 							firstAgentStatus,
@@ -208,7 +209,7 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						DBServers: api.MemberStatusList{
 							firstDBServerStatus,
@@ -264,7 +265,7 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						DBServers: api.MemberStatusList{
 							firstDBServerStatus,
@@ -315,7 +316,7 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						Coordinators: api.MemberStatusList{
 							firstCoordinatorStatus,
@@ -371,7 +372,7 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						Coordinators: api.MemberStatusList{
 							firstCoordinatorStatus,

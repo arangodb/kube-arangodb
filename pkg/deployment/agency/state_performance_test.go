@@ -29,6 +29,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func runCountWithMeasure(t *testing.T, c int, name string, f func(t *testing.T)) {
+	t.Run(name, func(t *testing.T) {
+		n := time.Now()
+		defer func() {
+			s := time.Since(n)
+			t.Logf("Elapsed: %s - %s per item", s.String(), s/time.Duration(c))
+		}()
+
+		for i := 0; i < c; i++ {
+			runWithMeasure(t, fmt.Sprintf("R%03d", i), f)
+		}
+	})
+}
+
 func runWithMeasure(t *testing.T, name string, f func(t *testing.T)) {
 	t.Run(name, func(t *testing.T) {
 		n := time.Now()
@@ -63,7 +77,7 @@ func perfWithSize(t *testing.T, dbs, collections, shards, rf, servers int) {
 			for id := 0; id < servers; id++ {
 				name := fmt.Sprintf("server-%d", id)
 				runWithMeasure(t, name, func(t *testing.T) {
-					require.Len(t, GetDBServerBlockingRestartShards(s, name), 0)
+					require.Len(t, GetDBServerBlockingRestartShards(s, Server(name)), 0)
 				})
 			}
 		})
@@ -72,7 +86,7 @@ func perfWithSize(t *testing.T, dbs, collections, shards, rf, servers int) {
 			for id := 0; id < servers; id++ {
 				name := fmt.Sprintf("server-%d", id)
 				runWithMeasure(t, name, func(t *testing.T) {
-					require.Len(t, GetDBServerShardsNotInSync(s, name), 0)
+					require.Len(t, GetDBServerShardsNotInSync(s, Server(name)), 0)
 				})
 			}
 		})
@@ -127,7 +141,7 @@ func generateShards(t *testing.T, col CollectionGeneratorInterface, shards, rf, 
 	return c
 }
 
-func getServersSublist(t *testing.T, rf, servers int) ShardServers {
+func getServersSublist(t *testing.T, rf, servers int) Servers {
 	require.NotEqual(t, 0, rf)
 	if rf > servers {
 		require.Fail(t, "Server count is smaller than rf")
@@ -136,11 +150,11 @@ func getServersSublist(t *testing.T, rf, servers int) ShardServers {
 	return generateServersSublist(servers)[0:rf]
 }
 
-func generateServersSublist(servers int) ShardServers {
-	s := make(ShardServers, servers)
+func generateServersSublist(servers int) Servers {
+	s := make(Servers, servers)
 
 	for id := range s {
-		s[id] = fmt.Sprintf("server-%d", id)
+		s[id] = Server(fmt.Sprintf("server-%d", id))
 	}
 
 	rand.Shuffle(len(s), func(i, j int) {

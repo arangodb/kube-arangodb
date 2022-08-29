@@ -26,24 +26,18 @@ import (
 	"math"
 	"os"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/topology"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/collection"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-
-	"github.com/arangodb/kube-arangodb/pkg/util"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/topology"
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/collection"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	core "k8s.io/api/core/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 )
 
 const (
@@ -56,6 +50,7 @@ var _ interfaces.PodCreator = &MemberArangoDPod{}
 var _ interfaces.ContainerCreator = &ArangoDContainer{}
 
 type MemberArangoDPod struct {
+	podName          string
 	status           api.MemberStatus
 	groupSpec        api.ServerGroupSpec
 	spec             api.DeploymentSpec
@@ -350,7 +345,7 @@ func (m *MemberArangoDPod) GetServiceAccountName() string {
 }
 
 func (m *MemberArangoDPod) GetSidecars(pod *core.Pod) error {
-	if m.spec.Metrics.IsEnabled() {
+	if m.spec.Metrics.IsEnabled() && m.spec.Metrics.Mode.Get() != api.MetricsModeInternal {
 		var c *core.Container
 
 		pod.Labels[k8sutil.LabelKeyArangoExporter] = "yes"
@@ -493,6 +488,13 @@ func (m *MemberArangoDPod) GetContainerCreator() interfaces.ContainerCreator {
 	}
 }
 
+func (m *MemberArangoDPod) GetRestartPolicy() core.RestartPolicy {
+	if features.RestartPolicyAlways().Enabled() {
+		return core.RestartPolicyAlways
+	}
+	return core.RestartPolicyNever
+}
+
 func (m *MemberArangoDPod) createMetricsExporterSidecarInternalExporter() (*core.Container, error) {
 	image := m.GetContainerCreator().GetImage()
 
@@ -587,6 +589,8 @@ func CreateArangoDVolumes(status api.MemberStatus, input pod.Input, spec api.Dep
 
 	// SNI
 	volumes.Append(pod.SNI(), input)
+
+	volumes.Append(pod.Timezone(), input)
 
 	if len(groupSpec.Volumes) > 0 {
 		volumes.AddVolume(groupSpec.Volumes.RenderVolumes(input.ApiObject, input.Group, status)...)

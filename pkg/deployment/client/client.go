@@ -23,11 +23,18 @@ package client
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/arangodb/go-driver"
+
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 )
 
-func NewClient(c driver.Connection) Client {
+func NewClient(c driver.Connection, log logging.Logger) Client {
+	if log != nil {
+		c = loggerConnection(c, log)
+	}
+
 	return &client{
 		c: c,
 	}
@@ -35,6 +42,7 @@ func NewClient(c driver.Connection) Client {
 
 type Client interface {
 	LicenseClient
+	MaintenanceClient
 
 	GetTLS(ctx context.Context) (TLSDetails, error)
 	RefreshTLS(ctx context.Context) (TLSDetails, error)
@@ -44,6 +52,8 @@ type Client interface {
 
 	GetJWT(ctx context.Context) (JWTDetails, error)
 	RefreshJWT(ctx context.Context) (JWTDetails, error)
+
+	DeleteExpiredJobs(ctx context.Context, timeout time.Duration) error
 }
 
 type client struct {

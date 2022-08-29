@@ -23,9 +23,9 @@ package v1
 import (
 	"strings"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
 	"k8s.io/apimachinery/pkg/util/validation"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 // KubernetesResourceName define name of kubernetes resource including validation function

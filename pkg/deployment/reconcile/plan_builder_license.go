@@ -29,11 +29,9 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/rs/zerolog"
 )
 
-func updateClusterLicense(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+func (r *Reconciler) updateClusterLicense(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext) api.Plan {
 	if !spec.License.HasSecretName() {
@@ -42,12 +40,12 @@ func updateClusterLicense(ctx context.Context,
 
 	l, ok := k8sutil.GetLicenseFromSecret(context.ACS().CurrentClusterCache(), spec.License.GetSecretName())
 	if !ok {
-		log.Trace().Str("secret", spec.Authentication.GetJWTSecretName()).Msgf("Unable to find license secret key")
+		r.log.Str("secret", spec.Authentication.GetJWTSecretName()).Trace("Unable to find license secret key")
 		return nil
 	}
 
 	if !l.V2.IsV2Set() {
-		log.Trace().Str("secret", spec.Authentication.GetJWTSecretName()).Msgf("V2 License key is not set")
+		r.log.Str("secret", spec.Authentication.GetJWTSecretName()).Trace("V2 License key is not set")
 		return nil
 	}
 
@@ -62,7 +60,7 @@ func updateClusterLicense(ctx context.Context,
 
 	if len(members) == 0 {
 		// No member found to take this action
-		log.Trace().Msgf("No enterprise member in version 3.9.0 or above")
+		r.log.Trace("No enterprise member in version 3.9.0 or above")
 		return nil
 	}
 
@@ -71,16 +69,16 @@ func updateClusterLicense(ctx context.Context,
 	ctxChild, cancel := globals.GetGlobals().Timeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 
-	c, err := context.GetServerClient(ctxChild, member.Group, member.Member.ID)
+	c, err := context.GetMembersState().GetMemberClient(member.Member.ID)
 	if err != nil {
-		log.Err(err).Msgf("Unable to get client")
+		r.log.Err(err).Error("Unable to get client")
 		return nil
 	}
 
-	internalClient := client.NewClient(c.Connection())
+	internalClient := client.NewClient(c.Connection(), r.log)
 
 	if ok, err := licenseV2Compare(ctxChild, internalClient, l.V2); err != nil {
-		log.Error().Err(err).Msg("Unable to verify license")
+		r.log.Err(err).Error("Unable to verify license")
 		return nil
 	} else if ok {
 		if c, _ := status.Conditions.Get(api.ConditionTypeLicenseSet); !c.IsTrue() || c.Hash != l.V2.V2Hash() {

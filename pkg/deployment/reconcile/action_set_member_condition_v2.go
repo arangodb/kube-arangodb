@@ -23,7 +23,6 @@ package reconcile
 import (
 	"context"
 
-	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -33,10 +32,10 @@ func init() {
 	registerAction(api.ActionTypeSetMemberConditionV2, setMemberConditionV2, defaultTimeout)
 }
 
-func setMemberConditionV2(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func setMemberConditionV2(action api.Action, actionCtx ActionContext) Action {
 	a := &actionSetMemberConditionV2{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -52,13 +51,13 @@ type actionSetMemberConditionV2 struct {
 func (a actionSetMemberConditionV2) Start(ctx context.Context) (bool, error) {
 	at, ok := a.action.Params[setConditionActionV2KeyType]
 	if !ok {
-		a.log.Info().Msgf("key %s is missing in action definition", setConditionActionV2KeyType)
+		a.log.Info("key %s is missing in action definition", setConditionActionV2KeyType)
 		return true, nil
 	}
 
 	aa, ok := a.action.Params[setConditionActionV2KeyAction]
 	if !ok {
-		a.log.Info().Msgf("key %s is missing in action definition", setConditionActionV2KeyAction)
+		a.log.Info("key %s is missing in action definition", setConditionActionV2KeyAction)
 		return true, nil
 	}
 
@@ -70,50 +69,58 @@ func (a actionSetMemberConditionV2) Start(ctx context.Context) (bool, error) {
 		as := a.action.Params[setConditionActionV2KeyStatus] == string(core.ConditionTrue)
 
 		if err := a.actionCtx.WithStatusUpdateErr(ctx, func(s *api.DeploymentStatus) (bool, error) {
-			var changed bool
+			status, g, ok := s.Members.ElementByID(a.action.MemberID)
+			if !ok {
+				a.log.Info("can not set the condition because the member is gone already")
+				return false, nil
+			}
 
-			s.Members.ForServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
-				for i := range members {
-					if members[i].ID == a.action.MemberID {
-						changed = members[i].Conditions.UpdateWithHash(api.ConditionType(aa), as, ar, am, ah)
-						return nil
-					}
+			if g != a.action.Group {
+				a.log.Info("can not set the condition because of invalid groups")
+				return false, nil
+			}
+
+			if status.Conditions.UpdateWithHash(api.ConditionType(aa), as, ar, am, ah) {
+				if err := s.Members.Update(status, g); err != nil {
+					return false, err
 				}
 
-				a.log.Info().Msg("can not set the condition because the member is gone already")
-				return nil
-			}, a.action.Group)
+				return true, nil
+			}
 
-			// If not found then false is returned.
-			return changed, nil
+			return false, nil
 		}); err != nil {
-			a.log.Warn().Err(err).Msgf("unable to update status")
+			a.log.Err(err).Warn("unable to update status")
 			return true, nil
 		}
 	case setConditionActionV2KeyTypeRemove:
 		if err := a.actionCtx.WithStatusUpdateErr(ctx, func(s *api.DeploymentStatus) (bool, error) {
-			var changed bool
+			status, g, ok := s.Members.ElementByID(a.action.MemberID)
+			if !ok {
+				a.log.Info("can not set the condition because the member is gone already")
+				return false, nil
+			}
 
-			s.Members.ForServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
-				for i := range members {
-					if members[i].ID == a.action.MemberID {
-						changed = members[i].Conditions.Remove(api.ConditionType(aa))
-						return nil
-					}
+			if g != a.action.Group {
+				a.log.Info("can not set the condition because of invalid groups")
+				return false, nil
+			}
+
+			if status.Conditions.Remove(api.ConditionType(aa)) {
+				if err := s.Members.Update(status, g); err != nil {
+					return false, err
 				}
 
-				a.log.Info().Msg("can not remove the condition because the member is gone already")
-				return nil
-			}, a.action.Group)
+				return true, nil
+			}
 
-			// If not found then false is returned.
-			return changed, nil
+			return false, nil
 		}); err != nil {
-			a.log.Warn().Err(err).Msgf("unable to update status")
+			a.log.Err(err).Warn("unable to update status")
 			return true, nil
 		}
 	default:
-		a.log.Info().Msgf("unknown type %s", at)
+		a.log.Info("unknown type %s", at)
 		return true, nil
 	}
 	return true, nil

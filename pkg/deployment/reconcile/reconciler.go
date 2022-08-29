@@ -27,46 +27,61 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 )
+
+var reconcileLogger = logging.Global().RegisterAndGetLogger("deployment-reconcile", logging.Info)
 
 // Reconciler is the service that takes care of bring the a deployment
 // in line with its (changed) specification.
 type Reconciler struct {
-	log     zerolog.Logger
-	context Context
+	namespace, name string
+	log             logging.Logger
+	planLogger      logging.Logger
+	context         Context
+
+	metrics Metrics
 }
 
 // NewReconciler creates a new reconciler with given context.
-func NewReconciler(log zerolog.Logger, context Context) *Reconciler {
-	return &Reconciler{
-		log:     log,
-		context: context,
+func NewReconciler(namespace, name string, context Context) *Reconciler {
+	r := &Reconciler{
+		context:   context,
+		namespace: namespace,
+		name:      name,
 	}
+	r.log = reconcileLogger.WrapObj(r)
+	r.planLogger = r.log.Str("section", "plan")
+	return r
+}
+
+func (r *Reconciler) WrapLogger(in *zerolog.Event) *zerolog.Event {
+	return in.Str("namespace", r.namespace).Str("name", r.name)
 }
 
 // CheckDeployment checks for obviously broken things and fixes them immediately
 func (r *Reconciler) CheckDeployment(ctx context.Context) error {
 	spec := r.context.GetSpec()
-	status, _ := r.context.GetStatus()
+	status := r.context.GetStatus()
 
 	if spec.GetMode().HasCoordinators() {
 		// Check if there are coordinators
 		if status.Members.Coordinators.AllFailed() {
-			r.log.Error().Msg("All coordinators failed - reset")
+			r.log.Error("All coordinators failed - reset")
 			for _, m := range status.Members.Coordinators {
 				cache, ok := r.context.ACS().ClusterCache(m.ClusterID)
 				if !ok {
-					r.log.Warn().Msg("Cluster is not ready")
+					r.log.Warn("Cluster is not ready")
 					continue
 				}
 
-				if err := cache.Client().Kubernetes().CoreV1().Secrets(cache.Namespace()).Delete(ctx, m.PodName, meta.DeleteOptions{}); err != nil {
-					r.log.Error().Err(err).Msg("Failed to delete pod")
+				if err := cache.Client().Kubernetes().CoreV1().Secrets(cache.Namespace()).Delete(ctx, m.Pod.GetName(), meta.DeleteOptions{}); err != nil {
+					r.log.Err(err).Error("Failed to delete secret")
 				}
 				m.Phase = api.MemberPhaseNone
 
 				if err := r.context.UpdateMember(ctx, m); err != nil {
-					r.log.Error().Err(err).Msg("Failed to update member")
+					r.log.Err(err).Error("Failed to update member")
 				}
 			}
 		}

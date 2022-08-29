@@ -25,16 +25,12 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/rs/zerolog"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 const (
@@ -46,7 +42,7 @@ const (
 )
 
 func ensureJWTFolderSupportFromAction(actionCtx ActionContext) (bool, error) {
-	return ensureJWTFolderSupport(actionCtx.GetSpec(), actionCtx.GetStatusSnapshot())
+	return ensureJWTFolderSupport(actionCtx.GetSpec(), actionCtx.GetStatus())
 }
 
 func ensureJWTFolderSupport(spec api.DeploymentSpec, status api.DeploymentStatus) (bool, error) {
@@ -68,10 +64,10 @@ func init() {
 	registerAction(api.ActionTypeJWTStatusUpdate, newJWTStatusUpdate, defaultTimeout)
 }
 
-func newJWTStatusUpdate(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newJWTStatusUpdate(action api.Action, actionCtx ActionContext) Action {
 	a := &jwtStatusUpdateAction{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -85,20 +81,20 @@ type jwtStatusUpdateAction struct {
 func (a *jwtStatusUpdateAction) Start(ctx context.Context) (bool, error) {
 	folder, err := ensureJWTFolderSupportFromAction(a.actionCtx)
 	if err != nil {
-		a.log.Error().Err(err).Msgf("Action not supported")
+		a.log.Err(err).Error("Action not supported")
 		return true, nil
 	}
 
 	if !folder {
 		f, ok := a.actionCtx.ACS().CurrentClusterCache().Secret().V1().GetSimple(a.actionCtx.GetSpec().Authentication.GetJWTSecretName())
 		if !ok {
-			a.log.Error().Msgf("Unable to get JWT secret info")
+			a.log.Error("Unable to get JWT secret info")
 			return true, nil
 		}
 
 		key, ok := f.Data[constants.SecretKeyToken]
 		if !ok {
-			a.log.Error().Msgf("JWT Token is invalid")
+			a.log.Error("JWT Token is invalid")
 			return true, nil
 		}
 
@@ -125,7 +121,7 @@ func (a *jwtStatusUpdateAction) Start(ctx context.Context) (bool, error) {
 
 	f, ok := a.actionCtx.ACS().CurrentClusterCache().Secret().V1().GetSimple(pod.JWTSecretFolder(a.actionCtx.GetName()))
 	if !ok {
-		a.log.Error().Msgf("Unable to get JWT folder info")
+		a.log.Error("Unable to get JWT folder info")
 		return true, nil
 	}
 

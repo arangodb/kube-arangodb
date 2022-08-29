@@ -23,24 +23,22 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
-	"github.com/arangodb/kube-arangodb/pkg/util"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-	"github.com/rs/zerolog"
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 
 func init() {
 	registerAction(api.ActionTypeEncryptionKeyStatusUpdate, newEncryptionKeyStatusUpdate, defaultTimeout)
 }
 
-func newEncryptionKeyStatusUpdate(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newEncryptionKeyStatusUpdate(action api.Action, actionCtx ActionContext) Action {
 	a := &encryptionKeyStatusUpdateAction{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -53,7 +51,7 @@ type encryptionKeyStatusUpdateAction struct {
 
 func (a *encryptionKeyStatusUpdateAction) Start(ctx context.Context) (bool, error) {
 	if err := ensureEncryptionSupport(a.actionCtx); err != nil {
-		a.log.Error().Err(err).Msgf("Action not supported")
+		a.log.Err(err).Error("Action not supported")
 		return true, nil
 	}
 
@@ -62,7 +60,7 @@ func (a *encryptionKeyStatusUpdateAction) Start(ctx context.Context) (bool, erro
 
 	f, err := a.actionCtx.ACS().CurrentClusterCache().Secret().V1().Read().Get(ctxChild, pod.GetEncryptionFolderSecretName(a.actionCtx.GetAPIObject().GetName()), meta.GetOptions{})
 	if err != nil {
-		a.log.Error().Err(err).Msgf("Unable to get folder info")
+		a.log.Err(err).Error("Unable to get folder info")
 		return true, nil
 	}
 

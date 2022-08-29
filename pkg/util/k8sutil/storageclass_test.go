@@ -24,37 +24,36 @@ import (
 	"context"
 	"testing"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/retry"
-	"github.com/stretchr/testify/require"
-	"k8s.io/apimachinery/pkg/runtime"
-
 	"github.com/stretchr/testify/assert"
-	v1 "k8s.io/api/storage/v1"
+	"github.com/stretchr/testify/require"
+	storage "k8s.io/api/storage/v1"
 	er "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/fake"
 	k8stesting "k8s.io/client-go/testing"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/retry"
 )
 
 func TestStorageClassIsDefault(t *testing.T) {
 	testCases := []struct {
 		Name         string
-		StorageClass v1.StorageClass
+		StorageClass storage.StorageClass
 		IsDefault    bool
 	}{
 		{
 			Name: "Storage class without annotations",
-			StorageClass: v1.StorageClass{
-				ObjectMeta: metav1.ObjectMeta{},
+			StorageClass: storage.StorageClass{
+				ObjectMeta: meta.ObjectMeta{},
 			},
 			IsDefault: false,
 		},
 		{
 			Name: "Storage class with empty annotations",
-			StorageClass: v1.StorageClass{
-				ObjectMeta: metav1.ObjectMeta{
+			StorageClass: storage.StorageClass{
+				ObjectMeta: meta.ObjectMeta{
 					Annotations: map[string]string{},
 				},
 			},
@@ -62,8 +61,8 @@ func TestStorageClassIsDefault(t *testing.T) {
 		},
 		{
 			Name: "Storage class without default",
-			StorageClass: v1.StorageClass{
-				ObjectMeta: metav1.ObjectMeta{
+			StorageClass: storage.StorageClass{
+				ObjectMeta: meta.ObjectMeta{
 					Annotations: map[string]string{
 						annStorageClassIsDefault: "false",
 					},
@@ -73,8 +72,8 @@ func TestStorageClassIsDefault(t *testing.T) {
 		},
 		{
 			Name: "Storage class with invalid value in annotation",
-			StorageClass: v1.StorageClass{
-				ObjectMeta: metav1.ObjectMeta{
+			StorageClass: storage.StorageClass{
+				ObjectMeta: meta.ObjectMeta{
 					Annotations: map[string]string{
 						annStorageClassIsDefault: "foo",
 					},
@@ -84,8 +83,8 @@ func TestStorageClassIsDefault(t *testing.T) {
 		},
 		{
 			Name: "Default storage class exits",
-			StorageClass: v1.StorageClass{
-				ObjectMeta: metav1.ObjectMeta{
+			StorageClass: storage.StorageClass{
+				ObjectMeta: meta.ObjectMeta{
 					Annotations: map[string]string{
 						annStorageClassIsDefault: "true",
 					},
@@ -121,7 +120,7 @@ func TestPatchStorageClassIsDefault(t *testing.T) {
 		{
 			Name:             "Storage class does not exist",
 			StorageClassName: "invalid",
-			ExpectedErr:      er.NewNotFound(v1.Resource(resourceName), "invalid"),
+			ExpectedErr:      er.NewNotFound(storage.Resource(resourceName), "invalid"),
 		},
 		{
 			Name:             "Can not get storage class from kubernetes",
@@ -146,10 +145,10 @@ func TestPatchStorageClassIsDefault(t *testing.T) {
 			StorageClassName: "test",
 			Reactor: func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
 				return true, nil,
-					retry.Permanent(er.NewConflict(v1.Resource(resourceName), "test", nil))
+					retry.Permanent(er.NewConflict(storage.Resource(resourceName), "test", nil))
 			},
 			ReactorActionVerb: "update",
-			ExpectedErr:       er.NewConflict(v1.Resource(resourceName), "test", nil),
+			ExpectedErr:       er.NewConflict(storage.Resource(resourceName), "test", nil),
 		},
 	}
 
@@ -161,12 +160,12 @@ func TestPatchStorageClassIsDefault(t *testing.T) {
 
 			clientSet := fake.NewSimpleClientset()
 			storageSet := clientSet.StorageV1()
-			_, err = storageSet.StorageClasses().Create(context.Background(), &v1.StorageClass{
-				TypeMeta: metav1.TypeMeta{},
-				ObjectMeta: metav1.ObjectMeta{
+			_, err = storageSet.StorageClasses().Create(context.Background(), &storage.StorageClass{
+				TypeMeta: meta.TypeMeta{},
+				ObjectMeta: meta.ObjectMeta{
 					Name: "test",
 				},
-			}, metav1.CreateOptions{})
+			}, meta.CreateOptions{})
 			require.NoError(t, err)
 
 			if testCase.Reactor != nil {

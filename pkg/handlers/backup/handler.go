@@ -26,30 +26,28 @@ import (
 	"sync"
 	"time"
 
-	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
-	"github.com/arangodb/kube-arangodb/pkg/util"
-
-	"github.com/arangodb/go-driver"
-	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
+	"github.com/rs/zerolog/log"
+	apiErrors "k8s.io/apimachinery/pkg/api/errors"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
-
-	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
-	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
-
 	"k8s.io/client-go/kubernetes"
 
-	apiErrors "k8s.io/apimachinery/pkg/api/errors"
+	"github.com/arangodb/go-driver"
 
-	"github.com/rs/zerolog/log"
-
+	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
+	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
+	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
+	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
+
+var logger = logging.Global().RegisterAndGetLogger("backup-operator", logging.Info)
 
 const (
 	defaultArangoClientTimeout = 30 * time.Second
@@ -91,11 +89,11 @@ func (h *handler) start(stopCh <-chan struct{}) {
 		case <-stopCh:
 			return
 		case <-t.C:
-			log.Debug().Msgf("Refreshing database objects")
+			logger.Debug("Refreshing database objects")
 			if err := h.refresh(); err != nil {
 				log.Error().Err(err).Msgf("Unable to refresh database objects")
 			}
-			log.Debug().Msgf("Database objects refreshed")
+			logger.Debug("Database objects refreshed")
 		}
 	}
 }
@@ -242,7 +240,7 @@ func (h *handler) Handle(item operation.Item) error {
 
 	// Check if we should start finalizer
 	if b.DeletionTimestamp != nil {
-		log.Debug().Msgf("Finalizing %s %s/%s",
+		logger.Debug("Finalizing %s %s/%s",
 			item.Kind,
 			item.Namespace,
 			item.Name)
@@ -350,7 +348,7 @@ func (h *handler) Handle(item operation.Item) error {
 
 	b.Status = *status
 
-	log.Debug().Msgf("Updating %s %s/%s",
+	logger.Debug("Updating %s %s/%s",
 		item.Kind,
 		item.Namespace,
 		item.Name)

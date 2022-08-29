@@ -25,9 +25,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
-
 	"github.com/stretchr/testify/require"
+
+	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 )
 
 const (

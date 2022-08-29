@@ -20,28 +20,4 @@
 
 package agency
 
-type Shards map[string]ShardServers
-
-type ShardServers []string
-
-func (s ShardServers) Contains(server string) bool {
-	for _, q := range s {
-		if server == q {
-			return true
-		}
-	}
-
-	return false
-}
-
-func (s ShardServers) FilterBy(b ShardServers) ShardServers {
-	q := make(ShardServers, 0, len(s))
-
-	for _, i := range s {
-		if b.Contains(i) {
-			q = append(q, i)
-		}
-	}
-
-	return q
-}
+type Shards map[string]Servers

@@ -50,7 +50,7 @@ func TestEnsurePod_Metrics(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						DBServers: api.MemberStatusList{
 							firstDBServerStatus,
@@ -110,7 +110,7 @@ func TestEnsurePod_Metrics(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						DBServers: api.MemberStatusList{
 							firstDBServerStatus,
@@ -170,7 +170,7 @@ func TestEnsurePod_Metrics(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						DBServers: api.MemberStatusList{
 							firstDBServerStatus,
@@ -180,7 +180,6 @@ func TestEnsurePod_Metrics(t *testing.T) {
 				}
 
 				testCase.createTestPodData(deployment, api.ServerGroupDBServers, firstDBServerStatus)
-				testCase.ExpectedPod.ObjectMeta.Labels[k8sutil.LabelKeyArangoExporter] = testYes
 			},
 			ExpectedEvent: "member dbserver is created",
 			ExpectedPod: core.Pod{
@@ -212,7 +211,6 @@ func TestEnsurePod_Metrics(t *testing.T) {
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
-						testArangodbInternalExporterContainer(false, false, emptyResources),
 					},
 					RestartPolicy:                 core.RestartPolicyNever,
 					TerminationGracePeriodSeconds: &defaultDBServerTerminationTimeout,
@@ -240,7 +238,7 @@ func TestEnsurePod_Metrics(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						Agents: api.MemberStatusList{
 							firstAgentStatus,
@@ -250,7 +248,6 @@ func TestEnsurePod_Metrics(t *testing.T) {
 				}
 
 				testCase.createTestPodData(deployment, api.ServerGroupAgents, firstAgentStatus)
-				testCase.ExpectedPod.ObjectMeta.Labels[k8sutil.LabelKeyArangoExporter] = testYes
 			},
 			ExpectedEvent: "member agent is created",
 			ExpectedPod: core.Pod{
@@ -282,7 +279,6 @@ func TestEnsurePod_Metrics(t *testing.T) {
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
-						testArangodbInternalExporterContainer(false, false, emptyResources),
 					},
 					RestartPolicy:                 core.RestartPolicyNever,
 					TerminationGracePeriodSeconds: &defaultAgentTerminationTimeout,

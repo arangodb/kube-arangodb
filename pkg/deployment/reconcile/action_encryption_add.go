@@ -24,21 +24,15 @@ import (
 	"context"
 	"encoding/base64"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-
 	"k8s.io/apimachinery/pkg/types"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/rs/zerolog"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 
 func ensureEncryptionSupport(actionCtx ActionContext) error {
@@ -60,10 +54,10 @@ func init() {
 	registerAction(api.ActionTypeEncryptionKeyAdd, newEncryptionKeyAdd, defaultTimeout)
 }
 
-func newEncryptionKeyAdd(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newEncryptionKeyAdd(action api.Action, actionCtx ActionContext) Action {
 	a := &encryptionKeyAddAction{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -76,7 +70,7 @@ type encryptionKeyAddAction struct {
 
 func (a *encryptionKeyAddAction) Start(ctx context.Context) (bool, error) {
 	if err := ensureEncryptionSupport(a.actionCtx); err != nil {
-		a.log.Error().Err(err).Msgf("Action not supported")
+		a.log.Err(err).Error("Action not supported")
 		return true, nil
 	}
 
@@ -87,7 +81,7 @@ func (a *encryptionKeyAddAction) Start(ctx context.Context) (bool, error) {
 
 	sha, d, exists, err := pod.GetEncryptionKey(ctx, a.actionCtx.ACS().CurrentClusterCache().Secret().V1().Read(), secret)
 	if err != nil {
-		a.log.Error().Err(err).Msgf("Unable to fetch current encryption key")
+		a.log.Err(err).Error("Unable to fetch current encryption key")
 		return true, nil
 	}
 
@@ -100,7 +94,7 @@ func (a *encryptionKeyAddAction) Start(ctx context.Context) (bool, error) {
 
 	patch, err := p.Marshal()
 	if err != nil {
-		a.log.Error().Err(err).Msgf("Unable to encrypt patch")
+		a.log.Err(err).Error("Unable to encrypt patch")
 		return true, nil
 	}
 

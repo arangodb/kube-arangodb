@@ -24,12 +24,12 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/arangodb/go-driver"
 
-	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
-
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
-	"github.com/stretchr/testify/require"
+	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 )
 
 func Test_State_Uploading_Common(t *testing.T) {

@@ -21,131 +21,65 @@
 package deployment
 
 import (
-	"sync"
-
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
+	"github.com/arangodb/kube-arangodb/pkg/generated/metric_descriptions"
 	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
-	"github.com/prometheus/client_golang/prometheus"
 )
 
-const (
-	// Component name for metrics of this package
-	metricsComponent = "deployment"
-)
-
-func init() {
-	localInventory = inventory{
-		deployments:                    map[string]map[string]*Deployment{},
-		deploymentsMetric:              metrics.NewDescription("arangodb_operator_deployments", "Number of active deployments", []string{"namespace", "deployment"}, nil),
-		deploymentMetricsMembersMetric: metrics.NewDescription("arango_operator_deployment_members", "List of members", []string{"namespace", "deployment", "role", "id"}, nil),
-		deploymentAgencyStateMetric:    metrics.NewDescription("arango_operator_deployment_agency_state", "Reachability of agency", []string{"namespace", "deployment"}, nil),
-		deploymentShardLeadersMetric:   metrics.NewDescription("arango_operator_deployment_shard_leaders", "Deployment leader shards distribution", []string{"namespace", "deployment", "database", "collection", "shard", "server"}, nil),
-		deploymentShardsMetric:         metrics.NewDescription("arango_operator_deployment_shards", "Deployment shards distribution", []string{"namespace", "deployment", "database", "collection", "shard", "server"}, nil),
-
-		operatorStateRefreshMetric: metrics.NewDescription("arango_operator_deployment_state_refresh_count", "Number of refreshes in deployment", []string{"namespace", "deployment", "type"}, nil),
+type Metrics struct {
+	Agency struct {
+		Errors  uint64
+		Fetches uint64
+		Index   uint64
 	}
 
-	prometheus.MustRegister(&localInventory)
+	Errors struct {
+		DeploymentValidationErrors, DeploymentImmutableErrors uint64
+	}
+
+	Deployment struct {
+		Accepted, UpToDate bool
+	}
 }
 
-var localInventory inventory
+func (d *Deployment) CollectMetrics(m metrics.PushMetric) {
+	m.Push(metric_descriptions.ArangodbOperatorAgencyErrorsCounter(float64(d.metrics.Agency.Errors), d.namespace, d.name))
+	m.Push(metric_descriptions.ArangodbOperatorAgencyFetchesCounter(float64(d.metrics.Agency.Fetches), d.namespace, d.name))
+	m.Push(metric_descriptions.ArangodbOperatorAgencyIndexGauge(float64(d.metrics.Agency.Index), d.namespace, d.name))
 
-var _ prometheus.Collector = &inventory{}
+	m.Push(metric_descriptions.ArangodbOperatorResourcesArangodeploymentValidationErrorsCounter(float64(d.metrics.Errors.DeploymentValidationErrors), d.namespace, d.name))
+	m.Push(metric_descriptions.ArangodbOperatorResourcesArangodeploymentImmutableErrorsCounter(float64(d.metrics.Errors.DeploymentValidationErrors), d.namespace, d.name))
 
-type inventory struct {
-	lock        sync.Mutex
-	deployments map[string]map[string]*Deployment
+	if d.metrics.Deployment.Accepted {
+		m.Push(metric_descriptions.ArangodbOperatorResourcesArangodeploymentAcceptedGauge(1, d.namespace, d.name))
+	} else {
+		m.Push(metric_descriptions.ArangodbOperatorResourcesArangodeploymentAcceptedGauge(0, d.namespace, d.name))
+	}
+	if d.metrics.Deployment.UpToDate {
+		m.Push(metric_descriptions.ArangodbOperatorResourcesArangodeploymentUptodateGauge(1, d.namespace, d.name))
+	} else {
+		m.Push(metric_descriptions.ArangodbOperatorResourcesArangodeploymentUptodateGauge(0, d.namespace, d.name))
+	}
 
-	deploymentsMetric, deploymentMetricsMembersMetric, deploymentAgencyStateMetric, deploymentShardsMetric, deploymentShardLeadersMetric metrics.Description
+	if c := d.agencyCache; c != nil {
+		m.Push(metric_descriptions.ArangodbOperatorAgencyCachePresentGauge(1, d.namespace, d.name))
+		if h, ok := c.Health(); ok {
+			m.Push(metric_descriptions.ArangodbOperatorAgencyCacheHealthPresentGauge(1, d.namespace, d.name))
 
-	operatorStateRefreshMetric metrics.Description
-}
-
-func (i *inventory) Describe(descs chan<- *prometheus.Desc) {
-	i.lock.Lock()
-	defer i.lock.Unlock()
-
-	metrics.NewPushDescription(descs).Push(i.deploymentsMetric, i.deploymentMetricsMembersMetric, i.deploymentAgencyStateMetric, i.deploymentShardLeadersMetric, i.deploymentShardsMetric, i.operatorStateRefreshMetric)
-}
-
-func (i *inventory) Collect(m chan<- prometheus.Metric) {
-	i.lock.Lock()
-	defer i.lock.Unlock()
-
-	p := metrics.NewPushMetric(m)
-	for _, deployments := range i.deployments {
-		for _, deployment := range deployments {
-			p.Push(i.deploymentsMetric.Gauge(1, deployment.GetNamespace(), deployment.GetName()))
-
-			if state := deployment.acs.CurrentClusterCache(); state != nil {
-				t := state.GetThrottles()
-
-				for _, c := range throttle.AllComponents() {
-					p.Push(i.operatorStateRefreshMetric.Gauge(float64(t.Get(c).Count()), deployment.GetNamespace(), deployment.GetName(), string(c)))
-				}
-			}
-
-			spec := deployment.GetSpec()
-			status, _ := deployment.GetStatus()
-
-			for _, member := range status.Members.AsList() {
-				p.Push(i.deploymentMetricsMembersMetric.Gauge(1, deployment.GetNamespace(), deployment.GetName(), member.Group.AsRole(), member.Member.ID))
-			}
-
-			if spec.Mode.Get().HasAgents() {
-				agency, agencyOk := deployment.GetAgencyCache()
-				if !agencyOk {
-					p.Push(i.deploymentAgencyStateMetric.Gauge(0, deployment.GetNamespace(), deployment.GetName()))
-					continue
-				}
-
-				p.Push(i.deploymentAgencyStateMetric.Gauge(1, deployment.GetNamespace(), deployment.GetName()))
-
-				if spec.Mode.Get() == api.DeploymentModeCluster {
-					for db, collections := range agency.Current.Collections {
-						for collection, shards := range collections {
-							for shard, details := range shards {
-								for id, server := range details.Servers {
-									name := "UNKNOWN"
-									if _, ok := agency.Plan.Collections[db]; ok {
-										if _, ok := agency.Plan.Collections[db][collection]; ok {
-											name = agency.Plan.Collections[db][collection].GetName(name)
-										}
-									}
-
-									m := []string{
-										deployment.GetNamespace(),
-										deployment.GetName(),
-										db,
-										name,
-										shard,
-										server,
-									}
-
-									if id == 0 {
-										p.Push(i.deploymentShardLeadersMetric.Gauge(1, m...))
-									}
-									p.Push(i.deploymentShardsMetric.Gauge(1, m...))
-								}
-							}
-						}
-					}
-				}
-			}
+			h.CollectMetrics(m)
+		} else {
+			m.Push(metric_descriptions.ArangodbOperatorAgencyCacheHealthPresentGauge(0, d.namespace, d.name))
 		}
-	}
-}
-
-func (i *inventory) Add(d *Deployment) {
-	i.lock.Lock()
-	defer i.lock.Unlock()
-
-	name, namespace := d.GetName(), d.GetNamespace()
-
-	if _, ok := i.deployments[namespace]; !ok {
-		i.deployments[namespace] = map[string]*Deployment{}
+	} else {
+		m.Push(metric_descriptions.ArangodbOperatorAgencyCachePresentGauge(0, d.namespace, d.name))
 	}
 
-	i.deployments[namespace][name] = d
+	// Reconcile
+	if c := d.reconciler; c != nil {
+		c.CollectMetrics(m)
+	}
+
+	// Resources
+	if r := d.resources; r != nil {
+		r.CollectMetrics(m)
+	}
 }

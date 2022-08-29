@@ -154,6 +154,10 @@ const (
 	ActionTypeDisableMaintenance ActionType = "DisableMaintenance"
 	// ActionTypeSetMaintenanceCondition sets maintenance condition.
 	ActionTypeSetMaintenanceCondition ActionType = "SetMaintenanceCondition"
+	// ActionTypeEnableMemberMaintenance enables maintenance on cluster member.
+	ActionTypeEnableMemberMaintenance ActionType = "EnableMemberMaintenance"
+	// ActionTypeDisableMemberMaintenance disables maintenance on cluster member.
+	ActionTypeDisableMemberMaintenance ActionType = "DisableMemberMaintenance"
 	// ActionTypeBootstrapUpdate update bootstrap status to true
 	ActionTypeBootstrapUpdate ActionType = "BootstrapUpdate"
 	// ActionTypeBootstrapSetPassword set password to the bootstrapped user
@@ -192,9 +196,11 @@ const (
 	// Rebalancer
 	ActionTypeRebalancerGenerate ActionType = "RebalancerGenerate"
 	ActionTypeRebalancerCheck    ActionType = "RebalancerCheck"
+	ActionTypeRebalancerClean    ActionType = "RebalancerClean"
 
 	// Resources
-	ActionTypeResourceSync ActionType = "ResourceSync"
+	ActionTypeResourceSync      ActionType = "ResourceSync"
+	ActionTypeTimezoneSecretSet ActionType = "TimezoneSecretSet"
 )
 
 const (
@@ -231,12 +237,15 @@ type Action struct {
 	Params map[string]string `json:"params,omitempty"`
 	// Locals additional storage for local variables which are produced during the action.
 	Locals PlanLocals `json:"locals,omitempty"`
+	// ID reference of the task involved in this action (if any)
+	TaskID types.UID `json:"taskID,omitempty"`
 }
 
 // Equal compares two Actions
 func (a Action) Equal(other Action) bool {
 	return a.ID == other.ID &&
 		a.Type == other.Type &&
+		a.SetID == other.SetID &&
 		a.MemberID == other.MemberID &&
 		a.Group == other.Group &&
 		util.TimeCompareEqual(a.CreationTime, other.CreationTime) &&
@@ -244,7 +253,8 @@ func (a Action) Equal(other Action) bool {
 		a.Reason == other.Reason &&
 		a.Image == other.Image &&
 		equality.Semantic.DeepEqual(a.Params, other.Params) &&
-		a.Locals.Equal(other.Locals)
+		a.Locals.Equal(other.Locals) &&
+		a.TaskID == other.TaskID
 }
 
 // AddParam returns copy of action with set parameter
@@ -359,7 +369,7 @@ func (p Plan) IsEmpty() bool {
 	return len(p) == 0
 }
 
-// Add add action at the end of plan
+// After add action at the end of plan
 func (p Plan) After(action ...Action) Plan {
 	n := Plan{}
 
@@ -370,7 +380,7 @@ func (p Plan) After(action ...Action) Plan {
 	return n
 }
 
-// Prefix add action at the beginning of plan
+// Before add action at the beginning of plan
 func (p Plan) Before(action ...Action) Plan {
 	n := Plan{}
 
@@ -381,7 +391,7 @@ func (p Plan) Before(action ...Action) Plan {
 	return n
 }
 
-// Prefix add action at the beginning of plan
+// Wrap wraps plan with actions
 func (p Plan) Wrap(before, after Action) Plan {
 	n := Plan{}
 

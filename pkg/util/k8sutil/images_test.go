@@ -23,15 +23,16 @@ package k8sutil
 import (
 	"testing"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	corev1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 func TestGetArangoDBImageIDFromPod(t *testing.T) {
 	type args struct {
-		pod *corev1.Pod
+		pod *core.Pod
 	}
 	tests := map[string]struct {
 		args    args
@@ -43,15 +44,15 @@ func TestGetArangoDBImageIDFromPod(t *testing.T) {
 		},
 		"container statuses list is empty": {
 			args: args{
-				pod: &corev1.Pod{},
+				pod: &core.Pod{},
 			},
 			wantErr: errors.New("empty list of ContainerStatuses"),
 		},
 		"image ID from the only container": {
 			args: args{
-				pod: &corev1.Pod{
-					Status: corev1.PodStatus{
-						ContainerStatuses: []corev1.ContainerStatus{
+				pod: &core.Pod{
+					Status: core.PodStatus{
+						ContainerStatuses: []core.ContainerStatus{
 							{
 								ImageID: dockerPullableImageIDPrefix + "test",
 							},
@@ -63,9 +64,9 @@ func TestGetArangoDBImageIDFromPod(t *testing.T) {
 		},
 		"image ID from two containers": {
 			args: args{
-				pod: &corev1.Pod{
-					Status: corev1.PodStatus{
-						ContainerStatuses: []corev1.ContainerStatus{
+				pod: &core.Pod{
+					Status: core.PodStatus{
+						ContainerStatuses: []core.ContainerStatus{
 							{
 								ImageID: dockerPullableImageIDPrefix + "test_arango",
 							},

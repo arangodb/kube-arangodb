@@ -22,16 +22,15 @@ package reconcile
 
 import (
 	"context"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"time"
 
 	"github.com/arangodb/go-driver"
-	"github.com/rs/zerolog"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 
 func init() {
@@ -43,10 +42,10 @@ const (
 	actionBackupRestoreLocalBackupName api.PlanLocalKey = "backupName"
 )
 
-func newBackupRestoreAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newBackupRestoreAction(action api.Action, actionCtx ActionContext) Action {
 	a := &actionBackupRestore{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -59,25 +58,25 @@ type actionBackupRestore struct {
 
 func (a actionBackupRestore) Start(ctx context.Context) (bool, error) {
 	spec := a.actionCtx.GetSpec()
-	status := a.actionCtx.GetStatusSnapshot()
+	status := a.actionCtx.GetStatus()
 
 	if spec.RestoreFrom == nil {
 		return true, nil
 	}
 
 	if status.Restore != nil {
-		a.log.Warn().Msg("Backup restore status should not be nil")
+		a.log.Warn("Backup restore status should not be nil")
 		return true, nil
 	}
 
 	backupResource, err := a.actionCtx.GetBackup(ctx, *spec.RestoreFrom)
 	if err != nil {
-		a.log.Error().Err(err).Msg("Unable to find backup")
+		a.log.Err(err).Error("Unable to find backup")
 		return true, nil
 	}
 
 	if backupResource.Status.Backup == nil {
-		a.log.Error().Msg("Backup ID is not set")
+		a.log.Error("Backup ID is not set")
 		return true, nil
 	}
 
@@ -91,7 +90,7 @@ func (a actionBackupRestore) Start(ctx context.Context) (bool, error) {
 		s.Restore = result
 
 		return true
-	}, true); err != nil {
+	}); err != nil {
 		return false, err
 	}
 
@@ -133,18 +132,16 @@ func (a actionBackupRestore) restoreAsync(ctx context.Context, backup *backupApi
 }
 
 func (a actionBackupRestore) restoreSync(ctx context.Context, backup *backupApi.ArangoBackup) (bool, error) {
-	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	dbc, err := a.actionCtx.GetDatabaseClient(ctxChild)
+	dbc, err := a.actionCtx.GetMembersState().State().GetDatabaseClient()
 	if err != nil {
-		a.log.Debug().Err(err).Msg("Failed to create database client")
+		a.log.Err(err).Debug("Failed to create database client")
 		return false, nil
 	}
 
 	// The below action can take a while so the full parent timeout context is used.
 	restoreError := dbc.Backup().Restore(ctx, driver.BackupID(backup.Status.Backup.ID), nil)
 	if restoreError != nil {
-		a.log.Error().Err(restoreError).Msg("Restore failed")
+		a.log.Err(restoreError).Error("Restore failed")
 	}
 
 	if err := a.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
@@ -163,7 +160,7 @@ func (a actionBackupRestore) restoreSync(ctx context.Context, backup *backupApi.
 
 		return true
 	}); err != nil {
-		a.log.Error().Err(err).Msg("Unable to set restored state")
+		a.log.Err(err).Error("Unable to set restored state")
 		return false, err
 	}
 
@@ -186,7 +183,7 @@ func (a actionBackupRestore) CheckProgress(ctx context.Context) (bool, bool, err
 
 	dbc, err := a.actionCtx.GetDatabaseAsyncClient(ctxChild)
 	if err != nil {
-		a.log.Debug().Err(err).Msg("Failed to create database client")
+		a.log.Err(err).Debug("Failed to create database client")
 		return false, false, nil
 	}
 
@@ -205,6 +202,16 @@ func (a actionBackupRestore) CheckProgress(ctx context.Context) (bool, bool, err
 			// Retry
 			return false, false, nil
 		}
+
+		// Add wait grace period for restore jobs - async job creation is asynchronous
+		if ok := conn.IsAsyncErrorNotFound(restoreError); ok {
+			if s := a.action.StartTime; s != nil && !s.Time.IsZero() {
+				if time.Since(s.Time) < 10*time.Second {
+					// Retry
+					return false, false, nil
+				}
+			}
+		}
 	}
 
 	// Restore is done
@@ -216,6 +223,7 @@ func (a actionBackupRestore) CheckProgress(ctx context.Context) (bool, bool, err
 		}
 
 		if restoreError != nil {
+			a.log.Err(restoreError).Error("Restore failed")
 			result.State = api.DeploymentRestoreStateRestoreFailed
 			result.Message = restoreError.Error()
 		}
@@ -224,7 +232,7 @@ func (a actionBackupRestore) CheckProgress(ctx context.Context) (bool, bool, err
 
 		return true
 	}); err != nil {
-		a.log.Error().Err(err).Msg("Unable to set restored state")
+		a.log.Err(err).Error("Unable to set restored state")
 		return false, false, err
 	}
 

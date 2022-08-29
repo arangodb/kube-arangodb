@@ -23,9 +23,10 @@ package interfaces
 import (
 	"context"
 
+	core "k8s.io/api/core/v1"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
-	core "k8s.io/api/core/v1"
 )
 
 type Inspector interface {
@@ -51,6 +52,7 @@ type PodCreator interface {
 	GetPodAntiAffinity() *core.PodAntiAffinity
 	GetPodAffinity() *core.PodAffinity
 	GetNodeAffinity() *core.NodeAffinity
+	GetRestartPolicy() core.RestartPolicy
 	GetContainerCreator() ContainerCreator
 	GetImagePullSecrets() []string
 	IsDeploymentMode() bool

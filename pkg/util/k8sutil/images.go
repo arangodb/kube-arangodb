@@ -23,7 +23,7 @@ package k8sutil
 import (
 	"strings"
 
-	corev1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
@@ -42,7 +42,7 @@ func ConvertImageID2Image(imageID string) string {
 }
 
 // GetArangoDBImageIDFromPod returns the ArangoDB specific image from a pod
-func GetArangoDBImageIDFromPod(pod *corev1.Pod) (string, error) {
+func GetArangoDBImageIDFromPod(pod *core.Pod) (string, error) {
 	if pod == nil {
 		return "", errors.New("failed to get container statuses from nil pod")
 	}

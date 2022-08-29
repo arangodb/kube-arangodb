@@ -45,7 +45,6 @@ import (
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	arangoInformer "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/backup"
-	"github.com/arangodb/kube-arangodb/pkg/handlers/clustersync"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/job"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/policy"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
@@ -58,18 +57,20 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/probe"
+	"github.com/arangodb/kube-arangodb/pkg/util/timer"
 )
 
 const (
 	initRetryWaitTime = 30 * time.Second
 )
 
+var logger = logging.Global().RegisterAndGetLogger("operator", logging.Info)
+
 type operatorV2type string
 
 const (
-	backupOperator         operatorV2type = "backup"
-	appsOperator           operatorV2type = "apps"
-	k2KClusterSyncOperator operatorV2type = "k2kclustersync"
+	backupOperator operatorV2type = "backup"
+	appsOperator   operatorV2type = "apps"
 )
 
 type Event struct {
@@ -83,7 +84,7 @@ type Operator struct {
 	Config
 	Dependencies
 
-	log                    zerolog.Logger
+	log                    logging.Logger
 	deployments            map[string]*deployment.Deployment
 	deploymentReplications map[string]*replication.DeploymentReplication
 	localStorages          map[string]*storage.LocalStorage
@@ -111,7 +112,6 @@ type Config struct {
 }
 
 type Dependencies struct {
-	LogService                 logging.Service
 	Client                     kclient.Client
 	EventRecorder              record.EventRecorder
 	LivenessProbe              *probe.LivenessProbe
@@ -128,11 +128,11 @@ func NewOperator(config Config, deps Dependencies) (*Operator, error) {
 	o := &Operator{
 		Config:                 config,
 		Dependencies:           deps,
-		log:                    deps.LogService.MustGetLogger(logging.LoggerNameOperator),
 		deployments:            make(map[string]*deployment.Deployment),
 		deploymentReplications: make(map[string]*replication.DeploymentReplication),
 		localStorages:          make(map[string]*storage.LocalStorage),
 	}
+	o.log = logger.WrapObj(o)
 	return o, nil
 }
 
@@ -174,22 +174,19 @@ func (o *Operator) Run() {
 		}
 	}
 	if o.Config.EnableK2KClusterSync {
-		if !o.Config.SingleMode {
-			go o.runLeaderElection("arango-k2k-cluster-sync-operator", constants.ClusterSyncLabelRole, o.onStartK2KClusterSync, o.Dependencies.K2KClusterSyncProbe)
-		} else {
-			go o.runWithoutLeaderElection("arango-k2k-cluster-sync-operator", constants.ClusterSyncLabelRole, o.onStartK2KClusterSync, o.Dependencies.K2KClusterSyncProbe)
-		}
+		// Nothing to do
+		o.log.Warn("K2K Cluster sync is permanently disabled")
 	}
 
 	ctx := util.CreateSignalContext(context.Background())
 	<-ctx.Done()
-	o.log.Info().Msgf("Got interrupt signal, running shutdown handler in %s...", o.Config.ShutdownDelay)
+	o.log.Info("Got interrupt signal, running shutdown handler in %s...", o.Config.ShutdownDelay)
 	time.Sleep(o.Config.ShutdownDelay)
 	o.handleShutdown()
 }
 
 func (o *Operator) handleShutdown() {
-	o.log.Info().Msg("Waiting for deployments termination...")
+	o.log.Info("Waiting for deployments termination...")
 	shutdownCh := make(chan struct{})
 	go func() {
 		for {
@@ -202,10 +199,10 @@ func (o *Operator) handleShutdown() {
 	}()
 	select {
 	case <-shutdownCh:
-		o.log.Info().Msg("All deployments terminated, exiting.")
+		o.log.Info("All deployments terminated, exiting.")
 		return
-	case <-time.After(o.Config.ShutdownTimeout):
-		o.log.Info().Msg("Timeout reached before all deployments terminated, exiting.")
+	case <-timer.After(o.Config.ShutdownTimeout):
+		o.log.Info("Timeout reached before all deployments terminated, exiting.")
 		return
 	}
 }
@@ -246,15 +243,10 @@ func (o *Operator) onStartApps(stop <-chan struct{}) {
 	o.onStartOperatorV2(appsOperator, stop)
 }
 
-// onStartK2KClusterSync starts the operator and run till given channel is closed.
-func (o *Operator) onStartK2KClusterSync(stop <-chan struct{}) {
-	o.onStartOperatorV2(k2KClusterSyncOperator, stop)
-}
-
 // onStartOperatorV2 run the operatorV2 type
 func (o *Operator) onStartOperatorV2(operatorType operatorV2type, stop <-chan struct{}) {
 	operatorName := fmt.Sprintf("arangodb-%s-operator", operatorType)
-	operator := operatorV2.NewOperator(o.Dependencies.LogService.MustGetLogger(logging.LoggerNameReconciliation), operatorName, o.Namespace, o.OperatorImage)
+	operator := operatorV2.NewOperator(operatorName, o.Namespace, o.OperatorImage)
 
 	rand.Seed(time.Now().Unix())
 
@@ -275,7 +267,7 @@ func (o *Operator) onStartOperatorV2(operatorType operatorV2type, stop <-chan st
 		panic(err)
 	}
 
-	eventRecorder := event.NewEventRecorder(o.Dependencies.LogService.MustGetLogger(logging.LoggerNameEventRecorder), operatorName, kubeClientSet)
+	eventRecorder := event.NewEventRecorder(operatorName, kubeClientSet)
 
 	arangoInformer := arangoInformer.NewSharedInformerFactoryWithOptions(arangoClientSet, 10*time.Second, arangoInformer.WithNamespace(o.Namespace))
 
@@ -310,16 +302,6 @@ func (o *Operator) onStartOperatorV2(operatorType operatorV2type, stop <-chan st
 		if err = policy.RegisterInformer(operator, eventRecorder, arangoClientSet, kubeClientSet, arangoInformer); err != nil {
 			panic(err)
 		}
-	case k2KClusterSyncOperator:
-		checkFn := func() error {
-			_, err := o.Client.Arango().DatabaseV1().ArangoClusterSynchronizations(o.Namespace).List(context.Background(), meta.ListOptions{})
-			return err
-		}
-		o.waitForCRD(depldef.ArangoClusterSynchronizationCRDName, checkFn)
-
-		if err = clustersync.RegisterInformer(operator, eventRecorder, arangoClientSet, kubeClientSet, arangoInformer); err != nil {
-			panic(err)
-		}
 	}
 
 	if err = operator.RegisterStarter(arangoInformer); err != nil {
@@ -332,4 +314,8 @@ func (o *Operator) onStartOperatorV2(operatorType operatorV2type, stop <-chan st
 	o.Dependencies.BackupProbe.SetReady()
 
 	<-stop
+}
+
+func (o *Operator) WrapLogger(in *zerolog.Event) *zerolog.Event {
+	return in.Str("namespace", o.Namespace)
 }

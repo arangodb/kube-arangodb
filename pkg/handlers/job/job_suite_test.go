@@ -24,6 +24,13 @@ import (
 	"context"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+	batch "k8s.io/api/batch/v1"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/uuid"
+	"k8s.io/client-go/kubernetes/fake"
+
 	"github.com/arangodb/kube-arangodb/pkg/apis/apps"
 	appsApi "github.com/arangodb/kube-arangodb/pkg/apis/apps/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
@@ -32,14 +39,6 @@ import (
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
-
-	"github.com/rs/zerolog/log"
-	"github.com/stretchr/testify/require"
-	batchv1 "k8s.io/api/batch/v1"
-	v1 "k8s.io/api/core/v1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/uuid"
-	"k8s.io/client-go/kubernetes/fake"
 )
 
 func newFakeHandler() *handler {
@@ -49,8 +48,8 @@ func newFakeHandler() *handler {
 	h := &handler{
 		client:        f,
 		kubeClient:    k,
-		eventRecorder: newEventInstance(event.NewEventRecorder(log.Logger, "mock", k)),
-		operator:      operator.NewOperator(log.Logger, "mock", "mock", "mock"),
+		eventRecorder: newEventInstance(event.NewEventRecorder("mock", k)),
+		operator:      operator.NewOperator("mock", "mock", "mock"),
 	}
 
 	return h
@@ -87,7 +86,7 @@ func createArangoJob(t *testing.T, h *handler, jobs ...*appsApi.ArangoJob) {
 	}
 }
 
-func createK8sJob(t *testing.T, h *handler, jobs ...*batchv1.Job) {
+func createK8sJob(t *testing.T, h *handler, jobs ...*batch.Job) {
 	for _, job := range jobs {
 		_, err := h.kubeClient.BatchV1().Jobs(job.Namespace).Create(context.Background(), job, meta.CreateOptions{})
 		require.NoError(t, err)
@@ -114,17 +113,17 @@ func newArangoJob(name, namespace, deployment string) *appsApi.ArangoJob {
 		},
 		Spec: appsApi.ArangoJobSpec{
 			ArangoDeploymentName: deployment,
-			JobTemplate: &batchv1.JobSpec{
-				Template: v1.PodTemplateSpec{
-					Spec: v1.PodSpec{
-						Containers: []v1.Container{
+			JobTemplate: &batch.JobSpec{
+				Template: core.PodTemplateSpec{
+					Spec: core.PodSpec{
+						Containers: []core.Container{
 							{
 								Image: "perl",
 								Name:  "pi",
 								Args:  []string{"perl", "-Mbignum=bpi", "-wle", "print bpi(2000)"},
 							},
 						},
-						RestartPolicy: v1.RestartPolicyNever,
+						RestartPolicy: core.RestartPolicyNever,
 					},
 				},
 			},
@@ -146,8 +145,8 @@ func newArangoDeployment(name, namespace string) *deploymentApi.ArangoDeployment
 	}
 }
 
-func newK8sJob(name, namespace string) *batchv1.Job {
-	return &batchv1.Job{
+func newK8sJob(name, namespace string) *batch.Job {
+	return &batch.Job{
 		ObjectMeta: meta.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,

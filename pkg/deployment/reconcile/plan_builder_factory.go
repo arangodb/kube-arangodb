@@ -25,31 +25,25 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/rs/zerolog"
 )
 
-type planBuilder func(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+type planBuilder func(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext) api.Plan
 
-type planBuilderCondition func(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+type planBuilderCondition func(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext) bool
 
-type planBuilderSubPlan func(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+type planBuilderSubPlan func(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext, w WithPlanBuilder, plans ...planBuilder) api.Plan
 
-func NewWithPlanBuilder(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+func NewWithPlanBuilder(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext) WithPlanBuilder {
 	return &withPlanBuilder{
 		ctx:       ctx,
-		log:       log,
 		apiObject: apiObject,
 		spec:      spec,
 		status:    status,
@@ -65,7 +59,6 @@ type WithPlanBuilder interface {
 
 type withPlanBuilder struct {
 	ctx       context.Context
-	log       zerolog.Logger
 	apiObject k8sutil.APIObject
 	spec      api.DeploymentSpec
 	status    api.DeploymentStatus
@@ -73,7 +66,7 @@ type withPlanBuilder struct {
 }
 
 func (w withPlanBuilder) ApplyWithCondition(c planBuilderCondition, p planBuilder) api.Plan {
-	if !c(w.ctx, w.log, w.apiObject, w.spec, w.status, w.context) {
+	if !c(w.ctx, w.apiObject, w.spec, w.status, w.context) {
 		return api.Plan{}
 	}
 
@@ -81,9 +74,9 @@ func (w withPlanBuilder) ApplyWithCondition(c planBuilderCondition, p planBuilde
 }
 
 func (w withPlanBuilder) ApplySubPlan(p planBuilderSubPlan, plans ...planBuilder) api.Plan {
-	return p(w.ctx, w.log, w.apiObject, w.spec, w.status, w.context, w, plans...)
+	return p(w.ctx, w.apiObject, w.spec, w.status, w.context, w, plans...)
 }
 
 func (w withPlanBuilder) Apply(p planBuilder) api.Plan {
-	return p(w.ctx, w.log, w.apiObject, w.spec, w.status, w.context)
+	return p(w.ctx, w.apiObject, w.spec, w.status, w.context)
 }

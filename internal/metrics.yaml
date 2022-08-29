@@ -1,0 +1,215 @@
+---
+  
+documentation: docs/generated/metrics
+destination: pkg/generated/metric_descriptions
+
+namespaces:
+  arangodb_operator:
+    agency_cache:
+      present:
+        shortDescription: "Determines if local agency cache is present"
+        description: "Determines if local agency cache is present"
+        type: "Gauge"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+      health_present:
+        shortDescription: "Determines if local agency cache health is present"
+        description: "Determines if local agency cache health is present"
+        type: "Gauge"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+      serving:
+        shortDescription: "Determines if agency is serving"
+        description: "Determines if agency is serving"
+        type: "Gauge"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+      healthy:
+        shortDescription: "Determines if agency is healthy"
+        description: "Determines if agency is healthy"
+        type: "Gauge"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+      member_serving:
+        shortDescription: "Determines if agency member is reachable"
+        description: "Determines if agency member is reachable"
+        type: "Gauge"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+          - key: agent
+            description: "Agent ID"
+      member_commit_offset:
+        shortDescription: "Determines agency member commit offset"
+        description: "Determines agency member commit offset. Set to -1 if Agent is not reachable"
+        type: "Gauge"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+          - key: agent
+            description: "Agent ID"
+      leaders:
+        shortDescription: "Determines agency leader vote count"
+        description: "Determines agency leader vote count. Should be always one"
+        type: "Gauge"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+          - key: agent
+            description: "Agent ID"
+    agency:
+      index:
+        shortDescription: "Current index of the agency cache"
+        description: "Current index of the agency cache"
+        type: "Gauge"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+      fetches:
+        shortDescription: "Current count of agency cache fetches"
+        description: "Current count of agency cache fetches"
+        type: "Counter"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+      errors:
+        shortDescription: "Current count of agency cache fetch errors"
+        description: "Current count of agency cache fetch errors"
+        type: "Counter"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+    rebalancer:
+      enabled:
+        shortDescription: "Determines if rebalancer is enabled"
+        description: "Determines if rebalancer is enabled"
+        type: "Gauge"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+      moves_generated:
+        shortDescription: "Define how many moves were generated"
+        description: "Define how many moves were generated"
+        type: "Counter"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+      moves_succeeded:
+        shortDescription: "Define how many moves succeeded"
+        description: "Define how many moves succeeded"
+        type: "Counter"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+      moves_failed:
+        shortDescription: "Define how many moves failed"
+        description: "Define how many moves failed"
+        type: "Counter"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+      moves_current:
+        shortDescription: "Define how many moves are currently in progress"
+        description: "Define how many moves are currently in progress"
+        type: "Gauge"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+    resources:
+      arangodeployment_validation_errors:
+        shortDescription: "Counter for deployment validation errors"
+        description: "Counter for deployment validation errors"
+        type: "Counter"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+      arangodeployment_immutable_errors:
+        shortDescription: "Counter for deployment immutable errors"
+        description: "Counter for deployment immutable errors"
+        type: "Counter"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+      arangodeployment_accepted:
+        shortDescription: "Defines if ArangoDeployment has been accepted"
+        description: "Defines if ArangoDeployment has been accepted"
+        type: "Gauge"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+      arangodeployment_uptodate:
+        shortDescription: "Defines if ArangoDeployment is uptodate"
+        description: "Defines if ArangoDeployment is uptodate"
+        type: "Gauge"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+    members:
+      unexpected_container_exit_codes:
+        shortDescription: "Counter of unexpected restarts in pod (Containers/InitContainers/EphemeralContainers)"
+        description: "Counter of unexpected restarts in pod (Containers/InitContainers/EphemeralContainers)"
+        type: "Counter"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+          - key: member
+            description: "Member ID"
+          - key: container
+            description: "Container Name"
+          - key: container_type
+            description: "Container/InitContainer/EphemeralContainer"
+          - key: code
+            description: "ExitCode"
+    engine:
+      panics_recovered:
+        shortDescription: "Number of Panics recovered inside Operator reconciliation loop"
+        description: "Number of Panics recovered inside Operator reconciliation loop. Section represents recovery section"
+        type: "Counter"
+        labels:
+          - key: section
+            description: "Panic Section"
+        

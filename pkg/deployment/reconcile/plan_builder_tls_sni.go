@@ -23,20 +23,17 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-
 	"github.com/arangodb/go-driver"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
-	"github.com/rs/zerolog"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
-func createRotateTLSServerSNIPlan(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+func (r *Reconciler) createRotateTLSServerSNIPlan(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	planCtx PlanBuilderContext) api.Plan {
 	if !spec.TLS.IsSecure() {
@@ -54,20 +51,19 @@ func createRotateTLSServerSNIPlan(ctx context.Context,
 
 	fetchedSecrets, err := mapTLSSNIConfig(*sni, planCtx.ACS().CurrentClusterCache())
 	if err != nil {
-		log.Warn().Err(err).Msg("Unable to get SNI desired state")
+		r.planLogger.Err(err).Warn("Unable to get SNI desired state")
 		return nil
 	}
 
 	var plan api.Plan
-	status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
+	for _, group := range api.AllServerGroups {
 		if !pod.GroupSNISupported(spec.Mode.Get(), group) {
-			return nil
+			continue
 		}
-
-		for _, m := range members {
+		for _, m := range status.Members.MembersOfGroup(group) {
 			if !plan.IsEmpty() {
 				// Only 1 member at a time
-				return nil
+				break
 			}
 
 			if m.Phase != api.MemberPhaseCreated {
@@ -82,24 +78,24 @@ func createRotateTLSServerSNIPlan(ctx context.Context,
 			var c driver.Client
 			err := globals.GetGlobalTimeouts().ArangoD().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				var err error
-				c, err = planCtx.GetServerClient(ctxChild, group, m.ID)
+				c, err = planCtx.GetMembersState().GetMemberClient(m.ID)
+
 				return err
 			})
 			if err != nil {
-				log.Info().Err(err).Msg("Unable to get client")
+				r.planLogger.Err(err).Info("Unable to get client")
 				continue
 			}
 
 			var ok bool
 			err = globals.GetGlobalTimeouts().ArangoD().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				var err error
-				ok, err = compareTLSSNIConfig(ctxChild, c.Connection(), fetchedSecrets, false)
+				ok, err = compareTLSSNIConfig(ctxChild, r.log, c.Connection(), fetchedSecrets, false)
 				return err
 			})
 			if err != nil {
-				log.Info().Err(err).Msg("SNI compare failed")
-				return nil
-
+				r.planLogger.Err(err).Info("SNI compare failed")
+				break
 			} else if !ok {
 				switch spec.TLS.Mode.Get() {
 				case api.TLSRotateModeRecreate:
@@ -108,12 +104,11 @@ func createRotateTLSServerSNIPlan(ctx context.Context,
 					plan = append(plan,
 						actions.NewAction(api.ActionTypeUpdateTLSSNI, group, m, "SNI Secret needs update"))
 				default:
-					log.Warn().Msg("SNI mode rotation is unknown")
+					r.planLogger.Warn("SNI mode rotation is unknown")
 					continue
 				}
 			}
 		}
-		return nil
-	})
+	}
 	return plan
 }

@@ -21,9 +21,9 @@
 package v2alpha1
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	core "k8s.io/api/core/v1"
 
-	v1 "k8s.io/api/core/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 // ExternalAccessType specifies the type of external access provides for the deployment
@@ -38,21 +38,24 @@ const (
 	ExternalAccessTypeLoadBalancer ExternalAccessType = "LoadBalancer"
 	// ExternalAccessTypeNodePort yields a cluster with a service of type `NodePort` to provide external access
 	ExternalAccessTypeNodePort ExternalAccessType = "NodePort"
+	// ExternalAccessTypeManaged yields a cluster with a service which controls only selector.
+	ExternalAccessTypeManaged ExternalAccessType = "Managed"
 )
 
 func (t ExternalAccessType) IsNone() bool         { return t == ExternalAccessTypeNone }
 func (t ExternalAccessType) IsAuto() bool         { return t == ExternalAccessTypeAuto }
 func (t ExternalAccessType) IsLoadBalancer() bool { return t == ExternalAccessTypeLoadBalancer }
 func (t ExternalAccessType) IsNodePort() bool     { return t == ExternalAccessTypeNodePort }
+func (t ExternalAccessType) IsManaged() bool      { return t == ExternalAccessTypeManaged }
 
 // AsServiceType returns the k8s ServiceType for this ExternalAccessType.
 // If type is "Auto", ServiceTypeLoadBalancer is returned.
-func (t ExternalAccessType) AsServiceType() v1.ServiceType {
+func (t ExternalAccessType) AsServiceType() core.ServiceType {
 	switch t {
 	case ExternalAccessTypeLoadBalancer, ExternalAccessTypeAuto:
-		return v1.ServiceTypeLoadBalancer
+		return core.ServiceTypeLoadBalancer
 	case ExternalAccessTypeNodePort:
-		return v1.ServiceTypeNodePort
+		return core.ServiceTypeNodePort
 	default:
 		return ""
 	}
@@ -62,7 +65,8 @@ func (t ExternalAccessType) AsServiceType() v1.ServiceType {
 // Return errors when validation fails, nil on success.
 func (t ExternalAccessType) Validate() error {
 	switch t {
-	case ExternalAccessTypeNone, ExternalAccessTypeAuto, ExternalAccessTypeLoadBalancer, ExternalAccessTypeNodePort:
+	case ExternalAccessTypeNone, ExternalAccessTypeAuto, ExternalAccessTypeLoadBalancer, ExternalAccessTypeNodePort,
+		ExternalAccessTypeManaged:
 		return nil
 	default:
 		return errors.WithStack(errors.Wrapf(ValidationError, "Unknown external access type: '%s'", string(t)))

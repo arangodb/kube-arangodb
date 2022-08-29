@@ -23,12 +23,12 @@ package storage
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -36,16 +36,16 @@ import (
 // provisioners.
 func (ls *LocalStorage) ensureProvisionerService(apiObject *api.ArangoLocalStorage) error {
 	labels := k8sutil.LabelsForLocalStorage(apiObject.GetName(), roleProvisioner)
-	svc := &v1.Service{
-		ObjectMeta: metav1.ObjectMeta{
+	svc := &core.Service{
+		ObjectMeta: meta.ObjectMeta{
 			Name:   apiObject.GetName(),
 			Labels: labels,
 		},
-		Spec: v1.ServiceSpec{
-			Ports: []v1.ServicePort{
-				v1.ServicePort{
+		Spec: core.ServiceSpec{
+			Ports: []core.ServicePort{
+				core.ServicePort{
 					Name:     "provisioner",
-					Protocol: v1.ProtocolTCP,
+					Protocol: core.ProtocolTCP,
 					Port:     provisioner.DefaultPort,
 				},
 			},
@@ -54,7 +54,7 @@ func (ls *LocalStorage) ensureProvisionerService(apiObject *api.ArangoLocalStora
 	}
 	svc.SetOwnerReferences(append(svc.GetOwnerReferences(), apiObject.AsOwner()))
 	ns := ls.config.Namespace
-	if _, err := ls.deps.Client.Kubernetes().CoreV1().Services(ns).Create(context.Background(), svc, metav1.CreateOptions{}); err != nil && !k8sutil.IsAlreadyExists(err) {
+	if _, err := ls.deps.Client.Kubernetes().CoreV1().Services(ns).Create(context.Background(), svc, meta.CreateOptions{}); err != nil && !k8sutil.IsAlreadyExists(err) {
 		return errors.WithStack(err)
 	}
 	return nil

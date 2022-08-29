@@ -23,11 +23,12 @@ package deployment
 import (
 	"testing"
 
+	core "k8s.io/api/core/v1"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	core "k8s.io/api/core/v1"
 )
 
 func modifyAffinity(group string, required bool, role string, mods ...func(a *core.Affinity)) *core.Affinity { // nolint:unparam
@@ -68,7 +69,7 @@ func TestEnsurePod_ArangoDB_AntiAffinity(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						DBServers: api.MemberStatusList{
 							firstDBServerStatus,
@@ -76,7 +77,7 @@ func TestEnsurePod_ArangoDB_AntiAffinity(t *testing.T) {
 					},
 					Images: createTestImages(false),
 				}
-				deployment.status.last.Members.DBServers[0].IsInitialized = true
+				deployment.currentObjectStatus.Members.DBServers[0].IsInitialized = true
 
 				testCase.createTestPodData(deployment, api.ServerGroupDBServers, firstDBServerStatus)
 			},
@@ -130,7 +131,7 @@ func TestEnsurePod_ArangoDB_AntiAffinity(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						DBServers: api.MemberStatusList{
 							firstDBServerStatus,
@@ -138,7 +139,7 @@ func TestEnsurePod_ArangoDB_AntiAffinity(t *testing.T) {
 					},
 					Images: createTestImages(false),
 				}
-				deployment.status.last.Members.DBServers[0].IsInitialized = true
+				deployment.currentObjectStatus.Members.DBServers[0].IsInitialized = true
 
 				testCase.createTestPodData(deployment, api.ServerGroupDBServers, firstDBServerStatus)
 			},
@@ -195,7 +196,7 @@ func TestEnsurePod_ArangoDB_AntiAffinity(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						DBServers: api.MemberStatusList{
 							firstDBServerStatus,
@@ -203,7 +204,7 @@ func TestEnsurePod_ArangoDB_AntiAffinity(t *testing.T) {
 					},
 					Images: createTestImages(false),
 				}
-				deployment.status.last.Members.DBServers[0].IsInitialized = true
+				deployment.currentObjectStatus.Members.DBServers[0].IsInitialized = true
 
 				testCase.createTestPodData(deployment, api.ServerGroupDBServers, firstDBServerStatus)
 			},
@@ -265,7 +266,7 @@ func TestEnsurePod_ArangoDB_AntiAffinity(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						DBServers: api.MemberStatusList{
 							firstDBServerStatus,
@@ -273,7 +274,7 @@ func TestEnsurePod_ArangoDB_AntiAffinity(t *testing.T) {
 					},
 					Images: createTestImages(false),
 				}
-				deployment.status.last.Members.DBServers[0].IsInitialized = true
+				deployment.currentObjectStatus.Members.DBServers[0].IsInitialized = true
 
 				testCase.createTestPodData(deployment, api.ServerGroupDBServers, firstDBServerStatus)
 			},
@@ -344,7 +345,7 @@ func TestEnsurePod_ArangoDB_Affinity(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						DBServers: api.MemberStatusList{
 							firstDBServerStatus,
@@ -352,7 +353,7 @@ func TestEnsurePod_ArangoDB_Affinity(t *testing.T) {
 					},
 					Images: createTestImages(false),
 				}
-				deployment.status.last.Members.DBServers[0].IsInitialized = true
+				deployment.currentObjectStatus.Members.DBServers[0].IsInitialized = true
 
 				testCase.createTestPodData(deployment, api.ServerGroupDBServers, firstDBServerStatus)
 			},
@@ -409,7 +410,7 @@ func TestEnsurePod_ArangoDB_Affinity(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						DBServers: api.MemberStatusList{
 							firstDBServerStatus,
@@ -417,7 +418,7 @@ func TestEnsurePod_ArangoDB_Affinity(t *testing.T) {
 					},
 					Images: createTestImages(false),
 				}
-				deployment.status.last.Members.DBServers[0].IsInitialized = true
+				deployment.currentObjectStatus.Members.DBServers[0].IsInitialized = true
 
 				testCase.createTestPodData(deployment, api.ServerGroupDBServers, firstDBServerStatus)
 			},
@@ -477,7 +478,7 @@ func TestEnsurePod_ArangoDB_Affinity(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						DBServers: api.MemberStatusList{
 							firstDBServerStatus,
@@ -485,7 +486,7 @@ func TestEnsurePod_ArangoDB_Affinity(t *testing.T) {
 					},
 					Images: createTestImages(false),
 				}
-				deployment.status.last.Members.DBServers[0].IsInitialized = true
+				deployment.currentObjectStatus.Members.DBServers[0].IsInitialized = true
 
 				testCase.createTestPodData(deployment, api.ServerGroupDBServers, firstDBServerStatus)
 			},
@@ -550,7 +551,7 @@ func TestEnsurePod_ArangoDB_Affinity(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						DBServers: api.MemberStatusList{
 							firstDBServerStatus,
@@ -558,7 +559,7 @@ func TestEnsurePod_ArangoDB_Affinity(t *testing.T) {
 					},
 					Images: createTestImages(false),
 				}
-				deployment.status.last.Members.DBServers[0].IsInitialized = true
+				deployment.currentObjectStatus.Members.DBServers[0].IsInitialized = true
 
 				testCase.createTestPodData(deployment, api.ServerGroupDBServers, firstDBServerStatus)
 			},
@@ -631,7 +632,7 @@ func TestEnsurePod_ArangoDB_NodeAffinity(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						DBServers: api.MemberStatusList{
 							firstDBServerStatus,
@@ -639,7 +640,7 @@ func TestEnsurePod_ArangoDB_NodeAffinity(t *testing.T) {
 					},
 					Images: createTestImages(false),
 				}
-				deployment.status.last.Members.DBServers[0].IsInitialized = true
+				deployment.currentObjectStatus.Members.DBServers[0].IsInitialized = true
 
 				testCase.createTestPodData(deployment, api.ServerGroupDBServers, firstDBServerStatus)
 			},

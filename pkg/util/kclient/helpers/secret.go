@@ -21,12 +21,13 @@
 package helpers
 
 import (
+	"github.com/pkg/errors"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
+
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
-	"github.com/pkg/errors"
-	rest "k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 func SecretConfigGetter(s secret.Inspector, name, key string) kclient.ConfigGetter {

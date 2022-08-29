@@ -25,14 +25,12 @@ import (
 	"sync"
 	"testing"
 
-	deploymentType "github.com/arangodb/kube-arangodb/pkg/apis/deployment"
-
+	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/util/uuid"
 
-	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
-
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
-	"github.com/stretchr/testify/require"
+	deploymentType "github.com/arangodb/kube-arangodb/pkg/apis/deployment"
+	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 )
 
 func Test_State_Pending_Common(t *testing.T) {
@@ -76,6 +74,44 @@ func Test_State_Pending_OneBackupObject(t *testing.T) {
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
 	checkBackup(t, newObj, backupApi.ArangoBackupStateScheduled, false)
+}
+
+func Test_State_Pending_WithUploadRunning(t *testing.T) {
+	// Arrange
+	handler, _ := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
+
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStatePending)
+
+	uploading := newArangoBackup(deployment.GetName(), deployment.GetNamespace(), string(uuid.NewUUID()), backupApi.ArangoBackupStateUploading)
+
+	// Act
+	createArangoDeployment(t, handler, deployment)
+	createArangoBackup(t, handler, obj, uploading)
+
+	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+
+	// Assert
+	newObj := refreshArangoBackup(t, handler, obj)
+	checkBackup(t, newObj, backupApi.ArangoBackupStateScheduled, false)
+}
+
+func Test_State_Pending_WithScheduled(t *testing.T) {
+	// Arrange
+	handler, _ := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
+
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStatePending)
+
+	uploading := newArangoBackup(deployment.GetName(), deployment.GetNamespace(), string(uuid.NewUUID()), backupApi.ArangoBackupStateScheduled)
+
+	// Act
+	createArangoDeployment(t, handler, deployment)
+	createArangoBackup(t, handler, obj, uploading)
+
+	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+
+	// Assert
+	newObj := refreshArangoBackup(t, handler, obj)
+	checkBackup(t, newObj, backupApi.ArangoBackupStatePending, false)
 }
 
 func Test_State_Pending_MultipleBackupObjectWithLimitation(t *testing.T) {

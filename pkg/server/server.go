@@ -27,22 +27,20 @@ import (
 	"strings"
 	"time"
 
-	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
-	"github.com/arangodb/kube-arangodb/pkg/version"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	"github.com/arangodb-helper/go-certificates"
 	"github.com/gin-gonic/gin"
 	"github.com/jessevdk/go-assets"
 	prometheus "github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	typedCore "k8s.io/client-go/kubernetes/typed/core/v1"
+
+	"github.com/arangodb-helper/go-certificates"
 
 	"github.com/arangodb/kube-arangodb/dashboard"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 	"github.com/arangodb/kube-arangodb/pkg/util/probe"
+	"github.com/arangodb/kube-arangodb/pkg/version"
 )
 
 // Config settings for the Server
@@ -64,7 +62,6 @@ type OperatorDependency struct {
 
 // Dependencies of the Server
 type Dependencies struct {
-	Log                   zerolog.Logger
 	LivenessProbe         *probe.LivenessProbe
 	Deployment            OperatorDependency
 	DeploymentReplication OperatorDependency
@@ -73,7 +70,7 @@ type Dependencies struct {
 	Apps                  OperatorDependency
 	ClusterSync           OperatorDependency
 	Operators             Operators
-	Secrets               corev1.SecretInterface
+	Secrets               typedCore.SecretInterface
 }
 
 // Operators is the API provided to the server for accessing the various operators.
@@ -97,7 +94,7 @@ type Server struct {
 }
 
 // NewServer creates a new server, fetching/preparing a TLS certificate.
-func NewServer(cli corev1.CoreV1Interface, cfg Config, deps Dependencies) (*Server, error) {
+func NewServer(cli typedCore.CoreV1Interface, cfg Config, deps Dependencies) (*Server, error) {
 	httpServer := &http.Server{
 		Addr:              cfg.Address,
 		ReadTimeout:       time.Second * 30,
@@ -109,7 +106,7 @@ func NewServer(cli corev1.CoreV1Interface, cfg Config, deps Dependencies) (*Serv
 	var cert, key string
 	if cfg.TLSSecretName != "" && cfg.TLSSecretNamespace != "" {
 		// Load TLS certificate from secret
-		s, err := cli.Secrets(cfg.TLSSecretNamespace).Get(context.Background(), cfg.TLSSecretName, metav1.GetOptions{})
+		s, err := cli.Secrets(cfg.TLSSecretNamespace).Get(context.Background(), cfg.TLSSecretName, meta.GetOptions{})
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
@@ -151,7 +148,7 @@ func NewServer(cli corev1.CoreV1Interface, cfg Config, deps Dependencies) (*Serv
 		cfg:        cfg,
 		deps:       deps,
 		httpServer: httpServer,
-		auth:       newServerAuthentication(deps.Log, deps.Secrets, cfg.AdminSecretName, cfg.AllowAnonymous),
+		auth:       newServerAuthentication(deps.Secrets, cfg.AdminSecretName, cfg.AllowAnonymous),
 	}
 
 	// Build router
@@ -220,7 +217,7 @@ func createAssetFileHandler(file *assets.File) func(c *gin.Context) {
 
 // Run the server until the program stops.
 func (s *Server) Run() error {
-	s.deps.Log.Info().Msgf("Serving on %s", s.httpServer.Addr)
+	serverLogger.Info("Serving on %s", s.httpServer.Addr)
 	if err := s.httpServer.ListenAndServeTLS("", ""); err != nil && err != http.ErrServerClosed {
 		return errors.WithStack(err)
 	}

@@ -22,28 +22,24 @@ package operator
 
 import (
 	"context"
+	"testing"
 	"time"
 
-	"github.com/rs/zerolog/log"
-
-	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
-
 	"github.com/stretchr/testify/assert"
-
-	"testing"
-
 	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes/fake"
+
+	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 )
 
 func Test_Operator_InformerProcessing(t *testing.T) {
 	// Arrange
 	name := string(uuid.NewUUID())
-	o := NewOperator(log.Logger, name, name, name)
+	o := NewOperator(name, name, name)
 	size := 64
 
 	objects := make([]string, size)
@@ -92,7 +88,7 @@ func Test_Operator_InformerProcessing(t *testing.T) {
 func Test_Operator_MultipleInformers(t *testing.T) {
 	// Arrange
 	name := string(uuid.NewUUID())
-	o := NewOperator(log.Logger, name, name, name)
+	o := NewOperator(name, name, name)
 	size := 16
 
 	objects := make([]string, size)
@@ -153,7 +149,7 @@ func Test_Operator_MultipleInformers(t *testing.T) {
 func Test_Operator_MultipleInformers_IgnoredTypes(t *testing.T) {
 	// Arrange
 	name := string(uuid.NewUUID())
-	o := NewOperator(log.Logger, name, name, name)
+	o := NewOperator(name, name, name)
 	size := 16
 
 	objects := make([]string, size)
@@ -213,7 +209,7 @@ func Test_Operator_MultipleInformers_IgnoredTypes(t *testing.T) {
 func Test_Operator_MultipleInformers_MultipleHandlers(t *testing.T) {
 	// Arrange
 	name := string(uuid.NewUUID())
-	o := NewOperator(log.Logger, name, name, name)
+	o := NewOperator(name, name, name)
 	size := 16
 
 	objects := make([]string, size)
@@ -321,7 +317,7 @@ func Test_Operator_MultipleInformers_MultipleHandlers(t *testing.T) {
 func Test_Operator_InformerProcessing_Namespaced(t *testing.T) {
 	// Arrange
 	name := string(uuid.NewUUID())
-	o := NewOperator(log.Logger, name, name, name)
+	o := NewOperator(name, name, name)
 	size := 16
 
 	objects := make([]string, size)

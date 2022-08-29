@@ -22,10 +22,41 @@ package agency
 
 type StateCurrentCollections map[string]StateCurrentDBCollections
 
+func (a StateCurrentCollections) IsDBServerPresent(name Server) bool {
+	for _, v := range a {
+		if v.IsDBServerPresent(name) {
+			return true
+		}
+	}
+
+	return false
+}
+
 type StateCurrentDBCollections map[string]StateCurrentDBCollection
+
+func (a StateCurrentDBCollections) IsDBServerPresent(name Server) bool {
+	for _, v := range a {
+		if v.IsDBServerPresent(name) {
+			return true
+		}
+	}
+
+	return false
+}
 
 type StateCurrentDBCollection map[string]StateCurrentDBShard
 
+func (a StateCurrentDBCollection) IsDBServerPresent(name Server) bool {
+
+	for _, v := range a {
+		if v.Servers.Contains(name) {
+			return true
+		}
+	}
+
+	return false
+}
+
 type StateCurrentDBShard struct {
-	Servers ShardServers `json:"servers,omitempty"`
+	Servers Servers `json:"servers,omitempty"`
 }

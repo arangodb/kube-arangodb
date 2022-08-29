@@ -24,17 +24,16 @@ import (
 	"context"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/rs/zerolog"
 )
 
 func init() {
 	registerAction(api.ActionTypeJWTPropagated, newJWTPropagated, defaultTimeout)
 }
 
-func newJWTPropagated(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newJWTPropagated(action api.Action, actionCtx ActionContext) Action {
 	a := &jwtPropagatedAction{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -48,13 +47,13 @@ type jwtPropagatedAction struct {
 func (a *jwtPropagatedAction) Start(ctx context.Context) (bool, error) {
 	_, err := ensureJWTFolderSupportFromAction(a.actionCtx)
 	if err != nil {
-		a.log.Error().Err(err).Msgf("Action not supported")
+		a.log.Err(err).Error("Action not supported")
 		return true, nil
 	}
 
 	propagatedFlag, exists := a.action.Params[propagated]
 	if !exists {
-		a.log.Error().Err(err).Msgf("Propagated flag is missing")
+		a.log.Err(err).Error("Propagated flag is missing")
 		return true, nil
 	}
 

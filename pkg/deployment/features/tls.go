@@ -31,6 +31,7 @@ var tlsRotation Feature = &feature{
 	version:            "3.7.0",
 	enterpriseRequired: true,
 	enabledByDefault:   true,
+	hidden:             true,
 }
 
 func TLSRotation() Feature {

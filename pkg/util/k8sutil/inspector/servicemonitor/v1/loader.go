@@ -21,8 +21,9 @@
 package v1
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/gvk"
 	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/gvk"
 )
 
 type Inspector interface {

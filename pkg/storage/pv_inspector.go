@@ -24,18 +24,17 @@ import (
 	"context"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 // inspectPVs queries all PersistentVolume's and triggers a cleanup for
 // released volumes.
 // Returns the number of available PV's.
 func (ls *LocalStorage) inspectPVs() (int, error) {
-	log := ls.deps.Log
-	list, err := ls.deps.Client.Kubernetes().CoreV1().PersistentVolumes().List(context.Background(), metav1.ListOptions{})
+	list, err := ls.deps.Client.Kubernetes().CoreV1().PersistentVolumes().List(context.Background(), meta.ListOptions{})
 	if err != nil {
 		return 0, errors.WithStack(err)
 	}
@@ -48,28 +47,28 @@ func (ls *LocalStorage) inspectPVs() (int, error) {
 			continue
 		}
 		switch pv.Status.Phase {
-		case v1.VolumeAvailable:
+		case core.VolumeAvailable:
 			// Is this an old volume?
 			if pv.GetObjectMeta().GetCreationTimestamp().Time.Before(cleanupBeforeTimestamp) {
 				// Let's clean it up
 				if ls.isOwnerOf(&pv) {
 					// Cleanup this volume
-					log.Debug().Str("name", pv.GetName()).Msg("Added PersistentVolume to cleaner")
+					ls.log.Str("name", pv.GetName()).Debug("Added PersistentVolume to cleaner")
 					ls.pvCleaner.Add(pv)
 				} else {
-					log.Debug().Str("name", pv.GetName()).Msg("PersistentVolume is not owned by us")
+					ls.log.Str("name", pv.GetName()).Debug("PersistentVolume is not owned by us")
 					availableVolumes++
 				}
 			} else {
 				availableVolumes++
 			}
-		case v1.VolumeReleased:
+		case core.VolumeReleased:
 			if ls.isOwnerOf(&pv) {
 				// Cleanup this volume
-				log.Debug().Str("name", pv.GetName()).Msg("Added PersistentVolume to cleaner")
+				ls.log.Str("name", pv.GetName()).Debug("Added PersistentVolume to cleaner")
 				ls.pvCleaner.Add(pv)
 			} else {
-				log.Debug().Str("name", pv.GetName()).Msg("PersistentVolume is not owned by us")
+				ls.log.Str("name", pv.GetName()).Debug("PersistentVolume is not owned by us")
 			}
 		}
 	}

@@ -23,13 +23,13 @@ package rotation
 import (
 	"time"
 
+	core "k8s.io/api/core/v1"
+
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/acs/sutil"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-	"github.com/rs/zerolog"
-	core "k8s.io/api/core/v1"
 )
 
 type Mode int
@@ -56,7 +56,7 @@ func CheckPossible(member api.MemberStatus) bool {
 	return !member.Conditions.IsTrue(api.ConditionTypeTerminated)
 }
 
-func IsRotationRequired(log zerolog.Logger, acs sutil.ACS, spec api.DeploymentSpec, member api.MemberStatus, group api.ServerGroup, pod *core.Pod, specTemplate, statusTemplate *api.ArangoMemberPodTemplate) (mode Mode, plan api.Plan, reason string, err error) {
+func IsRotationRequired(acs sutil.ACS, spec api.DeploymentSpec, member api.MemberStatus, group api.ServerGroup, pod *core.Pod, specTemplate, statusTemplate *api.ArangoMemberPodTemplate) (mode Mode, plan api.Plan, reason string, err error) {
 	// Determine if rotation is required based on plan and actions
 
 	// Set default mode for return value
@@ -87,7 +87,7 @@ func IsRotationRequired(log zerolog.Logger, acs sutil.ACS, spec api.DeploymentSp
 
 	// Check if pod details are propagated
 	if pod != nil {
-		if member.PodUID != pod.UID {
+		if member.Pod.GetUID() != pod.UID {
 			reason = "Pod UID does not match, this pod is not managed by Operator. Recreating"
 			mode = EnforcedRotation
 			return
@@ -100,7 +100,7 @@ func IsRotationRequired(log zerolog.Logger, acs sutil.ACS, spec api.DeploymentSp
 		}
 	}
 
-	if member.PodSpecVersion == "" {
+	if p := member.Pod; p != nil && p.SpecVersion == "" {
 		reason = "Pod Spec Version is nil - recreating pod"
 		mode = EnforcedRotation
 		return
@@ -124,8 +124,10 @@ func IsRotationRequired(log zerolog.Logger, acs sutil.ACS, spec api.DeploymentSp
 		return
 	}
 
-	if mode, plan, err := compare(log, spec, member, group, specTemplate, statusTemplate); err != nil {
+	if mode, plan, err := compare(spec, member, group, specTemplate, statusTemplate); err != nil {
 		return SkippedRotation, nil, "", err
+	} else if mode == SkippedRotation {
+		return mode, plan, "No rotation needed", nil
 	} else {
 		return mode, plan, "Pod needs rotation", nil
 	}

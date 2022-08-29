@@ -21,7 +21,7 @@
 package v1alpha
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
@@ -53,6 +53,6 @@ func addKnownTypes(s *runtime.Scheme) error {
 		&ArangoLocalStorage{},
 		&ArangoLocalStorageList{},
 	)
-	metav1.AddToGroupVersion(s, SchemeGroupVersion)
+	meta.AddToGroupVersion(s, SchemeGroupVersion)
 	return nil
 }

@@ -28,6 +28,7 @@ import (
 
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
@@ -37,8 +38,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
-type ConnectionWrap func(c driver.Connection) driver.Connection
-
 type Cache interface {
 	GetAuth() conn.Auth
 
@@ -46,7 +45,6 @@ type Cache interface {
 
 	Get(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error)
 	GetDatabase(ctx context.Context) (driver.Client, error)
-	GetDatabaseWithWrap(ctx context.Context, wraps ...ConnectionWrap) (driver.Client, error)
 	GetAgency(ctx context.Context, agencyIDs ...string) (agency.Agency, error)
 }
 
@@ -85,7 +83,7 @@ func (cc *cache) extendHost(host string) string {
 func (cc *cache) getClient(group api.ServerGroup, id string) (driver.Client, error) {
 	cc.mutex.Lock()
 	defer cc.mutex.Unlock()
-	m, _, _ := cc.in.GetStatusSnapshot().Members.ElementByID(id)
+	m, _, _ := cc.in.GetStatus().Members.ElementByID(id)
 
 	endpoint, err := cc.in.GenerateMemberEndpoint(group, m)
 	if err != nil {
@@ -148,25 +146,6 @@ func (cc *cache) GetDatabase(ctx context.Context) (driver.Client, error) {
 	}
 }
 
-func (cc *cache) GetDatabaseWithWrap(ctx context.Context, wraps ...ConnectionWrap) (driver.Client, error) {
-	c, err := cc.getDatabaseClient()
-	if err != nil {
-		return nil, err
-	}
-
-	conn := c.Connection()
-
-	for _, w := range wraps {
-		if w != nil {
-			conn = w(conn)
-		}
-	}
-
-	return driver.NewClient(driver.ClientConfig{
-		Connection: conn,
-	})
-}
-
 // GetAgency returns a cached client for the agency
 func (cc *cache) GetAgency(_ context.Context, agencyIDs ...string) (agency.Agency, error) {
 	cc.mutex.Lock()
@@ -174,7 +153,7 @@ func (cc *cache) GetAgency(_ context.Context, agencyIDs ...string) (agency.Agenc
 
 	// Not found, create a new client
 	var dnsNames []string
-	for _, m := range cc.in.GetStatusSnapshot().Members.Agents {
+	for _, m := range cc.in.GetStatus().Members.Agents {
 		if len(agencyIDs) > 0 {
 			if !utils.StringList(agencyIDs).Has(m.ID) {
 				continue

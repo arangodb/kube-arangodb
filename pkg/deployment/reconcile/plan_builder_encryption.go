@@ -23,20 +23,16 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	core "k8s.io/api/core/v1"
-
-	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
-	"github.com/rs/zerolog"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 func skipEncryptionPlan(spec api.DeploymentSpec, status api.DeploymentStatus) bool {
@@ -51,8 +47,7 @@ func skipEncryptionPlan(spec api.DeploymentSpec, status api.DeploymentStatus) bo
 	return false
 }
 
-func createEncryptionKeyStatusPropagatedFieldUpdate(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+func (r *Reconciler) createEncryptionKeyStatusPropagatedFieldUpdate(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext, w WithPlanBuilder, builders ...planBuilder) api.Plan {
 	if skipEncryptionPlan(spec, status) {
@@ -88,8 +83,7 @@ func createEncryptionKeyStatusPropagatedFieldUpdate(ctx context.Context,
 	return plan
 }
 
-func createEncryptionKey(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+func (r *Reconciler) createEncryptionKey(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext) api.Plan {
 	if skipEncryptionPlan(spec, status) {
@@ -103,7 +97,7 @@ func createEncryptionKey(ctx context.Context,
 
 	name, _, err := pod.GetEncryptionKeyFromSecret(secret)
 	if err != nil {
-		log.Error().Err(err).Msgf("Unable to fetch encryption key")
+		r.log.Err(err).Error("Unable to fetch encryption key")
 		return nil
 	}
 
@@ -113,7 +107,7 @@ func createEncryptionKey(ctx context.Context,
 
 	keyfolder, exists := context.ACS().CurrentClusterCache().Secret().V1().GetSimple(pod.GetEncryptionFolderSecretName(context.GetName()))
 	if !exists {
-		log.Error().Msgf("Encryption key folder does not exist")
+		r.log.Error("Encryption key folder does not exist")
 		return nil
 	}
 
@@ -128,7 +122,7 @@ func createEncryptionKey(ctx context.Context,
 		}
 	}
 
-	plan, failed := areEncryptionKeysUpToDate(ctx, log, spec, status, context, keyfolder)
+	plan, failed := r.areEncryptionKeysUpToDate(ctx, spec, status, context, keyfolder)
 	if !plan.IsEmpty() {
 		return plan
 	}
@@ -142,15 +136,14 @@ func createEncryptionKey(ctx context.Context,
 	return api.Plan{}
 }
 
-func createEncryptionKeyStatusUpdate(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+func (r *Reconciler) createEncryptionKeyStatusUpdate(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext) api.Plan {
 	if skipEncryptionPlan(spec, status) {
 		return nil
 	}
 
-	if createEncryptionKeyStatusUpdateRequired(log, spec, status, context) {
+	if r.createEncryptionKeyStatusUpdateRequired(spec, status, context) {
 		return api.Plan{actions.NewClusterAction(api.ActionTypeEncryptionKeyStatusUpdate)}
 	}
 
@@ -158,7 +151,7 @@ func createEncryptionKeyStatusUpdate(ctx context.Context,
 
 }
 
-func createEncryptionKeyStatusUpdateRequired(log zerolog.Logger, spec api.DeploymentSpec, status api.DeploymentStatus,
+func (r *Reconciler) createEncryptionKeyStatusUpdateRequired(spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext) bool {
 	if skipEncryptionPlan(spec, status) {
 		return false
@@ -166,7 +159,7 @@ func createEncryptionKeyStatusUpdateRequired(log zerolog.Logger, spec api.Deploy
 
 	keyfolder, exists := context.ACS().CurrentClusterCache().Secret().V1().GetSimple(pod.GetEncryptionFolderSecretName(context.GetName()))
 	if !exists {
-		log.Error().Msgf("Encryption key folder does not exist")
+		r.log.Error("Encryption key folder does not exist")
 		return false
 	}
 
@@ -175,8 +168,7 @@ func createEncryptionKeyStatusUpdateRequired(log zerolog.Logger, spec api.Deploy
 	return !util.CompareStringArray(keyHashes, status.Hashes.Encryption.Keys)
 }
 
-func createEncryptionKeyCleanPlan(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+func (r *Reconciler) createEncryptionKeyCleanPlan(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext) api.Plan {
 	if skipEncryptionPlan(spec, status) {
@@ -185,7 +177,7 @@ func createEncryptionKeyCleanPlan(ctx context.Context,
 
 	keyfolder, exists := context.ACS().CurrentClusterCache().Secret().V1().GetSimple(pod.GetEncryptionFolderSecretName(context.GetName()))
 	if !exists {
-		log.Error().Msgf("Encryption key folder does not exist")
+		r.log.Error("Encryption key folder does not exist")
 		return nil
 	}
 
@@ -214,7 +206,7 @@ func createEncryptionKeyCleanPlan(ctx context.Context,
 	}
 
 	if _, ok := keyfolder.Data[name]; !ok {
-		log.Err(err).Msgf("Key from encryption is not in keyfolder - do nothing")
+		r.log.Err(err).Error("Key from encryption is not in keyfolder - do nothing")
 		return nil
 	}
 
@@ -231,16 +223,15 @@ func createEncryptionKeyCleanPlan(ctx context.Context,
 	return api.Plan{}
 }
 
-func areEncryptionKeysUpToDate(ctx context.Context, log zerolog.Logger, spec api.DeploymentSpec,
+func (r *Reconciler) areEncryptionKeysUpToDate(ctx context.Context, spec api.DeploymentSpec,
 	status api.DeploymentStatus, context PlanBuilderContext, folder *core.Secret) (plan api.Plan, failed bool) {
 
-	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
+	for _, group := range api.AllServerGroups {
 		if !pod.GroupEncryptionSupported(spec.Mode.Get(), group) {
-			return nil
+			continue
 		}
-
-		for _, m := range list {
-			if updateRequired, failedMember := isEncryptionKeyUpToDate(ctx, log, status, context, group, m, folder); failedMember {
+		for _, m := range status.Members.MembersOfGroup(group) {
+			if updateRequired, failedMember := r.isEncryptionKeyUpToDate(ctx, status, context, group, m, folder); failedMember {
 				failed = true
 				continue
 			} else if updateRequired {
@@ -248,15 +239,12 @@ func areEncryptionKeysUpToDate(ctx context.Context, log zerolog.Logger, spec api
 				continue
 			}
 		}
-
-		return nil
-	})
+	}
 
 	return
 }
 
-func isEncryptionKeyUpToDate(ctx context.Context,
-	log zerolog.Logger, status api.DeploymentStatus,
+func (r *Reconciler) isEncryptionKeyUpToDate(ctx context.Context, status api.DeploymentStatus,
 	planCtx PlanBuilderContext,
 	group api.ServerGroup, m api.MemberStatus,
 	folder *core.Secret) (updateRequired bool, failed bool) {
@@ -268,28 +256,25 @@ func isEncryptionKeyUpToDate(ctx context.Context,
 		return false, false
 	}
 
-	mlog := log.With().Str("group", group.AsRole()).Str("member", m.ID).Logger()
-
-	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	c, err := planCtx.GetServerClient(ctxChild, group, m.ID)
+	log := r.log.Str("group", group.AsRole()).Str("member", m.ID)
+	c, err := planCtx.GetMembersState().GetMemberClient(m.ID)
 	if err != nil {
-		mlog.Warn().Err(err).Msg("Unable to get client")
+		log.Err(err).Warn("Unable to get client")
 		return false, true
 	}
 
-	client := client.NewClient(c.Connection())
+	client := client.NewClient(c.Connection(), log)
 
-	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	e, err := client.GetEncryption(ctxChild)
 	if err != nil {
-		mlog.Error().Err(err).Msgf("Unable to fetch encryption keys")
+		log.Err(err).Error("Unable to fetch encryption keys")
 		return false, true
 	}
 
 	if !e.Result.KeysPresent(folder.Data) {
-		mlog.Info().Msgf("Refresh of encryption keys required")
+		log.Info("Refresh of encryption keys required")
 		return true, false
 	}
 

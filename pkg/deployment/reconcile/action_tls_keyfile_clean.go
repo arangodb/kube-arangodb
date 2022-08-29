@@ -23,22 +23,21 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-	"github.com/rs/zerolog"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 func init() {
 	registerAction(api.ActionTypeCleanTLSKeyfileCertificate, newCleanTLSKeyfileCertificateAction, operationTLSCACertificateTimeout)
 }
 
-func newCleanTLSKeyfileCertificateAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newCleanTLSKeyfileCertificateAction(action api.Action, actionCtx ActionContext) Action {
 	a := &cleanTLSKeyfileCertificateAction{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -56,7 +55,7 @@ func (a *cleanTLSKeyfileCertificateAction) Start(ctx context.Context) (bool, err
 
 	member, exists := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !exists {
-		a.log.Warn().Msgf("Member does not exist")
+		a.log.Warn("Member does not exist")
 		return true, nil
 	}
 
@@ -66,7 +65,7 @@ func (a *cleanTLSKeyfileCertificateAction) Start(ctx context.Context) (bool, err
 	defer cancel()
 
 	if err := c.Client().Kubernetes().CoreV1().Secrets(c.Namespace()).Delete(ctxChild, k8sutil.AppendTLSKeyfileSecretPostfix(member.ArangoMemberName(a.actionCtx.GetName(), a.action.Group)), meta.DeleteOptions{}); err != nil {
-		a.log.Warn().Err(err).Msgf("Unable to remove keyfile")
+		a.log.Err(err).Warn("Unable to remove keyfile")
 		if !k8sutil.IsNotFound(err) {
 			return false, err
 		}

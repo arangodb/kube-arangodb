@@ -23,11 +23,12 @@ package inspector
 import (
 	"context"
 
+	apiErrors "k8s.io/apimachinery/pkg/api/errors"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	ins "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoclustersynchronization/v1"
-	apiErrors "k8s.io/apimachinery/pkg/api/errors"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func (p *arangoClusterSynchronizationsInspector) V1() (ins.Inspector, error) {

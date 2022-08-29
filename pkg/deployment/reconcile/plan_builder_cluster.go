@@ -24,19 +24,17 @@ import (
 	"context"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
 	"github.com/arangodb/go-driver"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/rs/zerolog"
 )
 
 const coordinatorHealthFailedTimeout time.Duration = time.Minute
 
-func createClusterOperationPlan(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
+func (r *Reconciler) createClusterOperationPlan(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	planCtx PlanBuilderContext) api.Plan {
 
@@ -44,18 +42,16 @@ func createClusterOperationPlan(ctx context.Context,
 		return nil
 	}
 
-	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	c, err := planCtx.GetDatabaseClient(ctxChild)
+	c, err := planCtx.GetMembersState().State().GetDatabaseClient()
 	if err != nil {
 		return nil
 	}
 
-	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	cluster, err := c.Cluster(ctxChild)
 	if err != nil {
-		log.Warn().Err(err).Msgf("Unable to get Cluster client")
+		r.log.Err(err).Warn("Unable to get Cluster client")
 		return nil
 	}
 
@@ -63,19 +59,15 @@ func createClusterOperationPlan(ctx context.Context,
 	defer cancel()
 	health, err := cluster.Health(ctxChild)
 	if err != nil {
-		log.Warn().Err(err).Msgf("Unable to get Cluster health")
+		r.log.Err(err).Warn("Unable to get Cluster health")
 		return nil
 	}
 
 	membersHealth := health.Health
 
-	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
-		for _, m := range list {
-			delete(membersHealth, driver.ServerID(m.ID))
-		}
-
-		return nil
-	})
+	for _, e := range status.Members.AsList() {
+		delete(membersHealth, driver.ServerID(e.Member.ID))
+	}
 
 	if len(membersHealth) == 0 {
 		return nil

@@ -21,16 +21,14 @@
 package operator
 
 import (
-	replication2 "github.com/arangodb/kube-arangodb/pkg/apis/replication"
-	"github.com/arangodb/kube-arangodb/pkg/logging"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
 	kwatch "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
 
+	replication2 "github.com/arangodb/kube-arangodb/pkg/apis/replication"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/replication"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -46,7 +44,6 @@ var (
 // This registers a listener and waits until the process stops.
 func (o *Operator) runDeploymentReplications(stop <-chan struct{}) {
 	rw := k8sutil.NewResourceWatcher(
-		o.log,
 		o.Dependencies.Client.Arango().ReplicationV1().RESTClient(),
 		replication2.ArangoDeploymentReplicationResourcePlural,
 		o.Config.Namespace,
@@ -67,9 +64,9 @@ func (o *Operator) onAddArangoDeploymentReplication(obj interface{}) {
 	defer o.Dependencies.LivenessProbe.Unlock()
 
 	apiObject := obj.(*api.ArangoDeploymentReplication)
-	o.log.Debug().
+	o.log.
 		Str("name", apiObject.GetObjectMeta().GetName()).
-		Msg("ArangoDeploymentReplication added")
+		Debug("ArangoDeploymentReplication added")
 	o.syncArangoDeploymentReplication(apiObject)
 }
 
@@ -79,9 +76,9 @@ func (o *Operator) onUpdateArangoDeploymentReplication(oldObj, newObj interface{
 	defer o.Dependencies.LivenessProbe.Unlock()
 
 	apiObject := newObj.(*api.ArangoDeploymentReplication)
-	o.log.Debug().
+	o.log.
 		Str("name", apiObject.GetObjectMeta().GetName()).
-		Msg("ArangoDeploymentReplication updated")
+		Debug("ArangoDeploymentReplication updated")
 	o.syncArangoDeploymentReplication(apiObject)
 }
 
@@ -95,18 +92,18 @@ func (o *Operator) onDeleteArangoDeploymentReplication(obj interface{}) {
 	if !ok {
 		tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
 		if !ok {
-			log.Error().Interface("event-object", obj).Msg("unknown object from ArangoDeploymentReplication delete event")
+			log.Interface("event-object", obj).Error("unknown object from ArangoDeploymentReplication delete event")
 			return
 		}
 		apiObject, ok = tombstone.Obj.(*api.ArangoDeploymentReplication)
 		if !ok {
-			log.Error().Interface("event-object", obj).Msg("Tombstone contained object that is not an ArangoDeploymentReplication")
+			log.Interface("event-object", obj).Error("Tombstone contained object that is not an ArangoDeploymentReplication")
 			return
 		}
 	}
-	log.Debug().
+	log.
 		Str("name", apiObject.GetObjectMeta().GetName()).
-		Msg("ArangoDeploymentReplication deleted")
+		Debug("ArangoDeploymentReplication deleted")
 	ev := &Event{
 		Type:                  kwatch.Deleted,
 		DeploymentReplication: apiObject,
@@ -115,7 +112,7 @@ func (o *Operator) onDeleteArangoDeploymentReplication(obj interface{}) {
 	//	pt.start()
 	err := o.handleDeploymentReplicationEvent(ev)
 	if err != nil {
-		log.Warn().Err(err).Msg("Failed to handle event")
+		log.Err(err).Warn("Failed to handle event")
 	}
 	//pt.stop()
 }
@@ -136,7 +133,7 @@ func (o *Operator) syncArangoDeploymentReplication(apiObject *api.ArangoDeployme
 	//pt.start()
 	err := o.handleDeploymentReplicationEvent(ev)
 	if err != nil {
-		o.log.Warn().Err(err).Msg("Failed to handle event")
+		o.log.Err(err).Warn("Failed to handle event")
 	}
 	//pt.stop()
 }
@@ -167,7 +164,7 @@ func (o *Operator) handleDeploymentReplicationEvent(event *Event) error {
 			return errors.WithStack(errors.Wrapf(err, "invalid deployment replication spec. please fix the following problem with the deployment replication spec: %v", err))
 		}
 
-		cfg, deps := o.makeDeploymentReplicationConfigAndDeps(apiObject)
+		cfg, deps := o.makeDeploymentReplicationConfigAndDeps()
 		nc, err := replication.New(cfg, deps, apiObject)
 		if err != nil {
 			return errors.WithStack(errors.Newf("failed to create deployment: %s", err))
@@ -199,16 +196,14 @@ func (o *Operator) handleDeploymentReplicationEvent(event *Event) error {
 }
 
 // makeDeploymentReplicationConfigAndDeps creates a Config & Dependencies object for a new DeploymentReplication.
-func (o *Operator) makeDeploymentReplicationConfigAndDeps(apiObject *api.ArangoDeploymentReplication) (replication.Config, replication.Dependencies) {
+func (o *Operator) makeDeploymentReplicationConfigAndDeps() (replication.Config, replication.Dependencies) {
 	cfg := replication.Config{
 		Namespace: o.Config.Namespace,
 	}
 	deps := replication.Dependencies{
-		Log: o.Dependencies.LogService.MustGetLogger(logging.LoggerNameDeploymentReplication).With().
-			Str("deployment-replication", apiObject.GetName()).
-			Logger(),
 		Client:        o.Client,
 		EventRecorder: o.Dependencies.EventRecorder,
 	}
+
 	return cfg, deps
 }

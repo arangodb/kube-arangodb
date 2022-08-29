@@ -22,41 +22,41 @@ import (
 	"os"
 	"path/filepath"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/probes"
+	core "k8s.io/api/core/v1"
 
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	v1 "k8s.io/api/core/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/probes"
 )
 
 // ArangodbInternalExporterContainer creates metrics container based on internal exporter
 func ArangodbInternalExporterContainer(image string, args []string, livenessProbe *probes.HTTPProbeConfig,
-	resources v1.ResourceRequirements, securityContext *v1.SecurityContext,
-	spec api.DeploymentSpec) (v1.Container, error) {
+	resources core.ResourceRequirements, securityContext *core.SecurityContext,
+	spec api.DeploymentSpec) (core.Container, error) {
 
 	binaryPath, err := os.Executable()
 	if err != nil {
-		return v1.Container{}, errors.WithStack(err)
+		return core.Container{}, errors.WithStack(err)
 	}
 	exePath := filepath.Join(k8sutil.LifecycleVolumeMountDir, filepath.Base(binaryPath))
 
-	c := v1.Container{
+	c := core.Container{
 		Name:    shared.ExporterContainerName,
 		Image:   image,
 		Command: append([]string{exePath, "exporter"}, args...),
-		Ports: []v1.ContainerPort{
+		Ports: []core.ContainerPort{
 			{
 				Name:          "exporter",
 				ContainerPort: int32(spec.Metrics.GetPort()),
-				Protocol:      v1.ProtocolTCP,
+				Protocol:      core.ProtocolTCP,
 			},
 		},
 		Resources:       k8sutil.ExtractPodResourceRequirement(resources),
-		ImagePullPolicy: v1.PullIfNotPresent,
+		ImagePullPolicy: core.PullIfNotPresent,
 		SecurityContext: securityContext,
-		VolumeMounts:    []v1.VolumeMount{k8sutil.LifecycleVolumeMount()},
+		VolumeMounts:    []core.VolumeMount{k8sutil.LifecycleVolumeMount()},
 	}
 
 	if livenessProbe != nil {

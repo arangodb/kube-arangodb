@@ -23,18 +23,18 @@ package v1
 import (
 	"fmt"
 
-	deployment "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	deployment "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // ArangoBackupPolicyList is a list of ArangoDB backup policy.
 type ArangoBackupPolicyList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
+	meta.TypeMeta `json:",inline"`
+	meta.ListMeta `json:"metadata,omitempty"`
 
 	Items []ArangoBackupPolicy `json:"items"`
 }
@@ -44,8 +44,8 @@ type ArangoBackupPolicyList struct {
 
 // ArangoBackupPolicy contains definition and status of the ArangoDB Backup Policy.
 type ArangoBackupPolicy struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
+	meta.TypeMeta   `json:",inline"`
+	meta.ObjectMeta `json:"metadata,omitempty"`
 
 	Spec   ArangoBackupPolicySpec   `json:"spec"`
 	Status ArangoBackupPolicyStatus `json:"status"`
@@ -64,7 +64,7 @@ func (a *ArangoBackupPolicy) NewBackup(d *deployment.ArangoDeployment) *ArangoBa
 	}
 
 	return &ArangoBackup{
-		ObjectMeta: metav1.ObjectMeta{
+		ObjectMeta: meta.ObjectMeta{
 			Name:      fmt.Sprintf("%s-%s", d.Name, utils.RandomString(8)),
 			Namespace: a.Namespace,
 

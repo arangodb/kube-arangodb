@@ -23,27 +23,27 @@ package deployment
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 	"testing"
 
-	driver "github.com/arangodb/go-driver"
-	"github.com/arangodb/go-driver/jwt"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	monitoringFakeClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/fake"
-	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	extfake "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/fake"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 	recordfake "k8s.io/client-go/tools/record"
+
+	driver "github.com/arangodb/go-driver"
+	"github.com/arangodb/go-driver/jwt"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/acs"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	arangofake "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/fake"
@@ -53,7 +53,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/probes"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
-	extfake "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/fake"
 )
 
 const (
@@ -144,6 +143,16 @@ func createTestReadinessProbe(mode string, secure bool, authorization string) *c
 
 	p.InitialDelaySeconds = 2
 	p.PeriodSeconds = 2
+
+	return p
+}
+
+func createTestStartupProbe(mode string, secure bool, authorization string, failureThreshold int32) *core.Probe {
+	p := getProbeCreator(mode)(secure, authorization, "/_api/version", shared.ArangoPort).Create()
+
+	p.InitialDelaySeconds = 1
+	p.PeriodSeconds = 5
+	p.FailureThreshold = failureThreshold
 
 	return p
 }
@@ -458,7 +467,7 @@ func createTestDeployment(t *testing.T, config Config, arangoDeployment *api.Ara
 	monitoringClientSet := monitoringFakeClient.NewSimpleClientset()
 	arangoClientSet := arangofake.NewSimpleClientset()
 
-	arangoDeployment.ObjectMeta = metav1.ObjectMeta{
+	arangoDeployment.ObjectMeta = meta.ObjectMeta{
 		Name:      testDeploymentName,
 		Namespace: testNamespace,
 	}
@@ -475,7 +484,6 @@ func createTestDeployment(t *testing.T, config Config, arangoDeployment *api.Ara
 	arangoDeployment.Status.CurrentImage = &arangoDeployment.Status.Images[0]
 
 	deps := Dependencies{
-		Log:           zerolog.New(ioutil.Discard),
 		EventRecorder: eventRecorder,
 		Client:        kclient.NewStaticClient(kubernetesClientSet, kubernetesExtClientSet, arangoClientSet, monitoringClientSet),
 	}
@@ -483,13 +491,15 @@ func createTestDeployment(t *testing.T, config Config, arangoDeployment *api.Ara
 	i := inspector.NewInspector(throttle.NewAlwaysThrottleComponents(), deps.Client, arangoDeployment.GetNamespace(), arangoDeployment.GetName())
 
 	d := &Deployment{
-		apiObject: arangoDeployment,
-		name:      arangoDeployment.GetName(),
-		namespace: arangoDeployment.GetNamespace(),
-		config:    config,
-		deps:      deps,
-		eventCh:   make(chan *deploymentEvent, deploymentEventQueueSize),
-		stopCh:    make(chan struct{}),
+		currentObject:       arangoDeployment,
+		currentObjectStatus: arangoDeployment.Status.DeepCopy(),
+		name:                arangoDeployment.GetName(),
+		namespace:           arangoDeployment.GetNamespace(),
+		config:              config,
+		deps:                deps,
+		eventCh:             make(chan *deploymentEvent, deploymentEventQueueSize),
+		stopCh:              make(chan struct{}),
+		log:                 logger,
 	}
 	d.clientCache = client.NewClientCache(d, conn.NewFactory(d.getAuth, d.getConnConfig))
 	d.acs = acs.NewACS("", i)
@@ -497,7 +507,7 @@ func createTestDeployment(t *testing.T, config Config, arangoDeployment *api.Ara
 	require.NoError(t, d.acs.CurrentClusterCache().Refresh(context.Background()))
 
 	arangoDeployment.Spec.SetDefaults(arangoDeployment.GetName())
-	d.resources = resources.NewResources(deps.Log, d)
+	d.resources = resources.NewResources(arangoDeployment.GetNamespace(), arangoDeployment.GetName(), d)
 
 	return d, eventRecorder
 }
@@ -564,11 +574,11 @@ func (testCase *testCaseStruct) createTestPodData(deployment *Deployment, group 
 	podName := k8sutil.CreatePodName(testDeploymentName, group.AsRoleAbbreviated(), memberStatus.ID,
 		resources.CreatePodSuffix(testCase.ArangoDeployment.Spec))
 
-	testCase.ExpectedPod.ObjectMeta = metav1.ObjectMeta{
+	testCase.ExpectedPod.ObjectMeta = meta.ObjectMeta{
 		Name:      podName,
 		Namespace: testNamespace,
 		Labels:    k8sutil.LabelsForMember(testDeploymentName, group.AsRole(), memberStatus.ID),
-		OwnerReferences: []metav1.OwnerReference{
+		OwnerReferences: []meta.OwnerReference{
 			testCase.ArangoDeployment.AsOwner(),
 		},
 		Finalizers: finalizers(group),
@@ -577,11 +587,26 @@ func (testCase *testCaseStruct) createTestPodData(deployment *Deployment, group 
 	groupSpec := testCase.ArangoDeployment.Spec.GetServerGroupSpec(group)
 	testCase.ExpectedPod.Spec.Tolerations = deployment.resources.CreatePodTolerations(group, groupSpec)
 
-	// Add image info
-	if member, group, ok := deployment.apiObject.Status.Members.ElementByID(memberStatus.ID); ok {
-		member.Image = deployment.apiObject.Status.CurrentImage
+	if group == api.ServerGroupCoordinators || group == api.ServerGroupDBServers {
+		// Set default startup probes.
+		isSecure := deployment.GetSpec().IsSecure()
+		var auth string
+		var retries int32 = 720 // one hour divide by 5.
+		if group == api.ServerGroupDBServers {
+			retries = 4320 // 6 hours divide by 5.
+		}
+		if deployment.GetSpec().IsAuthenticated() {
+			auth, _ = createTestToken(deployment, testCase, []string{"/_api/version"})
+		}
 
-		deployment.apiObject.Status.Members.Update(member, group)
+		testCase.ExpectedPod.Spec.Containers[0].StartupProbe = createTestStartupProbe(httpProbe, isSecure, auth, retries)
+	}
+
+	// Add image info
+	if member, group, ok := deployment.currentObject.Status.Members.ElementByID(memberStatus.ID); ok {
+		member.Image = deployment.currentObject.Status.CurrentImage
+
+		deployment.currentObject.Status.Members.Update(member, group)
 	}
 }
 

@@ -23,10 +23,11 @@ package inspector
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
 )
 
 func (i *inspectorState) IsOwnerOf(ctx context.Context, owner inspector.Object, obj meta.Object) bool {

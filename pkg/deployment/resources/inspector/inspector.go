@@ -26,7 +26,12 @@ import (
 	"sync"
 	"time"
 
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+
 	"github.com/arangodb/go-driver"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -47,19 +52,21 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
-	"github.com/rs/zerolog"
-	core "k8s.io/api/core/v1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 const (
 	DefaultVersion = ""
 )
 
+func init() {
+	logging.Global().RegisterLogger("inspector", logging.Info)
+}
+
 var (
 	inspectorLoadersList inspectorLoaders
 	inspectorLoadersLock sync.Mutex
+
+	logger = logging.Global().Get("inspector")
 )
 
 func requireRegisterInspectorLoader(i inspectorLoader) {
@@ -119,7 +126,6 @@ func NewInspector(throttles throttle.Components, client kclient.Client, namespac
 		deploymentName: deploymentName,
 		client:         client,
 		throttles:      throttles,
-		logger:         logging.GlobalLogger().MustGetLogger(logging.LoggerNameInspector),
 	}
 
 	return i
@@ -141,8 +147,6 @@ type inspectorState struct {
 	client kclient.Client
 
 	last time.Time
-
-	logger zerolog.Logger
 
 	pods                          *podsInspector
 	secrets                       *secretsInspector
@@ -339,15 +343,17 @@ func (i *inspectorState) refreshInThreads(ctx context.Context, threads int, load
 		n.versionInfo = driver.Version(strings.TrimPrefix(v.GitVersion, "v"))
 	}
 
+	logger := logger.Str("namespace", i.namespace).Str("name", i.deploymentName)
+
 	start := time.Now()
-	i.logger.Debug().Msg("Pre-inspector refresh start")
+	logger.Trace("Pre-inspector refresh start")
 	d, err := i.client.Arango().DatabaseV1().ArangoDeployments(i.namespace).Get(context.Background(), i.deploymentName, meta.GetOptions{})
 	n.deploymentResult = &inspectorStateDeploymentResult{
 		depl: d,
 		err:  err,
 	}
 
-	i.logger.Debug().Msg("Inspector refresh start")
+	logger.Trace("Inspector refresh start")
 
 	for id := range loaders {
 		go func(id int) {
@@ -358,14 +364,14 @@ func (i *inspectorState) refreshInThreads(ctx context.Context, threads int, load
 			t := n.throttles.Get(c)
 
 			if !t.Throttle() {
-				i.logger.Debug().Str("component", string(c)).Msg("Inspector refresh skipped")
+				logger.Str("component", string(c)).Trace("Inspector refresh skipped")
 				return
 			}
 
-			i.logger.Debug().Str("component", string(c)).Msg("Inspector refresh")
+			logger.Str("component", string(c)).Trace("Inspector refresh")
 
 			defer func() {
-				i.logger.Debug().Str("component", string(c)).Str("duration", time.Since(start).String()).Msg("Inspector done")
+				logger.Str("component", string(c)).SinceStart("duration", start).Trace("Inspector done")
 				t.Delay()
 			}()
 
@@ -380,7 +386,7 @@ func (i *inspectorState) refreshInThreads(ctx context.Context, threads int, load
 
 	m.Wait()
 
-	i.logger.Debug().Str("duration", time.Since(start).String()).Msg("Inspector refresh done")
+	logger.SinceStart("duration", start).Trace("Inspector refresh done")
 
 	for id := range loaders {
 		if err := loaders[id].Verify(n); err != nil {
@@ -478,6 +484,5 @@ func (i *inspectorState) copyCore() *inspectorState {
 		versionInfo:                   i.versionInfo,
 		endpoints:                     i.endpoints,
 		deploymentResult:              i.deploymentResult,
-		logger:                        i.logger,
 	}
 }

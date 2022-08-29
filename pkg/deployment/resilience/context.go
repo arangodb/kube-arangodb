@@ -21,21 +21,13 @@
 package resilience
 
 import (
-	"context"
-
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 )
 
 // Context provides methods to the resilience package.
 type Context interface {
 	reconciler.DeploymentDatabaseClient
-	reconciler.DeploymentAgencyClient
-	// GetSpec returns the current specification of the deployment
-	GetSpec() api.DeploymentSpec
-	// GetStatus returns the current status of the deployment
-	GetStatus() (api.DeploymentStatus, int32)
-	// UpdateStatus replaces the status of the deployment with the given status and
-	// updates the resources in k8s.
-	UpdateStatus(ctx context.Context, status api.DeploymentStatus, lastVersion int32, force ...bool) error
+	reconciler.ArangoAgency
+	reconciler.DeploymentInfoGetter
+	reconciler.DeploymentStatusUpdate
 }

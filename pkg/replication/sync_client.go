@@ -25,22 +25,21 @@ import (
 	"net"
 	"strconv"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/rs/zerolog/log"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	certificates "github.com/arangodb-helper/go-certificates"
 	"github.com/arangodb/arangosync-client/client"
 	"github.com/arangodb/arangosync-client/tasks"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 // createSyncMasterClient creates an arangosync client for the given endpoint.
 func (dr *DeploymentReplication) createSyncMasterClient(epSpec api.EndpointSpec) (client.API, error) {
-	log := dr.deps.Log
-
 	// Endpoint
 	source, err := dr.createArangoSyncEndpoint(epSpec)
 	if err != nil {
@@ -96,7 +95,8 @@ func (dr *DeploymentReplication) createSyncMasterClient(epSpec api.EndpointSpec)
 	auth.Password = password
 
 	// Create client
-	c, err := dr.clientCache.GetClient(log, source, auth, insecureSkipVerify)
+	// TODO: Change logger in clientset
+	c, err := dr.clientCache.GetClient(log.Logger, source, auth, insecureSkipVerify)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -108,9 +108,9 @@ func (dr *DeploymentReplication) createArangoSyncEndpoint(epSpec api.EndpointSpe
 	if epSpec.HasDeploymentName() {
 		deploymentName := epSpec.GetDeploymentName()
 		depls := dr.deps.Client.Arango().DatabaseV1().ArangoDeployments(dr.apiObject.GetNamespace())
-		depl, err := depls.Get(context.Background(), deploymentName, metav1.GetOptions{})
+		depl, err := depls.Get(context.Background(), deploymentName, meta.GetOptions{})
 		if err != nil {
-			dr.deps.Log.Debug().Err(err).Str("deployment", deploymentName).Msg("Failed to get deployment")
+			dr.log.Err(err).Str("deployment", deploymentName).Debug("Failed to get deployment")
 			return nil, errors.WithStack(err)
 		}
 		dnsName := k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(depl, depl.Spec.ClusterDomain)
@@ -167,9 +167,9 @@ func (dr *DeploymentReplication) getEndpointSecretNames(epSpec api.EndpointSpec)
 	if epSpec.HasDeploymentName() {
 		deploymentName := epSpec.GetDeploymentName()
 		depls := dr.deps.Client.Arango().DatabaseV1().ArangoDeployments(dr.apiObject.GetNamespace())
-		depl, err := depls.Get(context.Background(), deploymentName, metav1.GetOptions{})
+		depl, err := depls.Get(context.Background(), deploymentName, meta.GetOptions{})
 		if err != nil {
-			dr.deps.Log.Debug().Err(err).Str("deployment", deploymentName).Msg("Failed to get deployment")
+			dr.log.Err(err).Str("deployment", deploymentName).Debug("Failed to get deployment")
 			return "", "", "", "", errors.WithStack(err)
 		}
 		return clientAuthCertKeyfileSecretName, userSecretName, depl.Spec.Sync.Authentication.GetJWTSecretName(), depl.Spec.Sync.TLS.GetCASecretName(), nil

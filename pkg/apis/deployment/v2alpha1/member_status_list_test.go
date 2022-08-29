@@ -50,13 +50,13 @@ func TestMemberStatusList(t *testing.T) {
 	assert.Equal(t, m1.ID, (*list)[0].ID)
 	assert.Equal(t, m2.ID, (*list)[1].ID)
 
-	m2.PodName = "foo"
+	m2.Pod = &MemberPodStatus{Name: "foo"}
 	assert.NoError(t, list.update(m2))
 	assert.Equal(t, 2, len(*list))
 	assert.True(t, list.ContainsID(m2.ID))
 	x, found := list.ElementByPodName("foo")
 	assert.True(t, found)
-	assert.Equal(t, "foo", x.PodName)
+	assert.Equal(t, "foo", x.Pod.GetName())
 	assert.Equal(t, m2.ID, x.ID)
 
 	assert.NoError(t, list.add(m3))

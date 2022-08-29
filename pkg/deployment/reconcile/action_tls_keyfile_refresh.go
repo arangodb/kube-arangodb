@@ -23,26 +23,22 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/rs/zerolog"
 )
 
 func init() {
 	registerAction(api.ActionTypeRefreshTLSKeyfileCertificate, newRefreshTLSKeyfileCertificateAction, operationTLSCACertificateTimeout)
 }
 
-func newRefreshTLSKeyfileCertificateAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newRefreshTLSKeyfileCertificateAction(action api.Action, actionCtx ActionContext) Action {
 	a := &refreshTLSKeyfileCertificateAction{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -52,35 +48,33 @@ type refreshTLSKeyfileCertificateAction struct {
 }
 
 func (a *refreshTLSKeyfileCertificateAction) CheckProgress(ctx context.Context) (bool, bool, error) {
-	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	c, err := a.actionCtx.GetServerClient(ctxChild, a.action.Group, a.action.MemberID)
+	c, err := a.actionCtx.GetMembersState().GetMemberClient(a.action.MemberID)
 	if err != nil {
-		a.log.Warn().Err(err).Msg("Unable to get client")
+		a.log.Err(err).Warn("Unable to get client")
 		return true, false, nil
 	}
 
 	s, exists := a.actionCtx.ACS().CurrentClusterCache().Secret().V1().GetSimple(k8sutil.CreateTLSKeyfileSecretName(a.actionCtx.GetAPIObject().GetName(), a.action.Group.AsRole(), a.action.MemberID))
 	if !exists {
-		a.log.Warn().Msg("Keyfile secret is missing")
+		a.log.Warn("Keyfile secret is missing")
 		return true, false, nil
 	}
 
 	keyfile, ok := s.Data[constants.SecretTLSKeyfile]
 	if !ok {
-		a.log.Warn().Msg("Keyfile secret is invalid")
+		a.log.Warn("Keyfile secret is invalid")
 		return true, false, nil
 	}
 
 	keyfileSha := util.SHA256(keyfile)
 
-	client := client.NewClient(c.Connection())
+	client := client.NewClient(c.Connection(), a.log)
 
-	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	e, err := client.RefreshTLS(ctxChild)
 	if err != nil {
-		a.log.Warn().Err(err).Msg("Unable to refresh TLS")
+		a.log.Err(err).Warn("Unable to refresh TLS")
 		return true, false, nil
 	}
 

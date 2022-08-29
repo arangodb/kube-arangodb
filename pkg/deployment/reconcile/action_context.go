@@ -24,19 +24,18 @@ import (
 	"context"
 	"time"
 
-	"github.com/arangodb/arangosync-client/client"
-	"github.com/arangodb/go-driver/agency"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	core "k8s.io/api/core/v1"
 
 	"github.com/arangodb/go-driver"
+
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/acs/sutil"
 	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/member"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
@@ -51,12 +50,13 @@ type ActionContext interface {
 	reconciler.DeploymentPodRenderer
 	reconciler.ArangoAgencyGet
 	reconciler.DeploymentInfoGetter
-	reconciler.DeploymentClient
-	reconciler.DeploymentSyncClient
+	reconciler.DeploymentDatabaseClient
 
 	member.StateInspectorGetter
 
 	sutil.ACSGetter
+
+	Metrics() *Metrics
 
 	ActionLocalsContext
 
@@ -105,22 +105,33 @@ type ActionLocalsContext interface {
 
 	Get(action api.Action, key api.PlanLocalKey) (string, bool)
 	Add(key api.PlanLocalKey, value string, override bool) bool
+
+	SetTime(key api.PlanLocalKey, t time.Time) bool
+	GetTime(action api.Action, key api.PlanLocalKey) (time.Time, bool)
+
+	BackoffExecution(action api.Action, key api.PlanLocalKey, duration time.Duration) bool
 }
 
 // newActionContext creates a new ActionContext implementation.
-func newActionContext(log zerolog.Logger, context Context) ActionContext {
+func newActionContext(log logging.Logger, context Context, metrics *Metrics) ActionContext {
 	return &actionContext{
 		log:     log,
 		context: context,
+		metrics: metrics,
 	}
 }
 
 // actionContext implements ActionContext
 type actionContext struct {
 	context      Context
-	log          zerolog.Logger
+	log          logging.Logger
 	cachedStatus inspectorInterface.Inspector
 	locals       api.PlanLocals
+	metrics      *Metrics
+}
+
+func (ac *actionContext) Metrics() *Metrics {
+	return ac.metrics
 }
 
 func (ac *actionContext) ACS() sutil.ACS {
@@ -139,6 +150,39 @@ func (ac *actionContext) Get(action api.Action, key api.PlanLocalKey) (string, b
 	return ac.locals.GetWithParent(action.Locals, key)
 }
 
+func (ac *actionContext) BackoffExecution(action api.Action, key api.PlanLocalKey, duration time.Duration) bool {
+	t, ok := ac.GetTime(action, key)
+	if !ok {
+		// Reset as zero time
+		t = time.Time{}
+	}
+
+	if t.IsZero() || time.Since(t) > duration {
+		// Execution is needed
+		ac.SetTime(key, time.Now())
+		return true
+	}
+
+	return false
+}
+
+func (ac *actionContext) SetTime(key api.PlanLocalKey, t time.Time) bool {
+	return ac.Add(key, t.Format(util.TimeLayout), true)
+}
+
+func (ac *actionContext) GetTime(action api.Action, key api.PlanLocalKey) (time.Time, bool) {
+	s, ok := ac.locals.GetWithParent(action.Locals, key)
+	if !ok {
+		return time.Time{}, false
+	}
+
+	if t, err := time.Parse(util.TimeLayout, s); err != nil {
+		return time.Time{}, false
+	} else {
+		return t, true
+	}
+}
+
 func (ac *actionContext) Add(key api.PlanLocalKey, value string, override bool) bool {
 	return ac.locals.Add(key, value, override)
 }
@@ -155,24 +199,20 @@ func (ac *actionContext) GetMembersState() member.StateInspector {
 	return ac.context.GetMembersState()
 }
 
-func (ac *actionContext) UpdateStatus(ctx context.Context, status api.DeploymentStatus, lastVersion int32, force ...bool) error {
-	return ac.context.UpdateStatus(ctx, status, lastVersion, force...)
+func (ac *actionContext) UpdateStatus(ctx context.Context, status api.DeploymentStatus) error {
+	return ac.context.UpdateStatus(ctx, status)
 }
 
 func (ac *actionContext) GetNamespace() string {
 	return ac.context.GetNamespace()
 }
 
-func (ac *actionContext) GetAgencyClientsWithPredicate(ctx context.Context, predicate func(id string) bool) ([]driver.Connection, error) {
-	return ac.context.GetAgencyClientsWithPredicate(ctx, predicate)
-}
-
-func (ac *actionContext) GetStatus() (api.DeploymentStatus, int32) {
+func (ac *actionContext) GetStatus() api.DeploymentStatus {
 	return ac.context.GetStatus()
 }
 
 func (ac *actionContext) GetStatusSnapshot() api.DeploymentStatus {
-	return ac.context.GetStatusSnapshot()
+	return ac.context.GetStatus()
 }
 
 func (ac *actionContext) GenerateMemberEndpoint(group api.ServerGroup, member api.MemberStatus) (string, error) {
@@ -185,14 +225,6 @@ func (ac *actionContext) GetAgencyHealth() (agencyCache.Health, bool) {
 
 func (ac *actionContext) GetAgencyCache() (agencyCache.State, bool) {
 	return ac.context.GetAgencyCache()
-}
-
-func (ac *actionContext) RenderPodForMemberFromCurrent(ctx context.Context, acs sutil.ACS, memberID string) (*core.Pod, error) {
-	return ac.context.RenderPodForMemberFromCurrent(ctx, acs, memberID)
-}
-
-func (ac *actionContext) RenderPodTemplateForMemberFromCurrent(ctx context.Context, acs sutil.ACS, memberID string) (*core.PodTemplateSpec, error) {
-	return ac.context.RenderPodTemplateForMemberFromCurrent(ctx, acs, memberID)
 }
 
 func (ac *actionContext) SetAgencyMaintenanceMode(ctx context.Context, enabled bool) error {
@@ -223,12 +255,12 @@ func (ac *actionContext) GetBackup(ctx context.Context, backup string) (*backupA
 	return ac.context.GetBackup(ctx, backup)
 }
 
-func (ac *actionContext) WithStatusUpdateErr(ctx context.Context, action reconciler.DeploymentStatusUpdateErrFunc, force ...bool) error {
-	return ac.context.WithStatusUpdateErr(ctx, action, force...)
+func (ac *actionContext) WithStatusUpdateErr(ctx context.Context, action reconciler.DeploymentStatusUpdateErrFunc) error {
+	return ac.context.WithStatusUpdateErr(ctx, action)
 }
 
-func (ac *actionContext) WithStatusUpdate(ctx context.Context, action reconciler.DeploymentStatusUpdateFunc, force ...bool) error {
-	return ac.context.WithStatusUpdate(ctx, action, force...)
+func (ac *actionContext) WithStatusUpdate(ctx context.Context, action reconciler.DeploymentStatusUpdateFunc) error {
+	return ac.context.WithStatusUpdate(ctx, action)
 }
 
 func (ac *actionContext) UpdateClusterCondition(ctx context.Context, conditionType api.ConditionType, status bool, reason, message string) error {
@@ -245,7 +277,7 @@ func (ac *actionContext) CreateEvent(evt *k8sutil.Event) {
 	ac.context.CreateEvent(evt)
 }
 
-// Gets the specified mode of deployment
+// GetMode gets the specified mode of deployment.
 func (ac *actionContext) GetMode() api.DeploymentMode {
 	return ac.context.GetSpec().GetMode()
 }
@@ -254,58 +286,12 @@ func (ac *actionContext) GetSpec() api.DeploymentSpec {
 	return ac.context.GetSpec()
 }
 
-// GetDatabaseClient returns a cached client for the entire database (cluster coordinators or single server),
-// creating one if needed.
-func (ac *actionContext) GetDatabaseClient(ctx context.Context) (driver.Client, error) {
-	c, err := ac.context.GetDatabaseClient(ctx)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return c, nil
-}
-
-// GetServerClient returns a cached client for a specific server.
-func (ac *actionContext) GetServerClient(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error) {
-	c, err := ac.context.GetServerClient(ctx, group, id)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return c, nil
-}
-
-// GetAgencyClients returns a client connection for every agency member.
-func (ac *actionContext) GetAgencyClients(ctx context.Context) ([]driver.Connection, error) {
-	c, err := ac.context.GetAgencyClients(ctx)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return c, nil
-}
-
-// GetAgency returns a connection to the agency.
-func (ac *actionContext) GetAgency(ctx context.Context, agencyIDs ...string) (agency.Agency, error) {
-	a, err := ac.context.GetAgency(ctx, agencyIDs...)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return a, nil
-}
-
-// GetSyncServerClient returns a cached client for a specific arangosync server.
-func (ac *actionContext) GetSyncServerClient(ctx context.Context, group api.ServerGroup, id string) (client.API, error) {
-	c, err := ac.context.GetSyncServerClient(ctx, group, id)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return c, nil
-}
-
 // GetMemberStatusByID returns the current member status
 // for the member with given id.
 // Returns member status, true when found, or false
 // when no such member is found.
 func (ac *actionContext) GetMemberStatusByID(id string) (api.MemberStatus, bool) {
-	status, _ := ac.context.GetStatus()
+	status := ac.context.GetStatus()
 	m, _, ok := status.Members.ElementByID(id)
 	return m, ok
 }
@@ -315,7 +301,7 @@ func (ac *actionContext) GetMemberStatusByID(id string) (api.MemberStatus, bool)
 // Returns member status, true when found, or false
 // when no such member is found.
 func (ac *actionContext) GetMemberStatusAndGroupByID(id string) (api.MemberStatus, api.ServerGroup, bool) {
-	status, _ := ac.context.GetStatus()
+	status := ac.context.GetStatus()
 	return status.Members.ElementByID(id)
 }
 
@@ -331,7 +317,7 @@ func (ac *actionContext) CreateMember(ctx context.Context, group api.ServerGroup
 
 // UpdateMember updates the deployment status wrt the given member.
 func (ac *actionContext) UpdateMember(ctx context.Context, member api.MemberStatus) error {
-	status, lastVersion := ac.context.GetStatus()
+	status := ac.context.GetStatus()
 	_, group, found := status.Members.ElementByID(member.ID)
 	if !found {
 		return errors.WithStack(errors.Newf("Member %s not found", member.ID))
@@ -339,8 +325,8 @@ func (ac *actionContext) UpdateMember(ctx context.Context, member api.MemberStat
 	if err := status.Members.Update(member, group); err != nil {
 		return errors.WithStack(err)
 	}
-	if err := ac.context.UpdateStatus(ctx, status, lastVersion); err != nil {
-		log.Debug().Err(err).Msg("Updating CR status failed")
+	if err := ac.context.UpdateStatus(ctx, status); err != nil {
+		ac.log.Err(err).Debug("Updating CR status failed")
 		return errors.WithStack(err)
 	}
 	return nil
@@ -348,17 +334,17 @@ func (ac *actionContext) UpdateMember(ctx context.Context, member api.MemberStat
 
 // RemoveMemberByID removes a member with given id.
 func (ac *actionContext) RemoveMemberByID(ctx context.Context, id string) error {
-	status, lastVersion := ac.context.GetStatus()
+	status := ac.context.GetStatus()
 	_, group, found := status.Members.ElementByID(id)
 	if !found {
 		return nil
 	}
 	if err := status.Members.RemoveByID(id, group); err != nil {
-		log.Debug().Err(err).Str("group", group.AsRole()).Msg("Failed to remove member")
+		ac.log.Err(err).Str("group", group.AsRole()).Debug("Failed to remove member")
 		return errors.WithStack(err)
 	}
 	// Save removed member
-	if err := ac.context.UpdateStatus(ctx, status, lastVersion); err != nil {
+	if err := ac.context.UpdateStatus(ctx, status); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil
@@ -367,14 +353,14 @@ func (ac *actionContext) RemoveMemberByID(ctx context.Context, id string) error 
 // GetImageInfo returns the image info for an image with given name.
 // Returns: (info, infoFound)
 func (ac *actionContext) GetImageInfo(imageName string) (api.ImageInfo, bool) {
-	status, _ := ac.context.GetStatus()
+	status := ac.context.GetStatus()
 	return status.Images.GetByImage(imageName)
 }
 
 // GetImageInfo returns the image info for an current image.
 // Returns: (info, infoFound)
 func (ac *actionContext) GetCurrentImageInfo() (api.ImageInfo, bool) {
-	status, _ := ac.context.GetStatus()
+	status := ac.context.GetStatus()
 
 	if status.CurrentImage == nil {
 		return api.ImageInfo{}, false
@@ -392,7 +378,7 @@ func (ac *actionContext) SetCurrentImage(ctx context.Context, imageInfo api.Imag
 			return true
 		}
 		return false
-	}, true)
+	})
 }
 
 // DisableScalingCluster disables scaling DBservers and coordinators

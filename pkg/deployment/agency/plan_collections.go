@@ -22,7 +22,7 @@ package agency
 
 type StatePlanCollections map[string]StatePlanDBCollections
 
-func (a StatePlanCollections) IsDBServerInDatabases(name string) bool {
+func (a StatePlanCollections) IsDBServerPresent(name Server) bool {
 	for _, collections := range a {
 		if collections.IsDBServerInCollections(name) {
 			return true
@@ -31,11 +31,29 @@ func (a StatePlanCollections) IsDBServerInDatabases(name string) bool {
 	return false
 }
 
+func (a StatePlanCollections) IsDBServerLeader(name Server) bool {
+	for _, collections := range a {
+		if collections.IsDBServerLeaderInCollections(name) {
+			return true
+		}
+	}
+	return false
+}
+
 type StatePlanDBCollections map[string]StatePlanCollection
 
-func (a StatePlanDBCollections) IsDBServerInCollections(name string) bool {
+func (a StatePlanDBCollections) IsDBServerInCollections(name Server) bool {
 	for _, collection := range a {
 		if collection.IsDBServerInShards(name) {
+			return true
+		}
+	}
+	return false
+}
+
+func (a StatePlanDBCollections) IsDBServerLeaderInCollections(name Server) bool {
+	for _, collection := range a {
+		if collection.IsDBServerLeader(name) {
 			return true
 		}
 	}
@@ -60,6 +78,7 @@ type StatePlanCollection struct {
 	MinReplicationFactor *int               `json:"minReplicationFactor,omitempty"`
 	WriteConcern         *int               `json:"writeConcern,omitempty"`
 	ReplicationFactor    *ReplicationFactor `json:"replicationFactor,omitempty"`
+	DistributeShardsLike *string            `json:"distributeShardsLike,omitempty"`
 }
 
 func (a *StatePlanCollection) GetReplicationFactor(shard string) ReplicationFactor {
@@ -108,13 +127,29 @@ func (a StatePlanCollection) GetName(d string) string {
 	return *a.Name
 }
 
-func (a *StatePlanCollection) IsDBServerInShards(name string) bool {
+func (a *StatePlanCollection) IsDBServerInShards(name Server) bool {
 	if a == nil {
 		return false
 	}
 
 	for _, planShards := range a.Shards {
 		if planShards.Contains(name) {
+			return true
+		}
+	}
+	return false
+}
+
+func (a *StatePlanCollection) IsDBServerLeader(name Server) bool {
+	if a == nil {
+		return false
+	}
+
+	for _, servers := range a.Shards {
+		if len(servers) == 0 {
+			continue
+		}
+		if servers[0] == name {
 			return true
 		}
 	}

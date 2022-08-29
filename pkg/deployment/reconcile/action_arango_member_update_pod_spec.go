@@ -23,13 +23,10 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/rs/zerolog/log"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/rs/zerolog"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 func init() {
@@ -38,10 +35,10 @@ func init() {
 
 // newArangoMemberUpdatePodSpecAction creates a new Action that implements the given
 // planned ArangoMemberUpdatePodSpec action.
-func newArangoMemberUpdatePodSpecAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newArangoMemberUpdatePodSpecAction(action api.Action, actionCtx ActionContext) Action {
 	a := &actionArangoMemberUpdatePodSpec{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -60,24 +57,24 @@ type actionArangoMemberUpdatePodSpec struct {
 // the start time needs to be recorded and a ready condition needs to be checked.
 func (a *actionArangoMemberUpdatePodSpec) Start(ctx context.Context) (bool, error) {
 	spec := a.actionCtx.GetSpec()
-	status := a.actionCtx.GetStatusSnapshot()
+	status := a.actionCtx.GetStatus()
 
 	m, found := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !found {
-		log.Error().Msg("No such member")
+		a.log.Error("No such member")
 		return true, nil
 	}
 
 	member, ok := a.actionCtx.ACS().CurrentClusterCache().ArangoMember().V1().GetSimple(m.ArangoMemberName(a.actionCtx.GetName(), a.action.Group))
 	if !ok {
 		err := errors.Newf("ArangoMember not found")
-		log.Error().Err(err).Msg("ArangoMember not found")
+		a.log.Err(err).Error("ArangoMember not found")
 		return false, err
 	}
 
 	endpoint, err := a.actionCtx.GenerateMemberEndpoint(a.action.Group, m)
 	if err != nil {
-		log.Error().Err(err).Msg("Unable to render endpoint")
+		a.log.Err(err).Error("Unable to render endpoint")
 		return false, err
 	}
 
@@ -85,7 +82,7 @@ func (a *actionArangoMemberUpdatePodSpec) Start(ctx context.Context) (bool, erro
 		// Update endpoint
 		m.Endpoint = util.NewString(endpoint)
 		if err := status.Members.Update(m, a.action.Group); err != nil {
-			log.Error().Err(err).Msg("Unable to update endpoint")
+			a.log.Err(err).Error("Unable to update endpoint")
 			return false, err
 		}
 	}
@@ -104,19 +101,19 @@ func (a *actionArangoMemberUpdatePodSpec) Start(ctx context.Context) (bool, erro
 
 	renderedPod, err := a.actionCtx.RenderPodTemplateForMember(ctx, a.actionCtx.ACS(), spec, status, a.action.MemberID, imageInfo)
 	if err != nil {
-		log.Err(err).Msg("Error while rendering pod")
+		a.log.Err(err).Error("Error while rendering pod")
 		return false, err
 	}
 
 	checksum, err := resources.ChecksumArangoPod(groupSpec, resources.CreatePodFromTemplate(renderedPod))
 	if err != nil {
-		log.Err(err).Msg("Error while getting pod checksum")
+		a.log.Err(err).Error("Error while getting pod checksum")
 		return false, err
 	}
 
 	template, err := api.GetArangoMemberPodTemplate(renderedPod, checksum)
 	if err != nil {
-		log.Err(err).Msg("Error while getting pod template")
+		a.log.Err(err).Error("Error while getting pod template")
 		return false, err
 	}
 
@@ -135,18 +132,18 @@ func (a *actionArangoMemberUpdatePodSpec) Start(ctx context.Context) (bool, erro
 
 		return false
 	}); err != nil {
-		log.Err(err).Msg("Error while updating member")
+		a.log.Err(err).Error("Error while updating member")
 		return false, err
 	}
 
 	if err := c.UpdateStatus(ctx, func(member *api.ArangoMember, status *api.ArangoMemberStatus) bool {
-		if (status.Template == nil || status.Template.PodSpec == nil) && (m.PodSpecVersion == "" || m.PodSpecVersion == template.PodSpecChecksum) {
+		if (status.Template == nil || status.Template.PodSpec == nil) && (m.Pod == nil || m.Pod.SpecVersion == "" || m.Pod.SpecVersion == template.PodSpecChecksum) {
 			status.Template = template.DeepCopy()
 		}
 
 		return true
 	}); err != nil {
-		log.Err(err).Msg("Error while updating member status")
+		a.log.Err(err).Error("Error while updating member status")
 		return false, err
 	}
 

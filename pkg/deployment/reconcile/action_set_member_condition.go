@@ -24,8 +24,6 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/rs/zerolog"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
@@ -34,10 +32,10 @@ func init() {
 	registerAction(api.ActionTypeSetMemberCondition, setMemberCondition, defaultTimeout)
 }
 
-func setMemberCondition(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func setMemberCondition(action api.Action, actionCtx ActionContext) Action {
 	a := &actionSetMemberCondition{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -53,28 +51,28 @@ type actionSetMemberCondition struct {
 func (a actionSetMemberCondition) Start(ctx context.Context) (bool, error) {
 	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !ok {
-		a.log.Info().Msg("can not set the condition because the member is gone already")
+		a.log.Info("can not set the condition because the member is gone already")
 		return true, nil
 	}
 
 	if len(a.action.Params) == 0 {
-		a.log.Info().Msg("can not start the action with the empty list of conditions")
+		a.log.Info("can not start the action with the empty list of conditions")
 		return true, nil
 	}
 
 	for condition, value := range a.action.Params {
 		if value == "" {
-			a.log.Debug().Msg("remove the condition")
+			a.log.Debug("remove the condition")
 
 			m.Conditions.Remove(api.ConditionType(condition))
 		} else {
 			set, err := strconv.ParseBool(value)
 			if err != nil {
-				a.log.Error().Err(err).Str("value", value).Msg("can not parse string to boolean")
+				a.log.Err(err).Str("value", value).Error("can not parse string to boolean")
 				continue
 			}
 
-			a.log.Debug().Msg("set the condition")
+			a.log.Debug("set the condition")
 
 			m.Conditions.Update(api.ConditionType(condition), set, a.action.Reason, "action set the member condition")
 		}

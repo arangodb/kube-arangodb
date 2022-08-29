@@ -24,18 +24,16 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	core "k8s.io/api/core/v1"
 
 	"github.com/arangodb/go-driver"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	core "k8s.io/api/core/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 )
 
 const ActiveJWTKey = "-"

@@ -30,6 +30,7 @@ var encryptionRotation = &feature{
 	version:            "3.7.0",
 	enterpriseRequired: true,
 	enabledByDefault:   false,
+	hidden:             true,
 }
 
 func EncryptionRotation() Feature {

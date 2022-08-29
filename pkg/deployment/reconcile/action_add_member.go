@@ -23,14 +23,10 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/topology"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/topology"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 func init() {
@@ -39,10 +35,10 @@ func init() {
 
 // newAddMemberAction creates a new Action that implements the given
 // planned AddMember action.
-func newAddMemberAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newAddMemberAction(action api.Action, actionCtx ActionContext) Action {
 	a := &actionAddMember{}
 
-	a.actionImpl = newBaseActionImpl(log, action, actionCtx, &a.newMemberID)
+	a.actionImpl = newBaseActionImpl(action, actionCtx, &a.newMemberID)
 
 	return a
 }
@@ -66,7 +62,7 @@ type actionAddMember struct {
 func (a *actionAddMember) Start(ctx context.Context) (bool, error) {
 	newID, err := a.actionCtx.CreateMember(ctx, a.action.Group, a.action.MemberID, topology.WithTopologyMod)
 	if err != nil {
-		log.Debug().Err(err).Msg("Failed to create member")
+		a.log.Err(err).Debug("Failed to create member")
 		return false, errors.WithStack(err)
 	}
 	a.newMemberID = newID
@@ -76,21 +72,9 @@ func (a *actionAddMember) Start(ctx context.Context) (bool, error) {
 
 // ActionPlanAppender appends wait methods to the plan
 func (a *actionAddMember) ActionPlanAppender(current api.Plan) (api.Plan, bool) {
-	var app api.Plan
-
-	if _, ok := a.action.Params[api.ActionTypeWaitForMemberUp.String()]; ok {
-		app = append(app, actions.NewAction(api.ActionTypeWaitForMemberUp, a.action.Group, withPredefinedMember(a.newMemberID), "Wait for member in sync after creation"))
+	np := api.Plan{
+		actions.NewAction(api.ActionTypeWaitForMemberUp, a.action.Group, withPredefinedMember(a.newMemberID), "Wait for member in sync after creation"),
+		actions.NewAction(api.ActionTypeWaitForMemberInSync, a.action.Group, withPredefinedMember(a.newMemberID), "Wait for member in sync after creation"),
 	}
-
-	if _, ok := a.action.Params[api.ActionTypeWaitForMemberInSync.String()]; ok {
-		app = append(app, actions.NewAction(api.ActionTypeWaitForMemberInSync, a.action.Group, withPredefinedMember(a.newMemberID), "Wait for member in sync after creation"))
-	}
-
-	if len(app) > 0 {
-		return app.AfterFirst(func(a api.Action) bool {
-			return a.Type == api.ActionTypeAddMember
-		}, app...), true
-	}
-
-	return current, false
+	return append(current, np...), true
 }

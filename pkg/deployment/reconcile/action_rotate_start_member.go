@@ -22,11 +22,9 @@ package reconcile
 
 import (
 	"context"
-
-	"github.com/rs/zerolog"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"time"
+
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -39,10 +37,10 @@ func init() {
 
 // newRotateStartMemberAction creates a new Action that implements the given
 // planned RotateStartMember action.
-func newRotateStartMemberAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newRotateStartMemberAction(action api.Action, actionCtx ActionContext) Action {
 	a := &actionRotateStartMember{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -57,7 +55,7 @@ type actionRotateStartMember struct {
 // Returns true if the action is completely finished, false in case
 // the start time needs to be recorded and a ready condition needs to be checked.
 func (a *actionRotateStartMember) Start(ctx context.Context) (bool, error) {
-	shutdown, m, ok := getShutdownHelper(&a.action, a.actionCtx, a.log)
+	shutdown, m, ok := getShutdownHelper(a.actionImpl)
 	if !ok {
 		return true, nil
 	}
@@ -81,15 +79,14 @@ func (a *actionRotateStartMember) Start(ctx context.Context) (bool, error) {
 // Returns: ready, abort, error.
 func (a *actionRotateStartMember) CheckProgress(ctx context.Context) (bool, bool, error) {
 	// Check that pod is removed
-	log := a.log
-	shutdown, m, ok := getShutdownHelper(&a.action, a.actionCtx, a.log)
+	shutdown, m, ok := getShutdownHelper(a.actionImpl)
 	if !ok {
 		return true, false, nil
 	}
 
 	cache, ok := a.actionCtx.ACS().ClusterCache(m.ClusterID)
 	if !ok {
-		log.Warn().Msg("Cluster is not ready")
+		a.log.Warn("Cluster is not ready")
 		return false, false, nil
 	}
 
@@ -100,9 +97,9 @@ func (a *actionRotateStartMember) CheckProgress(ctx context.Context) (bool, bool
 	}
 
 	// Pod is terminated, we can now remove it
-	if err := cache.Client().Kubernetes().CoreV1().Pods(cache.Namespace()).Delete(ctx, m.PodName, meta.DeleteOptions{}); err != nil {
+	if err := cache.Client().Kubernetes().CoreV1().Pods(cache.Namespace()).Delete(ctx, m.Pod.GetName(), meta.DeleteOptions{}); err != nil {
 		if !k8sutil.IsNotFound(err) {
-			log.Error().Err(err).Msg("Unable to delete pod")
+			a.log.Err(err).Error("Unable to delete pod")
 			return false, false, nil
 		}
 	}

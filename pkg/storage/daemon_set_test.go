@@ -23,9 +23,10 @@ package storage
 import (
 	"testing"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
+
+	api "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 )
 
 // TestEnsureDaemonSet tests ensureDaemonSet() method

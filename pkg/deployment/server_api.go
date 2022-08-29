@@ -25,7 +25,7 @@ import (
 	"sort"
 
 	core "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
@@ -36,12 +36,12 @@ import (
 
 // Name returns the name of the deployment.
 func (d *Deployment) Name() string {
-	return d.apiObject.Name
+	return d.currentObject.Name
 }
 
 // Namespace returns the namespace that contains the deployment.
 func (d *Deployment) Namespace() string {
-	return d.apiObject.Namespace
+	return d.currentObject.Namespace
 }
 
 // GetMode returns the mode of the deployment.
@@ -65,21 +65,18 @@ func (d *Deployment) StateColor() server.StateColor {
 	if d.VolumeCount() != d.ReadyVolumeCount() {
 		allGood = false
 	}
-	status, _ := d.GetStatus()
-	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
-		for _, m := range list {
-			switch m.Phase {
-			case api.MemberPhaseFailed:
-				failed = true
-			case api.MemberPhaseCreated:
-				// Should be ok now
-			default:
-				// Something is going on
-				allGood = true
-			}
+	status := d.GetStatus()
+	for _, m := range status.Members.AsList() {
+		switch m.Member.Phase {
+		case api.MemberPhaseFailed:
+			failed = true
+		case api.MemberPhaseCreated:
+			// Should be ok now
+		default:
+			// Something is going on
+			allGood = true
 		}
-		return nil
-	})
+	}
 	if failed {
 		return server.StateRed
 	}
@@ -94,73 +91,55 @@ func (d *Deployment) StateColor() server.StateColor {
 
 // PodCount returns the number of pods for the deployment
 func (d *Deployment) PodCount() int {
-	count := 0
-	status, _ := d.GetStatus()
-	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
-		for _, m := range list {
-			if m.PodName != "" {
-				count++
-			}
-		}
-		return nil
-	})
-	return count
+	status := d.GetStatus()
+	return len(status.Members.PodNames())
 }
 
 // ReadyPodCount returns the number of pods for the deployment that are in ready state
 func (d *Deployment) ReadyPodCount() int {
 	count := 0
-	status, _ := d.GetStatus()
-	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
-		for _, m := range list {
-			if m.PodName == "" {
-				continue
-			}
-			if m.Conditions.IsTrue(api.ConditionTypeReady) {
-				count++
-			}
+	status := d.GetStatus()
+	for _, e := range status.Members.AsList() {
+		if e.Member.Pod.GetName() == "" {
+			continue
 		}
-		return nil
-	})
+		if e.Member.Conditions.IsTrue(api.ConditionTypeReady) {
+			count++
+		}
+	}
 	return count
 }
 
 // VolumeCount returns the number of volumes for the deployment
 func (d *Deployment) VolumeCount() int {
 	count := 0
-	status, _ := d.GetStatus()
-	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
-		for _, m := range list {
-			if m.PersistentVolumeClaimName != "" {
-				count++
-			}
+	status := d.GetStatus()
+	for _, e := range status.Members.AsList() {
+		if e.Member.PersistentVolumeClaimName != "" {
+			count++
 		}
-		return nil
-	})
+	}
 	return count
 }
 
 // ReadyVolumeCount returns the number of volumes for the deployment that are in ready state
 func (d *Deployment) ReadyVolumeCount() int {
 	count := 0
-	status, _ := d.GetStatus()
+	status := d.GetStatus()
 	pvcs, _ := d.GetOwnedPVCs() // Ignore errors on purpose
-	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
-		for _, m := range list {
-			if m.PersistentVolumeClaimName == "" {
-				continue
-			}
-			// Find status
-			for _, pvc := range pvcs {
-				if pvc.Name == m.PersistentVolumeClaimName {
-					if pvc.Status.Phase == core.ClaimBound {
-						count++
-					}
+	for _, e := range status.Members.AsList() {
+		if e.Member.PersistentVolumeClaimName == "" {
+			continue
+		}
+		// Find status
+		for _, pvc := range pvcs {
+			if pvc.Name == e.Member.PersistentVolumeClaimName {
+				if pvc.Status.Phase == core.ClaimBound {
+					count++
 				}
 			}
 		}
-		return nil
-	})
+	}
 	return count
 }
 
@@ -190,7 +169,7 @@ func (d *Deployment) StorageClasses() []string {
 // Empty string means that the database is not reachable outside the Kubernetes cluster.
 func (d *Deployment) DatabaseURL() string {
 	eaSvcName := k8sutil.CreateDatabaseExternalAccessServiceName(d.Name())
-	svc, err := d.acs.CurrentClusterCache().Service().V1().Read().Get(context.Background(), eaSvcName, metav1.GetOptions{})
+	svc, err := d.acs.CurrentClusterCache().Service().V1().Read().Get(context.Background(), eaSvcName, meta.GetOptions{})
 	if err != nil {
 		return ""
 	}
@@ -218,7 +197,7 @@ func (d *Deployment) DatabaseURL() string {
 // DatabaseVersion returns the version used by the deployment
 // Returns versionNumber, licenseType
 func (d *Deployment) DatabaseVersion() (string, string) {
-	status, _ := d.GetStatus()
+	status := d.GetStatus()
 	if current := status.CurrentImage; current != nil {
 		return string(current.ArangoDBVersion), memberState.GetImageLicense(status.CurrentImage)
 	}
@@ -228,8 +207,10 @@ func (d *Deployment) DatabaseVersion() (string, string) {
 // Members returns all members of the deployment by role.
 func (d *Deployment) Members() map[api.ServerGroup][]server.Member {
 	result := make(map[api.ServerGroup][]server.Member)
-	status, _ := d.GetStatus()
-	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
+	status := d.GetStatus()
+
+	for _, group := range api.AllServerGroups {
+		list := status.Members.MembersOfGroup(group)
 		members := make([]server.Member, len(list))
 		for i, m := range list {
 			members[i] = member{
@@ -241,7 +222,7 @@ func (d *Deployment) Members() map[api.ServerGroup][]server.Member {
 		if len(members) > 0 {
 			result[group] = members
 		}
-		return nil
-	})
+	}
+
 	return result
 }

@@ -23,16 +23,15 @@ package k8sutil
 import (
 	"testing"
 
-	"github.com/arangodb/kube-arangodb/pkg/util"
-
 	"github.com/stretchr/testify/assert"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 // TestCreatePodDNSName tests CreatePodDNSName.
 func TestCreatePodDNSName(t *testing.T) {
-	depl := &metav1.ObjectMeta{
+	depl := &meta.ObjectMeta{
 		Name:      "test",
 		Namespace: "ns",
 	}
@@ -42,7 +41,7 @@ func TestCreatePodDNSName(t *testing.T) {
 
 // TestCreateDatabaseClientServiceDNSName tests CreateDatabaseClientServiceDNSName.
 func TestCreateDatabaseClientServiceDNSName(t *testing.T) {
-	depl := &metav1.ObjectMeta{
+	depl := &meta.ObjectMeta{
 		Name:      "test",
 		Namespace: "ns",
 	}
@@ -51,7 +50,7 @@ func TestCreateDatabaseClientServiceDNSName(t *testing.T) {
 }
 
 func TestCreatePodDNSNameWithDomain(t *testing.T) {
-	depl := &metav1.ObjectMeta{
+	depl := &meta.ObjectMeta{
 		Name:      "test",
 		Namespace: "ns",
 	}

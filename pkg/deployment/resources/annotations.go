@@ -23,27 +23,28 @@ package resources
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
-	"github.com/arangodb/kube-arangodb/pkg/util/collection"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	core "k8s.io/api/core/v1"
+	policyv1 "k8s.io/api/policy/v1"
+	policyv1beta1 "k8s.io/api/policy/v1beta1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
+	"github.com/arangodb/kube-arangodb/pkg/util/collection"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/rs/zerolog/log"
-	core "k8s.io/api/core/v1"
-	policy "k8s.io/api/policy/v1beta1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 )
 
 type PatchFunc func(name string, d []byte) error
 
 func (r *Resources) EnsureAnnotations(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
-	log.Info().Msgf("Ensuring annotations")
+	log := r.log.Str("section", "annotations")
+
+	log.Trace("Ensuring annotations")
 
 	patchSecret := func(name string, d []byte) error {
 		return globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
@@ -53,7 +54,7 @@ func (r *Resources) EnsureAnnotations(ctx context.Context, cachedStatus inspecto
 		})
 	}
 
-	if err := ensureSecretsAnnotations(patchSecret,
+	if err := r.ensureSecretsAnnotations(patchSecret,
 		cachedStatus,
 		deployment.ArangoDeploymentResourceKind,
 		r.context.GetAPIObject().GetName(),
@@ -70,7 +71,7 @@ func (r *Resources) EnsureAnnotations(ctx context.Context, cachedStatus inspecto
 		})
 	}
 
-	if err := ensureServiceAccountsAnnotations(patchServiceAccount,
+	if err := r.ensureServiceAccountsAnnotations(patchServiceAccount,
 		cachedStatus,
 		deployment.ArangoDeploymentResourceKind,
 		r.context.GetAPIObject().GetName(),
@@ -87,7 +88,7 @@ func (r *Resources) EnsureAnnotations(ctx context.Context, cachedStatus inspecto
 		})
 	}
 
-	if err := ensureServicesAnnotations(patchService,
+	if err := r.ensureServicesAnnotations(patchService,
 		cachedStatus,
 		deployment.ArangoDeploymentResourceKind,
 		r.context.GetAPIObject().GetName(),
@@ -98,13 +99,20 @@ func (r *Resources) EnsureAnnotations(ctx context.Context, cachedStatus inspecto
 
 	patchPDB := func(name string, d []byte) error {
 		return globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			if _, err := cachedStatus.PodDisruptionBudget().V1(); err == nil {
+				_, err = cachedStatus.PodDisruptionBudgetsModInterface().V1().Patch(ctxChild, name,
+					types.JSONPatchType, d, meta.PatchOptions{})
+				return err
+			}
+
 			_, err := cachedStatus.PodDisruptionBudgetsModInterface().V1Beta1().Patch(ctxChild, name,
 				types.JSONPatchType, d, meta.PatchOptions{})
+
 			return err
 		})
 	}
 
-	if err := ensurePdbsAnnotations(patchPDB,
+	if err := r.ensurePdbsAnnotations(patchPDB,
 		cachedStatus,
 		deployment.ArangoDeploymentResourceKind,
 		r.context.GetAPIObject().GetName(),
@@ -121,7 +129,7 @@ func (r *Resources) EnsureAnnotations(ctx context.Context, cachedStatus inspecto
 		})
 	}
 
-	if err := ensurePvcsAnnotations(patchPVC,
+	if err := r.ensurePvcsAnnotations(patchPVC,
 		cachedStatus,
 		deployment.ArangoDeploymentResourceKind,
 		r.context.GetAPIObject().GetName(),
@@ -138,7 +146,7 @@ func (r *Resources) EnsureAnnotations(ctx context.Context, cachedStatus inspecto
 		})
 	}
 
-	if err := ensurePodsAnnotations(patchPod,
+	if err := r.ensurePodsAnnotations(patchPod,
 		cachedStatus,
 		deployment.ArangoDeploymentResourceKind,
 		r.context.GetAPIObject().GetName(),
@@ -155,7 +163,7 @@ func (r *Resources) EnsureAnnotations(ctx context.Context, cachedStatus inspecto
 		})
 	}
 
-	if err := ensureServiceMonitorsAnnotations(patchServiceMonitor,
+	if err := r.ensureServiceMonitorsAnnotations(patchServiceMonitor,
 		cachedStatus,
 		deployment.ArangoDeploymentResourceKind,
 		r.context.GetAPIObject().GetName(),
@@ -167,9 +175,9 @@ func (r *Resources) EnsureAnnotations(ctx context.Context, cachedStatus inspecto
 	return nil
 }
 
-func ensureSecretsAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
+func (r *Resources) ensureSecretsAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
 	if err := cachedStatus.Secret().V1().Iterate(func(secret *core.Secret) error {
-		ensureAnnotationsMap(secret.Kind, secret, spec, patch)
+		r.ensureAnnotationsMap(secret.Kind, secret, spec, patch)
 		return nil
 	}, func(secret *core.Secret) bool {
 		return k8sutil.IsChildResource(kind, name, namespace, secret)
@@ -180,9 +188,9 @@ func ensureSecretsAnnotations(patch PatchFunc, cachedStatus inspectorInterface.I
 	return nil
 }
 
-func ensureServiceAccountsAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
+func (r *Resources) ensureServiceAccountsAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
 	if err := cachedStatus.ServiceAccount().V1().Iterate(func(serviceAccount *core.ServiceAccount) error {
-		ensureAnnotationsMap(serviceAccount.Kind, serviceAccount, spec, patch)
+		r.ensureAnnotationsMap(serviceAccount.Kind, serviceAccount, spec, patch)
 		return nil
 	}, func(serviceAccount *core.ServiceAccount) bool {
 		return k8sutil.IsChildResource(kind, name, namespace, serviceAccount)
@@ -193,9 +201,9 @@ func ensureServiceAccountsAnnotations(patch PatchFunc, cachedStatus inspectorInt
 	return nil
 }
 
-func ensureServicesAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
+func (r *Resources) ensureServicesAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
 	if err := cachedStatus.Service().V1().Iterate(func(service *core.Service) error {
-		ensureAnnotationsMap(service.Kind, service, spec, patch)
+		r.ensureAnnotationsMap(service.Kind, service, spec, patch)
 		return nil
 	}, func(service *core.Service) bool {
 		return k8sutil.IsChildResource(kind, name, namespace, service)
@@ -206,15 +214,29 @@ func ensureServicesAnnotations(patch PatchFunc, cachedStatus inspectorInterface.
 	return nil
 }
 
-func ensurePdbsAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
-	i, err := cachedStatus.PodDisruptionBudget().V1Beta1()
+func (r *Resources) ensurePdbsAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Inspector, kind, name, namespace string,
+	spec api.DeploymentSpec) error {
+	if inspector, err := cachedStatus.PodDisruptionBudget().V1(); err == nil {
+		if err := inspector.Iterate(func(podDisruptionBudget *policyv1.PodDisruptionBudget) error {
+			r.ensureAnnotationsMap(podDisruptionBudget.Kind, podDisruptionBudget, spec, patch)
+			return nil
+		}, func(podDisruptionBudget *policyv1.PodDisruptionBudget) bool {
+			return k8sutil.IsChildResource(kind, name, namespace, podDisruptionBudget)
+		}); err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	inspector, err := cachedStatus.PodDisruptionBudget().V1Beta1()
 	if err != nil {
 		return err
 	}
-	if err := i.Iterate(func(podDisruptionBudget *policy.PodDisruptionBudget) error {
-		ensureAnnotationsMap(podDisruptionBudget.Kind, podDisruptionBudget, spec, patch)
+	if err := inspector.Iterate(func(podDisruptionBudget *policyv1beta1.PodDisruptionBudget) error {
+		r.ensureAnnotationsMap(podDisruptionBudget.Kind, podDisruptionBudget, spec, patch)
 		return nil
-	}, func(podDisruptionBudget *policy.PodDisruptionBudget) bool {
+	}, func(podDisruptionBudget *policyv1beta1.PodDisruptionBudget) bool {
 		return k8sutil.IsChildResource(kind, name, namespace, podDisruptionBudget)
 	}); err != nil {
 		return err
@@ -223,9 +245,9 @@ func ensurePdbsAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Insp
 	return nil
 }
 
-func ensurePvcsAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
+func (r *Resources) ensurePvcsAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
 	if err := cachedStatus.PersistentVolumeClaim().V1().Iterate(func(persistentVolumeClaim *core.PersistentVolumeClaim) error {
-		ensureGroupAnnotationsMap(persistentVolumeClaim.Kind, persistentVolumeClaim, spec, patch)
+		r.ensureGroupAnnotationsMap(persistentVolumeClaim.Kind, persistentVolumeClaim, spec, patch)
 		return nil
 	}, func(persistentVolumeClaim *core.PersistentVolumeClaim) bool {
 		return k8sutil.IsChildResource(kind, name, namespace, persistentVolumeClaim)
@@ -236,7 +258,7 @@ func ensurePvcsAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Insp
 	return nil
 }
 
-func ensureServiceMonitorsAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
+func (r *Resources) ensureServiceMonitorsAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
 	i, err := cachedStatus.ServiceMonitor().V1()
 	if err != nil {
 		if k8sutil.IsForbiddenOrNotFound(err) {
@@ -245,7 +267,7 @@ func ensureServiceMonitorsAnnotations(patch PatchFunc, cachedStatus inspectorInt
 		return err
 	}
 	if err := i.Iterate(func(serviceMonitor *monitoring.ServiceMonitor) error {
-		ensureAnnotationsMap(serviceMonitor.Kind, serviceMonitor, spec, patch)
+		r.ensureAnnotationsMap(serviceMonitor.Kind, serviceMonitor, spec, patch)
 		return nil
 	}, func(serviceMonitor *monitoring.ServiceMonitor) bool {
 		return k8sutil.IsChildResource(kind, name, namespace, serviceMonitor)
@@ -270,10 +292,10 @@ func getObjectGroup(obj meta.Object) api.ServerGroup {
 	return api.ServerGroupFromRole(group)
 }
 
-func ensurePodsAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
+func (r *Resources) ensurePodsAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
 
 	if err := cachedStatus.Pod().V1().Iterate(func(pod *core.Pod) error {
-		ensureGroupAnnotationsMap(pod.Kind, pod, spec, patch)
+		r.ensureGroupAnnotationsMap(pod.Kind, pod, spec, patch)
 		return nil
 	}, func(pod *core.Pod) bool {
 		return k8sutil.IsChildResource(kind, name, namespace, pod)
@@ -298,7 +320,7 @@ func getDefaultMode(annotations map[string]string) api.LabelsMode {
 	return api.LabelsReplaceMode
 }
 
-func ensureGroupLabelsMap(kind string, obj meta.Object, spec api.DeploymentSpec,
+func (r *Resources) ensureGroupLabelsMap(kind string, obj meta.Object, spec api.DeploymentSpec,
 	patchCmd func(name string, d []byte) error) bool {
 	group := getObjectGroup(obj)
 	groupSpec := spec.GetServerGroupSpec(group)
@@ -308,20 +330,20 @@ func ensureGroupLabelsMap(kind string, obj meta.Object, spec api.DeploymentSpec,
 
 	mode := groupSpec.LabelsMode.Get(spec.LabelsMode.Get(getDefaultMode(expected)))
 
-	return ensureObjectMap(kind, obj, mode, expected, obj.GetLabels(), collection.LabelsPatch, patchCmd, ignoredList...)
+	return r.ensureObjectMap(kind, obj, mode, expected, obj.GetLabels(), collection.LabelsPatch, patchCmd, ignoredList...)
 }
 
-func ensureLabelsMap(kind string, obj meta.Object, spec api.DeploymentSpec,
+func (r *Resources) ensureLabelsMap(kind string, obj meta.Object, spec api.DeploymentSpec,
 	patchCmd func(name string, d []byte) error) bool {
 	expected := spec.Labels
-	ignored := spec.AnnotationsIgnoreList
+	ignored := spec.LabelsIgnoreList
 
 	mode := spec.LabelsMode.Get(getDefaultMode(expected))
 
-	return ensureObjectMap(kind, obj, mode, expected, obj.GetLabels(), collection.LabelsPatch, patchCmd, ignored...)
+	return r.ensureObjectMap(kind, obj, mode, expected, obj.GetLabels(), collection.LabelsPatch, patchCmd, ignored...)
 }
 
-func ensureGroupAnnotationsMap(kind string, obj meta.Object, spec api.DeploymentSpec,
+func (r *Resources) ensureGroupAnnotationsMap(kind string, obj meta.Object, spec api.DeploymentSpec,
 	patchCmd func(name string, d []byte) error) {
 	group := getObjectGroup(obj)
 	groupSpec := spec.GetServerGroupSpec(group)
@@ -331,39 +353,41 @@ func ensureGroupAnnotationsMap(kind string, obj meta.Object, spec api.Deployment
 
 	mode := groupSpec.AnnotationsMode.Get(spec.AnnotationsMode.Get(getDefaultMode(expected)))
 
-	ensureObjectMap(kind, obj, mode, expected, obj.GetAnnotations(), collection.AnnotationsPatch, patchCmd, ignoredList...)
+	r.ensureObjectMap(kind, obj, mode, expected, obj.GetAnnotations(), collection.AnnotationsPatch, patchCmd, ignoredList...)
 }
 
-func ensureAnnotationsMap(kind string, obj meta.Object, spec api.DeploymentSpec, patchCmd PatchFunc) {
+func (r *Resources) ensureAnnotationsMap(kind string, obj meta.Object, spec api.DeploymentSpec, patchCmd PatchFunc) {
 	expected := spec.Annotations
 	ignored := spec.AnnotationsIgnoreList
 
 	mode := spec.AnnotationsMode.Get(getDefaultMode(expected))
 
-	ensureObjectMap(kind, obj, mode, expected, obj.GetAnnotations(), collection.AnnotationsPatch, patchCmd, ignored...)
+	r.ensureObjectMap(kind, obj, mode, expected, obj.GetAnnotations(), collection.AnnotationsPatch, patchCmd, ignored...)
 }
 
-func ensureObjectMap(kind string, obj meta.Object, mode api.LabelsMode,
+func (r *Resources) ensureObjectMap(kind string, obj meta.Object, mode api.LabelsMode,
 	expected, actual map[string]string,
 	patchGetter func(mode api.LabelsMode, expected map[string]string, actual map[string]string, ignored ...string) patch.Patch,
 	patchCmd PatchFunc,
 	ignored ...string) bool {
 	p := patchGetter(mode, expected, actual, ignored...)
 
+	log := r.log.Str("section", "annotations")
+
 	if len(p) == 0 {
 		return false
 	}
 
-	log.Info().Msgf("Replacing annotations for %s %s", kind, obj.GetName())
+	log.Info("Replacing annotations for %s %s", kind, obj.GetName())
 
 	d, err := p.Marshal()
 	if err != nil {
-		log.Warn().Err(err).Msgf("Unable to marshal kubernetes patch instruction")
+		log.Err(err).Warn("Unable to marshal kubernetes patch instruction")
 		return false
 	}
 
 	if err := patchCmd(obj.GetName(), d); err != nil {
-		log.Warn().Err(err).Msgf("Unable to patch Pod")
+		log.Err(err).Warn("Unable to patch Pod")
 		return false
 	}
 

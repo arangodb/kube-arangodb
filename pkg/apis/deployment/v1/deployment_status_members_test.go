@@ -39,46 +39,30 @@ func newMemberList() DeploymentStatusMembers {
 
 func Test_StatusMemberList_EnsureDefaultExecutionOrder(t *testing.T) {
 	statusMembers := newMemberList()
-
 	order := AllServerGroups
-
 	orderIndex := 0
 
-	statusMembers.ForeachServerGroup(func(group ServerGroup, list MemberStatusList) error {
+	for _, e := range statusMembers.AsList() {
 		require.True(t, orderIndex < len(order))
-
-		require.Equal(t, order[orderIndex], group)
-
-		require.Len(t, list, 1)
-
-		require.Equal(t, order[orderIndex].AsRole(), list[0].ID)
+		require.Equal(t, order[orderIndex], e.Group)
+		require.Equal(t, order[orderIndex].AsRole(), e.Member.ID)
 
 		orderIndex += 1
-
-		return nil
-	})
+	}
 }
 
 func Test_StatusMemberList_CustomExecutionOrder(t *testing.T) {
 	statusMembers := newMemberList()
-
 	order := []ServerGroup{
 		ServerGroupDBServers,
 	}
-
 	orderIndex := 0
 
-	statusMembers.ForeachServerInGroups(func(group ServerGroup, list MemberStatusList) error {
+	for _, e := range statusMembers.AsListInGroups(order...) {
 		require.True(t, orderIndex < len(order))
-
-		require.Equal(t, order[orderIndex], group)
-
-		require.Len(t, list, 1)
-
-		require.Equal(t, order[orderIndex].AsRole(), list[0].ID)
+		require.Equal(t, order[orderIndex], e.Group)
+		require.Equal(t, order[orderIndex].AsRole(), e.Member.ID)
 
 		orderIndex += 1
-
-		return nil
-	}, order...)
+	}
 }

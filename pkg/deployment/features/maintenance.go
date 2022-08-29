@@ -30,6 +30,7 @@ var maintenance = &feature{
 	version:            "3.6.0",
 	enterpriseRequired: false,
 	enabledByDefault:   true,
+	hidden:             true,
 }
 
 func Maintenance() Feature {

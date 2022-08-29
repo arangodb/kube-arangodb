@@ -23,14 +23,14 @@ package resources
 import (
 	"context"
 
+	core "k8s.io/api/core/v1"
+
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/acs/sutil"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/member"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	core "k8s.io/api/core/v1"
 )
 
 // Context provides all functions needed by the Resources service
@@ -42,9 +42,7 @@ type Context interface {
 	reconciler.DeploymentImageManager
 	reconciler.ArangoAgency
 	reconciler.ArangoApplier
-	reconciler.DeploymentInfoGetter
-	reconciler.DeploymentClient
-	reconciler.DeploymentSyncClient
+	reconciler.DeploymentGetter
 	reconciler.KubernetesEventGenerator
 
 	member.StateInspectorGetter
@@ -53,9 +51,6 @@ type Context interface {
 
 	// GetServerGroupIterator returns the deployment as ServerGroupIterator.
 	GetServerGroupIterator() reconciler.ServerGroupIterator
-	// UpdateStatus replaces the status of the deployment with the given status and
-	// updates the resources in k8s.
-	UpdateStatus(ctx context.Context, status api.DeploymentStatus, lastVersion int32, force ...bool) error
 	// GetOperatorImage returns the image name of operator image
 	GetOperatorImage() string
 	// GetArangoImage returns the image name containing the default arango image

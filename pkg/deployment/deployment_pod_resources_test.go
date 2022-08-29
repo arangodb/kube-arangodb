@@ -24,14 +24,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/stretchr/testify/require"
+	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	core "k8s.io/api/core/v1"
 )
 
 type envFunc func() []core.EnvVar
@@ -107,7 +107,7 @@ func TestEnsurePod_ArangoDB_Resources(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						DBServers: api.MemberStatusList{
 							firstDBServerStatus,
@@ -115,7 +115,7 @@ func TestEnsurePod_ArangoDB_Resources(t *testing.T) {
 					},
 					Images: createTestImages(false),
 				}
-				deployment.status.last.Members.DBServers[0].IsInitialized = true
+				deployment.currentObjectStatus.Members.DBServers[0].IsInitialized = true
 
 				testCase.createTestPodData(deployment, api.ServerGroupDBServers, firstDBServerStatus)
 			},
@@ -165,7 +165,7 @@ func TestEnsurePod_ArangoDB_Resources(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						DBServers: api.MemberStatusList{
 							firstDBServerStatus,
@@ -173,7 +173,7 @@ func TestEnsurePod_ArangoDB_Resources(t *testing.T) {
 					},
 					Images: createTestImages(false),
 				}
-				deployment.status.last.Members.DBServers[0].IsInitialized = true
+				deployment.currentObjectStatus.Members.DBServers[0].IsInitialized = true
 
 				testCase.createTestPodData(deployment, api.ServerGroupDBServers, firstDBServerStatus)
 			},
@@ -222,7 +222,7 @@ func TestEnsurePod_ArangoDB_Resources(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						DBServers: api.MemberStatusList{
 							firstDBServerStatus,
@@ -230,7 +230,7 @@ func TestEnsurePod_ArangoDB_Resources(t *testing.T) {
 					},
 					Images: createTestImages(false),
 				}
-				deployment.status.last.Members.DBServers[0].IsInitialized = true
+				deployment.currentObjectStatus.Members.DBServers[0].IsInitialized = true
 
 				testCase.createTestPodData(deployment, api.ServerGroupDBServers, firstDBServerStatus)
 			},

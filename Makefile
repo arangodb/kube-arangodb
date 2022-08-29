@@ -89,6 +89,14 @@ else
 	COMPILE_DEBUG_FLAGS :=
 endif
 
+PROTOC_VERSION := 21.1
+ifeq ($(shell uname),Darwin)
+	PROTOC_ARCHIVE_SUFFIX := osx-universal_binary
+else
+	PROTOC_ARCHIVE_SUFFIX := linux-x86_64
+endif
+PROTOC_URL := https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/protoc-${PROTOC_VERSION}-${PROTOC_ARCHIVE_SUFFIX}.zip
+
 ifeq ($(MANIFESTSUFFIX),-)
 	# Release setting
 	MANIFESTSUFFIX :=
@@ -146,12 +154,18 @@ BIN := $(BINDIR)/$(BINNAME)
 VBIN_LINUX_AMD64 := $(BINDIR)/$(RELEASE_MODE)/linux/amd64/$(BINNAME)
 VBIN_LINUX_ARM64 := $(BINDIR)/$(RELEASE_MODE)/linux/arm64/$(BINNAME)
 
+BIN_OPS_NAME := $(PROJECT)_ops
+BIN_OPS := $(BINDIR)/$(BIN_OPS_NAME)
+VBIN_OPS_LINUX_AMD64 := $(BINDIR)/$(RELEASE_MODE)/linux/amd64/$(BIN_OPS_NAME)
+VBIN_OPS_LINUX_ARM64 := $(BINDIR)/$(RELEASE_MODE)/linux/arm64/$(BIN_OPS_NAME)
+
 ifdef VERBOSE
 	TESTVERBOSEOPTIONS := -v
 endif
 
-EXCLUDE_DIRS := vendor .gobuild deps tools
-SOURCES_QUERY := find ./ -type f -name '*.go' $(foreach EXCLUDE_DIR,$(EXCLUDE_DIRS), ! -path "*/$(EXCLUDE_DIR)/*")
+EXCLUDE_DIRS := vendor .gobuild deps tools pkg/generated/clientset pkg/generated/informers pkg/generated/listers
+EXCLUDE_FILES := *generated.deepcopy.go
+SOURCES_QUERY := find ./ -type f -name '*.go' ! -name '*.pb.go' $(foreach EXCLUDE_DIR,$(EXCLUDE_DIRS), ! -path "*/$(EXCLUDE_DIR)/*") $(foreach EXCLUDE_FILE,$(EXCLUDE_FILES), ! -path "*/$(EXCLUDE_FILE)")
 SOURCES := $(shell $(SOURCES_QUERY))
 DASHBOARDSOURCES := $(shell find $(DASHBOARDDIR)/src -name '*.js') $(DASHBOARDDIR)/package.json
 LINT_EXCLUDES:=
@@ -161,6 +175,7 @@ else
 LINT_EXCLUDES+=.*\.enterprise\.go$$
 endif
 
+PROTOSOURCES := $(shell find ./ -type f  -name '*.proto' $(foreach EXCLUDE_DIR,$(EXCLUDE_DIRS), ! -path "*/$(EXCLUDE_DIR)/*") | sort)
 
 .DEFAULT_GOAL := all
 .PHONY: all
@@ -177,24 +192,21 @@ allall: all
 # Tip: Run `eval $(minikube docker-env)` before calling make if you're developing on minikube.
 #
 
-GOLANGCI_ENABLED=deadcode gosimple govet ineffassign staticcheck structcheck typecheck unconvert unparam unused varcheck
-#GOLANGCI_ENABLED=gocyclo goconst golint maligned errcheck interfacer megacheck
-#GOLANGCI_ENABLED+=dupl - disable dupl check
-
 .PHONY: license-verify
 license-verify:
 	@echo ">> Verify license of files"
-	@$(GOPATH)/bin/addlicense -f "./tools/codegen/boilerplate.go.txt" -check $(SOURCES)
+	@$(GOPATH)/bin/addlicense -f "./tools/codegen/license-header.txt" -check $(SOURCES) $(PROTOSOURCES)
 
 .PHONY: fmt
 fmt:
 	@echo ">> Ensuring style of files"
 	@$(GOPATH)/bin/goimports -w $(SOURCES)
+	@$(GOPATH)/bin/gci write -s "standard" -s "default" -s "prefix(github.com/arangodb)" -s "prefix(github.com/arangodb/kube-arangodb)" $(SOURCES) 
 
 .PHONY: license
 license:
 	@echo ">> Ensuring license of files"
-	@$(GOPATH)/bin/addlicense -f "./tools/codegen/boilerplate.go.txt" $(SOURCES)
+	@$(GOPATH)/bin/addlicense -f "./tools/codegen/license-header.txt" $(SOURCES) $(PROTOSOURCES)
 
 .PHONY: fmt-verify
 fmt-verify: license-verify
@@ -203,11 +215,11 @@ fmt-verify: license-verify
 
 .PHONY: linter
 linter:
-	$(GOPATH)/bin/golangci-lint run --build-tags "$(RELEASE_MODE)" --no-config --issues-exit-code=1 --deadline=30m --exclude-use-default=false \
-	--disable-all $(foreach EXCLUDE_DIR,$(EXCLUDE_DIRS),--skip-dirs $(EXCLUDE_DIR)) \
-	$(foreach MODE,$(GOLANGCI_ENABLED),--enable $(MODE)) \
-	$(foreach LINT_EXCLUDE,$(LINT_EXCLUDES),--exclude '$(LINT_EXCLUDE)') \
-	./...
+	$(GOPATH)/bin/golangci-lint run --build-tags "$(RELEASE_MODE)" $(foreach LINT_EXCLUDE,$(LINT_EXCLUDES),--exclude '$(LINT_EXCLUDE)') ./...
+
+.PHONY: linter-fix
+linter-fix:
+	$(GOPATH)/bin/golangci-lint run --fix --build-tags "$(RELEASE_MODE)" $(foreach LINT_EXCLUDE,$(LINT_EXCLUDES),--exclude '$(LINT_EXCLUDE)') ./...
 
 .PHONY: build
 build: docker manifests
@@ -218,7 +230,7 @@ endif
 
 .PHONY: clean
 clean:
-	rm -Rf $(BIN) $(BINDIR) $(DASHBOARDDIR)/build $(DASHBOARDDIR)/node_modules $(VBIN_LINUX_AMD64) $(VBIN_LINUX_ARM64)
+	rm -Rf $(BIN) $(BINDIR) $(DASHBOARDDIR)/build $(DASHBOARDDIR)/node_modules $(VBIN_LINUX_AMD64) $(VBIN_LINUX_ARM64) $(VBIN_OPS_LINUX_AMD64) $(VBIN_OPS_LINUX_ARM64)
 
 .PHONY: check-vars
 check-vars:
@@ -240,6 +252,7 @@ update-generated:
 	@rm -fr $(ORGDIR)
 	@mkdir -p $(ORGDIR)
 	@ln -s -f $(SCRIPTDIR) $(ORGDIR)/kube-arangodb
+	@sed -e 's/^/\/\/ /' -e 's/ *$$//' $(ROOTDIR)/tools/codegen/license-header.txt > $(ROOTDIR)/tools/codegen/boilerplate.go.txt
 	GOPATH=$(GOBUILDDIR) $(VENDORDIR)/k8s.io/code-generator/generate-groups.sh  \
 			"all" \
 			"github.com/arangodb/kube-arangodb/pkg/generated" \
@@ -276,14 +289,17 @@ bin-all: $(BIN) $(VBIN_LINUX_AMD64) $(VBIN_LINUX_ARM64)
 
 $(VBIN_LINUX_AMD64): $(SOURCES) dashboard/assets.go VERSION
 	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/linux/amd64
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build ${GOBUILDARGS} --tags "$(RELEASE_MODE)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(VBIN_LINUX_AMD64) ./
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build ${GOBUILDARGS} --tags "$(RELEASE_MODE)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(VBIN_LINUX_AMD64) ./cmd/main
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build ${GOBUILDARGS} --tags "$(RELEASE_MODE)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(VBIN_OPS_LINUX_AMD64) ./cmd/main-ops
 
 $(VBIN_LINUX_ARM64): $(SOURCES) dashboard/assets.go VERSION
 	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/linux/arm64
-	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build ${GOBUILDARGS} --tags "$(RELEASE_MODE)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(VBIN_LINUX_ARM64) ./
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build ${GOBUILDARGS} --tags "$(RELEASE_MODE)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(VBIN_LINUX_ARM64) ./cmd/main
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build ${GOBUILDARGS} --tags "$(RELEASE_MODE)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(VBIN_OPS_LINUX_ARM64) ./cmd/main-ops
 
 $(BIN): $(VBIN_LINUX_AMD64)
 	@cp "$(VBIN_LINUX_AMD64)" "$(BIN)"
+	@cp "$(VBIN_OPS_LINUX_AMD64)" "$(BIN_OPS)"
 
 .PHONY: docker
 docker: check-vars $(VBIN_LINUX_AMD64) $(VBIN_LINUX_ARM64)
@@ -449,13 +465,22 @@ init: tools update-generated $(BIN) vendor
 .PHONY: tools
 tools: update-vendor
 	@echo ">> Fetching golangci-lint linter"
-	@GOBIN=$(GOPATH)/bin go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.42.1
+	@GOBIN=$(GOPATH)/bin go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.46.2
 	@echo ">> Fetching goimports"
 	@GOBIN=$(GOPATH)/bin go install golang.org/x/tools/cmd/goimports@0bb7e5c47b1a31f85d4f173edc878a8e049764a5
 	@echo ">> Fetching license check"
 	@GOBIN=$(GOPATH)/bin go install github.com/google/addlicense@6d92264d717064f28b32464f0f9693a5b4ef0239
 	@echo ">> Fetching GO Assets Builder"
 	@GOBIN=$(GOPATH)/bin go install github.com/jessevdk/go-assets-builder@b8483521738fd2198ecfc378067a4e8a6079f8e5
+	@echo ">> Fetching gci"
+	@GOBIN=$(GOPATH)/bin go install github.com/daixiang0/gci@v0.3.0
+	@echo ">> Downloading protobuf compiler..."
+	@curl -L ${PROTOC_URL} -o $(GOPATH)/protoc.zip
+	@echo ">> Unzipping protobuf compiler..."
+	@unzip -o $(GOPATH)/protoc.zip -d $(GOPATH)/
+	@echo ">> Fetching protoc go plugins..."
+	@GOBIN=$(GOPATH)/bin go install github.com/golang/protobuf/protoc-gen-go@v1.5.2
+	@GOBIN=$(GOPATH)/bin go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
 
 .PHONY: vendor
 vendor:
@@ -523,3 +548,14 @@ check-community:
 
 _check:
 	@$(MAKE) fmt license-verify linter run-unit-tests bin
+
+generate: generate-internal generate-proto fmt
+
+generate-internal:
+	ROOT=$(ROOT) go test --count=1 "$(REPOPATH)/internal/..."
+	
+generate-proto:
+	PATH=$(PATH):$(GOBUILDDIR)/bin $(GOBUILDDIR)/bin/protoc -I.:$(GOBUILDDIR)/include/ \
+			--go_out=. --go_opt=paths=source_relative \
+			--go-grpc_out=. --go-grpc_opt=paths=source_relative \
+			$(PROTOSOURCES)

@@ -23,52 +23,105 @@ package rotation
 import (
 	"testing"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
-	"github.com/rs/zerolog/log"
-
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
+
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 )
+
+type TestCaseOverride struct {
+	expectedMode Mode
+	expectedPlan api.Plan
+	expectedErr  string
+}
 
 type TestCase struct {
 	name         string
 	spec, status *core.PodTemplateSpec
 
 	deploymentSpec api.DeploymentSpec
-	expectedMode   Mode
-	expectedPlan   api.Plan
-	expectedErr    string
+	groupSpec      api.ServerGroupSpec
+
+	TestCaseOverride
+
+	overrides map[api.DeploymentMode]map[api.ServerGroup]TestCaseOverride
 }
 
 func runTestCases(t *testing.T) func(tcs ...TestCase) {
+
 	return func(tcs ...TestCase) {
 		for _, tc := range tcs {
 			t.Run(tc.name, func(t *testing.T) {
-
-				pspec := newTemplateFromSpec(t, tc.spec, api.ServerGroupAgents, tc.deploymentSpec)
-				pstatus := newTemplateFromSpec(t, tc.status, api.ServerGroupAgents, tc.deploymentSpec)
-
-				mode, plan, err := compare(log.Logger, tc.deploymentSpec, api.MemberStatus{ID: "id"}, api.ServerGroupAgents, pspec, pstatus)
-
-				if tc.expectedErr != "" {
-					require.Error(t, err)
-					require.EqualError(t, err, tc.expectedErr)
-				} else {
-					require.Equal(t, tc.expectedMode, mode)
-
-					switch mode {
-					case InPlaceRotation:
-						require.Len(t, plan, len(tc.expectedPlan))
-
-						for i := range plan {
-							require.Equal(t, tc.expectedPlan[i].Type, plan[i].Type)
-						}
-					}
-				}
+				runTestCasesForMode(t, api.DeploymentModeSingle, tc)
+				runTestCasesForMode(t, api.DeploymentModeActiveFailover, tc)
+				runTestCasesForMode(t, api.DeploymentModeCluster, tc)
 			})
 		}
 	}
+}
+
+func runTestCasesForMode(t *testing.T, m api.DeploymentMode, tc TestCase) {
+	t.Run(m.String(), func(t *testing.T) {
+		switch m {
+		case api.DeploymentModeSingle:
+			runTestCasesForModeAndGroup(t, m, api.ServerGroupSingle, tc)
+		case api.DeploymentModeCluster:
+			runTestCasesForModeAndGroup(t, m, api.ServerGroupAgents, tc)
+			runTestCasesForModeAndGroup(t, m, api.ServerGroupDBServers, tc)
+			runTestCasesForModeAndGroup(t, m, api.ServerGroupCoordinators, tc)
+		case api.DeploymentModeActiveFailover:
+			runTestCasesForModeAndGroup(t, m, api.ServerGroupAgents, tc)
+			runTestCasesForModeAndGroup(t, m, api.ServerGroupSingle, tc)
+		}
+	})
+}
+
+func runTestCasesForModeAndGroup(t *testing.T, m api.DeploymentMode, g api.ServerGroup, tc TestCase) {
+	t.Run(g.AsRole(), func(t *testing.T) {
+		ds := tc.deploymentSpec.DeepCopy()
+		if ds == nil {
+			ds = &api.DeploymentSpec{}
+		}
+
+		ds.Mode = m.New()
+
+		ds.UpdateServerGroupSpec(g, tc.groupSpec)
+
+		if tc.spec == nil {
+			tc.spec = buildPodSpec()
+		}
+		if tc.status == nil {
+			tc.status = buildPodSpec()
+		}
+
+		pspec := newTemplateFromSpec(t, tc.spec, g, *ds)
+		pstatus := newTemplateFromSpec(t, tc.status, g, *ds)
+
+		mode, plan, err := compare(*ds, api.MemberStatus{ID: "id"}, g, pspec, pstatus)
+
+		q := tc.TestCaseOverride
+
+		if v, ok := tc.overrides[m][g]; ok {
+			q = v
+		}
+
+		if tc.expectedErr != "" {
+			require.Error(t, err)
+			require.EqualError(t, err, q.expectedErr)
+		} else {
+			require.Equal(t, q.expectedMode, mode)
+
+			switch mode {
+			case InPlaceRotation:
+				require.Len(t, plan, len(q.expectedPlan))
+
+				for i := range plan {
+					require.Equal(t, q.expectedPlan[i].Type, plan[i].Type)
+				}
+			}
+		}
+	})
 }
 
 func newTemplateFromSpec(t *testing.T, podSpec *core.PodTemplateSpec, group api.ServerGroup, deploymentSpec api.DeploymentSpec) *api.ArangoMemberPodTemplate {
@@ -83,6 +136,8 @@ func newTemplateFromSpec(t *testing.T, podSpec *core.PodTemplateSpec, group api.
 
 type podSpecBuilder func(pod *core.PodTemplateSpec)
 
+type podContainerBuilder func(c *core.Container)
+
 func buildPodSpec(b ...podSpecBuilder) *core.PodTemplateSpec {
 	p := &core.PodTemplateSpec{}
 
@@ -93,28 +148,28 @@ func buildPodSpec(b ...podSpecBuilder) *core.PodTemplateSpec {
 	return p
 }
 
-func addContainer(name string, f func(c *core.Container)) podSpecBuilder {
+func addContainer(name string, f ...podContainerBuilder) podSpecBuilder {
 	return func(pod *core.PodTemplateSpec) {
 		var c core.Container
 
 		c.Name = name
 
-		if f != nil {
-			f(&c)
+		for _, q := range f {
+			q(&c)
 		}
 
 		pod.Spec.Containers = append(pod.Spec.Containers, c)
 	}
 }
 
-func addInitContainer(name string, f func(c *core.Container)) podSpecBuilder {
+func addInitContainer(name string, f ...podContainerBuilder) podSpecBuilder {
 	return func(pod *core.PodTemplateSpec) {
 		var c core.Container
 
 		c.Name = name
 
-		if f != nil {
-			f(&c)
+		for _, q := range f {
+			q(&c)
 		}
 
 		pod.Spec.InitContainers = append(pod.Spec.InitContainers, c)
@@ -137,6 +192,18 @@ type deploymentBuilder func(depl *api.DeploymentSpec)
 
 func buildDeployment(b ...deploymentBuilder) api.DeploymentSpec {
 	p := api.DeploymentSpec{}
+
+	for _, i := range b {
+		i(&p)
+	}
+
+	return p
+}
+
+type groupSpecBuilder func(depl *api.ServerGroupSpec)
+
+func buildGroupSpec(b ...groupSpecBuilder) api.ServerGroupSpec {
+	p := api.ServerGroupSpec{}
 
 	for _, i := range b {
 		i(&p)

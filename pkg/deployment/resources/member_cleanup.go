@@ -24,15 +24,15 @@ import (
 	"context"
 	"time"
 
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
 	driver "github.com/arangodb/go-driver"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	memberState "github.com/arangodb/kube-arangodb/pkg/deployment/member"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	arangomemberv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember/v1"
 )
 
@@ -48,8 +48,10 @@ var (
 
 // SyncMembersInCluster sets proper condition for all arangod members that belongs to the deployment.
 func (r *Resources) SyncMembersInCluster(ctx context.Context, health memberState.Health) error {
+	log := r.log.Str("section", "members")
+
 	if health.Error != nil {
-		r.log.Info().Err(health.Error).Msg("Health of the cluster is missing")
+		log.Err(health.Error).Info("Health of the cluster is missing")
 		return nil
 	}
 
@@ -71,51 +73,45 @@ func (r *Resources) SyncMembersInCluster(ctx context.Context, health memberState
 
 // syncMembersInCluster sets proper condition for all arangod members that are part of the cluster.
 func (r *Resources) syncMembersInCluster(ctx context.Context, health memberState.Health) error {
-	log := r.log
-
+	log := r.log.Str("section", "members")
 	serverFound := func(id string) bool {
 		_, found := health.Members[driver.ServerID(id)]
 		return found
 	}
 
-	status, lastVersion := r.context.GetStatus()
+	status := r.context.GetStatus()
 	updateStatusNeeded := false
 
-	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
-		if group != api.ServerGroupCoordinators && group != api.ServerGroupDBServers {
-			// We're not interested in these other groups
-			return nil
-		}
-		for _, m := range list {
-			log := log.With().Str("member", m.ID).Str("role", group.AsRole()).Logger()
-			if serverFound(m.ID) {
-				// Member is (still) found, skip it
-				if m.Conditions.Update(api.ConditionTypeMemberOfCluster, true, "", "") {
-					if err := status.Members.Update(m, group); err != nil {
-						log.Warn().Err(err).Msg("Failed to update member")
-					}
-					updateStatusNeeded = true
-					log.Debug().Msg("Updating MemberOfCluster condition to true")
+	for _, e := range status.Members.AsListInGroups(api.ServerGroupCoordinators, api.ServerGroupDBServers) {
+		m := e.Member
+		group := e.Group
+		log := log.Str("member", m.ID).Str("role", group.AsRole())
+		if serverFound(m.ID) {
+			// Member is (still) found, skip it
+			if m.Conditions.Update(api.ConditionTypeMemberOfCluster, true, "", "") {
+				if err := status.Members.Update(m, group); err != nil {
+					log.Err(err).Warn("Failed to update member")
 				}
-				continue
-			} else if !m.Conditions.IsTrue(api.ConditionTypeMemberOfCluster) {
-				if m.Age() < minMemberAge {
-					log.Debug().Dur("age", m.Age()).Msg("Member is not yet recorded as member of cluster")
-					continue
-				}
-				log.Warn().Msg("Member can not be found in cluster")
-			} else {
-				log.Info().Msg("Member is no longer part of the ArangoDB cluster")
+				updateStatusNeeded = true
+				log.Debug("Updating MemberOfCluster condition to true")
 			}
+			continue
+		} else if !m.Conditions.IsTrue(api.ConditionTypeMemberOfCluster) {
+			if m.Age() < minMemberAge {
+				log.Dur("age", m.Age()).Debug("Member is not yet recorded as member of cluster")
+				continue
+			}
+			log.Warn("Member can not be found in cluster")
+		} else {
+			log.Info("Member is no longer part of the ArangoDB cluster")
 		}
-		return nil
-	})
+	}
 
 	if updateStatusNeeded {
-		log.Debug().Msg("UpdateStatus needed")
+		log.Debug("UpdateStatus needed")
 
-		if err := r.context.UpdateStatus(ctx, status, lastVersion); err != nil {
-			log.Warn().Err(err).Msg("Failed to update deployment status")
+		if err := r.context.UpdateStatus(ctx, status); err != nil {
+			log.Err(err).Warn("Failed to update deployment status")
 			return errors.WithStack(err)
 		}
 	}
@@ -125,61 +121,55 @@ func (r *Resources) syncMembersInCluster(ctx context.Context, health memberState
 
 func (r *Resources) EnsureArangoMembers(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
 	// Create all missing arangomembers
-	s, _ := r.context.GetStatus()
+	s := r.context.GetStatus()
 	obj := r.context.GetAPIObject()
 
-	if err := s.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
-		for _, member := range list {
-			name := member.ArangoMemberName(r.context.GetAPIObject().GetName(), group)
+	for _, e := range s.Members.AsList() {
+		name := e.Member.ArangoMemberName(r.context.GetAPIObject().GetName(), e.Group)
 
-			c := r.context.WithCurrentArangoMember(name)
+		c := r.context.WithCurrentArangoMember(name)
 
-			if !c.Exists(ctx) {
-				// Create ArangoMember
-				obj := &api.ArangoMember{
-					ObjectMeta: meta.ObjectMeta{
-						Name: name,
-						OwnerReferences: []meta.OwnerReference{
-							obj.AsOwner(),
-						},
+		if !c.Exists(ctx) {
+			// Create ArangoMember
+			obj := &api.ArangoMember{
+				ObjectMeta: meta.ObjectMeta{
+					Name: name,
+					OwnerReferences: []meta.OwnerReference{
+						obj.AsOwner(),
 					},
-					Spec: api.ArangoMemberSpec{
-						Group:         group,
-						ID:            member.ID,
-						DeploymentUID: obj.GetUID(),
-					},
-				}
+				},
+				Spec: api.ArangoMemberSpec{
+					Group:         e.Group,
+					ID:            e.Member.ID,
+					DeploymentUID: obj.GetUID(),
+				},
+			}
 
-				if err := r.context.WithCurrentArangoMember(name).Create(ctx, obj); err != nil {
-					return err
-				}
+			if err := r.context.WithCurrentArangoMember(name).Create(ctx, obj); err != nil {
+				return err
+			}
 
-				continue
-			} else {
-				if err := c.Update(ctx, func(m *api.ArangoMember) bool {
-					changed := false
-					if len(m.OwnerReferences) == 0 {
-						m.OwnerReferences = []meta.OwnerReference{
-							obj.AsOwner(),
-						}
-						changed = true
+			continue
+		} else {
+			if err := c.Update(ctx, func(m *api.ArangoMember) bool {
+				changed := false
+				if len(m.OwnerReferences) == 0 {
+					m.OwnerReferences = []meta.OwnerReference{
+						obj.AsOwner(),
 					}
-
-					if m.Spec.DeploymentUID == "" {
-						m.Spec.DeploymentUID = obj.GetUID()
-						changed = true
-					}
-
-					return changed
-				}); err != nil {
-					return err
+					changed = true
 				}
+
+				if m.Spec.DeploymentUID == "" {
+					m.Spec.DeploymentUID = obj.GetUID()
+					changed = true
+				}
+
+				return changed
+			}); err != nil {
+				return err
 			}
 		}
-
-		return nil
-	}); err != nil {
-		return err
 	}
 
 	if err := cachedStatus.ArangoMember().V1().Iterate(func(member *api.ArangoMember) error {

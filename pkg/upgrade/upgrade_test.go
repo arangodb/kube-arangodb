@@ -23,11 +23,12 @@ package upgrade
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
-	"github.com/stretchr/testify/require"
 )
 
 func genNewVersionAppender(v *[]api.Version, version api.Version) Upgrade {

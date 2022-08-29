@@ -23,11 +23,9 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/member"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/member"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/rs/zerolog"
 )
 
 func init() {
@@ -38,10 +36,10 @@ const (
 	actionTypeMemberPhaseUpdatePhaseKey string = "phase"
 )
 
-func newMemberPhaseUpdate(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newMemberPhaseUpdate(action api.Action, actionCtx ActionContext) Action {
 	a := &memberPhaseUpdateAction{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -53,22 +51,21 @@ type memberPhaseUpdateAction struct {
 }
 
 func (a *memberPhaseUpdateAction) Start(ctx context.Context) (bool, error) {
-	log := a.log
 	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !ok {
-		log.Error().Msg("No such member")
+		a.log.Error("No such member")
 		return true, nil
 	}
 
 	phaseString, ok := a.action.Params[actionTypeMemberPhaseUpdatePhaseKey]
 	if !ok {
-		log.Error().Msg("Phase not defined")
+		a.log.Error("Phase not defined")
 		return true, nil
 	}
 
 	p, ok := api.GetPhase(phaseString)
 	if !ok {
-		log.Error().Msgf("Phase %s unknown", p)
+		a.log.Error("Phase %s unknown", p)
 		return true, nil
 	}
 

@@ -34,6 +34,9 @@ type DeploymentStatus struct {
 	// AppliedVersion defines checksum of applied spec
 	AppliedVersion string `json:"appliedVersion"`
 
+	// AcceptedSpecVersion defines checksum of accepted spec
+	AcceptedSpecVersion *string `json:"acceptedSpecVersion,omitempty"`
+
 	// ServiceName holds the name of the Service a client can use (inside the k8s cluster)
 	// to access ArangoDB.
 	ServiceName string `json:"serviceName,omitempty"`
@@ -90,6 +93,15 @@ type DeploymentStatus struct {
 	BackOff BackOff `json:"backoff,omitempty"`
 
 	Version *Version `json:"version,omitempty"`
+
+	Timezone *string `json:"timezone,omitempty"`
+
+	Single       *ServerGroupStatus `json:"single,omitempty"`
+	Agents       *ServerGroupStatus `json:"agents,omitempty"`
+	DBServers    *ServerGroupStatus `json:"dbservers,omitempty"`
+	Coordinators *ServerGroupStatus `json:"coordinators,omitempty"`
+	SyncMasters  *ServerGroupStatus `json:"syncmasters,omitempty"`
+	SyncWorkers  *ServerGroupStatus `json:"syncworkers,omitempty"`
 }
 
 // Equal checks for equality
@@ -108,12 +120,20 @@ func (ds *DeploymentStatus) Equal(other DeploymentStatus) bool {
 		ds.Plan.Equal(other.Plan) &&
 		ds.HighPriorityPlan.Equal(other.HighPriorityPlan) &&
 		ds.ResourcesPlan.Equal(other.ResourcesPlan) &&
+		util.CompareStringPointers(ds.AcceptedSpecVersion, other.AcceptedSpecVersion) &&
 		ds.AcceptedSpec.Equal(other.AcceptedSpec) &&
 		ds.SecretHashes.Equal(other.SecretHashes) &&
 		ds.Agency.Equal(other.Agency) &&
 		ds.Topology.Equal(other.Topology) &&
 		ds.BackOff.Equal(other.BackOff) &&
-		ds.Version.Equal(other.Version)
+		ds.Version.Equal(other.Version) &&
+		ds.Single.Equal(other.Single) &&
+		ds.Agents.Equal(other.Agents) &&
+		ds.DBServers.Equal(other.DBServers) &&
+		ds.Coordinators.Equal(other.Coordinators) &&
+		ds.SyncMasters.Equal(other.SyncMasters) &&
+		ds.SyncWorkers.Equal(other.SyncWorkers) &&
+		util.CompareStringPointers(ds.Timezone, other.Timezone)
 }
 
 // IsForceReload returns true if ForceStatusReload is set to true
@@ -123,4 +143,52 @@ func (ds *DeploymentStatus) IsForceReload() bool {
 
 func (ds *DeploymentStatus) IsPlanEmpty() bool {
 	return ds.Plan.IsEmpty() && ds.HighPriorityPlan.IsEmpty()
+}
+
+// GetServerGroupStatus returns the server group status (from this
+// deployment status) for the given group.
+func (ds DeploymentStatus) GetServerGroupStatus(group ServerGroup) ServerGroupStatus {
+	if v := ds.getServerGroupStatus(group); v == nil {
+		return ServerGroupStatus{}
+	} else {
+		return *v
+	}
+}
+
+func (ds DeploymentStatus) getServerGroupStatus(group ServerGroup) *ServerGroupStatus {
+	switch group {
+	case ServerGroupSingle:
+		return ds.Single.DeepCopy()
+	case ServerGroupAgents:
+		return ds.Agents.DeepCopy()
+	case ServerGroupDBServers:
+		return ds.DBServers.DeepCopy()
+	case ServerGroupCoordinators:
+		return ds.Coordinators.DeepCopy()
+	case ServerGroupSyncMasters:
+		return ds.SyncMasters.DeepCopy()
+	case ServerGroupSyncWorkers:
+		return ds.SyncWorkers.DeepCopy()
+	default:
+		return nil
+	}
+}
+
+// UpdateServerGroupStatus returns the server group status (from this
+// deployment status) for the given group.
+func (ds *DeploymentStatus) UpdateServerGroupStatus(group ServerGroup, gspec ServerGroupStatus) {
+	switch group {
+	case ServerGroupSingle:
+		ds.Single = gspec.DeepCopy()
+	case ServerGroupAgents:
+		ds.Agents = &gspec
+	case ServerGroupDBServers:
+		ds.DBServers = &gspec
+	case ServerGroupCoordinators:
+		ds.Coordinators = &gspec
+	case ServerGroupSyncMasters:
+		ds.SyncMasters = &gspec
+	case ServerGroupSyncWorkers:
+		ds.SyncWorkers = &gspec
+	}
 }

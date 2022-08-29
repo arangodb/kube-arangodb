@@ -1,0 +1,19 @@
+# {{ .name }} ({{ .type }})
+
+## Description
+
+{{ .description }}
+
+{{ if .labels -}}
+## Labels
+
+{{ .labels_table }}
+
+{{- end -}}
+{{- if .alerting }}
+
+## Alerting
+
+{{ .alerting_table }}
+
+{{- end -}}

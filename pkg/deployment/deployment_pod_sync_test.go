@@ -24,17 +24,16 @@ import (
 	"context"
 	"testing"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-
-	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 func TestEnsurePod_Sync_Error(t *testing.T) {
@@ -47,7 +46,7 @@ func TestEnsurePod_Sync_Error(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						SyncMasters: api.MemberStatusList{
 							firstSyncMaster,
@@ -66,7 +65,7 @@ func TestEnsurePod_Sync_Error(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						SyncMasters: api.MemberStatusList{
 							firstSyncMaster,
@@ -89,7 +88,7 @@ func TestEnsurePod_Sync_Error(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						SyncMasters: api.MemberStatusList{
 							firstSyncMaster,
@@ -99,7 +98,7 @@ func TestEnsurePod_Sync_Error(t *testing.T) {
 				}
 
 				secretName := testCase.ArangoDeployment.Spec.Sync.Monitoring.GetTokenSecretName()
-				err := deployment.SecretsModInterface().Delete(context.Background(), secretName, metav1.DeleteOptions{})
+				err := deployment.SecretsModInterface().Delete(context.Background(), secretName, meta.DeleteOptions{})
 				require.NoError(t, err)
 			},
 			ExpectedError: errors.New("Monitoring token secret validation failed: secrets \"" +
@@ -123,7 +122,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						SyncMasters: api.MemberStatusList{
 							firstSyncMaster,
@@ -133,7 +132,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				}
 
 				secretName := testCase.ArangoDeployment.Spec.Sync.TLS.GetCASecretName()
-				err := deployment.SecretsModInterface().Delete(context.Background(), secretName, metav1.DeleteOptions{})
+				err := deployment.SecretsModInterface().Delete(context.Background(), secretName, meta.DeleteOptions{})
 				require.NoError(t, err)
 			},
 			ExpectedError: errors.New("Failed to create TLS keyfile secret: secrets \"" +
@@ -151,7 +150,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						SyncMasters: api.MemberStatusList{
 							firstSyncMaster,
@@ -161,7 +160,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				}
 
 				secretName := testCase.ArangoDeployment.Spec.Authentication.GetJWTSecretName()
-				err := deployment.SecretsModInterface().Delete(context.Background(), secretName, metav1.DeleteOptions{})
+				err := deployment.SecretsModInterface().Delete(context.Background(), secretName, meta.DeleteOptions{})
 				require.NoError(t, err)
 			},
 			ExpectedError: errors.New("Cluster JWT secret validation failed: secrets \"" +
@@ -179,7 +178,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						SyncMasters: api.MemberStatusList{
 							firstSyncMaster,
@@ -189,7 +188,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				}
 
 				secretName := testCase.ArangoDeployment.Spec.Sync.Authentication.GetClientCASecretName()
-				err := deployment.SecretsModInterface().Delete(context.Background(), secretName, metav1.DeleteOptions{})
+				err := deployment.SecretsModInterface().Delete(context.Background(), secretName, meta.DeleteOptions{})
 				require.NoError(t, err)
 			},
 			ExpectedError: errors.New("Client authentication CA certificate secret validation failed: " +
@@ -215,7 +214,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						SyncMasters: api.MemberStatusList{
 							firstSyncMaster,
@@ -306,7 +305,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						SyncMasters: api.MemberStatusList{
 							firstSyncMaster,
@@ -408,7 +407,7 @@ func TestEnsurePod_Sync_Worker(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						SyncWorkers: api.MemberStatusList{
 							firstSyncWorker,

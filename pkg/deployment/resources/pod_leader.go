@@ -22,12 +22,16 @@ package resources
 
 import (
 	"context"
+	"sync"
 
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -43,75 +47,68 @@ func (r *Resources) EnsureLeader(ctx context.Context, cachedStatus inspectorInte
 		return nil
 	}
 
+	log := r.log.Str("section", "pod")
+
 	cache, ok := r.context.GetAgencyHealth()
 	if !ok {
 		return nil
 	}
 
 	leaderID := cache.LeaderID()
-	status, _ := r.context.GetStatus()
+	status := r.context.GetStatus()
 	noLeader := len(leaderID) == 0
 	changed := false
 	group := api.ServerGroupAgents
-	agencyServers := func(group api.ServerGroup, list api.MemberStatusList) error {
-		for _, m := range list {
-			pod, exist := cachedStatus.Pod().V1().GetSimple(m.PodName)
-			if !exist {
-				continue
-			}
-
-			labels := pod.GetLabels()
-			if noLeader || m.ID != leaderID {
-				// Unset a leader when:
-				// - leader is unknown.
-				// - leader does not belong to the current pod.
-
-				if _, ok := labels[k8sutil.LabelKeyArangoLeader]; ok {
-					delete(labels, k8sutil.LabelKeyArangoLeader)
-
-					err := r.context.ApplyPatchOnPod(ctx, pod, patch.ItemReplace(patch.NewPath("metadata", "labels"), labels))
-					if err != nil {
-						r.log.Error().Err(err).Msgf("Unable to remove leader label")
-						return err
-					}
-
-					r.log.Info().Msgf("leader label is removed from \"%s\" member", m.ID)
-					changed = true
-				}
-
-				continue
-			}
-
-			// From here on it is known that there is a leader, and it should be attached to the current pod.
-			if value, ok := labels[k8sutil.LabelKeyArangoLeader]; !ok {
-				labels = addLabel(labels, k8sutil.LabelKeyArangoLeader, "true")
-			} else if value != "true" {
-				labels = addLabel(labels, k8sutil.LabelKeyArangoLeader, "true")
-			} else {
-				// A pod is already a leader, so nothing to change.
-				continue
-			}
-
-			err := r.context.ApplyPatchOnPod(ctx, pod, patch.ItemReplace(patch.NewPath("metadata", "labels"), labels))
-			if err != nil {
-				r.log.Error().Err(err).Msgf("Unable to update leader label")
-				return err
-			}
-			r.log.Info().Msgf("leader label is set on \"%s\" member", m.ID)
-			changed = true
+	for _, e := range status.Members.AsListInGroup(group) {
+		pod, exist := cachedStatus.Pod().V1().GetSimple(e.Member.Pod.GetName())
+		if !exist {
+			continue
 		}
 
-		return nil
-	}
+		labels := pod.GetLabels()
+		if noLeader || e.Member.ID != leaderID {
+			// Unset a leader when:
+			// - leader is unknown.
+			// - leader does not belong to the current pod.
 
-	if err := status.Members.ForeachServerInGroups(agencyServers, group); err != nil {
-		return err
+			if _, ok := labels[k8sutil.LabelKeyArangoLeader]; ok {
+				delete(labels, k8sutil.LabelKeyArangoLeader)
+
+				err := r.context.ApplyPatchOnPod(ctx, pod, patch.ItemReplace(patch.NewPath("metadata", "labels"), labels))
+				if err != nil {
+					log.Err(err).Error("Unable to remove leader label")
+					return err
+				}
+
+				log.Warn("leader label is removed from \"%s\" member", e.Member.ID)
+				changed = true
+			}
+
+			continue
+		}
+
+		// From here on it is known that there is a leader, and it should be attached to the current pod.
+		if value, ok := labels[k8sutil.LabelKeyArangoLeader]; !ok {
+			labels = addLabel(labels, k8sutil.LabelKeyArangoLeader, "true")
+		} else if value != "true" {
+			labels = addLabel(labels, k8sutil.LabelKeyArangoLeader, "true")
+		} else {
+			// A pod is already a leader, so nothing to change.
+			continue
+		}
+
+		err := r.context.ApplyPatchOnPod(ctx, pod, patch.ItemReplace(patch.NewPath("metadata", "labels"), labels))
+		if err != nil {
+			log.Err(err).Error("Unable to update leader label")
+			return err
+		}
+		log.Warn("leader label is set on \"%s\" member", e.Member.ID)
+		changed = true
 	}
 
 	if changed {
 		return errors.Reconcile()
 	}
-	changed = false
 
 	if noLeader {
 		// There is no leader agency so service may not exist, or it can exist with empty list of endpoints.
@@ -125,8 +122,8 @@ func (r *Resources) EnsureLeader(ctx context.Context, cachedStatus inspectorInte
 	if s, ok := cachedStatus.Service().V1().GetSimple(leaderAgentSvcName); ok {
 		if err, adjusted := r.adjustService(ctx, s, shared.ArangoPort, selector); err == nil {
 			if !adjusted {
-				// The service is not changed.
-				return nil
+				// The service is not changed, so single server leader can be set.
+				return r.ensureSingleServerLeader(ctx, cachedStatus)
 			}
 
 			return errors.Reconcile()
@@ -148,4 +145,167 @@ func (r *Resources) EnsureLeader(ctx context.Context, cachedStatus inspectorInte
 
 	// The service has been created.
 	return errors.Reconcile()
+}
+
+// getSingleServerLeaderID returns id of a single server leader.
+func (r *Resources) getSingleServerLeaderID(ctx context.Context) (string, error) {
+	status := r.context.GetStatus()
+	var mutex sync.Mutex
+	var leaderID string
+	var anyError error
+
+	ctxCancel, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	var wg sync.WaitGroup
+	for _, m := range status.Members.Single {
+		wg.Add(1)
+		go func(id string) {
+			defer wg.Done()
+			err := globals.GetGlobalTimeouts().ArangoD().RunWithTimeout(ctxCancel, func(ctxChild context.Context) error {
+				c, err := r.context.GetMembersState().GetMemberClient(id)
+				if err != nil {
+					return err
+				}
+
+				if available, err := arangod.IsServerAvailable(ctxChild, c); err != nil {
+					return err
+				} else if !available {
+					return errors.New("not available")
+				}
+
+				// Other requests can be interrupted, because a leader is known already.
+				cancel()
+				mutex.Lock()
+				leaderID = id
+				mutex.Unlock()
+				return nil
+			})
+
+			if err != nil {
+				mutex.Lock()
+				anyError = err
+				mutex.Unlock()
+			}
+		}(m.ID)
+	}
+	wg.Wait()
+
+	if len(leaderID) > 0 {
+		return leaderID, nil
+	}
+
+	if anyError != nil {
+		return "", errors.WithMessagef(anyError, "unable to get a leader")
+	}
+
+	return "", errors.New("unable to get a leader")
+}
+
+// setSingleServerLeadership adds or removes leadership label on a single server pod.
+func (r *Resources) ensureSingleServerLeader(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
+	changed := false
+
+	enabled := features.FailoverLeadership().Enabled()
+	var leaderID string
+	if enabled {
+		var err error
+		if leaderID, err = r.getSingleServerLeaderID(ctx); err != nil {
+			return err
+		}
+	}
+
+	status := r.context.GetStatus()
+	for _, m := range status.Members.Single {
+		pod, exist := cachedStatus.Pod().V1().GetSimple(m.Pod.GetName())
+		if !exist {
+			continue
+		}
+
+		labels := pod.GetLabels()
+		if enabled && m.ID == leaderID {
+			if value, ok := labels[k8sutil.LabelKeyArangoLeader]; ok && value == "true" {
+				// Single server is available, and it has a leader label.
+				continue
+			}
+
+			labels = addLabel(labels, k8sutil.LabelKeyArangoLeader, "true")
+		} else {
+			if _, ok := labels[k8sutil.LabelKeyArangoLeader]; !ok {
+				// Single server is not available, and it does not have a leader label.
+				continue
+			}
+
+			delete(labels, k8sutil.LabelKeyArangoLeader)
+		}
+
+		err := r.context.ApplyPatchOnPod(ctx, pod, patch.ItemReplace(patch.NewPath("metadata", "labels"), labels))
+		if err != nil {
+			return errors.WithMessagef(err, "unable to change leader label for pod %s", m.Pod.GetName())
+		}
+		changed = true
+	}
+
+	if changed {
+		return errors.Reconcile()
+	}
+
+	return r.ensureSingleServerLeaderServices(ctx, cachedStatus)
+}
+
+// ensureSingleServerLeaderServices adds a leadership label to deployment service and external deployment service.
+func (r *Resources) ensureSingleServerLeaderServices(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
+	// Add a leadership label to deployment service and external deployment service.
+	deploymentName := r.context.GetAPIObject().GetName()
+	changed := false
+	services := []string{
+		k8sutil.CreateDatabaseClientServiceName(deploymentName),
+		k8sutil.CreateDatabaseExternalAccessServiceName(deploymentName),
+	}
+
+	enabled := features.FailoverLeadership().Enabled()
+	for _, svcName := range services {
+		svc, exists := cachedStatus.Service().V1().GetSimple(svcName)
+		if !exists {
+			// It will be created later with a leadership label.
+			continue
+		}
+		selector := svc.Spec.Selector
+		if enabled {
+			if v, ok := selector[k8sutil.LabelKeyArangoLeader]; ok && v == "true" {
+				// It is already OK.
+				continue
+			}
+
+			selector = addLabel(selector, k8sutil.LabelKeyArangoLeader, "true")
+		} else {
+			if _, ok := selector[k8sutil.LabelKeyArangoLeader]; !ok {
+				// Service does not have a leader label, and it should not have.
+				continue
+			}
+
+			delete(selector, k8sutil.LabelKeyArangoLeader)
+		}
+
+		parser := patch.Patch([]patch.Item{patch.ItemReplace(patch.NewPath("spec", "selector"), selector)})
+		data, err := parser.Marshal()
+		if err != nil {
+			return errors.WithMessagef(err, "unable to marshal labels for service %s", svcName)
+		}
+
+		err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			_, err := cachedStatus.ServicesModInterface().V1().Patch(ctxChild, svcName, types.JSONPatchType, data, meta.PatchOptions{})
+			return err
+		})
+		if err != nil {
+			return errors.WithMessagef(err, "unable to patch labels for service %s", svcName)
+		}
+		changed = true
+	}
+
+	if changed {
+		return errors.Reconcile()
+	}
+
+	return nil
 }

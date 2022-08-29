@@ -27,7 +27,7 @@ import (
 
 	"github.com/arangodb/arangosync-client/client"
 	"github.com/arangodb/go-driver"
-	"github.com/arangodb/go-driver/agency"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/acs/sutil"
 	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency"
@@ -38,11 +38,11 @@ import (
 // ServerGroupIterator provides a helper to callback on every server
 // group of the deployment.
 type ServerGroupIterator interface {
-	// ForeachServerGroup calls the given callback for all server groups.
+	// ForeachServerGroupAccepted calls the given callback for all accepted server groups.
 	// If the callback returns an error, this error is returned and no other server
 	// groups are processed.
 	// Groups are processed in this order: agents, single, dbservers, coordinators, syncmasters, syncworkers
-	ForeachServerGroup(cb api.ServerGroupFunc, status *api.DeploymentStatus) error
+	ForeachServerGroupAccepted(cb api.ServerGroupFunc, status *api.DeploymentStatus) error
 }
 
 type DeploymentStatusUpdateErrFunc func(s *api.DeploymentStatus) (bool, error)
@@ -50,13 +50,13 @@ type DeploymentStatusUpdateFunc func(s *api.DeploymentStatus) bool
 
 type DeploymentStatusUpdate interface {
 	// WithStatusUpdateErr update status of ArangoDeployment with defined modifier. If action returns True action is taken
-	WithStatusUpdateErr(ctx context.Context, action DeploymentStatusUpdateErrFunc, force ...bool) error
+	WithStatusUpdateErr(ctx context.Context, action DeploymentStatusUpdateErrFunc) error
 	// WithStatusUpdate update status of ArangoDeployment with defined modifier. If action returns True action is taken
-	WithStatusUpdate(ctx context.Context, action DeploymentStatusUpdateFunc, force ...bool) error
+	WithStatusUpdate(ctx context.Context, action DeploymentStatusUpdateFunc) error
 
 	// UpdateStatus replaces the status of the deployment with the given status and
 	// updates the resources in k8s.
-	UpdateStatus(ctx context.Context, status api.DeploymentStatus, lastVersion int32, force ...bool) error
+	UpdateStatus(ctx context.Context, status api.DeploymentStatus) error
 	// UpdateMember updates the deployment status wrt the given member.
 	UpdateMember(ctx context.Context, member api.MemberStatus) error
 }
@@ -71,10 +71,6 @@ type DeploymentPodRenderer interface {
 	RenderPodForMember(ctx context.Context, acs sutil.ACS, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error)
 	// RenderPodTemplateForMember Renders PodTemplate definition for member
 	RenderPodTemplateForMember(ctx context.Context, acs sutil.ACS, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.PodTemplateSpec, error)
-	// RenderPodForMemberFromCurrent Renders PodTemplate definition for member from current state
-	RenderPodForMemberFromCurrent(ctx context.Context, acs sutil.ACS, memberID string) (*core.Pod, error)
-	// RenderPodTemplateForMemberFromCurrent Renders PodTemplate definition for member
-	RenderPodTemplateForMemberFromCurrent(ctx context.Context, acs sutil.ACS, memberID string) (*core.PodTemplateSpec, error)
 
 	DeploymentEndpoints
 }
@@ -108,9 +104,7 @@ type DeploymentInfoGetter interface {
 	// GetSpec returns the current specification of the deployment
 	GetSpec() api.DeploymentSpec
 	// GetStatus returns the current status of the deployment
-	GetStatus() (api.DeploymentStatus, int32)
-	// GetStatusSnapshot returns the current status of the deployment without revision
-	GetStatusSnapshot() api.DeploymentStatus
+	GetStatus() api.DeploymentStatus
 	// GetMode the specified mode of deployment
 	GetMode() api.DeploymentMode
 	// GetName returns the name of the deployment
@@ -124,20 +118,7 @@ type ArangoApplier interface {
 	ApplyPatch(ctx context.Context, p ...patch.Item) error
 }
 
-type DeploymentAgencyClient interface {
-	// GetAgencyClients returns a client connection for every agency member.
-	GetAgencyClients(ctx context.Context) ([]driver.Connection, error)
-	// GetAgencyClientsWithPredicate returns a client connection for every agency member which match condition.
-	GetAgencyClientsWithPredicate(ctx context.Context, predicate func(id string) bool) ([]driver.Connection, error)
-	// GetAgency returns a connection to the entire agency.
-	GetAgency(ctx context.Context, agencyIDs ...string) (agency.Agency, error)
-}
-
 type DeploymentDatabaseClient interface {
-	// GetDatabaseClient returns a cached client for the entire database (cluster coordinators or single server),
-	// creating one if needed.
-	GetDatabaseClient(ctx context.Context) (driver.Client, error)
-
 	// GetDatabaseAsyncClient returns a cached client for the entire database (cluster coordinators or single server),
 	// creating one if needed. Only in AsyncMode
 	GetDatabaseAsyncClient(ctx context.Context) (driver.Client, error)
@@ -159,9 +140,15 @@ type KubernetesEventGenerator interface {
 	CreateEvent(evt *k8sutil.Event)
 }
 
+// DeploymentClient provides functionalities to get deployment's clients.
 type DeploymentClient interface {
-	DeploymentAgencyClient
 	DeploymentDatabaseClient
 	DeploymentMemberClient
 	DeploymentSyncClient
+}
+
+// DeploymentGetter provides functionalities to get deployment resources.
+type DeploymentGetter interface {
+	DeploymentClient
+	DeploymentInfoGetter
 }

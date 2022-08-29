@@ -24,8 +24,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 func TestTLSSpecValidate(t *testing.T) {

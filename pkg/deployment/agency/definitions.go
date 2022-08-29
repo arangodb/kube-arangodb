@@ -32,12 +32,21 @@ const (
 	CurrentKey = "Current"
 	TargetKey  = "Target"
 
+	CurrentMaintenanceServers = "MaintenanceServers"
+
 	TargetHotBackupKey = "HotBackup"
 
 	PlanCollectionsKey = "Collections"
 
 	SupervisionKey            = "Supervision"
 	SupervisionMaintenanceKey = "Maintenance"
+
+	TargetJobToDoKey     = "ToDo"
+	TargetJobPendingKey  = "Pending"
+	TargetJobFailedKey   = "Failed"
+	TargetJobFinishedKey = "Finished"
+
+	TargetCleanedServersKey = "CleanedServers"
 )
 
 func GetAgencyKey(parts ...string) string {

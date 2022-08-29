@@ -23,22 +23,21 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/rs/zerolog"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func init() {
 	registerAction(api.ActionTypeRenewTLSCACertificate, newRenewTLSCACertificateAction, operationTLSCACertificateTimeout)
 }
 
-func newRenewTLSCACertificateAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newRenewTLSCACertificateAction(action api.Action, actionCtx ActionContext) Action {
 	a := &renewTLSCACertificateAction{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -59,7 +58,7 @@ func (a *renewTLSCACertificateAction) Start(ctx context.Context) (bool, error) {
 	})
 	if err != nil {
 		if !k8sutil.IsNotFound(err) {
-			a.log.Warn().Err(err).Msgf("Unable to clean cert %s", a.actionCtx.GetSpec().TLS.GetCASecretName())
+			a.log.Err(err).Warn("Unable to clean cert %s", a.actionCtx.GetSpec().TLS.GetCASecretName())
 			return true, nil
 		}
 	}

@@ -25,15 +25,16 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	secretv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
-	"github.com/stretchr/testify/require"
-	core "k8s.io/api/core/v1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func createTLSSNISecret(t *testing.T, client secretv1.ModInterface, name, namespace string) {
@@ -87,7 +88,7 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 				createTLSSNISecret(t, deployment.SecretsModInterface(), "sni2", deployment.Namespace())
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						Coordinators: api.MemberStatusList{
 							firstCoordinatorStatus,
@@ -162,7 +163,7 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 				createTLSSNISecret(t, deployment.SecretsModInterface(), "sni2", deployment.Namespace())
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						Coordinators: api.MemberStatusList{
 							firstCoordinatorStatus,
@@ -237,7 +238,7 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 				createTLSSNISecret(t, deployment.SecretsModInterface(), "sni2", deployment.Namespace())
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						Coordinators: api.MemberStatusList{
 							firstCoordinatorStatus,
@@ -312,7 +313,7 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 				createTLSSNISecret(t, deployment.SecretsModInterface(), "sni2", deployment.Namespace())
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						Coordinators: api.MemberStatusList{
 							firstCoordinatorStatus,
@@ -420,7 +421,7 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 				createTLSSNISecret(t, deployment.SecretsModInterface(), "sni2", deployment.Namespace())
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						DBServers: api.MemberStatusList{
 							firstDBServerStatus,

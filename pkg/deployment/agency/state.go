@@ -27,10 +27,11 @@ import (
 
 	"github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func loadState(ctx context.Context, client agency.Agency) (State, error) {
+func (c *cache) loadState(ctx context.Context, client agency.Agency) (State, error) {
 	conn := client.Connection()
 
 	req, err := client.Connection().NewRequest(http.MethodPost, "/_api/agency/read")
@@ -44,7 +45,13 @@ func loadState(ctx context.Context, client agency.Agency) (State, error) {
 		GetAgencyKey(ArangoKey, SupervisionKey, SupervisionMaintenanceKey),
 		GetAgencyKey(ArangoKey, PlanKey, PlanCollectionsKey),
 		GetAgencyKey(ArangoKey, CurrentKey, PlanCollectionsKey),
+		GetAgencyKey(ArangoKey, CurrentKey, CurrentMaintenanceServers),
 		GetAgencyKey(ArangoKey, TargetKey, TargetHotBackupKey),
+		GetAgencyKey(ArangoKey, TargetKey, TargetJobToDoKey),
+		GetAgencyKey(ArangoKey, TargetKey, TargetJobPendingKey),
+		GetAgencyKey(ArangoKey, TargetKey, TargetJobFailedKey),
+		GetAgencyKey(ArangoKey, TargetKey, TargetJobFinishedKey),
+		GetAgencyKey(ArangoKey, TargetKey, TargetCleanedServersKey),
 	}
 
 	req, err = req.SetBody(GetAgencyReadRequest(GetAgencyReadKey(readKeys...)))
@@ -61,25 +68,17 @@ func loadState(ctx context.Context, client agency.Agency) (State, error) {
 		return State{}, err
 	}
 
-	var c StateRoots
+	var r StateRoots
 
-	if err := json.Unmarshal(data, &c); err != nil {
+	if err := json.Unmarshal(data, &r); err != nil {
 		return State{}, err
 	}
 
-	if len(c) != 1 {
+	if len(r) != 1 {
 		return State{}, errors.Newf("Invalid response size")
 	}
 
-	state := c[0].Arango
-
-	if _, ok := state.Current.Collections["_system"]; !ok {
-		return State{}, errors.Newf("Unable to find system database (invalid data)")
-	}
-
-	if _, ok := state.Plan.Collections["_system"]; !ok {
-		return State{}, errors.Newf("Unable to find system database (invalid data)")
-	}
+	state := r[0].Arango
 
 	return state, nil
 }
@@ -102,7 +101,8 @@ type State struct {
 }
 
 type StateCurrent struct {
-	Collections StateCurrentCollections `json:"Collections"`
+	MaintenanceServers StateCurrentMaintenanceServers `json:"MaintenanceServers,omitempty"`
+	Collections        StateCurrentCollections        `json:"Collections"`
 }
 
 type StatePlan struct {
@@ -123,8 +123,8 @@ func (s State) CountShards() int {
 	return count
 }
 
-func (s State) PlanServers() []string {
-	q := map[string]bool{}
+func (s State) PlanServers() Servers {
+	q := map[Server]bool{}
 
 	for _, db := range s.Plan.Collections {
 		for _, col := range db {
@@ -136,7 +136,7 @@ func (s State) PlanServers() []string {
 		}
 	}
 
-	r := make([]string, 0, len(q))
+	r := make([]Server, 0, len(q))
 
 	for k := range q {
 		r = append(r, k)
@@ -187,11 +187,11 @@ func (s State) Filter(f StateShardFilter) CollectionShardDetails {
 	return shards[0:size]
 }
 
-func GetDBServerBlockingRestartShards(s State, serverID string) CollectionShardDetails {
+func GetDBServerBlockingRestartShards(s State, serverID Server) CollectionShardDetails {
 	return s.Filter(FilterDBServerShardRestart(serverID))
 }
 
-func FilterDBServerShardRestart(serverID string) StateShardFilter {
+func FilterDBServerShardRestart(serverID Server) StateShardFilter {
 	return NegateFilter(func(s State, db, col, shard string) bool {
 		// Filter all shards which are not blocking restart of server
 		plan := s.Plan.Collections[db][col]
@@ -203,7 +203,7 @@ func FilterDBServerShardRestart(serverID string) StateShardFilter {
 		}
 
 		current := s.Current.Collections[db][col][shard]
-		currentShard := current.Servers.FilterBy(planShard)
+		currentShard := current.Servers.Join(planShard)
 
 		serverInSync := currentShard.Contains(serverID)
 
@@ -246,11 +246,11 @@ func FilterDBServerShardRestart(serverID string) StateShardFilter {
 	})
 }
 
-func GetDBServerShardsNotInSync(s State, serverID string) CollectionShardDetails {
+func GetDBServerShardsNotInSync(s State, serverID Server) CollectionShardDetails {
 	return s.Filter(FilterDBServerShardsNotInSync(serverID))
 }
 
-func FilterDBServerShardsNotInSync(serverID string) StateShardFilter {
+func FilterDBServerShardsNotInSync(serverID Server) StateShardFilter {
 	return NegateFilter(func(s State, db, col, shard string) bool {
 		planShard := s.Plan.Collections[db][col].Shards[shard]
 

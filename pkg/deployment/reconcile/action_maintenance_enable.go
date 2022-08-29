@@ -24,17 +24,16 @@ import (
 	"context"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/rs/zerolog"
 )
 
 func init() {
 	registerAction(api.ActionTypeEnableMaintenance, newEnableMaintenanceAction, addMemberTimeout)
 }
 
-func newEnableMaintenanceAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newEnableMaintenanceAction(action api.Action, actionCtx ActionContext) Action {
 	a := &actionEnableMaintenance{}
 
-	a.actionImpl = newActionImpl(log, action, actionCtx, &a.newMemberID)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -44,8 +43,6 @@ type actionEnableMaintenance struct {
 	actionImpl
 
 	actionEmptyCheckProgress
-
-	newMemberID string
 }
 
 func (a *actionEnableMaintenance) Start(ctx context.Context) (bool, error) {
@@ -55,7 +52,7 @@ func (a *actionEnableMaintenance) Start(ctx context.Context) (bool, error) {
 	}
 
 	if err := a.actionCtx.SetAgencyMaintenanceMode(ctx, true); err != nil {
-		a.log.Error().Err(err).Msgf("Unable to enable maintenance")
+		a.log.Err(err).Error("Unable to enable maintenance")
 		return true, nil
 	}
 

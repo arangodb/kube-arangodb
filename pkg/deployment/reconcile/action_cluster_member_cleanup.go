@@ -23,12 +23,10 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
 	"github.com/arangodb/go-driver"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/rs/zerolog"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 
 func init() {
@@ -37,10 +35,10 @@ func init() {
 
 // newClusterMemberCleanupAction creates a new Action that implements the given
 // planned ClusterMemberCleanup action.
-func newClusterMemberCleanupAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newClusterMemberCleanupAction(action api.Action, actionCtx ActionContext) Action {
 	a := &actionClusterMemberCleanup{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -59,7 +57,7 @@ type actionClusterMemberCleanup struct {
 // the start time needs to be recorded and a ready condition needs to be checked.
 func (a *actionClusterMemberCleanup) Start(ctx context.Context) (bool, error) {
 	if err := a.start(ctx); err != nil {
-		a.log.Warn().Err(err).Msgf("Unable to clean cluster member")
+		a.log.Err(err).Warn("Unable to clean cluster member")
 	}
 
 	return true, nil
@@ -68,14 +66,12 @@ func (a *actionClusterMemberCleanup) Start(ctx context.Context) (bool, error) {
 func (a *actionClusterMemberCleanup) start(ctx context.Context) error {
 	id := driver.ServerID(a.MemberID())
 
-	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	c, err := a.actionCtx.GetDatabaseClient(ctxChild)
+	c, err := a.actionCtx.GetMembersState().State().GetDatabaseClient()
 	if err != nil {
 		return err
 	}
 
-	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	cluster, err := c.Cluster(ctxChild)
 	if err != nil {

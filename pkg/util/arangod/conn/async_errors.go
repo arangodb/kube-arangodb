@@ -35,7 +35,7 @@ func IsAsyncErrorNotFound(err error) bool {
 		return true
 	}
 
-	return IsAsyncErrorNotFound(errors.Cause(err))
+	return IsAsyncErrorNotFound(errors.CauseWithNil(err))
 }
 
 func newAsyncErrorNotFound(id string) error {
@@ -61,7 +61,7 @@ func IsAsyncJobInProgress(err error) (string, bool) {
 		return v.jobID, true
 	}
 
-	return IsAsyncJobInProgress(errors.Cause(err))
+	return IsAsyncJobInProgress(errors.CauseWithNil(err))
 }
 
 func newAsyncJobInProgress(id string) error {

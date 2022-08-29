@@ -23,10 +23,11 @@ package v1
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
 	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
 )
 
 // ModInterface has methods to work with ServiceMonitor resources only for creation

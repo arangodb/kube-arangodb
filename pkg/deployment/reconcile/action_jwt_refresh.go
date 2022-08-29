@@ -23,22 +23,20 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-	"github.com/rs/zerolog"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 
 func init() {
 	registerAction(api.ActionTypeJWTRefresh, newJWTRefresh, defaultTimeout)
 }
 
-func newJWTRefresh(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+func newJWTRefresh(action api.Action, actionCtx ActionContext) Action {
 	a := &jwtRefreshAction{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
@@ -48,28 +46,26 @@ type jwtRefreshAction struct {
 }
 
 func (a *jwtRefreshAction) CheckProgress(ctx context.Context) (bool, bool, error) {
-	if folder, err := ensureJWTFolderSupport(a.actionCtx.GetSpec(), a.actionCtx.GetStatusSnapshot()); err != nil || !folder {
+	if folder, err := ensureJWTFolderSupport(a.actionCtx.GetSpec(), a.actionCtx.GetStatus()); err != nil || !folder {
 		return true, false, nil
 	}
 
 	folder, ok := a.actionCtx.ACS().CurrentClusterCache().Secret().V1().GetSimple(pod.JWTSecretFolder(a.actionCtx.GetAPIObject().GetName()))
 	if !ok {
-		a.log.Error().Msgf("Unable to get JWT folder info")
+		a.log.Error("Unable to get JWT folder info")
+		return true, false, nil
+	}
+
+	c, err := a.actionCtx.GetMembersState().GetMemberClient(a.action.MemberID)
+	if err != nil {
+		a.log.Err(err).Warn("Unable to get client")
 		return true, false, nil
 	}
 
 	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
-	c, err := a.actionCtx.GetServerClient(ctxChild, a.action.Group, a.action.MemberID)
-	if err != nil {
-		a.log.Warn().Err(err).Msg("Unable to get client")
-		return true, false, nil
-	}
-
-	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	if invalid, err := isMemberJWTTokenInvalid(ctxChild, client.NewClient(c.Connection()), folder.Data, true); err != nil {
-		a.log.Warn().Err(err).Msg("Error while getting JWT Status")
+	if invalid, err := isMemberJWTTokenInvalid(ctxChild, client.NewClient(c.Connection(), a.log), folder.Data, true); err != nil {
+		a.log.Err(err).Warn("Error while getting JWT Status")
 		return true, false, nil
 	} else if invalid {
 		return false, false, nil

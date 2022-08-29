@@ -23,22 +23,22 @@ package storage
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 // getMyImage fetched the docker image from my own pod
 func (l *LocalStorage) getMyImage() (string, core.PullPolicy, []core.LocalObjectReference, error) {
-	return getImage(l.deps.Log, l.config.Namespace, l.config.PodName, l.deps.Client.Kubernetes())
+	return l.getImage(l.config.Namespace, l.config.PodName, l.deps.Client.Kubernetes())
 }
 
-func getImage(log zerolog.Logger, ns, name string, client kubernetes.Interface) (string, core.PullPolicy, []core.LocalObjectReference, error) {
+func (l *LocalStorage) getImage(ns, name string, client kubernetes.Interface) (string, core.PullPolicy, []core.LocalObjectReference, error) {
 	p, err := client.CoreV1().Pods(ns).Get(context.Background(), name, meta.GetOptions{})
 	if err != nil {
-		log.Debug().Err(err).Str("pod-name", name).Msg("Failed to get my own pod")
+		l.log.Err(err).Str("pod-name", name).Debug("Failed to get my own pod")
 		return "", "", nil, errors.WithStack(err)
 	}
 

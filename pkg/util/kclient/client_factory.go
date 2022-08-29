@@ -23,13 +23,14 @@ package kclient
 import (
 	"sync"
 
-	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/dchest/uniuri"
 	"github.com/pkg/errors"
 	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+
+	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 )
 
 const (

@@ -24,8 +24,6 @@ import (
 	"context"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 )
 
 const (
@@ -34,13 +32,14 @@ const (
 )
 
 const (
-	BackOffCheck api.BackOffKey = "check"
-	LicenseCheck api.BackOffKey = "license"
+	BackOffCheck  api.BackOffKey = "check"
+	LicenseCheck  api.BackOffKey = "license"
+	TimezoneCheck api.BackOffKey = "timezone"
 )
 
 // CreatePlan considers the current specification & status of the deployment creates a plan to
 // get the status in line with the specification.
 // If a plan already exists, nothing is done.
-func (d *Reconciler) CreatePlan(ctx context.Context, cachedStatus inspectorInterface.Inspector) (error, bool) {
-	return d.generatePlan(ctx, d.generatePlanFunc(createHighPlan, plannerHigh{}), d.generatePlanFunc(createResourcesPlan, plannerResources{}), d.generatePlanFunc(createNormalPlan, plannerNormal{}))
+func (d *Reconciler) CreatePlan(ctx context.Context) (error, bool) {
+	return d.generatePlan(ctx, d.generatePlanFunc(d.createHighPlan, plannerHigh{}), d.generatePlanFunc(d.createResourcesPlan, plannerResources{}), d.generatePlanFunc(d.createNormalPlan, plannerNormal{}))
 }

@@ -24,7 +24,6 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/rs/zerolog"
 )
 
 type updateUpgradeDecisionMap map[string]updateUpgradeDecision
@@ -60,23 +59,23 @@ type updateUpgradeDecision struct {
 	restartRequired     bool
 }
 
-func createRotateOrUpgradeDecision(log zerolog.Logger, spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext) updateUpgradeDecisionMap {
+func (r *Reconciler) createRotateOrUpgradeDecision(spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext) updateUpgradeDecisionMap {
 	d := updateUpgradeDecisionMap{}
 
 	// Init phase
 	for _, m := range status.Members.AsList() {
-		d[m.Member.ID] = createRotateOrUpgradeDecisionMember(log, spec, status, context, m)
+		d[m.Member.ID] = r.createRotateOrUpgradeDecisionMember(spec, status, context, m)
 	}
 
 	return d
 }
 
-func createRotateOrUpgradeDecisionMember(log zerolog.Logger, spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext, element api.DeploymentStatusMemberElement) (d updateUpgradeDecision) {
-	if element.Member.Phase == api.MemberPhaseCreated && element.Member.PodName != "" {
+func (r *Reconciler) createRotateOrUpgradeDecisionMember(spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext, element api.DeploymentStatusMemberElement) (d updateUpgradeDecision) {
+	if element.Member.Phase == api.MemberPhaseCreated && element.Member.Pod.GetName() != "" {
 		// Only upgrade when phase is created
 
 		// Got pod, compare it with what it should be
-		decision := podNeedsUpgrading(log, element.Member, spec, status.Images)
+		decision := r.podNeedsUpgrading(element.Member, spec, status.Images)
 
 		if decision.UpgradeNeeded || decision.Hold {
 			d.upgrade = true

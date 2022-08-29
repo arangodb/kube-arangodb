@@ -27,15 +27,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
 	"github.com/dchest/uniuri"
 	"github.com/gin-gonic/gin"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	typedCore "k8s.io/client-go/kubernetes/typed/core/v1"
 
-	"github.com/rs/zerolog"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	typedv1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 const (
@@ -43,9 +42,10 @@ const (
 	bearerPrefix        = "bearer "
 )
 
+var authLogger = logging.Global().RegisterAndGetLogger("server-authentication", logging.Info)
+
 type serverAuthentication struct {
-	log     zerolog.Logger
-	secrets typedv1.SecretInterface
+	secrets typedCore.SecretInterface
 	admin   struct {
 		mutex    sync.Mutex
 		username string
@@ -81,9 +81,8 @@ type loginResponse struct {
 
 // newServerAuthentication creates a new server authentication service
 // for the given arguments.
-func newServerAuthentication(log zerolog.Logger, secrets typedv1.SecretInterface, adminSecretName string, allowAnonymous bool) *serverAuthentication {
+func newServerAuthentication(secrets typedCore.SecretInterface, adminSecretName string, allowAnonymous bool) *serverAuthentication {
 	auth := &serverAuthentication{
-		log:             log,
 		secrets:         secrets,
 		adminSecretName: adminSecretName,
 		allowAnonymous:  allowAnonymous,
@@ -98,18 +97,18 @@ func (s *serverAuthentication) fetchAdminSecret() (string, string, error) {
 	if s.adminSecretName == "" {
 		return "", "", errors.WithStack(errors.Newf("No admin secret name specified"))
 	}
-	secret, err := s.secrets.Get(context.Background(), s.adminSecretName, metav1.GetOptions{})
+	secret, err := s.secrets.Get(context.Background(), s.adminSecretName, meta.GetOptions{})
 	if err != nil {
 		return "", "", errors.WithStack(err)
 	}
 	var username, password string
-	if raw, found := secret.Data[v1.BasicAuthUsernameKey]; !found {
-		return "", "", errors.WithStack(errors.Newf("Secret '%s' contains no '%s' field", s.adminSecretName, v1.BasicAuthUsernameKey))
+	if raw, found := secret.Data[core.BasicAuthUsernameKey]; !found {
+		return "", "", errors.WithStack(errors.Newf("Secret '%s' contains no '%s' field", s.adminSecretName, core.BasicAuthUsernameKey))
 	} else {
 		username = string(raw)
 	}
-	if raw, found := secret.Data[v1.BasicAuthPasswordKey]; !found {
-		return "", "", errors.WithStack(errors.Newf("Secret '%s' contains no '%s' field", s.adminSecretName, v1.BasicAuthPasswordKey))
+	if raw, found := secret.Data[core.BasicAuthPasswordKey]; !found {
+		return "", "", errors.WithStack(errors.Newf("Secret '%s' contains no '%s' field", s.adminSecretName, core.BasicAuthPasswordKey))
 	} else {
 		password = string(raw)
 	}
@@ -131,7 +130,7 @@ func (s *serverAuthentication) checkLogin(username, password string) error {
 	if expectedUsername == "" {
 		var err error
 		if expectedUsername, expectedPassword, err = s.fetchAdminSecret(); err != nil {
-			s.log.Error().Err(err).Msg("Failed to fetch secret")
+			authLogger.Err(err).Error("Failed to fetch secret")
 			return errors.WithStack(errors.Wrap(UnauthorizedError, "admin secret cannot be loaded"))
 		}
 	}
@@ -160,12 +159,12 @@ func (s *serverAuthentication) checkAuthentication(c *gin.Context) {
 	s.tokens.mutex.Lock()
 	defer s.tokens.mutex.Unlock()
 	if entry, found := s.tokens.tokens[token]; !found {
-		s.log.Debug().Str("token", token).Msg("Invalid token")
+		authLogger.Str("token", token).Debug("Invalid token")
 		sendError(c, errors.WithStack(errors.Wrap(UnauthorizedError, "invalid credentials")))
 		c.Abort()
 		return
 	} else if entry.IsExpired() {
-		s.log.Debug().Str("token", token).Msg("Token expired")
+		authLogger.Str("token", token).Debug("Token expired")
 		sendError(c, errors.WithStack(errors.Wrap(UnauthorizedError, "credentials expired")))
 		c.Abort()
 		return

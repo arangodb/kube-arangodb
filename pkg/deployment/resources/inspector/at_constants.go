@@ -21,9 +21,10 @@
 package inspector
 
 import (
+	"k8s.io/apimachinery/pkg/runtime/schema"
+
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	deploymentv1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 // ArangoTask

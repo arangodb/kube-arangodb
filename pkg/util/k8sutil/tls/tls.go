@@ -21,11 +21,15 @@
 package tls
 
 import (
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"net/url"
+
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 type KeyfileInput struct {
@@ -82,6 +86,28 @@ func GetServerAltNames(deployment meta.Object, spec api.DeploymentSpec, tls api.
 		return k, errors.WithStack(err)
 	} else {
 		k = k.Append(names)
+	}
+
+	return k, nil
+}
+
+func GetSyncAltNames(deployment meta.Object, spec api.DeploymentSpec, tls api.TLSSpec, group api.ServerGroup, member api.MemberStatus) (KeyfileInput, error) {
+	k, err := GetAltNames(tls)
+	if err != nil {
+		return k, errors.WithStack(err)
+	}
+
+	k.AltNames = append(k.AltNames,
+		k8sutil.CreateSyncMasterClientServiceName(deployment.GetName()),
+		k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(deployment, spec.ClusterDomain),
+		k8sutil.CreatePodDNSNameWithDomain(deployment, spec.ClusterDomain, group.AsRole(), member.ID),
+	)
+
+	masterEndpoint := spec.Sync.ExternalAccess.ResolveMasterEndpoint(k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(deployment, spec.ClusterDomain), shared.ArangoSyncMasterPort)
+	for _, ep := range masterEndpoint {
+		if u, err := url.Parse(ep); err == nil {
+			k.AltNames = append(k.AltNames, u.Hostname())
+		}
 	}
 
 	return k, nil

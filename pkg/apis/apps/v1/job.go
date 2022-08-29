@@ -21,18 +21,18 @@
 package v1
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/apis/apps"
+	batch "k8s.io/api/batch/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	batchv1 "k8s.io/api/batch/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/apps"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // ArangoJobList is a list of ArangoDB jobs.
 type ArangoJobList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
+	meta.TypeMeta `json:",inline"`
+	meta.ListMeta `json:"metadata,omitempty"`
 
 	Items []ArangoJob `json:"items"`
 }
@@ -42,16 +42,16 @@ type ArangoJobList struct {
 
 // ArangoJob contains definition and status of the ArangoDB type Job.
 type ArangoJob struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              ArangoJobSpec     `json:"spec,omitempty"`
-	Status            batchv1.JobStatus `json:"status,omitempty"`
+	meta.TypeMeta   `json:",inline"`
+	meta.ObjectMeta `json:"metadata,omitempty"`
+	Spec            ArangoJobSpec   `json:"spec,omitempty"`
+	Status          batch.JobStatus `json:"status,omitempty"`
 }
 
 // AsOwner creates an OwnerReference for the given job
-func (a *ArangoJob) AsOwner() metav1.OwnerReference {
+func (a *ArangoJob) AsOwner() meta.OwnerReference {
 	trueVar := true
-	return metav1.OwnerReference{
+	return meta.OwnerReference{
 		APIVersion: SchemeGroupVersion.String(),
 		Kind:       apps.ArangoJobResourceKind,
 		Name:       a.Name,
