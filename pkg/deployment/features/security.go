@@ -22,6 +22,7 @@ package features
 
 func init() {
 	registerFeature(ephemeralVolumes)
+	registerFeature(sensitiveInformationProtection)
 }
 
 var ephemeralVolumes = &feature{

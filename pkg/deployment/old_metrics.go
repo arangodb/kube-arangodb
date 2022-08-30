@@ -26,6 +26,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/generated/metric_descriptions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
@@ -111,21 +112,34 @@ func (i *inventory) Collect(m chan<- prometheus.Metric) {
 
 				if spec.Mode.Get() == api.DeploymentModeCluster {
 					for db, collections := range agency.Current.Collections {
+						dbName := db
+						if features.SensitiveInformationProtection().Enabled() {
+							dbName = "UNKNOWN"
+
+							if v, ok := agency.Plan.Databases[db]; ok && v.ID != "" {
+								dbName = v.ID
+							}
+						}
+
 						for collection, shards := range collections {
 							for shard, details := range shards {
 								for id, server := range details.Servers {
-									name := "UNKNOWN"
-									if _, ok := agency.Plan.Collections[db]; ok {
-										if _, ok := agency.Plan.Collections[db][collection]; ok {
-											name = agency.Plan.Collections[db][collection].GetName(name)
+									collectionName := "UNKNOWN"
+									if features.SensitiveInformationProtection().Enabled() {
+										collectionName = collection
+									} else {
+										if _, ok := agency.Plan.Collections[db]; ok {
+											if _, ok := agency.Plan.Collections[db][collection]; ok {
+												collectionName = agency.Plan.Collections[db][collection].GetName(collectionName)
+											}
 										}
 									}
 
 									m := []string{
 										deployment.GetNamespace(),
 										deployment.GetName(),
-										db,
-										name,
+										dbName,
+										collectionName,
 										shard,
 										string(server),
 									}
