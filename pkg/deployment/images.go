@@ -52,8 +52,9 @@ var _ interfaces.ContainerCreator = &ContainerIdentity{}
 // ImageUpdatePod describes how to launch the ID ArangoD POD.
 type ImageUpdatePod struct {
 	spec             api.DeploymentSpec
+	status           api.DeploymentStatus
 	apiObject        k8sutil.APIObject
-	containerCreator interfaces.ContainerCreator
+	containerCreator *ArangoDIdentity
 }
 
 // ContainerIdentity helps to resolve the container identity, e.g.: image ID, version of the entrypoint.
@@ -66,6 +67,7 @@ type ContainerIdentity struct {
 // ArangoDIdentity helps to resolve the ArangoD identity, e.g.: image ID, version of the entrypoint.
 type ArangoDIdentity struct {
 	interfaces.ContainerCreator
+	input     pod.Input
 	License   *string
 	ipAddress string
 }
@@ -226,6 +228,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 
 	imagePod := ImageUpdatePod{
 		spec:      ib.Spec,
+		status:    ib.Status,
 		apiObject: ib.APIObject,
 		containerCreator: &ArangoDIdentity{
 			ContainerCreator: &ContainerIdentity{
@@ -237,6 +240,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 			ipAddress: ib.Spec.GetListenAddr(),
 		},
 	}
+	imagePod.containerCreator.input = imagePod.AsInput()
 
 	pod, err = resources.RenderArangoPod(ctx, cachedStatus, ib.APIObject, role, id, podName, &imagePod)
 	if err != nil {
@@ -297,7 +301,7 @@ func (i *ImageUpdatePod) GetAffinityRole() string {
 }
 
 func (i *ImageUpdatePod) GetVolumes() []core.Volume {
-	return getVolumes().Volumes()
+	return getVolumes(i.AsInput()).Volumes()
 }
 
 func (i *ImageUpdatePod) GetSidecars(*core.Pod) error {
@@ -445,12 +449,16 @@ func (a *ContainerIdentity) GetVolumeMounts() []core.VolumeMount {
 
 // GetArgs returns the list of arguments for the ArangoD container identification.
 func (a *ArangoDIdentity) GetArgs() ([]string, error) {
-	return []string{
-		"--server.authentication=false",
-		fmt.Sprintf("--server.endpoint=tcp://%s:%d", a.ipAddress, shared.ArangoPort),
-		"--database.directory=" + shared.ArangodVolumeMountDir,
-		"--log.output=+",
-	}, nil
+	options := k8sutil.CreateOptionPairs(64)
+	options.Add("--server.authentication", "false")
+	options.Addf("--server.endpoint", "tcp://%s:%d", a.ipAddress, shared.ArangoPort)
+	options.Add("--database.directory", shared.ArangodVolumeMountDir)
+	options.Add("--log.output", "+")
+
+	// Security
+	options.Merge(pod.Security().Args(a.input))
+
+	return options.Copy().Sort().AsArgs(), nil
 }
 
 func (a *ArangoDIdentity) GetEnvs() []core.EnvVar {
@@ -471,7 +479,16 @@ func (a *ArangoDIdentity) GetEnvs() []core.EnvVar {
 
 // GetVolumeMounts returns volume mount for the ArangoD data.
 func (a *ArangoDIdentity) GetVolumeMounts() []core.VolumeMount {
-	return getVolumes().VolumeMounts()
+	return getVolumes(a.input).VolumeMounts()
+}
+
+func (a *ImageUpdatePod) AsInput() pod.Input {
+	return pod.Input{
+		ApiObject:  a.apiObject,
+		Deployment: a.spec,
+		Status:     a.status,
+		Group:      api.ServerGroupImageDiscovery,
+	}
 }
 
 // GetExecutor returns the fixed path to the ArangoSync binary in the container.
@@ -479,10 +496,13 @@ func (a *ArangoSyncIdentity) GetExecutor() string {
 	return resources.ArangoSyncExecutor
 }
 
-func getVolumes() pod.Volumes {
+func getVolumes(input pod.Input) pod.Volumes {
 	volumes := pod.NewVolumes()
 	volumes.AddVolume(k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName))
 	volumes.AddVolumeMount(k8sutil.ArangodVolumeMount())
+
+	// Security
+	volumes.Append(pod.Security(), input)
 
 	return volumes
 }
