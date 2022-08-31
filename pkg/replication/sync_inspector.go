@@ -30,6 +30,7 @@ import (
 	"github.com/arangodb/arangosync-client/client/synccheck"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -256,8 +257,12 @@ func (dr *DeploymentReplication) inspectIncomingSynchronizationStatus(ctx contex
 // createSynchronizationStatus returns aggregated info about DCSyncStatus
 func (dr *DeploymentReplication) createSynchronizationStatus(dcSyncStatus *synccheck.DCSyncStatus) api.SynchronizationStatus {
 	dbs := make(map[string]api.DatabaseSynchronizationStatus, len(dcSyncStatus.Databases))
-	for _, dbSyncStatus := range dcSyncStatus.Databases {
-		dbs[dbSyncStatus.ID] = dr.createDatabaseSynchronizationStatus(dbSyncStatus)
+	for dbName, dbSyncStatus := range dcSyncStatus.Databases {
+		db := dbName
+		if features.SensitiveInformationProtection().Enabled() {
+			db = dbSyncStatus.ID
+		}
+		dbs[db] = dr.createDatabaseSynchronizationStatus(dbSyncStatus)
 	}
 	return api.SynchronizationStatus{
 		AllInSync: dcSyncStatus.AllInSync(),
@@ -274,10 +279,15 @@ func (dr *DeploymentReplication) createDatabaseSynchronizationStatus(dbSyncStatu
 	var errs []api.DatabaseSynchronizationError
 	var shardsTotal, shardsInSync int
 	var errorsReportedToLog = 0
-	for _, colSyncStatus := range dbSyncStatus.Collections {
+	for colName, colSyncStatus := range dbSyncStatus.Collections {
 		if colSyncStatus.Error != "" && len(errs) < maxReportedIncomingSyncErrors {
+			col := colName
+			if features.SensitiveInformationProtection().Enabled() {
+				col = colSyncStatus.ID
+			}
+
 			errs = append(errs, api.DatabaseSynchronizationError{
-				Collection: colSyncStatus.ID,
+				Collection: col,
 				Shard:      "",
 				Message:    colSyncStatus.Error,
 			})
