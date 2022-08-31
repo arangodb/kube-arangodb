@@ -381,7 +381,10 @@ func (i *ImageUpdatePod) Validate(_ interfaces.Inspector) error {
 	return nil
 }
 
-func (i *ImageUpdatePod) ApplyPodSpec(_ *core.PodSpec) error {
+func (i *ImageUpdatePod) ApplyPodSpec(p *core.PodSpec) error {
+	if id := i.spec.ID; id != nil {
+		p.SecurityContext = i.spec.ID.SecurityContext.NewPodSecurityContext()
+	}
 	return nil
 }
 
