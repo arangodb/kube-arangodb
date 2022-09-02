@@ -34,7 +34,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/arangodb/arangosync-client/client"
-	"github.com/arangodb/arangosync-client/tasks"
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
 	"github.com/arangodb/go-driver/http"
@@ -51,6 +50,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
+	"github.com/arangodb/kube-arangodb/pkg/replication"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -323,16 +323,10 @@ func (d *Deployment) GetSyncServerClient(ctx context.Context, group api.ServerGr
 		port = shared.ArangoSyncWorkerPort
 	}
 	source := client.Endpoint{"https://" + net.JoinHostPort(dnsName, strconv.Itoa(port))}
-	tlsAuth := tasks.TLSAuthentication{
-		TLSClientAuthentication: tasks.TLSClientAuthentication{
-			ClientToken: monitoringToken,
-		},
-	}
-	auth := client.NewAuthentication(tlsAuth, "")
-	insecureSkipVerify := true
-	c, err := d.syncClientCache.GetClient(client.NewExternalEndpoints(source), auth, insecureSkipVerify)
+
+	c, err := replication.GetSyncServerClient(&d.syncClientCache, monitoringToken, source)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, err
 	}
 	return c, nil
 }
