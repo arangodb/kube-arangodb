@@ -47,7 +47,7 @@ func (d *Deployment) CollectMetrics(m metrics.PushMetric) {
 	m.Push(metric_descriptions.ArangodbOperatorAgencyIndexGauge(float64(d.metrics.Agency.Index), d.namespace, d.name))
 
 	m.Push(metric_descriptions.ArangodbOperatorResourcesArangodeploymentValidationErrorsCounter(float64(d.metrics.Errors.DeploymentValidationErrors), d.namespace, d.name))
-	m.Push(metric_descriptions.ArangodbOperatorResourcesArangodeploymentImmutableErrorsCounter(float64(d.metrics.Errors.DeploymentValidationErrors), d.namespace, d.name))
+	m.Push(metric_descriptions.ArangodbOperatorResourcesArangodeploymentImmutableErrorsCounter(float64(d.metrics.Errors.DeploymentImmutableErrors), d.namespace, d.name))
 
 	if d.metrics.Deployment.Accepted {
 		m.Push(metric_descriptions.ArangodbOperatorResourcesArangodeploymentAcceptedGauge(1, d.namespace, d.name))
