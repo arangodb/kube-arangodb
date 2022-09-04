@@ -473,10 +473,10 @@ func TestEnsureImages(t *testing.T) {
 
 func createTestCommandForImageUpdatePod() []string {
 	return []string{resources.ArangoDExecutor,
-		"--server.authentication=false",
-		fmt.Sprintf("--server.endpoint=tcp://[::]:%d", shared.ArangoPort),
 		"--database.directory=" + shared.ArangodVolumeMountDir,
 		"--log.output=+",
+		"--server.authentication=false",
+		fmt.Sprintf("--server.endpoint=tcp://[::]:%d", shared.ArangoPort),
 	}
 }
 
