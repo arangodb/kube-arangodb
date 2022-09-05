@@ -18,25 +18,16 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package logging
+package api
 
-import "github.com/rs/zerolog"
-
-type Level zerolog.Level
-
-func (l Level) New() *Level {
-	return &l
-}
-
-const (
-	Trace = Level(zerolog.TraceLevel)
-	Debug = Level(zerolog.DebugLevel)
-	Info  = Level(zerolog.InfoLevel)
-	Warn  = Level(zerolog.WarnLevel)
-	Error = Level(zerolog.ErrorLevel)
-	Fatal = Level(zerolog.FatalLevel)
+import (
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 )
 
-func (l Level) String() string {
-	return zerolog.Level(l).String()
+func (s *Server) getLogLevelsByTopics() map[string]logging.Level {
+	return logging.Global().LogLevels()
+}
+
+func (s *Server) setLogLevelsByTopics(logLevels map[string]logging.Level) {
+	logging.Global().ApplyLogLevels(logLevels)
 }

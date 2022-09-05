@@ -34,21 +34,29 @@ func ParseLogLevelsFromArgs(in []string) (map[string]Level, error) {
 
 		switch len(z) {
 		case 1:
-			l, err := zerolog.ParseLevel(strings.ToLower(z[0]))
+			l, err := ParseLogLevel(z[0])
 			if err != nil {
 				return nil, err
 			}
 
-			r[AllLevels] = Level(l)
+			r[TopicAll] = l
 		case 2:
-			l, err := zerolog.ParseLevel(strings.ToLower(z[1]))
+			l, err := ParseLogLevel(z[1])
 			if err != nil {
 				return nil, err
 			}
 
-			r[z[0]] = Level(l)
+			r[z[0]] = l
 		}
 	}
 
 	return r, nil
+}
+
+func ParseLogLevel(in string) (Level, error) {
+	l, err := zerolog.ParseLevel(strings.ToLower(in))
+	if err != nil {
+		return Debug, err
+	}
+	return Level(l), nil
 }

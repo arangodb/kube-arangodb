@@ -26,6 +26,8 @@ package server;
 
 service Operator {
   rpc GetVersion (Empty) returns (Version) {}
+  rpc GetLogLevel (Empty) returns (LogLevelConfig) {}
+  rpc SetLogLevel (LogLevelConfig) returns (Empty) {}
 }
 
 message Empty {}
@@ -36,4 +38,17 @@ message Version {
   string edition = 3;
   string go_version = 4;
   string build_date = 5;
+}
+
+enum LogLevel {
+  TRACE = 0;
+  DEBUG = 1;
+  INFO = 2;
+  WARN = 3;
+  ERROR = 4;
+  FATAL = 5;
+}
+
+message LogLevelConfig {
+  map<string, LogLevel> topics = 1;
 }

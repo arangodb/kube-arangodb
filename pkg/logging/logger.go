@@ -30,7 +30,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const AllLevels = "all"
+const TopicAll = "all"
 
 type Factory interface {
 	Get(name string) Logger
@@ -129,7 +129,7 @@ func (f *factory) ApplyLogLevels(in map[string]Level) {
 }
 
 func (f *factory) applyForLogger(name string) {
-	if def, ok := f.levels[AllLevels]; ok {
+	if def, ok := f.levels[TopicAll]; ok {
 		if ov, ok := f.levels[name]; ok {
 			// override on logger level
 			l := f.root.Level(zerolog.Level(ov))

@@ -22,8 +22,10 @@ package api
 
 import (
 	"context"
+	"fmt"
 
 	pb "github.com/arangodb/kube-arangodb/pkg/api/server"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/version"
 )
 
@@ -36,4 +38,47 @@ func (s *Server) GetVersion(ctx context.Context, _ *pb.Empty) (*pb.Version, erro
 		GoVersion: v.GoVersion,
 		BuildDate: v.BuildDate,
 	}, nil
+}
+
+var loglevelMap = map[pb.LogLevel]logging.Level{
+	pb.LogLevel_TRACE: logging.Trace,
+	pb.LogLevel_DEBUG: logging.Debug,
+	pb.LogLevel_INFO:  logging.Info,
+	pb.LogLevel_WARN:  logging.Warn,
+	pb.LogLevel_ERROR: logging.Error,
+	pb.LogLevel_FATAL: logging.Fatal,
+}
+
+func logLevelToGRPC(l logging.Level) pb.LogLevel {
+	for grpcVal, localVal := range loglevelMap {
+		if l == localVal {
+			return grpcVal
+		}
+	}
+	return pb.LogLevel_DEBUG
+}
+
+func (s *Server) GetLogLevel(ctx context.Context, _ *pb.Empty) (*pb.LogLevelConfig, error) {
+	l := s.getLogLevelsByTopics()
+
+	topics := make(map[string]pb.LogLevel, len(l))
+	for topic, level := range l {
+		topics[topic] = logLevelToGRPC(level)
+	}
+	return &pb.LogLevelConfig{
+		Topics: topics,
+	}, nil
+}
+
+func (s *Server) SetLogLevel(ctx context.Context, cfg *pb.LogLevelConfig) (*pb.Empty, error) {
+	l := make(map[string]logging.Level, len(cfg.Topics))
+	for topic, grpcLevel := range cfg.Topics {
+		level, ok := loglevelMap[grpcLevel]
+		if !ok {
+			return &pb.Empty{}, fmt.Errorf("unknown log level %s for topic %s", grpcLevel, topic)
+		}
+		l[topic] = level
+	}
+	s.setLogLevelsByTopics(l)
+	return &pb.Empty{}, nil
 }

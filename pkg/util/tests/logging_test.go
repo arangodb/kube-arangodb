@@ -43,6 +43,7 @@ func Test_Logger(t *testing.T) {
 
 		t.Run("Register logger", func(t *testing.T) {
 			f.RegisterLogger("foo", logging.Info)
+			f.RegisterLogger("bar", logging.Info)
 		})
 
 		t.Run("Run on registered logger", func(t *testing.T) {
@@ -83,6 +84,7 @@ func Test_Logger(t *testing.T) {
 			require.False(t, ok)
 
 			require.Equal(t, logging.Info, f.LogLevels()["foo"])
+			require.Equal(t, logging.Info, f.LogLevels()["bar"])
 		})
 
 		t.Run("Change invalid level", func(t *testing.T) {
@@ -109,7 +111,9 @@ func Test_Logger(t *testing.T) {
 			_, ok := s.Get(100 * time.Millisecond)
 			require.False(t, ok)
 
+			levels := f.LogLevels()
 			require.Equal(t, logging.Info, f.LogLevels()["foo"])
+			require.Equal(t, logging.Debug, levels["bar"])
 		})
 	})
 }
