@@ -59,6 +59,10 @@ func (f feature) Enabled() bool {
 		return *f.constValue
 	}
 
+	if enableAll {
+		return true
+	}
+
 	return f.enabled
 }
 
