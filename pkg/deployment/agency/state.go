@@ -44,6 +44,7 @@ func (c *cache) loadState(ctx context.Context, client agency.Agency) (State, err
 	readKeys := []string{
 		GetAgencyKey(ArangoKey, SupervisionKey, SupervisionMaintenanceKey),
 		GetAgencyKey(ArangoKey, PlanKey, PlanCollectionsKey),
+		GetAgencyKey(ArangoKey, PlanKey, PlanDatabasesKey),
 		GetAgencyKey(ArangoKey, CurrentKey, PlanCollectionsKey),
 		GetAgencyKey(ArangoKey, CurrentKey, CurrentMaintenanceServers),
 		GetAgencyKey(ArangoKey, TargetKey, TargetHotBackupKey),
@@ -107,6 +108,7 @@ type StateCurrent struct {
 
 type StatePlan struct {
 	Collections StatePlanCollections `json:"Collections"`
+	Databases   PlanDatabases        `json:"Databases,omitempty"`
 }
 
 type StateSupervision struct {

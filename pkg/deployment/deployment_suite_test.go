@@ -491,14 +491,15 @@ func createTestDeployment(t *testing.T, config Config, arangoDeployment *api.Ara
 	i := inspector.NewInspector(throttle.NewAlwaysThrottleComponents(), deps.Client, arangoDeployment.GetNamespace(), arangoDeployment.GetName())
 
 	d := &Deployment{
-		apiObject: arangoDeployment,
-		name:      arangoDeployment.GetName(),
-		namespace: arangoDeployment.GetNamespace(),
-		config:    config,
-		deps:      deps,
-		eventCh:   make(chan *deploymentEvent, deploymentEventQueueSize),
-		stopCh:    make(chan struct{}),
-		log:       logger,
+		currentObject:       arangoDeployment,
+		currentObjectStatus: arangoDeployment.Status.DeepCopy(),
+		name:                arangoDeployment.GetName(),
+		namespace:           arangoDeployment.GetNamespace(),
+		config:              config,
+		deps:                deps,
+		eventCh:             make(chan *deploymentEvent, deploymentEventQueueSize),
+		stopCh:              make(chan struct{}),
+		log:                 logger,
 	}
 	d.clientCache = client.NewClientCache(d, conn.NewFactory(d.getAuth, d.getConnConfig))
 	d.acs = acs.NewACS("", i)
@@ -602,10 +603,10 @@ func (testCase *testCaseStruct) createTestPodData(deployment *Deployment, group 
 	}
 
 	// Add image info
-	if member, group, ok := deployment.apiObject.Status.Members.ElementByID(memberStatus.ID); ok {
-		member.Image = deployment.apiObject.Status.CurrentImage
+	if member, group, ok := deployment.currentObject.Status.Members.ElementByID(memberStatus.ID); ok {
+		member.Image = deployment.currentObject.Status.CurrentImage
 
-		deployment.apiObject.Status.Members.Update(member, group)
+		deployment.currentObject.Status.Members.Update(member, group)
 	}
 }
 

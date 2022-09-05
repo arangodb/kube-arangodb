@@ -56,7 +56,7 @@ func (a actionBootstrapUpdate) Start(ctx context.Context) (bool, error) {
 			status.Conditions.Update(api.ConditionTypeBootstrapSucceded, true, "Bootstrap successful", "The bootstrap process has been completed successfully")
 		}
 		return true
-	}, true); err != nil {
+	}); err != nil {
 		return false, err
 	}
 

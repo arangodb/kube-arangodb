@@ -50,7 +50,7 @@ func TestEnsurePod_Metrics(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						DBServers: api.MemberStatusList{
 							firstDBServerStatus,
@@ -110,7 +110,7 @@ func TestEnsurePod_Metrics(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						DBServers: api.MemberStatusList{
 							firstDBServerStatus,
@@ -170,7 +170,7 @@ func TestEnsurePod_Metrics(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						DBServers: api.MemberStatusList{
 							firstDBServerStatus,
@@ -238,7 +238,7 @@ func TestEnsurePod_Metrics(t *testing.T) {
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						Agents: api.MemberStatusList{
 							firstAgentStatus,

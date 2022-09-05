@@ -47,7 +47,7 @@ const (
 // in spec.sync.externalAccess.accessPackageSecretNames.
 func (d *Deployment) createAccessPackages(ctx context.Context) error {
 	log := d.sectionLogger("access-package")
-	spec := d.apiObject.Spec
+	spec := d.GetSpec()
 
 	if !spec.Sync.IsEnabled() {
 		// We're only relevant when sync is enabled
@@ -79,11 +79,11 @@ func (d *Deployment) createAccessPackages(ctx context.Context) error {
 					if err != nil && !k8sutil.IsNotFound(err) {
 						// Not serious enough to stop everything now, just sectionLogger and create an event
 						log.Err(err).Warn("Failed to remove obsolete access package secret")
-						d.CreateEvent(k8sutil.NewErrorEvent("Access Package cleanup failed", err, d.apiObject))
+						d.CreateEvent(k8sutil.NewErrorEvent("Access Package cleanup failed", err, d.currentObject))
 					} else {
 						// Access package removed, notify user
 						log.Str("secret-name", secret.GetName()).Info("Removed access package Secret")
-						d.CreateEvent(k8sutil.NewAccessPackageDeletedEvent(d.apiObject, secret.GetName()))
+						d.CreateEvent(k8sutil.NewAccessPackageDeletedEvent(d.currentObject, secret.GetName()))
 					}
 				}
 			}
@@ -97,7 +97,7 @@ func (d *Deployment) createAccessPackages(ctx context.Context) error {
 // it is does not already exist.
 func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName string) error {
 	log := d.sectionLogger("access-package")
-	spec := d.apiObject.Spec
+	spec := d.GetSpec()
 
 	_, err := d.acs.CurrentClusterCache().Secret().V1().Read().Get(ctx, apSecretName, meta.GetOptions{})
 	if err == nil {
@@ -153,7 +153,7 @@ func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName strin
 		ObjectMeta: meta.ObjectMeta{
 			Name: apSecretName + "-auth",
 			Labels: map[string]string{
-				labelKeyOriginalDeployment: d.apiObject.GetName(),
+				labelKeyOriginalDeployment: d.currentObject.GetName(),
 			},
 		},
 		Data: map[string][]byte{
@@ -169,7 +169,7 @@ func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName strin
 		ObjectMeta: meta.ObjectMeta{
 			Name: apSecretName + "-ca",
 			Labels: map[string]string{
-				labelKeyOriginalDeployment: d.apiObject.GetName(),
+				labelKeyOriginalDeployment: d.currentObject.GetName(),
 			},
 		},
 		Data: map[string][]byte{
@@ -203,7 +203,7 @@ func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName strin
 		},
 	}
 	// Attach secret to owner
-	secret.SetOwnerReferences(append(secret.GetOwnerReferences(), d.apiObject.AsOwner()))
+	secret.SetOwnerReferences(append(secret.GetOwnerReferences(), d.currentObject.AsOwner()))
 	err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		_, err := d.SecretsModInterface().Create(ctxChild, secret, meta.CreateOptions{})
 		return err
@@ -216,7 +216,7 @@ func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName strin
 
 	// Write sectionLogger entry & create event
 	log.Str("secret-name", apSecretName).Info("Created access package Secret")
-	d.CreateEvent(k8sutil.NewAccessPackageCreatedEvent(d.apiObject, apSecretName))
+	d.CreateEvent(k8sutil.NewAccessPackageCreatedEvent(d.currentObject, apSecretName))
 
 	return nil
 }

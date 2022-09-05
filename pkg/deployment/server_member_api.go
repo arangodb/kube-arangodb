@@ -36,7 +36,7 @@ type member struct {
 }
 
 func (m member) status() (api.MemberStatus, bool) {
-	status, _ := m.d.GetStatus()
+	status := m.d.GetStatus()
 	result, _, found := status.Members.ElementByID(m.id)
 	return result, found
 }

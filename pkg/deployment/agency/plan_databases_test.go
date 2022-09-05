@@ -18,16 +18,18 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package resilience
+package agency
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
+	"encoding/json"
+	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
-// Context provides methods to the resilience package.
-type Context interface {
-	reconciler.DeploymentDatabaseClient
-	reconciler.ArangoAgency
-	reconciler.DeploymentInfoGetter
-	reconciler.DeploymentStatusUpdate
+func Test_Databases(t *testing.T) {
+	var s DumpState
+	require.NoError(t, json.Unmarshal(agencyDump39HotBackup, &s))
+
+	require.Contains(t, s.Agency.Arango.Plan.Databases, "_system")
 }

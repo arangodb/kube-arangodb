@@ -37,6 +37,7 @@ const (
 	TargetHotBackupKey = "HotBackup"
 
 	PlanCollectionsKey = "Collections"
+	PlanDatabasesKey   = "Databases"
 
 	SupervisionKey            = "Supervision"
 	SupervisionMaintenanceKey = "Maintenance"

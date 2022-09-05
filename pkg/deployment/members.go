@@ -34,9 +34,9 @@ import (
 
 func (d *Deployment) createAgencyMapping(ctx context.Context) error {
 	spec := d.GetSpec()
-	status := d.GetStatusSnapshot()
+	status := d.GetStatus()
 
-	if !spec.Mode.HasAgents() {
+	if !spec.Mode.Get().HasAgents() {
 		return nil
 	}
 
@@ -127,7 +127,7 @@ func (d *Deployment) renderMember(spec api.DeploymentSpec, status *api.Deploymen
 	}
 	deploymentName := apiObject.GetName()
 	role := group.AsRole()
-	arch := apiObject.Spec.Architecture.GetDefault()
+	arch := apiObject.GetAcceptedSpec().Architecture.GetDefault()
 
 	switch group {
 	case api.ServerGroupSingle:

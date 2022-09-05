@@ -73,25 +73,66 @@ func (d *ArangoDeployment) ForeachServerGroup(cb ServerGroupFunc, status *Deploy
 	if status == nil {
 		status = &d.Status
 	}
-	if err := cb(ServerGroupAgents, d.Spec.Agents, &status.Members.Agents); err != nil {
+	return d.foreachServerGroup(cb, d.Spec, status)
+}
+
+// ForeachServerGroupAccepted calls the given callback for all accepted server groups.
+// If the callback returns an error, this error is returned and no other server
+// groups are processed.
+// Groups are processed in this order: agents, single, dbservers, coordinators, syncmasters, syncworkers
+func (d *ArangoDeployment) ForeachServerGroupAccepted(cb ServerGroupFunc, status *DeploymentStatus) error {
+	if status == nil {
+		status = &d.Status
+	}
+	spec := d.Spec
+	if a := status.AcceptedSpec; a != nil {
+		spec = *a
+	}
+	return d.foreachServerGroup(cb, spec, status)
+}
+
+func (d *ArangoDeployment) foreachServerGroup(cb ServerGroupFunc, spec DeploymentSpec, status *DeploymentStatus) error {
+	if err := cb(ServerGroupAgents, spec.Agents, &status.Members.Agents); err != nil {
 		return errors.WithStack(err)
 	}
-	if err := cb(ServerGroupSingle, d.Spec.Single, &status.Members.Single); err != nil {
+	if err := cb(ServerGroupSingle, spec.Single, &status.Members.Single); err != nil {
 		return errors.WithStack(err)
 	}
-	if err := cb(ServerGroupDBServers, d.Spec.DBServers, &status.Members.DBServers); err != nil {
+	if err := cb(ServerGroupDBServers, spec.DBServers, &status.Members.DBServers); err != nil {
 		return errors.WithStack(err)
 	}
-	if err := cb(ServerGroupCoordinators, d.Spec.Coordinators, &status.Members.Coordinators); err != nil {
+	if err := cb(ServerGroupCoordinators, spec.Coordinators, &status.Members.Coordinators); err != nil {
 		return errors.WithStack(err)
 	}
-	if err := cb(ServerGroupSyncMasters, d.Spec.SyncMasters, &status.Members.SyncMasters); err != nil {
+	if err := cb(ServerGroupSyncMasters, spec.SyncMasters, &status.Members.SyncMasters); err != nil {
 		return errors.WithStack(err)
 	}
-	if err := cb(ServerGroupSyncWorkers, d.Spec.SyncWorkers, &status.Members.SyncWorkers); err != nil {
+	if err := cb(ServerGroupSyncWorkers, spec.SyncWorkers, &status.Members.SyncWorkers); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil
+}
+
+// IsAccepted checks if accepted version match current version in spec
+func (d ArangoDeployment) IsAccepted() (bool, error) {
+	if as := d.Status.AcceptedSpecVersion; as != nil {
+		sha, err := d.Spec.Checksum()
+		if err != nil {
+			return false, err
+		}
+
+		return *as == sha, nil
+	}
+
+	return false, nil
+}
+
+func (d ArangoDeployment) GetAcceptedSpec() DeploymentSpec {
+	if a := d.Status.AcceptedSpec; a != nil {
+		return *a
+	} else {
+		return d.Spec
+	}
 }
 
 // IsUpToDate checks if applied version match current version in spec

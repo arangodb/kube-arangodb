@@ -88,7 +88,7 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 				createTLSSNISecret(t, deployment.SecretsModInterface(), "sni2", deployment.Namespace())
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						Coordinators: api.MemberStatusList{
 							firstCoordinatorStatus,
@@ -163,7 +163,7 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 				createTLSSNISecret(t, deployment.SecretsModInterface(), "sni2", deployment.Namespace())
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						Coordinators: api.MemberStatusList{
 							firstCoordinatorStatus,
@@ -238,7 +238,7 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 				createTLSSNISecret(t, deployment.SecretsModInterface(), "sni2", deployment.Namespace())
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						Coordinators: api.MemberStatusList{
 							firstCoordinatorStatus,
@@ -313,7 +313,7 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 				createTLSSNISecret(t, deployment.SecretsModInterface(), "sni2", deployment.Namespace())
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						Coordinators: api.MemberStatusList{
 							firstCoordinatorStatus,
@@ -421,7 +421,7 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 				createTLSSNISecret(t, deployment.SecretsModInterface(), "sni2", deployment.Namespace())
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
+				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
 						DBServers: api.MemberStatusList{
 							firstDBServerStatus,

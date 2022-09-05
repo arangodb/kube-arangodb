@@ -70,7 +70,7 @@ func (r *Resources) EnsureSecrets(ctx context.Context, cachedStatus inspectorInt
 	start := time.Now()
 	spec := r.context.GetSpec()
 	secrets := cachedStatus.SecretsModInterface().V1()
-	status, _ := r.context.GetStatus()
+	status := r.context.GetStatus()
 	apiObject := r.context.GetAPIObject()
 	deploymentName := apiObject.GetName()
 	image := status.CurrentImage

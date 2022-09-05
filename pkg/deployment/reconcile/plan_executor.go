@@ -178,7 +178,7 @@ func (d *Reconciler) executePlanInLoop(ctx context.Context) (bool, bool, error) 
 }
 
 func (d *Reconciler) executePlanStatus(ctx context.Context, pg planner) (bool, bool, error) {
-	loopStatus, _ := d.context.GetStatus()
+	loopStatus := d.context.GetStatus()
 
 	plan := pg.Get(&loopStatus)
 
@@ -189,11 +189,11 @@ func (d *Reconciler) executePlanStatus(ctx context.Context, pg planner) (bool, b
 	newPlan, callAgain, callInLoop, err := d.executePlan(ctx, plan, pg)
 
 	// Refresh current status
-	loopStatus, lastVersion := d.context.GetStatus()
+	loopStatus = d.context.GetStatus()
 
 	if pg.Set(&loopStatus, newPlan) {
 		d.planLogger.Info("Updating plan")
-		if err := d.context.UpdateStatus(ctx, loopStatus, lastVersion, true); err != nil {
+		if err := d.context.UpdateStatus(ctx, loopStatus); err != nil {
 			d.planLogger.Err(err).Debug("Failed to update CR status")
 			return false, false, errors.WithStack(err)
 		}

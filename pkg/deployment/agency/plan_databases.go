@@ -18,16 +18,10 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package resilience
+package agency
 
-import (
-	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
-)
+type PlanDatabases map[string]PlanDatabase
 
-// Context provides methods to the resilience package.
-type Context interface {
-	reconciler.DeploymentDatabaseClient
-	reconciler.ArangoAgency
-	reconciler.DeploymentInfoGetter
-	reconciler.DeploymentStatusUpdate
+type PlanDatabase struct {
+	ID string `json:"id"`
 }

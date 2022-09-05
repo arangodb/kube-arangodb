@@ -55,7 +55,7 @@ func (r *Resources) EnsureLeader(ctx context.Context, cachedStatus inspectorInte
 	}
 
 	leaderID := cache.LeaderID()
-	status, _ := r.context.GetStatus()
+	status := r.context.GetStatus()
 	noLeader := len(leaderID) == 0
 	changed := false
 	group := api.ServerGroupAgents
@@ -149,7 +149,7 @@ func (r *Resources) EnsureLeader(ctx context.Context, cachedStatus inspectorInte
 
 // getSingleServerLeaderID returns id of a single server leader.
 func (r *Resources) getSingleServerLeaderID(ctx context.Context) (string, error) {
-	status, _ := r.context.GetStatus()
+	status := r.context.GetStatus()
 	var mutex sync.Mutex
 	var leaderID string
 	var anyError error
@@ -215,7 +215,7 @@ func (r *Resources) ensureSingleServerLeader(ctx context.Context, cachedStatus i
 		}
 	}
 
-	status, _ := r.context.GetStatus()
+	status := r.context.GetStatus()
 	for _, m := range status.Members.Single {
 		pod, exist := cachedStatus.Pod().V1().GetSimple(m.Pod.GetName())
 		if !exist {

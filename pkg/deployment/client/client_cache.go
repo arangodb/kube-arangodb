@@ -83,7 +83,7 @@ func (cc *cache) extendHost(host string) string {
 func (cc *cache) getClient(group api.ServerGroup, id string) (driver.Client, error) {
 	cc.mutex.Lock()
 	defer cc.mutex.Unlock()
-	m, _, _ := cc.in.GetStatusSnapshot().Members.ElementByID(id)
+	m, _, _ := cc.in.GetStatus().Members.ElementByID(id)
 
 	endpoint, err := cc.in.GenerateMemberEndpoint(group, m)
 	if err != nil {
@@ -153,7 +153,7 @@ func (cc *cache) GetAgency(_ context.Context, agencyIDs ...string) (agency.Agenc
 
 	// Not found, create a new client
 	var dnsNames []string
-	for _, m := range cc.in.GetStatusSnapshot().Members.Agents {
+	for _, m := range cc.in.GetStatus().Members.Agents {
 		if len(agencyIDs) > 0 {
 			if !utils.StringList(agencyIDs).Has(m.ID) {
 				continue

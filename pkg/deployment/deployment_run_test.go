@@ -59,7 +59,7 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 
 		d, eventRecorder := createTestDeployment(t, testCase.config, testCase.ArangoDeployment)
 
-		startDepl := d.status.last.DeepCopy()
+		startDepl := d.GetStatus()
 
 		errs := 0
 		for {
@@ -88,7 +88,7 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 
 		f := startDepl.Members.AsList()
 		if len(f) == 0 {
-			f = d.status.last.Members.AsList()
+			f = d.GetStatus().Members.AsList()
 		}
 
 		// Add Expected pod defaults
@@ -102,7 +102,7 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 		}
 
 		// Create custom resource in the fake kubernetes API
-		_, err := d.deps.Client.Arango().DatabaseV1().ArangoDeployments(testNamespace).Create(context.Background(), d.apiObject, meta.CreateOptions{})
+		_, err := d.deps.Client.Arango().DatabaseV1().ArangoDeployments(testNamespace).Create(context.Background(), d.currentObject, meta.CreateOptions{})
 		require.NoError(t, err)
 
 		if testCase.Resources != nil {
@@ -124,17 +124,17 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 		}
 
 		// Set Pending phase
-		for _, e := range d.status.last.Members.AsList() {
+		for _, e := range d.GetStatus().Members.AsList() {
 			m := e.Member
 			if m.Phase == api.MemberPhaseNone {
 				m.Phase = api.MemberPhasePending
-				require.NoError(t, d.status.last.Members.Update(m, e.Group))
+				require.NoError(t, d.currentObjectStatus.Members.Update(m, e.Group))
 			}
 		}
 
 		// Set members
 		var loopErr error
-		for _, e := range d.status.last.Members.AsList() {
+		for _, e := range d.GetStatus().Members.AsList() {
 			m := e.Member
 			group := e.Group
 			member := api.ArangoMember{
@@ -167,13 +167,13 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 
 			require.NoError(t, d.acs.CurrentClusterCache().Refresh(context.Background()))
 
-			groupSpec := d.apiObject.Spec.GetServerGroupSpec(group)
+			groupSpec := d.GetSpec().GetServerGroupSpec(group)
 
-			image, ok := d.resources.SelectImage(d.apiObject.Spec, d.status.last)
+			image, ok := d.resources.SelectImage(d.GetSpec(), d.GetStatus())
 			require.True(t, ok)
 
 			var template *core.PodTemplateSpec
-			template, loopErr = d.resources.RenderPodTemplateForMember(context.Background(), d.ACS(), d.apiObject.Spec, d.status.last, m.ID, image)
+			template, loopErr = d.resources.RenderPodTemplateForMember(context.Background(), d.ACS(), d.GetSpec(), d.GetStatus(), m.ID, image)
 			if loopErr != nil {
 				break
 			}
@@ -237,8 +237,7 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 				assert.Fail(t, "expected event", "expected event with message '%s'", testCase.ExpectedEvent)
 			}
 
-			status, version := d.GetStatus()
-			assert.Equal(t, int32(1), version)
+			status := d.GetStatus()
 
 			checkEachMember := func(group api.ServerGroup, groupSpec api.ServerGroupSpec, status *api.MemberStatusList) error {
 				for _, m := range *status {
@@ -256,12 +255,12 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 					require.Equal(t, false, exist)
 
 					require.NotNil(t, m.Image)
-					require.True(t, m.Image.Equal(d.apiObject.Status.CurrentImage))
+					require.True(t, m.Image.Equal(d.currentObject.Status.CurrentImage))
 				}
 				return nil
 			}
 
-			d.GetServerGroupIterator().ForeachServerGroup(checkEachMember, &status)
+			d.GetServerGroupIterator().ForeachServerGroupAccepted(checkEachMember, &status)
 		}
 	})
 }

@@ -48,7 +48,7 @@ func (r *Resources) CleanupTerminatedPods(ctx context.Context) (util.Interval, e
 	nextInterval := maxPodInspectorInterval // Large by default, will be made smaller if needed in the rest of the function
 
 	// Update member status from all pods found
-	status, _ := r.context.GetStatus()
+	status := r.context.GetStatus()
 	if err := r.context.ACS().ForEachHealthyCluster(func(item sutil.ACSItem) error {
 		return item.Cache().Pod().V1().Iterate(func(pod *core.Pod) error {
 			if k8sutil.IsArangoDBImageIDAndVersionPod(pod) {

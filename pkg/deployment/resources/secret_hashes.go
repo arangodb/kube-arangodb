@@ -104,7 +104,7 @@ func (r *Resources) ValidateSecretHashes(ctx context.Context, cachedStatus inspe
 	spec := r.context.GetSpec()
 	deploymentName := r.context.GetAPIObject().GetName()
 	var badSecretNames []string
-	status, lastVersion := r.context.GetStatus()
+	status := r.context.GetStatus()
 	image := status.CurrentImage
 	getHashes := func() *api.SecretHashes {
 		if status.SecretHashes == nil {
@@ -123,11 +123,11 @@ func (r *Resources) ValidateSecretHashes(ctx context.Context, cachedStatus inspe
 			status.SecretHashes.Users = make(map[string]string)
 		}
 		updater(status.SecretHashes)
-		if err := r.context.UpdateStatus(ctx, status, lastVersion); err != nil {
+		if err := r.context.UpdateStatus(ctx, status); err != nil {
 			return errors.WithStack(err)
 		}
 		// Reload status
-		status, lastVersion = r.context.GetStatus()
+		status = r.context.GetStatus()
 		return nil
 	}
 
@@ -203,7 +203,7 @@ func (r *Resources) ValidateSecretHashes(ctx context.Context, cachedStatus inspe
 		if status.Conditions.Update(api.ConditionTypeSecretsChanged, true,
 			"Secrets have changed", fmt.Sprintf("Found %d changed secrets", len(badSecretNames))) {
 			log.Warn("Found %d changed secrets. Settings SecretsChanged condition", len(badSecretNames))
-			if err := r.context.UpdateStatus(ctx, status, lastVersion); err != nil {
+			if err := r.context.UpdateStatus(ctx, status); err != nil {
 				log.Err(err).Error("Failed to save SecretsChanged condition")
 				return errors.WithStack(err)
 			}
@@ -214,7 +214,7 @@ func (r *Resources) ValidateSecretHashes(ctx context.Context, cachedStatus inspe
 		// All good, we van remove the SecretsChanged condition
 		if status.Conditions.Remove(api.ConditionTypeSecretsChanged) {
 			log.Info("Resetting SecretsChanged condition")
-			if err := r.context.UpdateStatus(ctx, status, lastVersion); err != nil {
+			if err := r.context.UpdateStatus(ctx, status); err != nil {
 				log.Err(err).Error("Failed to save SecretsChanged condition")
 				return errors.WithStack(err)
 			}

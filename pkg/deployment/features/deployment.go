@@ -21,30 +21,18 @@
 package features
 
 func init() {
-	registerFeature(ephemeralVolumes)
-	registerFeature(sensitiveInformationProtection)
+	registerFeature(deploymentSpecDefaultsRestore)
 }
 
-var ephemeralVolumes = &feature{
-	name:               "ephemeral-volumes",
-	description:        "Enables ephemeral volumes for apps and tmp directory",
-	version:            "3.7.0",
+var deploymentSpecDefaultsRestore = &feature{
+	name:               "deployment-spec-defaults-restore",
+	description:        "Restore defaults from last accepted state of deployment",
+	version:            "3.6.0",
 	enterpriseRequired: false,
-	enabledByDefault:   false,
+	enabledByDefault:   true,
+	hidden:             true,
 }
 
-var sensitiveInformationProtection = &feature{
-	name:               "sensitive-information-protection",
-	description:        "Hide sensitive information from metrics and logs",
-	version:            "3.7.0",
-	enterpriseRequired: false,
-	enabledByDefault:   false,
-}
-
-func EphemeralVolumes() Feature {
-	return ephemeralVolumes
-}
-
-func SensitiveInformationProtection() Feature {
-	return sensitiveInformationProtection
+func DeploymentSpecDefaultsRestore() Feature {
+	return deploymentSpecDefaultsRestore
 }
