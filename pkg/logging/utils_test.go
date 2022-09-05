@@ -49,7 +49,7 @@ func Test_ParseLogLevelsFromArgs(t *testing.T) {
 			},
 
 			expected: map[string]Level{
-				AllLevels: Info,
+				TopicAll: Info,
 			},
 		},
 		{
@@ -69,7 +69,7 @@ func Test_ParseLogLevelsFromArgs(t *testing.T) {
 			},
 
 			expected: map[string]Level{
-				AllLevels: Info,
+				TopicAll: Info,
 			},
 		},
 		{
@@ -81,8 +81,8 @@ func Test_ParseLogLevelsFromArgs(t *testing.T) {
 			},
 
 			expected: map[string]Level{
-				AllLevels: Info,
-				"other":   Debug,
+				TopicAll: Info,
+				"other":  Debug,
 			},
 		},
 	}
