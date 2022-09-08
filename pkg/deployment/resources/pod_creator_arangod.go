@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"strconv"
 
 	core "k8s.io/api/core/v1"
 
@@ -44,6 +45,10 @@ const (
 	ArangoDExecutor                          = "/usr/sbin/arangod"
 	ArangoDBOverrideDetectedTotalMemoryEnv   = "ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY"
 	ArangoDBOverrideDetectedNumberOfCoresEnv = "ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES"
+	ArangoDBOverrideServerGroupEnv           = "ARANGODB_OVERRIDE_SERVER_GROUP"
+	ArangoDBOverrideDeploymentModeEnv        = "ARANGODB_OVERRIDE_DEPLOYMENT_MODE"
+	ArangoDBOverrideVersionEnv               = "ARANGODB_OVERRIDE_VERSION"
+	ArangoDBOverrideEnterpriseEnv            = "ARANGODB_OVERRIDE_ENTERPRISE"
 )
 
 var _ interfaces.PodCreator = &MemberArangoDPod{}
@@ -173,7 +178,8 @@ func (a *ArangoDContainer) GetImage() string {
 	}
 }
 
-func (a *ArangoDContainer) GetEnvs() []core.EnvVar {
+// GetEnvs returns environment variables for ArangoDB containers.
+func (a *ArangoDContainer) GetEnvs() ([]core.EnvVar, []core.EnvFromSource) {
 	envs := NewEnvBuilder()
 
 	if a.spec.License.HasSecretName() && a.imageInfo.ArangoDBVersion.CompareTo("3.9.0") < 0 {
@@ -217,7 +223,36 @@ func (a *ArangoDContainer) GetEnvs() []core.EnvVar {
 
 	envs.Add(true, pod.Topology().Envs(a.member.AsInput())...)
 
-	return envs.GetEnvList()
+	envs.Add(true, core.EnvVar{
+		Name:  ArangoDBOverrideServerGroupEnv,
+		Value: a.input.Group.AsRole(),
+	})
+	envs.Add(true, core.EnvVar{
+		Name:  ArangoDBOverrideDeploymentModeEnv,
+		Value: string(a.input.Deployment.GetMode()),
+	})
+	envs.Add(true, core.EnvVar{
+		Name:  ArangoDBOverrideVersionEnv,
+		Value: string(a.input.Version),
+	})
+	envs.Add(true, core.EnvVar{
+		Name:  ArangoDBOverrideEnterpriseEnv,
+		Value: strconv.FormatBool(a.input.Enterprise),
+	})
+
+	envFromSource := []core.EnvFromSource{
+		{
+			ConfigMapRef: &core.ConfigMapEnvSource{
+				LocalObjectReference: core.LocalObjectReference{
+					Name: api.ConfigMapFeaturesEnabled,
+				},
+				// Optional in case if operator could not create it when process started.
+				Optional: util.NewBool(true),
+			},
+		},
+	}
+
+	return envs.GetEnvList(), envFromSource
 }
 
 func (a *ArangoDContainer) GetResourceRequirements() core.ResourceRequirements {

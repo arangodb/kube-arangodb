@@ -496,12 +496,14 @@ func NewContainer(containerCreator interfaces.ContainerCreator) (core.Container,
 		return core.Container{}, err
 	}
 
+	env, envFrom := containerCreator.GetEnvs()
 	return core.Container{
 		Name:            containerCreator.GetName(),
 		Image:           containerCreator.GetImage(),
 		Command:         append([]string{containerCreator.GetExecutor()}, args...),
 		Ports:           containerCreator.GetPorts(),
-		Env:             containerCreator.GetEnvs(),
+		Env:             env,
+		EnvFrom:         envFrom,
 		Resources:       containerCreator.GetResourceRequirements(),
 		LivenessProbe:   liveness,
 		ReadinessProbe:  readiness,
