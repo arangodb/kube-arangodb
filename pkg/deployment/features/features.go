@@ -20,7 +20,9 @@
 
 package features
 
-import "github.com/arangodb/go-driver"
+import (
+	"github.com/arangodb/go-driver"
+)
 
 const Enabled = "true"
 

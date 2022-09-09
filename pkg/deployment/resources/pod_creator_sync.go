@@ -105,17 +105,17 @@ func (a *ArangoSyncContainer) GetSecurityContext() *core.SecurityContext {
 func (a *ArangoSyncContainer) GetProbes() (*core.Probe, *core.Probe, *core.Probe, error) {
 	var liveness, readiness, startup *core.Probe
 
-	probeLivenessConfig, err := a.resources.getLivenessProbe(a.spec, a.group, a.imageInfo.ArangoDBVersion)
+	probeLivenessConfig, err := a.resources.getLivenessProbe(a.spec, a.group, a.imageInfo)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
-	probeReadinessConfig, err := a.resources.getReadinessProbe(a.spec, a.group, a.imageInfo.ArangoDBVersion)
+	probeReadinessConfig, err := a.resources.getReadinessProbe(a.spec, a.group, a.imageInfo)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
-	probeStartupConfig, err := a.resources.getReadinessProbe(a.spec, a.group, a.imageInfo.ArangoDBVersion)
+	probeStartupConfig, err := a.resources.getReadinessProbe(a.spec, a.group, a.imageInfo)
 	if err != nil {
 		return nil, nil, nil, err
 	}
