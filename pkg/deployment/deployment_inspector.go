@@ -467,12 +467,6 @@ func (d *Deployment) isUpToDateStatus(status api.DeploymentStatus) (upToDate boo
 		}
 	}
 
-	if status.Conditions.Check(api.ConditionTypeTopologyAware).Exists().IsFalse().Evaluate() {
-		upToDate = false
-		reason = "Deployment is not fully Topology Aware"
-		return
-	}
-
 	return
 }
 
