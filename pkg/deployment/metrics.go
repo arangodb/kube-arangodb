@@ -33,7 +33,7 @@ type Metrics struct {
 	}
 
 	Errors struct {
-		DeploymentValidationErrors, DeploymentImmutableErrors uint64
+		DeploymentValidationErrors, DeploymentImmutableErrors, StatusRestores uint64
 	}
 
 	Deployment struct {
@@ -48,6 +48,7 @@ func (d *Deployment) CollectMetrics(m metrics.PushMetric) {
 
 	m.Push(metric_descriptions.ArangodbOperatorResourcesArangodeploymentValidationErrorsCounter(float64(d.metrics.Errors.DeploymentValidationErrors), d.namespace, d.name))
 	m.Push(metric_descriptions.ArangodbOperatorResourcesArangodeploymentImmutableErrorsCounter(float64(d.metrics.Errors.DeploymentImmutableErrors), d.namespace, d.name))
+	m.Push(metric_descriptions.ArangodbOperatorResourcesArangodeploymentStatusRestoresCounter(float64(d.metrics.Errors.StatusRestores), d.namespace, d.name))
 
 	if d.metrics.Deployment.Accepted {
 		m.Push(metric_descriptions.ArangodbOperatorResourcesArangodeploymentAcceptedGauge(1, d.namespace, d.name))

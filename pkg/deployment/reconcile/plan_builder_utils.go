@@ -98,6 +98,7 @@ func removeMemberConditionActionV2(actionReason string, conditionType api.Condit
 		AddParam(setConditionActionV2KeyType, setConditionActionV2KeyTypeRemove)
 }
 
+//nolint:unparam
 func updateMemberConditionActionV2(actionReason string, conditionType api.ConditionType, group api.ServerGroup, member string, status bool, reason, message, hash string) api.Action {
 	statusBool := core.ConditionTrue
 	if !status {
