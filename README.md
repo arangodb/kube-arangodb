@@ -128,7 +128,7 @@ kind: Kustomization
 namespace: my-custom-namespace
 
 bases:
-  - https://github.com/arangodb/kube-arangodb/manifests/kustomize/deployment/?ref=1.0.3
+  - git::https://github.com/arangodb/kube-arangodb/manifests/kustomize/deployment/?ref=1.2.15
 ```
 
 ## Installation of latest release using Helm
