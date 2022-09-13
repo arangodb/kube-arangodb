@@ -26,6 +26,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -47,6 +48,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	arangofake "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/fake"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -608,6 +610,8 @@ func (testCase *testCaseStruct) createTestPodData(deployment *Deployment, group 
 
 		deployment.currentObject.Status.Members.Update(member, group)
 	}
+
+	testCase.createTestEnvVariables(deployment, group)
 }
 
 func finalizers(group api.ServerGroup) []string {
@@ -785,4 +789,82 @@ func addLifecycle(name string, uuidRequired bool, license string, group api.Serv
 
 		}
 	}
+}
+
+func (testCase *testCaseStruct) createTestEnvVariables(deployment *Deployment, group api.ServerGroup) {
+	if group == api.ServerGroupSyncMasters || group == api.ServerGroupSyncWorkers {
+		return
+	}
+
+	// Set up environment variables.
+	for i, container := range testCase.ExpectedPod.Spec.Containers {
+		if container.Name != api.ServerGroupReservedContainerNameServer {
+			continue
+		}
+
+		testCase.ExpectedPod.Spec.Containers[i].EnvFrom = []core.EnvFromSource{
+			{
+				ConfigMapRef: &core.ConfigMapEnvSource{
+					LocalObjectReference: core.LocalObjectReference{
+						Name: api.ConfigMapFeaturesEnabled,
+					},
+					Optional: util.NewBool(true),
+				},
+			},
+		}
+
+		var version, enterprise string
+		if len(deployment.currentObjectStatus.Images) > 0 {
+			version = string(deployment.currentObjectStatus.Images[0].ArangoDBVersion)
+			enterprise = strconv.FormatBool(deployment.currentObjectStatus.Images[0].Enterprise)
+		}
+
+		if version == "" {
+			version = testVersion
+		}
+		if enterprise == "" {
+			enterprise = "false"
+		}
+
+		if !isEnvExist(testCase.ExpectedPod.Spec.Containers[i].Env, resources.ArangoDBOverrideServerGroupEnv) {
+			testCase.ExpectedPod.Spec.Containers[i].Env = append(testCase.ExpectedPod.Spec.Containers[i].Env,
+				core.EnvVar{
+					Name:  resources.ArangoDBOverrideServerGroupEnv,
+					Value: group.AsRole(),
+				})
+		}
+		if !isEnvExist(testCase.ExpectedPod.Spec.Containers[i].Env, resources.ArangoDBOverrideDeploymentModeEnv) {
+			testCase.ExpectedPod.Spec.Containers[i].Env = append(testCase.ExpectedPod.Spec.Containers[i].Env,
+				core.EnvVar{
+					Name:  resources.ArangoDBOverrideDeploymentModeEnv,
+					Value: string(testCase.ArangoDeployment.Spec.GetMode()),
+				})
+		}
+
+		if !isEnvExist(testCase.ExpectedPod.Spec.Containers[i].Env, resources.ArangoDBOverrideVersionEnv) {
+			testCase.ExpectedPod.Spec.Containers[i].Env = append(testCase.ExpectedPod.Spec.Containers[i].Env,
+				core.EnvVar{
+					Name:  resources.ArangoDBOverrideVersionEnv,
+					Value: version,
+				})
+		}
+
+		if !isEnvExist(testCase.ExpectedPod.Spec.Containers[i].Env, resources.ArangoDBOverrideEnterpriseEnv) {
+			testCase.ExpectedPod.Spec.Containers[i].Env = append(testCase.ExpectedPod.Spec.Containers[i].Env,
+				core.EnvVar{
+					Name:  resources.ArangoDBOverrideEnterpriseEnv,
+					Value: enterprise,
+				})
+		}
+	}
+}
+
+func isEnvExist(envs []core.EnvVar, name string) bool {
+	for _, env := range envs {
+		if env.Name == name {
+			return true
+		}
+	}
+
+	return false
 }

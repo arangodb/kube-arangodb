@@ -313,6 +313,10 @@ func executeMain(cmd *cobra.Command, args []string) {
 			_ = crd.EnsureCRD(ctx, client, true)
 		}
 
+		if err := ensureFeaturesConfigMap(namespace, client.Kubernetes()); err != nil {
+			logger.Err(err).Error("Failed to create features config map")
+		}
+
 		secrets := client.Kubernetes().CoreV1().Secrets(namespace)
 
 		// Create operator
@@ -530,4 +534,41 @@ func createRecorder(kubecli kubernetes.Interface, name, namespace string) record
 	core.AddToScheme(combinedScheme)
 	apps.AddToScheme(combinedScheme)
 	return eventBroadcaster.NewRecorder(combinedScheme, core.EventSource{Component: name})
+}
+
+// ensureFeaturesConfigMap creates or updates config map with enabled features.
+func ensureFeaturesConfigMap(namespace string, cl kubernetes.Interface) error {
+	featuresCM := &core.ConfigMap{
+		ObjectMeta: meta.ObjectMeta{
+			Name:      deploymentApi.ConfigMapFeaturesEnabled,
+			Namespace: namespace,
+		},
+		Data: make(map[string]string),
+	}
+	featuresArgsNames := features.GetEnabledFeaturesArgsNames()
+	for _, name := range featuresArgsNames {
+		featuresCM.Data[util.NormalizeEnv(name)] = features.Enabled
+	}
+
+	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(context.Background(), func(ctxChild context.Context) error {
+		_, err := cl.CoreV1().ConfigMaps(namespace).Update(ctxChild, featuresCM, meta.UpdateOptions{})
+		return err
+	})
+	if err == nil {
+		// ConfigMap exists and it has been updated.
+		return nil
+	}
+
+	if !k8sutil.IsNotFound(err) {
+		// ConfigMap exists but it has not been updated.
+		return err
+	}
+
+	// ConfigMap does not exist so it must be created.
+	err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(context.Background(), func(ctxChild context.Context) error {
+		_, err := cl.CoreV1().ConfigMaps(namespace).Create(ctxChild, featuresCM, meta.CreateOptions{})
+		return err
+	})
+
+	return err
 }

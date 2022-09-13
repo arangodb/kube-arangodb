@@ -20,7 +20,10 @@
 
 package util
 
-import "os"
+import (
+	"os"
+	"strings"
+)
 
 // EnvironmentVariable is a wrapper to get environment variables
 type EnvironmentVariable string
@@ -54,4 +57,10 @@ func (e EnvironmentVariable) GetOrDefault(d string) string {
 	}
 
 	return d
+}
+
+// NormalizeEnv normalizes environment variables.
+func NormalizeEnv(env string) string {
+	r := strings.NewReplacer(".", "_", "-", "_")
+	return strings.ToUpper(r.Replace(env))
 }

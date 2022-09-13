@@ -396,8 +396,9 @@ func (a *ContainerIdentity) GetArgs() ([]string, error) {
 	return nil, nil
 }
 
-func (a *ContainerIdentity) GetEnvs() []core.EnvVar {
-	return nil
+// GetEnvs returns environment variables for identity containers.
+func (a *ContainerIdentity) GetEnvs() ([]core.EnvVar, []core.EnvFromSource) {
+	return nil, nil
 }
 
 func (a *ContainerIdentity) GetExecutor() string {
@@ -461,7 +462,8 @@ func (a *ArangoDIdentity) GetArgs() ([]string, error) {
 	return options.Copy().Sort().AsArgs(), nil
 }
 
-func (a *ArangoDIdentity) GetEnvs() []core.EnvVar {
+// GetEnvs returns environment variables for Arango identity containers.
+func (a *ArangoDIdentity) GetEnvs() ([]core.EnvVar, []core.EnvFromSource) {
 	env := make([]core.EnvVar, 0)
 
 	// Add advanced check for license
@@ -471,10 +473,10 @@ func (a *ArangoDIdentity) GetEnvs() []core.EnvVar {
 	}
 
 	if len(env) > 0 {
-		return env
+		return env, nil
 	}
 
-	return nil
+	return nil, nil
 }
 
 // GetVolumeMounts returns volume mount for the ArangoD data.
