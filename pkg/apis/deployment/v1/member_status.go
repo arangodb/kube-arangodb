@@ -77,8 +77,9 @@ type MemberStatus struct {
 	// Endpoint definition how member should be reachable
 	Endpoint *string `json:"endpoint,omitempty"`
 	// Topology define topology member status assignment
-	Topology *TopologyMemberStatus `json:"topology,omitempty"`
-	Pod      *MemberPodStatus      `json:"pod,omitempty"`
+	Topology     *TopologyMemberStatus `json:"topology,omitempty"`
+	Pod          *MemberPodStatus      `json:"pod,omitempty"`
+	SecondaryPod *MemberPodStatus      `json:"secondaryPod,omitempty"`
 
 	// deprecated
 	// SideCarSpecs contains list of specifications specified for side cars
@@ -104,6 +105,7 @@ func (s MemberStatus) Equal(other MemberStatus) bool {
 		util.TimeCompareEqual(s.CreatedAt, other.CreatedAt) &&
 		s.PersistentVolumeClaimName == other.PersistentVolumeClaimName &&
 		s.Pod.Equal(other.Pod) &&
+		s.SecondaryPod.Equal(other.SecondaryPod) &&
 		s.Conditions.Equal(other.Conditions) &&
 		s.IsInitialized == other.IsInitialized &&
 		s.CleanoutJobID == other.CleanoutJobID &&

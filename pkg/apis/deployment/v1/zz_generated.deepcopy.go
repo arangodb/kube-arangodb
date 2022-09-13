@@ -1738,6 +1738,11 @@ func (in *MemberStatus) DeepCopyInto(out *MemberStatus) {
 		*out = new(MemberPodStatus)
 		**out = **in
 	}
+	if in.SecondaryPod != nil {
+		in, out := &in.SecondaryPod, &out.SecondaryPod
+		*out = new(MemberPodStatus)
+		**out = **in
+	}
 	if in.SideCarSpecs != nil {
 		in, out := &in.SideCarSpecs, &out.SideCarSpecs
 		*out = make(map[string]corev1.Container, len(*in))
