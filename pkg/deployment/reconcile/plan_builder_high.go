@@ -52,6 +52,7 @@ func (r *Reconciler) createHighPlan(ctx context.Context, apiObject k8sutil.APIOb
 		ApplyIfEmpty(r.updateMemberRotationConditionsPlan).
 		ApplyIfEmpty(r.createMemberRecreationConditionsPlan).
 		ApplyIfEmpty(r.createRotateServerStoragePVCPendingResizeConditionPlan).
+		ApplyIfEmpty(r.createChangeMemberArchPlan).
 		ApplyIfEmpty(r.createRotateServerStorageResizePlanRuntime).
 		ApplyIfEmpty(r.createTopologyMemberUpdatePlan).
 		ApplyIfEmptyWithBackOff(LicenseCheck, 30*time.Second, r.updateClusterLicense).

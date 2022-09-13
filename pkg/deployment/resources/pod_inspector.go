@@ -29,6 +29,7 @@ import (
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
@@ -270,6 +271,15 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 				if memberStatus.Conditions.Update(api.ConditionTypeReachable, false, "ArangoDB is not reachable", "") {
 					updateMemberStatusNeeded = true
 					nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
+				}
+			}
+		}
+
+		// Member arch check
+		if v, ok := pod.Annotations[deployment.ArangoDeploymentPodChangeArchAnnotation]; ok {
+			if api.ArangoDeploymentArchitectureType(v).IsArchMismatch(spec.Architecture, *memberStatus.Architecture) {
+				if memberStatus.Conditions.Update(api.ConditionTypeArchitectureMismatch, true, "Member has a different architecture than the deployment", "") {
+					updateMemberStatusNeeded = true
 				}
 			}
 		}

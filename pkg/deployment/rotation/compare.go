@@ -32,12 +32,12 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 )
 
-type comparePodFuncGen func(deploymentSpec api.DeploymentSpec, group api.ServerGroup, spec, status *core.PodSpec) comparePodFunc
+type comparePodFuncGen func(deploymentSpec api.DeploymentSpec, group api.ServerGroup, member api.MemberStatus, spec, status *core.PodSpec) comparePodFunc
 type comparePodFunc func(builder api.ActionBuilder) (mode Mode, plan api.Plan, err error)
 
-func podFuncGenerator(deploymentSpec api.DeploymentSpec, group api.ServerGroup, spec, status *core.PodSpec) func(c comparePodFuncGen) comparePodFunc {
+func podFuncGenerator(deploymentSpec api.DeploymentSpec, group api.ServerGroup, member api.MemberStatus, spec, status *core.PodSpec) func(c comparePodFuncGen) comparePodFunc {
 	return func(c comparePodFuncGen) comparePodFunc {
-		return c(deploymentSpec, group, spec, status)
+		return c(deploymentSpec, group, member, spec, status)
 	}
 }
 
@@ -92,7 +92,7 @@ func compare(deploymentSpec api.DeploymentSpec, member api.MemberStatus, group a
 	// Try to fill fields
 	b := actions.NewActionBuilderWrap(group, member)
 
-	g := podFuncGenerator(deploymentSpec, group, &spec.PodSpec.Spec, &podStatus.Spec)
+	g := podFuncGenerator(deploymentSpec, group, member, &spec.PodSpec.Spec, &podStatus.Spec)
 
 	if m, p, err := comparePod(b, g(podCompare), g(affinityCompare), g(comparePodVolumes), g(containersCompare), g(initContainersCompare)); err != nil {
 		log.Err(err).Msg("Error while getting pod diff")

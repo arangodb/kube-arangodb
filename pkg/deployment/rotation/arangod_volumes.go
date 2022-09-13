@@ -33,7 +33,7 @@ type volumeDiff struct {
 	a, b *core.Volume
 }
 
-func comparePodVolumes(ds api.DeploymentSpec, g api.ServerGroup, spec, status *core.PodSpec) comparePodFunc {
+func comparePodVolumes(ds api.DeploymentSpec, g api.ServerGroup, _ api.MemberStatus, spec, status *core.PodSpec) comparePodFunc {
 	return func(builder api.ActionBuilder) (mode Mode, plan api.Plan, err error) {
 		specV := mapVolumes(spec)
 		statusV := mapVolumes(status)

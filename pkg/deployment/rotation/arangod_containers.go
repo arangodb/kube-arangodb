@@ -40,7 +40,7 @@ const (
 	ContainerImage = "image"
 )
 
-func containersCompare(ds api.DeploymentSpec, g api.ServerGroup, spec, status *core.PodSpec) comparePodFunc {
+func containersCompare(ds api.DeploymentSpec, g api.ServerGroup, _ api.MemberStatus, spec, status *core.PodSpec) comparePodFunc {
 	return func(builder api.ActionBuilder) (mode Mode, plan api.Plan, err error) {
 		a, b := spec.Containers, status.Containers
 
@@ -125,7 +125,7 @@ func containersCompare(ds api.DeploymentSpec, g api.ServerGroup, spec, status *c
 	}
 }
 
-func initContainersCompare(deploymentSpec api.DeploymentSpec, group api.ServerGroup, spec, status *core.PodSpec) comparePodFunc {
+func initContainersCompare(deploymentSpec api.DeploymentSpec, group api.ServerGroup, _ api.MemberStatus, spec, status *core.PodSpec) comparePodFunc {
 	return func(builder api.ActionBuilder) (Mode, api.Plan, error) {
 		gs := deploymentSpec.GetServerGroupSpec(group)
 
