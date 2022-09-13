@@ -28,6 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/topology"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
@@ -68,13 +69,32 @@ func containersCompare(ds api.DeploymentSpec, g api.ServerGroup, spec, status *c
 					}
 
 					if !equality.Semantic.DeepEqual(ac.Env, bc.Env) {
-						if areEnvsEqual(ac.Env, bc.Env, func(a, b map[string]core.EnvVar) (map[string]core.EnvVar, map[string]core.EnvVar) {
-							delete(a, topology.ArangoDBZone)
-							delete(b, topology.ArangoDBZone)
+						filter := func(a, b map[string]core.EnvVar) (map[string]core.EnvVar, map[string]core.EnvVar) {
+							for _, excludedEnv := range getExcludedEnv() {
+								delete(a, excludedEnv)
+								delete(b, excludedEnv)
+							}
 
 							return a, b
-						}) {
+						}
+						if areEnvsEqual(ac.Env, bc.Env, filter) {
+							// Envs are the same after filtering, but it were different before filtering, so it can be replaced.
 							bc.Env = ac.Env
+							mode = mode.And(SilentRotation)
+						}
+					}
+
+					if !equality.Semantic.DeepEqual(ac.EnvFrom, bc.EnvFrom) {
+						// Check EnvFromSource differences.
+						filter := func(a, b map[string]core.EnvFromSource) (map[string]core.EnvFromSource, map[string]core.EnvFromSource) {
+							delete(a, api.ConfigMapFeaturesEnabled)
+							delete(b, api.ConfigMapFeaturesEnabled)
+
+							return a, b
+						}
+						if areEnvsFromEqual(ac.EnvFrom, bc.EnvFrom, filter) {
+							// Envs are the same after filtering, but it were different before filtering, so it can be replaced.
+							bc.EnvFrom = ac.EnvFrom
 							mode = mode.And(SilentRotation)
 						}
 					}
@@ -229,4 +249,38 @@ func areProbesEqual(a, b *core.Probe) bool {
 		return false
 	}
 	return equality.Semantic.DeepEqual(a, b)
+}
+
+// areEnvsFromEqual returns true when environment variables from source are the same after filtering.
+func areEnvsFromEqual(a, b []core.EnvFromSource, rules ...func(a, b map[string]core.EnvFromSource) (map[string]core.EnvFromSource, map[string]core.EnvFromSource)) bool {
+	am := createEnvsFromMap(a)
+	bm := createEnvsFromMap(b)
+
+	for _, r := range rules {
+		am, bm = r(am, bm)
+	}
+
+	return equality.Semantic.DeepEqual(am, bm)
+}
+
+// createEnvsFromMap returns map from list.
+func createEnvsFromMap(e []core.EnvFromSource) map[string]core.EnvFromSource {
+	m := map[string]core.EnvFromSource{}
+
+	for _, q := range e {
+		if q.ConfigMapRef != nil {
+			m[q.ConfigMapRef.Name] = q
+		} else if q.SecretRef != nil {
+			m[q.SecretRef.Name] = q
+		}
+	}
+
+	return m
+}
+
+// getExcludedEnv returns environment variables which should not be compared when pod's rotation is considered.
+func getExcludedEnv() []string {
+	return []string{topology.ArangoDBZone, resources.ArangoDBOverrideServerGroupEnv,
+		resources.ArangoDBOverrideDeploymentModeEnv, resources.ArangoDBOverrideVersionEnv,
+		resources.ArangoDBOverrideEnterpriseEnv}
 }

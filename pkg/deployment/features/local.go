@@ -22,12 +22,17 @@ package features
 
 import (
 	"fmt"
+	"os"
 	"sync"
 
 	"github.com/spf13/cobra"
 
 	"github.com/arangodb/go-driver"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
+
+const prefixArg = "deployment.feature"
 
 var features = map[string]Feature{}
 var featuresLock sync.Mutex
@@ -54,6 +59,9 @@ var internalCMD = &cobra.Command{
 	Run:   cmdRun,
 }
 
+// Init initializes all registered features.
+// If a feature is not provided via process's argument, then it is taken from environment variable
+// or from enabled by default setting.
 func Init(cmd *cobra.Command) error {
 	featuresLock.Lock()
 	defer featuresLock.Unlock()
@@ -62,7 +70,8 @@ func Init(cmd *cobra.Command) error {
 
 	f := cmd.Flags()
 
-	f.BoolVar(&enableAll, "deployment.feature.all", false, "Enable ALL Features")
+	featureArgName := GetFeatureArgName("all")
+	f.BoolVar(&enableAll, featureArgName, isEnabledFeatureFromEnv(featureArgName), "Enable ALL Features")
 
 	for _, feature := range features {
 		z := ""
@@ -79,16 +88,18 @@ func Init(cmd *cobra.Command) error {
 			}
 		}
 
-		featureName := fmt.Sprintf("deployment.feature.%s", feature.Name())
-		f.BoolVar(feature.EnabledPointer(), featureName, feature.EnabledByDefault(), z)
+		featureArgName = GetFeatureArgName(feature.Name())
+		enabled := feature.EnabledByDefault() || isEnabledFeatureFromEnv(featureArgName)
+		f.BoolVar(feature.EnabledPointer(), featureArgName, enabled, z)
+
 		if ok, reason := feature.Deprecated(); ok {
-			if err := f.MarkDeprecated(featureName, reason); err != nil {
+			if err := f.MarkDeprecated(featureArgName, reason); err != nil {
 				return err
 			}
 		}
 
 		if feature.Hidden() {
-			if err := f.MarkHidden(featureName); err != nil {
+			if err := f.MarkHidden(featureArgName); err != nil {
 				return err
 			}
 		}
@@ -127,6 +138,41 @@ func cmdRun(_ *cobra.Command, _ []string) {
 	}
 }
 
+// Supported returns false when:
+// - feature is disabled.
+// - a given version is lower than minimum feature version.
+// - feature expects enterprise but a given enterprise arg is not true.
 func Supported(f Feature, v driver.Version, enterprise bool) bool {
-	return f.Enabled() && ((f.EnterpriseRequired() && enterprise) || !f.EnterpriseRequired()) && v.CompareTo(f.Version()) >= 0
+	if !f.Enabled() {
+		return false
+	}
+
+	if f.EnterpriseRequired() && !enterprise {
+		// This feature requires enterprise version but current version is not enterprise.
+		return false
+	}
+
+	return v.CompareTo(f.Version()) >= 0
+}
+
+// GetEnabledFeaturesArgsNames returns all enabled features' arguments names.
+func GetEnabledFeaturesArgsNames() []string {
+	args := make([]string, 0, len(features))
+	for _, f := range features {
+		if f.Enabled() {
+			args = append(args, GetFeatureArgName(f.Name()))
+		}
+	}
+
+	return args
+}
+
+// GetFeatureArgName returns feature process argument name.
+func GetFeatureArgName(featureName string) string {
+	return fmt.Sprintf("%s.%s", prefixArg, featureName)
+}
+
+// isEnabledFeatureFromEnv returns true if argument is enabled as an environment variable.
+func isEnabledFeatureFromEnv(arg string) bool {
+	return os.Getenv(util.NormalizeEnv(arg)) == Enabled
 }

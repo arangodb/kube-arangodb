@@ -73,7 +73,7 @@ type ContainerCreator interface {
 	GetLifecycle() (*core.Lifecycle, error)
 	GetImagePullPolicy() core.PullPolicy
 	GetImage() string
-	GetEnvs() []core.EnvVar
+	GetEnvs() ([]core.EnvVar, []core.EnvFromSource)
 	GetSecurityContext() *core.SecurityContext
 	GetPorts() []core.ContainerPort
 	GetVolumeMounts() []core.VolumeMount

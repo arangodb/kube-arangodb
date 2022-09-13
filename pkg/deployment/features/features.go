@@ -22,6 +22,8 @@ package features
 
 import "github.com/arangodb/go-driver"
 
+const Enabled = "true"
+
 var _ Feature = &feature{}
 
 type Feature interface {

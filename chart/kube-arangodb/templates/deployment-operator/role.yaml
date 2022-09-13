@@ -27,7 +27,7 @@ rules:
       verbs: ["*"]
 {{- end }}
     - apiGroups: [""]
-      resources: ["pods", "services", "endpoints", "persistentvolumeclaims", "events", "secrets", "serviceaccounts"]
+      resources: ["pods", "services", "endpoints", "persistentvolumeclaims", "events", "secrets", "serviceaccounts", "configmaps"]
       verbs: ["*"]
     - apiGroups: ["apps"]
       resources: ["deployments", "replicasets"]

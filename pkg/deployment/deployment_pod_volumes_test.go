@@ -172,7 +172,6 @@ func TestEnsurePod_ArangoDB_Volumes(t *testing.T) {
 				},
 			},
 		},
-
 		{
 			Name: "DBserver POD with Volume Mount",
 			ArangoDeployment: &api.ArangoDeployment{
