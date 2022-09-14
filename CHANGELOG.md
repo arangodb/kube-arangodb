@@ -4,6 +4,8 @@
 - (Feature) Add ArangoDeployment ServerGroupStatus
 - (Feature) (EE) Ordered Member IDs
 - (Refactor) Deprecate ForeachServerGroup, ForeachServerInGroups and ForServerGroup functions and refactor code accordingly
+- (Feature) Add new GRPC and HTTP API
+- (Feature) Add new API endpoints to allow getting and setting operator logging level
 - (Bugfix) Memory leaks due to incorrect time.After function usage
 - (Feature) Add startup probe for coordinators
 - (Feature) Use only connections for healthy members
@@ -68,8 +70,6 @@
 - (Bugfix) Infinite loop fix in ArangoD AsyncClient
 - (Bugfix) Add Panic Handler
 - (Bugfix) Unify yaml packages
-- (Feature) Add new GRPC and HTTP API
-- (Feature) Add new API endpoints to allow getting and setting operator logging level
 
 ## [1.2.13](https://github.com/arangodb/kube-arangodb/tree/1.2.13) (2022-06-07)
 - (Bugfix) Fix arangosync members state inspection
