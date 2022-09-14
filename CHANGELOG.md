@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Feature) Add new field to DeploymentReplicationStatus with details on DC2DC sync status
 
 ## [1.2.16](https://github.com/arangodb/kube-arangodb/tree/1.2.16) (2022-09-14)
 - (Feature) Add ArangoDeployment ServerGroupStatus

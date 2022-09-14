@@ -24,7 +24,7 @@ replace (
 
 require (
 	github.com/arangodb-helper/go-certificates v0.0.0-20180821055445-9fca24fc2680
-	github.com/arangodb/arangosync-client v0.7.0
+	github.com/arangodb/arangosync-client v0.8.0
 	github.com/arangodb/go-driver v1.2.1
 	github.com/arangodb/go-driver/v2 v2.0.0-20211021031401-d92dcd5a4c83
 	github.com/arangodb/go-upgrade-rules v0.0.0-20180809110947-031b4774ff21
@@ -107,3 +107,5 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
 	sigs.k8s.io/yaml v1.2.0
 )
+
+require github.com/cenkalti/backoff/v4 v4.1.3 // indirect

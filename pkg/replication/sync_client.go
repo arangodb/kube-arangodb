@@ -25,7 +25,6 @@ import (
 	"net"
 	"strconv"
 
-	"github.com/rs/zerolog/log"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	certificates "github.com/arangodb-helper/go-certificates"
@@ -95,8 +94,7 @@ func (dr *DeploymentReplication) createSyncMasterClient(epSpec api.EndpointSpec)
 	auth.Password = password
 
 	// Create client
-	// TODO: Change logger in clientset
-	c, err := dr.clientCache.GetClient(log.Logger, source, auth, insecureSkipVerify)
+	c, err := dr.clientCache.GetClient(client.NewExternalEndpoints(source), auth, insecureSkipVerify)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
