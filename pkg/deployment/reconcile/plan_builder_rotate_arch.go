@@ -22,10 +22,10 @@ package reconcile
 
 import (
 	"context"
-	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -51,7 +51,10 @@ func (r *Reconciler) createChangeMemberArchPlan(ctx context.Context,
 						Str("pod-name", member.Pod.GetName()).
 						Str("server-group", m.Group.AsRole()).
 						Warn("try changing an Architecture type, but %s", getRequiredRotateMessage(member.Pod.GetName()))
-					p = append(p, actions.NewAction(api.ActionTypeSetMemberCurrentArch, m.Group, member, "Architecture Mismatch").SetArch(arch))
+					p = append(p,
+						actions.NewAction(api.ActionTypeSetMemberCurrentArch, m.Group, member, "Architecture Mismatch").SetArch(arch),
+						actions.NewAction(api.ActionTypeSetMemberCondition, m.Group, member, "Architecture Mismatch").AddParam(api.ConditionTypePendingRestart.String(), "T"),
+					)
 				}
 			}
 		}

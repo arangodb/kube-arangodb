@@ -21,16 +21,13 @@
 package rotation
 
 import (
-	"reflect"
-
 	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-func podCompare(_ api.DeploymentSpec, _ api.ServerGroup, member api.MemberStatus, spec, status *core.PodSpec) comparePodFunc {
+func podCompare(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *core.PodSpec) comparePodFunc {
 	return func(builder api.ActionBuilder) (mode Mode, plan api.Plan, err error) {
 		if spec.SchedulerName != status.SchedulerName {
 			status.SchedulerName = spec.SchedulerName
@@ -42,17 +39,11 @@ func podCompare(_ api.DeploymentSpec, _ api.ServerGroup, member api.MemberStatus
 			mode = mode.And(SilentRotation)
 		}
 
-		archPodSpec := pod.GetArchFromAffinity(spec.Affinity)
-		if member.Architecture != nil && *member.Architecture != archPodSpec {
-			pod.SetArchInAffinity(status.Affinity, *member.Architecture)
-			mode = mode.And(SilentRotation)
-		}
-
 		return
 	}
 }
 
-func affinityCompare(_ api.DeploymentSpec, _ api.ServerGroup, _ api.MemberStatus, spec, status *core.PodSpec) comparePodFunc {
+func affinityCompare(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *core.PodSpec) comparePodFunc {
 	return func(builder api.ActionBuilder) (mode Mode, plan api.Plan, e error) {
 		if specC, err := util.SHA256FromJSON(spec.Affinity); err != nil {
 			e = err
@@ -62,7 +53,7 @@ func affinityCompare(_ api.DeploymentSpec, _ api.ServerGroup, _ api.MemberStatus
 				e = err
 				return
 			} else if specC != statusC {
-				mode = mode.And(getRotationMode(spec, status))
+				mode = mode.And(SilentRotation)
 				status.Affinity = spec.Affinity.DeepCopy()
 				return
 			} else {
@@ -70,22 +61,4 @@ func affinityCompare(_ api.DeploymentSpec, _ api.ServerGroup, _ api.MemberStatus
 			}
 		}
 	}
-}
-
-func getRotationMode(spec, status *core.PodSpec) Mode {
-	var specArchs map[api.ArangoDeploymentArchitectureType]bool
-	var statusArchs map[api.ArangoDeploymentArchitectureType]bool
-
-	if spec.Affinity != nil && spec.Affinity.NodeAffinity != nil && spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution != nil {
-		specArchs = api.GetArchsFromNodeSelector(spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms)
-	}
-
-	if status.Affinity != nil && status.Affinity.NodeAffinity != nil && status.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution != nil {
-		statusArchs = api.GetArchsFromNodeSelector(status.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms)
-	}
-
-	if !reflect.DeepEqual(specArchs, statusArchs) {
-		return GracefulRotation
-	}
-	return SilentRotation
 }

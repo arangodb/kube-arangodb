@@ -150,7 +150,7 @@ func Test_ArangoD_Affinity(t *testing.T) {
 			}),
 
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: GracefulRotation,
+				expectedMode: SilentRotation,
 			},
 		},
 		{
@@ -180,7 +180,7 @@ func Test_ArangoD_Affinity(t *testing.T) {
 			}),
 
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: GracefulRotation,
+				expectedMode: SilentRotation,
 			},
 		},
 		{
@@ -278,7 +278,7 @@ func Test_ArangoD_Affinity(t *testing.T) {
 			}),
 
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: GracefulRotation,
+				expectedMode: SilentRotation,
 			},
 		},
 		{
