@@ -53,7 +53,6 @@ func (r *Reconciler) createChangeMemberArchPlan(ctx context.Context,
 						Warn("try changing an Architecture type, but %s", getRequiredRotateMessage(member.Pod.GetName()))
 					p = append(p,
 						actions.NewAction(api.ActionTypeSetMemberCurrentArch, m.Group, member, "Architecture Mismatch").SetArch(arch),
-						actions.NewAction(api.ActionTypeSetMemberCondition, m.Group, member, "Architecture Mismatch").AddParam(api.ConditionTypePendingRestart.String(), "T"),
 					)
 				}
 			}

@@ -103,17 +103,6 @@ func (a ArangoDeploymentArchitectureType) AsNodeSelectorRequirement() core.NodeS
 	}
 }
 
-func GetArchFromNodeSelectorTerm(nst core.NodeSelectorTerm) ArangoDeploymentArchitectureType {
-	for _, req := range nst.MatchExpressions {
-		if req.Key == shared.NodeArchAffinityLabel || req.Key == shared.NodeArchAffinityLabelBeta {
-			for _, arch := range req.Values {
-				return ArangoDeploymentArchitectureType(arch)
-			}
-		}
-	}
-	return ""
-}
-
 func (a ArangoDeploymentArchitectureType) IsArchMismatch(deploymentArch ArangoDeploymentArchitecture, memberArch ArangoDeploymentArchitectureType) bool {
 	if a.Validate() == nil && deploymentArch.IsArchAllowed(a) && a != memberArch {
 		return true
@@ -121,7 +110,7 @@ func (a ArangoDeploymentArchitectureType) IsArchMismatch(deploymentArch ArangoDe
 	return false
 }
 
-func GetArchsFromNodeSelector(selectors []core.NodeSelectorTerm) map[ArangoDeploymentArchitectureType]bool {
+func GetAllArchFromNodeSelector(selectors []core.NodeSelectorTerm) map[ArangoDeploymentArchitectureType]bool {
 	result := make(map[ArangoDeploymentArchitectureType]bool)
 	for _, selector := range selectors {
 		if selector.MatchExpressions != nil {
