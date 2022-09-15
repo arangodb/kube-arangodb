@@ -60,25 +60,21 @@ func ensureJWTFolderSupport(spec api.DeploymentSpec, status api.DeploymentStatus
 	return true, nil
 }
 
-func init() {
-	registerAction(api.ActionTypeJWTStatusUpdate, newJWTStatusUpdate, defaultTimeout)
-}
-
-func newJWTStatusUpdate(action api.Action, actionCtx ActionContext) Action {
-	a := &jwtStatusUpdateAction{}
+func newJWTStatusUpdateAction(action api.Action, actionCtx ActionContext) Action {
+	a := &actionJWTStatusUpdate{}
 
 	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
 
-type jwtStatusUpdateAction struct {
+type actionJWTStatusUpdate struct {
 	actionImpl
 
 	actionEmptyCheckProgress
 }
 
-func (a *jwtStatusUpdateAction) Start(ctx context.Context) (bool, error) {
+func (a *actionJWTStatusUpdate) Start(ctx context.Context) (bool, error) {
 	folder, err := ensureJWTFolderSupportFromAction(a.actionCtx)
 	if err != nil {
 		a.log.Err(err).Error("Action not supported")

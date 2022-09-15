@@ -34,10 +34,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 
-func init() {
-	registerAction(api.ActionTypeRemoveMember, newRemoveMemberAction, removeMemberTimeout)
-}
-
 // newRemoveMemberAction creates a new Action that implements the given
 // planned RemoveMember action.
 func newRemoveMemberAction(action api.Action, actionCtx ActionContext) Action {

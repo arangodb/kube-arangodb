@@ -21,6 +21,8 @@
 package v1
 
 import (
+	"time"
+
 	"github.com/dchest/uniuri"
 	"k8s.io/apimachinery/pkg/api/equality"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -34,10 +36,13 @@ import (
 type ActionPriority int
 
 const (
-	// ActionPriorityNormal define normal priority plan
+	// ActionPriorityNormal define Normal priority plan
 	ActionPriorityNormal ActionPriority = iota
-	// ActionPriorityHigh define high priority plan
+	// ActionPriorityHigh define High priority plan
 	ActionPriorityHigh
+	// ActionPriorityResource define Resource priority plan
+	ActionPriorityResource
+	ActionPriorityUnknown
 )
 
 // ActionType is a strongly typed name for a plan action item
@@ -49,159 +54,12 @@ func (a ActionType) String() string {
 
 // Priority returns plan priority
 func (a ActionType) Priority() ActionPriority {
-	switch a {
-	case ActionTypeMemberPhaseUpdate, ActionTypeMemberRIDUpdate, ActionTypeSetMemberCondition, ActionTypeSetCondition, ActionTypeSetMemberConditionV2:
-		return ActionPriorityHigh
-	default:
-		return ActionPriorityNormal
-	}
+	return GetActionPriority(a)
 }
 
-const (
-	// ActionTypeIdle causes a plan to be recalculated.
-	ActionTypeIdle ActionType = "Idle"
-	// ActionTypeAddMember causes a member to be added.
-	ActionTypeAddMember ActionType = "AddMember"
-	// ActionTypeMarkToRemoveMember marks member to be removed.
-	ActionTypeMarkToRemoveMember ActionType = "MarkToRemoveMember"
-	// ActionTypeRemoveMember causes a member to be removed.
-	ActionTypeRemoveMember ActionType = "RemoveMember"
-	// ActionTypeRecreateMember recreates member. Used when member is still owner of some shards.
-	ActionTypeRecreateMember ActionType = "RecreateMember"
-	// ActionTypeCleanOutMember causes a member to be cleaned out (dbserver only).
-	ActionTypeCleanOutMember ActionType = "CleanOutMember"
-	// ActionTypeShutdownMember causes a member to be shutdown and removed from the cluster.
-	ActionTypeShutdownMember ActionType = "ShutdownMember"
-	// ActionTypeResignLeadership causes a member to resign leadership.
-	ActionTypeResignLeadership ActionType = "ResignLeadership"
-	// ActionTypeKillMemberPod causes a pod to get delete request. It also waits until Delay finalizer will be removed.
-	ActionTypeKillMemberPod ActionType = "KillMemberPod"
-	// ActionTypeRotateMember causes a member to be shutdown and have it's pod removed.
-	ActionTypeRotateMember ActionType = "RotateMember"
-	// ActionTypeRotateStartMember causes a member to be shutdown and have it's pod removed. Do not wait to pod recover.
-	ActionTypeRotateStartMember ActionType = "RotateStartMember"
-	// ActionTypeRotateStopMember causes a member to be restored.
-	ActionTypeRotateStopMember ActionType = "RotateStopMember"
-	// ActionTypeUpgradeMember causes a member to be shutdown and have it's pod removed, restarted with AutoUpgrade option, waited until termination and the restarted again.
-	ActionTypeUpgradeMember ActionType = "UpgradeMember"
-	// ActionTypeWaitForMemberUp causes the plan to wait until the member is considered "up".
-	ActionTypeWaitForMemberUp ActionType = "WaitForMemberUp"
-	// ActionTypeWaitForMemberInSync causes the plan to wait until members are considered "up" and cluster is healthy.
-	ActionTypeWaitForMemberInSync ActionType = "WaitForMemberInSync"
-	// ActionTypeRenewTLSCertificate causes the TLS certificate of a member to be renewed.
-	ActionTypeRenewTLSCertificate ActionType = "RenewTLSCertificate"
-	// ActionTypeRenewTLSCACertificate causes the TLS CA certificate of the entire deployment to be renewed.
-	ActionTypeRenewTLSCACertificate ActionType = "RenewTLSCACertificate"
-	// ActionTypeAppendTLSCACertificate add TLS CA certificate to local truststore.
-	ActionTypeAppendTLSCACertificate ActionType = "AppendTLSCACertificate"
-	// ActionTypeCleanTLSCACertificate clean TLS CA certificate from local truststore.
-	ActionTypeCleanTLSCACertificate ActionType = "CleanTLSCACertificate"
-	// ActionTypeCleanTLSKeyfileCertificate clean server keyfile
-	ActionTypeCleanTLSKeyfileCertificate ActionType = "CleanTLSKeyfileCertificate"
-	// ActionTypeRefreshTLSKeyfileCertificate refresh server keyfile using API
-	ActionTypeRefreshTLSKeyfileCertificate ActionType = "RefreshTLSKeyfileCertificate"
-	// ActionTypeTLSKeyStatusUpdate update status with current data from deployment
-	ActionTypeTLSKeyStatusUpdate ActionType = "TLSKeyStatusUpdate"
-	// ActionTypeTLSPropagated change propagated flag
-	ActionTypeTLSPropagated ActionType = "TLSPropagated"
-	// ActionTypeUpdateTLSSNI update SNI inplace.
-	ActionTypeUpdateTLSSNI ActionType = "UpdateTLSSNI"
-	// ActionTypeSetCurrentImage causes status.CurrentImage to be updated to the image given in the action.
-	ActionTypeSetCurrentImage ActionType = "SetCurrentImage"
-	// ActionTypeSetMemberCurrentImage replace image of member to current one.
-	ActionTypeSetMemberCurrentImage ActionType = "SetMemberCurrentImage"
-	// ActionTypeDisableClusterScaling turns off scaling DBservers and coordinators
-	ActionTypeDisableClusterScaling ActionType = "ScalingDisabled"
-	// ActionTypeEnableClusterScaling turns on scaling DBservers and coordinators
-	ActionTypeEnableClusterScaling ActionType = "ScalingEnabled"
-	// ActionTypePVCResize resize event for PVC
-	ActionTypePVCResize ActionType = "PVCResize"
-	// ActionTypePVCResized waits for PVC to resize for defined time
-	ActionTypePVCResized ActionType = "PVCResized"
-	// UpToDateUpdate define up to date annotation in spec
-	UpToDateUpdate ActionType = "UpToDateUpdate"
-	// ActionTypeBackupRestore restore plan
-	ActionTypeBackupRestore ActionType = "BackupRestore"
-	// ActionTypeBackupRestoreClean restore plan
-	ActionTypeBackupRestoreClean ActionType = "BackupRestoreClean"
-	// ActionTypeEncryptionKeyAdd add new encryption key to list
-	ActionTypeEncryptionKeyAdd ActionType = "EncryptionKeyAdd"
-	// ActionTypeEncryptionKeyRemove removes encryption key to list
-	ActionTypeEncryptionKeyRemove ActionType = "EncryptionKeyRemove"
-	// ActionTypeEncryptionKeyRefresh refresh encryption keys
-	ActionTypeEncryptionKeyRefresh ActionType = "EncryptionKeyRefresh"
-	// ActionTypeEncryptionKeyStatusUpdate update status object with current encryption keys
-	ActionTypeEncryptionKeyStatusUpdate ActionType = "EncryptionKeyStatusUpdate"
-	// ActionTypeEncryptionKeyPropagated change propagated flag
-	ActionTypeEncryptionKeyPropagated ActionType = "EncryptionKeyPropagated"
-	// ActionTypeJWTStatusUpdate update status of JWT Secret
-	ActionTypeJWTStatusUpdate ActionType = "JWTStatusUpdate"
-	// ActionTypeJWTSetActive change active JWT key
-	ActionTypeJWTSetActive ActionType = "JWTSetActive"
-	// ActionTypeJWTAdd add new JWT key
-	ActionTypeJWTAdd ActionType = "JWTAdd"
-	// ActionTypeJWTClean Clean old JWT key
-	ActionTypeJWTClean ActionType = "JWTClean"
-	// ActionTypeJWTRefresh refresh jwt tokens
-	ActionTypeJWTRefresh ActionType = "JWTRefresh"
-	// ActionTypeJWTPropagated change propagated flag
-	ActionTypeJWTPropagated ActionType = "JWTPropagated"
-	// ActionTypeClusterMemberCleanup removes member from cluster
-	ActionTypeClusterMemberCleanup ActionType = "ClusterMemberCleanup"
-	// ActionTypeEnableMaintenance enables maintenance on cluster.
-	ActionTypeEnableMaintenance ActionType = "EnableMaintenance"
-	// ActionTypeDisableMaintenance disables maintenance on cluster.
-	ActionTypeDisableMaintenance ActionType = "DisableMaintenance"
-	// ActionTypeSetMaintenanceCondition sets maintenance condition.
-	ActionTypeSetMaintenanceCondition ActionType = "SetMaintenanceCondition"
-	// ActionTypeEnableMemberMaintenance enables maintenance on cluster member.
-	ActionTypeEnableMemberMaintenance ActionType = "EnableMemberMaintenance"
-	// ActionTypeDisableMemberMaintenance disables maintenance on cluster member.
-	ActionTypeDisableMemberMaintenance ActionType = "DisableMemberMaintenance"
-	// ActionTypeBootstrapUpdate update bootstrap status to true
-	ActionTypeBootstrapUpdate ActionType = "BootstrapUpdate"
-	// ActionTypeBootstrapSetPassword set password to the bootstrapped user
-	ActionTypeBootstrapSetPassword ActionType = "BootstrapSetPassword"
-	// ActionTypeMemberPhaseUpdate updated member phase. High priority
-	ActionTypeMemberPhaseUpdate ActionType = "MemberPhaseUpdate"
-	// ActionTypeSetMemberCondition sets member condition. It is high priority action.
-	ActionTypeSetMemberCondition ActionType = "SetMemberCondition"
-	// ActionTypeSetMemberConditionV2 sets member condition. It is high priority action.
-	ActionTypeSetMemberConditionV2 ActionType = "SetMemberConditionV2"
-	// ActionTypeSetCondition sets condition. It is high priority action.
-	ActionTypeSetCondition ActionType = "SetCondition"
-	// ActionTypeSetConditionV2 sets condition. It is high priority action.
-	ActionTypeSetConditionV2 ActionType = "SetConditionV2"
-	// ActionTypeMemberRIDUpdate updated member Run ID (UID). High priority
-	ActionTypeMemberRIDUpdate ActionType = "MemberRIDUpdate"
-	// ActionTypeArangoMemberUpdatePodSpec updates pod spec
-	ActionTypeArangoMemberUpdatePodSpec ActionType = "ArangoMemberUpdatePodSpec"
-	// ActionTypeArangoMemberUpdatePodStatus updates pod spec
-	ActionTypeArangoMemberUpdatePodStatus ActionType = "ArangoMemberUpdatePodStatus"
-	// ActionTypeLicenseSet sets server license
-	ActionTypeLicenseSet ActionType = "LicenseSet"
-
-	// Runtime Updates
-	// ActionTypeRuntimeContainerImageUpdate updates container image in runtime
-	ActionTypeRuntimeContainerImageUpdate ActionType = "RuntimeContainerImageUpdate"
-	// ActionTypeRuntimeContainerArgsLogLevelUpdate updates the container's executor arguments.
-	ActionTypeRuntimeContainerArgsLogLevelUpdate ActionType = "RuntimeContainerArgsLogLevelUpdate"
-
-	// Topology
-	ActionTypeTopologyEnable           ActionType = "TopologyEnable"
-	ActionTypeTopologyDisable          ActionType = "TopologyDisable"
-	ActionTypeTopologyZonesUpdate      ActionType = "TopologyZonesUpdate"
-	ActionTypeTopologyMemberAssignment ActionType = "TopologyMemberAssignment"
-
-	// Rebalancer
-	ActionTypeRebalancerGenerate ActionType = "RebalancerGenerate"
-	ActionTypeRebalancerCheck    ActionType = "RebalancerCheck"
-	ActionTypeRebalancerClean    ActionType = "RebalancerClean"
-
-	// Resources
-	ActionTypeResourceSync      ActionType = "ResourceSync"
-	ActionTypeTimezoneSecretSet ActionType = "TimezoneSecretSet"
-)
+func (a ActionType) DefaultTimeout() time.Duration {
+	return ActionDefaultTimeout(a)
+}
 
 const (
 	// MemberIDPreviousAction is used for Action.MemberID when the MemberID

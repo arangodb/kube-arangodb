@@ -22,15 +22,10 @@ package reconcile
 
 import (
 	"context"
-	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
-
-func init() {
-	registerAction(api.ActionTypeShutdownMember, withActionStartFailureGracePeriod(newShutdownMemberAction, time.Minute), shutdownMemberTimeout)
-}
 
 // newShutdownMemberAction creates a new Action that implements the given
 // planned ShutdownMember action.

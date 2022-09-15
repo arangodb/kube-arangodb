@@ -31,10 +31,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 
-func init() {
-	registerAction(api.ActionTypeResignLeadership, newResignLeadershipAction, shutdownMemberTimeout)
-}
-
 // newResignLeadershipAction creates a new Action that implements the given
 // planned ResignLeadership action.
 func newResignLeadershipAction(action api.Action, actionCtx ActionContext) Action {

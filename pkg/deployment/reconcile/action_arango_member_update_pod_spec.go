@@ -29,10 +29,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func init() {
-	registerAction(api.ActionTypeArangoMemberUpdatePodSpec, newArangoMemberUpdatePodSpecAction, defaultTimeout)
-}
-
 // newArangoMemberUpdatePodSpecAction creates a new Action that implements the given
 // planned ArangoMemberUpdatePodSpec action.
 func newArangoMemberUpdatePodSpecAction(action api.Action, actionCtx ActionContext) Action {

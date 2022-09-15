@@ -35,25 +35,21 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
-func init() {
-	registerAction(api.ActionTypeCleanTLSCACertificate, newCleanTLSCACertificateAction, operationTLSCACertificateTimeout)
-}
-
 func newCleanTLSCACertificateAction(action api.Action, actionCtx ActionContext) Action {
-	a := &cleanTLSCACertificateAction{}
+	a := &actionCleanTLSCACertificate{}
 
 	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
 
-type cleanTLSCACertificateAction struct {
+type actionCleanTLSCACertificate struct {
 	actionImpl
 
 	actionEmptyCheckProgress
 }
 
-func (a *cleanTLSCACertificateAction) Start(ctx context.Context) (bool, error) {
+func (a *actionCleanTLSCACertificate) Start(ctx context.Context) (bool, error) {
 	a.log.Info("Clean TLS Ca")
 	if !a.actionCtx.GetSpec().TLS.IsSecure() {
 		a.log.Info("Insecure deployment")

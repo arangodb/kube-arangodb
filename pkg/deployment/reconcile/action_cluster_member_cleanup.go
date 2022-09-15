@@ -29,10 +29,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 
-func init() {
-	registerAction(api.ActionTypeClusterMemberCleanup, newClusterMemberCleanupAction, addMemberTimeout)
-}
-
 // newClusterMemberCleanupAction creates a new Action that implements the given
 // planned ClusterMemberCleanup action.
 func newClusterMemberCleanupAction(action api.Action, actionCtx ActionContext) Action {

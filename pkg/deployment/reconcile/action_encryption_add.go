@@ -50,25 +50,21 @@ func ensureEncryptionSupport(actionCtx ActionContext) error {
 	return nil
 }
 
-func init() {
-	registerAction(api.ActionTypeEncryptionKeyAdd, newEncryptionKeyAdd, defaultTimeout)
-}
-
-func newEncryptionKeyAdd(action api.Action, actionCtx ActionContext) Action {
-	a := &encryptionKeyAddAction{}
+func newEncryptionKeyAddAction(action api.Action, actionCtx ActionContext) Action {
+	a := &actionEncryptionKeyAdd{}
 
 	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
 
-type encryptionKeyAddAction struct {
+type actionEncryptionKeyAdd struct {
 	actionImpl
 
 	actionEmptyCheckProgress
 }
 
-func (a *encryptionKeyAddAction) Start(ctx context.Context) (bool, error) {
+func (a *actionEncryptionKeyAdd) Start(ctx context.Context) (bool, error) {
 	if err := ensureEncryptionSupport(a.actionCtx); err != nil {
 		a.log.Err(err).Error("Action not supported")
 		return true, nil

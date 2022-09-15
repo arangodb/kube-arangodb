@@ -26,25 +26,21 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
 
-func init() {
-	registerAction(api.ActionTypeJWTPropagated, newJWTPropagated, defaultTimeout)
-}
-
-func newJWTPropagated(action api.Action, actionCtx ActionContext) Action {
-	a := &jwtPropagatedAction{}
+func newJWTPropagatedAction(action api.Action, actionCtx ActionContext) Action {
+	a := &actionJWTPropagated{}
 
 	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
 
-type jwtPropagatedAction struct {
+type actionJWTPropagated struct {
 	actionImpl
 
 	actionEmptyCheckProgress
 }
 
-func (a *jwtPropagatedAction) Start(ctx context.Context) (bool, error) {
+func (a *actionJWTPropagated) Start(ctx context.Context) (bool, error) {
 	_, err := ensureJWTFolderSupportFromAction(a.actionCtx)
 	if err != nil {
 		a.log.Err(err).Error("Action not supported")

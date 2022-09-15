@@ -30,10 +30,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 
-func init() {
-	registerAction(api.ActionTypeWaitForMemberUp, newWaitForMemberUpAction, waitForMemberUpTimeout)
-}
-
 // newWaitForMemberUpAction creates a new Action that implements the given
 // planned WaitForMemberUp action.
 func newWaitForMemberUpAction(action api.Action, actionCtx ActionContext) Action {

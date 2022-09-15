@@ -31,25 +31,21 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 
-func init() {
-	registerAction(api.ActionTypeEncryptionKeyStatusUpdate, newEncryptionKeyStatusUpdate, defaultTimeout)
-}
-
-func newEncryptionKeyStatusUpdate(action api.Action, actionCtx ActionContext) Action {
-	a := &encryptionKeyStatusUpdateAction{}
+func newEncryptionKeyStatusUpdateAction(action api.Action, actionCtx ActionContext) Action {
+	a := &actionEncryptionKeyStatusUpdate{}
 
 	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
 
-type encryptionKeyStatusUpdateAction struct {
+type actionEncryptionKeyStatusUpdate struct {
 	actionImpl
 
 	actionEmptyCheckProgress
 }
 
-func (a *encryptionKeyStatusUpdateAction) Start(ctx context.Context) (bool, error) {
+func (a *actionEncryptionKeyStatusUpdate) Start(ctx context.Context) (bool, error) {
 	if err := ensureEncryptionSupport(a.actionCtx); err != nil {
 		a.log.Err(err).Error("Action not supported")
 		return true, nil

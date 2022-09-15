@@ -27,21 +27,17 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-func init() {
-	registerAction(api.ActionTypeEnableClusterScaling, newEnableScalingCluster, 0)
-}
-
-// newEnableScalingCluster creates the new action with enabling scaling DBservers and coordinators.
-func newEnableScalingCluster(action api.Action, actionCtx ActionContext) Action {
-	a := &actionEnableScalingCluster{}
+// newEnableClusterScalingAction creates the new action with enabling scaling DBservers and coordinators.
+func newEnableClusterScalingAction(action api.Action, actionCtx ActionContext) Action {
+	a := &actionEnableClusterScaling{}
 
 	a.actionImpl = newActionImpl(action, actionCtx, util.NewString(""))
 
 	return a
 }
 
-// actionEnableScalingCluster implements enabling scaling DBservers and coordinators.
-type actionEnableScalingCluster struct {
+// actionEnableClusterScaling implements enabling scaling DBservers and coordinators.
+type actionEnableClusterScaling struct {
 	// actionImpl implement timeout and member id functions
 	actionImpl
 
@@ -50,7 +46,7 @@ type actionEnableScalingCluster struct {
 }
 
 // Start enables scaling DBservers and coordinators
-func (a *actionEnableScalingCluster) Start(ctx context.Context) (bool, error) {
+func (a *actionEnableClusterScaling) Start(ctx context.Context) (bool, error) {
 	err := a.actionCtx.EnableScalingCluster(ctx)
 	if err != nil {
 		return false, err

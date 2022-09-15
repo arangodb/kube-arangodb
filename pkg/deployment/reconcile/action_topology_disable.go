@@ -24,12 +24,8 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
 
-func init() {
-	registerAction(api.ActionTypeTopologyDisable, newTopologyDisable, defaultTimeout)
-}
-
-func newTopologyDisable(action api.Action, actionCtx ActionContext) Action {
-	a := &topologyDisable{}
+func newTopologyDisableAction(action api.Action, actionCtx ActionContext) Action {
+	a := &actionTopologyDisable{}
 
 	a.actionImpl = newActionImplDefRef(action, actionCtx)
 

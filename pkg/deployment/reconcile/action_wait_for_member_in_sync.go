@@ -28,13 +28,9 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-func init() {
-	registerAction(api.ActionTypeWaitForMemberInSync, newWaitForMemberInSync, waitForMemberUpTimeout)
-}
-
 // newWaitForMemberUpAction creates a new Action that implements the given
 // planned WaitForShardInSync action.
-func newWaitForMemberInSync(action api.Action, actionCtx ActionContext) Action {
+func newWaitForMemberInSyncAction(action api.Action, actionCtx ActionContext) Action {
 	a := &actionWaitForMemberInSync{}
 
 	a.actionImpl = newActionImplDefRef(action, actionCtx)

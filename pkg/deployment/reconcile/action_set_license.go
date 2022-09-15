@@ -29,25 +29,21 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
-func init() {
-	registerAction(api.ActionTypeLicenseSet, newLicenseSet, defaultTimeout)
-}
-
-func newLicenseSet(action api.Action, actionCtx ActionContext) Action {
-	a := &licenseSetAction{}
+func newLicenseSetAction(action api.Action, actionCtx ActionContext) Action {
+	a := &actionLicenseSet{}
 
 	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
 
-type licenseSetAction struct {
+type actionLicenseSet struct {
 	actionImpl
 
 	actionEmptyCheckProgress
 }
 
-func (a *licenseSetAction) Start(ctx context.Context) (bool, error) {
+func (a *actionLicenseSet) Start(ctx context.Context) (bool, error) {
 	ctxChild, cancel := globals.GetGlobals().Timeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	spec := a.actionCtx.GetSpec()

@@ -327,9 +327,15 @@ func (d *Reconciler) executeAction(ctx context.Context, planAction api.Action, a
 		return false, false, true, false, nil
 	}
 
+	timeout := GetActionTimeout(d.context.GetSpec(), planAction.Type)
+
 	if t := planAction.StartTime; t != nil {
 		if tm := t.Time; !tm.IsZero() {
-			log = log.SinceStart("duration", tm)
+			since := time.Since(tm)
+			log = log.Dur("duration", since)
+			if !timeout.Infinite() {
+				log = log.Dur("timeouts_in", timeout.Duration-since)
+			}
 		}
 	}
 
@@ -353,10 +359,12 @@ func (d *Reconciler) executeAction(ctx context.Context, planAction api.Action, a
 		log.Warn("Action aborted. Removing the entire plan")
 		d.context.CreateEvent(k8sutil.NewPlanAbortedEvent(d.context.GetAPIObject(), string(planAction.Type), planAction.MemberID, planAction.Group.AsRole()))
 		return false, true, false, false, nil
-	} else if time.Now().After(planAction.CreationTime.Add(GetActionTimeout(d.context.GetSpec(), planAction.Type))) {
-		log.Warn("Action not finished in time. Removing the entire plan")
-		d.context.CreateEvent(k8sutil.NewPlanTimeoutEvent(d.context.GetAPIObject(), string(planAction.Type), planAction.MemberID, planAction.Group.AsRole()))
-		return false, true, false, false, nil
+	} else if !timeout.Infinite() {
+		if time.Now().After(planAction.CreationTime.Add(timeout.Duration)) {
+			log.Warn("Action not finished in time. Removing the entire plan")
+			d.context.CreateEvent(k8sutil.NewPlanTimeoutEvent(d.context.GetAPIObject(), string(planAction.Type), planAction.MemberID, planAction.Group.AsRole()))
+			return false, true, false, false, nil
+		}
 	}
 
 	// Timeout not yet expired, come back soon

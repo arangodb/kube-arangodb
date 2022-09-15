@@ -22,7 +22,6 @@ package reconcile
 
 import (
 	"context"
-	"time"
 
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -30,10 +29,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
-
-func init() {
-	registerAction(api.ActionTypeRotateStartMember, withActionStartFailureGracePeriod(newRotateStartMemberAction, time.Minute), rotateMemberTimeout)
-}
 
 // newRotateStartMemberAction creates a new Action that implements the given
 // planned RotateStartMember action.

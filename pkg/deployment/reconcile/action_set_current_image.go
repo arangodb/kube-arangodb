@@ -27,22 +27,18 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func init() {
-	registerAction(api.ActionTypeSetMemberCurrentImage, newSetCurrentMemberImageAction, upgradeMemberTimeout)
-}
-
 // newSetCurrentImageAction creates a new Action that implements the given
 // planned SetCurrentImage action.
-func newSetCurrentMemberImageAction(action api.Action, actionCtx ActionContext) Action {
-	a := &setCurrentMemberImageAction{}
+func newSetMemberCurrentImageAction(action api.Action, actionCtx ActionContext) Action {
+	a := &actionSetMemberCurrentImage{}
 
 	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
 
-// setCurrentImageAction implements an SetCurrentImage.
-type setCurrentMemberImageAction struct {
+// actionSetMemberCurrentImage implements an SetCurrentImage.
+type actionSetMemberCurrentImage struct {
 	// actionImpl implement timeout and member id functions
 	actionImpl
 }
@@ -50,7 +46,7 @@ type setCurrentMemberImageAction struct {
 // Start performs the start of the action.
 // Returns true if the action is completely finished, false in case
 // the start time needs to be recorded and a ready condition needs to be checked.
-func (a *setCurrentMemberImageAction) Start(ctx context.Context) (bool, error) {
+func (a *actionSetMemberCurrentImage) Start(ctx context.Context) (bool, error) {
 	ready, _, err := a.CheckProgress(ctx)
 	if err != nil {
 		return false, errors.WithStack(err)
@@ -60,7 +56,7 @@ func (a *setCurrentMemberImageAction) Start(ctx context.Context) (bool, error) {
 
 // CheckProgress checks the progress of the action.
 // Returns true if the action is completely finished, false otherwise.
-func (a *setCurrentMemberImageAction) CheckProgress(ctx context.Context) (bool, bool, error) {
+func (a *actionSetMemberCurrentImage) CheckProgress(ctx context.Context) (bool, bool, error) {
 	imageInfo, found := a.actionCtx.GetImageInfo(a.action.Image)
 	if !found {
 		a.log.Info("Image not found")

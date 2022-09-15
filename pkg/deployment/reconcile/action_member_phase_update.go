@@ -28,29 +28,25 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func init() {
-	registerAction(api.ActionTypeMemberPhaseUpdate, newMemberPhaseUpdate, defaultTimeout)
-}
-
 const (
 	actionTypeMemberPhaseUpdatePhaseKey string = "phase"
 )
 
-func newMemberPhaseUpdate(action api.Action, actionCtx ActionContext) Action {
-	a := &memberPhaseUpdateAction{}
+func newMemberPhaseUpdateAction(action api.Action, actionCtx ActionContext) Action {
+	a := &actionMemberPhaseUpdate{}
 
 	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
 
-type memberPhaseUpdateAction struct {
+type actionMemberPhaseUpdate struct {
 	actionImpl
 
 	actionEmptyCheckProgress
 }
 
-func (a *memberPhaseUpdateAction) Start(ctx context.Context) (bool, error) {
+func (a *actionMemberPhaseUpdate) Start(ctx context.Context) (bool, error) {
 	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !ok {
 		a.log.Error("No such member")
