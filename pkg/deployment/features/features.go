@@ -22,7 +22,10 @@ package features
 
 import "github.com/arangodb/go-driver"
 
-const Enabled = "true"
+const (
+	Enabled  = "true"
+	Disabled = "false"
+)
 
 var _ Feature = &feature{}
 

@@ -45,6 +45,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/acs"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	arangofake "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/fake"
@@ -806,7 +807,7 @@ func (testCase *testCaseStruct) createTestEnvVariables(deployment *Deployment, g
 			{
 				ConfigMapRef: &core.ConfigMapEnvSource{
 					LocalObjectReference: core.LocalObjectReference{
-						Name: api.ConfigMapFeaturesEnabled,
+						Name: features.ConfigMapName(),
 					},
 					Optional: util.NewBool(true),
 				},

@@ -28,6 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/topology"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -87,8 +88,8 @@ func containersCompare(ds api.DeploymentSpec, g api.ServerGroup, spec, status *c
 					if !equality.Semantic.DeepEqual(ac.EnvFrom, bc.EnvFrom) {
 						// Check EnvFromSource differences.
 						filter := func(a, b map[string]core.EnvFromSource) (map[string]core.EnvFromSource, map[string]core.EnvFromSource) {
-							delete(a, api.ConfigMapFeaturesEnabled)
-							delete(b, api.ConfigMapFeaturesEnabled)
+							delete(a, features.ConfigMapName())
+							delete(b, features.ConfigMapName())
 
 							return a, b
 						}

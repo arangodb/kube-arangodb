@@ -105,6 +105,8 @@ func Init(cmd *cobra.Command) error {
 		}
 	}
 
+	f.StringVar(&configMapName, "features-config-map-name", DefaultFeaturesConfigMap, "Name of the Feature Map ConfigMap")
+
 	return nil
 }
 
@@ -155,13 +157,11 @@ func Supported(f Feature, v driver.Version, enterprise bool) bool {
 	return v.CompareTo(f.Version()) >= 0
 }
 
-// GetEnabledFeaturesArgsNames returns all enabled features' arguments names.
-func GetEnabledFeaturesArgsNames() []string {
-	args := make([]string, 0, len(features))
+// GetFeatureMap returns all features' arguments names.
+func GetFeatureMap() map[string]bool {
+	args := make(map[string]bool, len(features))
 	for _, f := range features {
-		if f.Enabled() {
-			args = append(args, GetFeatureArgName(f.Name()))
-		}
+		args[GetFeatureArgName(f.Name())] = f.Enabled()
 	}
 
 	return args
