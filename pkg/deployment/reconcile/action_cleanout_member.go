@@ -141,6 +141,12 @@ func (a *actionCleanOutMember) CheckProgress(ctx context.Context) (bool, bool, e
 		}
 	}
 
+	if cache.PlanServers().Contains(agency.Server(m.ID)) {
+		// Something is wrong, servers is CleanedOut but still exists in the Plan
+		a.actionCtx.CreateOperatorEngineOpsAlertEvent("DBServer %s still exists in Plan after CleanOut", m.ID)
+		return false, true, nil
+	}
+
 	// Cleanout completed
 	return true, false, nil
 }

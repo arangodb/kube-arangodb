@@ -51,6 +51,7 @@ type ActionContext interface {
 	reconciler.ArangoAgencyGet
 	reconciler.DeploymentInfoGetter
 	reconciler.DeploymentDatabaseClient
+	reconciler.KubernetesEventGenerator
 
 	member.StateInspectorGetter
 
@@ -128,6 +129,10 @@ type actionContext struct {
 	cachedStatus inspectorInterface.Inspector
 	locals       api.PlanLocals
 	metrics      *Metrics
+}
+
+func (ac *actionContext) CreateOperatorEngineOpsAlertEvent(message string, args ...interface{}) {
+	ac.context.CreateOperatorEngineOpsAlertEvent(message, args...)
 }
 
 func (ac *actionContext) Metrics() *Metrics {
