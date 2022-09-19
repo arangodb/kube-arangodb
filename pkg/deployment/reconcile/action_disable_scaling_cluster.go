@@ -27,21 +27,17 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-func init() {
-	registerAction(api.ActionTypeDisableClusterScaling, newDisableScalingCluster, 0)
-}
-
-// newDisableScalingCluster creates the new action with disabling scaling DBservers and coordinators.
-func newDisableScalingCluster(action api.Action, actionCtx ActionContext) Action {
-	a := &actionDisableScalingCluster{}
+// newDisableClusterScalingAction creates the new action with disabling scaling DBservers and coordinators.
+func newDisableClusterScalingAction(action api.Action, actionCtx ActionContext) Action {
+	a := &actionDisableClusterScaling{}
 
 	a.actionImpl = newActionImpl(action, actionCtx, util.NewString(""))
 
 	return a
 }
 
-// actionDisableScalingCluster implements disabling scaling DBservers and coordinators.
-type actionDisableScalingCluster struct {
+// actionDisableClusterScaling implements disabling scaling DBservers and coordinators.
+type actionDisableClusterScaling struct {
 	// actionImpl implement timeout and member id functions
 	actionImpl
 
@@ -50,7 +46,7 @@ type actionDisableScalingCluster struct {
 }
 
 // Start disables scaling DBservers and coordinators
-func (a *actionDisableScalingCluster) Start(ctx context.Context) (bool, error) {
+func (a *actionDisableClusterScaling) Start(ctx context.Context) (bool, error) {
 	err := a.actionCtx.DisableScalingCluster(ctx)
 	if err != nil {
 		return false, err

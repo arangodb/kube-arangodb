@@ -1,0 +1,61 @@
+{{- $root := . -}}
+//
+// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Copyright holder is ArangoDB GmbH, Cologne, Germany
+//
+
+package v1
+
+import "time"
+
+const (
+    // Timeouts
+
+    // ActionsDefaultTimeout define default timeout
+    ActionsDefaultTimeout time.Duration = {{ $root.defaultTimeout }}
+{{- range .actions }}
+    // Action{{ . }}DefaultTimeout define default timeout for action Action{{ . }}
+    Action{{ . }}DefaultTimeout time.Duration = {{ index $root.timeouts . }}
+{{- end }}
+
+    // Actions
+{{ range .actions }}
+    // ActionType{{ . }} in scopes {{ index $root.scopes . }}. {{ index $root.descriptions . }}
+    ActionType{{ . }} ActionType = "{{ . }}"
+{{- end }}
+)
+
+func ActionDefaultTimeout(in ActionType) time.Duration {
+    switch in {
+{{- range .actions }}
+        case ActionType{{ . }}:
+            return Action{{ . }}DefaultTimeout
+{{- end }}
+        default:
+            return ActionsDefaultTimeout
+    }
+}
+
+func GetActionPriority(in ActionType) ActionPriority {
+    switch in {
+{{- range .actions }}
+        case ActionType{{ . }}:
+            return ActionPriority{{ index $root.highestScopes . }}
+{{- end }}
+        default:
+            return ActionPriorityUnknown
+    }
+}

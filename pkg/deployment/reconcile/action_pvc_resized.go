@@ -29,10 +29,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
-func init() {
-	registerAction(api.ActionTypePVCResized, newPVCResizedAction, pvcResizedTimeout)
-}
-
 // newRotateMemberAction creates a new Action that implements the given
 // planned RotateMember action.
 func newPVCResizedAction(action api.Action, actionCtx ActionContext) Action {

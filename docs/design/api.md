@@ -16,7 +16,7 @@ The HTTP API is running at endpoint specified by operator command line options `
 
 The HTTP API exposes endpoints used to get operator health and readiness status, operator version, and prometheus-compatible metrics.
 
-For now only `/metrics` endpoint require authorization.
+For now only `/metrics` and `/log/level` endpoints require authorization.
 
 
 ## gRPC

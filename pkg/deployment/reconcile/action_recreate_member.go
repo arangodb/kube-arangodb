@@ -27,10 +27,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func init() {
-	registerAction(api.ActionTypeRecreateMember, newRecreateMemberAction, recreateMemberTimeout)
-}
-
 // newRecreateMemberAction creates a new Action that implements the given
 // planned RecreateMember action.
 func newRecreateMemberAction(action api.Action, actionCtx ActionContext) Action {

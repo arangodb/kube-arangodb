@@ -21,6 +21,6 @@
 
 package reconcile
 
-type topologyZonesUpdate struct {
+type actionTopologyZonesUpdate struct {
 	actionEmpty
 }

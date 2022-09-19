@@ -22,6 +22,11 @@ package features
 
 import "github.com/arangodb/go-driver"
 
+const (
+	Enabled  = "true"
+	Disabled = "false"
+)
+
 var _ Feature = &feature{}
 
 type Feature interface {
@@ -57,6 +62,10 @@ func (f feature) Supported(v driver.Version, enterprise bool) bool {
 func (f feature) Enabled() bool {
 	if f.constValue != nil {
 		return *f.constValue
+	}
+
+	if enableAll {
+		return true
 	}
 
 	return f.enabled

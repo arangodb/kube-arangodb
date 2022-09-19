@@ -150,6 +150,15 @@ namespaces:
           - key: name
             description: "Deployment Name"
     resources:
+      arangodeployment_status_restores:
+        shortDescription: "Counter for deployment status restored"
+        description: "Counter for deployment status restored"
+        type: "Counter"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
       arangodeployment_validation_errors:
         shortDescription: "Counter for deployment validation errors"
         description: "Counter for deployment validation errors"

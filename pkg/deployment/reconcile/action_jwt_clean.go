@@ -35,25 +35,21 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
-func init() {
-	registerAction(api.ActionTypeJWTClean, newJWTClean, defaultTimeout)
-}
-
-func newJWTClean(action api.Action, actionCtx ActionContext) Action {
-	a := &jwtCleanAction{}
+func newJWTCleanAction(action api.Action, actionCtx ActionContext) Action {
+	a := &actionJWTClean{}
 
 	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
 
-type jwtCleanAction struct {
+type actionJWTClean struct {
 	actionImpl
 
 	actionEmptyCheckProgress
 }
 
-func (a *jwtCleanAction) Start(ctx context.Context) (bool, error) {
+func (a *actionJWTClean) Start(ctx context.Context) (bool, error) {
 	folder, err := ensureJWTFolderSupportFromAction(a.actionCtx)
 	if err != nil {
 		a.log.Err(err).Error("Action not supported")

@@ -24,12 +24,8 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
 
-func init() {
-	registerAction(api.ActionTypeTopologyMemberAssignment, newTopologyMemberAssignment, defaultTimeout)
-}
-
-func newTopologyMemberAssignment(action api.Action, actionCtx ActionContext) Action {
-	a := &topologyMemberAssignment{}
+func newTopologyMemberAssignmentAction(action api.Action, actionCtx ActionContext) Action {
+	a := &actionTopologyMemberAssignment{}
 
 	a.actionImpl = newActionImplDefRef(action, actionCtx)
 

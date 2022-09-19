@@ -33,10 +33,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 
-func init() {
-	registerAction(api.ActionTypeBackupRestore, newBackupRestoreAction, backupRestoreTimeout)
-}
-
 const (
 	actionBackupRestoreLocalJobID      api.PlanLocalKey = "jobID"
 	actionBackupRestoreLocalBackupName api.PlanLocalKey = "backupName"

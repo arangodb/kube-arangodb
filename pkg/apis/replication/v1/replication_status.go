@@ -25,7 +25,7 @@ package v1
 type DeploymentReplicationStatus struct {
 	// Phase holds the current lifetime phase of the deployment replication
 	Phase DeploymentReplicationPhase `json:"phase,omitempty"`
-	// Reason contains a human readable reason for reaching the current phase (can be empty)
+	// Reason contains a human-readable reason for reaching the current phase (can be empty)
 	Reason string `json:"reason,omitempty"` // Reason for current phase
 
 	// Conditions specific to the entire deployment replication
@@ -39,4 +39,7 @@ type DeploymentReplicationStatus struct {
 	// CancelFailures records the number of times that the configuration was canceled
 	// which resulted in an error.
 	CancelFailures int `json:"cancel-failures,omitempty"`
+
+	// IncomingSynchronization contains the incoming synchronization status for all databases
+	IncomingSynchronization SynchronizationStatus `json:"incoming-synchronization,omitempty"`
 }

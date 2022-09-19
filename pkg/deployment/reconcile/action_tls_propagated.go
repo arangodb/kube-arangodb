@@ -26,25 +26,21 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
 
-func init() {
-	registerAction(api.ActionTypeTLSPropagated, newTLSPropagated, defaultTimeout)
-}
-
-func newTLSPropagated(action api.Action, actionCtx ActionContext) Action {
-	a := &tlsPropagatedAction{}
+func newTLSPropagatedAction(action api.Action, actionCtx ActionContext) Action {
+	a := &actionTLSPropagated{}
 
 	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
 
-type tlsPropagatedAction struct {
+type actionTLSPropagated struct {
 	actionImpl
 
 	actionEmptyCheckProgress
 }
 
-func (a *tlsPropagatedAction) Start(ctx context.Context) (bool, error) {
+func (a *actionTLSPropagated) Start(ctx context.Context) (bool, error) {
 	propagatedFlag, exists := a.action.Params[propagated]
 	if !exists {
 		a.log.Error("Propagated flag is missing")

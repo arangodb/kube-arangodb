@@ -8,3 +8,4 @@
 
 # ArangoDB Kubernetes Operator Generated Documentation
 - [ArangoDB Operator Metrics & Alerts](./generated/metrics/README.md)
+- [ArangoDB Actions](./generated/actions.md)

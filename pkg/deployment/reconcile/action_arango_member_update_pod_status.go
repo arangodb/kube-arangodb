@@ -27,10 +27,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func init() {
-	registerAction(api.ActionTypeArangoMemberUpdatePodStatus, newArangoMemberUpdatePodStatusAction, defaultTimeout)
-}
-
 const (
 	ActionTypeArangoMemberUpdatePodStatusChecksum = "checksum"
 )

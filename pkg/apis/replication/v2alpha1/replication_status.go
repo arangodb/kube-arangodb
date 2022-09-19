@@ -39,4 +39,7 @@ type DeploymentReplicationStatus struct {
 	// CancelFailures records the number of times that the configuration was canceled
 	// which resulted in an error.
 	CancelFailures int `json:"cancel-failures,omitempty"`
+
+	// IncomingSynchronization contains the incoming synchronization status for all databases
+	IncomingSynchronization SynchronizationStatus `json:"incoming-synchronization,omitempty"`
 }

@@ -136,7 +136,7 @@ func (s shutdownHelperAPI) Start(ctx context.Context) (bool, error) {
 		}
 		removeFromCluster := false
 		s.log.Bool("removeFromCluster", removeFromCluster).Debug("Shutting down member")
-		ctxChild, cancel := context.WithTimeout(ctx, shutdownTimeout)
+		ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 		defer cancel()
 		if err := c.ShutdownV2(ctxChild, removeFromCluster, true); err != nil {
 			// Shutdown failed. Let's check if we're already done

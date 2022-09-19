@@ -158,10 +158,9 @@ type actionFactory func(action api.Action, actionCtx ActionContext) Action
 var (
 	definedActions     = map[api.ActionType]actionFactory{}
 	definedActionsLock sync.Mutex
-	actionTimeouts     = api.ActionTimeouts{}
 )
 
-func registerAction(t api.ActionType, f actionFactory, timeout time.Duration) {
+func registerAction(t api.ActionType, f actionFactory) {
 	definedActionsLock.Lock()
 	defer definedActionsLock.Unlock()
 
@@ -171,7 +170,6 @@ func registerAction(t api.ActionType, f actionFactory, timeout time.Duration) {
 	}
 
 	definedActions[t] = f
-	actionTimeouts[t] = api.NewTimeout(timeout)
 }
 
 func getActionFactory(t api.ActionType) (actionFactory, bool) {

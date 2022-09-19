@@ -23,6 +23,8 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type OperatorClient interface {
 	GetVersion(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Version, error)
+	GetLogLevel(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*LogLevelConfig, error)
+	SetLogLevel(ctx context.Context, in *LogLevelConfig, opts ...grpc.CallOption) (*Empty, error)
 }
 
 type operatorClient struct {
@@ -42,11 +44,31 @@ func (c *operatorClient) GetVersion(ctx context.Context, in *Empty, opts ...grpc
 	return out, nil
 }
 
+func (c *operatorClient) GetLogLevel(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*LogLevelConfig, error) {
+	out := new(LogLevelConfig)
+	err := c.cc.Invoke(ctx, "/server.Operator/GetLogLevel", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *operatorClient) SetLogLevel(ctx context.Context, in *LogLevelConfig, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, "/server.Operator/SetLogLevel", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // OperatorServer is the server API for Operator service.
 // All implementations must embed UnimplementedOperatorServer
 // for forward compatibility
 type OperatorServer interface {
 	GetVersion(context.Context, *Empty) (*Version, error)
+	GetLogLevel(context.Context, *Empty) (*LogLevelConfig, error)
+	SetLogLevel(context.Context, *LogLevelConfig) (*Empty, error)
 	mustEmbedUnimplementedOperatorServer()
 }
 
@@ -56,6 +78,12 @@ type UnimplementedOperatorServer struct {
 
 func (UnimplementedOperatorServer) GetVersion(context.Context, *Empty) (*Version, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetVersion not implemented")
+}
+func (UnimplementedOperatorServer) GetLogLevel(context.Context, *Empty) (*LogLevelConfig, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLogLevel not implemented")
+}
+func (UnimplementedOperatorServer) SetLogLevel(context.Context, *LogLevelConfig) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetLogLevel not implemented")
 }
 func (UnimplementedOperatorServer) mustEmbedUnimplementedOperatorServer() {}
 
@@ -88,6 +116,42 @@ func _Operator_GetVersion_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Operator_GetLogLevel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OperatorServer).GetLogLevel(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/server.Operator/GetLogLevel",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OperatorServer).GetLogLevel(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Operator_SetLogLevel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LogLevelConfig)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OperatorServer).SetLogLevel(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/server.Operator/SetLogLevel",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OperatorServer).SetLogLevel(ctx, req.(*LogLevelConfig))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Operator_ServiceDesc is the grpc.ServiceDesc for Operator service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -98,6 +162,14 @@ var Operator_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetVersion",
 			Handler:    _Operator_GetVersion_Handler,
+		},
+		{
+			MethodName: "GetLogLevel",
+			Handler:    _Operator_GetLogLevel_Handler,
+		},
+		{
+			MethodName: "SetLogLevel",
+			Handler:    _Operator_SetLogLevel_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

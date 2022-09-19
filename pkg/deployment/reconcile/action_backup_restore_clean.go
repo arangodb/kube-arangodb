@@ -26,10 +26,6 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
 
-func init() {
-	registerAction(api.ActionTypeBackupRestoreClean, newBackupRestoreCleanAction, backupRestoreTimeout)
-}
-
 func newBackupRestoreCleanAction(action api.Action, actionCtx ActionContext) Action {
 	a := &actionBackupRestoreClean{}
 

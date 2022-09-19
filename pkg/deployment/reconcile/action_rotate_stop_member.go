@@ -27,10 +27,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func init() {
-	registerAction(api.ActionTypeRotateStopMember, newRotateStopMemberAction, rotateMemberTimeout)
-}
-
 // newRotateStopMemberAction creates a new Action that implements the given
 // planned RotateStopMember action.
 func newRotateStopMemberAction(action api.Action, actionCtx ActionContext) Action {

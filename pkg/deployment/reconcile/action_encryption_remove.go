@@ -34,25 +34,21 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
-func init() {
-	registerAction(api.ActionTypeEncryptionKeyRemove, newEncryptionKeyRemove, defaultTimeout)
-}
-
-func newEncryptionKeyRemove(action api.Action, actionCtx ActionContext) Action {
-	a := &encryptionKeyRemoveAction{}
+func newEncryptionKeyRemoveAction(action api.Action, actionCtx ActionContext) Action {
+	a := &actionEncryptionKeyRemove{}
 
 	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
 
-type encryptionKeyRemoveAction struct {
+type actionEncryptionKeyRemove struct {
 	actionImpl
 
 	actionEmptyCheckProgress
 }
 
-func (a *encryptionKeyRemoveAction) Start(ctx context.Context) (bool, error) {
+func (a *actionEncryptionKeyRemove) Start(ctx context.Context) (bool, error) {
 	if err := ensureEncryptionSupport(a.actionCtx); err != nil {
 		a.log.Err(err).Error("Action not supported")
 		return true, nil

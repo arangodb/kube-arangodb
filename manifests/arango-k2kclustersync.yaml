@@ -7,7 +7,7 @@ metadata:
   namespace: default
   labels:
       app.kubernetes.io/name: kube-arangodb
-      helm.sh/chart: kube-arangodb-1.2.15
+      helm.sh/chart: kube-arangodb-1.2.16
       app.kubernetes.io/managed-by: Tiller
       app.kubernetes.io/instance: k2kclustersync
       release: k2kclustersync
@@ -19,7 +19,7 @@ metadata:
     name: arango-k2kclustersync-operator-rbac-crd
     labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.2.15
+        helm.sh/chart: kube-arangodb-1.2.16
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: k2kclustersync
         release: k2kclustersync
@@ -45,7 +45,7 @@ metadata:
     name: arango-k2kclustersync-operator-rbac-k2kclustersync
     labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.2.15
+        helm.sh/chart: kube-arangodb-1.2.16
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: k2kclustersync
         release: k2kclustersync
@@ -62,7 +62,7 @@ metadata:
     name: arango-k2kclustersync-operator-rbac-crd
     labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.2.15
+        helm.sh/chart: kube-arangodb-1.2.16
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: k2kclustersync
         release: k2kclustersync
@@ -82,7 +82,7 @@ metadata:
     name: arango-k2kclustersync-operator-rbac-k2kclustersync
     labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.2.15
+        helm.sh/chart: kube-arangodb-1.2.16
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: k2kclustersync
         release: k2kclustersync
@@ -104,7 +104,7 @@ metadata:
     namespace: default
     labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.2.15
+        helm.sh/chart: kube-arangodb-1.2.16
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: k2kclustersync
         release: k2kclustersync
@@ -134,7 +134,7 @@ metadata:
     namespace: default
     labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.2.15
+        helm.sh/chart: kube-arangodb-1.2.16
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: k2kclustersync
         release: k2kclustersync
@@ -156,7 +156,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.15
+    helm.sh/chart: kube-arangodb-1.2.16
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: k2kclustersync
     release: k2kclustersync
@@ -166,6 +166,14 @@ spec:
       port: 8528
       protocol: TCP
       targetPort: 8528
+    - name: http-api
+      port: 8628
+      protocol: TCP
+      targetPort: 8628
+    - name: grpc-api
+      port: 8728
+      protocol: TCP
+      targetPort: 8728
   selector:
     app.kubernetes.io/name: kube-arangodb
     app.kubernetes.io/managed-by: Tiller
@@ -183,7 +191,7 @@ metadata:
     namespace: default
     labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.2.15
+        helm.sh/chart: kube-arangodb-1.2.16
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: k2kclustersync
         release: k2kclustersync
@@ -202,7 +210,7 @@ spec:
         metadata:
             labels:
                 app.kubernetes.io/name: kube-arangodb
-                helm.sh/chart: kube-arangodb-1.2.15
+                helm.sh/chart: kube-arangodb-1.2.16
                 app.kubernetes.io/managed-by: Tiller
                 app.kubernetes.io/instance: k2kclustersync
                 release: k2kclustersync
@@ -241,7 +249,7 @@ spec:
             containers:
                 - name: operator
                   imagePullPolicy: Always
-                  image: arangodb/kube-arangodb:1.2.15
+                  image: arangodb/kube-arangodb:1.2.16
                   args:
                     - --scope=legacy
 

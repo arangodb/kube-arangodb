@@ -26,13 +26,14 @@ import (
 	"github.com/gin-gonic/gin"
 	prometheus "github.com/prometheus/client_golang/prometheus/promhttp"
 
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 	"github.com/arangodb/kube-arangodb/pkg/util/probe"
 	"github.com/arangodb/kube-arangodb/pkg/version"
 )
 
-func buildHTTPHandler(cfg ServerConfig, auth *authorization) (http.Handler, error) {
+func buildHTTPHandler(s *Server, cfg ServerConfig, auth *authorization) (http.Handler, error) {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 	r.Use(gin.Recovery())
@@ -61,6 +62,8 @@ func buildHTTPHandler(cfg ServerConfig, auth *authorization) (http.Handler, erro
 	r.GET("/ready", gin.WrapF(handleGetReady(readyProbes...)))
 
 	r.GET("/metrics", auth.ensureHTTPAuth, gin.WrapH(prometheus.Handler()))
+	r.GET("/log/level", auth.ensureHTTPAuth, s.handleGetLogLevel)
+	r.POST("/log/level", auth.ensureHTTPAuth, s.handlePostLogLevel)
 
 	return r, nil
 }
@@ -76,4 +79,44 @@ func handleGetReady(probes ...*probe.ReadyProbe) func(w http.ResponseWriter, r *
 
 		w.WriteHeader(http.StatusOK)
 	}
+}
+
+func (s *Server) handleGetLogLevel(c *gin.Context) {
+	logLevels := s.getLogLevelsByTopics()
+	topics := make(map[string]string, len(logLevels))
+	for topic, level := range logLevels {
+		topics[topic] = level.String()
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"topics": topics,
+	})
+}
+
+func (s *Server) handlePostLogLevel(c *gin.Context) {
+	var req = struct {
+		Topics map[string]string `json:"topics"`
+	}{}
+
+	err := c.BindJSON(&req)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"msg": err.Error(),
+		})
+		return
+	}
+
+	logLevels := make(map[string]logging.Level, len(req.Topics))
+	for topic, levelStr := range req.Topics {
+		l, err := logging.ParseLogLevel(levelStr)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+				"msg": err.Error(),
+			})
+			return
+		}
+		logLevels[topic] = l
+	}
+
+	s.setLogLevelsByTopics(logLevels)
+	c.JSON(http.StatusOK, gin.H{})
 }

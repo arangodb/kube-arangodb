@@ -34,10 +34,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
-func init() {
-	registerAction(api.ActionTypeBootstrapSetPassword, newBootstrapSetPasswordAction, defaultTimeout)
-}
-
 func newBootstrapSetPasswordAction(action api.Action, actionCtx ActionContext) Action {
 	a := &actionBootstrapSetPassword{}
 

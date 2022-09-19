@@ -281,7 +281,7 @@ dashboard/assets.go:
 		-v $(DASHBOARDDIR)/public:/usr/code/public:ro \
 		-v $(DASHBOARDDIR)/src:/usr/code/src:ro \
 		$(DASHBOARDBUILDIMAGE)
-	$(GOPATH)/bin/go-assets-builder -s /dashboard/build/ -o dashboard/assets.go -p dashboard dashboard/build
+	$(GOASSETSBUILDER) -s /dashboard/build/ -o dashboard/assets.go -p dashboard dashboard/build
 
 .PHONY: bin bin-all
 bin: $(BIN)

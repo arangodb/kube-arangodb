@@ -21,6 +21,6 @@
 
 package reconcile
 
-type topologyMemberAssignment struct {
+type actionTopologyMemberAssignment struct {
 	actionEmpty
 }

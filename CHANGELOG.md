@@ -1,9 +1,18 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Feature) Add new field to DeploymentReplicationStatus with details on DC2DC sync status
+- (Feature) Early connections support
+- (Bugfix) Fix and document action timeouts
+
+- (Feature) Propagate sidecars' ports to a member's service
+
+## [1.2.16](https://github.com/arangodb/kube-arangodb/tree/1.2.16) (2022-09-14)
 - (Feature) Add ArangoDeployment ServerGroupStatus
 - (Feature) (EE) Ordered Member IDs
 - (Refactor) Deprecate ForeachServerGroup, ForeachServerInGroups and ForServerGroup functions and refactor code accordingly
+- (Feature) Add new GRPC and HTTP API
+- (Feature) Add new API endpoints to allow getting and setting operator logging level
 - (Bugfix) Memory leaks due to incorrect time.After function usage
 - (Feature) Add startup probe for coordinators
 - (Feature) Use only connections for healthy members
@@ -22,8 +31,9 @@
 - (Bugfix) Fix ClusterScaling integration
 - (Feature) Sensitive information protection
 - (Bugfix) Propagate SecurityContext to the ID Containers
-- (Feature) Propagate sidecars' ports to a member's service
-
+- (Bugfix) Fix for enabling all features
+- (Feature) Propagate feature and predefined env variables to members
+ 
 ## [1.2.15](https://github.com/arangodb/kube-arangodb/tree/1.2.15) (2022-07-20)
 - (Bugfix) Ensure pod names not too long
 - (Refactor) Use cached member's clients
@@ -68,7 +78,6 @@
 - (Bugfix) Infinite loop fix in ArangoD AsyncClient
 - (Bugfix) Add Panic Handler
 - (Bugfix) Unify yaml packages
-- (Feature) Add new GRPC and HTTP API
 
 ## [1.2.13](https://github.com/arangodb/kube-arangodb/tree/1.2.13) (2022-06-07)
 - (Bugfix) Fix arangosync members state inspection

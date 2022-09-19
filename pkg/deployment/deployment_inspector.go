@@ -114,7 +114,21 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 
 		// Ensure that status is up to date
 		if !d.currentObjectStatus.Equal(updated.Status) {
+			d.metrics.Errors.StatusRestores++
 			if err := d.updateCRStatus(ctxReconciliation, *d.currentObjectStatus); err != nil {
+				d.log.Err(err).Error("Unable to refresh status")
+				return minInspectionInterval // Retry ASAP
+			}
+		}
+
+		// Ensure that fields are recovered
+		currentStatus := d.GetStatus()
+		if updated, err := RecoverStatus(&currentStatus, RecoverPodDetails); err != nil {
+			d.log.Err(err).Error("Unable to recover status")
+			return minInspectionInterval // Retry ASAP
+		} else if updated {
+			d.metrics.Errors.StatusRestores++
+			if err := d.updateCRStatus(ctxReconciliation, currentStatus); err != nil {
 				d.log.Err(err).Error("Unable to refresh status")
 				return minInspectionInterval // Retry ASAP
 			}

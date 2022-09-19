@@ -24,18 +24,14 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
 
-func init() {
-	registerAction(api.ActionTypeMemberRIDUpdate, newMemberRIDUpdate, defaultTimeout)
-}
-
-func newMemberRIDUpdate(action api.Action, actionCtx ActionContext) Action {
-	a := &memberRIDUpdateAction{}
+func newMemberRIDUpdateAction(action api.Action, actionCtx ActionContext) Action {
+	a := &actionMemberRIDUpdate{}
 
 	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
 
-type memberRIDUpdateAction struct {
+type actionMemberRIDUpdate struct {
 	actionEmpty
 }

@@ -29,23 +29,19 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 
-func init() {
-	registerAction(api.ActionTypeJWTRefresh, newJWTRefresh, defaultTimeout)
-}
-
-func newJWTRefresh(action api.Action, actionCtx ActionContext) Action {
-	a := &jwtRefreshAction{}
+func newJWTRefreshAction(action api.Action, actionCtx ActionContext) Action {
+	a := &actionJWTRefresh{}
 
 	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
 
-type jwtRefreshAction struct {
+type actionJWTRefresh struct {
 	actionImpl
 }
 
-func (a *jwtRefreshAction) CheckProgress(ctx context.Context) (bool, bool, error) {
+func (a *actionJWTRefresh) CheckProgress(ctx context.Context) (bool, bool, error) {
 	if folder, err := ensureJWTFolderSupport(a.actionCtx.GetSpec(), a.actionCtx.GetStatus()); err != nil || !folder {
 		return true, false, nil
 	}
@@ -73,7 +69,7 @@ func (a *jwtRefreshAction) CheckProgress(ctx context.Context) (bool, bool, error
 	return true, false, nil
 }
 
-func (a *jwtRefreshAction) Start(ctx context.Context) (bool, error) {
+func (a *actionJWTRefresh) Start(ctx context.Context) (bool, error) {
 	ready, _, err := a.CheckProgress(ctx)
 	return ready, err
 }

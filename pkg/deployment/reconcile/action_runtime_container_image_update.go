@@ -33,11 +33,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
-func init() {
-	registerAction(api.ActionTypeRuntimeContainerImageUpdate, runtimeContainerImageUpdate, defaultTimeout)
-}
-
-func runtimeContainerImageUpdate(action api.Action, actionCtx ActionContext) Action {
+func newRuntimeContainerImageUpdateAction(action api.Action, actionCtx ActionContext) Action {
 	a := &actionRuntimeContainerImageUpdate{}
 
 	a.actionImpl = newBaseActionImplDefRef(action, actionCtx)
