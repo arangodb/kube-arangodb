@@ -77,6 +77,9 @@ func (dr *DeploymentReplication) createSyncMasterClient(epSpec api.EndpointSpec)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
+		if err = kf.Validate(); err != nil {
+			return nil, errors.WithStack(err)
+		}
 		tlsAuth.TLSClientAuthentication = tasks.TLSClientAuthentication{
 			ClientCertificate: kf.EncodeCertificates(),
 			ClientKey:         kf.EncodePrivateKey(),
@@ -134,6 +137,9 @@ func (dr *DeploymentReplication) createArangoSyncTLSAuthentication(spec api.Depl
 	}
 	kf, err := certificates.NewKeyfile(keyFileContent)
 	if err != nil {
+		return client.TLSAuthentication{}, errors.WithStack(err)
+	}
+	if err = kf.Validate(); err != nil {
 		return client.TLSAuthentication{}, errors.WithStack(err)
 	}
 
