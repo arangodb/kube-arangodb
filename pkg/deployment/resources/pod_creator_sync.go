@@ -151,7 +151,7 @@ func (a *ArangoSyncContainer) GetImage() string {
 	return a.imageInfo.Image
 }
 
-func (a *ArangoSyncContainer) GetEnvs() []core.EnvVar {
+func (a *ArangoSyncContainer) GetEnvs() ([]core.EnvVar, []core.EnvFromSource) {
 	envs := NewEnvBuilder()
 
 	if a.spec.Sync.Monitoring.GetTokenSecretName() != "" {
@@ -180,7 +180,7 @@ func (a *ArangoSyncContainer) GetEnvs() []core.EnvVar {
 		}
 	}
 
-	return envs.GetEnvList()
+	return envs.GetEnvList(), nil
 }
 
 func (a *ArangoSyncContainer) GetVolumeMounts() []core.VolumeMount {
