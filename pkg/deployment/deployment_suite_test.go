@@ -22,7 +22,6 @@ package deployment
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
@@ -62,7 +61,8 @@ const (
 	testNamespace                 = "default"
 	testDeploymentName            = "test"
 	testVersion                   = "3.7.0"
-	testImage                     = "arangodb/arangodb:" + testVersion
+	testImagePrefix               = "arangodb/arangodb:"
+	testImage                     = testImagePrefix + testVersion
 	testCASecretName              = "testCA"
 	testJWTSecretName             = "testJWT"
 	testExporterToken             = "testExporterToken"
@@ -72,13 +72,13 @@ const (
 	testServiceAccountName        = "testServiceAccountName"
 	testPriorityClassName         = "testPriority"
 	testImageOperator             = "arangodb/kube-arangodb:0.3.16"
-
-	testYes = "yes"
+	testProbeDBServerRetires      = 4320 // 6 hours divide by 5.
+	testYes                       = "yes"
 )
 
 type testCaseFeatures struct {
-	TLSSNI, TLSRotation, JWTRotation, EncryptionRotation bool
-	Graceful                                             *bool
+	TLSSNI, TLSRotation, JWTRotation, EncryptionRotation, Version310 bool
+	Graceful                                                         *bool
 }
 
 type testCaseStruct struct {
@@ -93,6 +93,10 @@ type testCaseStruct struct {
 	ExpectedPod      core.Pod
 	Features         testCaseFeatures
 	DropInit         bool
+}
+
+func createTestImageForVersion(version string) string {
+	return testImagePrefix + version
 }
 
 func createTestTLSVolume(serverGroupString, ID string) core.Volume {
@@ -138,11 +142,12 @@ func createTestReadinessSimpleProbe(mode string, secure bool, authorization stri
 }
 
 func createTestLivenessProbe(mode string, secure bool, authorization string, port int) *core.Probe {
-	return getProbeCreator(mode)(secure, authorization, "/_api/version", port).Create()
+	return getProbeCreator(mode)(secure, authorization, "/_api/version", port, api.ProbeTypeLiveness).Create()
 }
 
 func createTestReadinessProbe(mode string, secure bool, authorization string) *core.Probe {
-	p := getProbeCreator(mode)(secure, authorization, "/_admin/server/availability", shared.ArangoPort).Create()
+	p := getProbeCreator(mode)(secure, authorization, "/_admin/server/availability", shared.ArangoPort,
+		api.ProbeTypeReadiness).Create()
 
 	p.InitialDelaySeconds = 2
 	p.PeriodSeconds = 2
@@ -151,7 +156,7 @@ func createTestReadinessProbe(mode string, secure bool, authorization string) *c
 }
 
 func createTestStartupProbe(mode string, secure bool, authorization string, failureThreshold int32) *core.Probe {
-	p := getProbeCreator(mode)(secure, authorization, "/_api/version", shared.ArangoPort).Create()
+	p := getProbeCreator(mode)(secure, authorization, "/_api/version", shared.ArangoPort, api.ProbeTypeStartUp).Create()
 
 	p.InitialDelaySeconds = 1
 	p.PeriodSeconds = 5
@@ -160,7 +165,7 @@ func createTestStartupProbe(mode string, secure bool, authorization string, fail
 	return p
 }
 
-type probeCreator func(secure bool, authorization, endpoint string, port int) resources.Probe
+type probeCreator func(secure bool, authorization, endpoint string, port int, probe api.ProbeType) resources.Probe
 
 const (
 	cmdProbe  = "cmdProbe"
@@ -177,24 +182,24 @@ func getProbeCreator(t string) probeCreator {
 }
 
 func getHTTPProbeCreator() probeCreator {
-	return func(secure bool, authorization, endpoint string, port int) resources.Probe {
+	return func(secure bool, authorization, endpoint string, port int, _ api.ProbeType) resources.Probe {
 		return createHTTPTestProbe(secure, authorization, endpoint, port)
 	}
 }
 
 func getCMDProbeCreator() probeCreator {
-	return func(secure bool, authorization, endpoint string, port int) resources.Probe {
-		return createCMDTestProbe(secure, authorization != "", endpoint)
+	return func(secure bool, authorization, endpoint string, port int, probeType api.ProbeType) resources.Probe {
+		return createCMDTestProbe(secure, authorization != "", probeType)
 	}
 }
 
-func createCMDTestProbe(secure, authorization bool, endpoint string) resources.Probe {
+func createCMDTestProbe(secure, authorization bool, probeType api.ProbeType) resources.Probe {
 	bin, _ := os.Executable()
 	args := []string{
 		filepath.Join(k8sutil.LifecycleVolumeMountDir, filepath.Base(bin)),
 		"lifecycle",
 		"probe",
-		fmt.Sprintf("--endpoint=%s", endpoint),
+		string(probeType),
 	}
 
 	if secure {
@@ -270,7 +275,8 @@ func createTestCommandForDBServer(name string, tls, auth, encryptionRocksDB bool
 		args.Merge(mod())
 	}
 
-	return append(command, args.Unique().AsArgs()...)
+	sorted := args.Sort().Unique().AsArgs()
+	return append(command, sorted...)
 }
 
 func createTestCommandForCoordinator(name string, tls, auth bool, mods ...func() k8sutil.OptionPairs) []string {
@@ -526,11 +532,12 @@ func createTestPorts() []core.ContainerPort {
 }
 
 func createTestImagesWithVersion(enterprise bool, version driver.Version) api.ImageInfoList {
+	i := createTestImageForVersion(string(version))
 	return api.ImageInfoList{
 		{
-			Image:           testImage,
+			Image:           i,
 			ArangoDBVersion: version,
-			ImageID:         testImage,
+			ImageID:         i,
 			Enterprise:      enterprise,
 		},
 	}
@@ -596,7 +603,7 @@ func (testCase *testCaseStruct) createTestPodData(deployment *Deployment, group 
 		var auth string
 		var retries int32 = 720 // one hour divide by 5.
 		if group == api.ServerGroupDBServers {
-			retries = 4320 // 6 hours divide by 5.
+			retries = testProbeDBServerRetires
 		}
 		if deployment.GetSpec().IsAuthenticated() {
 			auth, _ = createTestToken(deployment, testCase, []string{"/_api/version"})

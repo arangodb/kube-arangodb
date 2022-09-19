@@ -52,7 +52,7 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 							firstAgentStatus,
 						},
 					},
-					Images: createTestImagesWithVersion(false, "3.7.0"),
+					Images: createTestImagesWithVersion(false, testVersion),
 				}
 
 				testCase.createTestPodData(deployment, api.ServerGroupAgents, firstAgentStatus)
@@ -117,7 +117,7 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 							firstDBServerStatus,
 						},
 					},
-					Images: createTestImagesWithVersion(false, "3.7.0"),
+					Images: createTestImagesWithVersion(false, testVersion),
 				}
 
 				testCase.createTestPodData(deployment, api.ServerGroupDBServers, firstDBServerStatus)
@@ -200,7 +200,7 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 							firstAgentStatus,
 						},
 					},
-					Images: createTestImagesWithVersion(true, "3.7.0"),
+					Images: createTestImagesWithVersion(true, testVersion),
 				}
 
 				testCase.createTestPodData(deployment, api.ServerGroupAgents, firstAgentStatus)
@@ -263,7 +263,7 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 							firstAgentStatus,
 						},
 					},
-					Images: createTestImagesWithVersion(true, "3.7.0"),
+					Images: createTestImagesWithVersion(true, testVersion),
 				}
 
 				testCase.createTestPodData(deployment, api.ServerGroupAgents, firstAgentStatus)

@@ -112,6 +112,7 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 		// Set features
 		{
 			*features.EncryptionRotation().EnabledPointer() = testCase.Features.EncryptionRotation
+			*features.Version310().EnabledPointer() = testCase.Features.Version310
 			require.Equal(t, testCase.Features.EncryptionRotation, *features.EncryptionRotation().EnabledPointer())
 			*features.JWTRotation().EnabledPointer() = testCase.Features.JWTRotation
 			*features.TLSSNI().EnabledPointer() = testCase.Features.TLSSNI
