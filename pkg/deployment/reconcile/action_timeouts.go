@@ -21,33 +21,15 @@
 package reconcile
 
 import (
-	"time"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
 
-func GetActionTimeout(spec api.DeploymentSpec, t api.ActionType) time.Duration {
-	if d, ok := getActionTimeout(spec, t); ok {
-		return d
-	}
-
-	if d, ok := getActionTimeout(spec, "default"); ok {
-		return d
-	}
-
-	return defaultTimeout
-}
-
-func getActionTimeout(spec api.DeploymentSpec, t api.ActionType) (time.Duration, bool) {
+func GetActionTimeout(spec api.DeploymentSpec, t api.ActionType) api.Timeout {
 	if timeouts := spec.Timeouts; timeouts != nil {
 		if d, ok := timeouts.Actions[t]; ok {
-			return d.Duration, true
+			return d
 		}
 	}
 
-	if d, ok := actionTimeouts[t]; ok {
-		return d.Duration, true
-	}
-
-	return 0, false
+	return api.Timeout{Duration: api.ActionDefaultTimeout(t)}
 }

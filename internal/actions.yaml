@@ -1,0 +1,224 @@
+---
+
+default_timeout: 10m
+
+actions:
+  Idle:
+    description: Define idle operation in case if preconditions are not meet
+  AddMember:
+    description: Adds new member to the Member list
+    timeout: 10m
+  MarkToRemoveMember:
+    description: Marks member to be removed. Used when member Pod is annotated with replace annotation
+  RemoveMember:
+    description: Removes member from the Cluster and Status
+    timeout: 15m
+  RecreateMember:
+    description: Recreate member with same ID and Data
+    timeout: 15m
+  CleanOutMember:
+    description: Run the CleanOut job on member
+    timeout: 48h
+  ShutdownMember:
+    description: Sends Shutdown requests and waits for container to be stopped
+    timeout: 30m
+    startupFailureGracePeriod: 1m
+  ResignLeadership:
+    description: Run the ResignLeadership job on DBServer
+    timeout: 30m
+  KillMemberPod:
+    description: Execute Delete on Pod 9put pod in Terminating state)
+  RotateMember:
+    description: Waits for Pod restart and recreation
+    timeout: 15m
+    startupFailureGracePeriod: 1m
+  RotateStartMember:
+    description: Start member rotation. After this action member is down
+    timeout: 15m
+    startupFailureGracePeriod: 1m
+  RotateStopMember:
+    description: Finalize member rotation. After this action member is started back
+    timeout: 15m
+  UpgradeMember:
+    description: Run the Upgrade procedure on member
+    timeout: 6h
+  WaitForMemberUp:
+    description: Wait for member to be responsive
+    timeout: 30m
+  WaitForMemberInSync:
+    description: Wait for member to be in sync. In case of DBServer waits for shards. In case of Agents to catch-up on Agency index
+    timeout: 30m
+  RenewTLSCertificate:
+    enterprise: true
+    description: Recreate Server TLS Certificate secret
+    timeout: 30m
+  RenewTLSCACertificate:
+    enterprise: true
+    description: Recreate Managed CA secret
+    timeout: 30m
+  AppendTLSCACertificate:
+    enterprise: true
+    description: Append Certificate into CA TrustStore
+    timeout: 30m
+  CleanTLSCACertificate:
+    enterprise: true
+    description: Remove Certificate from CA TrustStore
+    timeout: 30m
+  CleanTLSKeyfileCertificate:
+    enterprise: true
+    description: Remove old TLS certificate from server
+    timeout: 30m
+  RefreshTLSKeyfileCertificate:
+    enterprise: true
+    description: Recreate Server TLS Certificate secret
+    timeout: 30m
+  TLSKeyStatusUpdate:
+    enterprise: true
+    description: Update Status of TLS propagation process
+  TLSPropagated:
+    enterprise: true
+    description: Update TLS propagation condition
+  UpdateTLSSNI:
+    enterprise: true
+    description: Update certificate in SNI
+    timeout: 10m
+  SetCurrentImage:
+    description: Update deployment current image after image discovery
+    timeout: 6h
+  SetMemberCurrentImage:
+    description: Update Member current image
+  DisableClusterScaling:
+    description: (Deprecated) Disable Cluster Scaling integration
+  EnableClusterScaling:
+    description: (Deprecated) Enable Cluster Scaling integration
+  PVCResize:
+    description: Start the resize procedure. Updates PVC Requests field
+    timeout: 30m
+  PVCResized:
+    description: Waits for PVC resize to be completed
+    timeout: 15m
+  UpToDateUpdate:
+    description: Update UpToDate condition
+  BackupRestore:
+    enterprise: true
+    description: Restore selected Backup
+    timeout: 15m
+  BackupRestoreClean:
+    enterprise: true
+    description: Clean restore status in case of restore spec change
+    timeout: 15m
+  EncryptionKeyAdd:
+    enterprise: true
+    description: Add the encryption key to the pool
+  EncryptionKeyRemove:
+    enterprise: true
+    description: Remove the encryption key to the pool
+  EncryptionKeyRefresh:
+    enterprise: true
+    description: Refresh the encryption keys on member
+  EncryptionKeyStatusUpdate:
+    enterprise: true
+    description: Update status of encryption propagation
+  EncryptionKeyPropagated:
+    enterprise: true
+    description: Update condition of encryption propagation
+  JWTStatusUpdate:
+    enterprise: true
+    description: Update status of JWT propagation
+  JWTSetActive:
+    enterprise: true
+    description: Change active JWT key on the cluster
+  JWTAdd:
+    enterprise: true
+    description: Adds new JWT to the pool
+  JWTClean:
+    enterprise: true
+    description: Remove JWT key from the pool
+  JWTRefresh:
+    enterprise: true
+    description: Refresh current JWT secrets on the member
+  JWTPropagated:
+    enterprise: true
+    description: Update condition of JWT propagation
+  ClusterMemberCleanup:
+    description: Remove member from Cluster if it is gone already (Coordinators)
+  EnableMaintenance:
+    description: Enable ArangoDB maintenance mode
+  DisableMaintenance:
+    description: Disable ArangoDB maintenance mode
+  SetMaintenanceCondition:
+    description: Update ArangoDB maintenance condition
+  EnableMemberMaintenance:
+    enterprise: true
+    description: Enable ArangoDB DBServer maintenance mode
+  DisableMemberMaintenance:
+    enterprise: true
+    description: Disable ArangoDB DBServer maintenance mode
+  BootstrapUpdate:
+    description: Update bootstrap status
+  BootstrapSetPassword:
+    description: Change password during bootstrap procedure
+  MemberPhaseUpdate:
+    description: Change member phase
+    scopes:
+      - High
+  SetMemberCondition:
+    description: (Deprecated) Set member condition
+    scopes:
+      - High
+  SetMemberConditionV2:
+    description: Set member condition
+    scopes:
+      - High
+  SetCondition:
+    description: (Deprecated) Set deployment condition
+    scopes:
+      - High
+  SetConditionV2:
+    description: Set deployment condition
+    scopes:
+      - High
+  MemberRIDUpdate:
+    description: Update Run ID of member
+    scopes:
+      - High
+  ArangoMemberUpdatePodSpec:
+    description: Propagate Member Pod spec (requested)
+    scopes:
+      - High
+  ArangoMemberUpdatePodStatus:
+    description: Propagate Member Pod status (current)
+    scopes:
+      - High
+  LicenseSet:
+    description: Update Cluster license (3.9+)
+  RuntimeContainerImageUpdate:
+    description: Update Container Image in runtime
+  RuntimeContainerArgsLogLevelUpdate:
+    description: Change ArangoDB Member log levels in runtime
+  TopologyEnable:
+    enterprise: true
+    description: Enable TopologyAwareness
+  TopologyDisable:
+    enterprise: true
+    description: Disable TopologyAwareness
+  TopologyZonesUpdate:
+    enterprise: true
+    description: Update TopologyAwareness Zones info
+  TopologyMemberAssignment:
+    enterprise: true
+    description: Update TopologyAwareness Members assignments
+  RebalancerGenerate:
+    enterprise: true
+    description: Generates the Rebalancer plan
+  RebalancerCheck:
+    enterprise: true
+    description: Check Rebalancer job progress
+  RebalancerClean:
+    enterprise: true
+    description: Cleans Rebalancer jobs
+  ResourceSync:
+    description: Runs the Resource sync
+  TimezoneSecretSet:
+    description: Set timezone details in cluster
+    timeout: 30m

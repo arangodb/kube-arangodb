@@ -26,19 +26,15 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
 
-func init() {
-	registerAction(api.ActionTypeMarkToRemoveMember, newMarkToRemoveMemberAction, addMemberTimeout)
-}
-
 func newMarkToRemoveMemberAction(action api.Action, actionCtx ActionContext) Action {
-	a := &actionMarkToRemove{}
+	a := &actionMarkToRemoveMember{}
 
 	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
 
-type actionMarkToRemove struct {
+type actionMarkToRemoveMember struct {
 	// actionImpl implement timeout and member id functions
 	actionImpl
 
@@ -46,7 +42,7 @@ type actionMarkToRemove struct {
 	actionEmptyCheckProgress
 }
 
-func (a *actionMarkToRemove) Start(ctx context.Context) (bool, error) {
+func (a *actionMarkToRemoveMember) Start(ctx context.Context) (bool, error) {
 	if a.action.Group != api.ServerGroupDBServers && a.action.Group != api.ServerGroupAgents && a.action.Group != api.ServerGroupCoordinators {
 		return true, nil
 	}

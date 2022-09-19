@@ -28,6 +28,7 @@ import (
 )
 
 func Test_GenerateTimezones(t *testing.T) {
+	t.Skip("Generate once")
 	root := os.Getenv("ROOT")
 	require.NotEmpty(t, root)
 	require.NoError(t, RenderTimezones(root))

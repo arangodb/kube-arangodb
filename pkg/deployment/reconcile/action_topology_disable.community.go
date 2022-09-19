@@ -21,6 +21,6 @@
 
 package reconcile
 
-type topologyDisable struct {
+type actionTopologyDisable struct {
 	actionEmpty
 }

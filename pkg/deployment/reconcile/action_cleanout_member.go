@@ -31,22 +31,18 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 
-func init() {
-	registerAction(api.ActionTypeCleanOutMember, newCleanOutMemberAction, cleanoutMemberTimeout)
-}
-
 // newCleanOutMemberAction creates a new Action that implements the given
 // planned CleanOutMember action.
 func newCleanOutMemberAction(action api.Action, actionCtx ActionContext) Action {
-	a := &actionCleanoutMember{}
+	a := &actionCleanOutMember{}
 
 	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
 
-// actionCleanoutMember implements an CleanOutMemberAction.
-type actionCleanoutMember struct {
+// actionCleanOutMember implements an CleanOutMemberAction.
+type actionCleanOutMember struct {
 	// actionImpl implement timeout and member id functions
 	actionImpl
 }
@@ -54,7 +50,7 @@ type actionCleanoutMember struct {
 // Start performs the start of the action.
 // Returns true if the action is completely finished, false in case
 // the start time needs to be recorded and a ready condition needs to be checked.
-func (a *actionCleanoutMember) Start(ctx context.Context) (bool, error) {
+func (a *actionCleanOutMember) Start(ctx context.Context) (bool, error) {
 	if a.action.Group != api.ServerGroupDBServers {
 		// Proceed only on DBServers
 		return true, nil
@@ -104,7 +100,7 @@ func (a *actionCleanoutMember) Start(ctx context.Context) (bool, error) {
 
 // CheckProgress checks the progress of the action.
 // Returns: ready, abort, error.
-func (a *actionCleanoutMember) CheckProgress(ctx context.Context) (bool, bool, error) {
+func (a *actionCleanOutMember) CheckProgress(ctx context.Context) (bool, bool, error) {
 	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !ok {
 		// We wanted to remove and it is already gone. All ok

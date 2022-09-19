@@ -24,10 +24,6 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
 
-func init() {
-	registerAction(api.ActionTypeSetMaintenanceCondition, newSetMaintenanceConditionAction, addMemberTimeout)
-}
-
 func newSetMaintenanceConditionAction(action api.Action, actionCtx ActionContext) Action {
 	a := &actionSetMaintenanceCondition{}
 

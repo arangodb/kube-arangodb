@@ -31,25 +31,21 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 
-func init() {
-	registerAction(api.ActionTypeTLSKeyStatusUpdate, newTLSKeyStatusUpdate, defaultTimeout)
-}
-
-func newTLSKeyStatusUpdate(action api.Action, actionCtx ActionContext) Action {
-	a := &tlsKeyStatusUpdateAction{}
+func newTLSKeyStatusUpdateAction(action api.Action, actionCtx ActionContext) Action {
+	a := &actionTLSKeyStatusUpdate{}
 
 	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
 
-type tlsKeyStatusUpdateAction struct {
+type actionTLSKeyStatusUpdate struct {
 	actionImpl
 
 	actionEmptyCheckProgress
 }
 
-func (a *tlsKeyStatusUpdateAction) Start(ctx context.Context) (bool, error) {
+func (a *actionTLSKeyStatusUpdate) Start(ctx context.Context) (bool, error) {
 	if !a.actionCtx.GetSpec().TLS.IsSecure() {
 		return true, nil
 	}

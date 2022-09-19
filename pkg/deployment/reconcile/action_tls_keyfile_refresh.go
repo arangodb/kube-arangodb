@@ -31,23 +31,19 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
-func init() {
-	registerAction(api.ActionTypeRefreshTLSKeyfileCertificate, newRefreshTLSKeyfileCertificateAction, operationTLSCACertificateTimeout)
-}
-
 func newRefreshTLSKeyfileCertificateAction(action api.Action, actionCtx ActionContext) Action {
-	a := &refreshTLSKeyfileCertificateAction{}
+	a := &actionRefreshTLSKeyfileCertificate{}
 
 	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
 
-type refreshTLSKeyfileCertificateAction struct {
+type actionRefreshTLSKeyfileCertificate struct {
 	actionImpl
 }
 
-func (a *refreshTLSKeyfileCertificateAction) CheckProgress(ctx context.Context) (bool, bool, error) {
+func (a *actionRefreshTLSKeyfileCertificate) CheckProgress(ctx context.Context) (bool, bool, error) {
 	c, err := a.actionCtx.GetMembersState().GetMemberClient(a.action.MemberID)
 	if err != nil {
 		a.log.Err(err).Warn("Unable to get client")
@@ -85,7 +81,7 @@ func (a *refreshTLSKeyfileCertificateAction) CheckProgress(ctx context.Context) 
 	return false, false, nil
 }
 
-func (a *refreshTLSKeyfileCertificateAction) Start(ctx context.Context) (bool, error) {
+func (a *actionRefreshTLSKeyfileCertificate) Start(ctx context.Context) (bool, error) {
 	ready, _, err := a.CheckProgress(ctx)
 	return ready, err
 }

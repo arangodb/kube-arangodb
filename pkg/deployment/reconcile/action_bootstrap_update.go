@@ -26,10 +26,6 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
 
-func init() {
-	registerAction(api.ActionTypeBootstrapUpdate, newBootstrapUpdateAction, defaultTimeout)
-}
-
 func newBootstrapUpdateAction(action api.Action, actionCtx ActionContext) Action {
 	a := &actionBootstrapUpdate{}
 

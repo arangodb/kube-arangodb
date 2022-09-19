@@ -63,11 +63,41 @@ func (t *Timeouts) Get() Timeouts {
 
 type ActionTimeouts map[ActionType]Timeout
 
+const InfiniteTimeout time.Duration = 0
+
+func NewInfiniteTimeout() Timeout {
+	return NewTimeout(InfiniteTimeout)
+}
+
 func NewTimeout(timeout time.Duration) Timeout {
 	return Timeout(meta.Duration{Duration: timeout})
 }
 
 type Timeout meta.Duration
+
+func (t *Timeout) UnmarshalJSON(b []byte) error {
+	var d meta.Duration
+
+	if err := d.UnmarshalJSON(b); err != nil {
+		return err
+	}
+
+	*t = Timeout(d)
+
+	return nil
+}
+
+func (t Timeout) MarshalJSON() ([]byte, error) {
+	return meta.Duration(t).MarshalJSON()
+}
+
+func (t *Timeout) Infinite() bool {
+	if t == nil {
+		return false
+	}
+
+	return t.Duration == 0
+}
 
 func (t *Timeout) Get(d time.Duration) time.Duration {
 	if t == nil {

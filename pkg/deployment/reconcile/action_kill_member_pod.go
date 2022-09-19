@@ -32,10 +32,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func init() {
-	registerAction(api.ActionTypeKillMemberPod, newKillMemberPodAction, defaultTimeout)
-}
-
 // newKillMemberPodAction creates a new Action that implements the given
 // planned KillMemberPod action.
 func newKillMemberPodAction(action api.Action, actionCtx ActionContext) Action {

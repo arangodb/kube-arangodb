@@ -37,25 +37,21 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
-func init() {
-	registerAction(api.ActionTypeTimezoneSecretSet, newTimezoneCMSetAction, operationTLSCACertificateTimeout)
-}
-
-func newTimezoneCMSetAction(action api.Action, actionCtx ActionContext) Action {
-	a := &timezoneCMSetAction{}
+func newTimezoneSecretSetAction(action api.Action, actionCtx ActionContext) Action {
+	a := &actionTimezoneSecretSet{}
 
 	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
 
-type timezoneCMSetAction struct {
+type actionTimezoneSecretSet struct {
 	actionImpl
 
 	actionEmptyCheckProgress
 }
 
-func (a *timezoneCMSetAction) Start(ctx context.Context) (bool, error) {
+func (a *actionTimezoneSecretSet) Start(ctx context.Context) (bool, error) {
 	if !features.Timezone().Enabled() {
 		return true, nil
 	}

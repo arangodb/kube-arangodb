@@ -28,11 +28,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func init() {
-	registerAction(api.ActionTypeSetMemberCondition, setMemberCondition, defaultTimeout)
-}
-
-func setMemberCondition(action api.Action, actionCtx ActionContext) Action {
+func newSetMemberConditionAction(action api.Action, actionCtx ActionContext) Action {
 	a := &actionSetMemberCondition{}
 
 	a.actionImpl = newActionImplDefRef(action, actionCtx)

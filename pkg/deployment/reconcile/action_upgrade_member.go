@@ -27,10 +27,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func init() {
-	registerAction(api.ActionTypeUpgradeMember, newUpgradeMemberAction, upgradeMemberTimeout)
-}
-
 // newUpgradeMemberAction creates a new Action that implements the given
 // planned UpgradeMember action.
 func newUpgradeMemberAction(action api.Action, actionCtx ActionContext) Action {

@@ -27,25 +27,21 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 
-func init() {
-	registerAction(api.ActionTypeUpdateTLSSNI, newTLSSNIUpdate, tlsSNIUpdateTimeout)
-}
-
-func newTLSSNIUpdate(action api.Action, actionCtx ActionContext) Action {
-	a := &tlsSNIUpdate{}
+func newUpdateTLSSNIAction(action api.Action, actionCtx ActionContext) Action {
+	a := &actionUpdateTLSSNI{}
 
 	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
 
-type tlsSNIUpdate struct {
+type actionUpdateTLSSNI struct {
 	actionImpl
 
 	actionEmptyStart
 }
 
-func (t *tlsSNIUpdate) CheckProgress(ctx context.Context) (bool, bool, error) {
+func (t *actionUpdateTLSSNI) CheckProgress(ctx context.Context) (bool, bool, error) {
 	spec := t.actionCtx.GetSpec()
 	if !spec.TLS.IsSecure() {
 		return true, false, nil

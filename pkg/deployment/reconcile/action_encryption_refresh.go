@@ -31,28 +31,24 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 
-func init() {
-	registerAction(api.ActionTypeEncryptionKeyRefresh, newEncryptionKeyRefresh, defaultTimeout)
-}
-
-func newEncryptionKeyRefresh(action api.Action, actionCtx ActionContext) Action {
-	a := &encryptionKeyRefreshAction{}
+func newEncryptionKeyRefreshAction(action api.Action, actionCtx ActionContext) Action {
+	a := &actionEncryptionKeyRefresh{}
 
 	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
 
-type encryptionKeyRefreshAction struct {
+type actionEncryptionKeyRefresh struct {
 	actionImpl
 }
 
-func (a *encryptionKeyRefreshAction) Start(ctx context.Context) (bool, error) {
+func (a *actionEncryptionKeyRefresh) Start(ctx context.Context) (bool, error) {
 	ready, _, err := a.CheckProgress(ctx)
 	return ready, err
 }
 
-func (a *encryptionKeyRefreshAction) CheckProgress(ctx context.Context) (bool, bool, error) {
+func (a *actionEncryptionKeyRefresh) CheckProgress(ctx context.Context) (bool, bool, error) {
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 	keyFolder, err := a.actionCtx.ACS().CurrentClusterCache().Secret().V1().Read().Get(ctxChild,

@@ -28,10 +28,6 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
 
-func init() {
-	registerAction(api.ActionTypeSetConditionV2, setConditionV2, defaultTimeout)
-}
-
 const (
 	setConditionActionV2KeyTypeAdd    string = "add"
 	setConditionActionV2KeyTypeRemove string = "remove"
@@ -44,7 +40,7 @@ const (
 	setConditionActionV2KeyHash    string = "hash"
 )
 
-func setConditionV2(action api.Action, actionCtx ActionContext) Action {
+func newSetConditionV2Action(action api.Action, actionCtx ActionContext) Action {
 	a := &actionSetConditionV2{}
 
 	a.actionImpl = newActionImplDefRef(action, actionCtx)

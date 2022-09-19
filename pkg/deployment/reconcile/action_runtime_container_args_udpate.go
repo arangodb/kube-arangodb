@@ -35,27 +35,23 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 )
 
-func init() {
-	registerAction(api.ActionTypeRuntimeContainerArgsLogLevelUpdate, runtimeContainerArgsUpdate, defaultTimeout)
-}
-
-func runtimeContainerArgsUpdate(action api.Action, actionCtx ActionContext) Action {
-	a := &actionRuntimeContainerArgsUpdate{}
+func newRuntimeContainerArgsLogLevelUpdateAction(action api.Action, actionCtx ActionContext) Action {
+	a := &actionRuntimeContainerArgsLogLevelUpdate{}
 
 	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
 
-var _ ActionPost = &actionRuntimeContainerArgsUpdate{}
+var _ ActionPost = &actionRuntimeContainerArgsLogLevelUpdate{}
 
-type actionRuntimeContainerArgsUpdate struct {
+type actionRuntimeContainerArgsLogLevelUpdate struct {
 	// actionImpl implement timeout and member id functions
 	actionImpl
 }
 
 // Post updates arguments for the specific Arango member.
-func (a actionRuntimeContainerArgsUpdate) Post(ctx context.Context) error {
+func (a actionRuntimeContainerArgsLogLevelUpdate) Post(ctx context.Context) error {
 	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !ok {
 		a.log.Info("member is gone already")
@@ -118,14 +114,14 @@ func (a actionRuntimeContainerArgsUpdate) Post(ctx context.Context) error {
 	return nil
 }
 
-func (a *actionRuntimeContainerArgsUpdate) ReloadComponents() []throttle.Component {
+func (a *actionRuntimeContainerArgsLogLevelUpdate) ReloadComponents() []throttle.Component {
 	return []throttle.Component{
 		throttle.Pod,
 	}
 }
 
 // Start starts the action for changing conditions on the provided member.
-func (a actionRuntimeContainerArgsUpdate) Start(ctx context.Context) (bool, error) {
+func (a actionRuntimeContainerArgsLogLevelUpdate) Start(ctx context.Context) (bool, error) {
 	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !ok {
 		a.log.Info("member is gone already")
@@ -238,12 +234,12 @@ func validateMemberAndPod(member *api.ArangoMember, pod *core.Pod) (*core.PodTem
 }
 
 // CheckProgress returns always true because it does not have to wait for any result.
-func (a actionRuntimeContainerArgsUpdate) CheckProgress(_ context.Context) (bool, bool, error) {
+func (a actionRuntimeContainerArgsLogLevelUpdate) CheckProgress(_ context.Context) (bool, bool, error) {
 	return true, false, nil
 }
 
 // setLogLevel sets the log's levels for the specific server.
-func (a actionRuntimeContainerArgsUpdate) setLogLevel(ctx context.Context, logLevels map[string]string) error {
+func (a actionRuntimeContainerArgsLogLevelUpdate) setLogLevel(ctx context.Context, logLevels map[string]string) error {
 	if len(logLevels) == 0 {
 		return nil
 	}
