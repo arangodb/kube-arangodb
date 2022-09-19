@@ -18,8 +18,14 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1
+package features
 
 const (
-	ConfigMapFeaturesEnabled = "features-enabled"
+	DefaultFeaturesConfigMap = "arangodb-operator-feature-config-map"
 )
+
+var configMapName = DefaultFeaturesConfigMap
+
+func ConfigMapName() string {
+	return configMapName
+}

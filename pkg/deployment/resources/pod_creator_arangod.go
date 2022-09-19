@@ -244,7 +244,7 @@ func (a *ArangoDContainer) GetEnvs() ([]core.EnvVar, []core.EnvFromSource) {
 		{
 			ConfigMapRef: &core.ConfigMapEnvSource{
 				LocalObjectReference: core.LocalObjectReference{
-					Name: api.ConfigMapFeaturesEnabled,
+					Name: features.ConfigMapName(),
 				},
 				// Optional in case if operator could not create it when process started.
 				Optional: util.NewBool(true),
