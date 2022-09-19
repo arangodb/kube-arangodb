@@ -22,6 +22,7 @@ package replication
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"sync/atomic"
 	"time"
@@ -169,7 +170,7 @@ func (dr *DeploymentReplication) run() {
 			switch event.Type {
 			case eventArangoDeploymentReplicationUpdated:
 				if err := dr.handleArangoDeploymentReplicationUpdatedEvent(event); err != nil {
-					dr.failOnError(err, "Failed to handle deployment replication update")
+					dr.reportDeploymentReplicationErr(err, "Failed to handle deployment replication update")
 					return
 				}
 			default:
@@ -321,17 +322,16 @@ func (dr *DeploymentReplication) updateCRSpec(newSpec api.DeploymentReplicationS
 	}
 }
 
-// failOnError reports the given error and sets the deployment replication status to failed.
-func (dr *DeploymentReplication) failOnError(err error, msg string) {
+// reportDeploymentReplicationErr reports the given error and sets the deployment replication status to failed.
+func (dr *DeploymentReplication) reportDeploymentReplicationErr(err error, msg string) {
 	dr.log.Err(err).Error(msg)
-	dr.status.Reason = err.Error()
+	dr.status.Reason = fmt.Sprintf("%s: %s", msg, err.Error())
 	dr.reportFailedStatus()
 }
 
 // reportFailedStatus sets the status of the deployment replication to Failed and keeps trying to forward
 // that to the API server.
 func (dr *DeploymentReplication) reportFailedStatus() {
-	dr.log.Info("local storage failed. Reporting failed reason...")
 	repls := dr.deps.Client.Arango().ReplicationV1().ArangoDeploymentReplications(dr.apiObject.GetNamespace())
 
 	op := func() error {

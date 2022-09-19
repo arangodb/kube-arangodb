@@ -22,6 +22,8 @@ package replication
 
 import (
 	"context"
+	"fmt"
+	"strconv"
 	"time"
 
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -119,7 +121,7 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 			dr.log.Debug("Destination deployment is gone. Source cleanup enabled")
 			cleanupSource = true
 		} else if err != nil {
-			dr.log.Err(err).Warn("Failed to get destinaton deployment")
+			dr.log.Err(err).Warn("Failed to get destination deployment")
 			return errors.WithStack(err)
 		} else if depl.GetDeletionTimestamp() != nil {
 			dr.log.Debug("Destination deployment is being deleted. Source cleanup enabled")
@@ -141,7 +143,7 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 		// Destination still exists, stop/abort sync
 		destClient, err := dr.createSyncMasterClient(p.Spec.Destination)
 		if err != nil {
-			dr.log.Err(err).Warn("Failed to create destination client")
+			dr.reportDeploymentReplicationErr(err, "Failed to create destination syncmaster client")
 			return errors.WithStack(err)
 		}
 		req := client.CancelSynchronizationRequest{
@@ -154,6 +156,7 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 		if err != nil && !client.IsPreconditionFailed(err) {
 			dr.log.Err(err).Bool("abort", abort).Warn("Failed to stop synchronization")
 			dr.status.CancelFailures++
+			dr.status.Reason = fmt.Sprintf("Failed to stop synchronization: %s. Abort: %s", err.Error(), strconv.FormatBool(abort))
 			if err := dr.updateCRStatus(); err != nil {
 				dr.log.Err(err).Warn("Failed to update status to reflect cancel-failures increment")
 			}

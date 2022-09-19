@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Feature) Add proper handling of errors when applying ArangoDeploymentReplication
 - (Feature) Define Actions PlaceHolder
 
 ## [1.2.17](https://github.com/arangodb/kube-arangodb/tree/1.2.17) (2022-09-22)
