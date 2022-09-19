@@ -12,7 +12,7 @@ read the [tutorial](https://www.arangodb.com/docs/stable/tutorials-kubernetes.ht
 
 The ArangoDB Kubernetes Operator is Production ready.
 
-[Documentation](./docs/README.md)
+[Documentation](https://www.arangodb.com/docs/stable/deployment-kubernetes.html)
 
 ### Production readiness state
 
