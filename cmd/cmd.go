@@ -39,6 +39,7 @@ import (
 	flag "github.com/spf13/pflag"
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
+	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
@@ -555,7 +556,7 @@ func ensureFeaturesConfigMap(ctx context.Context, client typedCore.ConfigMapInte
 	nctx, c := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer c()
 	if cm, err := client.Get(nctx, features.ConfigMapName(), meta.GetOptions{}); err != nil {
-		if !deploymentApi.IsNotFound(err) {
+		if !apiErrors.IsNotFound(err) {
 			return err
 		}
 
