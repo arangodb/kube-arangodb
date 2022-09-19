@@ -24,11 +24,11 @@ import (
 	"context"
 	"sync"
 
+	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
@@ -118,9 +118,11 @@ func (r *Resources) EnsureLeader(ctx context.Context, cachedStatus inspectorInte
 	leaderAgentSvcName := k8sutil.CreateAgentLeaderServiceName(r.context.GetAPIObject().GetName())
 	deploymentName := r.context.GetAPIObject().GetName()
 
+	ports := []core.ServicePort{CreateServerServicePort(group)}
+
 	selector := k8sutil.LabelsForLeaderMember(deploymentName, group.AsRole(), leaderID)
 	if s, ok := cachedStatus.Service().V1().GetSimple(leaderAgentSvcName); ok {
-		if err, adjusted := r.adjustService(ctx, s, shared.ArangoPort, selector); err == nil {
+		if err, adjusted := r.adjustService(ctx, s, ports, selector); err == nil {
 			if !adjusted {
 				// The service is not changed, so single server leader can be set.
 				return r.ensureSingleServerLeader(ctx, cachedStatus)
@@ -132,7 +134,7 @@ func (r *Resources) EnsureLeader(ctx context.Context, cachedStatus inspectorInte
 		}
 	}
 
-	s := r.createService(leaderAgentSvcName, r.context.GetNamespace(), r.context.GetAPIObject().AsOwner(), shared.ArangoPort, selector)
+	s := r.createService(leaderAgentSvcName, r.context.GetNamespace(), r.context.GetAPIObject().AsOwner(), ports, selector)
 	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		_, err := cachedStatus.ServicesModInterface().V1().Create(ctxChild, s, meta.CreateOptions{})
 		return err

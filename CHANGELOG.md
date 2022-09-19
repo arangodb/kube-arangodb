@@ -5,6 +5,8 @@
 - (Feature) Early connections support
 - (Bugfix) Fix and document action timeouts
 
+- (Feature) Propagate sidecars' ports to a member's service
+
 ## [1.2.16](https://github.com/arangodb/kube-arangodb/tree/1.2.16) (2022-09-14)
 - (Feature) Add ArangoDeployment ServerGroupStatus
 - (Feature) (EE) Ordered Member IDs
