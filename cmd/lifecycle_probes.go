@@ -22,44 +22,80 @@ package cmd
 
 import (
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
+	"strconv"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
+	"github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/jwt"
 
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 )
 
 var (
 	cmdLifecycleProbe = &cobra.Command{
 		Use: "probe",
-		Run: cmdLifecycleProbeCheck,
+		Run: cmdLifecycleProbeRun,
+	}
+	cmdLifecycleProbeLiveness = &cobra.Command{
+		Use: "liveness",
+		Run: cmdLifecycleProbeRun,
+	}
+	cmdLifecycleProbeReadiness = &cobra.Command{
+		Use: "readiness",
+		Run: cmdLifecycleProbeRun,
+	}
+	cmdLifecycleProbeStartUp = &cobra.Command{
+		Use: "startup",
+		Run: cmdLifecycleProbeRun,
 	}
 
 	probeInput struct {
-		SSL      bool
-		Auth     bool
-		Endpoint string
-		JWTPath  string
+		Endpoint        string
+		JWTPath         string
+		ArangoDBVersion string
+		ServerGroup     string
+		DeploymentMode  string
+		SSL             bool
+		Auth            bool
+		Enterprise      bool
 	}
 )
 
 func init() {
 	f := cmdLifecycleProbe.PersistentFlags()
 
+	cmdLifecycleProbe.AddCommand(cmdLifecycleProbeLiveness)
+	cmdLifecycleProbe.AddCommand(cmdLifecycleProbeReadiness)
+	cmdLifecycleProbe.AddCommand(cmdLifecycleProbeStartUp)
+
 	f.BoolVarP(&probeInput.SSL, "ssl", "", false, "Determines if SSL is enabled")
 	f.BoolVarP(&probeInput.Auth, "auth", "", false, "Determines if authentication is enabled")
-	f.StringVarP(&probeInput.Endpoint, "endpoint", "", "/_api/version", "Endpoint (path) to call for lifecycle probe")
+	f.StringVarP(&probeInput.Endpoint, "endpoint", "", client.ServerApiVersionEndpoint, "Endpoint (path) to call for lifecycle probe")
+	f.MarkDeprecated("endpoint", "Endpoint is chosen automatically by the lifecycle process")
 	f.StringVarP(&probeInput.JWTPath, "jwt", "", shared.ClusterJWTSecretVolumeMountDir, "Path to the JWT tokens")
+	f.StringVar(&probeInput.ArangoDBVersion, "arangodb-version", os.Getenv(resources.ArangoDBOverrideVersionEnv),
+		"Version of the ArangoDB")
+	f.StringVar(&probeInput.ServerGroup, "serverGroup", os.Getenv(resources.ArangoDBOverrideServerGroupEnv),
+		"Name of the group where a server belongs to")
+	f.StringVar(&probeInput.DeploymentMode, "deploymentMode", os.Getenv(resources.ArangoDBOverrideDeploymentModeEnv),
+		"A deployment mode (Cluster, Single, ActiveFailover)")
+	enterprise, _ := strconv.ParseBool(os.Getenv(resources.ArangoDBOverrideEnterpriseEnv))
+	f.BoolVar(&probeInput.Enterprise, "enterprise", enterprise, "Determines if ArangoDB is enterprise")
 }
 
 func probeClient() *http.Client {
@@ -147,10 +183,10 @@ func addAuthHeader(req *http.Request) error {
 	return nil
 }
 
-func doRequest() (*http.Response, error) {
+func doRequest(endpoint string) (*http.Response, error) {
 	client := probeClient()
 
-	req, err := http.NewRequest(http.MethodGet, probeEndpoint(probeInput.Endpoint), nil)
+	req, err := http.NewRequest(http.MethodGet, probeEndpoint(endpoint), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -162,22 +198,25 @@ func doRequest() (*http.Response, error) {
 	return client.Do(req)
 }
 
-func cmdLifecycleProbeCheck(cmd *cobra.Command, args []string) {
-	if err := cmdLifecycleProbeCheckE(); err != nil {
+func cmdLifecycleProbeRun(cmd *cobra.Command, _ []string) {
+	if err := cmdLifecycleProbeRunE(cmd); err != nil {
 		log.Error().Err(err).Msgf("Fatal")
 		os.Exit(1)
 	}
 }
 
-func cmdLifecycleProbeCheckE() error {
-	resp, err := doRequest()
+func cmdLifecycleProbeRunE(cmd *cobra.Command) error {
+	endpoint := getEndpoint(api.ProbeType(cmd.Use))
+	resp, err := doRequest(endpoint)
 	if err != nil {
 		return err
+	}
+	if resp.Body != nil {
+		defer resp.Body.Close()
 	}
 
 	if resp.StatusCode != http.StatusOK {
 		if resp.Body != nil {
-			defer resp.Body.Close()
 			if data, err := ioutil.ReadAll(resp.Body); err == nil {
 				return errors.Errorf("Unexpected code: %d - %s", resp.StatusCode, string(data))
 			}
@@ -186,7 +225,51 @@ func cmdLifecycleProbeCheckE() error {
 		return errors.Errorf("Unexpected code: %d", resp.StatusCode)
 	}
 
+	if endpoint == client.ServerStatusEndpoint {
+		// When server status endpoint is used then HTTP status code 200 is not enough.
+		// The progress should be also checked.
+		if resp.Body == nil {
+			return errors.Errorf("Expected body from the \"%s\" endpoint", endpoint)
+		}
+		data, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return errors.Errorf("Failed to read body from the \"%s\" endpoint", endpoint)
+		}
+
+		status := client.ServerStatus{}
+		if err = json.Unmarshal(data, &status); err != nil {
+			return errors.Errorf("Failed to unmarshal %s into server status", string(data))
+		}
+
+		if progress, ok := status.GetProgress(); !ok {
+			return errors.Errorf("server not ready: %s", progress)
+		}
+	}
+
 	log.Info().Msgf("Check passed")
 
 	return nil
+}
+
+// getEndpoint returns endpoint to the ArangoDB instance where readiness should be checked.
+func getEndpoint(probeType api.ProbeType) string {
+	if probeType == api.ProbeTypeReadiness {
+		if probeInput.DeploymentMode == string(api.DeploymentModeActiveFailover) {
+			v := driver.Version(probeInput.ArangoDBVersion)
+			if features.FailoverLeadership().Supported(v, probeInput.Enterprise) {
+				return client.ServerApiVersionEndpoint
+			}
+		}
+
+		return client.ServerAvailabilityEndpoint
+	}
+
+	if probeInput.ServerGroup == api.ServerGroupDBServersString {
+		v := driver.Version(probeInput.ArangoDBVersion)
+		if features.Version310().Supported(v, probeInput.Enterprise) {
+			return client.ServerStatusEndpoint
+		}
+	}
+
+	return client.ServerApiVersionEndpoint
 }

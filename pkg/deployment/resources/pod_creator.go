@@ -135,6 +135,13 @@ func createArangodArgs(cachedStatus interfaces.Inspector, input pod.Input, addit
 		options.Add("--cluster.my-role", "PRIMARY")
 		options.Add("--foxx.queues", false)
 		options.Add("--server.statistics", "true")
+		imageInfo := api.ImageInfo{
+			ArangoDBVersion: input.Version,
+			Enterprise:      input.Enterprise,
+		}
+		if IsServerProgressAvailable(input.Group, imageInfo) {
+			options.Add("--server.early-connections", "true")
+		}
 	case api.ServerGroupCoordinators:
 		addAgentEndpoints = true
 		options.Add("--cluster.my-address", myTCPURL)
