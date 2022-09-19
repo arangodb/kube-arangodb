@@ -21,14 +21,13 @@
 package resources
 
 import (
-	"fmt"
+	"math"
 	"os"
 	"path/filepath"
 	"time"
 
 	core "k8s.io/api/core/v1"
 
-	"github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/jwt"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -51,25 +50,25 @@ type probeCheckBuilder struct {
 	liveness, readiness, startup probeBuilder
 }
 
-type probeBuilder func(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error)
+type probeBuilder func(spec api.DeploymentSpec, group api.ServerGroup, _ api.ImageInfo) (Probe, error)
 
-func nilProbeBuilder(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
+func nilProbeBuilder(_ api.DeploymentSpec, _ api.ServerGroup, _ api.ImageInfo) (Probe, error) {
 	return nil, nil
 }
 
-func (r *Resources) getReadinessProbe(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
+func (r *Resources) getReadinessProbe(spec api.DeploymentSpec, group api.ServerGroup, imageInfo api.ImageInfo) (Probe, error) {
 	if !r.isReadinessProbeEnabled(spec, group) {
 		return nil, nil
 	}
 
-	builders := r.probeBuilders()
+	builders := r.probeBuilders(imageInfo)
 
 	builder, ok := builders[group]
 	if !ok {
 		return nil, nil
 	}
 
-	config, err := builder.readiness(spec, group, version)
+	config, err := builder.readiness(spec, group, imageInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -87,19 +86,19 @@ func (r *Resources) getReadinessProbe(spec api.DeploymentSpec, group api.ServerG
 	return config, nil
 }
 
-func (r *Resources) getLivenessProbe(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
+func (r *Resources) getLivenessProbe(spec api.DeploymentSpec, group api.ServerGroup, imageInfo api.ImageInfo) (Probe, error) {
 	if !r.isLivenessProbeEnabled(spec, group) {
 		return nil, nil
 	}
 
-	builders := r.probeBuilders()
+	builders := r.probeBuilders(imageInfo)
 
 	builder, ok := builders[group]
 	if !ok {
 		return nil, nil
 	}
 
-	config, err := builder.liveness(spec, group, version)
+	config, err := builder.liveness(spec, group, imageInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -117,19 +116,19 @@ func (r *Resources) getLivenessProbe(spec api.DeploymentSpec, group api.ServerGr
 	return config, nil
 }
 
-func (r *Resources) getStartupProbe(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
+func (r *Resources) getStartupProbe(spec api.DeploymentSpec, group api.ServerGroup, imageInfo api.ImageInfo) (Probe, error) {
 	if !r.isStartupProbeEnabled(spec, group) {
 		return nil, nil
 	}
 
-	builders := r.probeBuilders()
+	builders := r.probeBuilders(imageInfo)
 
 	builder, ok := builders[group]
 	if !ok {
 		return nil, nil
 	}
 
-	config, err := builder.startup(spec, group, version)
+	config, err := builder.startup(spec, group, imageInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -189,26 +188,26 @@ func (r *Resources) isStartupProbeEnabled(spec api.DeploymentSpec, group api.Ser
 	return probe.CanBeEnabled && probe.EnabledByDefault
 }
 
-func (r *Resources) probeBuilders() map[api.ServerGroup]probeCheckBuilder {
+func (r *Resources) probeBuilders(imageInfo api.ImageInfo) map[api.ServerGroup]probeCheckBuilder {
 	return map[api.ServerGroup]probeCheckBuilder{
 		api.ServerGroupSingle: {
-			startup:   r.probeBuilderStartupCoreSelect(),
-			liveness:  r.probeBuilderLivenessCoreSelect(),
+			startup:   r.probeBuilderStartupCoreSelect(api.ServerGroupSingle, imageInfo),
+			liveness:  r.probeBuilderLivenessCoreSelect(api.ServerGroupSingle, imageInfo),
 			readiness: r.probeBuilderReadinessCoreSelect(),
 		},
 		api.ServerGroupAgents: {
-			startup:   r.probeBuilderStartupCoreSelect(),
-			liveness:  r.probeBuilderLivenessCoreSelect(),
+			startup:   r.probeBuilderStartupCoreSelect(api.ServerGroupAgents, imageInfo),
+			liveness:  r.probeBuilderLivenessCoreSelect(api.ServerGroupAgents, imageInfo),
 			readiness: r.probeBuilderReadinessSimpleCoreSelect(),
 		},
 		api.ServerGroupDBServers: {
-			startup:   r.probeBuilderStartupCoreSelect(),
-			liveness:  r.probeBuilderLivenessCoreSelect(),
+			startup:   r.probeBuilderStartupCoreSelect(api.ServerGroupDBServers, imageInfo),
+			liveness:  r.probeBuilderLivenessCoreSelect(api.ServerGroupDBServers, imageInfo),
 			readiness: r.probeBuilderReadinessSimpleCoreSelect(),
 		},
 		api.ServerGroupCoordinators: {
-			startup:   r.probeBuilderStartupCoreSelect(),
-			liveness:  r.probeBuilderLivenessCoreSelect(),
+			startup:   r.probeBuilderStartupCoreSelect(api.ServerGroupCoordinators, imageInfo),
+			liveness:  r.probeBuilderLivenessCoreSelect(api.ServerGroupCoordinators, imageInfo),
 			readiness: r.probeBuilderReadinessCoreSelect(),
 		},
 		api.ServerGroupSyncMasters: {
@@ -224,7 +223,7 @@ func (r *Resources) probeBuilders() map[api.ServerGroup]probeCheckBuilder {
 	}
 }
 
-func (r *Resources) probeCommand(spec api.DeploymentSpec, endpoint string) ([]string, error) {
+func (r *Resources) probeCommand(spec api.DeploymentSpec, probeType api.ProbeType) ([]string, error) {
 	binaryPath, err := os.Executable()
 	if err != nil {
 		return nil, err
@@ -234,7 +233,8 @@ func (r *Resources) probeCommand(spec api.DeploymentSpec, endpoint string) ([]st
 		exePath,
 		"lifecycle",
 		"probe",
-		fmt.Sprintf("--endpoint=%s", endpoint),
+		string(probeType),
+		// TODO test rotation required when changed
 	}
 
 	if spec.IsSecure() {
@@ -248,40 +248,50 @@ func (r *Resources) probeCommand(spec api.DeploymentSpec, endpoint string) ([]st
 	return args, nil
 }
 
-func (r *Resources) probeBuilderLivenessCoreSelect() probeBuilder {
-	if features.JWTRotation().Enabled() {
+func (r *Resources) probeBuilderLivenessCoreSelect(group api.ServerGroup, imageInfo api.ImageInfo) probeBuilder {
+	if features.JWTRotation().Enabled() || IsServerProgressAvailable(group, imageInfo) {
 		return r.probeBuilderLivenessCoreOperator
 	}
 
 	return r.probeBuilderLivenessCore
 }
 
-func (r *Resources) probeBuilderStartupCoreSelect() probeBuilder {
-	if features.JWTRotation().Enabled() {
+func (r *Resources) probeBuilderStartupCoreSelect(group api.ServerGroup, imageInfo api.ImageInfo) probeBuilder {
+	if features.JWTRotation().Enabled() || IsServerProgressAvailable(group, imageInfo) {
 		return r.probeBuilderStartupCoreOperator
 	}
 
 	return r.probeBuilderStartupCore
 }
 
-func (r *Resources) probeBuilderLivenessCoreOperator(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
-	args, err := r.probeCommand(spec, "/_api/version")
+func (r *Resources) probeBuilderLivenessCoreOperator(spec api.DeploymentSpec, group api.ServerGroup,
+	image api.ImageInfo) (Probe, error) {
+	args, err := r.probeCommand(spec, api.ProbeTypeLiveness)
 	if err != nil {
 		return nil, err
 	}
 
-	return &probes.CMDProbeConfig{
+	cmdProbeConfig := &probes.CMDProbeConfig{
 		Command: args,
-	}, nil
+	}
+	if IsServerProgressAvailable(group, image) {
+		cmdProbeConfig.FailureThreshold = math.MaxInt32
+	}
+
+	return cmdProbeConfig, nil
 }
 
-func (r *Resources) probeBuilderStartupCoreOperator(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
-	args, err := r.probeCommand(spec, "/_api/version")
+func (r *Resources) probeBuilderStartupCoreOperator(spec api.DeploymentSpec, group api.ServerGroup,
+	image api.ImageInfo) (Probe, error) {
+	args, err := r.probeCommand(spec, api.ProbeTypeStartUp)
 	if err != nil {
 		return nil, err
 	}
 
 	retries, periodSeconds := getProbeRetries(group)
+	if IsServerProgressAvailable(group, image) {
+		retries = math.MaxInt32
+	}
 
 	return &probes.CMDProbeConfig{
 		Command:             args,
@@ -291,7 +301,7 @@ func (r *Resources) probeBuilderStartupCoreOperator(spec api.DeploymentSpec, gro
 	}, nil
 }
 
-func (r *Resources) probeBuilderLivenessCore(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
+func (r *Resources) probeBuilderLivenessCore(spec api.DeploymentSpec, _ api.ServerGroup, _ api.ImageInfo) (Probe, error) {
 	authorization := ""
 	if spec.IsAuthenticated() {
 		secretData, err := r.getJWTSecret(spec)
@@ -310,7 +320,7 @@ func (r *Resources) probeBuilderLivenessCore(spec api.DeploymentSpec, group api.
 	}, nil
 }
 
-func (r *Resources) probeBuilderStartupCore(spec api.DeploymentSpec, group api.ServerGroup, _ driver.Version) (Probe, error) {
+func (r *Resources) probeBuilderStartupCore(spec api.DeploymentSpec, group api.ServerGroup, _ api.ImageInfo) (Probe, error) {
 	retries, periodSeconds := getProbeRetries(group)
 
 	authorization := ""
@@ -342,8 +352,9 @@ func (r *Resources) probeBuilderReadinessSimpleCoreSelect() probeBuilder {
 	return r.probeBuilderReadinessSimpleCore
 }
 
-func (r *Resources) probeBuilderReadinessSimpleCoreOperator(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
-	p, err := r.probeBuilderReadinessCoreOperator(spec, group, version)
+func (r *Resources) probeBuilderReadinessSimpleCoreOperator(spec api.DeploymentSpec, group api.ServerGroup,
+	image api.ImageInfo) (Probe, error) {
+	p, err := r.probeBuilderReadinessCoreOperator(spec, group, image)
 	if err != nil {
 		return nil, err
 	}
@@ -360,8 +371,9 @@ func (r *Resources) probeBuilderReadinessSimpleCoreOperator(spec api.DeploymentS
 	return p, nil
 }
 
-func (r *Resources) probeBuilderReadinessSimpleCore(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
-	p, err := r.probeBuilderReadinessCore(spec, group, version)
+func (r *Resources) probeBuilderReadinessSimpleCore(spec api.DeploymentSpec, group api.ServerGroup,
+	image api.ImageInfo) (Probe, error) {
+	p, err := r.probeBuilderReadinessCore(spec, group, image)
 	if err != nil {
 		return nil, err
 	}
@@ -386,13 +398,8 @@ func (r *Resources) probeBuilderReadinessCoreSelect() probeBuilder {
 	return r.probeBuilderReadinessCore
 }
 
-func (r *Resources) probeBuilderReadinessCoreOperator(spec api.DeploymentSpec, _ api.ServerGroup, _ driver.Version) (Probe, error) {
-	// /_admin/server/availability is the way to go, it is available since 3.3.9
-	path := "/_admin/server/availability"
-	if features.FailoverLeadership().Enabled() && r.context.GetMode() == api.DeploymentModeActiveFailover {
-		path = "/_api/version"
-	}
-	args, err := r.probeCommand(spec, path)
+func (r *Resources) probeBuilderReadinessCoreOperator(spec api.DeploymentSpec, _ api.ServerGroup, _ api.ImageInfo) (Probe, error) {
+	args, err := r.probeCommand(spec, api.ProbeTypeReadiness)
 	if err != nil {
 		return nil, err
 	}
@@ -404,7 +411,7 @@ func (r *Resources) probeBuilderReadinessCoreOperator(spec api.DeploymentSpec, _
 	}, nil
 }
 
-func (r *Resources) probeBuilderReadinessCore(spec api.DeploymentSpec, _ api.ServerGroup, _ driver.Version) (Probe, error) {
+func (r *Resources) probeBuilderReadinessCore(spec api.DeploymentSpec, _ api.ServerGroup, _ api.ImageInfo) (Probe, error) {
 	// /_admin/server/availability is the way to go, it is available since 3.3.9
 	localPath := "/_admin/server/availability"
 	if features.FailoverLeadership().Enabled() && r.context.GetMode() == api.DeploymentModeActiveFailover {
@@ -433,7 +440,7 @@ func (r *Resources) probeBuilderReadinessCore(spec api.DeploymentSpec, _ api.Ser
 	return probeCfg, nil
 }
 
-func (r *Resources) probeBuilderLivenessSync(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
+func (r *Resources) probeBuilderLivenessSync(spec api.DeploymentSpec, group api.ServerGroup, _ api.ImageInfo) (Probe, error) {
 	authorization := ""
 	port := shared.ArangoSyncMasterPort
 	if group == api.ServerGroupSyncWorkers {
@@ -468,7 +475,7 @@ func (r *Resources) probeBuilderLivenessSync(spec api.DeploymentSpec, group api.
 	}, nil
 }
 
-func (r *Resources) probeBuilderStartupSync(spec api.DeploymentSpec, group api.ServerGroup, _ driver.Version) (Probe, error) {
+func (r *Resources) probeBuilderStartupSync(spec api.DeploymentSpec, group api.ServerGroup, _ api.ImageInfo) (Probe, error) {
 	authorization := ""
 	port := shared.ArangoSyncMasterPort
 	if group == api.ServerGroupSyncWorkers {
@@ -517,4 +524,10 @@ func getProbeRetries(group api.ServerGroup) (int32, int32) {
 	}
 
 	return int32(howLong / period), int32(period / time.Second)
+}
+
+// IsServerProgressAvailable returns true if server progress is available.
+func IsServerProgressAvailable(group api.ServerGroup, imageInfo api.ImageInfo) bool {
+	return group == api.ServerGroupDBServers &&
+		features.Version310().Supported(imageInfo.ArangoDBVersion, imageInfo.Enterprise)
 }

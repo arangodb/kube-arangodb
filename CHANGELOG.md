@@ -2,6 +2,7 @@
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Feature) Add new field to DeploymentReplicationStatus with details on DC2DC sync status
+- (Feature) Early connections support
 - (Bugfix) Fix and document action timeouts
 
 ## [1.2.16](https://github.com/arangodb/kube-arangodb/tree/1.2.16) (2022-09-14)
@@ -29,7 +30,8 @@
 - (Feature) Sensitive information protection
 - (Bugfix) Propagate SecurityContext to the ID Containers
 - (Bugfix) Fix for enabling all features
-
+- (Feature) Propagate feature and predefined env variables to members
+ 
 ## [1.2.15](https://github.com/arangodb/kube-arangodb/tree/1.2.15) (2022-07-20)
 - (Bugfix) Ensure pod names not too long
 - (Refactor) Use cached member's clients

@@ -105,17 +105,17 @@ func (a *ArangoSyncContainer) GetSecurityContext() *core.SecurityContext {
 func (a *ArangoSyncContainer) GetProbes() (*core.Probe, *core.Probe, *core.Probe, error) {
 	var liveness, readiness, startup *core.Probe
 
-	probeLivenessConfig, err := a.resources.getLivenessProbe(a.spec, a.group, a.imageInfo.ArangoDBVersion)
+	probeLivenessConfig, err := a.resources.getLivenessProbe(a.spec, a.group, a.imageInfo)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
-	probeReadinessConfig, err := a.resources.getReadinessProbe(a.spec, a.group, a.imageInfo.ArangoDBVersion)
+	probeReadinessConfig, err := a.resources.getReadinessProbe(a.spec, a.group, a.imageInfo)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
-	probeStartupConfig, err := a.resources.getReadinessProbe(a.spec, a.group, a.imageInfo.ArangoDBVersion)
+	probeStartupConfig, err := a.resources.getReadinessProbe(a.spec, a.group, a.imageInfo)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -151,7 +151,7 @@ func (a *ArangoSyncContainer) GetImage() string {
 	return a.imageInfo.Image
 }
 
-func (a *ArangoSyncContainer) GetEnvs() []core.EnvVar {
+func (a *ArangoSyncContainer) GetEnvs() ([]core.EnvVar, []core.EnvFromSource) {
 	envs := NewEnvBuilder()
 
 	if a.spec.Sync.Monitoring.GetTokenSecretName() != "" {
@@ -180,7 +180,7 @@ func (a *ArangoSyncContainer) GetEnvs() []core.EnvVar {
 		}
 	}
 
-	return envs.GetEnvList()
+	return envs.GetEnvList(), nil
 }
 
 func (a *ArangoSyncContainer) GetVolumeMounts() []core.VolumeMount {

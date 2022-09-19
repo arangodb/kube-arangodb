@@ -134,7 +134,7 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 			Name: "Pod SNI Mounts - Enterprise - 3.6.0",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewString(createTestImageForVersion("3.6.0")),
 					Authentication: noAuthentication,
 					TLS: func() api.TLSSpec {
 						s := tlsSpec.DeepCopy()
@@ -183,7 +183,7 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 					Containers: []core.Container{
 						{
 							Name:    shared.ServerContainerName,
-							Image:   testImage,
+							Image:   createTestImageForVersion("3.6.0"),
 							Command: createTestCommandForCoordinator(firstCoordinatorStatus.ID, true, false),
 							Ports:   createTestPorts(),
 							VolumeMounts: []core.VolumeMount{
@@ -244,7 +244,7 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 							firstCoordinatorStatus,
 						},
 					},
-					Images: createTestImagesWithVersion(false, "3.7.0"),
+					Images: createTestImagesWithVersion(false, testVersion),
 				}
 				testCase.createTestPodData(deployment, api.ServerGroupCoordinators, firstCoordinatorStatus)
 			},
@@ -319,7 +319,7 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 							firstCoordinatorStatus,
 						},
 					},
-					Images: createTestImagesWithVersion(true, "3.7.0"),
+					Images: createTestImagesWithVersion(true, testVersion),
 				}
 				testCase.createTestPodData(deployment, api.ServerGroupCoordinators, firstCoordinatorStatus)
 			},
@@ -427,7 +427,7 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 							firstDBServerStatus,
 						},
 					},
-					Images: createTestImagesWithVersion(true, "3.7.0"),
+					Images: createTestImagesWithVersion(true, testVersion),
 				}
 				testCase.createTestPodData(deployment, api.ServerGroupDBServers, firstDBServerStatus)
 			},

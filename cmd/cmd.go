@@ -27,6 +27,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -119,6 +120,8 @@ var (
 		enableApps                  bool // Run apps operator
 		versionOnly                 bool // Run only version endpoint, explicitly disabled with other
 		enableK2KClusterSync        bool // Run k2kClusterSync operator
+
+		operatorFeatureConfigMap string // ConfigMap name
 
 		scalingIntegrationEnabled bool
 
@@ -319,6 +322,9 @@ func executeMain(cmd *cobra.Command, args []string) {
 		cfg, deps, err := newOperatorConfigAndDeps(id+"-"+name, namespace, name)
 		if err != nil {
 			logger.Err(err).Fatal("Failed to create operator config & deps")
+		}
+		if err := ensureFeaturesConfigMap(context.Background(), client.Kubernetes().CoreV1().ConfigMaps(namespace), cfg); err != nil {
+			logger.Err(err).Error("Failed to create features config map")
 		}
 		o, err := operator.NewOperator(cfg, deps)
 		if err != nil {
@@ -530,4 +536,54 @@ func createRecorder(kubecli kubernetes.Interface, name, namespace string) record
 	core.AddToScheme(combinedScheme)
 	apps.AddToScheme(combinedScheme)
 	return eventBroadcaster.NewRecorder(combinedScheme, core.EventSource{Component: name})
+}
+
+// ensureFeaturesConfigMap creates or updates config map with enabled features.
+func ensureFeaturesConfigMap(ctx context.Context, client typedCore.ConfigMapInterface, cfg operator.Config) error {
+	ft := features.GetFeatureMap()
+
+	featuresCM := make(map[string]string, len(ft))
+
+	for k, v := range ft {
+		if v {
+			featuresCM[k] = features.Enabled
+		} else {
+			featuresCM[k] = features.Disabled
+		}
+	}
+
+	nctx, c := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
+	defer c()
+	if cm, err := client.Get(nctx, features.ConfigMapName(), meta.GetOptions{}); err != nil {
+		if !deploymentApi.IsNotFound(err) {
+			return err
+		}
+
+		nctx, c := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
+		defer c()
+		if _, err := client.Create(nctx, &core.ConfigMap{
+			ObjectMeta: meta.ObjectMeta{
+				Name:      features.ConfigMapName(),
+				Namespace: cfg.Namespace,
+			},
+			Data: make(map[string]string),
+		}, meta.CreateOptions{}); err != nil {
+			return err
+		}
+
+		return nil
+	} else if !reflect.DeepEqual(cm.Data, featuresCM) {
+		q := cm.DeepCopy()
+		q.Data = featuresCM
+
+		nctx, c := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
+		defer c()
+		if _, err := client.Update(nctx, q, meta.UpdateOptions{}); err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	return nil
 }
