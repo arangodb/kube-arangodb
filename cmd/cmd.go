@@ -567,7 +567,7 @@ func ensureFeaturesConfigMap(ctx context.Context, client typedCore.ConfigMapInte
 				Name:      features.ConfigMapName(),
 				Namespace: cfg.Namespace,
 			},
-			Data: make(map[string]string),
+			Data: featuresCM,
 		}, meta.CreateOptions{}); err != nil {
 			return err
 		}

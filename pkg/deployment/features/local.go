@@ -161,7 +161,7 @@ func Supported(f Feature, v driver.Version, enterprise bool) bool {
 func GetFeatureMap() map[string]bool {
 	args := make(map[string]bool, len(features))
 	for _, f := range features {
-		args[GetFeatureArgName(f.Name())] = f.Enabled()
+		args[util.NormalizeEnv(GetFeatureArgName(f.Name()))] = f.Enabled()
 	}
 
 	return args
