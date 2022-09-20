@@ -24,6 +24,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strconv"
 	"time"
 
 	"github.com/arangodb/arangosync-client/client"
@@ -297,14 +298,12 @@ func (dr *DeploymentReplication) createDatabaseSynchronizationStatus(dbSyncStatu
 
 	var errs []api.DatabaseSynchronizationError
 	var shardsTotal, shardsInSync int
-	var errorsReportedToLog = 0
 	for colName, colSyncStatus := range dbSyncStatus.Collections {
+		col := colName
+		if features.SensitiveInformationProtection().Enabled() {
+			col = colSyncStatus.ID
+		}
 		if colSyncStatus.Error != "" && len(errs) < maxReportedIncomingSyncErrors {
-			col := colName
-			if features.SensitiveInformationProtection().Enabled() {
-				col = colSyncStatus.ID
-			}
-
 			errs = append(errs, api.DatabaseSynchronizationError{
 				Collection: col,
 				Shard:      "",
@@ -316,12 +315,12 @@ func (dr *DeploymentReplication) createDatabaseSynchronizationStatus(dbSyncStatu
 		for shardIndex, shardSyncStatus := range colSyncStatus.Shards {
 			if shardSyncStatus.InSync {
 				shardsInSync++
-			} else if errorsReportedToLog < maxReportedIncomingSyncErrors {
-				dr.log.Str("db", dbSyncStatus.ID).
-					Str("col", colSyncStatus.ID).
-					Int("shard", shardIndex).
-					Debug("incoming synchronization shard status is not in-sync: %s", shardSyncStatus.Message)
-				errorsReportedToLog++
+			} else if len(errs) < maxReportedIncomingSyncErrors {
+				errs = append(errs, api.DatabaseSynchronizationError{
+					Collection: col,
+					Shard:      strconv.Itoa(shardIndex),
+					Message:    shardSyncStatus.Message,
+				})
 			}
 		}
 	}
