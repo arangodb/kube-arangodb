@@ -22,6 +22,8 @@ package v1alpha
 
 import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tools"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -46,6 +48,10 @@ type ArangoLocalStorage struct {
 	meta.ObjectMeta `json:"metadata,omitempty"`
 	Spec            LocalStorageSpec   `json:"spec"`
 	Status          LocalStorageStatus `json:"status"`
+}
+
+func (d *ArangoLocalStorage) OwnerOf(in meta.Object) bool {
+	return tools.IsOwner(d.AsOwner(), in)
 }
 
 // AsOwner creates an OwnerReference for the given storage

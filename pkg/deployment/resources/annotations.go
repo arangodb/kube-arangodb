@@ -37,6 +37,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tools"
 )
 
 type PatchFunc func(name string, d []byte) error
@@ -180,7 +181,7 @@ func (r *Resources) ensureSecretsAnnotations(patch PatchFunc, cachedStatus inspe
 		r.ensureAnnotationsMap(secret.Kind, secret, spec, patch)
 		return nil
 	}, func(secret *core.Secret) bool {
-		return k8sutil.IsChildResource(kind, name, namespace, secret)
+		return tools.IsChildResource(kind, name, namespace, secret)
 	}); err != nil {
 		return err
 	}
@@ -193,7 +194,7 @@ func (r *Resources) ensureServiceAccountsAnnotations(patch PatchFunc, cachedStat
 		r.ensureAnnotationsMap(serviceAccount.Kind, serviceAccount, spec, patch)
 		return nil
 	}, func(serviceAccount *core.ServiceAccount) bool {
-		return k8sutil.IsChildResource(kind, name, namespace, serviceAccount)
+		return tools.IsChildResource(kind, name, namespace, serviceAccount)
 	}); err != nil {
 		return err
 	}
@@ -206,7 +207,7 @@ func (r *Resources) ensureServicesAnnotations(patch PatchFunc, cachedStatus insp
 		r.ensureAnnotationsMap(service.Kind, service, spec, patch)
 		return nil
 	}, func(service *core.Service) bool {
-		return k8sutil.IsChildResource(kind, name, namespace, service)
+		return tools.IsChildResource(kind, name, namespace, service)
 	}); err != nil {
 		return err
 	}
@@ -221,7 +222,7 @@ func (r *Resources) ensurePdbsAnnotations(patch PatchFunc, cachedStatus inspecto
 			r.ensureAnnotationsMap(podDisruptionBudget.Kind, podDisruptionBudget, spec, patch)
 			return nil
 		}, func(podDisruptionBudget *policyv1.PodDisruptionBudget) bool {
-			return k8sutil.IsChildResource(kind, name, namespace, podDisruptionBudget)
+			return tools.IsChildResource(kind, name, namespace, podDisruptionBudget)
 		}); err != nil {
 			return err
 		}
@@ -237,7 +238,7 @@ func (r *Resources) ensurePdbsAnnotations(patch PatchFunc, cachedStatus inspecto
 		r.ensureAnnotationsMap(podDisruptionBudget.Kind, podDisruptionBudget, spec, patch)
 		return nil
 	}, func(podDisruptionBudget *policyv1beta1.PodDisruptionBudget) bool {
-		return k8sutil.IsChildResource(kind, name, namespace, podDisruptionBudget)
+		return tools.IsChildResource(kind, name, namespace, podDisruptionBudget)
 	}); err != nil {
 		return err
 	}
@@ -250,7 +251,7 @@ func (r *Resources) ensurePvcsAnnotations(patch PatchFunc, cachedStatus inspecto
 		r.ensureGroupAnnotationsMap(persistentVolumeClaim.Kind, persistentVolumeClaim, spec, patch)
 		return nil
 	}, func(persistentVolumeClaim *core.PersistentVolumeClaim) bool {
-		return k8sutil.IsChildResource(kind, name, namespace, persistentVolumeClaim)
+		return tools.IsChildResource(kind, name, namespace, persistentVolumeClaim)
 	}); err != nil {
 		return err
 	}
@@ -270,7 +271,7 @@ func (r *Resources) ensureServiceMonitorsAnnotations(patch PatchFunc, cachedStat
 		r.ensureAnnotationsMap(serviceMonitor.Kind, serviceMonitor, spec, patch)
 		return nil
 	}, func(serviceMonitor *monitoring.ServiceMonitor) bool {
-		return k8sutil.IsChildResource(kind, name, namespace, serviceMonitor)
+		return tools.IsChildResource(kind, name, namespace, serviceMonitor)
 	}); err != nil {
 		return err
 	}
@@ -298,7 +299,7 @@ func (r *Resources) ensurePodsAnnotations(patch PatchFunc, cachedStatus inspecto
 		r.ensureGroupAnnotationsMap(pod.Kind, pod, spec, patch)
 		return nil
 	}, func(pod *core.Pod) bool {
-		return k8sutil.IsChildResource(kind, name, namespace, pod)
+		return tools.IsChildResource(kind, name, namespace, pod)
 	}); err != nil {
 		return err
 	}
@@ -307,7 +308,7 @@ func (r *Resources) ensurePodsAnnotations(patch PatchFunc, cachedStatus inspecto
 }
 
 func (r *Resources) isChildResource(obj meta.Object) bool {
-	return k8sutil.IsChildResource(deployment.ArangoDeploymentResourceKind,
+	return tools.IsChildResource(deployment.ArangoDeploymentResourceKind,
 		r.context.GetAPIObject().GetName(),
 		r.context.GetAPIObject().GetNamespace(),
 		obj)

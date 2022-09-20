@@ -43,6 +43,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	memberTls "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tools"
 )
 
 const CertificateRenewalMargin = 7 * 24 * time.Hour
@@ -207,7 +208,7 @@ func (r *Reconciler) createCARenewalPlan(ctx context.Context, apiObject k8sutil.
 		return nil
 	}
 
-	if !k8sutil.IsOwner(apiObject.AsOwner(), caSecret) {
+	if !tools.IsOwner(apiObject.AsOwner(), caSecret) {
 		r.planLogger.Str("secret", spec.TLS.GetCASecretName()).Debug("CA Secret is not owned by Operator, we wont do anything")
 		return nil
 	}

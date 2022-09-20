@@ -22,6 +22,7 @@ package k8sutil
 
 import (
 	"context"
+	"sort"
 
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -157,4 +158,43 @@ func RemoveFinalizers(finalizers []string, getFunc func() (meta.Object, error), 
 			return 0, nil
 		}
 	}
+}
+
+func EnsureFinalizers(in meta.Object, exists []string, missing []string) bool {
+	present := make(map[string]bool, len(in.GetFinalizers()))
+
+	for _, k := range in.GetFinalizers() {
+		present[k] = true
+	}
+
+	changed := false
+
+	for _, k := range exists {
+		if _, ok := present[k]; !ok {
+			present[k] = true
+			changed = true
+		}
+	}
+
+	for _, k := range missing {
+		if _, ok := present[k]; ok {
+			delete(present, k)
+			changed = true
+		}
+	}
+
+	if !changed {
+		return false
+	}
+
+	q := make([]string, 0, len(present))
+
+	for k := range present {
+		q = append(q, k)
+	}
+
+	sort.Strings(q)
+
+	in.SetFinalizers(q)
+	return true
 }
