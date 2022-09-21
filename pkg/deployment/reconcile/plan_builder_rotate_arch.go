@@ -46,7 +46,7 @@ func (r *Reconciler) createChangeMemberArchPlan(ctx context.Context,
 		if pod, ok := cache.Pod().V1().GetSimple(member.Pod.GetName()); ok {
 			if v, ok := pod.GetAnnotations()[deployment.ArangoDeploymentPodChangeArchAnnotation]; ok {
 				arch := api.ArangoDeploymentArchitectureType(v)
-				if arch.IsArchMismatch(spec.Architecture, *member.Architecture) {
+				if arch.IsArchMismatch(spec.Architecture, member.Architecture) {
 					r.log.
 						Str("pod-name", member.Pod.GetName()).
 						Str("server-group", m.Group.AsRole()).

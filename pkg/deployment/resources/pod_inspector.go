@@ -277,7 +277,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 
 		// Member arch check
 		if v, ok := pod.Annotations[deployment.ArangoDeploymentPodChangeArchAnnotation]; ok {
-			if api.ArangoDeploymentArchitectureType(v).IsArchMismatch(spec.Architecture, *memberStatus.Architecture) {
+			if api.ArangoDeploymentArchitectureType(v).IsArchMismatch(spec.Architecture, memberStatus.Architecture) {
 				if memberStatus.Conditions.Update(api.ConditionTypeArchitectureMismatch, true, "Member has a different architecture than the deployment", "") {
 					updateMemberStatusNeeded = true
 				}

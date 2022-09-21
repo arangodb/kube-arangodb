@@ -103,9 +103,17 @@ func (a ArangoDeploymentArchitectureType) AsNodeSelectorRequirement() core.NodeS
 	}
 }
 
-func (a ArangoDeploymentArchitectureType) IsArchMismatch(deploymentArch ArangoDeploymentArchitecture, memberArch ArangoDeploymentArchitectureType) bool {
-	if a.Validate() == nil && deploymentArch.IsArchAllowed(a) && a != memberArch {
-		return true
+func (a ArangoDeploymentArchitectureType) IsArchMismatch(deploymentArch ArangoDeploymentArchitecture, memberArch *ArangoDeploymentArchitectureType) bool {
+	if a.Validate() != nil {
+		return false
+	}
+
+	if deploymentArch.IsArchAllowed(a) {
+		if memberArch == nil {
+			return true
+		} else if a != *memberArch {
+			return true
+		}
 	}
 	return false
 }
