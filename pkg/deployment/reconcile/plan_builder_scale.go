@@ -23,6 +23,7 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
@@ -86,7 +87,7 @@ func (r *Reconciler) createScalePlan(status api.DeploymentStatus, members api.Me
 			Debug("Creating scale-up plan")
 	} else if len(members) > count {
 		// Note, we scale down 1 member at a time
-		if m, err := members.SelectMemberToRemove(getCleanedServer(context), topologyMissingMemberToRemoveSelector(status.Topology), topologyAwarenessMemberToRemoveSelector(group, status.Topology)); err != nil {
+		if m, err := members.SelectMemberToRemove(getCleanedServer(context), getScaleDownCandidates(), topologyMissingMemberToRemoveSelector(status.Topology), topologyAwarenessMemberToRemoveSelector(group, status.Topology)); err != nil {
 			r.planLogger.Err(err).Str("role", group.AsRole()).Warn("Failed to select member to remove")
 		} else {
 			ready, message := groupReadyForRestart(context, status, m, group)
@@ -172,4 +173,46 @@ func getCleanedServer(ctx reconciler.ArangoAgencyGet) api.MemberToRemoveSelector
 		}
 		return "", nil
 	}
+}
+
+func getScaleDownCandidates() api.MemberToRemoveSelector {
+	return func(m api.MemberStatusList) (string, error) {
+		for _, member := range m {
+			if member.Conditions.IsTrue(api.ConditionTypeScaleDownCandidate) {
+				return member.ID, nil
+			}
+		}
+		return "", nil
+	}
+}
+
+func (r *Reconciler) scaleDownCandidate(ctx context.Context, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	context PlanBuilderContext) api.Plan {
+	var plan api.Plan
+
+	for _, m := range status.Members.AsList() {
+		cache, ok := context.ACS().ClusterCache(m.Member.ClusterID)
+		if !ok {
+			continue
+		}
+		pod, ok := cache.Pod().V1().GetSimple(m.Member.Pod.GetName())
+		if !ok {
+			continue
+		}
+
+		_, annotationExists := pod.Annotations[deployment.ArangoDeploymentPodScaleDownCandidateAnnotation]
+
+		conditionExists := m.Member.Conditions.IsTrue(api.ConditionTypeScaleDownCandidate)
+
+		if annotationExists != conditionExists {
+			if annotationExists {
+				plan = append(plan, updateMemberConditionActionV2("Marked as ScaleDownCandidate", api.ConditionTypeScaleDownCandidate, m.Group, m.Member.ID, true, "Marked as ScaleDownCandidate", "", ""))
+			} else {
+				plan = append(plan, removeMemberConditionActionV2("Unmarked as ScaleDownCandidate", api.ConditionTypeScaleDownCandidate, m.Group, m.Member.ID))
+			}
+		}
+	}
+
+	return plan
 }

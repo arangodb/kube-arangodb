@@ -21,10 +21,11 @@
 package deployment
 
 const (
-	ArangoDeploymentAnnotationPrefix         = "deployment.arangodb.com"
-	ArangoDeploymentPodMaintenanceAnnotation = ArangoDeploymentAnnotationPrefix + "/maintenance"
-	ArangoDeploymentPodRotateAnnotation      = ArangoDeploymentAnnotationPrefix + "/rotate"
-	ArangoDeploymentPodReplaceAnnotation     = ArangoDeploymentAnnotationPrefix + "/replace"
-	ArangoDeploymentPodDeleteNow             = ArangoDeploymentAnnotationPrefix + "/delete_now"
-	ArangoDeploymentPlanCleanAnnotation      = "plan." + ArangoDeploymentAnnotationPrefix + "/clean"
+	ArangoDeploymentAnnotationPrefix                = "deployment.arangodb.com"
+	ArangoDeploymentPodMaintenanceAnnotation        = ArangoDeploymentAnnotationPrefix + "/maintenance"
+	ArangoDeploymentPodRotateAnnotation             = ArangoDeploymentAnnotationPrefix + "/rotate"
+	ArangoDeploymentPodReplaceAnnotation            = ArangoDeploymentAnnotationPrefix + "/replace"
+	ArangoDeploymentPodDeleteNow                    = ArangoDeploymentAnnotationPrefix + "/delete_now"
+	ArangoDeploymentPodScaleDownCandidateAnnotation = ArangoDeploymentAnnotationPrefix + "/scale_down_candidate"
+	ArangoDeploymentPlanCleanAnnotation             = "plan." + ArangoDeploymentAnnotationPrefix + "/clean"
 )

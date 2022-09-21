@@ -68,6 +68,8 @@ const (
 	ConditionTypeSpecAccepted ConditionType = "SpecAccepted"
 	// ConditionTypeMarkedToRemove indicates that the member is marked to be removed.
 	ConditionTypeMarkedToRemove ConditionType = "MarkedToRemove"
+	// ConditionTypeScaleDownCandidate indicates that the member will be picked in ScaleDown operaion.
+	ConditionTypeScaleDownCandidate ConditionType = "ScaleDownCandidate"
 	// ConditionTypeUpgradeFailed indicates that upgrade failed
 	ConditionTypeUpgradeFailed ConditionType = "UpgradeFailed"
 
