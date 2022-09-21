@@ -46,6 +46,8 @@ type APIObject interface {
 	meta.Object
 	// AsOwner creates an OwnerReference for the given deployment
 	AsOwner() meta.OwnerReference
+
+	OwnerOf(in meta.Object) bool
 }
 
 // NewMemberAddEvent creates an event indicating that a member was added.

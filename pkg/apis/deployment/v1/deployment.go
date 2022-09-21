@@ -25,6 +25,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tools"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -47,6 +48,10 @@ type ArangoDeployment struct {
 	meta.ObjectMeta `json:"metadata,omitempty"`
 	Spec            DeploymentSpec   `json:"spec,omitempty"`
 	Status          DeploymentStatus `json:"status,omitempty"`
+}
+
+func (d *ArangoDeployment) OwnerOf(in meta.Object) bool {
+	return tools.IsOwner(d.AsOwner(), in)
 }
 
 type ServerGroupFunc func(ServerGroup, ServerGroupSpec, *MemberStatusList) error

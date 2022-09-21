@@ -28,6 +28,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -66,6 +67,12 @@ func (r *Resources) InspectPVCs(ctx context.Context, cachedStatus inspectorInter
 		memberStatus, group, found := status.Members.MemberStatusByPVCName(pvc.GetName())
 		if !found {
 			log.Str("pvc", pvc.GetName()).Debug("no memberstatus found for PVC")
+
+			if !r.context.GetAPIObject().OwnerOf(pvc) {
+				log.Str("pvc", pvc.GetName()).Debug("PVC is not owned by us")
+				return nil
+			}
+
 			if k8sutil.IsPersistentVolumeClaimMarkedForDeletion(pvc) && len(pvc.GetFinalizers()) > 0 {
 				// Strange, pvc belongs to us, but we have no member for it.
 				// Remove all finalizers, so it can be removed.
@@ -79,9 +86,23 @@ func (r *Resources) InspectPVCs(ctx context.Context, cachedStatus inspectorInter
 			return nil
 		}
 
+		groupSpec := r.context.GetSpec().GetServerGroupSpec(group)
+
 		owner := r.context.GetAPIObject().AsOwner()
-		if k8sutil.UpdateOwnerRefToObjectIfNeeded(pvc.GetObjectMeta(), &owner) {
-			q := patch.NewPatch(patch.ItemReplace(patch.NewPath("metadata", "ownerReferences"), pvc.ObjectMeta.OwnerReferences))
+
+		ownerUpdate := k8sutil.UpdateOwnerRefToObjectIfNeeded
+		if groupSpec.IndexMethod.Get() == api.ServerGroupIndexMethodOrdered {
+			ownerUpdate = k8sutil.RemoveOwnerRefToObjectIfNeeded
+		}
+
+		if ownerUpdate(pvc.GetObjectMeta(), &owner) {
+			q := patch.NewPatch()
+			if f := pvc.ObjectMeta.OwnerReferences; len(f) == 0 {
+				q.Add(patch.ItemRemove(patch.NewPath("metadata", "ownerReferences")))
+			} else {
+				q.Add(patch.ItemReplace(patch.NewPath("metadata", "ownerReferences"), pvc.ObjectMeta.OwnerReferences))
+			}
+
 			d, err := q.Marshal()
 			if err != nil {
 				log.Err(err).Debug("Failed to prepare PVC patch (ownerReferences)")
@@ -106,6 +127,32 @@ func (r *Resources) InspectPVCs(ctx context.Context, cachedStatus inspectorInter
 				log.Err(err).Warn("Failed to run PVC finalizers")
 			} else {
 				nextInterval = nextInterval.ReduceTo(x)
+			}
+		} else {
+			// Ensure finalizers
+			if r.ensurePVCFinalizers(pvc) {
+				q := patch.NewPatch()
+				if f := pvc.Finalizers; len(f) == 0 {
+					q.Add(patch.ItemRemove(patch.NewPath("metadata", "finalizers")))
+				} else {
+					q.Add(patch.ItemReplace(patch.NewPath("metadata", "finalizers"), f))
+				}
+
+				d, err := q.Marshal()
+				if err != nil {
+					log.Err(err).Debug("Failed to prepare PVC patch (finalizers)")
+					return errors.WithStack(err)
+				}
+
+				err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
+					_, err := cachedStatus.PersistentVolumeClaimsModInterface().V1().Patch(ctxChild, pvc.GetName(), types.JSONPatchType, d, meta.PatchOptions{})
+					return err
+				})
+
+				if err != nil {
+					log.Err(err).Debug("Failed to update PVC (ownerReferences)")
+					return errors.WithStack(err)
+				}
 			}
 		}
 

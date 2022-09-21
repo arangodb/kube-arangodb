@@ -57,6 +57,40 @@ func AddOwnerRefToObject(obj meta.Object, ownerRef *meta.OwnerReference) {
 	}
 }
 
+// RemoveOwnerRefToObjectIfNeeded removes given owner reference to given object if it exists
+func RemoveOwnerRefToObjectIfNeeded(obj meta.Object, ownerRef *meta.OwnerReference) bool {
+	exists := -1
+	if ownerRef != nil {
+		own := obj.GetOwnerReferences()
+
+		for id, existingOwnerRef := range own {
+			if existingOwnerRef.UID == ownerRef.UID {
+				exists = id
+				break
+			}
+		}
+
+		if exists == -1 {
+			return false
+		}
+
+		no := make([]meta.OwnerReference, 0, len(own))
+
+		for id := range own {
+			if id == exists {
+				continue
+			}
+
+			no = append(no, own[id])
+		}
+
+		obj.SetOwnerReferences(no)
+		return true
+	}
+
+	return false
+}
+
 // UpdateOwnerRefToObjectIfNeeded add given owner reference to given object if it does not exist yet
 func UpdateOwnerRefToObjectIfNeeded(obj meta.Object, ownerRef *meta.OwnerReference) bool {
 	if ownerRef != nil {

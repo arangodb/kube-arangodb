@@ -23,6 +23,8 @@ package resources
 import (
 	"context"
 
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -32,8 +34,12 @@ import (
 )
 
 // createPVCFinalizers creates a list of finalizers for a PVC created for the given group.
-func (r *Resources) createPVCFinalizers(group api.ServerGroup) []string {
+func (r *Resources) createPVCFinalizers() []string {
 	return []string{constants.FinalizerPVCMemberExists}
+}
+
+func (r *Resources) ensurePVCFinalizers(in meta.Object) bool {
+	return k8sutil.EnsureFinalizers(in, r.createPVCFinalizers(), nil)
 }
 
 // EnsurePVCs creates all PVC's listed in member status
@@ -59,7 +65,7 @@ func (r *Resources) EnsurePVCs(ctx context.Context, cachedStatus inspectorInterf
 			role := group.AsRole()
 			resources := spec.Resources
 			vct := spec.VolumeClaimTemplate
-			finalizers := r.createPVCFinalizers(group)
+			finalizers := r.createPVCFinalizers()
 			err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				return k8sutil.CreatePersistentVolumeClaim(ctxChild, cachedStatus.PersistentVolumeClaimsModInterface().V1(),
 					m.PersistentVolumeClaimName, deploymentName, storageClassName, role, enforceAntiAffinity,
