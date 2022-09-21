@@ -60,6 +60,7 @@
 |            SetCondition            |  10m0s  | Community & Enterprise |                                       (Deprecated) Set deployment condition                                        |
 |           SetConditionV2           |  10m0s  | Community & Enterprise |                                              Set deployment condition                                              |
 |          SetCurrentImage           | 6h0m0s  | Community & Enterprise |                               Update deployment current image after image discovery                                |
+|        SetCurrentMemberArch        |  10m0s  | Community & Enterprise |                                          Set current member architecture                                           |
 |      SetMaintenanceCondition       |  10m0s  | Community & Enterprise |                                       Update ArangoDB maintenance condition                                        |
 |         SetMemberCondition         |  10m0s  | Community & Enterprise |                                         (Deprecated) Set member condition                                          |
 |        SetMemberConditionV2        |  10m0s  | Community & Enterprise |                                                Set member condition                                                |
@@ -141,6 +142,7 @@ spec:
       SetCondition: 10m0s
       SetConditionV2: 10m0s
       SetCurrentImage: 6h0m0s
+      SetCurrentMemberArch: 10m0s
       SetMaintenanceCondition: 10m0s
       SetMemberCondition: 10m0s
       SetMemberConditionV2: 10m0s

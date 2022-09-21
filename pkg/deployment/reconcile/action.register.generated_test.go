@@ -256,6 +256,10 @@ func Test_Actions(t *testing.T) {
 		ActionsExistence(t, api.ActionTypeSetCurrentImage)
 	})
 
+	t.Run("SetCurrentMemberArch", func(t *testing.T) {
+		ActionsExistence(t, api.ActionTypeSetCurrentMemberArch)
+	})
+
 	t.Run("SetMaintenanceCondition", func(t *testing.T) {
 		ActionsExistence(t, api.ActionTypeSetMaintenanceCondition)
 	})

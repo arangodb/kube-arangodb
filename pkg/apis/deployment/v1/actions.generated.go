@@ -137,6 +137,8 @@ const (
 	ActionSetConditionV2DefaultTimeout time.Duration = ActionsDefaultTimeout
 	// ActionSetCurrentImageDefaultTimeout define default timeout for action ActionSetCurrentImage
 	ActionSetCurrentImageDefaultTimeout time.Duration = 21600 * time.Second // 6h0m0s
+	// ActionSetCurrentMemberArchDefaultTimeout define default timeout for action ActionSetCurrentMemberArch
+	ActionSetCurrentMemberArchDefaultTimeout time.Duration = 600 * time.Second // 10m0s
 	// ActionSetMaintenanceConditionDefaultTimeout define default timeout for action ActionSetMaintenanceCondition
 	ActionSetMaintenanceConditionDefaultTimeout time.Duration = ActionsDefaultTimeout
 	// ActionSetMemberConditionDefaultTimeout define default timeout for action ActionSetMemberCondition
@@ -286,6 +288,8 @@ const (
 	ActionTypeSetConditionV2 ActionType = "SetConditionV2"
 	// ActionTypeSetCurrentImage in scopes Normal. Update deployment current image after image discovery
 	ActionTypeSetCurrentImage ActionType = "SetCurrentImage"
+	// ActionTypeSetCurrentMemberArch in scopes Normal. Set current member architecture
+	ActionTypeSetCurrentMemberArch ActionType = "SetCurrentMemberArch"
 	// ActionTypeSetMaintenanceCondition in scopes Normal. Update ArangoDB maintenance condition
 	ActionTypeSetMaintenanceCondition ActionType = "SetMaintenanceCondition"
 	// ActionTypeSetMemberCondition in scopes High. (Deprecated) Set member condition
@@ -436,6 +440,8 @@ func ActionDefaultTimeout(in ActionType) time.Duration {
 		return ActionSetConditionV2DefaultTimeout
 	case ActionTypeSetCurrentImage:
 		return ActionSetCurrentImageDefaultTimeout
+	case ActionTypeSetCurrentMemberArch:
+		return ActionSetCurrentMemberArchDefaultTimeout
 	case ActionTypeSetMaintenanceCondition:
 		return ActionSetMaintenanceConditionDefaultTimeout
 	case ActionTypeSetMemberCondition:
@@ -588,6 +594,8 @@ func GetActionPriority(in ActionType) ActionPriority {
 	case ActionTypeSetConditionV2:
 		return ActionPriorityHigh
 	case ActionTypeSetCurrentImage:
+		return ActionPriorityNormal
+	case ActionTypeSetCurrentMemberArch:
 		return ActionPriorityNormal
 	case ActionTypeSetMaintenanceCondition:
 		return ActionPriorityNormal

@@ -195,6 +195,9 @@ var (
 	_ Action        = &actionSetCurrentImage{}
 	_ actionFactory = newSetCurrentImageAction
 
+	_ Action        = &actionSetCurrentMemberArch{}
+	_ actionFactory = newSetCurrentMemberArchAction
+
 	_ Action        = &actionSetMaintenanceCondition{}
 	_ actionFactory = newSetMaintenanceConditionAction
 
@@ -917,6 +920,18 @@ func init() {
 		// Get Action defition
 		function := newSetCurrentImageAction
 		action := api.ActionTypeSetCurrentImage
+
+		// Wrap action main function
+
+		// Register action
+		registerAction(action, function)
+	}
+
+	// SetCurrentMemberArch
+	{
+		// Get Action defition
+		function := newSetCurrentMemberArchAction
+		action := api.ActionTypeSetCurrentMemberArch
 
 		// Wrap action main function
 

@@ -27,21 +27,17 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func init() {
-	registerAction(api.ActionTypeSetMemberCurrentArch, newSetCurrentMemberArchAction, 0)
-}
-
 // newSetCurrentMemberArchAction creates a new Action that implements the given planned SetMemberCurrentArch action.
 func newSetCurrentMemberArchAction(action api.Action, actionCtx ActionContext) Action {
-	a := &setCurrentMemberArchAction{}
+	a := &actionSetCurrentMemberArch{}
 
 	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
 
-// setCurrentMemberArchAction implements an SetMemberCurrentArch.
-type setCurrentMemberArchAction struct {
+// actionSetCurrentMemberArch implements an SetMemberCurrentArch.
+type actionSetCurrentMemberArch struct {
 	// actionImpl implement timeout and member id functions
 	actionImpl
 }
@@ -49,7 +45,7 @@ type setCurrentMemberArchAction struct {
 // Start performs the start of the action.
 // Returns true if the action is completely finished, false in case
 // the start time needs to be recorded and a ready condition needs to be checked.
-func (a *setCurrentMemberArchAction) Start(ctx context.Context) (bool, error) {
+func (a *actionSetCurrentMemberArch) Start(ctx context.Context) (bool, error) {
 	ready, _, err := a.CheckProgress(ctx)
 	if err != nil {
 		return false, errors.WithStack(err)
@@ -59,7 +55,7 @@ func (a *setCurrentMemberArchAction) Start(ctx context.Context) (bool, error) {
 
 // CheckProgress checks the progress of the action.
 // Returns true if the action is completely finished, false otherwise.
-func (a *setCurrentMemberArchAction) CheckProgress(ctx context.Context) (bool, bool, error) {
+func (a *actionSetCurrentMemberArch) CheckProgress(ctx context.Context) (bool, bool, error) {
 	arch := a.action.Architecture
 
 	if err := a.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
