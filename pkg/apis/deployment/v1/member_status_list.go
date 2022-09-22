@@ -149,6 +149,11 @@ func (l MemberStatusList) SelectMemberToRemove(selectors ...MemberToRemoveSelect
 				return m, nil
 			}
 		}
+		for _, m := range l {
+			if m.Conditions.IsTrue(ConditionTypeScaleDownCandidate) {
+				return m, nil
+			}
+		}
 		// Try to find a not ready member
 		for _, m := range l {
 			if m.Phase.IsPending() {
