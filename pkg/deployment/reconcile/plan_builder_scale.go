@@ -87,7 +87,7 @@ func (r *Reconciler) createScalePlan(status api.DeploymentStatus, members api.Me
 			Debug("Creating scale-up plan")
 	} else if len(members) > count {
 		// Note, we scale down 1 member at a time
-		if m, err := members.SelectMemberToRemove(getCleanedServer(context), getScaleDownCandidates(), topologyMissingMemberToRemoveSelector(status.Topology), topologyAwarenessMemberToRemoveSelector(group, status.Topology)); err != nil {
+		if m, err := members.SelectMemberToRemove(getCleanedServer(context), topologyMissingMemberToRemoveSelector(status.Topology), topologyAwarenessMemberToRemoveSelector(group, status.Topology)); err != nil {
 			r.planLogger.Err(err).Str("role", group.AsRole()).Warn("Failed to select member to remove")
 		} else {
 			ready, message := groupReadyForRestart(context, status, m, group)
@@ -175,17 +175,6 @@ func getCleanedServer(ctx reconciler.ArangoAgencyGet) api.MemberToRemoveSelector
 	}
 }
 
-func getScaleDownCandidates() api.MemberToRemoveSelector {
-	return func(m api.MemberStatusList) (string, error) {
-		for _, member := range m {
-			if member.Conditions.IsTrue(api.ConditionTypeScaleDownCandidate) {
-				return member.ID, nil
-			}
-		}
-		return "", nil
-	}
-}
-
 func (r *Reconciler) scaleDownCandidate(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext) api.Plan {
@@ -196,12 +185,23 @@ func (r *Reconciler) scaleDownCandidate(ctx context.Context, apiObject k8sutil.A
 		if !ok {
 			continue
 		}
-		pod, ok := cache.Pod().V1().GetSimple(m.Member.Pod.GetName())
+
+		annotationExists := false
+
+		am, ok := cache.ArangoMember().V1().GetSimple(m.Member.ArangoMemberName(context.GetName(), m.Group))
 		if !ok {
 			continue
 		}
 
-		_, annotationExists := pod.Annotations[deployment.ArangoDeploymentPodScaleDownCandidateAnnotation]
+		if _, ok := am.Annotations[deployment.ArangoDeploymentPodScaleDownCandidateAnnotation]; ok {
+			annotationExists = true
+		}
+
+		if pod, ok := cache.Pod().V1().GetSimple(m.Member.Pod.GetName()); ok {
+			if _, ok := pod.Annotations[deployment.ArangoDeploymentPodScaleDownCandidateAnnotation]; ok {
+				annotationExists = true
+			}
+		}
 
 		conditionExists := m.Member.Conditions.IsTrue(api.ConditionTypeScaleDownCandidate)
 

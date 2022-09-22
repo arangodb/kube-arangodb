@@ -100,7 +100,6 @@ func removeMemberConditionsMapFunc(m *api.MemberStatus) {
 	m.Conditions.Remove(api.ConditionTypeTopologyAware)
 	m.Conditions.Remove(api.MemberReplacementRequired)
 	m.Conditions.Remove(api.ConditionTypePVCResizePending)
-	m.Conditions.Remove(api.ConditionTypeScaleDownCandidate)
 
 	m.RemoveTerminationsBefore(time.Now().Add(-1 * recentTerminationsKeepPeriod))
 
