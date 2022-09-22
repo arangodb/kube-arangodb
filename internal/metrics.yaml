@@ -221,4 +221,18 @@ namespaces:
         labels:
           - key: section
             description: "Panic Section"
+      ops_alerts:
+        shortDescription: "Counter for actions which requires ops attention"
+        description: "Counter for actions which requires ops attention"
+        type: "Counter"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+        alertingRules:
+          - priority: Warning
+            query: irate(arangodb_operator_engine_ops_alerts[1m]) > 1
+            description: "Trigger an alert if OPS attention is needed"
+
         

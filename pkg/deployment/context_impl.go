@@ -23,6 +23,7 @@ package deployment
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
 	"net"
 	nhttp "net/http"
 	"strconv"
@@ -650,4 +651,14 @@ func (d *Deployment) GenerateMemberEndpoint(group api.ServerGroup, member api.Me
 
 func (d *Deployment) ACS() sutil.ACS {
 	return d.acs
+}
+
+func (d *Deployment) CreateOperatorEngineOpsAlertEvent(message string, args ...interface{}) {
+	if d == nil {
+		return
+	}
+
+	d.metrics.ArangodbOperatorEngineOpsAlerts++
+
+	d.CreateEvent(k8sutil.NewOperatorEngineOpsAlertEvent(fmt.Sprintf(message, args...), d.GetAPIObject()))
 }

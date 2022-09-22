@@ -1,12 +1,13 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
-- (Feature) Add new field to DeploymentReplicationStatus with details on DC2DC sync status
+- (Feature) Add new field to DeploymentReplicationStatus with details on DC2DC sync status=
 - (Feature) Early connections support
 - (Bugfix) Fix and document action timeouts
 - (Feature) Propagate sidecars' ports to a member's service
 - (Debug Package) Initial commit
 - (Feature) Detach PVC from deployment in Ordered indexing method
+- (Feature) OPS Alerts
 
 ## [1.2.16](https://github.com/arangodb/kube-arangodb/tree/1.2.16) (2022-09-14)
 - (Feature) Add ArangoDeployment ServerGroupStatus
