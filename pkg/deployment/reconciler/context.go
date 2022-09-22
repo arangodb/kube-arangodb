@@ -138,6 +138,8 @@ type KubernetesEventGenerator interface {
 	// CreateEvent creates a given event.
 	// On error, the error is logged.
 	CreateEvent(evt *k8sutil.Event)
+
+	CreateOperatorEngineOpsAlertEvent(message string, args ...interface{})
 }
 
 // DeploymentClient provides functionalities to get deployment's clients.

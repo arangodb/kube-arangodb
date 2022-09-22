@@ -36,6 +36,8 @@ type Metrics struct {
 		DeploymentValidationErrors, DeploymentImmutableErrors, StatusRestores uint64
 	}
 
+	ArangodbOperatorEngineOpsAlerts int
+
 	Deployment struct {
 		Accepted, UpToDate bool
 	}

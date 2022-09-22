@@ -274,3 +274,12 @@ func newDeploymentEvent(apiObject runtime.Object) *Event {
 		InvolvedObject: apiObject,
 	}
 }
+
+// NewOperatorEngineOpsAlertEvent creates an even of type OperatorEngineOpsAlert.
+func NewOperatorEngineOpsAlertEvent(reason string, apiObject APIObject) *Event {
+	event := newDeploymentEvent(apiObject)
+	event.Type = core.EventTypeWarning
+	event.Reason = "OperatorEngineOpsAlert"
+	event.Message = fmt.Sprintf("Event OperatorEngineOpsAlert raised, investigation needed: %s", reason)
+	return event
+}

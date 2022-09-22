@@ -86,6 +86,11 @@ type testContext struct {
 	state     member.StateInspector
 }
 
+func (c *testContext) CreateOperatorEngineOpsAlertEvent(message string, args ...interface{}) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (c *testContext) GetAgencyHealth() (agencyCache.Health, bool) {
 	//TODO implement me
 	panic("implement me")
