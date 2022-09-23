@@ -178,6 +178,10 @@ func Test_Actions(t *testing.T) {
 		ActionsExistence(t, api.ActionTypePVCResized)
 	})
 
+	t.Run("PlaceHolder", func(t *testing.T) {
+		ActionsExistence(t, api.ActionTypePlaceHolder)
+	})
+
 	t.Run("RebalancerCheck", func(t *testing.T) {
 		ActionsExistence(t, api.ActionTypeRebalancerCheck)
 	})
