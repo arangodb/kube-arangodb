@@ -3,6 +3,8 @@
 default_timeout: 10m
 
 actions:
+  PlaceHolder:
+    description: Empty placeholder action
   Idle:
     description: Define idle operation in case if preconditions are not meet
   AddMember:

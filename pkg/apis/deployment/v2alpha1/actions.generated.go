@@ -99,6 +99,8 @@ const (
 	ActionPVCResizeDefaultTimeout time.Duration = 1800 * time.Second // 30m0s
 	// ActionPVCResizedDefaultTimeout define default timeout for action ActionPVCResized
 	ActionPVCResizedDefaultTimeout time.Duration = 900 * time.Second // 15m0s
+	// ActionPlaceHolderDefaultTimeout define default timeout for action ActionPlaceHolder
+	ActionPlaceHolderDefaultTimeout time.Duration = ActionsDefaultTimeout
 	// ActionRebalancerCheckDefaultTimeout define default timeout for action ActionRebalancerCheck
 	ActionRebalancerCheckDefaultTimeout time.Duration = ActionsDefaultTimeout
 	// ActionRebalancerCleanDefaultTimeout define default timeout for action ActionRebalancerClean
@@ -246,6 +248,8 @@ const (
 	ActionTypePVCResize ActionType = "PVCResize"
 	// ActionTypePVCResized in scopes Normal. Waits for PVC resize to be completed
 	ActionTypePVCResized ActionType = "PVCResized"
+	// ActionTypePlaceHolder in scopes Normal. Empty placeholder action
+	ActionTypePlaceHolder ActionType = "PlaceHolder"
 	// ActionTypeRebalancerCheck in scopes Normal. Check Rebalancer job progress
 	ActionTypeRebalancerCheck ActionType = "RebalancerCheck"
 	// ActionTypeRebalancerClean in scopes Normal. Cleans Rebalancer jobs
@@ -394,6 +398,8 @@ func ActionDefaultTimeout(in ActionType) time.Duration {
 		return ActionPVCResizeDefaultTimeout
 	case ActionTypePVCResized:
 		return ActionPVCResizedDefaultTimeout
+	case ActionTypePlaceHolder:
+		return ActionPlaceHolderDefaultTimeout
 	case ActionTypeRebalancerCheck:
 		return ActionRebalancerCheckDefaultTimeout
 	case ActionTypeRebalancerClean:
@@ -544,6 +550,8 @@ func GetActionPriority(in ActionType) ActionPriority {
 	case ActionTypePVCResize:
 		return ActionPriorityNormal
 	case ActionTypePVCResized:
+		return ActionPriorityNormal
+	case ActionTypePlaceHolder:
 		return ActionPriorityNormal
 	case ActionTypeRebalancerCheck:
 		return ActionPriorityNormal

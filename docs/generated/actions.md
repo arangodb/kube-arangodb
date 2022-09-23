@@ -41,6 +41,7 @@
 |          MemberRIDUpdate           |  10m0s  | Community & Enterprise |                                              Update Run ID of member                                               |
 |             PVCResize              |  30m0s  | Community & Enterprise |                               Start the resize procedure. Updates PVC Requests field                               |
 |             PVCResized             |  15m0s  | Community & Enterprise |                                        Waits for PVC resize to be completed                                        |
+|            PlaceHolder             |  10m0s  | Community & Enterprise |                                              Empty placeholder action                                              |
 |          RebalancerCheck           |  10m0s  |    Enterprise Only     |                                           Check Rebalancer job progress                                            |
 |          RebalancerClean           |  10m0s  |    Enterprise Only     |                                               Cleans Rebalancer jobs                                               |
 |         RebalancerGenerate         |  10m0s  |    Enterprise Only     |                                           Generates the Rebalancer plan                                            |
@@ -121,6 +122,7 @@ spec:
       MemberRIDUpdate: 10m0s
       PVCResize: 30m0s
       PVCResized: 15m0s
+      PlaceHolder: 10m0s
       RebalancerCheck: 10m0s
       RebalancerClean: 10m0s
       RebalancerGenerate: 10m0s

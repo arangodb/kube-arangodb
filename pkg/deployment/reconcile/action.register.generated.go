@@ -138,6 +138,9 @@ var (
 	_ Action        = &actionPVCResized{}
 	_ actionFactory = newPVCResizedAction
 
+	_ Action        = &actionPlaceHolder{}
+	_ actionFactory = newPlaceHolderAction
+
 	_ Action        = &actionRebalancerCheck{}
 	_ actionFactory = newRebalancerCheckAction
 
@@ -684,6 +687,18 @@ func init() {
 		// Get Action defition
 		function := newPVCResizedAction
 		action := api.ActionTypePVCResized
+
+		// Wrap action main function
+
+		// Register action
+		registerAction(action, function)
+	}
+
+	// PlaceHolder
+	{
+		// Get Action defition
+		function := newPlaceHolderAction
+		action := api.ActionTypePlaceHolder
 
 		// Wrap action main function
 
