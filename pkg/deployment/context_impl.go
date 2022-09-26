@@ -662,3 +662,37 @@ func (d *Deployment) CreateOperatorEngineOpsAlertEvent(message string, args ...i
 
 	d.CreateEvent(k8sutil.NewOperatorEngineOpsAlertEvent(fmt.Sprintf(message, args...), d.GetAPIObject()))
 }
+
+func (d *Deployment) WithMemberStatusUpdateErr(ctx context.Context, id string, group api.ServerGroup, action reconciler.DeploymentMemberStatusUpdateErrFunc) error {
+	return d.WithStatusUpdateErr(ctx, func(s *api.DeploymentStatus) (bool, error) {
+		m, g, ok := s.Members.ElementByID(id)
+		if !ok {
+			return false, errors.Newf("Member %s not found", id)
+		}
+
+		if g != group {
+			return false, errors.Newf("Invalid group for %s. Wanted %s, found %s", id, group.AsRole(), g.AsRole())
+		}
+
+		changed, err := action(&m)
+		if err != nil {
+			return false, err
+		}
+
+		if !changed {
+			return false, nil
+		}
+
+		if err := s.Members.Update(m, g); err != nil {
+			return false, err
+		}
+
+		return true, nil
+	})
+}
+
+func (d *Deployment) WithMemberStatusUpdate(ctx context.Context, id string, group api.ServerGroup, action reconciler.DeploymentMemberStatusUpdateFunc) error {
+	return d.WithMemberStatusUpdateErr(ctx, id, group, func(s *api.MemberStatus) (bool, error) {
+		return action(s), nil
+	})
+}
