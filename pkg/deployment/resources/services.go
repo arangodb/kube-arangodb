@@ -129,7 +129,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 		}
 
 		ports := CreateServerServicePortsWithSidecars(podInspector, e.Member.PodName, e.Group)
-		selector := k8sutil.LabelsForMember(deploymentName, e.Group.AsRole(), e.Member.ID)
+		selector := k8sutil.LabelsForActiveMember(deploymentName, e.Group.AsRole(), e.Member.ID)
 		if s, ok := cachedStatus.Service().V1().GetSimple(member.GetName()); !ok {
 			s := r.createService(member.GetName(), member.GetNamespace(), member.AsOwner(), ports, selector)
 

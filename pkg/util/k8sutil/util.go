@@ -46,6 +46,10 @@ const (
 	LabelKeyArangoTopology = "deployment.arangodb.com/topology"
 	// LabelKeyArangoLeader is the key of the label used to store the current leader of a group instances.
 	LabelKeyArangoLeader = "deployment.arangodb.com/leader"
+	// LabelKeyArangoActive is the key of the label used to mark members as active.
+	LabelKeyArangoActive = "deployment.arangodb.com/active"
+	// LabelValueArangoActive is the value of the label used to mark members as active.
+	LabelValueArangoActive = "true"
 	// AppName is the fixed value for the "app" label
 	AppName = "arangodb"
 )
@@ -129,6 +133,15 @@ func LabelsForMember(deploymentName, role, id string) map[string]string {
 	if id != "" {
 		l[LabelKeyArangoMember] = id
 	}
+
+	return l
+}
+
+// LabelsForActiveMember returns a map of labels, given to active members for given deployment name and member id
+func LabelsForActiveMember(deploymentName, role, id string) map[string]string {
+	l := LabelsForMember(deploymentName, role, id)
+
+	l[LabelKeyArangoActive] = LabelValueArangoActive
 
 	return l
 }

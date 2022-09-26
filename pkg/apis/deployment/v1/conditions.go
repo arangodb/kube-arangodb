@@ -43,6 +43,8 @@ const (
 	ConditionTypeReachable ConditionType = "Reachable"
 	// ConditionTypeServing indicates that the member core services are running.
 	ConditionTypeServing ConditionType = "Serving"
+	// ConditionTypeActive indicates that the member server container started.
+	ConditionTypeActive ConditionType = "Active"
 	// ConditionTypeTerminated indicates that the member has terminated and will not restart.
 	ConditionTypeTerminated ConditionType = "Terminated"
 	// ConditionTypeAutoUpgrade indicates that the member has to be started with `--database.auto-upgrade` once.
