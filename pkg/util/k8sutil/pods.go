@@ -77,6 +77,18 @@ func IsPodReady(pod *core.Pod) bool {
 	return condition != nil && condition.Status == core.ConditionTrue
 }
 
+func IsContainerStarted(pod *core.Pod, container string) bool {
+	for _, c := range pod.Status.ContainerStatuses {
+		if c.Name != container {
+			continue
+		}
+
+		return c.State.Terminated != nil || c.State.Running != nil
+	}
+
+	return false
+}
+
 // AreContainersReady checks whether Pod is considered as ready.
 // Returns true if the PodReady condition on the given pod is set to true,
 // or all provided containers' names are running and are not in the list of failed containers.

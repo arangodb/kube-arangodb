@@ -3,6 +3,7 @@
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Feature) Define Actions PlaceHolder
 - (Feature) Add Member Update helpers
+- (Feature) Active Member condition
 
 ## [1.2.17](https://github.com/arangodb/kube-arangodb/tree/1.2.17) (2022-09-22)
 - (Feature) Add new field to DeploymentReplicationStatus with details on DC2DC sync status=

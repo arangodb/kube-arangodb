@@ -30,6 +30,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
@@ -286,6 +287,23 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 					nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
 				}
 			}
+		}
+
+		if k8sutil.IsContainerStarted(pod, shared.ServerContainerName) {
+			if memberStatus.Conditions.Update(api.ConditionTypeActive, true, "Core Pod Container started", "") {
+				updateMemberStatusNeeded = true
+				nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
+			}
+		}
+
+		if memberStatus.Conditions.IsTrue(api.ConditionTypeActive) {
+			if v, ok := pod.Labels[k8sutil.LabelKeyArangoActive]; !ok || v != k8sutil.LabelValueArangoActive {
+				pod.Labels[k8sutil.LabelKeyArangoActive] = k8sutil.LabelValueArangoActive
+				if err := r.context.ApplyPatchOnPod(ctx, pod, patch.ItemReplace(patch.NewPath("metadata", "labels"), pod.Labels)); err != nil {
+					log.Str("pod-name", pod.GetName()).Err(err).Error("Unable to update labels")
+				}
+			}
+
 		}
 
 		if k8sutil.IsPodReady(pod) && k8sutil.AreContainersReady(pod, coreContainers) {
