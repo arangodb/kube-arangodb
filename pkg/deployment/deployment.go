@@ -445,7 +445,7 @@ func (d *Deployment) acceptNewSpec(ctx context.Context, depl *api.ArangoDeployme
 			return false, false, err
 		}
 
-		if acceptedChecksum == checksum {
+		if v := depl.Status.AcceptedSpecVersion; acceptedChecksum == checksum && (v != nil && *v == acceptedChecksum) {
 			return true, false, nil
 		}
 
