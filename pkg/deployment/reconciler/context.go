@@ -47,12 +47,19 @@ type ServerGroupIterator interface {
 
 type DeploymentStatusUpdateErrFunc func(s *api.DeploymentStatus) (bool, error)
 type DeploymentStatusUpdateFunc func(s *api.DeploymentStatus) bool
+type DeploymentMemberStatusUpdateErrFunc func(s *api.MemberStatus) (bool, error)
+type DeploymentMemberStatusUpdateFunc func(s *api.MemberStatus) bool
 
 type DeploymentStatusUpdate interface {
 	// WithStatusUpdateErr update status of ArangoDeployment with defined modifier. If action returns True action is taken
 	WithStatusUpdateErr(ctx context.Context, action DeploymentStatusUpdateErrFunc) error
 	// WithStatusUpdate update status of ArangoDeployment with defined modifier. If action returns True action is taken
 	WithStatusUpdate(ctx context.Context, action DeploymentStatusUpdateFunc) error
+
+	// WithMemberStatusUpdateErr update status of ArangoDeployment Member with defined modifier. If action returns True action is taken
+	WithMemberStatusUpdateErr(ctx context.Context, id string, group api.ServerGroup, action DeploymentMemberStatusUpdateErrFunc) error
+	// WithMemberStatusUpdate update status of ArangoDeployment Member with defined modifier. If action returns True action is taken
+	WithMemberStatusUpdate(ctx context.Context, id string, group api.ServerGroup, action DeploymentMemberStatusUpdateFunc) error
 
 	// UpdateStatus replaces the status of the deployment with the given status and
 	// updates the resources in k8s.

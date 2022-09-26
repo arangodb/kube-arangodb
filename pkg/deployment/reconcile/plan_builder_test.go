@@ -86,6 +86,16 @@ type testContext struct {
 	state     member.StateInspector
 }
 
+func (c *testContext) WithMemberStatusUpdateErr(ctx context.Context, id string, group api.ServerGroup, action reconciler.DeploymentMemberStatusUpdateErrFunc) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c *testContext) WithMemberStatusUpdate(ctx context.Context, id string, group api.ServerGroup, action reconciler.DeploymentMemberStatusUpdateFunc) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (c *testContext) CreateOperatorEngineOpsAlertEvent(message string, args ...interface{}) {
 	//TODO implement me
 	panic("implement me")

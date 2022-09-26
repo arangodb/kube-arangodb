@@ -131,6 +131,14 @@ type actionContext struct {
 	metrics      *Metrics
 }
 
+func (ac *actionContext) WithMemberStatusUpdateErr(ctx context.Context, id string, group api.ServerGroup, action reconciler.DeploymentMemberStatusUpdateErrFunc) error {
+	return ac.context.WithMemberStatusUpdateErr(ctx, id, group, action)
+}
+
+func (ac *actionContext) WithMemberStatusUpdate(ctx context.Context, id string, group api.ServerGroup, action reconciler.DeploymentMemberStatusUpdateFunc) error {
+	return ac.context.WithMemberStatusUpdate(ctx, id, group, action)
+}
+
 func (ac *actionContext) CreateOperatorEngineOpsAlertEvent(message string, args ...interface{}) {
 	ac.context.CreateOperatorEngineOpsAlertEvent(message, args...)
 }
