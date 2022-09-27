@@ -23,6 +23,8 @@ package resources
 import (
 	"context"
 	"math"
+	"net"
+	"net/url"
 
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -31,6 +33,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
+	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 	"github.com/arangodb/kube-arangodb/pkg/util/collection"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -74,6 +77,7 @@ type MemberSyncPod struct {
 	imageInfo              api.ImageInfo
 	apiObject              meta.Object
 	memberStatus           api.MemberStatus
+	cachedStatus           interfaces.Inspector
 }
 
 func (a *ArangoSyncContainer) GetArgs() ([]string, error) {
@@ -321,6 +325,10 @@ func (m *MemberSyncPod) Init(ctx context.Context, cachedStatus interfaces.Inspec
 	pod.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds
 	pod.Spec.PriorityClassName = m.groupSpec.PriorityClassName
 
+	if alias := m.syncHostAlias(); alias != nil {
+		pod.Spec.HostAliases = append(pod.Spec.HostAliases, *alias)
+	}
+
 	m.masterJWTSecretName = m.spec.Sync.Authentication.GetJWTSecretName()
 	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		return k8sutil.ValidateTokenSecret(ctxChild, cachedStatus.Secret().V1().Read(), m.masterJWTSecretName)
@@ -419,4 +427,61 @@ func createArangoSyncVolumes(tlsKeyfileSecretName, clientAuthCASecretName, maste
 	}
 
 	return volumes
+}
+
+func (m *MemberSyncPod) syncHostAlias() *core.HostAlias {
+	svcName := k8sutil.CreateSyncMasterClientServiceName(m.apiObject.GetName())
+	svc, ok := m.cachedStatus.Service().V1().GetSimple(svcName)
+	if !ok {
+		return nil
+	}
+
+	endpoint := k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(m.apiObject, m.spec.ClusterDomain)
+
+	if svc.Spec.ClusterIP == "" {
+		return nil
+	}
+
+	var alias core.HostAlias
+
+	alias.IP = svc.Spec.ClusterIP
+
+	var aliases utils.StringList
+
+	for _, u := range m.spec.Sync.ExternalAccess.ResolveMasterEndpoint(svcName, shared.ArangoSyncMasterPort) {
+		url, err := url.Parse(u)
+		if err != nil {
+			continue
+		}
+
+		host := url.Host
+
+		if h, _, err := net.SplitHostPort(host); err == nil {
+			host = h
+		}
+
+		if host == endpoint {
+			continue
+		}
+
+		if host == svcName {
+			continue
+		}
+
+		if ip := net.ParseIP(host); ip != nil {
+			continue
+		}
+
+		aliases = append(aliases, host)
+	}
+
+	if len(aliases) == 0 {
+		return nil
+	}
+
+	aliases = aliases.Sort().Unique()
+
+	alias.Hostnames = aliases
+
+	return &alias
 }

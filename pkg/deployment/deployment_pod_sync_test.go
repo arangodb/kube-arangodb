@@ -374,6 +374,868 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				},
 			},
 		},
+		{
+			DropInit: true,
+			Name:     "Sync Master Pod alias - existing service, ClusterIP and valid name",
+			config: Config{
+				OperatorImage: testImageOperator,
+			},
+			ArangoDeployment: &api.ArangoDeployment{
+				Spec: api.DeploymentSpec{
+					Image:          util.NewString(testImage),
+					Authentication: noAuthentication,
+					Environment:    api.NewEnvironment(api.EnvironmentProduction),
+					Sync: api.SyncSpec{
+						Enabled: util.NewBool(true),
+						ExternalAccess: api.SyncExternalAccessSpec{
+							MasterEndpoint: []string{
+								"https://arangodb.xyz:8629",
+							},
+						},
+					},
+					License: api.LicenseSpec{
+						SecretName: util.NewString(testLicense),
+					},
+				},
+			},
+			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
+				deployment.currentObjectStatus = &api.DeploymentStatus{
+					Members: api.DeploymentStatusMembers{
+						SyncMasters: api.MemberStatusList{
+							firstSyncMaster,
+						},
+					},
+					Images: createTestImages(true),
+				}
+
+				svc := &core.Service{
+					ObjectMeta: meta.ObjectMeta{
+						Name: "test-sync",
+					},
+					Spec: core.ServiceSpec{
+						ClusterIP: "1.2.3.4",
+					},
+				}
+
+				deployment.GetCachedStatus().ServicesModInterface().V1().Create(context.Background(), svc, meta.CreateOptions{})
+
+				testCase.createTestPodData(deployment, api.ServerGroupSyncMasters, firstSyncMaster)
+				name := testCase.ArangoDeployment.Spec.Sync.Monitoring.GetTokenSecretName()
+				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
+				require.NoError(t, err)
+
+				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(
+					"", true, "bearer "+auth, shared.ArangoSyncMasterPort)
+			},
+			ExpectedEvent: "member syncmaster is created",
+			ExpectedPod: core.Pod{
+				Spec: core.PodSpec{
+					Volumes: []core.Volume{
+						k8sutil.LifecycleVolume(),
+						createTestTLSVolume(api.ServerGroupSyncMastersString, firstSyncMaster.ID),
+						k8sutil.CreateVolumeWithSecret(shared.ClientAuthCAVolumeName,
+							testDeploymentName+"-sync-client-auth-ca"),
+						k8sutil.CreateVolumeWithSecret(shared.MasterJWTSecretVolumeName,
+							testDeploymentName+"-sync-jwt"),
+					},
+					InitContainers: []core.Container{
+						createTestLifecycleContainer(emptyResources),
+					},
+					Containers: []core.Container{
+						{
+							Name:    shared.ServerContainerName,
+							Image:   testImage,
+							Command: createTestCommandForSyncMaster(firstSyncMaster.ID, true, false, true, "https://arangodb.xyz:8629"),
+							Ports:   createTestPorts(),
+							Env: []core.EnvVar{
+								k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoSyncMonitoringToken,
+									testDeploymentName+"-sync-mt", constants.SecretKeyToken),
+								k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoLicenseKey,
+									testLicense, constants.SecretKeyToken),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorPodName, "metadata.name"),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorPodNamespace, "metadata.namespace"),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorNodeName, "spec.nodeName"),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorNodeNameArango, "spec.nodeName"),
+							},
+							Resources:       emptyResources,
+							ImagePullPolicy: core.PullIfNotPresent,
+							Lifecycle:       createTestLifecycle(api.ServerGroupSyncMasters),
+							SecurityContext: securityContext.NewSecurityContext(),
+							VolumeMounts: []core.VolumeMount{
+								k8sutil.LifecycleVolumeMount(),
+								k8sutil.TlsKeyfileVolumeMount(),
+								k8sutil.ClientAuthCACertificateVolumeMount(),
+								k8sutil.MasterJWTVolumeMount(),
+							},
+						},
+					},
+					RestartPolicy:                 core.RestartPolicyNever,
+					TerminationGracePeriodSeconds: &defaultSyncMasterTerminationTimeout,
+					Hostname: testDeploymentName + "-" + api.ServerGroupSyncMastersString + "-" +
+						firstSyncMaster.ID,
+					Subdomain: testDeploymentName + "-int",
+					Affinity: k8sutil.CreateAffinity(testDeploymentName, api.ServerGroupSyncMastersString,
+						true, ""),
+					HostAliases: []core.HostAlias{
+						{
+							IP: "1.2.3.4",
+							Hostnames: []string{
+								"arangodb.xyz",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			DropInit: true,
+			Name:     "Sync Master Pod alias - missing service and valid name",
+			config: Config{
+				OperatorImage: testImageOperator,
+			},
+			ArangoDeployment: &api.ArangoDeployment{
+				Spec: api.DeploymentSpec{
+					Image:          util.NewString(testImage),
+					Authentication: noAuthentication,
+					Environment:    api.NewEnvironment(api.EnvironmentProduction),
+					Sync: api.SyncSpec{
+						Enabled: util.NewBool(true),
+						ExternalAccess: api.SyncExternalAccessSpec{
+							MasterEndpoint: []string{
+								"https://arangodb.xyz:8629",
+							},
+						},
+					},
+					License: api.LicenseSpec{
+						SecretName: util.NewString(testLicense),
+					},
+				},
+			},
+			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
+				deployment.currentObjectStatus = &api.DeploymentStatus{
+					Members: api.DeploymentStatusMembers{
+						SyncMasters: api.MemberStatusList{
+							firstSyncMaster,
+						},
+					},
+					Images: createTestImages(true),
+				}
+
+				testCase.createTestPodData(deployment, api.ServerGroupSyncMasters, firstSyncMaster)
+				name := testCase.ArangoDeployment.Spec.Sync.Monitoring.GetTokenSecretName()
+				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
+				require.NoError(t, err)
+
+				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(
+					"", true, "bearer "+auth, shared.ArangoSyncMasterPort)
+			},
+			ExpectedEvent: "member syncmaster is created",
+			ExpectedPod: core.Pod{
+				Spec: core.PodSpec{
+					Volumes: []core.Volume{
+						k8sutil.LifecycleVolume(),
+						createTestTLSVolume(api.ServerGroupSyncMastersString, firstSyncMaster.ID),
+						k8sutil.CreateVolumeWithSecret(shared.ClientAuthCAVolumeName,
+							testDeploymentName+"-sync-client-auth-ca"),
+						k8sutil.CreateVolumeWithSecret(shared.MasterJWTSecretVolumeName,
+							testDeploymentName+"-sync-jwt"),
+					},
+					InitContainers: []core.Container{
+						createTestLifecycleContainer(emptyResources),
+					},
+					Containers: []core.Container{
+						{
+							Name:    shared.ServerContainerName,
+							Image:   testImage,
+							Command: createTestCommandForSyncMaster(firstSyncMaster.ID, true, false, true, "https://arangodb.xyz:8629"),
+							Ports:   createTestPorts(),
+							Env: []core.EnvVar{
+								k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoSyncMonitoringToken,
+									testDeploymentName+"-sync-mt", constants.SecretKeyToken),
+								k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoLicenseKey,
+									testLicense, constants.SecretKeyToken),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorPodName, "metadata.name"),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorPodNamespace, "metadata.namespace"),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorNodeName, "spec.nodeName"),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorNodeNameArango, "spec.nodeName"),
+							},
+							Resources:       emptyResources,
+							ImagePullPolicy: core.PullIfNotPresent,
+							Lifecycle:       createTestLifecycle(api.ServerGroupSyncMasters),
+							SecurityContext: securityContext.NewSecurityContext(),
+							VolumeMounts: []core.VolumeMount{
+								k8sutil.LifecycleVolumeMount(),
+								k8sutil.TlsKeyfileVolumeMount(),
+								k8sutil.ClientAuthCACertificateVolumeMount(),
+								k8sutil.MasterJWTVolumeMount(),
+							},
+						},
+					},
+					RestartPolicy:                 core.RestartPolicyNever,
+					TerminationGracePeriodSeconds: &defaultSyncMasterTerminationTimeout,
+					Hostname: testDeploymentName + "-" + api.ServerGroupSyncMastersString + "-" +
+						firstSyncMaster.ID,
+					Subdomain: testDeploymentName + "-int",
+					Affinity: k8sutil.CreateAffinity(testDeploymentName, api.ServerGroupSyncMastersString,
+						true, ""),
+				},
+			},
+		},
+		{
+			DropInit: true,
+			Name:     "Sync Master Pod alias - existing service, missing ClusterIP and valid name",
+			config: Config{
+				OperatorImage: testImageOperator,
+			},
+			ArangoDeployment: &api.ArangoDeployment{
+				Spec: api.DeploymentSpec{
+					Image:          util.NewString(testImage),
+					Authentication: noAuthentication,
+					Environment:    api.NewEnvironment(api.EnvironmentProduction),
+					Sync: api.SyncSpec{
+						Enabled: util.NewBool(true),
+						ExternalAccess: api.SyncExternalAccessSpec{
+							MasterEndpoint: []string{
+								"https://arangodb.xyz:8629",
+							},
+						},
+					},
+					License: api.LicenseSpec{
+						SecretName: util.NewString(testLicense),
+					},
+				},
+			},
+			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
+				deployment.currentObjectStatus = &api.DeploymentStatus{
+					Members: api.DeploymentStatusMembers{
+						SyncMasters: api.MemberStatusList{
+							firstSyncMaster,
+						},
+					},
+					Images: createTestImages(true),
+				}
+
+				svc := &core.Service{
+					ObjectMeta: meta.ObjectMeta{
+						Name: "test-sync",
+					},
+				}
+
+				deployment.GetCachedStatus().ServicesModInterface().V1().Create(context.Background(), svc, meta.CreateOptions{})
+
+				testCase.createTestPodData(deployment, api.ServerGroupSyncMasters, firstSyncMaster)
+				name := testCase.ArangoDeployment.Spec.Sync.Monitoring.GetTokenSecretName()
+				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
+				require.NoError(t, err)
+
+				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(
+					"", true, "bearer "+auth, shared.ArangoSyncMasterPort)
+			},
+			ExpectedEvent: "member syncmaster is created",
+			ExpectedPod: core.Pod{
+				Spec: core.PodSpec{
+					Volumes: []core.Volume{
+						k8sutil.LifecycleVolume(),
+						createTestTLSVolume(api.ServerGroupSyncMastersString, firstSyncMaster.ID),
+						k8sutil.CreateVolumeWithSecret(shared.ClientAuthCAVolumeName,
+							testDeploymentName+"-sync-client-auth-ca"),
+						k8sutil.CreateVolumeWithSecret(shared.MasterJWTSecretVolumeName,
+							testDeploymentName+"-sync-jwt"),
+					},
+					InitContainers: []core.Container{
+						createTestLifecycleContainer(emptyResources),
+					},
+					Containers: []core.Container{
+						{
+							Name:    shared.ServerContainerName,
+							Image:   testImage,
+							Command: createTestCommandForSyncMaster(firstSyncMaster.ID, true, false, true, "https://arangodb.xyz:8629"),
+							Ports:   createTestPorts(),
+							Env: []core.EnvVar{
+								k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoSyncMonitoringToken,
+									testDeploymentName+"-sync-mt", constants.SecretKeyToken),
+								k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoLicenseKey,
+									testLicense, constants.SecretKeyToken),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorPodName, "metadata.name"),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorPodNamespace, "metadata.namespace"),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorNodeName, "spec.nodeName"),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorNodeNameArango, "spec.nodeName"),
+							},
+							Resources:       emptyResources,
+							ImagePullPolicy: core.PullIfNotPresent,
+							Lifecycle:       createTestLifecycle(api.ServerGroupSyncMasters),
+							SecurityContext: securityContext.NewSecurityContext(),
+							VolumeMounts: []core.VolumeMount{
+								k8sutil.LifecycleVolumeMount(),
+								k8sutil.TlsKeyfileVolumeMount(),
+								k8sutil.ClientAuthCACertificateVolumeMount(),
+								k8sutil.MasterJWTVolumeMount(),
+							},
+						},
+					},
+					RestartPolicy:                 core.RestartPolicyNever,
+					TerminationGracePeriodSeconds: &defaultSyncMasterTerminationTimeout,
+					Hostname: testDeploymentName + "-" + api.ServerGroupSyncMastersString + "-" +
+						firstSyncMaster.ID,
+					Subdomain: testDeploymentName + "-int",
+					Affinity: k8sutil.CreateAffinity(testDeploymentName, api.ServerGroupSyncMastersString,
+						true, ""),
+				},
+			},
+		},
+		{
+			DropInit: true,
+			Name:     "Sync Master Pod alias - existing service, ClusterIP and invalid name",
+			config: Config{
+				OperatorImage: testImageOperator,
+			},
+			ArangoDeployment: &api.ArangoDeployment{
+				Spec: api.DeploymentSpec{
+					Image:          util.NewString(testImage),
+					Authentication: noAuthentication,
+					Environment:    api.NewEnvironment(api.EnvironmentProduction),
+					Sync: api.SyncSpec{
+						Enabled: util.NewBool(true),
+						ExternalAccess: api.SyncExternalAccessSpec{
+							MasterEndpoint: []string{
+								"https://127.0.0.1:8629",
+							},
+						},
+					},
+					License: api.LicenseSpec{
+						SecretName: util.NewString(testLicense),
+					},
+				},
+			},
+			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
+				deployment.currentObjectStatus = &api.DeploymentStatus{
+					Members: api.DeploymentStatusMembers{
+						SyncMasters: api.MemberStatusList{
+							firstSyncMaster,
+						},
+					},
+					Images: createTestImages(true),
+				}
+
+				svc := &core.Service{
+					ObjectMeta: meta.ObjectMeta{
+						Name: "test-sync",
+					},
+					Spec: core.ServiceSpec{
+						ClusterIP: "1.2.3.4",
+					},
+				}
+
+				deployment.GetCachedStatus().ServicesModInterface().V1().Create(context.Background(), svc, meta.CreateOptions{})
+
+				testCase.createTestPodData(deployment, api.ServerGroupSyncMasters, firstSyncMaster)
+				name := testCase.ArangoDeployment.Spec.Sync.Monitoring.GetTokenSecretName()
+				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
+				require.NoError(t, err)
+
+				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(
+					"", true, "bearer "+auth, shared.ArangoSyncMasterPort)
+			},
+			ExpectedEvent: "member syncmaster is created",
+			ExpectedPod: core.Pod{
+				Spec: core.PodSpec{
+					Volumes: []core.Volume{
+						k8sutil.LifecycleVolume(),
+						createTestTLSVolume(api.ServerGroupSyncMastersString, firstSyncMaster.ID),
+						k8sutil.CreateVolumeWithSecret(shared.ClientAuthCAVolumeName,
+							testDeploymentName+"-sync-client-auth-ca"),
+						k8sutil.CreateVolumeWithSecret(shared.MasterJWTSecretVolumeName,
+							testDeploymentName+"-sync-jwt"),
+					},
+					InitContainers: []core.Container{
+						createTestLifecycleContainer(emptyResources),
+					},
+					Containers: []core.Container{
+						{
+							Name:    shared.ServerContainerName,
+							Image:   testImage,
+							Command: createTestCommandForSyncMaster(firstSyncMaster.ID, true, false, true, "https://127.0.0.1:8629"),
+							Ports:   createTestPorts(),
+							Env: []core.EnvVar{
+								k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoSyncMonitoringToken,
+									testDeploymentName+"-sync-mt", constants.SecretKeyToken),
+								k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoLicenseKey,
+									testLicense, constants.SecretKeyToken),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorPodName, "metadata.name"),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorPodNamespace, "metadata.namespace"),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorNodeName, "spec.nodeName"),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorNodeNameArango, "spec.nodeName"),
+							},
+							Resources:       emptyResources,
+							ImagePullPolicy: core.PullIfNotPresent,
+							Lifecycle:       createTestLifecycle(api.ServerGroupSyncMasters),
+							SecurityContext: securityContext.NewSecurityContext(),
+							VolumeMounts: []core.VolumeMount{
+								k8sutil.LifecycleVolumeMount(),
+								k8sutil.TlsKeyfileVolumeMount(),
+								k8sutil.ClientAuthCACertificateVolumeMount(),
+								k8sutil.MasterJWTVolumeMount(),
+							},
+						},
+					},
+					RestartPolicy:                 core.RestartPolicyNever,
+					TerminationGracePeriodSeconds: &defaultSyncMasterTerminationTimeout,
+					Hostname: testDeploymentName + "-" + api.ServerGroupSyncMastersString + "-" +
+						firstSyncMaster.ID,
+					Subdomain: testDeploymentName + "-int",
+					Affinity: k8sutil.CreateAffinity(testDeploymentName, api.ServerGroupSyncMastersString,
+						true, ""),
+				},
+			},
+		},
+		{
+			DropInit: true,
+			Name:     "Sync Master Pod alias - existing service, ClusterIP and missing name",
+			config: Config{
+				OperatorImage: testImageOperator,
+			},
+			ArangoDeployment: &api.ArangoDeployment{
+				Spec: api.DeploymentSpec{
+					Image:          util.NewString(testImage),
+					Authentication: noAuthentication,
+					Environment:    api.NewEnvironment(api.EnvironmentProduction),
+					Sync: api.SyncSpec{
+						Enabled: util.NewBool(true),
+					},
+					License: api.LicenseSpec{
+						SecretName: util.NewString(testLicense),
+					},
+				},
+			},
+			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
+				deployment.currentObjectStatus = &api.DeploymentStatus{
+					Members: api.DeploymentStatusMembers{
+						SyncMasters: api.MemberStatusList{
+							firstSyncMaster,
+						},
+					},
+					Images: createTestImages(true),
+				}
+
+				svc := &core.Service{
+					ObjectMeta: meta.ObjectMeta{
+						Name: "test-sync",
+					},
+					Spec: core.ServiceSpec{
+						ClusterIP: "1.2.3.4",
+					},
+				}
+
+				deployment.GetCachedStatus().ServicesModInterface().V1().Create(context.Background(), svc, meta.CreateOptions{})
+
+				testCase.createTestPodData(deployment, api.ServerGroupSyncMasters, firstSyncMaster)
+				name := testCase.ArangoDeployment.Spec.Sync.Monitoring.GetTokenSecretName()
+				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
+				require.NoError(t, err)
+
+				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(
+					"", true, "bearer "+auth, shared.ArangoSyncMasterPort)
+			},
+			ExpectedEvent: "member syncmaster is created",
+			ExpectedPod: core.Pod{
+				Spec: core.PodSpec{
+					Volumes: []core.Volume{
+						k8sutil.LifecycleVolume(),
+						createTestTLSVolume(api.ServerGroupSyncMastersString, firstSyncMaster.ID),
+						k8sutil.CreateVolumeWithSecret(shared.ClientAuthCAVolumeName,
+							testDeploymentName+"-sync-client-auth-ca"),
+						k8sutil.CreateVolumeWithSecret(shared.MasterJWTSecretVolumeName,
+							testDeploymentName+"-sync-jwt"),
+					},
+					InitContainers: []core.Container{
+						createTestLifecycleContainer(emptyResources),
+					},
+					Containers: []core.Container{
+						{
+							Name:    shared.ServerContainerName,
+							Image:   testImage,
+							Command: createTestCommandForSyncMaster(firstSyncMaster.ID, true, false, true),
+							Ports:   createTestPorts(),
+							Env: []core.EnvVar{
+								k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoSyncMonitoringToken,
+									testDeploymentName+"-sync-mt", constants.SecretKeyToken),
+								k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoLicenseKey,
+									testLicense, constants.SecretKeyToken),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorPodName, "metadata.name"),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorPodNamespace, "metadata.namespace"),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorNodeName, "spec.nodeName"),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorNodeNameArango, "spec.nodeName"),
+							},
+							Resources:       emptyResources,
+							ImagePullPolicy: core.PullIfNotPresent,
+							Lifecycle:       createTestLifecycle(api.ServerGroupSyncMasters),
+							SecurityContext: securityContext.NewSecurityContext(),
+							VolumeMounts: []core.VolumeMount{
+								k8sutil.LifecycleVolumeMount(),
+								k8sutil.TlsKeyfileVolumeMount(),
+								k8sutil.ClientAuthCACertificateVolumeMount(),
+								k8sutil.MasterJWTVolumeMount(),
+							},
+						},
+					},
+					RestartPolicy:                 core.RestartPolicyNever,
+					TerminationGracePeriodSeconds: &defaultSyncMasterTerminationTimeout,
+					Hostname: testDeploymentName + "-" + api.ServerGroupSyncMastersString + "-" +
+						firstSyncMaster.ID,
+					Subdomain: testDeploymentName + "-int",
+					Affinity: k8sutil.CreateAffinity(testDeploymentName, api.ServerGroupSyncMastersString,
+						true, ""),
+				},
+			},
+		},
+		{
+			DropInit: true,
+			Name:     "Sync Master Pod alias - existing service, ClusterIP and valid names",
+			config: Config{
+				OperatorImage: testImageOperator,
+			},
+			ArangoDeployment: &api.ArangoDeployment{
+				Spec: api.DeploymentSpec{
+					Image:          util.NewString(testImage),
+					Authentication: noAuthentication,
+					Environment:    api.NewEnvironment(api.EnvironmentProduction),
+					Sync: api.SyncSpec{
+						Enabled: util.NewBool(true),
+						ExternalAccess: api.SyncExternalAccessSpec{
+							MasterEndpoint: []string{
+								"https://arangodb.xyz:8629",
+								"https://arangodb1.xyz:8629",
+								"https://arangodb2.xyz:8629",
+							},
+						},
+					},
+					License: api.LicenseSpec{
+						SecretName: util.NewString(testLicense),
+					},
+				},
+			},
+			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
+				deployment.currentObjectStatus = &api.DeploymentStatus{
+					Members: api.DeploymentStatusMembers{
+						SyncMasters: api.MemberStatusList{
+							firstSyncMaster,
+						},
+					},
+					Images: createTestImages(true),
+				}
+
+				svc := &core.Service{
+					ObjectMeta: meta.ObjectMeta{
+						Name: "test-sync",
+					},
+					Spec: core.ServiceSpec{
+						ClusterIP: "1.2.3.4",
+					},
+				}
+
+				deployment.GetCachedStatus().ServicesModInterface().V1().Create(context.Background(), svc, meta.CreateOptions{})
+
+				testCase.createTestPodData(deployment, api.ServerGroupSyncMasters, firstSyncMaster)
+				name := testCase.ArangoDeployment.Spec.Sync.Monitoring.GetTokenSecretName()
+				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
+				require.NoError(t, err)
+
+				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(
+					"", true, "bearer "+auth, shared.ArangoSyncMasterPort)
+			},
+			ExpectedEvent: "member syncmaster is created",
+			ExpectedPod: core.Pod{
+				Spec: core.PodSpec{
+					Volumes: []core.Volume{
+						k8sutil.LifecycleVolume(),
+						createTestTLSVolume(api.ServerGroupSyncMastersString, firstSyncMaster.ID),
+						k8sutil.CreateVolumeWithSecret(shared.ClientAuthCAVolumeName,
+							testDeploymentName+"-sync-client-auth-ca"),
+						k8sutil.CreateVolumeWithSecret(shared.MasterJWTSecretVolumeName,
+							testDeploymentName+"-sync-jwt"),
+					},
+					InitContainers: []core.Container{
+						createTestLifecycleContainer(emptyResources),
+					},
+					Containers: []core.Container{
+						{
+							Name:    shared.ServerContainerName,
+							Image:   testImage,
+							Command: createTestCommandForSyncMaster(firstSyncMaster.ID, true, false, true, "https://arangodb.xyz:8629", "https://arangodb1.xyz:8629", "https://arangodb2.xyz:8629"),
+							Ports:   createTestPorts(),
+							Env: []core.EnvVar{
+								k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoSyncMonitoringToken,
+									testDeploymentName+"-sync-mt", constants.SecretKeyToken),
+								k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoLicenseKey,
+									testLicense, constants.SecretKeyToken),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorPodName, "metadata.name"),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorPodNamespace, "metadata.namespace"),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorNodeName, "spec.nodeName"),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorNodeNameArango, "spec.nodeName"),
+							},
+							Resources:       emptyResources,
+							ImagePullPolicy: core.PullIfNotPresent,
+							Lifecycle:       createTestLifecycle(api.ServerGroupSyncMasters),
+							SecurityContext: securityContext.NewSecurityContext(),
+							VolumeMounts: []core.VolumeMount{
+								k8sutil.LifecycleVolumeMount(),
+								k8sutil.TlsKeyfileVolumeMount(),
+								k8sutil.ClientAuthCACertificateVolumeMount(),
+								k8sutil.MasterJWTVolumeMount(),
+							},
+						},
+					},
+					RestartPolicy:                 core.RestartPolicyNever,
+					TerminationGracePeriodSeconds: &defaultSyncMasterTerminationTimeout,
+					Hostname: testDeploymentName + "-" + api.ServerGroupSyncMastersString + "-" +
+						firstSyncMaster.ID,
+					Subdomain: testDeploymentName + "-int",
+					Affinity: k8sutil.CreateAffinity(testDeploymentName, api.ServerGroupSyncMastersString,
+						true, ""),
+					HostAliases: []core.HostAlias{
+						{
+							IP: "1.2.3.4",
+							Hostnames: []string{
+								"arangodb.xyz",
+								"arangodb1.xyz",
+								"arangodb2.xyz",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			DropInit: true,
+			Name:     "Sync Master Pod alias - existing service, ClusterIP and valid names with different ports",
+			config: Config{
+				OperatorImage: testImageOperator,
+			},
+			ArangoDeployment: &api.ArangoDeployment{
+				Spec: api.DeploymentSpec{
+					Image:          util.NewString(testImage),
+					Authentication: noAuthentication,
+					Environment:    api.NewEnvironment(api.EnvironmentProduction),
+					Sync: api.SyncSpec{
+						Enabled: util.NewBool(true),
+						ExternalAccess: api.SyncExternalAccessSpec{
+							MasterEndpoint: []string{
+								"https://arangodb.xyz:8629",
+								"https://arangodb.xyz:8639",
+								"https://arangodb.xyz:8649",
+							},
+						},
+					},
+					License: api.LicenseSpec{
+						SecretName: util.NewString(testLicense),
+					},
+				},
+			},
+			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
+				deployment.currentObjectStatus = &api.DeploymentStatus{
+					Members: api.DeploymentStatusMembers{
+						SyncMasters: api.MemberStatusList{
+							firstSyncMaster,
+						},
+					},
+					Images: createTestImages(true),
+				}
+
+				svc := &core.Service{
+					ObjectMeta: meta.ObjectMeta{
+						Name: "test-sync",
+					},
+					Spec: core.ServiceSpec{
+						ClusterIP: "1.2.3.4",
+					},
+				}
+
+				deployment.GetCachedStatus().ServicesModInterface().V1().Create(context.Background(), svc, meta.CreateOptions{})
+
+				testCase.createTestPodData(deployment, api.ServerGroupSyncMasters, firstSyncMaster)
+				name := testCase.ArangoDeployment.Spec.Sync.Monitoring.GetTokenSecretName()
+				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
+				require.NoError(t, err)
+
+				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(
+					"", true, "bearer "+auth, shared.ArangoSyncMasterPort)
+			},
+			ExpectedEvent: "member syncmaster is created",
+			ExpectedPod: core.Pod{
+				Spec: core.PodSpec{
+					Volumes: []core.Volume{
+						k8sutil.LifecycleVolume(),
+						createTestTLSVolume(api.ServerGroupSyncMastersString, firstSyncMaster.ID),
+						k8sutil.CreateVolumeWithSecret(shared.ClientAuthCAVolumeName,
+							testDeploymentName+"-sync-client-auth-ca"),
+						k8sutil.CreateVolumeWithSecret(shared.MasterJWTSecretVolumeName,
+							testDeploymentName+"-sync-jwt"),
+					},
+					InitContainers: []core.Container{
+						createTestLifecycleContainer(emptyResources),
+					},
+					Containers: []core.Container{
+						{
+							Name:    shared.ServerContainerName,
+							Image:   testImage,
+							Command: createTestCommandForSyncMaster(firstSyncMaster.ID, true, false, true, "https://arangodb.xyz:8629", "https://arangodb.xyz:8639", "https://arangodb.xyz:8649"),
+							Ports:   createTestPorts(),
+							Env: []core.EnvVar{
+								k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoSyncMonitoringToken,
+									testDeploymentName+"-sync-mt", constants.SecretKeyToken),
+								k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoLicenseKey,
+									testLicense, constants.SecretKeyToken),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorPodName, "metadata.name"),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorPodNamespace, "metadata.namespace"),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorNodeName, "spec.nodeName"),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorNodeNameArango, "spec.nodeName"),
+							},
+							Resources:       emptyResources,
+							ImagePullPolicy: core.PullIfNotPresent,
+							Lifecycle:       createTestLifecycle(api.ServerGroupSyncMasters),
+							SecurityContext: securityContext.NewSecurityContext(),
+							VolumeMounts: []core.VolumeMount{
+								k8sutil.LifecycleVolumeMount(),
+								k8sutil.TlsKeyfileVolumeMount(),
+								k8sutil.ClientAuthCACertificateVolumeMount(),
+								k8sutil.MasterJWTVolumeMount(),
+							},
+						},
+					},
+					RestartPolicy:                 core.RestartPolicyNever,
+					TerminationGracePeriodSeconds: &defaultSyncMasterTerminationTimeout,
+					Hostname: testDeploymentName + "-" + api.ServerGroupSyncMastersString + "-" +
+						firstSyncMaster.ID,
+					Subdomain: testDeploymentName + "-int",
+					Affinity: k8sutil.CreateAffinity(testDeploymentName, api.ServerGroupSyncMastersString,
+						true, ""),
+					HostAliases: []core.HostAlias{
+						{
+							IP: "1.2.3.4",
+							Hostnames: []string{
+								"arangodb.xyz",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			DropInit: true,
+			Name:     "Sync Master Pod alias - existing service, ClusterIP and mixed names",
+			config: Config{
+				OperatorImage: testImageOperator,
+			},
+			ArangoDeployment: &api.ArangoDeployment{
+				Spec: api.DeploymentSpec{
+					Image:          util.NewString(testImage),
+					Authentication: noAuthentication,
+					Environment:    api.NewEnvironment(api.EnvironmentProduction),
+					Sync: api.SyncSpec{
+						Enabled: util.NewBool(true),
+						ExternalAccess: api.SyncExternalAccessSpec{
+							MasterEndpoint: []string{
+								"https://arangodb2.xyz:8629",
+								"https://arangodb.xyz:8629",
+								"https://127.0.0.1:8629",
+							},
+						},
+					},
+					License: api.LicenseSpec{
+						SecretName: util.NewString(testLicense),
+					},
+				},
+			},
+			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
+				deployment.currentObjectStatus = &api.DeploymentStatus{
+					Members: api.DeploymentStatusMembers{
+						SyncMasters: api.MemberStatusList{
+							firstSyncMaster,
+						},
+					},
+					Images: createTestImages(true),
+				}
+
+				svc := &core.Service{
+					ObjectMeta: meta.ObjectMeta{
+						Name: "test-sync",
+					},
+					Spec: core.ServiceSpec{
+						ClusterIP: "1.2.3.4",
+					},
+				}
+
+				deployment.GetCachedStatus().ServicesModInterface().V1().Create(context.Background(), svc, meta.CreateOptions{})
+
+				testCase.createTestPodData(deployment, api.ServerGroupSyncMasters, firstSyncMaster)
+				name := testCase.ArangoDeployment.Spec.Sync.Monitoring.GetTokenSecretName()
+				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
+				require.NoError(t, err)
+
+				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(
+					"", true, "bearer "+auth, shared.ArangoSyncMasterPort)
+			},
+			ExpectedEvent: "member syncmaster is created",
+			ExpectedPod: core.Pod{
+				Spec: core.PodSpec{
+					Volumes: []core.Volume{
+						k8sutil.LifecycleVolume(),
+						createTestTLSVolume(api.ServerGroupSyncMastersString, firstSyncMaster.ID),
+						k8sutil.CreateVolumeWithSecret(shared.ClientAuthCAVolumeName,
+							testDeploymentName+"-sync-client-auth-ca"),
+						k8sutil.CreateVolumeWithSecret(shared.MasterJWTSecretVolumeName,
+							testDeploymentName+"-sync-jwt"),
+					},
+					InitContainers: []core.Container{
+						createTestLifecycleContainer(emptyResources),
+					},
+					Containers: []core.Container{
+						{
+							Name:    shared.ServerContainerName,
+							Image:   testImage,
+							Command: createTestCommandForSyncMaster(firstSyncMaster.ID, true, false, true, "https://127.0.0.1:8629", "https://arangodb.xyz:8629", "https://arangodb2.xyz:8629"),
+							Ports:   createTestPorts(),
+							Env: []core.EnvVar{
+								k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoSyncMonitoringToken,
+									testDeploymentName+"-sync-mt", constants.SecretKeyToken),
+								k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoLicenseKey,
+									testLicense, constants.SecretKeyToken),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorPodName, "metadata.name"),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorPodNamespace, "metadata.namespace"),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorNodeName, "spec.nodeName"),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorNodeNameArango, "spec.nodeName"),
+							},
+							Resources:       emptyResources,
+							ImagePullPolicy: core.PullIfNotPresent,
+							Lifecycle:       createTestLifecycle(api.ServerGroupSyncMasters),
+							SecurityContext: securityContext.NewSecurityContext(),
+							VolumeMounts: []core.VolumeMount{
+								k8sutil.LifecycleVolumeMount(),
+								k8sutil.TlsKeyfileVolumeMount(),
+								k8sutil.ClientAuthCACertificateVolumeMount(),
+								k8sutil.MasterJWTVolumeMount(),
+							},
+						},
+					},
+					RestartPolicy:                 core.RestartPolicyNever,
+					TerminationGracePeriodSeconds: &defaultSyncMasterTerminationTimeout,
+					Hostname: testDeploymentName + "-" + api.ServerGroupSyncMastersString + "-" +
+						firstSyncMaster.ID,
+					Subdomain: testDeploymentName + "-int",
+					Affinity: k8sutil.CreateAffinity(testDeploymentName, api.ServerGroupSyncMastersString,
+						true, ""),
+					HostAliases: []core.HostAlias{
+						{
+							IP: "1.2.3.4",
+							Hostnames: []string{
+								"arangodb.xyz",
+								"arangodb2.xyz",
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 
 	runTestCases(t, testCases...)

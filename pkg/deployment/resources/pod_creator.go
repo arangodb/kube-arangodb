@@ -372,6 +372,7 @@ func (r *Resources) RenderPodForMember(ctx context.Context, acs sutil.ACS, spec 
 			arangoMember: *member,
 			apiObject:    apiObject,
 			memberStatus: m,
+			cachedStatus: cache,
 		}
 	} else {
 		return nil, errors.Newf("unable to render Pod")
