@@ -19,14 +19,10 @@
 package resources
 
 import (
-	"os"
-	"path/filepath"
-
 	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/probes"
 )
@@ -36,11 +32,7 @@ func ArangodbInternalExporterContainer(image string, args []string, livenessProb
 	resources core.ResourceRequirements, securityContext *core.SecurityContext,
 	spec api.DeploymentSpec) (core.Container, error) {
 
-	binaryPath, err := os.Executable()
-	if err != nil {
-		return core.Container{}, errors.WithStack(err)
-	}
-	exePath := filepath.Join(k8sutil.LifecycleVolumeMountDir, filepath.Base(binaryPath))
+	exePath := k8sutil.LifecycleBinary()
 
 	c := core.Container{
 		Name:    shared.ExporterContainerName,

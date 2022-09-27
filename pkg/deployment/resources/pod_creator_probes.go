@@ -22,8 +22,6 @@ package resources
 
 import (
 	"math"
-	"os"
-	"path/filepath"
 	"time"
 
 	core "k8s.io/api/core/v1"
@@ -223,18 +221,13 @@ func (r *Resources) probeBuilders(imageInfo api.ImageInfo) map[api.ServerGroup]p
 	}
 }
 
-func (r *Resources) probeCommand(spec api.DeploymentSpec, probeType api.ProbeType) ([]string, error) {
-	binaryPath, err := os.Executable()
-	if err != nil {
-		return nil, err
-	}
-	exePath := filepath.Join(k8sutil.LifecycleVolumeMountDir, filepath.Base(binaryPath))
+func (r *Resources) probeCommand(spec api.DeploymentSpec, probeType api.ProbeType) []string {
+	exePath := k8sutil.LifecycleBinary()
 	args := []string{
 		exePath,
 		"lifecycle",
 		"probe",
 		string(probeType),
-		// TODO test rotation required when changed
 	}
 
 	if spec.IsSecure() {
@@ -245,7 +238,7 @@ func (r *Resources) probeCommand(spec api.DeploymentSpec, probeType api.ProbeTyp
 		args = append(args, "--auth")
 	}
 
-	return args, nil
+	return args
 }
 
 func (r *Resources) probeBuilderLivenessCoreSelect(group api.ServerGroup, imageInfo api.ImageInfo) probeBuilder {
@@ -266,10 +259,7 @@ func (r *Resources) probeBuilderStartupCoreSelect(group api.ServerGroup, imageIn
 
 func (r *Resources) probeBuilderLivenessCoreOperator(spec api.DeploymentSpec, group api.ServerGroup,
 	image api.ImageInfo) (Probe, error) {
-	args, err := r.probeCommand(spec, api.ProbeTypeLiveness)
-	if err != nil {
-		return nil, err
-	}
+	args := r.probeCommand(spec, api.ProbeTypeLiveness)
 
 	cmdProbeConfig := &probes.CMDProbeConfig{
 		Command: args,
@@ -283,10 +273,7 @@ func (r *Resources) probeBuilderLivenessCoreOperator(spec api.DeploymentSpec, gr
 
 func (r *Resources) probeBuilderStartupCoreOperator(spec api.DeploymentSpec, group api.ServerGroup,
 	image api.ImageInfo) (Probe, error) {
-	args, err := r.probeCommand(spec, api.ProbeTypeStartUp)
-	if err != nil {
-		return nil, err
-	}
+	args := r.probeCommand(spec, api.ProbeTypeStartUp)
 
 	retries, periodSeconds := getProbeRetries(group)
 	if IsServerProgressAvailable(group, image) {
@@ -399,10 +386,7 @@ func (r *Resources) probeBuilderReadinessCoreSelect() probeBuilder {
 }
 
 func (r *Resources) probeBuilderReadinessCoreOperator(spec api.DeploymentSpec, _ api.ServerGroup, _ api.ImageInfo) (Probe, error) {
-	args, err := r.probeCommand(spec, api.ProbeTypeReadiness)
-	if err != nil {
-		return nil, err
-	}
+	args := r.probeCommand(spec, api.ProbeTypeReadiness)
 
 	return &probes.CMDProbeConfig{
 		Command:             args,

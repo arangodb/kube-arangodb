@@ -32,6 +32,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/topology"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 const (
@@ -61,7 +62,7 @@ func containersCompare(ds api.DeploymentSpec, g api.ServerGroup, spec, status *c
 
 					g := podContainerFuncGenerator(ds, g, ac, bc)
 
-					if m, p, err := comparePodContainer(builder, g(compareServerContainerVolumeMounts)); err != nil {
+					if m, p, err := comparePodContainer(builder, g(compareServerContainerVolumeMounts), g(compareServerContainerProbes)); err != nil {
 						log.Err(err).Msg("Error while getting pod diff")
 						return SkippedRotation, nil, err
 					} else {
@@ -102,11 +103,6 @@ func containersCompare(ds api.DeploymentSpec, g api.ServerGroup, spec, status *c
 
 					if !equality.Semantic.DeepEqual(ac.Ports, bc.Ports) {
 						bc.Ports = ac.Ports
-						mode = mode.And(SilentRotation)
-					}
-
-					if !areProbesEqual(ac.StartupProbe, bc.StartupProbe) {
-						bc.StartupProbe = ac.StartupProbe
 						mode = mode.And(SilentRotation)
 					}
 				} else {
@@ -250,6 +246,18 @@ func areProbesEqual(a, b *core.Probe) bool {
 		return false
 	}
 	return equality.Semantic.DeepEqual(a, b)
+}
+
+func isManagedProbe(a, b *core.Probe) bool {
+	if a.Exec == nil || b.Exec == nil {
+		return false
+	}
+
+	if len(a.Exec.Command) == 0 || len(b.Exec.Command) == 0 {
+		return false
+	}
+
+	return a.Exec.Command[0] == k8sutil.LifecycleBinary() && b.Exec.Command[0] == k8sutil.LifecycleBinary()
 }
 
 // areEnvsFromEqual returns true when environment variables from source are the same after filtering.

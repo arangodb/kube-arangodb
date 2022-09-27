@@ -23,6 +23,7 @@ package rotation
 import (
 	"encoding/json"
 
+	jd "github.com/josephburnett/jd/lib"
 	"github.com/rs/zerolog/log"
 	core "k8s.io/api/core/v1"
 
@@ -114,14 +115,27 @@ func compare(deploymentSpec api.DeploymentSpec, member api.MemberStatus, group a
 	}
 
 	if spec.RotationNeeded(newStatus) {
-		specData, _ := json.Marshal(spec)
-		statusData, _ := json.Marshal(newStatus)
+		line := logger.Str("id", member.ID)
 
-		log.Info().Str("before", spec.PodSpecChecksum).
-			Str("id", member.ID).
-			Str("spec", string(specData)).
-			Str("status", string(statusData)).
-			Msg("Pod needs rotation - templates does not match")
+		specBytes, errA := json.Marshal(spec.PodSpec)
+		if errA == nil {
+			line = line.Str("spec", string(specBytes))
+		}
+
+		statusBytes, errB := json.Marshal(newStatus.PodSpec)
+		if errB == nil {
+			line = line.Str("status", string(statusBytes))
+		}
+
+		if errA == nil && errB == nil {
+			if specData, err := jd.ReadJsonString(string(specBytes)); err == nil && specData != nil {
+				if statusData, err := jd.ReadJsonString(string(statusBytes)); err == nil && statusData != nil {
+					line = line.Str("diff", specData.Diff(statusData).Render())
+				}
+			}
+		}
+
+		line.Info("Pod needs rotation - templates does not match")
 
 		return GracefulRotation, nil, nil
 	}

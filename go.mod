@@ -55,9 +55,6 @@ require (
 	k8s.io/apimachinery v0.21.10
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/klog v1.0.0
-)
-
-require (
 	github.com/arangodb/go-velocypack v0.0.0-20200318135517-5af53c29c67e // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
@@ -106,6 +103,10 @@ require (
 	k8s.io/utils v0.0.0-20210521133846-da695404a2bc // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
 	sigs.k8s.io/yaml v1.2.0
+	github.com/josephburnett/jd v1.6.1
+	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
+	github.com/go-openapi/jsonpointer v0.19.5 // indirect
+	github.com/go-openapi/swag v0.21.1 // indirect
+	github.com/josharian/intern v1.0.0 // indirect
+	github.com/mailru/easyjson v0.7.7 // indirect
 )
-
-require github.com/cenkalti/backoff/v4 v4.1.3 // indirect
