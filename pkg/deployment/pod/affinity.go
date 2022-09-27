@@ -64,20 +64,13 @@ func AppendAffinityWithRole(p interfaces.PodCreator, a *core.PodAffinity, role s
 	labelSelector := &meta.LabelSelector{
 		MatchLabels: k8sutil.LabelsForDeployment(p.GetName(), role),
 	}
-	if !p.IsDeploymentMode() {
-		a.RequiredDuringSchedulingIgnoredDuringExecution = append(a.RequiredDuringSchedulingIgnoredDuringExecution, core.PodAffinityTerm{
+	a.PreferredDuringSchedulingIgnoredDuringExecution = append(a.PreferredDuringSchedulingIgnoredDuringExecution, core.WeightedPodAffinityTerm{
+		Weight: 1,
+		PodAffinityTerm: core.PodAffinityTerm{
 			LabelSelector: labelSelector,
 			TopologyKey:   shared.TopologyKeyHostname,
-		})
-	} else {
-		a.PreferredDuringSchedulingIgnoredDuringExecution = append(a.PreferredDuringSchedulingIgnoredDuringExecution, core.WeightedPodAffinityTerm{
-			Weight: 1,
-			PodAffinityTerm: core.PodAffinityTerm{
-				LabelSelector: labelSelector,
-				TopologyKey:   shared.TopologyKeyHostname,
-			},
-		})
-	}
+		},
+	})
 }
 
 func MergePodAntiAffinity(a, b *core.PodAntiAffinity) {
