@@ -20,7 +20,10 @@
 
 package utils
 
-import "math/rand"
+import (
+	"math/rand"
+	"sort"
+)
 
 var (
 	randomBase = []rune("abcdefghijklmnopqrstuvwxyz0123456789")
@@ -59,6 +62,23 @@ func (s StringList) Remove(i ...string) StringList {
 	}
 
 	return r
+}
+
+func (s StringList) Sort() StringList {
+	sort.Slice(s, func(i, j int) bool {
+		return s[i] < s[j]
+	})
+	return s
+}
+
+func (s StringList) Unique() StringList {
+	z := make(StringList, 0, len(s))
+	for _, t := range s {
+		if !z.Has(t) {
+			z = append(z, t)
+		}
+	}
+	return z
 }
 
 // RandomString generates random string

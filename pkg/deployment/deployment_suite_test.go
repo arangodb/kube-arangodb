@@ -415,7 +415,8 @@ func createTestCommandForAgent(name string, tls, auth, encryptionRocksDB bool) [
 	return command
 }
 
-func createTestCommandForSyncMaster(name string, tls, auth, monitoring bool) []string {
+//nolint:unparam
+func createTestCommandForSyncMaster(name string, tls, auth, monitoring bool, customEndpoints ...string) []string {
 	command := []string{resources.ArangoSyncExecutor, "run", "master"}
 
 	if tls {
@@ -428,7 +429,15 @@ func createTestCommandForSyncMaster(name string, tls, auth, monitoring bool) []s
 		command = append(command, "--cluster.jwt-secret=/secrets/cluster/jwt/token")
 	}
 
-	command = append(command, "--master.endpoint=https://"+testDeploymentName+"-sync.default.svc:8629")
+	if len(customEndpoints) == 0 {
+		customEndpoints = []string{
+			"https://" + testDeploymentName + "-sync.default.svc:8629",
+		}
+	}
+
+	for _, customEndpoint := range customEndpoints {
+		command = append(command, "--master.endpoint="+customEndpoint)
+	}
 
 	command = append(command, "--master.jwt-secret=/secrets/master/jwt/token")
 
