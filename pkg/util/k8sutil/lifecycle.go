@@ -36,6 +36,26 @@ const (
 	lifecycleVolumeName        = "lifecycle"
 )
 
+var (
+	binaryPath string
+)
+
+func init() {
+	if b, err := os.Executable(); err != nil {
+		panic(err.Error())
+	} else {
+		binaryPath = b
+	}
+}
+
+func SetBinaryPath(path string) {
+	binaryPath = path
+}
+
+func LifecycleBinary() string {
+	return filepath.Join(LifecycleVolumeMountDir, filepath.Base(binaryPath))
+}
+
 // InitLifecycleContainer creates an init-container to copy the lifecycle binary to a shared volume.
 func InitLifecycleContainer(image string, resources *core.ResourceRequirements, securityContext *core.SecurityContext) (core.Container, error) {
 	binaryPath, err := os.Executable()
@@ -71,11 +91,7 @@ func NewLifecyclePort() (*core.Lifecycle, error) {
 
 // NewLifecycle creates a lifecycle structure with preStop handler.
 func NewLifecycle(t string) (*core.Lifecycle, error) {
-	binaryPath, err := os.Executable()
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	exePath := filepath.Join(LifecycleVolumeMountDir, filepath.Base(binaryPath))
+	exePath := LifecycleBinary()
 	lifecycle := &core.Lifecycle{
 		PreStop: &core.Handler{
 			Exec: &core.ExecAction{

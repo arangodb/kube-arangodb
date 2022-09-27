@@ -1,0 +1,351 @@
+{
+  "metadata": {
+    "creationTimestamp": null,
+    "finalizers": [
+      "pod.database.arangodb.com/delay",
+      "database.arangodb.com/graceful-shutdown"
+    ],
+    "labels": {
+      "app": "arangodb",
+      "arango_deployment": "deployment",
+      "deployment.arangodb.com/member": "CRDN-0000000",
+      "role": "coordinator"
+    },
+    "name": "deployment-crdn-0000000-49237a"
+  },
+  "spec": {
+    "containers": [
+      {
+        "command": [
+          "/usr/sbin/arangod",
+          "--cluster.agency-endpoint=ssl://10.0.111.156:8529",
+          "--cluster.agency-endpoint=ssl://10.0.142.55:8529",
+          "--cluster.agency-endpoint=ssl://10.0.208.123:8529",
+          "--cluster.my-address=ssl://10.0.238.70:8529",
+          "--cluster.my-role=COORDINATOR",
+          "--database.directory=/data",
+          "--foxx.queues=true",
+          "--log.level=INFO",
+          "--log.output=+",
+          "--rocksdb.encryption-keyfile=/secrets/rocksdb/encryption/key",
+          "--server.authentication=true",
+          "--server.endpoint=ssl://[::]:8529",
+          "--server.jwt-secret-folder=/secrets/cluster/jwt",
+          "--server.statistics=true",
+          "--server.storage-engine=rocksdb",
+          "--ssl.ecdh-curve=",
+          "--ssl.keyfile=/secrets/tls/tls.keyfile",
+          "--log.thread=true",
+          "--log.thread-name=true",
+          "--server.authentication-system-only=false",
+          "--javascript.startup-options-denylist=.*",
+          "--javascript.endpoints-allowlist=example.com",
+          "--javascript.environment-variables-allowlist=^HOSTNAME$",
+          "--javascript.environment-variables-allowlist=^PATH$",
+          "--javascript.files-allowlist=^$",
+          "--javascript.harden",
+          "--server.harden",
+          "--javascript.files-allowlist=^(?!(\\/bin\/.*))(?!(\/dev\/.*))(?!(\/etc\/.*))(?!(\/lib\/.*))(?!(\/lifecycle\/.*))(?!(\/media\/.*))(?!(\/mnt\/.*))(?!(\/opt\/.*))(?!(\/proc\/.*))(?!(\/root\/.*))(?!(\/run\/.*))(?!(\/sbin\/.*))(?!(\/secrets\/.*))(?!(\/srv\/.*))(?!(\/usr\/.*))(?!(\/var\/.*)).+",
+          "--backup.api-enabled=jwt",
+          "--cluster.max-number-of-shards=1",
+          "--cluster.min-replication-factor=3",
+          "--cluster.max-replication-factor=3",
+          "--cluster.upgrade=online",
+          "--server.export-metrics-api=true",
+          "--cluster.force-one-shard=true"
+        ],
+        "env": [
+          {
+            "name": "MY_POD_NAME",
+            "valueFrom": {
+              "fieldRef": {
+                "fieldPath": "metadata.name"
+              }
+            }
+          },
+          {
+            "name": "MY_POD_NAMESPACE",
+            "valueFrom": {
+              "fieldRef": {
+                "fieldPath": "metadata.namespace"
+              }
+            }
+          },
+          {
+            "name": "MY_NODE_NAME",
+            "valueFrom": {
+              "fieldRef": {
+                "fieldPath": "spec.nodeName"
+              }
+            }
+          },
+          {
+            "name": "NODE_NAME",
+            "valueFrom": {
+              "fieldRef": {
+                "fieldPath": "spec.nodeName"
+              }
+            }
+          },
+          {
+            "name": "ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES",
+            "value": "1"
+          },
+          {
+            "name": "ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY",
+            "value": "1020054733"
+          },
+          {
+            "name": "ARANGODB_ZONE",
+            "value": "0"
+          },
+          {
+            "name": "ARANGODB_OVERRIDE_SERVER_GROUP",
+            "value": "coordinator"
+          },
+          {
+            "name": "ARANGODB_OVERRIDE_DEPLOYMENT_MODE",
+            "value": "Cluster"
+          },
+          {
+            "name": "ARANGODB_OVERRIDE_VERSION",
+            "value": "3.9.2"
+          },
+          {
+            "name": "ARANGODB_OVERRIDE_ENTERPRISE",
+            "value": "true"
+          }
+        ],
+        "envFrom": [
+          {
+            "configMapRef": {
+              "name": "arangodb-operator-feature-config-map",
+              "optional": true
+            }
+          }
+        ],
+        "image": "arangodb/arangodb",
+        "imagePullPolicy": "IfNotPresent",
+        "lifecycle": {
+          "preStop": {
+            "exec": {
+              "command": [
+                "/lifecycle/tools/arangodb_operator",
+                "lifecycle",
+                "preStop",
+                "port"
+              ]
+            }
+          }
+        },
+        "name": "server",
+        "ports": [
+          {
+            "containerPort": 8529,
+            "name": "server",
+            "protocol": "TCP"
+          }
+        ],
+        "readinessProbe": {
+          "exec": {
+            "command": [
+              "/lifecycle/tools/arangodb_operator",
+              "lifecycle",
+              "probe",
+              "readiness",
+              "--ssl",
+              "--auth"
+            ]
+          },
+          "failureThreshold": 10,
+          "initialDelaySeconds": 2,
+          "periodSeconds": 2,
+          "successThreshold": 1,
+          "timeoutSeconds": 2
+        },
+        "resources": {
+          "limits": {
+            "cpu": "250m",
+            "memory": "1073741824"
+          },
+          "requests": {
+            "cpu": "250m",
+            "memory": "1073741824"
+          }
+        },
+        "securityContext": {
+          "capabilities": {
+          }
+        },
+        "startupProbe": {
+          "exec": {
+            "command": [
+              "/lifecycle/tools/arangodb_operator",
+              "lifecycle",
+              "probe",
+              "startup",
+              "--ssl",
+              "--auth"
+            ]
+          },
+          "failureThreshold": 600,
+          "initialDelaySeconds": 1,
+          "periodSeconds": 5,
+          "successThreshold": 1,
+          "timeoutSeconds": 2
+        },
+        "volumeMounts": [
+          {
+            "mountPath": "/data",
+            "name": "arangod-data"
+          },
+          {
+            "mountPath": "/lifecycle/tools",
+            "name": "lifecycle"
+          },
+          {
+            "mountPath": "/secrets/tls",
+            "name": "tls-keyfile",
+            "readOnly": true
+          },
+          {
+            "mountPath": "/secrets/rocksdb/encryption",
+            "name": "rocksdb-encryption"
+          },
+          {
+            "mountPath": "/secrets/cluster/jwt",
+            "name": "cluster-jwt"
+          }
+        ]
+      }
+    ],
+    "hostname": "deployment-coordinator-0000000",
+    "initContainers": [
+      {
+        "command": [
+          "/usr/bin/arangodb_operator",
+          "lifecycle",
+          "copy",
+          "--target",
+          "/lifecycle/tools"
+        ],
+        "image": "arangodb/kube-arangodb",
+        "imagePullPolicy": "IfNotPresent",
+        "name": "init-lifecycle",
+        "resources": {
+        },
+        "securityContext": {
+          "capabilities": {
+          }
+        },
+        "volumeMounts": [
+          {
+            "mountPath": "/lifecycle/tools",
+            "name": "lifecycle"
+          }
+        ]
+      },
+      {
+        "command": [
+          "/usr/bin/arangodb_operator",
+          "uuid",
+          "--uuid-path",
+          "/data/UUID",
+          "--engine-path",
+          "/data/ENGINE",
+          "--uuid",
+          "CRDN-0000000",
+          "--engine",
+          "rocksdb"
+        ],
+        "env": [
+          {
+            "name": "MY_POD_NAMESPACE",
+            "value": "depl-eayebbnrei1ao4ewwaac"
+          }
+        ],
+        "image": "arangodb/kube-arangodb",
+        "name": "uuid",
+        "resources": {
+          "limits": {
+            "cpu": "100m",
+            "memory": "50Mi"
+          },
+          "requests": {
+            "cpu": "100m",
+            "memory": "10Mi"
+          }
+        },
+        "securityContext": {
+          "capabilities": {
+          }
+        },
+        "volumeMounts": [
+          {
+            "mountPath": "/data",
+            "name": "arangod-data"
+          }
+        ]
+      }
+    ],
+    "restartPolicy": "Never",
+    "serviceAccountName": "deployment-pod",
+    "subdomain": "deployment-int",
+    "terminationGracePeriodSeconds": 3600,
+    "tolerations": [
+      {
+        "effect": "NoSchedule",
+        "key": "node.arangodb.com/out-of-volumes",
+        "operator": "Exists"
+      },
+      {
+        "effect": "NoExecute",
+        "key": "node.kubernetes.io/not-ready",
+        "operator": "Exists",
+        "tolerationSeconds": 15
+      },
+      {
+        "effect": "NoExecute",
+        "key": "node.kubernetes.io/unreachable",
+        "operator": "Exists",
+        "tolerationSeconds": 15
+      },
+      {
+        "effect": "NoExecute",
+        "key": "node.alpha.kubernetes.io/unreachable",
+        "operator": "Exists",
+        "tolerationSeconds": 15
+      }
+    ],
+    "volumes": [
+      {
+        "emptyDir": {
+        },
+        "name": "arangod-data"
+      },
+      {
+        "name": "tls-keyfile",
+        "secret": {
+          "secretName": "deployment-coordinator-0000000-tls-keyfile"
+        }
+      },
+      {
+        "name": "rocksdb-encryption",
+        "secret": {
+          "secretName": "deployment-rocksdb-encryption"
+        }
+      },
+      {
+        "name": "cluster-jwt",
+        "secret": {
+          "secretName": "deployment-jwt-folder"
+        }
+      },
+      {
+        "emptyDir": {
+        },
+        "name": "lifecycle"
+      }
+    ]
+  }
+}
