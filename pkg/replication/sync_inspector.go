@@ -60,12 +60,21 @@ func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.
 	}
 
 	// Is delete triggered?
-	if dr.apiObject.GetDeletionTimestamp() != nil {
-		// Deployment replication is triggered for deletion.
-		if err := dr.runFinalizers(ctx, dr.apiObject); err != nil {
-			dr.log.Err(err).Warn("Failed to run finalizers")
-			hasError = true
+	if timestamp := dr.apiObject.GetDeletionTimestamp(); timestamp != nil {
+		// Resource is being deleted.
+		retrySoon, err := dr.runFinalizers(ctx, dr.apiObject)
+		if err != nil || retrySoon {
+			if err != nil {
+				dr.log.Err(err).Warn("Failed to run finalizers")
+			}
+			timeout := CancellationTimeout + AbortTimeout
+			if isTimeExceeded(timestamp, timeout) {
+				// Cancellation and abort timeout exceeded, so it must go into failed state.
+				dr.failOnError(err, fmt.Sprintf("Failed to cancel synchronization in %s", timeout.String()))
+			}
 		}
+
+		return cancellationInterval
 	} else {
 		// Inspect configuration status
 		destClient, err := dr.createSyncMasterClient(spec.Destination)

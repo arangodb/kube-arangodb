@@ -152,7 +152,6 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 	if err != nil {
 		return false, errors.WithMessage(err, "Failed to get status from target master")
 	}
-	// TODO test if status is failed then we should go to failed state too?
 
 	if syncStatus, err := dr.getCancellationProgress(syncInfo); err != nil {
 		return false, err
@@ -166,6 +165,8 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 			return true, nil
 		}
 		// A Request must be sent once again because abort option has changed.
+	} else if syncStatus == client.SyncStatusFailed {
+		return false, errors.WithMessagef(err, "unexpected synchronization status \"%s\"", syncStatus)
 	}
 
 	if syncInfo.Status.IsActive() && util.BoolOrDefault(p.Spec.Cancellation.EnsureInSync, true) {
