@@ -30,7 +30,7 @@ var deploymentSpecDefaultsRestore = &feature{
 	version:            "3.6.0",
 	enterpriseRequired: false,
 	enabledByDefault:   true,
-	hidden:             true,
+	hidden:             false,
 }
 
 func DeploymentSpecDefaultsRestore() Feature {
