@@ -22,11 +22,15 @@ package replication
 
 import (
 	"context"
+	"fmt"
+	"strconv"
 	"time"
 
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/arangosync-client/client"
+	"github.com/arangodb/go-driver"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
@@ -36,66 +40,65 @@ import (
 )
 
 const (
-	maxCancelFailures = 5 // After this amount of failed cancel-synchronization attempts, the operator switch to abort-sychronization.
+	CancellationTimeout = time.Minute * 15
+	AbortTimeout        = time.Minute * 2
 )
 
-// addFinalizers adds a stop-sync finalizer to the api object when needed.
-func (dr *DeploymentReplication) addFinalizers() error {
-	apiObject := dr.apiObject
-	if apiObject.GetDeletionTimestamp() != nil {
+// addFinalizer adds new finalizer if it does not exist.
+func (dr *DeploymentReplication) addFinalizer(finalizer string) error {
+	if dr.apiObject.GetDeletionTimestamp() != nil {
 		// Delete already triggered, cannot add.
 		return nil
 	}
-	for _, f := range apiObject.GetFinalizers() {
-		if f == constants.FinalizerDeplReplStopSync {
-			// Finalizer already added
-			return nil
+	apiObject := dr.apiObject
+
+	if !isFinalizerExist(apiObject, finalizer) {
+		apiObject.SetFinalizers(append(apiObject.GetFinalizers(), finalizer))
+		if err := dr.updateCRSpec(apiObject.Spec); err != nil {
+			return errors.WithMessage(err, "Failed to update CR Spec")
 		}
 	}
-	apiObject.SetFinalizers(append(apiObject.GetFinalizers(), constants.FinalizerDeplReplStopSync))
-	if err := dr.updateCRSpec(apiObject.Spec); err != nil {
-		return errors.WithStack(err)
-	}
+
 	return nil
 }
 
-// runFinalizers goes through the list of ArangoDeploymentReplication finalizers to see if they can be removed.
-func (dr *DeploymentReplication) runFinalizers(ctx context.Context, p *api.ArangoDeploymentReplication) error {
-	log := dr.log.Str("replication-name", p.GetName())
-	var removalList []string
-	for _, f := range p.ObjectMeta.GetFinalizers() {
-		switch f {
-		case constants.FinalizerDeplReplStopSync:
-			log.Debug("Inspecting stop-sync finalizer")
-			if err := dr.inspectFinalizerDeplReplStopSync(ctx, p); err == nil {
-				removalList = append(removalList, f)
-			} else {
-				log.Err(err).Str("finalizer", f).Debug("Cannot remove finalizer yet")
-			}
-		}
-	}
-	// Remove finalizers (if needed)
-	if len(removalList) > 0 {
-		ignoreNotFound := false
-		if err := removeDeploymentReplicationFinalizers(dr.deps.Client.Arango(), p, removalList, ignoreNotFound); err != nil {
-			log.Err(err).Debug("Failed to update deployment replication (to remove finalizers)")
-			return errors.WithStack(err)
-		}
-	}
-	return nil
+// addFinalizers adds a required finalizers to the api object when needed.
+func (dr *DeploymentReplication) addFinalizers() error {
+	// Add stop sync replication finalizer automatically.
+	return dr.addFinalizer(constants.FinalizerDeplReplStopSync)
 }
 
-// inspectFinalizerDeplReplStopSync checks the finalizer condition for stop-sync.
-// It returns nil if the finalizer can be removed.
-func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Context, p *api.ArangoDeploymentReplication) error {
-	// Inspect phase
-	if p.Status.Phase.IsFailed() {
-		dr.log.Debug("Deployment replication is already failed, safe to remove stop-sync finalizer")
-		return nil
+// runFinalizers removes stop sync finalizer if it is possible.
+func (dr *DeploymentReplication) runFinalizers(ctx context.Context, p *api.ArangoDeploymentReplication) (bool, error) {
+	if !isFinalizerExist(p, constants.FinalizerDeplReplStopSync) {
+		return false, nil
 	}
 
-	// Inspect deployment deletion state in source
-	abort := dr.status.CancelFailures > maxCancelFailures
+	dr.log.Str("replication-name", p.GetName()).Debug("Inspecting stop-sync finalizer")
+	if retrySoon, err := dr.inspectFinalizerDeplReplStopSync(ctx, p); err != nil {
+		return true, errors.WithMessagef(err, "Cannot remove finalizer \"%s\" yet", constants.FinalizerDeplReplStopSync)
+	} else if retrySoon {
+		// No error, but not finished. Try to reconcile soon.
+		dr.log.Debug("Synchronization is still cancelling")
+		return true, nil
+	}
+
+	removalList := []string{constants.FinalizerDeplReplStopSync}
+	if err := removeDeploymentReplicationFinalizers(dr.deps.Client.Arango(), p, removalList, false); err != nil {
+		return true, errors.WithMessage(err, "Failed to update deployment replication (to remove finalizers)")
+	}
+
+	return false, nil
+}
+
+// inspectFinalizerDeplReplStopSync checks cancellation progress.
+// When true is returned then function can be called after a few seconds to check progress.
+// When it returns false and nil error then cancellation process is done.
+func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Context,
+	p *api.ArangoDeploymentReplication) (bool, error) {
+
+	abort := isTimeExceeded(p.GetDeletionTimestamp(), CancellationTimeout)
+	// Inspect deployment deletion state in source.
 	depls := dr.deps.Client.Arango().DatabaseV1().ArangoDeployments(p.GetNamespace())
 	if name := p.Spec.Source.GetDeploymentName(); name != "" {
 		depl, err := depls.Get(context.Background(), name, meta.GetOptions{})
@@ -104,7 +107,7 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 			abort = true
 		} else if err != nil {
 			dr.log.Err(err).Warn("Failed to get source deployment")
-			return errors.WithStack(err)
+			return false, errors.WithStack(err)
 		} else if depl.GetDeletionTimestamp() != nil {
 			dr.log.Debug("Source deployment is being deleted. Abort enabled")
 			abort = true
@@ -119,8 +122,8 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 			dr.log.Debug("Destination deployment is gone. Source cleanup enabled")
 			cleanupSource = true
 		} else if err != nil {
-			dr.log.Err(err).Warn("Failed to get destinaton deployment")
-			return errors.WithStack(err)
+			dr.log.Err(err).Warn("Failed to get destination deployment")
+			return false, errors.WithStack(err)
 		} else if depl.GetDeletionTimestamp() != nil {
 			dr.log.Debug("Destination deployment is being deleted. Source cleanup enabled")
 			cleanupSource = true
@@ -136,31 +139,83 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 			return errors.WithStack(err)
 		}*/
 		//sourceClient.Master().C
-		return errors.WithStack(errors.Newf("TODO"))
-	} else {
-		// Destination still exists, stop/abort sync
-		destClient, err := dr.createSyncMasterClient(p.Spec.Destination)
-		if err != nil {
-			dr.log.Err(err).Warn("Failed to create destination client")
-			return errors.WithStack(err)
-		}
-		req := client.CancelSynchronizationRequest{
-			WaitTimeout:  time.Minute * 3,
-			Force:        abort,
-			ForceTimeout: time.Minute * 2,
-		}
-		dr.log.Bool("abort", abort).Debug("Stopping synchronization...")
-		_, err = destClient.Master().CancelSynchronization(ctx, req)
-		if err != nil && !client.IsPreconditionFailed(err) {
-			dr.log.Err(err).Bool("abort", abort).Warn("Failed to stop synchronization")
-			dr.status.CancelFailures++
-			if err := dr.updateCRStatus(); err != nil {
-				dr.log.Err(err).Warn("Failed to update status to reflect cancel-failures increment")
-			}
-			return errors.WithStack(err)
-		}
-		return nil
+		return false, errors.WithStack(errors.Newf("TODO"))
 	}
+
+	// Destination still exists, stop/abort sync
+	destClient, err := dr.createSyncMasterClient(p.Spec.Destination)
+	if err != nil {
+		return false, errors.WithMessage(err, "Failed to create destination synchronization master client")
+	}
+
+	syncInfo, err := destClient.Master().Status(ctx)
+	if err != nil {
+		return false, errors.WithMessage(err, "Failed to get status from target master")
+	}
+	// TODO test if status is failed then we should go to failed state too?
+
+	if syncStatus, err := dr.getCancellationProgress(syncInfo); err != nil {
+		return false, err
+	} else if syncStatus == client.SyncStatusInactive {
+		return false, nil
+	} else if syncStatus == client.SyncStatusCancelling {
+		// Synchronization is cancelling, so request was already sent.
+		changed := dr.status.Conditions.Update(api.ConditionTypeAborted, abort, "Cancellation type",
+			"Cancellation will wait for source data center to be canceled with a timeout")
+		if !changed {
+			return true, nil
+		}
+		// A Request must be sent once again because abort option has changed.
+	}
+
+	if syncInfo.Status.IsActive() && util.BoolOrDefault(p.Spec.Cancellation.EnsureInSync, true) {
+		if inSync, inSyncShards, totalShards, err := dr.ensureInSync(ctx, destClient); err != nil {
+			return false, err
+		} else if !inSync {
+			if time.Since(dr.lastLog) > time.Second*5 {
+				dr.lastLog = time.Now()
+				dr.log.Info("Consistency is being checked, %d of %d shards are in-sync", inSyncShards, totalShards)
+			}
+
+			// Retry soon.
+			return true, nil
+		}
+	}
+
+	// From here on this code should be launched only once unless abort option is changed
+	// or replication is not in cancelling state.
+	sourceServerMode := driver.ServerModeDefault
+	if util.BoolOrDefault(p.Spec.Cancellation.SourceReadOnly) {
+		sourceServerMode = driver.ServerModeReadOnly
+	}
+	req := client.CancelSynchronizationRequest{
+		Force:            abort,
+		ForceTimeout:     AbortTimeout,
+		SourceServerMode: sourceServerMode,
+	}
+	dr.log.Interface("request", req).Info("Stopping synchronization...")
+	_, errCancel := destClient.Master().CancelSynchronization(ctx, req)
+	if errCancel != nil {
+		dr.log.Err(err).Bool("abort", abort).Warn("Failed to stop synchronization")
+		dr.status.Reason = fmt.Sprintf("Failed to stop synchronization: %s. Abort: %s", err.Error(), strconv.FormatBool(abort))
+	} else {
+		dr.status.Reason = "Stopping synchronization started"
+	}
+
+	// Update CR status.
+	if err := dr.updateCRStatus(); err != nil {
+		// TODO test
+		dr.log.Err(err).Warn("Failed to update replication status")
+		// Don't return with this error because original error must be returned.
+	}
+
+	// If err is nil then nil will be returned.
+	if errCancel != nil {
+		return false, errors.WithStack(errCancel)
+	}
+
+	return true, nil
+
 }
 
 // removeDeploymentReplicationFinalizers removes the given finalizers from the given DeploymentReplication.
@@ -186,4 +241,69 @@ func removeDeploymentReplicationFinalizers(crcli versioned.Interface, p *api.Ara
 		return errors.WithStack(err)
 	}
 	return nil
+}
+
+// isFinalizerExist returns true if a given finalizer exists.
+func isFinalizerExist(p *api.ArangoDeploymentReplication, finalizer string) bool {
+	for _, f := range p.ObjectMeta.GetFinalizers() {
+		if f == finalizer {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (dr *DeploymentReplication) getCancellationProgress(syncInfo client.SyncInfo) (client.SyncStatus, error) {
+	if syncInfo.IsInactive() {
+		if len(syncInfo.Source) > 0 {
+			return "", errors.New("Inactive target data center is still configured with the endpoint set to a source DC")
+		}
+		return client.SyncStatusInactive, nil
+	}
+
+	if syncInfo.Status == client.SyncStatusInactive {
+		// There are some not finished shards but status is inactive, so it was na canceled.
+		return "", errors.New("Target data center is inactive but some shards are not closed")
+	}
+
+	return syncInfo.Status, nil
+}
+
+// ensureInSync checks whether data is consistent on both data centers.
+// During this check both data centers will be in read-only mode.
+// Return nil when data is consistent or when consistency was already checked.
+func (dr *DeploymentReplication) ensureInSync(ctx context.Context, c client.API) (bool, int, int, error) {
+	if dr.status.Conditions.IsTrue(api.ConditionTypeEnsuredInSync) {
+		return true, 0, 0, nil
+	}
+
+	cancelStatus, err := c.Master().GetSynchronizationBarrierStatus(ctx)
+	if err != nil {
+		return false, 0, 0, errors.WithMessage(err, "Can not get synchronization barrier status")
+	}
+
+	if !cancelStatus.SourceServerReadonly {
+		if err := c.Master().CreateSynchronizationBarrier(ctx); err != nil {
+			return false, 0, 0, errors.WithMessage(err, "Can not create synchronization barrier")
+		}
+		dr.log.Info("Synchronization barrier created, both data centers are in read-only mode")
+	}
+
+	totalShards := cancelStatus.InSyncShards + cancelStatus.NotInSyncShards
+	if cancelStatus.InSyncShards > 0 && cancelStatus.NotInSyncShards == 0 {
+		dr.status.Conditions.Update(api.ConditionTypeEnsuredInSync, true, "Consistent", "Data on both data centers is the same")
+		if err := dr.updateCRStatus(); err != nil {
+			return false, 0, 0, errors.WithMessage(err, "Failed to update ArangoDeploymentReplication status")
+		}
+
+		return true, cancelStatus.InSyncShards, totalShards, nil
+	}
+
+	return false, cancelStatus.InSyncShards, totalShards, nil
+}
+
+// isTimeExceeded returns true when a time exceeds a given timeout.
+func isTimeExceeded(t *meta.Time, timeout time.Duration) bool {
+	return t != nil && time.Since(t.Time) > timeout
 }
