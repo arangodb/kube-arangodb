@@ -27,6 +27,18 @@ import "github.com/arangodb/kube-arangodb/pkg/util/errors"
 type DeploymentReplicationSpec struct {
 	Source      EndpointSpec `json:"source"`
 	Destination EndpointSpec `json:"destination"`
+	// Cancellation describes what to do during cancellation process.
+	Cancellation DeploymentReplicationCancel `json:"cancellation"`
+}
+
+// DeploymentReplicationCancel describes what to do during cancellation process.
+type DeploymentReplicationCancel struct {
+	// EnsureInSync if it is true then during cancellation process data consistency is required.
+	// Default value is true.
+	EnsureInSync *bool `json:"ensureInSync"`
+	// SourceReadOnly if it true then after cancellation source data center should be in read-only mode.
+	// Default value is false.
+	SourceReadOnly *bool `json:"sourceReadOnly"`
 }
 
 // Validate the given spec, returning an error on validation
