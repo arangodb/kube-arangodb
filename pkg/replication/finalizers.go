@@ -160,16 +160,20 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 		return false, err
 	} else if syncStatus == client.SyncStatusInactive {
 		return false, nil
+	} else if syncStatus == client.SyncStatusFailed {
+		return false, errors.WithMessagef(err, "unexpected synchronization status \"%s\"", syncStatus)
 	} else if syncStatus == client.SyncStatusCancelling {
 		// Synchronization is cancelling, so request was already sent.
+		if !abort {
+			return true, nil
+		}
+
 		changed := dr.status.Conditions.Update(api.ConditionTypeAborted, abort, "Cancellation type",
 			"Cancellation will wait for source data center to be canceled with a timeout")
 		if !changed {
 			return true, nil
 		}
 		// A Request must be sent once again because abort option has changed.
-	} else if syncStatus == client.SyncStatusFailed {
-		return false, errors.WithMessagef(err, "unexpected synchronization status \"%s\"", syncStatus)
 	}
 
 	// Check whether data consistency must be ensured.
@@ -292,18 +296,31 @@ func (dr *DeploymentReplication) ensureInSync(ctx context.Context, c client.API)
 		return false, 0, 0, errors.WithMessage(err, "Can not get synchronization barrier status")
 	}
 
-	if !cancelStatus.SourceServerReadonly {
+	if !cancelStatus.SourceServerReadonly ||
+		dr.status.Conditions.Update(api.ConditionTypeEnsuredInSync, false, "Consistent", "Data on both data centers is not the same") {
+		// If `GetSynchronizationBarrierStatus` could return active barrier then it would not create the above condition.
 		if err := c.Master().CreateSynchronizationBarrier(ctx); err != nil {
+			if driver.IsPreconditionFailed(err) {
+				dr.log.Info("Can not create synchronization barrier because synchronization is not running")
+				return false, 0, 0, nil
+			}
+
 			return false, 0, 0, errors.WithMessage(err, "Can not create synchronization barrier")
 		}
+
+		if err := dr.updateCRStatus(); err != nil {
+			return false, 0, 0, errors.WithMessage(err, "Failed to update ArangoDeploymentReplication status")
+		}
+
 		dr.log.Info("Synchronization barrier created, both data centers are in read-only mode")
 	}
 
 	totalShards := cancelStatus.InSyncShards + cancelStatus.NotInSyncShards
 	if cancelStatus.InSyncShards > 0 && cancelStatus.NotInSyncShards == 0 {
-		dr.status.Conditions.Update(api.ConditionTypeEnsuredInSync, true, "Consistent", "Data on both data centers is the same")
-		if err := dr.updateCRStatus(); err != nil {
-			return false, 0, 0, errors.WithMessage(err, "Failed to update ArangoDeploymentReplication status")
+		if dr.status.Conditions.Update(api.ConditionTypeEnsuredInSync, true, "Consistent", "Data on both data centers is the same") {
+			if err := dr.updateCRStatus(); err != nil {
+				return false, 0, 0, errors.WithMessage(err, "Failed to update ArangoDeploymentReplication status")
+			}
 		}
 
 		return true, cancelStatus.InSyncShards, totalShards, nil

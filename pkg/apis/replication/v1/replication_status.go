@@ -36,7 +36,8 @@ type DeploymentReplicationStatus struct {
 	// Destination contains the detailed status of the destination endpoint
 	Destination EndpointStatus `json:"destination"`
 
-	// Deprecated: CancelFailures records the number of times that the configuration was canceled
+	// Deprecated: this field will not be updated anymore
+	// CancelFailures records the number of times that the configuration was canceled
 	// which resulted in an error.
 	CancelFailures int `json:"cancel-failures,omitempty"`
 
