@@ -60,6 +60,7 @@ type ActionContext interface {
 	Metrics() *Metrics
 
 	ActionLocalsContext
+	ActionProgressor
 
 	// GetMemberStatusByID returns the current member status
 	// for the member with given id.
@@ -113,6 +114,14 @@ type ActionLocalsContext interface {
 	BackoffExecution(action api.Action, key api.PlanLocalKey, duration time.Duration) bool
 }
 
+// ActionProgressor describe functions to follow a progress of an action.
+type ActionProgressor interface {
+	// GetProgress returns progress of an action.
+	GetProgress() string
+	// SetProgress sets progress of an action.
+	SetProgress(progress string)
+}
+
 // newActionContext creates a new ActionContext implementation.
 func newActionContext(log logging.Logger, context Context, metrics *Metrics) ActionContext {
 	return &actionContext{
@@ -128,6 +137,7 @@ type actionContext struct {
 	log          logging.Logger
 	cachedStatus inspectorInterface.Inspector
 	locals       api.PlanLocals
+	Progress     string
 	metrics      *Metrics
 }
 
@@ -181,6 +191,16 @@ func (ac *actionContext) BackoffExecution(action api.Action, key api.PlanLocalKe
 
 func (ac *actionContext) SetTime(key api.PlanLocalKey, t time.Time) bool {
 	return ac.Add(key, t.Format(util.TimeLayout), true)
+}
+
+// SetProgress sets progress to an action.
+func (ac *actionContext) SetProgress(progress string) {
+	ac.Progress = progress
+}
+
+// GetProgress gets progress of an action.
+func (ac *actionContext) GetProgress() string {
+	return ac.Progress
 }
 
 func (ac *actionContext) GetTime(action api.Action, key api.PlanLocalKey) (time.Time, bool) {
