@@ -36,12 +36,12 @@ const (
 	// ConditionTypeAborted indicates that the replication is cancelling with abort option.
 	ConditionTypeAborted ConditionType = "Aborted"
 
-	// ConditionTypeConfiguredActive describes synchronization as active.
-	ConditionTypeConfiguredActive = "Active"
-	// ConditionTypeConfiguredInactive describes synchronization as inactive.
-	ConditionTypeConfiguredInactive = "Inactive"
-	// ConditionTypeConfiguredInvalid describes synchronization as active.
-	ConditionTypeConfiguredInvalid = "Invalid"
+	// ConditionConfiguredReasonActive describes synchronization as active.
+	ConditionConfiguredReasonActive = "Active"
+	// ConditionConfiguredReasonInactive describes synchronization as inactive.
+	ConditionConfiguredReasonInactive = "Inactive"
+	// ConditionConfiguredReasonInvalid describes synchronization as active.
+	ConditionConfiguredReasonInvalid = "Invalid"
 )
 
 // Condition represents one current condition of a deployment or deployment member.

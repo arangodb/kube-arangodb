@@ -52,7 +52,7 @@ func (dr *DeploymentReplication) addFinalizer(finalizer string) error {
 	}
 	apiObject := dr.apiObject
 
-	if !isFinalizerExist(apiObject, finalizer) {
+	if !finalizerExists(apiObject, finalizer) {
 		apiObject.SetFinalizers(append(apiObject.GetFinalizers(), finalizer))
 		if err := dr.updateCRSpec(apiObject.Spec); err != nil {
 			return errors.WithMessage(err, "Failed to update CR Spec")
@@ -70,7 +70,7 @@ func (dr *DeploymentReplication) addFinalizers() error {
 
 // runFinalizers removes stop sync finalizer if it is possible.
 func (dr *DeploymentReplication) runFinalizers(ctx context.Context, p *api.ArangoDeploymentReplication) (bool, error) {
-	if !isFinalizerExist(p, constants.FinalizerDeplReplStopSync) {
+	if !finalizerExists(p, constants.FinalizerDeplReplStopSync) {
 		return false, nil
 	}
 
@@ -256,8 +256,8 @@ func removeDeploymentReplicationFinalizers(crcli versioned.Interface, p *api.Ara
 	return nil
 }
 
-// isFinalizerExist returns true if a given finalizer exists.
-func isFinalizerExist(p *api.ArangoDeploymentReplication, finalizer string) bool {
+// finalizerExists returns true if a given finalizer exists.
+func finalizerExists(p *api.ArangoDeploymentReplication, finalizer string) bool {
 	for _, f := range p.ObjectMeta.GetFinalizers() {
 		if f == finalizer {
 			return true

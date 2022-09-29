@@ -108,7 +108,7 @@ func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.
 						if isIncomingEndpoint {
 							// Destination is correctly configured
 
-							dr.status.Conditions.Update(api.ConditionTypeConfigured, true, api.ConditionTypeConfiguredActive,
+							dr.status.Conditions.Update(api.ConditionTypeConfigured, true, api.ConditionConfiguredReasonActive,
 								"Destination syncmaster is configured correctly and active")
 							dr.status.Destination = createEndpointStatus(destStatus, "")
 							dr.status.IncomingSynchronization = dr.inspectIncomingSynchronizationStatus(ctx, destClient,
@@ -118,7 +118,7 @@ func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.
 							// Sync is active, but from different source
 							dr.log.Warn("Destination syncmaster is configured for different source")
 							cancelSyncNeeded = true
-							if dr.status.Conditions.Update(api.ConditionTypeConfigured, false, api.ConditionTypeConfiguredInvalid,
+							if dr.status.Conditions.Update(api.ConditionTypeConfigured, false, api.ConditionConfiguredReasonInvalid,
 								"Destination syncmaster is configured for different source") {
 								updateStatusNeeded = true
 							}
@@ -127,7 +127,7 @@ func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.
 				} else {
 					// Destination has correct source, but is inactive
 					configureSyncNeeded = true
-					if dr.status.Conditions.Update(api.ConditionTypeConfigured, false, api.ConditionTypeConfiguredInactive,
+					if dr.status.Conditions.Update(api.ConditionTypeConfigured, false, api.ConditionConfiguredReasonInactive,
 						"Destination syncmaster is configured correctly but in-active") {
 						updateStatusNeeded = true
 					}
