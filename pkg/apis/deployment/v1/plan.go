@@ -97,6 +97,8 @@ type Action struct {
 	Locals PlanLocals `json:"locals,omitempty"`
 	// ID reference of the task involved in this action (if any)
 	TaskID types.UID `json:"taskID,omitempty"`
+	// Progress describes what is a status of the current action.
+	Progress string `json:"progress,omitempty"`
 }
 
 // Equal compares two Actions
@@ -112,7 +114,8 @@ func (a Action) Equal(other Action) bool {
 		a.Image == other.Image &&
 		equality.Semantic.DeepEqual(a.Params, other.Params) &&
 		a.Locals.Equal(other.Locals) &&
-		a.TaskID == other.TaskID
+		a.TaskID == other.TaskID &&
+		a.Progress == other.Progress
 }
 
 // AddParam returns copy of action with set parameter
