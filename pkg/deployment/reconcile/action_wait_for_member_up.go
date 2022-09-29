@@ -22,10 +22,13 @@ package reconcile
 
 import (
 	"context"
+	"net/http"
 
 	driver "github.com/arangodb/go-driver"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
@@ -84,7 +87,7 @@ func (a *actionWaitForMemberUp) CheckProgress(ctx context.Context) (bool, bool, 
 		if a.action.Group == api.ServerGroupAgents {
 			return a.checkProgressAgent()
 		}
-		return a.checkProgressCluster()
+		return a.checkProgressCluster(ctx)
 	}
 }
 
@@ -138,7 +141,7 @@ func (a *actionWaitForMemberUp) checkProgressAgent() (bool, bool, error) {
 
 // checkProgressCluster checks the progress of the action in the case
 // of a cluster deployment (coordinator/dbserver).
-func (a *actionWaitForMemberUp) checkProgressCluster() (bool, bool, error) {
+func (a *actionWaitForMemberUp) checkProgressCluster(ctx context.Context) (bool, bool, error) {
 	h, _ := a.actionCtx.GetMembersState().Health()
 	if h.Error != nil {
 		a.log.Err(h.Error).Debug("Cluster health is missing")
@@ -153,13 +156,32 @@ func (a *actionWaitForMemberUp) checkProgressCluster() (bool, bool, error) {
 		a.log.Str("status", string(sh.Status)).Debug("Member set status not yet good")
 		return false, false, nil
 	}
+
 	// Wait for the member to become ready from a kubernetes point of view
 	// otherwise the coordinators may be rotated to fast and thus none of them
 	// is ready resulting in a short downtime
-	if m, found := a.actionCtx.GetMemberStatusByID(a.MemberID()); !found {
+	m, found := a.actionCtx.GetMemberStatusByID(a.MemberID())
+	if !found {
 		a.log.Error("No such member")
 		return false, true, nil
-	} else if !m.Conditions.IsTrue(api.ConditionTypeReady) {
+	}
+
+	imageInfo, found := a.actionCtx.GetCurrentImageInfo()
+	if !found {
+		a.log.Info("Image not found")
+		return false, false, nil
+	}
+
+	if resources.IsServerProgressAvailable(a.action.Group, imageInfo) {
+		if status, err := a.getServerStatus(ctx); err == nil {
+			progress, _ := status.GetProgress()
+			a.actionCtx.SetProgress(progress)
+		} else {
+			a.log.Err(err).Warn("Failed to get server status to establish a progress")
+		}
+	}
+
+	if !m.Conditions.IsTrue(api.ConditionTypeReady) {
 		a.log.Debug("Member not yet ready")
 		return false, false, nil
 	}
@@ -180,4 +202,37 @@ func (a *actionWaitForMemberUp) checkProgressArangoSync(ctx context.Context) (bo
 		return false, false, nil
 	}
 	return true, false, nil
+}
+
+func (a actionWaitForMemberUp) getServerStatus(ctx context.Context) (client.ServerStatus, error) {
+	cli, err := a.actionCtx.GetMembersState().GetMemberClient(a.action.MemberID)
+	if err != nil {
+		return client.ServerStatus{}, err
+	}
+	conn := cli.Connection()
+
+	req, err := conn.NewRequest("GET", "_admin/status")
+	if err != nil {
+		return client.ServerStatus{}, err
+	}
+
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
+	defer cancel()
+
+	resp, err := conn.Do(ctxChild, req)
+	if err != nil {
+		return client.ServerStatus{}, err
+	}
+
+	if err := resp.CheckStatus(http.StatusOK); err != nil {
+		return client.ServerStatus{}, err
+	}
+
+	var result client.ServerStatus
+
+	if err := resp.ParseBody("", &result); err != nil {
+		return client.ServerStatus{}, err
+	}
+
+	return result, nil
 }

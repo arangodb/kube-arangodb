@@ -294,7 +294,7 @@ func (d *Reconciler) executePlan(ctx context.Context, statusPlan api.Plan, pg pl
 			}
 
 			plan[0].Locals.Merge(actionContext.CurrentLocals())
-
+			plan[0].Progress = actionContext.GetProgress()
 			return plan, recall, false, nil
 		}
 	}
