@@ -2,6 +2,7 @@
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Feature) Add action progress
+- (Feature) Ensure consistency during replication cancellation
 
 ## [1.2.18](https://github.com/arangodb/kube-arangodb/tree/1.2.18) (2022-09-28)
 - (Feature) Define Actions PlaceHolder
@@ -13,7 +14,6 @@
 - (Feature) Add HostAliases for Sync
 - (Bugfix) Always stop Sync if disabled
 - (Bugfix) Fix checksum of accepted spec
-- (Feature) Ensure consitency during replication cancellation
 
 ## [1.2.17](https://github.com/arangodb/kube-arangodb/tree/1.2.17) (2022-09-22)
 - (Feature) Add new field to DeploymentReplicationStatus with details on DC2DC sync status=
