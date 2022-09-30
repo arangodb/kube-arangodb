@@ -54,18 +54,27 @@ func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.
 	}
 
 	// Is the deployment in failed state, if so, give up.
-	if dr.status.Phase == api.DeploymentReplicationPhaseFailed {
+	if dr.status.Phase.IsFailed() {
 		dr.log.Debug("Deployment replication is in Failed state.")
 		return nextInterval
 	}
 
 	// Is delete triggered?
-	if dr.apiObject.GetDeletionTimestamp() != nil {
-		// Deployment replication is triggered for deletion.
-		if err := dr.runFinalizers(ctx, dr.apiObject); err != nil {
-			dr.log.Err(err).Warn("Failed to run finalizers")
-			hasError = true
+	if timestamp := dr.apiObject.GetDeletionTimestamp(); timestamp != nil {
+		// Resource is being deleted.
+		retrySoon, err := dr.runFinalizers(ctx, dr.apiObject)
+		if err != nil || retrySoon {
+			if err != nil {
+				dr.log.Err(err).Warn("Failed to run finalizers")
+			}
+			timeout := CancellationTimeout + AbortTimeout
+			if isTimeExceeded(timestamp, timeout) {
+				// Cancellation and abort timeout exceeded, so it must go into failed state.
+				dr.failOnError(err, fmt.Sprintf("Failed to cancel synchronization in %s", timeout.String()))
+			}
 		}
+
+		return cancellationInterval
 	} else {
 		// Inspect configuration status
 		destClient, err := dr.createSyncMasterClient(spec.Destination)
@@ -98,15 +107,19 @@ func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.
 					} else {
 						if isIncomingEndpoint {
 							// Destination is correctly configured
-							dr.status.Conditions.Update(api.ConditionTypeConfigured, true, "Active", "Destination syncmaster is configured correctly and active")
+
+							dr.status.Conditions.Update(api.ConditionTypeConfigured, true, api.ConditionConfiguredReasonActive,
+								"Destination syncmaster is configured correctly and active")
 							dr.status.Destination = createEndpointStatus(destStatus, "")
-							dr.status.IncomingSynchronization = dr.inspectIncomingSynchronizationStatus(ctx, destClient, driver.Version(destArangosyncVersion.Version), destStatus.Shards)
+							dr.status.IncomingSynchronization = dr.inspectIncomingSynchronizationStatus(ctx, destClient,
+								driver.Version(destArangosyncVersion.Version), destStatus.Shards)
 							updateStatusNeeded = true
 						} else {
 							// Sync is active, but from different source
 							dr.log.Warn("Destination syncmaster is configured for different source")
 							cancelSyncNeeded = true
-							if dr.status.Conditions.Update(api.ConditionTypeConfigured, false, "Invalid", "Destination syncmaster is configured for different source") {
+							if dr.status.Conditions.Update(api.ConditionTypeConfigured, false, api.ConditionConfiguredReasonInvalid,
+								"Destination syncmaster is configured for different source") {
 								updateStatusNeeded = true
 							}
 						}
@@ -114,7 +127,8 @@ func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.
 				} else {
 					// Destination has correct source, but is inactive
 					configureSyncNeeded = true
-					if dr.status.Conditions.Update(api.ConditionTypeConfigured, false, "Inactive", "Destination syncmaster is configured correctly but in-active") {
+					if dr.status.Conditions.Update(api.ConditionTypeConfigured, false, api.ConditionConfiguredReasonInactive,
+						"Destination syncmaster is configured correctly but in-active") {
 						updateStatusNeeded = true
 					}
 				}

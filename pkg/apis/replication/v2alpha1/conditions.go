@@ -31,6 +31,17 @@ type ConditionType string
 const (
 	// ConditionTypeConfigured indicates that the replication has been configured.
 	ConditionTypeConfigured ConditionType = "Configured"
+	// ConditionTypeEnsuredInSync indicates that the replication consistency was checked.
+	ConditionTypeEnsuredInSync ConditionType = "EnsuredInSync"
+	// ConditionTypeAborted indicates that the replication is cancelling with abort option.
+	ConditionTypeAborted ConditionType = "Aborted"
+
+	// ConditionConfiguredReasonActive describes synchronization as active.
+	ConditionConfiguredReasonActive = "Active"
+	// ConditionConfiguredReasonInactive describes synchronization as inactive.
+	ConditionConfiguredReasonInactive = "Inactive"
+	// ConditionConfiguredReasonInvalid describes synchronization as active.
+	ConditionConfiguredReasonInvalid = "Invalid"
 )
 
 // Condition represents one current condition of a deployment or deployment member.

@@ -2,6 +2,7 @@
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Feature) Add action progress
+- (Feature) Ensure consistency during replication cancellation
 
 ## [1.2.18](https://github.com/arangodb/kube-arangodb/tree/1.2.18) (2022-09-28)
 - (Feature) Define Actions PlaceHolder
