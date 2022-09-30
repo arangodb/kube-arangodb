@@ -2,6 +2,7 @@
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Feature) Add action progress
+- (Feature) Ensure consistency during replication cancellation
 
 ## [1.2.19](https://github.com/arangodb/kube-arangodb/tree/1.2.19) (2022-10-05)
 - (Bugfix) Prevent changes when UID is wrong

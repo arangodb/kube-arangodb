@@ -22,6 +22,7 @@ package replication
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"sync/atomic"
 	"time"
@@ -72,11 +73,13 @@ const (
 	deploymentReplicationEventQueueSize = 100
 	minInspectionInterval               = time.Second // Ensure we inspect the generated resources no less than with this interval
 	maxInspectionInterval               = time.Minute // Ensure we inspect the generated resources no less than with this interval
+	cancellationInterval                = time.Second * 5
 )
 
 // DeploymentReplication is the in process state of an ArangoDeploymentReplication.
 type DeploymentReplication struct {
 	log       logging.Logger
+	lastLog   time.Time
 	apiObject *api.ArangoDeploymentReplication // API object
 	status    api.DeploymentReplicationStatus  // Internal status of the CR
 	config    Config
@@ -246,8 +249,14 @@ func (dr *DeploymentReplication) createEvent(evt *k8sutil.Event) {
 	dr.deps.EventRecorder.Event(evt.InvolvedObject, evt.Type, evt.Reason, evt.Message)
 }
 
-// Update the status of the API object from the internal status
+// Update the status of the API object from the internal status.
+// Has no effect if object is being deleted.
 func (dr *DeploymentReplication) updateCRStatus() error {
+	if dr.apiObject.DeletionTimestamp != nil {
+		// Object is being removed so nothing can be changed in the resource.
+		// The field DeploymentReplication.status is updated automatically here.
+		return nil
+	}
 	if reflect.DeepEqual(dr.apiObject.Status, dr.status) {
 		// Nothing has changed
 		return nil
@@ -323,8 +332,13 @@ func (dr *DeploymentReplication) updateCRSpec(newSpec api.DeploymentReplicationS
 
 // failOnError reports the given error and sets the deployment replication status to failed.
 func (dr *DeploymentReplication) failOnError(err error, msg string) {
-	dr.log.Err(err).Error(msg)
-	dr.status.Reason = err.Error()
+	if err != nil {
+		dr.log.Err(err).Error(msg)
+		dr.status.Reason = fmt.Sprintf("%s: %s", msg, err.Error())
+	} else {
+		dr.log.Error(msg)
+		dr.status.Reason = msg
+	}
 	dr.reportFailedStatus()
 }
 
