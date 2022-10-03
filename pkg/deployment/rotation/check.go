@@ -36,6 +36,7 @@ type Mode int
 
 const (
 	SkippedRotation Mode = iota
+	// SilentRotation Propagates changes without restart
 	SilentRotation
 	InPlaceRotation
 	GracefulRotation

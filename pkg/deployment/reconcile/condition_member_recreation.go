@@ -251,3 +251,8 @@ func getRequiredReplaceMessage(podName string) string {
 	return fmt.Sprintf("%s annotation is required to be set on the pod %s",
 		deployment.ArangoDeploymentPodReplaceAnnotation, podName)
 }
+
+func getRequiredRotateMessage(podName string) string {
+	return fmt.Sprintf("%s annotation is required to be set on the pod %s",
+		deployment.ArangoDeploymentPodRotateAnnotation, podName)
+}

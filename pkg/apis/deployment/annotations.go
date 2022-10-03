@@ -23,6 +23,7 @@ package deployment
 const (
 	ArangoDeploymentAnnotationPrefix                = "deployment.arangodb.com"
 	ArangoDeploymentPodMaintenanceAnnotation        = ArangoDeploymentAnnotationPrefix + "/maintenance"
+	ArangoDeploymentPodChangeArchAnnotation         = ArangoDeploymentAnnotationPrefix + "/arch"
 	ArangoDeploymentPodRotateAnnotation             = ArangoDeploymentAnnotationPrefix + "/rotate"
 	ArangoDeploymentPodReplaceAnnotation            = ArangoDeploymentAnnotationPrefix + "/replace"
 	ArangoDeploymentPodDeleteNow                    = ArangoDeploymentAnnotationPrefix + "/delete_now"
