@@ -51,7 +51,7 @@ func withMemberMaintenance(group api.ServerGroup, member api.MemberStatus, reaso
 		return plan
 	}
 
-	if !features.Version310().Enabled() {
+	if !features.Version310().ImageSupported(member.Image) {
 		return plan
 	}
 
