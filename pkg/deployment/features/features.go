@@ -20,7 +20,11 @@
 
 package features
 
-import "github.com/arangodb/go-driver"
+import (
+	"github.com/arangodb/go-driver"
+
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+)
 
 const (
 	Enabled  = "true"
@@ -40,6 +44,7 @@ type Feature interface {
 	Deprecated() (bool, string)
 	Hidden() bool
 	Supported(v driver.Version, enterprise bool) bool
+	ImageSupported(i *api.ImageInfo) bool
 }
 
 type feature struct {
@@ -49,6 +54,14 @@ type feature struct {
 	deprecated                                    string
 	constValue                                    *bool
 	hidden                                        bool
+}
+
+func (f feature) ImageSupported(i *api.ImageInfo) bool {
+	if i == nil {
+		return false
+	}
+
+	return f.Supported(i.ArangoDBVersion, i.Enterprise)
 }
 
 func (f feature) Hidden() bool {

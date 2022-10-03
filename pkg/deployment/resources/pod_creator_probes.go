@@ -513,5 +513,5 @@ func getProbeRetries(group api.ServerGroup) (int32, int32) {
 // IsServerProgressAvailable returns true if server progress is available.
 func IsServerProgressAvailable(group api.ServerGroup, imageInfo api.ImageInfo) bool {
 	return group == api.ServerGroupDBServers &&
-		features.Version310().Supported(imageInfo.ArangoDBVersion, imageInfo.Enterprise)
+		features.Version310().ImageSupported(&imageInfo)
 }
