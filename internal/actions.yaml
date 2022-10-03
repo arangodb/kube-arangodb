@@ -84,6 +84,9 @@ actions:
     enterprise: true
     description: Update certificate in SNI
     timeout: 10m
+  SetCurrentMemberArch:
+    description: Set current member architecture
+    timeout: 10m
   SetCurrentImage:
     description: Update deployment current image after image discovery
     timeout: 6h

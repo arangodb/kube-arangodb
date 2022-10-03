@@ -97,6 +97,8 @@ type Action struct {
 	Locals PlanLocals `json:"locals,omitempty"`
 	// ID reference of the task involved in this action (if any)
 	TaskID types.UID `json:"taskID,omitempty"`
+	// Architecture of the member involved in this action (if any)
+	Architecture ArangoDeploymentArchitectureType `json:"arch,omitempty"`
 	// Progress describes what is a status of the current action.
 	Progress string `json:"progress,omitempty"`
 }
@@ -115,6 +117,7 @@ func (a Action) Equal(other Action) bool {
 		equality.Semantic.DeepEqual(a.Params, other.Params) &&
 		a.Locals.Equal(other.Locals) &&
 		a.TaskID == other.TaskID &&
+		a.Architecture == other.Architecture &&
 		a.Progress == other.Progress
 }
 
@@ -191,6 +194,12 @@ func NewActionBuilder(group ServerGroup, memberID string) ActionBuilder {
 // action.
 func (a Action) SetImage(image string) Action {
 	a.Image = image
+	return a
+}
+
+// SetArch sets the Architecture field to the given value and returns the modified
+func (a Action) SetArch(arch ArangoDeploymentArchitectureType) Action {
+	a.Architecture = arch
 	return a
 }
 

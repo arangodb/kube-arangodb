@@ -60,6 +60,27 @@ func AppendArchSelector(a *core.NodeAffinity, arch api.ArangoDeploymentArchitect
 	a.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms = append(a.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms, arch.AsNodeSelectorRequirement())
 }
 
+func GetArchFromAffinity(a *core.Affinity) api.ArangoDeploymentArchitectureType {
+	if a != nil && a.NodeAffinity != nil && a.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution != nil {
+		for _, nst := range a.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms {
+			for _, req := range nst.MatchExpressions {
+				if req.Key == shared.NodeArchAffinityLabel || req.Key == shared.NodeArchAffinityLabelBeta {
+					for _, arch := range req.Values {
+						return api.ArangoDeploymentArchitectureType(arch)
+					}
+				}
+			}
+		}
+	}
+	return ""
+}
+
+func SetArchInAffinity(a *core.Affinity, arch api.ArangoDeploymentArchitectureType) {
+	if a != nil && a.NodeAffinity != nil && a.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution != nil {
+		a.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms = []core.NodeSelectorTerm{arch.AsNodeSelectorRequirement()}
+	}
+}
+
 func AppendAffinityWithRole(p interfaces.PodCreator, a *core.PodAffinity, role string) {
 	labelSelector := &meta.LabelSelector{
 		MatchLabels: k8sutil.LabelsForDeployment(p.GetName(), role),
