@@ -29,8 +29,6 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/topology"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
@@ -62,28 +60,12 @@ func containersCompare(ds api.DeploymentSpec, g api.ServerGroup, spec, status *c
 
 					g := podContainerFuncGenerator(ds, g, ac, bc)
 
-					if m, p, err := comparePodContainer(builder, g(compareServerContainerVolumeMounts), g(compareServerContainerProbes)); err != nil {
+					if m, p, err := comparePodContainer(builder, g(compareServerContainerVolumeMounts), g(compareServerContainerProbes), g(compareServerContainerEnvs)); err != nil {
 						log.Err(err).Msg("Error while getting pod diff")
 						return SkippedRotation, nil, err
 					} else {
 						mode = mode.And(m)
 						plan = append(plan, p...)
-					}
-
-					if !equality.Semantic.DeepEqual(ac.Env, bc.Env) {
-						filter := func(a, b map[string]core.EnvVar) (map[string]core.EnvVar, map[string]core.EnvVar) {
-							for _, excludedEnv := range getExcludedEnv() {
-								delete(a, excludedEnv)
-								delete(b, excludedEnv)
-							}
-
-							return a, b
-						}
-						if areEnvsEqual(ac.Env, bc.Env, filter) {
-							// Envs are the same after filtering, but it were different before filtering, so it can be replaced.
-							bc.Env = ac.Env
-							mode = mode.And(SilentRotation)
-						}
 					}
 
 					if !equality.Semantic.DeepEqual(ac.EnvFrom, bc.EnvFrom) {
@@ -112,6 +94,16 @@ func containersCompare(ds api.DeploymentSpec, g api.ServerGroup, spec, status *c
 
 						bc.Image = ac.Image
 						mode = mode.And(InPlaceRotation)
+					}
+
+					g := podContainerFuncGenerator(ds, g, ac, bc)
+
+					if m, p, err := comparePodContainer(builder, g(compareAnyContainerVolumeMounts), g(compareAnyContainerEnvs)); err != nil {
+						log.Err(err).Msg("Error while getting pod diff")
+						return SkippedRotation, nil, err
+					} else {
+						mode = mode.And(m)
+						plan = append(plan, p...)
 					}
 				}
 
@@ -217,27 +209,6 @@ func internalContainerLifecycleCompare(spec, status *core.Container) Mode {
 	return SkippedRotation
 }
 
-func areEnvsEqual(a, b []core.EnvVar, rules ...func(a, b map[string]core.EnvVar) (map[string]core.EnvVar, map[string]core.EnvVar)) bool {
-	am := getEnvs(a)
-	bm := getEnvs(b)
-
-	for _, r := range rules {
-		am, bm = r(am, bm)
-	}
-
-	return equality.Semantic.DeepEqual(am, bm)
-}
-
-func getEnvs(e []core.EnvVar) map[string]core.EnvVar {
-	m := map[string]core.EnvVar{}
-
-	for _, q := range e {
-		m[q.Name] = q
-	}
-
-	return m
-}
-
 func areProbesEqual(a, b *core.Probe) bool {
 	if a == nil && b == nil {
 		return true
@@ -285,11 +256,4 @@ func createEnvsFromMap(e []core.EnvFromSource) map[string]core.EnvFromSource {
 	}
 
 	return m
-}
-
-// getExcludedEnv returns environment variables which should not be compared when pod's rotation is considered.
-func getExcludedEnv() []string {
-	return []string{topology.ArangoDBZone, resources.ArangoDBOverrideServerGroupEnv,
-		resources.ArangoDBOverrideDeploymentModeEnv, resources.ArangoDBOverrideVersionEnv,
-		resources.ArangoDBOverrideEnterpriseEnv}
 }

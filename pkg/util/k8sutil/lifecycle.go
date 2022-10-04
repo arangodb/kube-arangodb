@@ -103,6 +103,25 @@ func NewLifecycle(t string) (*core.Lifecycle, error) {
 	return lifecycle, nil
 }
 
+func AppendLifecycleEnv(in []core.EnvVar) []core.EnvVar {
+	for _, e := range GetLifecycleEnv() {
+		if !EnvExists(in, e.Name) {
+			in = append(in, e)
+		}
+	}
+	return in
+}
+
+func EnvExists(a []core.EnvVar, name string) bool {
+	for _, q := range a {
+		if q.Name == name {
+			return true
+		}
+	}
+
+	return false
+}
+
 func GetLifecycleEnv() []core.EnvVar {
 	return []core.EnvVar{
 		CreateEnvFieldPath(constants.EnvOperatorPodName, "metadata.name"),
