@@ -103,6 +103,7 @@ type Deployment struct {
 	log logging.Logger
 
 	name      string
+	uid       types.UID
 	namespace string
 
 	currentObject       *api.ArangoDeployment
@@ -234,6 +235,7 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 		currentObject:       apiObject,
 		currentObjectStatus: apiObject.Status.DeepCopy(),
 		name:                apiObject.GetName(),
+		uid:                 apiObject.GetUID(),
 		namespace:           apiObject.GetNamespace(),
 		config:              config,
 		deps:                deps,

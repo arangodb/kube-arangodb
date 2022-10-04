@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Bugfix) Prevent changes when UID is wrong
 
 ## [1.2.18](https://github.com/arangodb/kube-arangodb/tree/1.2.18) (2022-09-28)
 - (Feature) Define Actions PlaceHolder

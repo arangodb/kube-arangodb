@@ -76,6 +76,12 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 		d.log.Info("Deployment is gone")
 		d.Stop()
 		return nextInterval
+	} else if err != nil {
+		d.log.Err(err).Error("Deployment fetch error")
+		return nextInterval
+	} else if d.uid != updated.GetUID() {
+		d.log.Error("Deployment UID Changed!")
+		return nextInterval
 	} else if updated != nil && updated.GetDeletionTimestamp() != nil {
 		// Deployment is marked for deletion
 		if err := d.runDeploymentFinalizers(ctxReconciliation, d.GetCachedStatus()); err != nil {
