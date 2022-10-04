@@ -33,6 +33,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/info"
 	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
 )
 
@@ -51,7 +52,7 @@ func (r *Resources) CleanupTerminatedPods(ctx context.Context) (util.Interval, e
 	status := r.context.GetStatus()
 	if err := r.context.ACS().ForEachHealthyCluster(func(item sutil.ACSItem) error {
 		return item.Cache().Pod().V1().Iterate(func(pod *core.Pod) error {
-			if k8sutil.IsArangoDBImageIDAndVersionPod(pod) {
+			if info.GetPodServerGroup(pod) == api.ServerGroupImageDiscovery {
 				// Image ID pods are not relevant to inspect here
 				return nil
 			}

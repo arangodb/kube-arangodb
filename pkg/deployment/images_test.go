@@ -58,7 +58,7 @@ func TestEnsureImages(t *testing.T) {
 	// Arange
 	terminationGracePeriodSeconds := int64((time.Second * 30).Seconds())
 	id := fmt.Sprintf("%0x", sha1.Sum([]byte(testNewImage)))[:6]
-	hostname := testDeploymentName + "-" + shared.ImageIDAndVersionRole + "-" + id
+	hostname := testDeploymentName + "-" + api.ServerGroupImageDiscovery.AsRole() + "-" + id
 
 	var securityContext api.ServerGroupSpecSecurityContext
 
@@ -107,7 +107,7 @@ func TestEnsureImages(t *testing.T) {
 					Hostname:                      hostname,
 					Subdomain:                     testDeploymentName + "-int",
 					Affinity: k8sutil.CreateAffinity(testDeploymentName,
-						shared.ImageIDAndVersionRole, false, ""),
+						api.ServerGroupImageDiscovery.AsRole(), false, ""),
 				},
 			},
 		},
@@ -170,7 +170,7 @@ func TestEnsureImages(t *testing.T) {
 					Hostname:                      hostname,
 					Subdomain:                     testDeploymentName + "-int",
 					Affinity: k8sutil.CreateAffinity(testDeploymentName,
-						shared.ImageIDAndVersionRole, false, ""),
+						api.ServerGroupImageDiscovery.AsRole(), false, ""),
 				},
 			},
 		},
@@ -213,7 +213,7 @@ func TestEnsureImages(t *testing.T) {
 					Hostname:                      hostname,
 					Subdomain:                     testDeploymentName + "-int",
 					Affinity: k8sutil.CreateAffinity(testDeploymentName,
-						shared.ImageIDAndVersionRole, false, ""),
+						api.ServerGroupImageDiscovery.AsRole(), false, ""),
 				},
 			},
 		},
@@ -269,7 +269,7 @@ func TestEnsureImages(t *testing.T) {
 					Hostname:                      hostname,
 					Subdomain:                     testDeploymentName + "-int",
 					Affinity: k8sutil.CreateAffinity(testDeploymentName,
-						shared.ImageIDAndVersionRole, false, ""),
+						api.ServerGroupImageDiscovery.AsRole(), false, ""),
 				},
 			},
 		},
@@ -283,7 +283,7 @@ func TestEnsureImages(t *testing.T) {
 			Before: func(t *testing.T, deployment *Deployment) {
 				pod := core.Pod{
 					ObjectMeta: meta.ObjectMeta{
-						Name:              k8sutil.CreatePodName(testDeploymentName, shared.ImageIDAndVersionRole, id, ""),
+						Name:              k8sutil.CreatePodName(testDeploymentName, api.ServerGroupImageDiscovery.AsRole(), id, ""),
 						CreationTimestamp: meta.Now(),
 					},
 					Spec: core.PodSpec{},
@@ -310,7 +310,7 @@ func TestEnsureImages(t *testing.T) {
 			Before: func(t *testing.T, deployment *Deployment) {
 				pod := core.Pod{
 					ObjectMeta: meta.ObjectMeta{
-						Name: k8sutil.CreatePodName(testDeploymentName, shared.ImageIDAndVersionRole, id, ""),
+						Name: k8sutil.CreatePodName(testDeploymentName, api.ServerGroupImageDiscovery.AsRole(), id, ""),
 					},
 					Status: core.PodStatus{
 						Phase: core.PodFailed,
@@ -335,7 +335,7 @@ func TestEnsureImages(t *testing.T) {
 			Before: func(t *testing.T, deployment *Deployment) {
 				pod := core.Pod{
 					ObjectMeta: meta.ObjectMeta{
-						Name: k8sutil.CreatePodName(testDeploymentName, shared.ImageIDAndVersionRole, id, ""),
+						Name: k8sutil.CreatePodName(testDeploymentName, api.ServerGroupImageDiscovery.AsRole(), id, ""),
 					},
 					Status: core.PodStatus{
 						Conditions: []core.PodCondition{
@@ -364,7 +364,7 @@ func TestEnsureImages(t *testing.T) {
 			Before: func(t *testing.T, deployment *Deployment) {
 				pod := core.Pod{
 					ObjectMeta: meta.ObjectMeta{
-						Name: k8sutil.CreatePodName(testDeploymentName, shared.ImageIDAndVersionRole, id, ""),
+						Name: k8sutil.CreatePodName(testDeploymentName, api.ServerGroupImageDiscovery.AsRole(), id, ""),
 					},
 					Status: core.PodStatus{
 						Conditions: []core.PodCondition{
@@ -394,7 +394,7 @@ func TestEnsureImages(t *testing.T) {
 			Before: func(t *testing.T, deployment *Deployment) {
 				pod := core.Pod{
 					ObjectMeta: meta.ObjectMeta{
-						Name: k8sutil.CreatePodName(testDeploymentName, shared.ImageIDAndVersionRole, id, ""),
+						Name: k8sutil.CreatePodName(testDeploymentName, api.ServerGroupImageDiscovery.AsRole(), id, ""),
 					},
 					Status: core.PodStatus{
 						Conditions: []core.PodCondition{
