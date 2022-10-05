@@ -296,12 +296,6 @@ func IsPodTerminating(pod *core.Pod) bool {
 	return IsPodMarkedForDeletion(pod) && pod.Status.Phase == core.PodRunning
 }
 
-// IsArangoDBImageIDAndVersionPod returns true if the given pod is used for fetching image ID and ArangoDB version of an image
-func IsArangoDBImageIDAndVersionPod(p *core.Pod) bool {
-	role, found := p.GetLabels()[LabelKeyRole]
-	return found && role == shared.ImageIDAndVersionRole
-}
-
 // getPodCondition returns the condition of given type in the given status.
 // If not found, nil is returned.
 func getPodCondition(status *core.PodStatus, condType core.PodConditionType) *core.PodCondition {

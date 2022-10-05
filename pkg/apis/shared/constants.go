@@ -42,9 +42,6 @@ const (
 	NodeArchAffinityLabel     = "kubernetes.io/arch"
 	NodeArchAffinityLabelBeta = "beta.kubernetes.io/arch"
 
-	// Internal constants
-	ImageIDAndVersionRole = "id" // Role use by identification pods
-
 	// Pod constants
 	ServerContainerName             = "server"
 	ExporterContainerName           = "exporter"

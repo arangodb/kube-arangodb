@@ -86,7 +86,7 @@ const (
 	ServerGroupCoordinatorsString   = "coordinator"
 	ServerGroupSyncMastersString    = "syncmaster"
 	ServerGroupSyncWorkersString    = "syncworker"
-	ServerGroupImageDiscoveryString = "imagediscovery"
+	ServerGroupImageDiscoveryString = "id"
 
 	ServerGroupSingleAbbreviatedString         = "sngl"
 	ServerGroupAgentsAbbreviatedString         = "agnt"
@@ -131,6 +131,8 @@ func (g ServerGroup) AsRole() string {
 		return ServerGroupSyncMastersString
 	case ServerGroupSyncWorkers:
 		return ServerGroupSyncWorkersString
+	case ServerGroupImageDiscovery:
+		return ServerGroupImageDiscoveryString
 	default:
 		return "?"
 	}
@@ -151,6 +153,8 @@ func (g ServerGroup) AsRoleAbbreviated() string {
 		return ServerGroupSyncMastersAbbreviatedString
 	case ServerGroupSyncWorkers:
 		return ServerGroupSyncWorkersAbbreviatedString
+	case ServerGroupImageDiscovery:
+		return ServerGroupImageDiscoveryAbbreviatedString
 	default:
 		return "?"
 	}
@@ -227,6 +231,8 @@ func ServerGroupFromAbbreviatedRole(label string) ServerGroup {
 		return ServerGroupSyncMasters
 	case ServerGroupSyncWorkersAbbreviatedString:
 		return ServerGroupSyncWorkers
+	case ServerGroupImageDiscoveryAbbreviatedString:
+		return ServerGroupImageDiscovery
 	default:
 		return ServerGroupUnknown
 	}
@@ -247,6 +253,8 @@ func ServerGroupFromRole(label string) ServerGroup {
 		return ServerGroupSyncMasters
 	case ServerGroupSyncWorkersString:
 		return ServerGroupSyncWorkers
+	case ServerGroupImageDiscoveryString:
+		return ServerGroupImageDiscovery
 	default:
 		return ServerGroupUnknown
 	}
