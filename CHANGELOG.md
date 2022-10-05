@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.2.19](https://github.com/arangodb/kube-arangodb/tree/1.2.19) (2022-10-05)
 - (Bugfix) Prevent changes when UID is wrong
 
 ## [1.2.18](https://github.com/arangodb/kube-arangodb/tree/1.2.18) (2022-09-28)
