@@ -716,6 +716,12 @@ func addLifecycleSidecar(coreNames []string, sidecars []core.Container) error {
 				break
 			}
 
+			if !k8sutil.VolumeMountExists(sidecar.VolumeMounts, shared.LifecycleVolumeName) {
+				sidecars[i].VolumeMounts = append(sidecars[i].VolumeMounts, k8sutil.LifecycleVolumeMount())
+			}
+
+			sidecars[i].Env = k8sutil.AppendLifecycleEnv(sidecars[i].Env)
+
 			lifecycle, err := k8sutil.NewLifecycleFinalizers()
 			if err != nil {
 				return err

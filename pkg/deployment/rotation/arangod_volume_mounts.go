@@ -29,16 +29,12 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 )
 
-type volumeDiff struct {
-	a, b *core.Volume
-}
-
-func comparePodVolumes(ds api.DeploymentSpec, g api.ServerGroup, spec, status *core.PodSpec) comparePodFunc {
+func compareServerContainerVolumeMounts(ds api.DeploymentSpec, g api.ServerGroup, spec, status *core.Container) comparePodContainerFunc {
 	return func(builder api.ActionBuilder) (mode Mode, plan api.Plan, err error) {
-		specV := mapVolumes(spec)
-		statusV := mapVolumes(status)
+		specV := mapVolumeMounts(spec)
+		statusV := mapVolumeMounts(status)
 
-		diff := getVolumesDiffFromPods(specV, statusV)
+		diff := getVolumeMountsDiffFromPods(specV, statusV)
 
 		if len(diff) == 0 {
 			return SkippedRotation, nil, nil
@@ -57,29 +53,60 @@ func comparePodVolumes(ds api.DeploymentSpec, g api.ServerGroup, spec, status *c
 					// Always enforce on serving group
 					return GracefulRotation, nil, nil
 				}
+			case shared.LifecycleVolumeName:
+				// Do nothing
 			default:
 				return GracefulRotation, nil, nil
 			}
 		}
 
-		status.Volumes = spec.Volumes
+		status.VolumeMounts = spec.VolumeMounts
 		return SilentRotation, nil, nil
 	}
 }
 
-func getVolumesDiffFromPods(a, b map[string]*core.Volume) map[string]volumeDiff {
-	d := map[string]volumeDiff{}
+func compareAnyContainerVolumeMounts(ds api.DeploymentSpec, g api.ServerGroup, spec, status *core.Container) comparePodContainerFunc {
+	return func(builder api.ActionBuilder) (mode Mode, plan api.Plan, err error) {
+		specV := mapVolumeMounts(spec)
+		statusV := mapVolumeMounts(status)
+
+		diff := getVolumeMountsDiffFromPods(specV, statusV)
+
+		if len(diff) == 0 {
+			return SkippedRotation, nil, nil
+		}
+
+		for k := range diff {
+			switch k {
+			case shared.LifecycleVolumeName:
+				// Do nothing
+			default:
+				return GracefulRotation, nil, nil
+			}
+		}
+
+		status.VolumeMounts = spec.VolumeMounts
+		return SilentRotation, nil, nil
+	}
+}
+
+type volumeMountDiff struct {
+	a, b []*core.VolumeMount
+}
+
+func getVolumeMountsDiffFromPods(a, b map[string][]*core.VolumeMount) map[string]volumeMountDiff {
+	d := map[string]volumeMountDiff{}
 
 	for k := range a {
 		if z, ok := b[k]; ok {
 			if !reflect.DeepEqual(a[k], z) {
-				d[k] = volumeDiff{
+				d[k] = volumeMountDiff{
 					a: a[k],
 					b: z,
 				}
 			}
 		} else {
-			d[k] = volumeDiff{
+			d[k] = volumeMountDiff{
 				a: a[k],
 				b: nil,
 			}
@@ -87,9 +114,9 @@ func getVolumesDiffFromPods(a, b map[string]*core.Volume) map[string]volumeDiff 
 	}
 	for k := range b {
 		if _, ok := a[k]; !ok {
-			d[k] = volumeDiff{
+			d[k] = volumeMountDiff{
 				a: nil,
-				b: b[k],
+				b: a[k],
 			}
 		}
 	}
@@ -97,13 +124,13 @@ func getVolumesDiffFromPods(a, b map[string]*core.Volume) map[string]volumeDiff 
 	return d
 }
 
-func mapVolumes(a *core.PodSpec) map[string]*core.Volume {
-	n := make(map[string]*core.Volume, len(a.Volumes))
+func mapVolumeMounts(a *core.Container) map[string][]*core.VolumeMount {
+	n := make(map[string][]*core.VolumeMount, len(a.VolumeMounts))
 
-	for id := range a.Volumes {
-		v := &a.Volumes[id]
+	for id := range a.VolumeMounts {
+		v := &a.VolumeMounts[id]
 
-		n[v.Name] = v
+		n[v.Name] = append(n[v.Name], v)
 	}
 
 	return n
