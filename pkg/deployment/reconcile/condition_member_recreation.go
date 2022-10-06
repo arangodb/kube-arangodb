@@ -102,7 +102,7 @@ func (r *Reconciler) isStorageClassChanged(_ context.Context, apiObject k8sutil.
 		return false, "", nil
 	}
 
-	if member.PersistentVolumeClaimName == "" {
+	if member.PersistentVolumeClaim.GetName() == "" {
 		// Plan is irrelevant without PVC.
 		return false, "", nil
 	}
@@ -120,9 +120,9 @@ func (r *Reconciler) isStorageClassChanged(_ context.Context, apiObject k8sutil.
 	}
 
 	// Check if a storage class changed.
-	if pvc, ok := cache.PersistentVolumeClaim().V1().GetSimple(member.PersistentVolumeClaimName); !ok {
+	if pvc, ok := cache.PersistentVolumeClaim().V1().GetSimple(member.PersistentVolumeClaim.GetName()); !ok {
 		r.log.Str("role", group.AsRole()).Str("id", member.ID).Warn("Failed to get PVC")
-		return false, "", fmt.Errorf("failed to get PVC %s", member.PersistentVolumeClaimName)
+		return false, "", fmt.Errorf("failed to get PVC %s", member.PersistentVolumeClaim.GetName())
 	} else {
 		pvcClassName := util.StringOrDefault(pvc.Spec.StorageClassName)
 		if pvcClassName == storageClassName {
@@ -173,7 +173,7 @@ func (r *Reconciler) isVolumeSizeChanged(_ context.Context, _ k8sutil.APIObject,
 		return false, "", nil
 	}
 
-	if member.PersistentVolumeClaimName == "" {
+	if member.PersistentVolumeClaim.GetName() == "" {
 		// Plan is irrelevant without PVC.
 		return false, "", nil
 	}
@@ -183,14 +183,14 @@ func (r *Reconciler) isVolumeSizeChanged(_ context.Context, _ k8sutil.APIObject,
 		return false, "", nil
 	}
 
-	pvc, ok := cache.PersistentVolumeClaim().V1().GetSimple(member.PersistentVolumeClaimName)
+	pvc, ok := cache.PersistentVolumeClaim().V1().GetSimple(member.PersistentVolumeClaim.GetName())
 	if !ok {
 		r.log.
 			Str("role", group.AsRole()).
 			Str("id", member.ID).
 			Warn("Failed to get PVC")
 
-		return false, "", fmt.Errorf("failed to get PVC %s", member.PersistentVolumeClaimName)
+		return false, "", fmt.Errorf("failed to get PVC %s", member.PersistentVolumeClaim.GetName())
 	}
 
 	groupSpec := spec.GetServerGroupSpec(group)

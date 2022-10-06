@@ -592,9 +592,9 @@ func CreateArangoDVolumes(status api.MemberStatus, input pod.Input, spec api.Dep
 
 	volumes.AddVolumeMount(k8sutil.LifecycleVolumeMount())
 
-	if status.PersistentVolumeClaimName != "" {
+	if status.PersistentVolumeClaim != nil {
 		vol := k8sutil.CreateVolumeWithPersitantVolumeClaim(shared.ArangodVolumeName,
-			status.PersistentVolumeClaimName)
+			status.PersistentVolumeClaim.GetName())
 
 		volumes.AddVolume(vol)
 	} else {

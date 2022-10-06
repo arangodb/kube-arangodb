@@ -68,7 +68,7 @@ func (r *Resources) prepareAgencyPodTermination(p *core.Pod, memberStatus api.Me
 	}
 
 	// Check PVC
-	pvc, ok := r.context.ACS().CurrentClusterCache().PersistentVolumeClaim().V1().GetSimple(memberStatus.PersistentVolumeClaimName)
+	pvc, ok := r.context.ACS().CurrentClusterCache().PersistentVolumeClaim().V1().GetSimple(memberStatus.PersistentVolumeClaim.GetName())
 	if !ok {
 		log.Warn("Failed to get PVC for member")
 		return errors.Newf("Failed to get PVC for member")
@@ -147,7 +147,7 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, p *core.P
 	// Check PVC
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
-	pvc, err := r.context.ACS().CurrentClusterCache().PersistentVolumeClaim().V1().Read().Get(ctxChild, memberStatus.PersistentVolumeClaimName, meta.GetOptions{})
+	pvc, err := r.context.ACS().CurrentClusterCache().PersistentVolumeClaim().V1().Read().Get(ctxChild, memberStatus.PersistentVolumeClaim.GetName(), meta.GetOptions{})
 	if err != nil {
 		log.Err(err).Warn("Failed to get PVC for member")
 		return errors.WithStack(err)

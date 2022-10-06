@@ -62,9 +62,9 @@ func (a *actionRecreateMember) Start(ctx context.Context) (bool, error) {
 
 	switch g {
 	case api.ServerGroupDBServers, api.ServerGroupAgents: // Only DBServers and Agents use persistent data
-		_, ok := cache.PersistentVolumeClaim().V1().GetSimple(m.PersistentVolumeClaimName)
+		_, ok := cache.PersistentVolumeClaim().V1().GetSimple(m.PersistentVolumeClaim.GetName())
 		if !ok {
-			return false, errors.Newf("PVC is missing %s. Members won't be recreated without old PV", m.PersistentVolumeClaimName)
+			return false, errors.Newf("PVC is missing %s. Members won't be recreated without old PV", m.PersistentVolumeClaim.GetName())
 		}
 	}
 

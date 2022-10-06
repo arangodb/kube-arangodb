@@ -133,10 +133,13 @@ func (d *Deployment) renderMember(spec api.DeploymentSpec, status *api.Deploymen
 	case api.ServerGroupSingle:
 		d.log.Str("id", id).Debug("Adding single server")
 		return &api.MemberStatus{
-			ID:                        id,
-			UID:                       uuid.NewUUID(),
-			CreatedAt:                 meta.Now(),
-			Phase:                     api.MemberPhaseNone,
+			ID:        id,
+			UID:       uuid.NewUUID(),
+			CreatedAt: meta.Now(),
+			Phase:     api.MemberPhaseNone,
+			PersistentVolumeClaim: &api.MemberPersistentVolumeClaimStatus{
+				Name: shared.CreatePersistentVolumeClaimName(deploymentName, role, id),
+			},
 			PersistentVolumeClaimName: shared.CreatePersistentVolumeClaimName(deploymentName, role, id),
 			Image:                     apiObject.Status.CurrentImage,
 			Architecture:              &arch,
@@ -144,10 +147,13 @@ func (d *Deployment) renderMember(spec api.DeploymentSpec, status *api.Deploymen
 	case api.ServerGroupAgents:
 		d.log.Str("id", id).Debug("Adding agent")
 		return &api.MemberStatus{
-			ID:                        id,
-			UID:                       uuid.NewUUID(),
-			CreatedAt:                 meta.Now(),
-			Phase:                     api.MemberPhaseNone,
+			ID:        id,
+			UID:       uuid.NewUUID(),
+			CreatedAt: meta.Now(),
+			Phase:     api.MemberPhaseNone,
+			PersistentVolumeClaim: &api.MemberPersistentVolumeClaimStatus{
+				Name: shared.CreatePersistentVolumeClaimName(deploymentName, role, id),
+			},
 			PersistentVolumeClaimName: shared.CreatePersistentVolumeClaimName(deploymentName, role, id),
 			Image:                     apiObject.Status.CurrentImage,
 			Architecture:              &arch,
@@ -155,10 +161,13 @@ func (d *Deployment) renderMember(spec api.DeploymentSpec, status *api.Deploymen
 	case api.ServerGroupDBServers:
 		d.log.Str("id", id).Debug("Adding dbserver")
 		return &api.MemberStatus{
-			ID:                        id,
-			UID:                       uuid.NewUUID(),
-			CreatedAt:                 meta.Now(),
-			Phase:                     api.MemberPhaseNone,
+			ID:        id,
+			UID:       uuid.NewUUID(),
+			CreatedAt: meta.Now(),
+			Phase:     api.MemberPhaseNone,
+			PersistentVolumeClaim: &api.MemberPersistentVolumeClaimStatus{
+				Name: shared.CreatePersistentVolumeClaimName(deploymentName, role, id),
+			},
 			PersistentVolumeClaimName: shared.CreatePersistentVolumeClaimName(deploymentName, role, id),
 			Image:                     apiObject.Status.CurrentImage,
 			Architecture:              &arch,
@@ -166,35 +175,32 @@ func (d *Deployment) renderMember(spec api.DeploymentSpec, status *api.Deploymen
 	case api.ServerGroupCoordinators:
 		d.log.Str("id", id).Debug("Adding coordinator")
 		return &api.MemberStatus{
-			ID:                        id,
-			UID:                       uuid.NewUUID(),
-			CreatedAt:                 meta.Now(),
-			Phase:                     api.MemberPhaseNone,
-			PersistentVolumeClaimName: "",
-			Image:                     apiObject.Status.CurrentImage,
-			Architecture:              &arch,
+			ID:           id,
+			UID:          uuid.NewUUID(),
+			CreatedAt:    meta.Now(),
+			Phase:        api.MemberPhaseNone,
+			Image:        apiObject.Status.CurrentImage,
+			Architecture: &arch,
 		}, nil
 	case api.ServerGroupSyncMasters:
 		d.log.Str("id", id).Debug("Adding syncmaster")
 		return &api.MemberStatus{
-			ID:                        id,
-			UID:                       uuid.NewUUID(),
-			CreatedAt:                 meta.Now(),
-			Phase:                     api.MemberPhaseNone,
-			PersistentVolumeClaimName: "",
-			Image:                     apiObject.Status.CurrentImage,
-			Architecture:              &arch,
+			ID:           id,
+			UID:          uuid.NewUUID(),
+			CreatedAt:    meta.Now(),
+			Phase:        api.MemberPhaseNone,
+			Image:        apiObject.Status.CurrentImage,
+			Architecture: &arch,
 		}, nil
 	case api.ServerGroupSyncWorkers:
 		d.log.Str("id", id).Debug("Adding syncworker")
 		return &api.MemberStatus{
-			ID:                        id,
-			UID:                       uuid.NewUUID(),
-			CreatedAt:                 meta.Now(),
-			Phase:                     api.MemberPhaseNone,
-			PersistentVolumeClaimName: "",
-			Image:                     apiObject.Status.CurrentImage,
-			Architecture:              &arch,
+			ID:           id,
+			UID:          uuid.NewUUID(),
+			CreatedAt:    meta.Now(),
+			Phase:        api.MemberPhaseNone,
+			Image:        apiObject.Status.CurrentImage,
+			Architecture: &arch,
 		}, nil
 	default:
 		return nil, errors.WithStack(errors.Newf("Unknown server group %d", group))

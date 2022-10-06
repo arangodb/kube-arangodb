@@ -40,6 +40,20 @@ func RecoverPodDetails(in *api.DeploymentStatus) (changed bool, _ error) {
 				changed = true
 			}
 		}
+
+		if p := m.Member.PersistentVolumeClaim; p == nil {
+			// Recovery is nil, recovery might be needed
+			if m.Member.PersistentVolumeClaimName != "" {
+				m.Member.PersistentVolumeClaim = &api.MemberPersistentVolumeClaimStatus{
+					Name: m.Member.PersistentVolumeClaimName,
+				}
+
+				if err := in.Members.Update(m.Member, m.Group); err != nil {
+					return false, err
+				}
+				changed = true
+			}
+		}
 	}
 	return
 }

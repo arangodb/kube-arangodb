@@ -50,8 +50,6 @@ type MemberStatus struct {
 	Phase MemberPhase `json:"phase"`
 	// CreatedAt holds the creation timestamp of this member.
 	CreatedAt meta.Time `json:"created-at"`
-	// PersistentVolumeClaimName holds the name of the persistent volume claim used for this member (if any).
-	PersistentVolumeClaimName string `json:"persistentVolumeClaimName,omitempty"`
 	// Conditions specific to this member
 	Conditions ConditionList `json:"conditions,omitempty"`
 	// RecentTerminatons holds the times when this member was recently terminated.
@@ -81,6 +79,9 @@ type MemberStatus struct {
 	Pod          *MemberPodStatus      `json:"pod,omitempty"`
 	SecondaryPod *MemberPodStatus      `json:"secondaryPod,omitempty"`
 
+	PersistentVolumeClaim          *MemberPersistentVolumeClaimStatus `json:"persistentVolumeClaim,omitempty"`
+	SecondaryPersistentVolumeClaim *MemberPersistentVolumeClaimStatus `json:"secondaryPersistentVolumeClaim,omitempty"`
+
 	// deprecated
 	// SideCarSpecs contains list of specifications specified for side cars
 	SideCarSpecs map[string]core.Container `json:"sidecars-specs,omitempty"`
@@ -93,6 +94,9 @@ type MemberStatus struct {
 	// deprecated
 	// PodSpecVersion holds the checksum of Pod spec that currently runs this member. Used to rotate pods
 	PodSpecVersion string `json:"podSpecVersion,omitempty"`
+	// deprecated
+	// PersistentVolumeClaimName holds the name of the persistent volume claim used for this member (if any).
+	PersistentVolumeClaimName string `json:"PersistentVolumeClaimName,omitempty"`
 }
 
 // Equal checks for equality
@@ -103,7 +107,8 @@ func (s MemberStatus) Equal(other MemberStatus) bool {
 		s.ClusterID == other.ClusterID &&
 		s.Phase == other.Phase &&
 		util.TimeCompareEqual(s.CreatedAt, other.CreatedAt) &&
-		s.PersistentVolumeClaimName == other.PersistentVolumeClaimName &&
+		s.PersistentVolumeClaim.Equal(other.PersistentVolumeClaim) &&
+		s.SecondaryPersistentVolumeClaim.Equal(other.SecondaryPersistentVolumeClaim) &&
 		s.Pod.Equal(other.Pod) &&
 		s.SecondaryPod.Equal(other.SecondaryPod) &&
 		s.Conditions.Equal(other.Conditions) &&
