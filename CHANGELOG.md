@@ -6,6 +6,7 @@
 - (Feature) Add annotation to change architecture of a member
 - (Bugfix) Prevent Member Maintenance Error log
 - (Feature) ID ServerGroup
+- (Bugfix) Propagate Lifecycle Mount
 
 ## [1.2.19](https://github.com/arangodb/kube-arangodb/tree/1.2.19) (2022-10-05)
 - (Bugfix) Prevent changes when UID is wrong
