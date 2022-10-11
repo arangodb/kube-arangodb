@@ -92,7 +92,7 @@ func (r *Reconciler) createScalePlan(status api.DeploymentStatus, members api.Me
 			Debug("Creating scale-up plan")
 	} else if len(members) > count {
 		// Note, we scale down 1 member at a time
-		if m, err := members.SelectMemberToRemove(getCleanedServer(context), topologyMissingMemberToRemoveSelector(status.Topology), topologyAwarenessMemberToRemoveSelector(group, status.Topology)); err != nil {
+		if m, err := members.SelectMemberToRemove(getCleanedServer(context), getToBeCleanedServer(context), topologyMissingMemberToRemoveSelector(status.Topology), topologyAwarenessMemberToRemoveSelector(group, status.Topology)); err != nil {
 			r.planLogger.Err(err).Str("role", group.AsRole()).Warn("Failed to select member to remove")
 		} else {
 			ready, message := groupReadyForRestart(context, status, m, group)
@@ -172,6 +172,19 @@ func getCleanedServer(ctx reconciler.ArangoAgencyGet) api.MemberToRemoveSelector
 		if a, ok := ctx.GetAgencyCache(); ok {
 			for _, member := range m {
 				if a.Target.CleanedServers.Contains(agency.Server(member.ID)) {
+					return member.ID, nil
+				}
+			}
+		}
+		return "", nil
+	}
+}
+
+func getToBeCleanedServer(ctx reconciler.ArangoAgencyGet) api.MemberToRemoveSelector {
+	return func(m api.MemberStatusList) (string, error) {
+		if a, ok := ctx.GetAgencyCache(); ok {
+			for _, member := range m {
+				if a.Target.ToBeCleanedServers.Contains(agency.Server(member.ID)) {
 					return member.ID, nil
 				}
 			}

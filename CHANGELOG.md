@@ -8,6 +8,7 @@
 - (Feature) ID ServerGroup
 - (Bugfix) Propagate Lifecycle Mount
 - (Feature) PVC Member Status info
+- (Feature) Respect ToBeCleanedServers in Agency
 
 ## [1.2.19](https://github.com/arangodb/kube-arangodb/tree/1.2.19) (2022-10-05)
 - (Bugfix) Prevent changes when UID is wrong
