@@ -1,0 +1,421 @@
+---
+# Source: kube-arangodb/templates/service-account.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: arango-storage-operator
+  namespace: default
+  labels:
+      app.kubernetes.io/name: kube-arangodb
+      helm.sh/chart: kube-arangodb-1.2.20
+      app.kubernetes.io/managed-by: Tiller
+      app.kubernetes.io/instance: storage
+      release: storage
+---
+# Source: kube-arangodb/templates/storage-operator/crd.yaml
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+    name: arangolocalstorages.storage.arangodb.com
+    labels:
+        app.kubernetes.io/name: kube-arangodb
+        helm.sh/chart: kube-arangodb-1.2.20
+        app.kubernetes.io/managed-by: Tiller
+        app.kubernetes.io/instance: storage
+        release: storage
+spec:
+    group: storage.arangodb.com
+    names:
+        kind: ArangoLocalStorage
+        listKind: ArangoLocalStorageList
+        plural: arangolocalstorages
+        shortNames:
+            - arangostorage
+        singular: arangolocalstorage
+    scope: Cluster
+    versions:
+        - name: v1alpha
+          served: true
+          storage: true
+          schema:
+              openAPIV3Schema:
+                  type: object
+                  x-kubernetes-preserve-unknown-fields: true
+---
+# Source: kube-arangodb/templates/crd/cluster-role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+    name: arango-storage-operator-rbac-crd
+    labels:
+        app.kubernetes.io/name: kube-arangodb
+        helm.sh/chart: kube-arangodb-1.2.20
+        app.kubernetes.io/managed-by: Tiller
+        app.kubernetes.io/instance: storage
+        release: storage
+rules:
+    - apiGroups: ["apiextensions.k8s.io"]
+      resources: ["customresourcedefinitions"]
+      verbs: ["get", "list", "watch", "update", "delete"]
+      resourceNames:
+        - "arangodeployments.database.arangodb.com"
+        - "arangoclustersynchronizations.database.arangodb.com"
+        - "arangomembers.database.arangodb.com"
+        - "arangotasks.database.arangodb.com"
+        - "arangodeploymentreplications.replication.database.arangodb.com"
+        - "arangobackups.backup.arangodb.com"
+        - "arangobackuppolicies.backup.arangodb.com"
+        - "arangojobs.apps.arangodb.com"
+        - "arangolocalstorages.storage.arangodb.com"
+---
+# Source: kube-arangodb/templates/storage-operator/cluster-role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+    name: arango-storage-operator-rbac-storage
+    labels:
+        app.kubernetes.io/name: kube-arangodb
+        helm.sh/chart: kube-arangodb-1.2.20
+        app.kubernetes.io/managed-by: Tiller
+        app.kubernetes.io/instance: storage
+        release: storage
+rules:
+    - apiGroups: [""]
+      resources: ["persistentvolumes", "persistentvolumeclaims", "endpoints", "events", "services"]
+      verbs: ["*"]
+    - apiGroups: ["apiextensions.k8s.io"]
+      resources: ["customresourcedefinitions"]
+      verbs: ["get", "list", "watch"]
+    - apiGroups: [""]
+      resources: ["namespaces", "nodes"]
+      verbs: ["get", "list"]
+    - apiGroups: ["storage.k8s.io"]
+      resources: ["storageclasses"]
+      verbs: ["*"]
+    - apiGroups: ["storage.arangodb.com"]
+      resources: ["arangolocalstorages"]
+      verbs: ["*"]
+---
+# Source: kube-arangodb/templates/crd/cluster-role-binding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+    name: arango-storage-operator-rbac-crd
+    labels:
+        app.kubernetes.io/name: kube-arangodb
+        helm.sh/chart: kube-arangodb-1.2.20
+        app.kubernetes.io/managed-by: Tiller
+        app.kubernetes.io/instance: storage
+        release: storage
+roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: arango-storage-operator-rbac-crd
+subjects:
+    - kind: ServiceAccount
+      name: arango-storage-operator
+      namespace: default
+---
+# Source: kube-arangodb/templates/storage-operator/cluster-role-binding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+    name: arango-storage-operator-rbac-storage
+    labels:
+        app.kubernetes.io/name: kube-arangodb
+        helm.sh/chart: kube-arangodb-1.2.20
+        app.kubernetes.io/managed-by: Tiller
+        app.kubernetes.io/instance: storage
+        release: storage
+roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: arango-storage-operator-rbac-storage
+subjects:
+    - kind: ServiceAccount
+      name: arango-storage-operator
+      namespace: default
+---
+# Source: kube-arangodb/templates/storage-operator/role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+    name: arango-storage-operator-rbac-storage
+    namespace: default
+    labels:
+        app.kubernetes.io/name: kube-arangodb
+        helm.sh/chart: kube-arangodb-1.2.20
+        app.kubernetes.io/managed-by: Tiller
+        app.kubernetes.io/instance: storage
+        release: storage
+rules:
+    - apiGroups: [""]
+      resources: ["pods"]
+      verbs: ["get", "update"]
+    - apiGroups: [""]
+      resources: ["secrets"]
+      verbs: ["get"]
+    - apiGroups: ["apps"]
+      resources: ["daemonsets"]
+      verbs: ["*"]
+    - apiGroups: ["apps"]
+      resources: ["deployments", "replicasets"]
+      verbs: ["get"]
+---
+# Source: kube-arangodb/templates/storage-operator/role-binding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+    name: arango-storage-operator-rbac-storage
+    namespace: default
+    labels:
+        app.kubernetes.io/name: kube-arangodb
+        helm.sh/chart: kube-arangodb-1.2.20
+        app.kubernetes.io/managed-by: Tiller
+        app.kubernetes.io/instance: storage
+        release: storage
+roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: Role
+    name: arango-storage-operator-rbac-storage
+subjects:
+    - kind: ServiceAccount
+      name: arango-storage-operator
+      namespace: default
+---
+# Source: kube-arangodb/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: arango-storage-operator
+  namespace: default
+  labels:
+    app.kubernetes.io/name: kube-arangodb
+    helm.sh/chart: kube-arangodb-1.2.20
+    app.kubernetes.io/managed-by: Tiller
+    app.kubernetes.io/instance: storage
+    release: storage
+spec:
+  ports:
+    - name: server
+      port: 8528
+      protocol: TCP
+      targetPort: 8528
+    - name: http-api
+      port: 8628
+      protocol: TCP
+      targetPort: 8628
+    - name: grpc-api
+      port: 8728
+      protocol: TCP
+      targetPort: 8728
+  selector:
+    app.kubernetes.io/name: kube-arangodb
+    app.kubernetes.io/managed-by: Tiller
+    app.kubernetes.io/instance: storage
+    release: storage
+    role: leader
+  type: ClusterIP
+---
+# Source: kube-arangodb/templates/deployment.yaml
+# Scope "legacy" selected
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: arango-storage-operator
+    namespace: default
+    labels:
+        app.kubernetes.io/name: kube-arangodb
+        helm.sh/chart: kube-arangodb-1.2.20
+        app.kubernetes.io/managed-by: Tiller
+        app.kubernetes.io/instance: storage
+        release: storage
+spec:
+    replicas: 2
+    strategy:
+        type: Recreate
+        
+    selector:
+        matchLabels:
+            app.kubernetes.io/name: kube-arangodb
+            app.kubernetes.io/managed-by: Tiller
+            app.kubernetes.io/instance: storage
+            release: storage
+    template:
+        metadata:
+            labels:
+                app.kubernetes.io/name: kube-arangodb
+                helm.sh/chart: kube-arangodb-1.2.20
+                app.kubernetes.io/managed-by: Tiller
+                app.kubernetes.io/instance: storage
+                release: storage
+        spec:
+            serviceAccountName: arango-storage-operator
+            affinity:
+              nodeAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                  nodeSelectorTerms:
+                    - matchExpressions:
+                        - key: kubernetes.io/arch
+                          operator: In
+                          values:
+                          - "amd64"
+              podAntiAffinity:
+                preferredDuringSchedulingIgnoredDuringExecution:
+                  - weight: 100
+                    podAffinityTerm:
+                      topologyKey: "kubernetes.io/hostname"
+                      labelSelector:
+                        matchExpressions:
+                          - key: app.kubernetes.io/name
+                            operator: In
+                            values:
+                              - kube-arangodb
+                          - key: app.kubernetes.io/instance
+                            operator: In
+                            values:
+                              - storage
+            hostNetwork: false
+            hostPID: false
+            hostIPC: false
+            securityContext:
+                runAsNonRoot: true
+                runAsUser: 1000
+            containers:
+                - name: operator
+                  imagePullPolicy: Always
+                  image: arangodb/kube-arangodb:1.2.20
+                  args:
+                    - --scope=legacy
+                    - --operator.storage
+
+
+
+                    - --chaos.allowed=false
+                  env:
+                      - name: MY_POD_NAMESPACE
+                        valueFrom:
+                            fieldRef:
+                                fieldPath: metadata.namespace
+                      - name: MY_POD_NAME
+                        valueFrom:
+                            fieldRef:
+                                fieldPath: metadata.name
+                      - name: MY_POD_IP
+                        valueFrom:
+                            fieldRef:
+                                fieldPath: status.podIP
+                      - name: RELATED_IMAGE_UBI
+                        value: "alpine:3.11"
+                      - name: RELATED_IMAGE_METRICSEXPORTER
+                        value: "arangodb/arangodb-exporter:0.1.7"
+                      - name: RELATED_IMAGE_DATABASE
+                        value: "arangodb/arangodb:latest"
+                  ports:
+                      - name: metrics
+                        containerPort: 8528
+                  securityContext:
+                      privileged: false
+                      allowPrivilegeEscalation: false
+                      readOnlyRootFilesystem: true
+                      capabilities:
+                          drop:
+                              - 'ALL'
+                  livenessProbe:
+                      httpGet:
+                          path: /health
+                          port: 8528
+                          scheme: HTTPS
+                      initialDelaySeconds: 5
+                      periodSeconds: 10
+                  readinessProbe:
+                      httpGet:
+                          path: /ready
+                          port: 8528
+                          scheme: HTTPS
+                      initialDelaySeconds: 5
+                      periodSeconds: 10
+            tolerations:
+                - key: "node.kubernetes.io/unreachable"
+                  operator: "Exists"
+                  effect: "NoExecute"
+                  tolerationSeconds: 5
+                - key: "node.kubernetes.io/not-ready"
+                  operator: "Exists"
+                  effect: "NoExecute"
+                  tolerationSeconds: 5
+
+---
+# Source: kube-arangodb/templates/apps-operator/cluster-role-binding.yaml
+
+---
+# Source: kube-arangodb/templates/apps-operator/cluster-role.yaml
+
+---
+# Source: kube-arangodb/templates/apps-operator/role-binding.yaml
+
+---
+# Source: kube-arangodb/templates/apps-operator/role.yaml
+
+---
+# Source: kube-arangodb/templates/apps-operator/service-account-job.yaml
+
+
+---
+# Source: kube-arangodb/templates/backup-operator/cluster-role-binding.yaml
+
+---
+# Source: kube-arangodb/templates/backup-operator/cluster-role.yaml
+
+---
+# Source: kube-arangodb/templates/backup-operator/role-binding.yaml
+
+---
+# Source: kube-arangodb/templates/backup-operator/role.yaml
+
+---
+# Source: kube-arangodb/templates/deployment-operator/cluster-role-binding.yaml
+
+---
+# Source: kube-arangodb/templates/deployment-operator/cluster-role.yaml
+
+---
+# Source: kube-arangodb/templates/deployment-operator/default-role-binding.yaml
+
+---
+# Source: kube-arangodb/templates/deployment-operator/default-role.yaml
+
+---
+# Source: kube-arangodb/templates/deployment-operator/role-binding.yaml
+
+---
+# Source: kube-arangodb/templates/deployment-operator/role.yaml
+
+---
+# Source: kube-arangodb/templates/deployment-replications-operator/cluster-role-binding.yaml
+
+---
+# Source: kube-arangodb/templates/deployment-replications-operator/cluster-role.yaml
+
+---
+# Source: kube-arangodb/templates/deployment-replications-operator/role-binding.yaml
+
+---
+# Source: kube-arangodb/templates/deployment-replications-operator/role.yaml
+
+---
+# Source: kube-arangodb/templates/k2k-cluster-sync-operator/cluster-role-binding.yaml
+
+
+---
+# Source: kube-arangodb/templates/k2k-cluster-sync-operator/cluster-role.yaml
+
+
+---
+# Source: kube-arangodb/templates/k2k-cluster-sync-operator/role-binding.yaml
+
+
+---
+# Source: kube-arangodb/templates/k2k-cluster-sync-operator/role.yaml
+
+

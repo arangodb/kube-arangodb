@@ -24,7 +24,7 @@ function replaceInFile {
     esac
 }
 
-for f in kube-arangodb kube-arangodb-crd kube-arangodb-test; do
+for f in kube-arangodb kube-arangodb-crd; do
     replaceInFile "s@^version: .*\$@version: ${VERSION}@g" "chart/${f}/Chart.yaml"
     if [[ -f "chart/${f}/values.yaml" ]]; then
         replaceInFile "s@^  image: .*\$@  image: ${IMAGE}@g" "chart/${f}/values.yaml"
