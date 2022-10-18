@@ -75,11 +75,11 @@ func isNotFoundC(err error) bool {
 // IsInvalid returns true if the given error is or is caused by a
 // kubernetes InvalidError,
 func IsInvalid(err error) bool {
-	return apierrors.IsInvalid(errors.Cause(err))
+	return isError(err, isInvalidC)
 }
 
 func isInvalidC(err error) bool {
-	return isError(err, isInvalidC)
+	return apierrors.IsInvalid(errors.Cause(err))
 }
 
 // IsForbiddenOrNotFound returns true if the given error is or is caused by a
