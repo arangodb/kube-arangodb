@@ -79,7 +79,10 @@ type MemberStatus struct {
 	Pod          *MemberPodStatus      `json:"pod,omitempty"`
 	SecondaryPod *MemberPodStatus      `json:"secondaryPod,omitempty"`
 
-	PersistentVolumeClaim          *MemberPersistentVolumeClaimStatus `json:"persistentVolumeClaim,omitempty"`
+	// PersistentVolumeClaim keeps information about PVC for Primary Pod
+	PersistentVolumeClaim *MemberPersistentVolumeClaimStatus `json:"persistentVolumeClaim,omitempty"`
+
+	// SecondaryPersistentVolumeClaim keeps information about PVC for SecondaryPod
 	SecondaryPersistentVolumeClaim *MemberPersistentVolumeClaimStatus `json:"secondaryPersistentVolumeClaim,omitempty"`
 
 	// deprecated
@@ -96,7 +99,7 @@ type MemberStatus struct {
 	PodSpecVersion string `json:"podSpecVersion,omitempty"`
 	// deprecated
 	// PersistentVolumeClaimName holds the name of the persistent volume claim used for this member (if any).
-	PersistentVolumeClaimName string `json:"PersistentVolumeClaimName,omitempty"`
+	PersistentVolumeClaimName string `json:"persistentVolumeClaimName,omitempty"`
 }
 
 // Equal checks for equality
