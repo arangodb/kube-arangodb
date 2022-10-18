@@ -33,10 +33,11 @@ import (
 )
 
 var (
-	conflictError = apierrors.NewConflict(schema.GroupResource{Group: "groupName", Resource: "resourceName"}, "something", os.ErrInvalid)
-	existsError   = apierrors.NewAlreadyExists(schema.GroupResource{Group: "groupName", Resource: "resourceName"}, "something")
-	invalidError  = apierrors.NewInvalid(schema.GroupKind{Group: "groupName", Kind: "kindName"}, "something", field.ErrorList{})
-	notFoundError = apierrors.NewNotFound(schema.GroupResource{Group: "groupName", Resource: "resourceName"}, "something")
+	conflictError  = apierrors.NewConflict(schema.GroupResource{Group: "groupName", Resource: "resourceName"}, "something", os.ErrInvalid)
+	existsError    = apierrors.NewAlreadyExists(schema.GroupResource{Group: "groupName", Resource: "resourceName"}, "something")
+	invalidError   = apierrors.NewInvalid(schema.GroupKind{Group: "groupName", Kind: "kindName"}, "something", field.ErrorList{})
+	notFoundError  = apierrors.NewNotFound(schema.GroupResource{Group: "groupName", Resource: "resourceName"}, "something")
+	forbiddenError = apierrors.NewForbidden(schema.GroupResource{Group: "groupName", Resource: "resourceName"}, "something", errors.Newf("error"))
 )
 
 func TestIsAlreadyExists(t *testing.T) {
@@ -58,4 +59,13 @@ func TestIsNotFound(t *testing.T) {
 	assert.False(t, IsNotFound(errors.WithStack(invalidError)))
 	assert.True(t, IsNotFound(notFoundError))
 	assert.True(t, IsNotFound(errors.WithStack(notFoundError)))
+}
+
+func TestIsForbiddenOrNotFound(t *testing.T) {
+	assert.False(t, IsNotFound(invalidError))
+	assert.False(t, IsNotFound(errors.WithStack(invalidError)))
+	assert.True(t, IsForbiddenOrNotFound(notFoundError))
+	assert.True(t, IsForbiddenOrNotFound(errors.WithStack(notFoundError)))
+	assert.True(t, IsForbiddenOrNotFound(forbiddenError))
+	assert.True(t, IsForbiddenOrNotFound(errors.WithStack(forbiddenError)))
 }
