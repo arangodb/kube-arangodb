@@ -26,30 +26,68 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
+func isError(err error, precondition func(err error) bool) bool {
+	if err == nil {
+		return false
+	}
+
+	if precondition(err) {
+		return true
+	}
+
+	if c := errors.CauseWithNil(err); c == err || c == nil {
+		return false
+	} else {
+		return isError(c, precondition)
+	}
+}
+
 // IsAlreadyExists returns true if the given error is or is caused by a
 // kubernetes AlreadyExistsError,
 func IsAlreadyExists(err error) bool {
-	return apierrors.IsAlreadyExists(errors.Cause(err))
+	return isError(err, isAlreadyExistsC)
+}
+
+func isAlreadyExistsC(err error) bool {
+	return apierrors.IsAlreadyExists(err)
 }
 
 // IsConflict returns true if the given error is or is caused by a
 // kubernetes ConflictError,
 func IsConflict(err error) bool {
-	return apierrors.IsConflict(errors.Cause(err))
+	return isError(err, isConflictC)
+}
+
+func isConflictC(err error) bool {
+	return apierrors.IsConflict(err)
 }
 
 // IsNotFound returns true if the given error is or is caused by a
 // kubernetes NotFoundError,
 func IsNotFound(err error) bool {
-	return apierrors.IsNotFound(errors.Cause(err))
+	return isError(err, isNotFoundC)
 }
 
-// IsNotFound returns true if the given error is or is caused by a
+func isNotFoundC(err error) bool {
+	return apierrors.IsNotFound(err)
+}
+
+// IsInvalid returns true if the given error is or is caused by a
 // kubernetes InvalidError,
 func IsInvalid(err error) bool {
 	return apierrors.IsInvalid(errors.Cause(err))
 }
 
+func isInvalidC(err error) bool {
+	return isError(err, isInvalidC)
+}
+
+// IsForbiddenOrNotFound returns true if the given error is or is caused by a
+// kubernetes NotFound or Forbidden,
 func IsForbiddenOrNotFound(err error) bool {
+	return isError(err, isForbiddenOrNotFoundC)
+}
+
+func isForbiddenOrNotFoundC(err error) bool {
 	return apierrors.IsNotFound(err) || apierrors.IsForbidden(err)
 }
