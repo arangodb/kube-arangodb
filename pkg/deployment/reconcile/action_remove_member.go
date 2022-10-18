@@ -113,8 +113,8 @@ func (a *actionRemoveMember) Start(ctx context.Context) (bool, error) {
 		}
 	}
 	// Remove the pvc (if any)
-	if m.PersistentVolumeClaimName != "" {
-		if err := cache.Client().Kubernetes().CoreV1().PersistentVolumeClaims(cache.Namespace()).Delete(ctx, m.PersistentVolumeClaimName, meta.DeleteOptions{}); err != nil {
+	if m.PersistentVolumeClaim != nil {
+		if err := cache.Client().Kubernetes().CoreV1().PersistentVolumeClaims(cache.Namespace()).Delete(ctx, m.PersistentVolumeClaim.GetName(), meta.DeleteOptions{}); err != nil {
 			if !apiErrors.IsNotFound(err) {
 				return false, errors.WithStack(err)
 			}

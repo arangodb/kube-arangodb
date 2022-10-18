@@ -115,7 +115,7 @@ func (d *Deployment) VolumeCount() int {
 	count := 0
 	status := d.GetStatus()
 	for _, e := range status.Members.AsList() {
-		if e.Member.PersistentVolumeClaimName != "" {
+		if e.Member.PersistentVolumeClaim != nil {
 			count++
 		}
 	}
@@ -128,12 +128,12 @@ func (d *Deployment) ReadyVolumeCount() int {
 	status := d.GetStatus()
 	pvcs, _ := d.GetOwnedPVCs() // Ignore errors on purpose
 	for _, e := range status.Members.AsList() {
-		if e.Member.PersistentVolumeClaimName == "" {
+		if e.Member.PersistentVolumeClaim.GetName() == "" {
 			continue
 		}
 		// Find status
 		for _, pvc := range pvcs {
-			if pvc.Name == e.Member.PersistentVolumeClaimName {
+			if pvc.Name == e.Member.PersistentVolumeClaim.GetName() {
 				if pvc.Status.Phase == core.ClaimBound {
 					count++
 				}

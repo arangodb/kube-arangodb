@@ -64,7 +64,7 @@ func (a *actionPVCResized) CheckProgress(ctx context.Context) (bool, bool, error
 		return false, false, nil
 	}
 
-	pvc, ok := cache.PersistentVolumeClaim().V1().GetSimple(m.PersistentVolumeClaimName)
+	pvc, ok := cache.PersistentVolumeClaim().V1().GetSimple(m.PersistentVolumeClaim.GetName())
 	if !ok {
 		return true, false, nil
 	}

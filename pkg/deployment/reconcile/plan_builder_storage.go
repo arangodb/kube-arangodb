@@ -56,7 +56,7 @@ func (r *Reconciler) createRotateServerStorageResizePlanInternal(spec api.Deploy
 			// Only make changes when phase is created
 			continue
 		}
-		if member.Member.PersistentVolumeClaimName == "" {
+		if member.Member.PersistentVolumeClaim.GetName() == "" {
 			// Plan is irrelevant without PVC
 			continue
 		}
@@ -72,7 +72,7 @@ func (r *Reconciler) createRotateServerStorageResizePlanInternal(spec api.Deploy
 		}
 
 		// Load PVC
-		pvc, exists := cache.PersistentVolumeClaim().V1().GetSimple(member.Member.PersistentVolumeClaimName)
+		pvc, exists := cache.PersistentVolumeClaim().V1().GetSimple(member.Member.PersistentVolumeClaim.GetName())
 		if !exists {
 			r.planLogger.
 				Str("role", member.Group.AsRole()).
@@ -106,11 +106,11 @@ func (r *Reconciler) createRotateServerStoragePVCPendingResizeConditionPlan(ctx 
 	context PlanBuilderContext) api.Plan {
 	var plan api.Plan
 	for _, i := range status.Members.AsList() {
-		if i.Member.PersistentVolumeClaimName == "" {
+		if i.Member.PersistentVolumeClaim.GetName() == "" {
 			continue
 		}
 
-		pvc, exists := context.ACS().CurrentClusterCache().PersistentVolumeClaim().V1().GetSimple(i.Member.PersistentVolumeClaimName)
+		pvc, exists := context.ACS().CurrentClusterCache().PersistentVolumeClaim().V1().GetSimple(i.Member.PersistentVolumeClaim.GetName())
 		if !exists {
 			continue
 		}

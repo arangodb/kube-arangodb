@@ -145,13 +145,13 @@ func (r *Resources) inspectFinalizerPodAgencyServing(ctx context.Context, p *cor
 	// of the agent, also remove the PVC
 	if memberStatus.Conditions.IsTrue(api.ConditionTypeAgentRecoveryNeeded) {
 		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-			return r.context.ACS().CurrentClusterCache().PersistentVolumeClaimsModInterface().V1().Delete(ctxChild, memberStatus.PersistentVolumeClaimName, meta.DeleteOptions{})
+			return r.context.ACS().CurrentClusterCache().PersistentVolumeClaimsModInterface().V1().Delete(ctxChild, memberStatus.PersistentVolumeClaim.GetName(), meta.DeleteOptions{})
 		})
 		if err != nil && !k8sutil.IsNotFound(err) {
 			log.Err(err).Warn("Failed to delete PVC for member")
 			return errors.WithStack(err)
 		}
-		log.Str("pvc-name", memberStatus.PersistentVolumeClaimName).Debug("Removed PVC of member so agency can be completely replaced")
+		log.Str("pvc-name", memberStatus.PersistentVolumeClaim.GetName()).Debug("Removed PVC of member so agency can be completely replaced")
 	}
 
 	return nil
@@ -175,13 +175,13 @@ func (r *Resources) inspectFinalizerPodDrainDBServer(ctx context.Context, p *cor
 	// If this DBServer is cleaned out, we need to remove the PVC.
 	if memberStatus.Conditions.IsTrue(api.ConditionTypeCleanedOut) || memberStatus.Phase == api.MemberPhaseDrain {
 		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-			return r.context.ACS().CurrentClusterCache().PersistentVolumeClaimsModInterface().V1().Delete(ctxChild, memberStatus.PersistentVolumeClaimName, meta.DeleteOptions{})
+			return r.context.ACS().CurrentClusterCache().PersistentVolumeClaimsModInterface().V1().Delete(ctxChild, memberStatus.PersistentVolumeClaim.GetName(), meta.DeleteOptions{})
 		})
 		if err != nil && !k8sutil.IsNotFound(err) {
 			log.Err(err).Warn("Failed to delete PVC for member")
 			return errors.WithStack(err)
 		}
-		log.Str("pvc-name", memberStatus.PersistentVolumeClaimName).Debug("Removed PVC of member")
+		log.Str("pvc-name", memberStatus.PersistentVolumeClaim.GetName()).Debug("Removed PVC of member")
 	}
 
 	return nil

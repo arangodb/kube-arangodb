@@ -813,7 +813,6 @@ func TestCreatePlan(t *testing.T) {
 			},
 			Helper: func(ad *api.ArangoDeployment) {
 				ad.Status.Members.DBServers[0].Phase = api.MemberPhaseCreated
-				//ad.Status.Members.DBServers[0].PersistentVolumeClaimName = ""
 			},
 			ExpectedPlan: []api.Action{},
 		},
@@ -844,11 +843,17 @@ func TestCreatePlan(t *testing.T) {
 					},
 				}
 				ad.Status.Members.DBServers[0].Phase = api.MemberPhaseCreated
-				ad.Status.Members.DBServers[0].PersistentVolumeClaimName = pvcName
+				ad.Status.Members.DBServers[0].PersistentVolumeClaim = &api.MemberPersistentVolumeClaimStatus{
+					Name: pvcName,
+				}
 				ad.Status.Members.DBServers[1].Phase = api.MemberPhasePending
-				ad.Status.Members.DBServers[1].PersistentVolumeClaimName = pvcName
+				ad.Status.Members.DBServers[1].PersistentVolumeClaim = &api.MemberPersistentVolumeClaimStatus{
+					Name: pvcName,
+				}
 				ad.Status.Members.DBServers[2].Phase = api.MemberPhasePending
-				ad.Status.Members.DBServers[2].PersistentVolumeClaimName = pvcName
+				ad.Status.Members.DBServers[2].PersistentVolumeClaim = &api.MemberPersistentVolumeClaimStatus{
+					Name: pvcName,
+				}
 				ad.Status.Members.Coordinators[0].Phase = api.MemberPhasePending
 				ad.Status.Members.Coordinators[1].Phase = api.MemberPhasePending
 				ad.Status.Members.Coordinators[2].Phase = api.MemberPhasePending
@@ -888,7 +893,9 @@ func TestCreatePlan(t *testing.T) {
 					},
 				}
 				ad.Status.Members.DBServers[0].Phase = api.MemberPhaseCreated
-				ad.Status.Members.DBServers[0].PersistentVolumeClaimName = pvcName
+				ad.Status.Members.DBServers[0].PersistentVolumeClaim = &api.MemberPersistentVolumeClaimStatus{
+					Name: pvcName,
+				}
 				cond := api.Condition{
 					Type:   api.MemberReplacementRequired,
 					Status: conditionTrue,
@@ -916,11 +923,17 @@ func TestCreatePlan(t *testing.T) {
 					StorageClassName: util.NewString("newStorage"),
 				}
 				ad.Status.Members.Agents[0].Phase = api.MemberPhaseCreated
-				ad.Status.Members.Agents[0].PersistentVolumeClaimName = pvcName
+				ad.Status.Members.Agents[0].PersistentVolumeClaim = &api.MemberPersistentVolumeClaimStatus{
+					Name: pvcName,
+				}
 				ad.Status.Members.Agents[1].Phase = api.MemberPhasePending
-				ad.Status.Members.Agents[1].PersistentVolumeClaimName = pvcName
+				ad.Status.Members.Agents[1].PersistentVolumeClaim = &api.MemberPersistentVolumeClaimStatus{
+					Name: pvcName,
+				}
 				ad.Status.Members.Agents[2].Phase = api.MemberPhasePending
-				ad.Status.Members.Agents[2].PersistentVolumeClaimName = pvcName
+				ad.Status.Members.Agents[2].PersistentVolumeClaim = &api.MemberPersistentVolumeClaimStatus{
+					Name: pvcName,
+				}
 				ad.Status.Members.Coordinators[0].Phase = api.MemberPhasePending
 				ad.Status.Members.Coordinators[1].Phase = api.MemberPhasePending
 				ad.Status.Members.Coordinators[2].Phase = api.MemberPhasePending
@@ -953,7 +966,9 @@ func TestCreatePlan(t *testing.T) {
 					},
 				}
 				ad.Status.Members.Coordinators[0].Phase = api.MemberPhaseCreated
-				ad.Status.Members.Coordinators[0].PersistentVolumeClaimName = pvcName
+				ad.Status.Members.Coordinators[0].PersistentVolumeClaim = &api.MemberPersistentVolumeClaimStatus{
+					Name: pvcName,
+				}
 				ad.Status.Members.Coordinators[1].Phase = api.MemberPhasePending
 				ad.Status.Members.Coordinators[2].Phase = api.MemberPhasePending
 				ad.Status.Members.DBServers[0].Phase = api.MemberPhasePending
@@ -1045,7 +1060,9 @@ func TestCreatePlan(t *testing.T) {
 					},
 				}
 				ad.Status.Members.Agents[0].Phase = api.MemberPhaseCreated
-				ad.Status.Members.Agents[0].PersistentVolumeClaimName = "pvc_test"
+				ad.Status.Members.Agents[0].PersistentVolumeClaim = &api.MemberPersistentVolumeClaimStatus{
+					Name: "pvc_test",
+				}
 			},
 			ExpectedHighPlan: []api.Action{
 				actions.NewAction(api.ActionTypeSetMemberConditionV2, api.ServerGroupAgents, deploymentTemplate.Status.Members.Agents[0], "PVC Resize pending"),

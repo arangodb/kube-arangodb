@@ -53,11 +53,11 @@ func (r *Resources) EnsurePVCs(ctx context.Context, cachedStatus inspectorInterf
 
 	if err := iterator.ForeachServerGroupAccepted(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
 		for _, m := range *status {
-			if m.PersistentVolumeClaimName == "" {
+			if m.PersistentVolumeClaim.GetName() == "" {
 				continue
 			}
 
-			if _, exists := cachedStatus.PersistentVolumeClaim().V1().GetSimple(m.PersistentVolumeClaimName); exists {
+			if _, exists := cachedStatus.PersistentVolumeClaim().V1().GetSimple(m.PersistentVolumeClaim.GetName()); exists {
 				continue
 			}
 
@@ -68,7 +68,7 @@ func (r *Resources) EnsurePVCs(ctx context.Context, cachedStatus inspectorInterf
 			finalizers := r.createPVCFinalizers()
 			err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				return k8sutil.CreatePersistentVolumeClaim(ctxChild, cachedStatus.PersistentVolumeClaimsModInterface().V1(),
-					m.PersistentVolumeClaimName, deploymentName, storageClassName, role, enforceAntiAffinity,
+					m.PersistentVolumeClaim.GetName(), deploymentName, storageClassName, role, enforceAntiAffinity,
 					resources, vct, finalizers, owner)
 			})
 			if err != nil {

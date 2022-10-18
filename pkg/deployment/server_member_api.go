@@ -54,15 +54,15 @@ func (m member) PodName() string {
 
 func (m member) PVCName() string {
 	if status, found := m.status(); found {
-		return status.PersistentVolumeClaimName
+		return status.PersistentVolumeClaim.GetName()
 	}
 	return ""
 }
 
 func (m member) PVName() string {
-	if status, found := m.status(); found && status.PersistentVolumeClaimName != "" {
+	if status, found := m.status(); found && status.PersistentVolumeClaim != nil {
 		pvcs := m.d.deps.Client.Kubernetes().CoreV1().PersistentVolumeClaims(m.d.Namespace())
-		if pvc, err := pvcs.Get(context.Background(), status.PersistentVolumeClaimName, meta.GetOptions{}); err == nil {
+		if pvc, err := pvcs.Get(context.Background(), status.PersistentVolumeClaim.GetName(), meta.GetOptions{}); err == nil {
 			return pvc.Spec.VolumeName
 		}
 	}

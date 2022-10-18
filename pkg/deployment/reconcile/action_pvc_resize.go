@@ -65,12 +65,12 @@ func (a *actionPVCResize) Start(ctx context.Context) (bool, error) {
 		return true, errors.Newf("Cluster is not ready")
 	}
 
-	if m.PersistentVolumeClaimName == "" {
+	if m.PersistentVolumeClaim.GetName() == "" {
 		// Nothing to do, PVC is empty
 		return true, nil
 	}
 
-	pvc, ok := cache.PersistentVolumeClaim().V1().GetSimple(m.PersistentVolumeClaimName)
+	pvc, ok := cache.PersistentVolumeClaim().V1().GetSimple(m.PersistentVolumeClaim.GetName())
 	if !ok {
 		return true, nil
 	}
@@ -118,7 +118,7 @@ func (a *actionPVCResize) CheckProgress(ctx context.Context) (bool, bool, error)
 		return false, false, nil
 	}
 
-	pvc, ok := cache.PersistentVolumeClaim().V1().GetSimple(m.PersistentVolumeClaimName)
+	pvc, ok := cache.PersistentVolumeClaim().V1().GetSimple(m.PersistentVolumeClaim.GetName())
 	if !ok {
 		return true, false, nil
 	}

@@ -457,7 +457,9 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 					Images: createTestImages(false),
 				}
 
-				deployment.currentObjectStatus.Members.DBServers[0].PersistentVolumeClaimName = testPersistentVolumeClaimName
+				deployment.currentObjectStatus.Members.DBServers[0].PersistentVolumeClaim = &api.MemberPersistentVolumeClaimStatus{
+					Name: testPersistentVolumeClaimName,
+				}
 				testCase.createTestPodData(deployment, api.ServerGroupDBServers, firstDBServerStatus)
 			},
 			ExpectedEvent: "member dbserver is created",
@@ -614,7 +616,9 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
 				agentWithPersistentVolumeClaim := firstAgentStatus
-				agentWithPersistentVolumeClaim.PersistentVolumeClaimName = testPersistentVolumeClaimName
+				agentWithPersistentVolumeClaim.PersistentVolumeClaim = &api.MemberPersistentVolumeClaimStatus{
+					Name: testPersistentVolumeClaimName,
+				}
 
 				deployment.currentObjectStatus = &api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
