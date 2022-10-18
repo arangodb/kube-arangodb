@@ -30,7 +30,8 @@ type StateTarget struct {
 
 	// Servers Section
 
-	CleanedServers Servers `json:"CleanedServers,omitempty"`
+	CleanedServers     Servers `json:"CleanedServers,omitempty"`
+	ToBeCleanedServers Servers `json:"ToBeCleanedServers,omitempty"`
 
 	// HotBackup section
 
