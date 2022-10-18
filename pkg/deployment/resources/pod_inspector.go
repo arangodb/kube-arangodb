@@ -37,6 +37,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/info"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
@@ -372,6 +373,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 				updateMemberStatusNeeded = true
 				log.Str("pod-name", pod.GetName()).Debug("Pod marked as terminating")
 			}
+
 			// Process finalizers
 			if x, err := r.runPodFinalizers(ctx, pod, memberStatus, func(m api.MemberStatus) error {
 				updateMemberStatusNeeded = true
@@ -382,6 +384,26 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 				log.Err(err).Warn("Failed to run pod finalizers")
 			} else {
 				nextInterval = nextInterval.ReduceTo(x)
+			}
+
+			// Check if any additional deletion request is required
+			if !k8sutil.IsPodAlive(pod) {
+				// Pod is dead, but still not removed. Send additional deletion request
+				nctx, c := globals.GetGlobals().Timeouts().Kubernetes().WithTimeout(ctx)
+				defer c()
+
+				if err := cachedStatus.PodsModInterface().V1().Delete(nctx, pod.GetName(), meta.DeleteOptions{
+					GracePeriodSeconds: util.NewInt64(10),
+					Preconditions:      meta.NewUIDPreconditions(string(pod.GetUID())),
+				}); err != nil {
+					if k8sutil.IsNotFound(err) {
+						// Pod is already gone, we are fine with it
+					} else if k8sutil.IsConflict(err) {
+						log.Warn("UID of Pod Changed")
+					} else {
+						log.Err(err).Error("Unknown error while deleting Pod")
+					}
+				}
 			}
 		}
 

@@ -360,6 +360,29 @@ func MasterJWTVolumeMount() core.VolumeMount {
 	}
 }
 
+// IsPodAlive returns true if any of the containers within pod is running
+func IsPodAlive(pod *core.Pod) bool {
+	return IsAnyContainerAlive(pod.Status.ContainerStatuses) ||
+		IsAnyContainerAlive(pod.Status.InitContainerStatuses) ||
+		IsAnyContainerAlive(pod.Status.EphemeralContainerStatuses)
+}
+
+// IsAnyContainerAlive returns true if any of the containers is running
+func IsAnyContainerAlive(containers []core.ContainerStatus) bool {
+	for _, c := range containers {
+		if IsContainerAlive(c) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// IsContainerAlive returns true if container is running
+func IsContainerAlive(container core.ContainerStatus) bool {
+	return container.State.Running != nil
+}
+
 // ClusterJWTVolumeMount creates a volume mount structure for a cluster JWT secret (token).
 func ClusterJWTVolumeMount() core.VolumeMount {
 	return core.VolumeMount{
