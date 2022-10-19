@@ -189,7 +189,9 @@ func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.
 				} else {
 					auth, err := dr.createArangoSyncTLSAuthentication(spec)
 					if err != nil {
-						dr.log.Err(err).Warn("Failed to configure synchronization authentication")
+						msg := "Failed to configure synchronization authentication"
+						dr.log.Err(err).Warn(msg)
+						dr.reportInvalidConfigError(false, err, msg)
 						hasError = true
 					} else {
 						req := client.SynchronizationRequest{
@@ -198,7 +200,9 @@ func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.
 						}
 						dr.log.Info("Configuring synchronization")
 						if err := destClient.Master().Synchronize(ctx, req); err != nil {
-							dr.log.Err(err).Warn("Failed to configure synchronization")
+							msg := "Failed to configure synchronization"
+							dr.log.Err(err).Warn(msg)
+							dr.reportInvalidConfigError(true, err, msg)
 							hasError = true
 						} else {
 							dr.log.Info("Configured synchronization")
