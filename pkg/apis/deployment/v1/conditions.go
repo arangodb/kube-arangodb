@@ -41,6 +41,8 @@ const (
 	ConditionTypeStarted ConditionType = "Started"
 	// ConditionTypeReachable indicates that the member is reachable.
 	ConditionTypeReachable ConditionType = "Reachable"
+	// ConditionTypeScheduled indicates that the member primary pod is scheduled.
+	ConditionTypeScheduled ConditionType = "Scheduled"
 	// ConditionTypeServing indicates that the member core services are running.
 	ConditionTypeServing ConditionType = "Serving"
 	// ConditionTypeActive indicates that the member server container started.
