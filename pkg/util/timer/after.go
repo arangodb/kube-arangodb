@@ -29,12 +29,6 @@ func After(duration time.Duration) <-chan time.Time {
 		defer close(r)
 
 		tc := time.NewTimer(duration)
-		defer func() {
-			// Cleanup channel
-			for range tc.C {
-
-			}
-		}()
 		defer tc.Stop()
 
 		r <- <-tc.C
