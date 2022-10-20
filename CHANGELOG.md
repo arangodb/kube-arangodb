@@ -13,6 +13,7 @@
 - (Feature) Remove stuck Pods
 - (Bugfix) Fix Go routine leak
 - (Feature) Extend Pod Security context
+- (Improvement) Update DeploymentReplicationStatus on configuration error
 
 ## [1.2.19](https://github.com/arangodb/kube-arangodb/tree/1.2.19) (2022-10-05)
 - (Bugfix) Prevent changes when UID is wrong

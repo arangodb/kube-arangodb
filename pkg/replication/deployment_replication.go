@@ -342,10 +342,20 @@ func (dr *DeploymentReplication) failOnError(err error, msg string) {
 	dr.reportFailedStatus()
 }
 
+func (dr *DeploymentReplication) reportInvalidConfigError(isRecoverable bool, err error, msg string) {
+	if !isRecoverable {
+		dr.status.Phase = api.DeploymentReplicationPhaseFailed
+		dr.status.Reason = fmt.Sprintf("%s: %s", msg, err.Error())
+	}
+	dr.status.Conditions.Update(api.ConditionTypeConfigured, false, api.ConditionConfiguredReasonInvalid, msg)
+	if err = dr.updateCRStatus(); err != nil {
+		dr.log.Err(err).Warn("Failed to update status")
+	}
+}
+
 // reportFailedStatus sets the status of the deployment replication to Failed and keeps trying to forward
 // that to the API server.
 func (dr *DeploymentReplication) reportFailedStatus() {
-	dr.log.Info("local storage failed. Reporting failed reason...")
 	repls := dr.deps.Client.Arango().ReplicationV1().ArangoDeploymentReplications(dr.apiObject.GetNamespace())
 
 	op := func() error {
