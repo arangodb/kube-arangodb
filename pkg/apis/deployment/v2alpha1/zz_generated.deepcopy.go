@@ -2506,6 +2506,16 @@ func (in *ServerGroupSpecSecurityContext) DeepCopyInto(out *ServerGroupSpecSecur
 		*out = new(int64)
 		**out = **in
 	}
+	if in.SeccompProfile != nil {
+		in, out := &in.SeccompProfile, &out.SeccompProfile
+		*out = new(v1.SeccompProfile)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.SELinuxOptions != nil {
+		in, out := &in.SELinuxOptions, &out.SELinuxOptions
+		*out = new(v1.SELinuxOptions)
+		**out = **in
+	}
 	return
 }
 
