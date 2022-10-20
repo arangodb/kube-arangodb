@@ -360,12 +360,19 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 			}
 		}
 
-		if k8sutil.IsPodNotScheduledFor(pod, podScheduleTimeout) {
-			// Pod cannot be scheduled for to long
-			log.Str("pod-name", pod.GetName()).Debug("Pod scheduling timeout")
-			podNamesWithScheduleTimeout = append(podNamesWithScheduleTimeout, pod.GetName())
-		} else if !k8sutil.IsPodScheduled(pod) {
-			unscheduledPodNames = append(unscheduledPodNames, pod.GetName())
+		if k8sutil.IsPodScheduled(pod) {
+			if memberStatus.Conditions.Update(api.ConditionTypeScheduled, true, "Pod is scheduled", "") {
+				updateMemberStatusNeeded = true
+				nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
+			}
+		} else {
+			if k8sutil.IsPodNotScheduledFor(pod, podScheduleTimeout) {
+				// Pod cannot be scheduled for to long
+				log.Str("pod-name", pod.GetName()).Debug("Pod scheduling timeout")
+				podNamesWithScheduleTimeout = append(podNamesWithScheduleTimeout, pod.GetName())
+			} else {
+				unscheduledPodNames = append(unscheduledPodNames, pod.GetName())
+			}
 		}
 
 		if k8sutil.IsPodMarkedForDeletion(pod) {
