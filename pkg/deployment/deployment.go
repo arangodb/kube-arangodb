@@ -30,6 +30,7 @@ import (
 
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/informers"
 	"k8s.io/client-go/tools/record"
 
 	"github.com/arangodb/arangosync-client/client"
@@ -49,6 +50,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resilience"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+	arangoInformer "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -118,7 +120,6 @@ type Deployment struct {
 	stopped int32
 
 	inspectTrigger            trigger.Trigger
-	inspectCRDTrigger         trigger.Trigger
 	updateDeploymentTrigger   trigger.Trigger
 	clientCache               deploymentClient.Cache
 	agencyCache               agency.Cache
@@ -265,12 +266,18 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 		}
 	}
 
+	aInformer := arangoInformer.NewSharedInformerFactoryWithOptions(deps.Client.Arango(), 0, arangoInformer.WithNamespace(apiObject.GetNamespace()))
+	kInformer := informers.NewSharedInformerFactoryWithOptions(deps.Client.Kubernetes(), 0, informers.WithNamespace(apiObject.GetNamespace()))
+
+	i.RegisterInformers(kInformer, aInformer)
+
+	aInformer.Start(d.stopCh)
+	kInformer.Start(d.stopCh)
+
+	kInformer.WaitForCacheSync(d.stopCh)
+	aInformer.WaitForCacheSync(d.stopCh)
+
 	go d.run()
-	go d.listenForPodEvents(d.stopCh)
-	go d.listenForPVCEvents(d.stopCh)
-	go d.listenForSecretEvents(d.stopCh)
-	go d.listenForServiceEvents(d.stopCh)
-	go d.listenForCRDEvents(d.stopCh)
 	if apiObject.GetAcceptedSpec().GetMode() == api.DeploymentModeCluster {
 		ci := newClusterScalingIntegration(d)
 		d.clusterScalingIntegration = ci
@@ -378,8 +385,6 @@ func (d *Deployment) run() {
 			inspectionInterval = d.inspectDeployment(inspectionInterval)
 			log.Str("interval", inspectionInterval.String()).Trace("...inspected deployment")
 
-		case <-d.inspectCRDTrigger.Done():
-			d.lookForServiceMonitorCRD()
 		case <-d.updateDeploymentTrigger.Done():
 			inspectionInterval = minInspectionInterval
 			d.handleArangoDeploymentUpdatedEvent()
@@ -515,9 +520,12 @@ func (d *Deployment) isOwnerOf(obj meta.Object) bool {
 
 // lookForServiceMonitorCRD checks if there is a CRD for the ServiceMonitor
 // CR and sets the flag haveServiceMonitorCRD accordingly. This is called
-// once at creation time of the deployment and then always if the CRD
-// informer is triggered.
+// once at creation time of the deployment.
 func (d *Deployment) lookForServiceMonitorCRD() {
+	if d.haveServiceMonitorCRD {
+		return
+	}
+
 	var err error
 	if d.GetScope().IsNamespaced() {
 		_, err = d.acs.CurrentClusterCache().ServiceMonitor().V1()

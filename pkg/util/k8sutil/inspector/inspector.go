@@ -25,7 +25,9 @@ import (
 
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/informers"
 
+	arangoInformer "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoclustersynchronization"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangodeployment"
@@ -88,4 +90,6 @@ type Inspector interface {
 	arangotask.Inspector
 
 	mods.Mods
+
+	RegisterInformers(k8s informers.SharedInformerFactory, arango arangoInformer.SharedInformerFactory)
 }

@@ -29,10 +29,12 @@ import (
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/informers"
 
 	"github.com/arangodb/go-driver"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	arangoInformer "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -63,34 +65,8 @@ func init() {
 }
 
 var (
-	inspectorLoadersList inspectorLoaders
-	inspectorLoadersLock sync.Mutex
-
 	logger = logging.Global().Get("inspector")
 )
-
-func requireRegisterInspectorLoader(i inspectorLoader) {
-	if !registerInspectorLoader(i) {
-		panic("Unable to register inspector loader")
-	}
-}
-
-func registerInspectorLoader(i inspectorLoader) bool {
-	inspectorLoadersLock.Lock()
-	defer inspectorLoadersLock.Unlock()
-
-	n := i.Name()
-
-	if inspectorLoadersList.Get(n) != -1 {
-		return false
-	}
-
-	inspectorLoadersList = append(inspectorLoadersList, i)
-
-	return true
-}
-
-type inspectorLoaders []inspectorLoader
 
 func (i inspectorLoaders) Get(name string) int {
 	for id, k := range i {
@@ -166,6 +142,17 @@ type inspectorState struct {
 	versionInfo driver.Version
 
 	initialised bool
+}
+
+func (i *inspectorState) RegisterInformers(k8s informers.SharedInformerFactory, arango arangoInformer.SharedInformerFactory) {
+	k8s.Core().V1().Nodes().Informer().AddEventHandler(i.eventHandler(throttle.Node))
+	k8s.Core().V1().PersistentVolumeClaims().Informer().AddEventHandler(i.eventHandler(throttle.PersistentVolumeClaim))
+	k8s.Policy().V1().PodDisruptionBudgets().Informer().AddEventHandler(i.eventHandler(throttle.PodDisruptionBudget))
+	k8s.Policy().V1beta1().PodDisruptionBudgets().Informer().AddEventHandler(i.eventHandler(throttle.PodDisruptionBudget))
+	k8s.Core().V1().Secrets().Informer().AddEventHandler(i.eventHandler(throttle.Secret))
+	k8s.Core().V1().Services().Informer().AddEventHandler(i.eventHandler(throttle.Service))
+	k8s.Core().V1().ServiceAccounts().Informer().AddEventHandler(i.eventHandler(throttle.ServiceAccount))
+	k8s.Core().V1().Endpoints().Informer().AddEventHandler(i.eventHandler(throttle.Endpoints))
 }
 
 func extractGVKFromOwnerReference(o meta.OwnerReference) schema.GroupVersionKind {
