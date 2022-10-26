@@ -56,17 +56,25 @@ ifeq ($(HELM),)
 	$(error Before templating you need to install helm in PATH or export helm binary using "export HELM=<path to helm>")
 endif
 
-HELM_PACKAGE_CMD = $(HELM) package "$(ROOTDIR)/chart/$(CHART_NAME)" \
-                           -d "$(ROOTDIR)/bin/charts" \
-                           --save=false --version "$(VERSION_MAJOR_MINOR_PATCH)"
+HELM_OPTIONS = --set "operator.image=$(OPERATORIMAGE)" \
+	--set "operator.imagePullPolicy=Always" \
+	--set "operator.resources=null" \
+	--set "operator.debug=$(DEBUG)"
 
-HELM_CMD = $(HELM) template "$(ROOTDIR)/chart/$(CHART_NAME)" \
-         	       --name "$(NAME)" \
-         	       --set "operator.image=$(OPERATORIMAGE)" \
-         	       --set "operator.imagePullPolicy=Always" \
-         	       --set "operator.resources=null" \
-         	       --set "operator.debug=$(DEBUG)" \
-         	       --namespace "$(DEPLOYMENTNAMESPACE)"
+ifeq ($(shell $(HELM) version --client --template '{{.Version}}' | cut -f 1 -d '.'),v3)
+	# Using helm v3
+	HELM_PACKAGE_CMD = $(HELM) package "$(ROOTDIR)/chart/$(CHART_NAME)" -d "$(ROOTDIR)/bin/charts" \
+		--version "$(VERSION_MAJOR_MINOR_PATCH)"
+
+	HELM_CMD = $(HELM) template $(NAME) "$(ROOTDIR)/chart/$(CHART_NAME)" $(HELM_OPTIONS) --namespace "$(DEPLOYMENTNAMESPACE)"
+else
+	# Using helm v2
+	HELM_PACKAGE_CMD = $(HELM) package "$(ROOTDIR)/chart/$(CHART_NAME)" -d "$(ROOTDIR)/bin/charts" \
+		--save=false --version "$(VERSION_MAJOR_MINOR_PATCH)"
+
+	HELM_CMD = $(HELM) template "$(ROOTDIR)/chart/$(CHART_NAME)" --name "$(NAME)" $(HELM_OPTIONS) \
+		--namespace "$(DEPLOYMENTNAMESPACE)"
+endif
 
 ifndef LOCALONLY
 	PUSHIMAGES := 1
