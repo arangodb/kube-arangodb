@@ -61,7 +61,7 @@ HELM_OPTIONS = --set "operator.image=$(OPERATORIMAGE)" \
 	--set "operator.resources=null" \
 	--set "operator.debug=$(DEBUG)"
 
-ifeq ($(shell $(HELM) version --client --template '{{.Version}}' | cut -f 1 -d '.'),v3)
+ifeq ($(shell $(HELM) version --client --template '{{.Version}}' 2> /dev/null | cut -f 1 -d '.'),v3)
 	# Using helm v3
 	HELM_PACKAGE_CMD = $(HELM) package "$(ROOTDIR)/chart/$(CHART_NAME)" -d "$(ROOTDIR)/bin/charts" \
 		--version "$(VERSION_MAJOR_MINOR_PATCH)"
@@ -113,6 +113,8 @@ ifndef MANIFESTSUFFIX
 	MANIFESTSUFFIX := -dev
 endif
 endif
+
+ifeq ($(RELEASE_MODE),community)
 MANIFESTPATHCRD := manifests/arango-crd$(MANIFESTSUFFIX).yaml
 MANIFESTPATHDEPLOYMENT := manifests/arango-deployment$(MANIFESTSUFFIX).yaml
 MANIFESTPATHDEPLOYMENTREPLICATION := manifests/arango-deployment-replication$(MANIFESTSUFFIX).yaml
@@ -121,16 +123,33 @@ MANIFESTPATHAPPS := manifests/arango-apps$(MANIFESTSUFFIX).yaml
 MANIFESTPATHK2KCLUSTERSYNC := manifests/arango-k2kclustersync$(MANIFESTSUFFIX).yaml
 MANIFESTPATHSTORAGE := manifests/arango-storage$(MANIFESTSUFFIX).yaml
 MANIFESTPATHALL := manifests/arango-all$(MANIFESTSUFFIX).yaml
-MANIFESTPATHTEST := manifests/arango-test$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHCRD := manifests/kustomize/crd/arango-crd$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHDEPLOYMENT := manifests/kustomize/deployment/arango-deployment$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHDEPLOYMENTREPLICATION := manifests/kustomize/deployment-replication/arango-deployment-replication$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHBACKUP := manifests/kustomize/backup/arango-backup$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHAPPS := manifests/kustomize/apps/arango-apps$(MANIFESTSUFFIX).yaml
-KUSTOMIZEPATHK2KCLUSTERSYNC := manifests/kustomize/apps/arango-k2kclustersync$(MANIFESTSUFFIX).yaml
+KUSTOMIZEPATHK2KCLUSTERSYNC := manifests/kustomize/k2kclustersync/arango-k2kclustersync$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHSTORAGE := manifests/kustomize/storage/arango-storage$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHALL := manifests/kustomize/all/arango-all$(MANIFESTSUFFIX).yaml
-KUSTOMIZEPATHTEST := manifests/kustomize/test/arango-test$(MANIFESTSUFFIX).yaml
+else
+MANIFESTPATHCRD := manifests/enterprise-crd$(MANIFESTSUFFIX).yaml
+MANIFESTPATHDEPLOYMENT := manifests/enterprise-deployment$(MANIFESTSUFFIX).yaml
+MANIFESTPATHDEPLOYMENTREPLICATION := manifests/enterprise-deployment-replication$(MANIFESTSUFFIX).yaml
+MANIFESTPATHBACKUP := manifests/enterprise-backup$(MANIFESTSUFFIX).yaml
+MANIFESTPATHAPPS := manifests/enterprise-apps$(MANIFESTSUFFIX).yaml
+MANIFESTPATHK2KCLUSTERSYNC := manifests/enterprise-k2kclustersync$(MANIFESTSUFFIX).yaml
+MANIFESTPATHSTORAGE := manifests/enterprise-storage$(MANIFESTSUFFIX).yaml
+MANIFESTPATHALL := manifests/enterprise-all$(MANIFESTSUFFIX).yaml
+KUSTOMIZEPATHCRD := manifests/kustomize-enterprise/crd/enterprise-crd$(MANIFESTSUFFIX).yaml
+KUSTOMIZEPATHDEPLOYMENT := manifests/kustomize-enterprise/deployment/enterprise-deployment$(MANIFESTSUFFIX).yaml
+KUSTOMIZEPATHDEPLOYMENTREPLICATION := manifests/kustomize-enterprise/deployment-replication/enterprise-deployment-replication$(MANIFESTSUFFIX).yaml
+KUSTOMIZEPATHBACKUP := manifests/kustomize-enterprise/backup/enterprise-backup$(MANIFESTSUFFIX).yaml
+KUSTOMIZEPATHAPPS := manifests/kustomize-enterprise/apps/enterprise-apps$(MANIFESTSUFFIX).yaml
+KUSTOMIZEPATHK2KCLUSTERSYNC := manifests/kustomize-enterprise/k2kclustersync/enterprise-k2kclustersync$(MANIFESTSUFFIX).yaml
+KUSTOMIZEPATHSTORAGE := manifests/kustomize-enterprise/storage/enterprise-storage$(MANIFESTSUFFIX).yaml
+KUSTOMIZEPATHALL := manifests/kustomize-enterprise/all/enterprise-all$(MANIFESTSUFFIX).yaml
+endif
+
 ifndef DEPLOYMENTNAMESPACE
 	DEPLOYMENTNAMESPACE := default
 endif
@@ -356,8 +375,6 @@ manifests:
 
 $(eval $(call manifest-generator, crd, kube-arangodb-crd))
 
-$(eval $(call manifest-generator, test, kube-arangodb-test))
-
 $(eval $(call manifest-generator, deployment, kube-arangodb, \
        --set "operator.features.deployment=true" \
 	   --set "operator.features.deploymentReplications=false" \
@@ -454,7 +471,7 @@ patch-examples:
 	$(ROOTDIR)/scripts/patch_examples.sh $(VERSION_MAJOR_MINOR_PATCH)
 
 .PHONY: patch-release
-patch-release: patch-readme patch-examples
+patch-release: patch-readme patch-examples patch-chart
 
 .PHONY: patch-chart
 patch-chart:
