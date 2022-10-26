@@ -1,7 +1,7 @@
 ---
 
 operator:
-  image: arangodb/kube-arangodb:1.2.19
+  image: arangodb/kube-arangodb:1.2.20
   imagePullPolicy: IfNotPresent
   imagePullSecrets: []
 

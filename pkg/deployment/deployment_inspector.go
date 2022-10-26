@@ -555,11 +555,6 @@ func (d *Deployment) triggerInspection() {
 	d.inspectTrigger.Trigger()
 }
 
-// triggerCRDInspection ensures that an inspection is run soon.
-func (d *Deployment) triggerCRDInspection() {
-	d.inspectCRDTrigger.Trigger()
-}
-
 func (d *Deployment) updateConditionWithHash(ctx context.Context, conditionType api.ConditionType, status bool, reason, message, hash string) error {
 	d.log.Str("condition", string(conditionType)).Bool("status", status).Str("reason", reason).Str("message", message).Str("hash", hash).Info("Updated condition")
 	if err := d.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
