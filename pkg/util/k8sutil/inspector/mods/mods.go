@@ -21,11 +21,14 @@
 package mods
 
 import (
+	arangoclustersynchronizationv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoclustersynchronization/v1"
+	arangomemberv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember/v1"
+	arangotaskv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangotask/v1"
 	endpointsv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/endpoints/v1"
 	persistentvolumeclaimv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim/v1"
 	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
 	poddisruptionbudgetv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget/v1beta1"
+	poddisruptionbudgetv1beta1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget/v1beta1"
 	secretv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
 	servicev1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service/v1"
 	serviceaccountv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount/v1"
@@ -62,7 +65,19 @@ type ServiceMonitorsMods interface {
 
 type PodDisruptionBudgetsMods interface {
 	V1() poddisruptionbudgetv1.ModInterface
-	V1Beta1() v1beta1.ModInterface
+	V1Beta1() poddisruptionbudgetv1beta1.ModInterface
+}
+
+type ArangoMemberMods interface {
+	V1() arangomemberv1.ModInterface
+}
+
+type ArangoTaskMods interface {
+	V1() arangotaskv1.ModInterface
+}
+
+type ArangoClusterSynchronizationMods interface {
+	V1() arangoclustersynchronizationv1.ModInterface
 }
 
 type Mods interface {
@@ -74,4 +89,8 @@ type Mods interface {
 	EndpointsModInterface() EndpointsMods
 	ServiceMonitorsModInterface() ServiceMonitorsMods
 	PodDisruptionBudgetsModInterface() PodDisruptionBudgetsMods
+
+	ArangoMemberModInterface() ArangoMemberMods
+	ArangoTaskModInterface() ArangoTaskMods
+	ArangoClusterSynchronizationModInterface() ArangoClusterSynchronizationMods
 }
