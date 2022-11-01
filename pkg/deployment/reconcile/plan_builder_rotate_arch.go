@@ -47,6 +47,14 @@ func (r *Reconciler) createChangeMemberArchPlan(ctx context.Context,
 			if v, ok := pod.GetAnnotations()[deployment.ArangoDeploymentPodChangeArchAnnotation]; ok {
 				arch := api.ArangoDeploymentArchitectureType(v)
 				if arch.IsArchMismatch(spec.Architecture, member.Architecture) {
+					if arch == api.ArangoDeploymentArchitectureARM64 && status.CurrentImage.ArangoDBVersion.CompareTo("3.10.0") < 0 {
+						arch = api.ArangoDeploymentArchitectureAMD64
+						r.log.Warn("Cannot apply ARM64 'arch' annotation. It's not supported in ArangoDB < 3.10.0")
+						context.CreateEvent(k8sutil.NewCannotSetArchitectureARM64Event(apiObject, member.ID))
+						context.CreateEvent(k8sutil.NewCannotSetArchitectureARM64Event(pod, member.ID))
+						return p
+					}
+
 					r.log.
 						Str("pod-name", member.Pod.GetName()).
 						Str("server-group", m.Group.AsRole()).
