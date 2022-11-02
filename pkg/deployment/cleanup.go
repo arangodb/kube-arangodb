@@ -33,6 +33,7 @@ import (
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	pvcv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim/v1"
 	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
 // removePodFinalizers removes all finalizers from all pods owned by us.
@@ -56,7 +57,7 @@ func (d *Deployment) removePodFinalizers(ctx context.Context, cachedStatus inspe
 		if err := d.PodsModInterface().Delete(ctxChild, pod.GetName(), meta.DeleteOptions{
 			GracePeriodSeconds: util.NewInt64(0),
 		}); err != nil {
-			if !k8sutil.IsNotFound(err) {
+			if !kerrors.IsNotFound(err) {
 				log.Err(err).Warn("Failed to remove pod")
 				return err
 			}

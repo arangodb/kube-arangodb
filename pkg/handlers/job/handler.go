@@ -41,6 +41,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
 const (
@@ -69,7 +70,7 @@ func (h *handler) Handle(item operation.Item) error {
 	// Get Job object. It also covers NotFound case
 	job, err := h.client.AppsV1().ArangoJobs(item.Namespace).Get(context.Background(), item.Name, meta.GetOptions{})
 	if err != nil {
-		if k8sutil.IsNotFound(err) {
+		if kerrors.IsNotFound(err) {
 			return nil
 		}
 		logger.Error("ArangoJob fetch error %v", err)
@@ -108,7 +109,7 @@ func (h *handler) createFailedJobStatusWithEvent(msg string, job *appsApi.Arango
 func (h *handler) processArangoJob(job *appsApi.ArangoJob) batch.JobStatus {
 	existingJob, err := h.kubeClient.BatchV1().Jobs(job.Namespace).Get(context.Background(), job.Name, meta.GetOptions{})
 	if err != nil {
-		if k8sutil.IsNotFound(err) {
+		if kerrors.IsNotFound(err) {
 			k8sJob, err := h.prepareK8sJob(job)
 			if err != nil {
 				return h.createFailedJobStatusWithEvent(fmt.Sprintf("can not prepare k8s Job: %s", err.Error()), job)

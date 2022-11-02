@@ -35,6 +35,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/info"
 	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
 const (
@@ -97,7 +98,7 @@ func (r *Resources) CleanupTerminatedPods(ctx context.Context) (util.Interval, e
 			err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				return item.Cache().Client().Kubernetes().CoreV1().Pods(item.Cache().Namespace()).Delete(ctxChild, pod.GetName(), *options)
 			})
-			if err != nil && !k8sutil.IsNotFound(err) {
+			if err != nil && !kerrors.IsNotFound(err) {
 				log.Err(err).Str("pod", pod.GetName()).Debug("Failed to cleanup pod")
 				return errors.WithStack(err)
 			}

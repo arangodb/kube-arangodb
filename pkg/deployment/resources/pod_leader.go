@@ -36,6 +36,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
 // EnsureLeader creates leader label on the pod's agency and creates service to it.
@@ -140,7 +141,7 @@ func (r *Resources) EnsureLeader(ctx context.Context, cachedStatus inspectorInte
 		return err
 	})
 	if err != nil {
-		if !k8sutil.IsConflict(err) {
+		if !kerrors.IsConflict(err) {
 			return err
 		}
 	}

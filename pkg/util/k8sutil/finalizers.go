@@ -33,6 +33,7 @@ import (
 	persistentvolumeclaimv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
 	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
 const (
@@ -113,7 +114,7 @@ func RemoveFinalizers(finalizers []string, getFunc func() (meta.Object, error), 
 		attempts++
 		obj, err := getFunc()
 		if err != nil {
-			if IsNotFound(err) && ignoreNotFound {
+			if kerrors.IsNotFound(err) && ignoreNotFound {
 				// Object no longer found and we're allowed to ignore that.
 				return 0, nil
 			}
@@ -140,14 +141,14 @@ func RemoveFinalizers(finalizers []string, getFunc func() (meta.Object, error), 
 		}
 		if z := len(original) - len(newList); z > 0 {
 			obj.SetFinalizers(newList)
-			if err := updateFunc(obj); IsConflict(err) {
+			if err := updateFunc(obj); kerrors.IsConflict(err) {
 				if attempts > maxRemoveFinalizersAttempts {
 					return 0, errors.WithStack(err)
 				} else {
 					// Try again
 					continue
 				}
-			} else if IsNotFound(err) && ignoreNotFound {
+			} else if kerrors.IsNotFound(err) && ignoreNotFound {
 				// Object no longer found and we're allowed to ignore that.
 				return 0, nil
 			} else if err != nil {

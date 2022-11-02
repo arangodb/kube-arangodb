@@ -42,6 +42,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/info"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
 var (
@@ -403,9 +404,9 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 					GracePeriodSeconds: util.NewInt64(10),
 					Preconditions:      meta.NewUIDPreconditions(string(pod.GetUID())),
 				}); err != nil {
-					if k8sutil.IsNotFound(err) {
+					if kerrors.IsNotFound(err) {
 						// Pod is already gone, we are fine with it
-					} else if k8sutil.IsConflict(err) {
+					} else if kerrors.IsConflict(err) {
 						log.Warn("UID of Pod Changed")
 					} else {
 						log.Err(err).Error("Unknown error while deleting Pod")

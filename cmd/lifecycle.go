@@ -35,7 +35,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
 	"github.com/arangodb/kube-arangodb/pkg/version"
@@ -118,7 +118,7 @@ func cmdLifecyclePreStopRunFinalizer(cmd *cobra.Command, args []string) {
 	recentErrors := 0
 	for {
 		p, err := pods.Get(context.Background(), name, meta.GetOptions{})
-		if k8sutil.IsNotFound(err) {
+		if kerrors.IsNotFound(err) {
 			logger.Warn("Pod not found")
 			return
 		} else if err != nil {
@@ -217,7 +217,7 @@ func (c *cmdLifecyclePreStopRunPort) run(cmd *cobra.Command, args []string) erro
 		conn.Close()
 
 		p, err := pods.Get(context.Background(), name, meta.GetOptions{})
-		if k8sutil.IsNotFound(err) {
+		if kerrors.IsNotFound(err) {
 			logger.Warn("Pod not found")
 			return nil
 		} else if err != nil {

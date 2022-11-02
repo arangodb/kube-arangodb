@@ -35,6 +35,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
 	servicev1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
 // CreateHeadlessServiceName returns the name of the headless service for the given
@@ -102,7 +103,7 @@ func CreateExporterService(ctx context.Context, cachedStatus service.Inspector, 
 		},
 	}
 	AddOwnerRefToObject(svc.GetObjectMeta(), &owner)
-	if _, err := svcs.Create(ctx, svc, meta.CreateOptions{}); IsAlreadyExists(err) {
+	if _, err := svcs.Create(ctx, svc, meta.CreateOptions{}); kerrors.IsAlreadyExists(err) {
 		return svcName, false, nil
 	} else if err != nil {
 		return svcName, false, errors.WithStack(err)
@@ -221,7 +222,7 @@ func createService(ctx context.Context, svcs servicev1.ModInterface, svcName, de
 		},
 	}
 	AddOwnerRefToObject(svc.GetObjectMeta(), &owner)
-	if _, err := svcs.Create(ctx, svc, meta.CreateOptions{}); IsAlreadyExists(err) {
+	if _, err := svcs.Create(ctx, svc, meta.CreateOptions{}); kerrors.IsAlreadyExists(err) {
 		return false, nil
 	} else if err != nil {
 		return false, errors.WithStack(err)

@@ -36,6 +36,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/probe"
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
 )
@@ -159,7 +160,7 @@ func (o *Operator) setRoleLabel(log logging.Logger, label, role string) error {
 	log = log.Str("pod-name", o.Config.PodName)
 	op := func() error {
 		pod, err := pods.Get(context.Background(), o.Config.PodName, meta.GetOptions{})
-		if k8sutil.IsNotFound(err) {
+		if kerrors.IsNotFound(err) {
 			log.Err(err).Error("Pod not found, so we cannot set its role label")
 			return retry.Permanent(errors.WithStack(err))
 		} else if err != nil {
@@ -171,7 +172,7 @@ func (o *Operator) setRoleLabel(log logging.Logger, label, role string) error {
 		}
 		labels[label] = role
 		pod.ObjectMeta.SetLabels(labels)
-		if _, err := pods.Update(context.Background(), pod, meta.UpdateOptions{}); k8sutil.IsConflict(err) {
+		if _, err := pods.Update(context.Background(), pod, meta.UpdateOptions{}); kerrors.IsConflict(err) {
 			// Retry it
 			return errors.WithStack(err)
 		} else if err != nil {

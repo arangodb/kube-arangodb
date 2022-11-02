@@ -32,7 +32,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
 func newJWTCleanAction(action api.Action, actionCtx ActionContext) Action {
@@ -105,7 +105,7 @@ func (a *actionJWTClean) Start(ctx context.Context) (bool, error) {
 		return err
 	})
 	if err != nil {
-		if !k8sutil.IsInvalid(err) {
+		if !kerrors.IsInvalid(err) {
 			return false, errors.Wrapf(err, "Unable to update secret: %s", pod.JWTSecretFolder(a.actionCtx.GetName()))
 		}
 	}

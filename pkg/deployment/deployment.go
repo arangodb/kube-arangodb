@@ -60,6 +60,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/trigger"
 )
@@ -529,7 +530,7 @@ func (d *Deployment) lookForServiceMonitorCRD() {
 	var err error
 	if d.GetScope().IsNamespaced() {
 		_, err = d.acs.CurrentClusterCache().ServiceMonitor().V1()
-		if k8sutil.IsForbiddenOrNotFound(err) {
+		if kerrors.IsForbiddenOrNotFound(err) {
 			return
 		}
 	} else {
@@ -544,7 +545,7 @@ func (d *Deployment) lookForServiceMonitorCRD() {
 		d.haveServiceMonitorCRD = true
 		d.triggerInspection()
 		return
-	} else if k8sutil.IsNotFound(err) {
+	} else if kerrors.IsNotFound(err) {
 		if d.haveServiceMonitorCRD {
 			log.Info("...ServiceMonitor CRD no longer there")
 		}

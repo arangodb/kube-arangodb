@@ -33,7 +33,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
 const (
@@ -203,7 +203,7 @@ func (s shutdownHelperDelete) Start(ctx context.Context) (bool, error) {
 
 	// Terminate pod
 	if err := cache.Client().Kubernetes().CoreV1().Pods(cache.Namespace()).Delete(ctx, podName, meta.DeleteOptions{}); err != nil {
-		if !k8sutil.IsNotFound(err) {
+		if !kerrors.IsNotFound(err) {
 			return false, errors.WithStack(err)
 		}
 	}
@@ -290,7 +290,7 @@ func (s shutdownNow) CheckProgress(ctx context.Context) (bool, bool, error) {
 		GracePeriodSeconds: util.NewInt64(1),
 	}
 	if err := cache.Client().Kubernetes().CoreV1().Pods(cache.Namespace()).Delete(ctx, podName, options); err != nil {
-		if !k8sutil.IsNotFound(err) {
+		if !kerrors.IsNotFound(err) {
 			return false, false, errors.WithStack(err)
 		}
 	}
