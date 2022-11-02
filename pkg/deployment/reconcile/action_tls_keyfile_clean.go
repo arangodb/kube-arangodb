@@ -28,6 +28,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
 func newCleanTLSKeyfileCertificateAction(action api.Action, actionCtx ActionContext) Action {
@@ -62,7 +63,7 @@ func (a *actionCleanTLSKeyfileCertificate) Start(ctx context.Context) (bool, err
 
 	if err := c.Client().Kubernetes().CoreV1().Secrets(c.Namespace()).Delete(ctxChild, k8sutil.AppendTLSKeyfileSecretPostfix(member.ArangoMemberName(a.actionCtx.GetName(), a.action.Group)), meta.DeleteOptions{}); err != nil {
 		a.log.Err(err).Warn("Unable to remove keyfile")
-		if !k8sutil.IsNotFound(err) {
+		if !kerrors.IsNotFound(err) {
 			return false, err
 		}
 	}

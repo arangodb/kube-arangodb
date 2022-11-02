@@ -37,6 +37,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	secretv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
 )
 
@@ -64,7 +65,7 @@ func (r *Resources) createTLSCACertificate(ctx context.Context, secrets secretv1
 		return errors.WithStack(err)
 	}
 	if err := k8sutil.CreateCASecret(ctx, secrets, spec.GetCASecretName(), cert, priv, ownerRef); err != nil {
-		if k8sutil.IsAlreadyExists(err) {
+		if kerrors.IsAlreadyExists(err) {
 			log.Debug("CA Secret already exists")
 		} else {
 			log.Err(err).Debug("Failed to create CA Secret")
@@ -115,7 +116,7 @@ func createTLSServerCertificate(ctx context.Context, log logging.Logger, cachedS
 		return k8sutil.CreateTLSKeyfileSecret(ctxChild, secrets, secretName, keyfile, ownerRef)
 	})
 	if err != nil {
-		if k8sutil.IsAlreadyExists(err) {
+		if kerrors.IsAlreadyExists(err) {
 			log.Debug("Server Secret already exists")
 		} else {
 			log.Err(err).Debug("Failed to create server Secret")

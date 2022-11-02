@@ -42,6 +42,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
 const (
@@ -298,7 +299,7 @@ func (ls *LocalStorage) bindClaimToVolume(claim core.PersistentVolumeClaim, volu
 
 		// Fetch latest version of claim
 		updated, err := pvcs.Get(context.Background(), claim.GetName(), meta.GetOptions{})
-		if k8sutil.IsNotFound(err) {
+		if kerrors.IsNotFound(err) {
 			return errors.WithStack(err)
 		} else if err != nil {
 			log.Err(err).Warn("Failed to load updated PersistentVolumeClaim")
@@ -316,7 +317,7 @@ func (ls *LocalStorage) bindClaimToVolume(claim core.PersistentVolumeClaim, volu
 
 		// Try to bind
 		updated.Spec.VolumeName = volumeName
-		if _, err := pvcs.Update(context.Background(), updated, meta.UpdateOptions{}); k8sutil.IsConflict(err) {
+		if _, err := pvcs.Update(context.Background(), updated, meta.UpdateOptions{}); kerrors.IsConflict(err) {
 			// Claim modified already, retry
 			log.Err(err).Debug("PersistentVolumeClaim has been modified. Retrying.")
 		} else if err != nil {

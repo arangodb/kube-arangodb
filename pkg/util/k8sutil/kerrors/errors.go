@@ -18,7 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package k8sutil
+package kerrors
 
 import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"

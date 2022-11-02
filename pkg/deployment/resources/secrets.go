@@ -48,6 +48,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	secretv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
 )
 
@@ -151,7 +152,7 @@ func (r *Resources) EnsureSecrets(ctx context.Context, cachedStatus inspectorInt
 					return errors.WithStack(errors.Wrapf(err, "Failed to render alt names"))
 				}
 				owner := member.AsOwner()
-				if created, err := createTLSServerCertificate(ctx, log, cachedStatus, secrets, serverNames, spec.TLS, tlsKeyfileSecretName, &owner); err != nil && !k8sutil.IsAlreadyExists(err) {
+				if created, err := createTLSServerCertificate(ctx, log, cachedStatus, secrets, serverNames, spec.TLS, tlsKeyfileSecretName, &owner); err != nil && !kerrors.IsAlreadyExists(err) {
 					return errors.WithStack(errors.Wrapf(err, "Failed to create TLS keyfile secret"))
 				} else if created {
 					reconcileRequired.Required()
@@ -346,7 +347,7 @@ func (r *Resources) createTokenSecret(ctx context.Context, secrets secretv1.ModI
 	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		return k8sutil.CreateTokenSecret(ctxChild, secrets, secretName, token, &owner)
 	})
-	if k8sutil.IsAlreadyExists(err) {
+	if kerrors.IsAlreadyExists(err) {
 		// Secret added while we tried it also
 		return nil
 	} else if err != nil {
@@ -441,7 +442,7 @@ func (r *Resources) ensureExporterTokenSecret(ctx context.Context, cachedStatus 
 		if !exists {
 			owner := r.context.GetAPIObject().AsOwner()
 			err = k8sutil.CreateJWTFromSecret(ctx, cachedStatus.Secret().V1().Read(), secrets, tokenSecretName, secretSecretName, exporterTokenClaims, &owner)
-			if k8sutil.IsAlreadyExists(err) {
+			if kerrors.IsAlreadyExists(err) {
 				// Secret added while we tried it also
 				return nil
 			} else if err != nil {
@@ -503,7 +504,7 @@ func (r *Resources) ensureTLSCACertificateSecret(ctx context.Context, cachedStat
 		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 			return r.createTLSCACertificate(ctxChild, secrets, spec, deploymentName, &owner)
 		})
-		if k8sutil.IsAlreadyExists(err) {
+		if kerrors.IsAlreadyExists(err) {
 			// Secret added while we tried it also
 			return nil
 		} else if err != nil {
@@ -527,7 +528,7 @@ func (r *Resources) ensureClientAuthCACertificateSecret(ctx context.Context, cac
 		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 			return r.createClientAuthCACertificate(ctxChild, secrets, spec, deploymentName, &owner)
 		})
-		if k8sutil.IsAlreadyExists(err) {
+		if kerrors.IsAlreadyExists(err) {
 			// Secret added while we tried it also
 			return nil
 		} else if err != nil {

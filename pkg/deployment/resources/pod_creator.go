@@ -49,6 +49,7 @@ import (
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
 )
 
@@ -513,7 +514,7 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 
 			owner := apiObject.AsOwner()
 			_, err = createTLSServerCertificate(ctx, log, cachedStatus, cachedStatus.SecretsModInterface().V1(), names, spec.Sync.TLS, tlsKeyfileSecretName, &owner)
-			if err != nil && !k8sutil.IsAlreadyExists(err) {
+			if err != nil && !kerrors.IsAlreadyExists(err) {
 				return errors.WithStack(errors.Wrapf(err, "Failed to create TLS keyfile secret"))
 			}
 		}

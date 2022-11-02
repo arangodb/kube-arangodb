@@ -34,6 +34,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/timer"
 )
 
@@ -155,7 +156,7 @@ func (r *Resources) ensurePDBForGroup(ctx context.Context, group api.ServerGroup
 			return nil
 		})
 
-		if k8sutil.IsNotFound(err) {
+		if kerrors.IsNotFound(err) {
 			if wantedMinAvail != 0 {
 				// No PDB found - create new.
 				log.Debug("Creating new PDB")
@@ -205,7 +206,7 @@ func (r *Resources) ensurePDBForGroup(ctx context.Context, group api.ServerGroup
 
 				return pdbMod.V1Beta1().Delete(ctxChild, pdbName, meta.DeleteOptions{})
 			})
-			if err != nil && !k8sutil.IsNotFound(err) {
+			if err != nil && !kerrors.IsNotFound(err) {
 				log.Err(err).Error("PDB deletion failed")
 				return errors.WithStack(err)
 			}

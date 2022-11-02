@@ -44,6 +44,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
 var _ interfaces.PodCreator = &ImageUpdatePod{}
@@ -150,7 +151,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 				err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 					return ib.Context.ACS().CurrentClusterCache().PodsModInterface().V1().Delete(ctxChild, podName, meta.DeleteOptions{})
 				})
-				if err != nil && !k8sutil.IsNotFound(err) {
+				if err != nil && !kerrors.IsNotFound(err) {
 					log.Err(err).Warn("Failed to delete Image ID Pod")
 					return false, nil
 				}
@@ -192,7 +193,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 		err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 			return ib.Context.ACS().CurrentClusterCache().PodsModInterface().V1().Delete(ctxChild, podName, meta.DeleteOptions{})
 		})
-		if err != nil && !k8sutil.IsNotFound(err) {
+		if err != nil && !kerrors.IsNotFound(err) {
 			log.Err(err).Warn("Failed to delete Image ID Pod")
 			return true, nil
 		}

@@ -32,8 +32,8 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
 func (r *Resources) EnsureLabels(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
@@ -155,7 +155,7 @@ func (r *Resources) EnsureServiceMonitorsLabels(ctx context.Context, cachedStatu
 	changed := false
 	i, err := cachedStatus.ServiceMonitor().V1()
 	if err != nil {
-		if k8sutil.IsForbiddenOrNotFound(err) {
+		if kerrors.IsForbiddenOrNotFound(err) {
 			return nil
 		}
 		return err

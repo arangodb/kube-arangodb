@@ -41,6 +41,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
 const (
@@ -597,7 +598,7 @@ func CreatePod(ctx context.Context, c podv1.ModInterface, pod *core.Pod, ns stri
 	AddOwnerRefToObject(pod.GetObjectMeta(), &owner)
 
 	if createdPod, err := c.Create(ctx, pod, meta.CreateOptions{}); err != nil {
-		if IsAlreadyExists(err) {
+		if kerrors.IsAlreadyExists(err) {
 			return pod.GetName(), "", nil // If pod exists do not return any error but do not record UID (enforced rotation)
 		}
 

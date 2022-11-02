@@ -30,6 +30,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	persistentvolumeclaimv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
 // IsPersistentVolumeClaimMarkedForDeletion returns true if the pvc has been marked for deletion.
@@ -101,7 +102,7 @@ func CreatePersistentVolumeClaim(ctx context.Context, pvcs persistentvolumeclaim
 		pvc.Spec.StorageClassName = &storageClassName
 	}
 	AddOwnerRefToObject(pvc.GetObjectMeta(), &owner)
-	if _, err := pvcs.Create(ctx, pvc, meta.CreateOptions{}); err != nil && !IsAlreadyExists(err) {
+	if _, err := pvcs.Create(ctx, pvc, meta.CreateOptions{}); err != nil && !kerrors.IsAlreadyExists(err) {
 		return errors.WithStack(err)
 	}
 	return nil

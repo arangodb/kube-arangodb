@@ -35,6 +35,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
 	"github.com/arangodb/kube-arangodb/pkg/util/timer"
@@ -300,7 +301,7 @@ func (ls *LocalStorage) handleArangoLocalStorageUpdatedEvent(event *localStorage
 	current, err := ls.deps.Client.Arango().StorageV1alpha().ArangoLocalStorages().Get(context.Background(), ls.apiObject.GetName(), meta.GetOptions{})
 	if err != nil {
 		log.Err(err).Debug("Failed to get current version of local storage from API server")
-		if k8sutil.IsNotFound(err) {
+		if kerrors.IsNotFound(err) {
 			return nil
 		}
 		return errors.WithStack(err)
@@ -365,7 +366,7 @@ func (ls *LocalStorage) updateCRStatus() error {
 			ls.apiObject = newAPIObject
 			return nil
 		}
-		if attempt < 10 && k8sutil.IsConflict(err) {
+		if attempt < 10 && kerrors.IsConflict(err) {
 			// API object may have been changed already,
 			// Reload api object and try again
 			var current *api.ArangoLocalStorage
@@ -399,7 +400,7 @@ func (ls *LocalStorage) updateCRSpec(newSpec api.LocalStorageSpec) error {
 			ls.apiObject = newAPIObject
 			return nil
 		}
-		if attempt < 10 && k8sutil.IsConflict(err) {
+		if attempt < 10 && kerrors.IsConflict(err) {
 			// API object may have been changed already,
 			// Reload api object and try again
 			var current *api.ArangoLocalStorage
@@ -432,12 +433,12 @@ func (ls *LocalStorage) reportFailedStatus() {
 	op := func() error {
 		ls.status.State = api.LocalStorageStateFailed
 		err := ls.updateCRStatus()
-		if err == nil || k8sutil.IsNotFound(err) {
+		if err == nil || kerrors.IsNotFound(err) {
 			// Status has been updated
 			return nil
 		}
 
-		if !k8sutil.IsConflict(err) {
+		if !kerrors.IsConflict(err) {
 			log.Err(err).Warn("retry report status: fail to update")
 			return errors.WithStack(err)
 		}
@@ -447,7 +448,7 @@ func (ls *LocalStorage) reportFailedStatus() {
 			// Update (PUT) will return conflict even if object is deleted since we have UID set in object.
 			// Because it will check UID first and return something like:
 			// "Precondition failed: UID in precondition: 0xc42712c0f0, UID in object meta: ".
-			if k8sutil.IsNotFound(err) {
+			if kerrors.IsNotFound(err) {
 				return nil
 			}
 			log.Err(err).Warn("retry report status: fail to get latest version")

@@ -33,6 +33,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
 const (
@@ -147,7 +148,7 @@ func (r *Resources) inspectFinalizerPodAgencyServing(ctx context.Context, p *cor
 		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 			return r.context.ACS().CurrentClusterCache().PersistentVolumeClaimsModInterface().V1().Delete(ctxChild, memberStatus.PersistentVolumeClaim.GetName(), meta.DeleteOptions{})
 		})
-		if err != nil && !k8sutil.IsNotFound(err) {
+		if err != nil && !kerrors.IsNotFound(err) {
 			log.Err(err).Warn("Failed to delete PVC for member")
 			return errors.WithStack(err)
 		}
@@ -177,7 +178,7 @@ func (r *Resources) inspectFinalizerPodDrainDBServer(ctx context.Context, p *cor
 		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 			return r.context.ACS().CurrentClusterCache().PersistentVolumeClaimsModInterface().V1().Delete(ctxChild, memberStatus.PersistentVolumeClaim.GetName(), meta.DeleteOptions{})
 		})
-		if err != nil && !k8sutil.IsNotFound(err) {
+		if err != nil && !kerrors.IsNotFound(err) {
 			log.Err(err).Warn("Failed to delete PVC for member")
 			return errors.WithStack(err)
 		}

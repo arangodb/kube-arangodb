@@ -35,6 +35,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
 var (
@@ -71,7 +72,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 
 	// Check deployment still exists
 	updated, err := d.acs.CurrentClusterCache().GetCurrentArangoDeployment()
-	if k8sutil.IsNotFound(err) {
+	if kerrors.IsNotFound(err) {
 		// Deployment is gone
 		d.log.Info("Deployment is gone")
 		d.Stop()

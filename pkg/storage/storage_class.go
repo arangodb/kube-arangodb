@@ -30,6 +30,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
 var (
@@ -53,7 +54,7 @@ func (l *LocalStorage) ensureStorageClass(apiObject *api.ArangoLocalStorage) err
 	// Note: We do not attach the StorageClass to the apiObject (OwnerRef) because many
 	// ArangoLocalStorage resource may use the same StorageClass.
 	cli := l.deps.Client.Kubernetes().StorageV1()
-	if _, err := cli.StorageClasses().Create(context.Background(), sc, meta.CreateOptions{}); k8sutil.IsAlreadyExists(err) {
+	if _, err := cli.StorageClasses().Create(context.Background(), sc, meta.CreateOptions{}); kerrors.IsAlreadyExists(err) {
 		l.log.
 			Str("storageclass", sc.GetName()).
 			Debug("StorageClass already exists")

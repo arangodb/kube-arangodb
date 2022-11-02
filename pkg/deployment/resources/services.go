@@ -42,6 +42,7 @@ import (
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	v1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
 	servicev1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
 var (
@@ -138,7 +139,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 				return err
 			})
 			if err != nil {
-				if !k8sutil.IsConflict(err) {
+				if !kerrors.IsConflict(err) {
 					return err
 				}
 			}

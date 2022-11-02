@@ -37,6 +37,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
 const (
@@ -102,7 +103,7 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 	depls := dr.deps.Client.Arango().DatabaseV1().ArangoDeployments(p.GetNamespace())
 	if name := p.Spec.Source.GetDeploymentName(); name != "" {
 		depl, err := depls.Get(context.Background(), name, meta.GetOptions{})
-		if k8sutil.IsNotFound(err) {
+		if kerrors.IsNotFound(err) {
 			dr.log.Debug("Source deployment is gone. Abort enabled")
 			abort = true
 		} else if err != nil {
@@ -118,7 +119,7 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 	cleanupSource := false
 	if name := p.Spec.Destination.GetDeploymentName(); name != "" {
 		depl, err := depls.Get(context.Background(), name, meta.GetOptions{})
-		if k8sutil.IsNotFound(err) {
+		if kerrors.IsNotFound(err) {
 			dr.log.Debug("Destination deployment is gone. Source cleanup enabled")
 			cleanupSource = true
 		} else if err != nil {

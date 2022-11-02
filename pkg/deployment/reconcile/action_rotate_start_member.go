@@ -27,7 +27,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
 // newRotateStartMemberAction creates a new Action that implements the given
@@ -93,7 +93,7 @@ func (a *actionRotateStartMember) CheckProgress(ctx context.Context) (bool, bool
 
 	// Pod is terminated, we can now remove it
 	if err := cache.Client().Kubernetes().CoreV1().Pods(cache.Namespace()).Delete(ctx, m.Pod.GetName(), meta.DeleteOptions{}); err != nil {
-		if !k8sutil.IsNotFound(err) {
+		if !kerrors.IsNotFound(err) {
 			a.log.Err(err).Error("Unable to delete pod")
 			return false, false, nil
 		}
