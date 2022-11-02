@@ -31,6 +31,8 @@ import (
 	apiextensionsclientFake "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/fake"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/version"
+	"k8s.io/client-go/discovery/fake"
 	kubernetesFake "k8s.io/client-go/kubernetes/fake"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -38,11 +40,17 @@ import (
 )
 
 func NewFakeClient() Client {
-	return NewStaticClient(kubernetesFake.NewSimpleClientset(), apiextensionsclientFake.NewSimpleClientset(), versionedFake.NewSimpleClientset(), monitoringFake.NewSimpleClientset())
+	return NewFakeClientWithVersion(nil)
+}
+
+func NewFakeClientWithVersion(version *version.Info) Client {
+	return NewFakeClientBuilder().Version(version).Client()
 }
 
 type FakeClientBuilder interface {
 	Add(objects ...runtime.Object) FakeClientBuilder
+
+	Version(version *version.Info) FakeClientBuilder
 
 	Client() Client
 }
@@ -54,7 +62,14 @@ func NewFakeClientBuilder() FakeClientBuilder {
 type fakeClientBuilder struct {
 	lock sync.Mutex
 
+	version *version.Info
+
 	all []runtime.Object
+}
+
+func (f *fakeClientBuilder) Version(version *version.Info) FakeClientBuilder {
+	f.version = version
+	return f
 }
 
 func (f *fakeClientBuilder) Add(objects ...runtime.Object) FakeClientBuilder {
@@ -88,8 +103,14 @@ func (f *fakeClientBuilder) filter(reg func(s *runtime.Scheme) error) []runtime.
 }
 
 func (f *fakeClientBuilder) Client() Client {
+	q := kubernetesFake.NewSimpleClientset(f.filter(kubernetesFake.AddToScheme)...)
+	if z, ok := q.Discovery().(*fake.FakeDiscovery); ok {
+		z.FakedServerVersion = f.version
+	} else {
+		panic("Unable to get client")
+	}
 	return NewStaticClient(
-		kubernetesFake.NewSimpleClientset(f.filter(kubernetesFake.AddToScheme)...),
+		q,
 		apiextensionsclientFake.NewSimpleClientset(f.filter(apiextensionsclientFake.AddToScheme)...),
 		versionedFake.NewSimpleClientset(f.filter(versionedFake.AddToScheme)...),
 		monitoringFake.NewSimpleClientset(f.filter(monitoringFake.AddToScheme)...))

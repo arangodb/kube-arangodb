@@ -31,6 +31,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
 )
 
 func init() {
@@ -170,7 +171,11 @@ func (p *nodesInspector) Refresh(ctx context.Context) error {
 	return p.state.refresh(ctx, nodesInspectorLoaderObj)
 }
 
-func (p nodesInspector) Throttle(c throttle.Components) throttle.Throttle {
+func (p *nodesInspector) Version() version.Version {
+	return version.V1
+}
+
+func (p *nodesInspector) Throttle(c throttle.Components) throttle.Throttle {
 	return c.Node()
 }
 

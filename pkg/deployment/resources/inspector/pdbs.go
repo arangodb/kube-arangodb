@@ -34,6 +34,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
 )
 
 func init() {
@@ -281,7 +282,15 @@ func (p *podDisruptionBudgetsInspector) Refresh(ctx context.Context) error {
 	return p.state.refresh(ctx, podDisruptionBudgetsInspectorLoaderObj)
 }
 
-func (p podDisruptionBudgetsInspector) Throttle(c throttle.Components) throttle.Throttle {
+func (p *podDisruptionBudgetsInspector) Version() version.Version {
+	if p.state.versionInfo.CompareTo("1.21") >= 0 {
+		return version.V1
+	}
+
+	return version.V1Beta1
+}
+
+func (p *podDisruptionBudgetsInspector) Throttle(c throttle.Components) throttle.Throttle {
 	return c.PodDisruptionBudget()
 }
 

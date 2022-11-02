@@ -95,6 +95,8 @@ type Factory interface {
 	Refresh() error
 	SetClient(c Client)
 
+	Name() string
+
 	Client() (Client, bool)
 }
 
@@ -108,6 +110,10 @@ type factory struct {
 	kubeConfigChecksum string
 
 	client Client
+}
+
+func (f *factory) Name() string {
+	return f.name
 }
 
 func (f *factory) Refresh() error {
@@ -152,7 +158,7 @@ func (f *factory) refresh() error {
 		cfg.RateLimiter = GetRateLimiter(f.name)
 	}
 
-	client, err := newClient(cfg)
+	client, err := newClient(f.name, cfg)
 	if err != nil {
 		return err
 	}
@@ -180,11 +186,14 @@ type Client interface {
 	Arango() versioned.Interface
 	Monitoring() monitoring.Interface
 
+	Name() string
+
 	Config() *rest.Config
 }
 
 func NewStaticClient(kubernetes kubernetes.Interface, kubernetesExtensions apiextensionsclient.Interface, arango versioned.Interface, monitoring monitoring.Interface) Client {
 	return &client{
+		name:                 "static",
 		kubernetes:           kubernetes,
 		kubernetesExtensions: kubernetesExtensions,
 		arango:               arango,
@@ -192,10 +201,11 @@ func NewStaticClient(kubernetes kubernetes.Interface, kubernetesExtensions apiex
 	}
 }
 
-func newClient(cfg *rest.Config) (*client, error) {
+func newClient(name string, cfg *rest.Config) (*client, error) {
 	var c client
 
 	c.config = cfg
+	c.name = name
 
 	if q, err := kubernetes.NewForConfig(cfg); err != nil {
 		return nil, err
@@ -225,11 +235,17 @@ func newClient(cfg *rest.Config) (*client, error) {
 }
 
 type client struct {
+	name string
+
 	kubernetes           kubernetes.Interface
 	kubernetesExtensions apiextensionsclient.Interface
 	arango               versioned.Interface
 	monitoring           monitoring.Interface
 	config               *rest.Config
+}
+
+func (c *client) Name() string {
+	return c.name
 }
 
 func (c *client) Config() *rest.Config {

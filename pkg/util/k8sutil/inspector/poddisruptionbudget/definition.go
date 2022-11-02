@@ -26,6 +26,7 @@ import (
 	v1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/refresh"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
 )
 
 type Inspector interface {
@@ -37,6 +38,8 @@ type Definition interface {
 
 	gvk.GK
 	anonymous.Impl
+
+	Version() version.Version
 
 	V1() (v1.Inspector, error)
 	V1Beta1() (v1beta1.Inspector, error)

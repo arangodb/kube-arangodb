@@ -6,6 +6,7 @@
 - (Improvement) Arango Kubernetes Client Mod Implementation
 - (Refactoring) Extract kerrors package
 - (Refactoring) Extract Inspector Definitions package
+- (Bugfix) Fix PDBs Version discovery
 
 ## [1.2.20](https://github.com/arangodb/kube-arangodb/tree/1.2.20) (2022-10-25)
 - (Feature) Add action progress

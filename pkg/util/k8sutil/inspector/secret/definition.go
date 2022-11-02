@@ -25,6 +25,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/gvk"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/refresh"
 	v1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
 )
 
 type Inspector interface {
@@ -36,6 +37,8 @@ type Definition interface {
 
 	gvk.GK
 	anonymous.Impl
+
+	Version() version.Version
 
 	V1() v1.Inspector
 }
