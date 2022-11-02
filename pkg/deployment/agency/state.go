@@ -96,7 +96,7 @@ type DumpState struct {
 }
 
 type StateDB struct {
-	ArangoSync ArangoSyncLazy `json:"arangoSync,omitempty"`
+	ArangoSync ArangoSyncLazy `json:"arangosync,omitempty"`
 }
 
 type State struct {
