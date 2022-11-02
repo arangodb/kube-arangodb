@@ -29,6 +29,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 )
 
@@ -41,8 +42,8 @@ var serviceAccountsInspectorLoaderObj = serviceAccountsInspectorLoader{}
 type serviceAccountsInspectorLoader struct {
 }
 
-func (p serviceAccountsInspectorLoader) Component() throttle.Component {
-	return throttle.ServiceAccount
+func (p serviceAccountsInspectorLoader) Component() definitions.Component {
+	return definitions.ServiceAccount
 }
 
 func (p serviceAccountsInspectorLoader) Load(ctx context.Context, i *inspectorState) {

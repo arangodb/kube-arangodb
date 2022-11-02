@@ -43,6 +43,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoclustersynchronization"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangotask"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/endpoints"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/node"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
@@ -81,7 +82,7 @@ func (i inspectorLoaders) Get(name string) int {
 type inspectorLoader interface {
 	Name() string
 
-	Component() throttle.Component
+	Component() definitions.Component
 
 	Load(context context.Context, i *inspectorState)
 
@@ -145,14 +146,14 @@ type inspectorState struct {
 }
 
 func (i *inspectorState) RegisterInformers(k8s informers.SharedInformerFactory, arango arangoInformer.SharedInformerFactory) {
-	k8s.Core().V1().Nodes().Informer().AddEventHandler(i.eventHandler(throttle.Node))
-	k8s.Core().V1().PersistentVolumeClaims().Informer().AddEventHandler(i.eventHandler(throttle.PersistentVolumeClaim))
-	k8s.Policy().V1().PodDisruptionBudgets().Informer().AddEventHandler(i.eventHandler(throttle.PodDisruptionBudget))
-	k8s.Policy().V1beta1().PodDisruptionBudgets().Informer().AddEventHandler(i.eventHandler(throttle.PodDisruptionBudget))
-	k8s.Core().V1().Secrets().Informer().AddEventHandler(i.eventHandler(throttle.Secret))
-	k8s.Core().V1().Services().Informer().AddEventHandler(i.eventHandler(throttle.Service))
-	k8s.Core().V1().ServiceAccounts().Informer().AddEventHandler(i.eventHandler(throttle.ServiceAccount))
-	k8s.Core().V1().Endpoints().Informer().AddEventHandler(i.eventHandler(throttle.Endpoints))
+	k8s.Core().V1().Nodes().Informer().AddEventHandler(i.eventHandler(definitions.Node))
+	k8s.Core().V1().PersistentVolumeClaims().Informer().AddEventHandler(i.eventHandler(definitions.PersistentVolumeClaim))
+	k8s.Policy().V1().PodDisruptionBudgets().Informer().AddEventHandler(i.eventHandler(definitions.PodDisruptionBudget))
+	k8s.Policy().V1beta1().PodDisruptionBudgets().Informer().AddEventHandler(i.eventHandler(definitions.PodDisruptionBudget))
+	k8s.Core().V1().Secrets().Informer().AddEventHandler(i.eventHandler(definitions.Secret))
+	k8s.Core().V1().Services().Informer().AddEventHandler(i.eventHandler(definitions.Service))
+	k8s.Core().V1().ServiceAccounts().Informer().AddEventHandler(i.eventHandler(definitions.ServiceAccount))
+	k8s.Core().V1().Endpoints().Informer().AddEventHandler(i.eventHandler(definitions.Endpoints))
 }
 
 func extractGVKFromOwnerReference(o meta.OwnerReference) schema.GroupVersionKind {

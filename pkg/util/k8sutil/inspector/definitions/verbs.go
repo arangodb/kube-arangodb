@@ -18,34 +18,14 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package inspector
+package definitions
 
-import (
-	"k8s.io/client-go/tools/cache"
+type Verb string
 
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
+const (
+	Create Verb = "create"
+	Delete Verb = "delete"
+	Get    Verb = "get"
+	Patch  Verb = "patch"
+	Update Verb = "update"
 )
-
-func (i *inspectorState) eventHandler(component definitions.Component) cache.ResourceEventHandler {
-	return eventHandler{
-		i:         i,
-		component: component,
-	}
-}
-
-type eventHandler struct {
-	i         *inspectorState
-	component definitions.Component
-}
-
-func (e eventHandler) OnAdd(obj interface{}) {
-	e.i.throttles.Invalidate(e.component)
-}
-
-func (e eventHandler) OnUpdate(oldObj, newObj interface{}) {
-	e.i.throttles.Invalidate(e.component)
-}
-
-func (e eventHandler) OnDelete(obj interface{}) {
-	e.i.throttles.Invalidate(e.component)
-}

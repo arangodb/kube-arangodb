@@ -29,7 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 )
 
 const (
@@ -86,10 +86,10 @@ type ActionReloadCachedStatus interface {
 	Action
 
 	// ReloadComponents return cache components to be reloaded
-	ReloadComponents() (types.UID, []throttle.Component)
+	ReloadComponents() (types.UID, []definitions.Component)
 }
 
-func getActionReloadCachedStatus(a Action) (types.UID, []throttle.Component) {
+func getActionReloadCachedStatus(a Action) (types.UID, []definitions.Component) {
 	if c, ok := a.(ActionReloadCachedStatus); !ok {
 		return "", nil
 	} else {
