@@ -27,11 +27,21 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_Databases(t *testing.T) {
+func Test_Sync_Target(t *testing.T) {
 	var s DumpState
-	require.NoError(t, json.Unmarshal(agencyDump39HotBackup, &s))
+	require.NoError(t, json.Unmarshal(syncSource, &s))
 
-	require.Contains(t, s.Agency.Arango.Plan.Databases, "_system")
+	require.NotNil(t, s.Agency.ArangoDB.ArangoSync.ArangoSync)
+	require.True(t, s.Agency.ArangoDB.ArangoSync.ArangoSync.State.Outgoing.Targets.Exists())
+	require.True(t, s.Agency.ArangoDB.ArangoSync.IsSyncInProgress())
+}
 
-	require.False(t, s.Agency.ArangoDB.ArangoSync.IsSyncInProgress())
+func Test_Sync_Source(t *testing.T) {
+	var s DumpState
+	require.NoError(t, json.Unmarshal(syncTarget, &s))
+
+	require.NotNil(t, s.Agency.ArangoDB.ArangoSync.ArangoSync)
+	require.NotNil(t, s.Agency.ArangoDB.ArangoSync.ArangoSync.State.Incoming.State)
+	require.Equal(t, "running", *s.Agency.ArangoDB.ArangoSync.ArangoSync.State.Incoming.State)
+	require.True(t, s.Agency.ArangoDB.ArangoSync.IsSyncInProgress())
 }

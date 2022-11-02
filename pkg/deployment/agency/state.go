@@ -87,11 +87,16 @@ func (c *cache) loadState(ctx context.Context, client agency.Agency) (State, err
 type StateRoots []StateRoot
 
 type StateRoot struct {
-	Arango State `json:"arango"`
+	Arango   State   `json:"arango"`
+	ArangoDB StateDB `json:"arangodb,omitempty"`
 }
 
 type DumpState struct {
 	Agency StateRoot `json:"agency"`
+}
+
+type StateDB struct {
+	ArangoSync ArangoSyncLazy `json:"arangosync,omitempty"`
 }
 
 type State struct {
