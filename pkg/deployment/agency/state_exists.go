@@ -20,7 +20,11 @@
 
 package agency
 
-import "github.com/arangodb/kube-arangodb/pkg/util"
+import (
+	"crypto/sha256"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
+)
 
 type StateExists []byte
 
@@ -42,10 +46,9 @@ func (d *StateExists) UnmarshalJSON(bytes []byte) error {
 		return nil
 	}
 
-	z := make([]byte, len(bytes))
+	data := sha256.Sum256(bytes)
+	allData := data[:]
 
-	copy(z, bytes)
-
-	*d = z
+	*d = allData
 	return nil
 }
