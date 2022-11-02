@@ -146,14 +146,30 @@ type inspectorState struct {
 }
 
 func (i *inspectorState) RegisterInformers(k8s informers.SharedInformerFactory, arango arangoInformer.SharedInformerFactory) {
-	k8s.Core().V1().Nodes().Informer().AddEventHandler(i.eventHandler(definitions.Node))
+	// K8S
 	k8s.Core().V1().PersistentVolumeClaims().Informer().AddEventHandler(i.eventHandler(definitions.PersistentVolumeClaim))
-	k8s.Policy().V1().PodDisruptionBudgets().Informer().AddEventHandler(i.eventHandler(definitions.PodDisruptionBudget))
-	k8s.Policy().V1beta1().PodDisruptionBudgets().Informer().AddEventHandler(i.eventHandler(definitions.PodDisruptionBudget))
+
+	if i.PodDisruptionBudget().Version().IsV1() {
+		k8s.Policy().V1().PodDisruptionBudgets().Informer().AddEventHandler(i.eventHandler(definitions.PodDisruptionBudget))
+	} else {
+		k8s.Policy().V1beta1().PodDisruptionBudgets().Informer().AddEventHandler(i.eventHandler(definitions.PodDisruptionBudget))
+	}
+
 	k8s.Core().V1().Secrets().Informer().AddEventHandler(i.eventHandler(definitions.Secret))
 	k8s.Core().V1().Services().Informer().AddEventHandler(i.eventHandler(definitions.Service))
 	k8s.Core().V1().ServiceAccounts().Informer().AddEventHandler(i.eventHandler(definitions.ServiceAccount))
 	k8s.Core().V1().Endpoints().Informer().AddEventHandler(i.eventHandler(definitions.Endpoints))
+
+	// Arango
+	arango.Database().V1().ArangoMembers().Informer().AddEventHandler(i.eventHandler(definitions.ArangoMember))
+
+	if _, err := i.ArangoTask().V1(); err != nil {
+		arango.Database().V1().ArangoTasks().Informer().AddEventHandler(i.eventHandler(definitions.ArangoTask))
+	}
+
+	if _, err := i.ArangoClusterSynchronization().V1(); err != nil {
+		arango.Database().V1().ArangoClusterSynchronizations().Informer().AddEventHandler(i.eventHandler(definitions.ArangoClusterSynchronization))
+	}
 }
 
 func extractGVKFromOwnerReference(o meta.OwnerReference) schema.GroupVersionKind {
