@@ -22,6 +22,7 @@ package inspector
 
 import (
 	"context"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
 	"time"
 
 	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -170,7 +171,11 @@ func (p *serviceMonitorsInspector) Refresh(ctx context.Context) error {
 	return p.state.refresh(ctx, serviceMonitorsInspectorLoaderObj)
 }
 
-func (p serviceMonitorsInspector) Throttle(c throttle.Components) throttle.Throttle {
+func (p *serviceMonitorsInspector) Version() version.Version {
+	return version.V1
+}
+
+func (p *serviceMonitorsInspector) Throttle(c throttle.Components) throttle.Throttle {
 	return c.ServiceMonitor()
 }
 

@@ -22,6 +22,7 @@ package inspector
 
 import (
 	"context"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
 	"time"
 
 	policyv1 "k8s.io/api/policy/v1"
@@ -281,7 +282,15 @@ func (p *podDisruptionBudgetsInspector) Refresh(ctx context.Context) error {
 	return p.state.refresh(ctx, podDisruptionBudgetsInspectorLoaderObj)
 }
 
-func (p podDisruptionBudgetsInspector) Throttle(c throttle.Components) throttle.Throttle {
+func (p *podDisruptionBudgetsInspector) Version() version.Version {
+	if p.state.versionInfo.CompareTo("1.21") >= 0 {
+		return version.V1
+	}
+
+	return version.V1Beta1
+}
+
+func (p *podDisruptionBudgetsInspector) Throttle(c throttle.Components) throttle.Throttle {
 	return c.PodDisruptionBudget()
 }
 

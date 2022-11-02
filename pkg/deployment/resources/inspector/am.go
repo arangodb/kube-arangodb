@@ -22,6 +22,7 @@ package inspector
 
 import (
 	"context"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
 	"time"
 
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -174,7 +175,11 @@ func (p *arangoMembersInspector) Refresh(ctx context.Context) error {
 	return p.state.refresh(ctx, arangoMembersInspectorLoaderObj)
 }
 
-func (p arangoMembersInspector) Throttle(c throttle.Components) throttle.Throttle {
+func (p *arangoMembersInspector) Version() version.Version {
+	return version.V1
+}
+
+func (p *arangoMembersInspector) Throttle(c throttle.Components) throttle.Throttle {
 	return c.ArangoMember()
 }
 

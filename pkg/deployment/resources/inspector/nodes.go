@@ -22,6 +22,7 @@ package inspector
 
 import (
 	"context"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
 	"time"
 
 	core "k8s.io/api/core/v1"
@@ -170,7 +171,11 @@ func (p *nodesInspector) Refresh(ctx context.Context) error {
 	return p.state.refresh(ctx, nodesInspectorLoaderObj)
 }
 
-func (p nodesInspector) Throttle(c throttle.Components) throttle.Throttle {
+func (p *nodesInspector) Version() version.Version {
+	return version.V1
+}
+
+func (p *nodesInspector) Throttle(c throttle.Components) throttle.Throttle {
 	return c.Node()
 }
 

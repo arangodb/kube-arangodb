@@ -18,27 +18,19 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package arangoclustersynchronization
+package version
 
-import (
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
-	v1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoclustersynchronization/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/gvk"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/refresh"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
+type Version string
+
+func (v Version) IsV1() bool {
+	return v == V1
+}
+
+func (v Version) IsV1Beta1() bool {
+	return v == V1Beta1
+}
+
+const (
+	V1      Version = "V1"
+	V1Beta1 Version = "V1Beta1"
 )
-
-type Inspector interface {
-	ArangoClusterSynchronization() Definition
-}
-
-type Definition interface {
-	refresh.Inspector
-
-	gvk.GK
-	anonymous.Impl
-
-	Version() version.Version
-
-	V1() (v1.Inspector, error)
-}
