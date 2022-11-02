@@ -78,6 +78,8 @@ const (
 	ConditionTypeUpgradeFailed ConditionType = "UpgradeFailed"
 	// ConditionTypeArchitectureMismatch indicates that the member has a different architecture than the deployment.
 	ConditionTypeArchitectureMismatch ConditionType = "ArchitectureMismatch"
+	// ConditionTypeArchitectureARM64CannotBeApplied indicates that the member has a different architecture than the requested one.
+	ConditionTypeArchitectureARM64CannotBeApplied ConditionType = "ArchitectureARM64CannotBeApplied"
 
 	// ConditionTypeMemberMaintenanceMode indicates that Maintenance is enabled on particular member
 	ConditionTypeMemberMaintenanceMode ConditionType = "MemberMaintenanceMode"

@@ -48,20 +48,27 @@ func (r *Reconciler) createChangeMemberArchPlan(ctx context.Context,
 				arch := api.ArangoDeploymentArchitectureType(v)
 				if arch.IsArchMismatch(spec.Architecture, member.Architecture) {
 					if arch == api.ArangoDeploymentArchitectureARM64 && status.CurrentImage.ArangoDBVersion.CompareTo("3.10.0") < 0 {
-						arch = api.ArangoDeploymentArchitectureAMD64
-						r.log.Warn("Cannot apply ARM64 'arch' annotation. It's not supported in ArangoDB < 3.10.0")
-						context.CreateEvent(k8sutil.NewCannotSetArchitectureARM64Event(apiObject, member.ID))
-						context.CreateEvent(k8sutil.NewCannotSetArchitectureARM64Event(pod, member.ID))
-						return p
-					}
+						if member.Conditions.Update(api.ConditionTypeArchitectureARM64CannotBeApplied, true,
+							"Member has ArangoDB in version which not supports ARM64 arch", "") {
 
-					r.log.
-						Str("pod-name", member.Pod.GetName()).
-						Str("server-group", m.Group.AsRole()).
-						Warn("try changing an Architecture type, but %s", getRequiredRotateMessage(member.Pod.GetName()))
-					p = append(p,
-						actions.NewAction(api.ActionTypeSetCurrentMemberArch, m.Group, member, "Architecture Mismatch").SetArch(arch),
-					)
+							arch = api.ArangoDeploymentArchitectureAMD64
+							r.log.Warn("Cannot apply ARM64 'arch' annotation. It's not supported in ArangoDB < 3.10.0")
+							context.CreateEvent(k8sutil.NewCannotSetArchitectureARM64Event(apiObject, member.ID))
+							context.CreateEvent(k8sutil.NewCannotSetArchitectureARM64Event(pod, member.ID))
+
+							if err := context.UpdateMember(ctx, member); err != nil {
+								r.log.Error("Can not save member condition", member.ID, api.ConditionTypeArchitectureARM64CannotBeApplied, err)
+							}
+						}
+					} else {
+						r.log.
+							Str("pod-name", member.Pod.GetName()).
+							Str("server-group", m.Group.AsRole()).
+							Warn("try changing an Architecture type, but %s", getRequiredRotateMessage(member.Pod.GetName()))
+						p = append(p,
+							actions.NewAction(api.ActionTypeSetCurrentMemberArch, m.Group, member, "Architecture Mismatch").SetArch(arch),
+						)
+					}
 				}
 			}
 		}
