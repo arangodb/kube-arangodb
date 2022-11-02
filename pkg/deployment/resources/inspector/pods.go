@@ -29,6 +29,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 )
 
@@ -41,8 +42,8 @@ var podsInspectorLoaderObj = podsInspectorLoader{}
 type podsInspectorLoader struct {
 }
 
-func (p podsInspectorLoader) Component() throttle.Component {
-	return throttle.Pod
+func (p podsInspectorLoader) Component() definitions.Component {
+	return definitions.Pod
 }
 
 func (p podsInspectorLoader) Load(ctx context.Context, i *inspectorState) {

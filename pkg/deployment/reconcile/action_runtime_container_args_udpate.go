@@ -32,7 +32,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 )
 
 func newRuntimeContainerArgsLogLevelUpdateAction(action api.Action, actionCtx ActionContext) Action {
@@ -114,9 +114,9 @@ func (a actionRuntimeContainerArgsLogLevelUpdate) Post(ctx context.Context) erro
 	return nil
 }
 
-func (a *actionRuntimeContainerArgsLogLevelUpdate) ReloadComponents() []throttle.Component {
-	return []throttle.Component{
-		throttle.Pod,
+func (a *actionRuntimeContainerArgsLogLevelUpdate) ReloadComponents() []definitions.Component {
+	return []definitions.Component{
+		definitions.Pod,
 	}
 }
 

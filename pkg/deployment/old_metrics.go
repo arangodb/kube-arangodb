@@ -28,7 +28,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/generated/metric_descriptions"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
 )
 
@@ -89,7 +89,7 @@ func (i *inventory) Collect(m chan<- prometheus.Metric) {
 			if state := deployment.acs.CurrentClusterCache(); state != nil {
 				t := state.GetThrottles()
 
-				for _, c := range throttle.AllComponents() {
+				for _, c := range definitions.AllComponents() {
 					p.Push(i.operatorStateRefreshMetric.Gauge(float64(t.Get(c).Count()), deployment.GetNamespace(), deployment.GetName(), string(c)))
 				}
 			}
