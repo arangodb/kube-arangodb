@@ -259,7 +259,7 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 
 	localInventory.Add(d)
 
-	if !d.acs.CurrentClusterCache().Initialised() {
+	for !d.acs.CurrentClusterCache().Initialised() {
 		d.log.Warn("ACS cache not yet initialised")
 		err := d.acs.CurrentClusterCache().Refresh(context.Background())
 		if err != nil {
@@ -275,8 +275,7 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 	aInformer.Start(d.stopCh)
 	kInformer.Start(d.stopCh)
 
-	kInformer.WaitForCacheSync(d.stopCh)
-	aInformer.WaitForCacheSync(d.stopCh)
+	k8sutil.WaitForInformers(d.stopCh, 5*time.Second, kInformer, aInformer)
 
 	go d.run()
 	if apiObject.GetAcceptedSpec().GetMode() == api.DeploymentModeCluster {
