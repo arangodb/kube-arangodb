@@ -18,50 +18,24 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package k8sutil
+package tests
 
 import (
-	"reflect"
-	"sync"
+	"testing"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/timer"
+	"github.com/stretchr/testify/require"
 )
 
-type Informer interface {
-	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
-}
+func DurationBetween() func(t *testing.T, expected time.Duration, skew float64) {
+	start := time.Now()
+	return func(t *testing.T, expected time.Duration, skew float64) {
+		current := time.Since(start)
+		min := time.Duration(float64(expected) * (1 - skew))
+		max := time.Duration(float64(expected) * (1 + skew))
 
-func WaitForInformers(stop <-chan struct{}, timeout time.Duration, informers ...Informer) {
-	done := make(chan struct{})
-
-	go func() {
-		defer close(done)
-
-		started := make(chan struct{})
-
-		go func() {
-			defer close(started)
-
-			var wg sync.WaitGroup
-
-			for id := range informers {
-				wg.Add(1)
-
-				go func(id int) {
-					defer wg.Done()
-					informers[id].WaitForCacheSync(stop)
-				}(id)
-			}
-
-			wg.Wait()
-		}()
-
-		select {
-		case <-started:
-		case <-timer.After(timeout):
+		if current > max || current < min {
+			require.Failf(t, "Skew is too big", "Expected %d, got %d", expected, current)
 		}
-	}()
-
-	<-done
+	}
 }
