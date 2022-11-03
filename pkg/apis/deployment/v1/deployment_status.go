@@ -145,6 +145,10 @@ func (ds *DeploymentStatus) IsPlanEmpty() bool {
 	return ds.Plan.IsEmpty() && ds.HighPriorityPlan.IsEmpty()
 }
 
+func (ds *DeploymentStatus) NonInternalActions() int {
+	return ds.Plan.NonInternalActions() + ds.HighPriorityPlan.NonInternalActions()
+}
+
 // GetServerGroupStatus returns the server group status (from this
 // deployment status) for the given group.
 func (ds DeploymentStatus) GetServerGroupStatus(group ServerGroup) ServerGroupStatus {
