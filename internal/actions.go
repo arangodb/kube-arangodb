@@ -120,6 +120,18 @@ func (i ActionsInput) StartFailureGracePeriods() map[string]string {
 	return r
 }
 
+func (i ActionsInput) Internal() map[string]string {
+	r := map[string]string{}
+
+	for a, spec := range i.Actions {
+		if spec.IsInternal {
+			r[a] = "true"
+		}
+	}
+
+	return r
+}
+
 func (i ActionsInput) HighestScopes() map[string]string {
 	r := map[string]string{}
 	for k, a := range i.Scopes() {
@@ -165,6 +177,8 @@ type Action struct {
 	Description string `json:"description"`
 
 	Enterprise bool `json:"enterprise"`
+
+	IsInternal bool `json:"isInternal"`
 }
 
 func (a Action) InScope(scope string) bool {
@@ -205,6 +219,7 @@ func RenderActions(root string) error {
 			"actions":        in.Keys(),
 			"scopes":         in.Scopes(),
 			"highestScopes":  in.HighestScopes(),
+			"internal":       in.Internal(),
 			"timeouts":       in.Timeouts(),
 			"descriptions":   in.Descriptions(),
 			"defaultTimeout": fmt.Sprintf("%d * time.Second // %s", in.DefaultTimeout.Duration/time.Second, in.DefaultTimeout.Duration.String()),
@@ -258,6 +273,7 @@ func RenderActions(root string) error {
 		if err := i.Execute(out, map[string]interface{}{
 			"actions":                    in.Keys(),
 			"startupFailureGracePeriods": in.StartFailureGracePeriods(),
+			"internal":                   in.Internal(),
 		}); err != nil {
 			return err
 		}
@@ -283,9 +299,11 @@ func RenderActions(root string) error {
 		action := md.NewColumn("Action", md.ColumnCenterAlign)
 		timeout := md.NewColumn("Timeout", md.ColumnCenterAlign)
 		description := md.NewColumn("Description", md.ColumnCenterAlign)
+		internal := md.NewColumn("Internal", md.ColumnCenterAlign)
 		edition := md.NewColumn("Edition", md.ColumnCenterAlign)
 		t := md.NewTable(
 			action,
+			internal,
 			timeout,
 			edition,
 			description,
@@ -302,12 +320,17 @@ func RenderActions(root string) error {
 			if a.Enterprise {
 				vr = "Enterprise Only"
 			}
+			int := "yes"
+			if !a.IsInternal {
+				int = "no"
+			}
 
 			if err := t.AddRow(map[md.Column]string{
 				action:      k,
 				timeout:     v,
 				description: a.Description,
 				edition:     vr,
+				internal:    int,
 			}); err != nil {
 				return err
 			}
