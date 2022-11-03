@@ -437,7 +437,7 @@ func (d *Deployment) sendCIUpdate() {
 }
 
 func (d *Deployment) isUpToDateStatus(status api.DeploymentStatus) (upToDate bool, reason string) {
-	if !status.IsPlanEmpty() {
+	if status.NonInternalActions() > 0 {
 		return false, "Plan is not empty"
 	}
 

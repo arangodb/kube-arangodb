@@ -216,6 +216,7 @@ actions:
   RebalancerGenerate:
     enterprise: true
     description: Generates the Rebalancer plan
+    isInternal: true
   RebalancerCheck:
     enterprise: true
     description: Check Rebalancer job progress
