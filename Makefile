@@ -516,10 +516,24 @@ vendor:
 	@go mod vendor -e
 
 set-deployment-api-version-v2alpha1: export API_VERSION=2alpha1
-set-deployment-api-version-v2alpha1: set-api-version/deployment set-api-version/replication
+set-deployment-api-version-v2alpha1: set-api-version/deployment set-typed-api-version/deployment set-api-version/replication
 
 set-deployment-api-version-v1: export API_VERSION=1
-set-deployment-api-version-v1: set-api-version/deployment set-api-version/replication
+set-deployment-api-version-v1: set-api-version/deployment set-typed-api-version/deployment set-api-version/replication
+
+set-typed-api-version/%:
+	@grep -rHn "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/$*/v[A-Za-z0-9]\+" \
+	      "$(ROOT)/pkg/deployment/" \
+	      "$(ROOT)/pkg/replication/" \
+	      "$(ROOT)/pkg/operator/" \
+	      "$(ROOT)/pkg/server/" \
+	      "$(ROOT)/pkg/util/" \
+	      "$(ROOT)/pkg/handlers/" \
+	      "$(ROOT)/pkg/apis/backup/" \
+	      "$(ROOT)/pkg/upgrade/" \
+	  | cut -d ':' -f 1 | sort | uniq \
+	  | xargs -n 1 $(SED) -i "s#github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/$*/v[A-Za-z0-9]\+#github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/$*/v$(API_VERSION)#g"
+
 
 set-api-version/%:
 	@grep -rHn "github.com/arangodb/kube-arangodb/pkg/apis/$*/v[A-Za-z0-9]\+" \
