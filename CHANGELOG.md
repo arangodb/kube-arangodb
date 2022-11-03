@@ -9,6 +9,8 @@
 - (Bugfix) Fix PDBs Version discovery
 - (Feature) Agency ArangoSync State check
 - (Improvement) Parametrize Make tools
+- (Bugfix) Fix V2Alpha1 Generator
+- (Feature) Create Internal Actions and move RebalancerGenerator
 - (Bugfix) Unlock broken inspectors
 
 ## [1.2.20](https://github.com/arangodb/kube-arangodb/tree/1.2.20) (2022-10-25)

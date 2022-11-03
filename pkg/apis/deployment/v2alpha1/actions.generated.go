@@ -326,8 +326,8 @@ const (
 	ActionTypeWaitForMemberUp ActionType = "WaitForMemberUp"
 )
 
-func ActionDefaultTimeout(in ActionType) time.Duration {
-	switch in {
+func (a ActionType) DefaultTimeout() time.Duration {
+	switch a {
 	case ActionTypeAddMember:
 		return ActionAddMemberDefaultTimeout
 	case ActionTypeAppendTLSCACertificate:
@@ -481,8 +481,9 @@ func ActionDefaultTimeout(in ActionType) time.Duration {
 	}
 }
 
-func GetActionPriority(in ActionType) ActionPriority {
-	switch in {
+// Priority returns action priority
+func (a ActionType) Priority() ActionPriority {
+	switch a {
 	case ActionTypeAddMember:
 		return ActionPriorityNormal
 	case ActionTypeAppendTLSCACertificate:
@@ -633,5 +634,15 @@ func GetActionPriority(in ActionType) ActionPriority {
 		return ActionPriorityNormal
 	default:
 		return ActionPriorityUnknown
+	}
+}
+
+// Internal returns true if action is considered to be internal
+func (a ActionType) Internal() bool {
+	switch a {
+	case ActionTypeRebalancerGenerate:
+		return true
+	default:
+		return false
 	}
 }

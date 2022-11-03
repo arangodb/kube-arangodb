@@ -52,13 +52,12 @@ func (a ActionType) String() string {
 	return string(a)
 }
 
-// Priority returns plan priority
-func (a ActionType) Priority() ActionPriority {
-	return GetActionPriority(a)
+func GetActionPriority(a ActionType) ActionPriority {
+	return a.Priority()
 }
 
-func (a ActionType) DefaultTimeout() time.Duration {
-	return ActionDefaultTimeout(a)
+func ActionDefaultTimeout(a ActionType) time.Duration {
+	return a.DefaultTimeout()
 }
 
 const (
@@ -237,6 +236,18 @@ func (p Plan) Equal(other Plan) bool {
 // IsEmpty checks if plan is empty
 func (p Plan) IsEmpty() bool {
 	return len(p) == 0
+}
+
+func (p Plan) NonInternalActions() int {
+	var z int
+
+	for id := range p {
+		if !p[id].Type.Internal() {
+			z++
+		}
+	}
+
+	return z
 }
 
 // After add action at the end of plan

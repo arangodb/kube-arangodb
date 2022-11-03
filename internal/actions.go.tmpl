@@ -38,8 +38,8 @@ const (
 {{- end }}
 )
 
-func ActionDefaultTimeout(in ActionType) time.Duration {
-    switch in {
+func (a ActionType) DefaultTimeout() time.Duration {
+    switch a {
 {{- range .actions }}
         case ActionType{{ . }}:
             return Action{{ . }}DefaultTimeout
@@ -49,13 +49,26 @@ func ActionDefaultTimeout(in ActionType) time.Duration {
     }
 }
 
-func GetActionPriority(in ActionType) ActionPriority {
-    switch in {
+// Priority returns action priority
+func (a ActionType) Priority() ActionPriority {
+    switch a {
 {{- range .actions }}
         case ActionType{{ . }}:
             return ActionPriority{{ index $root.highestScopes . }}
 {{- end }}
         default:
             return ActionPriorityUnknown
+    }
+}
+
+// Internal returns true if action is considered to be internal
+func (a ActionType) Internal() bool {
+    switch a {
+{{- range $key, $value := .internal }}
+        case ActionType{{ $key }}:
+            return true
+{{- end }}
+        default:
+            return false
     }
 }
