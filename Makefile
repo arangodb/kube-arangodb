@@ -273,7 +273,7 @@ endif
 .PHONY: update-vendor
 update-vendor:
 	@rm -Rf $(VENDORDIR)/k8s.io/code-generator
-	@git clone --branch kubernetes-1.21.14 https://github.com/kubernetes/code-generator.git $(VENDORDIR)/k8s.io/code-generator
+	@git clone --branch kubernetes-1.22.15 https://github.com/kubernetes/code-generator.git $(VENDORDIR)/k8s.io/code-generator
 	@rm -Rf $(VENDORDIR)/k8s.io/code-generator/.git
 
 
