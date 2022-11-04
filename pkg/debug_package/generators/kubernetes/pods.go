@@ -24,61 +24,56 @@ import (
 	"context"
 
 	"github.com/rs/zerolog"
-	"github.com/spf13/cobra"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
+	"github.com/arangodb/kube-arangodb/pkg/debug_package/cli"
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
 func Pods() shared.Factory {
-	return shared.NewFactory("kubernetes-pods", func(cmd *cobra.Command) {
-		f := cmd.Flags()
-		if f.Lookup("namespace") == nil {
-			f.String("namespace", "default", "Kubernetes namespace")
-		}
-	}, func(cmd *cobra.Command, logger zerolog.Logger, files chan<- shared.File) error {
-		k, ok := kclient.GetDefaultFactory().Client()
-		if !ok {
-			return errors.Newf("Client is not initialised")
-		}
+	return shared.NewFactory("kubernetes-pods", true, pods)
+}
 
-		ns, _ := cmd.Flags().GetString("namespace")
+func pods(logger zerolog.Logger, files chan<- shared.File) error {
+	k, ok := kclient.GetDefaultFactory().Client()
+	if !ok {
+		return errors.Newf("Client is not initialised")
+	}
 
-		pods := map[types.UID]*core.Pod{}
-		next := ""
-		for {
-			r, err := k.Kubernetes().CoreV1().Pods(ns).List(context.Background(), meta.ListOptions{
-				Continue: next,
-			})
-
-			if err != nil {
-				return err
-			}
-
-			for _, e := range r.Items {
-				pods[e.UID] = e.DeepCopy()
-			}
-
-			next = r.Continue
-			if next == "" {
-				break
-			}
-		}
-
-		files <- shared.NewJSONFile("kubernetes/pods.json", func() (interface{}, error) {
-			q := make([]*core.Pod, 0, len(pods))
-
-			for _, e := range pods {
-				q = append(q, e)
-			}
-
-			return q, nil
+	pods := map[types.UID]*core.Pod{}
+	next := ""
+	for {
+		r, err := k.Kubernetes().CoreV1().Pods(cli.GetInput().Namespace).List(context.Background(), meta.ListOptions{
+			Continue: next,
 		})
 
-		return nil
+		if err != nil {
+			return err
+		}
+
+		for _, e := range r.Items {
+			pods[e.UID] = e.DeepCopy()
+		}
+
+		next = r.Continue
+		if next == "" {
+			break
+		}
+	}
+
+	files <- shared.NewJSONFile("kubernetes/pods.json", func() (interface{}, error) {
+		q := make([]*core.Pod, 0, len(pods))
+
+		for _, e := range pods {
+			q = append(q, e)
+		}
+
+		return q, nil
 	})
+
+	return nil
 }

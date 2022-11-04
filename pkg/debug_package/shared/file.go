@@ -22,11 +22,10 @@ package shared
 
 import (
 	"github.com/rs/zerolog"
-	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/util/json"
 )
 
-type GenFunc func(cmd *cobra.Command, logger zerolog.Logger, files chan<- File) error
+type GenFunc func(logger zerolog.Logger, files chan<- File) error
 
 type File interface {
 	Path() string
@@ -66,35 +65,32 @@ func (f file) Write() ([]byte, error) {
 
 type Factory interface {
 	Name() string
-	Generate(cmd *cobra.Command, logger zerolog.Logger, files chan<- File) error
-
-	Init(command *cobra.Command)
+	Generate(logger zerolog.Logger, files chan<- File) error
+	Enabled() bool
 }
 
-func NewFactory(name string, cmd func(cmd *cobra.Command), gen GenFunc) Factory {
+func NewFactory(name string, enabled bool, gen GenFunc) Factory {
 	return factory{
 		name:     name,
+		enabled:  enabled,
 		generate: gen,
-		cmd:      cmd,
 	}
 }
 
 type factory struct {
 	name     string
+	enabled  bool
 	generate GenFunc
-	cmd      func(cmd *cobra.Command)
 }
 
-func (f factory) Init(command *cobra.Command) {
-	if c := f.cmd; c != nil {
-		c(command)
-	}
+func (f factory) Enabled() bool {
+	return f.enabled
 }
 
 func (f factory) Name() string {
 	return f.name
 }
 
-func (f factory) Generate(cmd *cobra.Command, logger zerolog.Logger, files chan<- File) error {
-	return f.generate(cmd, logger, files)
+func (f factory) Generate(logger zerolog.Logger, files chan<- File) error {
+	return f.generate(logger, files)
 }

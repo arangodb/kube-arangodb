@@ -24,61 +24,56 @@ import (
 	"context"
 
 	"github.com/rs/zerolog"
-	"github.com/spf13/cobra"
 	eventsv1 "k8s.io/api/events/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
+	"github.com/arangodb/kube-arangodb/pkg/debug_package/cli"
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
 func Events() shared.Factory {
-	return shared.NewFactory("kubernetes-events", func(cmd *cobra.Command) {
-		f := cmd.Flags()
-		if f.Lookup("namespace") == nil {
-			f.String("namespace", "default", "Kubernetes namespace")
-		}
-	}, func(cmd *cobra.Command, logger zerolog.Logger, files chan<- shared.File) error {
-		k, ok := kclient.GetDefaultFactory().Client()
-		if !ok {
-			return errors.Newf("Client is not initialised")
-		}
+	return shared.NewFactory("kubernetes-events", true, events)
+}
 
-		ns, _ := cmd.Flags().GetString("namespace")
+func events(logger zerolog.Logger, files chan<- shared.File) error {
+	k, ok := kclient.GetDefaultFactory().Client()
+	if !ok {
+		return errors.Newf("Client is not initialised")
+	}
 
-		events := map[types.UID]*eventsv1.Event{}
-		next := ""
-		for {
-			r, err := k.Kubernetes().EventsV1().Events(ns).List(context.Background(), meta.ListOptions{
-				Continue: next,
-			})
-
-			if err != nil {
-				return err
-			}
-
-			for _, e := range r.Items {
-				events[e.UID] = e.DeepCopy()
-			}
-
-			next = r.Continue
-			if next == "" {
-				break
-			}
-		}
-
-		files <- shared.NewJSONFile("kubernetes/events.json", func() (interface{}, error) {
-			q := make([]*eventsv1.Event, 0, len(events))
-
-			for _, e := range events {
-				q = append(q, e)
-			}
-
-			return q, nil
+	events := map[types.UID]*eventsv1.Event{}
+	next := ""
+	for {
+		r, err := k.Kubernetes().EventsV1().Events(cli.GetInput().Namespace).List(context.Background(), meta.ListOptions{
+			Continue: next,
 		})
 
-		return nil
+		if err != nil {
+			return err
+		}
+
+		for _, e := range r.Items {
+			events[e.UID] = e.DeepCopy()
+		}
+
+		next = r.Continue
+		if next == "" {
+			break
+		}
+	}
+
+	files <- shared.NewJSONFile("kubernetes/events.json", func() (interface{}, error) {
+		q := make([]*eventsv1.Event, 0, len(events))
+
+		for _, e := range events {
+			q = append(q, e)
+		}
+
+		return q, nil
 	})
+
+	return nil
 }
