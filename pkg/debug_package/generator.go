@@ -23,11 +23,13 @@ package debug_package
 import (
 	"archive/tar"
 	"bytes"
+	"fmt"
 	"io"
 	"time"
 
 	"github.com/spf13/cobra"
 
+	"github.com/arangodb/kube-arangodb/pkg/debug_package/cli"
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/generators/kubernetes"
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -40,8 +42,14 @@ var rootFactories = []shared.Factory{
 }
 
 func InitCommand(cmd *cobra.Command) {
-	for _, f := range rootFactories {
-		f.Init(cmd)
+	cli.Register(cmd)
+
+	f := cmd.Flags()
+
+	for _, factory := range rootFactories {
+		n := fmt.Sprintf("generator.%s", factory.Name())
+
+		f.Bool(n, factory.Enabled(), fmt.Sprintf("Define if generator %s is enabled", factory.Name()))
 	}
 }
 
@@ -97,8 +105,16 @@ func Generate(cmd *cobra.Command, out io.Writer, factories ...shared.Factory) er
 	}()
 
 	for _, f := range factories {
+		ok, _ := cmd.Flags().GetBool(fmt.Sprintf("generator.%s", f.Name()))
+
+		if !ok {
+			log.Info().Msgf("Factory %s disabled", f.Name())
+			continue
+		}
+
 		log.Info().Msgf("Fetching factory %s", f.Name())
-		if err := f.Generate(cmd, log, files); err != nil {
+
+		if err := f.Generate(log, files); err != nil {
 			factoryErrors[f.Name()] = err
 		}
 	}

@@ -18,16 +18,23 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package debug_package
+package cli
 
-import (
-	"io"
-	"os"
-	"time"
+import "github.com/spf13/cobra"
 
-	"github.com/rs/zerolog"
-)
+func Register(cmd *cobra.Command) {
+	f := cmd.Flags()
+	f.StringVar(&input.Namespace, "namespace", "default", "Kubernetes namespace")
+	f.BoolVar(&input.HideSensitiveData, "hide-sensitive-data", true, "Hide sensitive data")
+}
 
-func NewLogger(out io.Writer) zerolog.Logger {
-	return zerolog.New(zerolog.ConsoleWriter{Out: io.MultiWriter(out, os.Stderr), TimeFormat: time.RFC3339}).With().Timestamp().Logger()
+var input Input
+
+func GetInput() Input {
+	return input
+}
+
+type Input struct {
+	Namespace         string
+	HideSensitiveData bool
 }

@@ -13,6 +13,7 @@
 - (Feature) Create Internal Actions and move RebalancerGenerator
 - (Dependencies) Bump K8S Dependencies to 1.22.15
 - (Bugfix) Unlock broken inspectors
+- (Debug) Allow to send package to stdout
 
 ## [1.2.20](https://github.com/arangodb/kube-arangodb/tree/1.2.20) (2022-10-25)
 - (Feature) Add action progress

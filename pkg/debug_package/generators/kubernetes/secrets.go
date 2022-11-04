@@ -26,75 +26,65 @@ import (
 	"fmt"
 
 	"github.com/rs/zerolog"
-	"github.com/spf13/cobra"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
+	"github.com/arangodb/kube-arangodb/pkg/debug_package/cli"
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
 func Secrets() shared.Factory {
-	return shared.NewFactory("kubernetes-secrets", func(cmd *cobra.Command) {
-		f := cmd.Flags()
-		if f.Lookup("namespace") == nil {
-			f.String("namespace", "default", "Kubernetes namespace")
-		}
-		if f.Lookup("hide-sensitive-data") == nil {
-			f.Bool("hide-sensitive-data", true, "Hide sensitive data")
-		}
-	}, func(cmd *cobra.Command, logger zerolog.Logger, files chan<- shared.File) error {
-		k, ok := kclient.GetDefaultFactory().Client()
-		if !ok {
-			return errors.Newf("Client is not initialised")
-		}
+	return shared.NewFactory("kubernetes-secrets", true, secrets)
+}
 
-		ns, _ := cmd.Flags().GetString("namespace")
+func secrets(logger zerolog.Logger, files chan<- shared.File) error {
+	k, ok := kclient.GetDefaultFactory().Client()
+	if !ok {
+		return errors.Newf("Client is not initialised")
+	}
 
-		secrets := map[types.UID]*core.Secret{}
-		next := ""
-		for {
-			r, err := k.Kubernetes().CoreV1().Secrets(ns).List(context.Background(), meta.ListOptions{
-				Continue: next,
-			})
-
-			if err != nil {
-				return err
-			}
-
-			sensitive, _ := cmd.Flags().GetBool("hide-sensitive-data")
-
-			for _, e := range r.Items {
-				hashed := make(map[string][]byte, len(e.Data))
-				for k, v := range e.Data {
-					if sensitive {
-						hashed[k] = []byte(fmt.Sprintf("%02x", sha256.Sum256(v)))
-					} else {
-						hashed[k] = v
-					}
-				}
-				secrets[e.UID] = e.DeepCopy()
-				secrets[e.UID].Data = hashed
-			}
-
-			next = r.Continue
-			if next == "" {
-				break
-			}
-		}
-
-		files <- shared.NewJSONFile("kubernetes/secrets.json", func() (interface{}, error) {
-			q := make([]*core.Secret, 0, len(secrets))
-
-			for _, e := range secrets {
-				q = append(q, e)
-			}
-
-			return q, nil
+	secrets := map[types.UID]*core.Secret{}
+	next := ""
+	for {
+		r, err := k.Kubernetes().CoreV1().Secrets(cli.GetInput().Namespace).List(context.Background(), meta.ListOptions{
+			Continue: next,
 		})
 
-		return nil
+		if err != nil {
+			return err
+		}
+
+		for _, e := range r.Items {
+			hashed := make(map[string][]byte, len(e.Data))
+			for k, v := range e.Data {
+				if cli.GetInput().HideSensitiveData {
+					hashed[k] = []byte(fmt.Sprintf("%02x", sha256.Sum256(v)))
+				} else {
+					hashed[k] = v
+				}
+			}
+			secrets[e.UID] = e.DeepCopy()
+			secrets[e.UID].Data = hashed
+		}
+
+		next = r.Continue
+		if next == "" {
+			break
+		}
+	}
+
+	files <- shared.NewJSONFile("kubernetes/secrets.json", func() (interface{}, error) {
+		q := make([]*core.Secret, 0, len(secrets))
+
+		for _, e := range secrets {
+			q = append(q, e)
+		}
+
+		return q, nil
 	})
+
+	return nil
 }
