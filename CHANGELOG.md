@@ -17,6 +17,7 @@
 - (Improvement) ArangoDB image validation (=>3.10) for ARM64 architecture
 - (Improvement) Use inspector for ArangoMember
 - (DebugPackage) Collect logs from pods
+- (Bugfix) Move Agency CommitIndex log message to Trace
 
 ## [1.2.20](https://github.com/arangodb/kube-arangodb/tree/1.2.20) (2022-10-25)
 - (Feature) Add action progress
