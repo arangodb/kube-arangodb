@@ -52,8 +52,8 @@ func (r *Reconciler) createChangeMemberArchPlan(ctx context.Context,
 						if member.Conditions.Update(api.ConditionTypeArchitectureChangeCannotBeApplied, true,
 							fmt.Sprintf("Member has ArangoDB in version which not supports Architecture change (%s)", archToApply), "") {
 							r.log.Warn("Cannot apply 'arch' annotation changes. It's not supported in ArangoDB < 3.10.0")
-							context.CreateEvent(k8sutil.NewCannotSetArchitectureARM64Event(apiObject, member.ID))
-							context.CreateEvent(k8sutil.NewCannotSetArchitectureARM64Event(pod, member.ID))
+							context.CreateEvent(k8sutil.NewCannotSetArchitectureEvent(apiObject, string(archToApply), member.ID))
+							context.CreateEvent(k8sutil.NewCannotSetArchitectureEvent(pod, string(archToApply), member.ID))
 
 							if err := context.UpdateMember(ctx, member); err != nil {
 								r.log.Error("Can not save member condition", member.ID, api.ConditionTypeArchitectureChangeCannotBeApplied, err)

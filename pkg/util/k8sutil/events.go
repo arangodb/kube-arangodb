@@ -284,11 +284,11 @@ func NewOperatorEngineOpsAlertEvent(reason string, apiObject APIObject) *Event {
 	return event
 }
 
-// NewCannotSetArchitectureARM64Event creates an even of type CannotSetArchitectureARM64.
-func NewCannotSetArchitectureARM64Event(apiObject runtime.Object, memberId string) *Event {
+// NewCannotSetArchitectureEvent creates an even of type CannotSetArchitectureEvent.
+func NewCannotSetArchitectureEvent(apiObject runtime.Object, arch, memberId string) *Event {
 	event := newDeploymentEvent(apiObject)
 	event.Type = core.EventTypeWarning
-	event.Reason = "Can not set architecture ARM64"
-	event.Message = fmt.Sprintf("Can not apply ARM64 arch for member %s. It is not supported for ArangoDB < 3.10.0", memberId)
+	event.Reason = "Can not set architecture"
+	event.Message = fmt.Sprintf("Can not apply %s arch for member %s. It is not supported in current ArangoDB version", arch, memberId)
 	return event
 }
