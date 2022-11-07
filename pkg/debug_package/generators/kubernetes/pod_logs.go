@@ -18,25 +18,4 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package cli
-
-import "github.com/spf13/cobra"
-
-func Register(cmd *cobra.Command) {
-	f := cmd.Flags()
-	f.StringVar(&input.Namespace, "namespace", "default", "Kubernetes namespace")
-	f.BoolVar(&input.HideSensitiveData, "hide-sensitive-data", true, "Hide sensitive data")
-	f.BoolVar(&input.PodLogs, "pod-logs", true, "Collect pod logs")
-}
-
-var input Input
-
-func GetInput() Input {
-	return input
-}
-
-type Input struct {
-	Namespace         string
-	HideSensitiveData bool
-	PodLogs           bool
-}
+package kubernetes

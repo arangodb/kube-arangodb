@@ -18,25 +18,39 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package cli
+package errors
 
-import "github.com/spf13/cobra"
+import (
+	"fmt"
+	"strings"
+)
 
-func Register(cmd *cobra.Command) {
-	f := cmd.Flags()
-	f.StringVar(&input.Namespace, "namespace", "default", "Kubernetes namespace")
-	f.BoolVar(&input.HideSensitiveData, "hide-sensitive-data", true, "Hide sensitive data")
-	f.BoolVar(&input.PodLogs, "pod-logs", true, "Collect pod logs")
+type Array []error
+
+func (a Array) Error() string {
+	q := make([]string, len(a))
+
+	for id := range a {
+		q[id] = a.Error()
+	}
+
+	return fmt.Sprintf("Received %d errors: %s", len(q), strings.Join(q, ", "))
 }
 
-var input Input
+func Errors(errs ...error) error {
+	f := make(Array, 0, len(errs))
 
-func GetInput() Input {
-	return input
-}
+	for _, err := range errs {
+		if err == nil {
+			continue
+		}
 
-type Input struct {
-	Namespace         string
-	HideSensitiveData bool
-	PodLogs           bool
+		f = append(f, err)
+	}
+
+	if len(f) == 0 {
+		return nil
+	}
+
+	return f
 }
