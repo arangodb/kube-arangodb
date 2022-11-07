@@ -22,6 +22,7 @@ package reconcile
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -49,7 +50,7 @@ func (r *Reconciler) createChangeMemberArchPlan(ctx context.Context,
 				if archToApply.IsArchMismatch(spec.Architecture, member.Architecture) {
 					if archToApply != api.ArangoDeploymentArchitectureAMD64 && status.CurrentImage.ArangoDBVersion.CompareTo("3.10.0") < 0 {
 						if member.Conditions.Update(api.ConditionTypeArchitectureChangeCannotBeApplied, true,
-							"Member has ArangoDB in version which not supports Architecture change", "") {
+							fmt.Sprintf("Member has ArangoDB in version which not supports Architecture change (%s)", archToApply), "") {
 							r.log.Warn("Cannot apply 'arch' annotation changes. It's not supported in ArangoDB < 3.10.0")
 							context.CreateEvent(k8sutil.NewCannotSetArchitectureARM64Event(apiObject, member.ID))
 							context.CreateEvent(k8sutil.NewCannotSetArchitectureARM64Event(pod, member.ID))
