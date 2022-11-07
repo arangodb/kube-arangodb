@@ -37,6 +37,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 )
 
 func runTestCases(t *testing.T, testCases ...testCaseStruct) {
@@ -149,9 +150,7 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 				},
 			}
 
-			c := d.WithCurrentArangoMember(m.ArangoMemberName(d.GetName(), group))
-
-			if loopErr = c.Create(context.Background(), &member); loopErr != nil {
+			if _, loopErr = d.acs.CurrentClusterCache().ArangoMemberModInterface().V1().Create(context.Background(), &member, meta.CreateOptions{}); loopErr != nil {
 				break
 			}
 
@@ -188,16 +187,16 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 			member.Status.Template = podTemplate
 			member.Spec.Template = podTemplate
 
-			if loopErr = c.Update(context.Background(), func(obj *api.ArangoMember) bool {
-				obj.Spec.Template = podTemplate
-				return true
+			if loopErr = inspector.WithArangoMemberUpdate(context.Background(), d.acs.CurrentClusterCache(), member.GetName(), func(in *api.ArangoMember) (bool, error) {
+				in.Spec.Template = podTemplate
+				return true, nil
 			}); loopErr != nil {
 				break
 			}
 
-			if loopErr = c.UpdateStatus(context.Background(), func(obj *api.ArangoMember, s *api.ArangoMemberStatus) bool {
-				s.Template = podTemplate
-				return true
+			if loopErr = inspector.WithArangoMemberStatusUpdate(context.Background(), d.acs.CurrentClusterCache(), member.GetName(), func(in *api.ArangoMember) (bool, error) {
+				in.Status.Template = podTemplate
+				return true, nil
 			}); loopErr != nil {
 				break
 			}

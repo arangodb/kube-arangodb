@@ -32,6 +32,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 )
 
@@ -64,7 +65,7 @@ func (a actionRuntimeContainerArgsLogLevelUpdate) Post(ctx context.Context) erro
 	}
 
 	memberName := m.ArangoMemberName(a.actionCtx.GetName(), a.action.Group)
-	member, ok := cache.ArangoMember().V1().GetSimple(memberName)
+	_, ok = cache.ArangoMember().V1().GetSimple(memberName)
 	if !ok {
 		return errors.Errorf("ArangoMember %s not found", memberName)
 	}
@@ -76,37 +77,37 @@ func (a actionRuntimeContainerArgsLogLevelUpdate) Post(ctx context.Context) erro
 	}
 
 	log := a.log.Str("containerName", containerName)
-	updateMemberStatusArgs := func(obj *api.ArangoMember, s *api.ArangoMemberStatus) bool {
-		if obj.Spec.Template == nil || s.Template == nil ||
-			obj.Spec.Template.PodSpec == nil || s.Template.PodSpec == nil {
+	updateMemberStatusArgs := func(in *api.ArangoMember) (bool, error) {
+		if in.Spec.Template == nil || in.Status.Template == nil ||
+			in.Spec.Template.PodSpec == nil || in.Status.Template.PodSpec == nil {
 			log.Info("Nil Member definition")
-			return false
+			return false, nil
 		}
 
-		if len(obj.Spec.Template.PodSpec.Spec.Containers) != len(s.Template.PodSpec.Spec.Containers) {
+		if len(in.Spec.Template.PodSpec.Spec.Containers) != len(in.Status.Template.PodSpec.Spec.Containers) {
 			log.Info("Invalid size of containers")
-			return false
+			return false, nil
 		}
 
-		for id := range obj.Spec.Template.PodSpec.Spec.Containers {
-			if obj.Spec.Template.PodSpec.Spec.Containers[id].Name == containerName {
-				if s.Template.PodSpec.Spec.Containers[id].Name != containerName {
+		for id := range in.Spec.Template.PodSpec.Spec.Containers {
+			if in.Spec.Template.PodSpec.Spec.Containers[id].Name == containerName {
+				if in.Status.Template.PodSpec.Spec.Containers[id].Name != containerName {
 					log.Info("Invalid order of containers")
-					return false
+					return false, nil
 				}
 
-				s.Template.PodSpec.Spec.Containers[id].Command = obj.Spec.Template.PodSpec.Spec.Containers[id].Command
+				in.Status.Template.PodSpec.Spec.Containers[id].Command = in.Spec.Template.PodSpec.Spec.Containers[id].Command
 				log.Info("Updating container args")
-				return true
+				return true, nil
 			}
 		}
 
 		log.Info("can not find the container")
 
-		return false
+		return false, nil
 	}
 
-	err := a.actionCtx.WithCurrentArangoMember(member.GetName()).UpdateStatus(ctx, updateMemberStatusArgs)
+	err := inspector.WithArangoMemberStatusUpdate(ctx, cache, memberName, updateMemberStatusArgs)
 	if err != nil {
 		return errors.WithMessage(err, "Error while updating member status")
 	}

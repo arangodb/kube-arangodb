@@ -31,6 +31,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 )
 
 func newRuntimeContainerImageUpdateAction(action api.Action, actionCtx ActionContext) Action {
@@ -56,51 +57,54 @@ func (a actionRuntimeContainerImageUpdate) Post(ctx context.Context) error {
 		return nil
 	}
 
-	name, image, ok := a.getContainerDetails()
+	cname, image, ok := a.getContainerDetails()
 	if !ok {
 		a.log.Info("Unable to find container details")
 		return nil
 	}
 
-	member, ok := a.actionCtx.ACS().CurrentClusterCache().ArangoMember().V1().GetSimple(m.ArangoMemberName(a.actionCtx.GetName(), a.action.Group))
+	cache := a.actionCtx.ACS().CurrentClusterCache()
+	name := m.ArangoMemberName(a.actionCtx.GetName(), a.action.Group)
+
+	_, ok = cache.ArangoMember().V1().GetSimple(name)
 	if !ok {
 		err := errors.Newf("ArangoMember not found")
 		a.log.Err(err).Error("ArangoMember not found")
 		return err
 	}
 
-	return a.actionCtx.WithCurrentArangoMember(member.GetName()).UpdateStatus(ctx, func(obj *api.ArangoMember, s *api.ArangoMemberStatus) bool {
-		if obj.Spec.Template == nil || s.Template == nil ||
-			obj.Spec.Template.PodSpec == nil || s.Template.PodSpec == nil {
+	return inspector.WithArangoMemberUpdate(ctx, cache, name, func(in *api.ArangoMember) (bool, error) {
+		if in.Spec.Template == nil || in.Status.Template == nil ||
+			in.Spec.Template.PodSpec == nil || in.Status.Template.PodSpec == nil {
 			a.log.Info("Nil Member definition")
-			return false
+			return false, nil
 		}
 
-		if len(obj.Spec.Template.PodSpec.Spec.Containers) != len(s.Template.PodSpec.Spec.Containers) {
+		if len(in.Spec.Template.PodSpec.Spec.Containers) != len(in.Status.Template.PodSpec.Spec.Containers) {
 			a.log.Info("Invalid size of containers")
-			return false
+			return false, nil
 		}
 
-		for id := range obj.Spec.Template.PodSpec.Spec.Containers {
-			if obj.Spec.Template.PodSpec.Spec.Containers[id].Name == name {
-				if s.Template.PodSpec.Spec.Containers[id].Name != name {
+		for id := range in.Spec.Template.PodSpec.Spec.Containers {
+			if in.Spec.Template.PodSpec.Spec.Containers[id].Name == cname {
+				if in.Status.Template.PodSpec.Spec.Containers[id].Name != cname {
 					a.log.Info("Invalid order of containers")
-					return false
+					return false, nil
 				}
 
-				if obj.Spec.Template.PodSpec.Spec.Containers[id].Image != image {
-					a.log.Str("got", obj.Spec.Template.PodSpec.Spec.Containers[id].Image).Str("expected", image).Info("Invalid spec image of container")
-					return false
+				if in.Spec.Template.PodSpec.Spec.Containers[id].Image != image {
+					a.log.Str("got", in.Spec.Template.PodSpec.Spec.Containers[id].Image).Str("expected", image).Info("Invalid spec image of container")
+					return false, nil
 				}
 
-				if s.Template.PodSpec.Spec.Containers[id].Image != image {
-					s.Template.PodSpec.Spec.Containers[id].Image = image
-					return true
+				if in.Status.Template.PodSpec.Spec.Containers[id].Image != image {
+					in.Status.Template.PodSpec.Spec.Containers[id].Image = image
+					return true, nil
 				}
-				return false
+				return false, nil
 			}
 		}
-		return false
+		return false, nil
 	})
 }
 

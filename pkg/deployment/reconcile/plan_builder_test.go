@@ -25,7 +25,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"testing"
-	"time"
 
 	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 	"github.com/rs/zerolog"
@@ -124,14 +123,6 @@ func (c *testContext) GetDatabaseAsyncClient(ctx context.Context) (driver.Client
 	panic("implement me")
 }
 
-func (c *testContext) WithArangoMember(cache inspectorInterface.Inspector, timeout time.Duration, name string) reconciler.ArangoMemberModContext {
-	return reconciler.NewArangoMemberModContext(cache, timeout, name)
-}
-
-func (c *testContext) WithCurrentArangoMember(name string) reconciler.ArangoMemberModContext {
-	return c.WithArangoMember(c.Inspector, 0, name)
-}
-
 func (c *testContext) GetMembersState() member.StateInspector {
 	return c.state
 }
@@ -218,14 +209,6 @@ func (c *testContext) GetArangoCli() versioned.Interface {
 
 func (c *testContext) SelectImageForMember(spec api.DeploymentSpec, status api.DeploymentStatus, member api.MemberStatus) (api.ImageInfo, bool) {
 	return c.SelectImage(spec, status)
-}
-
-func (c *testContext) WithArangoMemberUpdate(ctx context.Context, namespace, name string, action reconciler.ArangoMemberUpdateFunc) error {
-	panic("implement me")
-}
-
-func (c *testContext) WithArangoMemberStatusUpdate(ctx context.Context, namespace, name string, action reconciler.ArangoMemberStatusUpdateFunc) error {
-	panic("implement me")
 }
 
 func (c *testContext) GetAgencyMaintenanceMode(ctx context.Context) (bool, error) {

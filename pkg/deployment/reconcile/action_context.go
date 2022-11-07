@@ -46,7 +46,6 @@ import (
 type ActionContext interface {
 	reconciler.DeploymentStatusUpdate
 	reconciler.DeploymentAgencyMaintenance
-	reconciler.ArangoMemberContext
 	reconciler.DeploymentPodRenderer
 	reconciler.ArangoAgencyGet
 	reconciler.DeploymentInfoGetter
@@ -218,14 +217,6 @@ func (ac *actionContext) GetTime(action api.Action, key api.PlanLocalKey) (time.
 
 func (ac *actionContext) Add(key api.PlanLocalKey, value string, override bool) bool {
 	return ac.locals.Add(key, value, override)
-}
-
-func (ac *actionContext) WithArangoMember(cache inspectorInterface.Inspector, timeout time.Duration, name string) reconciler.ArangoMemberModContext {
-	return ac.context.WithArangoMember(cache, timeout, name)
-}
-
-func (ac *actionContext) WithCurrentArangoMember(name string) reconciler.ArangoMemberModContext {
-	return ac.context.WithCurrentArangoMember(name)
 }
 
 func (ac *actionContext) GetMembersState() member.StateInspector {
