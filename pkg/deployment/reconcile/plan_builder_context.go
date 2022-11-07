@@ -36,7 +36,6 @@ type PlanBuilderContext interface {
 
 	reconciler.DeploymentInfoGetter
 	reconciler.DeploymentAgencyMaintenance
-	reconciler.ArangoMemberContext
 	reconciler.DeploymentPodRenderer
 	reconciler.DeploymentImageManager
 	reconciler.ArangoAgencyGet

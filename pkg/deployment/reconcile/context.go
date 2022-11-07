@@ -37,7 +37,6 @@ type CreateMemberMod func(s *api.DeploymentStatus, g api.ServerGroup, m *api.Mem
 type Context interface {
 	reconciler.DeploymentStatusUpdate
 	reconciler.DeploymentAgencyMaintenance
-	reconciler.ArangoMemberContext
 	reconciler.DeploymentPodRenderer
 	reconciler.DeploymentImageManager
 	reconciler.ArangoAgencyGet

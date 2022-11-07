@@ -46,7 +46,6 @@ import (
 	memberState "github.com/arangodb/kube-arangodb/pkg/deployment/member"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resilience"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
@@ -59,7 +58,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/trigger"
@@ -137,14 +135,6 @@ type Deployment struct {
 	memberState memberState.StateInspector
 
 	metrics Metrics
-}
-
-func (d *Deployment) WithArangoMember(cache inspectorInterface.Inspector, timeout time.Duration, name string) reconciler.ArangoMemberModContext {
-	return reconciler.NewArangoMemberModContext(cache, timeout, name)
-}
-
-func (d *Deployment) WithCurrentArangoMember(name string) reconciler.ArangoMemberModContext {
-	return d.WithArangoMember(d.acs.CurrentClusterCache(), globals.GetGlobals().Timeouts().Kubernetes().Get(), name)
 }
 
 func (d *Deployment) GetMembersState() memberState.StateInspector {

@@ -38,7 +38,6 @@ import (
 type Context interface {
 	reconciler.DeploymentStatusUpdate
 	reconciler.DeploymentAgencyMaintenance
-	reconciler.ArangoMemberContext
 	reconciler.DeploymentImageManager
 	reconciler.ArangoAgency
 	reconciler.ArangoApplier

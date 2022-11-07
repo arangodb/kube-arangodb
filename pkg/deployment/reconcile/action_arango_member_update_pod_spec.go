@@ -27,6 +27,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 )
 
 // newArangoMemberUpdatePodSpecAction creates a new Action that implements the given
@@ -61,7 +62,11 @@ func (a *actionArangoMemberUpdatePodSpec) Start(ctx context.Context) (bool, erro
 		return true, nil
 	}
 
-	member, ok := a.actionCtx.ACS().CurrentClusterCache().ArangoMember().V1().GetSimple(m.ArangoMemberName(a.actionCtx.GetName(), a.action.Group))
+	name := m.ArangoMemberName(a.actionCtx.GetName(), a.action.Group)
+
+	cache := a.actionCtx.ACS().CurrentClusterCache()
+
+	_, ok := cache.ArangoMember().V1().GetSimple(name)
 	if !ok {
 		err := errors.Newf("ArangoMember not found")
 		a.log.Err(err).Error("ArangoMember not found")
@@ -118,26 +123,24 @@ func (a *actionArangoMemberUpdatePodSpec) Start(ctx context.Context) (bool, erro
 		template.Endpoint = &q
 	}
 
-	c := a.actionCtx.WithCurrentArangoMember(member.GetName())
-
-	if err := c.Update(ctx, func(member *api.ArangoMember) bool {
+	if err := inspector.WithArangoMemberUpdate(ctx, cache, name, func(member *api.ArangoMember) (bool, error) {
 		if !member.Spec.Template.Equals(template) {
 			member.Spec.Template = template.DeepCopy()
-			return true
+			return true, nil
 		}
 
-		return false
+		return false, nil
 	}); err != nil {
 		a.log.Err(err).Error("Error while updating member")
 		return false, err
 	}
 
-	if err := c.UpdateStatus(ctx, func(member *api.ArangoMember, status *api.ArangoMemberStatus) bool {
-		if (status.Template == nil || status.Template.PodSpec == nil) && (m.Pod == nil || m.Pod.SpecVersion == "" || m.Pod.SpecVersion == template.PodSpecChecksum) {
-			status.Template = template.DeepCopy()
+	if err := inspector.WithArangoMemberStatusUpdate(ctx, cache, name, func(member *api.ArangoMember) (bool, error) {
+		if (member.Status.Template == nil || member.Status.Template.PodSpec == nil) && (m.Pod == nil || m.Pod.SpecVersion == "" || m.Pod.SpecVersion == template.PodSpecChecksum) {
+			member.Status.Template = template.DeepCopy()
 		}
 
-		return true
+		return true, nil
 	}); err != nil {
 		a.log.Err(err).Error("Error while updating member status")
 		return false, err
