@@ -130,9 +130,9 @@ func (d *Deployment) renderMember(spec api.DeploymentSpec, status *api.Deploymen
 	role := group.AsRole()
 
 	arch := apiObject.GetAcceptedSpec().Architecture.GetDefault()
-	if arch == api.ArangoDeploymentArchitectureARM64 && apiObject.Status.CurrentImage.ArangoDBVersion.CompareTo("3.10.0") < 0 {
+	if arch != api.ArangoDeploymentArchitectureAMD64 && apiObject.Status.CurrentImage.ArangoDBVersion.CompareTo("3.10.0") < 0 {
 		arch = api.ArangoDeploymentArchitectureAMD64
-		d.log.Str("arch", id).Warn("Cannot render pod with ARM64 arch. It's not supported in ArangoDB < 3.10.0. Defaulting architecture to AMD64")
+		d.log.Str("arch", string(arch)).Warn("Cannot render pod with requested arch. It's not supported in ArangoDB < 3.10.0. Defaulting architecture to AMD64")
 		d.CreateEvent(k8sutil.NewCannotSetArchitectureARM64Event(d.GetAPIObject(), id))
 	}
 
