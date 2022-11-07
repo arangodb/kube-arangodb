@@ -39,7 +39,8 @@ ifndef KEEP_GOPATH
 endif
 
 GOBUILDARGS ?=
-GOVERSION := 1.17-alpine3.15
+GOBASEVERSION := 1.17
+GOVERSION := $(GOBASEVERSION)-alpine3.15
 DISTRIBUTION := alpine:3.15
 
 PULSAR := $(GOBUILDDIR)/bin/pulsar$(shell go env GOEXE)
@@ -482,7 +483,7 @@ patch-chart:
 
 .PHONY: tidy
 tidy:
-	@go mod tidy
+	@go mod tidy -compat=$(GOBASEVERSION)
 
 .PHONY: deps-reload
 deps-reload: tidy init
