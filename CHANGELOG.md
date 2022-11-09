@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.2.20-1](https://github.com/arangodb/kube-arangodb/tree/1.2.20-1) (2022-11-09)
 - (Feature) Create Internal Actions and move RebalancerGenerator
 
 ## [1.2.20](https://github.com/arangodb/kube-arangodb/tree/1.2.20) (2022-10-25)
