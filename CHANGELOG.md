@@ -23,6 +23,7 @@
 - (Improvement) Don't serialize and deprecate two DeploymentReplicationStatus fields
 - (Improvement) Improve error message when replication can't be configured
 - (Bugfix) Fix License handling in case of broken license secret
+- (Improvement) Do not check checksums for DeploymentReplicationStatus.IncomingSynchronization field values
 
 ## [1.2.20](https://github.com/arangodb/kube-arangodb/tree/1.2.20) (2022-10-25)
 - (Feature) Add action progress
