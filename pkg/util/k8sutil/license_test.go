@@ -98,8 +98,8 @@ func getLicenseFromSecret(t *testing.T, raw, encoded string) {
 
 			require.NoError(t, i.Refresh(context.Background()))
 
-			license, ok := GetLicenseFromSecret(i, n)
-			require.True(t, ok)
+			license, err := GetLicenseFromSecret(i, n)
+			require.NoError(t, err)
 
 			require.Empty(t, license.V1)
 			require.NotEmpty(t, license.V2)
@@ -111,8 +111,8 @@ func getLicenseFromSecret(t *testing.T, raw, encoded string) {
 
 			require.NoError(t, i.Refresh(context.Background()))
 
-			license, ok := GetLicenseFromSecret(i, n)
-			require.True(t, ok)
+			license, err := GetLicenseFromSecret(i, n)
+			require.NoError(t, err)
 
 			require.Empty(t, license.V1)
 			require.NotEmpty(t, license.V2)
@@ -126,8 +126,8 @@ func getLicenseFromSecret(t *testing.T, raw, encoded string) {
 
 			require.NoError(t, i.Refresh(context.Background()))
 
-			license, ok := GetLicenseFromSecret(i, n)
-			require.True(t, ok)
+			license, err := GetLicenseFromSecret(i, n)
+			require.NoError(t, err)
 
 			require.Empty(t, license.V1)
 			require.NotEmpty(t, license.V2)
@@ -139,12 +139,27 @@ func getLicenseFromSecret(t *testing.T, raw, encoded string) {
 
 			require.NoError(t, i.Refresh(context.Background()))
 
-			license, ok := GetLicenseFromSecret(i, n)
-			require.True(t, ok)
+			license, err := GetLicenseFromSecret(i, n)
+			require.NoError(t, err)
 
 			require.Empty(t, license.V1)
 			require.NotEmpty(t, license.V2)
 			require.EqualValues(t, encoded, license.V2)
+		})
+
+		t.Run("Non existing Secret license", func(t *testing.T) {
+			require.NoError(t, i.Refresh(context.Background()))
+
+			_, err := GetLicenseFromSecret(i, "non-existing-secret")
+			require.Error(t, err)
+		})
+		t.Run("Non existing license secret key", func(t *testing.T) {
+			n := createLicenseSecret(t, c, "wrong-key", raw)
+
+			require.NoError(t, i.Refresh(context.Background()))
+
+			_, err := GetLicenseFromSecret(i, n)
+			require.Error(t, err)
 		})
 	})
 }
