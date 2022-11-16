@@ -2,6 +2,7 @@
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Feature) Force delete Pods which are stuck in init phase
+- (Bugfix) Do not tolerate False Bootstrap condition in UpToDate evaluation
 
 ## [1.2.20-1](https://github.com/arangodb/kube-arangodb/tree/1.2.20-1) (2022-11-09)
 - (Feature) Create Internal Actions and move RebalancerGenerator
