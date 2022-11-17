@@ -52,12 +52,12 @@ func AppendPodAntiAffinityDefault(p interfaces.PodCreator, a *core.PodAntiAffini
 	}
 }
 
-func AppendArchSelector(a *core.NodeAffinity, arch api.ArangoDeploymentArchitectureType) {
+func AppendArchSelector(a *core.NodeAffinity, nodeSelectorForArch core.NodeSelectorTerm) {
 	if a.RequiredDuringSchedulingIgnoredDuringExecution == nil {
 		a.RequiredDuringSchedulingIgnoredDuringExecution = &core.NodeSelector{}
 	}
 
-	a.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms = append(a.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms, arch.AsNodeSelectorRequirement())
+	a.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms = append(a.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms, nodeSelectorForArch)
 }
 
 func GetArchFromAffinity(a *core.Affinity) api.ArangoDeploymentArchitectureType {

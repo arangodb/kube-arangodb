@@ -59,6 +59,28 @@ func (a ArangoDeploymentArchitecture) IsArchAllowed(arch ArangoDeploymentArchite
 	return false
 }
 
+func (a ArangoDeploymentArchitecture) AsNodeSelectorRequirement() core.NodeSelectorTerm {
+	var archs []string
+
+	if len(a) == 0 {
+		archs = append(archs, ArangoDeploymentArchitectureDefault.String())
+	} else {
+		for _, arch := range a {
+			archs = append(archs, arch.String())
+		}
+	}
+
+	return core.NodeSelectorTerm{
+		MatchExpressions: []core.NodeSelectorRequirement{
+			{
+				Key:      shared.NodeArchAffinityLabel,
+				Operator: "In",
+				Values:   archs,
+			},
+		},
+	}
+}
+
 type ArangoDeploymentArchitectureType string
 
 const (
@@ -83,6 +105,10 @@ func (a ArangoDeploymentArchitectureType) Validate() error {
 	}
 }
 
+func (a ArangoDeploymentArchitectureType) String() string {
+	return string(a)
+}
+
 func (a *ArangoDeploymentArchitectureType) Default(def ArangoDeploymentArchitectureType) ArangoDeploymentArchitectureType {
 	if a == nil {
 		return def
@@ -97,7 +123,7 @@ func (a ArangoDeploymentArchitectureType) AsNodeSelectorRequirement() core.NodeS
 			{
 				Key:      shared.NodeArchAffinityLabel,
 				Operator: "In",
-				Values:   []string{string(a)},
+				Values:   []string{a.String()},
 			},
 		},
 	}
