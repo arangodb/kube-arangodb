@@ -201,7 +201,7 @@ func (a *actionWaitForMemberUp) checkProgressArangoSync(ctx context.Context) (bo
 	// When replication is in initial-sync state, then it can take a long time to be in running state.
 	// This is the reason why Health of ArangoSync can not be checked here.
 	if _, err := c.Version(ctx); err != nil {
-		a.log.Err(err).Debug("Health not ok yet")
+		a.log.Err(err).Debug("Member is not ready yet")
 		return false, false, nil
 	}
 	return true, false, nil
