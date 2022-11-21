@@ -20,6 +20,7 @@
 - (Bugfix) Move Agency CommitIndex log message to Trace
 - (Feature) Force delete Pods which are stuck in init phase
 - (Bugfix) Do not tolerate False Bootstrap condition in UpToDate evaluation
+- (Bugfix) Check ArangoSync availability without checking healthiness
 
 ## [1.2.20](https://github.com/arangodb/kube-arangodb/tree/1.2.20) (2022-10-25)
 - (Feature) Add action progress
