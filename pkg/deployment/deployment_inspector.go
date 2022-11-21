@@ -455,7 +455,14 @@ func (d *Deployment) isUpToDateStatus(status api.DeploymentStatus) (upToDate boo
 		return
 	}
 
+	if !status.Conditions.Check(api.ConditionTypeBootstrapCompleted).Exists().IsTrue().Evaluate() {
+		reason = "ArangoDB is not bootstrapped"
+		upToDate = false
+		return
+	}
+
 	if !status.Conditions.Check(api.ConditionTypeReachable).Exists().IsTrue().Evaluate() {
+		reason = "ArangoDB is not reachable"
 		upToDate = false
 		return
 	}
