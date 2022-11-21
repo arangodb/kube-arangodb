@@ -344,11 +344,12 @@ func (dr *DeploymentReplication) failOnError(err error, msg string) {
 }
 
 func (dr *DeploymentReplication) reportInvalidConfigError(isRecoverable bool, err error, msg string) {
+	details := fmt.Sprintf("%s: %s", msg, err.Error())
 	if !isRecoverable {
 		dr.status.Phase = api.DeploymentReplicationPhaseFailed
-		dr.status.Reason = fmt.Sprintf("%s: %s", msg, err.Error())
+		dr.status.Reason = details
 	}
-	dr.status.Conditions.Update(api.ConditionTypeConfigured, false, api.ConditionConfiguredReasonInvalid, msg)
+	dr.status.Conditions.Update(api.ConditionTypeConfigured, false, api.ConditionConfiguredReasonInvalid, details)
 	if err = dr.updateCRStatus(); err != nil {
 		dr.log.Err(err).Warn("Failed to update status")
 	}
