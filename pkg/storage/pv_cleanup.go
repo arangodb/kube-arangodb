@@ -33,7 +33,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/timer"
 	"github.com/arangodb/kube-arangodb/pkg/util/trigger"
 )
@@ -165,7 +165,7 @@ func (c *pvCleaner) clean(pv core.PersistentVolume) error {
 	}
 
 	// Remove persistent volume
-	if err := c.cli.CoreV1().PersistentVolumes().Delete(context.Background(), pv.GetName(), meta.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
+	if err := c.cli.CoreV1().PersistentVolumes().Delete(context.Background(), pv.GetName(), meta.DeleteOptions{}); err != nil && !kerrors.IsNotFound(err) {
 		log.Err(err).
 			Str("name", pv.GetName()).
 			Debug("Failed to remove PersistentVolume")

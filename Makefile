@@ -1,6 +1,9 @@
 CURRENT=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 ROOT:=$(CURRENT)
 
+SED ?= sed
+REALPATH ?= realpath
+
 PROJECT := arangodb_operator
 SCRIPTDIR := $(shell pwd)
 ROOTDIR := $(shell cd $(SCRIPTDIR) && pwd)
@@ -36,7 +39,8 @@ ifndef KEEP_GOPATH
 endif
 
 GOBUILDARGS ?=
-GOVERSION := 1.17-alpine3.15
+GOBASEVERSION := 1.17
+GOVERSION := $(GOBASEVERSION)-alpine3.15
 DISTRIBUTION := alpine:3.15
 
 PULSAR := $(GOBUILDDIR)/bin/pulsar$(shell go env GOEXE)
@@ -270,7 +274,7 @@ endif
 .PHONY: update-vendor
 update-vendor:
 	@rm -Rf $(VENDORDIR)/k8s.io/code-generator
-	@git clone --branch kubernetes-1.21.14 https://github.com/kubernetes/code-generator.git $(VENDORDIR)/k8s.io/code-generator
+	@git clone --branch kubernetes-1.22.15 https://github.com/kubernetes/code-generator.git $(VENDORDIR)/k8s.io/code-generator
 	@rm -Rf $(VENDORDIR)/k8s.io/code-generator/.git
 
 
@@ -279,7 +283,7 @@ update-generated:
 	@rm -fr $(ORGDIR)
 	@mkdir -p $(ORGDIR)
 	@ln -s -f $(SCRIPTDIR) $(ORGDIR)/kube-arangodb
-	@sed -e 's/^/\/\/ /' -e 's/ *$$//' $(ROOTDIR)/tools/codegen/license-header.txt > $(ROOTDIR)/tools/codegen/boilerplate.go.txt
+	@$(SED) -e 's/^/\/\/ /' -e 's/ *$$//' $(ROOTDIR)/tools/codegen/license-header.txt > $(ROOTDIR)/tools/codegen/boilerplate.go.txt
 	GOPATH=$(GOBUILDDIR) $(VENDORDIR)/k8s.io/code-generator/generate-groups.sh  \
 			"all" \
 			"github.com/arangodb/kube-arangodb/pkg/generated" \
@@ -479,7 +483,7 @@ patch-chart:
 
 .PHONY: tidy
 tidy:
-	@go mod tidy
+	@go mod tidy -compat=$(GOBASEVERSION)
 
 .PHONY: deps-reload
 deps-reload: tidy init
@@ -513,10 +517,24 @@ vendor:
 	@go mod vendor -e
 
 set-deployment-api-version-v2alpha1: export API_VERSION=2alpha1
-set-deployment-api-version-v2alpha1: set-api-version/deployment set-api-version/replication
+set-deployment-api-version-v2alpha1: set-api-version/deployment set-typed-api-version/deployment set-api-version/replication
 
 set-deployment-api-version-v1: export API_VERSION=1
-set-deployment-api-version-v1: set-api-version/deployment set-api-version/replication
+set-deployment-api-version-v1: set-api-version/deployment set-typed-api-version/deployment set-api-version/replication
+
+set-typed-api-version/%:
+	@grep -rHn "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/$*/v[A-Za-z0-9]\+" \
+	      "$(ROOT)/pkg/deployment/" \
+	      "$(ROOT)/pkg/replication/" \
+	      "$(ROOT)/pkg/operator/" \
+	      "$(ROOT)/pkg/server/" \
+	      "$(ROOT)/pkg/util/" \
+	      "$(ROOT)/pkg/handlers/" \
+	      "$(ROOT)/pkg/apis/backup/" \
+	      "$(ROOT)/pkg/upgrade/" \
+	  | cut -d ':' -f 1 | sort | uniq \
+	  | xargs -n 1 $(SED) -i "s#github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/$*/v[A-Za-z0-9]\+#github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/$*/v$(API_VERSION)#g"
+
 
 set-api-version/%:
 	@grep -rHn "github.com/arangodb/kube-arangodb/pkg/apis/$*/v[A-Za-z0-9]\+" \
@@ -529,7 +547,7 @@ set-api-version/%:
 	      "$(ROOT)/pkg/apis/backup/" \
 	      "$(ROOT)/pkg/upgrade/" \
 	  | cut -d ':' -f 1 | sort | uniq \
-	  | xargs -n 1 sed -i "s#github.com/arangodb/kube-arangodb/pkg/apis/$*/v[A-Za-z0-9]\+#github.com/arangodb/kube-arangodb/pkg/apis/$*/v$(API_VERSION)#g"
+	  | xargs -n 1 $(SED) -i "s#github.com/arangodb/kube-arangodb/pkg/apis/$*/v[A-Za-z0-9]\+#github.com/arangodb/kube-arangodb/pkg/apis/$*/v$(API_VERSION)#g"
 	@grep -rHn "DatabaseV[A-Za-z0-9]\+()" \
 		  "$(ROOT)/pkg/deployment/" \
 	      "$(ROOT)/pkg/replication/" \
@@ -540,7 +558,7 @@ set-api-version/%:
 	      "$(ROOT)/pkg/apis/backup/" \
 	      "$(ROOT)/pkg/upgrade/" \
 	  | cut -d ':' -f 1 | sort | uniq \
-	  | xargs -n 1 sed -i "s#DatabaseV[A-Za-z0-9]\+()\.#DatabaseV$(API_VERSION)().#g"
+	  | xargs -n 1 $(SED) -i "s#DatabaseV[A-Za-z0-9]\+()\.#DatabaseV$(API_VERSION)().#g"
 	@grep -rHn "ReplicationV[A-Za-z0-9]\+()" \
 		  "$(ROOT)/pkg/deployment/" \
 		  "$(ROOT)/pkg/replication/" \
@@ -551,12 +569,12 @@ set-api-version/%:
 		  "$(ROOT)/pkg/apis/backup/" \
 	      "$(ROOT)/pkg/upgrade/" \
 	  | cut -d ':' -f 1 | sort | uniq \
-	  | xargs -n 1 sed -i "s#ReplicationV[A-Za-z0-9]\+()\.#ReplicationV$(API_VERSION)().#g"
+	  | xargs -n 1 $(SED) -i "s#ReplicationV[A-Za-z0-9]\+()\.#ReplicationV$(API_VERSION)().#g"
 
 synchronize-v2alpha1-with-v1:
 	@rm -f pkg/apis/deployment/v1/zz_generated.deepcopy.go pkg/apis/deployment/v2alpha1/zz_generated.deepcopy.go
-	@for file in $$(find "$(ROOT)/pkg/apis/deployment/v1/" -type f -exec realpath --relative-to "$(ROOT)/pkg/apis/deployment/v1/" {} \;); do if [ ! -d "$(ROOT)/pkg/apis/deployment/v2alpha1/$$(dirname $${file})" ]; then mkdir -p "$(ROOT)/pkg/apis/deployment/v2alpha1/$$(dirname $${file})"; fi; done
-	@for file in $$(find "$(ROOT)/pkg/apis/deployment/v1/" -type f -exec realpath --relative-to "$(ROOT)/pkg/apis/deployment/v1/" {} \;); do cat "$(ROOT)/pkg/apis/deployment/v1/$${file}" | sed "s#package v1#package v2alpha1#g" | sed 's#ArangoDeploymentVersion = "v1"#ArangoDeploymentVersion = "v2alpha1"#g' > "$(ROOT)/pkg/apis/deployment/v2alpha1/$${file}"; done
+	@for file in $$(find "$(ROOT)/pkg/apis/deployment/v1/" -type f -exec $(REALPATH) --relative-to "$(ROOT)/pkg/apis/deployment/v1/" {} \;); do if [ ! -d "$(ROOT)/pkg/apis/deployment/v2alpha1/$$(dirname $${file})" ]; then mkdir -p "$(ROOT)/pkg/apis/deployment/v2alpha1/$$(dirname $${file})"; fi; done
+	@for file in $$(find "$(ROOT)/pkg/apis/deployment/v1/" -type f -exec $(REALPATH) --relative-to "$(ROOT)/pkg/apis/deployment/v1/" {} \;); do cat "$(ROOT)/pkg/apis/deployment/v1/$${file}" | $(SED) "s#package v1#package v2alpha1#g" | $(SED) 's#ArangoDeploymentVersion = "v1"#ArangoDeploymentVersion = "v2alpha1"#g' > "$(ROOT)/pkg/apis/deployment/v2alpha1/$${file}"; done
 	@make update-generated
 	@make set-deployment-api-version-v2alpha1 bin
 	@make set-deployment-api-version-v1 bin

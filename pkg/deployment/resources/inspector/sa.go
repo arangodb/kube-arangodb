@@ -29,7 +29,9 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
 )
 
 func init() {
@@ -41,8 +43,8 @@ var serviceAccountsInspectorLoaderObj = serviceAccountsInspectorLoader{}
 type serviceAccountsInspectorLoader struct {
 }
 
-func (p serviceAccountsInspectorLoader) Component() throttle.Component {
-	return throttle.ServiceAccount
+func (p serviceAccountsInspectorLoader) Component() definitions.Component {
+	return definitions.ServiceAccount
 }
 
 func (p serviceAccountsInspectorLoader) Load(ctx context.Context, i *inspectorState) {
@@ -173,7 +175,11 @@ func (p *serviceAccountsInspector) Refresh(ctx context.Context) error {
 	return p.state.refresh(ctx, serviceAccountsInspectorLoaderObj)
 }
 
-func (p serviceAccountsInspector) Throttle(c throttle.Components) throttle.Throttle {
+func (p *serviceAccountsInspector) Version() version.Version {
+	return version.V1
+}
+
+func (p *serviceAccountsInspector) Throttle(c throttle.Components) throttle.Throttle {
 	return c.ServiceAccount()
 }
 

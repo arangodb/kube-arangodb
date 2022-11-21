@@ -38,6 +38,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	secretv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
 func GroupEncryptionSupported(mode api.DeploymentMode, group api.ServerGroup) bool {
@@ -71,7 +72,7 @@ func GetEncryptionKey(ctx context.Context, secrets secretv1.ReadInterface, name 
 
 	keyfile, err := secrets.Get(ctxChild, name, meta.GetOptions{})
 	if err != nil {
-		if k8sutil.IsNotFound(err) {
+		if kerrors.IsNotFound(err) {
 			return "", nil, false, nil
 		}
 		return "", nil, false, errors.Wrapf(err, "Unable to fetch secret")

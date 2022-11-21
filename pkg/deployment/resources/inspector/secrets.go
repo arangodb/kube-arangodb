@@ -29,7 +29,9 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
 )
 
 func init() {
@@ -41,8 +43,8 @@ var secretsInspectorLoaderObj = secretsInspectorLoader{}
 type secretsInspectorLoader struct {
 }
 
-func (p secretsInspectorLoader) Component() throttle.Component {
-	return throttle.Secret
+func (p secretsInspectorLoader) Component() definitions.Component {
+	return definitions.Secret
 }
 
 func (p secretsInspectorLoader) Load(ctx context.Context, i *inspectorState) {
@@ -173,7 +175,11 @@ func (p *secretsInspector) Refresh(ctx context.Context) error {
 	return p.state.refresh(ctx, secretsInspectorLoaderObj)
 }
 
-func (p secretsInspector) Throttle(c throttle.Components) throttle.Throttle {
+func (p *secretsInspector) Version() version.Version {
+	return version.V1
+}
+
+func (p *secretsInspector) Throttle(c throttle.Components) throttle.Throttle {
 	return c.Secret()
 }
 

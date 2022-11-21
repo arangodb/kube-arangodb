@@ -46,7 +46,6 @@ import (
 	memberState "github.com/arangodb/kube-arangodb/pkg/deployment/member"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resilience"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
@@ -59,7 +58,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/trigger"
 )
@@ -136,14 +135,6 @@ type Deployment struct {
 	memberState memberState.StateInspector
 
 	metrics Metrics
-}
-
-func (d *Deployment) WithArangoMember(cache inspectorInterface.Inspector, timeout time.Duration, name string) reconciler.ArangoMemberModContext {
-	return reconciler.NewArangoMemberModContext(cache, timeout, name)
-}
-
-func (d *Deployment) WithCurrentArangoMember(name string) reconciler.ArangoMemberModContext {
-	return d.WithArangoMember(d.acs.CurrentClusterCache(), globals.GetGlobals().Timeouts().Kubernetes().Get(), name)
 }
 
 func (d *Deployment) GetMembersState() memberState.StateInspector {
@@ -258,7 +249,7 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 
 	localInventory.Add(d)
 
-	if !d.acs.CurrentClusterCache().Initialised() {
+	for !d.acs.CurrentClusterCache().Initialised() {
 		d.log.Warn("ACS cache not yet initialised")
 		err := d.acs.CurrentClusterCache().Refresh(context.Background())
 		if err != nil {
@@ -274,8 +265,7 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 	aInformer.Start(d.stopCh)
 	kInformer.Start(d.stopCh)
 
-	kInformer.WaitForCacheSync(d.stopCh)
-	aInformer.WaitForCacheSync(d.stopCh)
+	k8sutil.WaitForInformers(d.stopCh, 5*time.Second, kInformer, aInformer)
 
 	go d.run()
 	if apiObject.GetAcceptedSpec().GetMode() == api.DeploymentModeCluster {
@@ -529,7 +519,7 @@ func (d *Deployment) lookForServiceMonitorCRD() {
 	var err error
 	if d.GetScope().IsNamespaced() {
 		_, err = d.acs.CurrentClusterCache().ServiceMonitor().V1()
-		if k8sutil.IsForbiddenOrNotFound(err) {
+		if kerrors.IsForbiddenOrNotFound(err) {
 			return
 		}
 	} else {
@@ -544,7 +534,7 @@ func (d *Deployment) lookForServiceMonitorCRD() {
 		d.haveServiceMonitorCRD = true
 		d.triggerInspection()
 		return
-	} else if k8sutil.IsNotFound(err) {
+	} else if kerrors.IsNotFound(err) {
 		if d.haveServiceMonitorCRD {
 			log.Info("...ServiceMonitor CRD no longer there")
 		}

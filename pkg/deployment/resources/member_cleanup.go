@@ -32,6 +32,7 @@ import (
 	memberState "github.com/arangodb/kube-arangodb/pkg/deployment/member"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	arangomemberv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember/v1"
 )
@@ -127,9 +128,9 @@ func (r *Resources) EnsureArangoMembers(ctx context.Context, cachedStatus inspec
 	for _, e := range s.Members.AsList() {
 		name := e.Member.ArangoMemberName(r.context.GetAPIObject().GetName(), e.Group)
 
-		c := r.context.WithCurrentArangoMember(name)
+		_, ok := cachedStatus.ArangoMember().V1().GetSimple(name)
 
-		if !c.Exists(ctx) {
+		if !ok {
 			// Create ArangoMember
 			obj := &api.ArangoMember{
 				ObjectMeta: meta.ObjectMeta{
@@ -145,27 +146,30 @@ func (r *Resources) EnsureArangoMembers(ctx context.Context, cachedStatus inspec
 				},
 			}
 
-			if err := r.context.WithCurrentArangoMember(name).Create(ctx, obj); err != nil {
+			nctx, c := globals.GetGlobals().Timeouts().Kubernetes().WithTimeout(ctx)
+			defer c()
+
+			if _, err := cachedStatus.ArangoMemberModInterface().V1().Create(nctx, obj, meta.CreateOptions{}); err != nil {
 				return err
 			}
 
 			continue
 		} else {
-			if err := c.Update(ctx, func(m *api.ArangoMember) bool {
+			if err := inspectorInterface.WithArangoMemberUpdate(ctx, cachedStatus, name, func(in *api.ArangoMember) (bool, error) {
 				changed := false
-				if len(m.OwnerReferences) == 0 {
-					m.OwnerReferences = []meta.OwnerReference{
+				if len(in.OwnerReferences) == 0 {
+					in.OwnerReferences = []meta.OwnerReference{
 						obj.AsOwner(),
 					}
 					changed = true
 				}
 
-				if m.Spec.DeploymentUID == "" {
-					m.Spec.DeploymentUID = obj.GetUID()
+				if in.Spec.DeploymentUID == "" {
+					in.Spec.DeploymentUID = obj.GetUID()
 					changed = true
 				}
 
-				return changed
+				return changed, nil
 			}); err != nil {
 				return err
 			}
@@ -177,7 +181,10 @@ func (r *Resources) EnsureArangoMembers(ctx context.Context, cachedStatus inspec
 
 		if !ok || g != member.Spec.Group {
 			// Remove member
-			if err := r.context.WithCurrentArangoMember(member.GetName()).Delete(ctx); err != nil {
+			nctx, c := globals.GetGlobals().Timeouts().Kubernetes().WithTimeout(ctx)
+			defer c()
+
+			if err := cachedStatus.ArangoMemberModInterface().V1().Delete(nctx, member.Name, meta.DeleteOptions{}); err != nil {
 				return err
 			}
 		}

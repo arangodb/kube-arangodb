@@ -29,5 +29,5 @@ import (
 )
 
 func NewLogger(out io.Writer) zerolog.Logger {
-	return zerolog.New(zerolog.ConsoleWriter{Out: io.MultiWriter(out, os.Stdout), TimeFormat: time.RFC3339}).With().Timestamp().Logger()
+	return zerolog.New(zerolog.ConsoleWriter{Out: io.MultiWriter(out, os.Stderr), TimeFormat: time.RFC3339}).With().Timestamp().Logger()
 }

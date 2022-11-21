@@ -42,6 +42,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/info"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
 var (
@@ -55,6 +56,7 @@ const (
 	// we will mark the pod as scheduled for termination
 	recheckSoonPodInspectorInterval = util.Interval(time.Second) // Time between Pod inspection if we think something will change soon
 	maxPodInspectorInterval         = util.Interval(time.Hour)   // Maximum time between Pod inspection (if nothing else happens)
+	forcePodDeletionGracePeriod     = 15 * time.Minute
 )
 
 func (r *Resources) handleRestartedPod(pod *core.Pod, memberStatus *api.MemberStatus, wasTerminated, markAsTerminated *bool) {
@@ -395,17 +397,35 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 
 			// Check if any additional deletion request is required
 			if !k8sutil.IsPodAlive(pod) {
+				var gps int64 = 10
+
+				forceDelete := false
+				if t := k8sutil.PodStopTime(pod); !t.IsZero() {
+					if time.Since(t) > forcePodDeletionGracePeriod {
+						forceDelete = true
+					}
+				} else if t := pod.DeletionTimestamp; t != nil {
+					if time.Since(t.Time) > forcePodDeletionGracePeriod {
+						forceDelete = true
+					}
+				}
+
+				if forceDelete {
+					gps = 0
+					log.Str("pod-name", pod.GetName()).Warn("Enforcing deletion of Pod")
+				}
+
 				// Pod is dead, but still not removed. Send additional deletion request
 				nctx, c := globals.GetGlobals().Timeouts().Kubernetes().WithTimeout(ctx)
 				defer c()
 
 				if err := cachedStatus.PodsModInterface().V1().Delete(nctx, pod.GetName(), meta.DeleteOptions{
-					GracePeriodSeconds: util.NewInt64(10),
+					GracePeriodSeconds: util.NewInt64(gps),
 					Preconditions:      meta.NewUIDPreconditions(string(pod.GetUID())),
 				}); err != nil {
-					if k8sutil.IsNotFound(err) {
+					if kerrors.IsNotFound(err) {
 						// Pod is already gone, we are fine with it
-					} else if k8sutil.IsConflict(err) {
+					} else if kerrors.IsConflict(err) {
 						log.Warn("UID of Pod Changed")
 					} else {
 						log.Err(err).Error("Unknown error while deleting Pod")

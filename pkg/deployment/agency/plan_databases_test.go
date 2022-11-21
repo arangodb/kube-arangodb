@@ -32,4 +32,6 @@ func Test_Databases(t *testing.T) {
 	require.NoError(t, json.Unmarshal(agencyDump39HotBackup, &s))
 
 	require.Contains(t, s.Agency.Arango.Plan.Databases, "_system")
+
+	require.False(t, s.Agency.ArangoDB.ArangoSync.IsSyncInProgress())
 }

@@ -35,6 +35,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
 const (
@@ -76,7 +77,7 @@ func (d *Deployment) createAccessPackages(ctx context.Context) error {
 							Preconditions: &meta.Preconditions{UID: &secret.UID},
 						})
 					})
-					if err != nil && !k8sutil.IsNotFound(err) {
+					if err != nil && !kerrors.IsNotFound(err) {
 						// Not serious enough to stop everything now, just sectionLogger and create an event
 						log.Err(err).Warn("Failed to remove obsolete access package secret")
 						d.CreateEvent(k8sutil.NewErrorEvent("Access Package cleanup failed", err, d.currentObject))
@@ -103,7 +104,7 @@ func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName strin
 	if err == nil {
 		// Secret already exists
 		return nil
-	} else if !k8sutil.IsNotFound(err) {
+	} else if !kerrors.IsNotFound(err) {
 		log.Err(err).Str("name", apSecretName).Debug("Failed to get arangosync access package secret")
 		return errors.WithStack(err)
 	}

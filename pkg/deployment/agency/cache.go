@@ -336,12 +336,14 @@ func (c *cache) getLeader(ctx context.Context, size int, clients map[string]agen
 			}
 		}
 	}
+
 	if err := h.Serving(); err != nil {
 		c.log.Err(err).Warn("Agency Not serving")
 		return nil, nil, h, err
 	}
+
 	if err := h.Healthy(); err != nil {
-		c.log.Err(err).Debug("Agency Not healthy")
+		c.log.Err(err).Trace("Agency Not healthy")
 	}
 
 	for id := range names {

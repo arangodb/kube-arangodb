@@ -33,6 +33,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	secretv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
 const (
@@ -57,7 +58,7 @@ func (r *Resources) createClientAuthCACertificate(ctx context.Context, secrets s
 		return errors.WithStack(err)
 	}
 	if err := k8sutil.CreateCASecret(ctx, secrets, spec.GetClientCASecretName(), cert, priv, ownerRef); err != nil {
-		if k8sutil.IsAlreadyExists(err) {
+		if kerrors.IsAlreadyExists(err) {
 			log.Debug("CA Secret already exists")
 		} else {
 			log.Err(err).Str("name", spec.GetClientCASecretName()).Debug("Failed to create CA Secret")

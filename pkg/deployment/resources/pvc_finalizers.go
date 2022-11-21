@@ -33,6 +33,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
 const (
@@ -107,7 +108,7 @@ func (r *Resources) inspectFinalizerPVCMemberExists(ctx context.Context, group a
 		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 			return r.context.ACS().CurrentClusterCache().PodsModInterface().V1().Delete(ctxChild, memberStatus.Pod.GetName(), meta.DeleteOptions{})
 		})
-		if err != nil && !k8sutil.IsNotFound(err) {
+		if err != nil && !kerrors.IsNotFound(err) {
 			log.Err(err).Debug("Failed to delete pod")
 			return errors.WithStack(err)
 		}

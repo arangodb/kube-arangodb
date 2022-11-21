@@ -32,6 +32,10 @@ import (
 func init() {
 	cmdMain.AddCommand(debugPackage)
 
+	f := debugPackage.Flags()
+
+	f.StringVarP(&debugPackageInput.Output, "output", "o", "out.tar.gz", "Output of the result gz file. If set to `-` then stdout is used")
+
 	debug_package.InitCommand(debugPackage)
 }
 
@@ -41,13 +45,23 @@ var debugPackage = &cobra.Command{
 	RunE:  debugPackageFunc,
 }
 
+var debugPackageInput struct {
+	Output string
+}
+
 func debugPackageFunc(cmd *cobra.Command, _ []string) error {
-	f, err := os.OpenFile("./out.tar.gz", os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0644)
-	if err != nil {
-		return err
+	out := os.Stdout
+
+	if debugPackageInput.Output != "-" {
+		f, err := os.OpenFile("./out.tar.gz", os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0644)
+		if err != nil {
+			return err
+		}
+
+		out = f
 	}
 
-	gw := gzip.NewWriter(f)
+	gw := gzip.NewWriter(out)
 
 	if err := debug_package.GenerateD(cmd, gw); err != nil {
 		return err
@@ -57,8 +71,10 @@ func debugPackageFunc(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if err := f.Close(); err != nil {
-		return err
+	if debugPackageInput.Output != "-" {
+		if err := out.Close(); err != nil {
+			return err
+		}
 	}
 
 	return nil

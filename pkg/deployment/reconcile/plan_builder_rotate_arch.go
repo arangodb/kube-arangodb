@@ -22,6 +22,7 @@ package reconcile
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -45,15 +46,28 @@ func (r *Reconciler) createChangeMemberArchPlan(ctx context.Context,
 
 		if pod, ok := cache.Pod().V1().GetSimple(member.Pod.GetName()); ok {
 			if v, ok := pod.GetAnnotations()[deployment.ArangoDeploymentPodChangeArchAnnotation]; ok {
-				arch := api.ArangoDeploymentArchitectureType(v)
-				if arch.IsArchMismatch(spec.Architecture, member.Architecture) {
-					r.log.
-						Str("pod-name", member.Pod.GetName()).
-						Str("server-group", m.Group.AsRole()).
-						Warn("try changing an Architecture type, but %s", getRequiredRotateMessage(member.Pod.GetName()))
-					p = append(p,
-						actions.NewAction(api.ActionTypeSetCurrentMemberArch, m.Group, member, "Architecture Mismatch").SetArch(arch),
-					)
+				archToApply := api.ArangoDeploymentArchitectureType(v)
+				if archToApply.IsArchMismatch(spec.Architecture, member.Architecture) {
+					if archToApply != api.ArangoDeploymentArchitectureAMD64 && status.CurrentImage.ArangoDBVersion.CompareTo("3.10.0") < 0 {
+						if member.Conditions.Update(api.ConditionTypeArchitectureChangeCannotBeApplied, true,
+							fmt.Sprintf("Member has ArangoDB in version which not supports Architecture change (%s)", archToApply), "") {
+							r.log.Warn("Cannot apply 'arch' annotation changes. It's not supported in ArangoDB < 3.10.0")
+							context.CreateEvent(k8sutil.NewCannotSetArchitectureEvent(apiObject, string(archToApply), member.ID))
+							context.CreateEvent(k8sutil.NewCannotSetArchitectureEvent(pod, string(archToApply), member.ID))
+
+							if err := context.UpdateMember(ctx, member); err != nil {
+								r.log.Error("Can not save member condition", member.ID, api.ConditionTypeArchitectureChangeCannotBeApplied, err)
+							}
+						}
+					} else {
+						r.log.
+							Str("pod-name", member.Pod.GetName()).
+							Str("server-group", m.Group.AsRole()).
+							Warn("try changing an Architecture type, but %s", getRequiredRotateMessage(member.Pod.GetName()))
+						p = append(p,
+							actions.NewAction(api.ActionTypeSetCurrentMemberArch, m.Group, member, "Architecture Mismatch").SetArch(archToApply),
+						)
+					}
 				}
 			}
 		}

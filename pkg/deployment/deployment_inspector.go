@@ -35,6 +35,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
 var (
@@ -71,7 +72,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 
 	// Check deployment still exists
 	updated, err := d.acs.CurrentClusterCache().GetCurrentArangoDeployment()
-	if k8sutil.IsNotFound(err) {
+	if kerrors.IsNotFound(err) {
 		// Deployment is gone
 		d.log.Info("Deployment is gone")
 		d.Stop()
@@ -436,7 +437,7 @@ func (d *Deployment) sendCIUpdate() {
 }
 
 func (d *Deployment) isUpToDateStatus(status api.DeploymentStatus) (upToDate bool, reason string) {
-	if !status.IsPlanEmpty() {
+	if status.NonInternalActions() > 0 {
 		return false, "Plan is not empty"
 	}
 
@@ -454,7 +455,14 @@ func (d *Deployment) isUpToDateStatus(status api.DeploymentStatus) (upToDate boo
 		return
 	}
 
+	if !status.Conditions.Check(api.ConditionTypeBootstrapCompleted).Exists().IsTrue().Evaluate() {
+		reason = "ArangoDB is not bootstrapped"
+		upToDate = false
+		return
+	}
+
 	if !status.Conditions.Check(api.ConditionTypeReachable).Exists().IsTrue().Evaluate() {
+		reason = "ArangoDB is not reachable"
 		upToDate = false
 		return
 	}

@@ -2,82 +2,82 @@
 
 ## List
 
-|               Action               | Timeout |        Edition         |                                                    Description                                                     |
-|:----------------------------------:|:-------:|:----------------------:|:------------------------------------------------------------------------------------------------------------------:|
-|             AddMember              |  10m0s  | Community & Enterprise |                                         Adds new member to the Member list                                         |
-|       AppendTLSCACertificate       |  30m0s  |    Enterprise Only     |                                       Append Certificate into CA TrustStore                                        |
-|     ArangoMemberUpdatePodSpec      |  10m0s  | Community & Enterprise |                                       Propagate Member Pod spec (requested)                                        |
-|    ArangoMemberUpdatePodStatus     |  10m0s  | Community & Enterprise |                                       Propagate Member Pod status (current)                                        |
-|           BackupRestore            |  15m0s  |    Enterprise Only     |                                              Restore selected Backup                                               |
-|         BackupRestoreClean         |  15m0s  |    Enterprise Only     |                                Clean restore status in case of restore spec change                                 |
-|        BootstrapSetPassword        |  10m0s  | Community & Enterprise |                                     Change password during bootstrap procedure                                     |
-|          BootstrapUpdate           |  10m0s  | Community & Enterprise |                                              Update bootstrap status                                               |
-|           CleanOutMember           | 48h0m0s | Community & Enterprise |                                           Run the CleanOut job on member                                           |
-|       CleanTLSCACertificate        |  30m0s  |    Enterprise Only     |                                       Remove Certificate from CA TrustStore                                        |
-|     CleanTLSKeyfileCertificate     |  30m0s  |    Enterprise Only     |                                       Remove old TLS certificate from server                                       |
-|        ClusterMemberCleanup        |  10m0s  | Community & Enterprise |                          Remove member from Cluster if it is gone already (Coordinators)                           |
-|       DisableClusterScaling        |  10m0s  | Community & Enterprise |                                  (Deprecated) Disable Cluster Scaling integration                                  |
-|         DisableMaintenance         |  10m0s  | Community & Enterprise |                                         Disable ArangoDB maintenance mode                                          |
-|      DisableMemberMaintenance      |  10m0s  |    Enterprise Only     |                                     Disable ArangoDB DBServer maintenance mode                                     |
-|        EnableClusterScaling        |  10m0s  | Community & Enterprise |                                  (Deprecated) Enable Cluster Scaling integration                                   |
-|         EnableMaintenance          |  10m0s  | Community & Enterprise |                                          Enable ArangoDB maintenance mode                                          |
-|      EnableMemberMaintenance       |  10m0s  |    Enterprise Only     |                                     Enable ArangoDB DBServer maintenance mode                                      |
-|          EncryptionKeyAdd          |  10m0s  |    Enterprise Only     |                                         Add the encryption key to the pool                                         |
-|      EncryptionKeyPropagated       |  10m0s  |    Enterprise Only     |                                     Update condition of encryption propagation                                     |
-|        EncryptionKeyRefresh        |  10m0s  |    Enterprise Only     |                                       Refresh the encryption keys on member                                        |
-|        EncryptionKeyRemove         |  10m0s  |    Enterprise Only     |                                       Remove the encryption key to the pool                                        |
-|     EncryptionKeyStatusUpdate      |  10m0s  |    Enterprise Only     |                                      Update status of encryption propagation                                       |
-|                Idle                |  10m0s  | Community & Enterprise |                            Define idle operation in case if preconditions are not meet                             |
-|               JWTAdd               |  10m0s  |    Enterprise Only     |                                              Adds new JWT to the pool                                              |
-|              JWTClean              |  10m0s  |    Enterprise Only     |                                            Remove JWT key from the pool                                            |
-|           JWTPropagated            |  10m0s  |    Enterprise Only     |                                        Update condition of JWT propagation                                         |
-|             JWTRefresh             |  10m0s  |    Enterprise Only     |                                     Refresh current JWT secrets on the member                                      |
-|            JWTSetActive            |  10m0s  |    Enterprise Only     |                                        Change active JWT key on the cluster                                        |
-|          JWTStatusUpdate           |  10m0s  |    Enterprise Only     |                                          Update status of JWT propagation                                          |
-|           KillMemberPod            |  10m0s  | Community & Enterprise |                                Execute Delete on Pod 9put pod in Terminating state)                                |
-|             LicenseSet             |  10m0s  | Community & Enterprise |                                           Update Cluster license (3.9+)                                            |
-|         MarkToRemoveMember         |  10m0s  | Community & Enterprise |               Marks member to be removed. Used when member Pod is annotated with replace annotation                |
-|         MemberPhaseUpdate          |  10m0s  | Community & Enterprise |                                                Change member phase                                                 |
-|          MemberRIDUpdate           |  10m0s  | Community & Enterprise |                                              Update Run ID of member                                               |
-|             PVCResize              |  30m0s  | Community & Enterprise |                               Start the resize procedure. Updates PVC Requests field                               |
-|             PVCResized             |  15m0s  | Community & Enterprise |                                        Waits for PVC resize to be completed                                        |
-|            PlaceHolder             |  10m0s  | Community & Enterprise |                                              Empty placeholder action                                              |
-|          RebalancerCheck           |  10m0s  |    Enterprise Only     |                                           Check Rebalancer job progress                                            |
-|          RebalancerClean           |  10m0s  |    Enterprise Only     |                                               Cleans Rebalancer jobs                                               |
-|         RebalancerGenerate         |  10m0s  |    Enterprise Only     |                                           Generates the Rebalancer plan                                            |
-|           RecreateMember           |  15m0s  | Community & Enterprise |                                       Recreate member with same ID and Data                                        |
-|    RefreshTLSKeyfileCertificate    |  30m0s  |    Enterprise Only     |                                       Recreate Server TLS Certificate secret                                       |
-|            RemoveMember            |  15m0s  | Community & Enterprise |                                     Removes member from the Cluster and Status                                     |
-|       RenewTLSCACertificate        |  30m0s  |    Enterprise Only     |                                             Recreate Managed CA secret                                             |
-|        RenewTLSCertificate         |  30m0s  |    Enterprise Only     |                                       Recreate Server TLS Certificate secret                                       |
-|          ResignLeadership          |  30m0s  | Community & Enterprise |                                      Run the ResignLeadership job on DBServer                                      |
-|            ResourceSync            |  10m0s  | Community & Enterprise |                                               Runs the Resource sync                                               |
-|            RotateMember            |  15m0s  | Community & Enterprise |                                        Waits for Pod restart and recreation                                        |
-|         RotateStartMember          |  15m0s  | Community & Enterprise |                              Start member rotation. After this action member is down                               |
-|          RotateStopMember          |  15m0s  | Community & Enterprise |                         Finalize member rotation. After this action member is started back                         |
-| RuntimeContainerArgsLogLevelUpdate |  10m0s  | Community & Enterprise |                                    Change ArangoDB Member log levels in runtime                                    |
-|    RuntimeContainerImageUpdate     |  10m0s  | Community & Enterprise |                                         Update Container Image in runtime                                          |
-|            SetCondition            |  10m0s  | Community & Enterprise |                                       (Deprecated) Set deployment condition                                        |
-|           SetConditionV2           |  10m0s  | Community & Enterprise |                                              Set deployment condition                                              |
-|          SetCurrentImage           | 6h0m0s  | Community & Enterprise |                               Update deployment current image after image discovery                                |
-|        SetCurrentMemberArch        |  10m0s  | Community & Enterprise |                                          Set current member architecture                                           |
-|      SetMaintenanceCondition       |  10m0s  | Community & Enterprise |                                       Update ArangoDB maintenance condition                                        |
-|         SetMemberCondition         |  10m0s  | Community & Enterprise |                                         (Deprecated) Set member condition                                          |
-|        SetMemberConditionV2        |  10m0s  | Community & Enterprise |                                                Set member condition                                                |
-|       SetMemberCurrentImage        |  10m0s  | Community & Enterprise |                                            Update Member current image                                             |
-|           ShutdownMember           |  30m0s  | Community & Enterprise |                           Sends Shutdown requests and waits for container to be stopped                            |
-|         TLSKeyStatusUpdate         |  10m0s  |    Enterprise Only     |                                      Update Status of TLS propagation process                                      |
-|           TLSPropagated            |  10m0s  |    Enterprise Only     |                                          Update TLS propagation condition                                          |
-|         TimezoneSecretSet          |  30m0s  | Community & Enterprise |                                          Set timezone details in cluster                                           |
-|          TopologyDisable           |  10m0s  |    Enterprise Only     |                                             Disable TopologyAwareness                                              |
-|           TopologyEnable           |  10m0s  |    Enterprise Only     |                                              Enable TopologyAwareness                                              |
-|      TopologyMemberAssignment      |  10m0s  |    Enterprise Only     |                                    Update TopologyAwareness Members assignments                                    |
-|        TopologyZonesUpdate         |  10m0s  |    Enterprise Only     |                                        Update TopologyAwareness Zones info                                         |
-|           UpToDateUpdate           |  10m0s  | Community & Enterprise |                                             Update UpToDate condition                                              |
-|            UpdateTLSSNI            |  10m0s  |    Enterprise Only     |                                             Update certificate in SNI                                              |
-|           UpgradeMember            | 6h0m0s  | Community & Enterprise |                                        Run the Upgrade procedure on member                                         |
-|        WaitForMemberInSync         |  30m0s  | Community & Enterprise | Wait for member to be in sync. In case of DBServer waits for shards. In case of Agents to catch-up on Agency index |
-|          WaitForMemberUp           |  30m0s  | Community & Enterprise |                                          Wait for member to be responsive                                          |
+|               Action               | Internal | Timeout |        Edition         |                                                    Description                                                     |
+|:----------------------------------:|:--------:|:-------:|:----------------------:|:------------------------------------------------------------------------------------------------------------------:|
+|             AddMember              |    no    |  10m0s  | Community & Enterprise |                                         Adds new member to the Member list                                         |
+|       AppendTLSCACertificate       |    no    |  30m0s  |    Enterprise Only     |                                       Append Certificate into CA TrustStore                                        |
+|     ArangoMemberUpdatePodSpec      |    no    |  10m0s  | Community & Enterprise |                                       Propagate Member Pod spec (requested)                                        |
+|    ArangoMemberUpdatePodStatus     |    no    |  10m0s  | Community & Enterprise |                                       Propagate Member Pod status (current)                                        |
+|           BackupRestore            |    no    |  15m0s  |    Enterprise Only     |                                              Restore selected Backup                                               |
+|         BackupRestoreClean         |    no    |  15m0s  |    Enterprise Only     |                                Clean restore status in case of restore spec change                                 |
+|        BootstrapSetPassword        |    no    |  10m0s  | Community & Enterprise |                                     Change password during bootstrap procedure                                     |
+|          BootstrapUpdate           |    no    |  10m0s  | Community & Enterprise |                                              Update bootstrap status                                               |
+|           CleanOutMember           |    no    | 48h0m0s | Community & Enterprise |                                           Run the CleanOut job on member                                           |
+|       CleanTLSCACertificate        |    no    |  30m0s  |    Enterprise Only     |                                       Remove Certificate from CA TrustStore                                        |
+|     CleanTLSKeyfileCertificate     |    no    |  30m0s  |    Enterprise Only     |                                       Remove old TLS certificate from server                                       |
+|        ClusterMemberCleanup        |    no    |  10m0s  | Community & Enterprise |                          Remove member from Cluster if it is gone already (Coordinators)                           |
+|       DisableClusterScaling        |    no    |  10m0s  | Community & Enterprise |                                  (Deprecated) Disable Cluster Scaling integration                                  |
+|         DisableMaintenance         |    no    |  10m0s  | Community & Enterprise |                                         Disable ArangoDB maintenance mode                                          |
+|      DisableMemberMaintenance      |    no    |  10m0s  |    Enterprise Only     |                                     Disable ArangoDB DBServer maintenance mode                                     |
+|        EnableClusterScaling        |    no    |  10m0s  | Community & Enterprise |                                  (Deprecated) Enable Cluster Scaling integration                                   |
+|         EnableMaintenance          |    no    |  10m0s  | Community & Enterprise |                                          Enable ArangoDB maintenance mode                                          |
+|      EnableMemberMaintenance       |    no    |  10m0s  |    Enterprise Only     |                                     Enable ArangoDB DBServer maintenance mode                                      |
+|          EncryptionKeyAdd          |    no    |  10m0s  |    Enterprise Only     |                                         Add the encryption key to the pool                                         |
+|      EncryptionKeyPropagated       |    no    |  10m0s  |    Enterprise Only     |                                     Update condition of encryption propagation                                     |
+|        EncryptionKeyRefresh        |    no    |  10m0s  |    Enterprise Only     |                                       Refresh the encryption keys on member                                        |
+|        EncryptionKeyRemove         |    no    |  10m0s  |    Enterprise Only     |                                       Remove the encryption key to the pool                                        |
+|     EncryptionKeyStatusUpdate      |    no    |  10m0s  |    Enterprise Only     |                                      Update status of encryption propagation                                       |
+|                Idle                |    no    |  10m0s  | Community & Enterprise |                            Define idle operation in case if preconditions are not meet                             |
+|               JWTAdd               |    no    |  10m0s  |    Enterprise Only     |                                              Adds new JWT to the pool                                              |
+|              JWTClean              |    no    |  10m0s  |    Enterprise Only     |                                            Remove JWT key from the pool                                            |
+|           JWTPropagated            |    no    |  10m0s  |    Enterprise Only     |                                        Update condition of JWT propagation                                         |
+|             JWTRefresh             |    no    |  10m0s  |    Enterprise Only     |                                     Refresh current JWT secrets on the member                                      |
+|            JWTSetActive            |    no    |  10m0s  |    Enterprise Only     |                                        Change active JWT key on the cluster                                        |
+|          JWTStatusUpdate           |    no    |  10m0s  |    Enterprise Only     |                                          Update status of JWT propagation                                          |
+|           KillMemberPod            |    no    |  10m0s  | Community & Enterprise |                                Execute Delete on Pod 9put pod in Terminating state)                                |
+|             LicenseSet             |    no    |  10m0s  | Community & Enterprise |                                           Update Cluster license (3.9+)                                            |
+|         MarkToRemoveMember         |    no    |  10m0s  | Community & Enterprise |               Marks member to be removed. Used when member Pod is annotated with replace annotation                |
+|         MemberPhaseUpdate          |    no    |  10m0s  | Community & Enterprise |                                                Change member phase                                                 |
+|          MemberRIDUpdate           |    no    |  10m0s  | Community & Enterprise |                                              Update Run ID of member                                               |
+|             PVCResize              |    no    |  30m0s  | Community & Enterprise |                               Start the resize procedure. Updates PVC Requests field                               |
+|             PVCResized             |    no    |  15m0s  | Community & Enterprise |                                        Waits for PVC resize to be completed                                        |
+|            PlaceHolder             |    no    |  10m0s  | Community & Enterprise |                                              Empty placeholder action                                              |
+|          RebalancerCheck           |    no    |  10m0s  |    Enterprise Only     |                                           Check Rebalancer job progress                                            |
+|          RebalancerClean           |    no    |  10m0s  |    Enterprise Only     |                                               Cleans Rebalancer jobs                                               |
+|         RebalancerGenerate         |   yes    |  10m0s  |    Enterprise Only     |                                           Generates the Rebalancer plan                                            |
+|           RecreateMember           |    no    |  15m0s  | Community & Enterprise |                                       Recreate member with same ID and Data                                        |
+|    RefreshTLSKeyfileCertificate    |    no    |  30m0s  |    Enterprise Only     |                                       Recreate Server TLS Certificate secret                                       |
+|            RemoveMember            |    no    |  15m0s  | Community & Enterprise |                                     Removes member from the Cluster and Status                                     |
+|       RenewTLSCACertificate        |    no    |  30m0s  |    Enterprise Only     |                                             Recreate Managed CA secret                                             |
+|        RenewTLSCertificate         |    no    |  30m0s  |    Enterprise Only     |                                       Recreate Server TLS Certificate secret                                       |
+|          ResignLeadership          |    no    |  30m0s  | Community & Enterprise |                                      Run the ResignLeadership job on DBServer                                      |
+|            ResourceSync            |    no    |  10m0s  | Community & Enterprise |                                               Runs the Resource sync                                               |
+|            RotateMember            |    no    |  15m0s  | Community & Enterprise |                                        Waits for Pod restart and recreation                                        |
+|         RotateStartMember          |    no    |  15m0s  | Community & Enterprise |                              Start member rotation. After this action member is down                               |
+|          RotateStopMember          |    no    |  15m0s  | Community & Enterprise |                         Finalize member rotation. After this action member is started back                         |
+| RuntimeContainerArgsLogLevelUpdate |    no    |  10m0s  | Community & Enterprise |                                    Change ArangoDB Member log levels in runtime                                    |
+|    RuntimeContainerImageUpdate     |    no    |  10m0s  | Community & Enterprise |                                         Update Container Image in runtime                                          |
+|            SetCondition            |    no    |  10m0s  | Community & Enterprise |                                       (Deprecated) Set deployment condition                                        |
+|           SetConditionV2           |    no    |  10m0s  | Community & Enterprise |                                              Set deployment condition                                              |
+|          SetCurrentImage           |    no    | 6h0m0s  | Community & Enterprise |                               Update deployment current image after image discovery                                |
+|        SetCurrentMemberArch        |    no    |  10m0s  | Community & Enterprise |                                          Set current member architecture                                           |
+|      SetMaintenanceCondition       |    no    |  10m0s  | Community & Enterprise |                                       Update ArangoDB maintenance condition                                        |
+|         SetMemberCondition         |    no    |  10m0s  | Community & Enterprise |                                         (Deprecated) Set member condition                                          |
+|        SetMemberConditionV2        |    no    |  10m0s  | Community & Enterprise |                                                Set member condition                                                |
+|       SetMemberCurrentImage        |    no    |  10m0s  | Community & Enterprise |                                            Update Member current image                                             |
+|           ShutdownMember           |    no    |  30m0s  | Community & Enterprise |                           Sends Shutdown requests and waits for container to be stopped                            |
+|         TLSKeyStatusUpdate         |    no    |  10m0s  |    Enterprise Only     |                                      Update Status of TLS propagation process                                      |
+|           TLSPropagated            |    no    |  10m0s  |    Enterprise Only     |                                          Update TLS propagation condition                                          |
+|         TimezoneSecretSet          |    no    |  30m0s  | Community & Enterprise |                                          Set timezone details in cluster                                           |
+|          TopologyDisable           |    no    |  10m0s  |    Enterprise Only     |                                             Disable TopologyAwareness                                              |
+|           TopologyEnable           |    no    |  10m0s  |    Enterprise Only     |                                              Enable TopologyAwareness                                              |
+|      TopologyMemberAssignment      |    no    |  10m0s  |    Enterprise Only     |                                    Update TopologyAwareness Members assignments                                    |
+|        TopologyZonesUpdate         |    no    |  10m0s  |    Enterprise Only     |                                        Update TopologyAwareness Zones info                                         |
+|           UpToDateUpdate           |    no    |  10m0s  | Community & Enterprise |                                             Update UpToDate condition                                              |
+|            UpdateTLSSNI            |    no    |  10m0s  |    Enterprise Only     |                                             Update certificate in SNI                                              |
+|           UpgradeMember            |    no    | 6h0m0s  | Community & Enterprise |                                        Run the Upgrade procedure on member                                         |
+|        WaitForMemberInSync         |    no    |  30m0s  | Community & Enterprise | Wait for member to be in sync. In case of DBServer waits for shards. In case of Agents to catch-up on Agency index |
+|          WaitForMemberUp           |    no    |  30m0s  | Community & Enterprise |                                          Wait for member to be responsive                                          |
 
 
 ## ArangoDeployment spec

@@ -23,10 +23,10 @@ package inspector
 import (
 	"k8s.io/client-go/tools/cache"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 )
 
-func (i *inspectorState) eventHandler(component throttle.Component) cache.ResourceEventHandler {
+func (i *inspectorState) eventHandler(component definitions.Component) cache.ResourceEventHandler {
 	return eventHandler{
 		i:         i,
 		component: component,
@@ -35,7 +35,7 @@ func (i *inspectorState) eventHandler(component throttle.Component) cache.Resour
 
 type eventHandler struct {
 	i         *inspectorState
-	component throttle.Component
+	component definitions.Component
 }
 
 func (e eventHandler) OnAdd(obj interface{}) {

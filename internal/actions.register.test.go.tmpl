@@ -38,6 +38,14 @@ func Test_Actions(t *testing.T) {
 {{- if $startupFailureGracePeriod }}
         ActionsWrapWithActionStartFailureGracePeriod(t, api.ActionType{{ . }}, {{ $startupFailureGracePeriod }})
 {{- end }}
+{{- $isInternal := index $root.internal . }}
+        t.Run("Internal", func(t *testing.T) {
+{{- if $isInternal }}
+            require.True(t, api.ActionType{{ . }}.Internal())
+{{- else }}
+            require.False(t, api.ActionType{{ . }}.Internal())
+{{- end }}
+        })
     })
 {{- end }}
 }

@@ -65,6 +65,7 @@ import (
 	servicev1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service/v1"
 	serviceaccountv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount/v1"
 	servicemonitorv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
@@ -367,7 +368,7 @@ func (d *Deployment) DeletePod(ctx context.Context, podName string, options meta
 	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		return d.PodsModInterface().Delete(ctxChild, podName, options)
 	})
-	if err != nil && !k8sutil.IsNotFound(err) {
+	if err != nil && !kerrors.IsNotFound(err) {
 		log.Err(err).Str("pod", podName).Debug("Failed to remove pod")
 		return errors.WithStack(err)
 	}
@@ -384,7 +385,7 @@ func (d *Deployment) CleanupPod(ctx context.Context, p *core.Pod) error {
 	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		return d.PodsModInterface().Delete(ctxChild, podName, *options)
 	})
-	if err != nil && !k8sutil.IsNotFound(err) {
+	if err != nil && !kerrors.IsNotFound(err) {
 		log.Err(err).Str("pod", podName).Debug("Failed to cleanup pod")
 		return errors.WithStack(err)
 	}
@@ -398,7 +399,7 @@ func (d *Deployment) RemovePodFinalizers(ctx context.Context, podName string) er
 	defer cancel()
 	p, err := d.GetCachedStatus().Pod().V1().Read().Get(ctxChild, podName, meta.GetOptions{})
 	if err != nil {
-		if k8sutil.IsNotFound(err) {
+		if kerrors.IsNotFound(err) {
 			return nil
 		}
 		return errors.WithStack(err)
@@ -418,7 +419,7 @@ func (d *Deployment) DeletePvc(ctx context.Context, pvcName string) error {
 	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		return d.PersistentVolumeClaimsModInterface().Delete(ctxChild, pvcName, meta.DeleteOptions{})
 	})
-	if err != nil && !k8sutil.IsNotFound(err) {
+	if err != nil && !kerrors.IsNotFound(err) {
 		log.Err(err).Str("pvc", pvcName).Debug("Failed to remove pvc")
 		return errors.WithStack(err)
 	}
@@ -487,7 +488,7 @@ func (d *Deployment) DeleteTLSKeyfile(ctx context.Context, group api.ServerGroup
 	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		return d.SecretsModInterface().Delete(ctxChild, secretName, meta.DeleteOptions{})
 	})
-	if err != nil && !k8sutil.IsNotFound(err) {
+	if err != nil && !kerrors.IsNotFound(err) {
 		return errors.WithStack(err)
 	}
 	return nil
@@ -496,7 +497,7 @@ func (d *Deployment) DeleteTLSKeyfile(ctx context.Context, group api.ServerGroup
 // DeleteSecret removes the Secret with given name.
 // If the secret does not exist, the error is ignored.
 func (d *Deployment) DeleteSecret(secretName string) error {
-	if err := d.SecretsModInterface().Delete(context.Background(), secretName, meta.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
+	if err := d.SecretsModInterface().Delete(context.Background(), secretName, meta.DeleteOptions{}); err != nil && !kerrors.IsNotFound(err) {
 		return errors.WithStack(err)
 	}
 	return nil

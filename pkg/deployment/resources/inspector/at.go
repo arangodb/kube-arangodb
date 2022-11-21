@@ -29,7 +29,9 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
 )
 
 func init() {
@@ -41,8 +43,8 @@ var arangoTasksInspectorLoaderObj = arangoTasksInspectorLoader{}
 type arangoTasksInspectorLoader struct {
 }
 
-func (p arangoTasksInspectorLoader) Component() throttle.Component {
-	return throttle.ArangoTask
+func (p arangoTasksInspectorLoader) Component() definitions.Component {
+	return definitions.ArangoTask
 }
 
 func (p arangoTasksInspectorLoader) Load(ctx context.Context, i *inspectorState) {
@@ -169,7 +171,11 @@ func (p *arangoTasksInspector) Refresh(ctx context.Context) error {
 	return p.state.refresh(ctx, arangoTasksInspectorLoaderObj)
 }
 
-func (p arangoTasksInspector) Throttle(c throttle.Components) throttle.Throttle {
+func (p *arangoTasksInspector) Version() version.Version {
+	return version.V1
+}
+
+func (p *arangoTasksInspector) Throttle(c throttle.Components) throttle.Throttle {
 	return c.ArangoTask()
 }
 

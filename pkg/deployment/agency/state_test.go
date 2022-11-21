@@ -52,6 +52,12 @@ var agencyDump39Jobs []byte
 //go:embed testdata/longdata.json
 var longData []byte
 
+//go:embed testdata/sync.source.json
+var syncSource []byte
+
+//go:embed testdata/sync.target.json
+var syncTarget []byte
+
 var (
 	data = map[string][]byte{
 		"3.6":           agencyDump36,

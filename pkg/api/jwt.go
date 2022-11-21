@@ -33,6 +33,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	secret "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
 // ensureJWT ensure that JWT signing key exists or creates a new one.
@@ -42,7 +43,7 @@ func ensureJWT(cli typedCore.CoreV1Interface, cfg ServerConfig) (string, error) 
 	secrets := cli.Secrets(cfg.Namespace)
 
 	signingKey, err := k8sutil.GetTokenSecret(context.Background(), secrets, cfg.JWTKeySecretName)
-	if err != nil && k8sutil.IsNotFound(err) || signingKey == "" {
+	if err != nil && kerrors.IsNotFound(err) || signingKey == "" {
 		signingKey, err = createSigningKey(secrets, cfg.JWTKeySecretName)
 		if err != nil {
 			return "", err
@@ -52,7 +53,7 @@ func ensureJWT(cli typedCore.CoreV1Interface, cfg ServerConfig) (string, error) 
 	}
 
 	_, err = k8sutil.GetTokenSecret(context.Background(), secrets, cfg.JWTSecretName)
-	if err != nil && k8sutil.IsNotFound(err) {
+	if err != nil && kerrors.IsNotFound(err) {
 		err = generateAndSaveJWT(secrets, cfg)
 		if err != nil {
 			return "", err

@@ -27,7 +27,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
 func newRenewTLSCACertificateAction(action api.Action, actionCtx ActionContext) Action {
@@ -53,7 +53,7 @@ func (a *actionRenewTLSCACertificate) Start(ctx context.Context) (bool, error) {
 		return a.actionCtx.ACS().CurrentClusterCache().SecretsModInterface().V1().Delete(ctxChild, a.actionCtx.GetSpec().TLS.GetCASecretName(), meta.DeleteOptions{})
 	})
 	if err != nil {
-		if !k8sutil.IsNotFound(err) {
+		if !kerrors.IsNotFound(err) {
 			a.log.Err(err).Warn("Unable to clean cert %s", a.actionCtx.GetSpec().TLS.GetCASecretName())
 			return true, nil
 		}

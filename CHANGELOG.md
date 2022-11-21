@@ -4,6 +4,22 @@
 - (Improvement) Bump dependencies
 - (Documentation) (1.3.0) EE & CE Definitions
 - (Improvement) Arango Kubernetes Client Mod Implementation
+- (Refactoring) Extract kerrors package
+- (Refactoring) Extract Inspector Definitions package
+- (Bugfix) Fix PDBs Version discovery
+- (Feature) Agency ArangoSync State check
+- (Improvement) Parametrize Make tools
+- (Bugfix) Fix V2Alpha1 Generator
+- (Feature) Create Internal Actions and move RebalancerGenerator
+- (Dependencies) Bump K8S Dependencies to 1.22.15
+- (Bugfix) Unlock broken inspectors
+- (Debug) Allow to send package to stdout
+- (Improvement) ArangoDB image validation (=>3.10) for ARM64 architecture
+- (Improvement) Use inspector for ArangoMember
+- (DebugPackage) Collect logs from pods
+- (Bugfix) Move Agency CommitIndex log message to Trace
+- (Feature) Force delete Pods which are stuck in init phase
+- (Bugfix) Do not tolerate False Bootstrap condition in UpToDate evaluation
 - (Improvement) Improve error message when replication can't be configured
 
 ## [1.2.20](https://github.com/arangodb/kube-arangodb/tree/1.2.20) (2022-10-25)

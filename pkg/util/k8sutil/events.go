@@ -283,3 +283,12 @@ func NewOperatorEngineOpsAlertEvent(reason string, apiObject APIObject) *Event {
 	event.Message = fmt.Sprintf("Event OperatorEngineOpsAlert raised, investigation needed: %s", reason)
 	return event
 }
+
+// NewCannotSetArchitectureEvent creates an even of type CannotSetArchitectureEvent.
+func NewCannotSetArchitectureEvent(apiObject runtime.Object, arch, memberId string) *Event {
+	event := newDeploymentEvent(apiObject)
+	event.Type = core.EventTypeWarning
+	event.Reason = "Can not set architecture"
+	event.Message = fmt.Sprintf("Can not apply %s arch for member %s. It is not supported in current ArangoDB version", arch, memberId)
+	return event
+}

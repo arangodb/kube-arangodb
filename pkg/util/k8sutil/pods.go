@@ -41,6 +41,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
 const (
@@ -383,6 +384,47 @@ func IsContainerAlive(container core.ContainerStatus) bool {
 	return container.State.Running != nil
 }
 
+// PodStopTime returns time when pod has been stopped
+func PodStopTime(pod *core.Pod) time.Time {
+	var t time.Time
+
+	if q := ContainersRecentStopTime(pod.Status.ContainerStatuses); q.After(t) {
+		t = q
+	}
+
+	if q := ContainersRecentStopTime(pod.Status.InitContainerStatuses); q.After(t) {
+		t = q
+	}
+
+	if q := ContainersRecentStopTime(pod.Status.EphemeralContainerStatuses); q.After(t) {
+		t = q
+	}
+
+	return t
+}
+
+// ContainersRecentStopTime returns most recent termination time of pods
+func ContainersRecentStopTime(containers []core.ContainerStatus) time.Time {
+	var t time.Time
+
+	for _, c := range containers {
+		if v := ContainerStopTime(c); v.After(t) {
+			t = v
+		}
+	}
+
+	return t
+}
+
+// ContainerStopTime returns time of the Container stop. If container is running, time.Zero is returned
+func ContainerStopTime(container core.ContainerStatus) time.Time {
+	if p := container.State.Terminated; p != nil {
+		return p.FinishedAt.Time
+	}
+
+	return time.Time{}
+}
+
 // ClusterJWTVolumeMount creates a volume mount structure for a cluster JWT secret (token).
 func ClusterJWTVolumeMount() core.VolumeMount {
 	return core.VolumeMount{
@@ -597,7 +639,7 @@ func CreatePod(ctx context.Context, c podv1.ModInterface, pod *core.Pod, ns stri
 	AddOwnerRefToObject(pod.GetObjectMeta(), &owner)
 
 	if createdPod, err := c.Create(ctx, pod, meta.CreateOptions{}); err != nil {
-		if IsAlreadyExists(err) {
+		if kerrors.IsAlreadyExists(err) {
 			return pod.GetName(), "", nil // If pod exists do not return any error but do not record UID (enforced rotation)
 		}
 

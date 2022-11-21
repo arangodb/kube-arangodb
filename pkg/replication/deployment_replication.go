@@ -37,6 +37,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
 	"github.com/arangodb/kube-arangodb/pkg/util/timer"
@@ -203,7 +204,7 @@ func (dr *DeploymentReplication) handleArangoDeploymentReplicationUpdatedEvent(e
 	current, err := repls.Get(context.Background(), dr.apiObject.GetName(), meta.GetOptions{})
 	if err != nil {
 		log.Err(err).Debug("Failed to get current version of deployment replication from API server")
-		if k8sutil.IsNotFound(err) {
+		if kerrors.IsNotFound(err) {
 			return nil
 		}
 		return errors.WithStack(err)
@@ -276,7 +277,7 @@ func (dr *DeploymentReplication) updateCRStatus() error {
 			dr.apiObject = newAPIObject
 			return nil
 		}
-		if attempt < 10 && k8sutil.IsConflict(err) {
+		if attempt < 10 && kerrors.IsConflict(err) {
 			// API object may have been changed already,
 			// Reload api object and try again
 			var current *api.ArangoDeploymentReplication
@@ -313,7 +314,7 @@ func (dr *DeploymentReplication) updateCRSpec(newSpec api.DeploymentReplicationS
 			dr.apiObject = newAPIObject
 			return nil
 		}
-		if attempt < 10 && k8sutil.IsConflict(err) {
+		if attempt < 10 && kerrors.IsConflict(err) {
 			// API object may have been changed already,
 			// Reload api object and try again
 			var current *api.ArangoDeploymentReplication
@@ -362,12 +363,12 @@ func (dr *DeploymentReplication) reportFailedStatus() {
 	op := func() error {
 		dr.status.Phase = api.DeploymentReplicationPhaseFailed
 		err := dr.updateCRStatus()
-		if err == nil || k8sutil.IsNotFound(err) {
+		if err == nil || kerrors.IsNotFound(err) {
 			// Status has been updated
 			return nil
 		}
 
-		if !k8sutil.IsConflict(err) {
+		if !kerrors.IsConflict(err) {
 			dr.log.Err(err).Warn("retry report status: fail to update")
 			return errors.WithStack(err)
 		}
@@ -377,7 +378,7 @@ func (dr *DeploymentReplication) reportFailedStatus() {
 			// Update (PUT) will return conflict even if object is deleted since we have UID set in object.
 			// Because it will check UID first and return something like:
 			// "Precondition failed: UID in precondition: 0xc42712c0f0, UID in object meta: ".
-			if k8sutil.IsNotFound(err) {
+			if kerrors.IsNotFound(err) {
 				return nil
 			}
 			dr.log.Err(err).Warn("retry report status: fail to get latest version")

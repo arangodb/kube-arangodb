@@ -37,6 +37,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tools"
 )
 
@@ -262,7 +263,7 @@ func (r *Resources) ensurePvcsAnnotations(patch PatchFunc, cachedStatus inspecto
 func (r *Resources) ensureServiceMonitorsAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
 	i, err := cachedStatus.ServiceMonitor().V1()
 	if err != nil {
-		if k8sutil.IsForbiddenOrNotFound(err) {
+		if kerrors.IsForbiddenOrNotFound(err) {
 			return nil
 		}
 		return err

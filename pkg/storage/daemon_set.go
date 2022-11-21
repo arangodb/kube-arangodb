@@ -35,6 +35,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
 const (
@@ -127,7 +128,7 @@ func (ls *LocalStorage) ensureDaemonSet(apiObject *api.ArangoLocalStorage) error
 	ds.SetOwnerReferences(append(ds.GetOwnerReferences(), apiObject.AsOwner()))
 	// Create DS
 	if _, err := ls.deps.Client.Kubernetes().AppsV1().DaemonSets(ns).Create(context.Background(), ds, meta.CreateOptions{}); err != nil {
-		if k8sutil.IsAlreadyExists(err) {
+		if kerrors.IsAlreadyExists(err) {
 			// Already exists, update it
 		} else {
 			return errors.WithStack(err)
@@ -151,7 +152,7 @@ func (ls *LocalStorage) ensureDaemonSet(apiObject *api.ArangoLocalStorage) error
 
 		// Update it
 		current.Spec = dsSpec
-		if _, err := ls.deps.Client.Kubernetes().AppsV1().DaemonSets(ns).Update(context.Background(), current, meta.UpdateOptions{}); k8sutil.IsConflict(err) && attempt < 10 {
+		if _, err := ls.deps.Client.Kubernetes().AppsV1().DaemonSets(ns).Update(context.Background(), current, meta.UpdateOptions{}); kerrors.IsConflict(err) && attempt < 10 {
 			// Failed to update, try again
 			continue
 		} else if err != nil {

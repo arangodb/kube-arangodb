@@ -25,6 +25,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 )
 
 const (
@@ -60,7 +61,10 @@ func (a *actionArangoMemberUpdatePodStatus) Start(ctx context.Context) (bool, er
 		return true, nil
 	}
 
-	member, ok := a.actionCtx.ACS().CurrentClusterCache().ArangoMember().V1().GetSimple(m.ArangoMemberName(a.actionCtx.GetName(), a.action.Group))
+	name := m.ArangoMemberName(a.actionCtx.GetName(), a.action.Group)
+	cache := a.actionCtx.ACS().CurrentClusterCache()
+
+	member, ok := cache.ArangoMember().V1().GetSimple(name)
 	if !ok {
 		err := errors.Newf("ArangoMember not found")
 		a.log.Err(err).Error("ArangoMember not found")
@@ -79,12 +83,12 @@ func (a *actionArangoMemberUpdatePodStatus) Start(ctx context.Context) (bool, er
 	}
 
 	if member.Status.Template == nil || !member.Status.Template.Equals(member.Spec.Template) {
-		if err := a.actionCtx.WithCurrentArangoMember(member.GetName()).UpdateStatus(ctx, func(obj *api.ArangoMember, status *api.ArangoMemberStatus) bool {
-			if status.Template == nil || !status.Template.Equals(member.Spec.Template) {
-				status.Template = member.Spec.Template.DeepCopy()
-				return true
+		if err := inspector.WithArangoMemberStatusUpdate(ctx, cache, name, func(in *api.ArangoMember) (bool, error) {
+			if in.Status.Template == nil || !in.Status.Template.Equals(member.Spec.Template) {
+				in.Status.Template = member.Spec.Template.DeepCopy()
+				return true, nil
 			}
-			return false
+			return false, nil
 		}); err != nil {
 			a.log.Err(err).Error("Error while updating member")
 			return false, err

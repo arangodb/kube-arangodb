@@ -32,9 +32,10 @@ import (
 
 // PlanBuilderContext contains context methods provided to plan builders.
 type PlanBuilderContext interface {
+	reconciler.DeploymentStatusUpdate
+
 	reconciler.DeploymentInfoGetter
 	reconciler.DeploymentAgencyMaintenance
-	reconciler.ArangoMemberContext
 	reconciler.DeploymentPodRenderer
 	reconciler.DeploymentImageManager
 	reconciler.ArangoAgencyGet

@@ -29,7 +29,9 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
 )
 
 func init() {
@@ -41,8 +43,8 @@ var persistentVolumeClaimsInspectorLoaderObj = persistentVolumeClaimsInspectorLo
 type persistentVolumeClaimsInspectorLoader struct {
 }
 
-func (p persistentVolumeClaimsInspectorLoader) Component() throttle.Component {
-	return throttle.PersistentVolumeClaim
+func (p persistentVolumeClaimsInspectorLoader) Component() definitions.Component {
+	return definitions.PersistentVolumeClaim
 }
 
 func (p persistentVolumeClaimsInspectorLoader) Load(ctx context.Context, i *inspectorState) {
@@ -173,7 +175,11 @@ func (p *persistentVolumeClaimsInspector) Refresh(ctx context.Context) error {
 	return p.state.refresh(ctx, persistentVolumeClaimsInspectorLoaderObj)
 }
 
-func (p persistentVolumeClaimsInspector) Throttle(c throttle.Components) throttle.Throttle {
+func (p *persistentVolumeClaimsInspector) Version() version.Version {
+	return version.V1
+}
+
+func (p *persistentVolumeClaimsInspector) Throttle(c throttle.Components) throttle.Throttle {
 	return c.PersistentVolumeClaim()
 }
 

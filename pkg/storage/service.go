@@ -30,6 +30,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
 // ensureProvisionerService ensures that a service is created for accessing the
@@ -54,7 +55,7 @@ func (ls *LocalStorage) ensureProvisionerService(apiObject *api.ArangoLocalStora
 	}
 	svc.SetOwnerReferences(append(svc.GetOwnerReferences(), apiObject.AsOwner()))
 	ns := ls.config.Namespace
-	if _, err := ls.deps.Client.Kubernetes().CoreV1().Services(ns).Create(context.Background(), svc, meta.CreateOptions{}); err != nil && !k8sutil.IsAlreadyExists(err) {
+	if _, err := ls.deps.Client.Kubernetes().CoreV1().Services(ns).Create(context.Background(), svc, meta.CreateOptions{}); err != nil && !kerrors.IsAlreadyExists(err) {
 		return errors.WithStack(err)
 	}
 	return nil

@@ -23,6 +23,8 @@ package throttle
 import (
 	"sync"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 )
 
 type Inspector interface {
@@ -50,42 +52,6 @@ func NewThrottleComponents(acs, am, at, node, pvc, pod, pdb, secret, service, se
 	}
 }
 
-type ComponentCount map[Component]int
-
-type Component string
-
-const (
-	ArangoClusterSynchronization Component = "ArangoClusterSynchronization"
-	ArangoMember                 Component = "ArangoMember"
-	ArangoTask                   Component = "ArangoTask"
-	Node                         Component = "Node"
-	PersistentVolumeClaim        Component = "PersistentVolumeClaim"
-	Pod                          Component = "Pod"
-	PodDisruptionBudget          Component = "PodDisruptionBudget"
-	Secret                       Component = "Secret"
-	Service                      Component = "Service"
-	ServiceAccount               Component = "ServiceAccount"
-	ServiceMonitor               Component = "ServiceMonitor"
-	Endpoints                    Component = "Endpoints"
-)
-
-func AllComponents() []Component {
-	return []Component{
-		ArangoClusterSynchronization,
-		ArangoMember,
-		ArangoTask,
-		Node,
-		PersistentVolumeClaim,
-		Pod,
-		PodDisruptionBudget,
-		Secret,
-		Service,
-		ServiceAccount,
-		ServiceMonitor,
-		Endpoints,
-	}
-}
-
 type Components interface {
 	ArangoClusterSynchronization() Throttle
 	ArangoMember() Throttle
@@ -100,10 +66,10 @@ type Components interface {
 	ServiceMonitor() Throttle
 	Endpoints() Throttle
 
-	Get(c Component) Throttle
-	Invalidate(components ...Component)
+	Get(c definitions.Component) Throttle
+	Invalidate(components ...definitions.Component)
 
-	Counts() ComponentCount
+	Counts() definitions.ComponentCount
 	Copy() Components
 }
 
@@ -126,50 +92,50 @@ func (t *throttleComponents) Endpoints() Throttle {
 	return t.endpoints
 }
 
-func (t *throttleComponents) Counts() ComponentCount {
-	z := ComponentCount{}
+func (t *throttleComponents) Counts() definitions.ComponentCount {
+	z := definitions.ComponentCount{}
 
-	for _, c := range AllComponents() {
+	for _, c := range definitions.AllComponents() {
 		z[c] = t.Get(c).Count()
 	}
 
 	return z
 }
 
-func (t *throttleComponents) Invalidate(components ...Component) {
+func (t *throttleComponents) Invalidate(components ...definitions.Component) {
 	for _, c := range components {
 		t.Get(c).Invalidate()
 	}
 }
 
-func (t *throttleComponents) Get(c Component) Throttle {
+func (t *throttleComponents) Get(c definitions.Component) Throttle {
 	if t == nil {
 		return NewAlwaysThrottle()
 	}
 	switch c {
-	case ArangoClusterSynchronization:
+	case definitions.ArangoClusterSynchronization:
 		return t.arangoClusterSynchronization
-	case ArangoMember:
+	case definitions.ArangoMember:
 		return t.arangoMember
-	case ArangoTask:
+	case definitions.ArangoTask:
 		return t.arangoTask
-	case Node:
+	case definitions.Node:
 		return t.node
-	case PersistentVolumeClaim:
+	case definitions.PersistentVolumeClaim:
 		return t.persistentVolumeClaim
-	case Pod:
+	case definitions.Pod:
 		return t.pod
-	case PodDisruptionBudget:
+	case definitions.PodDisruptionBudget:
 		return t.podDisruptionBudget
-	case Secret:
+	case definitions.Secret:
 		return t.secret
-	case Service:
+	case definitions.Service:
 		return t.service
-	case ServiceAccount:
+	case definitions.ServiceAccount:
 		return t.serviceAccount
-	case ServiceMonitor:
+	case definitions.ServiceMonitor:
 		return t.serviceMonitor
-	case Endpoints:
+	case definitions.Endpoints:
 		return t.endpoints
 	default:
 		return NewAlwaysThrottle()
