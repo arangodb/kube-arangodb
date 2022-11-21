@@ -23,7 +23,6 @@ package replication
 import (
 	"context"
 	"fmt"
-	"sort"
 	"time"
 
 	"github.com/arangodb/arangosync-client/client"
@@ -107,10 +106,8 @@ func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.
 					} else {
 						if isIncomingEndpoint {
 							// Destination is correctly configured
-
 							dr.status.Conditions.Update(api.ConditionTypeConfigured, true, api.ConditionConfiguredReasonActive,
 								"Destination syncmaster is configured correctly and active")
-							dr.status.Destination = createEndpointStatus(destStatus, "")
 							dr.status.IncomingSynchronization = dr.inspectIncomingSynchronizationStatus(ctx, destClient,
 								driver.Version(destArangosyncVersion.Version), destStatus.Shards)
 							updateStatusNeeded = true
@@ -145,15 +142,10 @@ func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.
 				}
 
 				//if sourceStatus.Status.IsActive() {
-				outgoingID, hasOutgoingEndpoint, err := dr.hasOutgoingEndpoint(sourceStatus, spec.Destination, destEndpoint)
+				_, hasOutgoingEndpoint, err := dr.hasOutgoingEndpoint(sourceStatus, spec.Destination, destEndpoint)
 				if err != nil {
 					dr.log.Err(err).Warn("Failed to check has-outgoing-endpoint")
-				} else if hasOutgoingEndpoint {
-					// Destination is know in source
-					// Fetch shard status
-					dr.status.Source = createEndpointStatus(sourceStatus, outgoingID)
-					updateStatusNeeded = true
-				} else {
+				} else if !hasOutgoingEndpoint {
 					// We cannot find the destination in the source status
 					dr.log.Err(err).Info("Destination not yet known in source syncmasters")
 				}
@@ -344,72 +336,4 @@ func (dr *DeploymentReplication) createDatabaseSynchronizationStatus(dbSyncStatu
 		ShardsInSync: shardsInSync,
 		Errors:       errs,
 	}
-}
-
-// createEndpointStatus creates an api EndpointStatus from the given sync status.
-func createEndpointStatus(status client.SyncInfo, outgoingID string) api.EndpointStatus {
-	result := api.EndpointStatus{}
-	if outgoingID == "" {
-		return createEndpointStatusFromShards(status.Shards)
-	}
-	for _, o := range status.Outgoing {
-		if o.ID != outgoingID {
-			continue
-		}
-		return createEndpointStatusFromShards(o.Shards)
-	}
-
-	return result
-}
-
-// createEndpointStatusFromShards creates an api EndpointStatus from the given list of shard statuses.
-func createEndpointStatusFromShards(shards []client.ShardSyncInfo) api.EndpointStatus {
-	result := api.EndpointStatus{}
-
-	getDatabase := func(name string) *api.DatabaseStatus {
-		for i, d := range result.Databases {
-			if d.Name == name {
-				return &result.Databases[i]
-			}
-		}
-		// Not found, add it
-		result.Databases = append(result.Databases, api.DatabaseStatus{Name: name})
-		return &result.Databases[len(result.Databases)-1]
-	}
-
-	getCollection := func(db *api.DatabaseStatus, name string) *api.CollectionStatus {
-		for i, c := range db.Collections {
-			if c.Name == name {
-				return &db.Collections[i]
-			}
-		}
-		// Not found, add it
-		db.Collections = append(db.Collections, api.CollectionStatus{Name: name})
-		return &db.Collections[len(db.Collections)-1]
-	}
-
-	// Sort shard by index
-	sort.Slice(shards, func(i, j int) bool {
-		return shards[i].ShardIndex < shards[j].ShardIndex
-	})
-	for _, s := range shards {
-		db := getDatabase(s.Database)
-		col := getCollection(db, s.Collection)
-
-		// Add "missing" shards if needed
-		for len(col.Shards) < s.ShardIndex {
-			col.Shards = append(col.Shards, api.ShardStatus{Status: ""})
-		}
-
-		// Add current shard
-		col.Shards = append(col.Shards, api.ShardStatus{Status: string(s.Status)})
-	}
-
-	// Sort result
-	sort.Slice(result.Databases, func(i, j int) bool { return result.Databases[i].Name < result.Databases[j].Name })
-	for i, db := range result.Databases {
-		sort.Slice(db.Collections, func(i, j int) bool { return db.Collections[i].Name < db.Collections[j].Name })
-		result.Databases[i] = db
-	}
-	return result
 }
