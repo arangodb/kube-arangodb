@@ -21,6 +21,7 @@
 - (Feature) Force delete Pods which are stuck in init phase
 - (Bugfix) Do not tolerate False Bootstrap condition in UpToDate evaluation
 - (Improvement) Don't serialize and deprecate two DeploymentReplicationStatus fields
+- (Improvement) Add Anonymous Inspector mods
 
 ## [1.2.20](https://github.com/arangodb/kube-arangodb/tree/1.2.20) (2022-10-25)
 - (Feature) Add action progress

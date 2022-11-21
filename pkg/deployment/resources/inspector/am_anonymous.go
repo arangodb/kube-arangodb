@@ -35,7 +35,7 @@ func (p *arangoMembersInspector) Anonymous(gvk schema.GroupVersionKind) (anonymo
 			if p.v1 == nil || p.v1.err != nil {
 				return nil, false
 			}
-			return &arangoMembersInspectorAnonymousV1{i: p.v1}, true
+			return &arangoMembersInspectorAnonymousV1{i: p.state}, true
 		}
 	}
 

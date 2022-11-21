@@ -35,12 +35,12 @@ func (p *podDisruptionBudgetsInspector) Anonymous(gvk schema.GroupVersionKind) (
 			if p.v1 == nil || p.v1.err != nil {
 				return nil, false
 			}
-			return &podDisruptionBudgetsInspectorAnonymousV1{i: p.v1}, true
+			return &podDisruptionBudgetsInspectorAnonymousV1{i: p.state}, true
 		case PodDisruptionBudgetVersionV1Beta1:
 			if p.v1beta1 == nil || p.v1beta1.err != nil {
 				return nil, false
 			}
-			return &podDisruptionBudgetsInspectorAnonymousV1Beta1{i: p.v1beta1}, true
+			return &podDisruptionBudgetsInspectorAnonymousV1Beta1{i: p.state}, true
 		}
 	}
 

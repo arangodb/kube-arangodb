@@ -23,13 +23,43 @@ package inspector
 import (
 	"context"
 
+	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 type secretsInspectorAnonymousV1 struct {
-	i *secretsInspectorV1
+	i *inspectorState
 }
 
 func (e *secretsInspectorAnonymousV1) Get(ctx context.Context, name string, opts meta.GetOptions) (meta.Object, error) {
-	return e.i.Get(ctx, name, opts)
+	return e.i.secrets.v1.Get(ctx, name, opts)
+}
+
+func (e *secretsInspectorAnonymousV1) Create(ctx context.Context, obj meta.Object, opts meta.CreateOptions) (meta.Object, error) {
+	if o, ok := obj.(*core.Secret); !ok {
+		return nil, newInvalidTypeError(SecretGKv1())
+	} else {
+		return e.i.SecretsModInterface().V1().Create(ctx, o, opts)
+	}
+}
+
+func (e *secretsInspectorAnonymousV1) Update(ctx context.Context, obj meta.Object, opts meta.UpdateOptions) (meta.Object, error) {
+	if o, ok := obj.(*core.Secret); !ok {
+		return nil, newInvalidTypeError(SecretGKv1())
+	} else {
+		return e.i.SecretsModInterface().V1().Update(ctx, o, opts)
+	}
+}
+
+func (e *secretsInspectorAnonymousV1) UpdateStatus(ctx context.Context, obj meta.Object, opts meta.UpdateOptions) (meta.Object, error) {
+	return nil, newNotImplementedError(SecretGKv1())
+}
+
+func (e *secretsInspectorAnonymousV1) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts meta.PatchOptions, subresources ...string) (result meta.Object, err error) {
+	return e.i.SecretsModInterface().V1().Patch(ctx, name, pt, data, opts, subresources...)
+}
+
+func (e *secretsInspectorAnonymousV1) Delete(ctx context.Context, name string, opts meta.DeleteOptions) error {
+	return e.i.SecretsModInterface().V1().Delete(ctx, name, opts)
 }

@@ -23,13 +23,43 @@ package inspector
 import (
 	"context"
 
+	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 type persistentVolumeClaimsInspectorAnonymousV1 struct {
-	i *persistentVolumeClaimsInspectorV1
+	i *inspectorState
 }
 
 func (e *persistentVolumeClaimsInspectorAnonymousV1) Get(ctx context.Context, name string, opts meta.GetOptions) (meta.Object, error) {
-	return e.i.Get(ctx, name, opts)
+	return e.i.persistentVolumeClaims.v1.Get(ctx, name, opts)
+}
+
+func (e *persistentVolumeClaimsInspectorAnonymousV1) Create(ctx context.Context, obj meta.Object, opts meta.CreateOptions) (meta.Object, error) {
+	if o, ok := obj.(*core.PersistentVolumeClaim); !ok {
+		return nil, newInvalidTypeError(PersistentVolumeClaimGKv1())
+	} else {
+		return e.i.PersistentVolumeClaimsModInterface().V1().Create(ctx, o, opts)
+	}
+}
+
+func (e *persistentVolumeClaimsInspectorAnonymousV1) Update(ctx context.Context, obj meta.Object, opts meta.UpdateOptions) (meta.Object, error) {
+	if o, ok := obj.(*core.PersistentVolumeClaim); !ok {
+		return nil, newInvalidTypeError(PersistentVolumeClaimGKv1())
+	} else {
+		return e.i.PersistentVolumeClaimsModInterface().V1().Update(ctx, o, opts)
+	}
+}
+
+func (e *persistentVolumeClaimsInspectorAnonymousV1) UpdateStatus(ctx context.Context, obj meta.Object, opts meta.UpdateOptions) (meta.Object, error) {
+	return nil, newNotImplementedError(PersistentVolumeClaimGKv1())
+}
+
+func (e *persistentVolumeClaimsInspectorAnonymousV1) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts meta.PatchOptions, subresources ...string) (result meta.Object, err error) {
+	return e.i.PersistentVolumeClaimsModInterface().V1().Patch(ctx, name, pt, data, opts, subresources...)
+}
+
+func (e *persistentVolumeClaimsInspectorAnonymousV1) Delete(ctx context.Context, name string, opts meta.DeleteOptions) error {
+	return e.i.PersistentVolumeClaimsModInterface().V1().Delete(ctx, name, opts)
 }
