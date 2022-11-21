@@ -21,6 +21,7 @@
 package v1
 
 // CollectionStatus contains the status of a single collection.
+// Deprecated
 type CollectionStatus struct {
 	// Name of the collection
 	Name string `json:"name"`
