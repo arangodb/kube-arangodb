@@ -31,8 +31,11 @@ type DeploymentReplicationStatus struct {
 	// Conditions specific to the entire deployment replication
 	Conditions ConditionList `json:"conditions,omitempty"`
 
+	// Deprecated: this field will be removed in future versions
 	// Source contains the detailed status of the source endpoint
 	Source EndpointStatus `json:"source"`
+
+	// Deprecated: this field will be removed in future versions
 	// Destination contains the detailed status of the destination endpoint
 	Destination EndpointStatus `json:"destination"`
 
