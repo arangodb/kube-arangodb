@@ -52,10 +52,9 @@ func (a *actionLicenseSet) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	l, ok := k8sutil.GetLicenseFromSecret(a.actionCtx.ACS().CurrentClusterCache(), spec.License.GetSecretName())
-
-	if !ok {
-		return true, nil
+	l, err := k8sutil.GetLicenseFromSecret(a.actionCtx.ACS().CurrentClusterCache(), spec.License.GetSecretName())
+	if err != nil {
+		return true, err
 	}
 
 	if !l.V2.IsV2Set() {
