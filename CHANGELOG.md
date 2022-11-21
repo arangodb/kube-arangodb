@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.2.20-2](https://github.com/arangodb/kube-arangodb/tree/1.2.20-2) (2022-11-22)
 - (Feature) Force delete Pods which are stuck in init phase
 - (Bugfix) Do not tolerate False Bootstrap condition in UpToDate evaluation
 
