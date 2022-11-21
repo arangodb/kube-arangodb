@@ -21,6 +21,7 @@
 package v2alpha1
 
 // EndpointStatus contains the status of either the source or destination endpoint.
+// Deprecated
 type EndpointStatus struct {
 	// Databases holds the replication status of all databases from the point of view of this endpoint.
 	// List is ordered by name of the database.
