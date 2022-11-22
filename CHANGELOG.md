@@ -6,6 +6,7 @@
 
 ## [1.2.20-1](https://github.com/arangodb/kube-arangodb/tree/1.2.20-1) (2022-11-09)
 - (Feature) Create Internal Actions and move RebalancerGenerator
+- (Bugfix) Check ArangoSync availability without checking healthiness
 
 ## [1.2.20](https://github.com/arangodb/kube-arangodb/tree/1.2.20) (2022-10-25)
 - (Feature) Add action progress
