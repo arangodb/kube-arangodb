@@ -35,7 +35,7 @@ func (p *secretsInspector) Anonymous(gvk schema.GroupVersionKind) (anonymous.Int
 			if p.v1 == nil || p.v1.err != nil {
 				return nil, false
 			}
-			return &secretsInspectorAnonymousV1{i: p.v1}, true
+			return &secretsInspectorAnonymousV1{i: p.state}, true
 		}
 	}
 
