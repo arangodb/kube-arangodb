@@ -35,7 +35,7 @@ func (p *podsInspector) Anonymous(gvk schema.GroupVersionKind) (anonymous.Interf
 			if p.v1 == nil || p.v1.err != nil {
 				return nil, false
 			}
-			return &podsInspectorAnonymousV1{i: p.v1}, true
+			return &podsInspectorAnonymousV1{i: p.state}, true
 		}
 	}
 

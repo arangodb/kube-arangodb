@@ -21,23 +21,31 @@
 package inspector
 
 import (
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"fmt"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-func (p *endpointsInspector) Anonymous(gvk schema.GroupVersionKind) (anonymous.Interface, bool) {
-	g := EndpointsGK()
+func newNotImplementedError(gvk schema.GroupVersionKind) error {
+	return notImplementedError{gvk: gvk}
+}
 
-	if g.Kind == gvk.Kind && g.Group == gvk.Group {
-		switch gvk.Version {
-		case EndpointsVersionV1, DefaultVersion:
-			if p.v1 == nil || p.v1.err != nil {
-				return nil, false
-			}
-			return &endpointsInspectorAnonymousV1{i: p.state}, true
-		}
-	}
+type notImplementedError struct {
+	gvk schema.GroupVersionKind
+}
 
-	return nil, false
+func (n notImplementedError) Error() string {
+	return fmt.Sprintf("Action is not implemented for %s", n.gvk.String())
+}
+
+func newInvalidTypeError(gvk schema.GroupVersionKind) error {
+	return invalidTypeError{gvk: gvk}
+}
+
+type invalidTypeError struct {
+	gvk schema.GroupVersionKind
+}
+
+func (n invalidTypeError) Error() string {
+	return fmt.Sprintf("Type is invalid for %s", n.gvk.String())
 }
