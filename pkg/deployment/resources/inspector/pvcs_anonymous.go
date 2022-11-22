@@ -35,7 +35,7 @@ func (p *persistentVolumeClaimsInspector) Anonymous(gvk schema.GroupVersionKind)
 			if p.v1 == nil || p.v1.err != nil {
 				return nil, false
 			}
-			return &persistentVolumeClaimsInspectorAnonymousV1{i: p.v1}, true
+			return &persistentVolumeClaimsInspectorAnonymousV1{i: p.state}, true
 		}
 	}
 

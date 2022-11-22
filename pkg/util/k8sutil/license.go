@@ -26,6 +26,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
 )
 
@@ -44,10 +45,10 @@ type LicenseSecret struct {
 	V2 License
 }
 
-func GetLicenseFromSecret(secret secret.Inspector, name string) (LicenseSecret, bool) {
+func GetLicenseFromSecret(secret secret.Inspector, name string) (LicenseSecret, error) {
 	s, ok := secret.Secret().V1().GetSimple(name)
 	if !ok {
-		return LicenseSecret{}, false
+		return LicenseSecret{}, errors.Newf("Secret %s not found", name)
 	}
 
 	var l LicenseSecret
@@ -70,9 +71,12 @@ func GetLicenseFromSecret(secret secret.Inspector, name string) (LicenseSecret, 
 		} else {
 			l.V2 = License(v2)
 		}
+	} else {
+		return LicenseSecret{}, errors.Newf("Key (%s, %s or %s) is missing in the license secret (%s)",
+			constants.SecretKeyToken, constants.SecretKeyV2License, constants.SecretKeyV2Token, name)
 	}
 
-	return l, true
+	return l, nil
 }
 
 func isJSONBytes(s []byte) bool {

@@ -21,6 +21,7 @@
 package v1
 
 // ShardStatus contains the status of a single shard.
+// Deprecated
 type ShardStatus struct {
 	Status string `json:"status"`
 }

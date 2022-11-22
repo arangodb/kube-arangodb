@@ -25,6 +25,7 @@ import (
 
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 type Impl interface {
@@ -33,4 +34,10 @@ type Impl interface {
 
 type Interface interface {
 	Get(ctx context.Context, name string, opts meta.GetOptions) (meta.Object, error)
+
+	Create(ctx context.Context, obj meta.Object, opts meta.CreateOptions) (meta.Object, error)
+	Update(ctx context.Context, obj meta.Object, opts meta.UpdateOptions) (meta.Object, error)
+	UpdateStatus(ctx context.Context, obj meta.Object, opts meta.UpdateOptions) (meta.Object, error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts meta.PatchOptions, subresources ...string) (result meta.Object, err error)
+	Delete(ctx context.Context, name string, opts meta.DeleteOptions) error
 }

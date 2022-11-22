@@ -23,15 +23,12 @@ package replication
 import (
 	"context"
 	"fmt"
-	"sort"
+	"strconv"
 	"time"
 
 	"github.com/arangodb/arangosync-client/client"
-	"github.com/arangodb/arangosync-client/client/synccheck"
-	"github.com/arangodb/go-driver"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -69,7 +66,6 @@ func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.
 			}
 			timeout := CancellationTimeout + AbortTimeout
 			if isTimeExceeded(timestamp, timeout) {
-				// Cancellation and abort timeout exceeded, so it must go into failed state.
 				dr.failOnError(err, fmt.Sprintf("Failed to cancel synchronization in %s", timeout.String()))
 			}
 		}
@@ -81,12 +77,6 @@ func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.
 		if err != nil {
 			dr.log.Err(err).Warn("Failed to create destination syncmaster client")
 		} else {
-			destArangosyncVersion, err := destClient.Version(ctx)
-			if err != nil {
-				dr.log.Err(err).Warn("Failed to get destination arangosync version")
-				hasError = true
-			}
-
 			// Fetch status of destination
 			updateStatusNeeded := false
 			configureSyncNeeded := false
@@ -107,12 +97,9 @@ func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.
 					} else {
 						if isIncomingEndpoint {
 							// Destination is correctly configured
-
 							dr.status.Conditions.Update(api.ConditionTypeConfigured, true, api.ConditionConfiguredReasonActive,
 								"Destination syncmaster is configured correctly and active")
-							dr.status.Destination = createEndpointStatus(destStatus, "")
-							dr.status.IncomingSynchronization = dr.inspectIncomingSynchronizationStatus(ctx, destClient,
-								driver.Version(destArangosyncVersion.Version), destStatus.Shards)
+							dr.status.IncomingSynchronization = dr.inspectIncomingSynchronizationStatus(destStatus)
 							updateStatusNeeded = true
 						} else {
 							// Sync is active, but from different source
@@ -145,15 +132,10 @@ func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.
 				}
 
 				//if sourceStatus.Status.IsActive() {
-				outgoingID, hasOutgoingEndpoint, err := dr.hasOutgoingEndpoint(sourceStatus, spec.Destination, destEndpoint)
+				_, hasOutgoingEndpoint, err := dr.hasOutgoingEndpoint(sourceStatus, spec.Destination, destEndpoint)
 				if err != nil {
 					dr.log.Err(err).Warn("Failed to check has-outgoing-endpoint")
-				} else if hasOutgoingEndpoint {
-					// Destination is know in source
-					// Fetch shard status
-					dr.status.Source = createEndpointStatus(sourceStatus, outgoingID)
-					updateStatusNeeded = true
-				} else {
+				} else if !hasOutgoingEndpoint {
 					// We cannot find the destination in the source status
 					dr.log.Err(err).Info("Destination not yet known in source syncmasters")
 				}
@@ -257,159 +239,28 @@ func (dr *DeploymentReplication) hasOutgoingEndpoint(status client.SyncInfo, epS
 }
 
 // inspectIncomingSynchronizationStatus returns the synchronization status for the incoming sync
-func (dr *DeploymentReplication) inspectIncomingSynchronizationStatus(ctx context.Context, syncClient client.API, arangosyncVersion driver.Version, localShards []client.ShardSyncInfo) api.SynchronizationStatus {
-	dataCentersResp, err := syncClient.Master().GetDataCentersInfo(ctx)
-	if err != nil {
-		errMsg := "Failed to fetch data-centers info"
-		dr.log.Err(err).Warn(errMsg)
-		return api.SynchronizationStatus{
-			Error: fmt.Sprintf("%s: %s", errMsg, err.Error()),
+func (dr *DeploymentReplication) inspectIncomingSynchronizationStatus(destStatus client.SyncInfo) api.SynchronizationStatus {
+	const maxReportedIncomingSyncErrorsPerDatabase = 10
+
+	dbs := make(map[string]api.DatabaseSynchronizationStatus, 0)
+	for _, s := range destStatus.Shards {
+		db := dbs[s.Database]
+		db.ShardsTotal++
+		if s.Status == client.SyncStatusRunning {
+			db.ShardsInSync++
+		} else if s.Status == client.SyncStatusFailed && len(db.Errors) < maxReportedIncomingSyncErrorsPerDatabase {
+			db.Errors = append(db.Errors, api.DatabaseSynchronizationError{
+				Collection: s.Collection,
+				Shard:      strconv.Itoa(s.ShardIndex),
+				Message:    fmt.Sprintf("shard sync failed: %s", s.StatusMessage),
+			})
 		}
+		dbs[s.Database] = db
 	}
 
-	ch := synccheck.NewSynchronizationChecker(syncClient, time.Minute)
-	incomingSyncStatus, err := ch.CheckSync(ctx, &dataCentersResp, localShards)
-	if err != nil {
-		errMsg := "Failed to check synchronization status"
-		dr.log.Err(err).Warn(errMsg)
-		return api.SynchronizationStatus{
-			Error: fmt.Sprintf("%s: %s", errMsg, err.Error()),
-		}
-	}
-	return dr.createSynchronizationStatus(arangosyncVersion, incomingSyncStatus)
-}
-
-// createSynchronizationStatus returns aggregated info about DCSyncStatus
-func (dr *DeploymentReplication) createSynchronizationStatus(arangosyncVersion driver.Version, dcSyncStatus *synccheck.DCSyncStatus) api.SynchronizationStatus {
-	dbs := make(map[string]api.DatabaseSynchronizationStatus, len(dcSyncStatus.Databases))
-	i := 0
-	for dbName, dbSyncStatus := range dcSyncStatus.Databases {
-		i++
-		db := dbName
-		if features.SensitiveInformationProtection().Enabled() {
-			// internal IDs are not available in older versions
-			if arangosyncVersion.CompareTo("2.12.0") >= 0 {
-				db = dbSyncStatus.ID
-			} else {
-				db = fmt.Sprintf("<PROTECTED_INFO_%d>", i)
-			}
-		}
-		dbs[db] = dr.createDatabaseSynchronizationStatus(dbSyncStatus)
-	}
 	return api.SynchronizationStatus{
-		AllInSync: dcSyncStatus.AllInSync(),
+		AllInSync: destStatus.Status == client.SyncStatusRunning,
 		Databases: dbs,
 		Error:     "",
 	}
-}
-
-// createDatabaseSynchronizationStatus returns sync status for DB
-func (dr *DeploymentReplication) createDatabaseSynchronizationStatus(dbSyncStatus synccheck.DatabaseSyncStatus) api.DatabaseSynchronizationStatus {
-	// use limit for errors because the resulting status object should not be too big
-	const maxReportedIncomingSyncErrors = 20
-
-	var errs []api.DatabaseSynchronizationError
-	var shardsTotal, shardsInSync int
-	var errorsReportedToLog = 0
-	for colName, colSyncStatus := range dbSyncStatus.Collections {
-		if colSyncStatus.Error != "" && len(errs) < maxReportedIncomingSyncErrors {
-			col := colName
-			if features.SensitiveInformationProtection().Enabled() {
-				col = colSyncStatus.ID
-			}
-
-			errs = append(errs, api.DatabaseSynchronizationError{
-				Collection: col,
-				Shard:      "",
-				Message:    colSyncStatus.Error,
-			})
-		}
-
-		shardsTotal += len(colSyncStatus.Shards)
-		for shardIndex, shardSyncStatus := range colSyncStatus.Shards {
-			if shardSyncStatus.InSync {
-				shardsInSync++
-			} else if errorsReportedToLog < maxReportedIncomingSyncErrors {
-				dr.log.Str("db", dbSyncStatus.ID).
-					Str("col", colSyncStatus.ID).
-					Int("shard", shardIndex).
-					Debug("incoming synchronization shard status is not in-sync: %s", shardSyncStatus.Message)
-				errorsReportedToLog++
-			}
-		}
-	}
-
-	return api.DatabaseSynchronizationStatus{
-		ShardsTotal:  shardsTotal,
-		ShardsInSync: shardsInSync,
-		Errors:       errs,
-	}
-}
-
-// createEndpointStatus creates an api EndpointStatus from the given sync status.
-func createEndpointStatus(status client.SyncInfo, outgoingID string) api.EndpointStatus {
-	result := api.EndpointStatus{}
-	if outgoingID == "" {
-		return createEndpointStatusFromShards(status.Shards)
-	}
-	for _, o := range status.Outgoing {
-		if o.ID != outgoingID {
-			continue
-		}
-		return createEndpointStatusFromShards(o.Shards)
-	}
-
-	return result
-}
-
-// createEndpointStatusFromShards creates an api EndpointStatus from the given list of shard statuses.
-func createEndpointStatusFromShards(shards []client.ShardSyncInfo) api.EndpointStatus {
-	result := api.EndpointStatus{}
-
-	getDatabase := func(name string) *api.DatabaseStatus {
-		for i, d := range result.Databases {
-			if d.Name == name {
-				return &result.Databases[i]
-			}
-		}
-		// Not found, add it
-		result.Databases = append(result.Databases, api.DatabaseStatus{Name: name})
-		return &result.Databases[len(result.Databases)-1]
-	}
-
-	getCollection := func(db *api.DatabaseStatus, name string) *api.CollectionStatus {
-		for i, c := range db.Collections {
-			if c.Name == name {
-				return &db.Collections[i]
-			}
-		}
-		// Not found, add it
-		db.Collections = append(db.Collections, api.CollectionStatus{Name: name})
-		return &db.Collections[len(db.Collections)-1]
-	}
-
-	// Sort shard by index
-	sort.Slice(shards, func(i, j int) bool {
-		return shards[i].ShardIndex < shards[j].ShardIndex
-	})
-	for _, s := range shards {
-		db := getDatabase(s.Database)
-		col := getCollection(db, s.Collection)
-
-		// Add "missing" shards if needed
-		for len(col.Shards) < s.ShardIndex {
-			col.Shards = append(col.Shards, api.ShardStatus{Status: ""})
-		}
-
-		// Add current shard
-		col.Shards = append(col.Shards, api.ShardStatus{Status: string(s.Status)})
-	}
-
-	// Sort result
-	sort.Slice(result.Databases, func(i, j int) bool { return result.Databases[i].Name < result.Databases[j].Name })
-	for i, db := range result.Databases {
-		sort.Slice(db.Collections, func(i, j int) bool { return db.Collections[i].Name < db.Collections[j].Name })
-		result.Databases[i] = db
-	}
-	return result
 }

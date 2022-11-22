@@ -35,7 +35,7 @@ func (p *serviceMonitorsInspector) Anonymous(gvk schema.GroupVersionKind) (anony
 			if p.v1 == nil || p.v1.err != nil {
 				return nil, false
 			}
-			return &serviceMonitorsInspectorAnonymousV1{i: p.v1}, true
+			return &serviceMonitorsInspectorAnonymousV1{i: p.state}, true
 		}
 	}
 

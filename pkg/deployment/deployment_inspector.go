@@ -273,11 +273,6 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 		return minInspectionInterval, errors.Wrapf(err, "Secret hash validation failed")
 	}
 
-	// Check for LicenseKeySecret
-	if err := d.resources.ValidateLicenseKeySecret(d.GetCachedStatus()); err != nil {
-		return minInspectionInterval, errors.Wrapf(err, "License Key Secret invalid")
-	}
-
 	// Is the deployment in a good state?
 	if status.Conditions.IsTrue(api.ConditionTypeSecretsChanged) {
 		return minInspectionInterval, errors.Newf("Secrets changed")
