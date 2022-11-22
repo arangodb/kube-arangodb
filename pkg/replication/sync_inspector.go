@@ -66,7 +66,6 @@ func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.
 			}
 			timeout := CancellationTimeout + AbortTimeout
 			if isTimeExceeded(timestamp, timeout) {
-				// Cancellation and abort timeout exceeded, so it must go into failed state.
 				dr.failOnError(err, fmt.Sprintf("Failed to cancel synchronization in %s", timeout.String()))
 			}
 		}
@@ -264,6 +263,4 @@ func (dr *DeploymentReplication) inspectIncomingSynchronizationStatus(destStatus
 		Databases: dbs,
 		Error:     "",
 	}
-}
-
 }
