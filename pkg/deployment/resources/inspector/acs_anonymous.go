@@ -24,14 +24,15 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 )
 
 func (p *arangoClusterSynchronizationsInspector) Anonymous(gvk schema.GroupVersionKind) (anonymous.Interface, bool) {
-	g := ArangoClusterSynchronizationGK()
+	g := constants.ArangoClusterSynchronizationGK()
 
 	if g.Kind == gvk.Kind && g.Group == gvk.Group {
 		switch gvk.Version {
-		case ArangoClusterSynchronizationVersionV1, DefaultVersion:
+		case constants.ArangoClusterSynchronizationVersionV1, DefaultVersion:
 			if p.v1 == nil || p.v1.err != nil {
 				return nil, false
 			}

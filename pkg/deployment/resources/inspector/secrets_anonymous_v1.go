@@ -26,6 +26,8 @@ import (
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 )
 
 type secretsInspectorAnonymousV1 struct {
@@ -38,7 +40,7 @@ func (e *secretsInspectorAnonymousV1) Get(ctx context.Context, name string, opts
 
 func (e *secretsInspectorAnonymousV1) Create(ctx context.Context, obj meta.Object, opts meta.CreateOptions) (meta.Object, error) {
 	if o, ok := obj.(*core.Secret); !ok {
-		return nil, newInvalidTypeError(SecretGKv1())
+		return nil, newInvalidTypeError(constants.SecretGKv1())
 	} else {
 		return e.i.SecretsModInterface().V1().Create(ctx, o, opts)
 	}
@@ -46,14 +48,14 @@ func (e *secretsInspectorAnonymousV1) Create(ctx context.Context, obj meta.Objec
 
 func (e *secretsInspectorAnonymousV1) Update(ctx context.Context, obj meta.Object, opts meta.UpdateOptions) (meta.Object, error) {
 	if o, ok := obj.(*core.Secret); !ok {
-		return nil, newInvalidTypeError(SecretGKv1())
+		return nil, newInvalidTypeError(constants.SecretGKv1())
 	} else {
 		return e.i.SecretsModInterface().V1().Update(ctx, o, opts)
 	}
 }
 
 func (e *secretsInspectorAnonymousV1) UpdateStatus(ctx context.Context, obj meta.Object, opts meta.UpdateOptions) (meta.Object, error) {
-	return nil, newNotImplementedError(SecretGKv1())
+	return nil, newNotImplementedError(constants.SecretGKv1())
 }
 
 func (e *secretsInspectorAnonymousV1) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts meta.PatchOptions, subresources ...string) (result meta.Object, err error) {

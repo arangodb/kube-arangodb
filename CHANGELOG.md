@@ -27,6 +27,7 @@
 - (Improvement) Add Anonymous Inspector mods
 - (Improvement) Do not check checksums for DeploymentReplicationStatus.IncomingSynchronization field values
 - (Improvement) Add ServerGroup details into ServerGroupSpec
+- (Improvement) Add Resource kerror Type
 
 ## [1.2.20](https://github.com/arangodb/kube-arangodb/tree/1.2.20) (2022-10-25)
 - (Feature) Add action progress

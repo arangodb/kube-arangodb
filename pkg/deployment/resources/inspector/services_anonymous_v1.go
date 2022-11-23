@@ -26,6 +26,8 @@ import (
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 )
 
 type servicesInspectorAnonymousV1 struct {
@@ -38,7 +40,7 @@ func (e *servicesInspectorAnonymousV1) Get(ctx context.Context, name string, opt
 
 func (e *servicesInspectorAnonymousV1) Create(ctx context.Context, obj meta.Object, opts meta.CreateOptions) (meta.Object, error) {
 	if o, ok := obj.(*core.Service); !ok {
-		return nil, newInvalidTypeError(ServiceGKv1())
+		return nil, newInvalidTypeError(constants.ServiceGKv1())
 	} else {
 		return e.i.ServicesModInterface().V1().Create(ctx, o, opts)
 	}
@@ -46,14 +48,14 @@ func (e *servicesInspectorAnonymousV1) Create(ctx context.Context, obj meta.Obje
 
 func (e *servicesInspectorAnonymousV1) Update(ctx context.Context, obj meta.Object, opts meta.UpdateOptions) (meta.Object, error) {
 	if o, ok := obj.(*core.Service); !ok {
-		return nil, newInvalidTypeError(ServiceGKv1())
+		return nil, newInvalidTypeError(constants.ServiceGKv1())
 	} else {
 		return e.i.ServicesModInterface().V1().Update(ctx, o, opts)
 	}
 }
 
 func (e *servicesInspectorAnonymousV1) UpdateStatus(ctx context.Context, obj meta.Object, opts meta.UpdateOptions) (meta.Object, error) {
-	return nil, newNotImplementedError(ServiceGKv1())
+	return nil, newNotImplementedError(constants.ServiceGKv1())
 }
 
 func (e *servicesInspectorAnonymousV1) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts meta.PatchOptions, subresources ...string) (result meta.Object, err error) {

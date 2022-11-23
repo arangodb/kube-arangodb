@@ -21,60 +21,23 @@
 package inspector
 
 import (
-	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 )
-
-// ServiceMonitor
-const (
-	ServiceMonitorGroup     = monitoring.GroupName
-	ServiceMonitorResource  = "servicemonitors"
-	ServiceMonitorKind      = "ServiceMonitor"
-	ServiceMonitorVersionV1 = "v1"
-)
-
-func ServiceMonitorGK() schema.GroupKind {
-	return schema.GroupKind{
-		Group: ServiceMonitorGroup,
-		Kind:  ServiceMonitorKind,
-	}
-}
-
-func ServiceMonitorGKv1() schema.GroupVersionKind {
-	return schema.GroupVersionKind{
-		Group:   ServiceMonitorGroup,
-		Kind:    ServiceMonitorKind,
-		Version: ServiceMonitorVersionV1,
-	}
-}
-
-func ServiceMonitorGR() schema.GroupResource {
-	return schema.GroupResource{
-		Group:    ServiceMonitorGroup,
-		Resource: ServiceMonitorResource,
-	}
-}
-
-func ServiceMonitorGRv1() schema.GroupVersionResource {
-	return schema.GroupVersionResource{
-		Group:    ServiceMonitorGroup,
-		Resource: ServiceMonitorResource,
-		Version:  ServiceMonitorVersionV1,
-	}
-}
 
 func (p *serviceMonitorsInspectorV1) GroupVersionKind() schema.GroupVersionKind {
-	return ServiceMonitorGKv1()
+	return constants.ServiceMonitorGKv1()
 }
 
 func (p *serviceMonitorsInspectorV1) GroupVersionResource() schema.GroupVersionResource {
-	return ServiceMonitorGRv1()
+	return constants.ServiceMonitorGRv1()
 }
 
 func (p *serviceMonitorsInspector) GroupKind() schema.GroupKind {
-	return ServiceMonitorGK()
+	return constants.ServiceMonitorGK()
 }
 
 func (p *serviceMonitorsInspector) GroupResource() schema.GroupResource {
-	return ServiceMonitorGR()
+	return constants.ServiceMonitorGR()
 }

@@ -18,27 +18,47 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package inspector
+package constants
 
 import (
+	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 )
 
-func (p *podsInspector) Anonymous(gvk schema.GroupVersionKind) (anonymous.Interface, bool) {
-	g := constants.PodGK()
+// Node
+const (
+	NodeGroup     = core.GroupName
+	NodeResource  = "nodes"
+	NodeKind      = "Node"
+	NodeVersionV1 = "v1"
+)
 
-	if g.Kind == gvk.Kind && g.Group == gvk.Group {
-		switch gvk.Version {
-		case constants.PodVersionV1, DefaultVersion:
-			if p.v1 == nil || p.v1.err != nil {
-				return nil, false
-			}
-			return &podsInspectorAnonymousV1{i: p.state}, true
-		}
+func NodeGK() schema.GroupKind {
+	return schema.GroupKind{
+		Group: NodeGroup,
+		Kind:  NodeKind,
 	}
+}
 
-	return nil, false
+func NodeGKv1() schema.GroupVersionKind {
+	return schema.GroupVersionKind{
+		Group:   NodeGroup,
+		Kind:    NodeKind,
+		Version: NodeVersionV1,
+	}
+}
+
+func NodeGR() schema.GroupResource {
+	return schema.GroupResource{
+		Group:    NodeGroup,
+		Resource: NodeResource,
+	}
+}
+
+func NodeGRv1() schema.GroupVersionResource {
+	return schema.GroupVersionResource{
+		Group:    NodeGroup,
+		Resource: NodeResource,
+		Version:  NodeVersionV1,
+	}
 }
