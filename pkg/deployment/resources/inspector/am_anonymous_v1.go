@@ -27,6 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 )
 
 type arangoMembersInspectorAnonymousV1 struct {
@@ -39,7 +40,7 @@ func (e *arangoMembersInspectorAnonymousV1) Get(ctx context.Context, name string
 
 func (e *arangoMembersInspectorAnonymousV1) Create(ctx context.Context, obj meta.Object, opts meta.CreateOptions) (meta.Object, error) {
 	if o, ok := obj.(*api.ArangoMember); !ok {
-		return nil, newInvalidTypeError(ArangoMemberGKv1())
+		return nil, newInvalidTypeError(constants.ArangoMemberGKv1())
 	} else {
 		return e.i.ArangoMemberModInterface().V1().Create(ctx, o, opts)
 	}
@@ -47,7 +48,7 @@ func (e *arangoMembersInspectorAnonymousV1) Create(ctx context.Context, obj meta
 
 func (e *arangoMembersInspectorAnonymousV1) Update(ctx context.Context, obj meta.Object, opts meta.UpdateOptions) (meta.Object, error) {
 	if o, ok := obj.(*api.ArangoMember); !ok {
-		return nil, newInvalidTypeError(ArangoMemberGKv1())
+		return nil, newInvalidTypeError(constants.ArangoMemberGKv1())
 	} else {
 		return e.i.ArangoMemberModInterface().V1().Update(ctx, o, opts)
 	}
@@ -55,7 +56,7 @@ func (e *arangoMembersInspectorAnonymousV1) Update(ctx context.Context, obj meta
 
 func (e *arangoMembersInspectorAnonymousV1) UpdateStatus(ctx context.Context, obj meta.Object, opts meta.UpdateOptions) (meta.Object, error) {
 	if o, ok := obj.(*api.ArangoMember); !ok {
-		return nil, newInvalidTypeError(ArangoMemberGKv1())
+		return nil, newInvalidTypeError(constants.ArangoMemberGKv1())
 	} else {
 		return e.i.ArangoMemberModInterface().V1().UpdateStatus(ctx, o, opts)
 	}

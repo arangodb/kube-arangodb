@@ -26,6 +26,8 @@ import (
 	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 )
 
 type serviceMonitorsInspectorAnonymousV1 struct {
@@ -38,7 +40,7 @@ func (e *serviceMonitorsInspectorAnonymousV1) Get(ctx context.Context, name stri
 
 func (e *serviceMonitorsInspectorAnonymousV1) Create(ctx context.Context, obj meta.Object, opts meta.CreateOptions) (meta.Object, error) {
 	if o, ok := obj.(*monitoring.ServiceMonitor); !ok {
-		return nil, newInvalidTypeError(ServiceMonitorGKv1())
+		return nil, newInvalidTypeError(constants.ServiceMonitorGKv1())
 	} else {
 		return e.i.ServiceMonitorsModInterface().V1().Create(ctx, o, opts)
 	}
@@ -46,14 +48,14 @@ func (e *serviceMonitorsInspectorAnonymousV1) Create(ctx context.Context, obj me
 
 func (e *serviceMonitorsInspectorAnonymousV1) Update(ctx context.Context, obj meta.Object, opts meta.UpdateOptions) (meta.Object, error) {
 	if o, ok := obj.(*monitoring.ServiceMonitor); !ok {
-		return nil, newInvalidTypeError(ServiceMonitorGKv1())
+		return nil, newInvalidTypeError(constants.ServiceMonitorGKv1())
 	} else {
 		return e.i.ServiceMonitorsModInterface().V1().Update(ctx, o, opts)
 	}
 }
 
 func (e *serviceMonitorsInspectorAnonymousV1) UpdateStatus(ctx context.Context, obj meta.Object, opts meta.UpdateOptions) (meta.Object, error) {
-	return nil, newNotImplementedError(ServiceMonitorGKv1())
+	return nil, newNotImplementedError(constants.ServiceMonitorGKv1())
 }
 
 func (e *serviceMonitorsInspectorAnonymousV1) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts meta.PatchOptions, subresources ...string) (result meta.Object, err error) {

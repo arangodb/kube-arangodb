@@ -18,7 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package inspector
+package constants
 
 import (
 	"k8s.io/apimachinery/pkg/runtime/schema"

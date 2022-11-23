@@ -18,27 +18,47 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package inspector
+package constants
 
 import (
+	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 )
 
-func (p *podsInspector) Anonymous(gvk schema.GroupVersionKind) (anonymous.Interface, bool) {
-	g := constants.PodGK()
+// Pod
+const (
+	PodGroup     = core.GroupName
+	PodResource  = "pods"
+	PodKind      = "Pod"
+	PodVersionV1 = "v1"
+)
 
-	if g.Kind == gvk.Kind && g.Group == gvk.Group {
-		switch gvk.Version {
-		case constants.PodVersionV1, DefaultVersion:
-			if p.v1 == nil || p.v1.err != nil {
-				return nil, false
-			}
-			return &podsInspectorAnonymousV1{i: p.state}, true
-		}
+func PodGK() schema.GroupKind {
+	return schema.GroupKind{
+		Group: PodGroup,
+		Kind:  PodKind,
 	}
+}
 
-	return nil, false
+func PodGKv1() schema.GroupVersionKind {
+	return schema.GroupVersionKind{
+		Group:   PodGroup,
+		Kind:    PodKind,
+		Version: PodVersionV1,
+	}
+}
+
+func PodGR() schema.GroupResource {
+	return schema.GroupResource{
+		Group:    PodGroup,
+		Resource: PodResource,
+	}
+}
+
+func PodGRv1() schema.GroupVersionResource {
+	return schema.GroupVersionResource{
+		Group:    PodGroup,
+		Resource: PodResource,
+		Version:  PodVersionV1,
+	}
 }

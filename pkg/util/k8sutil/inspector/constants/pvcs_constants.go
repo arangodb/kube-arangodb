@@ -18,7 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package inspector
+package constants
 
 import (
 	core "k8s.io/api/core/v1"
@@ -61,20 +61,4 @@ func PersistentVolumeClaimGRv1() schema.GroupVersionResource {
 		Resource: PersistentVolumeClaimResource,
 		Version:  PersistentVolumeClaimVersionV1,
 	}
-}
-
-func (p *persistentVolumeClaimsInspectorV1) GroupVersionKind() schema.GroupVersionKind {
-	return PersistentVolumeClaimGKv1()
-}
-
-func (p *persistentVolumeClaimsInspectorV1) GroupVersionResource() schema.GroupVersionResource {
-	return PersistentVolumeClaimGRv1()
-}
-
-func (p *persistentVolumeClaimsInspector) GroupKind() schema.GroupKind {
-	return PersistentVolumeClaimGK()
-}
-
-func (p *persistentVolumeClaimsInspector) GroupResource() schema.GroupResource {
-	return PersistentVolumeClaimGR()
 }

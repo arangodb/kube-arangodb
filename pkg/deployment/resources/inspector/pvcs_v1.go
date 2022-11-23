@@ -28,6 +28,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	ins "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim/v1"
 )
 
@@ -110,7 +111,7 @@ func (p *persistentVolumeClaimsInspectorV1) Read() ins.ReadInterface {
 
 func (p *persistentVolumeClaimsInspectorV1) Get(ctx context.Context, name string, opts meta.GetOptions) (*core.PersistentVolumeClaim, error) {
 	if s, ok := p.GetSimple(name); !ok {
-		return nil, apiErrors.NewNotFound(PersistentVolumeClaimGR(), name)
+		return nil, apiErrors.NewNotFound(constants.PersistentVolumeClaimGR(), name)
 	} else {
 		return s, nil
 	}

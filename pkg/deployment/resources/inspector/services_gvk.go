@@ -21,60 +21,23 @@
 package inspector
 
 import (
-	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 )
-
-// Service
-const (
-	ServiceGroup     = core.GroupName
-	ServiceResource  = "services"
-	ServiceKind      = "Service"
-	ServiceVersionV1 = "v1"
-)
-
-func ServiceGK() schema.GroupKind {
-	return schema.GroupKind{
-		Group: ServiceGroup,
-		Kind:  ServiceKind,
-	}
-}
-
-func ServiceGKv1() schema.GroupVersionKind {
-	return schema.GroupVersionKind{
-		Group:   ServiceGroup,
-		Kind:    ServiceKind,
-		Version: ServiceVersionV1,
-	}
-}
-
-func ServiceGR() schema.GroupResource {
-	return schema.GroupResource{
-		Group:    ServiceGroup,
-		Resource: ServiceResource,
-	}
-}
-
-func ServiceGRv1() schema.GroupVersionResource {
-	return schema.GroupVersionResource{
-		Group:    ServiceGroup,
-		Resource: ServiceResource,
-		Version:  ServiceVersionV1,
-	}
-}
 
 func (p *servicesInspectorV1) GroupVersionKind() schema.GroupVersionKind {
-	return ServiceGKv1()
+	return constants.ServiceGKv1()
 }
 
 func (p *servicesInspectorV1) GroupVersionResource() schema.GroupVersionResource {
-	return ServiceGRv1()
+	return constants.ServiceGRv1()
 }
 
 func (p *servicesInspector) GroupKind() schema.GroupKind {
-	return ServiceGK()
+	return constants.ServiceGK()
 }
 
 func (p *servicesInspector) GroupResource() schema.GroupResource {
-	return ServiceGR()
+	return constants.ServiceGR()
 }
