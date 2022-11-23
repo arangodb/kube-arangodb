@@ -66,6 +66,8 @@ const (
 
 // ServerGroupSpec contains the specification for all servers in a specific group (e.g. all agents)
 type ServerGroupSpec struct {
+	group ServerGroup `json:"-"`
+
 	// Count holds the requested number of servers
 	Count *int `json:"count,omitempty"`
 	// MinCount specifies a lower limit for count
@@ -343,7 +345,7 @@ func (s ServerGroupSpec) GetOverrideDetectedTotalMemory() bool {
 	return *s.OverrideDetectedTotalMemory
 }
 
-// OverrideDetectedNumberOfCores returns OverrideDetectedNumberOfCores with default value (false)
+// GetOverrideDetectedNumberOfCores returns OverrideDetectedNumberOfCores with default value (false)
 func (s ServerGroupSpec) GetOverrideDetectedNumberOfCores() bool {
 	if s.OverrideDetectedNumberOfCores == nil {
 		return true
@@ -354,6 +356,10 @@ func (s ServerGroupSpec) GetOverrideDetectedNumberOfCores() bool {
 
 // Validate the given group spec
 func (s ServerGroupSpec) Validate(group ServerGroup, used bool, mode DeploymentMode, env Environment) error {
+	if s.group != group {
+		return errors.WithStack(errors.Wrapf(ValidationError, "Group is not set"))
+	}
+
 	if used {
 		minCount := 1
 		if env == EnvironmentProduction {
@@ -484,8 +490,27 @@ func (s *ServerGroupSpec) validateVolumes() error {
 	return nil
 }
 
+// WithGroup copy deployment with missing group
+func (s ServerGroupSpec) WithGroup(group ServerGroup) ServerGroupSpec {
+	s.group = group
+	return s
+}
+
+// WithDefaults copy deployment with missing defaults
+func (s ServerGroupSpec) WithDefaults(group ServerGroup, used bool, mode DeploymentMode) ServerGroupSpec {
+	q := s.DeepCopy()
+	q.SetDefaults(group, used, mode)
+	return *q
+}
+
 // SetDefaults fills in missing defaults
 func (s *ServerGroupSpec) SetDefaults(group ServerGroup, used bool, mode DeploymentMode) {
+	if s == nil {
+		return
+	}
+
+	s.group = group
+
 	if s.GetCount() == 0 && used {
 		switch group {
 		case ServerGroupSingle:
@@ -635,4 +660,12 @@ func (s ServerGroupSpec) GetExternalPortEnabled() bool {
 	} else {
 		return *v
 	}
+}
+
+func (s *ServerGroupSpec) Group() ServerGroup {
+	if s == nil {
+		return ServerGroupUnknown
+	}
+
+	return s.group
 }
