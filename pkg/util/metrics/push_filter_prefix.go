@@ -20,15 +20,21 @@
 
 package metrics
 
-type MCollector interface {
-	CollectMetrics(in PushMetric)
-}
+import (
+	"fmt"
+	"strings"
+)
 
-type DCollector interface {
-	CollectDescriptions(in PushDescription)
-}
+func NewPrefixMetricPushFilter(prefixes ...string) MetricPushFilter {
+	return func(m Metric) bool {
+		for id := range prefixes {
+			prefix := fmt.Sprintf(`Desc{fqName: "%s`, prefixes[id])
 
-type Collector interface {
-	MCollector
-	DCollector
+			if strings.HasPrefix(m.Desc().String(), prefix) {
+				return true
+			}
+		}
+
+		return false
+	}
 }
