@@ -26,6 +26,8 @@ import (
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 )
 
 type persistentVolumeClaimsInspectorAnonymousV1 struct {
@@ -38,7 +40,7 @@ func (e *persistentVolumeClaimsInspectorAnonymousV1) Get(ctx context.Context, na
 
 func (e *persistentVolumeClaimsInspectorAnonymousV1) Create(ctx context.Context, obj meta.Object, opts meta.CreateOptions) (meta.Object, error) {
 	if o, ok := obj.(*core.PersistentVolumeClaim); !ok {
-		return nil, newInvalidTypeError(PersistentVolumeClaimGKv1())
+		return nil, newInvalidTypeError(constants.PersistentVolumeClaimGKv1())
 	} else {
 		return e.i.PersistentVolumeClaimsModInterface().V1().Create(ctx, o, opts)
 	}
@@ -46,14 +48,14 @@ func (e *persistentVolumeClaimsInspectorAnonymousV1) Create(ctx context.Context,
 
 func (e *persistentVolumeClaimsInspectorAnonymousV1) Update(ctx context.Context, obj meta.Object, opts meta.UpdateOptions) (meta.Object, error) {
 	if o, ok := obj.(*core.PersistentVolumeClaim); !ok {
-		return nil, newInvalidTypeError(PersistentVolumeClaimGKv1())
+		return nil, newInvalidTypeError(constants.PersistentVolumeClaimGKv1())
 	} else {
 		return e.i.PersistentVolumeClaimsModInterface().V1().Update(ctx, o, opts)
 	}
 }
 
 func (e *persistentVolumeClaimsInspectorAnonymousV1) UpdateStatus(ctx context.Context, obj meta.Object, opts meta.UpdateOptions) (meta.Object, error) {
-	return nil, newNotImplementedError(PersistentVolumeClaimGKv1())
+	return nil, newNotImplementedError(constants.PersistentVolumeClaimGKv1())
 }
 
 func (e *persistentVolumeClaimsInspectorAnonymousV1) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts meta.PatchOptions, subresources ...string) (result meta.Object, err error) {

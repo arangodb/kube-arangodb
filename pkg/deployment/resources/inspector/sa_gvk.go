@@ -23,22 +23,21 @@ package inspector
 import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 )
 
-func (p *podsInspector) Anonymous(gvk schema.GroupVersionKind) (anonymous.Interface, bool) {
-	g := constants.PodGK()
+func (p *serviceAccountsInspectorV1) GroupVersionKind() schema.GroupVersionKind {
+	return constants.ServiceAccountGKv1()
+}
 
-	if g.Kind == gvk.Kind && g.Group == gvk.Group {
-		switch gvk.Version {
-		case constants.PodVersionV1, DefaultVersion:
-			if p.v1 == nil || p.v1.err != nil {
-				return nil, false
-			}
-			return &podsInspectorAnonymousV1{i: p.state}, true
-		}
-	}
+func (p *serviceAccountsInspectorV1) GroupVersionResource() schema.GroupVersionResource {
+	return constants.ServiceAccountGRv1()
+}
 
-	return nil, false
+func (p *serviceAccountsInspector) GroupKind() schema.GroupKind {
+	return constants.ServiceAccountGK()
+}
+
+func (p *serviceAccountsInspector) GroupResource() schema.GroupResource {
+	return constants.ServiceAccountGR()
 }

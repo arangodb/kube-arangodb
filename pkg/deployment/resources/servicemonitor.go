@@ -122,7 +122,11 @@ func (r *Resources) serviceMonitorSpec() (coreosv1.ServiceMonitorSpec, error) {
 }
 
 // EnsureServiceMonitor creates or updates a ServiceMonitor.
-func (r *Resources) EnsureServiceMonitor(ctx context.Context) error {
+func (r *Resources) EnsureServiceMonitor(ctx context.Context, enabled bool) error {
+	if !enabled {
+		return nil
+	}
+
 	// Some preparations:
 	log := r.log.Str("section", "service-monitor")
 	apiObject := r.context.GetAPIObject()

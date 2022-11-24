@@ -18,7 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package inspector
+package constants
 
 import (
 	core "k8s.io/api/core/v1"
@@ -61,20 +61,4 @@ func ServiceAccountGRv1() schema.GroupVersionResource {
 		Resource: ServiceAccountResource,
 		Version:  ServiceAccountVersionV1,
 	}
-}
-
-func (p *serviceAccountsInspectorV1) GroupVersionKind() schema.GroupVersionKind {
-	return ServiceAccountGKv1()
-}
-
-func (p *serviceAccountsInspectorV1) GroupVersionResource() schema.GroupVersionResource {
-	return ServiceAccountGRv1()
-}
-
-func (p *serviceAccountsInspector) GroupKind() schema.GroupKind {
-	return ServiceAccountGK()
-}
-
-func (p *serviceAccountsInspector) GroupResource() schema.GroupResource {
-	return ServiceAccountGR()
 }

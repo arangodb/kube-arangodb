@@ -88,13 +88,13 @@ func (r *Resources) EnsureSecrets(ctx context.Context, cachedStatus inspectorInt
 	if spec.IsAuthenticated() {
 		counterMetric.Inc()
 		if err := reconcileRequired.WithError(r.ensureTokenSecret(ctx, cachedStatus, secrets, spec.Authentication.GetJWTSecretName())); err != nil {
-			return errors.WithStack(err)
+			return errors.Section(err, "JWT Secret")
 		}
 	}
 	if spec.IsSecure() {
 		counterMetric.Inc()
 		if err := reconcileRequired.WithError(r.ensureTLSCACertificateSecret(ctx, cachedStatus, secrets, spec.TLS)); err != nil {
-			return errors.WithStack(err)
+			return errors.Section(err, "TLS CA")
 		}
 	}
 
@@ -106,7 +106,7 @@ func (r *Resources) EnsureSecrets(ctx context.Context, cachedStatus inspectorInt
 		if imageFound {
 			if pod.VersionHasJWTSecretKeyfolder(image.ArangoDBVersion, image.Enterprise) {
 				if err := r.ensureTokenSecretFolder(ctx, cachedStatus, secrets, spec.Authentication.GetJWTSecretName(), pod.JWTSecretFolder(deploymentName)); err != nil {
-					return errors.WithStack(err)
+					return errors.Section(err, "JWT Folder")
 				}
 			}
 		}
@@ -114,18 +114,18 @@ func (r *Resources) EnsureSecrets(ctx context.Context, cachedStatus inspectorInt
 		if spec.Metrics.IsEnabled() {
 			if imageFound && pod.VersionHasJWTSecretKeyfolder(image.ArangoDBVersion, image.Enterprise) {
 				if err := reconcileRequired.WithError(r.ensureExporterTokenSecret(ctx, cachedStatus, secrets, spec.Metrics.GetJWTTokenSecretName(), pod.JWTSecretFolder(deploymentName))); err != nil {
-					return errors.WithStack(err)
+					return errors.Section(err, "Metrics JWT")
 				}
 			} else {
 				if err := reconcileRequired.WithError(r.ensureExporterTokenSecret(ctx, cachedStatus, secrets, spec.Metrics.GetJWTTokenSecretName(), spec.Authentication.GetJWTSecretName())); err != nil {
-					return errors.WithStack(err)
+					return errors.Section(err, "Metrics JWT")
 				}
 			}
 		}
 	}
 	if spec.IsSecure() {
 		if err := reconcileRequired.WithError(r.ensureSecretWithEmptyKey(ctx, cachedStatus, secrets, GetCASecretName(r.context.GetAPIObject()), "empty")); err != nil {
-			return errors.WithStack(err)
+			return errors.Section(err, "TLS TrustStore")
 		}
 
 		if err := reconcileRequired.ParallelAll(len(members), func(id int) error {
@@ -160,32 +160,32 @@ func (r *Resources) EnsureSecrets(ctx context.Context, cachedStatus inspectorInt
 			}
 			return nil
 		}); err != nil {
-			return errors.WithStack(err)
+			return errors.Section(err, "TLS TrustStore")
 		}
 	}
 	if spec.RocksDB.IsEncrypted() {
 		if i := status.CurrentImage; i != nil && features.EncryptionRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
 			if err := reconcileRequired.WithError(r.ensureEncryptionKeyfolderSecret(ctx, cachedStatus, secrets, spec.RocksDB.Encryption.GetKeySecretName(), pod.GetEncryptionFolderSecretName(deploymentName))); err != nil {
-				return errors.WithStack(err)
+				return errors.Section(err, "Encryption")
 			}
 		}
 	}
 	if spec.Sync.IsEnabled() {
 		counterMetric.Inc()
 		if err := reconcileRequired.WithError(r.ensureTokenSecret(ctx, cachedStatus, secrets, spec.Sync.Authentication.GetJWTSecretName())); err != nil {
-			return errors.WithStack(err)
+			return errors.Section(err, "Sync Auth")
 		}
 		counterMetric.Inc()
 		if err := reconcileRequired.WithError(r.ensureTokenSecret(ctx, cachedStatus, secrets, spec.Sync.Monitoring.GetTokenSecretName())); err != nil {
-			return errors.WithStack(err)
+			return errors.Section(err, "Sync Monitoring Auth")
 		}
 		counterMetric.Inc()
 		if err := reconcileRequired.WithError(r.ensureTLSCACertificateSecret(ctx, cachedStatus, secrets, spec.Sync.TLS)); err != nil {
-			return errors.WithStack(err)
+			return errors.Section(err, "Sync TLS CA")
 		}
 		counterMetric.Inc()
 		if err := reconcileRequired.WithError(r.ensureClientAuthCACertificateSecret(ctx, cachedStatus, secrets, spec.Sync.Authentication)); err != nil {
-			return errors.WithStack(err)
+			return errors.Section(err, "Sync TLS Client CA")
 		}
 	}
 	return reconcileRequired.Reconcile(ctx)
@@ -321,7 +321,7 @@ func (r *Resources) createSecretWithMod(ctx context.Context, secrets secretv1.Mo
 
 	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		_, err := secrets.Create(ctxChild, secret, meta.CreateOptions{})
-		return err
+		return kerrors.NewResourceError(err, secret)
 	})
 	if err != nil {
 		// Failed to create secret
@@ -412,7 +412,7 @@ func AppendKeyfileToKeyfolder(ctx context.Context, cachedStatus inspectorInterfa
 		k8sutil.AddOwnerRefToObject(secret, ownerRef)
 		if _, err := secrets.Create(ctx, secret, meta.CreateOptions{}); err != nil {
 			// Failed to create secret
-			return errors.WithStack(err)
+			return kerrors.NewResourceError(err, secret)
 		}
 
 		return errors.Reconcile()

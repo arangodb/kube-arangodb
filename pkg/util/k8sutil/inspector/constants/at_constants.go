@@ -18,7 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package inspector
+package constants
 
 import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -63,20 +63,4 @@ func ArangoTaskGRv1() schema.GroupVersionResource {
 		Resource: ArangoTaskResource,
 		Version:  ArangoTaskVersionV1,
 	}
-}
-
-func (p *arangoTasksInspectorV1) GroupVersionKind() schema.GroupVersionKind {
-	return ArangoTaskGKv1()
-}
-
-func (p *arangoTasksInspectorV1) GroupVersionResource() schema.GroupVersionResource {
-	return ArangoTaskGRv1()
-}
-
-func (p *arangoTasksInspector) GroupKind() schema.GroupKind {
-	return ArangoTaskGK()
-}
-
-func (p *arangoTasksInspector) GroupResource() schema.GroupResource {
-	return ArangoTaskGR()
 }

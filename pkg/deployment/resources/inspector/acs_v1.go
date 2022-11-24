@@ -29,6 +29,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	ins "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoclustersynchronization/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 )
 
 func (p *arangoClusterSynchronizationsInspector) V1() (ins.Inspector, error) {
@@ -130,7 +131,7 @@ func (p *arangoClusterSynchronizationsInspectorV1) Read() ins.ReadInterface {
 
 func (p *arangoClusterSynchronizationsInspectorV1) Get(ctx context.Context, name string, opts meta.GetOptions) (*api.ArangoClusterSynchronization, error) {
 	if s, ok := p.GetSimple(name); !ok {
-		return nil, apiErrors.NewNotFound(ArangoClusterSynchronizationGR(), name)
+		return nil, apiErrors.NewNotFound(constants.ArangoClusterSynchronizationGR(), name)
 	} else {
 		return s, nil
 	}

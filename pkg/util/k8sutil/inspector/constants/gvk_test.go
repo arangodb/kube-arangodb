@@ -18,7 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package inspector
+package constants
 
 import (
 	"reflect"

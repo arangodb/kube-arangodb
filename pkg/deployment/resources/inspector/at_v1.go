@@ -29,6 +29,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	ins "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangotask/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 )
 
 func (p *arangoTasksInspector) V1() (ins.Inspector, error) {
@@ -130,7 +131,7 @@ func (p *arangoTasksInspectorV1) Read() ins.ReadInterface {
 
 func (p *arangoTasksInspectorV1) Get(ctx context.Context, name string, opts meta.GetOptions) (*api.ArangoTask, error) {
 	if s, ok := p.GetSimple(name); !ok {
-		return nil, apiErrors.NewNotFound(ArangoTaskGR(), name)
+		return nil, apiErrors.NewNotFound(constants.ArangoTaskGR(), name)
 	} else {
 		return s, nil
 	}

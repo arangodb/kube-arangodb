@@ -33,6 +33,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/uuid"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
@@ -106,7 +107,7 @@ func Test_OwnerRef(t *testing.T) {
 				},
 			},
 		}
-		sapi, skind := ServiceGKv1().ToAPIVersionAndKind()
+		sapi, skind := constants.ServiceGKv1().ToAPIVersionAndKind()
 		obj1 := &core.Service{
 			ObjectMeta: meta.ObjectMeta{
 				Name:      "obj1",
@@ -133,7 +134,7 @@ func Test_OwnerRef(t *testing.T) {
 	})
 	t.Run("Owner - infinite loop", func(t *testing.T) {
 		s2uid := uuid.NewUUID()
-		sapi, skind := ServiceGKv1().ToAPIVersionAndKind()
+		sapi, skind := constants.ServiceGKv1().ToAPIVersionAndKind()
 		obj4 := &api.ArangoDeployment{
 			ObjectMeta: meta.ObjectMeta{
 				Name:      "obj4",
@@ -205,7 +206,7 @@ func Test_OwnerRef(t *testing.T) {
 				UID:       uuid.NewUUID(),
 			},
 		}
-		sapi, skind := ServiceGKv1().ToAPIVersionAndKind()
+		sapi, skind := constants.ServiceGKv1().ToAPIVersionAndKind()
 
 		last := &core.Service{
 			ObjectMeta: meta.ObjectMeta{
@@ -259,7 +260,7 @@ func Test_OwnerRef(t *testing.T) {
 				UID:       uuid.NewUUID(),
 			},
 		}
-		sapi, skind := ServiceGKv1().ToAPIVersionAndKind()
+		sapi, skind := constants.ServiceGKv1().ToAPIVersionAndKind()
 
 		last := &core.Service{
 			ObjectMeta: meta.ObjectMeta{
@@ -324,7 +325,7 @@ func clientWithGVK(t *testing.T, obj ...GVKEnsurer) kclient.Client {
 
 func ensureGVK(t *testing.T, objs ...GVKEnsurer) {
 	for _, o := range objs {
-		gvk, ok := ExtractGVKFromObject(o)
+		gvk, ok := constants.ExtractGVKFromObject(o)
 		require.True(t, ok)
 
 		o.SetGroupVersionKind(gvk)

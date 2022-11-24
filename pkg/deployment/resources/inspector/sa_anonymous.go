@@ -24,14 +24,15 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 )
 
 func (p *serviceAccountsInspector) Anonymous(gvk schema.GroupVersionKind) (anonymous.Interface, bool) {
-	g := ServiceAccountGK()
+	g := constants.ServiceAccountGK()
 
 	if g.Kind == gvk.Kind && g.Group == gvk.Group {
 		switch gvk.Version {
-		case ServiceAccountVersionV1, DefaultVersion:
+		case constants.ServiceAccountVersionV1, DefaultVersion:
 			if p.v1 == nil || p.v1.err != nil {
 				return nil, false
 			}

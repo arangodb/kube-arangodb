@@ -21,60 +21,23 @@
 package inspector
 
 import (
-	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 )
-
-// Endpoints
-const (
-	EndpointsGroup     = core.GroupName
-	EndpointsResource  = "endpoints"
-	EndpointsKind      = "Endpoints"
-	EndpointsVersionV1 = "v1"
-)
-
-func EndpointsGK() schema.GroupKind {
-	return schema.GroupKind{
-		Group: EndpointsGroup,
-		Kind:  EndpointsKind,
-	}
-}
-
-func EndpointsGKv1() schema.GroupVersionKind {
-	return schema.GroupVersionKind{
-		Group:   EndpointsGroup,
-		Kind:    EndpointsKind,
-		Version: EndpointsVersionV1,
-	}
-}
-
-func EndpointsGR() schema.GroupResource {
-	return schema.GroupResource{
-		Group:    EndpointsGroup,
-		Resource: EndpointsResource,
-	}
-}
-
-func EndpointsGRv1() schema.GroupVersionResource {
-	return schema.GroupVersionResource{
-		Group:    EndpointsGroup,
-		Resource: EndpointsResource,
-		Version:  EndpointsVersionV1,
-	}
-}
 
 func (p *endpointsInspectorV1) GroupVersionKind() schema.GroupVersionKind {
-	return EndpointsGKv1()
+	return constants.EndpointsGKv1()
 }
 
 func (p *endpointsInspectorV1) GroupVersionResource() schema.GroupVersionResource {
-	return EndpointsGRv1()
+	return constants.EndpointsGRv1()
 }
 
 func (p *endpointsInspector) GroupKind() schema.GroupKind {
-	return EndpointsGK()
+	return constants.EndpointsGK()
 }
 
 func (p *endpointsInspector) GroupResource() schema.GroupResource {
-	return EndpointsGR()
+	return constants.EndpointsGR()
 }

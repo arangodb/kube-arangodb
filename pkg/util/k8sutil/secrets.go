@@ -31,6 +31,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	secretv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
 // ValidateEncryptionKeySecret checks that a secret with given name in given namespace
@@ -71,7 +72,7 @@ func CreateEncryptionKeySecret(secrets secretv1.ModInterface, secretName string,
 	}
 	if _, err := secrets.Create(context.Background(), secret, meta.CreateOptions{}); err != nil {
 		// Failed to create secret
-		return errors.WithStack(err)
+		return kerrors.NewResourceError(err, secret)
 	}
 	return nil
 }
@@ -165,7 +166,7 @@ func CreateCASecret(ctx context.Context, secrets secretv1.ModInterface, secretNa
 	AddOwnerRefToObject(secret, ownerRef)
 	if _, err := secrets.Create(ctx, secret, meta.CreateOptions{}); err != nil {
 		// Failed to create secret
-		return errors.WithStack(err)
+		return kerrors.NewResourceError(err, secret)
 	}
 	return nil
 }
@@ -207,7 +208,7 @@ func CreateTLSKeyfileSecret(ctx context.Context, secrets secretv1.ModInterface, 
 	AddOwnerRefToObject(secret, ownerRef)
 	if _, err := secrets.Create(ctx, secret, meta.CreateOptions{}); err != nil {
 		// Failed to create secret
-		return errors.WithStack(err)
+		return kerrors.NewResourceError(err, secret)
 	}
 	return nil
 }
@@ -267,7 +268,7 @@ func CreateTokenSecret(ctx context.Context, secrets secretv1.ModInterface, secre
 	AddOwnerRefToObject(secret, ownerRef)
 	if _, err := secrets.Create(ctx, secret, meta.CreateOptions{}); err != nil {
 		// Failed to create secret
-		return errors.WithStack(err)
+		return kerrors.NewResourceError(err, secret)
 	}
 	return nil
 }
@@ -327,7 +328,7 @@ func CreateBasicAuthSecret(ctx context.Context, secrets secretv1.ModInterface, s
 	AddOwnerRefToObject(secret, ownerRef)
 	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		_, err := secrets.Create(ctxChild, secret, meta.CreateOptions{})
-		return err
+		return kerrors.NewResourceError(err, secret)
 	})
 	if err != nil {
 		// Failed to create secret
