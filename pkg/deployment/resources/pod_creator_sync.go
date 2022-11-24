@@ -384,6 +384,8 @@ func (m *MemberSyncPod) ApplyPodSpec(spec *core.PodSpec) error {
 		spec.SchedulerName = *s
 	}
 
+	m.groupSpec.PodModes.Apply(spec)
+
 	return nil
 }
 
