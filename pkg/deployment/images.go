@@ -249,6 +249,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 		return true, errors.WithStack(err)
 	}
 
+	// here we need a pod with selector
 	err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		_, _, err := resources.CreateArangoPod(ctxChild, ib.Context.ACS().CurrentClusterCache().PodsModInterface().V1(), ib.APIObject, ib.Spec, api.ServerGroupImageDiscovery, pod)
 		return err
@@ -373,9 +374,7 @@ func (i *ImageUpdatePod) GetPodAffinity() *core.PodAffinity {
 
 func (i *ImageUpdatePod) GetNodeAffinity() *core.NodeAffinity {
 	a := core.NodeAffinity{}
-	arch := i.spec.Architecture.GetDefault()
-
-	pod.AppendArchSelector(&a, arch)
+	pod.AppendArchSelector(&a, i.spec.Architecture.AsNodeSelectorRequirement())
 
 	pod.MergeNodeAffinity(&a, i.spec.ID.Get().NodeAffinity)
 

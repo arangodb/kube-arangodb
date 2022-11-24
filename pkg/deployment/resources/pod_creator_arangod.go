@@ -362,7 +362,7 @@ func (m *MemberArangoDPod) GetPodAffinity() *core.PodAffinity {
 func (m *MemberArangoDPod) GetNodeAffinity() *core.NodeAffinity {
 	a := core.NodeAffinity{}
 
-	pod.AppendArchSelector(&a, m.status.Architecture.Default(m.spec.Architecture.GetDefault()))
+	pod.AppendArchSelector(&a, m.status.Architecture.Default(m.spec.Architecture.GetDefault()).AsNodeSelectorRequirement())
 
 	pod.MergeNodeAffinity(&a, m.groupSpec.NodeAffinity)
 
