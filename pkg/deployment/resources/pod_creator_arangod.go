@@ -561,6 +561,8 @@ func (m *MemberArangoDPod) ApplyPodSpec(p *core.PodSpec) error {
 		p.SchedulerName = *s
 	}
 
+	m.groupSpec.PodModes.Apply(p)
+
 	return nil
 }
 

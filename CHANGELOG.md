@@ -30,6 +30,7 @@
 - (Improvement) Add Resource kerror Type
 - (Bugfix) Do not block reconciliation in case of Resource failure
 - (Improvement) Multi-arch support for ID member
+- (Feature) Allow to change Pod Network and PID settings
 
 ## [1.2.20](https://github.com/arangodb/kube-arangodb/tree/1.2.20) (2022-10-25)
 - (Feature) Add action progress

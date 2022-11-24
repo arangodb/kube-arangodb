@@ -157,6 +157,9 @@ type ServerGroupSpec struct {
 	TerminationGracePeriodSeconds *int64 `json:"terminationGracePeriodSeconds,omitempty"`
 	// IndexMethod define group Indexing method
 	IndexMethod *ServerGroupIndexMethod `json:"indexMethod,omitempty"`
+
+	// PodModes define additional modes enabled on the Pod level
+	PodModes *ServerGroupSpecPodMode `json:"podModes,omitempty"`
 }
 
 // ServerGroupProbesSpec contains specification for probes for pods of the server group
