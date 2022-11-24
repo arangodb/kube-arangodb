@@ -18,7 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package inspector
+package constants
 
 import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -63,20 +63,4 @@ func ArangoClusterSynchronizationGRv1() schema.GroupVersionResource {
 		Resource: ArangoClusterSynchronizationResource,
 		Version:  ArangoClusterSynchronizationVersionV1,
 	}
-}
-
-func (p *arangoClusterSynchronizationsInspectorV1) GroupVersionKind() schema.GroupVersionKind {
-	return ArangoClusterSynchronizationGKv1()
-}
-
-func (p *arangoClusterSynchronizationsInspectorV1) GroupVersionResource() schema.GroupVersionResource {
-	return ArangoClusterSynchronizationGRv1()
-}
-
-func (p *arangoClusterSynchronizationsInspector) GroupKind() schema.GroupKind {
-	return ArangoClusterSynchronizationGK()
-}
-
-func (p *arangoClusterSynchronizationsInspector) GroupResource() schema.GroupResource {
-	return ArangoClusterSynchronizationGR()
 }

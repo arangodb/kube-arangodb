@@ -18,7 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package inspector
+package constants
 
 import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -63,20 +63,4 @@ func ArangoMemberGRv1() schema.GroupVersionResource {
 		Resource: ArangoMemberResource,
 		Version:  ArangoMemberVersionV1,
 	}
-}
-
-func (p *arangoMembersInspectorV1) GroupVersionKind() schema.GroupVersionKind {
-	return ArangoMemberGKv1()
-}
-
-func (p *arangoMembersInspectorV1) GroupVersionResource() schema.GroupVersionResource {
-	return ArangoMemberGRv1()
-}
-
-func (p *arangoMembersInspector) GroupKind() schema.GroupKind {
-	return ArangoMemberGK()
-}
-
-func (p *arangoMembersInspector) GroupResource() schema.GroupResource {
-	return ArangoMemberGR()
 }

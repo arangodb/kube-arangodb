@@ -20,7 +20,13 @@
 
 package resources
 
-import "github.com/arangodb/kube-arangodb/pkg/logging"
+import (
+	"context"
+
+	"github.com/arangodb/kube-arangodb/pkg/logging"
+	errors "github.com/arangodb/kube-arangodb/pkg/util/errors"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
+)
 
 // Resources is a service that creates low level resources for members
 // and inspects low level resources, put the inspection result in members.
@@ -44,4 +50,20 @@ func NewResources(namespace, name string, context Context) *Resources {
 	r.log = logger.WrapObj(r)
 
 	return r
+}
+
+func (r *Resources) EnsureCoreResources(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
+	return errors.Errors(errors.Section(r.EnsureLeader(ctx, cachedStatus), "EnsureLeader"),
+		errors.Section(r.EnsureArangoMembers(ctx, cachedStatus), "EnsureArangoMembers"),
+		errors.Section(r.EnsureServices(ctx, cachedStatus), "EnsureServices"),
+		errors.Section(r.EnsureSecrets(ctx, cachedStatus), "EnsureSecrets"))
+}
+
+func (r *Resources) EnsureResources(ctx context.Context, serviceMonitorEnabled bool, cachedStatus inspectorInterface.Inspector) error {
+	return errors.Errors(errors.Section(r.EnsureServiceMonitor(ctx, serviceMonitorEnabled), "EnsureServiceMonitor"),
+		errors.Section(r.EnsurePVCs(ctx, cachedStatus), "EnsurePVCs"),
+		errors.Section(r.EnsurePods(ctx, cachedStatus), "EnsurePods"),
+		errors.Section(r.EnsurePDBs(ctx), "EnsurePDBs"),
+		errors.Section(r.EnsureAnnotations(ctx, cachedStatus), "EnsureAnnotations"),
+		errors.Section(r.EnsureLabels(ctx, cachedStatus), "EnsureLabels"))
 }

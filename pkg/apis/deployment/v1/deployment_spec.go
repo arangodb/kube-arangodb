@@ -286,17 +286,17 @@ func (s DeploymentSpec) IsSecure() bool {
 func (s DeploymentSpec) GetServerGroupSpec(group ServerGroup) ServerGroupSpec {
 	switch group {
 	case ServerGroupSingle:
-		return s.Single
+		return s.Single.WithGroup(group)
 	case ServerGroupAgents:
-		return s.Agents
+		return s.Agents.WithGroup(group)
 	case ServerGroupDBServers:
-		return s.DBServers
+		return s.DBServers.WithGroup(group)
 	case ServerGroupCoordinators:
-		return s.Coordinators
+		return s.Coordinators.WithGroup(group)
 	case ServerGroupSyncMasters:
-		return s.SyncMasters
+		return s.SyncMasters.WithGroup(group)
 	case ServerGroupSyncWorkers:
-		return s.SyncWorkers
+		return s.SyncWorkers.WithGroup(group)
 	default:
 		return ServerGroupSpec{}
 	}

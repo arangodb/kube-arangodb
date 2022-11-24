@@ -38,14 +38,14 @@ func (r *Reconciler) updateClusterLicense(ctx context.Context, apiObject k8sutil
 		return nil
 	}
 
-	l, ok := k8sutil.GetLicenseFromSecret(context.ACS().CurrentClusterCache(), spec.License.GetSecretName())
-	if !ok {
-		r.log.Str("secret", spec.Authentication.GetJWTSecretName()).Trace("Unable to find license secret key")
+	l, err := k8sutil.GetLicenseFromSecret(context.ACS().CurrentClusterCache(), spec.License.GetSecretName())
+	if err != nil {
+		r.log.Err(err).Error("License secret error")
 		return nil
 	}
 
 	if !l.V2.IsV2Set() {
-		r.log.Str("secret", spec.Authentication.GetJWTSecretName()).Trace("V2 License key is not set")
+		r.log.Str("secret", spec.License.GetSecretName()).Error("V2 License key is not set")
 		return nil
 	}
 

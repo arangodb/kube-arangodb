@@ -326,13 +326,6 @@ func (d *Deployment) run() {
 	}
 
 	if d.GetPhase() == api.DeploymentPhaseNone {
-		// Create service monitor
-		if d.haveServiceMonitorCRD {
-			if err := d.resources.EnsureServiceMonitor(context.TODO()); err != nil {
-				d.CreateEvent(k8sutil.NewErrorEvent("Failed to create service monitor", err, d.GetAPIObject()))
-			}
-		}
-
 		// Create initial topology
 		if err := d.createInitialTopology(context.TODO()); err != nil {
 			d.CreateEvent(k8sutil.NewErrorEvent("Failed to create initial topology", err, d.GetAPIObject()))

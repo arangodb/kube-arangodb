@@ -18,63 +18,47 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package inspector
+package constants
 
 import (
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-// Pod
+// Secret
 const (
-	PodGroup     = core.GroupName
-	PodResource  = "pods"
-	PodKind      = "Pod"
-	PodVersionV1 = "v1"
+	SecretGroup     = core.GroupName
+	SecretResource  = "secrets"
+	SecretKind      = "Secret"
+	SecretVersionV1 = "v1"
 )
 
-func PodGK() schema.GroupKind {
+func SecretGK() schema.GroupKind {
 	return schema.GroupKind{
-		Group: PodGroup,
-		Kind:  PodKind,
+		Group: SecretGroup,
+		Kind:  SecretKind,
 	}
 }
 
-func PodGKv1() schema.GroupVersionKind {
+func SecretGKv1() schema.GroupVersionKind {
 	return schema.GroupVersionKind{
-		Group:   PodGroup,
-		Kind:    PodKind,
-		Version: PodVersionV1,
+		Group:   SecretGroup,
+		Kind:    SecretKind,
+		Version: SecretVersionV1,
 	}
 }
 
-func PodGR() schema.GroupResource {
+func SecretGR() schema.GroupResource {
 	return schema.GroupResource{
-		Group:    PodGroup,
-		Resource: PodResource,
+		Group:    SecretGroup,
+		Resource: SecretResource,
 	}
 }
 
-func PodGRv1() schema.GroupVersionResource {
+func SecretGRv1() schema.GroupVersionResource {
 	return schema.GroupVersionResource{
-		Group:    PodGroup,
-		Resource: PodResource,
-		Version:  PodVersionV1,
+		Group:    SecretGroup,
+		Resource: SecretResource,
+		Version:  SecretVersionV1,
 	}
-}
-
-func (p *podsInspectorV1) GroupVersionKind() schema.GroupVersionKind {
-	return PodGKv1()
-}
-
-func (p *podsInspectorV1) GroupVersionResource() schema.GroupVersionResource {
-	return PodGRv1()
-}
-
-func (p *podsInspector) GroupKind() schema.GroupKind {
-	return PodGK()
-}
-
-func (p *podsInspector) GroupResource() schema.GroupResource {
-	return PodGR()
 }

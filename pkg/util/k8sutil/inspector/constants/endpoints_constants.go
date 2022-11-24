@@ -18,63 +18,47 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package inspector
+package constants
 
 import (
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-// Node
+// Endpoints
 const (
-	NodeGroup     = core.GroupName
-	NodeResource  = "nodes"
-	NodeKind      = "Node"
-	NodeVersionV1 = "v1"
+	EndpointsGroup     = core.GroupName
+	EndpointsResource  = "endpoints"
+	EndpointsKind      = "Endpoints"
+	EndpointsVersionV1 = "v1"
 )
 
-func NodeGK() schema.GroupKind {
+func EndpointsGK() schema.GroupKind {
 	return schema.GroupKind{
-		Group: NodeGroup,
-		Kind:  NodeKind,
+		Group: EndpointsGroup,
+		Kind:  EndpointsKind,
 	}
 }
 
-func NodeGKv1() schema.GroupVersionKind {
+func EndpointsGKv1() schema.GroupVersionKind {
 	return schema.GroupVersionKind{
-		Group:   NodeGroup,
-		Kind:    NodeKind,
-		Version: NodeVersionV1,
+		Group:   EndpointsGroup,
+		Kind:    EndpointsKind,
+		Version: EndpointsVersionV1,
 	}
 }
 
-func NodeGR() schema.GroupResource {
+func EndpointsGR() schema.GroupResource {
 	return schema.GroupResource{
-		Group:    NodeGroup,
-		Resource: NodeResource,
+		Group:    EndpointsGroup,
+		Resource: EndpointsResource,
 	}
 }
 
-func NodeGRv1() schema.GroupVersionResource {
+func EndpointsGRv1() schema.GroupVersionResource {
 	return schema.GroupVersionResource{
-		Group:    NodeGroup,
-		Resource: NodeResource,
-		Version:  NodeVersionV1,
+		Group:    EndpointsGroup,
+		Resource: EndpointsResource,
+		Version:  EndpointsVersionV1,
 	}
-}
-
-func (p *nodesInspectorV1) GroupVersionKind() schema.GroupVersionKind {
-	return NodeGKv1()
-}
-
-func (p *nodesInspectorV1) GroupVersionResource() schema.GroupVersionResource {
-	return NodeGRv1()
-}
-
-func (p *nodesInspector) GroupKind() schema.GroupKind {
-	return NodeGK()
-}
-
-func (p *nodesInspector) GroupResource() schema.GroupResource {
-	return NodeGR()
 }

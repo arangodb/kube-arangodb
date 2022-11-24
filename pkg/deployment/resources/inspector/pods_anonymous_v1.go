@@ -23,13 +23,45 @@ package inspector
 import (
 	"context"
 
+	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 )
 
 type podsInspectorAnonymousV1 struct {
-	i *podsInspectorV1
+	i *inspectorState
 }
 
 func (e *podsInspectorAnonymousV1) Get(ctx context.Context, name string, opts meta.GetOptions) (meta.Object, error) {
-	return e.i.Get(ctx, name, opts)
+	return e.i.pods.v1.Get(ctx, name, opts)
+}
+
+func (e *podsInspectorAnonymousV1) Create(ctx context.Context, obj meta.Object, opts meta.CreateOptions) (meta.Object, error) {
+	if o, ok := obj.(*core.Pod); !ok {
+		return nil, newInvalidTypeError(constants.PodGKv1())
+	} else {
+		return e.i.PodsModInterface().V1().Create(ctx, o, opts)
+	}
+}
+
+func (e *podsInspectorAnonymousV1) Update(ctx context.Context, obj meta.Object, opts meta.UpdateOptions) (meta.Object, error) {
+	if o, ok := obj.(*core.Pod); !ok {
+		return nil, newInvalidTypeError(constants.PodGKv1())
+	} else {
+		return e.i.PodsModInterface().V1().Update(ctx, o, opts)
+	}
+}
+
+func (e *podsInspectorAnonymousV1) UpdateStatus(ctx context.Context, obj meta.Object, opts meta.UpdateOptions) (meta.Object, error) {
+	return nil, newNotImplementedError(constants.PodGKv1())
+}
+
+func (e *podsInspectorAnonymousV1) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts meta.PatchOptions, subresources ...string) (result meta.Object, err error) {
+	return e.i.PodsModInterface().V1().Patch(ctx, name, pt, data, opts, subresources...)
+}
+
+func (e *podsInspectorAnonymousV1) Delete(ctx context.Context, name string, opts meta.DeleteOptions) error {
+	return e.i.PodsModInterface().V1().Delete(ctx, name, opts)
 }

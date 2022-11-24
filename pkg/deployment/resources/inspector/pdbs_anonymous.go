@@ -24,23 +24,24 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 )
 
 func (p *podDisruptionBudgetsInspector) Anonymous(gvk schema.GroupVersionKind) (anonymous.Interface, bool) {
-	g := PodDisruptionBudgetGK()
+	g := constants.PodDisruptionBudgetGK()
 
 	if g.Kind == gvk.Kind && g.Group == gvk.Group {
 		switch gvk.Version {
-		case PodDisruptionBudgetVersionV1, DefaultVersion:
+		case constants.PodDisruptionBudgetVersionV1, DefaultVersion:
 			if p.v1 == nil || p.v1.err != nil {
 				return nil, false
 			}
-			return &podDisruptionBudgetsInspectorAnonymousV1{i: p.v1}, true
-		case PodDisruptionBudgetVersionV1Beta1:
+			return &podDisruptionBudgetsInspectorAnonymousV1{i: p.state}, true
+		case constants.PodDisruptionBudgetVersionV1Beta1:
 			if p.v1beta1 == nil || p.v1beta1.err != nil {
 				return nil, false
 			}
-			return &podDisruptionBudgetsInspectorAnonymousV1Beta1{i: p.v1beta1}, true
+			return &podDisruptionBudgetsInspectorAnonymousV1Beta1{i: p.state}, true
 		}
 	}
 

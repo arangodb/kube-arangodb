@@ -18,7 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package inspector
+package constants
 
 import (
 	policyv1 "k8s.io/api/policy/v1"
@@ -78,28 +78,4 @@ func PodDisruptionBudgetGRv1Beta1() schema.GroupVersionResource {
 		Resource: PodDisruptionBudgetResource,
 		Version:  PodDisruptionBudgetVersionV1Beta1,
 	}
-}
-
-func (p *podDisruptionBudgetsInspectorV1) GroupVersionKind() schema.GroupVersionKind {
-	return PodDisruptionBudgetGKv1()
-}
-
-func (p *podDisruptionBudgetsInspectorV1) GroupVersionResource() schema.GroupVersionResource {
-	return PodDisruptionBudgetGRv1()
-}
-
-func (p *podDisruptionBudgetsInspectorV1Beta1) GroupVersionKind() schema.GroupVersionKind {
-	return PodDisruptionBudgetGKv1Beta1()
-}
-
-func (p *podDisruptionBudgetsInspectorV1Beta1) GroupVersionResource() schema.GroupVersionResource {
-	return PodDisruptionBudgetGRv1Beta1()
-}
-
-func (p *podDisruptionBudgetsInspector) GroupKind() schema.GroupKind {
-	return PodDisruptionBudgetGK()
-}
-
-func (p *podDisruptionBudgetsInspector) GroupResource() schema.GroupResource {
-	return PodDisruptionBudgetGR()
 }

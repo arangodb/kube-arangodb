@@ -21,60 +21,23 @@
 package inspector
 
 import (
-	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 )
-
-// Secret
-const (
-	SecretGroup     = core.GroupName
-	SecretResource  = "secrets"
-	SecretKind      = "Secret"
-	SecretVersionV1 = "v1"
-)
-
-func SecretGK() schema.GroupKind {
-	return schema.GroupKind{
-		Group: SecretGroup,
-		Kind:  SecretKind,
-	}
-}
-
-func SecretGKv1() schema.GroupVersionKind {
-	return schema.GroupVersionKind{
-		Group:   SecretGroup,
-		Kind:    SecretKind,
-		Version: SecretVersionV1,
-	}
-}
-
-func SecretGR() schema.GroupResource {
-	return schema.GroupResource{
-		Group:    SecretGroup,
-		Resource: SecretResource,
-	}
-}
-
-func SecretGRv1() schema.GroupVersionResource {
-	return schema.GroupVersionResource{
-		Group:    SecretGroup,
-		Resource: SecretResource,
-		Version:  SecretVersionV1,
-	}
-}
 
 func (p *secretsInspectorV1) GroupVersionKind() schema.GroupVersionKind {
-	return SecretGKv1()
+	return constants.SecretGKv1()
 }
 
 func (p *secretsInspectorV1) GroupVersionResource() schema.GroupVersionResource {
-	return SecretGRv1()
+	return constants.SecretGRv1()
 }
 
 func (p *secretsInspector) GroupKind() schema.GroupKind {
-	return SecretGK()
+	return constants.SecretGK()
 }
 
 func (p *secretsInspector) GroupResource() schema.GroupResource {
-	return SecretGR()
+	return constants.SecretGR()
 }

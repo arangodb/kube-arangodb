@@ -21,6 +21,7 @@
 package v2alpha1
 
 // DatabaseStatus contains the status of a single database.
+// Deprecated
 type DatabaseStatus struct {
 	// Name of the database
 	Name string `json:"name"`

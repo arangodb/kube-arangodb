@@ -24,18 +24,19 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 )
 
 func (p *podsInspector) Anonymous(gvk schema.GroupVersionKind) (anonymous.Interface, bool) {
-	g := PodGK()
+	g := constants.PodGK()
 
 	if g.Kind == gvk.Kind && g.Group == gvk.Group {
 		switch gvk.Version {
-		case PodVersionV1, DefaultVersion:
+		case constants.PodVersionV1, DefaultVersion:
 			if p.v1 == nil || p.v1.err != nil {
 				return nil, false
 			}
-			return &podsInspectorAnonymousV1{i: p.v1}, true
+			return &podsInspectorAnonymousV1{i: p.state}, true
 		}
 	}
 

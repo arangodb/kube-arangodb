@@ -28,6 +28,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	ins "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
 )
 
@@ -111,7 +112,7 @@ func (p *podsInspectorV1) Read() ins.ReadInterface {
 
 func (p *podsInspectorV1) Get(ctx context.Context, name string, opts meta.GetOptions) (*core.Pod, error) {
 	if s, ok := p.GetSimple(name); !ok {
-		return nil, apiErrors.NewNotFound(PodGR(), name)
+		return nil, apiErrors.NewNotFound(constants.PodGR(), name)
 	} else {
 		return s, nil
 	}

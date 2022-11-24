@@ -34,7 +34,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
@@ -251,31 +250,13 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	} else {
 		nextInterval = nextInterval.ReduceTo(x)
 	}
-
-	if err := d.resources.EnsureLeader(ctx, d.GetCachedStatus()); err != nil {
-		return minInspectionInterval, errors.Wrapf(err, "Creating leaders failed")
-	}
-
-	if err := d.resources.EnsureArangoMembers(ctx, d.GetCachedStatus()); err != nil {
-		return minInspectionInterval, errors.Wrapf(err, "ArangoMember creation failed")
-	}
-
-	if err := d.resources.EnsureServices(ctx, d.GetCachedStatus()); err != nil {
-		return minInspectionInterval, errors.Wrapf(err, "Service creation failed")
-	}
-
-	if err := d.resources.EnsureSecrets(ctx, d.GetCachedStatus()); err != nil {
-		return minInspectionInterval, errors.Wrapf(err, "Secret creation failed")
+	if err := d.resources.EnsureCoreResources(ctx, d.GetCachedStatus()); err != nil {
+		d.log.Err(err).Error("Unable to ensure core resources")
 	}
 
 	// Inspect secret hashes
 	if err := d.resources.ValidateSecretHashes(ctx, d.GetCachedStatus()); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Secret hash validation failed")
-	}
-
-	// Check for LicenseKeySecret
-	if err := d.resources.ValidateLicenseKeySecret(d.GetCachedStatus()); err != nil {
-		return minInspectionInterval, errors.Wrapf(err, "License Key Secret invalid")
 	}
 
 	// Is the deployment in a good state?
@@ -313,10 +294,8 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 		return minInspectionInterval, errors.Wrapf(err, "Reconciler immediate actions failed")
 	}
 
-	if interval, err := d.ensureResources(ctx, nextInterval, d.GetCachedStatus()); err != nil {
-		return minInspectionInterval, errors.Wrapf(err, "Reconciler resource recreation failed")
-	} else {
-		nextInterval = interval
+	if err := d.resources.EnsureResources(ctx, d.haveServiceMonitorCRD, d.GetCachedStatus()); err != nil {
+		d.log.Err(err).Error("Unable to ensure resources")
 	}
 
 	d.metrics.Agency.Fetches++
@@ -524,38 +503,6 @@ func (d *Deployment) refreshMaintenanceTTL(ctx context.Context) {
 			d.log.Info("Refreshed maintenance lock")
 		}
 	}
-}
-
-// ensureResources creates all required resources for the deployment
-func (d *Deployment) ensureResources(ctx context.Context, lastInterval util.Interval, cachedStatus inspectorInterface.Inspector) (util.Interval, error) {
-	// Ensure all resources are created
-	if d.haveServiceMonitorCRD {
-		if err := d.resources.EnsureServiceMonitor(ctx); err != nil {
-			return minInspectionInterval, errors.Wrapf(err, "Service monitor creation failed")
-		}
-	}
-
-	if err := d.resources.EnsurePVCs(ctx, cachedStatus); err != nil {
-		return minInspectionInterval, errors.Wrapf(err, "PVC creation failed")
-	}
-
-	if err := d.resources.EnsurePods(ctx, cachedStatus); err != nil {
-		return minInspectionInterval, errors.Wrapf(err, "Pod creation failed")
-	}
-
-	if err := d.resources.EnsurePDBs(ctx); err != nil {
-		return minInspectionInterval, errors.Wrapf(err, "PDB creation failed")
-	}
-
-	if err := d.resources.EnsureAnnotations(ctx, cachedStatus); err != nil {
-		return minInspectionInterval, errors.Wrapf(err, "Annotation update failed")
-	}
-
-	if err := d.resources.EnsureLabels(ctx, cachedStatus); err != nil {
-		return minInspectionInterval, errors.Wrapf(err, "Labels update failed")
-	}
-
-	return lastInterval, nil
 }
 
 // triggerInspection ensures that an inspection is run soon.
