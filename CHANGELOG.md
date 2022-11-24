@@ -28,6 +28,7 @@
 - (Improvement) Do not check checksums for DeploymentReplicationStatus.IncomingSynchronization field values
 - (Improvement) Add ServerGroup details into ServerGroupSpec
 - (Improvement) Add Resource kerror Type
+- (Bugfix) Do not block reconciliation in case of Resource failure
 
 ## [1.2.20](https://github.com/arangodb/kube-arangodb/tree/1.2.20) (2022-10-25)
 - (Feature) Add action progress
