@@ -530,11 +530,20 @@ func createTestDeployment(t *testing.T, config Config, arangoDeployment *api.Ara
 	return d, eventRecorder
 }
 
-func createTestPorts() []core.ContainerPort {
+func createTestPorts(group api.ServerGroup) []core.ContainerPort {
+	port := shared.ArangoPort
+
+	switch group {
+	case api.ServerGroupSyncMasters:
+		port = shared.ArangoSyncMasterPort
+	case api.ServerGroupSyncWorkers:
+		port = shared.ArangoSyncWorkerPort
+	}
+
 	return []core.ContainerPort{
 		{
 			Name:          "server",
-			ContainerPort: 8529,
+			ContainerPort: int32(port),
 			Protocol:      "TCP",
 		},
 	}

@@ -110,7 +110,7 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForCoordinator(firstCoordinatorStatus.ID, true, false),
-							Ports:   createTestPorts(),
+							Ports:   createTestPorts(api.ServerGroupAgents),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 								k8sutil.TlsKeyfileVolumeMount(),
@@ -185,7 +185,7 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 							Name:    shared.ServerContainerName,
 							Image:   createTestImageForVersion("3.6.0"),
 							Command: createTestCommandForCoordinator(firstCoordinatorStatus.ID, true, false),
-							Ports:   createTestPorts(),
+							Ports:   createTestPorts(api.ServerGroupAgents),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 								k8sutil.TlsKeyfileVolumeMount(),
@@ -260,7 +260,7 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForCoordinator(firstCoordinatorStatus.ID, true, false),
-							Ports:   createTestPorts(),
+							Ports:   createTestPorts(api.ServerGroupAgents),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 								k8sutil.TlsKeyfileVolumeMount(),
@@ -358,7 +358,7 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 									fmt.Sprintf("--ssl.server-name-indication=d=%s/sni2/tls.keyfile", shared.TLSSNIKeyfileVolumeMountDir))
 								return args
 							}(),
-							Ports: createTestPorts(),
+							Ports: createTestPorts(api.ServerGroupAgents),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 								k8sutil.TlsKeyfileVolumeMount(),
@@ -446,7 +446,7 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 								args := createTestCommandForDBServer(firstDBServerStatus.ID, true, false, false)
 								return args
 							}(),
-							Ports: createTestPorts(),
+							Ports: createTestPorts(api.ServerGroupAgents),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 								k8sutil.TlsKeyfileVolumeMount(),

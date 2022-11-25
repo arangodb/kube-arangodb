@@ -250,7 +250,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForSyncMaster(firstSyncMaster.ID, true, true, true),
-							Ports:   createTestPorts(),
+							Ports:   createTestPorts(api.ServerGroupSyncMasters),
 							Env: []core.EnvVar{
 								k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoSyncMonitoringToken,
 									testDeploymentName+"-sync-mt", constants.SecretKeyToken),
@@ -341,7 +341,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForSyncMaster(firstSyncMaster.ID, true, false, true),
-							Ports:   createTestPorts(),
+							Ports:   createTestPorts(api.ServerGroupSyncMasters),
 							Env: []core.EnvVar{
 								k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoSyncMonitoringToken,
 									testDeploymentName+"-sync-mt", constants.SecretKeyToken),
@@ -446,7 +446,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForSyncMaster(firstSyncMaster.ID, true, false, true, "https://arangodb.xyz:8629"),
-							Ports:   createTestPorts(),
+							Ports:   createTestPorts(api.ServerGroupSyncMasters),
 							Env: []core.EnvVar{
 								k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoSyncMonitoringToken,
 									testDeploymentName+"-sync-mt", constants.SecretKeyToken),
@@ -548,7 +548,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForSyncMaster(firstSyncMaster.ID, true, false, true, "https://arangodb.xyz:8629"),
-							Ports:   createTestPorts(),
+							Ports:   createTestPorts(api.ServerGroupSyncMasters),
 							Env: []core.EnvVar{
 								k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoSyncMonitoringToken,
 									testDeploymentName+"-sync-mt", constants.SecretKeyToken),
@@ -650,7 +650,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForSyncMaster(firstSyncMaster.ID, true, false, true, "https://arangodb.xyz:8629"),
-							Ports:   createTestPorts(),
+							Ports:   createTestPorts(api.ServerGroupSyncMasters),
 							Env: []core.EnvVar{
 								k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoSyncMonitoringToken,
 									testDeploymentName+"-sync-mt", constants.SecretKeyToken),
@@ -755,7 +755,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForSyncMaster(firstSyncMaster.ID, true, false, true, "https://127.0.0.1:8629"),
-							Ports:   createTestPorts(),
+							Ports:   createTestPorts(api.ServerGroupSyncMasters),
 							Env: []core.EnvVar{
 								k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoSyncMonitoringToken,
 									testDeploymentName+"-sync-mt", constants.SecretKeyToken),
@@ -855,7 +855,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForSyncMaster(firstSyncMaster.ID, true, false, true),
-							Ports:   createTestPorts(),
+							Ports:   createTestPorts(api.ServerGroupSyncMasters),
 							Env: []core.EnvVar{
 								k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoSyncMonitoringToken,
 									testDeploymentName+"-sync-mt", constants.SecretKeyToken),
@@ -962,7 +962,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForSyncMaster(firstSyncMaster.ID, true, false, true, "https://arangodb.xyz:8629", "https://arangodb1.xyz:8629", "https://arangodb2.xyz:8629"),
-							Ports:   createTestPorts(),
+							Ports:   createTestPorts(api.ServerGroupSyncMasters),
 							Env: []core.EnvVar{
 								k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoSyncMonitoringToken,
 									testDeploymentName+"-sync-mt", constants.SecretKeyToken),
@@ -1079,7 +1079,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForSyncMaster(firstSyncMaster.ID, true, false, true, "https://arangodb.xyz:8629", "https://arangodb.xyz:8639", "https://arangodb.xyz:8649"),
-							Ports:   createTestPorts(),
+							Ports:   createTestPorts(api.ServerGroupSyncMasters),
 							Env: []core.EnvVar{
 								k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoSyncMonitoringToken,
 									testDeploymentName+"-sync-mt", constants.SecretKeyToken),
@@ -1194,7 +1194,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForSyncMaster(firstSyncMaster.ID, true, false, true, "https://127.0.0.1:8629", "https://arangodb.xyz:8629", "https://arangodb2.xyz:8629"),
-							Ports:   createTestPorts(),
+							Ports:   createTestPorts(api.ServerGroupSyncMasters),
 							Env: []core.EnvVar{
 								k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoSyncMonitoringToken,
 									testDeploymentName+"-sync-mt", constants.SecretKeyToken),
@@ -1302,7 +1302,7 @@ func TestEnsurePod_Sync_Worker(t *testing.T) {
 							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForSyncWorker(firstSyncWorker.ID, true, true),
-							Ports:   createTestPorts(),
+							Ports:   createTestPorts(api.ServerGroupSyncWorkers),
 							Env: []core.EnvVar{
 								k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoSyncMonitoringToken,
 									testDeploymentName+"-sync-mt", constants.SecretKeyToken),

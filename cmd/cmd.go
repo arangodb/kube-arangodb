@@ -28,8 +28,10 @@ import (
 	"net/http"
 	"os"
 	"reflect"
+	goruntime "runtime"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -232,6 +234,25 @@ func Execute() int {
 // Show usage
 func executeUsage(cmd *cobra.Command, args []string) {
 	cmd.Usage()
+}
+
+func monitorMemoryLimit() {
+	if memoryLimit.hardLimit == 0 {
+		return
+	}
+
+	var m goruntime.MemStats
+
+	for {
+		time.Sleep(time.Millisecond)
+		goruntime.ReadMemStats(&m)
+
+		if m.Sys > 1024*1024*memoryLimit.hardLimit {
+			if err := syscall.Kill(syscall.Getpid(), syscall.SIGABRT); err != nil {
+				panic(err)
+			}
+		}
+	}
 }
 
 // Run the operator

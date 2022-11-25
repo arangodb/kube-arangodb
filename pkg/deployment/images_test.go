@@ -89,7 +89,7 @@ func TestEnsureImages(t *testing.T) {
 							Name:    shared.ServerContainerName,
 							Image:   testNewImage,
 							Command: createTestCommandForImageUpdatePod(),
-							Ports:   createTestPorts(),
+							Ports:   createTestPorts(api.ServerGroupAgents),
 							Resources: core.ResourceRequirements{
 								Limits:   make(core.ResourceList),
 								Requests: make(core.ResourceList),
@@ -148,7 +148,7 @@ func TestEnsureImages(t *testing.T) {
 							Name:    shared.ServerContainerName,
 							Image:   testNewImage,
 							Command: createTestCommandForImageUpdatePod(),
-							Ports:   createTestPorts(),
+							Ports:   createTestPorts(api.ServerGroupAgents),
 							Env: []core.EnvVar{
 								k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoLicenseKey,
 									testLicense, constants.SecretKeyToken),
@@ -195,7 +195,7 @@ func TestEnsureImages(t *testing.T) {
 							Name:    shared.ServerContainerName,
 							Image:   testNewImage,
 							Command: createTestCommandForImageUpdatePod(),
-							Ports:   createTestPorts(),
+							Ports:   createTestPorts(api.ServerGroupAgents),
 							Resources: core.ResourceRequirements{
 								Limits:   make(core.ResourceList),
 								Requests: make(core.ResourceList),
@@ -251,7 +251,7 @@ func TestEnsureImages(t *testing.T) {
 							Name:    shared.ServerContainerName,
 							Image:   testNewImage,
 							Command: createTestCommandForImageUpdatePod(),
-							Ports:   createTestPorts(),
+							Ports:   createTestPorts(api.ServerGroupAgents),
 							Resources: core.ResourceRequirements{
 								Limits:   make(core.ResourceList),
 								Requests: make(core.ResourceList),

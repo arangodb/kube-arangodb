@@ -155,6 +155,7 @@ func (i *inspectorState) RegisterInformers(k8s informers.SharedInformerFactory, 
 		k8s.Policy().V1beta1().PodDisruptionBudgets().Informer().AddEventHandler(i.eventHandler(definitions.PodDisruptionBudget))
 	}
 
+	k8s.Core().V1().Pods().Informer().AddEventHandler(i.eventHandler(definitions.Pod))
 	k8s.Core().V1().Secrets().Informer().AddEventHandler(i.eventHandler(definitions.Secret))
 	k8s.Core().V1().Services().Informer().AddEventHandler(i.eventHandler(definitions.Service))
 	k8s.Core().V1().ServiceAccounts().Informer().AddEventHandler(i.eventHandler(definitions.ServiceAccount))

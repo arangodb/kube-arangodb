@@ -72,7 +72,7 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForAgent(firstAgentStatus.ID, false, false, false),
-							Ports:   createTestPorts(),
+							Ports:   createTestPorts(api.ServerGroupAgents),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
@@ -129,7 +129,7 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForAgent(firstAgentStatus.ID, false, false, false),
-							Ports:   createTestPorts(),
+							Ports:   createTestPorts(api.ServerGroupAgents),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
@@ -187,7 +187,7 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForAgent(firstAgentStatus.ID, false, false, false),
-							Ports:   createTestPorts(),
+							Ports:   createTestPorts(api.ServerGroupAgents),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
@@ -238,7 +238,7 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForDBServer(firstDBServerStatus.ID, false, false, false),
-							Ports:   createTestPorts(),
+							Ports:   createTestPorts(api.ServerGroupAgents),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
@@ -294,7 +294,7 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForDBServer(firstDBServerStatus.ID, false, false, false),
-							Ports:   createTestPorts(),
+							Ports:   createTestPorts(api.ServerGroupAgents),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
@@ -345,7 +345,7 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForCoordinator(firstCoordinatorStatus.ID, false, false),
-							Ports:   createTestPorts(),
+							Ports:   createTestPorts(api.ServerGroupAgents),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
@@ -401,7 +401,7 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForCoordinator(firstCoordinatorStatus.ID, false, false),
-							Ports:   createTestPorts(),
+							Ports:   createTestPorts(api.ServerGroupAgents),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
@@ -459,7 +459,7 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 							Name:    shared.ServerContainerName,
 							Image:   createTestImageForVersion("3.10.0"),
 							Command: createTestCommandForDBServer(firstDBServerStatus.ID, false, false, false, addEarlyConnection),
-							Ports:   createTestPorts(),
+							Ports:   createTestPorts(api.ServerGroupAgents),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
@@ -513,7 +513,7 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 							Name:    shared.ServerContainerName,
 							Image:   createTestImageForVersion("3.9.2"),
 							Command: createTestCommandForDBServer(firstDBServerStatus.ID, false, false, false),
-							Ports:   createTestPorts(),
+							Ports:   createTestPorts(api.ServerGroupAgents),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
@@ -567,7 +567,7 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 							Name:    shared.ServerContainerName,
 							Image:   createTestImageForVersion("3.10.0"),
 							Command: createTestCommandForDBServer(firstDBServerStatus.ID, false, false, false),
-							Ports:   createTestPorts(),
+							Ports:   createTestPorts(api.ServerGroupAgents),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
@@ -621,7 +621,7 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 							Name:    shared.ServerContainerName,
 							Image:   createTestImageForVersion("3.10.0"),
 							Command: createTestCommandForCoordinator(firstCoordinatorStatus.ID, false, false),
-							Ports:   createTestPorts(),
+							Ports:   createTestPorts(api.ServerGroupAgents),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
@@ -674,7 +674,7 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 							Name:    shared.ServerContainerName,
 							Image:   createTestImageForVersion("3.10.0"),
 							Command: createTestCommandForAgent(firstAgentStatus.ID, false, false, false),
-							Ports:   createTestPorts(),
+							Ports:   createTestPorts(api.ServerGroupAgents),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
