@@ -84,7 +84,7 @@ func TestEnsurePod_ArangoDB_ImagePropagation(t *testing.T) {
 							Name:    shared.ServerContainerName,
 							Image:   imageID,
 							Command: createTestCommandForAgent(firstAgentStatus.ID, false, false, false),
-							Ports:   createTestPorts(),
+							Ports:   createTestPorts(api.ServerGroupAgents),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
@@ -136,7 +136,7 @@ func TestEnsurePod_ArangoDB_ImagePropagation(t *testing.T) {
 							Name:    shared.ServerContainerName,
 							Image:   imageID,
 							Command: createTestCommandForAgent(firstAgentStatus.ID, false, false, false),
-							Ports:   createTestPorts(),
+							Ports:   createTestPorts(api.ServerGroupAgents),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
@@ -188,7 +188,7 @@ func TestEnsurePod_ArangoDB_ImagePropagation(t *testing.T) {
 							Name:    shared.ServerContainerName,
 							Image:   image,
 							Command: createTestCommandForAgent(firstAgentStatus.ID, false, false, false),
-							Ports:   createTestPorts(),
+							Ports:   createTestPorts(api.ServerGroupAgents),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},

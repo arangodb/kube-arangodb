@@ -72,7 +72,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 
 								return args
 							}),
-							Ports:     createTestPorts(),
+							Ports:     createTestPorts(api.ServerGroupDBServers),
 							Resources: emptyResources,
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
@@ -135,7 +135,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 
 								return args
 							}),
-							Ports:     createTestPorts(),
+							Ports:     createTestPorts(api.ServerGroupDBServers),
 							Resources: emptyResources,
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
@@ -194,7 +194,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 
 								return args
 							}),
-							Ports:     createTestPorts(),
+							Ports:     createTestPorts(api.ServerGroupDBServers),
 							Resources: emptyResources,
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
@@ -257,7 +257,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 
 								return args
 							}),
-							Ports:     createTestPorts(),
+							Ports:     createTestPorts(api.ServerGroupCoordinators),
 							Resources: emptyResources,
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
@@ -320,7 +320,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 
 								return args
 							}),
-							Ports:     createTestPorts(),
+							Ports:     createTestPorts(api.ServerGroupCoordinators),
 							Resources: emptyResources,
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
@@ -382,7 +382,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 
 								return args
 							}),
-							Ports:     createTestPorts(),
+							Ports:     createTestPorts(api.ServerGroupSingle),
 							Resources: emptyResources,
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
@@ -447,7 +447,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 
 								return args
 							}),
-							Ports:     createTestPorts(),
+							Ports:     createTestPorts(api.ServerGroupSingle),
 							Resources: emptyResources,
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
@@ -512,7 +512,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 
 								return args
 							}),
-							Ports:     createTestPorts(),
+							Ports:     createTestPorts(api.ServerGroupSingle),
 							Resources: emptyResources,
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),

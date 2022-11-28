@@ -37,6 +37,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/patcher"
 )
 
 // EnsureLeader creates leader label on the pod's agency and creates service to it.
@@ -119,19 +120,18 @@ func (r *Resources) EnsureLeader(ctx context.Context, cachedStatus inspectorInte
 	leaderAgentSvcName := k8sutil.CreateAgentLeaderServiceName(r.context.GetAPIObject().GetName())
 	deploymentName := r.context.GetAPIObject().GetName()
 
-	ports := []core.ServicePort{CreateServerServicePort(group)}
-
+	ports := []core.ServicePort{CreateServerServicePort()}
 	selector := k8sutil.LabelsForLeaderMember(deploymentName, group.AsRole(), leaderID)
+
 	if s, ok := cachedStatus.Service().V1().GetSimple(leaderAgentSvcName); ok {
-		if err, adjusted := r.adjustService(ctx, s, ports, selector); err == nil {
-			if !adjusted {
-				// The service is not changed, so single server leader can be set.
+		if c, err := patcher.ServicePatcher(ctx, cachedStatus.ServicesModInterface().V1(), s, meta.PatchOptions{}, patcher.PatchServiceSelector(selector), patcher.PatchServicePorts(ports)); err != nil {
+			return err
+		} else {
+			if !c {
 				return r.ensureSingleServerLeader(ctx, cachedStatus)
 			}
 
 			return errors.Reconcile()
-		} else {
-			return err
 		}
 	}
 

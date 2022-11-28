@@ -89,10 +89,16 @@ func (a *ArangoSyncContainer) GetName() string {
 }
 
 func (a *ArangoSyncContainer) GetPorts() []core.ContainerPort {
+	port := shared.ArangoSyncMasterPort
+
+	if a.group == api.ServerGroupSyncWorkers {
+		port = shared.ArangoSyncWorkerPort
+	}
+
 	return []core.ContainerPort{
 		{
 			Name:          shared.ServerContainerName,
-			ContainerPort: int32(shared.ArangoPort),
+			ContainerPort: int32(port),
 			Protocol:      core.ProtocolTCP,
 		},
 	}

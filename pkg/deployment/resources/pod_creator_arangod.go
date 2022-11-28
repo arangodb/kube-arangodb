@@ -99,7 +99,7 @@ type ArangoVersionCheckContainer struct {
 func (a *ArangoDContainer) GetPorts() []core.ContainerPort {
 	ports := []core.ContainerPort{
 		{
-			Name:          shared.ServerContainerName,
+			Name:          shared.ServerPortName,
 			ContainerPort: int32(shared.ArangoPort),
 			Protocol:      core.ProtocolTCP,
 		},
@@ -109,7 +109,7 @@ func (a *ArangoDContainer) GetPorts() []core.ContainerPort {
 		switch a.spec.Metrics.Mode.Get() {
 		case api.MetricsModeInternal:
 			ports = append(ports, core.ContainerPort{
-				Name:          "exporter",
+				Name:          shared.ExporterPortName,
 				ContainerPort: int32(shared.ArangoPort),
 				Protocol:      core.ProtocolTCP,
 			})

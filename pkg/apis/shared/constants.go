@@ -64,4 +64,7 @@ const (
 	ClusterJWTSecretVolumeMountDir  = "/secrets/cluster/jwt"
 	ExporterJWTVolumeMountDir       = "/secrets/exporter/jwt"
 	MasterJWTSecretVolumeMountDir   = "/secrets/master/jwt"
+
+	ServerPortName   = "server"
+	ExporterPortName = "exporter"
 )
