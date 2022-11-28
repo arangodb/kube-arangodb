@@ -49,6 +49,7 @@ const (
 	ArangoDBOverrideDeploymentModeEnv        = "ARANGODB_OVERRIDE_DEPLOYMENT_MODE"
 	ArangoDBOverrideVersionEnv               = "ARANGODB_OVERRIDE_VERSION"
 	ArangoDBOverrideEnterpriseEnv            = "ARANGODB_OVERRIDE_ENTERPRISE"
+	ArangoDBServerPortEnv                    = "ARANGODB_SERVER_PORT"
 )
 
 var _ interfaces.PodCreator = &MemberArangoDPod{}
@@ -100,7 +101,7 @@ func (a *ArangoDContainer) GetPorts() []core.ContainerPort {
 	ports := []core.ContainerPort{
 		{
 			Name:          shared.ServerPortName,
-			ContainerPort: int32(shared.ArangoPort),
+			ContainerPort: int32(a.groupSpec.GetPort()),
 			Protocol:      core.ProtocolTCP,
 		},
 	}
@@ -110,7 +111,7 @@ func (a *ArangoDContainer) GetPorts() []core.ContainerPort {
 		case api.MetricsModeInternal:
 			ports = append(ports, core.ContainerPort{
 				Name:          shared.ExporterPortName,
-				ContainerPort: int32(shared.ArangoPort),
+				ContainerPort: int32(a.groupSpec.GetPort()),
 				Protocol:      core.ProtocolTCP,
 			})
 		}
@@ -239,6 +240,13 @@ func (a *ArangoDContainer) GetEnvs() ([]core.EnvVar, []core.EnvFromSource) {
 		Name:  ArangoDBOverrideEnterpriseEnv,
 		Value: strconv.FormatBool(a.input.Enterprise),
 	})
+
+	if p := a.groupSpec.Port; p != nil {
+		envs.Add(true, core.EnvVar{
+			Name:  ArangoDBServerPortEnv,
+			Value: fmt.Sprintf("%d", *p),
+		})
+	}
 
 	envFromSource := []core.EnvFromSource{
 		{
@@ -537,8 +545,7 @@ func (m *MemberArangoDPod) createMetricsExporterSidecarInternalExporter() (*core
 
 	c, err := ArangodbInternalExporterContainer(image, args,
 		createExporterLivenessProbe(m.spec.IsSecure() && m.spec.Metrics.IsTLS()), m.spec.Metrics.Resources,
-		m.groupSpec.SecurityContext.NewSecurityContext(),
-		m.spec)
+		m.spec, m.groupSpec)
 	if err != nil {
 		return nil, err
 	}

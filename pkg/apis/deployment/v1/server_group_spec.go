@@ -160,6 +160,10 @@ type ServerGroupSpec struct {
 
 	// PodModes define additional modes enabled on the Pod level
 	PodModes *ServerGroupSpecPodMode `json:"podModes,omitempty"`
+	// Port define Port used by member
+	Port *uint16 `json:"port,omitempty"`
+	// ExporterPort define Port used by exporter
+	ExporterPort *uint16 `json:"exporterPort,omitempty"`
 }
 
 // ServerGroupProbesSpec contains specification for probes for pods of the server group
@@ -671,4 +675,31 @@ func (s *ServerGroupSpec) Group() ServerGroup {
 	}
 
 	return s.group
+}
+
+func (s *ServerGroupSpec) GetPort() uint16 {
+	if s != nil {
+		if p := s.Port; p != nil {
+			return *p
+		}
+	}
+
+	switch s.Group() {
+	case ServerGroupSyncMasters:
+		return shared.ArangoSyncMasterPort
+	case ServerGroupSyncWorkers:
+		return shared.ArangoSyncWorkerPort
+	default:
+		return shared.ArangoPort
+	}
+}
+
+func (s *ServerGroupSpec) GetExporterPort() uint16 {
+	if s != nil {
+		if p := s.ExporterPort; p != nil {
+			return *p
+		}
+	}
+
+	return shared.ArangoExporterPort
 }

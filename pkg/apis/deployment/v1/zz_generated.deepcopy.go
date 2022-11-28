@@ -2445,6 +2445,16 @@ func (in *ServerGroupSpec) DeepCopyInto(out *ServerGroupSpec) {
 		*out = new(ServerGroupSpecPodMode)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.Port != nil {
+		in, out := &in.Port, &out.Port
+		*out = new(uint16)
+		**out = **in
+	}
+	if in.ExporterPort != nil {
+		in, out := &in.ExporterPort, &out.ExporterPort
+		*out = new(uint16)
+		**out = **in
+	}
 	return
 }
 

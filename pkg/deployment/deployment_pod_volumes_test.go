@@ -96,7 +96,7 @@ func TestEnsurePod_ArangoDB_Volumes(t *testing.T) {
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -157,7 +157,7 @@ func TestEnsurePod_ArangoDB_Volumes(t *testing.T) {
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -220,7 +220,7 @@ func TestEnsurePod_ArangoDB_Volumes(t *testing.T) {
 								k8sutil.ArangodVolumeMount(),
 								createExampleVolumeMount("volume").VolumeMount(),
 							},
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},

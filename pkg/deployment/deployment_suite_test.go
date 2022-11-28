@@ -22,6 +22,7 @@ package deployment
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
@@ -124,7 +125,7 @@ func createTestToken(deployment *Deployment, testCase *testCaseStruct, paths []s
 	return jwt.CreateArangodJwtAuthorizationHeaderAllowedPaths(s, "kube-arangodb", paths)
 }
 
-func modTestLivenessProbe(mode string, secure bool, authorization string, port int, mod func(*core.Probe)) *core.Probe {
+func modTestLivenessProbe(mode string, secure bool, authorization string, port string, mod func(*core.Probe)) *core.Probe {
 	probe := createTestLivenessProbe(mode, secure, authorization, port)
 
 	mod(probe)
@@ -141,12 +142,12 @@ func createTestReadinessSimpleProbe(mode string, secure bool, authorization stri
 	return probe
 }
 
-func createTestLivenessProbe(mode string, secure bool, authorization string, port int) *core.Probe {
+func createTestLivenessProbe(mode string, secure bool, authorization string, port string) *core.Probe {
 	return getProbeCreator(mode)(secure, authorization, "/_api/version", port, api.ProbeTypeLiveness).Create()
 }
 
 func createTestReadinessProbe(mode string, secure bool, authorization string) *core.Probe {
-	p := getProbeCreator(mode)(secure, authorization, "/_admin/server/availability", shared.ArangoPort,
+	p := getProbeCreator(mode)(secure, authorization, "/_admin/server/availability", shared.ServerPortName,
 		api.ProbeTypeReadiness).Create()
 
 	p.InitialDelaySeconds = 2
@@ -156,7 +157,7 @@ func createTestReadinessProbe(mode string, secure bool, authorization string) *c
 }
 
 func createTestStartupProbe(mode string, secure bool, authorization string, failureThreshold int32) *core.Probe {
-	p := getProbeCreator(mode)(secure, authorization, "/_api/version", shared.ArangoPort, api.ProbeTypeStartUp).Create()
+	p := getProbeCreator(mode)(secure, authorization, "/_api/version", shared.ServerPortName, api.ProbeTypeStartUp).Create()
 
 	p.InitialDelaySeconds = 1
 	p.PeriodSeconds = 5
@@ -165,7 +166,7 @@ func createTestStartupProbe(mode string, secure bool, authorization string, fail
 	return p
 }
 
-type probeCreator func(secure bool, authorization, endpoint string, port int, probe api.ProbeType) resources.Probe
+type probeCreator func(secure bool, authorization, endpoint string, port string, probe api.ProbeType) resources.Probe
 
 const (
 	cmdProbe  = "cmdProbe"
@@ -182,13 +183,13 @@ func getProbeCreator(t string) probeCreator {
 }
 
 func getHTTPProbeCreator() probeCreator {
-	return func(secure bool, authorization, endpoint string, port int, _ api.ProbeType) resources.Probe {
+	return func(secure bool, authorization, endpoint string, port string, _ api.ProbeType) resources.Probe {
 		return createHTTPTestProbe(secure, authorization, endpoint, port)
 	}
 }
 
 func getCMDProbeCreator() probeCreator {
-	return func(secure bool, authorization, endpoint string, port int, probeType api.ProbeType) resources.Probe {
+	return func(secure bool, authorization, endpoint string, _ string, probeType api.ProbeType) resources.Probe {
 		return createCMDTestProbe(secure, authorization != "", probeType)
 	}
 }
@@ -215,12 +216,12 @@ func createCMDTestProbe(secure, authorization bool, probeType api.ProbeType) res
 	}
 }
 
-func createHTTPTestProbe(secure bool, authorization string, endpoint string, port int) resources.Probe {
+func createHTTPTestProbe(secure bool, authorization string, endpoint string, port string) resources.Probe {
 	return &probes.HTTPProbeConfig{
 		LocalPath:     endpoint,
 		Secure:        secure,
 		Authorization: authorization,
-		Port:          port,
+		PortName:      port,
 	}
 }
 
@@ -279,6 +280,55 @@ func createTestCommandForDBServer(name string, tls, auth, encryptionRocksDB bool
 	return append(command, sorted...)
 }
 
+func createTestCommandForCoordinatorWithPort(name string, tls, auth bool, port int, mods ...func() k8sutil.OptionPairs) []string {
+	command := []string{resources.ArangoDExecutor}
+
+	args := k8sutil.OptionPairs{}
+
+	if tls {
+		args.Addf("--cluster.my-address", "ssl://%s-%s-%s.test-int.default.svc:8529",
+			testDeploymentName,
+			api.ServerGroupCoordinatorsString,
+			name)
+	} else {
+		args.Addf("--cluster.my-address", "tcp://%s-%s-%s.test-int.default.svc:8529",
+			testDeploymentName,
+			api.ServerGroupCoordinatorsString,
+			name)
+	}
+
+	args.Add("--cluster.my-role", "COORDINATOR")
+	args.Add("--database.directory", "/data")
+	args.Add("--foxx.queues", "true")
+	args.Add("--log.level", "INFO")
+	args.Add("--log.output", "+")
+	args.Add("--server.authentication", auth)
+
+	if tls {
+		args.Addf("--server.endpoint", "ssl://[::]:%d", port)
+	} else {
+		args.Addf("--server.endpoint", "tcp://[::]:%d", port)
+	}
+
+	if auth {
+		args.Add("--server.jwt-secret-keyfile", "/secrets/cluster/jwt/token")
+	}
+
+	args.Add("--server.statistics", "true")
+	args.Add("--server.storage-engine", "rocksdb")
+
+	if tls {
+		args.Add("--ssl.ecdh-curve", "")
+		args.Add("--ssl.keyfile", "/secrets/tls/tls.keyfile")
+	}
+
+	for _, mod := range mods {
+		args.Merge(mod())
+	}
+
+	return append(command, args.Unique().AsArgs()...)
+}
+
 func createTestCommandForCoordinator(name string, tls, auth bool, mods ...func() k8sutil.OptionPairs) []string {
 	command := []string{resources.ArangoDExecutor}
 
@@ -307,6 +357,42 @@ func createTestCommandForCoordinator(name string, tls, auth bool, mods ...func()
 		args.Add("--server.endpoint", "ssl://[::]:8529")
 	} else {
 		args.Add("--server.endpoint", "tcp://[::]:8529")
+	}
+
+	if auth {
+		args.Add("--server.jwt-secret-keyfile", "/secrets/cluster/jwt/token")
+	}
+
+	args.Add("--server.statistics", "true")
+	args.Add("--server.storage-engine", "rocksdb")
+
+	if tls {
+		args.Add("--ssl.ecdh-curve", "")
+		args.Add("--ssl.keyfile", "/secrets/tls/tls.keyfile")
+	}
+
+	for _, mod := range mods {
+		args.Merge(mod())
+	}
+
+	return append(command, args.Unique().AsArgs()...)
+}
+
+func createTestCommandForSingleModeWithPortOverride(tls, auth bool, port int, mods ...func() k8sutil.OptionPairs) []string {
+	command := []string{resources.ArangoDExecutor}
+
+	args := k8sutil.OptionPairs{}
+
+	args.Add("--database.directory", "/data")
+	args.Add("--foxx.queues", "true")
+	args.Add("--log.level", "INFO")
+	args.Add("--log.output", "+")
+	args.Add("--server.authentication", auth)
+
+	if tls {
+		args.Addf("--server.endpoint", "ssl://[::]:%d", port)
+	} else {
+		args.Addf("--server.endpoint", "tcp://[::]:%d", port)
 	}
 
 	if auth {
@@ -530,7 +616,7 @@ func createTestDeployment(t *testing.T, config Config, arangoDeployment *api.Ara
 	return d, eventRecorder
 }
 
-func createTestPorts(group api.ServerGroup) []core.ContainerPort {
+func createTestPorts(group api.ServerGroup, ports ...int) []core.ContainerPort {
 	port := shared.ArangoPort
 
 	switch group {
@@ -538,6 +624,10 @@ func createTestPorts(group api.ServerGroup) []core.ContainerPort {
 		port = shared.ArangoSyncMasterPort
 	case api.ServerGroupSyncWorkers:
 		port = shared.ArangoSyncWorkerPort
+	}
+
+	if len(ports) > 0 {
+		port = ports[0]
 	}
 
 	return []core.ContainerPort{
@@ -568,7 +658,7 @@ func createTestImages(enterprise bool) api.ImageInfoList {
 func createTestExporterLivenessProbe(secure bool) *core.Probe {
 	return probes.HTTPProbeConfig{
 		LocalPath: "/",
-		Port:      shared.ArangoExporterPort,
+		PortName:  shared.ExporterPortName,
 		Secure:    secure,
 	}.Create()
 }
@@ -819,68 +909,84 @@ func addLifecycle(name string, uuidRequired bool, license string, group api.Serv
 
 func (testCase *testCaseStruct) createTestEnvVariables(deployment *Deployment, group api.ServerGroup) {
 	if group == api.ServerGroupSyncMasters || group == api.ServerGroupSyncWorkers {
-		return
-	}
 
-	// Set up environment variables.
+	} else {
+		// Set up environment variables.
+		for i, container := range testCase.ExpectedPod.Spec.Containers {
+			if container.Name != api.ServerGroupReservedContainerNameServer {
+				continue
+			}
+
+			testCase.ExpectedPod.Spec.Containers[i].EnvFrom = []core.EnvFromSource{
+				{
+					ConfigMapRef: &core.ConfigMapEnvSource{
+						LocalObjectReference: core.LocalObjectReference{
+							Name: features.ConfigMapName(),
+						},
+						Optional: util.NewBool(true),
+					},
+				},
+			}
+
+			var version, enterprise string
+			if len(deployment.currentObjectStatus.Images) > 0 {
+				version = string(deployment.currentObjectStatus.Images[0].ArangoDBVersion)
+				enterprise = strconv.FormatBool(deployment.currentObjectStatus.Images[0].Enterprise)
+			}
+
+			if version == "" {
+				version = testVersion
+			}
+			if enterprise == "" {
+				enterprise = "false"
+			}
+
+			if !isEnvExist(testCase.ExpectedPod.Spec.Containers[i].Env, resources.ArangoDBOverrideServerGroupEnv) {
+				testCase.ExpectedPod.Spec.Containers[i].Env = append(testCase.ExpectedPod.Spec.Containers[i].Env,
+					core.EnvVar{
+						Name:  resources.ArangoDBOverrideServerGroupEnv,
+						Value: group.AsRole(),
+					})
+			}
+			if !isEnvExist(testCase.ExpectedPod.Spec.Containers[i].Env, resources.ArangoDBOverrideDeploymentModeEnv) {
+				testCase.ExpectedPod.Spec.Containers[i].Env = append(testCase.ExpectedPod.Spec.Containers[i].Env,
+					core.EnvVar{
+						Name:  resources.ArangoDBOverrideDeploymentModeEnv,
+						Value: string(testCase.ArangoDeployment.Spec.GetMode()),
+					})
+			}
+
+			if !isEnvExist(testCase.ExpectedPod.Spec.Containers[i].Env, resources.ArangoDBOverrideVersionEnv) {
+				testCase.ExpectedPod.Spec.Containers[i].Env = append(testCase.ExpectedPod.Spec.Containers[i].Env,
+					core.EnvVar{
+						Name:  resources.ArangoDBOverrideVersionEnv,
+						Value: version,
+					})
+			}
+
+			if !isEnvExist(testCase.ExpectedPod.Spec.Containers[i].Env, resources.ArangoDBOverrideEnterpriseEnv) {
+				testCase.ExpectedPod.Spec.Containers[i].Env = append(testCase.ExpectedPod.Spec.Containers[i].Env,
+					core.EnvVar{
+						Name:  resources.ArangoDBOverrideEnterpriseEnv,
+						Value: enterprise,
+					})
+			}
+		}
+	}
 	for i, container := range testCase.ExpectedPod.Spec.Containers {
 		if container.Name != api.ServerGroupReservedContainerNameServer {
 			continue
 		}
+		if !isEnvExist(testCase.ExpectedPod.Spec.Containers[i].Env, resources.ArangoDBServerPortEnv) {
+			gs := deployment.GetSpec().GetServerGroupSpec(group)
 
-		testCase.ExpectedPod.Spec.Containers[i].EnvFrom = []core.EnvFromSource{
-			{
-				ConfigMapRef: &core.ConfigMapEnvSource{
-					LocalObjectReference: core.LocalObjectReference{
-						Name: features.ConfigMapName(),
-					},
-					Optional: util.NewBool(true),
-				},
-			},
-		}
-
-		var version, enterprise string
-		if len(deployment.currentObjectStatus.Images) > 0 {
-			version = string(deployment.currentObjectStatus.Images[0].ArangoDBVersion)
-			enterprise = strconv.FormatBool(deployment.currentObjectStatus.Images[0].Enterprise)
-		}
-
-		if version == "" {
-			version = testVersion
-		}
-		if enterprise == "" {
-			enterprise = "false"
-		}
-
-		if !isEnvExist(testCase.ExpectedPod.Spec.Containers[i].Env, resources.ArangoDBOverrideServerGroupEnv) {
-			testCase.ExpectedPod.Spec.Containers[i].Env = append(testCase.ExpectedPod.Spec.Containers[i].Env,
-				core.EnvVar{
-					Name:  resources.ArangoDBOverrideServerGroupEnv,
-					Value: group.AsRole(),
-				})
-		}
-		if !isEnvExist(testCase.ExpectedPod.Spec.Containers[i].Env, resources.ArangoDBOverrideDeploymentModeEnv) {
-			testCase.ExpectedPod.Spec.Containers[i].Env = append(testCase.ExpectedPod.Spec.Containers[i].Env,
-				core.EnvVar{
-					Name:  resources.ArangoDBOverrideDeploymentModeEnv,
-					Value: string(testCase.ArangoDeployment.Spec.GetMode()),
-				})
-		}
-
-		if !isEnvExist(testCase.ExpectedPod.Spec.Containers[i].Env, resources.ArangoDBOverrideVersionEnv) {
-			testCase.ExpectedPod.Spec.Containers[i].Env = append(testCase.ExpectedPod.Spec.Containers[i].Env,
-				core.EnvVar{
-					Name:  resources.ArangoDBOverrideVersionEnv,
-					Value: version,
-				})
-		}
-
-		if !isEnvExist(testCase.ExpectedPod.Spec.Containers[i].Env, resources.ArangoDBOverrideEnterpriseEnv) {
-			testCase.ExpectedPod.Spec.Containers[i].Env = append(testCase.ExpectedPod.Spec.Containers[i].Env,
-				core.EnvVar{
-					Name:  resources.ArangoDBOverrideEnterpriseEnv,
-					Value: enterprise,
-				})
+			if p := gs.Port; p != nil {
+				testCase.ExpectedPod.Spec.Containers[i].Env = append(testCase.ExpectedPod.Spec.Containers[i].Env,
+					core.EnvVar{
+						Name:  resources.ArangoDBServerPortEnv,
+						Value: fmt.Sprintf("%d", *p),
+					})
+			}
 		}
 	}
 }

@@ -229,8 +229,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
 				require.NoError(t, err)
 
-				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(
-					"", true, "bearer "+auth, shared.ArangoSyncMasterPort)
+				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe("", true, "bearer "+auth, shared.ServerPortName)
 			},
 			ExpectedEvent: "member syncmaster is created",
 			ExpectedPod: core.Pod{
@@ -319,8 +318,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
 				require.NoError(t, err)
 
-				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(
-					"", true, "bearer "+auth, shared.ArangoSyncMasterPort)
+				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe("", true, "bearer "+auth, shared.ServerPortName)
 			},
 			ExpectedEvent: "member syncmaster is created",
 			ExpectedPod: core.Pod{
@@ -424,8 +422,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
 				require.NoError(t, err)
 
-				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(
-					"", true, "bearer "+auth, shared.ArangoSyncMasterPort)
+				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe("", true, "bearer "+auth, shared.ServerPortName)
 			},
 			ExpectedEvent: "member syncmaster is created",
 			ExpectedPod: core.Pod{
@@ -526,8 +523,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
 				require.NoError(t, err)
 
-				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(
-					"", true, "bearer "+auth, shared.ArangoSyncMasterPort)
+				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe("", true, "bearer "+auth, shared.ServerPortName)
 			},
 			ExpectedEvent: "member syncmaster is created",
 			ExpectedPod: core.Pod{
@@ -628,8 +624,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
 				require.NoError(t, err)
 
-				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(
-					"", true, "bearer "+auth, shared.ArangoSyncMasterPort)
+				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe("", true, "bearer "+auth, shared.ServerPortName)
 			},
 			ExpectedEvent: "member syncmaster is created",
 			ExpectedPod: core.Pod{
@@ -733,8 +728,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
 				require.NoError(t, err)
 
-				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(
-					"", true, "bearer "+auth, shared.ArangoSyncMasterPort)
+				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe("", true, "bearer "+auth, shared.ServerPortName)
 			},
 			ExpectedEvent: "member syncmaster is created",
 			ExpectedPod: core.Pod{
@@ -833,8 +827,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
 				require.NoError(t, err)
 
-				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(
-					"", true, "bearer "+auth, shared.ArangoSyncMasterPort)
+				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe("", true, "bearer "+auth, shared.ServerPortName)
 			},
 			ExpectedEvent: "member syncmaster is created",
 			ExpectedPod: core.Pod{
@@ -940,8 +933,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
 				require.NoError(t, err)
 
-				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(
-					"", true, "bearer "+auth, shared.ArangoSyncMasterPort)
+				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe("", true, "bearer "+auth, shared.ServerPortName)
 			},
 			ExpectedEvent: "member syncmaster is created",
 			ExpectedPod: core.Pod{
@@ -1057,8 +1049,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
 				require.NoError(t, err)
 
-				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(
-					"", true, "bearer "+auth, shared.ArangoSyncMasterPort)
+				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe("", true, "bearer "+auth, shared.ServerPortName)
 			},
 			ExpectedEvent: "member syncmaster is created",
 			ExpectedPod: core.Pod{
@@ -1172,8 +1163,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
 				require.NoError(t, err)
 
-				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(
-					"", true, "bearer "+auth, shared.ArangoSyncMasterPort)
+				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe("", true, "bearer "+auth, shared.ServerPortName)
 			},
 			ExpectedEvent: "member syncmaster is created",
 			ExpectedPod: core.Pod{
@@ -1284,8 +1274,7 @@ func TestEnsurePod_Sync_Worker(t *testing.T) {
 				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
 				require.NoError(t, err)
 
-				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(
-					"", true, "bearer "+auth, shared.ArangoSyncWorkerPort)
+				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe("", true, "bearer "+auth, shared.ServerPortName)
 			},
 			ExpectedEvent: "member syncworker is created",
 			ExpectedPod: core.Pod{
