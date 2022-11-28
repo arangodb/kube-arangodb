@@ -97,6 +97,10 @@ var (
 		Run: executeMain,
 	}
 
+	memoryLimit struct {
+		hardLimit uint64
+	}
+
 	logLevels     []string
 	serverOptions struct {
 		host            string
@@ -209,6 +213,7 @@ func init() {
 	f.IntVar(&operatorKubernetesOptions.burst, "kubernetes.burst", kclient.DefaultBurst, "Burst for the k8s API")
 	f.BoolVar(&crdOptions.install, "crd.install", true, "Install missing CRD if access is possible")
 	f.IntVar(&operatorBackup.concurrentUploads, "backup-concurrent-uploads", globals.DefaultBackupConcurrentUploads, "Number of concurrent uploads per deployment")
+	f.Uint64Var(&memoryLimit.hardLimit, "memory-limit", 0, "Define memory limit for hard shutdown and the dump of goroutines. Used for testing")
 	if err := features.Init(&cmdMain); err != nil {
 		panic(err.Error())
 	}
@@ -235,6 +240,8 @@ func executeMain(cmd *cobra.Command, args []string) {
 	namespace := os.Getenv(constants.EnvOperatorPodNamespace)
 	name := os.Getenv(constants.EnvOperatorPodName)
 	ip := os.Getenv(constants.EnvOperatorPodIP)
+
+	go monitorMemoryLimit()
 
 	deploymentApi.DefaultImage = operatorOptions.arangoImage
 

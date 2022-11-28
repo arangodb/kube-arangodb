@@ -18,28 +18,38 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package util
+package cmd
 
 import (
-	"context"
+	"runtime"
+	"syscall"
+	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 )
 
-// CreateSignalContext creates and returns the context which is closed when one of the provided signal occurs.
-// SIGINT and SIGTERM is used by default.
-func CreateSignalContext(ctx context.Context) context.Context {
-	if ctx == nil {
-		ctx = context.Background()
+func monitorMemoryLimit() {
+	if memoryLimit.hardLimit == 0 {
+		return
 	}
-	ctxSignal, cancelSignal := context.WithCancel(ctx)
 
-	go func() {
-		// Wait until shutdown starts
-		<-shutdown.Channel()
-		// Close the context which is used by the caller.
-		cancelSignal()
-	}()
+	var m runtime.MemStats
 
-	return ctxSignal
+	t := time.NewTicker(time.Millisecond)
+	defer t.Stop()
+
+	for {
+		select {
+		case <-t.C:
+			runtime.ReadMemStats(&m)
+
+			if m.Sys > 1024*1024*memoryLimit.hardLimit {
+				if err := syscall.Kill(syscall.Getpid(), syscall.SIGABRT); err != nil {
+					panic(err)
+				}
+			}
+		case <-shutdown.Channel():
+			return
+		}
+	}
 }
