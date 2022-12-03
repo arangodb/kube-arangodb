@@ -31,7 +31,7 @@ func (a Array) Error() string {
 	q := make([]string, len(a))
 
 	for id := range a {
-		q[id] = a.Error()
+		q[id] = a[id].Error()
 	}
 
 	return fmt.Sprintf("Received %d errors: %s", len(q), strings.Join(q, ", "))

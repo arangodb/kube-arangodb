@@ -26,15 +26,12 @@ import (
 	"time"
 
 	core "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/equality"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
@@ -43,6 +40,7 @@ import (
 	v1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
 	servicev1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/patcher"
 )
 
 var (
@@ -71,39 +69,8 @@ func (r *Resources) createService(name, namespace string, owner meta.OwnerRefere
 	}
 }
 
-// adjustService checks whether service contains is valid and if not than it reconciles service.
-// Returns true if service is adjusted.
-func (r *Resources) adjustService(ctx context.Context, s *core.Service, ports []core.ServicePort,
-	selector map[string]string) (error, bool) {
-	services := r.context.ACS().CurrentClusterCache().ServicesModInterface().V1()
-	spec := s.Spec.DeepCopy()
-
-	spec.Type = core.ServiceTypeClusterIP
-	spec.Ports = ports
-	spec.PublishNotReadyAddresses = true
-	spec.Selector = selector
-	if equality.Semantic.DeepDerivative(*spec, s.Spec) {
-		// The service has not changed, so nothing should be changed.
-		return nil, false
-	}
-
-	s.Spec = *spec
-	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-		_, err := services.Update(ctxChild, s, meta.UpdateOptions{})
-		return err
-	})
-	if err != nil {
-		return err, false
-	}
-
-	// The service has been changed.
-	return nil, true
-
-}
-
 // EnsureServices creates all services needed to service the deployment
 func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
-
 	log := r.log.Str("section", "service")
 	start := time.Now()
 	apiObject := r.context.GetAPIObject()
@@ -111,6 +78,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 	deploymentName := apiObject.GetName()
 	owner := apiObject.AsOwner()
 	spec := r.context.GetSpec()
+	role := spec.Mode.Get().ServingGroup().AsRole()
 	defer metrics.SetDuration(inspectServicesDurationGauges.WithLabelValues(deploymentName), start)
 	counterMetric := inspectedServicesCounters.WithLabelValues(deploymentName)
 
@@ -129,7 +97,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 			return errors.Newf("Member %s not found", memberName)
 		}
 
-		ports := CreateServerServicePortsWithSidecars(podInspector, e.Member.PodName, e.Group)
+		ports := CreateServerServicePortsWithSidecars(podInspector, e.Member.Pod.GetName())
 		selector := k8sutil.LabelsForActiveMember(deploymentName, e.Group.AsRole(), e.Member.ID)
 		if s, ok := cachedStatus.Service().V1().GetSimple(member.GetName()); !ok {
 			s := r.createService(member.GetName(), member.GetNamespace(), member.AsOwner(), ports, selector)
@@ -147,29 +115,40 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 			reconcileRequired.Required()
 			continue
 		} else {
-			if err, adjusted := r.adjustService(ctx, s, ports, selector); err == nil {
-				if adjusted {
-					reconcileRequired.Required()
-				}
-				// Continue the loop.
-			} else {
+
+			if changed, err := patcher.ServicePatcher(ctx, svcs, s, meta.PatchOptions{},
+				patcher.PatchServicePorts(ports),
+				patcher.PatchServiceSelector(selector),
+				patcher.PatchServicePublishNotReadyAddresses(true),
+				patcher.PatchServiceType(core.ServiceTypeClusterIP)); err != nil {
 				return err
+			} else if changed {
+				reconcileRequired.Required()
 			}
 		}
 	}
 
 	// Headless service
 	counterMetric.Inc()
-	if _, exists := cachedStatus.Service().V1().GetSimple(k8sutil.CreateHeadlessServiceName(deploymentName)); !exists {
+	headlessPorts, headlessSelector := k8sutil.HeadlessServiceDetails(deploymentName, role)
+
+	if s, exists := cachedStatus.Service().V1().GetSimple(k8sutil.CreateHeadlessServiceName(deploymentName)); !exists {
 		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
-		svcName, newlyCreated, err := k8sutil.CreateHeadlessService(ctxChild, svcs, apiObject, owner)
+		svcName, newlyCreated, err := k8sutil.CreateHeadlessService(ctxChild, svcs, apiObject, headlessPorts, headlessSelector, owner)
 		if err != nil {
 			log.Err(err).Debug("Failed to create headless service")
 			return errors.WithStack(err)
 		}
 		if newlyCreated {
 			log.Str("service", svcName).Debug("Created headless service")
+		}
+	} else {
+		if changed, err := patcher.ServicePatcher(ctx, svcs, s, meta.PatchOptions{}, patcher.PatchServicePorts(headlessPorts), patcher.PatchServiceSelector(headlessSelector)); err != nil {
+			log.Err(err).Debug("Failed to patch headless service")
+			return errors.WithStack(err)
+		} else if changed {
+			log.Str("service", s.GetName()).Debug("Updated headless service")
 		}
 	}
 
@@ -181,10 +160,13 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 		}
 	}
 	counterMetric.Inc()
-	if _, exists := cachedStatus.Service().V1().GetSimple(k8sutil.CreateDatabaseClientServiceName(deploymentName)); !exists {
+
+	clientServicePorts, clientServiceSelectors := k8sutil.DatabaseClientDetails(deploymentName, role, withLeader)
+
+	if s, exists := cachedStatus.Service().V1().GetSimple(k8sutil.CreateDatabaseClientServiceName(deploymentName)); !exists {
 		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
-		svcName, newlyCreated, err := k8sutil.CreateDatabaseClientService(ctxChild, svcs, apiObject, single, withLeader, owner)
+		svcName, newlyCreated, err := k8sutil.CreateDatabaseClientService(ctxChild, svcs, apiObject, clientServicePorts, clientServiceSelectors, owner)
 		if err != nil {
 			log.Err(err).Debug("Failed to create database client service")
 			return errors.WithStack(err)
@@ -201,14 +183,17 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 				}
 			}
 		}
+	} else {
+		if changed, err := patcher.ServicePatcher(ctx, svcs, s, meta.PatchOptions{}, patcher.PatchServicePorts(clientServicePorts), patcher.PatchServiceSelector(clientServiceSelectors)); err != nil {
+			log.Err(err).Debug("Failed to patch database client service")
+			return errors.WithStack(err)
+		} else if changed {
+			log.Str("service", s.GetName()).Debug("Updated database client service")
+		}
 	}
 
 	// Database external access service
 	eaServiceName := k8sutil.CreateDatabaseExternalAccessServiceName(deploymentName)
-	role := "coordinator"
-	if single {
-		role = "single"
-	}
 	if err := r.ensureExternalAccessServices(ctx, cachedStatus, svcs, eaServiceName, role, shared.ArangoPort,
 		false, withLeader, spec.ExternalAccess, apiObject); err != nil {
 		return errors.WithStack(err)
@@ -234,7 +219,10 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 	if spec.Metrics.IsEnabled() {
 		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
-		name, _, err := k8sutil.CreateExporterService(ctxChild, cachedStatus, svcs, apiObject, apiObject.AsOwner())
+
+		ports, selectors := k8sutil.ExporterServiceDetails(deploymentName)
+
+		name, _, err := k8sutil.CreateExporterService(ctxChild, cachedStatus, apiObject, ports, selectors, apiObject.AsOwner())
 		if err != nil {
 			log.Err(err).Debug("Failed to create %s exporter service", name)
 			return errors.WithStack(err)
@@ -253,16 +241,17 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 
 // ensureExternalAccessServices ensures all services needed for a deployment.
 func (r *Resources) ensureExternalAccessServices(ctx context.Context, cachedStatus inspectorInterface.Inspector,
-	svcs servicev1.ModInterface, eaServiceName, svcRole string, port int, noneIsClusterIP bool, withLeader bool,
+	svcs servicev1.ModInterface, eaServiceName, role string, port int, noneIsClusterIP bool, withLeader bool,
 	spec api.ExternalAccessSpec, apiObject k8sutil.APIObject) error {
+
+	eaPorts, eaSelector := k8sutil.ExternalAccessDetails(port, spec.GetNodePort(), apiObject.GetName(), role, withLeader)
 
 	if spec.GetType().IsManaged() {
 		// Managed services should not be created or removed by the operator.
-		return r.ensureExternalAccessManagedServices(ctx, cachedStatus, svcs, eaServiceName, svcRole, spec, apiObject,
-			withLeader)
+		return r.ensureExternalAccessManagedServices(ctx, cachedStatus, eaServiceName, eaPorts, eaSelector, spec)
 	}
 
-	log := r.log.Str("section", "service-ea").Str("role", svcRole).Str("service", eaServiceName)
+	log := r.log.Str("section", "service-ea").Str("role", role).Str("service", eaServiceName)
 	createExternalAccessService := false
 	deleteExternalAccessService := false
 	eaServiceType := spec.GetType().AsServiceType() // Note: Type auto defaults to ServiceTypeLoadBalancer
@@ -326,6 +315,14 @@ func (r *Resources) ensureExternalAccessServices(ctx context.Context, cachedStat
 				return errors.WithStack(err)
 			}
 		}
+		if !createExternalAccessService && !deleteExternalAccessService {
+			if changed, err := patcher.ServicePatcher(ctx, svcs, existing, meta.PatchOptions{}, patcher.PatchServicePorts(eaPorts), patcher.PatchServiceSelector(eaSelector)); err != nil {
+				log.Err(err).Debug("Failed to patch database client service")
+				return errors.WithStack(err)
+			} else if changed {
+				log.Str("service", existing.GetName()).Debug("Updated database client service")
+			}
+		}
 	} else {
 		// External access service does not exist
 		if !spec.GetType().IsNone() || noneIsClusterIP {
@@ -345,13 +342,11 @@ func (r *Resources) ensureExternalAccessServices(ctx context.Context, cachedStat
 	}
 	if createExternalAccessService {
 		// Let's create or update the database external access service
-		nodePort := spec.GetNodePort()
 		loadBalancerIP := spec.GetLoadBalancerIP()
 		loadBalancerSourceRanges := spec.LoadBalancerSourceRanges
 		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
-		_, newlyCreated, err := k8sutil.CreateExternalAccessService(ctxChild, svcs, eaServiceName, svcRole, apiObject,
-			eaServiceType, port, nodePort, loadBalancerIP, loadBalancerSourceRanges, apiObject.AsOwner(), withLeader)
+		_, newlyCreated, err := k8sutil.CreateExternalAccessService(ctxChild, svcs, eaServiceName, eaServiceType, eaPorts, eaSelector, loadBalancerIP, loadBalancerSourceRanges, apiObject.AsOwner())
 		if err != nil {
 			log.Err(err).Debug("Failed to create external access service")
 			return errors.WithStack(err)
@@ -365,18 +360,16 @@ func (r *Resources) ensureExternalAccessServices(ctx context.Context, cachedStat
 
 // ensureExternalAccessServices ensures if there are correct selectors on a managed services.
 // If hardcoded external service names are not on the list of managed services then it will be checked additionally.
-func (r *Resources) ensureExternalAccessManagedServices(ctx context.Context, cachedStatus inspectorInterface.Inspector,
-	services servicev1.ModInterface, eaServiceName, svcRole string, spec api.ExternalAccessSpec,
-	apiObject k8sutil.APIObject, withLeader bool) error {
+func (r *Resources) ensureExternalAccessManagedServices(ctx context.Context, cachedStatus inspectorInterface.Inspector, eaServiceName string,
+	ports []core.ServicePort, selectors map[string]string, spec api.ExternalAccessSpec) error {
 
-	log := r.log.Str("section", "service-ea").Str("role", svcRole).Str("service", eaServiceName)
+	log := r.log.Str("section", "service-ea").Str("service", eaServiceName)
 	managedServiceNames := spec.GetManagedServiceNames()
-	deploymentName := apiObject.GetName()
-	var selector map[string]string
-	if withLeader {
-		selector = k8sutil.LabelsForLeaderMember(deploymentName, svcRole, "")
-	} else {
-		selector = k8sutil.LabelsForDeployment(deploymentName, svcRole)
+
+	apply := func(svc *core.Service) (bool, error) {
+		return patcher.ServicePatcher(ctx, cachedStatus.ServicesModInterface().V1(), svc, meta.PatchOptions{},
+			patcher.PatchServicePorts(ports),
+			patcher.PatchServiceSelector(selectors))
 	}
 
 	// Check if hardcoded service has correct selector.
@@ -386,7 +379,7 @@ func (r *Resources) ensureExternalAccessManagedServices(ctx context.Context, cac
 			log.Warn("the field \"spec.externalAccess.managedServiceNames\" should be provided for \"managed\" service type")
 			return nil
 		}
-	} else if changed, err := ensureManagedServiceSelector(ctx, selector, svc, services); err != nil {
+	} else if changed, err := apply(svc); err != nil {
 		return errors.WithMessage(err, "failed to ensure service selector")
 	} else if changed {
 		log.Info("selector applied to the managed service \"%s\"", svc.GetName())
@@ -404,7 +397,7 @@ func (r *Resources) ensureExternalAccessManagedServices(ctx context.Context, cac
 			continue
 		}
 
-		if changed, err := ensureManagedServiceSelector(ctx, selector, svc, services); err != nil {
+		if changed, err := apply(svc); err != nil {
 			return errors.WithMessage(err, "failed to ensure service selector")
 		} else if changed {
 			log.Info("selector applied to the managed service \"%s\"", svcName)
@@ -414,35 +407,10 @@ func (r *Resources) ensureExternalAccessManagedServices(ctx context.Context, cac
 	return nil
 }
 
-// ensureManagedServiceSelector ensures if there is correct selector on a service.
-func ensureManagedServiceSelector(ctx context.Context, selector map[string]string, svc *core.Service,
-	services servicev1.ModInterface) (bool, error) {
-	for key, value := range selector {
-		if currentValue, ok := svc.Spec.Selector[key]; ok && value == currentValue {
-			continue
-		}
-
-		p := patch.NewPatch()
-		p.ItemReplace(patch.NewPath("spec", "selector"), selector)
-		data, err := p.Marshal()
-		if err != nil {
-			return false, errors.WithMessage(err, "failed to marshal service selector")
-		}
-
-		if _, err = services.Patch(ctx, svc.GetName(), types.JSONPatchType, data, meta.PatchOptions{}); err != nil {
-			return false, errors.WithMessage(err, "failed to patch service selector")
-		}
-
-		return true, nil
-	}
-
-	return false, nil
-}
-
 // CreateServerServicePortsWithSidecars returns ports for the service.
-func CreateServerServicePortsWithSidecars(podInspector v1.Inspector, podName string, group api.ServerGroup) []core.ServicePort {
+func CreateServerServicePortsWithSidecars(podInspector v1.Inspector, podName string) []core.ServicePort {
 	// Create service port for the `server` container.
-	ports := []core.ServicePort{CreateServerServicePort(group)}
+	ports := []core.ServicePort{CreateServerServicePort()}
 
 	if podInspector == nil {
 		return ports
@@ -456,9 +424,10 @@ func CreateServerServicePortsWithSidecars(podInspector v1.Inspector, podName str
 			}
 			for _, port := range c.Ports {
 				ports = append(ports, core.ServicePort{
-					Name:     port.Name,
-					Protocol: core.ProtocolTCP,
-					Port:     port.ContainerPort,
+					Name:       port.Name,
+					Protocol:   core.ProtocolTCP,
+					Port:       port.ContainerPort,
+					TargetPort: intstr.FromString(port.Name),
 				})
 			}
 		}
@@ -468,27 +437,11 @@ func CreateServerServicePortsWithSidecars(podInspector v1.Inspector, podName str
 }
 
 // CreateServerServicePort creates main server service port.
-func CreateServerServicePort(group api.ServerGroup) core.ServicePort {
-	serverTargetPort := getTargetPort(group)
+func CreateServerServicePort() core.ServicePort {
 	return core.ServicePort{
-		Name:     api.ServerGroupReservedContainerNameServer,
-		Protocol: core.ProtocolTCP,
-		Port:     shared.ArangoPort,
-		TargetPort: intstr.IntOrString{
-			IntVal: serverTargetPort,
-		},
+		Name:       shared.ServerPortName,
+		Protocol:   core.ProtocolTCP,
+		Port:       shared.ArangoPort,
+		TargetPort: intstr.FromString(shared.ServerPortName),
 	}
-}
-
-// getTargetPort returns target port for the given server group.
-func getTargetPort(group api.ServerGroup) int32 {
-	if group == api.ServerGroupSyncMasters {
-		return shared.ArangoSyncMasterPort
-	}
-
-	if group == api.ServerGroupSyncWorkers {
-		return shared.ArangoSyncWorkerPort
-	}
-
-	return shared.ArangoPort
 }

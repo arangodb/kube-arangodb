@@ -29,13 +29,14 @@ import (
 
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	servicev1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/patcher"
 )
 
 // CreateHeadlessServiceName returns the name of the headless service for the given
@@ -74,41 +75,49 @@ func CreateAgentLeaderServiceName(deploymentName string) string {
 }
 
 // CreateExporterService
-func CreateExporterService(ctx context.Context, cachedStatus service.Inspector, svcs servicev1.ModInterface,
-	deployment meta.Object, owner meta.OwnerReference) (string, bool, error) {
+func CreateExporterService(ctx context.Context, cachedStatus inspector.Inspector,
+	deployment meta.Object, ports []core.ServicePort, selectors map[string]string, owner meta.OwnerReference) (string, bool, error) {
 	deploymentName := deployment.GetName()
 	svcName := CreateExporterClientServiceName(deploymentName)
 
-	selectorLabels := LabelsForExporterServiceSelector(deploymentName)
-
-	if _, exists := cachedStatus.Service().V1().GetSimple(svcName); exists {
-		return svcName, false, nil
+	if svc, exists := cachedStatus.Service().V1().GetSimple(svcName); exists {
+		if changed, err := patcher.ServicePatcher(ctx, cachedStatus.ServicesModInterface().V1(), svc, meta.PatchOptions{}, patcher.PatchServiceSelector(selectors), patcher.PatchServicePorts(ports)); err != nil {
+			return "", false, err
+		} else {
+			return svcName, changed, nil
+		}
 	}
 
 	svc := &core.Service{
 		ObjectMeta: meta.ObjectMeta{
 			Name:   svcName,
-			Labels: LabelsForExporterService(deploymentName),
+			Labels: selectors,
 		},
 		Spec: core.ServiceSpec{
 			ClusterIP: core.ClusterIPNone,
-			Ports: []core.ServicePort{
-				{
-					Name:     "exporter",
-					Protocol: core.ProtocolTCP,
-					Port:     shared.ArangoExporterPort,
-				},
-			},
-			Selector: selectorLabels,
+			Ports:     ports,
+			Selector:  selectors,
 		},
 	}
 	AddOwnerRefToObject(svc.GetObjectMeta(), &owner)
-	if _, err := svcs.Create(ctx, svc, meta.CreateOptions{}); kerrors.IsAlreadyExists(err) {
+
+	if _, err := cachedStatus.ServicesModInterface().V1().Create(ctx, svc, meta.CreateOptions{}); kerrors.IsAlreadyExists(err) {
 		return svcName, false, nil
 	} else if err != nil {
 		return svcName, false, errors.WithStack(err)
 	}
 	return svcName, true, nil
+}
+
+func ExporterServiceDetails(deploymentName string) ([]core.ServicePort, map[string]string) {
+	return []core.ServicePort{
+		{
+			Name:       shared.ExporterPortName,
+			Protocol:   core.ProtocolTCP,
+			Port:       shared.ArangoExporterPort,
+			TargetPort: intstr.FromString(shared.ExporterPortName),
+		},
+	}, LabelsForExporterServiceSelector(deploymentName)
 }
 
 // CreateHeadlessService prepares and creates a headless service in k8s, used to provide a stable
@@ -117,24 +126,31 @@ func CreateExporterService(ctx context.Context, cachedStatus service.Inspector, 
 // If another error occurs, that error is returned.
 // The returned bool is true if the service is created, or false when the service already existed.
 func CreateHeadlessService(ctx context.Context, svcs servicev1.ModInterface, deployment meta.Object,
+	ports []core.ServicePort, selectors map[string]string,
 	owner meta.OwnerReference) (string, bool, error) {
 	deploymentName := deployment.GetName()
 	svcName := CreateHeadlessServiceName(deploymentName)
-	ports := []core.ServicePort{
-		{
-			Name:     "server",
-			Protocol: core.ProtocolTCP,
-			Port:     shared.ArangoPort,
-		},
-	}
-	publishNotReadyAddresses := true
-	serviceType := core.ServiceTypeClusterIP
-	newlyCreated, err := createService(ctx, svcs, svcName, deploymentName, shared.ClusterIPNone, "", serviceType, ports,
-		"", nil, publishNotReadyAddresses, false, owner)
+
+	newlyCreated, err := createService(ctx, svcs, svcName, shared.ClusterIPNone, core.ServiceTypeClusterIP, ports,
+		selectors, "", nil, true, owner)
 	if err != nil {
 		return "", false, errors.WithStack(err)
 	}
 	return svcName, newlyCreated, nil
+}
+
+func HeadlessServiceDetails(deploymentName string, role string) ([]core.ServicePort, map[string]string) {
+	ports := []core.ServicePort{
+		{
+			Name:       shared.ServerPortName,
+			Protocol:   core.ProtocolTCP,
+			Port:       shared.ArangoPort,
+			TargetPort: intstr.FromString(shared.ServerPortName),
+		},
+	}
+	labels := LabelsForDeployment(deploymentName, role)
+
+	return ports, labels
 }
 
 // CreateDatabaseClientService prepares and creates a service in k8s, used by database clients within the k8s cluster.
@@ -142,79 +158,88 @@ func CreateHeadlessService(ctx context.Context, svcs servicev1.ModInterface, dep
 // If another error occurs, that error is returned.
 // The returned bool is true if the service is created, or false when the service already existed.
 func CreateDatabaseClientService(ctx context.Context, svcs servicev1.ModInterface, deployment meta.Object,
-	single, withLeader bool, owner meta.OwnerReference) (string, bool, error) {
+	ports []core.ServicePort, selectors map[string]string, owner meta.OwnerReference) (string, bool, error) {
 	deploymentName := deployment.GetName()
 	svcName := CreateDatabaseClientServiceName(deploymentName)
-	ports := []core.ServicePort{
-		{
-			Name:     api.ServerGroupReservedContainerNameServer,
-			Protocol: core.ProtocolTCP,
-			Port:     shared.ArangoPort,
-		},
-	}
-	var role string
-	if single {
-		role = "single"
-	} else {
-		role = "coordinator"
-	}
-	serviceType := core.ServiceTypeClusterIP
-	publishNotReadyAddresses := false
-	newlyCreated, err := createService(ctx, svcs, svcName, deploymentName, "", role, serviceType, ports, "", nil,
-		publishNotReadyAddresses, withLeader, owner)
+
+	newlyCreated, err := createService(ctx, svcs, svcName, "", core.ServiceTypeClusterIP, ports, selectors, "", nil,
+		false, owner)
 	if err != nil {
 		return "", false, errors.WithStack(err)
 	}
 	return svcName, newlyCreated, nil
+}
+
+func DatabaseClientDetails(deploymentName string, role string, withLeader bool) ([]core.ServicePort, map[string]string) {
+	ports := []core.ServicePort{
+		{
+			Name:       shared.ServerPortName,
+			Protocol:   core.ProtocolTCP,
+			Port:       shared.ArangoPort,
+			TargetPort: intstr.FromString(shared.ServerPortName),
+		},
+	}
+
+	labels := LabelsForDeployment(deploymentName, role)
+	if withLeader {
+		labels[LabelKeyArangoLeader] = "true"
+	}
+
+	return ports, labels
 }
 
 // CreateExternalAccessService prepares and creates a service in k8s, used to access the database/sync from outside k8s cluster.
 // If the service already exists, nil is returned.
 // If another error occurs, that error is returned.
 // The returned bool is true if the service is created, or false when the service already existed.
-func CreateExternalAccessService(ctx context.Context, svcs servicev1.ModInterface, svcName, role string,
-	deployment meta.Object, serviceType core.ServiceType, port, nodePort int, loadBalancerIP string,
-	loadBalancerSourceRanges []string, owner meta.OwnerReference, withLeader bool) (string, bool, error) {
-	deploymentName := deployment.GetName()
-	ports := []core.ServicePort{
-		{
-			Name:     "server",
-			Protocol: core.ProtocolTCP,
-			Port:     int32(port),
-			NodePort: int32(nodePort),
-		},
-	}
-	publishNotReadyAddresses := false
-	newlyCreated, err := createService(ctx, svcs, svcName, deploymentName, "", role, serviceType, ports, loadBalancerIP,
-		loadBalancerSourceRanges, publishNotReadyAddresses, withLeader, owner)
+func CreateExternalAccessService(ctx context.Context, svcs servicev1.ModInterface, svcName string, serviceType core.ServiceType,
+	ports []core.ServicePort, selectors map[string]string, loadBalancerIP string,
+	loadBalancerSourceRanges []string, owner meta.OwnerReference) (string, bool, error) {
+
+	newlyCreated, err := createService(ctx, svcs, svcName, "", serviceType, ports, selectors, loadBalancerIP,
+		loadBalancerSourceRanges, false, owner)
 	if err != nil {
 		return "", false, errors.WithStack(err)
 	}
 	return svcName, newlyCreated, nil
 }
 
-// createService prepares and creates a service in k8s.
-// If the service already exists, nil is returned.
-// If another error occurs, that error is returned.
-// The returned bool is true if the service is created, or false when the service already existed.
-func createService(ctx context.Context, svcs servicev1.ModInterface, svcName, deploymentName, clusterIP, role string,
-	serviceType core.ServiceType, ports []core.ServicePort, loadBalancerIP string, loadBalancerSourceRanges []string,
-	publishNotReadyAddresses, withLeader bool, owner meta.OwnerReference) (bool, error) {
+func ExternalAccessDetails(port, nodePort int, deploymentName, role string, withLeader bool) ([]core.ServicePort, map[string]string) {
+	ports := []core.ServicePort{
+		{
+			Name:       shared.ServerPortName,
+			Protocol:   core.ProtocolTCP,
+			Port:       int32(port),
+			NodePort:   int32(nodePort),
+			TargetPort: intstr.FromString(shared.ServerPortName),
+		},
+	}
+
 	labels := LabelsForDeployment(deploymentName, role)
 	if withLeader {
 		labels[LabelKeyArangoLeader] = "true"
 	}
 
+	return ports, labels
+}
+
+// createService prepares and creates a service in k8s.
+// If the service already exists, nil is returned.
+// If another error occurs, that error is returned.
+// The returned bool is true if the service is created, or false when the service already existed.
+func createService(ctx context.Context, svcs servicev1.ModInterface, svcName, clusterIP string,
+	serviceType core.ServiceType, ports []core.ServicePort, selectors map[string]string, loadBalancerIP string, loadBalancerSourceRanges []string,
+	publishNotReadyAddresses bool, owner meta.OwnerReference) (bool, error) {
 	svc := &core.Service{
 		ObjectMeta: meta.ObjectMeta{
 			Name:        svcName,
-			Labels:      labels,
+			Labels:      selectors,
 			Annotations: map[string]string{},
 		},
 		Spec: core.ServiceSpec{
 			Type:                     serviceType,
 			Ports:                    ports,
-			Selector:                 labels,
+			Selector:                 selectors,
 			ClusterIP:                clusterIP,
 			PublishNotReadyAddresses: publishNotReadyAddresses,
 			LoadBalancerIP:           loadBalancerIP,

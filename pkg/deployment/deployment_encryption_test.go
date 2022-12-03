@@ -75,7 +75,7 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 								AgentArgsWithTLS(firstAgentStatus.ID, false),
 								ArgsWithAuth(false),
 								ArgsWithEncryptionKey()),
-							Ports: createTestPorts(),
+							Ports: createTestPorts(api.ServerGroupAgents),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 								k8sutil.RocksdbEncryptionVolumeMount(),
@@ -154,7 +154,7 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 							Name:            shared.ServerContainerName,
 							Image:           testImage,
 							Command:         createTestCommandForDBServer(firstDBServerStatus.ID, true, true, true),
-							Ports:           createTestPorts(),
+							Ports:           createTestPorts(api.ServerGroupDBServers),
 							Lifecycle:       createTestLifecycle(api.ServerGroupAgents),
 							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
 							ImagePullPolicy: core.PullIfNotPresent,
@@ -223,7 +223,7 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 								AgentArgsWithTLS(firstAgentStatus.ID, false),
 								ArgsWithAuth(false),
 								ArgsWithEncryptionKey()),
-							Ports: createTestPorts(),
+							Ports: createTestPorts(api.ServerGroupAgents),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 								k8sutil.RocksdbEncryptionVolumeMount(),
@@ -290,7 +290,7 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 										"rocksdb.encryption-key-rotation": "true",
 									}
 								}),
-							Ports: createTestPorts(),
+							Ports: createTestPorts(api.ServerGroupAgents),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 								k8sutil.RocksdbEncryptionReadOnlyVolumeMount(),

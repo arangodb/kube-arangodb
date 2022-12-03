@@ -73,7 +73,7 @@ func TestEnsurePod_Metrics(t *testing.T) {
 							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForDBServer(firstDBServerStatus.ID, false, false, false),
-							Ports:   createTestPorts(),
+							Ports:   createTestPorts(api.ServerGroupAgents),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
@@ -133,7 +133,7 @@ func TestEnsurePod_Metrics(t *testing.T) {
 							Name:    shared.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForDBServer(firstDBServerStatus.ID, false, false, false),
-							Ports:   createTestPorts(),
+							Ports:   createTestPorts(api.ServerGroupAgents),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
@@ -193,7 +193,7 @@ func TestEnsurePod_Metrics(t *testing.T) {
 							Image:   testImage,
 							Command: createTestCommandForDBServer(firstDBServerStatus.ID, false, false, false),
 							Ports: func() []core.ContainerPort {
-								ports := createTestPorts()
+								ports := createTestPorts(api.ServerGroupAgents)
 
 								ports = append(ports, core.ContainerPort{
 									Name:          "exporter",
@@ -261,7 +261,7 @@ func TestEnsurePod_Metrics(t *testing.T) {
 							Image:   testImage,
 							Command: createTestCommandForAgent(firstAgentStatus.ID, false, false, false),
 							Ports: func() []core.ContainerPort {
-								ports := createTestPorts()
+								ports := createTestPorts(api.ServerGroupAgents)
 
 								ports = append(ports, core.ContainerPort{
 									Name:          "exporter",
