@@ -23,15 +23,14 @@ package panics
 import (
 	"sync"
 
-	"github.com/prometheus/client_golang/prometheus"
-
 	"github.com/arangodb/kube-arangodb/pkg/generated/metric_descriptions"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
+	"github.com/arangodb/kube-arangodb/pkg/metrics/collector"
 	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
 )
 
 func init() {
-	prometheus.MustRegister(panicsReceived)
+	collector.GetCollector().RegisterMetric(panicsReceived)
 }
 
 var (
@@ -45,18 +44,9 @@ type panicsReceiver struct {
 	lock   sync.Mutex
 }
 
-func (p *panicsReceiver) Describe(descs chan<- *prometheus.Desc) {
-
-}
-
-func (p *panicsReceiver) Collect(c chan<- prometheus.Metric) {
-	p.lock.Lock()
-	defer p.lock.Unlock()
-
-	out := metrics.NewPushMetric(c)
-
+func (p *panicsReceiver) CollectMetrics(in metrics.PushMetric) {
 	for k, v := range p.panics {
-		out.Push(metric_descriptions.ArangodbOperatorEnginePanicsRecoveredCounter(float64(v), k))
+		in.Push(metric_descriptions.ArangodbOperatorEnginePanicsRecoveredCounter(float64(v), k))
 	}
 }
 
