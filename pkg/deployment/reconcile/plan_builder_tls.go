@@ -282,7 +282,7 @@ func (r *Reconciler) createKeyfileRenewalPlanSynced(ctx context.Context, apiObje
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	planCtx PlanBuilderContext) api.Plan {
 
-	if !spec.Sync.IsEnabled() || !spec.Sync.TLS.IsSecure() {
+	if !planCtx.IsSyncEnabled() || !spec.Sync.TLS.IsSecure() {
 		return nil
 	}
 

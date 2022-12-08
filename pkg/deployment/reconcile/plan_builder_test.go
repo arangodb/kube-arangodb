@@ -85,6 +85,15 @@ type testContext struct {
 	state     member.StateInspector
 }
 
+func (c *testContext) IsSyncEnabled() bool {
+	return false
+}
+
+func (c *testContext) GetAgencyArangoDBCache() (agencyCache.StateDB, bool) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (c *testContext) WithMemberStatusUpdateErr(ctx context.Context, id string, group api.ServerGroup, action reconciler.DeploymentMemberStatusUpdateErrFunc) error {
 	//TODO implement me
 	panic("implement me")

@@ -140,6 +140,10 @@ type actionContext struct {
 	metrics      *Metrics
 }
 
+func (ac *actionContext) IsSyncEnabled() bool {
+	return ac.context.IsSyncEnabled()
+}
+
 func (ac *actionContext) WithMemberStatusUpdateErr(ctx context.Context, id string, group api.ServerGroup, action reconciler.DeploymentMemberStatusUpdateErrFunc) error {
 	return ac.context.WithMemberStatusUpdateErr(ctx, id, group, action)
 }
@@ -249,6 +253,10 @@ func (ac *actionContext) GetAgencyHealth() (agencyCache.Health, bool) {
 
 func (ac *actionContext) GetAgencyCache() (agencyCache.State, bool) {
 	return ac.context.GetAgencyCache()
+}
+
+func (ac *actionContext) GetAgencyArangoDBCache() (agencyCache.StateDB, bool) {
+	return ac.context.GetAgencyArangoDBCache()
 }
 
 func (ac *actionContext) SetAgencyMaintenanceMode(ctx context.Context, enabled bool) error {

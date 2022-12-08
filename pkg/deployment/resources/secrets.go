@@ -170,7 +170,7 @@ func (r *Resources) EnsureSecrets(ctx context.Context, cachedStatus inspectorInt
 			}
 		}
 	}
-	if spec.Sync.IsEnabled() {
+	if r.context.IsSyncEnabled() {
 		counterMetric.Inc()
 		if err := reconcileRequired.WithError(r.ensureTokenSecret(ctx, cachedStatus, secrets, spec.Sync.Authentication.GetJWTSecretName())); err != nil {
 			return errors.Section(err, "Sync Auth")

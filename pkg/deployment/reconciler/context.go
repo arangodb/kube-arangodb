@@ -96,6 +96,7 @@ type DeploymentImageManager interface {
 
 type ArangoAgencyGet interface {
 	GetAgencyCache() (agencyCache.State, bool)
+	GetAgencyArangoDBCache() (agencyCache.StateDB, bool)
 	GetAgencyHealth() (agencyCache.Health, bool)
 }
 
@@ -118,6 +119,8 @@ type DeploymentInfoGetter interface {
 	GetName() string
 	// GetNamespace returns the namespace that contains the deployment
 	GetNamespace() string
+	// IsSyncEnabled returns information if sync is enabled
+	IsSyncEnabled() bool
 }
 
 type ArangoApplier interface {

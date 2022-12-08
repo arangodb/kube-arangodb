@@ -137,6 +137,21 @@ type Deployment struct {
 	metrics Metrics
 }
 
+func (d *Deployment) IsSyncEnabled() bool {
+	d.currentObjectLock.RLock()
+	defer d.currentObjectLock.RUnlock()
+
+	if d.currentObject.Spec.Sync.IsEnabled() {
+		return true
+	}
+
+	if d.currentObject.Status.Conditions.IsTrue(api.ConditionTypeSyncEnabled) {
+		return true
+	}
+
+	return false
+}
+
 func (d *Deployment) GetMembersState() memberState.StateInspector {
 	return d.memberState
 }
@@ -147,6 +162,10 @@ func (d *Deployment) GetAgencyCache() (agency.State, bool) {
 
 func (d *Deployment) GetAgencyHealth() (agency.Health, bool) {
 	return d.agencyCache.Health()
+}
+
+func (d *Deployment) GetAgencyArangoDBCache() (agency.StateDB, bool) {
+	return d.agencyCache.DataDB()
 }
 
 func (d *Deployment) RefreshAgencyCache(ctx context.Context) (uint64, error) {
