@@ -35,6 +35,8 @@
 - (Bugfix) Fix ErrorArray String function
 - (Feature) Switch services to Port names
 - (Feature) Configurable ArangoD Port
+- (Feature) Allow to exclude metrics
+- (Feature) Do not restart member if all pods in group are not ready
 - (Bugfix) Do not stop Sync if Synchronization is in progress 
 
 ## [1.2.20](https://github.com/arangodb/kube-arangodb/tree/1.2.20) (2022-10-25)

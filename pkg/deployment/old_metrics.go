@@ -23,11 +23,10 @@ package deployment
 import (
 	"sync"
 
-	"github.com/prometheus/client_golang/prometheus"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/generated/metric_descriptions"
+	"github.com/arangodb/kube-arangodb/pkg/metrics/collector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
 )
@@ -49,12 +48,11 @@ func init() {
 		operatorStateRefreshMetric: metrics.NewDescription("arango_operator_deployment_state_refresh_count", "Number of refreshes in deployment", []string{"namespace", "deployment", "type"}, nil),
 	}
 
-	prometheus.MustRegister(&localInventory)
+	collector.GetCollector().RegisterMetric(&localInventory)
+	collector.GetCollector().RegisterDescription(&localInventory)
 }
 
 var localInventory inventory
-
-var _ prometheus.Collector = &inventory{}
 
 type inventory struct {
 	lock        sync.Mutex
@@ -65,32 +63,24 @@ type inventory struct {
 	operatorStateRefreshMetric metrics.Description
 }
 
-func (i *inventory) Describe(descs chan<- *prometheus.Desc) {
-	i.lock.Lock()
-	defer i.lock.Unlock()
+func (i *inventory) CollectDescriptions(in metrics.PushDescription) {
+	in.Push(i.deploymentsMetric, i.deploymentMetricsMembersMetric, i.deploymentAgencyStateMetric, i.deploymentShardLeadersMetric, i.deploymentShardsMetric, i.operatorStateRefreshMetric)
 
-	pd := metrics.NewPushDescription(descs)
-	pd.Push(i.deploymentsMetric, i.deploymentMetricsMembersMetric, i.deploymentAgencyStateMetric, i.deploymentShardLeadersMetric, i.deploymentShardsMetric, i.operatorStateRefreshMetric)
-
-	metric_descriptions.Descriptions(pd)
+	metric_descriptions.Descriptions(in)
 }
 
-func (i *inventory) Collect(m chan<- prometheus.Metric) {
-	i.lock.Lock()
-	defer i.lock.Unlock()
-
-	p := metrics.NewPushMetric(m)
+func (i *inventory) CollectMetrics(in metrics.PushMetric) {
 	for _, deployments := range i.deployments {
 		for _, deployment := range deployments {
-			p.Push(i.deploymentsMetric.Gauge(1, deployment.GetNamespace(), deployment.GetName()))
+			in.Push(i.deploymentsMetric.Gauge(1, deployment.GetNamespace(), deployment.GetName()))
 
-			deployment.CollectMetrics(p)
+			deployment.CollectMetrics(in)
 
 			if state := deployment.acs.CurrentClusterCache(); state != nil {
 				t := state.GetThrottles()
 
 				for _, c := range definitions.AllComponents() {
-					p.Push(i.operatorStateRefreshMetric.Gauge(float64(t.Get(c).Count()), deployment.GetNamespace(), deployment.GetName(), string(c)))
+					in.Push(i.operatorStateRefreshMetric.Gauge(float64(t.Get(c).Count()), deployment.GetNamespace(), deployment.GetName(), string(c)))
 				}
 			}
 
@@ -98,17 +88,17 @@ func (i *inventory) Collect(m chan<- prometheus.Metric) {
 			status := deployment.GetStatus()
 
 			for _, member := range status.Members.AsList() {
-				p.Push(i.deploymentMetricsMembersMetric.Gauge(1, deployment.GetNamespace(), deployment.GetName(), member.Group.AsRole(), member.Member.ID))
+				in.Push(i.deploymentMetricsMembersMetric.Gauge(1, deployment.GetNamespace(), deployment.GetName(), member.Group.AsRole(), member.Member.ID))
 			}
 
 			if spec.Mode.Get().HasAgents() {
 				agency, agencyOk := deployment.GetAgencyCache()
 				if !agencyOk {
-					p.Push(i.deploymentAgencyStateMetric.Gauge(0, deployment.GetNamespace(), deployment.GetName()))
+					in.Push(i.deploymentAgencyStateMetric.Gauge(0, deployment.GetNamespace(), deployment.GetName()))
 					continue
 				}
 
-				p.Push(i.deploymentAgencyStateMetric.Gauge(1, deployment.GetNamespace(), deployment.GetName()))
+				in.Push(i.deploymentAgencyStateMetric.Gauge(1, deployment.GetNamespace(), deployment.GetName()))
 
 				if spec.Mode.Get() == api.DeploymentModeCluster {
 					for db, collections := range agency.Current.Collections {
@@ -145,9 +135,9 @@ func (i *inventory) Collect(m chan<- prometheus.Metric) {
 									}
 
 									if id == 0 {
-										p.Push(i.deploymentShardLeadersMetric.Gauge(1, m...))
+										in.Push(i.deploymentShardLeadersMetric.Gauge(1, m...))
 									}
-									p.Push(i.deploymentShardsMetric.Gauge(1, m...))
+									in.Push(i.deploymentShardsMetric.Gauge(1, m...))
 								}
 							}
 						}
