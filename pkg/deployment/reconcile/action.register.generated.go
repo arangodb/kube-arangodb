@@ -246,6 +246,9 @@ var (
 	_ Action        = &actionWaitForMemberInSync{}
 	_ actionFactory = newWaitForMemberInSyncAction
 
+	_ Action        = &actionWaitForMemberReady{}
+	_ actionFactory = newWaitForMemberReadyAction
+
 	_ Action        = &actionWaitForMemberUp{}
 	_ actionFactory = newWaitForMemberUpAction
 )
@@ -1125,6 +1128,18 @@ func init() {
 		// Get Action defition
 		function := newWaitForMemberInSyncAction
 		action := api.ActionTypeWaitForMemberInSync
+
+		// Wrap action main function
+
+		// Register action
+		registerAction(action, function)
+	}
+
+	// WaitForMemberReady
+	{
+		// Get Action defition
+		function := newWaitForMemberReadyAction
+		action := api.ActionTypeWaitForMemberReady
 
 		// Wrap action main function
 

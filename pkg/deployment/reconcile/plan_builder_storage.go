@@ -137,16 +137,14 @@ func (r *Reconciler) pvcResizePlan(group api.ServerGroup, member api.MemberStatu
 			actions.NewAction(api.ActionTypePVCResize, group, member),
 		}
 	case api.PVCResizeModeRotate:
-		return api.Plan{
+		return withWaitForMember(api.Plan{
 			actions.NewAction(api.ActionTypeResignLeadership, group, member),
 			actions.NewAction(api.ActionTypeKillMemberPod, group, member),
 			actions.NewAction(api.ActionTypeRotateStartMember, group, member),
 			actions.NewAction(api.ActionTypePVCResize, group, member),
 			actions.NewAction(api.ActionTypePVCResized, group, member),
 			actions.NewAction(api.ActionTypeRotateStopMember, group, member),
-			actions.NewAction(api.ActionTypeWaitForMemberUp, group, member),
-			actions.NewAction(api.ActionTypeWaitForMemberInSync, group, member),
-		}
+		}, group, member)
 	default:
 		r.planLogger.Str("server-group", group.AsRole()).Str("mode", mode.String()).
 			Error("Requested mode is not supported")

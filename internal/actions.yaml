@@ -44,6 +44,9 @@ actions:
   UpgradeMember:
     description: Run the Upgrade procedure on member
     timeout: 6h
+  WaitForMemberReady:
+    description: Wait for member Ready condition
+    timeout: 30m
   WaitForMemberUp:
     description: Wait for member to be responsive
     timeout: 30m
