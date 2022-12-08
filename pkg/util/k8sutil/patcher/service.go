@@ -83,6 +83,72 @@ func PatchServicePorts(ports []core.ServicePort) ServicePatch {
 	}
 }
 
+func Optional(p ServicePatch, enabled bool) ServicePatch {
+	return func(in *core.Service) []patch.Item {
+		if !enabled {
+			return nil
+		}
+
+		if p != nil {
+			return p(in)
+		}
+
+		return nil
+	}
+}
+
+func PatchServiceOnlyPorts(ports ...core.ServicePort) ServicePatch {
+	return func(in *core.Service) []patch.Item {
+		psvc := in.Spec.DeepCopy()
+		cp := psvc.Ports
+
+		changed := false
+
+		for pid := range ports {
+			got := false
+			for id := range cp {
+				if ports[pid].Name == cp[id].Name {
+					got = true
+
+					// Set ignored fields
+					if ports[pid].NodePort == 0 {
+						ports[pid].NodePort = cp[id].NodePort
+					}
+					if ports[pid].AppProtocol == nil {
+						ports[pid].AppProtocol = cp[id].AppProtocol
+					}
+					if ports[pid].Protocol == "" {
+						ports[pid].Protocol = cp[id].Protocol
+					}
+					if ports[pid].TargetPort.StrVal == "" && ports[pid].TargetPort.IntVal == 0 {
+						ports[pid].TargetPort = cp[id].TargetPort
+					}
+
+					if !equality.Semantic.DeepEqual(ports[pid], cp[id]) {
+						q := ports[pid].DeepCopy()
+						cp[id] = *q
+						changed = true
+						break
+					}
+				}
+			}
+			if !got {
+				q := ports[pid].DeepCopy()
+				cp = append(cp, *q)
+				changed = true
+			}
+		}
+
+		if !changed {
+			return nil
+		}
+
+		return []patch.Item{
+			patch.ItemReplace(patch.NewPath("spec", "ports"), cp),
+		}
+	}
+}
+
 func PatchServiceSelector(selector map[string]string) ServicePatch {
 	return func(in *core.Service) []patch.Item {
 		if equality.Semantic.DeepEqual(in.Spec.Selector, selector) {
