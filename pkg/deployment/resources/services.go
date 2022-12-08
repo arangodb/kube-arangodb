@@ -37,7 +37,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-	v1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
+	v1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember/v1"
 	servicev1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/patcher"
@@ -84,7 +84,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 
 	// Fetch existing services
 	svcs := cachedStatus.ServicesModInterface().V1()
-	podInspector := cachedStatus.Pod().V1()
+	amInspector := cachedStatus.ArangoMember().V1()
 
 	reconcileRequired := k8sutil.NewReconcile(cachedStatus)
 
@@ -97,7 +97,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 			return errors.Newf("Member %s not found", memberName)
 		}
 
-		ports := CreateServerServicePortsWithSidecars(podInspector, e.Member.Pod.GetName())
+		ports := CreateServerServicePortsWithSidecars(amInspector, e.Member.ArangoMemberName(deploymentName, e.Group))
 		selector := k8sutil.LabelsForActiveMember(deploymentName, e.Group.AsRole(), e.Member.ID)
 		if s, ok := cachedStatus.Service().V1().GetSimple(member.GetName()); !ok {
 			s := r.createService(member.GetName(), member.GetNamespace(), member.AsOwner(), ports, selector)
@@ -408,27 +408,31 @@ func (r *Resources) ensureExternalAccessManagedServices(ctx context.Context, cac
 }
 
 // CreateServerServicePortsWithSidecars returns ports for the service.
-func CreateServerServicePortsWithSidecars(podInspector v1.Inspector, podName string) []core.ServicePort {
+func CreateServerServicePortsWithSidecars(amInspector v1.Inspector, am string) []core.ServicePort {
 	// Create service port for the `server` container.
 	ports := []core.ServicePort{CreateServerServicePort()}
 
-	if podInspector == nil {
+	if amInspector == nil {
 		return ports
 	}
 
-	if p, ok := podInspector.GetSimple(podName); ok {
-		for _, c := range p.Spec.Containers {
-			if c.Name == api.ServerGroupReservedContainerNameServer {
-				// It is already added.
-				continue
-			}
-			for _, port := range c.Ports {
-				ports = append(ports, core.ServicePort{
-					Name:       port.Name,
-					Protocol:   core.ProtocolTCP,
-					Port:       port.ContainerPort,
-					TargetPort: intstr.FromString(port.Name),
-				})
+	if am, ok := amInspector.GetSimple(am); ok {
+		if t := am.Status.Template; t != nil {
+			if p := t.PodSpec; p != nil {
+				for _, c := range p.Spec.Containers {
+					if c.Name == api.ServerGroupReservedContainerNameServer {
+						// It is already added.
+						continue
+					}
+					for _, port := range c.Ports {
+						ports = append(ports, core.ServicePort{
+							Name:       port.Name,
+							Protocol:   core.ProtocolTCP,
+							Port:       port.ContainerPort,
+							TargetPort: intstr.FromString(port.Name),
+						})
+					}
+				}
 			}
 		}
 	}
