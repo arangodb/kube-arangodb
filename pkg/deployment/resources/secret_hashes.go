@@ -185,7 +185,7 @@ func (r *Resources) ValidateSecretHashes(ctx context.Context, cachedStatus inspe
 			}
 		}
 	}
-	if spec.Sync.IsEnabled() {
+	if r.context.IsSyncEnabled() {
 		secretName := spec.Sync.TLS.GetCASecretName()
 		getExpectedHash := func() string { return getHashes().SyncTLSCA }
 		setExpectedHash := func(h string) error {

@@ -26,7 +26,8 @@ import (
 )
 
 const (
-	ArangoKey = "arango"
+	ArangoKey   = "arango"
+	ArangoDBKey = "arangodb"
 
 	PlanKey    = "Plan"
 	CurrentKey = "Current"
@@ -48,6 +49,13 @@ const (
 	TargetJobFinishedKey = "Finished"
 
 	TargetCleanedServersKey = "CleanedServers"
+
+	ArangoSyncKey                     = "arangosync"
+	ArangoSyncStateKey                = "synchronizationState"
+	ArangoSyncStateIncomingKey        = "incoming"
+	ArangoSyncStateIncomingStateKey   = "state"
+	ArangoSyncStateOutgoingKey        = "outgoing"
+	ArangoSyncStateOutgoingTargetsKey = "targets"
 )
 
 func GetAgencyKey(parts ...string) string {

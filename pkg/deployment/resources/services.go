@@ -199,7 +199,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 		return errors.WithStack(err)
 	}
 
-	if spec.Sync.IsEnabled() {
+	if r.context.IsSyncEnabled() {
 		// External (and internal) Sync master service
 		counterMetric.Inc()
 		eaServiceName := k8sutil.CreateSyncMasterClientServiceName(deploymentName)

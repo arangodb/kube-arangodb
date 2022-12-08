@@ -121,6 +121,9 @@ const (
 
 	// ConditionTypeMaintenance indicates that maintenance is enabled on cluster
 	ConditionTypeMaintenance ConditionType = "Maintenance"
+
+	// ConditionTypeSyncEnabled Define if sync is enabled
+	ConditionTypeSyncEnabled ConditionType = "SyncEnabled"
 )
 
 // Condition represents one current condition of a deployment or deployment member.

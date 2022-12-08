@@ -50,7 +50,7 @@ func (d *Deployment) createAccessPackages(ctx context.Context) error {
 	log := d.sectionLogger("access-package")
 	spec := d.GetSpec()
 
-	if !spec.Sync.IsEnabled() {
+	if !d.IsSyncEnabled() {
 		// We're only relevant when sync is enabled
 		return nil
 	}

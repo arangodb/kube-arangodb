@@ -153,6 +153,7 @@ type Health interface {
 type Cache interface {
 	Reload(ctx context.Context, size int, clients map[string]agency.Agency) (uint64, error)
 	Data() (State, bool)
+	DataDB() (StateDB, bool)
 	CommitIndex() uint64
 	// Health returns true when healthy object is available.
 	Health() (Health, bool)
@@ -184,6 +185,10 @@ func NewSingleCache() Cache {
 type cacheSingle struct {
 }
 
+func (c cacheSingle) DataDB() (StateDB, bool) {
+	return StateDB{}, false
+}
+
 func (c cacheSingle) CommitIndex() uint64 {
 	return 0
 }
@@ -212,7 +217,8 @@ type cache struct {
 
 	commitIndex uint64
 
-	data State
+	data   State
+	dataDB StateDB
 
 	health Health
 }
@@ -232,7 +238,22 @@ func (c *cache) Data() (State, bool) {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 
-	return c.data, c.valid
+	if !c.valid {
+		return State{}, false
+	}
+
+	return c.data, true
+}
+
+func (c *cache) DataDB() (StateDB, bool) {
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+
+	if !c.valid {
+		return StateDB{}, false
+	}
+
+	return c.dataDB, c.valid
 }
 
 // Health returns always false for single cache.
@@ -275,7 +296,8 @@ func (c *cache) Reload(ctx context.Context, size int, clients map[string]agency.
 		c.valid = false
 		return leaderConfig.CommitIndex, err
 	} else {
-		c.data = data
+		c.data = data.Arango
+		c.dataDB = data.ArangoDB
 		c.valid = true
 		c.commitIndex = leaderConfig.CommitIndex
 		return leaderConfig.CommitIndex, nil

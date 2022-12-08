@@ -63,7 +63,7 @@ func (r *Reconciler) createScaleMemberPlan(ctx context.Context, apiObject k8suti
 	}
 	if spec.GetMode().SupportsSync() {
 		// Scale syncmasters & syncworkers
-		if spec.Sync.IsEnabled() {
+		if context.IsSyncEnabled() {
 			plan = append(plan, r.createScalePlan(status, status.Members.SyncMasters, api.ServerGroupSyncMasters, spec.SyncMasters.GetCount(), context)...)
 			plan = append(plan, r.createScalePlan(status, status.Members.SyncWorkers, api.ServerGroupSyncWorkers, spec.SyncWorkers.GetCount(), context)...)
 		} else {

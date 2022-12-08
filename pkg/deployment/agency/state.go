@@ -31,12 +31,12 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func (c *cache) loadState(ctx context.Context, client agency.Agency) (State, error) {
+func (c *cache) loadState(ctx context.Context, client agency.Agency) (StateRoot, error) {
 	conn := client.Connection()
 
 	req, err := client.Connection().NewRequest(http.MethodPost, "/_api/agency/read")
 	if err != nil {
-		return State{}, err
+		return StateRoot{}, err
 	}
 
 	var data []byte
@@ -53,33 +53,35 @@ func (c *cache) loadState(ctx context.Context, client agency.Agency) (State, err
 		GetAgencyKey(ArangoKey, TargetKey, TargetJobFailedKey),
 		GetAgencyKey(ArangoKey, TargetKey, TargetJobFinishedKey),
 		GetAgencyKey(ArangoKey, TargetKey, TargetCleanedServersKey),
+		GetAgencyKey(ArangoDBKey, ArangoSyncKey, ArangoSyncStateKey, ArangoSyncStateIncomingKey, ArangoSyncStateIncomingStateKey),
+		GetAgencyKey(ArangoDBKey, ArangoSyncKey, ArangoSyncStateKey, ArangoSyncStateOutgoingKey, ArangoSyncStateOutgoingTargetsKey),
 	}
 
 	req, err = req.SetBody(GetAgencyReadRequest(GetAgencyReadKey(readKeys...)))
 	if err != nil {
-		return State{}, err
+		return StateRoot{}, err
 	}
 
 	resp, err := conn.Do(driver.WithRawResponse(ctx, &data), req)
 	if err != nil {
-		return State{}, err
+		return StateRoot{}, err
 	}
 
 	if err := resp.CheckStatus(http.StatusOK); err != nil {
-		return State{}, err
+		return StateRoot{}, err
 	}
 
 	var r StateRoots
 
 	if err := json.Unmarshal(data, &r); err != nil {
-		return State{}, err
+		return StateRoot{}, err
 	}
 
 	if len(r) != 1 {
-		return State{}, errors.Newf("Invalid response size")
+		return StateRoot{}, errors.Newf("Invalid response size")
 	}
 
-	state := r[0].Arango
+	state := r[0]
 
 	return state, nil
 }

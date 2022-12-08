@@ -61,7 +61,7 @@ func (r *Resources) EnsurePDBs(ctx context.Context) error {
 		// Setting those to zero triggers a remove of the PDB
 		minSyncMaster := 0
 		minSyncWorker := 0
-		if spec.Sync.IsEnabled() {
+		if r.context.IsSyncEnabled() {
 			minSyncMaster = spec.GetServerGroupSpec(api.ServerGroupSyncMasters).GetCount() - 1
 			minSyncWorker = spec.GetServerGroupSpec(api.ServerGroupSyncWorkers).GetCount() - 1
 		}
