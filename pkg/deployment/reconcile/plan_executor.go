@@ -219,6 +219,13 @@ func (d *Reconciler) executePlan(ctx context.Context, statusPlan api.Plan, pg pl
 
 		action, actionContext := d.createAction(planAction)
 
+		if !planAction.IsStarted() {
+			if err := getActionPre(action, ctx); err != nil {
+				d.planLogger.Err(err).Error("Pre action failed")
+				return nil, false, false, errors.WithStack(err)
+			}
+		}
+
 		done, abort, recall, retry, err := d.executeAction(ctx, planAction, action)
 		if err != nil {
 			if retry {

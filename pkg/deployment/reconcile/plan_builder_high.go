@@ -183,7 +183,7 @@ func (r *Reconciler) updateMemberRotationConditions(apiObject k8sutil.APIObject,
 		return nil, nil
 	}
 
-	if m, _, reason, err := rotation.IsRotationRequired(context.ACS(), spec, member, group, p, arangoMember.Spec.Template, arangoMember.Status.Template); err != nil {
+	if m, _, checksum, reason, err := rotation.IsRotationRequired(context.ACS(), spec, member, group, p, arangoMember.Spec.Template, arangoMember.Status.Template); err != nil {
 		r.log.Err(err).Error("Error while getting rotation details")
 		return nil, err
 	} else {
@@ -208,7 +208,7 @@ func (r *Reconciler) updateMemberRotationConditions(apiObject k8sutil.APIObject,
 			return api.Plan{actions.NewAction(api.ActionTypeSetMemberCondition, group, member, reason).AddParam(api.ConditionTypePendingUpdate.String(), "T")}, nil
 		case rotation.SilentRotation:
 			// Propagate changes without restart
-			return api.Plan{actions.NewAction(api.ActionTypeArangoMemberUpdatePodStatus, group, member, "Propagating status of pod").AddParam(ActionTypeArangoMemberUpdatePodStatusChecksum, arangoMember.Spec.Template.GetChecksum())}, nil
+			return api.Plan{actions.NewAction(api.ActionTypeArangoMemberUpdatePodStatus, group, member, "Propagating status of pod").AddParam(ActionTypeArangoMemberUpdatePodStatusChecksum, checksum)}, nil
 		case rotation.GracefulRotation:
 			if reason != "" {
 				r.log.Bool("enforced", false).Info(reason)

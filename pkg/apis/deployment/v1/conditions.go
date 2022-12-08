@@ -144,6 +144,8 @@ type Condition struct {
 	Message string `json:"message,omitempty"`
 	// Hash keep propagation hash id, for example checksum of secret
 	Hash string `json:"hash,omitempty"`
+	// Params keeps additional params for the condition
+	Params ConditionParams `json:"params,omitempty"`
 }
 
 func (c Condition) IsTrue() bool {
@@ -154,6 +156,7 @@ func (c Condition) IsTrue() bool {
 func (c Condition) Equal(other Condition) bool {
 	return c.Type == other.Type &&
 		c.Status == other.Status &&
+		c.Params.Equal(other.Params) &&
 		util.TimeCompareEqual(c.LastUpdateTime, other.LastUpdateTime) &&
 		util.TimeCompareEqual(c.LastTransitionTime, other.LastTransitionTime) &&
 		c.Reason == other.Reason &&

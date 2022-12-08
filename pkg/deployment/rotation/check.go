@@ -57,7 +57,7 @@ func CheckPossible(member api.MemberStatus) bool {
 	return !member.Conditions.IsTrue(api.ConditionTypeTerminated)
 }
 
-func IsRotationRequired(acs sutil.ACS, spec api.DeploymentSpec, member api.MemberStatus, group api.ServerGroup, pod *core.Pod, specTemplate, statusTemplate *api.ArangoMemberPodTemplate) (mode Mode, plan api.Plan, reason string, err error) {
+func IsRotationRequired(acs sutil.ACS, spec api.DeploymentSpec, member api.MemberStatus, group api.ServerGroup, pod *core.Pod, specTemplate, statusTemplate *api.ArangoMemberPodTemplate) (mode Mode, plan api.Plan, specChecksum string, reason string, err error) {
 	// Determine if rotation is required based on plan and actions
 
 	// Set default mode for return value
@@ -126,10 +126,10 @@ func IsRotationRequired(acs sutil.ACS, spec api.DeploymentSpec, member api.Membe
 	}
 
 	if mode, plan, err := compare(spec, member, group, specTemplate, statusTemplate); err != nil {
-		return SkippedRotation, nil, "", err
+		return SkippedRotation, nil, specTemplate.Checksum, "", err
 	} else if mode == SkippedRotation {
-		return mode, plan, "No rotation needed", nil
+		return mode, plan, specTemplate.Checksum, "No rotation needed", nil
 	} else {
-		return mode, plan, "Pod needs rotation", nil
+		return mode, plan, specTemplate.Checksum, "Pod needs rotation", nil
 	}
 }

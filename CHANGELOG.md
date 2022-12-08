@@ -38,6 +38,7 @@
 - (Feature) Allow to exclude metrics
 - (Bugfix) Do not stop Sync if Synchronization is in progress
 - (Bugfix) Wait for Pod to be Ready in post-restart actions
+- (Bugfix) Prevent Runtime update restarts
 
 ## [1.2.20](https://github.com/arangodb/kube-arangodb/tree/1.2.20) (2022-10-25)
 - (Feature) Add action progress
