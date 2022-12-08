@@ -128,6 +128,15 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 		spec := r.context.GetSpec()
 		coreContainers := spec.GetCoreContainers(group)
 
+		if c, ok := memberStatus.Conditions.Get(api.ConditionTypeUpdating); ok {
+			if v, ok := c.Params[api.ConditionParamContainerUpdatingName]; ok {
+				// We are in update phase, container needs to be ignored
+				if v != "" {
+					coreContainers = coreContainers.Remove(v)
+				}
+			}
+		}
+
 		// Update state
 		updateMemberStatusNeeded := false
 		if k8sutil.IsPodSucceeded(pod, coreContainers) {

@@ -191,7 +191,7 @@ func (r *Reconciler) createUpdatePlanInternal(apiObject k8sutil.APIObject, spec 
 			p = nil
 		}
 
-		if mode, p, reason, err := rotation.IsRotationRequired(context.ACS(), spec, m.Member, m.Group, p, arangoMember.Spec.Template, arangoMember.Status.Template); err != nil {
+		if mode, p, checksum, reason, err := rotation.IsRotationRequired(context.ACS(), spec, m.Member, m.Group, p, arangoMember.Spec.Template, arangoMember.Status.Template); err != nil {
 			r.planLogger.Err(err).Str("member", m.Member.ID).Error("Error while generating update plan")
 			continue
 		} else if mode != rotation.InPlaceRotation {
@@ -200,6 +200,8 @@ func (r *Reconciler) createUpdatePlanInternal(apiObject k8sutil.APIObject, spec 
 				AddParam(api.ConditionTypeUpdating.String(), "T")}, false
 		} else {
 			p = withWaitForMember(p, m.Group, m.Member)
+
+			p = append(p, actions.NewAction(api.ActionTypeArangoMemberUpdatePodStatus, m.Group, m.Member, "Propagating status of pod").AddParam(ActionTypeArangoMemberUpdatePodStatusChecksum, checksum))
 
 			p = p.Wrap(actions.NewAction(api.ActionTypeSetMemberCondition, m.Group, m.Member, reason).
 				AddParam(api.ConditionTypePendingUpdate.String(), "").AddParam(api.ConditionTypeUpdating.String(), "T"),

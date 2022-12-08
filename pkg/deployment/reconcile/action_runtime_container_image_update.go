@@ -43,10 +43,42 @@ func newRuntimeContainerImageUpdateAction(action api.Action, actionCtx ActionCon
 }
 
 var _ ActionPost = &actionRuntimeContainerImageUpdate{}
+var _ ActionPre = &actionRuntimeContainerImageUpdate{}
 
 type actionRuntimeContainerImageUpdate struct {
 	// actionImpl implement timeout and member id functions
 	actionImpl
+}
+
+func (a actionRuntimeContainerImageUpdate) Pre(ctx context.Context) error {
+	a.log.Info("Updating member condition")
+	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
+	if !ok {
+		a.log.Info("member is gone already")
+		return nil
+	}
+
+	cname, _, ok := a.getContainerDetails()
+	if !ok {
+		a.log.Info("Unable to find container details")
+		return nil
+	}
+
+	if c, ok := m.Conditions.Get(api.ConditionTypeUpdating); ok {
+		if c.Params == nil {
+			c.Params = api.ConditionParams{}
+		}
+
+		if c.Params[api.ConditionParamContainerUpdatingName] != cname {
+			c.Params[api.ConditionParamContainerUpdatingName] = cname
+
+			if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 func (a actionRuntimeContainerImageUpdate) Post(ctx context.Context) error {
@@ -55,6 +87,22 @@ func (a actionRuntimeContainerImageUpdate) Post(ctx context.Context) error {
 	if !ok {
 		a.log.Info("member is gone already")
 		return nil
+	}
+
+	if c, ok := m.Conditions.Get(api.ConditionTypeUpdating); ok {
+		if c.Params != nil {
+			if _, ok := c.Params[api.ConditionParamContainerUpdatingName]; ok {
+				delete(c.Params, api.ConditionParamContainerUpdatingName)
+
+				if len(c.Params) == 0 {
+					c.Params = nil
+				}
+
+				if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
+					return err
+				}
+			}
+		}
 	}
 
 	cname, image, ok := a.getContainerDetails()

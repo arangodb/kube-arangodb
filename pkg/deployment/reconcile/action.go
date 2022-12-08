@@ -81,6 +81,22 @@ func getActionPost(a Action, ctx context.Context) error {
 	}
 }
 
+// ActionPre keep interface which is executed before action is started.
+type ActionPre interface {
+	Action
+
+	// Pre execute after action is completed
+	Pre(ctx context.Context) error
+}
+
+func getActionPre(a Action, ctx context.Context) error {
+	if c, ok := a.(ActionPre); !ok {
+		return nil
+	} else {
+		return c.Pre(ctx)
+	}
+}
+
 // ActionReloadCachedStatus keeps information about CachedStatus reloading (executed after action has been executed)
 type ActionReloadCachedStatus interface {
 	Action
