@@ -560,3 +560,8 @@ func (s DeploymentSpec) GetCoreContainers(group ServerGroup) utils.StringList {
 
 	return result
 }
+
+func (s DeploymentSpec) GetGroupPort(group ServerGroup) uint16 {
+	spec := s.GetServerGroupSpec(group)
+	return spec.GetPort()
+}

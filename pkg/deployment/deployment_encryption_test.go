@@ -81,7 +81,7 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 								k8sutil.RocksdbEncryptionVolumeMount(),
 							},
 							Resources:       emptyResources,
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -129,8 +129,7 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 				authorization, err := createTestToken(deployment, testCase, []string{"/_api/version"})
 				require.NoError(t, err)
 
-				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(httpProbe, true,
-					authorization, shared.ArangoPort)
+				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(httpProbe, true, authorization, shared.ServerPortName)
 			},
 			config: Config{
 				OperatorImage: testImageOperator,
@@ -156,7 +155,7 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 							Command:         createTestCommandForDBServer(firstDBServerStatus.ID, true, true, true),
 							Ports:           createTestPorts(api.ServerGroupDBServers),
 							Lifecycle:       createTestLifecycle(api.ServerGroupAgents),
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 							VolumeMounts: []core.VolumeMount{
@@ -229,7 +228,7 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 								k8sutil.RocksdbEncryptionVolumeMount(),
 							},
 							Resources:       emptyResources,
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -296,7 +295,7 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 								k8sutil.RocksdbEncryptionReadOnlyVolumeMount(),
 							},
 							Resources:       emptyResources,
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},

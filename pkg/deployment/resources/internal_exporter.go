@@ -29,10 +29,19 @@ import (
 
 // ArangodbInternalExporterContainer creates metrics container based on internal exporter
 func ArangodbInternalExporterContainer(image string, args []string, livenessProbe *probes.HTTPProbeConfig,
-	resources core.ResourceRequirements, securityContext *core.SecurityContext,
-	spec api.DeploymentSpec) (core.Container, error) {
+	resources core.ResourceRequirements, spec api.DeploymentSpec, groupSpec api.ServerGroupSpec) (core.Container, error) {
 
 	exePath := k8sutil.LifecycleBinary()
+
+	var port uint16 = shared.ArangoExporterPort
+
+	if p := spec.Metrics.Port; p != nil {
+		port = *p
+	}
+
+	if p := groupSpec.ExporterPort; p != nil {
+		port = *p
+	}
 
 	c := core.Container{
 		Name:    shared.ExporterContainerName,
@@ -41,13 +50,13 @@ func ArangodbInternalExporterContainer(image string, args []string, livenessProb
 		Ports: []core.ContainerPort{
 			{
 				Name:          "exporter",
-				ContainerPort: int32(spec.Metrics.GetPort()),
+				ContainerPort: int32(port),
 				Protocol:      core.ProtocolTCP,
 			},
 		},
 		Resources:       k8sutil.ExtractPodResourceRequirement(resources),
 		ImagePullPolicy: core.PullIfNotPresent,
-		SecurityContext: securityContext,
+		SecurityContext: groupSpec.SecurityContext.NewSecurityContext(),
 		VolumeMounts:    []core.VolumeMount{k8sutil.LifecycleVolumeMount()},
 	}
 

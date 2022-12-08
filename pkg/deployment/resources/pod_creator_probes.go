@@ -29,7 +29,6 @@ import (
 	"github.com/arangodb/go-driver/jwt"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -288,7 +287,7 @@ func (r *Resources) probeBuilderStartupCoreOperator(spec api.DeploymentSpec, gro
 	}, nil
 }
 
-func (r *Resources) probeBuilderLivenessCore(spec api.DeploymentSpec, _ api.ServerGroup, _ api.ImageInfo) (Probe, error) {
+func (r *Resources) probeBuilderLivenessCore(spec api.DeploymentSpec, group api.ServerGroup, _ api.ImageInfo) (Probe, error) {
 	authorization := ""
 	if spec.IsAuthenticated() {
 		secretData, err := r.getJWTSecret(spec)
@@ -385,7 +384,7 @@ func (r *Resources) probeBuilderReadinessCoreSelect() probeBuilder {
 	return r.probeBuilderReadinessCore
 }
 
-func (r *Resources) probeBuilderReadinessCoreOperator(spec api.DeploymentSpec, _ api.ServerGroup, _ api.ImageInfo) (Probe, error) {
+func (r *Resources) probeBuilderReadinessCoreOperator(spec api.DeploymentSpec, group api.ServerGroup, _ api.ImageInfo) (Probe, error) {
 	args := r.probeCommand(spec, api.ProbeTypeReadiness)
 
 	return &probes.CMDProbeConfig{
@@ -426,10 +425,7 @@ func (r *Resources) probeBuilderReadinessCore(spec api.DeploymentSpec, _ api.Ser
 
 func (r *Resources) probeBuilderLivenessSync(spec api.DeploymentSpec, group api.ServerGroup, _ api.ImageInfo) (Probe, error) {
 	authorization := ""
-	port := shared.ArangoSyncMasterPort
-	if group == api.ServerGroupSyncWorkers {
-		port = shared.ArangoSyncWorkerPort
-	}
+
 	if spec.Sync.Monitoring.GetTokenSecretName() != "" {
 		// Use monitoring token
 		token, err := r.getSyncMonitoringToken(spec)
@@ -455,16 +451,12 @@ func (r *Resources) probeBuilderLivenessSync(spec api.DeploymentSpec, group api.
 		LocalPath:     "/_api/version",
 		Secure:        spec.Sync.TLS.IsSecure(),
 		Authorization: authorization,
-		Port:          port,
 	}, nil
 }
 
 func (r *Resources) probeBuilderStartupSync(spec api.DeploymentSpec, group api.ServerGroup, _ api.ImageInfo) (Probe, error) {
 	authorization := ""
-	port := shared.ArangoSyncMasterPort
-	if group == api.ServerGroupSyncWorkers {
-		port = shared.ArangoSyncWorkerPort
-	}
+
 	if spec.Sync.Monitoring.GetTokenSecretName() != "" {
 		// Use monitoring token
 		token, err := r.getSyncMonitoringToken(spec)
@@ -490,7 +482,6 @@ func (r *Resources) probeBuilderStartupSync(spec api.DeploymentSpec, group api.S
 		LocalPath:     "/_api/version",
 		Secure:        spec.Sync.TLS.IsSecure(),
 		Authorization: authorization,
-		Port:          port,
 	}, nil
 }
 

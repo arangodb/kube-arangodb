@@ -74,7 +74,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 								k8sutil.ArangodVolumeMount(),
 							},
 							Resources:       emptyResources,
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName),
 							ImagePullPolicy: core.PullAlways,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -125,7 +125,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 								k8sutil.ArangodVolumeMount(),
 							},
 							Resources:       emptyResources,
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName),
 							ImagePullPolicy: core.PullAlways,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -185,7 +185,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 								k8sutil.ArangodVolumeMount(),
 							},
 							Resources:       emptyResources,
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -242,7 +242,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 								k8sutil.ArangodVolumeMount(),
 							},
 							Resources:       emptyResources,
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -307,7 +307,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 								k8sutil.ArangodVolumeMount(),
 							},
 							Resources:       emptyResources,
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -362,7 +362,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 							Env:             withDefaultEnvs(t, resourcesUnfiltered),
@@ -419,7 +419,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 							Env:             withDefaultEnvs(t, resourcesUnfiltered),
@@ -479,7 +479,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 							Env:             withDefaultEnvs(t, resourcesUnfiltered),
@@ -539,7 +539,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 								k8sutil.ArangodVolumeMount(),
 							},
 							Resources:       emptyResources,
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -591,7 +591,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 								k8sutil.ArangodVolumeMount(),
 							},
 							Resources:       emptyResources,
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -648,7 +648,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 								k8sutil.ArangodVolumeMount(),
 							},
 							Resources:       emptyResources,
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -701,7 +701,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 								k8sutil.TlsKeyfileVolumeMount(),
 							},
 							Resources:       emptyResources,
-							LivenessProbe:   createTestLivenessProbe(httpProbe, true, "", shared.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, true, "", shared.ServerPortName),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -740,8 +740,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 				authorization, err := createTestToken(deployment, testCase, []string{"/_api/version"})
 				require.NoError(t, err)
 
-				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(httpProbe, false,
-					authorization, shared.ArangoPort)
+				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(httpProbe, false, authorization, shared.ServerPortName)
 			},
 			ExpectedEvent: "member agent is created",
 			ExpectedPod: core.Pod{
@@ -800,8 +799,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 				authorization, err := createTestToken(deployment, testCase, []string{"/_api/version"})
 				require.NoError(t, err)
 
-				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(httpProbe, true,
-					authorization, shared.ArangoPort)
+				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(httpProbe, true, authorization, shared.ServerPortName)
 			},
 			ExpectedEvent: "member agent is created",
 			ExpectedPod: core.Pod{
@@ -879,7 +877,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 								k8sutil.RocksdbEncryptionVolumeMount(),
 							},
 							Resources:       emptyResources,
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -919,8 +917,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 				authorization, err := createTestToken(deployment, testCase, []string{"/_api/version"})
 				require.NoError(t, err)
 
-				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(httpProbe, false,
-					authorization, shared.ArangoPort)
+				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(httpProbe, false, authorization, shared.ServerPortName)
 			},
 			ExpectedEvent: "member dbserver is created",
 			ExpectedPod: core.Pod{
@@ -988,8 +985,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 				authorization, err := createTestToken(deployment, testCase, []string{"/_api/version"})
 				require.NoError(t, err)
 
-				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(httpProbe, false,
-					authorization, shared.ArangoPort)
+				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(httpProbe, false, authorization, shared.ServerPortName)
 			},
 			ExpectedEvent: "member dbserver is created",
 			ExpectedPod: core.Pod{
@@ -1053,8 +1049,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 				authorization, err := createTestToken(deployment, testCase, []string{"/_api/version"})
 				require.NoError(t, err)
 
-				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(httpProbe, false,
-					authorization, shared.ArangoPort)
+				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(httpProbe, false, authorization, shared.ServerPortName)
 			},
 			config: Config{
 				OperatorImage: testImageOperator,
@@ -1124,8 +1119,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 				authorization, err := createTestToken(deployment, testCase, []string{"/_api/version"})
 				require.NoError(t, err)
 
-				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(httpProbe, false,
-					authorization, shared.ArangoPort)
+				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(httpProbe, false, authorization, shared.ServerPortName)
 			},
 			config: Config{
 				OperatorImage: testImageOperator,
@@ -1260,8 +1254,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 				authReadiness, err := createTestToken(deployment, testCase, []string{"/_admin/server/availability"})
 				require.NoError(t, err)
 
-				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(httpProbe, true,
-					authLiveness, 0)
+				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(httpProbe, true, authLiveness, shared.ServerPortName)
 				testCase.ExpectedPod.Spec.Containers[0].ReadinessProbe = createTestReadinessProbe(httpProbe, true, authReadiness)
 			},
 			ExpectedEvent: "member single is created",
@@ -1294,6 +1287,143 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 					Subdomain:                     testDeploymentName + "-int",
 					Affinity: k8sutil.CreateAffinity(testDeploymentName, api.ServerGroupSingleString,
 						false, ""),
+				},
+			},
+		},
+		{
+			Name: "Single Pod with TLS and authentication and readiness and port override",
+			ArangoDeployment: &api.ArangoDeployment{
+				Spec: api.DeploymentSpec{
+					Image:          util.NewString(testImage),
+					Authentication: authenticationSpec,
+					TLS: api.TLSSpec{
+						CASecretName: util.NewString(testCASecretName),
+					},
+					Single: api.ServerGroupSpec{
+						Port: util.NewUInt16(18529),
+					},
+				},
+			},
+			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
+				deployment.currentObjectStatus = &api.DeploymentStatus{
+					Members: api.DeploymentStatusMembers{
+						Single: api.MemberStatusList{
+							singleStatus,
+						},
+					},
+					Images: createTestImages(false),
+				}
+
+				testCase.createTestPodData(deployment, api.ServerGroupSingle, singleStatus)
+
+				authLiveness, err := createTestToken(deployment, testCase, []string{"/_api/version"})
+				require.NoError(t, err)
+
+				authReadiness, err := createTestToken(deployment, testCase, []string{"/_admin/server/availability"})
+				require.NoError(t, err)
+
+				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(httpProbe, true, authLiveness, shared.ServerPortName)
+				testCase.ExpectedPod.Spec.Containers[0].ReadinessProbe = createTestReadinessProbe(httpProbe, true, authReadiness)
+			},
+			ExpectedEvent: "member single is created",
+			ExpectedPod: core.Pod{
+				Spec: core.PodSpec{
+					Volumes: []core.Volume{
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
+						createTestTLSVolume(api.ServerGroupSingleString, singleStatus.ID),
+						k8sutil.CreateVolumeWithSecret(shared.ClusterJWTSecretVolumeName, testJWTSecretName),
+					},
+					Containers: []core.Container{
+						{
+							Name:            shared.ServerContainerName,
+							Image:           testImage,
+							Command:         createTestCommandForSingleModeWithPortOverride(true, true, 18529),
+							Ports:           createTestPorts(api.ServerGroupSingle, 18529),
+							ImagePullPolicy: core.PullIfNotPresent,
+							SecurityContext: securityContext.NewSecurityContext(),
+							VolumeMounts: []core.VolumeMount{
+								k8sutil.ArangodVolumeMount(),
+								k8sutil.TlsKeyfileVolumeMount(),
+								k8sutil.ClusterJWTVolumeMount(),
+							},
+							Resources: emptyResources,
+						},
+					},
+					RestartPolicy:                 core.RestartPolicyNever,
+					TerminationGracePeriodSeconds: &defaultSingleTerminationTimeout,
+					Hostname:                      testDeploymentName + "-" + api.ServerGroupSingleString + "-" + singleStatus.ID,
+					Subdomain:                     testDeploymentName + "-int",
+					Affinity: k8sutil.CreateAffinity(testDeploymentName, api.ServerGroupSingleString,
+						false, ""),
+				},
+			},
+		},
+		{
+			Name: "Coordinator Pod with TLS and authentication and readiness and liveness and custom port",
+			Features: testCaseFeatures{
+				JWTRotation: true,
+			},
+			ArangoDeployment: &api.ArangoDeployment{
+				Spec: api.DeploymentSpec{
+					Image:          util.NewString(testImage),
+					Authentication: authenticationSpec,
+					Environment:    api.NewEnvironment(api.EnvironmentProduction),
+					TLS: api.TLSSpec{
+						CASecretName: util.NewString(testCASecretName),
+					},
+					Coordinators: api.ServerGroupSpec{
+						Port: util.NewUInt16(18529),
+					},
+				},
+			},
+			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
+				deployment.currentObjectStatus = &api.DeploymentStatus{
+					Members: api.DeploymentStatusMembers{
+						Coordinators: api.MemberStatusList{
+							firstCoordinatorStatus,
+						},
+					},
+					Images: createTestImages(false),
+				}
+
+				testCase.createTestPodData(deployment, api.ServerGroupCoordinators, firstCoordinatorStatus)
+
+				auth, err := createTestToken(deployment, testCase, []string{"/_admin/server/availability"})
+				require.NoError(t, err)
+
+				testCase.ExpectedPod.Spec.Containers[0].ReadinessProbe = createTestReadinessProbe(cmdProbe, true, auth)
+				testCase.ExpectedPod.Spec.Containers[0].StartupProbe = createTestStartupProbe(cmdProbe, true, auth, 720)
+			},
+			ExpectedEvent: "member coordinator is created",
+			ExpectedPod: core.Pod{
+				Spec: core.PodSpec{
+					Volumes: []core.Volume{
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
+						createTestTLSVolume(api.ServerGroupCoordinatorsString, firstCoordinatorStatus.ID),
+						k8sutil.CreateVolumeWithSecret(shared.ClusterJWTSecretVolumeName, testJWTSecretName),
+					},
+					Containers: []core.Container{
+						{
+							Name:            shared.ServerContainerName,
+							Image:           testImage,
+							Command:         createTestCommandForCoordinatorWithPort(firstCoordinatorStatus.ID, true, true, 18529),
+							Ports:           createTestPorts(api.ServerGroupCoordinators, 18529),
+							ImagePullPolicy: core.PullIfNotPresent,
+							Resources:       emptyResources,
+							SecurityContext: securityContext.NewSecurityContext(),
+							VolumeMounts: []core.VolumeMount{
+								k8sutil.ArangodVolumeMount(),
+								k8sutil.TlsKeyfileVolumeMount(),
+								k8sutil.ClusterJWTVolumeMount(),
+							},
+						},
+					},
+					RestartPolicy:                 core.RestartPolicyNever,
+					TerminationGracePeriodSeconds: &defaultCoordinatorTerminationTimeout,
+					Hostname:                      testDeploymentName + "-" + api.ServerGroupCoordinatorsString + "-" + firstCoordinatorStatus.ID,
+					Subdomain:                     testDeploymentName + "-int",
+					Affinity: k8sutil.CreateAffinity(testDeploymentName, api.ServerGroupCoordinatorsString,
+						true, ""),
 				},
 			},
 		},

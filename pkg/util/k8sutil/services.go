@@ -139,7 +139,7 @@ func CreateHeadlessService(ctx context.Context, svcs servicev1.ModInterface, dep
 	return svcName, newlyCreated, nil
 }
 
-func HeadlessServiceDetails(deploymentName string, role string) ([]core.ServicePort, map[string]string) {
+func HeadlessServiceDetails(deploymentName string) ([]core.ServicePort, map[string]string) {
 	ports := []core.ServicePort{
 		{
 			Name:       shared.ServerPortName,
@@ -148,7 +148,7 @@ func HeadlessServiceDetails(deploymentName string, role string) ([]core.ServiceP
 			TargetPort: intstr.FromString(shared.ServerPortName),
 		},
 	}
-	labels := LabelsForDeployment(deploymentName, role)
+	labels := LabelsForDeployment(deploymentName, "")
 
 	return ports, labels
 }

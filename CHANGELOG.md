@@ -34,6 +34,7 @@
 - (Feature) Pre OOM Abort function
 - (Bugfix) Fix ErrorArray String function
 - (Feature) Switch services to Port names
+- (Feature) Configurable ArangoD Port
 
 ## [1.2.20](https://github.com/arangodb/kube-arangodb/tree/1.2.20) (2022-10-25)
 - (Feature) Add action progress
