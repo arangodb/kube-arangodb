@@ -171,6 +171,8 @@ const (
 	ActionUpgradeMemberDefaultTimeout time.Duration = 21600 * time.Second // 6h0m0s
 	// ActionWaitForMemberInSyncDefaultTimeout define default timeout for action ActionWaitForMemberInSync
 	ActionWaitForMemberInSyncDefaultTimeout time.Duration = 1800 * time.Second // 30m0s
+	// ActionWaitForMemberReadyDefaultTimeout define default timeout for action ActionWaitForMemberReady
+	ActionWaitForMemberReadyDefaultTimeout time.Duration = 1800 * time.Second // 30m0s
 	// ActionWaitForMemberUpDefaultTimeout define default timeout for action ActionWaitForMemberUp
 	ActionWaitForMemberUpDefaultTimeout time.Duration = 1800 * time.Second // 30m0s
 
@@ -322,6 +324,8 @@ const (
 	ActionTypeUpgradeMember ActionType = "UpgradeMember"
 	// ActionTypeWaitForMemberInSync in scopes Normal. Wait for member to be in sync. In case of DBServer waits for shards. In case of Agents to catch-up on Agency index
 	ActionTypeWaitForMemberInSync ActionType = "WaitForMemberInSync"
+	// ActionTypeWaitForMemberReady in scopes Normal. Wait for member Ready condition
+	ActionTypeWaitForMemberReady ActionType = "WaitForMemberReady"
 	// ActionTypeWaitForMemberUp in scopes Normal. Wait for member to be responsive
 	ActionTypeWaitForMemberUp ActionType = "WaitForMemberUp"
 )
@@ -474,6 +478,8 @@ func (a ActionType) DefaultTimeout() time.Duration {
 		return ActionUpgradeMemberDefaultTimeout
 	case ActionTypeWaitForMemberInSync:
 		return ActionWaitForMemberInSyncDefaultTimeout
+	case ActionTypeWaitForMemberReady:
+		return ActionWaitForMemberReadyDefaultTimeout
 	case ActionTypeWaitForMemberUp:
 		return ActionWaitForMemberUpDefaultTimeout
 	default:
@@ -629,6 +635,8 @@ func (a ActionType) Priority() ActionPriority {
 	case ActionTypeUpgradeMember:
 		return ActionPriorityNormal
 	case ActionTypeWaitForMemberInSync:
+		return ActionPriorityNormal
+	case ActionTypeWaitForMemberReady:
 		return ActionPriorityNormal
 	case ActionTypeWaitForMemberUp:
 		return ActionPriorityNormal

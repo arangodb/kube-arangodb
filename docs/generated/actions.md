@@ -77,6 +77,7 @@
 |            UpdateTLSSNI            |    no    |  10m0s  |    Enterprise Only     |                                             Update certificate in SNI                                              |
 |           UpgradeMember            |    no    | 6h0m0s  | Community & Enterprise |                                        Run the Upgrade procedure on member                                         |
 |        WaitForMemberInSync         |    no    |  30m0s  | Community & Enterprise | Wait for member to be in sync. In case of DBServer waits for shards. In case of Agents to catch-up on Agency index |
+|         WaitForMemberReady         |    no    |  30m0s  | Community & Enterprise |                                          Wait for member Ready condition                                           |
 |          WaitForMemberUp           |    no    |  30m0s  | Community & Enterprise |                                          Wait for member to be responsive                                          |
 
 
@@ -159,6 +160,7 @@ spec:
       UpdateTLSSNI: 10m0s
       UpgradeMember: 6h0m0s
       WaitForMemberInSync: 30m0s
+      WaitForMemberReady: 30m0s
       WaitForMemberUp: 30m0s
 
 ```

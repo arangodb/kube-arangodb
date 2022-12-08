@@ -199,9 +199,7 @@ func (r *Reconciler) createUpdatePlanInternal(apiObject k8sutil.APIObject, spec 
 				AddParam(api.ConditionTypePendingUpdate.String(), "").
 				AddParam(api.ConditionTypeUpdating.String(), "T")}, false
 		} else {
-			p = p.After(
-				actions.NewAction(api.ActionTypeWaitForMemberUp, m.Group, m.Member),
-				actions.NewAction(api.ActionTypeWaitForMemberInSync, m.Group, m.Member))
+			p = withWaitForMember(p, m.Group, m.Member)
 
 			p = p.Wrap(actions.NewAction(api.ActionTypeSetMemberCondition, m.Group, m.Member, reason).
 				AddParam(api.ConditionTypePendingUpdate.String(), "").AddParam(api.ConditionTypeUpdating.String(), "T"),
@@ -458,9 +456,6 @@ func groupReadyForRestart(context PlanBuilderContext, status api.DeploymentStatu
 		return false, "Not all members are serving"
 	}
 
-	if !status.Members.MembersOfGroup(group).AllMembersReady() {
-		return false, "Not all members are ready"
-	}
 	switch group {
 	case api.ServerGroupDBServers:
 		agencyState, ok := context.GetAgencyCache()
@@ -534,4 +529,16 @@ func withSecureWrap(member api.MemberStatus,
 func skipResignLeadership(mode api.DeploymentMode, v driver.Version) bool {
 	return mode == api.DeploymentModeCluster && features.Maintenance().Enabled() && ((v.CompareTo("3.6.0") >= 0 && v.CompareTo("3.6.14") <= 0) ||
 		(v.CompareTo("3.7.0") >= 0 && v.CompareTo("3.7.12") <= 0))
+}
+
+func withWaitForMember(plan api.Plan, group api.ServerGroup, member api.MemberStatus) api.Plan {
+	return append(plan, waitForMemberActions(group, member)...)
+}
+
+func waitForMemberActions(group api.ServerGroup, member api.MemberStatus) api.Plan {
+	return api.Plan{
+		actions.NewAction(api.ActionTypeWaitForMemberUp, group, member, "Wait for member to be up after creation"),
+		actions.NewAction(api.ActionTypeWaitForMemberReady, group, member, "Wait for member pod to be ready after creation"),
+		actions.NewAction(api.ActionTypeWaitForMemberInSync, group, member, "Wait for member to be in sync after creation"),
+	}
 }

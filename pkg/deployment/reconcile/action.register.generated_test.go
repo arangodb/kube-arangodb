@@ -544,6 +544,13 @@ func Test_Actions(t *testing.T) {
 		})
 	})
 
+	t.Run("WaitForMemberReady", func(t *testing.T) {
+		ActionsExistence(t, api.ActionTypeWaitForMemberReady)
+		t.Run("Internal", func(t *testing.T) {
+			require.False(t, api.ActionTypeWaitForMemberReady.Internal())
+		})
+	})
+
 	t.Run("WaitForMemberUp", func(t *testing.T) {
 		ActionsExistence(t, api.ActionTypeWaitForMemberUp)
 		t.Run("Internal", func(t *testing.T) {

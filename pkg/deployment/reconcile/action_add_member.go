@@ -24,7 +24,6 @@ import (
 	"context"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/topology"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
@@ -68,9 +67,5 @@ func (a *actionAddMember) Start(ctx context.Context) (bool, error) {
 
 // ActionPlanAppender appends wait methods to the plan
 func (a *actionAddMember) ActionPlanAppender(current api.Plan) (api.Plan, bool) {
-	np := api.Plan{
-		actions.NewAction(api.ActionTypeWaitForMemberUp, a.action.Group, withPredefinedMember(a.newMemberID), "Wait for member in sync after creation"),
-		actions.NewAction(api.ActionTypeWaitForMemberInSync, a.action.Group, withPredefinedMember(a.newMemberID), "Wait for member in sync after creation"),
-	}
-	return append(current, np...), true
+	return withWaitForMember(current, a.action.Group, withPredefinedMember(a.action.MemberID)), true
 }
