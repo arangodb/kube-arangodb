@@ -458,6 +458,9 @@ func groupReadyForRestart(context PlanBuilderContext, status api.DeploymentStatu
 		return false, "Not all members are serving"
 	}
 
+	if !status.Members.MembersOfGroup(group).AllMembersReady() {
+		return false, "Not all members are ready"
+	}
 	switch group {
 	case api.ServerGroupDBServers:
 		agencyState, ok := context.GetAgencyCache()
