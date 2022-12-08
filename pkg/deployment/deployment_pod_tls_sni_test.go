@@ -452,7 +452,7 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 								k8sutil.TlsKeyfileVolumeMount(),
 							},
 							Resources:       emptyResources,
-							LivenessProbe:   createTestLivenessProbe(httpProbe, true, "", shared.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, true, "", shared.ServerPortName),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},

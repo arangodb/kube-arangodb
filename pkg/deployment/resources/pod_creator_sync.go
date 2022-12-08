@@ -22,6 +22,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"net"
 	"net/url"
@@ -179,6 +180,13 @@ func (a *ArangoSyncContainer) GetEnvs() ([]core.EnvVar, []core.EnvFromSource) {
 	}
 
 	envs.Add(true, k8sutil.GetLifecycleEnv()...)
+
+	if p := a.groupSpec.Port; p != nil {
+		envs.Add(true, core.EnvVar{
+			Name:  ArangoDBServerPortEnv,
+			Value: fmt.Sprintf("%d", *p),
+		})
+	}
 
 	if len(a.groupSpec.Envs) > 0 {
 		for _, env := range a.groupSpec.Envs {

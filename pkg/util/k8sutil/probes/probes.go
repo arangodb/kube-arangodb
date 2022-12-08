@@ -36,8 +36,8 @@ type HTTPProbeConfig struct {
 	Secure bool
 	// Value for an Authorization header (can be empty)
 	Authorization string
-	// Port to inspect (defaults to ArangoPort)
-	Port int
+	// PortName define port name used to connect to the server for probes
+	PortName string
 	// Number of seconds after the container has started before liveness probes are initiated (defaults to 30)
 	InitialDelaySeconds int32
 	// Number of seconds after which the probe times out (defaults to 2).
@@ -71,17 +71,22 @@ func (config HTTPProbeConfig) Create() *core.Probe {
 			Value: config.Authorization,
 		})
 	}
-	def := func(value, defaultValue int32) int32 {
-		if value != 0 {
-			return value
+
+	def := func(values ...string) string {
+		for _, v := range values {
+			if v != "" {
+				return v
+			}
 		}
-		return defaultValue
+
+		return ""
 	}
+
 	return &core.Probe{
 		Handler: core.Handler{
 			HTTPGet: &core.HTTPGetAction{
 				Path:        config.LocalPath,
-				Port:        intstr.FromInt(int(def(int32(config.Port), shared.ArangoPort))),
+				Port:        intstr.FromString(def(config.PortName, shared.ServerPortName)),
 				Scheme:      scheme,
 				HTTPHeaders: headers,
 			},

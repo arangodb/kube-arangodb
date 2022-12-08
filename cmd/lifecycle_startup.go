@@ -40,8 +40,10 @@ var cmdLifecycleStartup = &cobra.Command{
 func cmdLifecycleStartupFunc(cmd *cobra.Command, args []string) error {
 	var close bool
 
+	port := ProbePort.GetOrDefault(fmt.Sprintf("%d", shared.ArangoPort))
+
 	server := &http.Server{
-		Addr: fmt.Sprintf(":%d", shared.ArangoPort),
+		Addr: fmt.Sprintf(":%s", port),
 	}
 
 	handlers := http.NewServeMux()

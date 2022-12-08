@@ -45,7 +45,7 @@ func createInternalExporterArgs(spec api.DeploymentSpec, groupSpec api.ServerGro
 		if spec.IsSecure() {
 			scheme = "https"
 		}
-		options.Addf("--arangodb.endpoint", "%s://localhost:%d%s", scheme, shared.ArangoPort, path)
+		options.Addf("--arangodb.endpoint", "%s://localhost:%d%s", scheme, groupSpec.GetPort(), path)
 	} else {
 		options.Addf("--arangodb.endpoint", "http://localhost:%d%s", *port, path)
 	}
@@ -55,7 +55,17 @@ func createInternalExporterArgs(spec api.DeploymentSpec, groupSpec api.ServerGro
 		options.Add("--ssl.keyfile", keyPath)
 	}
 
-	if port := spec.Metrics.GetPort(); port != shared.ArangoExporterPort {
+	var port uint16 = shared.ArangoExporterPort
+
+	if p := spec.Metrics.Port; p != nil {
+		port = *p
+	}
+
+	if p := groupSpec.ExporterPort; p != nil {
+		port = *p
+	}
+
+	if port != shared.ArangoExporterPort {
 		options.Addf("--server.address", ":%d", port)
 	}
 
@@ -73,7 +83,7 @@ func getArangoExporterInternalEndpoint(version driver.Version) string {
 func createExporterLivenessProbe(isSecure bool) *probes.HTTPProbeConfig {
 	probeCfg := &probes.HTTPProbeConfig{
 		LocalPath: "/",
-		Port:      shared.ArangoExporterPort,
+		PortName:  shared.ExporterPortName,
 		Secure:    isSecure,
 	}
 

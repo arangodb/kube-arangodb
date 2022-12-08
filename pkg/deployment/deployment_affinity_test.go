@@ -97,7 +97,7 @@ func TestEnsurePod_ArangoDB_AntiAffinity(t *testing.T) {
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -159,7 +159,7 @@ func TestEnsurePod_ArangoDB_AntiAffinity(t *testing.T) {
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -224,7 +224,7 @@ func TestEnsurePod_ArangoDB_AntiAffinity(t *testing.T) {
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -294,7 +294,7 @@ func TestEnsurePod_ArangoDB_AntiAffinity(t *testing.T) {
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -373,7 +373,7 @@ func TestEnsurePod_ArangoDB_Affinity(t *testing.T) {
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -438,7 +438,7 @@ func TestEnsurePod_ArangoDB_Affinity(t *testing.T) {
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -506,7 +506,7 @@ func TestEnsurePod_ArangoDB_Affinity(t *testing.T) {
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -579,7 +579,7 @@ func TestEnsurePod_ArangoDB_Affinity(t *testing.T) {
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -660,7 +660,7 @@ func TestEnsurePod_ArangoDB_NodeAffinity(t *testing.T) {
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},

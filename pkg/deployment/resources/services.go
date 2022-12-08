@@ -130,7 +130,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 
 	// Headless service
 	counterMetric.Inc()
-	headlessPorts, headlessSelector := k8sutil.HeadlessServiceDetails(deploymentName, role)
+	headlessPorts, headlessSelector := k8sutil.HeadlessServiceDetails(deploymentName)
 
 	if s, exists := cachedStatus.Service().V1().GetSimple(k8sutil.CreateHeadlessServiceName(deploymentName)); !exists {
 		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)

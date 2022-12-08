@@ -68,7 +68,7 @@ func createArangodArgs(cachedStatus interfaces.Inspector, input pod.Input, addit
 	}
 
 	if input.GroupSpec.GetExternalPortEnabled() {
-		options.Addf("--server.endpoint", "%s://%s:%d", scheme, input.Deployment.GetListenAddr(), shared.ArangoPort)
+		options.Addf("--server.endpoint", "%s://%s:%d", scheme, input.Deployment.GetListenAddr(), input.GroupSpec.GetPort())
 	}
 
 	if port := input.GroupSpec.InternalPort; port != nil {
@@ -192,12 +192,8 @@ func createArangoSyncArgs(apiObject meta.Object, spec api.DeploymentSpec, group 
 	groupSpec api.ServerGroupSpec, member api.MemberStatus) []string {
 	options := k8sutil.CreateOptionPairs(64)
 	var runCmd string
-	var port int
+	port := groupSpec.GetPort()
 
-	/*if config.DebugCluster {
-		options = append(options,
-			k8sutil.OptionPair{"--log.level", "debug"})
-	}*/
 	if spec.Sync.Monitoring.GetTokenSecretName() != "" {
 		options.Addf("--monitoring.token", "$(%s)", constants.EnvArangoSyncMonitoringToken)
 	}
@@ -208,8 +204,7 @@ func createArangoSyncArgs(apiObject meta.Object, spec api.DeploymentSpec, group 
 	switch group {
 	case api.ServerGroupSyncMasters:
 		runCmd = "master"
-		port = shared.ArangoSyncMasterPort
-		masterEndpoint = spec.Sync.ExternalAccess.ResolveMasterEndpoint(k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(apiObject, spec.ClusterDomain), port)
+		masterEndpoint = spec.Sync.ExternalAccess.ResolveMasterEndpoint(k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(apiObject, spec.ClusterDomain), int(port))
 		keyPath := filepath.Join(shared.TLSKeyfileVolumeMountDir, constants.SecretTLSKeyfile)
 		clientCAPath := filepath.Join(shared.ClientAuthCAVolumeMountDir, constants.SecretCACertificate)
 		options.Add("--server.keyfile", keyPath)
@@ -227,16 +222,15 @@ func createArangoSyncArgs(apiObject meta.Object, spec api.DeploymentSpec, group 
 		options.Addf("--cluster.endpoint", "%s://%s:%d", scheme, dbServiceName, shared.ArangoPort)
 	case api.ServerGroupSyncWorkers:
 		runCmd = "worker"
-		port = shared.ArangoSyncWorkerPort
 		masterEndpointHost := k8sutil.CreateSyncMasterClientServiceName(apiObject.GetName())
 		masterEndpoint = []string{"https://" + net.JoinHostPort(masterEndpointHost, strconv.Itoa(shared.ArangoSyncMasterPort))}
 	}
 	for _, ep := range masterEndpoint {
 		options.Add("--master.endpoint", ep)
 	}
-	serverEndpoint := "https://" + net.JoinHostPort(k8sutil.CreatePodDNSNameWithDomain(apiObject, spec.ClusterDomain, group.AsRole(), member.ID), strconv.Itoa(port))
+	serverEndpoint := "https://" + net.JoinHostPort(k8sutil.CreatePodDNSNameWithDomain(apiObject, spec.ClusterDomain, group.AsRole(), member.ID), strconv.Itoa(int(port)))
 	options.Add("--server.endpoint", serverEndpoint)
-	options.Add("--server.port", strconv.Itoa(port))
+	options.Add("--server.port", strconv.Itoa(int(port)))
 
 	args := []string{
 		"run",

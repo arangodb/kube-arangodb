@@ -77,7 +77,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -140,7 +140,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -362,7 +362,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 
 				testCase.createTestPodData(deployment, api.ServerGroupSingle, singleStatus)
 
-				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(httpProbe, false, "", 0)
+				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName)
 				testCase.ExpectedPod.Spec.Containers[0].ReadinessProbe = createTestReadinessProbe(httpProbe, false, "")
 			},
 			ExpectedEvent: "member single is created",
@@ -427,7 +427,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 
 				testCase.createTestPodData(deployment, api.ServerGroupSingle, singleStatus)
 
-				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(httpProbe, false, "", 0)
+				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName)
 				testCase.ExpectedPod.Spec.Containers[0].ReadinessProbe = createTestReadinessProbe(httpProbe, false, "")
 			},
 			ExpectedEvent: "member single is created",
@@ -492,7 +492,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 
 				testCase.createTestPodData(deployment, api.ServerGroupSingle, singleStatus)
 
-				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(httpProbe, false, "", 0)
+				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName)
 				testCase.ExpectedPod.Spec.Containers[0].ReadinessProbe = createTestReadinessProbe(httpProbe, false, "")
 			},
 			ExpectedEvent: "member single is created",

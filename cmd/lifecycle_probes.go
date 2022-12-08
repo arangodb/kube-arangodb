@@ -43,7 +43,12 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+)
+
+const (
+	ProbePort util.EnvironmentVariable = "ARANGODB_SERVER_PORT"
 )
 
 var (
@@ -118,7 +123,9 @@ func probeEndpoint(endpoint string) string {
 		proto = "https"
 	}
 
-	return fmt.Sprintf("%s://%s:%d%s", proto, "127.0.0.1", shared.ArangoPort, endpoint)
+	port := ProbePort.GetOrDefault(fmt.Sprintf("%d", shared.ArangoPort))
+
+	return fmt.Sprintf("%s://%s:%s%s", proto, "127.0.0.1", port, endpoint)
 }
 
 func readJWTFile(file string) ([]byte, error) {
