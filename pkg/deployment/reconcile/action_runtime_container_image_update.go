@@ -263,6 +263,8 @@ func (a actionRuntimeContainerImageUpdate) CheckProgress(ctx context.Context) (b
 		return true, false, nil
 	}
 
+	groupSpec := a.actionCtx.GetSpec().GetServerGroupSpec(a.action.Group)
+
 	cache, ok := a.actionCtx.ACS().ClusterCache(m.ClusterID)
 	if !ok {
 		a.log.Info("Cluster is not ready")
@@ -273,6 +275,10 @@ func (a actionRuntimeContainerImageUpdate) CheckProgress(ctx context.Context) (b
 	if !ok {
 		a.log.Info("pod is not present")
 		return true, false, nil
+	}
+
+	if err := k8sutil.EnsureFinalizerAbsent(ctx, cache.PodsModInterface().V1(), pod, k8sutil.GetFinalizers(groupSpec, a.action.Group)...); err != nil {
+		a.log.Err(err).Error("Unable to enforce finalizer")
 	}
 
 	name, image, ok := a.getContainerDetails()
