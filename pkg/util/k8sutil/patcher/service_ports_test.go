@@ -25,6 +25,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 func Test_Service_Ports(t *testing.T) {
@@ -65,5 +68,136 @@ func Test_Service_Ports(t *testing.T) {
 		})
 
 		require.Len(t, q, 1)
+	})
+}
+
+func Test_Service_OnlyPorts(t *testing.T) {
+	t.Run("Equal", func(t *testing.T) {
+		q := PatchServiceOnlyPorts(core.ServicePort{
+			Name: "test",
+		})(&core.Service{
+			Spec: core.ServiceSpec{
+				Ports: []core.ServicePort{
+					{
+						Name: "test",
+					},
+				},
+			},
+		})
+
+		require.Len(t, q, 0)
+	})
+
+	t.Run("Missing", func(t *testing.T) {
+		q := PatchServiceOnlyPorts(core.ServicePort{
+			Name: "test",
+		})(&core.Service{
+			Spec: core.ServiceSpec{
+				Ports: []core.ServicePort{
+					{
+						Name: "test2",
+					},
+				},
+			},
+		})
+
+		require.Len(t, q, 1)
+	})
+
+	t.Run("Different", func(t *testing.T) {
+		q := PatchServiceOnlyPorts(core.ServicePort{
+			Name: "test",
+			Port: 8529,
+		})(&core.Service{
+			Spec: core.ServiceSpec{
+				Ports: []core.ServicePort{
+					{
+						Name: "test1",
+					},
+				},
+			},
+		})
+
+		require.Len(t, q, 1)
+	})
+
+	t.Run("Different Port", func(t *testing.T) {
+		q := PatchServiceOnlyPorts(core.ServicePort{
+			Name: "test",
+			Port: 8529,
+		})(&core.Service{
+			Spec: core.ServiceSpec{
+				Ports: []core.ServicePort{
+					{
+						Name: "test",
+					},
+				},
+			},
+		})
+
+		require.Len(t, q, 1)
+	})
+
+	t.Run("Changed NodePort", func(t *testing.T) {
+		q := PatchServiceOnlyPorts(core.ServicePort{
+			Name: "test",
+			Port: 8529,
+		})(&core.Service{
+			Spec: core.ServiceSpec{
+				Ports: []core.ServicePort{
+					{
+						Name:     "test",
+						Port:     8529,
+						NodePort: 12345,
+					},
+				},
+			},
+		})
+
+		require.Len(t, q, 0)
+	})
+
+	t.Run("Changed Port", func(t *testing.T) {
+		q := PatchServiceOnlyPorts(core.ServicePort{
+			Name: "test",
+			Port: 8528,
+		})(&core.Service{
+			Spec: core.ServiceSpec{
+				Ports: []core.ServicePort{
+					{
+						Name:     "test",
+						Port:     8529,
+						NodePort: 12345,
+					},
+				},
+			},
+		})
+
+		require.Len(t, q, 1)
+	})
+
+	t.Run("Ignore fields", func(t *testing.T) {
+		q := PatchServiceOnlyPorts(core.ServicePort{
+			Name: "test",
+			Port: 8528,
+		})(&core.Service{
+			Spec: core.ServiceSpec{
+				Ports: []core.ServicePort{
+					{
+						Name:        "test",
+						Protocol:    core.ProtocolTCP,
+						AppProtocol: util.NewString("test"),
+						Port:        8528,
+						TargetPort: intstr.IntOrString{
+							StrVal: "TEST",
+							IntVal: 0,
+						},
+						NodePort: 6543,
+					},
+				},
+			},
+		})
+
+		require.Len(t, q, 0)
 	})
 }

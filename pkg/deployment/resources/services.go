@@ -184,7 +184,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 			}
 		}
 	} else {
-		if changed, err := patcher.ServicePatcher(ctx, svcs, s, meta.PatchOptions{}, patcher.PatchServicePorts(clientServicePorts), patcher.PatchServiceSelector(clientServiceSelectors)); err != nil {
+		if changed, err := patcher.ServicePatcher(ctx, svcs, s, meta.PatchOptions{}, patcher.PatchServiceOnlyPorts(clientServicePorts...), patcher.PatchServiceSelector(clientServiceSelectors)); err != nil {
 			log.Err(err).Debug("Failed to patch database client service")
 			return errors.WithStack(err)
 		} else if changed {
@@ -254,9 +254,12 @@ func (r *Resources) ensureExternalAccessServices(ctx context.Context, cachedStat
 	log := r.log.Str("section", "service-ea").Str("role", role).Str("service", eaServiceName)
 	createExternalAccessService := false
 	deleteExternalAccessService := false
+	owned := false
 	eaServiceType := spec.GetType().AsServiceType() // Note: Type auto defaults to ServiceTypeLoadBalancer
 	if existing, exists := cachedStatus.Service().V1().GetSimple(eaServiceName); exists {
 		// External access service exists
+		owned = apiObject.OwnerOf(existing)
+
 		updateExternalAccessService := false
 		loadBalancerIP := spec.GetLoadBalancerIP()
 		loadBalancerSourceRanges := spec.LoadBalancerSourceRanges
@@ -285,7 +288,7 @@ func (r *Resources) ensureExternalAccessServices(ctx context.Context, cachedStat
 				} else if existing.Spec.Type == core.ServiceTypeLoadBalancer && (loadBalancerIP != "" && existing.Spec.LoadBalancerIP != loadBalancerIP) {
 					deleteExternalAccessService = true // LoadBalancerIP is wrong, remove the current and replace with proper one
 					createExternalAccessService = true
-				} else if existing.Spec.Type == core.ServiceTypeNodePort && len(existing.Spec.Ports) == 1 && (nodePort != 0 && existing.Spec.Ports[0].NodePort != int32(nodePort)) {
+				} else if existing.Spec.Type == core.ServiceTypeNodePort && len(existing.Spec.Ports) < 1 || existing.Spec.Ports[0].Name != shared.ServerPortName && (nodePort != 0 && existing.Spec.Ports[0].NodePort != int32(nodePort)) {
 					deleteExternalAccessService = true // NodePort is wrong, remove the current and replace with proper one
 					createExternalAccessService = true
 				}
@@ -300,7 +303,7 @@ func (r *Resources) ensureExternalAccessServices(ctx context.Context, cachedStat
 				existing.Spec.LoadBalancerSourceRanges = loadBalancerSourceRanges
 			}
 		} else if spec.GetType().IsNodePort() {
-			if existing.Spec.Type != core.ServiceTypeNodePort || len(existing.Spec.Ports) != 1 || (nodePort != 0 && existing.Spec.Ports[0].NodePort != int32(nodePort)) {
+			if existing.Spec.Type != core.ServiceTypeNodePort || len(existing.Spec.Ports) < 1 || existing.Spec.Ports[0].Name != shared.ServerPortName || (nodePort != 0 && existing.Spec.Ports[0].NodePort != int32(nodePort)) {
 				deleteExternalAccessService = true // Remove the current and replace with proper one
 				createExternalAccessService = true
 			}
@@ -316,7 +319,9 @@ func (r *Resources) ensureExternalAccessServices(ctx context.Context, cachedStat
 			}
 		}
 		if !createExternalAccessService && !deleteExternalAccessService {
-			if changed, err := patcher.ServicePatcher(ctx, svcs, existing, meta.PatchOptions{}, patcher.PatchServicePorts(eaPorts), patcher.PatchServiceSelector(eaSelector)); err != nil {
+			if changed, err := patcher.ServicePatcher(ctx, svcs, existing, meta.PatchOptions{},
+				patcher.PatchServiceSelector(eaSelector),
+				patcher.Optional(patcher.PatchServiceOnlyPorts(eaPorts...), owned)); err != nil {
 				log.Err(err).Debug("Failed to patch database client service")
 				return errors.WithStack(err)
 			} else if changed {
@@ -331,13 +336,15 @@ func (r *Resources) ensureExternalAccessServices(ctx context.Context, cachedStat
 	}
 
 	if deleteExternalAccessService {
-		log.Info("Removing obsolete external access service")
-		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-			return svcs.Delete(ctxChild, eaServiceName, meta.DeleteOptions{})
-		})
-		if err != nil {
-			log.Err(err).Debug("Failed to remove external access service")
-			return errors.WithStack(err)
+		if owned {
+			log.Info("Removing obsolete external access service")
+			err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
+				return svcs.Delete(ctxChild, eaServiceName, meta.DeleteOptions{})
+			})
+			if err != nil {
+				log.Err(err).Debug("Failed to remove external access service")
+				return errors.WithStack(err)
+			}
 		}
 	}
 	if createExternalAccessService {
@@ -368,7 +375,7 @@ func (r *Resources) ensureExternalAccessManagedServices(ctx context.Context, cac
 
 	apply := func(svc *core.Service) (bool, error) {
 		return patcher.ServicePatcher(ctx, cachedStatus.ServicesModInterface().V1(), svc, meta.PatchOptions{},
-			patcher.PatchServicePorts(ports),
+			patcher.PatchServiceOnlyPorts(ports...),
 			patcher.PatchServiceSelector(selectors))
 	}
 
