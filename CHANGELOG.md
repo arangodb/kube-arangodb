@@ -41,6 +41,7 @@
 - (Bugfix) Prevent Runtime update restarts
 - (Bugfix) Change member port discovery
 - (Feature) Do not change external service ports
+- (Bugfix) Fix Operator Debug mode
 
 ## [1.2.20](https://github.com/arangodb/kube-arangodb/tree/1.2.20) (2022-10-25)
 - (Feature) Add action progress
