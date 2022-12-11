@@ -493,24 +493,7 @@ func (m *MemberArangoDPod) GetInitContainers(cachedStatus interfaces.Inspector) 
 }
 
 func (m *MemberArangoDPod) GetFinalizers() []string {
-	var finalizers []string
-
-	if d := m.spec.GetServerGroupSpec(m.group).GetShutdownDelay(m.group); d != 0 {
-		finalizers = append(finalizers, constants.FinalizerDelayPodTermination)
-	}
-
-	if features.GracefulShutdown().Enabled() {
-		finalizers = append(finalizers, constants.FinalizerPodGracefulShutdown) // No need for other finalizers, quorum will be managed
-	} else {
-		switch m.group {
-		case api.ServerGroupAgents:
-			finalizers = append(finalizers, constants.FinalizerPodAgencyServing)
-		case api.ServerGroupDBServers:
-			finalizers = append(finalizers, constants.FinalizerPodDrainDBServer)
-		}
-	}
-
-	return finalizers
+	return k8sutil.GetFinalizers(m.spec.GetServerGroupSpec(m.group), m.group)
 }
 
 func (m *MemberArangoDPod) GetTolerations() []core.Toleration {

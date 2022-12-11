@@ -34,11 +34,15 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
 
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
@@ -704,4 +708,79 @@ func CreateEnvSecretKeySelector(name, SecretKeyName, secretKey string) core.EnvV
 			},
 		},
 	}
+}
+
+func EnsureFinalizerAbsent(ctx context.Context, pods podv1.Interface, pod *core.Pod, finalizers ...string) error {
+	var newFinalizers []string
+
+	c := utils.StringList(finalizers)
+
+	for _, fn := range pod.Finalizers {
+		if !c.Has(fn) {
+			newFinalizers = append(newFinalizers, fn)
+		}
+	}
+
+	if len(newFinalizers) == len(pod.Finalizers) {
+		return nil
+	}
+
+	return SetFinalizers(ctx, pods, pod, newFinalizers...)
+}
+
+func EnsureFinalizerPresent(ctx context.Context, pods podv1.Interface, pod *core.Pod, finalizers ...string) error {
+	var newFinalizers []string
+
+	newFinalizers = append(newFinalizers, pod.Finalizers...)
+
+	for _, fn := range finalizers {
+		if utils.StringList(newFinalizers).Has(fn) {
+			continue
+		}
+
+		newFinalizers = append(newFinalizers, fn)
+	}
+
+	if len(newFinalizers) == len(pod.Finalizers) {
+		return nil
+	}
+
+	return SetFinalizers(ctx, pods, pod, newFinalizers...)
+}
+
+func SetFinalizers(ctx context.Context, pods podv1.Interface, pod *core.Pod, finalizers ...string) error {
+	d, err := patch.NewPatch(patch.ItemReplace(patch.NewPath("metadata", "finalizers"), finalizers)).Marshal()
+	if err != nil {
+		return err
+	}
+
+	nctx, c := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
+	defer c()
+
+	if _, err := pods.Patch(nctx, pod.GetName(), types.JSONPatchType, d, meta.PatchOptions{}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func GetFinalizers(spec api.ServerGroupSpec, group api.ServerGroup) []string {
+	var finalizers []string
+
+	if d := spec.GetShutdownDelay(group); d != 0 {
+		finalizers = append(finalizers, constants.FinalizerDelayPodTermination)
+	}
+
+	if features.GracefulShutdown().Enabled() {
+		finalizers = append(finalizers, constants.FinalizerPodGracefulShutdown) // No need for other finalizers, quorum will be managed
+	} else {
+		switch group {
+		case api.ServerGroupAgents:
+			finalizers = append(finalizers, constants.FinalizerPodAgencyServing)
+		case api.ServerGroupDBServers:
+			finalizers = append(finalizers, constants.FinalizerPodDrainDBServer)
+		}
+	}
+
+	return finalizers
 }

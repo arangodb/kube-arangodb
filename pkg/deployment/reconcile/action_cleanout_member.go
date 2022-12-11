@@ -92,7 +92,7 @@ func (a *actionCleanOutMember) Start(ctx context.Context) (bool, error) {
 	// Update status
 	m.Phase = api.MemberPhaseCleanOut
 	m.CleanoutJobID = jobID
-	if a.actionCtx.UpdateMember(ctx, m); err != nil {
+	if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
 		return false, errors.WithStack(err)
 	}
 	return false, nil
@@ -109,6 +109,14 @@ func (a *actionCleanOutMember) CheckProgress(ctx context.Context) (bool, bool, e
 	// do not try to clean out a pod that was not initialized
 	if !m.IsInitialized {
 		return true, false, nil
+	}
+
+	if m.Phase == api.MemberPhaseCreated {
+		// Restart occurred
+		m.Phase = api.MemberPhaseCleanOut
+		if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
+			return false, false, errors.WithStack(err)
+		}
 	}
 
 	cache, ok := a.actionCtx.GetAgencyCache()

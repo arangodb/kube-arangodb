@@ -126,6 +126,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 		}
 
 		spec := r.context.GetSpec()
+		groupSpec := spec.GetServerGroupSpec(group)
 		coreContainers := spec.GetCoreContainers(group)
 
 		if c, ok := memberStatus.Conditions.Get(api.ConditionTypeUpdating); ok {
@@ -133,6 +134,13 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 				// We are in update phase, container needs to be ignored
 				if v != "" {
 					coreContainers = coreContainers.Remove(v)
+				}
+			}
+		} else {
+			// Restore gracefulness
+			if !k8sutil.IsPodTerminating(pod) {
+				if err := k8sutil.EnsureFinalizerPresent(ctx, cachedStatus.PodsModInterface().V1(), pod, k8sutil.GetFinalizers(groupSpec, group)...); err != nil {
+					log.Err(err).Error("Unable to enforce finalizer")
 				}
 			}
 		}
@@ -487,10 +495,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 					// Create event
 					nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
 					events = append(events, k8sutil.NewPodGoneEvent(podName, group.AsRole(), apiObject))
-					updateMemberNeeded := false
-					if m.Conditions.Update(api.ConditionTypeReady, false, "Pod Does Not Exist", "") {
-						updateMemberNeeded = true
-					}
+					m.Conditions.Update(api.ConditionTypeReady, false, "Pod Does Not Exist", "")
 					wasTerminated := m.Conditions.IsTrue(api.ConditionTypeTerminated)
 					if m.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Does Not Exist", "") {
 						if !wasTerminated {
@@ -498,13 +503,11 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 							now := meta.Now()
 							m.RecentTerminations = append(m.RecentTerminations, now)
 						}
-						updateMemberNeeded = true
 					}
-					if updateMemberNeeded {
-						// Save it
-						if err := status.Members.Update(m, group); err != nil {
-							return 0, errors.WithStack(err)
-						}
+
+					// Save it
+					if err := status.Members.Update(m, group); err != nil {
+						return 0, errors.WithStack(err)
 					}
 				}
 			}
