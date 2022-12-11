@@ -22,6 +22,7 @@ package cmd
 
 import (
 	"compress/gzip"
+	"io"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -50,32 +51,48 @@ var debugPackageInput struct {
 }
 
 func debugPackageFunc(cmd *cobra.Command, _ []string) error {
-	out := os.Stdout
-
-	if debugPackageInput.Output != "-" {
-		f, err := os.OpenFile("./out.tar.gz", os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0644)
-		if err != nil {
-			return err
-		}
-
-		out = f
+	if debugPackageInput.Output == "-" {
+		return debugPackageStdOut(cmd)
 	}
 
+	return debugPackageFile(cmd)
+}
+
+func debugPackageStdOut(cmd *cobra.Command) (returnError error) {
+	return debugPackageGZip(cmd, os.Stdout)
+}
+
+func debugPackageFile(cmd *cobra.Command) (returnError error) {
+	out, err := os.OpenFile("./out.tar.gz", os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0644)
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if err := out.Close(); err != nil {
+			if returnError == nil {
+				returnError = err
+			}
+		}
+	}()
+
+	return debugPackageGZip(cmd, out)
+}
+
+func debugPackageGZip(cmd *cobra.Command, out io.Writer) (returnError error) {
 	gw := gzip.NewWriter(out)
 
-	if err := debug_package.GenerateD(cmd, gw); err != nil {
-		return err
-	}
-
-	if err := gw.Close(); err != nil {
-		return err
-	}
-
-	if debugPackageInput.Output != "-" {
-		if err := out.Close(); err != nil {
-			return err
+	defer func() {
+		if err := gw.Close(); err != nil {
+			if returnError == nil {
+				returnError = err
+			}
 		}
-	}
+	}()
 
-	return nil
+	return debugPackageRaw(cmd, gw)
+}
+
+func debugPackageRaw(cmd *cobra.Command, gw io.Writer) error {
+	return debug_package.GenerateD(cmd, gw)
 }
