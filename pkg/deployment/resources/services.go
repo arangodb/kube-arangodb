@@ -375,7 +375,7 @@ func (r *Resources) ensureExternalAccessManagedServices(ctx context.Context, cac
 
 	apply := func(svc *core.Service) (bool, error) {
 		return patcher.ServicePatcher(ctx, cachedStatus.ServicesModInterface().V1(), svc, meta.PatchOptions{},
-			patcher.PatchServiceOnlyPorts(ports...),
+			patcher.PatchServiceOnlyPortsWithoutNodePort(ports...),
 			patcher.PatchServiceSelector(selectors))
 	}
 
