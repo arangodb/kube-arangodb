@@ -248,7 +248,7 @@ func (r *Resources) ensureExternalAccessServices(ctx context.Context, cachedStat
 
 	if spec.GetType().IsManaged() {
 		// Managed services should not be created or removed by the operator.
-		return r.ensureExternalAccessManagedServices(ctx, cachedStatus, eaServiceName, eaPorts, eaSelector, spec)
+		return r.ensureExternalAccessManagedServices(ctx, cachedStatus, eaServiceName, eaSelector, spec)
 	}
 
 	log := r.log.Str("section", "service-ea").Str("role", role).Str("service", eaServiceName)
@@ -368,14 +368,13 @@ func (r *Resources) ensureExternalAccessServices(ctx context.Context, cachedStat
 // ensureExternalAccessServices ensures if there are correct selectors on a managed services.
 // If hardcoded external service names are not on the list of managed services then it will be checked additionally.
 func (r *Resources) ensureExternalAccessManagedServices(ctx context.Context, cachedStatus inspectorInterface.Inspector, eaServiceName string,
-	ports []core.ServicePort, selectors map[string]string, spec api.ExternalAccessSpec) error {
+	selectors map[string]string, spec api.ExternalAccessSpec) error {
 
 	log := r.log.Str("section", "service-ea").Str("service", eaServiceName)
 	managedServiceNames := spec.GetManagedServiceNames()
 
 	apply := func(svc *core.Service) (bool, error) {
 		return patcher.ServicePatcher(ctx, cachedStatus.ServicesModInterface().V1(), svc, meta.PatchOptions{},
-			patcher.PatchServiceOnlyPortsWithoutNodePort(ports...),
 			patcher.PatchServiceSelector(selectors))
 	}
 
