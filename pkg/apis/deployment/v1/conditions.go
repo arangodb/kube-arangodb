@@ -70,6 +70,8 @@ const (
 	ConditionTypeUpToDate ConditionType = "UpToDate"
 	// ConditionTypeSpecAccepted indicates that the deployment spec has been accepted.
 	ConditionTypeSpecAccepted ConditionType = "SpecAccepted"
+	// ConditionTypeSpecPropagated indicates that the deployment has been at least once UpToDate after spec acceptance.
+	ConditionTypeSpecPropagated ConditionType = "SpecPropagated"
 	// ConditionTypeMarkedToRemove indicates that the member is marked to be removed.
 	ConditionTypeMarkedToRemove ConditionType = "MarkedToRemove"
 	// ConditionTypeScaleDownCandidate indicates that the member will be picked in ScaleDown operaion.

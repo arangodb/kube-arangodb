@@ -39,7 +39,7 @@ type Metrics struct {
 	ArangodbOperatorEngineOpsAlerts int
 
 	Deployment struct {
-		Accepted, UpToDate bool
+		Accepted, UpToDate, Propagated bool
 	}
 }
 
@@ -61,6 +61,11 @@ func (d *Deployment) CollectMetrics(m metrics.PushMetric) {
 		m.Push(metric_descriptions.ArangodbOperatorResourcesArangodeploymentUptodateGauge(1, d.namespace, d.name))
 	} else {
 		m.Push(metric_descriptions.ArangodbOperatorResourcesArangodeploymentUptodateGauge(0, d.namespace, d.name))
+	}
+	if d.metrics.Deployment.Propagated {
+		m.Push(metric_descriptions.ArangodbOperatorResourcesArangodeploymentPropagatedGauge(1, d.namespace, d.name))
+	} else {
+		m.Push(metric_descriptions.ArangodbOperatorResourcesArangodeploymentPropagatedGauge(0, d.namespace, d.name))
 	}
 
 	if c := d.agencyCache; c != nil {

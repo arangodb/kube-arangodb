@@ -186,6 +186,15 @@ namespaces:
             description: "Deployment Namespace"
           - key: name
             description: "Deployment Name"
+      arangodeployment_propagated:
+        shortDescription: "Defines if ArangoDeployment Spec is propagated"
+        description: "Defines if ArangoDeployment Spec is propagated"
+        type: "Gauge"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
       arangodeployment_uptodate:
         shortDescription: "Defines if ArangoDeployment is uptodate"
         description: "Defines if ArangoDeployment is uptodate"
