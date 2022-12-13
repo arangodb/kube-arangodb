@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.2.21](https://github.com/arangodb/kube-arangodb/tree/1.2.21) (2022-12-13)
 - (Improvement) Bump dependencies
 - (Documentation) (1.3.0) EE & CE Definitions
 - (Improvement) Arango Kubernetes Client Mod Implementation
