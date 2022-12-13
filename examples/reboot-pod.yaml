@@ -6,7 +6,7 @@ spec:
   restartPolicy: Never
   serviceAccountName: arango-deployment-operator-reboot
   containers:
-    - image: arangodb/kube-arangodb:1.2.21
+    - image: arangodb/kube-arangodb:1.2.22
       name: reboot
       command: ["arangodb_operator", "reboot"]
       args:
