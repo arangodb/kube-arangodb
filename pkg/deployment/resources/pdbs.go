@@ -121,8 +121,13 @@ func newPDBV1(minAvail int, deplname string, group api.ServerGroup, owner meta.O
 	}
 }
 
-// ensurePDBForGroup ensure pdb for a specific server group, if wantMinAvail is zero, the PDB is removed and not recreated
+// ensurePDBForGroup ensure pdb for a specific server group, if wantMinAvail is zero or less, the PDB is removed and not recreated
 func (r *Resources) ensurePDBForGroup(ctx context.Context, group api.ServerGroup, wantedMinAvail int) error {
+	if wantedMinAvail < 0 {
+		// Enforce removal
+		wantedMinAvail = 0
+	}
+
 	deplName := r.context.GetAPIObject().GetName()
 	pdbName := PDBNameForGroup(deplName, group)
 	log := r.log.Str("section", "pdb").Str("group", group.AsRole())
