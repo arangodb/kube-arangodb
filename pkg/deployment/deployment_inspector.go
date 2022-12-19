@@ -143,6 +143,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 		d.currentObject = updated
 
 		d.metrics.Deployment.Accepted = updated.Status.Conditions.IsTrue(api.ConditionTypeSpecAccepted)
+		d.metrics.Deployment.Propagated = updated.Status.Conditions.IsTrue(api.ConditionTypeSpecPropagated)
 		d.metrics.Deployment.UpToDate = updated.Status.Conditions.IsTrue(api.ConditionTypeUpToDate)
 
 		// Is the deployment in failed state, if so, give up.
@@ -231,6 +232,16 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	if !status.Conditions.IsTrue(api.ConditionTypeSpecAccepted) {
 		condition, exists := status.Conditions.Get(api.ConditionTypeUpToDate)
 		if !exists || condition.IsTrue() {
+			propagatedCondition, propagatedExists := status.Conditions.Get(api.ConditionTypeSpecPropagated)
+			if !propagatedExists || propagatedCondition.IsTrue() {
+				if err = d.updateConditionWithHash(ctx, api.ConditionTypeSpecPropagated, false, "Spec Changed", "Spec Object changed. Waiting until spec will be applied", ""); err != nil {
+					return minInspectionInterval, errors.Wrapf(err, "Unable to update SpecPropagated condition")
+
+				}
+
+				return minInspectionInterval, nil // Retry ASAP
+			}
+
 			if err = d.updateConditionWithHash(ctx, api.ConditionTypeUpToDate, false, "Spec Changed", "Spec Object changed. Waiting until plan will be applied", currentChecksum); err != nil {
 				return minInspectionInterval, errors.Wrapf(err, "Unable to update UpToDate condition")
 
@@ -371,6 +382,12 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 			}
 
 			return minInspectionInterval, nil
+		}
+	}
+
+	if status.Conditions.IsTrue(api.ConditionTypeUpToDate) && !status.Conditions.IsTrue(api.ConditionTypeSpecPropagated) {
+		if err = d.updateConditionWithHash(ctx, api.ConditionTypeSpecPropagated, true, "Spec is Propagated", "Spec is Propagated", ""); err != nil {
+			return minInspectionInterval, errors.Wrapf(err, "Unable to update SpecPropagated condition")
 		}
 	}
 

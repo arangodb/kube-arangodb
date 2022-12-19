@@ -2,6 +2,7 @@
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Bugfix) Remove PDBs if group count is 0
+- (Feature) Add SpecPropagated condition
 
 ## [1.2.22](https://github.com/arangodb/kube-arangodb/tree/1.2.22) (2022-12-13)
 - (Bugfix) Do not manage ports in managed ExternalAccess mode
