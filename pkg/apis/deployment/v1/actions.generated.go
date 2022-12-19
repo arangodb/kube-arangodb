@@ -131,6 +131,8 @@ const (
 	ActionRuntimeContainerArgsLogLevelUpdateDefaultTimeout time.Duration = ActionsDefaultTimeout
 	// ActionRuntimeContainerImageUpdateDefaultTimeout define default timeout for action ActionRuntimeContainerImageUpdate
 	ActionRuntimeContainerImageUpdateDefaultTimeout time.Duration = ActionsDefaultTimeout
+	// ActionRuntimeContainerSyncTolerationsDefaultTimeout define default timeout for action ActionRuntimeContainerSyncTolerations
+	ActionRuntimeContainerSyncTolerationsDefaultTimeout time.Duration = ActionsDefaultTimeout
 	// ActionSetConditionDefaultTimeout define default timeout for action ActionSetCondition
 	ActionSetConditionDefaultTimeout time.Duration = ActionsDefaultTimeout
 	// ActionSetConditionV2DefaultTimeout define default timeout for action ActionSetConditionV2
@@ -284,6 +286,8 @@ const (
 	ActionTypeRuntimeContainerArgsLogLevelUpdate ActionType = "RuntimeContainerArgsLogLevelUpdate"
 	// ActionTypeRuntimeContainerImageUpdate in scopes Normal. Update Container Image in runtime
 	ActionTypeRuntimeContainerImageUpdate ActionType = "RuntimeContainerImageUpdate"
+	// ActionTypeRuntimeContainerSyncTolerations in scopes Normal. Update Pod Tolerations in runtime
+	ActionTypeRuntimeContainerSyncTolerations ActionType = "RuntimeContainerSyncTolerations"
 	// ActionTypeSetCondition in scopes High. (Deprecated) Set deployment condition
 	ActionTypeSetCondition ActionType = "SetCondition"
 	// ActionTypeSetConditionV2 in scopes High. Set deployment condition
@@ -438,6 +442,8 @@ func (a ActionType) DefaultTimeout() time.Duration {
 		return ActionRuntimeContainerArgsLogLevelUpdateDefaultTimeout
 	case ActionTypeRuntimeContainerImageUpdate:
 		return ActionRuntimeContainerImageUpdateDefaultTimeout
+	case ActionTypeRuntimeContainerSyncTolerations:
+		return ActionRuntimeContainerSyncTolerationsDefaultTimeout
 	case ActionTypeSetCondition:
 		return ActionSetConditionDefaultTimeout
 	case ActionTypeSetConditionV2:
@@ -595,6 +601,8 @@ func (a ActionType) Priority() ActionPriority {
 	case ActionTypeRuntimeContainerArgsLogLevelUpdate:
 		return ActionPriorityNormal
 	case ActionTypeRuntimeContainerImageUpdate:
+		return ActionPriorityNormal
+	case ActionTypeRuntimeContainerSyncTolerations:
 		return ActionPriorityNormal
 	case ActionTypeSetCondition:
 		return ActionPriorityHigh

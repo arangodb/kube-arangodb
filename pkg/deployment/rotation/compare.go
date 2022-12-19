@@ -94,7 +94,7 @@ func compare(deploymentSpec api.DeploymentSpec, member api.MemberStatus, group a
 
 	g := podFuncGenerator(deploymentSpec, group, &spec.PodSpec.Spec, &podStatus.Spec)
 
-	if m, p, err := comparePod(b, g(podCompare), g(affinityCompare), g(comparePodVolumes), g(containersCompare), g(initContainersCompare)); err != nil {
+	if m, p, err := comparePod(b, g(podCompare), g(affinityCompare), g(comparePodVolumes), g(containersCompare), g(initContainersCompare), g(comparePodTolerations)); err != nil {
 		log.Err(err).Msg("Error while getting pod diff")
 		return SkippedRotation, nil, err
 	} else {

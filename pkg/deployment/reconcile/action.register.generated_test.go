@@ -403,6 +403,13 @@ func Test_Actions(t *testing.T) {
 		})
 	})
 
+	t.Run("RuntimeContainerSyncTolerations", func(t *testing.T) {
+		ActionsExistence(t, api.ActionTypeRuntimeContainerSyncTolerations)
+		t.Run("Internal", func(t *testing.T) {
+			require.False(t, api.ActionTypeRuntimeContainerSyncTolerations.Internal())
+		})
+	})
+
 	t.Run("SetCondition", func(t *testing.T) {
 		ActionsExistence(t, api.ActionTypeSetCondition)
 		t.Run("Internal", func(t *testing.T) {
