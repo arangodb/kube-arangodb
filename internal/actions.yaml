@@ -202,6 +202,8 @@ actions:
     description: Update Cluster license (3.9+)
   RuntimeContainerImageUpdate:
     description: Update Container Image in runtime
+  RuntimeContainerSyncTolerations:
+    description: Update Pod Tolerations in runtime
   RuntimeContainerArgsLogLevelUpdate:
     description: Change ArangoDB Member log levels in runtime
   TopologyEnable:
