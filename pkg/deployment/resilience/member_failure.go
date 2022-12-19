@@ -52,7 +52,7 @@ func (r *Resilience) CheckMemberFailure(ctx context.Context) error {
 		switch m.Phase {
 		case api.MemberPhaseNone, api.MemberPhasePending:
 			continue
-		case api.MemberPhaseUpgrading, api.MemberPhaseRotating, api.MemberPhaseCleanOut, api.MemberPhaseRotateStart:
+		case api.MemberPhaseUpgrading, api.MemberPhaseRotating, api.MemberPhaseCleanOut, api.MemberPhaseRotateStart, api.MemberPhaseShuttingDown:
 			if len(status.Plan) == 0 {
 				log.Error("No plan but member is in phase %s - marking as failed", m.Phase)
 				m.Phase = api.MemberPhaseFailed
