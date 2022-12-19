@@ -31,6 +31,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
 
 const (
@@ -157,9 +158,9 @@ func (a *actionJWTStatusUpdate) Start(ctx context.Context) (bool, error) {
 		}
 
 		sort.Strings(keys)
-		keys = util.PrefixStringArray(keys, "sha256:")
+		keys = strings.PrefixStringArray(keys, "sha256:")
 
-		if !util.CompareStringArray(keys, s.Hashes.JWT.Passive) {
+		if !strings.CompareStringArray(keys, s.Hashes.JWT.Passive) {
 			s.Hashes.JWT.Passive = keys
 			update = true
 		}

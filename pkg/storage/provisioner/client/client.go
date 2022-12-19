@@ -26,7 +26,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
@@ -174,7 +173,7 @@ func (c *client) do(ctx context.Context, req *http.Request, result interface{}) 
 
 	// Read content
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return errors.WithStack(err)
 	}

@@ -31,6 +31,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	strings2 "github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
 
 const (
@@ -172,7 +173,7 @@ func filterReservedInitContainers(c []core.Container) []core.Container {
 // isOnlyLogLevelChanged returns true when status and spec log level arguments are different.
 // If any other argument than --log.level is different false is returned.
 func isOnlyLogLevelChanged(specArgs, statusArgs []string) bool {
-	diff := util.DiffStrings(specArgs, statusArgs)
+	diff := strings2.DiffStrings(specArgs, statusArgs)
 	if len(diff) == 0 {
 		return false
 	}

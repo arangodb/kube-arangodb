@@ -140,7 +140,6 @@ func NewServer(cli typedCore.CoreV1Interface, cfg Config, deps Dependencies) (*S
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	tlsConfig.BuildNameToCertificate()
 	httpServer.TLSConfig = tlsConfig
 
 	// Builder server

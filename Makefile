@@ -39,8 +39,8 @@ ifndef KEEP_GOPATH
 endif
 
 GOBUILDARGS ?=
-GOBASEVERSION := 1.17
-GOVERSION := $(GOBASEVERSION)-alpine3.15
+GOBASEVERSION := 1.19
+GOVERSION := $(GOBASEVERSION)-alpine3.17
 DISTRIBUTION := alpine:3.15
 
 PULSAR := $(GOBUILDDIR)/bin/pulsar$(shell go env GOEXE)
@@ -494,7 +494,7 @@ init: tools update-generated $(BIN) vendor
 .PHONY: tools
 tools: update-vendor
 	@echo ">> Fetching golangci-lint linter"
-	@GOBIN=$(GOPATH)/bin go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.46.2
+	@GOBIN=$(GOPATH)/bin go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.50.1
 	@echo ">> Fetching goimports"
 	@GOBIN=$(GOPATH)/bin go install golang.org/x/tools/cmd/goimports@0bb7e5c47b1a31f85d4f173edc878a8e049764a5
 	@echo ">> Fetching license check"

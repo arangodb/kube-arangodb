@@ -22,11 +22,11 @@ package reconcile
 
 import (
 	"context"
-	"strings"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
 
 type planGenerationOutput struct {

@@ -27,9 +27,9 @@ import (
 	"os"
 	"path"
 	"sort"
-	"strings"
 
 	"github.com/arangodb/kube-arangodb/internal/md"
+	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
 
 //go:embed metrics.go.tmpl

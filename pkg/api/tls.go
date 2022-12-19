@@ -43,7 +43,6 @@ func prepareTLSConfig(cli typedCore.CoreV1Interface, cfg ServerConfig) (*tls.Con
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	tlsConfig.BuildNameToCertificate()
 	return tlsConfig, nil
 }
 

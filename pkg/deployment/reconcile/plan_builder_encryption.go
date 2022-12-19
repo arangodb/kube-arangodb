@@ -30,9 +30,9 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
 
 func skipEncryptionPlan(spec api.DeploymentSpec, status api.DeploymentStatus) bool {
@@ -165,7 +165,7 @@ func (r *Reconciler) createEncryptionKeyStatusUpdateRequired(spec api.Deployment
 
 	keyHashes := secretKeysToListWithPrefix(keyfolder)
 
-	return !util.CompareStringArray(keyHashes, status.Hashes.Encryption.Keys)
+	return !strings.CompareStringArray(keyHashes, status.Hashes.Encryption.Keys)
 }
 
 func (r *Reconciler) createEncryptionKeyCleanPlan(ctx context.Context, apiObject k8sutil.APIObject,

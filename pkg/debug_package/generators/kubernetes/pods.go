@@ -23,7 +23,7 @@ package kubernetes
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 
 	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
@@ -151,7 +151,7 @@ func podContainerLogs(client kclient.Client, files chan<- shared.File, pod *core
 
 	defer q.Close()
 
-	d, err := ioutil.ReadAll(q)
+	d, err := io.ReadAll(q)
 	if err != nil {
 		return err
 	}

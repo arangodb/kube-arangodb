@@ -23,7 +23,7 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
@@ -148,7 +148,7 @@ func sendJSON(w http.ResponseWriter, body interface{}) error {
 
 func parseBody(r *http.Request, data interface{}) error {
 	defer r.Body.Close()
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return errors.WithStack(err)
 	}

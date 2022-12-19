@@ -432,8 +432,8 @@ func (r *Reconciler) arangoMemberPodTemplateNeedsUpdate(ctx context.Context, api
 }
 
 // groupReadyForRestart returns true if the cluster is ready for the next update, that is:
-// 	- all shards are in sync
-// 	- all members are ready and fine
+//   - all shards are in sync
+//   - all members are ready and fine
 func groupReadyForRestart(context PlanBuilderContext, status api.DeploymentStatus, member api.MemberStatus, group api.ServerGroup) (bool, string) {
 	if group == api.ServerGroupSingle {
 		return true, "Restart always in single mode"

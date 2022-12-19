@@ -27,12 +27,12 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
+	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
 
 func secretKeysToListWithPrefix(s *core.Secret) []string {
-	return util.PrefixStringArray(secretKeysToList(s), "sha256:")
+	return strings.PrefixStringArray(secretKeysToList(s), "sha256:")
 }
 
 func secretKeysToList(s *core.Secret) []string {

@@ -44,6 +44,7 @@ import (
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	memberTls "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tools"
+	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
 
 const CertificateRenewalMargin = 7 * 24 * time.Hour
@@ -140,7 +141,7 @@ func (r *Reconciler) createTLSStatusUpdateRequired(apiObject k8sutil.APIObject, 
 		}
 	}
 
-	if !util.CompareStringArray(status.Hashes.TLS.Truststore, keyHashes) {
+	if !strings.CompareStringArray(status.Hashes.TLS.Truststore, keyHashes) {
 		return true
 	}
 
@@ -534,7 +535,7 @@ func (r *Reconciler) keyfileRenewalRequired(ctx context.Context, apiObject k8sut
 			dnsNames = append(dnsNames, ip.String())
 		}
 
-		if a := util.DiffStrings(altNames.AltNames, dnsNames); len(a) > 0 {
+		if a := strings.DiffStrings(altNames.AltNames, dnsNames); len(a) > 0 {
 			r.planLogger.Strs("AltNames Current", cert.DNSNames...).
 				Strs("AltNames Expected", altNames.AltNames...).
 				Info("Alt names are different")

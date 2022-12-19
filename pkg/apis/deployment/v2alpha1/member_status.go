@@ -31,6 +31,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
 
 // MemberStatus holds the current status of a single member (server)
@@ -123,7 +124,7 @@ func (s MemberStatus) Equal(other MemberStatus) bool {
 		s.OldImage.Equal(other.OldImage) &&
 		s.Architecture.Equal(other.Architecture) &&
 		s.Upgrade == other.Upgrade &&
-		util.CompareStringPointers(s.Endpoint, other.Endpoint)
+		strings.CompareStringPointers(s.Endpoint, other.Endpoint)
 }
 
 // Age returns the duration since the creation timestamp of this member.

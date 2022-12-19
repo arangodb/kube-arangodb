@@ -22,6 +22,7 @@ package v2alpha1
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
 
 // DeploymentStatus contains the status part of a Cluster resource.
@@ -120,7 +121,7 @@ func (ds *DeploymentStatus) Equal(other DeploymentStatus) bool {
 		ds.Plan.Equal(other.Plan) &&
 		ds.HighPriorityPlan.Equal(other.HighPriorityPlan) &&
 		ds.ResourcesPlan.Equal(other.ResourcesPlan) &&
-		util.CompareStringPointers(ds.AcceptedSpecVersion, other.AcceptedSpecVersion) &&
+		strings.CompareStringPointers(ds.AcceptedSpecVersion, other.AcceptedSpecVersion) &&
 		ds.AcceptedSpec.Equal(other.AcceptedSpec) &&
 		ds.SecretHashes.Equal(other.SecretHashes) &&
 		ds.Agency.Equal(other.Agency) &&
@@ -133,7 +134,7 @@ func (ds *DeploymentStatus) Equal(other DeploymentStatus) bool {
 		ds.Coordinators.Equal(other.Coordinators) &&
 		ds.SyncMasters.Equal(other.SyncMasters) &&
 		ds.SyncWorkers.Equal(other.SyncWorkers) &&
-		util.CompareStringPointers(ds.Timezone, other.Timezone)
+		strings.CompareStringPointers(ds.Timezone, other.Timezone)
 }
 
 // IsForceReload returns true if ForceStatusReload is set to true
