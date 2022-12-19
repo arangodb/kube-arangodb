@@ -45,6 +45,7 @@ import (
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tolerations"
 )
 
 var _ interfaces.PodCreator = &ImageUpdatePod{}
@@ -319,27 +320,27 @@ func (i *ImageUpdatePod) GetFinalizers() []string {
 }
 
 func (i *ImageUpdatePod) GetTolerations() []core.Toleration {
-	shortDur := k8sutil.TolerationDuration{
+	shortDur := tolerations.TolerationDuration{
 		Forever:  false,
 		TimeSpan: time.Second * 5,
 	}
 
-	tolerations := make([]core.Toleration, 0, 3+len(i.spec.ID.Get().Tolerations))
+	ts := make([]core.Toleration, 0, 3+len(i.spec.ID.Get().Tolerations))
 
 	if idTolerations := i.spec.ID.Get().Tolerations; len(idTolerations) > 0 {
 		for _, toleration := range idTolerations {
-			tolerations = k8sutil.AddTolerationIfNotFound(tolerations, toleration)
+			ts = tolerations.AddTolerationIfNotFound(ts, toleration)
 		}
 	}
 
-	tolerations = k8sutil.AddTolerationIfNotFound(tolerations,
-		k8sutil.NewNoExecuteToleration(k8sutil.TolerationKeyNodeNotReady, shortDur))
-	tolerations = k8sutil.AddTolerationIfNotFound(tolerations,
-		k8sutil.NewNoExecuteToleration(k8sutil.TolerationKeyNodeUnreachable, shortDur))
-	tolerations = k8sutil.AddTolerationIfNotFound(tolerations,
-		k8sutil.NewNoExecuteToleration(k8sutil.TolerationKeyNodeAlphaUnreachable, shortDur))
+	ts = tolerations.AddTolerationIfNotFound(ts,
+		tolerations.NewNoExecuteToleration(tolerations.TolerationKeyNodeNotReady, shortDur))
+	ts = tolerations.AddTolerationIfNotFound(ts,
+		tolerations.NewNoExecuteToleration(tolerations.TolerationKeyNodeUnreachable, shortDur))
+	ts = tolerations.AddTolerationIfNotFound(ts,
+		tolerations.NewNoExecuteToleration(tolerations.TolerationKeyNodeAlphaUnreachable, shortDur))
 
-	return tolerations
+	return ts
 }
 
 func (i *ImageUpdatePod) IsDeploymentMode() bool {

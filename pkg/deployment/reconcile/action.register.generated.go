@@ -186,6 +186,9 @@ var (
 	_ Action        = &actionRuntimeContainerImageUpdate{}
 	_ actionFactory = newRuntimeContainerImageUpdateAction
 
+	_ Action        = &actionRuntimeContainerSyncTolerations{}
+	_ actionFactory = newRuntimeContainerSyncTolerationsAction
+
 	_ Action        = &actionSetCondition{}
 	_ actionFactory = newSetConditionAction
 
@@ -887,6 +890,18 @@ func init() {
 		// Get Action defition
 		function := newRuntimeContainerImageUpdateAction
 		action := api.ActionTypeRuntimeContainerImageUpdate
+
+		// Wrap action main function
+
+		// Register action
+		registerAction(action, function)
+	}
+
+	// RuntimeContainerSyncTolerations
+	{
+		// Get Action defition
+		function := newRuntimeContainerSyncTolerationsAction
+		action := api.ActionTypeRuntimeContainerSyncTolerations
 
 		// Wrap action main function
 

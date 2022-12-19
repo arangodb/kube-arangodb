@@ -38,6 +38,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tolerations"
 )
 
 const (
@@ -482,14 +483,14 @@ func createTestCommandForImageUpdatePod() []string {
 
 func getTestTolerations() []core.Toleration {
 
-	shortDur := k8sutil.TolerationDuration{
+	shortDur := tolerations.TolerationDuration{
 		Forever:  false,
 		TimeSpan: time.Second * 5,
 	}
 
 	return []core.Toleration{
-		k8sutil.NewNoExecuteToleration(k8sutil.TolerationKeyNodeNotReady, shortDur),
-		k8sutil.NewNoExecuteToleration(k8sutil.TolerationKeyNodeUnreachable, shortDur),
-		k8sutil.NewNoExecuteToleration(k8sutil.TolerationKeyNodeAlphaUnreachable, shortDur),
+		tolerations.NewNoExecuteToleration(tolerations.TolerationKeyNodeNotReady, shortDur),
+		tolerations.NewNoExecuteToleration(tolerations.TolerationKeyNodeUnreachable, shortDur),
+		tolerations.NewNoExecuteToleration(tolerations.TolerationKeyNodeAlphaUnreachable, shortDur),
 	}
 }

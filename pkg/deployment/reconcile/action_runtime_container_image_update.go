@@ -121,7 +121,7 @@ func (a actionRuntimeContainerImageUpdate) Post(ctx context.Context) error {
 		return err
 	}
 
-	return inspector.WithArangoMemberUpdate(ctx, cache, name, func(in *api.ArangoMember) (bool, error) {
+	return inspector.WithArangoMemberStatusUpdate(ctx, cache, name, func(in *api.ArangoMember) (bool, error) {
 		if in.Spec.Template == nil || in.Status.Template == nil ||
 			in.Spec.Template.PodSpec == nil || in.Status.Template.PodSpec == nil {
 			a.log.Info("Nil Member definition")

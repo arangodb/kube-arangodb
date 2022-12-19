@@ -57,6 +57,7 @@
 |          RotateStopMember          |    no    |  15m0s  | Community & Enterprise |                         Finalize member rotation. After this action member is started back                         |
 | RuntimeContainerArgsLogLevelUpdate |    no    |  10m0s  | Community & Enterprise |                                    Change ArangoDB Member log levels in runtime                                    |
 |    RuntimeContainerImageUpdate     |    no    |  10m0s  | Community & Enterprise |                                         Update Container Image in runtime                                          |
+|  RuntimeContainerSyncTolerations   |    no    |  10m0s  | Community & Enterprise |                                         Update Pod Tolerations in runtime                                          |
 |            SetCondition            |    no    |  10m0s  | Community & Enterprise |                                       (Deprecated) Set deployment condition                                        |
 |           SetConditionV2           |    no    |  10m0s  | Community & Enterprise |                                              Set deployment condition                                              |
 |          SetCurrentImage           |    no    | 6h0m0s  | Community & Enterprise |                               Update deployment current image after image discovery                                |
@@ -140,6 +141,7 @@ spec:
       RotateStopMember: 15m0s
       RuntimeContainerArgsLogLevelUpdate: 10m0s
       RuntimeContainerImageUpdate: 10m0s
+      RuntimeContainerSyncTolerations: 10m0s
       SetCondition: 10m0s
       SetConditionV2: 10m0s
       SetCurrentImage: 6h0m0s

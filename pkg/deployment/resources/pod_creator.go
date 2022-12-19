@@ -29,7 +29,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"sync"
-	"time"
 
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -51,6 +50,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tolerations"
 )
 
 // createArangodArgsWithUpgrade creates command line arguments for an arangod server upgrade in the given group.
@@ -248,38 +248,7 @@ func createArangoSyncArgs(apiObject meta.Object, spec api.DeploymentSpec, group 
 
 // CreatePodTolerations creates a list of tolerations for a pod created for the given group.
 func (r *Resources) CreatePodTolerations(group api.ServerGroup, groupSpec api.ServerGroupSpec) []core.Toleration {
-	notReadyDur := k8sutil.TolerationDuration{Forever: false, TimeSpan: time.Minute}
-	unreachableDur := k8sutil.TolerationDuration{Forever: false, TimeSpan: time.Minute}
-	switch group {
-	case api.ServerGroupAgents:
-		notReadyDur.Forever = true
-		unreachableDur.Forever = true
-	case api.ServerGroupCoordinators:
-		notReadyDur.TimeSpan = 15 * time.Second
-		unreachableDur.TimeSpan = 15 * time.Second
-	case api.ServerGroupDBServers:
-		notReadyDur.TimeSpan = 5 * time.Minute
-		unreachableDur.TimeSpan = 5 * time.Minute
-	case api.ServerGroupSingle:
-		if r.context.GetSpec().GetMode() == api.DeploymentModeSingle {
-			notReadyDur.Forever = true
-			unreachableDur.Forever = true
-		} else {
-			notReadyDur.TimeSpan = 5 * time.Minute
-			unreachableDur.TimeSpan = 5 * time.Minute
-		}
-	case api.ServerGroupSyncMasters:
-		notReadyDur.TimeSpan = 15 * time.Second
-		unreachableDur.TimeSpan = 15 * time.Second
-	case api.ServerGroupSyncWorkers:
-		notReadyDur.TimeSpan = 1 * time.Minute
-		unreachableDur.TimeSpan = 1 * time.Minute
-	}
-	tolerations := groupSpec.GetTolerations()
-	tolerations = k8sutil.AddTolerationIfNotFound(tolerations, k8sutil.NewNoExecuteToleration(k8sutil.TolerationKeyNodeNotReady, notReadyDur))
-	tolerations = k8sutil.AddTolerationIfNotFound(tolerations, k8sutil.NewNoExecuteToleration(k8sutil.TolerationKeyNodeUnreachable, unreachableDur))
-	tolerations = k8sutil.AddTolerationIfNotFound(tolerations, k8sutil.NewNoExecuteToleration(k8sutil.TolerationKeyNodeAlphaUnreachable, unreachableDur))
-	return tolerations
+	return tolerations.MergeTolerationsIfNotFound(tolerations.CreatePodTolerations(r.context.GetMode(), group), groupSpec.GetTolerations())
 }
 
 func (r *Resources) RenderPodTemplateForMember(ctx context.Context, acs sutil.ACS, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.PodTemplateSpec, error) {
