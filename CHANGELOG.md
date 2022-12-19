@@ -3,6 +3,7 @@
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Bugfix) Remove PDBs if group count is 0
 - (Feature) Add SpecPropagated condition
+- (Bugfix) Recover from locked ShuttingDown state
 - (Feature) Add tolerations runtime rotation
 
 ## [1.2.22](https://github.com/arangodb/kube-arangodb/tree/1.2.22) (2022-12-13)
