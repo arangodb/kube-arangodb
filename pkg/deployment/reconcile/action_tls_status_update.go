@@ -29,6 +29,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
 
 func newTLSKeyStatusUpdateAction(action api.Action, actionCtx ActionContext) Action {
@@ -69,7 +70,7 @@ func (a *actionTLSKeyStatusUpdate) Start(ctx context.Context) (bool, error) {
 			}
 		}
 
-		if !util.CompareStringArray(keyHashes, s.Hashes.TLS.Truststore) {
+		if !strings.CompareStringArray(keyHashes, s.Hashes.TLS.Truststore) {
 			s.Hashes.TLS.Truststore = keyHashes
 			r = true
 		}

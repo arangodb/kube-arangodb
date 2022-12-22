@@ -23,7 +23,7 @@ package reconcile
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"testing"
 
 	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
@@ -1233,7 +1233,7 @@ func TestCreatePlan(t *testing.T) {
 			}
 
 			h := &LastLogRecord{t: t}
-			logger := logging.NewFactory(zerolog.New(ioutil.Discard).Hook(h)).RegisterAndGetLogger("test", logging.Debug)
+			logger := logging.NewFactory(zerolog.New(io.Discard).Hook(h)).RegisterAndGetLogger("test", logging.Debug)
 			r := &Reconciler{
 				log:        logger,
 				planLogger: logger,

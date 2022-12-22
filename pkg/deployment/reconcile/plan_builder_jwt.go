@@ -37,6 +37,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
 
 func (r *Reconciler) createJWTKeyUpdate(ctx context.Context, apiObject k8sutil.APIObject,
@@ -192,9 +193,9 @@ func (r *Reconciler) createJWTStatusUpdateRequired(apiObject k8sutil.APIObject, 
 	}
 
 	sort.Strings(keys)
-	keys = util.PrefixStringArray(keys, "sha256:")
+	keys = strings.PrefixStringArray(keys, "sha256:")
 
-	return !util.CompareStringArray(keys, status.Hashes.JWT.Passive)
+	return !strings.CompareStringArray(keys, status.Hashes.JWT.Passive)
 }
 
 func (r *Reconciler) areJWTTokensUpToDate(ctx context.Context, status api.DeploymentStatus,

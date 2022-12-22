@@ -24,7 +24,6 @@ import (
 	_ "embed"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -105,7 +104,7 @@ func ListTimezones() ([]Timezone, []TimezoneData) {
 	var tzs []Timezone
 
 	for _, zoneDir := range zoneDirs {
-		files, err := ioutil.ReadDir(zoneDir)
+		files, err := os.ReadDir(zoneDir)
 		if err != nil {
 			continue
 		}
@@ -117,8 +116,8 @@ func ListTimezones() ([]Timezone, []TimezoneData) {
 				if err != nil {
 					continue
 				}
-				if file.Mode()&os.ModeSymlink != os.ModeSymlink {
-					data, err := ioutil.ReadFile(path.Join(zoneDir, fn))
+				if file.Type()&os.ModeSymlink != os.ModeSymlink {
+					data, err := os.ReadFile(path.Join(zoneDir, fn))
 					if err == nil {
 						datas[fn] = base64.StdEncoding.EncodeToString(data)
 						dataMaps[fn] = fn
@@ -142,7 +141,7 @@ func ListTimezones() ([]Timezone, []TimezoneData) {
 					continue
 				}
 
-				subFiles, err := ioutil.ReadDir(path.Join(zoneDir, fn))
+				subFiles, err := os.ReadDir(path.Join(zoneDir, fn))
 				if err != nil {
 					continue
 				}
@@ -154,8 +153,8 @@ func ListTimezones() ([]Timezone, []TimezoneData) {
 						continue
 					}
 
-					if subFile.Mode()&os.ModeSymlink != os.ModeSymlink {
-						data, err := ioutil.ReadFile(path.Join(zoneDir, zn))
+					if subFile.Type()&os.ModeSymlink != os.ModeSymlink {
+						data, err := os.ReadFile(path.Join(zoneDir, zn))
 						if err == nil {
 							datas[zn] = base64.StdEncoding.EncodeToString(data)
 							dataMaps[zn] = zn

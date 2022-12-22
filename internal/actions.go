@@ -26,7 +26,6 @@ import (
 	"os"
 	"path"
 	"sort"
-	"strings"
 	"text/template"
 	"time"
 
@@ -35,6 +34,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/internal/md"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
 
 //go:embed actions.yaml

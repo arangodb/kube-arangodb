@@ -22,7 +22,6 @@ package cmd
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"os/signal"
 	"syscall"
@@ -89,7 +88,7 @@ func cmdExporterCheckE() error {
 			return "", nil
 		}
 
-		data, err := ioutil.ReadFile(exporterInput.jwtFile)
+		data, err := os.ReadFile(exporterInput.jwtFile)
 		if err != nil {
 			return "", err
 		}
@@ -105,7 +104,7 @@ func cmdExporterCheckE() error {
 			return "", nil
 		}
 
-		data, err := ioutil.ReadFile(exporterInput.jwtFile)
+		data, err := os.ReadFile(exporterInput.jwtFile)
 		if err != nil {
 			return "", err
 		}

@@ -22,9 +22,10 @@ package version
 
 import (
 	"runtime"
-	"strings"
 
 	"github.com/arangodb/go-driver"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
 
 type License string

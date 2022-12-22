@@ -22,7 +22,6 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -96,7 +95,7 @@ func cmdUUIDSave(cmd *cobra.Command, args []string) error {
 		}
 
 		fileContent := fmt.Sprintf("%s\n", cmdUUIDInput.uuid)
-		if err := ioutil.WriteFile(cmdUUIDInput.uuidPath, []byte(fileContent), 0644); err != nil {
+		if err := os.WriteFile(cmdUUIDInput.uuidPath, []byte(fileContent), 0644); err != nil {
 			log.Error().Err(err).Msg("Unable to save UUID")
 			return err
 		}
@@ -151,7 +150,7 @@ func fileExists(path string) (bool, error) {
 }
 
 func checkFileContent(path, expected string) (bool, string, error) {
-	content, err := ioutil.ReadFile(path)
+	content, err := os.ReadFile(path)
 	if err != nil {
 		return false, "", err
 	}

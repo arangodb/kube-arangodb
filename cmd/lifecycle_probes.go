@@ -24,7 +24,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"path"
@@ -138,7 +138,7 @@ func readJWTFile(file string) ([]byte, error) {
 	}
 
 	defer f.Close()
-	data, err := ioutil.ReadAll(f)
+	data, err := io.ReadAll(f)
 	if err != nil {
 		return nil, err
 	}
@@ -159,7 +159,7 @@ func getJWTToken() ([]byte, error) {
 		return token, nil
 	}
 
-	if files, err := ioutil.ReadDir(probeInput.JWTPath); err == nil {
+	if files, err := os.ReadDir(probeInput.JWTPath); err == nil {
 		for _, file := range files {
 			if token, err := readJWTFile(file.Name()); err == nil {
 				log.Info().Str("token", file.Name()).Msgf("Using JWT Token")
@@ -224,7 +224,7 @@ func cmdLifecycleProbeRunE(cmd *cobra.Command) error {
 
 	if resp.StatusCode != http.StatusOK {
 		if resp.Body != nil {
-			if data, err := ioutil.ReadAll(resp.Body); err == nil {
+			if data, err := io.ReadAll(resp.Body); err == nil {
 				return errors.Errorf("Unexpected code: %d - %s", resp.StatusCode, string(data))
 			}
 		}
@@ -238,7 +238,7 @@ func cmdLifecycleProbeRunE(cmd *cobra.Command) error {
 		if resp.Body == nil {
 			return errors.Errorf("Expected body from the \"%s\" endpoint", endpoint)
 		}
-		data, err := ioutil.ReadAll(resp.Body)
+		data, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return errors.Errorf("Failed to read body from the \"%s\" endpoint", endpoint)
 		}

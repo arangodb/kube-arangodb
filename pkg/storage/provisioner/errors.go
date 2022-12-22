@@ -28,7 +28,7 @@ package provisioner
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -94,7 +94,7 @@ func ParseResponseError(r *http.Response, body []byte) error {
 	// Read body (if needed)
 	if body == nil {
 		defer r.Body.Close()
-		body, _ = ioutil.ReadAll(r.Body)
+		body, _ = io.ReadAll(r.Body)
 	}
 	return parseResponseError(body, r.StatusCode)
 }

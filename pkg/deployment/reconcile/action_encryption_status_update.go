@@ -27,8 +27,8 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
 
 func newEncryptionKeyStatusUpdateAction(action api.Action, actionCtx ActionContext) Action {
@@ -72,7 +72,7 @@ func (a *actionEncryptionKeyStatusUpdate) Start(ctx context.Context) (bool, erro
 			return false
 		}
 
-		if !util.CompareStringArray(keyHashes, s.Hashes.Encryption.Keys) {
+		if !strings.CompareStringArray(keyHashes, s.Hashes.Encryption.Keys) {
 			s.Hashes.Encryption.Keys = keyHashes
 			return true
 		}

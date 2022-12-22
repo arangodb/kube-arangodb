@@ -22,7 +22,7 @@ package exporter
 
 import (
 	"crypto/tls"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -108,7 +108,7 @@ func (p passthru) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 
 	defer data.Body.Close()
 
-	response, err := ioutil.ReadAll(data.Body)
+	response, err := io.ReadAll(data.Body)
 	if err != nil {
 		// Ignore error
 		resp.WriteHeader(http.StatusInternalServerError)

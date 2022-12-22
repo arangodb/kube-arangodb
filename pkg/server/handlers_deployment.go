@@ -23,11 +23,11 @@ package server
 import (
 	"net/http"
 	"sort"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
 
 // Deployment is the API implemented by an ArangoDeployment.
