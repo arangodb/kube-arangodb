@@ -51,6 +51,7 @@ type ActionContext interface {
 	reconciler.DeploymentInfoGetter
 	reconciler.DeploymentDatabaseClient
 	reconciler.KubernetesEventGenerator
+	reconciler.DeploymentImageManager
 
 	member.StateInspectorGetter
 
@@ -97,8 +98,6 @@ type ActionContext interface {
 	GetBackup(ctx context.Context, backup string) (*backupApi.ArangoBackup, error)
 	// GetName receives information about a deployment name
 	GetName() string
-	// SelectImage select currently used image by pod
-	SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool)
 }
 
 type ActionLocalsContext interface {
@@ -273,6 +272,10 @@ func (ac *actionContext) RenderPodTemplateForMember(ctx context.Context, acs sut
 
 func (ac *actionContext) SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool) {
 	return ac.context.SelectImage(spec, status)
+}
+
+func (ac *actionContext) SelectImageForMember(spec api.DeploymentSpec, status api.DeploymentStatus, member api.MemberStatus) (api.ImageInfo, bool) {
+	return ac.context.SelectImageForMember(spec, status, member)
 }
 
 func (ac *actionContext) GetCachedStatus() inspectorInterface.Inspector {
