@@ -23,6 +23,8 @@ package v1alpha
 import (
 	"strings"
 
+	core "k8s.io/api/core/v1"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -32,6 +34,7 @@ type LocalStorageSpec struct {
 	StorageClass StorageClassSpec `json:"storageClass"`
 	LocalPath    []string         `json:"localPath,omitempty"`
 
+	Tolerations  []core.Toleration `json:"tolerations,omitempty"`
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 	Privileged   *bool             `json:"privileged,omitempty"`
 
