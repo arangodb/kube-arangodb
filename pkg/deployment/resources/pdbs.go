@@ -23,7 +23,6 @@ package resources
 import (
 	"context"
 	"fmt"
-	"time"
 
 	policyv1 "k8s.io/api/policy/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
@@ -35,7 +34,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
-	"github.com/arangodb/kube-arangodb/pkg/util/timer"
 )
 
 func min(a int, b int) int {
@@ -50,36 +48,45 @@ func (r *Resources) EnsurePDBs(ctx context.Context) error {
 
 	// Only in Cluster and Production Mode
 	spec := r.context.GetSpec()
+	status := r.context.GetStatus()
 	if spec.IsProduction() && spec.GetMode().IsCluster() {
 
 		// We want to lose at most one agent and dbserver.
 		// Coordinators are not that critical. To keep the service available two should be enough
 		minAgents := spec.GetServerGroupSpec(api.ServerGroupAgents).GetCount() - 1
+		currAgents := status.Members.Agents.MembersReady()
+
 		minDBServers := spec.GetServerGroupSpec(api.ServerGroupDBServers).GetCount() - 1
+		currDBServers := status.Members.DBServers.MembersReady()
+
 		minCoordinators := min(spec.GetServerGroupSpec(api.ServerGroupCoordinators).GetCount()-1, 2)
+		currCoordinators := status.Members.Coordinators.MembersReady()
 
 		// Setting those to zero triggers a remove of the PDB
-		minSyncMaster := 0
-		minSyncWorker := 0
+		minSyncMaster, currSyncMaster := 0, 0
+		minSyncWorker, currSyncWorker := 0, 0
 		if r.context.IsSyncEnabled() {
 			minSyncMaster = spec.GetServerGroupSpec(api.ServerGroupSyncMasters).GetCount() - 1
+			currSyncMaster = status.Members.SyncMasters.MembersReady()
+
 			minSyncWorker = spec.GetServerGroupSpec(api.ServerGroupSyncWorkers).GetCount() - 1
+			currSyncWorker = status.Members.SyncWorkers.MembersReady()
 		}
 
 		// Ensure all PDBs as calculated
-		if err := r.ensurePDBForGroup(ctx, api.ServerGroupAgents, minAgents); err != nil {
+		if err := r.ensurePDBForGroup(ctx, api.ServerGroupAgents, minAgents, currAgents); err != nil {
 			return err
 		}
-		if err := r.ensurePDBForGroup(ctx, api.ServerGroupDBServers, minDBServers); err != nil {
+		if err := r.ensurePDBForGroup(ctx, api.ServerGroupDBServers, minDBServers, currDBServers); err != nil {
 			return err
 		}
-		if err := r.ensurePDBForGroup(ctx, api.ServerGroupCoordinators, minCoordinators); err != nil {
+		if err := r.ensurePDBForGroup(ctx, api.ServerGroupCoordinators, minCoordinators, currCoordinators); err != nil {
 			return err
 		}
-		if err := r.ensurePDBForGroup(ctx, api.ServerGroupSyncMasters, minSyncMaster); err != nil {
+		if err := r.ensurePDBForGroup(ctx, api.ServerGroupSyncMasters, minSyncMaster, currSyncMaster); err != nil {
 			return err
 		}
-		if err := r.ensurePDBForGroup(ctx, api.ServerGroupSyncWorkers, minSyncWorker); err != nil {
+		if err := r.ensurePDBForGroup(ctx, api.ServerGroupSyncWorkers, minSyncWorker, currSyncWorker); err != nil {
 			return err
 		}
 	}
@@ -122,7 +129,7 @@ func newPDBV1(minAvail int, deplname string, group api.ServerGroup, owner meta.O
 }
 
 // ensurePDBForGroup ensure pdb for a specific server group, if wantMinAvail is zero or less, the PDB is removed and not recreated
-func (r *Resources) ensurePDBForGroup(ctx context.Context, group api.ServerGroup, wantedMinAvail int) error {
+func (r *Resources) ensurePDBForGroup(ctx context.Context, group api.ServerGroup, wantedMinAvail, current int) error {
 	if wantedMinAvail < 0 {
 		// Enforce removal
 		wantedMinAvail = 0
@@ -134,101 +141,90 @@ func (r *Resources) ensurePDBForGroup(ctx context.Context, group api.ServerGroup
 	cache := r.context.ACS().CurrentClusterCache()
 	pdbMod := cache.PodDisruptionBudgetsModInterface()
 
-	for {
-		var minAvailable *intstr.IntOrString
-		var deletionTimestamp *meta.Time
+	var minAvailable *intstr.IntOrString
+	var deletionTimestamp *meta.Time
 
-		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-			if inspector, err := cache.PodDisruptionBudget().V1(); err == nil {
-				if pdb, err := inspector.Read().Get(ctxChild, pdbName, meta.GetOptions{}); err != nil {
-					return err
-				} else {
-					minAvailable = pdb.Spec.MinAvailable
-					deletionTimestamp = pdb.GetDeletionTimestamp()
-				}
-			} else if inspector, err := cache.PodDisruptionBudget().V1Beta1(); err == nil {
-				if pdb, err := inspector.Read().Get(ctxChild, pdbName, meta.GetOptions{}); err != nil {
-					return err
-				} else {
-					minAvailable = pdb.Spec.MinAvailable
-					deletionTimestamp = pdb.GetDeletionTimestamp()
-				}
+	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		if inspector, err := cache.PodDisruptionBudget().V1(); err == nil {
+			if pdb, err := inspector.Read().Get(ctxChild, pdbName, meta.GetOptions{}); err != nil {
+				return err
 			} else {
-				return errors.WithStack(err)
+				minAvailable = pdb.Spec.MinAvailable
+				deletionTimestamp = pdb.GetDeletionTimestamp()
 			}
-
-			return nil
-		})
-
-		if kerrors.IsNotFound(err) {
-			if wantedMinAvail != 0 {
-				// No PDB found - create new.
-				log.Debug("Creating new PDB")
-				err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-					var errInternal error
-
-					if cache.PodDisruptionBudget().Version().IsV1() {
-						pdb := newPDBV1(wantedMinAvail, deplName, group, r.context.GetAPIObject().AsOwner())
-						_, errInternal = pdbMod.V1().Create(ctxChild, pdb, meta.CreateOptions{})
-					} else {
-						pdb := newPDBV1Beta1(wantedMinAvail, deplName, group, r.context.GetAPIObject().AsOwner())
-						_, errInternal = pdbMod.V1Beta1().Create(ctxChild, pdb, meta.CreateOptions{})
-					}
-
-					return errInternal
-				})
-
-				if err != nil {
-					log.Err(err).Error("failed to create PDB")
-					return errors.WithStack(err)
-				}
+		} else if inspector, err := cache.PodDisruptionBudget().V1Beta1(); err == nil {
+			if pdb, err := inspector.Read().Get(ctxChild, pdbName, meta.GetOptions{}); err != nil {
+				return err
+			} else {
+				minAvailable = pdb.Spec.MinAvailable
+				deletionTimestamp = pdb.GetDeletionTimestamp()
 			}
-
-			return nil
-		} else if err != nil {
-			// Some other error than not found.
+		} else {
 			return errors.WithStack(err)
 		}
 
-		// PDB v1 or v1beta1 is here.
-		if minAvailable.IntValue() == wantedMinAvail && wantedMinAvail != 0 {
-			return nil
-		}
-		// Update for PDBs is forbidden, thus one has to delete it and then create it again
-		// Otherwise delete it if wantedMinAvail is zero
-		log.Int("wanted-min-avail", wantedMinAvail).
-			Int("current-min-avail", minAvailable.IntValue()).
-			Debug("Recreating PDB")
+		return nil
+	})
 
-		// Trigger deletion only if not already deleted.
-		if deletionTimestamp == nil {
-			// Update the PDB.
-			err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
+	if kerrors.IsNotFound(err) {
+		if wantedMinAvail != 0 && wantedMinAvail < current {
+			// No PDB found - create new.
+			log.Debug("Creating new PDB")
+			err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
+				var errInternal error
+
 				if cache.PodDisruptionBudget().Version().IsV1() {
-					return pdbMod.V1().Delete(ctxChild, pdbName, meta.DeleteOptions{})
+					pdb := newPDBV1(wantedMinAvail, deplName, group, r.context.GetAPIObject().AsOwner())
+					_, errInternal = pdbMod.V1().Create(ctxChild, pdb, meta.CreateOptions{})
+				} else {
+					pdb := newPDBV1Beta1(wantedMinAvail, deplName, group, r.context.GetAPIObject().AsOwner())
+					_, errInternal = pdbMod.V1Beta1().Create(ctxChild, pdb, meta.CreateOptions{})
 				}
 
-				return pdbMod.V1Beta1().Delete(ctxChild, pdbName, meta.DeleteOptions{})
+				return errInternal
 			})
-			if err != nil && !kerrors.IsNotFound(err) {
-				log.Err(err).Error("PDB deletion failed")
+
+			if err != nil {
+				log.Err(err).Error("failed to create PDB")
 				return errors.WithStack(err)
 			}
-		} else {
-			log.Debug("PDB already deleted")
-		}
-		// Exit here if deletion was intended
-		if wantedMinAvail == 0 {
-			return nil
 		}
 
-		log.Debug("Retry loop for PDB")
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-timer.After(time.Second):
-		}
+		return nil
+	} else if err != nil {
+		// Some other error than not found.
+		return errors.WithStack(err)
 	}
+
+	// PDB v1 or v1beta1 is here.
+	if minAvailable.IntValue() == wantedMinAvail && wantedMinAvail != 0 {
+		return nil
+	}
+	// Update for PDBs is forbidden, thus one has to delete it and then create it again
+	// Otherwise delete it if wantedMinAvail is zero
+	log.Int("wanted-min-avail", wantedMinAvail).
+		Int("current-min-avail", minAvailable.IntValue()).
+		Debug("Recreating PDB")
+
+	// Trigger deletion only if not already deleted.
+	if deletionTimestamp == nil {
+		// Update the PDB.
+		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			if cache.PodDisruptionBudget().Version().IsV1() {
+				return pdbMod.V1().Delete(ctxChild, pdbName, meta.DeleteOptions{})
+			}
+
+			return pdbMod.V1Beta1().Delete(ctxChild, pdbName, meta.DeleteOptions{})
+		})
+		if err != nil && !kerrors.IsNotFound(err) {
+			log.Err(err).Error("PDB deletion failed")
+			return errors.WithStack(err)
+		}
+	} else {
+		log.Debug("PDB already deleted")
+	}
+
+	return nil
 }
 
 func newFromInt(v int) *intstr.IntOrString {
