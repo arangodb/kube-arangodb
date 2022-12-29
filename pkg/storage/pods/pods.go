@@ -106,7 +106,7 @@ func listPods(ctx context.Context, in typedCore.PodInterface, next string) (Pods
 		return nil, "", err
 	}
 
-	podsPointers := make(Pods, 0, len(pods.Items))
+	podsPointers := make(Pods, len(pods.Items))
 
 	for id := range pods.Items {
 		podsPointers[id] = pods.Items[id].DeepCopy()
