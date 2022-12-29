@@ -411,6 +411,8 @@ func (i *inspectorState) refreshInThreads(ctx context.Context, threads int, load
 
 	i.throttles = n.throttles
 
+	i.versionInfo = n.versionInfo
+
 	i.last = time.Now()
 	i.initialised = true
 

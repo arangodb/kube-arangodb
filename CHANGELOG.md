@@ -6,6 +6,7 @@
 - (Bugfix) Recover from locked ShuttingDown state
 - (Feature) Add tolerations runtime rotation
 - (Feature) Promote Version Check Feature
+- (Bugfix) Ensure PDBs Consistency
 
 ## [1.2.22](https://github.com/arangodb/kube-arangodb/tree/1.2.22) (2022-12-13)
 - (Bugfix) Do not manage ports in managed ExternalAccess mode
