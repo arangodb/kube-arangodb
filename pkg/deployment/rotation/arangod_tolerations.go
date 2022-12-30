@@ -33,7 +33,7 @@ func comparePodTolerations(_ api.DeploymentSpec, _ api.ServerGroup, spec, status
 		if !reflect.DeepEqual(spec.Tolerations, status.Tolerations) {
 			plan = append(plan, builder.NewAction(api.ActionTypeRuntimeContainerSyncTolerations))
 
-			spec.Tolerations = status.Tolerations
+			status.Tolerations = spec.Tolerations
 			mode = mode.And(InPlaceRotation)
 
 			return
