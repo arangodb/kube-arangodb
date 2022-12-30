@@ -24,7 +24,6 @@ import (
 	"context"
 	"crypto/sha1"
 	"fmt"
-	resources "github.com/arangodb/kube-arangodb/pkg/storage/resources"
 	"net"
 	"path/filepath"
 	"sort"
@@ -40,6 +39,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner"
+	resources "github.com/arangodb/kube-arangodb/pkg/storage/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"

@@ -21,8 +21,9 @@
 package utils
 
 import (
-	core "k8s.io/api/core/v1"
 	"time"
+
+	core "k8s.io/api/core/v1"
 )
 
 func IsNodeSchedulableForPod(node *core.Node, pod *core.Pod) bool {

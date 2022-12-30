@@ -21,12 +21,14 @@
 package utils
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/util"
+	"testing"
+	"time"
+
 	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"testing"
-	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 type taintsCase struct {
