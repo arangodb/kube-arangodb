@@ -24,6 +24,7 @@ import (
 	"context"
 	"crypto/sha1"
 	"fmt"
+	resources "github.com/arangodb/kube-arangodb/pkg/storage/resources"
 	"net"
 	"path/filepath"
 	"sort"
@@ -38,7 +39,6 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
-	pods2 "github.com/arangodb/kube-arangodb/pkg/storage/pods"
 	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -62,8 +62,6 @@ var (
 func (ls *LocalStorage) createPVs(ctx context.Context, apiObject *api.ArangoLocalStorage, unboundClaims []core.PersistentVolumeClaim) (bool, error) {
 	// Fetch StorageClass name
 	var bm = storage.VolumeBindingImmediate
-
-	ls.deps.Client.Kubernetes().CoreV1().Pods("")
 
 	if sc, err := ls.deps.Client.Kubernetes().StorageV1().StorageClasses().Get(ctx, ls.apiObject.Spec.StorageClass.Name, meta.GetOptions{}); err == nil {
 		// We are able to fetch storageClass
@@ -110,32 +108,30 @@ func (ls *LocalStorage) createPVs(ctx context.Context, apiObject *api.ArangoLoca
 		}
 
 		if bm == storage.VolumeBindingWaitForFirstConsumer {
-			// Pod first will get scheduled
-			podList, err := pods2.ListPods(ctx, ls.deps.Client.Kubernetes().CoreV1().Pods(claim.GetNamespace()))
+			podList, err := resources.ListPods(ctx, ls.deps.Client.Kubernetes().CoreV1().Pods(claim.GetNamespace()))
 			if err != nil {
-				ls.log.Err(err).Warn("Unable to find pods schedules")
+				ls.log.Err(err).Warn("Unable to list pods")
 				continue
 			}
 
-			pod := podList.FilterByScheduled().FilterByPVCName(claim.GetName()).PickAny()
-			if pod == nil {
-				ls.log.Info("Waiting for first consumer to connect")
+			podList = podList.FilterByPVCName(claim.GetName())
+
+			nodeList, err := resources.ListNodes(ctx, ls.deps.Client.Kubernetes().CoreV1().Nodes())
+			if err != nil {
+				ls.log.Err(err).Warn("Unable to list nodes")
 				continue
 			}
 
-			podNode := pod.Spec.NodeName
-
-			if podNode == "" {
-				podNode = pod.Status.NominatedNodeName
-			}
-
-			if podNode == "" {
-				ls.log.Info("Pod is not yet scheduled")
-				continue
-			}
+			nodeList = nodeList.FilterSchedulable().FilterPodsTaints(podList)
 
 			allowedClients = allowedClients.Filter(func(node string, client provisioner.API) bool {
-				return podNode == node
+				for _, n := range nodeList {
+					if n.GetName() == node {
+						return true
+					}
+				}
+
+				return false
 			})
 		}
 

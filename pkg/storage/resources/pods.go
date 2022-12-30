@@ -18,11 +18,10 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package nodes
+package resources
 
 import (
 	"context"
-	"github.com/arangodb/kube-arangodb/pkg/storage/utils"
 	"math/rand"
 
 	core "k8s.io/api/core/v1"
@@ -30,10 +29,10 @@ import (
 	typedCore "k8s.io/client-go/kubernetes/typed/core/v1"
 )
 
-type Nodes []*core.Node
+type Pods []*core.Pod
 
-func (p Nodes) Filter(f func(node *core.Node) bool) Nodes {
-	var r = make(Nodes, 0, len(p))
+func (p Pods) Filter(f func(pod *core.Pod) bool) Pods {
+	var r = make(Pods, 0, len(p))
 
 	for _, c := range p {
 		if f(c) {
@@ -44,13 +43,27 @@ func (p Nodes) Filter(f func(node *core.Node) bool) Nodes {
 	return r
 }
 
-func (p Nodes) FilterTaints(pod *core.Pod) Nodes {
-	return p.Filter(func(node *core.Node) bool {
-		return utils.IsNodeSchedulableForPod(node, pod)
+func (p Pods) FilterByScheduled() Pods {
+	return p.Filter(func(pod *core.Pod) bool {
+		return pod.Status.NominatedNodeName != "" || pod.Spec.NodeName != ""
 	})
 }
 
-func (p Nodes) PickAny() *core.Node {
+func (p Pods) FilterByPVCName(pvc string) Pods {
+	return p.Filter(func(pod *core.Pod) bool {
+		for _, v := range pod.Spec.Volumes {
+			if p := v.PersistentVolumeClaim; p != nil {
+				if p.ClaimName == pvc {
+					return true
+				}
+			}
+		}
+
+		return false
+	})
+}
+
+func (p Pods) PickAny() *core.Pod {
 	if len(p) == 0 {
 		return nil
 	}
@@ -62,42 +75,42 @@ func (p Nodes) PickAny() *core.Node {
 	return p[0]
 }
 
-func ListNodes(ctx context.Context, in typedCore.NodeInterface) (Nodes, error) {
-	var nodes Nodes
+func ListPods(ctx context.Context, in typedCore.PodInterface) (Pods, error) {
+	var pods Pods
 
 	cont := ""
 
 	for {
-		nextNodes, c, err := listNodes(ctx, in, cont)
+		nextPods, c, err := listPods(ctx, in, cont)
 		if err != nil {
 			return nil, err
 		}
 
-		nodes = append(nodes, nextNodes...)
+		pods = append(pods, nextPods...)
 
 		if c == "" {
-			return nodes, nil
+			return pods, nil
 		}
 
 		cont = c
 	}
 }
 
-func listNodes(ctx context.Context, in typedCore.NodeInterface, next string) (Nodes, string, error) {
+func listPods(ctx context.Context, in typedCore.PodInterface, next string) (Pods, string, error) {
 	opts := meta.ListOptions{}
 
 	opts.Continue = next
 
-	nodes, err := in.List(ctx, opts)
+	pods, err := in.List(ctx, opts)
 	if err != nil {
 		return nil, "", err
 	}
 
-	nodesPointers := make(Nodes, len(nodes.Items))
+	podsPointers := make(Pods, len(pods.Items))
 
-	for id := range nodes.Items {
-		nodesPointers[id] = nodes.Items[id].DeepCopy()
+	for id := range pods.Items {
+		podsPointers[id] = pods.Items[id].DeepCopy()
 	}
 
-	return nodesPointers, nodes.Continue, nil
+	return podsPointers, pods.Continue, nil
 }

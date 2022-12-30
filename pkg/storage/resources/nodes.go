@@ -18,10 +18,11 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package pods
+package resources
 
 import (
 	"context"
+	"github.com/arangodb/kube-arangodb/pkg/storage/utils"
 	"math/rand"
 
 	core "k8s.io/api/core/v1"
@@ -29,10 +30,10 @@ import (
 	typedCore "k8s.io/client-go/kubernetes/typed/core/v1"
 )
 
-type Pods []*core.Pod
+type Nodes []*core.Node
 
-func (p Pods) Filter(f func(pod *core.Pod) bool) Pods {
-	var r = make(Pods, 0, len(p))
+func (p Nodes) Filter(f func(node *core.Node) bool) Nodes {
+	var r = make(Nodes, 0, len(p))
 
 	for _, c := range p {
 		if f(c) {
@@ -43,19 +44,11 @@ func (p Pods) Filter(f func(pod *core.Pod) bool) Pods {
 	return r
 }
 
-func (p Pods) FilterByScheduled() Pods {
-	return p.Filter(func(pod *core.Pod) bool {
-		return pod.Status.NominatedNodeName != "" || pod.Spec.NodeName != ""
-	})
-}
-
-func (p Pods) FilterByPVCName(pvc string) Pods {
-	return p.Filter(func(pod *core.Pod) bool {
-		for _, v := range pod.Spec.Volumes {
-			if p := v.PersistentVolumeClaim; p != nil {
-				if p.ClaimName == pvc {
-					return true
-				}
+func (p Nodes) FilterPodsTaints(pods Pods) Nodes {
+	return p.Filter(func(node *core.Node) bool {
+		for _, pod := range pods {
+			if utils.IsNodeSchedulableForPod(node, pod) {
+				return true
 			}
 		}
 
@@ -63,7 +56,19 @@ func (p Pods) FilterByPVCName(pvc string) Pods {
 	})
 }
 
-func (p Pods) PickAny() *core.Pod {
+func (p Nodes) FilterTaints(pod *core.Pod) Nodes {
+	return p.Filter(func(node *core.Node) bool {
+		return utils.IsNodeSchedulableForPod(node, pod)
+	})
+}
+
+func (p Nodes) FilterSchedulable() Nodes {
+	return p.Filter(func(node *core.Node) bool {
+		return !node.Spec.Unschedulable
+	})
+}
+
+func (p Nodes) PickAny() *core.Node {
 	if len(p) == 0 {
 		return nil
 	}
@@ -75,42 +80,42 @@ func (p Pods) PickAny() *core.Pod {
 	return p[0]
 }
 
-func ListPods(ctx context.Context, in typedCore.PodInterface) (Pods, error) {
-	var pods Pods
+func ListNodes(ctx context.Context, in typedCore.NodeInterface) (Nodes, error) {
+	var nodes Nodes
 
 	cont := ""
 
 	for {
-		nextPods, c, err := listPods(ctx, in, cont)
+		nextNodes, c, err := listNodes(ctx, in, cont)
 		if err != nil {
 			return nil, err
 		}
 
-		pods = append(pods, nextPods...)
+		nodes = append(nodes, nextNodes...)
 
 		if c == "" {
-			return pods, nil
+			return nodes, nil
 		}
 
 		cont = c
 	}
 }
 
-func listPods(ctx context.Context, in typedCore.PodInterface, next string) (Pods, string, error) {
+func listNodes(ctx context.Context, in typedCore.NodeInterface, next string) (Nodes, string, error) {
 	opts := meta.ListOptions{}
 
 	opts.Continue = next
 
-	pods, err := in.List(ctx, opts)
+	nodes, err := in.List(ctx, opts)
 	if err != nil {
 		return nil, "", err
 	}
 
-	podsPointers := make(Pods, len(pods.Items))
+	nodesPointers := make(Nodes, len(nodes.Items))
 
-	for id := range pods.Items {
-		podsPointers[id] = pods.Items[id].DeepCopy()
+	for id := range nodes.Items {
+		nodesPointers[id] = nodes.Items[id].DeepCopy()
 	}
 
-	return podsPointers, pods.Continue, nil
+	return nodesPointers, nodes.Continue, nil
 }

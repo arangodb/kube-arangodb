@@ -209,7 +209,6 @@ func (ls *LocalStorage) run() {
 	for {
 		select {
 		case <-ls.stopCh:
-			println("XXX Stop")
 			// We're being stopped.
 			return
 
@@ -229,7 +228,6 @@ func (ls *LocalStorage) run() {
 			}
 
 		case <-ls.inspectTrigger.Done():
-			println("XXX Inspect")
 			hasError := false
 			unboundPVCs, err := ls.inspectPVCs()
 			if err != nil {
@@ -286,7 +284,6 @@ func (ls *LocalStorage) run() {
 			}
 
 		case <-timer.After(inspectionInterval):
-			println("XXX Refreshing")
 			// Trigger inspection
 			ls.inspectTrigger.Trigger()
 			// Backoff with next interval
