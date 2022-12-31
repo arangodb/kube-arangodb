@@ -46,11 +46,11 @@ type pvCleaner struct {
 	cli          kubernetes.Interface
 	items        []core.PersistentVolume
 	trigger      trigger.Trigger
-	clientGetter func(nodeName string) (provisioner.API, error)
+	clientGetter func(ctx context.Context, nodeName string) (provisioner.API, error)
 }
 
 // newPVCleaner creates a new cleaner of persistent volumes.
-func newPVCleaner(cli kubernetes.Interface, clientGetter func(nodeName string) (provisioner.API, error)) *pvCleaner {
+func newPVCleaner(cli kubernetes.Interface, clientGetter func(ctx context.Context, nodeName string) (provisioner.API, error)) *pvCleaner {
 	c := &pvCleaner{
 		cli:          cli,
 		clientGetter: clientGetter,
@@ -148,7 +148,7 @@ func (c *pvCleaner) clean(pv core.PersistentVolume) error {
 	if nodeName == "" {
 		return errors.WithStack(errors.Newf("PersistentVolume has no node-name annotation"))
 	}
-	client, err := c.clientGetter(nodeName)
+	client, err := c.clientGetter(context.Background(), nodeName)
 	if err != nil {
 		log.Err(err).Str("node", nodeName).Debug("Failed to get client for node")
 		return errors.WithStack(err)

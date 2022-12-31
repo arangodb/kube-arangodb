@@ -259,9 +259,11 @@ func (ls *LocalStorage) run() {
 				}
 				if createNow {
 					ctx := context.Background()
-					if err := ls.createPVs(ctx, ls.apiObject, unboundPVCs); err != nil {
+					if retry, err := ls.createPVs(ctx, ls.apiObject, unboundPVCs); err != nil {
 						hasError = true
 						ls.createEvent(k8sutil.NewErrorEvent("PV creation failed", err, ls.apiObject))
+					} else if retry {
+						inspectionInterval = minInspectionInterval
 					}
 				}
 			}

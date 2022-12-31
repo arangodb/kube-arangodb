@@ -21,16 +21,12 @@
 package storage
 
 import (
-	"context"
 	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner"
-	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner/mocks"
 )
 
 // TestCreateValidEndpointList tests createValidEndpointList.
@@ -93,34 +89,6 @@ func TestCreateNodeSelector(t *testing.T) {
 		output, err := json.Marshal(sel)
 		assert.NoError(t, err)
 		assert.Equal(t, expected, string(output), "Input: '%s'", input)
-	}
-}
-
-// TestCreateNodeClientMap tests createNodeClientMap.
-func TestCreateNodeClientMap(t *testing.T) {
-	GB := int64(1024 * 1024 * 1024)
-	foo := mocks.NewProvisioner("foo", 100*GB, 200*GB)
-	bar := mocks.NewProvisioner("bar", 300*GB, 400*GB)
-	tests := []struct {
-		Input    []provisioner.API
-		Expected map[string]provisioner.API
-	}{
-		{
-			Input:    nil,
-			Expected: map[string]provisioner.API{},
-		},
-		{
-			Input: []provisioner.API{foo, bar},
-			Expected: map[string]provisioner.API{
-				"bar": bar,
-				"foo": foo,
-			},
-		},
-	}
-	ctx := context.Background()
-	for _, test := range tests {
-		output := createNodeClientMap(ctx, test.Input)
-		assert.Equal(t, test.Expected, output)
 	}
 }
 

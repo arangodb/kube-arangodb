@@ -23,6 +23,7 @@ package storage
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner"
 	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner/client"
@@ -30,9 +31,43 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
+type Clients map[string]provisioner.API
+
+func (c Clients) Copy() Clients {
+	r := make(Clients, len(c))
+
+	for k, v := range c {
+		r[k] = v
+	}
+
+	return r
+}
+
+func (c Clients) Filter(f func(node string, client provisioner.API) bool) Clients {
+	r := make(Clients, len(c))
+
+	for k, v := range c {
+		if f(k, v) {
+			r[k] = v
+		}
+	}
+
+	return r
+}
+
+func (c Clients) Keys() []string {
+	r := make([]string, 0, len(c))
+
+	for k := range c {
+		r = append(r, k)
+	}
+
+	return r
+}
+
 // createProvisionerClients creates a list of clients for all known
 // provisioners.
-func (ls *LocalStorage) createProvisionerClients() ([]provisioner.API, error) {
+func (ls *LocalStorage) createProvisionerClients(ctx context.Context) (Clients, error) {
 	// Find provisioner endpoints
 	ns := ls.apiObject.GetNamespace()
 	listOptions := k8sutil.LocalStorageListOpt(ls.apiObject.GetName(), roleProvisioner)
@@ -46,31 +81,38 @@ func (ls *LocalStorage) createProvisionerClients() ([]provisioner.API, error) {
 		return nil, nil
 	}
 	// Create clients for endpoints
-	clients := make([]provisioner.API, len(addrs))
-	for i, addr := range addrs {
-		var err error
-		clients[i], err = client.New(fmt.Sprintf("http://%s", addr))
+	clients := make(map[string]provisioner.API, len(addrs))
+	for _, addr := range addrs {
+		c, err := client.New(fmt.Sprintf("http://%s", addr))
 		if err != nil {
 			return nil, errors.WithStack(err)
+		}
+
+		if info, err := ls.fetchClientNodeInfo(ctx, c); err == nil {
+			clients[info.NodeName] = c
 		}
 	}
 	return clients, nil
 }
 
+func (ls *LocalStorage) fetchClientNodeInfo(ctx context.Context, c provisioner.API) (provisioner.NodeInfo, error) {
+	nctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+	return c.GetNodeInfo(nctx)
+}
+
 // GetClientByNodeName looks for a client that serves the given node name.
 // Returns an error if no such client is found.
-func (ls *LocalStorage) GetClientByNodeName(nodeName string) (provisioner.API, error) {
-	clients, err := ls.createProvisionerClients()
+func (ls *LocalStorage) GetClientByNodeName(ctx context.Context, nodeName string) (provisioner.API, error) {
+	clients, err := ls.createProvisionerClients(ctx)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
 	// Find matching client
-	for _, c := range clients {
-		ctx := context.Background()
-		if info, err := c.GetNodeInfo(ctx); err == nil && info.NodeName == nodeName {
-			return c, nil
-		}
+	if c, ok := clients[nodeName]; ok {
+		return c, nil
 	}
+
 	return nil, errors.WithStack(errors.Newf("No client found for node name '%s'", nodeName))
 }

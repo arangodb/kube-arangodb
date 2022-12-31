@@ -20,7 +20,7 @@ rules:
       verbs: ["get", "list", "watch"]
     - apiGroups: [""]
       resources: ["namespaces", "nodes"]
-      verbs: ["get", "list"]
+      verbs: ["get", "list", "watch"]
     - apiGroups: ["storage.k8s.io"]
       resources: ["storageclasses"]
       verbs: ["*"]

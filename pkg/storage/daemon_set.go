@@ -94,6 +94,7 @@ func (ls *LocalStorage) ensureDaemonSet(apiObject *api.ArangoLocalStorage) error
 				NodeSelector:     apiObject.Spec.NodeSelector,
 				ImagePullSecrets: ls.imagePullSecrets,
 				Priority:         apiObject.Spec.PodCustomization.GetPriority(),
+				Tolerations:      apiObject.Spec.Tolerations,
 			},
 		},
 	}
@@ -153,6 +154,7 @@ func (ls *LocalStorage) ensureDaemonSet(apiObject *api.ArangoLocalStorage) error
 		// Update it
 		current.Spec = dsSpec
 		if _, err := ls.deps.Client.Kubernetes().AppsV1().DaemonSets(ns).Update(context.Background(), current, meta.UpdateOptions{}); kerrors.IsConflict(err) && attempt < 10 {
+			ls.log.Err(err).Debug("failed to patch DaemonSet spec")
 			// Failed to update, try again
 			continue
 		} else if err != nil {
