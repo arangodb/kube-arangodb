@@ -24,7 +24,6 @@ import (
 	"context"
 	"crypto/sha1"
 	"fmt"
-	"math/rand"
 	"net"
 	"path/filepath"
 	"sort"
@@ -34,11 +33,13 @@ import (
 
 	"github.com/dchest/uniuri"
 	core "k8s.io/api/core/v1"
+	storage "k8s.io/api/storage/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner"
+	resources "github.com/arangodb/kube-arangodb/pkg/storage/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -58,33 +59,35 @@ var (
 )
 
 // createPVs creates a given number of PersistentVolume's.
-func (ls *LocalStorage) createPVs(ctx context.Context, apiObject *api.ArangoLocalStorage, unboundClaims []core.PersistentVolumeClaim) error {
+func (ls *LocalStorage) createPVs(ctx context.Context, apiObject *api.ArangoLocalStorage, unboundClaims []core.PersistentVolumeClaim) (bool, error) {
+	// Fetch StorageClass name
+	var bm = storage.VolumeBindingImmediate
+
+	if sc, err := ls.deps.Client.Kubernetes().StorageV1().StorageClasses().Get(ctx, ls.apiObject.Spec.StorageClass.Name, meta.GetOptions{}); err == nil {
+		// We are able to fetch storageClass
+		if b := sc.VolumeBindingMode; b != nil {
+			bm = *b
+		}
+	}
+
 	// Find provisioner clients
-	clients, err := ls.createProvisionerClients()
+	clients, err := ls.createProvisionerClients(ctx)
 	if err != nil {
-		return errors.WithStack(err)
+		return false, errors.WithStack(err)
 	}
 	if len(clients) == 0 {
 		// No provisioners available
-		return errors.WithStack(errors.Newf("No ready provisioner endpoints found"))
+		return false, errors.WithStack(errors.Newf("No ready provisioner endpoints found"))
 	}
-	// Randomize list
-	rand.Shuffle(len(clients), func(i, j int) {
-		clients[i], clients[j] = clients[j], clients[i]
-	})
 
-	var nodeClientMap map[string]provisioner.API
 	for i, claim := range unboundClaims {
 		// Find deployment name & role in the claim (if any)
 		deplName, role, enforceAniAffinity := getDeploymentInfo(claim)
 		allowedClients := clients
 		if deplName != "" {
 			// Select nodes to choose from such that no volume in group lands on the same node
-			if nodeClientMap == nil {
-				nodeClientMap = createNodeClientMap(ctx, clients)
-			}
 			var err error
-			allowedClients, err = ls.filterAllowedNodes(nodeClientMap, deplName, role)
+			allowedClients, err = ls.filterAllowedNodes(clients, deplName, role)
 			if err != nil {
 				ls.log.Err(err).Warn("Failed to filter allowed nodes")
 				continue // We'll try this claim again later
@@ -103,20 +106,58 @@ func (ls *LocalStorage) createPVs(ctx context.Context, apiObject *api.ArangoLoca
 				volSize = v
 			}
 		}
+
+		if bm == storage.VolumeBindingWaitForFirstConsumer {
+			podList, err := resources.ListPods(ctx, ls.deps.Client.Kubernetes().CoreV1().Pods(claim.GetNamespace()))
+			if err != nil {
+				ls.log.Err(err).Warn("Unable to list pods")
+				continue
+			}
+
+			podList = podList.FilterByPVCName(claim.GetName())
+
+			nodeList, err := resources.ListNodes(ctx, ls.deps.Client.Kubernetes().CoreV1().Nodes())
+			if err != nil {
+				ls.log.Err(err).Warn("Unable to list nodes")
+				continue
+			}
+
+			nodeList = nodeList.FilterSchedulable().FilterPodsTaints(podList)
+
+			allowedClients = allowedClients.Filter(func(node string, client provisioner.API) bool {
+				for _, n := range nodeList {
+					if n.GetName() == node {
+						return true
+					}
+				}
+
+				return false
+			})
+		}
+
+		if len(allowedClients) == 0 {
+			ls.log.Info("PVC Cannot be created on any node")
+			continue
+		}
+
 		// Create PV
 		if err := ls.createPV(ctx, apiObject, allowedClients, i, volSize, claim, deplName, role); err != nil {
 			ls.log.Err(err).Error("Failed to create PersistentVolume")
 		}
+
+		return true, nil
 	}
 
-	return nil
+	return false, nil
 }
 
 // createPV creates a PersistentVolume.
-func (ls *LocalStorage) createPV(ctx context.Context, apiObject *api.ArangoLocalStorage, clients []provisioner.API, clientsOffset int, volSize int64, claim core.PersistentVolumeClaim, deploymentName, role string) error {
+func (ls *LocalStorage) createPV(ctx context.Context, apiObject *api.ArangoLocalStorage, clients Clients, clientsOffset int, volSize int64, claim core.PersistentVolumeClaim, deploymentName, role string) error {
 	// Try clients
-	for clientIdx := 0; clientIdx < len(clients); clientIdx++ {
-		client := clients[(clientsOffset+clientIdx)%len(clients)]
+	keys := clients.Keys()
+
+	for clientIdx := 0; clientIdx < len(keys); clientIdx++ {
+		client := clients[keys[(clientsOffset+clientIdx)%len(keys)]]
 
 		// Try local path within client
 		for _, localPathRoot := range apiObject.Spec.LocalPath {
@@ -240,19 +281,6 @@ func createNodeSelector(nodeName string) *core.NodeSelector {
 	}
 }
 
-// createNodeClientMap creates a map from node name to API.
-// Clients that do not respond properly on a GetNodeInfo request are
-// ignored.
-func createNodeClientMap(ctx context.Context, clients []provisioner.API) map[string]provisioner.API {
-	result := make(map[string]provisioner.API)
-	for _, c := range clients {
-		if info, err := c.GetNodeInfo(ctx); err == nil {
-			result[info.NodeName] = c
-		}
-	}
-	return result
-}
-
 // getDeploymentInfo returns the name of the deployment that created the given claim,
 // the role of the server that the claim is used for and the value for `enforceAntiAffinity`.
 // If not found, empty strings are returned.
@@ -265,7 +293,7 @@ func getDeploymentInfo(pvc core.PersistentVolumeClaim) (string, string, bool) {
 }
 
 // filterAllowedNodes returns those clients that do not yet have a volume for the given deployment name & role.
-func (ls *LocalStorage) filterAllowedNodes(clients map[string]provisioner.API, deploymentName, role string) ([]provisioner.API, error) {
+func (ls *LocalStorage) filterAllowedNodes(clients Clients, deploymentName, role string) (Clients, error) {
 	// Find all PVs for given deployment & role
 	list, err := ls.deps.Client.Kubernetes().CoreV1().PersistentVolumes().List(context.Background(), meta.ListOptions{
 		LabelSelector: fmt.Sprintf("%s=%s,%s=%s", k8sutil.LabelKeyArangoDeployment, deploymentName, k8sutil.LabelKeyRole, role),
@@ -278,13 +306,11 @@ func (ls *LocalStorage) filterAllowedNodes(clients map[string]provisioner.API, d
 		nodeName := pv.GetAnnotations()[nodeNameAnnotation]
 		excludedNodes[nodeName] = struct{}{}
 	}
-	result := make([]provisioner.API, 0, len(clients))
-	for nodeName, c := range clients {
-		if _, found := excludedNodes[nodeName]; !found {
-			result = append(result, c)
-		}
-	}
-	return result, nil
+
+	return clients.Filter(func(node string, client provisioner.API) bool {
+		_, ok := excludedNodes[node]
+		return !ok
+	}), nil
 }
 
 // bindClaimToVolume tries to bind the given claim to the volume with given name.
