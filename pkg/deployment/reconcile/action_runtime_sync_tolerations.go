@@ -78,7 +78,9 @@ func (a actionRuntimeContainerSyncTolerations) Start(ctx context.Context) (bool,
 
 	expectedTolerations := member.Spec.Template.PodSpec.Spec.Tolerations
 
-	calculatedTolerations := tolerations.MergeTolerationsIfNotFound(currentTolerations, expectedTolerations)
+	origTolerations := tolerations.CreatePodTolerations(a.actionCtx.GetMode(), a.action.Group)
+
+	calculatedTolerations := tolerations.MergeTolerationsIfNotFound(currentTolerations, origTolerations, expectedTolerations)
 
 	if reflect.DeepEqual(currentTolerations, calculatedTolerations) {
 		return true, nil

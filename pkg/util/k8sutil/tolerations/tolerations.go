@@ -26,7 +26,6 @@ import (
 	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 const (
@@ -56,6 +55,16 @@ func NewNoExecuteToleration(key string, duration TolerationDuration) core.Tolera
 	return t
 }
 
+func CopyTolerations(source []core.Toleration) []core.Toleration {
+	out := make([]core.Toleration, len(source))
+
+	for id := range out {
+		source[id].DeepCopyInto(&out[id])
+	}
+
+	return out
+}
+
 // MergeTolerationsIfNotFound merge the given tolerations lists, if no such toleration has been set in the given source.
 func MergeTolerationsIfNotFound(source []core.Toleration, toAdd ...[]core.Toleration) []core.Toleration {
 	for _, toleration := range toAdd {
@@ -82,16 +91,18 @@ func AddTolerationIfNotFound(source []core.Toleration, toAdd core.Toleration) []
 		}
 	}
 
+	// Ensure we are working on the copy
+	source = CopyTolerations(source)
+
 	for id, t := range source {
 		if t.Key == toAdd.Key && t.Effect == toAdd.Effect && t.Operator == toAdd.Operator && t.Value == toAdd.Value {
 			// We are on same toleration, only value needs to be modified
-			if !util.CompareInt64p(t.TolerationSeconds, toAdd.TolerationSeconds) {
-				source[id].TolerationSeconds = util.NewInt64OrNil(toAdd.TolerationSeconds)
-			}
+			toAdd.DeepCopyInto(&source[id])
 
 			return source
 		}
 	}
+
 	return append(source, toAdd)
 }
 
