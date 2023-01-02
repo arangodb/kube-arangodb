@@ -91,8 +91,6 @@ func (a actionRuntimeContainerSyncTolerations) Start(ctx context.Context) (bool,
 		return false, errors.Wrapf(err, "Unable to create patch")
 	}
 
-	println("XXXXXX", string(p))
-
 	nctx, c := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer c()
 
