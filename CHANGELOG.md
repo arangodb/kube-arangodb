@@ -8,6 +8,7 @@
 - (Feature) Promote Version Check Feature
 - (Bugfix) Ensure PDBs Consistency
 - (Bugfix) Fix LocalStorage WaitForFirstConsumer mode
+- (Bugfix) Fix Tolerations propagation in case of toleration removal
 
 ## [1.2.22](https://github.com/arangodb/kube-arangodb/tree/1.2.22) (2022-12-13)
 - (Bugfix) Do not manage ports in managed ExternalAccess mode
