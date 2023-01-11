@@ -148,7 +148,7 @@ func (ac *arangoClientBackupImpl) getCredentialsFromSecret(ctx context.Context, 
 }
 
 func (ac *arangoClientBackupImpl) Upload(backupID driver.BackupID) (driver.BackupTransferJobID, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), defaultArangoClientTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), backupUploadArangoClientTimeout)
 	defer cancel()
 
 	uploadSpec := ac.backup.Spec.Upload
@@ -165,7 +165,7 @@ func (ac *arangoClientBackupImpl) Upload(backupID driver.BackupID) (driver.Backu
 }
 
 func (ac *arangoClientBackupImpl) Download(backupID driver.BackupID) (driver.BackupTransferJobID, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), defaultArangoClientTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), backupUploadArangoClientTimeout)
 	defer cancel()
 
 	downloadSpec := ac.backup.Spec.Download
