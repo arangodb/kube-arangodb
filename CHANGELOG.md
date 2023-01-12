@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.2.23](https://github.com/arangodb/kube-arangodb/tree/1.2.23) (2023-01-12)
 - (Bugfix) Remove PDBs if group count is 0
 - (Feature) Add SpecPropagated condition
 - (Bugfix) Recover from locked ShuttingDown state
