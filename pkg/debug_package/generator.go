@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,11 +39,13 @@ var rootFactories = []shared.Factory{
 	kubernetes.Events(),
 	kubernetes.Pods(),
 	kubernetes.Secrets(),
+	kubernetes.Services(),
+	kubernetes.Deployments(),
+	kubernetes.AgencyDump(),
 }
 
 func InitCommand(cmd *cobra.Command) {
 	cli.Register(cmd)
-
 	f := cmd.Flags()
 
 	for _, factory := range rootFactories {

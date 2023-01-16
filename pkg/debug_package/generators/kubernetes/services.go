@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,37 +21,56 @@
 package kubernetes
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/rs/zerolog"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
-func Events() shared.Factory {
-	return shared.NewFactory("kubernetes-events", true, events)
+func Services() shared.Factory {
+	return shared.NewFactory("kubernetes-services", true, services)
 }
 
-func events(logger zerolog.Logger, files chan<- shared.File) error {
+func services(logger zerolog.Logger, files chan<- shared.File) error {
 	k, ok := kclient.GetDefaultFactory().Client()
 	if !ok {
 		return errors.Newf("Client is not initialised")
 	}
 
-	events, err := ListEvents(k)
+	services, err := ListServices(k)
 	if err != nil {
 		return err
 	}
 
-	files <- shared.NewYAMLFile("kubernetes/events.yaml", func() ([]interface{}, error) {
-		q := make([]interface{}, 0, len(events))
+	files <- shared.NewYAMLFile("kubernetes/services.yaml", func() ([]interface{}, error) {
+		q := make([]interface{}, 0, len(services))
 
-		for _, e := range events {
+		for _, e := range services {
 			q = append(q, e)
 		}
 
 		return q, nil
 	})
 
+	for _, svc := range services {
+		endpoints(k, svc.GetNamespace(), svc.GetName(), files)
+	}
+
 	return nil
+}
+
+func endpoints(k kclient.Client, namespace, name string, files chan<- shared.File) {
+	ep, err := k.Kubernetes().CoreV1().Endpoints(namespace).Get(context.Background(), name, meta.GetOptions{})
+	if err == nil {
+		files <- shared.NewYAMLFile(fmt.Sprintf("kubernetes/services/%s/endpoints.yaml", name), func() ([]interface{}, error) {
+			ep.ManagedFields = nil
+
+			return []interface{}{ep}, nil
+		})
+	}
 }
