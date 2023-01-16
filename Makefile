@@ -228,6 +228,10 @@ license-verify:
 	@echo ">> Verify license of files"
 	@$(GOPATH)/bin/addlicense -f "./tools/codegen/license-header.txt" -check $(SOURCES) $(PROTOSOURCES)
 
+.PHONY: license-range-verify
+license-range-verify:
+	@GOBIN=$(GOPATH)/bin go run "$(ROOT)/tools/license/" $(SOURCES)
+
 .PHONY: fmt
 fmt:
 	@echo ">> Ensuring style of files"
