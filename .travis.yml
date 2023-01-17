@@ -12,6 +12,6 @@ install:
   - make init
 
 script:
-  - make license-verify fmt-verify linter
+  - make license-verify license-range-verify fmt-verify linter
   - make run-unit-tests
   - make bin
