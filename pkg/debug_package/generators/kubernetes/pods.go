@@ -23,8 +23,9 @@ package kubernetes
 import (
 	"context"
 	"fmt"
-	"github.com/rs/zerolog"
 	"io"
+
+	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/cli"

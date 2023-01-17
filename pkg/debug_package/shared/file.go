@@ -44,7 +44,7 @@ func NewJSONFile(path string, write func() ([]interface{}, error)) File {
 		}
 
 		for z := range obj {
-			cleanObject(&obj[z])
+			obj[z] = cleanObject(&obj[z])
 		}
 
 		return json.Marshal(obj)
@@ -73,7 +73,7 @@ func NewYAMLFile(path string, write func() ([]interface{}, error)) File {
 		buff := bytes.NewBuffer(nil)
 
 		for z := range obj {
-			cleanObject(&obj[z])
+			obj[z] = cleanObject(&obj[z])
 		}
 
 		for z := range obj {
