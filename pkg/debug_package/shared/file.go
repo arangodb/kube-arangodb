@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,8 +21,12 @@
 package shared
 
 import (
+	"bytes"
+	"encoding/json"
+
 	"github.com/rs/zerolog"
-	"k8s.io/apimachinery/pkg/util/json"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/yaml"
 )
 
 type GenFunc func(logger zerolog.Logger, files chan<- File) error
@@ -32,14 +36,60 @@ type File interface {
 	Write() ([]byte, error)
 }
 
-func NewJSONFile(path string, write func() (interface{}, error)) File {
+func NewJSONFile(path string, write func() ([]interface{}, error)) File {
 	return NewFile(path, func() ([]byte, error) {
 		obj, err := write()
 		if err != nil {
 			return nil, err
 		}
 
+		for z := range obj {
+			obj[z] = cleanObject(&obj[z])
+		}
+
 		return json.Marshal(obj)
+	})
+}
+
+func cleanObject(obj interface{}) interface{} {
+	if obj == nil {
+		return nil
+	}
+
+	if v, ok := obj.(meta.Object); ok {
+		v.SetManagedFields(nil)
+	}
+
+	return obj
+}
+
+func NewYAMLFile(path string, write func() ([]interface{}, error)) File {
+	return NewFile(path, func() ([]byte, error) {
+		obj, err := write()
+		if err != nil {
+			return nil, err
+		}
+
+		buff := bytes.NewBuffer(nil)
+
+		for z := range obj {
+			obj[z] = cleanObject(&obj[z])
+		}
+
+		for z := range obj {
+			d, err := yaml.Marshal(obj[z])
+			if err != nil {
+				return nil, err
+			}
+
+			buff.Write(d)
+
+			if z+1 < len(obj) {
+				buff.Write([]byte("\n---\n\n"))
+			}
+		}
+
+		return buff.Bytes(), nil
 	})
 }
 

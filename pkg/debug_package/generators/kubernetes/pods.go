@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,8 +27,6 @@ import (
 
 	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/cli"
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/shared"
@@ -46,38 +44,18 @@ func pods(logger zerolog.Logger, files chan<- shared.File) error {
 		return errors.Newf("Client is not initialised")
 	}
 
-	pods := map[types.UID]*core.Pod{}
-	next := ""
-	for {
-		r, err := k.Kubernetes().CoreV1().Pods(cli.GetInput().Namespace).List(context.Background(), meta.ListOptions{
-			Continue: next,
-		})
-
-		if err != nil {
-			return err
-		}
-
-		for _, e := range r.Items {
-			pods[e.UID] = e.DeepCopy()
-		}
-
-		next = r.Continue
-		if next == "" {
-			break
-		}
+	pods, err := ListPods(k)
+	if err != nil {
+		return err
 	}
 
-	podsList := make([]*core.Pod, 0, len(pods))
+	podsList := pods.AsList()
 
-	for _, p := range pods {
-		podsList = append(podsList, p)
-	}
+	files <- shared.NewYAMLFile("kubernetes/pods.yaml", func() ([]interface{}, error) {
+		q := make([]interface{}, len(podsList))
 
-	files <- shared.NewJSONFile("kubernetes/pods.json", func() (interface{}, error) {
-		q := make([]*core.Pod, 0, len(pods))
-
-		for _, e := range pods {
-			q = append(q, e)
+		for id := range podsList {
+			q[id] = podsList[id]
 		}
 
 		return q, nil
@@ -103,6 +81,8 @@ func podsLogs(client kclient.Client, files chan<- shared.File, pods ...*core.Pod
 }
 
 func podLogs(client kclient.Client, files chan<- shared.File, pod *core.Pod) error {
+	podYaml(files, pod)
+
 	errs := make([]error, 0, len(pod.Status.ContainerStatuses)+len(pod.Status.InitContainerStatuses)+len(pod.Status.EphemeralContainerStatuses))
 
 	if s := pod.Status.ContainerStatuses; len(s) > 0 {
@@ -136,6 +116,12 @@ func podLogs(client kclient.Client, files chan<- shared.File, pod *core.Pod) err
 	}
 
 	return errors.Errors(errs...)
+}
+
+func podYaml(files chan<- shared.File, pod *core.Pod) {
+	files <- shared.NewYAMLFile(fmt.Sprintf("kubernetes/pods/%s/pod.yaml", pod.GetName()), func() ([]interface{}, error) {
+		return []interface{}{pod}, nil
+	})
 }
 
 func podContainerLogs(client kclient.Client, files chan<- shared.File, pod *core.Pod, container string) error {

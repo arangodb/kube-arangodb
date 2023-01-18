@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,16 +21,8 @@
 package kubernetes
 
 import (
-	"context"
-	"crypto/sha256"
-	"fmt"
-
 	"github.com/rs/zerolog"
-	core "k8s.io/api/core/v1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 
-	"github.com/arangodb/kube-arangodb/pkg/debug_package/cli"
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
@@ -46,38 +38,13 @@ func secrets(logger zerolog.Logger, files chan<- shared.File) error {
 		return errors.Newf("Client is not initialised")
 	}
 
-	secrets := map[types.UID]*core.Secret{}
-	next := ""
-	for {
-		r, err := k.Kubernetes().CoreV1().Secrets(cli.GetInput().Namespace).List(context.Background(), meta.ListOptions{
-			Continue: next,
-		})
-
-		if err != nil {
-			return err
-		}
-
-		for _, e := range r.Items {
-			hashed := make(map[string][]byte, len(e.Data))
-			for k, v := range e.Data {
-				if cli.GetInput().HideSensitiveData {
-					hashed[k] = []byte(fmt.Sprintf("%02x", sha256.Sum256(v)))
-				} else {
-					hashed[k] = v
-				}
-			}
-			secrets[e.UID] = e.DeepCopy()
-			secrets[e.UID].Data = hashed
-		}
-
-		next = r.Continue
-		if next == "" {
-			break
-		}
+	secrets, err := ListSecrets(k)
+	if err != nil {
+		return err
 	}
 
-	files <- shared.NewJSONFile("kubernetes/secrets.json", func() (interface{}, error) {
-		q := make([]*core.Secret, 0, len(secrets))
+	files <- shared.NewYAMLFile("kubernetes/secrets.yaml", func() ([]interface{}, error) {
+		q := make([]interface{}, 0, len(secrets))
 
 		for _, e := range secrets {
 			q = append(q, e)
