@@ -3,6 +3,7 @@
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Bugfix) Fix deployment creation on ARM64
 - (DebugPackage) Add Agency Dump & State
+- (Bugfix) Fix After leaked GoRoutines
 
 ## [1.2.23](https://github.com/arangodb/kube-arangodb/tree/1.2.23) (2023-01-12)
 - (Bugfix) Remove PDBs if group count is 0
