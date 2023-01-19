@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,19 +20,26 @@
 
 package timer
 
-import "time"
+import (
+	"runtime"
+	"testing"
+	"time"
 
-func After(duration time.Duration) <-chan time.Time {
-	r := make(chan time.Time, 1)
+	"github.com/stretchr/testify/require"
+)
 
-	go func() {
-		defer close(r)
+func checkGoRoutinesLeak(t *testing.T, f func()) {
+	got := runtime.NumGoroutine()
 
-		tc := time.NewTimer(duration)
-		defer tc.Stop()
+	f()
 
-		r <- <-tc.C
-	}()
+	require.Equal(t, got, runtime.NumGoroutine())
+}
 
-	return r
+func Test_AfterLeaks(t *testing.T) {
+	checkGoRoutinesLeak(t, func() {
+		After(time.Second)
+
+		time.Sleep(5 * time.Second)
+	})
 }
