@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 package v1
 
 import (
-	policyv1 "k8s.io/api/policy/v1"
+	policy "k8s.io/api/policy/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/gvk"
 )
@@ -29,10 +29,10 @@ import (
 type Inspector interface {
 	gvk.GVK
 
-	GetSimple(name string) (*policyv1.PodDisruptionBudget, bool)
+	GetSimple(name string) (*policy.PodDisruptionBudget, bool)
 	Iterate(action Action, filters ...Filter) error
 	Read() ReadInterface
 }
 
-type Filter func(podDisruptionBudget *policyv1.PodDisruptionBudget) bool
-type Action func(podDisruptionBudget *policyv1.PodDisruptionBudget) error
+type Filter func(podDisruptionBudget *policy.PodDisruptionBudget) bool
+type Action func(podDisruptionBudget *policy.PodDisruptionBudget) error

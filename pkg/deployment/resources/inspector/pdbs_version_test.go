@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,9 +35,9 @@ import (
 
 func Test_PDB_Versions(t *testing.T) {
 	k8sVersions := map[string]version.Version{
-		"v1.18.0": version.V1Beta1,
-		"v1.19.0": version.V1Beta1,
-		"v1.20.0": version.V1Beta1,
+		"v1.18.0": "",
+		"v1.19.0": "",
+		"v1.20.0": "",
 		"v1.21.0": version.V1,
 		"v1.22.0": version.V1,
 		"v1.23.0": version.V1,
@@ -60,15 +60,9 @@ func Test_PDB_Versions(t *testing.T) {
 			if expected.IsV1() {
 				_, err := i.PodDisruptionBudget().V1()
 				require.NoError(t, err)
-
-				_, err = i.PodDisruptionBudget().V1Beta1()
-				require.Error(t, err)
 			} else {
 				_, err := i.PodDisruptionBudget().V1()
-				require.Error(t, err)
-
-				_, err = i.PodDisruptionBudget().V1Beta1()
-				require.NoError(t, err)
+				require.EqualError(t, err, "Kubernetes 1.20 or lower is not supported anymore")
 			}
 		})
 	}

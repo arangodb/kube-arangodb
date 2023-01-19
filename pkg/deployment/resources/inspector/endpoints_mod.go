@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,12 @@
 package inspector
 
 import (
+	core "k8s.io/api/core/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
+	endpointsv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/endpoints/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/mods"
 )
 
@@ -32,4 +38,12 @@ func (i *inspectorState) EndpointsModInterface() mods.EndpointsMods {
 
 type endpointsMod struct {
 	i *inspectorState
+}
+
+func (p endpointsMod) V1() endpointsv1.ModInterface {
+	return generic.NewModThrottle[*core.Endpoints](definitions.Endpoints, p.i.GetThrottles, generic.WithModStatusGetter[*core.Endpoints](constants.EndpointsGKv1(), p.clientv1))
+}
+
+func (p endpointsMod) clientv1() generic.ModClient[*core.Endpoints] {
+	return p.i.Client().Kubernetes().CoreV1().Endpoints(p.i.Namespace())
 }

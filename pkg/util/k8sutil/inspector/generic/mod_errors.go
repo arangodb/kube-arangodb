@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,21 +18,22 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1beta1
+package generic
 
 import (
-	policyv1beta1 "k8s.io/api/policy/v1beta1"
+	"fmt"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/gvk"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-type Inspector interface {
-	gvk.GVK
-
-	GetSimple(name string) (*policyv1beta1.PodDisruptionBudget, bool)
-	Iterate(action Action, filters ...Filter) error
-	Read() ReadInterface
+func newNotImplementedError(gvk schema.GroupVersionKind) error {
+	return notImplementedError{gvk: gvk}
 }
 
-type Filter func(podDisruptionBudget *policyv1beta1.PodDisruptionBudget) bool
-type Action func(podDisruptionBudget *policyv1beta1.PodDisruptionBudget) error
+type notImplementedError struct {
+	gvk schema.GroupVersionKind
+}
+
+func (n notImplementedError) Error() string {
+	return fmt.Sprintf("Action is not implemented for %s", n.gvk.String())
+}

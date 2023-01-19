@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,8 +25,7 @@ import (
 
 	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	core "k8s.io/api/core/v1"
-	policyv1 "k8s.io/api/policy/v1"
-	policyv1beta1 "k8s.io/api/policy/v1beta1"
+	policy "k8s.io/api/policy/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
@@ -245,7 +244,7 @@ func (r *Resources) EnsurePodDisruptionBudgetsLabels(ctx context.Context, cached
 	changed := false
 
 	if inspector, err := cachedStatus.PodDisruptionBudget().V1(); err == nil {
-		if err := inspector.Iterate(func(budget *policyv1.PodDisruptionBudget) error {
+		if err := inspector.Iterate(func(budget *policy.PodDisruptionBudget) error {
 			if r.ensureLabelsMap(budget.Kind, budget, r.context.GetSpec(), func(name string, d []byte) error {
 				return globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 					_, err := cachedStatus.PodDisruptionBudgetsModInterface().V1().Patch(ctxChild, name,
@@ -257,29 +256,7 @@ func (r *Resources) EnsurePodDisruptionBudgetsLabels(ctx context.Context, cached
 			}
 
 			return nil
-		}, func(budget *policyv1.PodDisruptionBudget) bool {
-			return r.isChildResource(budget)
-		}); err != nil {
-			return err
-		}
-	} else {
-		inspector, err := cachedStatus.PodDisruptionBudget().V1Beta1()
-		if err != nil {
-			return err
-		}
-		if err := inspector.Iterate(func(budget *policyv1beta1.PodDisruptionBudget) error {
-			if r.ensureLabelsMap(budget.Kind, budget, r.context.GetSpec(), func(name string, d []byte) error {
-				return globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-					_, err := cachedStatus.PodDisruptionBudgetsModInterface().V1Beta1().Patch(ctxChild, name,
-						types.JSONPatchType, d, meta.PatchOptions{})
-					return err
-				})
-			}) {
-				changed = true
-			}
-
-			return nil
-		}, func(budget *policyv1beta1.PodDisruptionBudget) bool {
+		}, func(budget *policy.PodDisruptionBudget) bool {
 			return r.isChildResource(budget)
 		}); err != nil {
 			return err

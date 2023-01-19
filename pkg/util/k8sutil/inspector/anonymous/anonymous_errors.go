@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,18 +21,19 @@
 package anonymous
 
 import (
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"fmt"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-type Impl interface {
-	Anonymous(gvk schema.GroupVersionKind) (Interface, bool)
+func newInvalidTypeError(gvk schema.GroupVersionKind) error {
+	return invalidTypeError{gvk: gvk}
 }
 
-type Interface interface {
-	generic.ReadClient[meta.Object]
+type invalidTypeError struct {
+	gvk schema.GroupVersionKind
+}
 
-	generic.ModStatusClient[meta.Object]
+func (n invalidTypeError) Error() string {
+	return fmt.Sprintf("Type is invalid for %s", n.gvk.String())
 }

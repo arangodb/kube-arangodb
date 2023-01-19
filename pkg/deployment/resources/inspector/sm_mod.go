@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,13 @@
 package inspector
 
 import (
+	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/mods"
+	servicemonitorv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor/v1"
 )
 
 func (i *inspectorState) ServiceMonitorsModInterface() mods.ServiceMonitorsMods {
@@ -32,4 +38,12 @@ func (i *inspectorState) ServiceMonitorsModInterface() mods.ServiceMonitorsMods 
 
 type serviceMonitorsMod struct {
 	i *inspectorState
+}
+
+func (p serviceMonitorsMod) V1() servicemonitorv1.ModInterface {
+	return generic.NewModThrottle[*monitoring.ServiceMonitor](definitions.ServiceMonitor, p.i.GetThrottles, generic.WithModStatusGetter[*monitoring.ServiceMonitor](constants.ServiceMonitorGKv1(), p.clientv1))
+}
+
+func (p serviceMonitorsMod) clientv1() generic.ModClient[*monitoring.ServiceMonitor] {
+	return p.i.Client().Monitoring().MonitoringV1().ServiceMonitors(p.i.Namespace())
 }

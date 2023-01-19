@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,21 +21,13 @@
 package v1
 
 import (
-	"context"
-
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 )
 
 // ModInterface has methods to work with ArangoMember resources only for creation
 type ModInterface interface {
-	Create(ctx context.Context, arangomember *api.ArangoMember, opts meta.CreateOptions) (*api.ArangoMember, error)
-	Update(ctx context.Context, arangomember *api.ArangoMember, opts meta.UpdateOptions) (*api.ArangoMember, error)
-	UpdateStatus(ctx context.Context, arangomember *api.ArangoMember, opts meta.UpdateOptions) (*api.ArangoMember, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts meta.PatchOptions, subresources ...string) (result *api.ArangoMember, err error)
-	Delete(ctx context.Context, name string, opts meta.DeleteOptions) error
+	generic.ModStatusClient[*api.ArangoMember]
 }
 
 // Interface has methods to work with ArangoMember resources.
@@ -46,5 +38,5 @@ type Interface interface {
 
 // ReadInterface has methods to work with ArangoMember resources with ReadOnly mode.
 type ReadInterface interface {
-	Get(ctx context.Context, name string, opts meta.GetOptions) (*api.ArangoMember, error)
+	generic.ReadClient[*api.ArangoMember]
 }

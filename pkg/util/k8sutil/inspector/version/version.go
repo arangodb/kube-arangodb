@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,11 +26,6 @@ func (v Version) IsV1() bool {
 	return v == V1
 }
 
-func (v Version) IsV1Beta1() bool {
-	return v == V1Beta1
-}
-
 const (
-	V1      Version = "V1"
-	V1Beta1 Version = "V1Beta1"
+	V1 Version = "V1"
 )
