@@ -142,13 +142,15 @@ func (h *handler) prepareK8sJob(job *appsApi.ArangoJob) (*batch.Job, error) {
 		return &k8sJob, err
 	}
 
-	if deployment.Spec.TLS.IsSecure() {
+	spec := deployment.GetAcceptedSpec()
+
+	if spec.TLS.IsSecure() {
 		k8sJob.Spec.Template.Spec.Volumes = []core.Volume{
 			{
 				Name: shared.TlsKeyfileVolumeName,
 				VolumeSource: core.VolumeSource{
 					Secret: &core.SecretVolumeSource{
-						SecretName: deployment.Spec.TLS.GetCASecretName(),
+						SecretName: spec.TLS.GetCASecretName(),
 					},
 				},
 			},
@@ -162,7 +164,7 @@ func (h *handler) prepareK8sJob(job *appsApi.ArangoJob) (*batch.Job, error) {
 	}
 
 	initContainer := k8sutil.ArangodWaiterInitContainer(api.ServerGroupReservedInitContainerNameWait, deployment.Name, executable,
-		h.operator.Image(), deployment.Spec.TLS.IsSecure(), &core.SecurityContext{})
+		h.operator.Image(), spec.TLS.IsSecure(), &core.SecurityContext{})
 
 	k8sJob.Spec.Template.Spec.InitContainers = append(k8sJob.Spec.Template.Spec.InitContainers, initContainer)
 

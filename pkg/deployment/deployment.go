@@ -141,7 +141,7 @@ func (d *Deployment) IsSyncEnabled() bool {
 	d.currentObjectLock.RLock()
 	defer d.currentObjectLock.RUnlock()
 
-	if d.currentObject.Spec.Sync.IsEnabled() {
+	if d.currentObject.GetAcceptedSpec().Sync.IsEnabled() {
 		return true
 	}
 
