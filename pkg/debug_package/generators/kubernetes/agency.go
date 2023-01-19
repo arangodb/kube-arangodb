@@ -57,7 +57,7 @@ func agencyDump(logger zerolog.Logger, files chan<- shared.File) error {
 	}
 
 	for _, deployment := range deployments {
-		if !deployment.Spec.Mode.HasAgents() {
+		if !deployment.GetAcceptedSpec().Mode.HasAgents() {
 			continue
 		}
 

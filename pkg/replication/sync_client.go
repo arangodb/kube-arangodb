@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -114,7 +114,7 @@ func (dr *DeploymentReplication) createArangoSyncEndpoint(epSpec api.EndpointSpe
 			dr.log.Err(err).Str("deployment", deploymentName).Debug("Failed to get deployment")
 			return nil, errors.WithStack(err)
 		}
-		dnsName := k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(depl, depl.Spec.ClusterDomain)
+		dnsName := k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(depl, depl.GetAcceptedSpec().ClusterDomain)
 		return client.Endpoint{"https://" + net.JoinHostPort(dnsName, strconv.Itoa(shared.ArangoSyncMasterPort))}, nil
 	}
 	return client.Endpoint(epSpec.MasterEndpoint), nil
@@ -176,7 +176,7 @@ func (dr *DeploymentReplication) getEndpointSecretNames(epSpec api.EndpointSpec)
 			dr.log.Err(err).Str("deployment", deploymentName).Debug("Failed to get deployment")
 			return "", "", "", "", errors.WithStack(err)
 		}
-		return clientAuthCertKeyfileSecretName, userSecretName, depl.Spec.Sync.Authentication.GetJWTSecretName(), depl.Spec.Sync.TLS.GetCASecretName(), nil
+		return clientAuthCertKeyfileSecretName, userSecretName, depl.GetAcceptedSpec().Sync.Authentication.GetJWTSecretName(), depl.GetAcceptedSpec().Sync.TLS.GetCASecretName(), nil
 	}
 	return clientAuthCertKeyfileSecretName, userSecretName, "", epSpec.TLS.GetCASecretName(), nil
 }
