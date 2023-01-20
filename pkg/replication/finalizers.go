@@ -151,7 +151,7 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 	}
 
 	// Get status from sync master.
-	syncInfo, err := destClient.Master().Status(ctx)
+	syncInfo, err := destClient.Master().Status(ctx, client.GetSyncStatusDetailsShort)
 	if err != nil {
 		return false, errors.WithMessage(err, "Failed to get status from target master")
 	}

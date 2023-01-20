@@ -63,6 +63,10 @@ github.com/arangodb-helper/go-certificates v0.0.0-20180821055445-9fca24fc2680 h1
 github.com/arangodb-helper/go-certificates v0.0.0-20180821055445-9fca24fc2680/go.mod h1:xDyzBwyYzcEhsaDXtmxCNM4p5BrtuoVYYsRTuJqmCeg=
 github.com/arangodb/arangosync-client v0.8.0 h1:lZzT8ERzkAZWjCZR7HUoTFjAep6KcpNsioWE6t+0ggQ=
 github.com/arangodb/arangosync-client v0.8.0/go.mod h1:TwzM8ll85P4Iu+MRq3BTUwsMLDOoaPREKDnwvyRS+70=
+github.com/arangodb/arangosync-client v0.8.1-0.20230120154617-a4ae374af8cd h1:CIrFed1D1Y8+yYqt4LEFltYdI12ZeDcpwz/OaYhNnCg=
+github.com/arangodb/arangosync-client v0.8.1-0.20230120154617-a4ae374af8cd/go.mod h1:kU2UaOkv2AeHLAFMEo4Ug3qLbUQVKOuRtkfr6pZqmuk=
+github.com/arangodb/arangosync-client v0.9.0 h1:XhY+5gGGpl9Gk8Prqmdv0SpK3HydFUXvN2CmTIKUxKI=
+github.com/arangodb/arangosync-client v0.9.0/go.mod h1:kU2UaOkv2AeHLAFMEo4Ug3qLbUQVKOuRtkfr6pZqmuk=
 github.com/arangodb/go-driver v1.2.1 h1:HREDHhDmzdIWxHmfkfTESbYUnRjESjPh4WUuXq7FZa8=
 github.com/arangodb/go-driver v1.2.1/go.mod h1:zdDkJJnCj8DAkfbtIjIXnsTrWIiy6VhP3Vy14p+uQeY=
 github.com/arangodb/go-driver/v2 v2.0.0-20211021031401-d92dcd5a4c83 h1:PCbi3alUFastUw6InBKGEXqniveJJcQuMYspubJMRS8=
