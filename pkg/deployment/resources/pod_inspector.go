@@ -471,7 +471,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 			if _, exists := cachedStatus.Pod().V1().GetSimple(podName); !exists {
 				log.Str("pod-name", podName).Debug("Does not exist")
 				switch m.Phase {
-				case api.MemberPhaseNone, api.MemberPhasePending:
+				case api.MemberPhaseNone, api.MemberPhasePending, api.MemberPhaseCreationFailed:
 					// Do nothing
 					log.Str("pod-name", podName).Debug("PodPhase is None, waiting for the pod to be recreated")
 				case api.MemberPhaseShuttingDown, api.MemberPhaseUpgrading, api.MemberPhaseFailed, api.MemberPhaseRotateStart, api.MemberPhaseRotating:

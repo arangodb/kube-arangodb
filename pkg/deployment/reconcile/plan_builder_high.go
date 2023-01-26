@@ -105,6 +105,15 @@ func (r *Reconciler) updateMemberPhasePlan(ctx context.Context, apiObject k8suti
 			)
 			plan = append(plan, p...)
 		}
+
+		if e.Member.Phase == api.MemberPhaseCreationFailed {
+			var p api.Plan
+			p = append(p,
+				actions.NewAction(api.ActionTypeMemberPhaseUpdate, e.Group, e.Member,
+					"Move to None phase due to Creation Error").AddParam(actionTypeMemberPhaseUpdatePhaseKey, api.MemberPhaseNone.String()),
+			)
+			plan = append(plan, p...)
+		}
 	}
 
 	return plan

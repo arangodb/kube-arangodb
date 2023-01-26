@@ -40,6 +40,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/member"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -438,8 +439,12 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 
 		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
+
 		podName, uid, err := CreateArangoPod(ctxChild, cachedStatus.PodsModInterface().V1(), apiObject, spec, group, CreatePodFromTemplate(template.PodSpec))
 		if err != nil {
+			if uerr := r.context.WithMemberStatusUpdateErr(ctx, m.ID, group, updateMemberPhase(api.MemberPhaseCreationFailed)); uerr != nil {
+				return errors.WithStack(uerr)
+			}
 			return errors.WithStack(err)
 		}
 
@@ -486,6 +491,9 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 		defer cancel()
 		podName, uid, err := CreateArangoPod(ctxChild, cachedStatus.PodsModInterface().V1(), apiObject, spec, group, CreatePodFromTemplate(template.PodSpec))
 		if err != nil {
+			if uerr := r.context.WithMemberStatusUpdateErr(ctx, m.ID, group, updateMemberPhase(api.MemberPhaseCreationFailed)); uerr != nil {
+				return errors.WithStack(uerr)
+			}
 			return errors.WithStack(err)
 		}
 
@@ -690,4 +698,20 @@ func CreatePodSuffix(spec api.DeploymentSpec) string {
 	raw, _ := json.Marshal(spec)
 	hash := sha1.Sum(raw)
 	return fmt.Sprintf("%0x", hash)[:6]
+}
+
+func updateMemberPhase(phase api.MemberPhase) reconciler.DeploymentMemberStatusUpdateErrFunc {
+	return func(s *api.MemberStatus) (bool, error) {
+		if s == nil {
+			return false, nil
+		}
+
+		if s.Phase == phase {
+			return false, nil
+		}
+
+		s.Phase = phase
+
+		return true, nil
+	}
 }
