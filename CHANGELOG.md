@@ -5,7 +5,7 @@
 - (DebugPackage) Add Agency Dump & State
 - (Bugfix) Fix After leaked GoRoutines
 - (Bugfix) Ensure proper ArangoDeployment Spec usage in ArangoSync
-- (Feature) Add Generics & Drom policy/v1beta1 support
+- (Feature) Add Generics & Drop policy/v1beta1 support
 
 ## [1.2.23](https://github.com/arangodb/kube-arangodb/tree/1.2.23) (2023-01-12)
 - (Bugfix) Remove PDBs if group count is 0
