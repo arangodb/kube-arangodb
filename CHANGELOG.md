@@ -1,11 +1,13 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Feature) Add Generics & Drop policy/v1beta1 support
+
+## [1.2.24](https://github.com/arangodb/kube-arangodb/tree/1.2.24) (2023-01-25)
 - (Bugfix) Fix deployment creation on ARM64
 - (DebugPackage) Add Agency Dump & State
 - (Bugfix) Fix After leaked GoRoutines
 - (Bugfix) Ensure proper ArangoDeployment Spec usage in ArangoSync
-- (Feature) Add Generics & Drop policy/v1beta1 support
 
 ## [1.2.23](https://github.com/arangodb/kube-arangodb/tree/1.2.23) (2023-01-12)
 - (Bugfix) Remove PDBs if group count is 0
