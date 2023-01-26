@@ -51,6 +51,13 @@ type clientMetrics struct {
 	metrics map[definitions.Component]map[definitions.Verb]clientMetricsFields
 }
 
+func (c *clientMetrics) reset() {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	c.metrics = nil
+}
+
 func (c *clientMetrics) CollectMetrics(in metrics.PushMetric) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
@@ -92,11 +99,15 @@ func (c *clientMetrics) Request(definition definitions.Component, verb definitio
 
 	f.calls++
 
+	if err != nil {
+		f.errors++
+	}
+
 	c.metrics[definition][verb] = f
 
 	// Logging
 
-	log := clientLogger.Str("name", name).Err(err)
+	log := clientLogger.Str("name", name).Str("kind", string(definition)).Str("verb", string(verb)).Err(err)
 
 	if err == nil {
 		call := log.Debug

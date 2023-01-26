@@ -41,7 +41,7 @@ type podsMod struct {
 }
 
 func (p podsMod) V1() podv1.ModInterface {
-	return wrapMod[*core.Pod](definitions.Endpoints, p.i.GetThrottles, generic.WithModStatusGetter[*core.Pod](constants.PodGKv1(), p.clientv1))
+	return wrapMod[*core.Pod](definitions.Pod, p.i.GetThrottles, generic.WithModStatusGetter[*core.Pod](constants.PodGKv1(), p.clientv1))
 }
 
 func (p podsMod) clientv1() generic.ModClient[*core.Pod] {

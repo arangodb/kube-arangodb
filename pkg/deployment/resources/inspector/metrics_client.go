@@ -58,7 +58,7 @@ func (s statusClientMetrics[S]) Update(ctx context.Context, obj S, opts meta.Upd
 
 func (s statusClientMetrics[S]) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts meta.PatchOptions, subresources ...string) (result S, err error) {
 	r, err := s.in.Patch(ctx, name, pt, data, opts, subresources...)
-	clientMetricsInstance.Request(s.component, definitions.Create, name, err)
+	clientMetricsInstance.Request(s.component, definitions.Patch, name, err)
 	return r, err
 }
 
