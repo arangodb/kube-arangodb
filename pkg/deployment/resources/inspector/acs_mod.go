@@ -39,7 +39,7 @@ type arangoClusterSynchronizationMod struct {
 }
 
 func (p arangoClusterSynchronizationMod) V1() arangoclustersynchronizationv1.ModInterface {
-	return generic.NewModThrottle[*api.ArangoClusterSynchronization](definitions.ArangoClusterSynchronization, p.i.GetThrottles, p.clientv1)
+	return wrapMod[*api.ArangoClusterSynchronization](definitions.ArangoClusterSynchronization, p.i.GetThrottles, p.clientv1)
 }
 
 func (p arangoClusterSynchronizationMod) clientv1() generic.ModStatusClient[*api.ArangoClusterSynchronization] {

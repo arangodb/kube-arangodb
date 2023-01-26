@@ -18,16 +18,22 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package definitions
+package metric_descriptions
 
-type Verb string
+import "github.com/arangodb/kube-arangodb/pkg/util/metrics"
 
-const (
-	Create       Verb = "create"
-	Delete       Verb = "delete"
-	ForceDelete  Verb = "force-delete"
-	Get          Verb = "get"
-	Patch        Verb = "patch"
-	Update       Verb = "update"
-	UpdateStatus Verb = "update-status"
+var (
+	arangodbOperatorKubernetesClientRequests = metrics.NewDescription("arangodb_operator_kubernetes_client_requests", "Number of Kubernetes Client requests", []string{`component`, `verb`}, nil)
 )
+
+func init() {
+	registerDescription(arangodbOperatorKubernetesClientRequests)
+}
+
+func ArangodbOperatorKubernetesClientRequests() metrics.Description {
+	return arangodbOperatorKubernetesClientRequests
+}
+
+func ArangodbOperatorKubernetesClientRequestsCounter(value float64, component string, verb string) metrics.Metric {
+	return ArangodbOperatorKubernetesClientRequests().Gauge(value, component, verb)
+}

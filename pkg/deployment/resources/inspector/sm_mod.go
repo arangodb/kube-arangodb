@@ -41,7 +41,7 @@ type serviceMonitorsMod struct {
 }
 
 func (p serviceMonitorsMod) V1() servicemonitorv1.ModInterface {
-	return generic.NewModThrottle[*monitoring.ServiceMonitor](definitions.ServiceMonitor, p.i.GetThrottles, generic.WithModStatusGetter[*monitoring.ServiceMonitor](constants.ServiceMonitorGKv1(), p.clientv1))
+	return wrapMod[*monitoring.ServiceMonitor](definitions.ServiceMonitor, p.i.GetThrottles, generic.WithModStatusGetter[*monitoring.ServiceMonitor](constants.ServiceMonitorGKv1(), p.clientv1))
 }
 
 func (p serviceMonitorsMod) clientv1() generic.ModClient[*monitoring.ServiceMonitor] {

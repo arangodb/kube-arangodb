@@ -41,7 +41,7 @@ type podDisruptionBudgetsMod struct {
 }
 
 func (p podDisruptionBudgetsMod) V1() policyv1.ModInterface {
-	return generic.NewModThrottle[*policy.PodDisruptionBudget](definitions.PodDisruptionBudget, p.i.GetThrottles, generic.WithModStatusGetter[*policy.PodDisruptionBudget](constants.PodDisruptionBudgetGKv1(), p.clientv1))
+	return wrapMod[*policy.PodDisruptionBudget](definitions.PodDisruptionBudget, p.i.GetThrottles, generic.WithModStatusGetter[*policy.PodDisruptionBudget](constants.PodDisruptionBudgetGKv1(), p.clientv1))
 }
 
 func (p podDisruptionBudgetsMod) clientv1() generic.ModClient[*policy.PodDisruptionBudget] {
