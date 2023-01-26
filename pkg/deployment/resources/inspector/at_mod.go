@@ -39,7 +39,7 @@ type arangoTaskMod struct {
 }
 
 func (p arangoTaskMod) V1() arangotaskv1.ModInterface {
-	return generic.NewModThrottle[*api.ArangoTask](definitions.ArangoTask, p.i.GetThrottles, p.clientv1)
+	return wrapMod[*api.ArangoTask](definitions.ArangoTask, p.i.GetThrottles, p.clientv1)
 }
 
 func (p arangoTaskMod) clientv1() generic.ModStatusClient[*api.ArangoTask] {

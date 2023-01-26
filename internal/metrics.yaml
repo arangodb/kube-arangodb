@@ -243,5 +243,22 @@ namespaces:
           - priority: Warning
             query: irate(arangodb_operator_engine_ops_alerts[1m]) > 1
             description: "Trigger an alert if OPS attention is needed"
-
-        
+    kubernetes_client:
+      requests:
+        shortDescription: "Number of Kubernetes Client requests"
+        description: "Number of Kubernetes Client requests"
+        type: "Counter"
+        labels:
+          - key: component
+            description: "K8S Resource name"
+          - key: verb
+            description: "Verb (create,update,update-status,patch,delete,force-delete)"
+      request_errors:
+        shortDescription: "Number of Kubernetes Client request errors"
+        description: "Number of Kubernetes Client request errors"
+        type: "Counter"
+        labels:
+          - key: component
+            description: "K8S Resource name"
+          - key: verb
+            description: "Verb (create,update,update-status,patch,delete,force-delete)"

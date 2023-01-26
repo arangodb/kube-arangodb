@@ -41,7 +41,7 @@ type secretsMod struct {
 }
 
 func (p secretsMod) V1() secretv1.ModInterface {
-	return generic.NewModThrottle[*core.Secret](definitions.Endpoints, p.i.GetThrottles, generic.WithModStatusGetter[*core.Secret](constants.SecretGKv1(), p.clientv1))
+	return wrapMod[*core.Secret](definitions.Secret, p.i.GetThrottles, generic.WithModStatusGetter[*core.Secret](constants.SecretGKv1(), p.clientv1))
 }
 
 func (p secretsMod) clientv1() generic.ModClient[*core.Secret] {

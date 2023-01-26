@@ -41,7 +41,7 @@ type persistentVolumeClaimsMod struct {
 }
 
 func (p persistentVolumeClaimsMod) V1() persistentvolumeclaimv1.ModInterface {
-	return generic.NewModThrottle[*core.PersistentVolumeClaim](definitions.Endpoints, p.i.GetThrottles, generic.WithModStatusGetter[*core.PersistentVolumeClaim](constants.PersistentVolumeClaimGKv1(), p.clientv1))
+	return wrapMod[*core.PersistentVolumeClaim](definitions.PersistentVolumeClaim, p.i.GetThrottles, generic.WithModStatusGetter[*core.PersistentVolumeClaim](constants.PersistentVolumeClaimGKv1(), p.clientv1))
 }
 
 func (p persistentVolumeClaimsMod) clientv1() generic.ModClient[*core.PersistentVolumeClaim] {
