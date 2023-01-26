@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,16 +23,16 @@ package v1
 import (
 	"context"
 
-	policyv1 "k8s.io/api/policy/v1"
+	policy "k8s.io/api/policy/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
 
 // ModInterface has methods to work with PodDisruptionBudget resources only for creation
 type ModInterface interface {
-	Create(ctx context.Context, poddisruptionbudget *policyv1.PodDisruptionBudget, opts meta.CreateOptions) (*policyv1.PodDisruptionBudget, error)
-	Update(ctx context.Context, poddisruptionbudget *policyv1.PodDisruptionBudget, opts meta.UpdateOptions) (*policyv1.PodDisruptionBudget, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts meta.PatchOptions, subresources ...string) (result *policyv1.PodDisruptionBudget, err error)
+	Create(ctx context.Context, poddisruptionbudget *policy.PodDisruptionBudget, opts meta.CreateOptions) (*policy.PodDisruptionBudget, error)
+	Update(ctx context.Context, poddisruptionbudget *policy.PodDisruptionBudget, opts meta.UpdateOptions) (*policy.PodDisruptionBudget, error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts meta.PatchOptions, subresources ...string) (result *policy.PodDisruptionBudget, err error)
 	Delete(ctx context.Context, name string, opts meta.DeleteOptions) error
 }
 
@@ -44,5 +44,5 @@ type Interface interface {
 
 // ReadInterface has methods to work with PodDisruptionBudget resources with ReadOnly mode.
 type ReadInterface interface {
-	Get(ctx context.Context, name string, opts meta.GetOptions) (*policyv1.PodDisruptionBudget, error)
+	Get(ctx context.Context, name string, opts meta.GetOptions) (*policy.PodDisruptionBudget, error)
 }

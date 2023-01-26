@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,8 +23,7 @@ package constants
 import (
 	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	core "k8s.io/api/core/v1"
-	policyv1 "k8s.io/api/policy/v1"
-	policyv1beta1 "k8s.io/api/policy/v1beta1"
+	policy "k8s.io/api/policy/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -43,10 +42,8 @@ func ExtractGVKFromObject(in interface{}) (schema.GroupVersionKind, bool) {
 			return EndpointsGKv1(), true
 		case *core.Node, core.Node:
 			return NodeGKv1(), true
-		case *policyv1.PodDisruptionBudget, policyv1.PodDisruptionBudget:
+		case *policy.PodDisruptionBudget, policy.PodDisruptionBudget:
 			return PodDisruptionBudgetGKv1(), true
-		case *policyv1beta1.PodDisruptionBudget, policyv1beta1.PodDisruptionBudget:
-			return PodDisruptionBudgetGKv1Beta1(), true
 		case *core.Pod, core.Pod:
 			return PodGKv1(), true
 		case *core.ServiceAccount, core.ServiceAccount:

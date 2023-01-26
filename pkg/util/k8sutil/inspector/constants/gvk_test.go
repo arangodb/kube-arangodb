@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,8 +27,7 @@ import (
 	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
-	policyv1 "k8s.io/api/policy/v1"
-	policyv1beta1 "k8s.io/api/policy/v1beta1"
+	policy "k8s.io/api/policy/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -40,8 +39,7 @@ func Test_GVK(t *testing.T) {
 	testGVK(t, ArangoTaskGKv1(), &api.ArangoTask{}, api.ArangoTask{})
 	testGVK(t, EndpointsGKv1(), &core.Endpoints{}, core.Endpoints{})
 	testGVK(t, NodeGKv1(), &core.Node{}, core.Node{})
-	testGVK(t, PodDisruptionBudgetGKv1(), &policyv1.PodDisruptionBudget{}, policyv1.PodDisruptionBudget{})
-	testGVK(t, PodDisruptionBudgetGKv1Beta1(), &policyv1beta1.PodDisruptionBudget{}, policyv1beta1.PodDisruptionBudget{})
+	testGVK(t, PodDisruptionBudgetGKv1(), &policy.PodDisruptionBudget{}, policy.PodDisruptionBudget{})
 	testGVK(t, PodGKv1(), &core.Pod{}, core.Pod{})
 	testGVK(t, ServiceAccountGKv1(), &core.ServiceAccount{}, core.ServiceAccount{})
 	testGVK(t, ServiceGKv1(), &core.Service{}, core.Service{})

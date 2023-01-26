@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,13 +21,13 @@
 package constants
 
 import (
-	policyv1 "k8s.io/api/policy/v1"
+	policy "k8s.io/api/policy/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 // PodDisruptionBudget
 const (
-	PodDisruptionBudgetGroup          = policyv1.GroupName
+	PodDisruptionBudgetGroup          = policy.GroupName
 	PodDisruptionBudgetResource       = "poddisruptionbudgets"
 	PodDisruptionBudgetKind           = "PodDisruptionBudget"
 	PodDisruptionBudgetVersionV1Beta1 = "v1beta1"
@@ -38,14 +38,6 @@ func PodDisruptionBudgetGK() schema.GroupKind {
 	return schema.GroupKind{
 		Group: PodDisruptionBudgetGroup,
 		Kind:  PodDisruptionBudgetKind,
-	}
-}
-
-func PodDisruptionBudgetGKv1Beta1() schema.GroupVersionKind {
-	return schema.GroupVersionKind{
-		Group:   PodDisruptionBudgetGroup,
-		Kind:    PodDisruptionBudgetKind,
-		Version: PodDisruptionBudgetVersionV1Beta1,
 	}
 }
 
@@ -69,13 +61,5 @@ func PodDisruptionBudgetGRv1() schema.GroupVersionResource {
 		Group:    PodDisruptionBudgetGroup,
 		Resource: PodDisruptionBudgetResource,
 		Version:  PodDisruptionBudgetVersionV1,
-	}
-}
-
-func PodDisruptionBudgetGRv1Beta1() schema.GroupVersionResource {
-	return schema.GroupVersionResource{
-		Group:    PodDisruptionBudgetGroup,
-		Resource: PodDisruptionBudgetResource,
-		Version:  PodDisruptionBudgetVersionV1Beta1,
 	}
 }

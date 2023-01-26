@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,14 +21,16 @@
 package inspector
 
 import (
+	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 )
 
 func (p *endpointsInspector) Anonymous(gvk schema.GroupVersionKind) (anonymous.Interface, bool) {
-	g := constants.EndpointsGK()
+	g := constants.EndpointsGKv1()
 
 	if g.Kind == gvk.Kind && g.Group == gvk.Group {
 		switch gvk.Version {
@@ -36,7 +38,7 @@ func (p *endpointsInspector) Anonymous(gvk schema.GroupVersionKind) (anonymous.I
 			if p.v1 == nil || p.v1.err != nil {
 				return nil, false
 			}
-			return &endpointsInspectorAnonymousV1{i: p.state}, true
+			return anonymous.NewAnonymous[*core.Endpoints](g, p.state.endpoints.v1, generic.WithModStatus[*core.Endpoints](g, p.state.EndpointsModInterface().V1())), true
 		}
 	}
 

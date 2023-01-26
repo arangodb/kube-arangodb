@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,8 +25,7 @@ import (
 
 	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	core "k8s.io/api/core/v1"
-	policyv1 "k8s.io/api/policy/v1"
-	policyv1beta1 "k8s.io/api/policy/v1beta1"
+	policy "k8s.io/api/policy/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
@@ -107,10 +106,7 @@ func (r *Resources) EnsureAnnotations(ctx context.Context, cachedStatus inspecto
 				return err
 			}
 
-			_, err := cachedStatus.PodDisruptionBudgetsModInterface().V1Beta1().Patch(ctxChild, name,
-				types.JSONPatchType, d, meta.PatchOptions{})
-
-			return err
+			return nil
 		})
 	}
 
@@ -219,29 +215,16 @@ func (r *Resources) ensureServicesAnnotations(patch PatchFunc, cachedStatus insp
 func (r *Resources) ensurePdbsAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Inspector, kind, name, namespace string,
 	spec api.DeploymentSpec) error {
 	if inspector, err := cachedStatus.PodDisruptionBudget().V1(); err == nil {
-		if err := inspector.Iterate(func(podDisruptionBudget *policyv1.PodDisruptionBudget) error {
+		if err := inspector.Iterate(func(podDisruptionBudget *policy.PodDisruptionBudget) error {
 			r.ensureAnnotationsMap(podDisruptionBudget.Kind, podDisruptionBudget, spec, patch)
 			return nil
-		}, func(podDisruptionBudget *policyv1.PodDisruptionBudget) bool {
+		}, func(podDisruptionBudget *policy.PodDisruptionBudget) bool {
 			return tools.IsChildResource(kind, name, namespace, podDisruptionBudget)
 		}); err != nil {
 			return err
 		}
 
 		return nil
-	}
-
-	inspector, err := cachedStatus.PodDisruptionBudget().V1Beta1()
-	if err != nil {
-		return err
-	}
-	if err := inspector.Iterate(func(podDisruptionBudget *policyv1beta1.PodDisruptionBudget) error {
-		r.ensureAnnotationsMap(podDisruptionBudget.Kind, podDisruptionBudget, spec, patch)
-		return nil
-	}, func(podDisruptionBudget *policyv1beta1.PodDisruptionBudget) bool {
-		return tools.IsChildResource(kind, name, namespace, podDisruptionBudget)
-	}); err != nil {
-		return err
 	}
 
 	return nil

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,12 +23,13 @@ package inspector
 import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 )
 
 func (p *arangoClusterSynchronizationsInspector) Anonymous(gvk schema.GroupVersionKind) (anonymous.Interface, bool) {
-	g := constants.ArangoClusterSynchronizationGK()
+	g := constants.ArangoClusterSynchronizationGKv1()
 
 	if g.Kind == gvk.Kind && g.Group == gvk.Group {
 		switch gvk.Version {
@@ -36,7 +37,7 @@ func (p *arangoClusterSynchronizationsInspector) Anonymous(gvk schema.GroupVersi
 			if p.v1 == nil || p.v1.err != nil {
 				return nil, false
 			}
-			return &arangoClusterSynchronizationsInspectorAnonymousV1{i: p.state}, true
+			return anonymous.NewAnonymous[*api.ArangoClusterSynchronization](g, p.state.arangoClusterSynchronizations.v1, p.state.ArangoClusterSynchronizationModInterface().V1()), true
 		}
 	}
 

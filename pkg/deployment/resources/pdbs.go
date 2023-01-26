@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,8 +24,7 @@ import (
 	"context"
 	"fmt"
 
-	policyv1 "k8s.io/api/policy/v1"
-	policyv1beta1 "k8s.io/api/policy/v1beta1"
+	policy "k8s.io/api/policy/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
@@ -98,28 +97,13 @@ func PDBNameForGroup(depl string, group api.ServerGroup) string {
 	return fmt.Sprintf("%s-%s-pdb", depl, group.AsRole())
 }
 
-func newPDBV1Beta1(minAvail int, deplname string, group api.ServerGroup, owner meta.OwnerReference) *policyv1beta1.PodDisruptionBudget {
-	return &policyv1beta1.PodDisruptionBudget{
+func newPDBV1(minAvail int, deplname string, group api.ServerGroup, owner meta.OwnerReference) *policy.PodDisruptionBudget {
+	return &policy.PodDisruptionBudget{
 		ObjectMeta: meta.ObjectMeta{
 			Name:            PDBNameForGroup(deplname, group),
 			OwnerReferences: []meta.OwnerReference{owner},
 		},
-		Spec: policyv1beta1.PodDisruptionBudgetSpec{
-			MinAvailable: newFromInt(minAvail),
-			Selector: &meta.LabelSelector{
-				MatchLabels: k8sutil.LabelsForDeployment(deplname, group.AsRole()),
-			},
-		},
-	}
-}
-
-func newPDBV1(minAvail int, deplname string, group api.ServerGroup, owner meta.OwnerReference) *policyv1.PodDisruptionBudget {
-	return &policyv1.PodDisruptionBudget{
-		ObjectMeta: meta.ObjectMeta{
-			Name:            PDBNameForGroup(deplname, group),
-			OwnerReferences: []meta.OwnerReference{owner},
-		},
-		Spec: policyv1.PodDisruptionBudgetSpec{
+		Spec: policy.PodDisruptionBudgetSpec{
 			MinAvailable: newFromInt(minAvail),
 			Selector: &meta.LabelSelector{
 				MatchLabels: k8sutil.LabelsForDeployment(deplname, group.AsRole()),
@@ -152,15 +136,6 @@ func (r *Resources) ensurePDBForGroup(ctx context.Context, group api.ServerGroup
 				minAvailable = pdb.Spec.MinAvailable
 				deletionTimestamp = pdb.GetDeletionTimestamp()
 			}
-		} else if inspector, err := cache.PodDisruptionBudget().V1Beta1(); err == nil {
-			if pdb, err := inspector.Read().Get(ctxChild, pdbName, meta.GetOptions{}); err != nil {
-				return err
-			} else {
-				minAvailable = pdb.Spec.MinAvailable
-				deletionTimestamp = pdb.GetDeletionTimestamp()
-			}
-		} else {
-			return errors.WithStack(err)
 		}
 
 		return nil
@@ -176,9 +151,6 @@ func (r *Resources) ensurePDBForGroup(ctx context.Context, group api.ServerGroup
 				if cache.PodDisruptionBudget().Version().IsV1() {
 					pdb := newPDBV1(wantedMinAvail, deplName, group, r.context.GetAPIObject().AsOwner())
 					_, errInternal = pdbMod.V1().Create(ctxChild, pdb, meta.CreateOptions{})
-				} else {
-					pdb := newPDBV1Beta1(wantedMinAvail, deplName, group, r.context.GetAPIObject().AsOwner())
-					_, errInternal = pdbMod.V1Beta1().Create(ctxChild, pdb, meta.CreateOptions{})
 				}
 
 				return errInternal
@@ -214,7 +186,7 @@ func (r *Resources) ensurePDBForGroup(ctx context.Context, group api.ServerGroup
 				return pdbMod.V1().Delete(ctxChild, pdbName, meta.DeleteOptions{})
 			}
 
-			return pdbMod.V1Beta1().Delete(ctxChild, pdbName, meta.DeleteOptions{})
+			return nil
 		})
 		if err != nil && !kerrors.IsNotFound(err) {
 			log.Err(err).Error("PDB deletion failed")

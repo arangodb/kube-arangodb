@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,10 @@
 package inspector
 
 import (
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	arangomemberv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/mods"
 )
 
@@ -32,4 +36,12 @@ func (i *inspectorState) ArangoMemberModInterface() mods.ArangoMemberMods {
 
 type arangoMemberMod struct {
 	i *inspectorState
+}
+
+func (p arangoMemberMod) V1() arangomemberv1.ModInterface {
+	return generic.NewModThrottle[*api.ArangoMember](definitions.ArangoMember, p.i.GetThrottles, p.clientv1)
+}
+
+func (p arangoMemberMod) clientv1() generic.ModStatusClient[*api.ArangoMember] {
+	return p.i.Client().Arango().DatabaseV1().ArangoMembers(p.i.Namespace())
 }

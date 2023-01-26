@@ -39,6 +39,8 @@ linters-settings:
         alias: batch
       - pkg: k8s.io/api/storage/v1
         alias: storage
+      - pkg: k8s.io/api/policy/v1
+        alias: policy
   gci:
     sections:
       - standard

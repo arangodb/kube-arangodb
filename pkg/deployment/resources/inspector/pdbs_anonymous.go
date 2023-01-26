@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,14 +21,16 @@
 package inspector
 
 import (
+	policy "k8s.io/api/policy/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 )
 
 func (p *podDisruptionBudgetsInspector) Anonymous(gvk schema.GroupVersionKind) (anonymous.Interface, bool) {
-	g := constants.PodDisruptionBudgetGK()
+	g := constants.PodDisruptionBudgetGKv1()
 
 	if g.Kind == gvk.Kind && g.Group == gvk.Group {
 		switch gvk.Version {
@@ -36,12 +38,7 @@ func (p *podDisruptionBudgetsInspector) Anonymous(gvk schema.GroupVersionKind) (
 			if p.v1 == nil || p.v1.err != nil {
 				return nil, false
 			}
-			return &podDisruptionBudgetsInspectorAnonymousV1{i: p.state}, true
-		case constants.PodDisruptionBudgetVersionV1Beta1:
-			if p.v1beta1 == nil || p.v1beta1.err != nil {
-				return nil, false
-			}
-			return &podDisruptionBudgetsInspectorAnonymousV1Beta1{i: p.state}, true
+			return anonymous.NewAnonymous[*policy.PodDisruptionBudget](g, p.state.podDisruptionBudgets.v1, generic.WithModStatus[*policy.PodDisruptionBudget](g, p.state.PodDisruptionBudgetsModInterface().V1())), true
 		}
 	}
 

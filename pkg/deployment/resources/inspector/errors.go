@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,29 +23,29 @@ package inspector
 import (
 	"fmt"
 
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"github.com/arangodb/go-driver"
 )
 
-func newNotImplementedError(gvk schema.GroupVersionKind) error {
-	return notImplementedError{gvk: gvk}
+func newMinK8SVersion(ver driver.Version) error {
+	return minK8SVersion{ver: ver}
 }
 
-type notImplementedError struct {
-	gvk schema.GroupVersionKind
+type minK8SVersion struct {
+	ver driver.Version
 }
 
-func (n notImplementedError) Error() string {
-	return fmt.Sprintf("Action is not implemented for %s", n.gvk.String())
+func (m minK8SVersion) Error() string {
+	return fmt.Sprintf("Kubernetes %s or lower is not supported anymore", m.ver)
 }
 
-func newInvalidTypeError(gvk schema.GroupVersionKind) error {
-	return invalidTypeError{gvk: gvk}
-}
+func IsK8SVersion(err error) (driver.Version, bool) {
+	if err == nil {
+		return "", false
+	}
 
-type invalidTypeError struct {
-	gvk schema.GroupVersionKind
-}
+	if v, ok := err.(minK8SVersion); ok {
+		return v.ver, true
+	}
 
-func (n invalidTypeError) Error() string {
-	return fmt.Sprintf("Type is invalid for %s", n.gvk.String())
+	return "", false
 }

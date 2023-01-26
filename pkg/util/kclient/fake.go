@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,8 +26,7 @@ import (
 	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringFake "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/fake"
 	core "k8s.io/api/core/v1"
-	policyv1 "k8s.io/api/policy/v1"
-	policyv1beta1 "k8s.io/api/policy/v1beta1"
+	policy "k8s.io/api/policy/v1"
 	apiextensionsclientFake "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/fake"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -124,8 +123,7 @@ type FakeDataInput struct {
 	Services        map[string]*core.Service
 	PVCS            map[string]*core.PersistentVolumeClaim
 	ServiceAccounts map[string]*core.ServiceAccount
-	PDBSV1Beta1     map[string]*policyv1beta1.PodDisruptionBudget
-	PDBSV1          map[string]*policyv1.PodDisruptionBudget
+	PDBSV1          map[string]*policy.PodDisruptionBudget
 	ServiceMonitors map[string]*monitoring.ServiceMonitor
 	ArangoMembers   map[string]*api.ArangoMember
 	Nodes           map[string]*core.Node
@@ -169,14 +167,6 @@ func (f FakeDataInput) asList() []runtime.Object {
 		r = append(r, c)
 	}
 	for k, v := range f.ServiceAccounts {
-		c := v.DeepCopy()
-		c.SetName(k)
-		if c.GetNamespace() == "" && f.Namespace != "" {
-			c.SetNamespace(f.Namespace)
-		}
-		r = append(r, c)
-	}
-	for k, v := range f.PDBSV1Beta1 {
 		c := v.DeepCopy()
 		c.SetName(k)
 		if c.GetNamespace() == "" && f.Namespace != "" {

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,15 +21,27 @@
 package inspector
 
 import (
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	arangoclustersynchronizationv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoclustersynchronization/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/mods"
 )
 
 func (i *inspectorState) ArangoClusterSynchronizationModInterface() mods.ArangoClusterSynchronizationMods {
-	return arangoClusterSynchronizationMod{
+	return &arangoClusterSynchronizationMod{
 		i: i,
 	}
 }
 
 type arangoClusterSynchronizationMod struct {
 	i *inspectorState
+}
+
+func (p arangoClusterSynchronizationMod) V1() arangoclustersynchronizationv1.ModInterface {
+	return generic.NewModThrottle[*api.ArangoClusterSynchronization](definitions.ArangoClusterSynchronization, p.i.GetThrottles, p.clientv1)
+}
+
+func (p arangoClusterSynchronizationMod) clientv1() generic.ModStatusClient[*api.ArangoClusterSynchronization] {
+	return p.i.Client().Arango().DatabaseV1().ArangoClusterSynchronizations(p.i.Namespace())
 }

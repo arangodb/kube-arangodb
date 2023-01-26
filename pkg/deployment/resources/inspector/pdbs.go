@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,11 +24,8 @@ import (
 	"context"
 	"time"
 
-	policyv1 "k8s.io/api/policy/v1"
-	policyv1beta1 "k8s.io/api/policy/v1beta1"
-	apiErrors "k8s.io/apimachinery/pkg/api/errors"
+	policy "k8s.io/api/policy/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
@@ -53,110 +50,18 @@ func (p podDisruptionBudgetsInspectorLoader) Component() definitions.Component {
 func (p podDisruptionBudgetsInspectorLoader) Load(ctx context.Context, i *inspectorState) {
 	var q podDisruptionBudgetsInspector
 
-	if i.versionInfo.CompareTo("1.21") >= 0 {
+	if i.versionInfo.CompareTo("1.21") >= 1 {
 		p.loadV1(ctx, i, &q)
-
-		q.v1beta1 = &podDisruptionBudgetsInspectorV1Beta1{
-			podDisruptionBudgetInspector: &q,
-			err: apiErrors.NewNotFound(schema.GroupResource{
-				Group:    policyv1beta1.GroupName,
-				Resource: "podDisruptionBudgets",
-			}, ""),
-		}
 	} else {
-		p.loadV1Beta1(ctx, i, &q)
-
 		q.v1 = &podDisruptionBudgetsInspectorV1{
 			podDisruptionBudgetInspector: &q,
-			err: apiErrors.NewNotFound(schema.GroupResource{
-				Group:    policyv1.GroupName,
-				Resource: "podDisruptionBudgets",
-			}, ""),
+			err:                          newMinK8SVersion("1.20"),
 		}
 	}
+
 	i.podDisruptionBudgets = &q
 	q.state = i
 	q.last = time.Now()
-}
-
-func (p podDisruptionBudgetsInspectorLoader) loadV1Beta1(ctx context.Context, i *inspectorState, q *podDisruptionBudgetsInspector) {
-	var z podDisruptionBudgetsInspectorV1Beta1
-
-	z.podDisruptionBudgetInspector = q
-
-	z.podDisruptionBudgets, z.err = p.getV1Beta1PodDisruptionBudgets(ctx, i)
-
-	q.v1beta1 = &z
-}
-
-func (p podDisruptionBudgetsInspectorLoader) getV1Beta1PodDisruptionBudgets(ctx context.Context, i *inspectorState) (map[string]*policyv1beta1.PodDisruptionBudget, error) {
-	objs, err := p.getV1Beta1PodDisruptionBudgetsList(ctx, i)
-	if err != nil {
-		return nil, err
-	}
-
-	r := make(map[string]*policyv1beta1.PodDisruptionBudget, len(objs))
-
-	for id := range objs {
-		r[objs[id].GetName()] = objs[id]
-	}
-
-	return r, nil
-}
-
-func (p podDisruptionBudgetsInspectorLoader) getV1Beta1PodDisruptionBudgetsList(ctx context.Context, i *inspectorState) ([]*policyv1beta1.PodDisruptionBudget, error) {
-	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
-	defer cancel()
-	obj, err := i.client.Kubernetes().PolicyV1beta1().PodDisruptionBudgets(i.namespace).List(ctxChild, meta.ListOptions{
-		Limit: globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	items := obj.Items
-	cont := obj.Continue
-	var s = int64(len(items))
-
-	if z := obj.RemainingItemCount; z != nil {
-		s += *z
-	}
-
-	ptrs := make([]*policyv1beta1.PodDisruptionBudget, 0, s)
-
-	for {
-		for id := range items {
-			ptrs = append(ptrs, &items[id])
-		}
-
-		if cont == "" {
-			break
-		}
-
-		items, cont, err = p.getV1Beta1PodDisruptionBudgetsListRequest(ctx, i, cont)
-
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return ptrs, nil
-}
-
-func (p podDisruptionBudgetsInspectorLoader) getV1Beta1PodDisruptionBudgetsListRequest(ctx context.Context, i *inspectorState, cont string) ([]policyv1beta1.PodDisruptionBudget, string, error) {
-	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
-	defer cancel()
-	obj, err := i.client.Kubernetes().PolicyV1beta1().PodDisruptionBudgets(i.namespace).List(ctxChild, meta.ListOptions{
-		Limit:    globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
-		Continue: cont,
-	})
-
-	if err != nil {
-		return nil, "", err
-	}
-
-	return obj.Items, obj.Continue, err
 }
 
 func (p podDisruptionBudgetsInspectorLoader) loadV1(ctx context.Context, i *inspectorState, q *podDisruptionBudgetsInspector) {
@@ -169,13 +74,13 @@ func (p podDisruptionBudgetsInspectorLoader) loadV1(ctx context.Context, i *insp
 	q.v1 = &z
 }
 
-func (p podDisruptionBudgetsInspectorLoader) getV1PodDisruptionBudgets(ctx context.Context, i *inspectorState) (map[string]*policyv1.PodDisruptionBudget, error) {
+func (p podDisruptionBudgetsInspectorLoader) getV1PodDisruptionBudgets(ctx context.Context, i *inspectorState) (map[string]*policy.PodDisruptionBudget, error) {
 	objs, err := p.getV1PodDisruptionBudgetsList(ctx, i)
 	if err != nil {
 		return nil, err
 	}
 
-	r := make(map[string]*policyv1.PodDisruptionBudget, len(objs))
+	r := make(map[string]*policy.PodDisruptionBudget, len(objs))
 
 	for id := range objs {
 		r[objs[id].GetName()] = objs[id]
@@ -184,7 +89,7 @@ func (p podDisruptionBudgetsInspectorLoader) getV1PodDisruptionBudgets(ctx conte
 	return r, nil
 }
 
-func (p podDisruptionBudgetsInspectorLoader) getV1PodDisruptionBudgetsList(ctx context.Context, i *inspectorState) ([]*policyv1.PodDisruptionBudget, error) {
+func (p podDisruptionBudgetsInspectorLoader) getV1PodDisruptionBudgetsList(ctx context.Context, i *inspectorState) ([]*policy.PodDisruptionBudget, error) {
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 	obj, err := i.client.Kubernetes().PolicyV1().PodDisruptionBudgets(i.namespace).List(ctxChild, meta.ListOptions{
@@ -203,7 +108,7 @@ func (p podDisruptionBudgetsInspectorLoader) getV1PodDisruptionBudgetsList(ctx c
 		s += *z
 	}
 
-	ptrs := make([]*policyv1.PodDisruptionBudget, 0, s)
+	ptrs := make([]*policy.PodDisruptionBudget, 0, s)
 
 	for {
 		for id := range items {
@@ -224,7 +129,7 @@ func (p podDisruptionBudgetsInspectorLoader) getV1PodDisruptionBudgetsList(ctx c
 	return ptrs, nil
 }
 
-func (p podDisruptionBudgetsInspectorLoader) getV1PodDisruptionBudgetsListRequest(ctx context.Context, i *inspectorState, cont string) ([]policyv1.PodDisruptionBudget, string, error) {
+func (p podDisruptionBudgetsInspectorLoader) getV1PodDisruptionBudgetsListRequest(ctx context.Context, i *inspectorState, cont string) ([]policy.PodDisruptionBudget, string, error) {
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 	obj, err := i.client.Kubernetes().PolicyV1().PodDisruptionBudgets(i.namespace).List(ctxChild, meta.ListOptions{
@@ -240,12 +145,6 @@ func (p podDisruptionBudgetsInspectorLoader) getV1PodDisruptionBudgetsListReques
 }
 
 func (p podDisruptionBudgetsInspectorLoader) Verify(i *inspectorState) error {
-	if errv1, errv1beta1 := i.podDisruptionBudgets.v1.err, i.podDisruptionBudgets.v1beta1.err; errv1 != nil && errv1beta1 != nil {
-		return errors.Wrap(errv1, "Both requests failed")
-	} else if errv1 == nil && errv1beta1 == nil {
-		return errors.Newf("V1 and V1beta1 are not nil - only one should be picked")
-	}
-
 	return nil
 }
 
@@ -269,8 +168,7 @@ type podDisruptionBudgetsInspector struct {
 
 	last time.Time
 
-	v1      *podDisruptionBudgetsInspectorV1
-	v1beta1 *podDisruptionBudgetsInspectorV1Beta1
+	v1 *podDisruptionBudgetsInspectorV1
 }
 
 func (p *podDisruptionBudgetsInspector) LastRefresh() time.Time {
@@ -283,11 +181,7 @@ func (p *podDisruptionBudgetsInspector) Refresh(ctx context.Context) error {
 }
 
 func (p *podDisruptionBudgetsInspector) Version() version.Version {
-	if p.state.versionInfo.CompareTo("1.21") >= 0 {
-		return version.V1
-	}
-
-	return version.V1Beta1
+	return version.V1
 }
 
 func (p *podDisruptionBudgetsInspector) Throttle(c throttle.Components) throttle.Throttle {
@@ -304,11 +198,9 @@ func (p *podDisruptionBudgetsInspector) validate() error {
 	}
 
 	if err := p.v1.validate(); err != nil {
-		return err
-	}
-
-	if err := p.v1beta1.validate(); err != nil {
-		return err
+		if _, ok := IsK8SVersion(err); !ok {
+			return err
+		}
 	}
 
 	return nil

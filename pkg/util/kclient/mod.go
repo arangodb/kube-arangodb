@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import (
 	arangomemberv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember/v1"
 	persistentvolumeclaimv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim/v1"
 	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
-	poddisruptionbudgetv1beta1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget/v1beta1"
+	poddisruptionbudgetv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget/v1"
 	secretv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
 	servicev1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service/v1"
 	serviceaccountv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount/v1"
@@ -44,7 +44,7 @@ type ModInterface interface {
 	Services() servicev1.ModInterface
 	ServiceAccounts() serviceaccountv1.ModInterface
 	PersistentVolumeClaims() persistentvolumeclaimv1.ModInterface
-	PodDisruptionBudgets() poddisruptionbudgetv1beta1.ModInterface
+	PodDisruptionBudgets() poddisruptionbudgetv1.ModInterface
 	ServiceMonitors() servicemonitorv1.ModInterface
 	ArangoMembers() arangomemberv1.ModInterface
 }
@@ -58,8 +58,8 @@ func (m modInterface) PersistentVolumeClaims() persistentvolumeclaimv1.ModInterf
 	return m.client.Kubernetes().CoreV1().PersistentVolumeClaims(m.namespace)
 }
 
-func (m modInterface) PodDisruptionBudgets() poddisruptionbudgetv1beta1.ModInterface {
-	return m.client.Kubernetes().PolicyV1beta1().PodDisruptionBudgets(m.namespace)
+func (m modInterface) PodDisruptionBudgets() poddisruptionbudgetv1.ModInterface {
+	return m.client.Kubernetes().PolicyV1().PodDisruptionBudgets(m.namespace)
 }
 
 func (m modInterface) ServiceMonitors() servicemonitorv1.ModInterface {

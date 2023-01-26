@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ package inspector
 import (
 	"context"
 
-	policyv1 "k8s.io/api/policy/v1"
+	policy "k8s.io/api/policy/v1"
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -43,7 +43,7 @@ func (p *podDisruptionBudgetsInspector) V1() (ins.Inspector, error) {
 type podDisruptionBudgetsInspectorV1 struct {
 	podDisruptionBudgetInspector *podDisruptionBudgetsInspector
 
-	podDisruptionBudgets map[string]*policyv1.PodDisruptionBudget
+	podDisruptionBudgets map[string]*policy.PodDisruptionBudget
 	err                  error
 }
 
@@ -67,8 +67,8 @@ func (p *podDisruptionBudgetsInspectorV1) validate() error {
 	return nil
 }
 
-func (p *podDisruptionBudgetsInspectorV1) PodDisruptionBudgets() []*policyv1.PodDisruptionBudget {
-	var r []*policyv1.PodDisruptionBudget
+func (p *podDisruptionBudgetsInspectorV1) PodDisruptionBudgets() []*policy.PodDisruptionBudget {
+	var r []*policy.PodDisruptionBudget
 	for _, podDisruptionBudget := range p.podDisruptionBudgets {
 		r = append(r, podDisruptionBudget)
 	}
@@ -76,7 +76,7 @@ func (p *podDisruptionBudgetsInspectorV1) PodDisruptionBudgets() []*policyv1.Pod
 	return r
 }
 
-func (p *podDisruptionBudgetsInspectorV1) GetSimple(name string) (*policyv1.PodDisruptionBudget, bool) {
+func (p *podDisruptionBudgetsInspectorV1) GetSimple(name string) (*policy.PodDisruptionBudget, bool) {
 	podDisruptionBudget, ok := p.podDisruptionBudgets[name]
 	if !ok {
 		return nil, false
@@ -95,7 +95,7 @@ func (p *podDisruptionBudgetsInspectorV1) Iterate(action ins.Action, filters ...
 	return nil
 }
 
-func (p *podDisruptionBudgetsInspectorV1) iteratePodDisruptionBudget(podDisruptionBudget *policyv1.PodDisruptionBudget, action ins.Action, filters ...ins.Filter) error {
+func (p *podDisruptionBudgetsInspectorV1) iteratePodDisruptionBudget(podDisruptionBudget *policy.PodDisruptionBudget, action ins.Action, filters ...ins.Filter) error {
 	for _, f := range filters {
 		if f == nil {
 			continue
@@ -113,7 +113,7 @@ func (p *podDisruptionBudgetsInspectorV1) Read() ins.ReadInterface {
 	return p
 }
 
-func (p *podDisruptionBudgetsInspectorV1) Get(ctx context.Context, name string, opts meta.GetOptions) (*policyv1.PodDisruptionBudget, error) {
+func (p *podDisruptionBudgetsInspectorV1) Get(ctx context.Context, name string, opts meta.GetOptions) (*policy.PodDisruptionBudget, error) {
 	if s, ok := p.GetSimple(name); !ok {
 		return nil, apiErrors.NewNotFound(constants.PodDisruptionBudgetGR(), name)
 	} else {
