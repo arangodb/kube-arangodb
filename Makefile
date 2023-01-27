@@ -519,10 +519,10 @@ vendor:
 	@go mod vendor -e
 
 set-deployment-api-version-v2alpha1: export API_VERSION=2alpha1
-set-deployment-api-version-v2alpha1: set-api-version/deployment set-typed-api-version/deployment set-api-version/replication
+set-deployment-api-version-v2alpha1: set-api-version/deployment set-api-version/replication
 
 set-deployment-api-version-v1: export API_VERSION=1
-set-deployment-api-version-v1: set-api-version/deployment set-typed-api-version/deployment set-api-version/replication
+set-deployment-api-version-v1: set-api-version/deployment set-api-version/replication
 
 set-typed-api-version/%:
 	@grep -rHn "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/$*/v[A-Za-z0-9]\+" \

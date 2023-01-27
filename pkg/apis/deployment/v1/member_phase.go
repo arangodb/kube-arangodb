@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,6 +30,8 @@ const (
 	MemberPhasePending MemberPhase = "Pending"
 	// MemberPhaseCreated indicates that all resources needed for the member have been created
 	MemberPhaseCreated MemberPhase = "Created"
+	// MemberPhaseCreationFailed indicates that creation of member resources was not possible, fallback to MemberPhaseCreated state
+	MemberPhaseCreationFailed MemberPhase = "CreationFailed"
 	// MemberPhaseFailed indicates that the member is gone beyond hope of recovery. It must be replaced with a new member.
 	MemberPhaseFailed MemberPhase = "Failed"
 	// MemberPhaseCleanOut indicates that a dbserver is in the process of being cleaned out
@@ -50,7 +52,7 @@ const (
 
 // IsPending returns true when given phase == "" OR "Pending"
 func (p MemberPhase) IsPending() bool {
-	return p == MemberPhaseNone || p == MemberPhasePending
+	return p == MemberPhaseNone || p == MemberPhasePending || p == MemberPhaseCreationFailed
 }
 
 // IsFailed returns true when given phase == "Failed"
@@ -76,7 +78,7 @@ func (p MemberPhase) String() string {
 // GetPhase parses string into phase
 func GetPhase(phase string) (MemberPhase, bool) {
 	switch p := MemberPhase(phase); p {
-	case MemberPhaseNone, MemberPhasePending, MemberPhaseCreated, MemberPhaseFailed, MemberPhaseCleanOut, MemberPhaseDrain, MemberPhaseResign, MemberPhaseShuttingDown, MemberPhaseRotating, MemberPhaseRotateStart, MemberPhaseUpgrading:
+	case MemberPhaseNone, MemberPhasePending, MemberPhaseCreated, MemberPhaseCreationFailed, MemberPhaseFailed, MemberPhaseCleanOut, MemberPhaseDrain, MemberPhaseResign, MemberPhaseShuttingDown, MemberPhaseRotating, MemberPhaseRotateStart, MemberPhaseUpgrading:
 		return p, true
 	default:
 		return "", false
