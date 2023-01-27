@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ func (r *Resilience) CheckMemberFailure(ctx context.Context) error {
 
 		// Check if there are Members with Phase Upgrading or Rotation but no plan
 		switch m.Phase {
-		case api.MemberPhaseNone, api.MemberPhasePending:
+		case api.MemberPhaseNone, api.MemberPhasePending, api.MemberPhaseCreationFailed:
 			continue
 		case api.MemberPhaseUpgrading, api.MemberPhaseRotating, api.MemberPhaseCleanOut, api.MemberPhaseRotateStart, api.MemberPhaseShuttingDown:
 			if len(status.Plan) == 0 {

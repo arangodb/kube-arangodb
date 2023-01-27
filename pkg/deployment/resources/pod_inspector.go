@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -471,7 +471,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 			if _, exists := cachedStatus.Pod().V1().GetSimple(podName); !exists {
 				log.Str("pod-name", podName).Debug("Does not exist")
 				switch m.Phase {
-				case api.MemberPhaseNone, api.MemberPhasePending:
+				case api.MemberPhaseNone, api.MemberPhasePending, api.MemberPhaseCreationFailed:
 					// Do nothing
 					log.Str("pod-name", podName).Debug("PodPhase is None, waiting for the pod to be recreated")
 				case api.MemberPhaseShuttingDown, api.MemberPhaseUpgrading, api.MemberPhaseFailed, api.MemberPhaseRotateStart, api.MemberPhaseRotating:
