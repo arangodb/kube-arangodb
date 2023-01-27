@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
@@ -47,12 +48,12 @@ func (r *Reconciler) createMemberRecreationConditionsPlan(ctx context.Context,
 		if !recreate {
 			if _, ok := m.Member.Conditions.Get(api.MemberReplacementRequired); ok {
 				// Unset condition
-				p = append(p, removeMemberConditionActionV2("Member replacement not required", api.MemberReplacementRequired, m.Group, m.Member.ID))
+				p = append(p, shared.RemoveMemberConditionActionV2("Member replacement not required", api.MemberReplacementRequired, m.Group, m.Member.ID))
 			}
 		} else {
 			if c, ok := m.Member.Conditions.Get(api.MemberReplacementRequired); !ok || !c.IsTrue() || c.Message != message {
 				// Update condition
-				p = append(p, updateMemberConditionActionV2("Member replacement required", api.MemberReplacementRequired, m.Group, m.Member.ID, true, "Member replacement required", message, ""))
+				p = append(p, shared.UpdateMemberConditionActionV2("Member replacement required", api.MemberReplacementRequired, m.Group, m.Member.ID, true, "Member replacement required", message, ""))
 			}
 		}
 	}

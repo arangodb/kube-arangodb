@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -128,11 +129,11 @@ func (r *Reconciler) createRotateOrUpgradePlanInternal(apiObject k8sutil.APIObje
 			p := make(api.Plan, 0, 2)
 
 			if upgradeCondition {
-				p = append(p, removeConditionActionV2("Upgrade done", api.ConditionTypeUpgradeInProgress))
+				p = append(p, shared.RemoveConditionActionV2("Upgrade done", api.ConditionTypeUpgradeInProgress))
 			}
 
 			if updateCondition {
-				p = append(p, removeConditionActionV2("Update done", api.ConditionTypeUpdateInProgress))
+				p = append(p, shared.RemoveConditionActionV2("Update done", api.ConditionTypeUpdateInProgress))
 			}
 
 			return p, false
@@ -148,7 +149,7 @@ func (r *Reconciler) createUpdatePlanInternalCondition(apiObject k8sutil.APIObje
 	if idle || len(plan) > 0 {
 		if !status.Conditions.IsTrue(api.ConditionTypeUpdateInProgress) {
 			plan = append(api.Plan{
-				updateConditionActionV2("Update in progress", api.ConditionTypeUpdateInProgress, true, "", "", ""),
+				shared.UpdateConditionActionV2("Update in progress", api.ConditionTypeUpdateInProgress, true, "", "", ""),
 			}, plan...)
 		}
 	}
@@ -220,7 +221,7 @@ func (r *Reconciler) createUpgradePlanInternalCondition(apiObject k8sutil.APIObj
 	if idle || len(plan) > 0 {
 		if !status.Conditions.IsTrue(api.ConditionTypeUpgradeInProgress) {
 			plan = append(api.Plan{
-				updateConditionActionV2("Upgrade in progress", api.ConditionTypeUpgradeInProgress, true, "", "", ""),
+				shared.UpdateConditionActionV2("Upgrade in progress", api.ConditionTypeUpgradeInProgress, true, "", "", ""),
 			}, plan...)
 		}
 	}

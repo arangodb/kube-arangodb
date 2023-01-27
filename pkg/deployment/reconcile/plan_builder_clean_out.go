@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -50,9 +51,9 @@ func (r *Reconciler) createCleanOutPlan(ctx context.Context, _ k8sutil.APIObject
 
 		if cleanedStatus != cleanedAgency {
 			if cleanedAgency {
-				plan = append(plan, updateMemberConditionActionV2("DBServer cleaned", api.ConditionTypeCleanedOut, m.Group, m.Member.ID, true, "DBServer cleaned", "DBServer cleaned", ""))
+				plan = append(plan, shared.UpdateMemberConditionActionV2("DBServer cleaned", api.ConditionTypeCleanedOut, m.Group, m.Member.ID, true, "DBServer cleaned", "DBServer cleaned", ""))
 			} else {
-				plan = append(plan, removeMemberConditionActionV2("DBServer is not cleaned", api.ConditionTypeCleanedOut, m.Group, m.Member.ID))
+				plan = append(plan, shared.RemoveMemberConditionActionV2("DBServer is not cleaned", api.ConditionTypeCleanedOut, m.Group, m.Member.ID))
 			}
 		}
 	}

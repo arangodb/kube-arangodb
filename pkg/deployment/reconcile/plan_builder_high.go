@@ -28,6 +28,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
@@ -120,7 +121,7 @@ func (r *Reconciler) updateMemberPhasePlan(ctx context.Context, apiObject k8suti
 }
 
 func pendingRestartMemberConditionAction(group api.ServerGroup, memberID string, reason string) api.Action {
-	return actions.NewAction(api.ActionTypeSetMemberCondition, group, withPredefinedMember(memberID), reason).AddParam(api.ConditionTypePendingRestart.String(), "T")
+	return actions.NewAction(api.ActionTypeSetMemberCondition, group, shared.WithPredefinedMember(memberID), reason).AddParam(api.ConditionTypePendingRestart.String(), "T")
 }
 
 func restartMemberConditionAction(group api.ServerGroup, memberID string, reason string) api.Action {
@@ -128,7 +129,7 @@ func restartMemberConditionAction(group api.ServerGroup, memberID string, reason
 }
 
 func tlsRotateConditionAction(group api.ServerGroup, memberID string, reason string) api.Action {
-	return actions.NewAction(api.ActionTypeSetMemberCondition, group, withPredefinedMember(memberID), reason).AddParam(api.ConditionTypePendingTLSRotation.String(), "T")
+	return actions.NewAction(api.ActionTypeSetMemberCondition, group, shared.WithPredefinedMember(memberID), reason).AddParam(api.ConditionTypePendingTLSRotation.String(), "T")
 }
 
 func (r *Reconciler) updateMemberUpdateConditionsPlan(ctx context.Context, apiObject k8sutil.APIObject,
@@ -192,7 +193,7 @@ func (r *Reconciler) updateMemberRotationConditions(apiObject k8sutil.APIObject,
 		return nil, nil
 	}
 
-	if m, _, checksum, reason, err := rotation.IsRotationRequired(context.ACS(), spec, member, group, p, arangoMember.Spec.Template, arangoMember.Status.Template); err != nil {
+	if m, plan, checksum, reason, err := rotation.IsRotationRequired(context.ACS(), spec, member, group, p, arangoMember.Spec.Template, arangoMember.Status.Template); err != nil {
 		r.log.Err(err).Error("Error while getting rotation details")
 		return nil, err
 	} else {
@@ -216,8 +217,9 @@ func (r *Reconciler) updateMemberRotationConditions(apiObject k8sutil.APIObject,
 			}
 			return api.Plan{actions.NewAction(api.ActionTypeSetMemberCondition, group, member, reason).AddParam(api.ConditionTypePendingUpdate.String(), "T")}, nil
 		case rotation.SilentRotation:
-			// Propagate changes without restart
-			return api.Plan{actions.NewAction(api.ActionTypeArangoMemberUpdatePodStatus, group, member, "Propagating status of pod").AddParam(ActionTypeArangoMemberUpdatePodStatusChecksum, checksum)}, nil
+			// Propagate changes without restart, but apply plan if required
+			plan = append(plan, actions.NewAction(api.ActionTypeArangoMemberUpdatePodStatus, group, member, "Propagating status of pod").AddParam(ActionTypeArangoMemberUpdatePodStatusChecksum, checksum))
+			return plan, nil
 		case rotation.GracefulRotation:
 			if reason != "" {
 				r.log.Bool("enforced", false).Info(reason)

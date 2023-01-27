@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -170,6 +170,12 @@ func NewAction(actionType ActionType, group ServerGroup, memberID string, reason
 type ActionBuilder interface {
 	// NewAction instantiates a new Action.
 	NewAction(actionType ActionType, reason ...string) Action
+
+	// Group returns ServerGroup for this builder
+	Group() ServerGroup
+
+	// MemberID returns Member ID for this builder
+	MemberID() string
 }
 
 type actionBuilder struct {
@@ -179,6 +185,14 @@ type actionBuilder struct {
 
 func (a actionBuilder) NewAction(actionType ActionType, reason ...string) Action {
 	return NewAction(actionType, a.group, a.memberID, reason...)
+}
+
+func (a actionBuilder) Group() ServerGroup {
+	return a.group
+}
+
+func (a actionBuilder) MemberID() string {
+	return a.memberID
 }
 
 // NewActionBuilder create new action builder with provided group and id

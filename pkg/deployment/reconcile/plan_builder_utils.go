@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,8 +22,6 @@ package reconcile
 
 import (
 	"context"
-
-	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
@@ -68,48 +66,4 @@ func (r *Reconciler) emptyPlanBuilder(ctx context.Context, apiObject k8sutil.API
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext) api.Plan {
 	return nil
-}
-
-func removeConditionActionV2(actionReason string, conditionType api.ConditionType) api.Action {
-	return actions.NewClusterAction(api.ActionTypeSetConditionV2, actionReason).
-		AddParam(setConditionActionV2KeyAction, string(conditionType)).
-		AddParam(setConditionActionV2KeyType, setConditionActionV2KeyTypeRemove)
-}
-
-//nolint:unparam
-func updateConditionActionV2(actionReason string, conditionType api.ConditionType, status bool, reason, message, hash string) api.Action {
-	statusBool := core.ConditionTrue
-	if !status {
-		statusBool = core.ConditionFalse
-	}
-
-	return actions.NewClusterAction(api.ActionTypeSetConditionV2, actionReason).
-		AddParam(setConditionActionV2KeyAction, string(conditionType)).
-		AddParam(setConditionActionV2KeyType, setConditionActionV2KeyTypeAdd).
-		AddParam(setConditionActionV2KeyStatus, string(statusBool)).
-		AddParam(setConditionActionV2KeyReason, reason).
-		AddParam(setConditionActionV2KeyMessage, message).
-		AddParam(setConditionActionV2KeyHash, hash)
-}
-
-func removeMemberConditionActionV2(actionReason string, conditionType api.ConditionType, group api.ServerGroup, member string) api.Action {
-	return actions.NewAction(api.ActionTypeSetMemberConditionV2, group, withPredefinedMember(member), actionReason).
-		AddParam(setConditionActionV2KeyAction, string(conditionType)).
-		AddParam(setConditionActionV2KeyType, setConditionActionV2KeyTypeRemove)
-}
-
-//nolint:unparam
-func updateMemberConditionActionV2(actionReason string, conditionType api.ConditionType, group api.ServerGroup, member string, status bool, reason, message, hash string) api.Action {
-	statusBool := core.ConditionTrue
-	if !status {
-		statusBool = core.ConditionFalse
-	}
-
-	return actions.NewAction(api.ActionTypeSetMemberConditionV2, group, withPredefinedMember(member), actionReason).
-		AddParam(setConditionActionV2KeyAction, string(conditionType)).
-		AddParam(setConditionActionV2KeyType, setConditionActionV2KeyTypeAdd).
-		AddParam(setConditionActionV2KeyStatus, string(statusBool)).
-		AddParam(setConditionActionV2KeyReason, reason).
-		AddParam(setConditionActionV2KeyMessage, message).
-		AddParam(setConditionActionV2KeyHash, hash)
 }

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,10 +36,13 @@ type Mode int
 
 const (
 	SkippedRotation Mode = iota
-	// SilentRotation Propagates changes without restart
+	// SilentRotation Propagates changes without restart. Returned plan is executed in High actions
 	SilentRotation
+	// InPlaceRotation Silently accept changes. Returned plan is executed in Normal actions
 	InPlaceRotation
+	// GracefulRotation Schedule pod restart. Returned plan is ignored
 	GracefulRotation
+	// EnforcedRotation Enforce pod restart. Returned plan is ignored
 	EnforcedRotation
 )
 

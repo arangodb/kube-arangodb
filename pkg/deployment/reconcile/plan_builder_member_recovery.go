@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -121,8 +122,8 @@ func (r *Reconciler) createMemberFailedRestoreInternal(_ context.Context, _ k8su
 					memberLog.Info("Creating member replacement plan because member has failed")
 					plan = append(plan,
 						actions.NewAction(api.ActionTypeRemoveMember, group, m),
-						actions.NewAction(api.ActionTypeAddMember, group, withPredefinedMember("")),
-						actions.NewAction(api.ActionTypeWaitForMemberUp, group, withPredefinedMember(api.MemberIDPreviousAction)),
+						actions.NewAction(api.ActionTypeAddMember, group, shared.WithPredefinedMember("")),
+						actions.NewAction(api.ActionTypeWaitForMemberUp, group, shared.WithPredefinedMember(api.MemberIDPreviousAction)),
 					)
 				} else {
 					memberLog.Info("Restoring old member. Recreation is disabled for group")

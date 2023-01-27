@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -52,7 +53,7 @@ func (r *Reconciler) createBackupInProgressConditionPlan(ctx context.Context, ap
 		if !maintenance.Exists() {
 			// Condition needs to be removed
 			return api.Plan{
-				removeConditionActionV2("Backup not in progress", api.ConditionTypeBackupInProgress),
+				shared.RemoveConditionActionV2("Backup not in progress", api.ConditionTypeBackupInProgress),
 			}
 		}
 
@@ -62,7 +63,7 @@ func (r *Reconciler) createBackupInProgressConditionPlan(ctx context.Context, ap
 
 		if !currentCondition.IsTrue() || currentCondition.Hash != hash {
 			return api.Plan{
-				updateConditionActionV2("Backup in progress", api.ConditionTypeBackupInProgress, true, "Backup In Progress", "", hash),
+				shared.UpdateConditionActionV2("Backup in progress", api.ConditionTypeBackupInProgress, true, "Backup In Progress", "", hash),
 			}
 		}
 
@@ -70,7 +71,7 @@ func (r *Reconciler) createBackupInProgressConditionPlan(ctx context.Context, ap
 	} else {
 		if maintenance.Exists() {
 			return api.Plan{
-				updateConditionActionV2("Backup in progress", api.ConditionTypeBackupInProgress, true, "Backup In Progress", "", maintenance.Hash()),
+				shared.UpdateConditionActionV2("Backup in progress", api.ConditionTypeBackupInProgress, true, "Backup In Progress", "", maintenance.Hash()),
 			}
 		}
 
@@ -100,7 +101,7 @@ func (r *Reconciler) createMaintenanceConditionPlan(ctx context.Context, apiObje
 		if !maintenance.Exists() {
 			// Condition needs to be removed
 			return api.Plan{
-				removeConditionActionV2("Maintenance Disabled", api.ConditionTypeMaintenance),
+				shared.RemoveConditionActionV2("Maintenance Disabled", api.ConditionTypeMaintenance),
 			}
 		}
 
@@ -110,7 +111,7 @@ func (r *Reconciler) createMaintenanceConditionPlan(ctx context.Context, apiObje
 
 		if !currentCondition.IsTrue() || currentCondition.Hash != hash {
 			return api.Plan{
-				updateConditionActionV2("Maintenance Enabled", api.ConditionTypeMaintenance, true, "Maintenance Enabled", "", hash),
+				shared.UpdateConditionActionV2("Maintenance Enabled", api.ConditionTypeMaintenance, true, "Maintenance Enabled", "", hash),
 			}
 		}
 
@@ -118,7 +119,7 @@ func (r *Reconciler) createMaintenanceConditionPlan(ctx context.Context, apiObje
 	} else {
 		if maintenance.Exists() {
 			return api.Plan{
-				updateConditionActionV2("Maintenance Enabled", api.ConditionTypeMaintenance, true, "Maintenance Enabled", "", maintenance.Hash()),
+				shared.UpdateConditionActionV2("Maintenance Enabled", api.ConditionTypeMaintenance, true, "Maintenance Enabled", "", maintenance.Hash()),
 			}
 		}
 

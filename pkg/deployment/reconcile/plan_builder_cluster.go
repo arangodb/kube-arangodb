@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
@@ -82,7 +83,7 @@ func (r *Reconciler) createClusterOperationPlan(ctx context.Context, apiObject k
 
 			if member.LastHeartbeatAcked.Add(coordinatorHealthFailedTimeout).Before(time.Now()) {
 				return api.Plan{
-					actions.NewAction(api.ActionTypeClusterMemberCleanup, api.ServerGroupCoordinators, withPredefinedMember(string(id))),
+					actions.NewAction(api.ActionTypeClusterMemberCleanup, api.ServerGroupCoordinators, shared.WithPredefinedMember(string(id))),
 				}
 			}
 		case driver.ServerRoleDBServer:
@@ -95,7 +96,7 @@ func (r *Reconciler) createClusterOperationPlan(ctx context.Context, apiObject k
 			}
 
 			return api.Plan{
-				actions.NewAction(api.ActionTypeClusterMemberCleanup, api.ServerGroupDBServers, withPredefinedMember(string(id))),
+				actions.NewAction(api.ActionTypeClusterMemberCleanup, api.ServerGroupDBServers, shared.WithPredefinedMember(string(id))),
 			}
 		}
 	}

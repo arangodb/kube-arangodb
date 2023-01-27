@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -45,6 +45,14 @@ type actionBuilderWrap struct {
 
 func (a actionBuilderWrap) NewAction(actionType api.ActionType, reason ...string) api.Action {
 	return NewAction(actionType, a.group, a.member, reason...)
+}
+
+func (a actionBuilderWrap) Group() api.ServerGroup {
+	return a.group
+}
+
+func (a actionBuilderWrap) MemberID() string {
+	return a.member.ID
 }
 
 func actionWrap(a api.Action, member *api.MemberStatus, wrap ...actionWrapper) api.Action {

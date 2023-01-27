@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -120,9 +121,9 @@ func (r *Reconciler) createRotateServerStoragePVCPendingResizeConditionPlan(ctx 
 
 		if pvcResizePending != pvcResizePendingCond {
 			if pvcResizePending {
-				plan = append(plan, updateMemberConditionActionV2("PVC Resize pending", api.ConditionTypePVCResizePending, i.Group, i.Member.ID, true, "PVC Resize pending", "", ""))
+				plan = append(plan, shared.UpdateMemberConditionActionV2("PVC Resize pending", api.ConditionTypePVCResizePending, i.Group, i.Member.ID, true, "PVC Resize pending", "", ""))
 			} else {
-				plan = append(plan, removeMemberConditionActionV2("PVC Resize is done", api.ConditionTypePVCResizePending, i.Group, i.Member.ID))
+				plan = append(plan, shared.RemoveMemberConditionActionV2("PVC Resize is done", api.ConditionTypePVCResizePending, i.Group, i.Member.ID))
 			}
 		}
 	}
