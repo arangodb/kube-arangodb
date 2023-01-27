@@ -24,6 +24,7 @@ import (
 	"context"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -38,7 +39,7 @@ func (r *Reconciler) createSyncPlan(ctx context.Context, apiObject k8sutil.APIOb
 		}
 
 		// We need to enable condition
-		return api.Plan{updateConditionActionV2("Sync Enabled", api.ConditionTypeSyncEnabled, true, "Sync enabled", "", "")}
+		return api.Plan{shared.UpdateConditionActionV2("Sync Enabled", api.ConditionTypeSyncEnabled, true, "Sync enabled", "", "")}
 	}
 
 	if !status.Conditions.IsTrue(api.ConditionTypeSyncEnabled) {
@@ -55,7 +56,7 @@ func (r *Reconciler) createSyncPlan(ctx context.Context, apiObject k8sutil.APIOb
 	if cache.ArangoSync.Error == nil {
 		if !cache.ArangoSync.IsSyncInProgress() {
 			// Remove condition
-			return api.Plan{removeConditionActionV2("Sync Disabled", api.ConditionTypeSyncEnabled)}
+			return api.Plan{shared.RemoveConditionActionV2("Sync Disabled", api.ConditionTypeSyncEnabled)}
 		}
 	}
 

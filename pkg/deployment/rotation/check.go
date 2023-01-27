@@ -36,10 +36,13 @@ type Mode int
 
 const (
 	SkippedRotation Mode = iota
-	// SilentRotation Propagates changes without restart
+	// SilentRotation Propagates changes without restart. Returned plan is executed in High actions
 	SilentRotation
+	// InPlaceRotation Silently accept changes. Returned plan is executed in Normal actions
 	InPlaceRotation
+	// GracefulRotation Schedule pod restart. Returned plan is ignored
 	GracefulRotation
+	// EnforcedRotation Enforce pod restart. Returned plan is ignored
 	EnforcedRotation
 )
 

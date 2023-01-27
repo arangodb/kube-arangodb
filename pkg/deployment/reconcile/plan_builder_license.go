@@ -26,6 +26,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -82,10 +83,10 @@ func (r *Reconciler) updateClusterLicense(ctx context.Context, apiObject k8sutil
 		return nil
 	} else if ok {
 		if c, _ := status.Conditions.Get(api.ConditionTypeLicenseSet); !c.IsTrue() || c.Hash != l.V2.V2Hash() {
-			return api.Plan{updateConditionActionV2("License is set", api.ConditionTypeLicenseSet, true, "License UpToDate", "", l.V2.V2Hash())}
+			return api.Plan{shared.UpdateConditionActionV2("License is set", api.ConditionTypeLicenseSet, true, "License UpToDate", "", l.V2.V2Hash())}
 		}
 		return nil
 	}
 
-	return api.Plan{removeConditionActionV2("License is not set", api.ConditionTypeLicenseSet), actions.NewAction(api.ActionTypeLicenseSet, member.Group, member.Member, "Setting license")}
+	return api.Plan{shared.RemoveConditionActionV2("License is not set", api.ConditionTypeLicenseSet), actions.NewAction(api.ActionTypeLicenseSet, member.Group, member.Member, "Setting license")}
 }

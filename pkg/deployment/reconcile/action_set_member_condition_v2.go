@@ -26,6 +26,7 @@ import (
 	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
 )
 
 func newSetMemberConditionV2Action(action api.Action, actionCtx ActionContext) Action {
@@ -45,24 +46,24 @@ type actionSetMemberConditionV2 struct {
 
 // Start starts the action for changing conditions on the provided member.
 func (a actionSetMemberConditionV2) Start(ctx context.Context) (bool, error) {
-	at, ok := a.action.Params[setConditionActionV2KeyType]
+	at, ok := a.action.Params[shared.SetConditionActionV2KeyType]
 	if !ok {
-		a.log.Info("key %s is missing in action definition", setConditionActionV2KeyType)
+		a.log.Info("key %s is missing in action definition", shared.SetConditionActionV2KeyType)
 		return true, nil
 	}
 
-	aa, ok := a.action.Params[setConditionActionV2KeyAction]
+	aa, ok := a.action.Params[shared.SetConditionActionV2KeyAction]
 	if !ok {
-		a.log.Info("key %s is missing in action definition", setConditionActionV2KeyAction)
+		a.log.Info("key %s is missing in action definition", shared.SetConditionActionV2KeyAction)
 		return true, nil
 	}
 
 	switch at {
-	case setConditionActionV2KeyTypeAdd:
-		ah := a.action.Params[setConditionActionV2KeyHash]
-		am := a.action.Params[setConditionActionV2KeyMessage]
-		ar := a.action.Params[setConditionActionV2KeyReason]
-		as := a.action.Params[setConditionActionV2KeyStatus] == string(core.ConditionTrue)
+	case shared.SetConditionActionV2KeyTypeAdd:
+		ah := a.action.Params[shared.SetConditionActionV2KeyHash]
+		am := a.action.Params[shared.SetConditionActionV2KeyMessage]
+		ar := a.action.Params[shared.SetConditionActionV2KeyReason]
+		as := a.action.Params[shared.SetConditionActionV2KeyStatus] == string(core.ConditionTrue)
 
 		if err := a.actionCtx.WithStatusUpdateErr(ctx, func(s *api.DeploymentStatus) (bool, error) {
 			status, g, ok := s.Members.ElementByID(a.action.MemberID)
@@ -89,7 +90,7 @@ func (a actionSetMemberConditionV2) Start(ctx context.Context) (bool, error) {
 			a.log.Err(err).Warn("unable to update status")
 			return true, nil
 		}
-	case setConditionActionV2KeyTypeRemove:
+	case shared.SetConditionActionV2KeyTypeRemove:
 		if err := a.actionCtx.WithStatusUpdateErr(ctx, func(s *api.DeploymentStatus) (bool, error) {
 			status, g, ok := s.Members.ElementByID(a.action.MemberID)
 			if !ok {

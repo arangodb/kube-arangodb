@@ -30,6 +30,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/strings"
@@ -235,7 +236,7 @@ func (r *Reconciler) areEncryptionKeysUpToDate(ctx context.Context, spec api.Dep
 				failed = true
 				continue
 			} else if updateRequired {
-				plan = append(plan, actions.NewAction(api.ActionTypeEncryptionKeyRefresh, group, withPredefinedMember(m.ID)))
+				plan = append(plan, actions.NewAction(api.ActionTypeEncryptionKeyRefresh, group, shared.WithPredefinedMember(m.ID)))
 				continue
 			}
 		}

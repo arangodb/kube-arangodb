@@ -47,6 +47,14 @@ func (a actionBuilderWrap) NewAction(actionType api.ActionType, reason ...string
 	return NewAction(actionType, a.group, a.member, reason...)
 }
 
+func (a actionBuilderWrap) Group() api.ServerGroup {
+	return a.group
+}
+
+func (a actionBuilderWrap) MemberID() string {
+	return a.member.ID
+}
+
 func actionWrap(a api.Action, member *api.MemberStatus, wrap ...actionWrapper) api.Action {
 	for _, w := range wrap {
 		a = w(a, member)

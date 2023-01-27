@@ -66,9 +66,3 @@ func ifPodUIDMismatch(m api.MemberStatus, a api.Action, i pod.Inspector) bool {
 
 	return u != p.GetUID()
 }
-
-func withPredefinedMember(id string) api.MemberStatus {
-	return api.MemberStatus{
-		ID: id,
-	}
-}

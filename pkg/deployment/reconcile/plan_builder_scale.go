@@ -27,6 +27,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
@@ -82,7 +83,7 @@ func (r *Reconciler) createScalePlan(status api.DeploymentStatus, members api.Me
 		// Scale up
 		toAdd := count - len(members)
 		for i := 0; i < toAdd; i++ {
-			plan = append(plan, actions.NewAction(api.ActionTypeAddMember, group, withPredefinedMember("")))
+			plan = append(plan, actions.NewAction(api.ActionTypeAddMember, group, shared.WithPredefinedMember("")))
 		}
 		r.planLogger.
 			Int("count", count).
@@ -141,7 +142,7 @@ func (r *Reconciler) createReplaceMemberPlan(ctx context.Context, apiObject k8su
 
 			switch group {
 			case api.ServerGroupDBServers:
-				plan = append(plan, actions.NewAction(api.ActionTypeAddMember, group, withPredefinedMember("")))
+				plan = append(plan, actions.NewAction(api.ActionTypeAddMember, group, shared.WithPredefinedMember("")))
 				r.planLogger.
 					Str("role", group.AsRole()).
 					Debug("Creating replacement plan")
@@ -152,7 +153,7 @@ func (r *Reconciler) createReplaceMemberPlan(ctx context.Context, apiObject k8su
 					Debug("Creating replacement plan")
 			case api.ServerGroupAgents:
 				plan = append(plan, cleanOutMember(group, member)...)
-				plan = append(plan, actions.NewAction(api.ActionTypeAddMember, group, withPredefinedMember("")))
+				plan = append(plan, actions.NewAction(api.ActionTypeAddMember, group, shared.WithPredefinedMember("")))
 				r.planLogger.
 					Str("role", group.AsRole()).
 					Debug("Creating replacement plan")
@@ -225,9 +226,9 @@ func (r *Reconciler) scaleDownCandidate(ctx context.Context, apiObject k8sutil.A
 
 		if annotationExists != conditionExists {
 			if annotationExists {
-				plan = append(plan, updateMemberConditionActionV2("Marked as ScaleDownCandidate", api.ConditionTypeScaleDownCandidate, m.Group, m.Member.ID, true, "Marked as ScaleDownCandidate", "", ""))
+				plan = append(plan, shared.UpdateMemberConditionActionV2("Marked as ScaleDownCandidate", api.ConditionTypeScaleDownCandidate, m.Group, m.Member.ID, true, "Marked as ScaleDownCandidate", "", ""))
 			} else {
-				plan = append(plan, removeMemberConditionActionV2("Unmarked as ScaleDownCandidate", api.ConditionTypeScaleDownCandidate, m.Group, m.Member.ID))
+				plan = append(plan, shared.RemoveMemberConditionActionV2("Unmarked as ScaleDownCandidate", api.ConditionTypeScaleDownCandidate, m.Group, m.Member.ID))
 			}
 		}
 	}
