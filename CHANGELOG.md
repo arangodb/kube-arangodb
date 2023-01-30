@@ -6,13 +6,13 @@
 - (Feature) CreationFailed ArangoMember Phase
 - (Bugfix) Fix Rebalancer NPE in case if member is missing in Status
 - (Feature) SilentRotation High plan
+- (Improvement) Update arangosync-client package for new API capabilities and better HTTP handling
 
 ## [1.2.24](https://github.com/arangodb/kube-arangodb/tree/1.2.24) (2023-01-25)
 - (Bugfix) Fix deployment creation on ARM64
 - (DebugPackage) Add Agency Dump & State
 - (Bugfix) Fix After leaked GoRoutines
 - (Bugfix) Ensure proper ArangoDeployment Spec usage in ArangoSync
-- (Improvement) Update arangosync-client package for new API capabilities and better HTTP handling
 
 ## [1.2.23](https://github.com/arangodb/kube-arangodb/tree/1.2.23) (2023-01-12)
 - (Bugfix) Remove PDBs if group count is 0
