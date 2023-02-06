@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -85,7 +85,7 @@ func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.
 			if err != nil {
 				dr.log.Err(err).Warn("Failed to fetch endpoints from destination syncmaster")
 			}
-			destStatus, err := destClient.Master().Status(ctx)
+			destStatus, err := destClient.Master().Status(ctx, client.GetSyncStatusDetailsFull)
 			if err != nil {
 				dr.log.Err(err).Warn("Failed to fetch status from destination syncmaster")
 			} else {
@@ -126,7 +126,7 @@ func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.
 			if err != nil {
 				dr.log.Err(err).Warn("Failed to create source syncmaster client")
 			} else {
-				sourceStatus, err := sourceClient.Master().Status(ctx)
+				sourceStatus, err := sourceClient.Master().Status(ctx, client.GetSyncStatusDetailsShort)
 				if err != nil {
 					dr.log.Err(err).Warn("Failed to fetch status from source syncmaster")
 				}

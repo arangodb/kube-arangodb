@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -151,7 +151,7 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 	}
 
 	// Get status from sync master.
-	syncInfo, err := destClient.Master().Status(ctx)
+	syncInfo, err := destClient.Master().Status(ctx, client.GetSyncStatusDetailsShort)
 	if err != nil {
 		return false, errors.WithMessage(err, "Failed to get status from target master")
 	}
