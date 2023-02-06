@@ -242,12 +242,15 @@ func (dr *DeploymentReplication) hasOutgoingEndpoint(status client.SyncInfo, epS
 func (dr *DeploymentReplication) inspectIncomingSynchronizationStatus(destStatus client.SyncInfo) api.SynchronizationStatus {
 	const maxReportedIncomingSyncErrorsPerDatabase = 10
 
+	var totalShardsFromStatus, shardsInSync int
 	dbs := make(map[string]api.DatabaseSynchronizationStatus, 0)
 	for _, s := range destStatus.Shards {
 		db := dbs[s.Database]
 		db.ShardsTotal++
+		totalShardsFromStatus++
 		if s.Status == client.SyncStatusRunning {
 			db.ShardsInSync++
+			shardsInSync++
 		} else if s.Status == client.SyncStatusFailed && len(db.Errors) < maxReportedIncomingSyncErrorsPerDatabase {
 			db.Errors = append(db.Errors, api.DatabaseSynchronizationError{
 				Collection: s.Collection,
@@ -258,7 +261,14 @@ func (dr *DeploymentReplication) inspectIncomingSynchronizationStatus(destStatus
 		dbs[s.Database] = db
 	}
 
+	var totalShards = destStatus.TotalShardsCount
+	if totalShards == 0 {
+		// can be zero for old versions of arangosync
+		totalShards = totalShardsFromStatus
+	}
+
 	return api.SynchronizationStatus{
+		Progress:  float32(totalShards) / float32(shardsInSync),
 		AllInSync: destStatus.Status == client.SyncStatusRunning,
 		Databases: dbs,
 		Error:     "",

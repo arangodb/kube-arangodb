@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,10 @@ package v1
 type SynchronizationStatus struct {
 	// Databases holds the synchronization status for each database.
 	Databases map[string]DatabaseSynchronizationStatus `json:"databases,omitempty"`
-	// AllInSync is true if all shards listed in 'databases' are in sync
-	AllInSync bool   `json:"allInSync,omitempty"`
-	Error     string `json:"error,omitempty"`
+	// Progress the value in percents showing the progress of synchronization
+	Progress float32 `json:"progress,omitempty"`
+	// AllInSync is true if target cluster is fully in-sync with source cluster
+	AllInSync bool `json:"allInSync,omitempty"`
+	// Error contains an error description if there is an error preventing synchronization
+	Error string `json:"error,omitempty"`
 }
