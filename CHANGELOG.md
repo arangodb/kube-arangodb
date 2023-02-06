@@ -7,6 +7,7 @@
 - (Bugfix) Fix Rebalancer NPE in case if member is missing in Status
 - (Feature) SilentRotation High plan
 - (Improvement) Update arangosync-client package for new API capabilities and better HTTP handling
+- (Maintenance) Fix generated license dates
 
 ## [1.2.24](https://github.com/arangodb/kube-arangodb/tree/1.2.24) (2023-01-25)
 - (Bugfix) Fix deployment creation on ARM64

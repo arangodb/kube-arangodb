@@ -583,7 +583,7 @@ synchronize-v2alpha1-with-v1:
 
 .PHONY: check-all check-enterprise check-community _check
 
-check-all: check-enterprise check-community
+check-all: check-enterprise check-community license-range-verify
 
 check-enterprise:
 	@$(MAKE) _check RELEASE_MODE=enterprise
