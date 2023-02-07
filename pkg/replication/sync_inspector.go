@@ -267,8 +267,8 @@ func (dr *DeploymentReplication) inspectIncomingSynchronizationStatus(destStatus
 		totalShards = totalShardsFromStatus
 	}
 	progress := float32(0.0)
-	if shardsInSync > 0.0 {
-		progress = float32(totalShards) / float32(shardsInSync)
+	if totalShards > 0 {
+		progress = float32(shardsInSync) / float32(totalShards)
 	}
 	return api.SynchronizationStatus{
 		Progress:  progress,
