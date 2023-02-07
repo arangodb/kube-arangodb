@@ -266,9 +266,12 @@ func (dr *DeploymentReplication) inspectIncomingSynchronizationStatus(destStatus
 		// can be zero for old versions of arangosync
 		totalShards = totalShardsFromStatus
 	}
-
+	progress := float32(0.0)
+	if shardsInSync > 0.0 {
+		progress = float32(totalShards) / float32(shardsInSync)
+	}
 	return api.SynchronizationStatus{
-		Progress:  float32(totalShards) / float32(shardsInSync),
+		Progress:  progress,
 		AllInSync: destStatus.Status == client.SyncStatusRunning,
 		Databases: dbs,
 		Error:     "",
