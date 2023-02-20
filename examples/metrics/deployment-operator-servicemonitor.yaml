@@ -14,9 +14,9 @@ spec:
       app.kubernetes.io/name: kube-arangodb
   namespaceSelector:
     matchNames:
-    - default
+      - default
   endpoints:
-  - port: server
-    scheme: https
-    tlsConfig:
-      insecureSkipVerify: true
+    - port: server
+      scheme: https
+      tlsConfig:
+        insecureSkipVerify: true

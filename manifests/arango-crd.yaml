@@ -1,4 +1,3 @@
----
 # Source: kube-arangodb-crd/templates/backup-policy.yaml
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
@@ -68,19 +67,18 @@ spec:
           type: string
       subresources:
         status: {}
-
 ---
 # Source: kube-arangodb-crd/templates/backup.yaml
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-    name: arangobackups.backup.arangodb.com
-    labels:
-        app.kubernetes.io/name: kube-arangodb-crd
-        helm.sh/chart: kube-arangodb-crd-1.2.24
-        app.kubernetes.io/managed-by: Tiller
-        app.kubernetes.io/instance: crd
-        release: crd
+  name: arangobackups.backup.arangodb.com
+  labels:
+    app.kubernetes.io/name: kube-arangodb-crd
+    helm.sh/chart: kube-arangodb-crd-1.2.24
+    app.kubernetes.io/managed-by: Tiller
+    app.kubernetes.io/instance: crd
+    release: crd
 spec:
   group: backup.arangodb.com
   names:
@@ -180,19 +178,18 @@ spec:
           type: string
       subresources:
         status: {}
-
 ---
 # Source: kube-arangodb-crd/templates/deployment-replications.yaml
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-    name: arangodeploymentreplications.replication.database.arangodb.com
-    labels:
-        app.kubernetes.io/name: kube-arangodb-crd
-        helm.sh/chart: kube-arangodb-crd-1.2.24
-        app.kubernetes.io/managed-by: Tiller
-        app.kubernetes.io/instance: crd
-        release: crd
+  name: arangodeploymentreplications.replication.database.arangodb.com
+  labels:
+    app.kubernetes.io/name: kube-arangodb-crd
+    helm.sh/chart: kube-arangodb-crd-1.2.24
+    app.kubernetes.io/managed-by: Tiller
+    app.kubernetes.io/instance: crd
+    release: crd
 spec:
   group: replication.database.arangodb.com
   names:
@@ -227,19 +224,18 @@ spec:
       storage: false
       subresources:
         status: {}
-
 ---
 # Source: kube-arangodb-crd/templates/deployment.yaml
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-    name: arangodeployments.database.arangodb.com
-    labels:
-        app.kubernetes.io/name: kube-arangodb-crd
-        helm.sh/chart: kube-arangodb-crd-1.2.24
-        app.kubernetes.io/managed-by: Tiller
-        app.kubernetes.io/instance: crd
-        release: crd
+  name: arangodeployments.database.arangodb.com
+  labels:
+    app.kubernetes.io/name: kube-arangodb-crd
+    helm.sh/chart: kube-arangodb-crd-1.2.24
+    app.kubernetes.io/managed-by: Tiller
+    app.kubernetes.io/instance: crd
+    release: crd
 spec:
   group: database.arangodb.com
   names:
@@ -312,7 +308,6 @@ spec:
           type: string
       subresources:
         status: {}
-
 ---
 # Source: kube-arangodb-crd/templates/k2kclustersync.yaml
 apiVersion: apiextensions.k8s.io/v1
@@ -354,19 +349,18 @@ spec:
       storage: false
       subresources:
         status: {}
-
 ---
 # Source: kube-arangodb-crd/templates/member.yaml
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-    name: arangomembers.database.arangodb.com
-    labels:
-        app.kubernetes.io/name: kube-arangodb-crd
-        helm.sh/chart: kube-arangodb-crd-1.2.24
-        app.kubernetes.io/managed-by: Tiller
-        app.kubernetes.io/instance: crd
-        release: crd
+  name: arangomembers.database.arangodb.com
+  labels:
+    app.kubernetes.io/name: kube-arangodb-crd
+    helm.sh/chart: kube-arangodb-crd-1.2.24
+    app.kubernetes.io/managed-by: Tiller
+    app.kubernetes.io/instance: crd
+    release: crd
 spec:
   group: database.arangodb.com
   names:

@@ -8,7 +8,7 @@ spec:
     role: single
   type: NodePort
   ports:
-  - protocol: TCP
-    port: 8529
-    targetPort: 8529
-    nodePort: 30529
+    - protocol: TCP
+      port: 8529
+      targetPort: 8529
+      nodePort: 30529

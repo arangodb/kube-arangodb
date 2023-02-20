@@ -14,4 +14,3 @@ spec:
     externalAccess:
       type: LoadBalancer
       loadBalancerIP: 192.168.140.211
-

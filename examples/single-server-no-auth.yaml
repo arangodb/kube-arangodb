@@ -6,4 +6,3 @@ spec:
   mode: Single
   auth:
     jwtSecretName: None
-
