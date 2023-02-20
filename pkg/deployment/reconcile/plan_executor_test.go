@@ -21,11 +21,11 @@
 package reconcile
 
 import (
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
