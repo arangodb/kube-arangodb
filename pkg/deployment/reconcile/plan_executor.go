@@ -226,7 +226,7 @@ func (d *Reconciler) executePlan(ctx context.Context, statusPlan api.Plan, pg pl
 			}
 		}
 
-		done, abort, recall, retry, err := d.executeOptionalAction(ctx, planAction, action)
+		done, abort, recall, retry, err := d.executeAnyAction(ctx, planAction, action)
 		if err != nil {
 			if retry {
 				return plan, true, false, nil
@@ -305,6 +305,14 @@ func (d *Reconciler) executePlan(ctx context.Context, statusPlan api.Plan, pg pl
 			return plan, recall, false, nil
 		}
 	}
+}
+
+func (d *Reconciler) executeAnyAction(ctx context.Context, planAction api.Action, action Action) (done, abort, callAgain, retry bool, err error) {
+	if planAction.Type.Optional() {
+		return d.executeOptionalAction(ctx, planAction, action)
+	}
+
+	return d.executeAction(ctx, planAction, action)
 }
 
 func (d *Reconciler) executeOptionalAction(ctx context.Context, planAction api.Action, action Action) (done, abort, callAgain, retry bool, err error) {
