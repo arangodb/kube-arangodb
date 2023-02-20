@@ -29,12 +29,24 @@ type dateRange struct {
 func mainE() error {
 	// Ensure that all files have proper license dates
 
+	rewrite := false
+
+	for _, a := range os.Args[1:] {
+		if a == "-w" {
+			rewrite = true
+		}
+	}
+
 	files := map[string]int{}
 
 	currentHeaders := map[string]dateRange{}
 
 	// Extract current dates
 	for _, file := range os.Args[1:] {
+		if file == "-w" {
+			continue
+		}
+
 		var out bytes.Buffer
 
 		cmd := exec.Command("git", "log", "-n", "1", "--pretty=format:%cd", file)
@@ -79,6 +91,21 @@ func mainE() error {
 			valid = false
 		} else if date < c.from || date > c.to {
 			println(fmt.Sprintf("Date %d not in range %d-%d for %s. File has beed modified", date, c.from, c.to, file))
+			if rewrite {
+				println("Rewrite file")
+
+				q := fmt.Sprintf("// Copyright %d-%d ArangoDB GmbH, Cologne, Germany", c.from, c.to)
+				if c.from == c.to {
+					q = fmt.Sprintf("// Copyright %d ArangoDB GmbH, Cologne, Germany", c.to)
+				}
+
+				changed, err := rewriteLicenseDates(file, q, fmt.Sprintf("// Copyright %d-%d ArangoDB GmbH, Cologne, Germany", c.from, date))
+				if err != nil {
+					return err
+				} else if changed {
+					continue
+				}
+			}
 			valid = false
 		}
 	}
@@ -88,6 +115,55 @@ func mainE() error {
 	}
 
 	return nil
+}
+
+func rewriteLicenseDates(file string, from, to string) (bool, error) {
+	data, changed, err := readNewLicenseDates(file, from, to)
+	if err != nil {
+		return false, err
+	}
+
+	if !changed {
+		return false, nil
+	}
+
+	if err := os.WriteFile(file, data, 0644); err != nil {
+		if err != nil {
+			return false, err
+		}
+	}
+
+	return true, nil
+}
+
+func readNewLicenseDates(file string, from, to string) ([]byte, bool, error) {
+	readFile, err := os.Open(file)
+	if err != nil {
+		return nil, false, err
+	}
+
+	defer readFile.Close()
+
+	fileScanner := bufio.NewScanner(readFile)
+
+	fileScanner.Split(bufio.ScanLines)
+
+	q := bytes.NewBuffer(nil)
+
+	got := false
+
+	for fileScanner.Scan() {
+		t := fileScanner.Text()
+		if t == from {
+			got = true
+			q.WriteString(to)
+		} else {
+			q.WriteString(t)
+		}
+		q.WriteString("\n")
+	}
+
+	return q.Bytes(), got, nil
 }
 
 func extractFileLicenseData(file string) (int, int, error) {

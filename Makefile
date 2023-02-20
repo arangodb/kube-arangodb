@@ -232,6 +232,10 @@ license-verify:
 license-range-verify:
 	@GOBIN=$(GOPATH)/bin go run "$(ROOT)/tools/license/" $(SOURCES)
 
+.PHONY: license-range
+license-range:
+	@GOBIN=$(GOPATH)/bin go run "$(ROOT)/tools/license/" -w $(SOURCES)
+
 .PHONY: fmt
 fmt:
 	@echo ">> Ensuring style of files"
@@ -250,11 +254,11 @@ fmt-verify: license-verify
 
 .PHONY: linter
 linter:
-	$(GOPATH)/bin/golangci-lint run --build-tags "$(RELEASE_MODE)" $(foreach LINT_EXCLUDE,$(LINT_EXCLUDES),--exclude '$(LINT_EXCLUDE)') ./...
+	@$(GOPATH)/bin/golangci-lint run --build-tags "$(RELEASE_MODE)" $(foreach LINT_EXCLUDE,$(LINT_EXCLUDES),--exclude '$(LINT_EXCLUDE)') ./...
 
 .PHONY: linter-fix
 linter-fix:
-	$(GOPATH)/bin/golangci-lint run --fix --build-tags "$(RELEASE_MODE)" $(foreach LINT_EXCLUDE,$(LINT_EXCLUDES),--exclude '$(LINT_EXCLUDE)') ./...
+	@$(GOPATH)/bin/golangci-lint run --fix --build-tags "$(RELEASE_MODE)" $(foreach LINT_EXCLUDE,$(LINT_EXCLUDES),--exclude '$(LINT_EXCLUDE)') ./...
 
 .PHONY: build
 build: docker manifests
@@ -607,3 +611,6 @@ generate-proto:
 			--go_out=. --go_opt=paths=source_relative \
 			--go-grpc_out=. --go-grpc_opt=paths=source_relative \
 			$(PROTOSOURCES)
+
+.PHONY: fix
+fix: license-range fmt license
