@@ -8,10 +8,13 @@ go_import_path: github.com/arangodb/kube-arangodb
 env:
   - GO111MODULES=off
 
-install:
-  - make init
-
 script:
-  - make license-verify license-range-verify fmt-verify linter
-  - make run-unit-tests
-  - make bin
+  - |
+    if [ "$TRAVIS_PULL_REQUEST" != "false" ] || [ ! -z "$ALWAYS" ]; then
+      make init
+      make license-verify license-range-verify fmt-verify linter
+      make run-unit-tests
+      make bin
+    else
+      make vendor tools-min fmt-verify linter
+    fi

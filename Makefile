@@ -493,16 +493,19 @@ tidy:
 deps-reload: tidy init
 
 .PHONY: init
-init: tools update-generated $(BIN) vendor
+init: vendor tools update-generated $(BIN)
 
-.PHONY: tools
-tools: update-vendor
+.PHONY: tools-min
+tools-min: update-vendor
 	@echo ">> Fetching golangci-lint linter"
 	@GOBIN=$(GOPATH)/bin go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.50.1
 	@echo ">> Fetching goimports"
 	@GOBIN=$(GOPATH)/bin go install golang.org/x/tools/cmd/goimports@0bb7e5c47b1a31f85d4f173edc878a8e049764a5
 	@echo ">> Fetching license check"
 	@GOBIN=$(GOPATH)/bin go install github.com/google/addlicense@6d92264d717064f28b32464f0f9693a5b4ef0239
+
+.PHONY: tools
+tools: tools-min
 	@echo ">> Fetching gci"
 	@GOBIN=$(GOPATH)/bin go install github.com/daixiang0/gci@v0.3.0
 	@echo ">> Downloading protobuf compiler..."
