@@ -46,6 +46,14 @@ func Test_Actions(t *testing.T) {
             require.False(t, api.ActionType{{ . }}.Internal())
 {{- end }}
         })
+{{- $isOptional := index $root.optional . }}
+        t.Run("Optional", func(t *testing.T) {
+{{- if $isOptional }}
+            require.True(t, api.ActionType{{ . }}.Optional())
+{{- else }}
+            require.False(t, api.ActionType{{ . }}.Optional())
+{{- end }}
+        })
     })
 {{- end }}
 }

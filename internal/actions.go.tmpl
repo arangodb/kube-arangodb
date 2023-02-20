@@ -72,3 +72,19 @@ func (a ActionType) Internal() bool {
             return false
     }
 }
+
+// Optional returns true if action execution wont abort Plan
+func (a ActionType) Optional() bool {
+    switch a {
+{{- range $key, $value := .optionals }}
+        case ActionType{{ $key }}:
+{{- if $value }}
+          return true
+{{- else }}
+          return false
+{{- end }}
+{{- end }}
+        default:
+            return false
+    }
+}
