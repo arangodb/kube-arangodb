@@ -9,7 +9,7 @@ spec:
   type: NodePort
   publishNotReadyAddresses: true
   ports:
-  - protocol: TCP
-    port: 8529
-    targetPort: 8529
-    nodePort: 31529
+    - protocol: TCP
+      port: 8529
+      targetPort: 8529
+      nodePort: 31529

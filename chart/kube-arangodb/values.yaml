@@ -1,24 +1,15 @@
----
-
 operator:
   image: arangodb/kube-arangodb:1.2.24
   imagePullPolicy: IfNotPresent
   imagePullSecrets: []
-
   scope: legacy
-  
   architectures:
-  - amd64
-
+    - amd64
   debug: false
-
   args: []
-
   service:
     type: ClusterIP
-
   annotations: {}
-
   resources:
     limits:
       cpu: 1
@@ -26,21 +17,14 @@ operator:
     requests:
       cpu: 250m
       memory: 256Mi
-
   securityContext:
     runAsUser: 1000
-
   replicaCount: 2
-
   updateStrategy:
     type: Recreate
-
   allowChaos: false
-
   nodeSelector: {}
-  
   enableCRDManagement: true
-
   features:
     deployment: true
     deploymentReplications: true
@@ -48,14 +32,11 @@ operator:
     backup: false
     apps: false
     k8sToK8sClusterSync: false
-
   images:
     base: alpine:3.11
     metricsExporter: arangodb/arangodb-exporter:0.1.7
     arango: arangodb/arangodb:latest
-
   tolerations: []
-
 rbac:
   enabled: true
   extensions:

@@ -1,7 +1,4 @@
----
-
 default_timeout: 10m
-
 actions:
   PlaceHolder:
     description: Empty placeholder action

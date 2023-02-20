@@ -1,5 +1,3 @@
----
-
 run:
   issues-exit-code: 3
   timeout: 30m
@@ -8,21 +6,19 @@ run:
     - .gobuild
     - deps
     - tools
-
 linters:
   disable-all: true
   enable:
-    - gosimple 
-    - govet 
-    - ineffassign 
+    - gosimple
+    - govet
+    - ineffassign
     - staticcheck
-    - typecheck 
-    - unconvert 
-    - unparam 
+    - typecheck
+    - unconvert
+    - unparam
     - unused
     - importas
     - gci
-
 linters-settings:
   importas:
     no-unaliased: true
