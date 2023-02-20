@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,50 +18,39 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package crd
+package crds
 
 import (
-	"sync"
+	_ "embed"
 
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/arangodb/go-driver"
-
-	"github.com/arangodb/kube-arangodb/pkg/crd/crds"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-const Version = "arangodb.com/version"
-
-var (
-	registeredCRDs = map[string]crd{}
-
-	crdsLock sync.Mutex
+const (
+	DatabaseTaskVersion = driver.Version("1.0.1")
 )
 
-type crd struct {
-	version driver.Version
-	spec    apiextensions.CustomResourceDefinitionSpec
-}
-
-func registerCRDWithPanic(c crds.Definition) {
-	if err := registerCRD(c.CRD.GetName(), crd{
-		version: c.Version,
-		spec:    c.CRD.Spec,
-	}); err != nil {
+func init() {
+	if err := yaml.Unmarshal(databaseTask, &databaseTaskCRD); err != nil {
 		panic(err)
 	}
 }
 
-func registerCRD(name string, crd crd) error {
-	crdsLock.Lock()
-	defer crdsLock.Unlock()
-
-	if _, ok := registeredCRDs[name]; ok {
-		return errors.Newf("CRD %s already exists", name)
-	}
-
-	registeredCRDs[name] = crd
-
-	return nil
+func DatabaseTask() *apiextensions.CustomResourceDefinition {
+	return databaseTaskCRD.DeepCopy()
 }
+
+func DatabaseTaskDefinition() Definition {
+	return Definition{
+		Version: DatabaseTaskVersion,
+		CRD:     databaseTaskCRD.DeepCopy(),
+	}
+}
+
+var databaseTaskCRD apiextensions.CustomResourceDefinition
+
+//go:embed database-task.yaml
+var databaseTask []byte

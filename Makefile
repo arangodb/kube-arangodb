@@ -397,7 +397,20 @@ endef
 .PHONY: manifests
 manifests:
 
-$(eval $(call manifest-generator, crd, kube-arangodb-crd))
+.PHONY: manifests-crd-file
+manifests-crd-file:
+	@echo Building manifests for CRD - $(MANIFESTPATHCRD)
+	@echo -n > $(MANIFESTPATHCRD)
+	@$(foreach FILE,$(CRDS),echo '---\n# File: chart/kube-arangodb/crds/$(FILE).yaml' >> $(MANIFESTPATHCRD) && \
+                           cat '$(ROOT)/chart/kube-arangodb/crds/$(FILE).yaml' >> $(MANIFESTPATHCRD) && \
+                           echo '\n' >> $(MANIFESTPATHCRD);)
+manifests: manifests-crd-file
+
+.PHONY: manifests-crd-kustomize
+manifests-crd-kustomize: manifests-crd-file
+	@echo Building manifests for CRD - $(KUSTOMIZEPATHCRD)
+	@cp "$(MANIFESTPATHCRD)" "$(KUSTOMIZEPATHCRD)"
+manifests: manifests-crd-kustomize
 
 $(eval $(call manifest-generator, deployment, kube-arangodb, \
        --set "operator.features.deployment=true" \
@@ -481,6 +494,7 @@ run-unit-tests: $(SOURCES)
 		$(REPOPATH)/pkg/apis/storage/... \
 		$(REPOPATH)/pkg/deployment/... \
 		$(REPOPATH)/pkg/storage \
+	    $(REPOPATH)/pkg/crd/... \
 		$(REPOPATH)/pkg/util/... \
 		$(REPOPATH)/pkg/handlers/...
 
@@ -526,6 +540,8 @@ tools-min: update-vendor
 tools: tools-min
 	@echo ">> Fetching gci"
 	@GOBIN=$(GOPATH)/bin go install github.com/daixiang0/gci@v0.3.0
+	@echo ">> Fetching yamlfmt"
+	@GOBIN=$(GOPATH)/bin go install github.com/UltiRequiem/yamlfmt@v1.3.0
 	@echo ">> Downloading protobuf compiler..."
 	@curl -L ${PROTOC_URL} -o $(GOPATH)/protoc.zip
 	@echo ">> Unzipping protobuf compiler..."
@@ -612,7 +628,7 @@ check-enterprise:
 check-community:
 	@$(MAKE) _check RELEASE_MODE=community
 
-_check:
+_check: sync-crds
 	@$(MAKE) fmt yamlfmt license-verify linter run-unit-tests bin
 
 generate: generate-internal generate-proto fmt
@@ -628,3 +644,12 @@ generate-proto:
 
 .PHONY: fix
 fix: license-range fmt license yamlfmt
+
+CRDS:=apps-job \
+      backups-backup backups-backuppolicy \
+      database-clustersynchronization database-deployment database-member database-task \
+      replication-deploymentreplication
+
+.PHONY: sync-crds
+sync-crds:
+	@cp $(foreach FILE,$(CRDS),"$(ROOT)/chart/kube-arangodb/crds/$(FILE).yaml" ) "$(ROOT)/pkg/crd/crds/"

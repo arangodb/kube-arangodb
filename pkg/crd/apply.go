@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ func EnsureCRD(ctx context.Context, client kclient.Client, ignoreErrors bool) er
 	crdsLock.Lock()
 	defer crdsLock.Unlock()
 
-	for crd, spec := range crds {
+	for crd, spec := range registeredCRDs {
 		getAccess := verifyCRDAccess(ctx, client, crd, "get")
 		if !getAccess.Allowed {
 			logger.Str("crd", crd).Info("Get Operations is not allowed. Continue")
@@ -123,6 +123,10 @@ func tryApplyCRD(ctx context.Context, client kclient.Client, crd string, spec cr
 }
 
 func verifyCRDAccess(ctx context.Context, client kclient.Client, crd string, verb string) authorization.SubjectAccessReviewStatus {
+	if c := verifyCRDAccessForTests; c != nil {
+		return *c
+	}
+
 	r, err := verifyCRDAccessRequest(ctx, client, crd, verb)
 	if err != nil {
 		return authorization.SubjectAccessReviewStatus{
@@ -133,6 +137,8 @@ func verifyCRDAccess(ctx context.Context, client kclient.Client, crd string, ver
 
 	return r.Status
 }
+
+var verifyCRDAccessForTests *authorization.SubjectAccessReviewStatus
 
 func verifyCRDAccessRequest(ctx context.Context, client kclient.Client, crd string, verb string) (*authorization.SelfSubjectAccessReview, error) {
 	review := authorization.SelfSubjectAccessReview{
