@@ -396,16 +396,28 @@ func (d *Reconciler) executeAction(ctx context.Context, planAction api.Action, a
 		log.Warn("Action aborted. Removing the entire plan")
 		d.context.CreateEvent(k8sutil.NewPlanAbortedEvent(d.context.GetAPIObject(), string(planAction.Type), planAction.MemberID, planAction.Group.AsRole()))
 		return false, true, false, false, nil
-	} else if !timeout.Infinite() && !planAction.StartTime.IsZero() {
-		if time.Now().After(planAction.StartTime.Add(timeout.Duration)) {
-			log.Warn("Action not finished in time. Removing the entire plan")
-			d.context.CreateEvent(k8sutil.NewPlanTimeoutEvent(d.context.GetAPIObject(), string(planAction.Type), planAction.MemberID, planAction.Group.AsRole()))
-			return false, true, false, false, nil
-		}
+	} else if isActionTimeout(timeout, planAction) {
+		log.Warn("Action not finished in time. Removing the entire plan")
+		d.context.CreateEvent(k8sutil.NewPlanTimeoutEvent(d.context.GetAPIObject(), string(planAction.Type), planAction.MemberID, planAction.Group.AsRole()))
+		return false, true, false, false, nil
+
 	}
 
 	// Timeout not yet expired, come back soon
 	return false, false, true, false, nil
+}
+
+func isActionTimeout(timeout api.Timeout, planAction api.Action) bool {
+	if planAction.StartTime == nil {
+		return false
+	}
+	if planAction.StartTime.IsZero() {
+		return false
+	}
+	if timeout.Infinite() {
+		return false
+	}
+	return time.Now().After(planAction.StartTime.Add(timeout.Duration))
 }
 
 func (d *Reconciler) executeActionCheckProgress(ctx context.Context, action Action) (ready bool, abort bool, retErr error) {
