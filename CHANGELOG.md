@@ -8,6 +8,8 @@
 - (Feature) SilentRotation High plan
 - (Improvement) Update arangosync-client package for new API capabilities and better HTTP handling
 - (Maintenance) Fix generated license dates
+- (Improvement) Reduce CI on Commit Travis runs
+- (Maintenance) Add license range rewrite command
 - (Feature) Optional Action
 
 ## [1.2.24](https://github.com/arangodb/kube-arangodb/tree/1.2.24) (2023-01-25)
