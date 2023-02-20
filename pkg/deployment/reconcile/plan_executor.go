@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -226,7 +226,7 @@ func (d *Reconciler) executePlan(ctx context.Context, statusPlan api.Plan, pg pl
 			}
 		}
 
-		done, abort, recall, retry, err := d.executeAction(ctx, planAction, action)
+		done, abort, recall, retry, err := d.executeAnyAction(ctx, planAction, action)
 		if err != nil {
 			if retry {
 				return plan, true, false, nil
@@ -307,6 +307,35 @@ func (d *Reconciler) executePlan(ctx context.Context, statusPlan api.Plan, pg pl
 	}
 }
 
+func (d *Reconciler) executeAnyAction(ctx context.Context, planAction api.Action, action Action) (done, abort, callAgain, retry bool, err error) {
+	if planAction.Type.Optional() {
+		return d.executeOptionalAction(ctx, planAction, action)
+	}
+
+	return d.executeAction(ctx, planAction, action)
+}
+
+func (d *Reconciler) executeOptionalAction(ctx context.Context, planAction api.Action, action Action) (done, abort, callAgain, retry bool, err error) {
+	done, abort, callAgain, retry, err = d.executeAction(ctx, planAction, action)
+	if err != nil {
+		// Check if we still can retry
+		if retry {
+			return
+		}
+
+		// We cant retry anymore, check if abort was requested
+		if abort {
+			return
+		}
+
+		done = true
+		err = nil
+		d.planLogger.Str("action", string(planAction.Type)).Str("member", planAction.MemberID).Err(err).Warn("Optional action failed, but it is safe to continue")
+	}
+
+	return
+}
+
 func (d *Reconciler) executeAction(ctx context.Context, planAction api.Action, action Action) (done, abort, callAgain, retry bool, err error) {
 	log := d.planLogger.Str("action", string(planAction.Type)).Str("member", planAction.MemberID)
 	log.Info("Executing action")
@@ -321,6 +350,7 @@ func (d *Reconciler) executeAction(ctx context.Context, planAction api.Action, a
 					return false, false, false, true, errors.WithStack(err)
 				}
 			}
+
 			log.Err(err).Error("Failed to start action")
 			return false, false, false, false, errors.WithStack(err)
 		}

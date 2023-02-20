@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -68,6 +68,16 @@ func (i ActionsInput) Keys() []string {
 	sort.Strings(z)
 
 	return z
+}
+
+func (i ActionsInput) Optionals() map[string]bool {
+	r := map[string]bool{}
+
+	for k, v := range i.Actions {
+		r[k] = v.Optional
+	}
+
+	return r
 }
 
 type Scopes struct {
@@ -179,6 +189,8 @@ type Action struct {
 	Enterprise bool `json:"enterprise"`
 
 	IsInternal bool `json:"isInternal"`
+
+	Optional bool `json:"optional"`
 }
 
 func (a Action) InScope(scope string) bool {
@@ -222,6 +234,7 @@ func RenderActions(root string) error {
 			"internal":       in.Internal(),
 			"timeouts":       in.Timeouts(),
 			"descriptions":   in.Descriptions(),
+			"optionals":      in.Optionals(),
 			"defaultTimeout": fmt.Sprintf("%d * time.Second // %s", in.DefaultTimeout.Duration/time.Second, in.DefaultTimeout.Duration.String()),
 		}); err != nil {
 			return err
@@ -274,6 +287,7 @@ func RenderActions(root string) error {
 			"actions":                    in.Keys(),
 			"startupFailureGracePeriods": in.StartFailureGracePeriods(),
 			"internal":                   in.Internal(),
+			"optional":                   in.Optionals(),
 		}); err != nil {
 			return err
 		}
@@ -300,11 +314,13 @@ func RenderActions(root string) error {
 		timeout := md.NewColumn("Timeout", md.ColumnCenterAlign)
 		description := md.NewColumn("Description", md.ColumnCenterAlign)
 		internal := md.NewColumn("Internal", md.ColumnCenterAlign)
+		optional := md.NewColumn("Optional", md.ColumnCenterAlign)
 		edition := md.NewColumn("Edition", md.ColumnCenterAlign)
 		t := md.NewTable(
 			action,
 			internal,
 			timeout,
+			optional,
 			edition,
 			description,
 		)
@@ -324,12 +340,17 @@ func RenderActions(root string) error {
 			if !a.IsInternal {
 				int = "no"
 			}
+			opt := "yes"
+			if !a.Optional {
+				opt = "no"
+			}
 
 			if err := t.AddRow(map[md.Column]string{
 				action:      k,
 				timeout:     v,
 				description: a.Description,
 				edition:     vr,
+				optional:    opt,
 				internal:    int,
 			}); err != nil {
 				return err
