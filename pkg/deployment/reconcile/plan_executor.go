@@ -417,7 +417,7 @@ func isActionTimeout(timeout api.Timeout, planAction api.Action) bool {
 	if timeout.Infinite() {
 		return false
 	}
-	return time.Now().After(planAction.StartTime.Add(timeout.Duration))
+	return time.Since(planAction.StartTime.Time) > timeout.Duration
 }
 
 func (d *Reconciler) executeActionCheckProgress(ctx context.Context, action Action) (ready bool, abort bool, retErr error) {
