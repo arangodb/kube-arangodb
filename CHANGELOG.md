@@ -12,6 +12,7 @@
 - (Maintenance) Add license range rewrite command
 - (Feature) Optional Action
 - (Maintenance) Add & Enable YAML Linter
+- (Feature) Optional ResignLeadership Action
 - (Bugfix) Fix invalid Timeout calculation in case of ActionList
 
 ## [1.2.24](https://github.com/arangodb/kube-arangodb/tree/1.2.24) (2023-01-25)

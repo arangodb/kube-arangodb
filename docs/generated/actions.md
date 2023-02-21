@@ -50,7 +50,7 @@
 |            RemoveMember            |    no    |  15m0s  |    no    | Community & Enterprise |                                     Removes member from the Cluster and Status                                     |
 |       RenewTLSCACertificate        |    no    |  30m0s  |    no    |    Enterprise Only     |                                             Recreate Managed CA secret                                             |
 |        RenewTLSCertificate         |    no    |  30m0s  |    no    |    Enterprise Only     |                                       Recreate Server TLS Certificate secret                                       |
-|          ResignLeadership          |    no    |  30m0s  |    no    | Community & Enterprise |                                      Run the ResignLeadership job on DBServer                                      |
+|          ResignLeadership          |    no    |  30m0s  |   yes    | Community & Enterprise |                                      Run the ResignLeadership job on DBServer                                      |
 |            ResourceSync            |    no    |  10m0s  |    no    | Community & Enterprise |                                               Runs the Resource sync                                               |
 |            RotateMember            |    no    |  15m0s  |    no    | Community & Enterprise |                                        Waits for Pod restart and recreation                                        |
 |         RotateStartMember          |    no    |  15m0s  |    no    | Community & Enterprise |                              Start member rotation. After this action member is down                               |

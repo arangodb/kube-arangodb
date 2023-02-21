@@ -759,7 +759,7 @@ func (a ActionType) Optional() bool {
 	case ActionTypeRenewTLSCertificate:
 		return false
 	case ActionTypeResignLeadership:
-		return false
+		return true
 	case ActionTypeResourceSync:
 		return false
 	case ActionTypeRotateMember:
