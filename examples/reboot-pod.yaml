@@ -29,17 +29,13 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
-
 ---
-
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: arango-deployment-operator-reboot
   namespace: default
-
 ---
-
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -52,10 +48,7 @@ rules:
   - apiGroups: ["database.arangodb.com"]
     resources: ["arangodeployments"]
     verbs: ["*"]
-
-
 ---
-
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
@@ -69,9 +62,7 @@ subjects:
   - kind: ServiceAccount
     name: arango-deployment-operator-reboot
     namespace: default
-
 ---
-
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -81,9 +72,7 @@ rules:
   - apiGroups: [""]
     resources: ["persistentvolumes"]
     verbs: ["*"]
-
 ---
-
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:

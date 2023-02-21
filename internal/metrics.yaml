@@ -1,8 +1,5 @@
----
-  
 documentation: docs/generated/metrics
 destination: pkg/generated/metric_descriptions
-
 namespaces:
   arangodb_operator:
     agency_cache:

@@ -198,6 +198,12 @@ EXCLUDE_DIRS := vendor .gobuild deps tools pkg/generated/clientset pkg/generated
 EXCLUDE_FILES := *generated.deepcopy.go
 SOURCES_QUERY := find ./ -type f -name '*.go' ! -name '*.pb.go' $(foreach EXCLUDE_DIR,$(EXCLUDE_DIRS), ! -path "*/$(EXCLUDE_DIR)/*") $(foreach EXCLUDE_FILE,$(EXCLUDE_FILES), ! -path "*/$(EXCLUDE_FILE)")
 SOURCES := $(shell $(SOURCES_QUERY))
+
+YAML_EXCLUDE_DIRS := vendor .gobuild deps tools pkg/generated/clientset pkg/generated/informers pkg/generated/listers chart/kube-arangodb/templates chart/kube-arangodb-crd/templates chart/arangodb-ingress-proxy/templates
+YAML_EXCLUDE_FILES :=
+YAML_QUERY := find ./ -type f -name '*.yaml' $(foreach EXCLUDE_DIR,$(YAML_EXCLUDE_DIRS), ! -path "*/$(EXCLUDE_DIR)/*") $(foreach EXCLUDE_FILE,$(YAML_EXCLUDE_FILES), ! -path "*/$(EXCLUDE_FILE)")
+YAMLS := $(shell $(YAML_QUERY))
+
 DASHBOARDSOURCES := $(shell find $(DASHBOARDDIR)/src -name '*.js') $(DASHBOARDDIR)/package.json
 LINT_EXCLUDES:=
 ifeq ($(RELEASE_MODE),enterprise)
@@ -241,6 +247,12 @@ fmt:
 	@echo ">> Ensuring style of files"
 	@$(GOPATH)/bin/goimports -w $(SOURCES)
 	@$(GOPATH)/bin/gci write -s "standard" -s "default" -s "prefix(github.com/arangodb)" -s "prefix(github.com/arangodb/kube-arangodb)" $(SOURCES) 
+
+.PHONY: yamlfmt
+yamlfmt:
+	@echo ">> Ensuring style of yaml files"
+	@$(GOPATH)/bin/yamlfmt -w $(YAMLS)
+	@$(GOPATH)/bin/yamlfmt -w $(YAMLS)
 
 .PHONY: license
 license:
@@ -507,6 +519,8 @@ tools-min: update-vendor
 	@GOBIN=$(GOPATH)/bin go install golang.org/x/tools/cmd/goimports@0bb7e5c47b1a31f85d4f173edc878a8e049764a5
 	@echo ">> Fetching license check"
 	@GOBIN=$(GOPATH)/bin go install github.com/google/addlicense@6d92264d717064f28b32464f0f9693a5b4ef0239
+	@echo ">> Fetching yamlfmt"
+	@GOBIN=$(GOPATH)/bin go install github.com/UltiRequiem/yamlfmt@v1.3.0
 
 .PHONY: tools
 tools: tools-min
@@ -599,7 +613,7 @@ check-community:
 	@$(MAKE) _check RELEASE_MODE=community
 
 _check:
-	@$(MAKE) fmt license-verify linter run-unit-tests bin
+	@$(MAKE) fmt yamlfmt license-verify linter run-unit-tests bin
 
 generate: generate-internal generate-proto fmt
 
@@ -613,4 +627,4 @@ generate-proto:
 			$(PROTOSOURCES)
 
 .PHONY: fix
-fix: license-range fmt license
+fix: license-range fmt license yamlfmt
