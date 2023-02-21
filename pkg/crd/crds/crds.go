@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,12 +18,29 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package crd
+package crds
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/crd/crds"
+	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+
+	"github.com/arangodb/go-driver"
 )
 
-func init() {
-	registerCRDWithPanic(crds.DatabaseDeploymentDefinition())
+type Definition struct {
+	Version driver.Version
+	CRD     *apiextensions.CustomResourceDefinition
+}
+
+func AllDefinitions() []Definition {
+	return []Definition{
+		AppsJobDefinition(),
+		BackupsBackupDefinition(),
+		BackupsBackupPolicyDefinition(),
+		DatabaseClusterSynchronizationDefinition(),
+		DatabaseDeploymentDefinition(),
+		DatabaseMemberDefinition(),
+		DatabaseTaskDefinition(),
+		ReplicationDeploymentReplicationDefinition(),
+		StorageLocalStorageDefinition(),
+	}
 }

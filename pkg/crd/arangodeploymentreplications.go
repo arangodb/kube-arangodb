@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,64 +21,9 @@
 package crd
 
 import (
-	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-
-	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/crd/crds"
 )
 
 func init() {
-	registerCRDWithPanic("arangodeploymentreplications.replication.database.arangodb.com", crd{
-		version: "1.0.1",
-		spec: apiextensions.CustomResourceDefinitionSpec{
-			Group: "replication.database.arangodb.com",
-			Names: apiextensions.CustomResourceDefinitionNames{
-				Plural:   "arangodeploymentreplications",
-				Singular: "arangodeploymentreplication",
-				ShortNames: []string{
-					"arangorepl",
-				},
-				Kind:     "ArangoDeploymentReplication",
-				ListKind: "ArangoDeploymentReplicationList",
-			},
-			Scope: apiextensions.NamespaceScoped,
-			Versions: []apiextensions.CustomResourceDefinitionVersion{
-				{
-					Name: "v1",
-					Schema: &apiextensions.CustomResourceValidation{
-						OpenAPIV3Schema: &apiextensions.JSONSchemaProps{
-							Type:                   "object",
-							XPreserveUnknownFields: util.NewBool(true),
-						},
-					},
-					Served:  true,
-					Storage: true,
-				},
-				{
-					Name: "v1alpha",
-					Schema: &apiextensions.CustomResourceValidation{
-						OpenAPIV3Schema: &apiextensions.JSONSchemaProps{
-							Type:                   "object",
-							XPreserveUnknownFields: util.NewBool(true),
-						},
-					},
-					Served:  true,
-					Storage: false,
-				},
-				{
-					Name: "v2alpha1",
-					Schema: &apiextensions.CustomResourceValidation{
-						OpenAPIV3Schema: &apiextensions.JSONSchemaProps{
-							Type:                   "object",
-							XPreserveUnknownFields: util.NewBool(true),
-						},
-					},
-					Served:  true,
-					Storage: false,
-					Subresources: &apiextensions.CustomResourceSubresources{
-						Status: &apiextensions.CustomResourceSubresourceStatus{},
-					},
-				},
-			},
-		},
-	})
+	registerCRDWithPanic(crds.ReplicationDeploymentReplicationDefinition())
 }

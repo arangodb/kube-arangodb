@@ -111,8 +111,6 @@ Only use this procedure for a new install of the operator. See below for
 upgrades.
 
 ```bash
-# The following will install the custom resources required by the operators.
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.24/kube-arangodb-crd-1.2.24.tgz
 # The following will install the operator for `ArangoDeployment` &
 # `ArangoDeploymentReplication` resources.
 helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.24/kube-arangodb-1.2.24.tgz
@@ -136,7 +134,6 @@ list` output:
 ```
 % helm list
 NAME            	REVISION	UPDATED                 	STATUS  	CHART                               	APP VERSION	NAMESPACE
-steely-mule     	1       	Sun Mar 31 21:11:07 2019	DEPLOYED	kube-arangodb-crd-0.3.9             	           	default  
 vetoed-ladybird 	1       	Mon Apr  8 11:36:58 2019	DEPLOYED	kube-arangodb-0.3.10-preview        	           	default  
 ```
 
@@ -200,8 +197,6 @@ Only use this procedure for a new install of the operator. See below for
 upgrades.
 
 ```bash
-# The following will install the custom resources required by the operators.
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.24/kube-arangodb-crd-1.2.24.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.24"
 # The following will install the operator for `ArangoDeployment` &
 # `ArangoDeploymentReplication` resources.
 helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.24/kube-arangodb-1.2.24.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.24"
@@ -225,7 +220,6 @@ list` output:
 ```
 % helm list
 NAME            	REVISION	UPDATED                 	STATUS  	CHART                               	APP VERSION	NAMESPACE
-steely-mule     	1       	Sun Mar 31 21:11:07 2019	DEPLOYED	kube-arangodb-crd-0.3.9             	           	default  
 vetoed-ladybird 	1       	Mon Apr  8 11:36:58 2019	DEPLOYED	kube-arangodb-0.3.10-preview        	           	default  
 ```
 
