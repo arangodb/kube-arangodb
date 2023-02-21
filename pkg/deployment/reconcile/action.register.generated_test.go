@@ -496,7 +496,7 @@ func Test_Actions(t *testing.T) {
 			require.False(t, api.ActionTypeResignLeadership.Internal())
 		})
 		t.Run("Optional", func(t *testing.T) {
-			require.False(t, api.ActionTypeResignLeadership.Optional())
+			require.True(t, api.ActionTypeResignLeadership.Optional())
 		})
 	})
 

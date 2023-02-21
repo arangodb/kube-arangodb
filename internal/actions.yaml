@@ -25,6 +25,7 @@ actions:
   ResignLeadership:
     description: Run the ResignLeadership job on DBServer
     timeout: 30m
+    optional: true
   KillMemberPod:
     description: Execute Delete on Pod 9put pod in Terminating state)
   RotateMember:
