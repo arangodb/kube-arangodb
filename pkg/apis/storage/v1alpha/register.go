@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,13 +24,16 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+
+	"github.com/arangodb/kube-arangodb/pkg/apis/storage"
 )
 
 const (
-	ArangoLocalStorageResourceKind   = "ArangoLocalStorage"
-	ArangoLocalStorageResourcePlural = "arangolocalstorages"
+	ArangoLocalStorageResourceKind   = storage.ArangoLocalStorageResourceKind
+	ArangoLocalStorageResourcePlural = storage.ArangoLocalStorageResourcePlural
 
-	groupName = "storage.arangodb.com"
+	groupName                 = storage.ArangoLocalStorageGroupName
+	ArangoLocalStorageCRDName = ArangoLocalStorageResourcePlural + "." + groupName
 )
 
 var (
@@ -38,7 +41,6 @@ var (
 	AddToScheme   = SchemeBuilder.AddToScheme
 
 	SchemeGroupVersion           = schema.GroupVersion{Group: groupName, Version: "v1alpha"}
-	ArangoLocalStorageCRDName    = ArangoLocalStorageResourcePlural + "." + groupName
 	ArangoLocalStorageShortNames = []string{"arangostorage"}
 )
 

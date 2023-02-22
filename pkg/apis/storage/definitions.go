@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,12 +18,16 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package crd
+package storage
 
-import (
-	"github.com/arangodb/kube-arangodb/pkg/crd/crds"
+const (
+	ArangoLocalStorageResourceKind   = "ArangoLocalStorage"
+	ArangoLocalStorageResourcePlural = "arangolocalstorages"
+
+	ArangoLocalStorageCRDName   = ArangoLocalStorageResourcePlural + "." + ArangoLocalStorageGroupName
+	ArangoLocalStorageGroupName = "storage.arangodb.com"
 )
 
-func init() {
-	registerCRDWithPanic(crds.DatabaseDeploymentDefinition())
-}
+var (
+	ArangoLocalStorageShortNames = []string{"arangostorage"}
+)
