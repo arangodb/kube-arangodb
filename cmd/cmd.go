@@ -279,6 +279,12 @@ func executeMain(cmd *cobra.Command, args []string) {
 	}
 	logging.Global().ApplyLogLevels(levels)
 
+	podNameParts := strings.Split(name, "-")
+	operatorID := podNameParts[len(podNameParts)-1]
+	logging.Global().RegisterWrappers(func(in *zerolog.Event) *zerolog.Event {
+		return in.Str("operator-id", operatorID)
+	})
+
 	logger.Info("nice to meet you")
 
 	// Check operating mode
