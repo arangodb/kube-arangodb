@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -103,6 +103,7 @@ var (
 		hardLimit uint64
 	}
 
+	prettifyLog   bool
 	logLevels     []string
 	serverOptions struct {
 		host            string
@@ -183,6 +184,7 @@ func init() {
 	f.StringVar(&serverOptions.tlsSecretName, "server.tls-secret-name", "", "Name of secret containing tls.crt & tls.key for HTTPS server (if empty, self-signed certificate is used)")
 	f.StringVar(&serverOptions.adminSecretName, "server.admin-secret-name", defaultAdminSecretName, "Name of secret containing username + password for login to the dashboard")
 	f.BoolVar(&serverOptions.allowAnonymous, "server.allow-anonymous-access", false, "Allow anonymous access to the dashboard")
+	f.BoolVar(&prettifyLog, "log.prettifyLog", true, "Prettify log output (if false, log output is in JSON format)")
 	f.StringArrayVar(&logLevels, "log.level", []string{defaultLogLevel}, fmt.Sprintf("Set log levels in format <level> or <logger>=<level>. Possible loggers: %s", strings.Join(logging.Global().Names(), ", ")))
 	f.BoolVar(&apiOptions.enabled, "api.enabled", true, "Enable operator HTTP and gRPC API")
 	f.IntVar(&apiOptions.httpPort, "api.http-port", defaultAPIHTTPPort, "HTTP API port to listen on")
@@ -272,6 +274,7 @@ func executeMain(cmd *cobra.Command, args []string) {
 		logger.Err(err).Fatal("Unable to parse log level")
 	}
 
+	logging.SetGlobal(prettifyLog)
 	logging.Global().ApplyLogLevels(levels)
 
 	podNameParts := strings.Split(name, "-")
