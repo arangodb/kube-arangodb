@@ -21,27 +21,18 @@
 package logging
 
 import (
-	"io"
 	"os"
 	"time"
 
 	"github.com/rs/zerolog"
 )
 
-var global = SetGlobal(true)
+var global = NewFactory(zerolog.New(zerolog.ConsoleWriter{
+	Out:        os.Stdout,
+	TimeFormat: time.RFC3339Nano,
+	NoColor:    true,
+}).With().Timestamp().Logger())
 
 func Global() Factory {
 	return global
-}
-
-func SetGlobal(isPretty bool) Factory {
-	var w io.Writer = os.Stderr
-	if isPretty {
-		w = zerolog.ConsoleWriter{
-			Out:        os.Stdout,
-			TimeFormat: time.RFC3339Nano,
-			NoColor:    true,
-		}
-	}
-	return NewFactory(zerolog.New(w).With().Timestamp().Logger())
 }

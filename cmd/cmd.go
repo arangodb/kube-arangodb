@@ -45,7 +45,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	typedCore "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/record"
-	"k8s.io/klog"
 
 	"github.com/arangodb/kube-arangodb/pkg/api"
 	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -274,20 +273,13 @@ func executeMain(cmd *cobra.Command, args []string) {
 		logger.Err(err).Fatal("Unable to parse log level")
 	}
 
-	logging.SetGlobal(prettifyLog)
+	// Set root logger to stdout (JSON formatted) if not prettified
+	if !prettifyLog {
+		logging.Global().SetRoot(zerolog.New(os.Stdout).With().Timestamp().Logger())
+	}
 	logging.Global().ApplyLogLevels(levels)
 
-	podNameParts := strings.Split(name, "-")
-	operatorID := podNameParts[len(podNameParts)-1]
-	logging.Global().RegisterWrappers(func(in *zerolog.Event) *zerolog.Event {
-		return in.Str("operator-id", operatorID)
-	})
-
-	kl := logging.Global().RegisterAndGetLogger("klog", logging.Info)
-
-	klog.SetOutput(kl.InfoIO())
-	klog.Info("nice to meet you")
-	klog.Flush()
+	logger.Info("nice to meet you")
 
 	// Check operating mode
 	if !operatorOptions.enableDeployment && !operatorOptions.enableDeploymentReplication && !operatorOptions.enableStorage &&
