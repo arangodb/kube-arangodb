@@ -1,5 +1,4 @@
+apiVersion: v2
 name: kube-arangodb
 version: 1.2.24
 description: "ArangoDB Kubernetes Operator"
-tillerVersion: ">2.7"
-appVersion: 3.5.0
