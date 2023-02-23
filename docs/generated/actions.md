@@ -2,6 +2,7 @@
 
 ## List
 
+<!-- START(actionsTable) -->
 |               Action               | Internal | Timeout | Optional |        Edition         |                                                    Description                                                     |
 |:----------------------------------:|:--------:|:-------:|:--------:|:----------------------:|:------------------------------------------------------------------------------------------------------------------:|
 |             AddMember              |    no    |  10m0s  |    no    | Community & Enterprise |                                         Adds new member to the Member list                                         |
@@ -81,9 +82,11 @@
 |         WaitForMemberReady         |    no    |  30m0s  |    no    | Community & Enterprise |                                          Wait for member Ready condition                                           |
 |          WaitForMemberUp           |    no    |  30m0s  |    no    | Community & Enterprise |                                          Wait for member to be responsive                                          |
 
+<!-- END(actionsTable) -->
 
 ## ArangoDeployment spec
 
+<!-- START(actionsModYaml) -->
 ```yaml
 spec:
   timeouts:
@@ -166,3 +169,4 @@ spec:
       WaitForMemberUp: 30m0s
 
 ```
+<!-- END(actionsModYaml) -->

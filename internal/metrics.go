@@ -38,9 +38,6 @@ var metricsGoTemplate []byte
 //go:embed metrics.item.go.tmpl
 var metricsItemGoTemplate []byte
 
-//go:embed metrics.tmpl
-var metricsTemplate []byte
-
 //go:embed metrics.item.tmpl
 var metricItemTemplate []byte
 
@@ -255,25 +252,9 @@ func generateMetricsREADME(root string, in MetricsDoc) error {
 		}
 	}
 
-	table := t.Render()
-
-	q, err := template.New("metrics").Parse(string(metricsTemplate))
-	if err != nil {
-		return err
-	}
-
-	out, err := os.OpenFile(path.Join(root, "README.md"), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
-	if err != nil {
-		return err
-	}
-
-	if err := q.Execute(out, map[string]interface{}{
-		"table": table,
+	if err := md.ReplaceSectionsInFile(path.Join(root, "README.md"), map[string]string{
+		"metricsTable": md.WrapWithNewLines(t.Render()),
 	}); err != nil {
-		return err
-	}
-
-	if err := out.Close(); err != nil {
 		return err
 	}
 

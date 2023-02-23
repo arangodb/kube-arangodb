@@ -1,7 +1,8 @@
 # ArangoDB Operator Metrics
 
-## List
+## List of the Operator metrics
 
+<!-- START(metricsTable) -->
 |                                                                 Name                                                                  |     Namespace     |       Group       |  Type   | Description                                                                           |
 |:-------------------------------------------------------------------------------------------------------------------------------------:|:-----------------:|:-----------------:|:-------:|:--------------------------------------------------------------------------------------|
 |                                [arangodb_operator_agency_errors](./arangodb_operator_agency_errors.md)                                | arangodb_operator |      agency       | Counter | Current count of agency cache fetch errors                                            |
@@ -30,3 +31,5 @@
 |   [arangodb_operator_resources_arangodeployment_status_restores](./arangodb_operator_resources_arangodeployment_status_restores.md)   | arangodb_operator |     resources     | Counter | Counter for deployment status restored                                                |
 |          [arangodb_operator_resources_arangodeployment_uptodate](./arangodb_operator_resources_arangodeployment_uptodate.md)          | arangodb_operator |     resources     |  Gauge  | Defines if ArangoDeployment is uptodate                                               |
 | [arangodb_operator_resources_arangodeployment_validation_errors](./arangodb_operator_resources_arangodeployment_validation_errors.md) | arangodb_operator |     resources     | Counter | Counter for deployment validation errors                                              |
+
+<!-- END(metricsTable) -->
