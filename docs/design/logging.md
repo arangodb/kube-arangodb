@@ -20,7 +20,7 @@ By default, operator logs in `pretty` format.
 To switch logging format to the JSON, you can use `operator.args` in chart template value:
 ```yaml
 operator:
-  args: ["--log.prettifyLog=false"]
+  args: ["--log.format=pretty"]
 ```
 
 ## ArangoDeployment logging
