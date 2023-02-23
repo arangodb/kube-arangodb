@@ -48,6 +48,7 @@ require (
 	github.com/stretchr/testify v1.7.1
 	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f
 	golang.org/x/sys v0.0.0-20210806184541-e5e7981a1069
+	golang.org/x/text v0.3.6
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac
 	google.golang.org/grpc v1.47.0
 	google.golang.org/protobuf v1.28.0
@@ -56,7 +57,6 @@ require (
 	k8s.io/apiextensions-apiserver v0.18.3
 	k8s.io/apimachinery v0.22.15
 	k8s.io/client-go v12.0.0+incompatible
-	k8s.io/klog v1.0.0
 	sigs.k8s.io/yaml v1.2.0
 )
 
@@ -67,7 +67,6 @@ require (
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/evanphx/json-patch v4.11.0+incompatible // indirect
-	github.com/gin-contrib/pprof v1.4.0 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-logr/logr v0.4.0 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
@@ -105,7 +104,6 @@ require (
 	golang.org/x/net v0.0.0-20211209124913-491a49abca63 // indirect
 	golang.org/x/oauth2 v0.0.0-20210402161424-2e8d93401602 // indirect
 	golang.org/x/term v0.0.0-20210220032956-6a3ed077a48d // indirect
-	golang.org/x/text v0.3.6 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20220617124728-180714bec0ad // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
