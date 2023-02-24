@@ -13,10 +13,7 @@ kind: ArangoDeployment
 metadata:
   name: cluster
 spec:
-  image: arangodb/enterprise
   mode: Cluster
-  externalAccess:
-    type: NodePort
   dbservers:
     overrideDetectedTotalMemory: true
     resources:
