@@ -29,22 +29,22 @@ Kubernetes versions starting from 1.18 are supported and tested, charts and mani
 The following table has the general readiness state, the table below
 covers individual newer features separately.
 
-| Platform            | Kubernetes Version | ArangoDB Version | State      | Remarks                                                          | Provider Remarks                   |
-|---------------------|--------------------|------------------|------------|------------------------------------------------------------------|------------------------------------|
-| Google GKE          | 1.22-1.25          | >= 3.6.0         | Production | Don't use micro nodes                                            |                                    |
-| Azure AKS           | 1.21-1.24          | >= 3.6.0         | Production |                                                                  |                                    |
-| Amazon EKS          | 1.21-1.24          | >= 3.6.0         | Production |                                                                  | [Amazon EKS](./docs/providers/eks) |
-| IBM Cloud           | 1.17               | >= 3.6.0         | Deprecated | Support will be dropped in Operator 1.5.0                        |                                    |
-| IBM Cloud           | 1.18               | >= 3.6.0         | Production |                                                                  |                                    |
-| IBM Cloud           | 1.19               | >= 3.6.0         | Production |                                                                  |                                    |
-| IBM Cloud           | 1.20               | >= 3.6.0         | Production |                                                                  |                                    |
-| IBM Cloud           | 1.21               | >= 3.6.0         | Production |                                                                  |                                    |
-| OpenShift           | 3.11               | >= 3.6.0         | Deprecated | Support will be dropped in Operator 1.5.0                        |                                    |
-| OpenShift           | 4.2-4.11           | >= 3.6.0         | Production |                                                                  |                                    |
-| BareMetal (kubeadm) | 1.16-1.17          | >= 3.6.0         | Deprecated | Support will be dropped in Operator 1.5.0                        |                                    |
-| BareMetal (kubeadm) | 1.18-1.25          | >= 3.6.0         | Production |                                                                  |                                    |
-| Minikube            | 1.18+              | >= 3.6.0         | Devel Only |                                                                  |                                    |
-| Other               | 1.18+              | >= 3.6.0         | Devel Only |                                                                  |                                    |
+<!-- START(metricsTable) -->
+| Platform            | Kubernetes Version | ArangoDB Version | State      | Remarks                                   | Provider Remarks                   |
+|:--------------------|:-------------------|:-----------------|:-----------|:------------------------------------------|:-----------------------------------|
+| Google GKE          | 1.21-1.25          | >= 3.6.0         | Production | Don't use micro nodes                     |                                    |
+| Azure AKS           | 1.21-1.24          | >= 3.6.0         | Production |                                           |                                    |
+| Amazon EKS          | 1.21-1.24          | >= 3.6.0         | Production |                                           | [Amazon EKS](./docs/providers/eks) |
+| IBM Cloud           | 1.17               | >= 3.6.0         | Deprecated | Support will be dropped in Operator 1.5.0 |                                    |
+| IBM Cloud           | 1.18-1.21          | >= 3.6.0         | Production |                                           |                                    |
+| OpenShift           | 3.11               | >= 3.6.0         | Deprecated | Support will be dropped in Operator 1.5.0 |                                    |
+| OpenShift           | 4.2-4.11           | >= 3.6.0         | Production |                                           |                                    |
+| BareMetal (kubeadm) | <= 1.20            | >= 3.6.0         | Deprecated | Support will be dropped in Operator 1.5.0 |                                    |
+| BareMetal (kubeadm) | 1.21-1.25          | >= 3.6.0         | Production |                                           |                                    |
+| Minikube            | 1.21-1.25          | >= 3.6.0         | Devel Only |                                           |                                    |
+| Other               | 1.21-1.25          | >= 3.6.0         | Devel Only |                                           |                                    |
+
+<!-- END(metricsTable) -->
 
 Feature-wise production readiness table:
 
