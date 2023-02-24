@@ -17,6 +17,7 @@
 - (Bugfix) Fix invalid Timeout calculation in case of ActionList
 - (Feature) Optional JSON logger format
 - (Improvement) Change Operator default ReplicasCount to 1
+- (Maintenance) Change MD content injection method
 
 ## [1.2.24](https://github.com/arangodb/kube-arangodb/tree/1.2.24) (2023-01-25)
 - (Bugfix) Fix deployment creation on ARM64

@@ -40,9 +40,6 @@ import (
 //go:embed actions.yaml
 var actions []byte
 
-//go:embed actions.tmpl
-var actionsMD []byte
-
 //go:embed actions.go.tmpl
 var actionsGoTemplate []byte
 
@@ -300,16 +297,6 @@ func RenderActions(root string) error {
 	{
 		actions := path.Join(root, "docs", "generated", "actions.md")
 
-		out, err := os.OpenFile(actions, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
-		if err != nil {
-			return err
-		}
-
-		i, err := template.New("actions").Parse(string(actionsMD))
-		if err != nil {
-			return err
-		}
-
 		action := md.NewColumn("Action", md.ColumnCenterAlign)
 		timeout := md.NewColumn("Timeout", md.ColumnCenterAlign)
 		description := md.NewColumn("Description", md.ColumnCenterAlign)
@@ -379,14 +366,10 @@ func RenderActions(root string) error {
 			return err
 		}
 
-		if err := i.Execute(out, map[string]interface{}{
-			"table":   t.Render(),
-			"example": string(d),
+		if err := md.ReplaceSectionsInFile(actions, map[string]string{
+			"actionsTable":   md.WrapWithNewLines(t.Render()),
+			"actionsModYaml": md.WrapWithNewLines(md.WrapWithYAMLSegment(string(d))),
 		}); err != nil {
-			return err
-		}
-
-		if err := out.Close(); err != nil {
 			return err
 		}
 	}
