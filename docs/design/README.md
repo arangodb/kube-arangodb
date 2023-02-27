@@ -5,6 +5,7 @@
 - [Metrics](./metrics.md)
 - [Kubernetes Pod name versus cluster ID](./pod_name_versus_cluster_id.md)
 - [Resource & labels](./resource_and_labels.md)
+- [Resource Management](./resource_management.md)
 - [Scaling](./scaling.md)
 - [Status](./status.md)
 - [Upgrading](./upgrading.md)
