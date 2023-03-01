@@ -19,6 +19,7 @@
 - (Improvement) Change Operator default ReplicasCount to 1
 - (Maintenance) Change MD content injection method
 - (Maintenance) Generate README Platforms
+- (Improvement) Cleanout calculation - picks members with the lowest number of shards
 
 ## [1.2.24](https://github.com/arangodb/kube-arangodb/tree/1.2.24) (2023-01-25)
 - (Bugfix) Fix deployment creation on ARM64
