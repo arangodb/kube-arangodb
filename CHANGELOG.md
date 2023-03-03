@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Feature) Backup lifetime - remove Backup once its lifetime has been reached
 
 ## [1.2.31](https://github.com/arangodb/kube-arangodb/tree/1.2.31) (2023-07-14)
 - (Improvement) Block traffic on the services if there is more than 1 active leader in ActiveFailover mode
