@@ -21,8 +21,6 @@
 package v1
 
 import (
-	"time"
-
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -52,13 +50,6 @@ func (a *ArangoBackupSpec) Validate() error {
 	if a.Upload != nil {
 		if err := a.Upload.Validate(); err != nil {
 			return err
-		}
-	}
-
-	if a.Lifetime != "" {
-		_, err := time.ParseDuration(a.Lifetime)
-		if err != nil {
-			return errors.Newf("Invalid duration: %v\n", err)
 		}
 	}
 

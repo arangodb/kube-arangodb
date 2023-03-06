@@ -20,6 +20,8 @@
 
 package v1
 
+import meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 type ArangoBackupSpec struct {
 	// Deployment
 	Deployment ArangoBackupSpecDeployment `json:"deployment,omitempty"`
@@ -37,7 +39,7 @@ type ArangoBackupSpec struct {
 	Backoff *ArangoBackupSpecBackOff `json:"backoff,omitempty"`
 
 	// Lifetime is the time after which the backup will be deleted. Format: "1.5h" or "2h45m".
-	Lifetime string `json:"lifetime,omitempty"`
+	Lifetime *meta.Duration `json:"lifetime,omitempty"`
 }
 
 type ArangoBackupSpecDeployment struct {

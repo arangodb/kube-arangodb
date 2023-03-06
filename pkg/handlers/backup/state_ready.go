@@ -58,13 +58,8 @@ func stateReadyHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.A
 		)
 	}
 
-	if backup.Spec.Lifetime != "" {
-		lifetime, err := time.ParseDuration(backup.Spec.Lifetime)
-		if err != nil {
-			return nil, err
-		}
-
-		if backupMeta.DateTime.Add(lifetime).Before(time.Now()) {
+	if backup.Spec.Lifetime != nil {
+		if backupMeta.DateTime.Add(backup.Spec.Lifetime.Duration).Before(time.Now()) {
 			err = client.Delete(driver.BackupID(backup.Status.Backup.ID))
 			if err != nil {
 				return nil, err
