@@ -53,7 +53,7 @@ type MemberStatus struct {
 	CreatedAt meta.Time `json:"created-at"`
 	// Conditions specific to this member
 	Conditions ConditionList `json:"conditions,omitempty"`
-	// RecentTerminatons holds the times when this member was recently terminated.
+	// RecentTerminations holds the times when this member was recently terminated.
 	// First entry is the oldest. (do not add omitempty, since we want to be able to switch from a list to an empty list)
 	RecentTerminations []meta.Time `json:"recent-terminations"`
 	// IsInitialized is set after the very first time a pod was created for this member.
