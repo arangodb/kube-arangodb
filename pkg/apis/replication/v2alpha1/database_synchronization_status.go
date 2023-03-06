@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,8 +22,10 @@ package v2alpha1
 
 // DatabaseSynchronizationStatus contains the synchronization status of replication for database
 type DatabaseSynchronizationStatus struct {
+	// Deprecated
 	// ShardsTotal shows how many shards are expected to be in-sync
 	ShardsTotal int `json:"shards-total"`
+	// Deprecated
 	// ShardsInSync shows how many shards are already in-sync
 	ShardsInSync int `json:"shards-in-sync"`
 	// Errors contains a list of errors if there were unexpected errors during synchronization
