@@ -23,8 +23,10 @@ package backup
 import (
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
 
 	"github.com/arangodb/go-driver"
@@ -64,6 +66,45 @@ func Test_State_Ready_Success(t *testing.T) {
 	newObj := refreshArangoBackup(t, handler, obj)
 	checkBackup(t, newObj, backupApi.ArangoBackupStateReady, true)
 	compareBackupMeta(t, backupMeta, newObj)
+}
+
+func Test_State_Ready_With_Lifetime(t *testing.T) {
+	// Arrange
+	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
+
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStateReady)
+	obj.Spec.Lifetime = &meta.Duration{Duration: 5 * time.Second}
+
+	createResponse, err := mock.Create()
+	require.NoError(t, err)
+
+	backupMeta, err := mock.Get(createResponse.ID)
+	require.NoError(t, err)
+
+	obj.Status.Backup = createBackupFromMeta(backupMeta, nil)
+
+	// Act
+	createArangoDeployment(t, handler, deployment)
+	createArangoBackup(t, handler, obj)
+
+	t.Run("First iteration", func(t *testing.T) {
+		require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+
+		// Assert
+		newObj := refreshArangoBackup(t, handler, obj)
+		checkBackup(t, newObj, backupApi.ArangoBackupStateReady, true)
+		compareBackupMeta(t, backupMeta, newObj)
+	})
+
+	t.Run("Second iteration once Lifetime is expired", func(t *testing.T) {
+		time.Sleep(10 * time.Second)
+		require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+
+		// Assert
+		newObj := refreshArangoBackup(t, handler, obj)
+		checkBackup(t, newObj, backupApi.ArangoBackupStateDeleted, false)
+		compareBackupMeta(t, backupMeta, newObj)
+	})
 }
 
 func Test_State_Ready_Unavailable(t *testing.T) {
