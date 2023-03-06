@@ -93,7 +93,13 @@ func (r *Reconciler) createScalePlan(status api.DeploymentStatus, members api.Me
 			Debug("Creating scale-up plan")
 	} else if len(members) > count {
 		// Note, we scale down 1 member at a time
-		if m, err := members.SelectMemberToRemove(getCleanedServer(context), getToBeCleanedServer(context), topologyMissingMemberToRemoveSelector(status.Topology), topologyAwarenessMemberToRemoveSelector(group, status.Topology)); err != nil {
+
+		if m, err := members.SelectMemberToRemove(
+			getCleanedServer(context),
+			getToBeCleanedServer(context),
+			topologyMissingMemberToRemoveSelector(status.Topology),
+			topologyAwarenessMemberToRemoveSelector(group, status.Topology),
+			getDbServerWithLowestShards(context, group)); err != nil {
 			r.planLogger.Err(err).Str("role", group.AsRole()).Warn("Failed to select member to remove")
 		} else {
 			ready, message := groupReadyForRestart(context, status, m, group)
@@ -189,6 +195,18 @@ func getToBeCleanedServer(ctx reconciler.ArangoAgencyGet) api.MemberToRemoveSele
 					return member.ID, nil
 				}
 			}
+		}
+		return "", nil
+	}
+}
+
+func getDbServerWithLowestShards(ctx reconciler.ArangoAgencyGet, g api.ServerGroup) api.MemberToRemoveSelector {
+	return func(m api.MemberStatusList) (string, error) {
+		if g != api.ServerGroupDBServers {
+			return "", nil
+		}
+		if a, ok := ctx.GetAgencyCache(); ok {
+			return string(a.GetDBServerWithLowestShards()), nil
 		}
 		return "", nil
 	}
