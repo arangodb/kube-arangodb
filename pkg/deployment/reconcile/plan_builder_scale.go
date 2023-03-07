@@ -212,7 +212,7 @@ func getDbServerWithLowestShards(ctx reconciler.ArangoAgencyGet, g api.ServerGro
 			return "", nil
 		}
 
-		dbServersShards := a.ShardsByDbServers()
+		dbServersShards := a.ShardsByDBServers()
 		for _, member := range m {
 			if _, ok := dbServersShards[agencyCache.Server(member.ID)]; !ok {
 				// member is not in agency cache, so it has no shards
