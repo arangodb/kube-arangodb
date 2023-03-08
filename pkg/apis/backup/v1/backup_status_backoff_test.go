@@ -24,9 +24,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util"
-
 	"github.com/stretchr/testify/require"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 func TestArangoBackupStatusBackOff_Backoff(t *testing.T) {
