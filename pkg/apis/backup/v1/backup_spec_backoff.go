@@ -29,7 +29,7 @@ type ArangoBackupSpecBackOff struct {
 	MaxDelay *int `json:"max_delay,omitempty"`
 	// Iterations defines number of iterations before reaching MaxDelay. Default to 5
 	Iterations *int `json:"iterations,omitempty"`
-	// MaxIterations defines maximum number of iterations after backoff will be disabled. Default to nil
+	// MaxIterations defines maximum number of iterations after backoff will be disabled. Default to nil (no limit)
 	MaxIterations *int `json:"max_iterations,omitempty"`
 }
 

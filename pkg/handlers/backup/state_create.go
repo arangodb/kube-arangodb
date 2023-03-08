@@ -71,7 +71,7 @@ func stateCreateHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.
 }
 
 func stateCreateErrorHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.ArangoBackupStatus, error) {
-	if !backup.Status.Backoff.GetNext().After(time.Now()) {
+	if backup.Status.Backoff.ShouldBackoff(backup.Spec.Backoff) && !backup.Status.Backoff.GetNext().After(time.Now()) {
 		return wrapUpdateStatus(backup,
 			updateStatusState(backupApi.ArangoBackupStateCreate, ""),
 			cleanStatusJob())

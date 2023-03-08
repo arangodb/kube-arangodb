@@ -27,7 +27,8 @@ import (
 )
 
 func stateUploadErrorHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.ArangoBackupStatus, error) {
-	if backup.Spec.Upload == nil || !backup.Status.Backoff.GetNext().After(time.Now()) {
+	if backup.Spec.Upload == nil ||
+		(backup.Status.Backoff.ShouldBackoff(backup.Spec.Backoff) && !backup.Status.Backoff.GetNext().After(time.Now())) {
 		return wrapUpdateStatus(backup,
 			updateStatusState(backupApi.ArangoBackupStateReady, ""),
 			cleanStatusJob(),
