@@ -41,7 +41,12 @@ func stateCreateHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.
 
 	response, err := client.Create()
 	if err != nil {
-		return nil, err
+		return wrapUpdateStatus(backup,
+			updateStatusState(backupApi.ArangoBackupStateCreateError, "Create failed with error: %s", err.Error()),
+			cleanStatusJob(),
+			updateStatusAvailable(false),
+			addBackOff(backup.Spec),
+		)
 	}
 
 	backupMeta, err := client.Get(response.ID)
@@ -54,12 +59,7 @@ func stateCreateHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.
 			)
 		}
 
-		return wrapUpdateStatus(backup,
-			updateStatusState(backupApi.ArangoBackupStateCreateError, "Create failed with error: %s", err.Error()),
-			cleanStatusJob(),
-			updateStatusAvailable(false),
-			addBackOff(backup.Spec),
-		)
+		return nil, newFatalError(err)
 	}
 
 	return wrapUpdateStatus(backup,

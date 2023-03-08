@@ -90,10 +90,7 @@ func (c *Clientset) Tracker() testing.ObjectTracker {
 	return c.tracker
 }
 
-var (
-	_ clientset.Interface = &Clientset{}
-	_ testing.FakeClient  = &Clientset{}
-)
+var _ clientset.Interface = &Clientset{}
 
 // AppsV1 retrieves the AppsV1Client
 func (c *Clientset) AppsV1() appsv1.AppsV1Interface {

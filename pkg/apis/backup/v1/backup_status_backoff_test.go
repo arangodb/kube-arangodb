@@ -24,6 +24,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util"
+
 	"github.com/stretchr/testify/require"
 )
 
@@ -36,5 +38,22 @@ func TestArangoBackupStatusBackOff_Backoff(t *testing.T) {
 
 		require.Equal(t, 1, n.GetIterations())
 		require.True(t, n.GetNext().After(time.Now().Add(time.Duration(9.9*float64(time.Second)))))
+	})
+
+	t.Run("Test MaxIterations", func(t *testing.T) {
+		var spec = &ArangoBackupSpecBackOff{
+			Iterations:    util.NewInt(2),
+			MaxIterations: util.NewInt(3),
+		}
+		var status *ArangoBackupStatusBackOff
+
+		n := status.Backoff(spec)
+		require.Equal(t, 1, n.GetIterations())
+		require.True(t, n.ShouldBackoff(spec))
+
+		n.Iterations = 3
+		n = n.Backoff(spec)
+		require.Equal(t, 3, n.GetIterations())
+		require.False(t, n.ShouldBackoff(spec))
 	})
 }
