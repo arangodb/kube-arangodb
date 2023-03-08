@@ -21,6 +21,8 @@
 package backup
 
 import (
+	"time"
+
 	"github.com/arangodb/go-driver"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
@@ -52,12 +54,28 @@ func stateCreateHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.
 			)
 		}
 
-		return nil, newFatalError(err)
+		return wrapUpdateStatus(backup,
+			updateStatusState(backupApi.ArangoBackupStateCreateError, "Create failed with error: %s", err.Error()),
+			cleanStatusJob(),
+			updateStatusAvailable(false),
+			addBackOff(backup.Spec),
+		)
 	}
 
 	return wrapUpdateStatus(backup,
 		updateStatusState(backupApi.ArangoBackupStateReady, ""),
 		updateStatusAvailable(true),
 		updateStatusBackup(backupMeta),
+		cleanBackOff(),
 	)
+}
+
+func stateCreateErrorHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.ArangoBackupStatus, error) {
+	if !backup.Status.Backoff.GetNext().After(time.Now()) {
+		return wrapUpdateStatus(backup,
+			updateStatusState(backupApi.ArangoBackupStateCreate, ""),
+			cleanStatusJob())
+	}
+
+	return wrapUpdateStatus(backup)
 }

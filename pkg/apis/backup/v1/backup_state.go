@@ -34,6 +34,7 @@ const (
 	ArangoBackupStateDownloadError state.State = "DownloadError"
 	ArangoBackupStateDownloading   state.State = "Downloading"
 	ArangoBackupStateCreate        state.State = "Create"
+	ArangoBackupStateCreateError   state.State = "CreateError"
 	ArangoBackupStateUpload        state.State = "Upload"
 	ArangoBackupStateUploading     state.State = "Uploading"
 	ArangoBackupStateUploadError   state.State = "UploadError"

@@ -33,6 +33,7 @@ var (
 		backupApi.ArangoBackupStatePending:       statePendingHandler,
 		backupApi.ArangoBackupStateScheduled:     stateScheduledHandler,
 		backupApi.ArangoBackupStateCreate:        stateCreateHandler,
+		backupApi.ArangoBackupStateCreateError:   stateCreateErrorHandler,
 		backupApi.ArangoBackupStateUpload:        stateUploadHandler,
 		backupApi.ArangoBackupStateUploading:     stateUploadingHandler,
 		backupApi.ArangoBackupStateUploadError:   stateUploadErrorHandler,

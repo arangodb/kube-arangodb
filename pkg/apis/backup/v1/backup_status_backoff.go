@@ -52,6 +52,14 @@ func (a *ArangoBackupStatusBackOff) GetNext() meta.Time {
 }
 
 func (a *ArangoBackupStatusBackOff) Backoff(spec *ArangoBackupSpecBackOff) *ArangoBackupStatusBackOff {
+	if spec.MaxIterations != nil && a.GetIterations() >= *spec.MaxIterations {
+		// Do not backoff anymore
+		return &ArangoBackupStatusBackOff{
+			Iterations: a.Iterations,
+			Next:       a.Next,
+		}
+	}
+
 	return &ArangoBackupStatusBackOff{
 		Iterations: a.GetIterations() + 1,
 		Next:       meta.Time{Time: time.Now().Add(spec.Backoff(a.GetIterations()))},
