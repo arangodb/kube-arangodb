@@ -174,3 +174,40 @@ func Test_State_CreateError_Retry(t *testing.T) {
 	require.NotNil(t, newObj.Status.Backup)
 	require.Equal(t, obj.Status.Backup, newObj.Status.Backup)
 }
+
+func Test_State_CreateError_Transfer_To_Failed(t *testing.T) {
+	// Arrange
+	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
+
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStateCreateError)
+
+	backupMeta, err := mock.Create()
+	require.NoError(t, err)
+
+	obj.Status.Backup = &backupApi.ArangoBackupDetails{
+		ID:                string(backupMeta.ID),
+		Version:           backupMeta.Version,
+		CreationTimestamp: meta.Now(),
+	}
+	obj.Status.Backoff = &backupApi.ArangoBackupStatusBackOff{
+		Iterations: 2,
+	}
+
+	obj.Spec.Backoff = &backupApi.ArangoBackupSpecBackOff{
+		Iterations:    util.NewInt(1),
+		MaxIterations: util.NewInt(2),
+	}
+
+	obj.Status.Time.Time = time.Now().Add(-2 * downloadDelay)
+
+	// Act
+	createArangoDeployment(t, handler, deployment)
+	createArangoBackup(t, handler, obj)
+
+	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+
+	// Assert
+	newObj := refreshArangoBackup(t, handler, obj)
+	require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateFailed)
+	require.Equal(t, newObj.Status.Message, "out of Create retries")
+}

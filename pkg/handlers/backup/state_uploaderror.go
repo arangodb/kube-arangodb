@@ -27,6 +27,14 @@ import (
 )
 
 func stateUploadErrorHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.ArangoBackupStatus, error) {
+	// no more retries - move to failed state
+	if !backup.Status.Backoff.ShouldBackoff(backup.Spec.Backoff) {
+		return wrapUpdateStatus(backup,
+			updateStatusState(backupApi.ArangoBackupStateFailed, "out of Upload retries"),
+			cleanStatusJob())
+	}
+
+	// if we should retry - move to ready state
 	if backup.Spec.Upload == nil ||
 		(backup.Status.Backoff.ShouldBackoff(backup.Spec.Backoff) && !backup.Status.Backoff.GetNext().After(time.Now())) {
 		return wrapUpdateStatus(backup,
@@ -35,6 +43,7 @@ func stateUploadErrorHandler(h *handler, backup *backupApi.ArangoBackup) (*backu
 			updateStatusAvailable(true))
 	}
 
+	// no ready to retry - wait (do not change state)
 	return wrapUpdateStatus(backup,
 		updateStatusAvailable(true))
 }
