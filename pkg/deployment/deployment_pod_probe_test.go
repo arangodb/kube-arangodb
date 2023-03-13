@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
@@ -446,7 +447,7 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe.FailureThreshold = math.MaxInt32
 			},
 			Features: testCaseFeatures{
-				Version310: true,
+				features.Version310(): true,
 			},
 			ExpectedEvent: "member dbserver is created",
 			ExpectedPod: core.Pod{
@@ -500,7 +501,7 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 				testCase.createTestPodData(deployment, api.ServerGroupDBServers, firstDBServerStatus)
 			},
 			Features: testCaseFeatures{
-				Version310: true,
+				features.Version310(): true,
 			},
 			ExpectedEvent: "member dbserver is created",
 			ExpectedPod: core.Pod{
@@ -554,7 +555,7 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 				testCase.createTestPodData(deployment, api.ServerGroupDBServers, firstDBServerStatus)
 			},
 			Features: testCaseFeatures{
-				Version310: false,
+				features.Version310(): false,
 			},
 			ExpectedEvent: "member dbserver is created",
 			ExpectedPod: core.Pod{
@@ -608,7 +609,7 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 				testCase.createTestPodData(deployment, api.ServerGroupCoordinators, firstCoordinatorStatus)
 			},
 			Features: testCaseFeatures{
-				Version310: true,
+				features.Version310(): true,
 			},
 			ExpectedEvent: "member coordinator is created",
 			ExpectedPod: core.Pod{
@@ -661,7 +662,7 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 				testCase.createTestPodData(deployment, api.ServerGroupAgents, firstAgentStatus)
 			},
 			Features: testCaseFeatures{
-				Version310: true,
+				features.Version310(): true,
 			},
 			ExpectedEvent: "member agent is created",
 			ExpectedPod: core.Pod{

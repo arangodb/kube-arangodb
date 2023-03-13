@@ -180,6 +180,16 @@ func Test_Actions(t *testing.T) {
 		})
 	})
 
+	t.Run("DrainMember", func(t *testing.T) {
+		ActionsExistence(t, api.ActionTypeDrainMember)
+		t.Run("Internal", func(t *testing.T) {
+			require.False(t, api.ActionTypeDrainMember.Internal())
+		})
+		t.Run("Optional", func(t *testing.T) {
+			require.False(t, api.ActionTypeDrainMember.Optional())
+		})
+	})
+
 	t.Run("EnableClusterScaling", func(t *testing.T) {
 		ActionsExistence(t, api.ActionTypeEnableClusterScaling)
 		t.Run("Internal", func(t *testing.T) {

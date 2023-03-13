@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ type actionKillMemberPod struct {
 // Returns true if the action is completely finished, false in case
 // the start time needs to be recorded and a ready condition needs to be checked.
 func (a *actionKillMemberPod) Start(ctx context.Context) (bool, error) {
-	if !features.GracefulShutdown().Enabled() {
+	if !features.GracefulShutdown().Enabled() || !features.RestartWithTermination().Enabled() {
 		return true, nil
 	}
 
@@ -83,7 +83,7 @@ func (a *actionKillMemberPod) Start(ctx context.Context) (bool, error) {
 // CheckProgress checks the progress of the action.
 // Returns: ready, abort, error.
 func (a *actionKillMemberPod) CheckProgress(ctx context.Context) (bool, bool, error) {
-	if !features.GracefulShutdown().Enabled() {
+	if !features.GracefulShutdown().Enabled() || !features.RestartWithTermination().Enabled() {
 		return true, false, nil
 	}
 	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)

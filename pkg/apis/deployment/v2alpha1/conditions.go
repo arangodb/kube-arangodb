@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,6 +51,11 @@ const (
 	ConditionTypeTerminated ConditionType = "Terminated"
 	// ConditionTypeAutoUpgrade indicates that the member has to be started with `--database.auto-upgrade` once.
 	ConditionTypeAutoUpgrade ConditionType = "AutoUpgrade"
+
+	// ConditionTypeServiceAttached indicates that the member is attached to the use-facing service.
+	ConditionTypeServiceAttached ConditionType = "ServiceAttached"
+	// ConditionTypeDrain indicates that the member should be drained from the use-facing service.
+	ConditionTypeDrain ConditionType = "Drain"
 
 	// ConditionTypeCleanedOut indicates that the member (dbserver) has been cleaned out.
 	// Always check in combination with ConditionTypeTerminated.

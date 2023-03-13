@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -77,9 +77,30 @@ const (
 	testYes                       = "yes"
 )
 
-type testCaseFeatures struct {
-	TLSSNI, TLSRotation, JWTRotation, EncryptionRotation, Version310 bool
-	Graceful                                                         *bool
+type testCaseFeatures map[features.Feature]bool
+
+func (f testCaseFeatures) SetIfMissing(key features.Feature, enabled bool) testCaseFeatures {
+	z := testCaseFeatures{}
+
+	for k, v := range f {
+		z[k] = v
+	}
+
+	if _, ok := z[key]; !ok {
+		z[key] = enabled
+	}
+
+	return z
+}
+
+func (f testCaseFeatures) AsFeatures() map[features.Feature]*bool {
+	z := map[features.Feature]*bool{}
+
+	for k, v := range f {
+		z[k] = util.NewBool(v)
+	}
+
+	return z
 }
 
 type testCaseStruct struct {

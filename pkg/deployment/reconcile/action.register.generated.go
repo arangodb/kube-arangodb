@@ -72,6 +72,9 @@ var (
 	_ Action        = &actionDisableMemberMaintenance{}
 	_ actionFactory = newDisableMemberMaintenanceAction
 
+	_ Action        = &actionDrainMember{}
+	_ actionFactory = newDrainMemberAction
+
 	_ Action        = &actionEnableClusterScaling{}
 	_ actionFactory = newEnableClusterScalingAction
 
@@ -432,6 +435,18 @@ func init() {
 		// Get Action defition
 		function := newDisableMemberMaintenanceAction
 		action := api.ActionTypeDisableMemberMaintenance
+
+		// Wrap action main function
+
+		// Register action
+		registerAction(action, function)
+	}
+
+	// DrainMember
+	{
+		// Get Action defition
+		function := newDrainMemberAction
+		action := api.ActionTypeDrainMember
 
 		// Wrap action main function
 

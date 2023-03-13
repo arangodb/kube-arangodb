@@ -20,6 +20,7 @@
 |       DisableClusterScaling        |    no    |  10m0s  |    no    | Community & Enterprise |                                  (Deprecated) Disable Cluster Scaling integration                                  |
 |         DisableMaintenance         |    no    |  10m0s  |    no    | Community & Enterprise |                                         Disable ArangoDB maintenance mode                                          |
 |      DisableMemberMaintenance      |    no    |  10m0s  |    no    |    Enterprise Only     |                                     Disable ArangoDB DBServer maintenance mode                                     |
+|            DrainMember             |    no    |  10m0s  |    no    | Community & Enterprise |                                          Remove member from serving group                                          |
 |        EnableClusterScaling        |    no    |  10m0s  |    no    | Community & Enterprise |                                  (Deprecated) Enable Cluster Scaling integration                                   |
 |         EnableMaintenance          |    no    |  10m0s  |    no    | Community & Enterprise |                                          Enable ArangoDB maintenance mode                                          |
 |      EnableMemberMaintenance       |    no    |  10m0s  |    no    |    Enterprise Only     |                                     Enable ArangoDB DBServer maintenance mode                                      |
@@ -106,6 +107,7 @@ spec:
       DisableClusterScaling: 10m0s
       DisableMaintenance: 10m0s
       DisableMemberMaintenance: 10m0s
+      DrainMember: 10m0s
       EnableClusterScaling: 10m0s
       EnableMaintenance: 10m0s
       EnableMemberMaintenance: 10m0s

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ func init() {
 	registerFeature(tlsSNI)
 }
 
-var tlsRotation Feature = &feature{
+var tlsRotation = &feature{
 	name:               "tls-rotation",
 	description:        "TLS Keyfile rotation in runtime",
 	version:            "3.7.0",
@@ -38,7 +38,7 @@ func TLSRotation() Feature {
 	return tlsRotation
 }
 
-var tlsSNI Feature = &feature{
+var tlsSNI = &feature{
 	name:               "tls-sni",
 	description:        "TLS SNI Support",
 	version:            "3.7.0",

@@ -55,6 +55,8 @@ const (
 	ActionDisableMaintenanceDefaultTimeout time.Duration = ActionsDefaultTimeout
 	// ActionDisableMemberMaintenanceDefaultTimeout define default timeout for action ActionDisableMemberMaintenance
 	ActionDisableMemberMaintenanceDefaultTimeout time.Duration = ActionsDefaultTimeout
+	// ActionDrainMemberDefaultTimeout define default timeout for action ActionDrainMember
+	ActionDrainMemberDefaultTimeout time.Duration = 600 * time.Second // 10m0s
 	// ActionEnableClusterScalingDefaultTimeout define default timeout for action ActionEnableClusterScaling
 	ActionEnableClusterScalingDefaultTimeout time.Duration = ActionsDefaultTimeout
 	// ActionEnableMaintenanceDefaultTimeout define default timeout for action ActionEnableMaintenance
@@ -210,6 +212,8 @@ const (
 	ActionTypeDisableMaintenance ActionType = "DisableMaintenance"
 	// ActionTypeDisableMemberMaintenance in scopes Normal. Disable ArangoDB DBServer maintenance mode
 	ActionTypeDisableMemberMaintenance ActionType = "DisableMemberMaintenance"
+	// ActionTypeDrainMember in scopes Normal. Remove member from serving group
+	ActionTypeDrainMember ActionType = "DrainMember"
 	// ActionTypeEnableClusterScaling in scopes Normal. (Deprecated) Enable Cluster Scaling integration
 	ActionTypeEnableClusterScaling ActionType = "EnableClusterScaling"
 	// ActionTypeEnableMaintenance in scopes Normal. Enable ArangoDB maintenance mode
@@ -366,6 +370,8 @@ func (a ActionType) DefaultTimeout() time.Duration {
 		return ActionDisableMaintenanceDefaultTimeout
 	case ActionTypeDisableMemberMaintenance:
 		return ActionDisableMemberMaintenanceDefaultTimeout
+	case ActionTypeDrainMember:
+		return ActionDrainMemberDefaultTimeout
 	case ActionTypeEnableClusterScaling:
 		return ActionEnableClusterScalingDefaultTimeout
 	case ActionTypeEnableMaintenance:
@@ -525,6 +531,8 @@ func (a ActionType) Priority() ActionPriority {
 	case ActionTypeDisableMaintenance:
 		return ActionPriorityNormal
 	case ActionTypeDisableMemberMaintenance:
+		return ActionPriorityNormal
+	case ActionTypeDrainMember:
 		return ActionPriorityNormal
 	case ActionTypeEnableClusterScaling:
 		return ActionPriorityNormal
@@ -695,6 +703,8 @@ func (a ActionType) Optional() bool {
 	case ActionTypeDisableMaintenance:
 		return false
 	case ActionTypeDisableMemberMaintenance:
+		return false
+	case ActionTypeDrainMember:
 		return false
 	case ActionTypeEnableClusterScaling:
 		return false

@@ -25,6 +25,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -50,8 +51,9 @@ func createRotateMemberPlanWithAction(member api.MemberStatus,
 	}
 	plan = withSecureWrap(member, group, spec, plan...)
 
+	plan = plan.After(createShutdownMemberPlanWrapper(member, group)...)
+
 	plan = plan.After(
-		actions.NewAction(api.ActionTypeKillMemberPod, group, member, reason),
 		actions.NewAction(action, group, member, reason),
 	)
 
@@ -66,4 +68,14 @@ func (r *Reconciler) emptyPlanBuilder(ctx context.Context, apiObject k8sutil.API
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext) api.Plan {
 	return nil
+}
+
+func createShutdownMemberPlanWrapper(member api.MemberStatus,
+	group api.ServerGroup) api.Plan {
+
+	if features.RestartWithTermination().Enabled() {
+		return api.Plan{actions.NewAction(api.ActionTypeKillMemberPod, group, member)}
+	} else {
+		return api.Plan{actions.NewAction(api.ActionTypeDrainMember, group, member)}
+	}
 }

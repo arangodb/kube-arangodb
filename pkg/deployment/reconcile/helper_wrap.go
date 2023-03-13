@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -75,8 +75,10 @@ func cleanOutMember(group api.ServerGroup, m api.MemberStatus) api.Plan {
 			actions.NewAction(api.ActionTypeCleanOutMember, group, m),
 		)
 	}
+
+	plan = append(plan, createShutdownMemberPlanWrapper(m, group)...)
+
 	plan = append(plan,
-		actions.NewAction(api.ActionTypeKillMemberPod, group, m),
 		actions.NewAction(api.ActionTypeShutdownMember, group, m),
 		actions.NewAction(api.ActionTypeRemoveMember, group, m),
 	)

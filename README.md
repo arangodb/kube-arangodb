@@ -67,6 +67,7 @@ Feature-wise production readiness table:
 | Operator Internal Metrics Exporter      | 1.2.0            | >= 3.6.0         | Community, Enterprise | 1.2.0      | Production   | True    | --deployment.feature.metrics-exporter                 | N/A                                                                      |
 | Operator Ephemeral Volumes              | 1.2.2            | >= 3.7.0         | Community, Enterprise | 1.2.2      | Alpha        | False   | --deployment.feature.ephemeral-volumes                | N/A                                                                      |
 | Spec Default Restore                    | 1.2.21           | >= 3.7.0         | Community, Enterprise | 1.2.21     | Beta         | True    | --deployment.feature.deployment-spec-defaults-restore | If set to False Operator will not change ArangoDeployment Spec           |
+| Member Restarts With Termination        | 1.2.24           | >= 3.6.0         | Community, Enterprise | 1.2.24     | Alpha        | True    | --deployment.feature.restart-with-termination         | N/A                                                                      |
 
 ## Operator Community Edition (CE)
 

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -81,7 +82,7 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 				},
 			},
 			Features: testCaseFeatures{
-				TLSSNI: true,
+				features.TLSSNI(): true,
 			},
 			Resources: func(t *testing.T, deployment *Deployment) {
 				createTLSSNISecret(t, deployment.SecretsModInterface(), "sni1", deployment.Namespace())
@@ -156,7 +157,7 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 				},
 			},
 			Features: testCaseFeatures{
-				TLSSNI: true,
+				features.TLSSNI(): true,
 			},
 			Resources: func(t *testing.T, deployment *Deployment) {
 				createTLSSNISecret(t, deployment.SecretsModInterface(), "sni1", deployment.Namespace())
@@ -231,7 +232,7 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 				},
 			},
 			Features: testCaseFeatures{
-				TLSSNI: true,
+				features.TLSSNI(): true,
 			},
 			Resources: func(t *testing.T, deployment *Deployment) {
 				createTLSSNISecret(t, deployment.SecretsModInterface(), "sni1", deployment.Namespace())
@@ -306,7 +307,7 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 				},
 			},
 			Features: testCaseFeatures{
-				TLSSNI: true,
+				features.TLSSNI(): true,
 			},
 			Resources: func(t *testing.T, deployment *Deployment) {
 				createTLSSNISecret(t, deployment.SecretsModInterface(), "sni1", deployment.Namespace())
@@ -414,7 +415,7 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 				},
 			},
 			Features: testCaseFeatures{
-				TLSSNI: true,
+				features.TLSSNI(): true,
 			},
 			Resources: func(t *testing.T, deployment *Deployment) {
 				createTLSSNISecret(t, deployment.SecretsModInterface(), "sni1", deployment.Namespace())

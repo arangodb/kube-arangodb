@@ -327,14 +327,35 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 			}
 		}
 
-		if memberStatus.Conditions.IsTrue(api.ConditionTypeActive) {
+		if memberStatus.Conditions.IsTrue(api.ConditionTypeActive) &&
+			memberStatus.Conditions.IsTrue(api.ConditionTypeReady) &&
+			!memberStatus.Conditions.IsTrue(api.ConditionTypeTerminating) &&
+			!memberStatus.Conditions.IsTrue(api.ConditionTypeDrain) {
 			if v, ok := pod.Labels[k8sutil.LabelKeyArangoActive]; !ok || v != k8sutil.LabelValueArangoActive {
 				pod.Labels[k8sutil.LabelKeyArangoActive] = k8sutil.LabelValueArangoActive
 				if err := r.context.ApplyPatchOnPod(ctx, pod, patch.ItemReplace(patch.NewPath("metadata", "labels"), pod.Labels)); err != nil {
 					log.Str("pod-name", pod.GetName()).Err(err).Error("Unable to update labels")
 				}
 			}
+		} else {
+			if _, ok := pod.Labels[k8sutil.LabelKeyArangoActive]; ok {
+				delete(pod.Labels, k8sutil.LabelKeyArangoActive)
+				if err := r.context.ApplyPatchOnPod(ctx, pod, patch.ItemReplace(patch.NewPath("metadata", "labels"), pod.Labels)); err != nil {
+					log.Str("pod-name", pod.GetName()).Err(err).Error("Unable to update labels")
+				}
+			}
+		}
 
+		if v, ok := pod.Labels[k8sutil.LabelKeyArangoActive]; ok || v == k8sutil.LabelValueArangoActive {
+			if memberStatus.Conditions.Update(api.ConditionTypeServiceAttached, true, "Service attached", "") {
+				updateMemberStatusNeeded = true
+				nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
+			}
+		} else {
+			if memberStatus.Conditions.Remove(api.ConditionTypeServiceAttached) {
+				updateMemberStatusNeeded = true
+				nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
+			}
 		}
 
 		if k8sutil.IsPodReady(pod) && k8sutil.AreContainersReady(pod, coreContainers) {

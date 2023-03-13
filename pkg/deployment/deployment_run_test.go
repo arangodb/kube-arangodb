@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -112,17 +112,12 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 
 		// Set features
 		{
-			*features.EncryptionRotation().EnabledPointer() = testCase.Features.EncryptionRotation
-			*features.Version310().EnabledPointer() = testCase.Features.Version310
-			require.Equal(t, testCase.Features.EncryptionRotation, *features.EncryptionRotation().EnabledPointer())
-			*features.JWTRotation().EnabledPointer() = testCase.Features.JWTRotation
-			*features.TLSSNI().EnabledPointer() = testCase.Features.TLSSNI
-			if g := testCase.Features.Graceful; g != nil {
-				*features.GracefulShutdown().EnabledPointer() = *g
-			} else {
-				*features.GracefulShutdown().EnabledPointer() = features.GracefulShutdown().EnabledByDefault()
-			}
-			*features.TLSRotation().EnabledPointer() = testCase.Features.TLSRotation
+			features.ResetDefaults()
+
+			features.Enable(testCase.Features.
+				SetIfMissing(features.UpgradeVersionCheck(), false).
+				SetIfMissing(features.JWTRotation(), false).
+				AsFeatures())
 		}
 
 		// Set Pending phase

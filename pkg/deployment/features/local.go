@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,11 +34,11 @@ import (
 
 const prefixArg = "deployment.feature"
 
-var features = map[string]Feature{}
+var features = map[string]*feature{}
 var featuresLock sync.Mutex
 var enableAll = false
 
-func registerFeature(f Feature) {
+func registerFeature(f *feature) {
 	featuresLock.Lock()
 	defer featuresLock.Unlock()
 
@@ -46,11 +46,42 @@ func registerFeature(f Feature) {
 		panic("Feature cannot be nil")
 	}
 
+	f.enabled = f.enabledByDefault
+
 	if _, ok := features[f.Name()]; ok {
 		panic("Feature already registered")
 	}
 
 	features[f.Name()] = f
+}
+
+func Enable(fs map[Feature]*bool) {
+	featuresLock.Lock()
+	defer featuresLock.Unlock()
+
+	for k, v := range fs {
+		z, ok := features[k.Name()]
+		if !ok {
+			continue
+		}
+
+		if v == nil {
+			z.enabled = z.enabledByDefault
+		} else {
+			z.enabled = *v
+		}
+
+		features[k.Name()] = z
+	}
+}
+
+func ResetDefaults() {
+	featuresLock.Lock()
+	defer featuresLock.Unlock()
+
+	for k := range features {
+		features[k].enabled = features[k].enabledByDefault
+	}
 }
 
 var internalCMD = &cobra.Command{

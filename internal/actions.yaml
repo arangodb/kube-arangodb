@@ -22,6 +22,9 @@ actions:
     description: Sends Shutdown requests and waits for container to be stopped
     timeout: 30m
     startupFailureGracePeriod: 1m
+  DrainMember:
+    description: Remove member from serving group
+    timeout: 10m
   ResignLeadership:
     description: Run the ResignLeadership job on DBServer
     timeout: 30m
