@@ -20,6 +20,8 @@ replace (
 	k8s.io/component-base => k8s.io/component-base v0.22.15
 	k8s.io/kubernetes => k8s.io/kubernetes v0.22.15
 	k8s.io/metrics => k8s.io/metrics v0.22.15
+
+	gopkg.in/yaml.v3 => gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
