@@ -74,7 +74,7 @@ EOF
 
 ## Create PV and PVC
 
-1. W need to create ArangoLocalStorage first
+1. We need to create ArangoLocalStorage first:
     ```yaml
     cat <<EOF | kubectl apply -f -
     apiVersion: "storage.arangodb.com/v1alpha"
