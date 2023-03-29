@@ -27,8 +27,7 @@ rlzl467vfgsdpofu
 To find out the name of the members to which data should be attached,
 we need to check the `UUID` file content in each directory:
 ```bash
-> cd /var/data/
-> cat */UUID
+> cat /var/data/*/UUID
 AGNT-pntg5yc8
 AGNT-kfyuj8ow
 AGNT-bv5rofcz
@@ -41,38 +40,37 @@ PRMR-31akmzrp
 
 Here is an example of the initial ArangoDeployment before deletion:
 ```yaml
-    cat <<EOF | kubectl apply -f -
-    apiVersion: "database.arangodb.com/v1"
-    kind: "ArangoDeployment"
-    metadata:
-      name: "cluster"
-    spec:
-      externalAccess:
-        type: NodePort
-      mode: Cluster
-      agents:
-        volumeClaimTemplate:
-          spec:
-            storageClassName: my-local-ssd
-            accessModes:
-              - ReadWriteOnce
-            resources:
-              requests:
-                storage: 1Gi
-            volumeMode: Filesystem
-      dbservers:
-        volumeClaimTemplate:
-          spec:
-            storageClassName: my-local-ssd
-            accessModes:
-              - ReadWriteOnce
-            resources:
-              requests:
-                storage: 1Gi
-            volumeMode: Filesystem
-    EOF
+cat <<EOF | kubectl apply -f -
+apiVersion: "database.arangodb.com/v1"
+kind: "ArangoDeployment"
+metadata:
+  name: "cluster"
+spec:
+  externalAccess:
+    type: NodePort
+  mode: Cluster
+  agents:
+    volumeClaimTemplate:
+      spec:
+        storageClassName: my-local-ssd
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+        volumeMode: Filesystem
+  dbservers:
+    volumeClaimTemplate:
+      spec:
+        storageClassName: my-local-ssd
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+        volumeMode: Filesystem
+EOF
 ```
-
 
 ## Create PV and PVC
 
@@ -203,74 +201,70 @@ Here is an example of the initial ArangoDeployment before deletion:
 
 Now we can create ArangoDeployment with previously created PVCs:
 ```yaml
-    cat <<EOF | kubectl apply -f -
-    apiVersion: "database.arangodb.com/v1"
-    kind: "ArangoDeployment"
-    metadata:
-      name: "cluster"
-    spec:
-      architecture:
-        - arm64
-      tls:
-        caSecretName: None
-      externalAccess:
-        type: NodePort
-      mode: Cluster
-      agents:
-        volumeClaimTemplate:
-          spec:
-            storageClassName: my-local-ssd
-            accessModes:
-              - ReadWriteOnce
-            resources:
-              requests:
-                storage: 1Gi
-            volumeMode: Filesystem
-      dbservers:
-        volumeClaimTemplate:
-          spec:
-            storageClassName: my-local-ssd
-            accessModes:
-              - ReadWriteOnce
-            resources:
-              requests:
-                storage: 1Gi
-            volumeMode: Filesystem
-    status:
-      agency:
-        ids:
-          - AGNT-pntg5yc8
-          - AGNT-kfyuj8ow
-          - AGNT-bv5rofcz
-        size: 3
-      members:
-        agents:
-          - id: AGNT-pntg5yc8
-            persistentVolumeClaim:
-              name: agent-pntg5yc8
-            persistentVolumeClaimName: agent-pntg5yc8
-          - id: AGNT-kfyuj8ow
-            persistentVolumeClaim:
-              name: agent-kfyuj8ow
-            persistentVolumeClaimName: agent-kfyuj8ow
-          - id: AGNT-bv5rofcz
-            persistentVolumeClaim:
-              name: agent-bv5rofcz
-            persistentVolumeClaimName: agent-bv5rofcz
-        dbservers:
-          - id: PRMR-9xztmg4t
-            persistentVolumeClaim:
-              name: cluster-dbserver-9xztmg4t
-            persistentVolumeClaimName: cluster-dbserver-9xztmg4t
-          - id: PRMR-l1pp19yl
-            persistentVolumeClaim:
-              name: cluster-dbserver-l1pp19yl
-            persistentVolumeClaimName: cluster-dbserver-l1pp19yl
-          - id: PRMR-31akmzrp
-            persistentVolumeClaim:
-              name: cluster-dbserver-31akmzrp
-            persistentVolumeClaimName: cluster-dbserver-31akmzrp
-    EOF
+cat <<EOF | kubectl apply -f -
+apiVersion: "database.arangodb.com/v1"
+kind: "ArangoDeployment"
+metadata:
+  name: "cluster"
+spec:
+  externalAccess:
+    type: NodePort
+  mode: Cluster
+  agents:
+    volumeClaimTemplate:
+      spec:
+        storageClassName: my-local-ssd
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+        volumeMode: Filesystem
+  dbservers:
+    volumeClaimTemplate:
+      spec:
+        storageClassName: my-local-ssd
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+        volumeMode: Filesystem
+status:
+  agency:
+    ids:
+      - AGNT-pntg5yc8
+      - AGNT-kfyuj8ow
+      - AGNT-bv5rofcz
+    size: 3
+  members:
+    agents:
+      - id: AGNT-pntg5yc8
+        persistentVolumeClaim:
+          name: agent-pntg5yc8
+        persistentVolumeClaimName: agent-pntg5yc8
+      - id: AGNT-kfyuj8ow
+        persistentVolumeClaim:
+          name: agent-kfyuj8ow
+        persistentVolumeClaimName: agent-kfyuj8ow
+      - id: AGNT-bv5rofcz
+        persistentVolumeClaim:
+          name: agent-bv5rofcz
+        persistentVolumeClaimName: agent-bv5rofcz
+    dbservers:
+      - id: PRMR-9xztmg4t
+        persistentVolumeClaim:
+          name: cluster-dbserver-9xztmg4t
+        persistentVolumeClaimName: cluster-dbserver-9xztmg4t
+      - id: PRMR-l1pp19yl
+        persistentVolumeClaim:
+          name: cluster-dbserver-l1pp19yl
+        persistentVolumeClaimName: cluster-dbserver-l1pp19yl
+      - id: PRMR-31akmzrp
+        persistentVolumeClaim:
+          name: cluster-dbserver-31akmzrp
+        persistentVolumeClaimName: cluster-dbserver-31akmzrp
+EOF
 ```
 
 That's it! Now you can use ArangoDB with restored data.
