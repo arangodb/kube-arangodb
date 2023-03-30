@@ -53,6 +53,7 @@ func createRotateMemberPlanWithAction(member api.MemberStatus,
 	plan = plan.After(
 		actions.NewAction(api.ActionTypeKillMemberPod, group, member, reason),
 		actions.NewAction(action, group, member, reason),
+		actions.NewAction(api.ActionTypeCleanMemberService, group, member, "Remove server service and enforce renewal/recreation"),
 	)
 
 	plan = withWaitForMember(plan, group, member)

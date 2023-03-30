@@ -51,6 +51,9 @@ var (
 	_ Action        = &actionBootstrapUpdate{}
 	_ actionFactory = newBootstrapUpdateAction
 
+	_ Action        = &actionCleanMemberService{}
+	_ actionFactory = newCleanMemberServiceAction
+
 	_ Action        = &actionCleanOutMember{}
 	_ actionFactory = newCleanOutMemberAction
 
@@ -348,6 +351,18 @@ func init() {
 		// Get Action defition
 		function := newBootstrapUpdateAction
 		action := api.ActionTypeBootstrapUpdate
+
+		// Wrap action main function
+
+		// Register action
+		registerAction(action, function)
+	}
+
+	// CleanMemberService
+	{
+		// Get Action defition
+		function := newCleanMemberServiceAction
+		action := api.ActionTypeCleanMemberService
 
 		// Wrap action main function
 

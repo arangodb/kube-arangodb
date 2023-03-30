@@ -110,6 +110,16 @@ func Test_Actions(t *testing.T) {
 		})
 	})
 
+	t.Run("CleanMemberService", func(t *testing.T) {
+		ActionsExistence(t, api.ActionTypeCleanMemberService)
+		t.Run("Internal", func(t *testing.T) {
+			require.False(t, api.ActionTypeCleanMemberService.Internal())
+		})
+		t.Run("Optional", func(t *testing.T) {
+			require.False(t, api.ActionTypeCleanMemberService.Optional())
+		})
+	})
+
 	t.Run("CleanOutMember", func(t *testing.T) {
 		ActionsExistence(t, api.ActionTypeCleanOutMember)
 		t.Run("Internal", func(t *testing.T) {

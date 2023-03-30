@@ -43,11 +43,15 @@ func GenerateMemberEndpoint(services service.Inspector, apiObject meta.Object, s
 func GenerateMemberEndpointFromService(svc *core.Service, apiObject meta.Object, spec api.DeploymentSpec, group api.ServerGroup, member api.MemberStatus) (string, error) {
 	if group.IsArangod() {
 		switch method := spec.CommunicationMethod.Get(); method {
-		case api.DeploymentCommunicationMethodDNS:
+		case api.DeploymentCommunicationMethodDNS, api.DeploymentCommunicationMethodHeadlessDNS:
 			return k8sutil.CreateServiceDNSNameWithDomain(svc, spec.ClusterDomain), nil
 		case api.DeploymentCommunicationMethodIP:
 			if svc.Spec.ClusterIP == "" {
 				return "", errors.Newf("ClusterIP of service %s is empty", svc.GetName())
+			}
+
+			if svc.Spec.ClusterIP == core.ClusterIPNone {
+				return k8sutil.CreateServiceDNSNameWithDomain(svc, spec.ClusterDomain), nil
 			}
 
 			return svc.Spec.ClusterIP, nil

@@ -13,6 +13,7 @@
 |         BackupRestoreClean         |    no    |  15m0s  |    no    |    Enterprise Only     |                                Clean restore status in case of restore spec change                                 |
 |        BootstrapSetPassword        |    no    |  10m0s  |    no    | Community & Enterprise |                                     Change password during bootstrap procedure                                     |
 |          BootstrapUpdate           |    no    |  10m0s  |    no    | Community & Enterprise |                                              Update bootstrap status                                               |
+|         CleanMemberService         |    no    |  30m0s  |    no    | Community & Enterprise |                                               Removes Server Service                                               |
 |           CleanOutMember           |    no    | 48h0m0s |    no    | Community & Enterprise |                                           Run the CleanOut job on member                                           |
 |       CleanTLSCACertificate        |    no    |  30m0s  |    no    |    Enterprise Only     |                                       Remove Certificate from CA TrustStore                                        |
 |     CleanTLSKeyfileCertificate     |    no    |  30m0s  |    no    |    Enterprise Only     |                                       Remove old TLS certificate from server                                       |
@@ -99,6 +100,7 @@ spec:
       BackupRestoreClean: 15m0s
       BootstrapSetPassword: 10m0s
       BootstrapUpdate: 10m0s
+      CleanMemberService: 30m0s
       CleanOutMember: 48h0m0s
       CleanTLSCACertificate: 30m0s
       CleanTLSKeyfileCertificate: 30m0s

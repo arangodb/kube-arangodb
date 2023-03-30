@@ -41,6 +41,8 @@ const (
 	ActionBootstrapSetPasswordDefaultTimeout time.Duration = ActionsDefaultTimeout
 	// ActionBootstrapUpdateDefaultTimeout define default timeout for action ActionBootstrapUpdate
 	ActionBootstrapUpdateDefaultTimeout time.Duration = ActionsDefaultTimeout
+	// ActionCleanMemberServiceDefaultTimeout define default timeout for action ActionCleanMemberService
+	ActionCleanMemberServiceDefaultTimeout time.Duration = 1800 * time.Second // 30m0s
 	// ActionCleanOutMemberDefaultTimeout define default timeout for action ActionCleanOutMember
 	ActionCleanOutMemberDefaultTimeout time.Duration = 172800 * time.Second // 48h0m0s
 	// ActionCleanTLSCACertificateDefaultTimeout define default timeout for action ActionCleanTLSCACertificate
@@ -196,6 +198,8 @@ const (
 	ActionTypeBootstrapSetPassword ActionType = "BootstrapSetPassword"
 	// ActionTypeBootstrapUpdate in scopes Normal. Update bootstrap status
 	ActionTypeBootstrapUpdate ActionType = "BootstrapUpdate"
+	// ActionTypeCleanMemberService in scopes Normal. Removes Server Service
+	ActionTypeCleanMemberService ActionType = "CleanMemberService"
 	// ActionTypeCleanOutMember in scopes Normal. Run the CleanOut job on member
 	ActionTypeCleanOutMember ActionType = "CleanOutMember"
 	// ActionTypeCleanTLSCACertificate in scopes Normal. Remove Certificate from CA TrustStore
@@ -352,6 +356,8 @@ func (a ActionType) DefaultTimeout() time.Duration {
 		return ActionBootstrapSetPasswordDefaultTimeout
 	case ActionTypeBootstrapUpdate:
 		return ActionBootstrapUpdateDefaultTimeout
+	case ActionTypeCleanMemberService:
+		return ActionCleanMemberServiceDefaultTimeout
 	case ActionTypeCleanOutMember:
 		return ActionCleanOutMemberDefaultTimeout
 	case ActionTypeCleanTLSCACertificate:
@@ -511,6 +517,8 @@ func (a ActionType) Priority() ActionPriority {
 	case ActionTypeBootstrapSetPassword:
 		return ActionPriorityNormal
 	case ActionTypeBootstrapUpdate:
+		return ActionPriorityNormal
+	case ActionTypeCleanMemberService:
 		return ActionPriorityNormal
 	case ActionTypeCleanOutMember:
 		return ActionPriorityNormal
@@ -681,6 +689,8 @@ func (a ActionType) Optional() bool {
 	case ActionTypeBootstrapSetPassword:
 		return false
 	case ActionTypeBootstrapUpdate:
+		return false
+	case ActionTypeCleanMemberService:
 		return false
 	case ActionTypeCleanOutMember:
 		return false

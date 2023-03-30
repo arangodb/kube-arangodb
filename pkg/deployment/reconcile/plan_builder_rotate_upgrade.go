@@ -177,6 +177,7 @@ func (r *Reconciler) createUpdatePlanInternal(apiObject k8sutil.APIObject, spec 
 		if m.Member.Conditions.IsTrue(api.ConditionTypeRestart) {
 			return r.createRotateMemberPlan(m.Member, m.Group, spec, "Restart flag present"), false
 		}
+
 		arangoMember, ok := context.ACS().CurrentClusterCache().ArangoMember().V1().GetSimple(m.Member.ArangoMemberName(apiObject.GetName(), m.Group))
 		if !ok {
 			continue
@@ -190,6 +191,14 @@ func (r *Reconciler) createUpdatePlanInternal(apiObject k8sutil.APIObject, spec 
 		p, ok := cache.Pod().V1().GetSimple(m.Member.Pod.GetName())
 		if !ok {
 			p = nil
+		}
+
+		if svc, ok := cache.Service().V1().GetSimple(arangoMember.GetName()); ok {
+			if k8sutil.IsServiceRotationRequired(spec, svc) {
+				return api.Plan{actions.NewAction(api.ActionTypeSetMemberCondition, m.Group, m.Member, "Cleaning update").
+					AddParam(api.ConditionTypePendingUpdate.String(), "").
+					AddParam(api.ConditionTypeUpdating.String(), "T")}, false
+			}
 		}
 
 		if mode, p, checksum, reason, err := rotation.IsRotationRequired(context.ACS(), spec, m.Member, m.Group, p, arangoMember.Spec.Template, arangoMember.Status.Template); err != nil {
