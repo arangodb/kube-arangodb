@@ -3,6 +3,7 @@
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Feature) Add InSync Cache
 - (Feature) Force Rebuild Out Synced Shards
+- (Feature) Hibernation mode for Arango deployment
 
 ## [1.2.26](https://github.com/arangodb/kube-arangodb/tree/1.2.26) (2023-04-18)
 - (Bugfix) Fix manual overwrite for ReplicasCount in helm

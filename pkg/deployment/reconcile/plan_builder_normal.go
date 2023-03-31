@@ -81,7 +81,8 @@ func (r *Reconciler) createNormalPlan(ctx context.Context, apiObject k8sutil.API
 		ApplyIfEmpty(r.createRebalancerGeneratePlan).
 		// Final
 		ApplyIfEmpty(r.createTLSStatusPropagated).
-		ApplyIfEmpty(r.createBootstrapPlan))
+		ApplyIfEmpty(r.createBootstrapPlan).
+		ApplyIfEmpty(r.createHibernateMemberPlan))
 
 	return q.Plan(), q.BackOff(), true
 }

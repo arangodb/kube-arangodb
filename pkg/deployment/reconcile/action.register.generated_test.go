@@ -270,6 +270,16 @@ func Test_Actions(t *testing.T) {
 		})
 	})
 
+	t.Run("Hibernate", func(t *testing.T) {
+		ActionsExistence(t, api.ActionTypeHibernate)
+		t.Run("Internal", func(t *testing.T) {
+			require.False(t, api.ActionTypeHibernate.Internal())
+		})
+		t.Run("Optional", func(t *testing.T) {
+			require.False(t, api.ActionTypeHibernate.Optional())
+		})
+	})
+
 	t.Run("Idle", func(t *testing.T) {
 		ActionsExistence(t, api.ActionTypeIdle)
 		t.Run("Internal", func(t *testing.T) {

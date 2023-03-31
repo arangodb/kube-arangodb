@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -87,6 +87,11 @@ func (ci *clusterScalingIntegration) SendUpdateToCluster(spec api.DeploymentSpec
 func (ci *clusterScalingIntegration) checkScalingCluster(ctx context.Context, expectSuccess bool) bool {
 	ci.scaleEnabled.mutex.Lock()
 	defer ci.scaleEnabled.mutex.Unlock()
+
+	st := ci.depl.GetStatus()
+	if _, isHibernated := st.IsHibernated(); isHibernated {
+		return true
+	}
 
 	if !ci.depl.config.ScalingIntegrationEnabled {
 		if err := ci.cleanClusterServers(ctx); err != nil {

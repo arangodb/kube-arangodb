@@ -48,6 +48,8 @@ const (
 	MemberPhaseRotateStart MemberPhase = "RotateStart"
 	// MemberPhaseUpgrading indicates that a member is in the process of upgrading its database data format
 	MemberPhaseUpgrading MemberPhase = "Upgrading"
+	// MemberPhaseHibernated indicates that a member is hibernated.
+	MemberPhaseHibernated MemberPhase = "Hibernated"
 )
 
 // IsPending returns true when given phase == "" OR "Pending"
@@ -78,7 +80,9 @@ func (p MemberPhase) String() string {
 // GetPhase parses string into phase
 func GetPhase(phase string) (MemberPhase, bool) {
 	switch p := MemberPhase(phase); p {
-	case MemberPhaseNone, MemberPhasePending, MemberPhaseCreated, MemberPhaseCreationFailed, MemberPhaseFailed, MemberPhaseCleanOut, MemberPhaseDrain, MemberPhaseResign, MemberPhaseShuttingDown, MemberPhaseRotating, MemberPhaseRotateStart, MemberPhaseUpgrading:
+	case MemberPhaseNone, MemberPhasePending, MemberPhaseCreated, MemberPhaseCreationFailed, MemberPhaseFailed,
+		MemberPhaseCleanOut, MemberPhaseDrain, MemberPhaseResign, MemberPhaseShuttingDown, MemberPhaseRotating,
+		MemberPhaseRotateStart, MemberPhaseUpgrading, MemberPhaseHibernated:
 		return p, true
 	default:
 		return "", false

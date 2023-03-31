@@ -16,7 +16,8 @@
 // limitations under the License.
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
-//
+//go:build !enterprise
+// +build !enterprise
 
 package reconcile
 
@@ -24,24 +25,17 @@ import (
 	"context"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
-const (
-	// Component name for reconciliation of this package
-	reconciliationComponent = "deployment_reconciliation"
-)
+// createHibernateMemberPlan creates empty plan for community version.
+func (r *Reconciler) createHibernateMemberPlan(_ context.Context, _ k8sutil.APIObject,
+	_ api.DeploymentSpec, _ api.DeploymentStatus, _ PlanBuilderContext) api.Plan {
+	return nil
+}
 
-const (
-	BackOffCheck  api.BackOffKey = "check"
-	LicenseCheck  api.BackOffKey = "license"
-	TimezoneCheck api.BackOffKey = "timezone"
-)
-
-// CreatePlan considers the current specification & status of the deployment creates a plan to
-// get the status in line with the specification.
-// If a plan already exists, nothing is done.
-func (d *Reconciler) CreatePlan(ctx context.Context) (error, bool) {
-	return d.generatePlan(ctx, d.generatePlanFunc(d.createHighPlan, plannerHigh{}),
-		d.generatePlanFunc(d.createResourcesPlan, plannerResources{}),
-		d.generatePlanFunc(d.createNormalPlan, plannerNormal{}))
+// createHibernatePlan creates empty plan for community version.
+func (r *Reconciler) createHibernatePlan(_ context.Context, _ k8sutil.APIObject, _ api.DeploymentSpec,
+	_ api.DeploymentStatus, _ PlanBuilderContext) api.Plan {
+	return nil
 }

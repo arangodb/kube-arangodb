@@ -133,9 +133,11 @@ func (r *Reconciler) createMemberFailedRestoreInternal(_ context.Context, _ k8su
 		}
 	}
 
-	if len(plan) == 0 && !agencyOK {
-		r.log.Warn("unable to build further plan without access to agency")
-		plan = append(plan, actions.NewClusterAction(api.ActionTypeIdle))
+	if isTurnedOn, _ := status.IsHibernated(); !isTurnedOn {
+		if len(plan) == 0 && !agencyOK {
+			r.log.Warn("unable to build further plan without access to agency")
+			plan = append(plan, actions.NewClusterAction(api.ActionTypeIdle))
+		}
 	}
 
 	return plan

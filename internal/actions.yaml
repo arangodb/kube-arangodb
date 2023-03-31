@@ -234,8 +234,15 @@ actions:
   TimezoneSecretSet:
     description: Set timezone details in cluster
     timeout: 30m
+  Hibernate:
+    description: Hibernate deployment by stopping all ArangoDB pods
+    enterprise: true
+    scopes:
+      - High
+    timeout: 30m
   RebuildOutSyncedShards:
     description: Run Rebuild Out Synced Shards procedure for DBServers
     timeout: 24h
     scopes:
       - High
+

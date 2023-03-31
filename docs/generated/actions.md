@@ -29,6 +29,7 @@
 |        EncryptionKeyRefresh        |    no    |  10m0s  |    no    |    Enterprise Only     |                                       Refresh the encryption keys on member                                        |
 |        EncryptionKeyRemove         |    no    |  10m0s  |    no    |    Enterprise Only     |                                       Remove the encryption key to the pool                                        |
 |     EncryptionKeyStatusUpdate      |    no    |  10m0s  |    no    |    Enterprise Only     |                                      Update status of encryption propagation                                       |
+|             Hibernate              |    no    |  30m0s  |    no    |    Enterprise Only     |                                 Hibernate deployment by stopping all ArangoDB pods                                 |
 |                Idle                |    no    |  10m0s  |    no    | Community & Enterprise |                            Define idle operation in case if preconditions are not meet                             |
 |               JWTAdd               |    no    |  10m0s  |    no    |    Enterprise Only     |                                              Adds new JWT to the pool                                              |
 |              JWTClean              |    no    |  10m0s  |    no    |    Enterprise Only     |                                            Remove JWT key from the pool                                            |
@@ -117,6 +118,7 @@ spec:
       EncryptionKeyRefresh: 10m0s
       EncryptionKeyRemove: 10m0s
       EncryptionKeyStatusUpdate: 10m0s
+      Hibernate: 30m0s
       Idle: 10m0s
       JWTAdd: 10m0s
       JWTClean: 10m0s

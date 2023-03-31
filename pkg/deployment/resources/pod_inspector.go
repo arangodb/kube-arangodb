@@ -463,51 +463,54 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 		return 0, err
 	}
 
-	// Go over all members, check for missing pods
-	for _, e := range status.Members.AsList() {
-		m := e.Member
-		group := e.Group
-		if podName := m.Pod.GetName(); podName != "" {
-			if _, exists := cachedStatus.Pod().V1().GetSimple(podName); !exists {
-				log.Str("pod-name", podName).Debug("Does not exist")
-				switch m.Phase {
-				case api.MemberPhaseNone, api.MemberPhasePending, api.MemberPhaseCreationFailed:
-					// Do nothing
-					log.Str("pod-name", podName).Debug("PodPhase is None, waiting for the pod to be recreated")
-				case api.MemberPhaseShuttingDown, api.MemberPhaseUpgrading, api.MemberPhaseFailed, api.MemberPhaseRotateStart, api.MemberPhaseRotating:
-					// Shutdown was intended, so not need to do anything here.
-					// Just mark terminated
-					wasTerminated := m.Conditions.IsTrue(api.ConditionTypeTerminated)
-					if m.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Terminated", "") {
-						if !wasTerminated {
-							// Record termination time
-							now := meta.Now()
-							m.RecentTerminations = append(m.RecentTerminations, now)
+	st := r.context.GetStatus()
+	if isTurnedOn, _ := st.IsHibernated(); !isTurnedOn {
+		// Go over all members, check for missing pods
+		for _, e := range status.Members.AsList() {
+			m := e.Member
+			group := e.Group
+			if podName := m.Pod.GetName(); podName != "" {
+				if _, exists := cachedStatus.Pod().V1().GetSimple(podName); !exists {
+					log.Str("pod-name", podName).Debug("Does not exist")
+					switch m.Phase {
+					case api.MemberPhaseNone, api.MemberPhasePending, api.MemberPhaseCreationFailed:
+						// Do nothing
+						log.Str("pod-name", podName).Debug("PodPhase is None, waiting for the pod to be recreated")
+					case api.MemberPhaseShuttingDown, api.MemberPhaseUpgrading, api.MemberPhaseFailed, api.MemberPhaseRotateStart, api.MemberPhaseRotating:
+						// Shutdown was intended, so not need to do anything here.
+						// Just mark terminated
+						wasTerminated := m.Conditions.IsTrue(api.ConditionTypeTerminated)
+						if m.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Terminated", "") {
+							if !wasTerminated {
+								// Record termination time
+								now := meta.Now()
+								m.RecentTerminations = append(m.RecentTerminations, now)
+							}
+							// Save it
+							if err := status.Members.Update(m, group); err != nil {
+								return 0, errors.WithStack(err)
+							}
 						}
+					default:
+						log.Str("pod-name", podName).Debug("Pod is gone")
+						m.Phase = api.MemberPhaseNone // This is trigger a recreate of the pod.
+						// Create event
+						nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
+						events = append(events, k8sutil.NewPodGoneEvent(podName, group.AsRole(), apiObject))
+						m.Conditions.Update(api.ConditionTypeReady, false, "Pod Does Not Exist", "")
+						wasTerminated := m.Conditions.IsTrue(api.ConditionTypeTerminated)
+						if m.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Does Not Exist", "") {
+							if !wasTerminated {
+								// Record termination time
+								now := meta.Now()
+								m.RecentTerminations = append(m.RecentTerminations, now)
+							}
+						}
+
 						// Save it
 						if err := status.Members.Update(m, group); err != nil {
 							return 0, errors.WithStack(err)
 						}
-					}
-				default:
-					log.Str("pod-name", podName).Debug("Pod is gone")
-					m.Phase = api.MemberPhaseNone // This is trigger a recreate of the pod.
-					// Create event
-					nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
-					events = append(events, k8sutil.NewPodGoneEvent(podName, group.AsRole(), apiObject))
-					m.Conditions.Update(api.ConditionTypeReady, false, "Pod Does Not Exist", "")
-					wasTerminated := m.Conditions.IsTrue(api.ConditionTypeTerminated)
-					if m.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Does Not Exist", "") {
-						if !wasTerminated {
-							// Record termination time
-							now := meta.Now()
-							m.RecentTerminations = append(m.RecentTerminations, now)
-						}
-					}
-
-					// Save it
-					if err := status.Members.Update(m, group); err != nil {
-						return 0, errors.WithStack(err)
 					}
 				}
 			}

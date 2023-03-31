@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -90,10 +90,26 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 		}
 	} else {
 		// Check if maintenance annotation is set
-		if updated != nil && updated.Annotations != nil {
+		if updated != nil {
 			if v, ok := updated.Annotations[deployment.ArangoDeploymentPodMaintenanceAnnotation]; ok && v == "true" {
 				// Disable checks if we will enter maintenance mode
 				d.log.Str("deployment", deploymentName).Info("Deployment in maintenance mode")
+				return nextInterval
+			}
+
+			if _, isHibernated := updated.Status.IsHibernated(); isHibernated {
+				if _, ok := updated.Annotations[deployment.ArangoDeploymentHibernateAnnotation]; ok {
+					d.log.Str("deployment", deploymentName).Info("Deployment is hibernated because '%s' annotation exists",
+						deployment.ArangoDeploymentHibernateAnnotation)
+				} else {
+					d.log.Str("deployment", deploymentName).Info("de-hibernate hibernated deployment")
+					updated.Status.Conditions.Remove(api.ConditionTypeHibernation)
+					patch := patch.ItemReplace(patch.NewPath("status", "conditions"), updated.Status.Conditions)
+					if err := d.ApplyPatch(ctxReconciliation, patch); err != nil {
+						d.log.Err(err).Warn("Unable to set conditions")
+					}
+				}
+
 				return nextInterval
 			}
 		}

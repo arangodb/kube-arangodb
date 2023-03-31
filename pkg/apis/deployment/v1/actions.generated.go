@@ -73,6 +73,8 @@ const (
 	ActionEncryptionKeyRemoveDefaultTimeout time.Duration = ActionsDefaultTimeout
 	// ActionEncryptionKeyStatusUpdateDefaultTimeout define default timeout for action ActionEncryptionKeyStatusUpdate
 	ActionEncryptionKeyStatusUpdateDefaultTimeout time.Duration = ActionsDefaultTimeout
+	// ActionHibernateDefaultTimeout define default timeout for action ActionHibernate
+	ActionHibernateDefaultTimeout time.Duration = 1800 * time.Second // 30m0s
 	// ActionIdleDefaultTimeout define default timeout for action ActionIdle
 	ActionIdleDefaultTimeout time.Duration = ActionsDefaultTimeout
 	// ActionJWTAddDefaultTimeout define default timeout for action ActionJWTAdd
@@ -232,6 +234,8 @@ const (
 	ActionTypeEncryptionKeyRemove ActionType = "EncryptionKeyRemove"
 	// ActionTypeEncryptionKeyStatusUpdate in scopes Normal. Update status of encryption propagation
 	ActionTypeEncryptionKeyStatusUpdate ActionType = "EncryptionKeyStatusUpdate"
+	// ActionTypeHibernate in scopes High. Hibernate deployment by stopping all ArangoDB pods
+	ActionTypeHibernate ActionType = "Hibernate"
 	// ActionTypeIdle in scopes Normal. Define idle operation in case if preconditions are not meet
 	ActionTypeIdle ActionType = "Idle"
 	// ActionTypeJWTAdd in scopes Normal. Adds new JWT to the pool
@@ -392,6 +396,8 @@ func (a ActionType) DefaultTimeout() time.Duration {
 		return ActionEncryptionKeyRemoveDefaultTimeout
 	case ActionTypeEncryptionKeyStatusUpdate:
 		return ActionEncryptionKeyStatusUpdateDefaultTimeout
+	case ActionTypeHibernate:
+		return ActionHibernateDefaultTimeout
 	case ActionTypeIdle:
 		return ActionIdleDefaultTimeout
 	case ActionTypeJWTAdd:
@@ -556,6 +562,8 @@ func (a ActionType) Priority() ActionPriority {
 		return ActionPriorityNormal
 	case ActionTypeEncryptionKeyStatusUpdate:
 		return ActionPriorityNormal
+	case ActionTypeHibernate:
+		return ActionPriorityHigh
 	case ActionTypeIdle:
 		return ActionPriorityNormal
 	case ActionTypeJWTAdd:
@@ -729,6 +737,8 @@ func (a ActionType) Optional() bool {
 	case ActionTypeEncryptionKeyRemove:
 		return false
 	case ActionTypeEncryptionKeyStatusUpdate:
+		return false
+	case ActionTypeHibernate:
 		return false
 	case ActionTypeIdle:
 		return false

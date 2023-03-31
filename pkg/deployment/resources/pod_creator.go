@@ -643,6 +643,12 @@ func (r *Resources) EnsurePods(ctx context.Context, cachedStatus inspectorInterf
 	imageNotFoundOnce := &sync.Once{}
 	changed := false
 
+	st := r.context.GetStatus()
+	if isTurnedOn, _ := st.IsHibernated(); isTurnedOn {
+		// Deployment is being hibernated.
+		return nil
+	}
+
 	log := r.log.Str("section", "member")
 
 	if err := iterator.ForeachServerGroupAccepted(func(group api.ServerGroup, groupSpec api.ServerGroupSpec, status *api.MemberStatusList) error {

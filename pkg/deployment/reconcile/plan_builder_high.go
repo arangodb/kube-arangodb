@@ -66,7 +66,8 @@ func (r *Reconciler) createHighPlan(ctx context.Context, apiObject k8sutil.APIOb
 		ApplyIfEmptyWithBackOff(TimezoneCheck, time.Minute, r.createTimezoneUpdatePlan).
 		Apply(r.createBackupInProgressConditionPlan). // Discover backups always
 		Apply(r.createMaintenanceConditionPlan).      // Discover maintenance always
-		Apply(r.cleanupConditions)                    // Cleanup Conditions
+		Apply(r.cleanupConditions).                   // Cleanup Conditions
+		ApplyIfEmpty(r.createHibernatePlan)           // Move deployment into hibernation mode.
 
 	return q.Plan(), q.BackOff(), true
 }

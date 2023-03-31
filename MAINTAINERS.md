@@ -89,6 +89,10 @@ If the release process fails, it may leave:
 - A git tag named `<major>.<minor>.<patch>` in this repository in github.
   To resolve remove it manually.
 
+## Add new action
+
+Add new entry to the file `internal/actions.yaml` and run `make generate`.
+
 ## Development on MacOS
 
 This repo requires GNU command line tools instead BSD one (which are by default available on Mac).

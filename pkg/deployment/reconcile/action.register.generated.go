@@ -99,6 +99,9 @@ var (
 	_ Action        = &actionEncryptionKeyStatusUpdate{}
 	_ actionFactory = newEncryptionKeyStatusUpdateAction
 
+	_ Action        = &actionHibernate{}
+	_ actionFactory = newHibernateAction
+
 	_ Action        = &actionIdle{}
 	_ actionFactory = newIdleAction
 
@@ -546,6 +549,18 @@ func init() {
 		// Get Action defition
 		function := newEncryptionKeyStatusUpdateAction
 		action := api.ActionTypeEncryptionKeyStatusUpdate
+
+		// Wrap action main function
+
+		// Register action
+		registerAction(action, function)
+	}
+
+	// Hibernate
+	{
+		// Get Action defition
+		function := newHibernateAction
+		action := api.ActionTypeHibernate
 
 		// Wrap action main function
 
