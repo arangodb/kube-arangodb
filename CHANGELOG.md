@@ -24,6 +24,7 @@
 - (Maintenance) Bump GO Modules
 - (Feature) Optional Graceful Restart
 - (Maintenance) Manual Recovery documentation
+- (Feature) Headless DNS CommunicationMethod
 
 ## [1.2.24](https://github.com/arangodb/kube-arangodb/tree/1.2.24) (2023-01-25)
 - (Bugfix) Fix deployment creation on ARM64

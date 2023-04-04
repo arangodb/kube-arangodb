@@ -135,7 +135,7 @@ func (r *Resources) EnsureLeader(ctx context.Context, cachedStatus inspectorInte
 		}
 	}
 
-	s := r.createService(leaderAgentSvcName, r.context.GetNamespace(), r.context.GetAPIObject().AsOwner(), ports, selector)
+	s := r.createService(leaderAgentSvcName, r.context.GetNamespace(), "", core.ServiceTypeClusterIP, r.context.GetAPIObject().AsOwner(), ports, selector)
 	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		_, err := cachedStatus.ServicesModInterface().V1().Create(ctxChild, s, meta.CreateOptions{})
 		return err

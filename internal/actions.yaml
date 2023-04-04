@@ -55,6 +55,9 @@ actions:
     enterprise: true
     description: Recreate Server TLS Certificate secret
     timeout: 30m
+  CleanMemberService:
+    description: Removes Server Service
+    timeout: 30m
   RenewTLSCACertificate:
     enterprise: true
     description: Recreate Managed CA secret

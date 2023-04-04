@@ -20,8 +20,6 @@ replace (
 	k8s.io/component-base => k8s.io/component-base v0.22.15
 	k8s.io/kubernetes => k8s.io/kubernetes v0.22.15
 	k8s.io/metrics => k8s.io/metrics v0.22.15
-
-	gopkg.in/yaml.v3 => gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -54,7 +52,7 @@ require (
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac
 	google.golang.org/grpc v1.47.0
 	google.golang.org/protobuf v1.28.0
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
+	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.22.15
 	k8s.io/apiextensions-apiserver v0.18.3
 	k8s.io/apimachinery v0.22.15

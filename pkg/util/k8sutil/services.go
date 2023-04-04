@@ -31,6 +31,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
@@ -316,4 +317,26 @@ func CreateServiceURL(svc core.Service, scheme string, portPredicate func(core.S
 		scheme = scheme + "://"
 	}
 	return scheme + net.JoinHostPort(host, strconv.Itoa(int(port))), nil
+}
+
+func IsServiceRotationRequired(spec api.DeploymentSpec, svc *core.Service) bool {
+	if svc == nil {
+		return false
+	}
+
+	if svc.Spec.ClusterIP == "" {
+		return false
+	}
+
+	if p := spec.CommunicationMethod.ServiceClusterIP(); p == core.ClusterIPNone {
+		if svc.Spec.ClusterIP != core.ClusterIPNone {
+			return true
+		}
+	} else {
+		if svc.Spec.ClusterIP == core.ClusterIPNone {
+			return true
+		}
+	}
+
+	return false
 }
