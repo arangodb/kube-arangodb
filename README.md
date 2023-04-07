@@ -72,17 +72,17 @@ Feature-wise production readiness table:
 
 ## Operator Community Edition (CE)
 
-Image: `arangodb/kube-arangodb:1.2.24`
+Image: `arangodb/kube-arangodb:1.2.25`
 
 ### Installation of latest CE release using Kubectl
 
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.24/manifests/arango-crd.yaml
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.24/manifests/arango-deployment.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.25/manifests/arango-crd.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.25/manifests/arango-deployment.yaml
 # To use `ArangoLocalStorage`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.24/manifests/arango-storage.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.25/manifests/arango-storage.yaml
 # To use `ArangoDeploymentReplication`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.24/manifests/arango-deployment-replication.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.25/manifests/arango-deployment-replication.yaml
 ```
 
 This procedure can also be used for upgrades and will not harm any
@@ -115,9 +115,9 @@ upgrades.
 ```bash
 # The following will install the operator for `ArangoDeployment` &
 # `ArangoDeploymentReplication` resources.
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.24/kube-arangodb-1.2.24.tgz
+helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.25/kube-arangodb-1.2.25.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.24/kube-arangodb-1.2.24.tgz --set "operator.features.storage=true"
+helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.25/kube-arangodb-1.2.25.tgz --set "operator.features.storage=true"
 ```
 
 ### Upgrading the operator using Helm
@@ -151,24 +151,24 @@ with `helm install` as normal:
 ```bash
 # The following will install the operator for `ArangoDeployment` &
 # `ArangoDeploymentReplication` resources.
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.24/kube-arangodb-1.2.24.tgz
+helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.25/kube-arangodb-1.2.25.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.24/kube-arangodb-1.2.24.tgz --set "operator.features.storage=true"
+helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.25/kube-arangodb-1.2.25.tgz --set "operator.features.storage=true"
 ```
 
 ## Operator Enterprise Edition (EE)
 
-Image: `arangodb/kube-arangodb-enterprise:1.2.24`
+Image: `arangodb/kube-arangodb-enterprise:1.2.25`
 
 ### Installation of latest EE release using Kubectl
 
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.24/manifests/enterprise-crd.yaml
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.24/manifests/enterprise-deployment.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.25/manifests/enterprise-crd.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.25/manifests/enterprise-deployment.yaml
 # To use `ArangoLocalStorage`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.24/manifests/enterprise-storage.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.25/manifests/enterprise-storage.yaml
 # To use `ArangoDeploymentReplication`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.24/manifests/enterprise-deployment-replication.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.25/manifests/enterprise-deployment-replication.yaml
 ```
 
 This procedure can also be used for upgrades and will not harm any
@@ -201,9 +201,9 @@ upgrades.
 ```bash
 # The following will install the operator for `ArangoDeployment` &
 # `ArangoDeploymentReplication` resources.
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.24/kube-arangodb-1.2.24.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.24"
+helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.25/kube-arangodb-1.2.25.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.25"
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.24/kube-arangodb-1.2.24.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.24" --set "operator.features.storage=true"
+helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.25/kube-arangodb-1.2.25.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.25" --set "operator.features.storage=true"
 ```
 
 ### Upgrading the operator using Helm
@@ -237,9 +237,9 @@ with `helm install` as normal:
 ```bash
 # The following will install the operator for `ArangoDeployment` &
 # `ArangoDeploymentReplication` resources.
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.24/kube-arangodb-1.2.24.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.24"
+helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.25/kube-arangodb-1.2.25.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.25"
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.24/kube-arangodb-1.2.24.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.24" --set "operator.features.storage=true"
+helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.25/kube-arangodb-1.2.25.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.25" --set "operator.features.storage=true"
 ```
 
 ## Building
