@@ -161,11 +161,11 @@ func (i *inspectorState) RegisterInformers(k8s informers.SharedInformerFactory, 
 	// Arango
 	arango.Database().V1().ArangoMembers().Informer().AddEventHandler(i.eventHandler(definitions.ArangoMember))
 
-	if _, err := i.ArangoTask().V1(); err != nil {
+	if _, err := i.ArangoTask().V1(); err == nil {
 		arango.Database().V1().ArangoTasks().Informer().AddEventHandler(i.eventHandler(definitions.ArangoTask))
 	}
 
-	if _, err := i.ArangoClusterSynchronization().V1(); err != nil {
+	if _, err := i.ArangoClusterSynchronization().V1(); err == nil {
 		arango.Database().V1().ArangoClusterSynchronizations().Informer().AddEventHandler(i.eventHandler(definitions.ArangoClusterSynchronization))
 	}
 }
