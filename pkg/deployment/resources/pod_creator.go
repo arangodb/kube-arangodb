@@ -109,7 +109,6 @@ func createArangodArgs(cachedStatus interfaces.Inspector, input pod.Input, addit
 	if err != nil {
 		return nil, err
 	}
-	endpoint = util.StringOrDefault(input.Member.Endpoint, endpoint)
 
 	myTCPURL := scheme + "://" + net.JoinHostPort(endpoint, strconv.Itoa(shared.ArangoPort))
 	addAgentEndpoints := false
@@ -128,7 +127,7 @@ func createArangodArgs(cachedStatus interfaces.Inspector, input pod.Input, addit
 				if err != nil {
 					return nil, err
 				}
-				options.Addf("--agency.endpoint", "%s://%s", scheme, net.JoinHostPort(util.StringOrDefault(p.Endpoint, dnsName), strconv.Itoa(shared.ArangoPort)))
+				options.Addf("--agency.endpoint", "%s://%s", scheme, net.JoinHostPort(dnsName, strconv.Itoa(shared.ArangoPort)))
 			}
 		}
 	case api.ServerGroupDBServers:
@@ -172,7 +171,7 @@ func createArangodArgs(cachedStatus interfaces.Inspector, input pod.Input, addit
 			if err != nil {
 				return nil, err
 			}
-			options.Addf("--cluster.agency-endpoint", "%s://%s", scheme, net.JoinHostPort(util.StringOrDefault(p.Endpoint, dnsName), strconv.Itoa(shared.ArangoPort)))
+			options.Addf("--cluster.agency-endpoint", "%s://%s", scheme, net.JoinHostPort(dnsName, strconv.Itoa(shared.ArangoPort)))
 		}
 	}
 

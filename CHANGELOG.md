@@ -2,6 +2,7 @@
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Bugfix) Fix manual overwrite for ReplicasCount in helm
+- (Improvement) Deprecate Endpoint field in ArangoDeployment
 
 ## [1.2.25](https://github.com/arangodb/kube-arangodb/tree/1.2.25) (2023-04-07)
 - (Feature) Add Generics & Drop policy/v1beta1 support

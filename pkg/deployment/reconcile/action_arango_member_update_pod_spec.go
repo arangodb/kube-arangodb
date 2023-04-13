@@ -25,7 +25,6 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
-	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 )
@@ -73,21 +72,6 @@ func (a *actionArangoMemberUpdatePodSpec) Start(ctx context.Context) (bool, erro
 		return false, err
 	}
 
-	endpoint, err := a.actionCtx.GenerateMemberEndpoint(a.action.Group, m)
-	if err != nil {
-		a.log.Err(err).Error("Unable to render endpoint")
-		return false, err
-	}
-
-	if m.Endpoint == nil || *m.Endpoint != endpoint {
-		// Update endpoint
-		m.Endpoint = util.NewString(endpoint)
-		if err := status.Members.Update(m, a.action.Group); err != nil {
-			a.log.Err(err).Error("Unable to update endpoint")
-			return false, err
-		}
-	}
-
 	groupSpec := spec.GetServerGroupSpec(a.action.Group)
 
 	imageInfo, imageFound := a.actionCtx.SelectImage(spec, status)
@@ -116,11 +100,6 @@ func (a *actionArangoMemberUpdatePodSpec) Start(ctx context.Context) (bool, erro
 	if err != nil {
 		a.log.Err(err).Error("Error while getting pod template")
 		return false, err
-	}
-
-	if z := m.Endpoint; z != nil {
-		q := *z
-		template.Endpoint = &q
 	}
 
 	if err := inspector.WithArangoMemberUpdate(ctx, cache, name, func(member *api.ArangoMember) (bool, error) {

@@ -31,7 +31,6 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
 
 // MemberStatus holds the current status of a single member (server)
@@ -73,8 +72,7 @@ type MemberStatus struct {
 	Architecture *ArangoDeploymentArchitectureType `json:"architecture,omitempty"`
 	// Upgrade define if upgrade should be enforced during next execution
 	Upgrade bool `json:"upgrade,omitempty"`
-	// Endpoint definition how member should be reachable
-	Endpoint *string `json:"endpoint,omitempty"`
+
 	// Topology define topology member status assignment
 	Topology     *TopologyMemberStatus `json:"topology,omitempty"`
 	Pod          *MemberPodStatus      `json:"pod,omitempty"`
@@ -101,6 +99,9 @@ type MemberStatus struct {
 	// deprecated
 	// PersistentVolumeClaimName holds the name of the persistent volume claim used for this member (if any).
 	PersistentVolumeClaimName string `json:"persistentVolumeClaimName,omitempty"`
+	// deprecated
+	// Endpoint definition how member should be reachable
+	Endpoint *string `json:"-"`
 }
 
 // Equal checks for equality
@@ -123,8 +124,7 @@ func (s MemberStatus) Equal(other MemberStatus) bool {
 		s.Image.Equal(other.Image) &&
 		s.OldImage.Equal(other.OldImage) &&
 		s.Architecture.Equal(other.Architecture) &&
-		s.Upgrade == other.Upgrade &&
-		strings.CompareStringPointers(s.Endpoint, other.Endpoint)
+		s.Upgrade == other.Upgrade
 }
 
 // Age returns the duration since the creation timestamp of this member.
@@ -150,14 +150,6 @@ func (s *MemberStatus) RemoveTerminationsBefore(timestamp time.Time) int {
 			return removed
 		}
 	}
-}
-
-func (s *MemberStatus) GetEndpoint(defaultEndpoint string) string {
-	if s == nil || s.Endpoint == nil {
-		return defaultEndpoint
-	}
-
-	return *s.Endpoint
 }
 
 // RecentTerminationsSince returns the number of terminations since the given timestamp.

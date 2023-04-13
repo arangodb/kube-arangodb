@@ -51,8 +51,6 @@ type ArangoMemberPodTemplate struct {
 	PodSpec         *core.PodTemplateSpec `json:"podSpec,omitempty"`
 	PodSpecChecksum string                `json:"podSpecChecksum,omitempty"`
 	Checksum        string                `json:"checksum,omitempty"`
-
-	Endpoint *string `json:"endpoint,omitempty"`
 }
 
 func (a *ArangoMemberPodTemplate) GetChecksum() string {

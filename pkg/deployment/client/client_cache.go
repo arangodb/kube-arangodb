@@ -90,7 +90,7 @@ func (cc *cache) getClient(group api.ServerGroup, id string) (driver.Client, err
 		return nil, err
 	}
 
-	c, err := cc.factory.Client(cc.extendHost(m.GetEndpoint(endpoint)))
+	c, err := cc.factory.Client(cc.extendHost(endpoint))
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -165,7 +165,7 @@ func (cc *cache) GetAgency(_ context.Context, agencyIDs ...string) (agency.Agenc
 			return nil, err
 		}
 
-		dnsNames = append(dnsNames, cc.extendHost(m.GetEndpoint(endpoint)))
+		dnsNames = append(dnsNames, cc.extendHost(endpoint))
 	}
 
 	if len(dnsNames) == 0 {
