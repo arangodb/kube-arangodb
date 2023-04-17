@@ -8,9 +8,6 @@ spec:
     kind: ArangoTask
     listKind: ArangoTaskList
     plural: arangotasks
-    shortNames:
-      - arangodb
-      - arango
     singular: arangotask
   scope: Namespaced
   versions:
