@@ -73,8 +73,7 @@ type MemberStatus struct {
 	Architecture *ArangoDeploymentArchitectureType `json:"architecture,omitempty"`
 	// Upgrade define if upgrade should be enforced during next execution
 	Upgrade bool `json:"upgrade,omitempty"`
-	// Endpoint definition how member should be reachable
-	Endpoint *string `json:"endpoint,omitempty"`
+
 	// Topology define topology member status assignment
 	Topology     *TopologyMemberStatus `json:"topology,omitempty"`
 	Pod          *MemberPodStatus      `json:"pod,omitempty"`
@@ -101,6 +100,9 @@ type MemberStatus struct {
 	// deprecated
 	// PersistentVolumeClaimName holds the name of the persistent volume claim used for this member (if any).
 	PersistentVolumeClaimName string `json:"persistentVolumeClaimName,omitempty"`
+	// deprecated
+	// Endpoint definition how member should be reachable
+	Endpoint *string `json:"-"`
 }
 
 // Equal checks for equality
@@ -152,6 +154,7 @@ func (s *MemberStatus) RemoveTerminationsBefore(timestamp time.Time) int {
 	}
 }
 
+// deprecated
 func (s *MemberStatus) GetEndpoint(defaultEndpoint string) string {
 	if s == nil || s.Endpoint == nil {
 		return defaultEndpoint

@@ -1768,11 +1768,6 @@ func (in *MemberStatus) DeepCopyInto(out *MemberStatus) {
 		*out = new(ArangoDeploymentArchitectureType)
 		**out = **in
 	}
-	if in.Endpoint != nil {
-		in, out := &in.Endpoint, &out.Endpoint
-		*out = new(string)
-		**out = **in
-	}
 	if in.Topology != nil {
 		in, out := &in.Topology, &out.Topology
 		*out = new(TopologyMemberStatus)
@@ -1804,6 +1799,11 @@ func (in *MemberStatus) DeepCopyInto(out *MemberStatus) {
 		for key, val := range *in {
 			(*out)[key] = *val.DeepCopy()
 		}
+	}
+	if in.Endpoint != nil {
+		in, out := &in.Endpoint, &out.Endpoint
+		*out = new(string)
+		**out = **in
 	}
 	return
 }
