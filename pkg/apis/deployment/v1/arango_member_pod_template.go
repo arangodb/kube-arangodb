@@ -52,7 +52,7 @@ type ArangoMemberPodTemplate struct {
 	PodSpecChecksum string                `json:"podSpecChecksum,omitempty"`
 	Checksum        string                `json:"checksum,omitempty"`
 
-	// Deprecated
+	// deprecated
 	Endpoint *string `json:"endpoint,omitempty"`
 }
 
