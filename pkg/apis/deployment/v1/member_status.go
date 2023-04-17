@@ -100,7 +100,7 @@ type MemberStatus struct {
 	// deprecated
 	// PersistentVolumeClaimName holds the name of the persistent volume claim used for this member (if any).
 	PersistentVolumeClaimName string `json:"persistentVolumeClaimName,omitempty"`
-	// Deprecated
+	// deprecated
 	// Endpoint definition how member should be reachable
 	Endpoint *string `json:"-"`
 }
@@ -154,7 +154,7 @@ func (s *MemberStatus) RemoveTerminationsBefore(timestamp time.Time) int {
 	}
 }
 
-// Deprecated
+// deprecated
 func (s *MemberStatus) GetEndpoint(defaultEndpoint string) string {
 	if s == nil || s.Endpoint == nil {
 		return defaultEndpoint
