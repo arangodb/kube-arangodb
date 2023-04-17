@@ -100,7 +100,7 @@ type MemberStatus struct {
 	// deprecated
 	// PersistentVolumeClaimName holds the name of the persistent volume claim used for this member (if any).
 	PersistentVolumeClaimName string `json:"persistentVolumeClaimName,omitempty"`
-	// deprecated
+	// Deprecated
 	// Endpoint definition how member should be reachable
 	Endpoint *string `json:"-"`
 }
