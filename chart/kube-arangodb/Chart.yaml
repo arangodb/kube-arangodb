@@ -1,5 +1,5 @@
 # do not switch to V2 yet - we still need to support Helm 2
 apiVersion: v1
 name: kube-arangodb
-version: 1.2.25
+version: 1.2.26
 description: "ArangoDB Kubernetes Operator"
