@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.2.26](https://github.com/arangodb/kube-arangodb/tree/1.2.26) (2023-04-18)
 - (Bugfix) Fix manual overwrite for ReplicasCount in helm
 - (Bugfix) Fix for ArangoTask list error
 - (Improvement) Deprecate Endpoint field in ArangoDeployment
