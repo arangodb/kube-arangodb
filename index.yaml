@@ -2,6 +2,22 @@ apiVersion: v1
 entries:
   kube-arangodb:
   - apiVersion: v1
+    created: "2023-04-19T11:34:34.97969+02:00"
+    description: ArangoDB Kubernetes Operator
+    digest: e56dc031bfbbc7a5f86218c5bd3b11e64a6e70b718a9f674dc61aa7303f4e22b
+    name: kube-arangodb
+    urls:
+    - https://github.com/arangodb/kube-arangodb/releases/download/1.2.26/kube-arangodb-1.2.26.tgz
+    version: 1.2.26
+  - apiVersion: v1
+    created: "2023-04-19T11:34:34.740936+02:00"
+    description: ArangoDB Kubernetes Operator
+    digest: 41341d6674dcc245a54ad2cf31e67b7084fd538383814908596b9126ef0a69f0
+    name: kube-arangodb
+    urls:
+    - https://github.com/arangodb/kube-arangodb/releases/download/1.2.25/kube-arangodb-1.2.25.tgz
+    version: 1.2.25
+  - apiVersion: v1
     appVersion: 3.5.0
     created: "2023-01-27T09:36:02.680943+01:00"
     description: ArangoDB Kubernetes Operator
@@ -220,6 +236,24 @@ entries:
   kube-arangodb-crd:
   - apiVersion: v1
     appVersion: 3.5.0
+    created: "2023-04-19T11:34:35.460821+02:00"
+    description: ArangoDB Kubernetes Custom Resource Definitions (Deprecated)
+    digest: 9e78e2a01d2a0abd129f8eeb9d68dd9a88c24fc6141f1716cee3212d158348a1
+    name: kube-arangodb-crd
+    urls:
+    - https://github.com/arangodb/kube-arangodb/releases/download/1.2.26/kube-arangodb-crd-1.2.26.tgz
+    version: 1.2.26
+  - apiVersion: v1
+    appVersion: 3.5.0
+    created: "2023-04-19T11:34:35.213321+02:00"
+    description: ArangoDB Kubernetes Custom Resource Definitions (Deprecated)
+    digest: ae9f9e74d65ecc275e21892ae060dc4c663de308d0dc7f8207aa2b008da4607f
+    name: kube-arangodb-crd
+    urls:
+    - https://github.com/arangodb/kube-arangodb/releases/download/1.2.25/kube-arangodb-crd-1.2.25.tgz
+    version: 1.2.25
+  - apiVersion: v1
+    appVersion: 3.5.0
     created: "2023-01-27T09:36:02.888201+01:00"
     description: ArangoDB Kubernetes Custom Resource Definitions
     digest: 37830022ef1ef33f2c1ea1c3fdfea2f1d6e34a341136f4af50a66361feacd09b
@@ -425,4 +459,4 @@ entries:
     urls:
     - https://github.com/arangodb/kube-arangodb/releases/download/1.2.1/kube-arangodb-crd-1.2.1.tgz
     version: 1.2.1
-generated: "2023-01-27T09:36:02.888785+01:00"
+generated: "2023-04-19T11:34:35.46188+02:00"
