@@ -33,7 +33,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 const (
@@ -73,8 +73,13 @@ func getShutdownHelper(a actionImpl) (ActionCore, api.MemberStatus, bool) {
 		return NewActionSuccess(), m, true
 	}
 
-	if _, ok := pod.GetAnnotations()[deployment.ArangoDeploymentPodDeleteNow]; ok {
+	annotations := pod.GetAnnotations()
+	if _, ok := annotations[deployment.ArangoDeploymentPodDeleteNow]; ok {
 		// The pod contains annotation, so pod must be deleted immediately.
+		return shutdownNow{actionImpl: a, memberStatus: m}, m, true
+	}
+
+	if _, ok := annotations[deployment.ArangoDeploymentPodFastRestart]; ok {
 		return shutdownNow{actionImpl: a, memberStatus: m}, m, true
 	}
 
@@ -144,14 +149,8 @@ func (s shutdownHelperAPI) Start(ctx context.Context) (bool, error) {
 
 	// Remove finalizers, so Kubernetes will quickly terminate the pod
 	if !features.GracefulShutdown().Enabled() {
-		pod, ok := cache.Pod().V1().GetSimple(podName)
-		if ok && len(pod.Finalizers) > 0 {
-			pod.Finalizers = nil
-
-			ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
-			defer cancel()
-
-			if _, err := cache.Client().Kubernetes().CoreV1().Pods(cache.Namespace()).Update(ctxChild, pod, meta.UpdateOptions{}); err != nil {
+		if pod, ok := cache.Pod().V1().GetSimple(podName); ok {
+			if err := k8sutil.RemoveAllPodFinalizers(ctx, pod, cache); err != nil {
 				return false, err
 			}
 		}
@@ -179,7 +178,7 @@ func (s shutdownHelperAPI) Start(ctx context.Context) (bool, error) {
 		}
 	} else if group.IsArangosync() {
 		// Terminate pod
-		if err := cache.Client().Kubernetes().CoreV1().Pods(cache.Namespace()).Delete(ctx, podName, meta.DeleteOptions{}); err != nil {
+		if err := k8sutil.RemovePodByName(ctx, podName, cache, nil); err != nil {
 			return false, errors.WithStack(err)
 		}
 	}
@@ -231,11 +230,8 @@ func (s shutdownHelperDelete) Start(ctx context.Context) (bool, error) {
 		return true, errors.Newf("Cluster is not ready")
 	}
 
-	// Terminate pod
-	if err := cache.Client().Kubernetes().CoreV1().Pods(cache.Namespace()).Delete(ctx, podName, meta.DeleteOptions{}); err != nil {
-		if !kerrors.IsNotFound(err) {
-			return false, errors.WithStack(err)
-		}
+	if err := k8sutil.RemovePodByName(ctx, podName, cache, nil); err != nil {
+		return false, errors.WithStack(err)
 	}
 
 	return false, nil
@@ -302,27 +298,17 @@ func (s shutdownNow) CheckProgress(ctx context.Context) (bool, bool, error) {
 		return true, false, nil
 	}
 
-	// Remove finalizers forcefully.
-	if len(pod.Finalizers) > 0 {
-		pod.Finalizers = nil
-
-		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
-		defer cancel()
-
-		if _, err := cache.Client().Kubernetes().CoreV1().Pods(cache.Namespace()).Update(ctxChild, pod, meta.UpdateOptions{}); err != nil {
-			return false, false, err
-		}
+	if err := k8sutil.RemoveAllPodFinalizers(ctx, pod, cache); err != nil {
+		return false, false, err
 	}
 
-	// Terminate pod.
-	options := meta.DeleteOptions{
+	options := &meta.DeleteOptions{
 		// Leave one second to clean a PVC.
 		GracePeriodSeconds: util.NewInt64(1),
 	}
-	if err := cache.Client().Kubernetes().CoreV1().Pods(cache.Namespace()).Delete(ctx, podName, options); err != nil {
-		if !kerrors.IsNotFound(err) {
-			return false, false, errors.WithStack(err)
-		}
+
+	if err := k8sutil.RemovePod(ctx, pod, cache, options); err != nil {
+		return false, false, errors.WithMessagef(err, "RemovePodForcefully failed")
 	}
 
 	s.log.Info("Using shutdown now method completed")

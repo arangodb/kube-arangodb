@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,11 +31,9 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/acs/sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/info"
 	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
 const (
@@ -90,15 +88,12 @@ func (r *Resources) CleanupTerminatedPods(ctx context.Context) (util.Interval, e
 				}
 			}
 
-			// Ok, we can delete the pod
-			log.Str("pod-name", pod.GetName()).Debug("Cleanup terminated pod")
-
+			// This pod can be deleted.
+			log.Str("pod", pod.GetName()).Debug("Cleanup terminated pod")
 			options := meta.NewDeleteOptions(0)
 			options.Preconditions = meta.NewUIDPreconditions(string(pod.GetUID()))
-			err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-				return item.Cache().Client().Kubernetes().CoreV1().Pods(item.Cache().Namespace()).Delete(ctxChild, pod.GetName(), *options)
-			})
-			if err != nil && !kerrors.IsNotFound(err) {
+			if err := k8sutil.RemovePodByName(ctx, pod.GetName(), item.Cache(), options); err != nil {
+				// TODO test. Should not we handle kerrors.IsConflict(err) here?
 				log.Err(err).Str("pod", pod.GetName()).Debug("Failed to cleanup pod")
 				return errors.WithStack(err)
 			}

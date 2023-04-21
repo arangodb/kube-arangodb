@@ -37,7 +37,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/info"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
@@ -414,35 +413,28 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 
 			// Check if any additional deletion request is required
 			if !k8sutil.IsPodAlive(pod) {
-				var gps int64 = 10
+				opts := &meta.DeleteOptions{
+					GracePeriodSeconds: util.NewInt64(10),
+					Preconditions:      meta.NewUIDPreconditions(string(pod.GetUID())),
+				}
 
-				forceDelete := false
 				if t := k8sutil.PodStopTime(pod); !t.IsZero() {
 					if time.Since(t) > forcePodDeletionGracePeriod {
-						forceDelete = true
+						*opts.GracePeriodSeconds = 0
 					}
 				} else if t := pod.DeletionTimestamp; t != nil {
 					if time.Since(t.Time) > forcePodDeletionGracePeriod {
-						forceDelete = true
+						*opts.GracePeriodSeconds = 0
 					}
 				}
 
-				if forceDelete {
-					gps = 0
+				if *opts.GracePeriodSeconds == 0 {
 					log.Str("pod-name", pod.GetName()).Warn("Enforcing deletion of Pod")
 				}
 
 				// Pod is dead, but still not removed. Send additional deletion request
-				nctx, c := globals.GetGlobals().Timeouts().Kubernetes().WithTimeout(ctx)
-				defer c()
-
-				if err := cachedStatus.PodsModInterface().V1().Delete(nctx, pod.GetName(), meta.DeleteOptions{
-					GracePeriodSeconds: util.NewInt64(gps),
-					Preconditions:      meta.NewUIDPreconditions(string(pod.GetUID())),
-				}); err != nil {
-					if kerrors.IsNotFound(err) {
-						// Pod is already gone, we are fine with it
-					} else if kerrors.IsConflict(err) {
+				if err := k8sutil.RemovePod(ctx, pod, cachedStatus, opts); err != nil {
+					if kerrors.IsConflict(err) {
 						log.Warn("UID of Pod Changed")
 					} else {
 						log.Err(err).Error("Unknown error while deleting Pod")

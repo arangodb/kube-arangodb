@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
 	persistentvolumeclaimv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
@@ -72,6 +73,21 @@ func RemovePodFinalizers(ctx context.Context, cachedStatus pod.Inspector, c podv
 	}
 }
 
+// RemoveAllPodFinalizers removes all finalizers for a given pod.
+// Returns true if pod contains finalizers.
+func RemoveAllPodFinalizers(ctx context.Context, pod *core.Pod, cache inspectorInterface.Inspector) error {
+	if len(pod.Finalizers) == 0 {
+		return nil
+	}
+
+	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
+	defer cancel()
+	pod.Finalizers = nil
+	_, err := cache.Client().Kubernetes().CoreV1().Pods(cache.Namespace()).Update(ctxChild, pod, meta.UpdateOptions{})
+
+	return err
+}
+
 // RemovePVCFinalizers removes the given finalizers from the given PVC.
 func RemovePVCFinalizers(ctx context.Context, cachedStatus persistentvolumeclaim.Inspector, c persistentvolumeclaimv1.ModInterface,
 	p *core.PersistentVolumeClaim, finalizers []string, ignoreNotFound bool) (int, error) {
@@ -110,6 +126,11 @@ func RemovePVCFinalizers(ctx context.Context, cachedStatus persistentvolumeclaim
 // In case of an update conflict, the functions tries again.
 func RemoveFinalizers(finalizers []string, getFunc func() (meta.Object, error), updateFunc func(meta.Object) error, ignoreNotFound bool) (int, error) {
 	attempts := 0
+	if len(finalizers) == 0 {
+		// Nothing to remove.
+		return 0, nil
+	}
+
 	for {
 		attempts++
 		obj, err := getFunc()

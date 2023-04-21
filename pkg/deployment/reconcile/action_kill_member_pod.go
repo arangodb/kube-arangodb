@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,13 +23,12 @@ package reconcile
 import (
 	"context"
 
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 // newKillMemberPodAction creates a new Action that implements the given
@@ -72,7 +71,7 @@ func (a *actionKillMemberPod) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	if err := cache.Client().Kubernetes().CoreV1().Pods(cache.Namespace()).Delete(ctx, m.Pod.GetName(), meta.DeleteOptions{}); err != nil {
+	if err := k8sutil.RemovePodByName(ctx, m.Pod.GetName(), cache, nil); err != nil {
 		a.log.Err(err).Error("Unable to kill pod")
 		return true, nil
 	}

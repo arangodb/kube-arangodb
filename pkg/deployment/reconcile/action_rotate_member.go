@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,12 +23,9 @@ package reconcile
 import (
 	"context"
 
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 // newRotateMemberAction creates a new Action that implements the given
@@ -92,16 +89,11 @@ func (a *actionRotateMember) CheckProgress(ctx context.Context) (bool, bool, err
 		return false, false, nil
 	}
 
-	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
-	defer cancel()
-
-	// Pod is terminated, we can now remove it
-	if err := cache.Client().Kubernetes().CoreV1().Pods(cache.Namespace()).Delete(ctxChild, m.Pod.GetName(), meta.DeleteOptions{}); err != nil {
-		if !kerrors.IsNotFound(err) {
-			a.log.Err(err).Error("Unable to delete pod")
-			return false, false, nil
-		}
+	if err := k8sutil.RemovePodByName(ctx, m.Pod.GetName(), cache, nil); err != nil {
+		a.log.Err(err).Error("Unable to delete pod")
+		return false, false, nil
 	}
+
 	// Pod is now gone, update the member status
 	m.Phase = api.MemberPhaseNone
 	m.RecentTerminations = nil // Since we're rotating, we do not care about old terminations.

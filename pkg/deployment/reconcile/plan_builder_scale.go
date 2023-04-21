@@ -124,10 +124,8 @@ func (r *Reconciler) createScalePlan(status api.DeploymentStatus, members api.Me
 	return plan
 }
 
-func (r *Reconciler) createReplaceMemberPlan(ctx context.Context, apiObject k8sutil.APIObject,
-	spec api.DeploymentSpec, status api.DeploymentStatus,
-	context PlanBuilderContext) api.Plan {
-
+func (r *Reconciler) createReplaceMemberPlan(_ context.Context, _ k8sutil.APIObject, _ api.DeploymentSpec,
+	status api.DeploymentStatus, context PlanBuilderContext) api.Plan {
 	var plan api.Plan
 
 	// Replace is only allowed for Coordinators, DBServers & Agents
@@ -141,29 +139,23 @@ func (r *Reconciler) createReplaceMemberPlan(ctx context.Context, apiObject k8su
 
 		if member.Conditions.IsTrue(api.ConditionTypeMarkedToRemove) {
 			ready, message := groupReadyForRestart(context, status, member, group)
+			log := r.planLogger.Str("member", member.ID).Str("role", group.AsRole()).Str("reason", message)
 			if !ready {
-				r.planLogger.Str("member", member.ID).Str("role", group.AsRole()).Str("message", message).Warn("Unable to recreate member")
+				log.Warn("Unable to recreate member")
 				continue
 			}
 
 			switch group {
 			case api.ServerGroupDBServers:
 				plan = append(plan, actions.NewAction(api.ActionTypeAddMember, group, shared.WithPredefinedMember("")))
-				r.planLogger.
-					Str("role", group.AsRole()).
-					Debug("Creating replacement plan")
 			case api.ServerGroupCoordinators:
 				plan = append(plan, cleanOutMember(group, member)...)
-				r.planLogger.
-					Str("role", group.AsRole()).
-					Debug("Creating replacement plan")
 			case api.ServerGroupAgents:
 				plan = append(plan, cleanOutMember(group, member)...)
 				plan = append(plan, actions.NewAction(api.ActionTypeAddMember, group, shared.WithPredefinedMember("")))
-				r.planLogger.
-					Str("role", group.AsRole()).
-					Debug("Creating replacement plan")
 			}
+
+			log.Debug("Creating replacement plan")
 		}
 	}
 

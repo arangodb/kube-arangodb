@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import (
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
@@ -44,7 +45,14 @@ func (d *Deployment) removePodFinalizers(ctx context.Context, cachedStatus inspe
 
 	if err := cachedStatus.Pod().V1().Iterate(func(pod *core.Pod) error {
 		log.Str("pod", pod.GetName()).Info("Removing Pod Finalizer")
-		if count, err := k8sutil.RemovePodFinalizers(ctx, cachedStatus, d.PodsModInterface(), pod, constants.ManagedFinalizers(), true); err != nil {
+		finalizers := constants.ManagedFinalizers()
+		if _, ok := pod.GetAnnotations()[deployment.ArangoDeploymentPodFastRestart]; ok {
+			// Remove all finalizers.
+			finalizers = pod.Finalizers
+		}
+
+		count, err := k8sutil.RemovePodFinalizers(ctx, cachedStatus, d.PodsModInterface(), pod, finalizers, true)
+		if err != nil {
 			log.Err(err).Warn("Failed to remove pod finalizers")
 			return err
 		} else if count > 0 {

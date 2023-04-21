@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 // newRemoveMemberAction creates a new Action that implements the given
@@ -104,12 +105,10 @@ func (a *actionRemoveMember) Start(ctx context.Context) (bool, error) {
 			}
 		}
 	}
-	if p := m.Pod.GetName(); p != "" {
+	if podName := m.Pod.GetName(); podName != "" {
 		// Remove the pod (if any)
-		if err := cache.Client().Kubernetes().CoreV1().Pods(cache.Namespace()).Delete(ctx, p, meta.DeleteOptions{}); err != nil {
-			if !apiErrors.IsNotFound(err) {
-				return false, errors.WithStack(err)
-			}
+		if err := k8sutil.RemovePodByName(ctx, podName, cache, nil); err != nil {
+			return false, errors.WithStack(err)
 		}
 	}
 	// Remove the pvc (if any)

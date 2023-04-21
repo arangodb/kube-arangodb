@@ -464,6 +464,16 @@ func groupReadyForRestart(context PlanBuilderContext, status api.DeploymentStatu
 		return true, "Member is not serving"
 	}
 
+	// If fast restart annotation is enabled then return readiness.
+	if cache, ok := context.ACS().ClusterCache(member.ClusterID); ok {
+		if p, ok := cache.Pod().V1().GetSimple(member.Pod.GetName()); ok {
+			if _, ok := p.GetAnnotations()[deployment.ArangoDeploymentPodFastRestart]; ok {
+				// TODO test, what if there are blocking shards (inconsistency).
+				return true, "fast restart is enabled"
+			}
+		}
+	}
+
 	if !status.Members.MembersOfGroup(group).AllMembersServing() {
 		return false, "Not all members are serving"
 	}

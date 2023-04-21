@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,7 +44,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tolerations"
 )
 
@@ -149,10 +148,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 		if k8sutil.IsPodFailed(pod, utils.StringList{shared.ServerContainerName}) {
 			// Wait some time before deleting the pod
 			if time.Now().After(pod.GetCreationTimestamp().Add(30 * time.Second)) {
-				err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-					return ib.Context.ACS().CurrentClusterCache().PodsModInterface().V1().Delete(ctxChild, podName, meta.DeleteOptions{})
-				})
-				if err != nil && !kerrors.IsNotFound(err) {
+				if err := k8sutil.RemovePodByName(ctx, podName, ib.Context.ACS().CurrentClusterCache(), nil); err != nil {
 					log.Err(err).Warn("Failed to delete Image ID Pod")
 					return false, nil
 				}
@@ -191,10 +187,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 		enterprise := strings.ToLower(v.License) == "enterprise"
 
 		// We have all the info we need now, kill the pod and store the image info.
-		err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-			return ib.Context.ACS().CurrentClusterCache().PodsModInterface().V1().Delete(ctxChild, podName, meta.DeleteOptions{})
-		})
-		if err != nil && !kerrors.IsNotFound(err) {
+		if err := k8sutil.RemovePodByName(ctx, podName, ib.Context.ACS().CurrentClusterCache(), nil); err != nil {
 			log.Err(err).Warn("Failed to delete Image ID Pod")
 			return true, nil
 		}

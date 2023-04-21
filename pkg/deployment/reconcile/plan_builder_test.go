@@ -261,10 +261,6 @@ func (c *testContext) SelectImage(spec api.DeploymentSpec, status api.Deployment
 	}, true
 }
 
-func (c *testContext) UpdatePvc(_ context.Context, pvc *core.PersistentVolumeClaim) error {
-	panic("implement me")
-}
-
 func (c *testContext) GetPv(pvName string) (*core.PersistentVolume, error) {
 	panic("implement me")
 }
@@ -302,10 +298,6 @@ func (c *testContext) CreateMember(_ context.Context, group api.ServerGroup, id 
 }
 
 func (c *testContext) DeletePod(_ context.Context, _ string, _ meta.DeleteOptions) error {
-	panic("implement me")
-}
-
-func (c *testContext) DeletePvc(_ context.Context, pvcName string) error {
 	panic("implement me")
 }
 

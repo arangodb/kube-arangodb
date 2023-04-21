@@ -30,7 +30,6 @@ import (
 	"time"
 
 	core "k8s.io/api/core/v1"
-	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
@@ -375,23 +374,6 @@ func (d *Deployment) DeletePod(ctx context.Context, podName string, options meta
 	return nil
 }
 
-// CleanupPod deletes a given pod with force and explicit UID.
-// If the pod does not exist, the error is ignored.
-func (d *Deployment) CleanupPod(ctx context.Context, p *core.Pod) error {
-	log := d.log
-	podName := p.GetName()
-	options := meta.NewDeleteOptions(0)
-	options.Preconditions = meta.NewUIDPreconditions(string(p.GetUID()))
-	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-		return d.PodsModInterface().Delete(ctxChild, podName, *options)
-	})
-	if err != nil && !kerrors.IsNotFound(err) {
-		log.Err(err).Str("pod", podName).Debug("Failed to cleanup pod")
-		return errors.WithStack(err)
-	}
-	return nil
-}
-
 // RemovePodFinalizers removes all the finalizers from the Pod with given name in the namespace
 // of the deployment. If the pod does not exist, the error is ignored.
 func (d *Deployment) RemovePodFinalizers(ctx context.Context, podName string) error {
@@ -410,38 +392,6 @@ func (d *Deployment) RemovePodFinalizers(ctx context.Context, podName string) er
 		return errors.WithStack(err)
 	}
 	return nil
-}
-
-// DeletePvc deletes a persistent volume claim with given name in the namespace
-// of the deployment. If the pvc does not exist, the error is ignored.
-func (d *Deployment) DeletePvc(ctx context.Context, pvcName string) error {
-	log := d.log
-	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-		return d.PersistentVolumeClaimsModInterface().Delete(ctxChild, pvcName, meta.DeleteOptions{})
-	})
-	if err != nil && !kerrors.IsNotFound(err) {
-		log.Err(err).Str("pvc", pvcName).Debug("Failed to remove pvc")
-		return errors.WithStack(err)
-	}
-	return nil
-}
-
-// UpdatePvc updated a persistent volume claim in the namespace
-// of the deployment. If the pvc does not exist, the error is ignored.
-func (d *Deployment) UpdatePvc(ctx context.Context, pvc *core.PersistentVolumeClaim) error {
-	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-		_, err := d.PersistentVolumeClaimsModInterface().Update(ctxChild, pvc, meta.UpdateOptions{})
-		return err
-	})
-	if err == nil {
-		return nil
-	}
-
-	if apiErrors.IsNotFound(err) {
-		return nil
-	}
-
-	return errors.WithStack(err)
 }
 
 // GetOwnedPVCs returns a list of all PVCs owned by the deployment.

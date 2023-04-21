@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
@@ -43,6 +44,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
@@ -783,4 +785,71 @@ func GetFinalizers(spec api.ServerGroupSpec, group api.ServerGroup) []string {
 	}
 
 	return finalizers
+}
+
+// RemovePodByName removes a given pod by name.
+// If options are not provided then pod will be removed forcefully without timeout.
+// When pod does not exist then error is not returned.
+func RemovePodByName(ctx context.Context, podName string, cache inspectorInterface.Inspector, opts *meta.DeleteOptions) error {
+	pod, ok := cache.Pod().V1().GetSimple(podName)
+	if !ok {
+		// It does not exist in cache, lets confirm that in the cluster.
+		var err error
+
+		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
+		defer cancel()
+
+		pod, err = cache.Client().Kubernetes().CoreV1().Pods(cache.Namespace()).Get(ctxChild, podName, meta.GetOptions{})
+		if err != nil {
+			if kerrors.IsNotFound(err) {
+				// It does not exist in cache, and in the cluster.
+				return nil
+			}
+
+			return errors.WithStack(err)
+		}
+	}
+
+	return RemovePod(ctx, pod, cache, opts)
+}
+
+// RemovePod removes a given pod.
+// If options are not provided then pod will be removed with forcefully without timeout.
+// When pod does not exist then not error is returned.
+// If annotation fast restart is set then pod will be removed forcefully.
+func RemovePod(ctx context.Context, pod *core.Pod, cache inspectorInterface.Inspector, opts *meta.DeleteOptions) error {
+	options := meta.DeleteOptions{}
+
+	if opts != nil {
+		options = *opts
+	}
+
+	if _, ok := pod.GetAnnotations()[deployment.ArangoDeploymentPodFastRestart]; ok {
+		// Remove pod forcefully.
+		if err := RemoveAllPodFinalizers(ctx, pod, cache); err != nil {
+			return err
+		}
+
+		if opts == nil {
+			// Don't overwrite options given by a caller.
+			options = meta.DeleteOptions{
+				GracePeriodSeconds: util.NewInt64(0),
+			}
+		}
+	}
+
+	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		return cache.PodsModInterface().V1().Delete(ctxChild, pod.GetName(), options)
+	})
+
+	if err != nil {
+		if !kerrors.IsNotFound(err) {
+			return errors.WithStack(err)
+		}
+	}
+
+	//cache.Pod().Refresh(ctx)
+
+	// Pod has been deleted, so TODO test should we restart reconciliation loop because cache is not valid now.
+	return nil
 }
