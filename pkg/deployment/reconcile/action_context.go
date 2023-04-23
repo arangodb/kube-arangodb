@@ -168,6 +168,10 @@ func (ac *actionContext) GetDatabaseAsyncClient(ctx context.Context) (driver.Cli
 	return ac.context.GetDatabaseAsyncClient(ctx)
 }
 
+func (ac *actionContext) GetServerAsyncClient(id string) (driver.Client, error) {
+	return ac.context.GetServerAsyncClient(id)
+}
+
 func (ac *actionContext) CurrentLocals() api.PlanLocals {
 	return ac.locals
 }

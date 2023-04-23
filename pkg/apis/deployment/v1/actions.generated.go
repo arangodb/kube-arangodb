@@ -109,6 +109,8 @@ const (
 	ActionRebalancerCleanDefaultTimeout time.Duration = ActionsDefaultTimeout
 	// ActionRebalancerGenerateDefaultTimeout define default timeout for action ActionRebalancerGenerate
 	ActionRebalancerGenerateDefaultTimeout time.Duration = ActionsDefaultTimeout
+	// ActionRebuildOutSyncedShardsDefaultTimeout define default timeout for action ActionRebuildOutSyncedShards
+	ActionRebuildOutSyncedShardsDefaultTimeout time.Duration = 86400 * time.Second // 24h0m0s
 	// ActionRecreateMemberDefaultTimeout define default timeout for action ActionRecreateMember
 	ActionRecreateMemberDefaultTimeout time.Duration = 900 * time.Second // 15m0s
 	// ActionRefreshTLSKeyfileCertificateDefaultTimeout define default timeout for action ActionRefreshTLSKeyfileCertificate
@@ -266,6 +268,8 @@ const (
 	ActionTypeRebalancerClean ActionType = "RebalancerClean"
 	// ActionTypeRebalancerGenerate in scopes Normal. Generates the Rebalancer plan
 	ActionTypeRebalancerGenerate ActionType = "RebalancerGenerate"
+	// ActionTypeRebuildOutSyncedShards in scopes High. Run Rebuild Out Synced Shards procedure for DBServers
+	ActionTypeRebuildOutSyncedShards ActionType = "RebuildOutSyncedShards"
 	// ActionTypeRecreateMember in scopes Normal. Recreate member with same ID and Data
 	ActionTypeRecreateMember ActionType = "RecreateMember"
 	// ActionTypeRefreshTLSKeyfileCertificate in scopes Normal. Recreate Server TLS Certificate secret
@@ -424,6 +428,8 @@ func (a ActionType) DefaultTimeout() time.Duration {
 		return ActionRebalancerCleanDefaultTimeout
 	case ActionTypeRebalancerGenerate:
 		return ActionRebalancerGenerateDefaultTimeout
+	case ActionTypeRebuildOutSyncedShards:
+		return ActionRebuildOutSyncedShardsDefaultTimeout
 	case ActionTypeRecreateMember:
 		return ActionRecreateMemberDefaultTimeout
 	case ActionTypeRefreshTLSKeyfileCertificate:
@@ -586,6 +592,8 @@ func (a ActionType) Priority() ActionPriority {
 		return ActionPriorityNormal
 	case ActionTypeRebalancerGenerate:
 		return ActionPriorityNormal
+	case ActionTypeRebuildOutSyncedShards:
+		return ActionPriorityHigh
 	case ActionTypeRecreateMember:
 		return ActionPriorityNormal
 	case ActionTypeRefreshTLSKeyfileCertificate:
@@ -757,6 +765,8 @@ func (a ActionType) Optional() bool {
 	case ActionTypeRebalancerClean:
 		return false
 	case ActionTypeRebalancerGenerate:
+		return false
+	case ActionTypeRebuildOutSyncedShards:
 		return false
 	case ActionTypeRecreateMember:
 		return false

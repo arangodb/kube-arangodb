@@ -47,6 +47,7 @@
 |          RebalancerCheck           |    no    |  10m0s  |    no    |    Enterprise Only     |                                           Check Rebalancer job progress                                            |
 |          RebalancerClean           |    no    |  10m0s  |    no    |    Enterprise Only     |                                               Cleans Rebalancer jobs                                               |
 |         RebalancerGenerate         |   yes    |  10m0s  |    no    |    Enterprise Only     |                                           Generates the Rebalancer plan                                            |
+|       RebuildOutSyncedShards       |    no    | 24h0m0s |    no    | Community & Enterprise |                               Run Rebuild Out Synced Shards procedure for DBServers                                |
 |           RecreateMember           |    no    |  15m0s  |    no    | Community & Enterprise |                                       Recreate member with same ID and Data                                        |
 |    RefreshTLSKeyfileCertificate    |    no    |  30m0s  |    no    |    Enterprise Only     |                                       Recreate Server TLS Certificate secret                                       |
 |            RemoveMember            |    no    |  15m0s  |    no    | Community & Enterprise |                                     Removes member from the Cluster and Status                                     |
@@ -134,6 +135,7 @@ spec:
       RebalancerCheck: 10m0s
       RebalancerClean: 10m0s
       RebalancerGenerate: 10m0s
+      RebuildOutSyncedShards: 24h0m0s
       RecreateMember: 15m0s
       RefreshTLSKeyfileCertificate: 30m0s
       RemoveMember: 15m0s
