@@ -45,3 +45,17 @@ func (s Servers) Join(ids Servers) Servers {
 
 	return r
 }
+
+func (s Servers) Equals(ids Servers) bool {
+	if len(ids) != len(s) {
+		return false
+	}
+
+	for id := range ids {
+		if ids[id] != s[id] {
+			return false
+		}
+	}
+
+	return true
+}
