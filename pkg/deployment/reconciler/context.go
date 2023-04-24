@@ -98,6 +98,7 @@ type ArangoAgencyGet interface {
 	GetAgencyCache() (agencyCache.State, bool)
 	GetAgencyArangoDBCache() (agencyCache.StateDB, bool)
 	GetAgencyHealth() (agencyCache.Health, bool)
+	ShardsInSyncMap() (agencyCache.ShardsSyncStatus, bool)
 }
 
 type ArangoAgency interface {

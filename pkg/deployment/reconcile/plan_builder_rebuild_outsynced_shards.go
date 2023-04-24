@@ -22,11 +22,9 @@ package reconcile
 
 import (
 	"context"
-	"strings"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -43,31 +41,65 @@ func (r *Reconciler) createRebuildOutSyncedPlan(ctx context.Context, apiObject k
 		return nil
 	}
 
-	// TODO: use that to check if we need to rebuild shards
-	r.log.Info("Rebuilding out-synced shards timeout", globals.GetGlobalTimeouts().ShardRebuild().Get())
-
+	shardStatus, ok := context.ShardsInSyncMap()
+	if !ok {
+		r.log.Error("Unable to get shards status")
+		return nil
+	}
 	agencyState, ok := context.GetAgencyCache()
 	if !ok {
-		// Unable to get agency state, do not restart
 		r.log.Error("Unable to get agency state")
 		return nil
 	}
 
-	for _, m := range status.Members.AsList() {
-		if m.Group == api.ServerGroupDBServers {
-			// use * for global
-			notInSyncShards := agency.GetDBServerShardsNotInSync(agencyState, agency.Server(m.Member.ID))
+	outSyncedMembers := map[string]api.MemberStatus{}
 
-			if s := len(notInSyncShards); s > 0 {
-				var shardsID []string
-				for _, shard := range notInSyncShards {
-					shardsID = append(shardsID, shard.Shard)
-				}
+	members := map[string]api.MemberStatus{}
+	for _, m := range status.Members.AsListInGroup(api.ServerGroupDBServers) {
+		members[m.Member.ID] = m.Member
+	}
 
-				m.Member.Conditions.Update(api.ConditionTypeOutSyncedShards, true, "Member has out-synced shard(s)", strings.Join(shardsID, ", "))
-				plan = append(plan, actions.NewAction(api.ActionTypeRebuildOutSyncedShards, api.ServerGroupDBServers, m.Member))
+	// Get shards which are out-synced for more than defined timeout
+	outSyncedShardsIDs := shardStatus.NotInSyncSince(globals.GetGlobalTimeouts().ShardRebuild().Get())
+
+	// Create plan for out-synced shards
+	for _, shardID := range outSyncedShardsIDs {
+		shardServers, exist := agencyState.GetShardServersByID(shardID)
+		if !exist {
+			r.log.Error("Shard servers not found", "shard", shardID)
+			continue
+		}
+
+		for _, server := range shardServers {
+			member, ok := members[string(server)]
+			if ok {
+				r.log.Error("Member not found - we can not fix out-synced shard!", "member", server)
+			}
+
+			outSyncedMembers[member.ID] = member
+
+			action := actions.NewAction(api.ActionTypeRebuildOutSyncedShards, api.ServerGroupDBServers, member)
+			action.Params["shardID"] = shardID
+
+			plan = append(plan, action)
+		}
+	}
+
+	// Update member conditions
+	for _, member := range members {
+		shouldUpdate := false
+		if _, ok := outSyncedMembers[member.ID]; ok {
+			shouldUpdate = member.Conditions.Update(api.ConditionTypeOutSyncedShards, true, "Member has out-synced shard(s)", "")
+		} else {
+			shouldUpdate = member.Conditions.Remove(api.ConditionTypeOutSyncedShards)
+		}
+
+		if shouldUpdate {
+			if err := context.UpdateMember(ctx, member); err != nil {
+				r.log.Error("Can not save member condition", member.ID, api.ConditionTypeOutSyncedShards, err)
 			}
 		}
 	}
+
 	return plan
 }

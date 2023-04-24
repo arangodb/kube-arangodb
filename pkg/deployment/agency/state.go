@@ -167,13 +167,44 @@ func (s State) GetDBServerWithLowestShards() Server {
 	return resultServer
 }
 
+// GetShardServersByID returns the servers of a shard by its ID
+func (s State) GetShardServersByID(id string) (Servers, bool) {
+	// check first in Plan
+	for _, db := range s.Plan.Collections {
+		for _, col := range db {
+			for sName, servers := range col.Shards {
+				if sName == id {
+					return servers, true
+				}
+			}
+		}
+	}
+
+	// check in Current
+	for _, db := range s.Current.Collections {
+		for _, col := range db {
+			for sName, shard := range col {
+				if sName == id {
+					return shard.Servers, true
+				}
+			}
+		}
+	}
+
+	return nil, false
+}
+
+type ShardStatus struct {
+	IsSynced bool
+}
+
 func (s State) GetShardsStatus() map[string]bool {
 	q := map[string]bool{}
 
 	for dName, d := range s.Plan.Collections {
 		for cName, c := range d {
-			for sName, shard := range c.Shards {
-				q[sName] = s.IsShardInSync(dName, cName, sName, shard)
+			for sName, servers := range c.Shards {
+				q[sName] = s.IsShardInSync(dName, cName, sName, servers)
 			}
 		}
 	}

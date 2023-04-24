@@ -164,6 +164,11 @@ func (d *Deployment) GetAgencyHealth() (agency.Health, bool) {
 	return d.agencyCache.Health()
 }
 
+// ShardsInSyncMap returns last in sync state of shards. If no state is available, false is returned.
+func (d *Deployment) ShardsInSyncMap() (agency.ShardsSyncStatus, bool) {
+	return d.agencyCache.ShardsInSyncMap()
+}
+
 func (d *Deployment) GetAgencyArangoDBCache() (agency.StateDB, bool) {
 	return d.agencyCache.DataDB()
 }

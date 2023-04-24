@@ -255,6 +255,10 @@ func (ac *actionContext) GetAgencyHealth() (agencyCache.Health, bool) {
 	return ac.context.GetAgencyHealth()
 }
 
+func (ac *actionContext) ShardsInSyncMap() (agencyCache.ShardsSyncStatus, bool) {
+	return ac.context.ShardsInSyncMap()
+}
+
 func (ac *actionContext) GetAgencyCache() (agencyCache.State, bool) {
 	return ac.context.GetAgencyCache()
 }

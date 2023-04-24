@@ -24,6 +24,7 @@ import "time"
 
 type ShardsSyncStatus map[string]time.Time
 
+// NotInSyncSince returns a list of shards that have not been in sync for at least t.
 func (s ShardsSyncStatus) NotInSyncSince(t time.Duration) []string {
 	r := make([]string, 0, len(s))
 
