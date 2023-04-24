@@ -69,6 +69,7 @@ Feature-wise production readiness table:
 | Operator Internal Metrics Exporter      | 1.2.0            | >= 3.6.0         | Community, Enterprise | 1.2.0      | Production   | True    | --deployment.feature.metrics-exporter                 | N/A                                                                      |
 | Operator Ephemeral Volumes              | 1.2.2            | >= 3.7.0         | Community, Enterprise | 1.2.2      | Alpha        | False   | --deployment.feature.ephemeral-volumes                | N/A                                                                      |
 | Spec Default Restore                    | 1.2.21           | >= 3.7.0         | Community, Enterprise | 1.2.21     | Beta         | True    | --deployment.feature.deployment-spec-defaults-restore | If set to False Operator will not change ArangoDeployment Spec           |
+| Force Rebuild Out Synced Shards         | 1.2.27           | >= 3.8.0         | Community, Enterprise | 1.2.27     | Beta         | False   | --deployment.feature.force-rebuild-out-synced-shards  | It should be used only if user is aware of the risks.                    |
 
 ## Operator Community Edition (CE)
 

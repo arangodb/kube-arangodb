@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,6 +29,8 @@ const (
 	DefaultArangoDCheckTimeout   = time.Second * 2
 	DefaultReconciliationTimeout = time.Minute
 
+	DefaultOutSyncedShardRebuildTimeout = time.Minute * 60
+
 	DefaultKubernetesRequestBatchSize = 256
 
 	DefaultBackupConcurrentUploads = 4
@@ -41,6 +43,7 @@ var globalObj = &globals{
 		arangodCheck:   NewTimeout(DefaultArangoDCheckTimeout),
 		reconciliation: NewTimeout(DefaultReconciliationTimeout),
 		agency:         NewTimeout(DefaultArangoDAgencyTimeout),
+		shardRebuild:   NewTimeout(DefaultOutSyncedShardRebuildTimeout),
 	},
 	kubernetes: &globalKubernetes{
 		requestBatchSize: NewInt64(DefaultKubernetesRequestBatchSize),
@@ -108,6 +111,7 @@ func (g *globalBackup) ConcurrentUploads() Int {
 
 type GlobalTimeouts interface {
 	Reconciliation() Timeout
+	ShardRebuild() Timeout
 
 	Kubernetes() Timeout
 	ArangoD() Timeout
@@ -116,7 +120,7 @@ type GlobalTimeouts interface {
 }
 
 type globalTimeouts struct {
-	requests, arangod, reconciliation, arangodCheck, agency Timeout
+	requests, arangod, reconciliation, arangodCheck, agency, shardRebuild Timeout
 }
 
 func (g *globalTimeouts) Agency() Timeout {
@@ -129,6 +133,10 @@ func (g *globalTimeouts) ArangoDCheck() Timeout {
 
 func (g *globalTimeouts) Reconciliation() Timeout {
 	return g.reconciliation
+}
+
+func (g *globalTimeouts) ShardRebuild() Timeout {
+	return g.shardRebuild
 }
 
 func (g *globalTimeouts) ArangoD() Timeout {

@@ -159,6 +159,7 @@ var (
 		arangoDCheck   time.Duration
 		reconciliation time.Duration
 		agency         time.Duration
+		shardRebuild   time.Duration
 	}
 	chaosOptions struct {
 		allowed bool
@@ -211,6 +212,7 @@ func init() {
 	f.DurationVar(&operatorTimeouts.arangoDCheck, "timeout.arangod-check", globals.DefaultArangoDCheckTimeout, "The version check request timeout to the ArangoDB")
 	f.DurationVar(&operatorTimeouts.agency, "timeout.agency", globals.DefaultArangoDAgencyTimeout, "The Agency read timeout")
 	f.DurationVar(&operatorTimeouts.reconciliation, "timeout.reconciliation", globals.DefaultReconciliationTimeout, "The reconciliation timeout to the ArangoDB CR")
+	f.DurationVar(&operatorTimeouts.shardRebuild, "timeout.shard-rebuild", globals.DefaultOutSyncedShardRebuildTimeout, "Timeout after which particular out-synced shard is rebuilt")
 	f.DurationVar(&shutdownOptions.delay, "shutdown.delay", defaultShutdownDelay, "The delay before running shutdown handlers")
 	f.DurationVar(&shutdownOptions.timeout, "shutdown.timeout", defaultShutdownTimeout, "Timeout for shutdown handlers")
 	f.BoolVar(&operatorOptions.scalingIntegrationEnabled, "internal.scaling-integration", false, "Enable Scaling Integration")
@@ -257,6 +259,7 @@ func executeMain(cmd *cobra.Command, args []string) {
 	globals.GetGlobalTimeouts().Agency().Set(operatorTimeouts.agency)
 	globals.GetGlobalTimeouts().ArangoDCheck().Set(operatorTimeouts.arangoDCheck)
 	globals.GetGlobalTimeouts().Reconciliation().Set(operatorTimeouts.reconciliation)
+	globals.GetGlobalTimeouts().ShardRebuild().Set(operatorTimeouts.shardRebuild)
 	globals.GetGlobals().Kubernetes().RequestBatchSize().Set(operatorKubernetesOptions.maxBatchSize)
 	globals.GetGlobals().Backup().ConcurrentUploads().Set(operatorBackup.concurrentUploads)
 

@@ -34,11 +34,10 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 
 const (
-	// TODO make it configurable
-	ttlRebuildOutSyncedShards                 time.Duration    = 600
 	actionRebuildOutSyncedShardsLocalJobID    api.PlanLocalKey = "rebuildJobID"
 	actionRebuildOutSyncedShardsLocalDatabase api.PlanLocalKey = "database"
 	actionRebuildOutSyncedShardsLocalShard    api.PlanLocalKey = "shard"
@@ -257,7 +256,7 @@ func (a *actionRebuildOutSyncedShards) createBatch(ctx context.Context, clientSy
 	}
 	params := struct {
 		TTL float64 `json:"ttl"`
-	}{TTL: ttlRebuildOutSyncedShards.Seconds()}
+	}{TTL: globals.GetGlobalTimeouts().ShardRebuild().Get().Seconds()}
 	req, err = req.SetBody(params)
 	if err != nil {
 		return "", errors.Wrapf(err, "Unable to add body to the batch creation request")
@@ -282,11 +281,17 @@ func (a *actionRebuildOutSyncedShards) createBatch(ctx context.Context, clientSy
 
 // deleteBatch removes batch from the server
 func (a *actionRebuildOutSyncedShards) deleteBatch(ctx context.Context, clientSync driver.Client, batchID string) error {
-	req, err := clientSync.Connection().NewRequest("POST", path.Join("_api/replication/batch", batchID))
+	req, err := clientSync.Connection().NewRequest("DELETE", path.Join("_api/replication/batch", batchID))
 	if err != nil {
 		return errors.Wrapf(err, "Unable to create request for batch removal")
 	}
 
-	_, err = clientSync.Connection().Do(ctx, req)
-	return err
+	resp, err := clientSync.Connection().Do(ctx, req)
+	if err != nil {
+		return errors.Wrapf(err, "Unable to remove batch, request failed")
+	}
+	if err := resp.CheckStatus(204); err != nil {
+		return errors.Wrapf(err, "Unable to remove batch, wrong status code %d", resp.StatusCode())
+	}
+	return nil
 }
