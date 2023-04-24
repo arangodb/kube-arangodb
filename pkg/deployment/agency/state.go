@@ -167,31 +167,48 @@ func (s State) GetDBServerWithLowestShards() Server {
 	return resultServer
 }
 
-// GetShardServersByID returns the servers of a shard by its ID
-func (s State) GetShardServersByID(id string) (Servers, bool) {
+type ShardDetails struct {
+	ShardID    string
+	Database   string
+	Collection string
+	Servers    Servers
+}
+
+// GetShardDetailsByID returns the ShardDetails for a given ShardID. If the ShardID is not found, the second return value is false
+func (s State) GetShardDetailsByID(id string) (ShardDetails, bool) {
 	// check first in Plan
-	for _, db := range s.Plan.Collections {
-		for _, col := range db {
+	for dbName, db := range s.Plan.Collections {
+		for colName, col := range db {
 			for sName, servers := range col.Shards {
 				if sName == id {
-					return servers, true
+					return ShardDetails{
+						ShardID:    sName,
+						Database:   dbName,
+						Collection: colName,
+						Servers:    servers,
+					}, true
 				}
 			}
 		}
 	}
 
 	// check in Current
-	for _, db := range s.Current.Collections {
-		for _, col := range db {
+	for dbName, db := range s.Current.Collections {
+		for colName, col := range db {
 			for sName, shard := range col {
 				if sName == id {
-					return shard.Servers, true
+					return ShardDetails{
+						ShardID:    sName,
+						Database:   dbName,
+						Collection: colName,
+						Servers:    shard.Servers,
+					}, true
 				}
 			}
 		}
 	}
 
-	return nil, false
+	return ShardDetails{}, false
 }
 
 type ShardStatus struct {
