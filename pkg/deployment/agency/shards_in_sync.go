@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,42 +20,22 @@
 
 package agency
 
-type Server string
+import "time"
 
-type Servers []Server
+type ShardsInSync map[string]time.Time
 
-func (s Servers) Contains(id Server) bool {
-	for _, q := range s {
-		if q == id {
-			return true
+func (s ShardsInSync) NotInSyncSince(t time.Duration) []string {
+	r := make([]string, 0, len(s))
+
+	for k, v := range s {
+		if v.IsZero() {
+			continue
 		}
-	}
 
-	return false
-}
-
-func (s Servers) Join(ids Servers) Servers {
-	r := make(Servers, 0, len(s))
-
-	for _, id := range ids {
-		if s.Contains(id) {
-			r = append(r, id)
+		if time.Since(v) > t {
+			r = append(r, k)
 		}
 	}
 
 	return r
-}
-
-func (s Servers) Equals(ids Servers) bool {
-	if len(ids) != len(s) {
-		return false
-	}
-
-	for id := range ids {
-		if ids[id] != s[id] {
-			return false
-		}
-	}
-
-	return true
 }

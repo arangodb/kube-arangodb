@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -158,8 +158,8 @@ type Cache interface {
 	CommitIndex() uint64
 	// Health returns true when healthy object is available.
 	Health() (Health, bool)
-	// ShardsInSyncMap returns last in sync state of particular collection
-	ShardsInSyncMap() (map[string]time.Time, bool)
+	// ShardsInSyncMap returns last in sync state of particular shard
+	ShardsInSyncMap() (ShardsInSync, bool)
 }
 
 func NewCache(namespace, name string, mode *api.DeploymentMode) Cache {
@@ -174,7 +174,7 @@ func NewAgencyCache(namespace, name string) Cache {
 	c := &cache{
 		namespace:    namespace,
 		name:         name,
-		shardsInSync: map[string]time.Time{},
+		shardsInSync: ShardsInSync{},
 	}
 
 	c.log = logger.WrapObj(c)
@@ -189,7 +189,7 @@ func NewSingleCache() Cache {
 type cacheSingle struct {
 }
 
-func (c cacheSingle) ShardsInSyncMap() (map[string]time.Time, bool) {
+func (c cacheSingle) ShardsInSyncMap() (ShardsInSync, bool) {
 	return nil, false
 }
 
@@ -230,7 +230,7 @@ type cache struct {
 
 	health Health
 
-	shardsInSync map[string]time.Time
+	shardsInSync ShardsInSync
 }
 
 func (c *cache) WrapLogger(in *zerolog.Event) *zerolog.Event {
@@ -346,7 +346,7 @@ func (c *cache) reload(ctx context.Context, size int, clients map[string]agency.
 	}
 }
 
-func (c *cache) ShardsInSyncMap() (map[string]time.Time, bool) {
+func (c *cache) ShardsInSyncMap() (ShardsInSync, bool) {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 
