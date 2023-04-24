@@ -24,6 +24,7 @@ import (
 	"context"
 	"net/http"
 	"path"
+	"time"
 
 	"github.com/arangodb/go-driver"
 
@@ -43,7 +44,7 @@ const (
 // newRebuildOutSyncedShardsAction creates a new Action that implements the given
 // planned RebuildOutSyncedShards action.
 func newRebuildOutSyncedShardsAction(action api.Action, actionCtx ActionContext) Action {
-	a := &actionRecreateMember{}
+	a := &actionRebuildOutSyncedShards{}
 
 	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
@@ -72,16 +73,25 @@ func (a *actionRebuildOutSyncedShards) Start(ctx context.Context) (bool, error) 
 
 	shardID, exist := a.action.GetParam("shardID")
 	if !exist {
-		return false, errors.New("ShardID key not found in action params")
+		a.log.Error("*shardID* key not found in action params")
+		return true, nil
 	}
 
 	database, exist := a.action.GetParam("database")
 	if !exist {
-		return false, errors.New("database key not found in action params")
+		a.log.Error("*database* key not found in action params")
+		return true, nil
 	}
 
 	// trigger async rebuild job
-	return false, a.rebuildShard(ctx, clientSync, clientAsync, shardID, database)
+	err = a.rebuildShard(ctx, clientSync, clientAsync, shardID, database)
+	if err != nil {
+		a.log.Err(err).Error("Rebuild Shard Tree action failed on start", shardID, database, a.action.MemberID)
+		return true, err
+	}
+
+	a.log.Info("Triggering async job Shard Tree rebuild", shardID, database, a.action.MemberID)
+	return false, nil
 }
 
 // CheckProgress returns: ready, abort, error.
@@ -96,16 +106,45 @@ func (a *actionRebuildOutSyncedShards) CheckProgress(ctx context.Context) (bool,
 		return false, false, errors.Wrapf(err, "Unable to create client (AsyncMode)")
 	}
 
-	// check first if there is rebuild job running
-	rebuildInProgress, err := a.checkRebuildShardProgress(ctx, clientAsync, clientSync)
-	if rebuildInProgress {
-		return false, false, nil
+	jobID, ok := a.actionCtx.Get(a.action, actionRebuildOutSyncedShardsLocalJobID)
+	if !ok {
+		return false, true, errors.Newf("Local Key is missing in action: %s", actionRebuildOutSyncedShardsLocalJobID)
 	}
+
+	batchID, ok := a.actionCtx.Get(a.action, actionRebuildOutSyncedShardsBatchID)
+	if !ok {
+		return false, true, errors.Newf("Local Key is missing in action: %s", actionRebuildOutSyncedShardsBatchID)
+	}
+
+	database, ok := a.actionCtx.Get(a.action, actionRebuildOutSyncedShardsLocalDatabase)
+	if !ok {
+		return false, true, errors.Newf("Local Key is missing in action: %s", actionRebuildOutSyncedShardsLocalDatabase)
+	}
+
+	shardID, ok := a.actionCtx.Get(a.action, actionRebuildOutSyncedShardsLocalShard)
+	if !ok {
+		return false, true, errors.Newf("Local Key is missing in action: %s", actionRebuildOutSyncedShardsLocalShard)
+	}
+
+	// check first if there is rebuild job running
+	rebuildInProgress, err := a.checkRebuildShardProgress(ctx, clientAsync, clientSync, shardID, database, jobID, batchID)
 	if err != nil {
-		return false, true, err
+		if rebuildInProgress {
+			a.log.Err(err).Error("Rebuild job failed but we will retry", shardID, database, a.action.MemberID)
+			return false, false, err
+		} else {
+			a.log.Err(err).Error("Rebuild job failed", shardID, database, a.action.MemberID)
+			return false, true, err
+		}
+
+	}
+	if rebuildInProgress {
+		a.log.Debug("Rebuild job is still in progress", shardID, database, a.action.MemberID)
+		return false, false, nil
 	}
 
 	// rebuild job is done
+	a.log.Info("Rebuild Shard Tree is done", shardID, database, a.action.MemberID)
 	return true, false, nil
 }
 
@@ -133,44 +172,32 @@ func (a *actionRebuildOutSyncedShards) rebuildShard(ctx context.Context, clientS
 }
 
 // checkRebuildShardProgress returns: inProgress, error.
-func (a *actionRebuildOutSyncedShards) checkRebuildShardProgress(ctx context.Context, clientAsync, clientSync driver.Client) (bool, error) {
-	job, ok := a.actionCtx.Get(a.action, actionRebuildOutSyncedShardsLocalJobID)
-	if !ok {
-		return false, errors.Newf("Local Key is missing in action: %s", actionRebuildOutSyncedShardsLocalJobID)
-	}
-
-	batchID, ok := a.actionCtx.Get(a.action, actionRebuildOutSyncedShardsBatchID)
-	if !ok {
-		return false, errors.Newf("Local Key is missing in action: %s", actionRebuildOutSyncedShardsBatchID)
-	}
-
-	database, ok := a.actionCtx.Get(a.action, actionRebuildOutSyncedShardsLocalDatabase)
-	if !ok {
-		return false, errors.Newf("Local Key is missing in action: %s", actionRebuildOutSyncedShardsLocalDatabase)
-	}
-
-	shardID, ok := a.actionCtx.Get(a.action, actionRebuildOutSyncedShardsLocalShard)
-	if !ok {
-		return false, errors.Newf("Local Key is missing in action: %s", actionRebuildOutSyncedShardsLocalShard)
-	}
-
+func (a *actionRebuildOutSyncedShards) checkRebuildShardProgress(ctx context.Context, clientAsync, clientSync driver.Client, shardID, database, jobID, batchID string) (bool, error) {
 	req, err := a.createShardRebuildRequest(clientAsync, shardID, database, batchID)
 	if err != nil {
 		return false, err
 	}
 
-	resp, err := clientAsync.Connection().Do(conn.WithAsyncID(ctx, job), req)
+	resp, err := clientAsync.Connection().Do(conn.WithAsyncID(ctx, jobID), req)
 	if err != nil {
-		if id, ok := conn.IsAsyncJobInProgress(err); ok {
-			a.log.Info("Rebuild shard %s is still in progress, jobID %s", shardID, id)
+		if _, ok := conn.IsAsyncJobInProgress(err); ok {
 			return true, nil
-		} else {
-			a.log.Err(err).Error("check rebuild progress error for shard %s", shardID)
-			return true, errors.Wrapf(err, "check rebuild progress error")
 		}
+
+		// Add wait grace period
+		if ok := conn.IsAsyncErrorNotFound(err); ok {
+			if s := a.action.StartTime; s != nil && !s.Time.IsZero() {
+				if time.Since(s.Time) < 10*time.Second {
+					// Retry
+					return true, nil
+				}
+			}
+		}
+
+		return false, errors.Wrapf(err, "check rebuild progress error")
+
 	}
 	if resp.StatusCode() == http.StatusNoContent {
-		a.log.Info("Rebuild shard %s is finished", shardID)
 		_ = a.deleteBatch(ctx, clientSync, batchID)
 		return false, nil
 	} else {
