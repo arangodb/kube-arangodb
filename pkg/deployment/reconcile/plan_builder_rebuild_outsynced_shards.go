@@ -30,6 +30,8 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
+var disableRebuildOutSyncedShards = false
+
 // createRotateOrUpgradePlan
 func (r *Reconciler) createRebuildOutSyncedPlan(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
@@ -38,6 +40,11 @@ func (r *Reconciler) createRebuildOutSyncedPlan(ctx context.Context, apiObject k
 
 	if !features.RebuildOutSyncedShards().Enabled() {
 		// RebuildOutSyncedShards feature is not enabled
+		return nil
+	}
+
+	if disableRebuildOutSyncedShards {
+		// RebuildOutSyncedShards has been used already
 		return nil
 	}
 
@@ -62,46 +69,53 @@ func (r *Reconciler) createRebuildOutSyncedPlan(ctx context.Context, apiObject k
 	// Get shards which are out-synced for more than defined timeout
 	outSyncedShardsIDs := shardStatus.NotInSyncSince(globals.GetGlobalTimeouts().ShardRebuild().Get())
 
-	// Create plan for out-synced shards
-	for _, shardID := range outSyncedShardsIDs {
-		shard, exist := agencyState.GetShardDetailsByID(shardID)
-		if !exist {
-			r.log.Error("Shard servers not found", shardID, shard.Database)
-			continue
+	if len(outSyncedShardsIDs) > 0 {
+		// Create plan for out-synced shards
+		for _, shardID := range outSyncedShardsIDs {
+			shard, exist := agencyState.GetShardDetailsByID(shardID)
+			if !exist {
+				r.log.Error("Shard servers not found", shardID, shard.Database)
+				continue
+			}
+
+			for _, server := range shard.Servers {
+				member, ok := members[string(server)]
+				if !ok {
+					r.log.Error("Member not found - we can not fix out-synced shard!", server)
+				} else {
+					r.log.Info("Shard is out-synced and its Tree will be rebuild", shardID, shard.Database, shard.Collection, member.ID)
+					outSyncedMembers[member.ID] = member
+
+					action := actions.NewAction(api.ActionTypeRebuildOutSyncedShards, api.ServerGroupDBServers, member).
+						AddParam("shardID", shardID).
+						AddParam("database", shard.Database)
+
+					plan = append(plan, action)
+				}
+			}
 		}
 
-		for _, server := range shard.Servers {
-			member, ok := members[string(server)]
-			if !ok {
-				r.log.Error("Member not found - we can not fix out-synced shard!", server)
+		// Update member conditions
+		for _, member := range members {
+			shouldUpdate := false
+			if _, ok := outSyncedMembers[member.ID]; ok {
+				shouldUpdate = member.Conditions.Update(api.ConditionTypeOutSyncedShards, true, "Member has out-synced shard(s)", "")
 			} else {
-				r.log.Info("Shard is out-synced and its Tree will be rebuild", shardID, shard.Database, shard.Collection, member.ID)
-				outSyncedMembers[member.ID] = member
+				shouldUpdate = member.Conditions.Remove(api.ConditionTypeOutSyncedShards)
+			}
 
-				action := actions.NewAction(api.ActionTypeRebuildOutSyncedShards, api.ServerGroupDBServers, member).
-					AddParam("shardID", shardID).
-					AddParam("database", shard.Database)
-
-				plan = append(plan, action)
+			if shouldUpdate {
+				if err := context.UpdateMember(ctx, member); err != nil {
+					r.log.Error("Can not save member condition", member.ID, api.ConditionTypeOutSyncedShards, err)
+				}
 			}
 		}
+
+		// TODO: remove this
+		// we allow to use this feature only once per deployment. After that we disable it
+		// to prevent from rebuilding out-synced shards again and again
+		// to enable it again we need to restart operator
+		disableRebuildOutSyncedShards = true
 	}
-
-	// Update member conditions
-	for _, member := range members {
-		shouldUpdate := false
-		if _, ok := outSyncedMembers[member.ID]; ok {
-			shouldUpdate = member.Conditions.Update(api.ConditionTypeOutSyncedShards, true, "Member has out-synced shard(s)", "")
-		} else {
-			shouldUpdate = member.Conditions.Remove(api.ConditionTypeOutSyncedShards)
-		}
-
-		if shouldUpdate {
-			if err := context.UpdateMember(ctx, member); err != nil {
-				r.log.Error("Can not save member condition", member.ID, api.ConditionTypeOutSyncedShards, err)
-			}
-		}
-	}
-
 	return plan
 }
