@@ -36,6 +36,7 @@ func Test_ShardsInSync(t *testing.T) {
 							Servers: Servers{
 								"A",
 								"B",
+								"C",
 							},
 						},
 					},
@@ -45,11 +46,15 @@ func Test_ShardsInSync(t *testing.T) {
 	}
 
 	t.Run("All in sync", func(t *testing.T) {
-		require.True(t, s.IsShardInSync("a", "a", "s0001", Servers{"A", "B"}))
+		require.True(t, s.IsShardInSync("a", "a", "s0001", Servers{"A", "B", "C"}))
 	})
 
-	t.Run("Invalid order", func(t *testing.T) {
-		require.False(t, s.IsShardInSync("a", "a", "s0001", Servers{"B", "A"}))
+	t.Run("InSync with random order", func(t *testing.T) {
+		require.True(t, s.IsShardInSync("a", "a", "s0001", Servers{"A", "C", "B"}))
+	})
+
+	t.Run("Invalid leader", func(t *testing.T) {
+		require.False(t, s.IsShardInSync("a", "a", "s0001", Servers{"B", "A", "C"}))
 	})
 
 	t.Run("Missing server", func(t *testing.T) {
@@ -57,14 +62,14 @@ func Test_ShardsInSync(t *testing.T) {
 	})
 
 	t.Run("Missing db", func(t *testing.T) {
-		require.False(t, s.IsShardInSync("a1", "a", "s0001", Servers{"A", "B"}))
+		require.False(t, s.IsShardInSync("a1", "a", "s0001", Servers{"A", "B", "C"}))
 	})
 
 	t.Run("Missing col", func(t *testing.T) {
-		require.False(t, s.IsShardInSync("a", "a1", "s0001", Servers{"A", "B"}))
+		require.False(t, s.IsShardInSync("a", "a1", "s0001", Servers{"A", "B", "C"}))
 	})
 
 	t.Run("Missing shard", func(t *testing.T) {
-		require.False(t, s.IsShardInSync("a", "a", "s00011", Servers{"A", "B"}))
+		require.False(t, s.IsShardInSync("a", "a", "s00011", Servers{"A", "B", "C"}))
 	})
 }

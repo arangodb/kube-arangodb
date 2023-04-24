@@ -22,9 +22,9 @@ package agency
 
 import "time"
 
-type ShardsInSync map[string]time.Time
+type ShardsSyncStatus map[string]time.Time
 
-func (s ShardsInSync) NotInSyncSince(t time.Duration) []string {
+func (s ShardsSyncStatus) NotInSyncSince(t time.Duration) []string {
 	r := make([]string, 0, len(s))
 
 	for k, v := range s {

@@ -159,7 +159,7 @@ type Cache interface {
 	// Health returns true when healthy object is available.
 	Health() (Health, bool)
 	// ShardsInSyncMap returns last in sync state of particular shard
-	ShardsInSyncMap() (ShardsInSync, bool)
+	ShardsInSyncMap() (ShardsSyncStatus, bool)
 }
 
 func NewCache(namespace, name string, mode *api.DeploymentMode) Cache {
@@ -172,9 +172,9 @@ func NewCache(namespace, name string, mode *api.DeploymentMode) Cache {
 
 func NewAgencyCache(namespace, name string) Cache {
 	c := &cache{
-		namespace:    namespace,
-		name:         name,
-		shardsInSync: ShardsInSync{},
+		namespace:        namespace,
+		name:             name,
+		shardsSyncStatus: ShardsSyncStatus{},
 	}
 
 	c.log = logger.WrapObj(c)
@@ -189,7 +189,7 @@ func NewSingleCache() Cache {
 type cacheSingle struct {
 }
 
-func (c cacheSingle) ShardsInSyncMap() (ShardsInSync, bool) {
+func (c cacheSingle) ShardsInSyncMap() (ShardsSyncStatus, bool) {
 	return nil, false
 }
 
@@ -230,7 +230,7 @@ type cache struct {
 
 	health Health
 
-	shardsInSync ShardsInSync
+	shardsSyncStatus ShardsSyncStatus
 }
 
 func (c *cache) WrapLogger(in *zerolog.Event) *zerolog.Event {
@@ -292,21 +292,21 @@ func (c *cache) Reload(ctx context.Context, size int, clients map[string]agency.
 	}
 
 	// Refresh map of the shards
-	shardNames := c.data.GetShardInSyncShards()
+	shardNames := c.data.GetShardsStatus()
 
 	n := time.Now()
 
-	for k := range c.shardsInSync {
+	for k := range c.shardsSyncStatus {
 		if _, ok := shardNames[k]; !ok {
-			delete(c.shardsInSync, k)
+			delete(c.shardsSyncStatus, k)
 		}
 	}
 
 	for k, v := range shardNames {
-		if _, ok := c.shardsInSync[k]; !ok {
-			c.shardsInSync[k] = n
+		if _, ok := c.shardsSyncStatus[k]; !ok {
+			c.shardsSyncStatus[k] = n
 		} else if v {
-			c.shardsInSync[k] = n
+			c.shardsSyncStatus[k] = n
 		}
 	}
 
@@ -346,7 +346,7 @@ func (c *cache) reload(ctx context.Context, size int, clients map[string]agency.
 	}
 }
 
-func (c *cache) ShardsInSyncMap() (ShardsInSync, bool) {
+func (c *cache) ShardsInSyncMap() (ShardsSyncStatus, bool) {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 
@@ -354,11 +354,11 @@ func (c *cache) ShardsInSyncMap() (ShardsInSync, bool) {
 		return nil, false
 	}
 
-	if c.shardsInSync == nil {
+	if c.shardsSyncStatus == nil {
 		return nil, false
 	}
 
-	return c.shardsInSync, true
+	return c.shardsSyncStatus, true
 }
 
 // getLeader returns config and client to a leader agency, and health to check if agencies are on the same page.

@@ -167,15 +167,13 @@ func (s State) GetDBServerWithLowestShards() Server {
 	return resultServer
 }
 
-func (s State) GetShardInSyncShards() map[string]bool {
+func (s State) GetShardsStatus() map[string]bool {
 	q := map[string]bool{}
 
 	for dName, d := range s.Plan.Collections {
 		for cName, c := range d {
 			for sName, shard := range c.Shards {
-
 				q[sName] = s.IsShardInSync(dName, cName, sName, shard)
-
 			}
 		}
 	}
@@ -199,7 +197,7 @@ func (s State) IsShardInSync(db, col, shard string, servers Servers) bool {
 		return false
 	}
 
-	return sCurrent.Servers.Equals(servers)
+	return sCurrent.Servers.InSync(servers)
 }
 
 // PlanServers returns all servers which are part of the plan

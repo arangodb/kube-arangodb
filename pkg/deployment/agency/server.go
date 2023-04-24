@@ -20,6 +20,8 @@
 
 package agency
 
+import "sort"
+
 type Server string
 
 type Servers []Server
@@ -53,6 +55,39 @@ func (s Servers) Equals(ids Servers) bool {
 
 	for id := range ids {
 		if ids[id] != s[id] {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (s Servers) Sort() {
+	sort.Slice(s, func(i, j int) bool {
+		return s[i] < s[j]
+	})
+}
+
+func (s Servers) InSync(ids Servers) bool {
+	if len(s) != len(ids) {
+		return false
+	}
+
+	if len(s) == 0 {
+		return false
+	}
+
+	if s[0] != ids[0] {
+		return false
+	}
+
+	if len(s) > 1 {
+		s[1:].Sort()
+		ids[1:].Sort()
+
+		if s.Equals(ids) {
+			return true
+		} else {
 			return false
 		}
 	}
