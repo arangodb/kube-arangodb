@@ -70,21 +70,20 @@ func (r *Reconciler) createRebuildOutSyncedPlan(ctx context.Context, apiObject k
 			continue
 		}
 
-		r.log.Info("Shard is out-synced and its Tree will be rebuild", shardID, shard.Database, shard.Collection, shard.Servers)
-
 		for _, server := range shard.Servers {
 			member, ok := members[string(server)]
 			if !ok {
 				r.log.Error("Member not found - we can not fix out-synced shard!", server)
+			} else {
+				r.log.Info("Shard is out-synced and its Tree will be rebuild", shardID, shard.Database, shard.Collection, member.ID)
+				outSyncedMembers[member.ID] = member
+
+				action := actions.NewAction(api.ActionTypeRebuildOutSyncedShards, api.ServerGroupDBServers, member).
+					AddParam("shardID", shardID).
+					AddParam("database", shard.Database)
+
+				plan = append(plan, action)
 			}
-
-			outSyncedMembers[member.ID] = member
-
-			action := actions.NewAction(api.ActionTypeRebuildOutSyncedShards, api.ServerGroupDBServers, member).
-				AddParam("shardID", shardID).
-				AddParam("database", shard.Database)
-
-			plan = append(plan, action)
 		}
 	}
 
