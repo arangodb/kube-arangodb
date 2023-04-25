@@ -158,7 +158,7 @@ type Cache interface {
 	CommitIndex() uint64
 	// Health returns true when healthy object is available.
 	Health() (Health, bool)
-	// ShardsInSyncMap returns last in sync state of particular shard
+	// ShardsInSyncMap returns last in sync state of shards. If no state is available, false is returned.
 	ShardsInSyncMap() (ShardsSyncStatus, bool)
 }
 

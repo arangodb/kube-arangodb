@@ -49,6 +49,7 @@ func (r *Reconciler) createNormalPlan(ctx context.Context, apiObject k8sutil.API
 		ApplyIfEmpty(r.createScaleUPMemberPlan).
 		// Check for failed members
 		ApplyIfEmpty(r.createMemberFailedRestoreNormalPlan).
+		ApplyIfEmpty(r.createRebuildOutSyncedPlan).
 		// Check for scale up/down
 		ApplyIfEmpty(r.createScaleMemberPlan).
 		// Update status

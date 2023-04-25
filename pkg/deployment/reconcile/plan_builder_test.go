@@ -115,6 +115,11 @@ func (c *testContext) GetAgencyHealth() (agencyCache.Health, bool) {
 	panic("implement me")
 }
 
+func (c *testContext) ShardsInSyncMap() (agencyCache.ShardsSyncStatus, bool) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (c *testContext) RenderPodForMember(ctx context.Context, acs sutil.ACS, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error) {
 	//TODO implement me
 	panic("implement me")
@@ -129,6 +134,11 @@ func (c *testContext) ACS() sutil.ACS {
 }
 
 func (c *testContext) GetDatabaseAsyncClient(ctx context.Context) (driver.Client, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (ac *testContext) GetServerAsyncClient(id string) (driver.Client, error) {
 	//TODO implement me
 	panic("implement me")
 }

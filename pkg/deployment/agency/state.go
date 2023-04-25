@@ -167,13 +167,61 @@ func (s State) GetDBServerWithLowestShards() Server {
 	return resultServer
 }
 
+type ShardDetails struct {
+	ShardID    string
+	Database   string
+	Collection string
+	Servers    Servers
+}
+
+// GetShardDetailsByID returns the ShardDetails for a given ShardID. If the ShardID is not found, the second return value is false
+func (s State) GetShardDetailsByID(id string) (ShardDetails, bool) {
+	// check first in Plan
+	for dbName, db := range s.Plan.Collections {
+		for colName, col := range db {
+			for sName, servers := range col.Shards {
+				if sName == id {
+					return ShardDetails{
+						ShardID:    sName,
+						Database:   dbName,
+						Collection: colName,
+						Servers:    servers,
+					}, true
+				}
+			}
+		}
+	}
+
+	// check in Current
+	for dbName, db := range s.Current.Collections {
+		for colName, col := range db {
+			for sName, shard := range col {
+				if sName == id {
+					return ShardDetails{
+						ShardID:    sName,
+						Database:   dbName,
+						Collection: colName,
+						Servers:    shard.Servers,
+					}, true
+				}
+			}
+		}
+	}
+
+	return ShardDetails{}, false
+}
+
+type ShardStatus struct {
+	IsSynced bool
+}
+
 func (s State) GetShardsStatus() map[string]bool {
 	q := map[string]bool{}
 
 	for dName, d := range s.Plan.Collections {
 		for cName, c := range d {
-			for sName, shard := range c.Shards {
-				q[sName] = s.IsShardInSync(dName, cName, sName, shard)
+			for sName, servers := range c.Shards {
+				q[sName] = s.IsShardInSync(dName, cName, sName, servers)
 			}
 		}
 	}

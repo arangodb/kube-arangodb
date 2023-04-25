@@ -165,16 +165,16 @@ func (d *Deployment) GetDatabaseWithWrap(wrappers ...conn.ConnectionWrap) (drive
 		return nil, errors.WithStack(err)
 	}
 
-	conn := c.Connection()
+	dbConn := c.Connection()
 
 	for _, w := range wrappers {
 		if w != nil {
-			conn = w(conn)
+			dbConn = w(dbConn)
 		}
 	}
 
 	return driver.NewClient(driver.ClientConfig{
-		Connection: conn,
+		Connection: dbConn,
 	})
 }
 
@@ -185,6 +185,18 @@ func (d *Deployment) GetDatabaseAsyncClient(ctx context.Context) (driver.Client,
 		return nil, errors.WithStack(err)
 	}
 	return c, nil
+}
+
+// GetServerAsyncClient returns an async client for a specific server.
+func (d *Deployment) GetServerAsyncClient(id string) (driver.Client, error) {
+	c, err := d.GetMembersState().GetMemberClient(id)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return driver.NewClient(driver.ClientConfig{
+		Connection: conn.NewAsyncConnection(c.Connection()),
+	})
 }
 
 // GetServerClient returns a cached client for a specific server.

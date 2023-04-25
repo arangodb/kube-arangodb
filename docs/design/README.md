@@ -17,3 +17,4 @@
 - [Operator API](./api.md)
 - [Logging](./logging.md)
 - [Manual Recovery](./recovery.md)
+- [Force rebuild out-synced Shards with broken Merkle Tree](./rebuild_out_synced_shards.md)

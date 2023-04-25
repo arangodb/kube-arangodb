@@ -20,6 +20,7 @@
 
 package agency
 
+// StatePlanCollections is a map of database name to collections
 type StatePlanCollections map[string]StatePlanDBCollections
 
 func (a StatePlanCollections) IsDBServerPresent(name Server) bool {
@@ -40,6 +41,7 @@ func (a StatePlanCollections) IsDBServerLeader(name Server) bool {
 	return false
 }
 
+// StatePlanDBCollections is a map of collection name to collection details
 type StatePlanDBCollections map[string]StatePlanCollection
 
 func (a StatePlanDBCollections) IsDBServerInCollections(name Server) bool {

@@ -18,25 +18,21 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package agency
+package features
 
-import "time"
+func init() {
+	registerFeature(rebuildOutSyncedShards)
+}
 
-type ShardsSyncStatus map[string]time.Time
+var rebuildOutSyncedShards = &feature{
+	name:               "force-rebuild-out-synced-shards",
+	description:        "Force rebuild permanently out-synced shards due to a bug in ArangoDB 3.8-3.10",
+	version:            "3.8.0",
+	enterpriseRequired: false,
+	enabledByDefault:   false,
+	hidden:             true,
+}
 
-// NotInSyncSince returns a list of shards that have not been in sync for at least t.
-func (s ShardsSyncStatus) NotInSyncSince(t time.Duration) []string {
-	r := make([]string, 0, len(s))
-
-	for k, v := range s {
-		if v.IsZero() {
-			continue
-		}
-
-		if time.Since(v) > t {
-			r = append(r, k)
-		}
-	}
-
-	return r
+func RebuildOutSyncedShards() Feature {
+	return rebuildOutSyncedShards
 }

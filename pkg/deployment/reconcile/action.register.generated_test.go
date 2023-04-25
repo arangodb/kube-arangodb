@@ -450,6 +450,16 @@ func Test_Actions(t *testing.T) {
 		})
 	})
 
+	t.Run("RebuildOutSyncedShards", func(t *testing.T) {
+		ActionsExistence(t, api.ActionTypeRebuildOutSyncedShards)
+		t.Run("Internal", func(t *testing.T) {
+			require.False(t, api.ActionTypeRebuildOutSyncedShards.Internal())
+		})
+		t.Run("Optional", func(t *testing.T) {
+			require.False(t, api.ActionTypeRebuildOutSyncedShards.Optional())
+		})
+	})
+
 	t.Run("RecreateMember", func(t *testing.T) {
 		ActionsExistence(t, api.ActionTypeRecreateMember)
 		t.Run("Internal", func(t *testing.T) {
