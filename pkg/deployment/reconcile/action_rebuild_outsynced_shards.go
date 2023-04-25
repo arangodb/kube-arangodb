@@ -31,10 +31,10 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 
 const (
+	actionRebuildOutSyncedShardsBatchTTL                       = 600 * time.Second
 	actionRebuildOutSyncedShardsLocalJobID    api.PlanLocalKey = "rebuildJobID"
 	actionRebuildOutSyncedShardsLocalDatabase api.PlanLocalKey = "database"
 	actionRebuildOutSyncedShardsLocalShard    api.PlanLocalKey = "shard"
@@ -195,10 +195,12 @@ func (a *actionRebuildOutSyncedShards) checkRebuildShardProgress(ctx context.Con
 		}
 
 		return false, errors.Wrapf(err, "check rebuild progress error")
-
 	}
+
+	// cleanup batch
+	_ = a.deleteBatch(ctx, clientSync, batchID)
+
 	if resp.StatusCode() == http.StatusNoContent {
-		_ = a.deleteBatch(ctx, clientSync, batchID)
 		return false, nil
 	} else {
 		return false, errors.Wrapf(err, "rebuild progress failed with status code %d", resp.StatusCode())
@@ -226,7 +228,7 @@ func (a *actionRebuildOutSyncedShards) createBatch(ctx context.Context, clientSy
 	}
 	params := struct {
 		TTL float64 `json:"ttl"`
-	}{TTL: globals.GetGlobalTimeouts().ShardRebuild().Get().Seconds()}
+	}{TTL: actionRebuildOutSyncedShardsBatchTTL.Seconds()}
 	req, err = req.SetBody(params)
 	if err != nil {
 		return "", errors.Wrapf(err, "Unable to add body to the batch creation request")
