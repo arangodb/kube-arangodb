@@ -6,7 +6,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.20
+    helm.sh/chart: kube-arangodb-1.2.26
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: storage
     release: storage
@@ -18,7 +18,7 @@ metadata:
   name: arangolocalstorages.storage.arangodb.com
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.20
+    helm.sh/chart: kube-arangodb-1.2.26
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: storage
     release: storage
@@ -48,7 +48,7 @@ metadata:
   name: arango-storage-operator-rbac-crd
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.20
+    helm.sh/chart: kube-arangodb-1.2.26
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: storage
     release: storage
@@ -74,7 +74,7 @@ metadata:
   name: arango-storage-operator-rbac-storage
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.20
+    helm.sh/chart: kube-arangodb-1.2.26
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: storage
     release: storage
@@ -87,7 +87,7 @@ rules:
     verbs: ["get", "list", "watch"]
   - apiGroups: [""]
     resources: ["namespaces", "nodes"]
-    verbs: ["get", "list"]
+    verbs: ["get", "list", "watch"]
   - apiGroups: ["storage.k8s.io"]
     resources: ["storageclasses"]
     verbs: ["*"]
@@ -102,7 +102,7 @@ metadata:
   name: arango-storage-operator-rbac-crd
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.20
+    helm.sh/chart: kube-arangodb-1.2.26
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: storage
     release: storage
@@ -122,7 +122,7 @@ metadata:
   name: arango-storage-operator-rbac-storage
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.20
+    helm.sh/chart: kube-arangodb-1.2.26
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: storage
     release: storage
@@ -143,14 +143,14 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.20
+    helm.sh/chart: kube-arangodb-1.2.26
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: storage
     release: storage
 rules:
   - apiGroups: [""]
     resources: ["pods"]
-    verbs: ["get", "update"]
+    verbs: ["get", "update", "watch", "list"]
   - apiGroups: [""]
     resources: ["secrets"]
     verbs: ["get"]
@@ -169,7 +169,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.20
+    helm.sh/chart: kube-arangodb-1.2.26
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: storage
     release: storage
@@ -190,7 +190,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.20
+    helm.sh/chart: kube-arangodb-1.2.26
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: storage
     release: storage
@@ -225,12 +225,12 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.20
+    helm.sh/chart: kube-arangodb-1.2.26
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: storage
     release: storage
 spec:
-  replicas: 2
+  replicas: 1
   strategy:
     type: Recreate
   selector:
@@ -243,7 +243,7 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.2.20
+        helm.sh/chart: kube-arangodb-1.2.26
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: storage
         release: storage
@@ -282,10 +282,11 @@ spec:
       containers:
         - name: operator
           imagePullPolicy: Always
-          image: arangodb/kube-arangodb:1.2.20
+          image: arangodb/kube-arangodb-enterprise:1.2.26
           args:
             - --scope=legacy
             - --operator.storage
+            - --mode.single
             - --chaos.allowed=false
           env:
             - name: MY_POD_NAMESPACE
