@@ -125,8 +125,7 @@ const (
 	ConditionTypeMaintenance ConditionType = "Maintenance"
 
 	// ConditionTypeSyncEnabled Define if sync is enabled
-	ConditionTypeSyncEnabled     ConditionType = "SyncEnabled"
-	ConditionTypeOutSyncedShards ConditionType = "ShardsOutSynced"
+	ConditionTypeSyncEnabled ConditionType = "SyncEnabled"
 )
 
 // Condition represents one current condition of a deployment or deployment member.

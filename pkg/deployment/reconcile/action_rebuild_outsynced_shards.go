@@ -29,6 +29,7 @@ import (
 	"github.com/arangodb/go-driver"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
@@ -61,6 +62,11 @@ type actionRebuildOutSyncedShards struct {
 // Returns true if the action is completely finished, false in case
 // the start time needs to be recorded and a ready condition needs to be checked.
 func (a *actionRebuildOutSyncedShards) Start(ctx context.Context) (bool, error) {
+	if !features.RebuildOutSyncedShards().Enabled() {
+		// RebuildOutSyncedShards feature is not enabled
+		return true, nil
+	}
+
 	clientSync, err := a.actionCtx.GetMembersState().GetMemberClient(a.action.MemberID)
 	if err != nil {
 		return false, errors.Wrapf(err, "Unable to create client (SyncMode)")
@@ -96,6 +102,11 @@ func (a *actionRebuildOutSyncedShards) Start(ctx context.Context) (bool, error) 
 
 // CheckProgress returns: ready, abort, error.
 func (a *actionRebuildOutSyncedShards) CheckProgress(ctx context.Context) (bool, bool, error) {
+	if !features.RebuildOutSyncedShards().Enabled() {
+		// RebuildOutSyncedShards feature is not enabled
+		return true, false, nil
+	}
+
 	clientSync, err := a.actionCtx.GetMembersState().GetMemberClient(a.action.MemberID)
 	if err != nil {
 		return false, false, errors.Wrapf(err, "Unable to create client (SyncMode)")

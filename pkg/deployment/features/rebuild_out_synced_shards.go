@@ -28,7 +28,7 @@ var rebuildOutSyncedShards = &feature{
 	name:               "force-rebuild-out-synced-shards",
 	description:        "Force rebuild permanently out-synced shards due to a bug in ArangoDB 3.8-3.10",
 	version:            "3.8.0",
-	enterpriseRequired: true,
+	enterpriseRequired: false,
 	enabledByDefault:   false,
 	hidden:             true,
 }

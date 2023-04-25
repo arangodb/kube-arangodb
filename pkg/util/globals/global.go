@@ -29,7 +29,11 @@ const (
 	DefaultArangoDCheckTimeout   = time.Second * 2
 	DefaultReconciliationTimeout = time.Minute
 
+	// DefaultOutSyncedShardRebuildTimeout
+	// timeout after which particular out-synced shard is considered as failed and rebuild is triggered
 	DefaultOutSyncedShardRebuildTimeout = time.Minute * 60
+	// DefaultOutSyncedShardRebuildRetryTimeout timeout after which rebuild shards retry flow is triggered
+	DefaultOutSyncedShardRebuildRetryTimeout = time.Minute * 60
 
 	DefaultKubernetesRequestBatchSize = 256
 
@@ -38,12 +42,13 @@ const (
 
 var globalObj = &globals{
 	timeouts: &globalTimeouts{
-		requests:       NewTimeout(DefaultKubernetesTimeout),
-		arangod:        NewTimeout(DefaultArangoDTimeout),
-		arangodCheck:   NewTimeout(DefaultArangoDCheckTimeout),
-		reconciliation: NewTimeout(DefaultReconciliationTimeout),
-		agency:         NewTimeout(DefaultArangoDAgencyTimeout),
-		shardRebuild:   NewTimeout(DefaultOutSyncedShardRebuildTimeout),
+		requests:          NewTimeout(DefaultKubernetesTimeout),
+		arangod:           NewTimeout(DefaultArangoDTimeout),
+		arangodCheck:      NewTimeout(DefaultArangoDCheckTimeout),
+		reconciliation:    NewTimeout(DefaultReconciliationTimeout),
+		agency:            NewTimeout(DefaultArangoDAgencyTimeout),
+		shardRebuild:      NewTimeout(DefaultOutSyncedShardRebuildTimeout),
+		shardRebuildRetry: NewTimeout(DefaultOutSyncedShardRebuildRetryTimeout),
 	},
 	kubernetes: &globalKubernetes{
 		requestBatchSize: NewInt64(DefaultKubernetesRequestBatchSize),
@@ -112,6 +117,7 @@ func (g *globalBackup) ConcurrentUploads() Int {
 type GlobalTimeouts interface {
 	Reconciliation() Timeout
 	ShardRebuild() Timeout
+	ShardRebuildRetry() Timeout
 
 	Kubernetes() Timeout
 	ArangoD() Timeout
@@ -120,7 +126,7 @@ type GlobalTimeouts interface {
 }
 
 type globalTimeouts struct {
-	requests, arangod, reconciliation, arangodCheck, agency, shardRebuild Timeout
+	requests, arangod, reconciliation, arangodCheck, agency, shardRebuild, shardRebuildRetry Timeout
 }
 
 func (g *globalTimeouts) Agency() Timeout {
@@ -137,6 +143,10 @@ func (g *globalTimeouts) Reconciliation() Timeout {
 
 func (g *globalTimeouts) ShardRebuild() Timeout {
 	return g.shardRebuild
+}
+
+func (g *globalTimeouts) ShardRebuildRetry() Timeout {
+	return g.shardRebuildRetry
 }
 
 func (g *globalTimeouts) ArangoD() Timeout {
