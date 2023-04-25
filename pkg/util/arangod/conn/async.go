@@ -79,6 +79,13 @@ func (a async) Do(ctx context.Context, req driver.Request) (driver.Response, err
 		case http.StatusNotFound:
 			return nil, newAsyncErrorNotFound(id)
 		case http.StatusNoContent:
+			asyncID := resp.Header(constants.ArangoHeaderAsyncIDKey)
+			if asyncID == id {
+				// Job is done
+				return resp, nil
+			}
+
+			// Job is in progress
 			return nil, newAsyncJobInProgress(id)
 		default:
 			return resp, nil
