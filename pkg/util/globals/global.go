@@ -33,7 +33,7 @@ const (
 	// timeout after which particular out-synced shard is considered as failed and rebuild is triggered
 	DefaultOutSyncedShardRebuildTimeout = time.Minute * 60
 	// DefaultOutSyncedShardRebuildRetryTimeout timeout after which rebuild shards retry flow is triggered
-	DefaultOutSyncedShardRebuildRetryTimeout = time.Minute * 60
+	DefaultOutSyncedShardRebuildRetryTimeout = time.Hour * 4
 
 	DefaultKubernetesRequestBatchSize = 256
 
