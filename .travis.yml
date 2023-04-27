@@ -15,6 +15,7 @@ script:
       make license-verify license-range-verify fmt-verify linter
       make run-unit-tests
       make bin
+      make vulncheck
     else
       make vendor tools-min fmt-verify linter
     fi
