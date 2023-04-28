@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +19,8 @@
 //
 
 package agency
+
+import "sort"
 
 type Server string
 
@@ -44,4 +46,51 @@ func (s Servers) Join(ids Servers) Servers {
 	}
 
 	return r
+}
+
+func (s Servers) Equals(ids Servers) bool {
+	if len(ids) != len(s) {
+		return false
+	}
+
+	for id := range ids {
+		if ids[id] != s[id] {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (s Servers) Sort() {
+	sort.Slice(s, func(i, j int) bool {
+		return s[i] < s[j]
+	})
+}
+
+func (s Servers) InSync(ids Servers) bool {
+	if len(s) != len(ids) {
+		return false
+	}
+
+	if len(s) == 0 {
+		return false
+	}
+
+	if s[0] != ids[0] {
+		return false
+	}
+
+	if len(s) > 1 {
+		s[1:].Sort()
+		ids[1:].Sort()
+
+		if s.Equals(ids) {
+			return true
+		} else {
+			return false
+		}
+	}
+
+	return true
 }

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -79,7 +79,7 @@ func getShutdownHelper(a actionImpl) (ActionCore, api.MemberStatus, bool) {
 	}
 
 	if features.GracefulShutdown().Enabled() {
-		return shutdownHelperAPI{actionImpl: a, memberStatus: m}, m, true
+		return getShutdownHelperAPI(a, m), m, true
 	}
 
 	serverGroup := a.actionCtx.GetSpec().GetServerGroupSpec(a.action.Group)
@@ -88,8 +88,38 @@ func getShutdownHelper(a actionImpl) (ActionCore, api.MemberStatus, bool) {
 	case api.ServerGroupShutdownMethodDelete:
 		return shutdownHelperDelete{actionImpl: a, memberStatus: m}, m, true
 	default:
-		return shutdownHelperAPI{actionImpl: a, memberStatus: m}, m, true
+		return getShutdownHelperAPI(a, m), m, true
 	}
+}
+
+func getShutdownHelperAPI(a actionImpl, member api.MemberStatus) ActionCore {
+	act := shutdownHelperAPI{actionImpl: a, memberStatus: member}
+
+	if !features.OptionalGracefulShutdown().Enabled() {
+		return act
+	}
+
+	return shutdownHelperOptionalAPI{action: act}
+}
+
+type shutdownHelperOptionalAPI struct {
+	action shutdownHelperAPI
+}
+
+func (s shutdownHelperOptionalAPI) Start(ctx context.Context) (bool, error) {
+	return false, nil
+}
+
+func (s shutdownHelperOptionalAPI) CheckProgress(ctx context.Context) (bool, bool, error) {
+	if done, abort, err := s.action.CheckProgress(ctx); err != nil || abort || done {
+		return done, abort, err
+	}
+
+	if _, err := s.action.Start(ctx); err != nil {
+		return false, false, nil
+	}
+
+	return false, false, nil
 }
 
 type shutdownHelperAPI struct {

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ package agency
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/rs/zerolog"
 
@@ -157,6 +158,8 @@ type Cache interface {
 	CommitIndex() uint64
 	// Health returns true when healthy object is available.
 	Health() (Health, bool)
+	// ShardsInSyncMap returns last in sync state of shards. If no state is available, false is returned.
+	ShardsInSyncMap() (ShardsSyncStatus, bool)
 }
 
 func NewCache(namespace, name string, mode *api.DeploymentMode) Cache {
@@ -169,8 +172,9 @@ func NewCache(namespace, name string, mode *api.DeploymentMode) Cache {
 
 func NewAgencyCache(namespace, name string) Cache {
 	c := &cache{
-		namespace: namespace,
-		name:      name,
+		namespace:        namespace,
+		name:             name,
+		shardsSyncStatus: ShardsSyncStatus{},
 	}
 
 	c.log = logger.WrapObj(c)
@@ -183,6 +187,10 @@ func NewSingleCache() Cache {
 }
 
 type cacheSingle struct {
+}
+
+func (c cacheSingle) ShardsInSyncMap() (ShardsSyncStatus, bool) {
+	return nil, false
 }
 
 func (c cacheSingle) DataDB() (StateDB, bool) {
@@ -221,6 +229,8 @@ type cache struct {
 	dataDB StateDB
 
 	health Health
+
+	shardsSyncStatus ShardsSyncStatus
 }
 
 func (c *cache) WrapLogger(in *zerolog.Event) *zerolog.Event {
@@ -272,6 +282,38 @@ func (c *cache) Reload(ctx context.Context, size int, clients map[string]agency.
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
+	index, err := c.reload(ctx, size, clients)
+	if err != nil {
+		return index, err
+	}
+
+	if !c.valid {
+		return index, nil
+	}
+
+	// Refresh map of the shards
+	shardNames := c.data.GetShardsStatus()
+
+	n := time.Now()
+
+	for k := range c.shardsSyncStatus {
+		if _, ok := shardNames[k]; !ok {
+			delete(c.shardsSyncStatus, k)
+		}
+	}
+
+	for k, v := range shardNames {
+		if _, ok := c.shardsSyncStatus[k]; !ok {
+			c.shardsSyncStatus[k] = n
+		} else if v {
+			c.shardsSyncStatus[k] = n
+		}
+	}
+
+	return index, nil
+}
+
+func (c *cache) reload(ctx context.Context, size int, clients map[string]agency.Agency) (uint64, error) {
 	leaderCli, leaderConfig, health, err := c.getLeader(ctx, size, clients)
 	if err != nil {
 		// Invalidate a leader ID and agency state.
@@ -302,6 +344,21 @@ func (c *cache) Reload(ctx context.Context, size int, clients map[string]agency.
 		c.commitIndex = leaderConfig.CommitIndex
 		return leaderConfig.CommitIndex, nil
 	}
+}
+
+func (c *cache) ShardsInSyncMap() (ShardsSyncStatus, bool) {
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+
+	if !c.valid {
+		return nil, false
+	}
+
+	if c.shardsSyncStatus == nil {
+		return nil, false
+	}
+
+	return c.shardsSyncStatus, true
 }
 
 // getLeader returns config and client to a leader agency, and health to check if agencies are on the same page.

@@ -55,6 +55,9 @@ actions:
     enterprise: true
     description: Recreate Server TLS Certificate secret
     timeout: 30m
+  CleanMemberService:
+    description: Removes Server Service
+    timeout: 30m
   RenewTLSCACertificate:
     enterprise: true
     description: Recreate Managed CA secret
@@ -231,3 +234,8 @@ actions:
   TimezoneSecretSet:
     description: Set timezone details in cluster
     timeout: 30m
+  RebuildOutSyncedShards:
+    description: Run Rebuild Out Synced Shards procedure for DBServers
+    timeout: 24h
+    scopes:
+      - High

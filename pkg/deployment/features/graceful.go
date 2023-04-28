@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ package features
 
 func init() {
 	registerFeature(gracefulShutdown)
+	registerFeature(optionalGracefulShutdown)
 }
 
 var gracefulShutdown = &feature{
@@ -33,6 +34,19 @@ var gracefulShutdown = &feature{
 	hidden:             true,
 }
 
+var optionalGracefulShutdown = &feature{
+	name:               "optional-graceful-shutdown",
+	description:        "Define graceful shutdown, using finalizers, is optional and can fail in case of connection issues",
+	version:            "3.6.0",
+	enterpriseRequired: false,
+	enabledByDefault:   false,
+	hidden:             true,
+}
+
 func GracefulShutdown() Feature {
 	return gracefulShutdown
+}
+
+func OptionalGracefulShutdown() Feature {
+	return optionalGracefulShutdown
 }

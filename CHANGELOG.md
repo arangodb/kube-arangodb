@@ -1,6 +1,18 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Feature) ArangoBackup create retries and MaxIterations limit
+
+## [1.2.27](https://github.com/arangodb/kube-arangodb/tree/1.2.27) (2023-04-27)
+- (Feature) Add InSync Cache
+- (Feature) Force Rebuild Out Synced Shards
+
+## [1.2.26](https://github.com/arangodb/kube-arangodb/tree/1.2.26) (2023-04-18)
+- (Bugfix) Fix manual overwrite for ReplicasCount in helm
+- (Bugfix) Fix for ArangoTask list error
+- (Improvement) Deprecate Endpoint field in ArangoDeployment
+
+## [1.2.25](https://github.com/arangodb/kube-arangodb/tree/1.2.25) (2023-04-07)
 - (Feature) Add Generics & Drop policy/v1beta1 support
 - (Feature) Add Kubernetes Client logger
 - (Feature) CreationFailed ArangoMember Phase
@@ -21,7 +33,10 @@
 - (Maintenance) Generate README Platforms
 - (Improvement) Cleanout calculation - picks members with the lowest number of shards
 - (Improvement) Add new field to CR for more precise calculation of DC2DC replication progress
-- (Feature) ArangoBackup create retries and MaxIterations limit
+- (Maintenance) Bump GO Modules
+- (Feature) Optional Graceful Restart
+- (Maintenance) Manual Recovery documentation
+- (Feature) Headless DNS CommunicationMethod
 
 ## [1.2.24](https://github.com/arangodb/kube-arangodb/tree/1.2.24) (2023-01-25)
 - (Bugfix) Fix deployment creation on ARM64

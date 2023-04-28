@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@
 
 package agency
 
+// StateCurrentCollections is a map of database name to collections
 type StateCurrentCollections map[string]StateCurrentDBCollections
 
 func (a StateCurrentCollections) IsDBServerPresent(name Server) bool {
@@ -32,6 +33,7 @@ func (a StateCurrentCollections) IsDBServerPresent(name Server) bool {
 	return false
 }
 
+// StateCurrentDBCollections is a map of collection name to shards
 type StateCurrentDBCollections map[string]StateCurrentDBCollection
 
 func (a StateCurrentDBCollections) IsDBServerPresent(name Server) bool {
@@ -44,6 +46,7 @@ func (a StateCurrentDBCollections) IsDBServerPresent(name Server) bool {
 	return false
 }
 
+// StateCurrentDBCollection is a map of Shard name to Shard details
 type StateCurrentDBCollection map[string]StateCurrentDBShard
 
 func (a StateCurrentDBCollection) IsDBServerPresent(name Server) bool {

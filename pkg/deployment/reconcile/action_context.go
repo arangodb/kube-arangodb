@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -168,6 +168,10 @@ func (ac *actionContext) GetDatabaseAsyncClient(ctx context.Context) (driver.Cli
 	return ac.context.GetDatabaseAsyncClient(ctx)
 }
 
+func (ac *actionContext) GetServerAsyncClient(id string) (driver.Client, error) {
+	return ac.context.GetServerAsyncClient(id)
+}
+
 func (ac *actionContext) CurrentLocals() api.PlanLocals {
 	return ac.locals
 }
@@ -249,6 +253,10 @@ func (ac *actionContext) GenerateMemberEndpoint(group api.ServerGroup, member ap
 
 func (ac *actionContext) GetAgencyHealth() (agencyCache.Health, bool) {
 	return ac.context.GetAgencyHealth()
+}
+
+func (ac *actionContext) ShardsInSyncMap() (agencyCache.ShardsSyncStatus, bool) {
+	return ac.context.ShardsInSyncMap()
 }
 
 func (ac *actionContext) GetAgencyCache() (agencyCache.State, bool) {

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -98,6 +98,7 @@ type ArangoAgencyGet interface {
 	GetAgencyCache() (agencyCache.State, bool)
 	GetAgencyArangoDBCache() (agencyCache.StateDB, bool)
 	GetAgencyHealth() (agencyCache.Health, bool)
+	ShardsInSyncMap() (agencyCache.ShardsSyncStatus, bool)
 }
 
 type ArangoAgency interface {
@@ -132,6 +133,8 @@ type DeploymentDatabaseClient interface {
 	// GetDatabaseAsyncClient returns a cached client for the entire database (cluster coordinators or single server),
 	// creating one if needed. Only in AsyncMode
 	GetDatabaseAsyncClient(ctx context.Context) (driver.Client, error)
+	// GetServerAsyncClient returns an async client for a specific server.
+	GetServerAsyncClient(id string) (driver.Client, error)
 }
 
 type DeploymentMemberClient interface {

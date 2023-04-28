@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -59,10 +59,28 @@ func (d *DeploymentCommunicationMethod) Get() DeploymentCommunicationMethod {
 	}
 
 	switch v := *d; v {
-	case DeploymentCommunicationMethodHeadlessService, DeploymentCommunicationMethodDNS, DeploymentCommunicationMethodIP, DeploymentCommunicationMethodShortDNS:
+	case DeploymentCommunicationMethodHeadlessService, DeploymentCommunicationMethodDNS, DeploymentCommunicationMethodIP, DeploymentCommunicationMethodShortDNS, DeploymentCommunicationMethodHeadlessDNS:
 		return v
 	default:
 		return DefaultDeploymentCommunicationMethod
+	}
+}
+
+// ServiceType returns Service Type for communication method
+func (d *DeploymentCommunicationMethod) ServiceType() core.ServiceType {
+	switch d.Get() {
+	default:
+		return core.ServiceTypeClusterIP
+	}
+}
+
+// ServiceClusterIP returns Service ClusterIP for communication method
+func (d *DeploymentCommunicationMethod) ServiceClusterIP() string {
+	switch d.Get() {
+	case DeploymentCommunicationMethodHeadlessDNS:
+		return core.ClusterIPNone
+	default:
+		return ""
 	}
 }
 
@@ -85,7 +103,9 @@ const (
 	DeploymentCommunicationMethodDNS DeploymentCommunicationMethod = "dns"
 	// DeploymentCommunicationMethodShortDNS define ClusterIP Service DNS based communication. Use namespaced short DNS (used in migration)
 	DeploymentCommunicationMethodShortDNS DeploymentCommunicationMethod = "short-dns"
-	// DeploymentCommunicationMethodIP define ClusterIP Servce IP based communication.
+	// DeploymentCommunicationMethodHeadlessDNS define Headless Service DNS based communication.
+	DeploymentCommunicationMethodHeadlessDNS DeploymentCommunicationMethod = "headless-dns"
+	// DeploymentCommunicationMethodIP define ClusterIP Service IP based communication.
 	DeploymentCommunicationMethodIP DeploymentCommunicationMethod = "ip"
 )
 

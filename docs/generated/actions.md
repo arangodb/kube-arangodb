@@ -13,6 +13,7 @@
 |         BackupRestoreClean         |    no    |  15m0s  |    no    |    Enterprise Only     |                                Clean restore status in case of restore spec change                                 |
 |        BootstrapSetPassword        |    no    |  10m0s  |    no    | Community & Enterprise |                                     Change password during bootstrap procedure                                     |
 |          BootstrapUpdate           |    no    |  10m0s  |    no    | Community & Enterprise |                                              Update bootstrap status                                               |
+|         CleanMemberService         |    no    |  30m0s  |    no    | Community & Enterprise |                                               Removes Server Service                                               |
 |           CleanOutMember           |    no    | 48h0m0s |    no    | Community & Enterprise |                                           Run the CleanOut job on member                                           |
 |       CleanTLSCACertificate        |    no    |  30m0s  |    no    |    Enterprise Only     |                                       Remove Certificate from CA TrustStore                                        |
 |     CleanTLSKeyfileCertificate     |    no    |  30m0s  |    no    |    Enterprise Only     |                                       Remove old TLS certificate from server                                       |
@@ -46,6 +47,7 @@
 |          RebalancerCheck           |    no    |  10m0s  |    no    |    Enterprise Only     |                                           Check Rebalancer job progress                                            |
 |          RebalancerClean           |    no    |  10m0s  |    no    |    Enterprise Only     |                                               Cleans Rebalancer jobs                                               |
 |         RebalancerGenerate         |   yes    |  10m0s  |    no    |    Enterprise Only     |                                           Generates the Rebalancer plan                                            |
+|       RebuildOutSyncedShards       |    no    | 24h0m0s |    no    | Community & Enterprise |                               Run Rebuild Out Synced Shards procedure for DBServers                                |
 |           RecreateMember           |    no    |  15m0s  |    no    | Community & Enterprise |                                       Recreate member with same ID and Data                                        |
 |    RefreshTLSKeyfileCertificate    |    no    |  30m0s  |    no    |    Enterprise Only     |                                       Recreate Server TLS Certificate secret                                       |
 |            RemoveMember            |    no    |  15m0s  |    no    | Community & Enterprise |                                     Removes member from the Cluster and Status                                     |
@@ -99,6 +101,7 @@ spec:
       BackupRestoreClean: 15m0s
       BootstrapSetPassword: 10m0s
       BootstrapUpdate: 10m0s
+      CleanMemberService: 30m0s
       CleanOutMember: 48h0m0s
       CleanTLSCACertificate: 30m0s
       CleanTLSKeyfileCertificate: 30m0s
@@ -132,6 +135,7 @@ spec:
       RebalancerCheck: 10m0s
       RebalancerClean: 10m0s
       RebalancerGenerate: 10m0s
+      RebuildOutSyncedShards: 24h0m0s
       RecreateMember: 15m0s
       RefreshTLSKeyfileCertificate: 30m0s
       RemoveMember: 15m0s

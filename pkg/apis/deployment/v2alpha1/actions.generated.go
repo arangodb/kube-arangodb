@@ -41,6 +41,8 @@ const (
 	ActionBootstrapSetPasswordDefaultTimeout time.Duration = ActionsDefaultTimeout
 	// ActionBootstrapUpdateDefaultTimeout define default timeout for action ActionBootstrapUpdate
 	ActionBootstrapUpdateDefaultTimeout time.Duration = ActionsDefaultTimeout
+	// ActionCleanMemberServiceDefaultTimeout define default timeout for action ActionCleanMemberService
+	ActionCleanMemberServiceDefaultTimeout time.Duration = 1800 * time.Second // 30m0s
 	// ActionCleanOutMemberDefaultTimeout define default timeout for action ActionCleanOutMember
 	ActionCleanOutMemberDefaultTimeout time.Duration = 172800 * time.Second // 48h0m0s
 	// ActionCleanTLSCACertificateDefaultTimeout define default timeout for action ActionCleanTLSCACertificate
@@ -107,6 +109,8 @@ const (
 	ActionRebalancerCleanDefaultTimeout time.Duration = ActionsDefaultTimeout
 	// ActionRebalancerGenerateDefaultTimeout define default timeout for action ActionRebalancerGenerate
 	ActionRebalancerGenerateDefaultTimeout time.Duration = ActionsDefaultTimeout
+	// ActionRebuildOutSyncedShardsDefaultTimeout define default timeout for action ActionRebuildOutSyncedShards
+	ActionRebuildOutSyncedShardsDefaultTimeout time.Duration = 86400 * time.Second // 24h0m0s
 	// ActionRecreateMemberDefaultTimeout define default timeout for action ActionRecreateMember
 	ActionRecreateMemberDefaultTimeout time.Duration = 900 * time.Second // 15m0s
 	// ActionRefreshTLSKeyfileCertificateDefaultTimeout define default timeout for action ActionRefreshTLSKeyfileCertificate
@@ -196,6 +200,8 @@ const (
 	ActionTypeBootstrapSetPassword ActionType = "BootstrapSetPassword"
 	// ActionTypeBootstrapUpdate in scopes Normal. Update bootstrap status
 	ActionTypeBootstrapUpdate ActionType = "BootstrapUpdate"
+	// ActionTypeCleanMemberService in scopes Normal. Removes Server Service
+	ActionTypeCleanMemberService ActionType = "CleanMemberService"
 	// ActionTypeCleanOutMember in scopes Normal. Run the CleanOut job on member
 	ActionTypeCleanOutMember ActionType = "CleanOutMember"
 	// ActionTypeCleanTLSCACertificate in scopes Normal. Remove Certificate from CA TrustStore
@@ -262,6 +268,8 @@ const (
 	ActionTypeRebalancerClean ActionType = "RebalancerClean"
 	// ActionTypeRebalancerGenerate in scopes Normal. Generates the Rebalancer plan
 	ActionTypeRebalancerGenerate ActionType = "RebalancerGenerate"
+	// ActionTypeRebuildOutSyncedShards in scopes High. Run Rebuild Out Synced Shards procedure for DBServers
+	ActionTypeRebuildOutSyncedShards ActionType = "RebuildOutSyncedShards"
 	// ActionTypeRecreateMember in scopes Normal. Recreate member with same ID and Data
 	ActionTypeRecreateMember ActionType = "RecreateMember"
 	// ActionTypeRefreshTLSKeyfileCertificate in scopes Normal. Recreate Server TLS Certificate secret
@@ -352,6 +360,8 @@ func (a ActionType) DefaultTimeout() time.Duration {
 		return ActionBootstrapSetPasswordDefaultTimeout
 	case ActionTypeBootstrapUpdate:
 		return ActionBootstrapUpdateDefaultTimeout
+	case ActionTypeCleanMemberService:
+		return ActionCleanMemberServiceDefaultTimeout
 	case ActionTypeCleanOutMember:
 		return ActionCleanOutMemberDefaultTimeout
 	case ActionTypeCleanTLSCACertificate:
@@ -418,6 +428,8 @@ func (a ActionType) DefaultTimeout() time.Duration {
 		return ActionRebalancerCleanDefaultTimeout
 	case ActionTypeRebalancerGenerate:
 		return ActionRebalancerGenerateDefaultTimeout
+	case ActionTypeRebuildOutSyncedShards:
+		return ActionRebuildOutSyncedShardsDefaultTimeout
 	case ActionTypeRecreateMember:
 		return ActionRecreateMemberDefaultTimeout
 	case ActionTypeRefreshTLSKeyfileCertificate:
@@ -512,6 +524,8 @@ func (a ActionType) Priority() ActionPriority {
 		return ActionPriorityNormal
 	case ActionTypeBootstrapUpdate:
 		return ActionPriorityNormal
+	case ActionTypeCleanMemberService:
+		return ActionPriorityNormal
 	case ActionTypeCleanOutMember:
 		return ActionPriorityNormal
 	case ActionTypeCleanTLSCACertificate:
@@ -578,6 +592,8 @@ func (a ActionType) Priority() ActionPriority {
 		return ActionPriorityNormal
 	case ActionTypeRebalancerGenerate:
 		return ActionPriorityNormal
+	case ActionTypeRebuildOutSyncedShards:
+		return ActionPriorityHigh
 	case ActionTypeRecreateMember:
 		return ActionPriorityNormal
 	case ActionTypeRefreshTLSKeyfileCertificate:
@@ -682,6 +698,8 @@ func (a ActionType) Optional() bool {
 		return false
 	case ActionTypeBootstrapUpdate:
 		return false
+	case ActionTypeCleanMemberService:
+		return false
 	case ActionTypeCleanOutMember:
 		return false
 	case ActionTypeCleanTLSCACertificate:
@@ -747,6 +765,8 @@ func (a ActionType) Optional() bool {
 	case ActionTypeRebalancerClean:
 		return false
 	case ActionTypeRebalancerGenerate:
+		return false
+	case ActionTypeRebuildOutSyncedShards:
 		return false
 	case ActionTypeRecreateMember:
 		return false

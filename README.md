@@ -64,23 +64,26 @@ Feature-wise production readiness table:
 | Version Check                           | 1.1.4            | >= 3.6.0         | Community, Enterprise | 1.1.4      | Alpha        | False   | --deployment.feature.upgrade-version-check            | N/A                                                                      |
 | Version Check                           | 1.2.23           | >= 3.6.0         | Community, Enterprise | 1.1.4      | Production   | True    | --deployment.feature.upgrade-version-check            | N/A                                                                      |
 | Operator Maintenance Management Support | 1.2.0            | >= 3.6.0         | Community, Enterprise | 1.0.7      | Production   | True    | --deployment.feature.maintenance                      | N/A                                                                      |
+| Graceful Restart                        | 1.2.5            | >= 3.6.0         | Community, Enterprise | 1.0.7      | Production   | True    | --deployment.feature.graceful-shutdown                | N/A                                                                      |
+| Optional Graceful Restart               | 1.2.25           | >= 3.6.0         | Community, Enterprise | 1.2.5      | Beta         | True    | --deployment.feature.optional-graceful-shutdown       | N/A                                                                      |
 | Operator Internal Metrics Exporter      | 1.2.0            | >= 3.6.0         | Community, Enterprise | 1.2.0      | Production   | True    | --deployment.feature.metrics-exporter                 | N/A                                                                      |
 | Operator Ephemeral Volumes              | 1.2.2            | >= 3.7.0         | Community, Enterprise | 1.2.2      | Alpha        | False   | --deployment.feature.ephemeral-volumes                | N/A                                                                      |
 | Spec Default Restore                    | 1.2.21           | >= 3.7.0         | Community, Enterprise | 1.2.21     | Beta         | True    | --deployment.feature.deployment-spec-defaults-restore | If set to False Operator will not change ArangoDeployment Spec           |
+| Force Rebuild Out Synced Shards         | 1.2.27           | >= 3.8.0         | Community, Enterprise | 1.2.27     | Beta         | False   | --deployment.feature.force-rebuild-out-synced-shards  | It should be used only if user is aware of the risks.                    |
 
 ## Operator Community Edition (CE)
 
-Image: `arangodb/kube-arangodb:1.2.24`
+Image: `arangodb/kube-arangodb:1.2.27`
 
 ### Installation of latest CE release using Kubectl
 
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.24/manifests/arango-crd.yaml
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.24/manifests/arango-deployment.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.27/manifests/arango-crd.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.27/manifests/arango-deployment.yaml
 # To use `ArangoLocalStorage`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.24/manifests/arango-storage.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.27/manifests/arango-storage.yaml
 # To use `ArangoDeploymentReplication`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.24/manifests/arango-deployment-replication.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.27/manifests/arango-deployment-replication.yaml
 ```
 
 This procedure can also be used for upgrades and will not harm any
@@ -113,9 +116,9 @@ upgrades.
 ```bash
 # The following will install the operator for `ArangoDeployment` &
 # `ArangoDeploymentReplication` resources.
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.24/kube-arangodb-1.2.24.tgz
+helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.27/kube-arangodb-1.2.27.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.24/kube-arangodb-1.2.24.tgz --set "operator.features.storage=true"
+helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.27/kube-arangodb-1.2.27.tgz --set "operator.features.storage=true"
 ```
 
 ### Upgrading the operator using Helm
@@ -149,24 +152,24 @@ with `helm install` as normal:
 ```bash
 # The following will install the operator for `ArangoDeployment` &
 # `ArangoDeploymentReplication` resources.
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.24/kube-arangodb-1.2.24.tgz
+helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.27/kube-arangodb-1.2.27.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.24/kube-arangodb-1.2.24.tgz --set "operator.features.storage=true"
+helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.27/kube-arangodb-1.2.27.tgz --set "operator.features.storage=true"
 ```
 
 ## Operator Enterprise Edition (EE)
 
-Image: `arangodb/kube-arangodb-enterprise:1.2.24`
+Image: `arangodb/kube-arangodb-enterprise:1.2.27`
 
 ### Installation of latest EE release using Kubectl
 
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.24/manifests/enterprise-crd.yaml
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.24/manifests/enterprise-deployment.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.27/manifests/enterprise-crd.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.27/manifests/enterprise-deployment.yaml
 # To use `ArangoLocalStorage`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.24/manifests/enterprise-storage.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.27/manifests/enterprise-storage.yaml
 # To use `ArangoDeploymentReplication`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.24/manifests/enterprise-deployment-replication.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.27/manifests/enterprise-deployment-replication.yaml
 ```
 
 This procedure can also be used for upgrades and will not harm any
@@ -199,9 +202,9 @@ upgrades.
 ```bash
 # The following will install the operator for `ArangoDeployment` &
 # `ArangoDeploymentReplication` resources.
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.24/kube-arangodb-1.2.24.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.24"
+helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.27/kube-arangodb-1.2.27.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.27"
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.24/kube-arangodb-1.2.24.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.24" --set "operator.features.storage=true"
+helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.27/kube-arangodb-1.2.27.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.27" --set "operator.features.storage=true"
 ```
 
 ### Upgrading the operator using Helm
@@ -235,9 +238,9 @@ with `helm install` as normal:
 ```bash
 # The following will install the operator for `ArangoDeployment` &
 # `ArangoDeploymentReplication` resources.
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.24/kube-arangodb-1.2.24.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.24"
+helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.27/kube-arangodb-1.2.27.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.27"
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.24/kube-arangodb-1.2.24.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.24" --set "operator.features.storage=true"
+helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.27/kube-arangodb-1.2.27.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.27" --set "operator.features.storage=true"
 ```
 
 ## Building

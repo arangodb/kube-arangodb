@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ var (
 )
 
 // createService returns service's object.
-func (r *Resources) createService(name, namespace string, owner meta.OwnerReference, ports []core.ServicePort,
+func (r *Resources) createService(name, namespace, clusterIP string, serviceType core.ServiceType, owner meta.OwnerReference, ports []core.ServicePort,
 	selector map[string]string) *core.Service {
 
 	return &core.Service{
@@ -61,7 +61,8 @@ func (r *Resources) createService(name, namespace string, owner meta.OwnerRefere
 			},
 		},
 		Spec: core.ServiceSpec{
-			Type:                     core.ServiceTypeClusterIP,
+			Type:                     serviceType,
+			ClusterIP:                clusterIP,
 			Ports:                    ports,
 			PublishNotReadyAddresses: true,
 			Selector:                 selector,
@@ -100,7 +101,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 		ports := CreateServerServicePortsWithSidecars(amInspector, e.Member.ArangoMemberName(deploymentName, e.Group))
 		selector := k8sutil.LabelsForActiveMember(deploymentName, e.Group.AsRole(), e.Member.ID)
 		if s, ok := cachedStatus.Service().V1().GetSimple(member.GetName()); !ok {
-			s := r.createService(member.GetName(), member.GetNamespace(), member.AsOwner(), ports, selector)
+			s := r.createService(member.GetName(), member.GetNamespace(), spec.CommunicationMethod.ServiceClusterIP(), spec.CommunicationMethod.ServiceType(), member.AsOwner(), ports, selector)
 
 			err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				_, err := svcs.Create(ctxChild, s, meta.CreateOptions{})
@@ -120,7 +121,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 				patcher.PatchServicePorts(ports),
 				patcher.PatchServiceSelector(selector),
 				patcher.PatchServicePublishNotReadyAddresses(true),
-				patcher.PatchServiceType(core.ServiceTypeClusterIP)); err != nil {
+				patcher.PatchServiceType(spec.CommunicationMethod.ServiceType())); err != nil {
 				return err
 			} else if changed {
 				reconcileRequired.Required()

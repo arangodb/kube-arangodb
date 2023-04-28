@@ -51,6 +51,9 @@ var (
 	_ Action        = &actionBootstrapUpdate{}
 	_ actionFactory = newBootstrapUpdateAction
 
+	_ Action        = &actionCleanMemberService{}
+	_ actionFactory = newCleanMemberServiceAction
+
 	_ Action        = &actionCleanOutMember{}
 	_ actionFactory = newCleanOutMemberAction
 
@@ -149,6 +152,9 @@ var (
 
 	_ Action        = &actionRebalancerGenerate{}
 	_ actionFactory = newRebalancerGenerateAction
+
+	_ Action        = &actionRebuildOutSyncedShards{}
+	_ actionFactory = newRebuildOutSyncedShardsAction
 
 	_ Action        = &actionRecreateMember{}
 	_ actionFactory = newRecreateMemberAction
@@ -348,6 +354,18 @@ func init() {
 		// Get Action defition
 		function := newBootstrapUpdateAction
 		action := api.ActionTypeBootstrapUpdate
+
+		// Wrap action main function
+
+		// Register action
+		registerAction(action, function)
+	}
+
+	// CleanMemberService
+	{
+		// Get Action defition
+		function := newCleanMemberServiceAction
+		action := api.ActionTypeCleanMemberService
 
 		// Wrap action main function
 
@@ -744,6 +762,18 @@ func init() {
 		// Get Action defition
 		function := newRebalancerGenerateAction
 		action := api.ActionTypeRebalancerGenerate
+
+		// Wrap action main function
+
+		// Register action
+		registerAction(action, function)
+	}
+
+	// RebuildOutSyncedShards
+	{
+		// Get Action defition
+		function := newRebuildOutSyncedShardsAction
+		action := api.ActionTypeRebuildOutSyncedShards
 
 		// Wrap action main function
 

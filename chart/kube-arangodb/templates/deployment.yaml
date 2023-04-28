@@ -105,7 +105,7 @@ spec:
 {{ if .Values.operator.features.backup }}
                     - --operator.backup
 {{- end }}
-{{- if or .Values.operator.debug (eq .Values.operator.replicaCount 1.0)  }}
+{{- if or .Values.operator.debug (eq ( int .Values.operator.replicaCount)  1)  }}
                     - --mode.single
 {{- end }}
 {{ if .Values.operator.features.apps }}

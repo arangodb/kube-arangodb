@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -79,6 +79,13 @@ func (a async) Do(ctx context.Context, req driver.Request) (driver.Response, err
 		case http.StatusNotFound:
 			return nil, newAsyncErrorNotFound(id)
 		case http.StatusNoContent:
+			asyncID := resp.Header(constants.ArangoHeaderAsyncIDKey)
+			if asyncID == id {
+				// Job is done
+				return resp, nil
+			}
+
+			// Job is in progress
 			return nil, newAsyncJobInProgress(id)
 		default:
 			return resp, nil

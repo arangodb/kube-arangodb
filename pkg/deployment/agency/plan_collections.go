@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@
 
 package agency
 
+// StatePlanCollections is a map of database name to collections
 type StatePlanCollections map[string]StatePlanDBCollections
 
 func (a StatePlanCollections) IsDBServerPresent(name Server) bool {
@@ -40,6 +41,7 @@ func (a StatePlanCollections) IsDBServerLeader(name Server) bool {
 	return false
 }
 
+// StatePlanDBCollections is a map of collection name to collection details
 type StatePlanDBCollections map[string]StatePlanCollection
 
 func (a StatePlanDBCollections) IsDBServerInCollections(name Server) bool {
