@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,8 @@
 package backup
 
 import (
+	"time"
+
 	"github.com/arangodb/go-driver"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
@@ -39,7 +41,12 @@ func stateCreateHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.
 
 	response, err := client.Create()
 	if err != nil {
-		return nil, err
+		return wrapUpdateStatus(backup,
+			updateStatusState(backupApi.ArangoBackupStateCreateError, "Create failed with error: %s", err.Error()),
+			cleanStatusJob(),
+			updateStatusAvailable(false),
+			addBackOff(backup.Spec),
+		)
 	}
 
 	backupMeta, err := client.Get(response.ID)
@@ -59,5 +66,25 @@ func stateCreateHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.
 		updateStatusState(backupApi.ArangoBackupStateReady, ""),
 		updateStatusAvailable(true),
 		updateStatusBackup(backupMeta),
+		cleanBackOff(),
 	)
+}
+
+func stateCreateErrorHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.ArangoBackupStatus, error) {
+	// no more retries - move to failed state
+	if !backup.Status.Backoff.ShouldBackoff(backup.Spec.Backoff) {
+		return wrapUpdateStatus(backup,
+			updateStatusState(backupApi.ArangoBackupStateFailed, "out of Create retries"),
+			cleanStatusJob())
+	}
+
+	// if we should retry - move to create state
+	if backup.Status.Backoff.ShouldBackoff(backup.Spec.Backoff) && !backup.Status.Backoff.GetNext().After(time.Now()) {
+		return wrapUpdateStatus(backup,
+			updateStatusState(backupApi.ArangoBackupStateCreate, ""),
+			cleanStatusJob())
+	}
+
+	// no ready to retry - wait (do not change state)
+	return wrapUpdateStatus(backup)
 }
