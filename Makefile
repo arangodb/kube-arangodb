@@ -546,6 +546,7 @@ tools: tools-min
 	@curl -L ${PROTOC_URL} -o $(GOPATH)/protoc.zip
 	@echo ">> Unzipping protobuf compiler..."
 	@unzip -o $(GOPATH)/protoc.zip -d $(GOPATH)/
+	@chmod +x $(GOPATH)/bin/protoc
 	@echo ">> Fetching protoc go plugins..."
 	@GOBIN=$(GOPATH)/bin go install github.com/golang/protobuf/protoc-gen-go@v1.5.2
 	@GOBIN=$(GOPATH)/bin go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
@@ -635,9 +636,9 @@ generate: generate-internal generate-proto fmt
 
 generate-internal:
 	ROOT=$(ROOT) go test --count=1 "$(REPOPATH)/internal/..."
-	
+
 generate-proto:
-	PATH=$(PATH):$(GOBUILDDIR)/bin $(GOBUILDDIR)/bin/protoc -I.:$(GOBUILDDIR)/include/ \
+	PATH="$(PATH):$(GOBUILDDIR)/bin" $(GOBUILDDIR)/bin/protoc -I.:$(GOBUILDDIR)/include/ \
 			--go_out=. --go_opt=paths=source_relative \
 			--go-grpc_out=. --go-grpc_opt=paths=source_relative \
 			$(PROTOSOURCES)
