@@ -132,8 +132,8 @@ func (s State) CountShards() int {
 	return count
 }
 
-// ShardsByDbServers returns a map of DBServers and the amount of shards they have
-func (s State) ShardsByDbServers() map[Server]int {
+// ShardsByDBServers returns a map of DBServers and the amount of shards they have
+func (s State) ShardsByDBServers() map[Server]int {
 	result := make(map[Server]int)
 
 	for _, collections := range s.Current.Collections {
@@ -154,7 +154,7 @@ func (s State) GetDBServerWithLowestShards() Server {
 	var resultServer Server = ""
 	var resultShards int
 
-	for server, shards := range s.ShardsByDbServers() {
+	for server, shards := range s.ShardsByDBServers() {
 		// init first server as result
 		if resultServer == "" {
 			resultServer = server
