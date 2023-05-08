@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ type Metrics struct {
 	Members map[string]MetricMember
 }
 
-func (m *Metrics) IncMemberContainerRestarts(id, container string, code int32) {
+func (m *Metrics) IncMemberContainerRestarts(id, container, reason string, code int32) {
 	if m == nil {
 		return
 	}
@@ -63,14 +63,22 @@ func (m *Metrics) IncMemberContainerRestarts(id, container string, code int32) {
 		cr = MetricMemberRestarts{}
 	}
 
-	cr[code]++
+	cd := cr[code]
+
+	if cd == nil {
+		cd = MetricMemberRestartReason{}
+	}
+
+	cd[reason]++
+
+	cr[code] = cd
 
 	v.ContainerRestarts[container] = cr
 
 	m.Members[id] = v
 }
 
-func (m *Metrics) IncMemberInitContainerRestarts(id, container string, code int32) {
+func (m *Metrics) IncMemberInitContainerRestarts(id, container, reason string, code int32) {
 	if m == nil {
 		return
 	}
@@ -94,14 +102,22 @@ func (m *Metrics) IncMemberInitContainerRestarts(id, container string, code int3
 		cr = MetricMemberRestarts{}
 	}
 
-	cr[code]++
+	cd := cr[code]
+
+	if cd == nil {
+		cd = MetricMemberRestartReason{}
+	}
+
+	cd[reason]++
+
+	cr[code] = cd
 
 	v.InitContainerRestarts[container] = cr
 
 	m.Members[id] = v
 }
 
-func (m *Metrics) IncMemberEphemeralContainerRestarts(id, container string, code int32) {
+func (m *Metrics) IncMemberEphemeralContainerRestarts(id, container, reason string, code int32) {
 	if m == nil {
 		return
 	}
@@ -125,7 +141,15 @@ func (m *Metrics) IncMemberEphemeralContainerRestarts(id, container string, code
 		cr = MetricMemberRestarts{}
 	}
 
-	cr[code]++
+	cd := cr[code]
+
+	if cd == nil {
+		cd = MetricMemberRestartReason{}
+	}
+
+	cd[reason]++
+
+	cr[code] = cd
 
 	v.EphemeralContainerRestarts[container] = cr
 
@@ -133,31 +157,41 @@ func (m *Metrics) IncMemberEphemeralContainerRestarts(id, container string, code
 }
 
 type MetricMember struct {
-	ContainerRestarts          map[string]MetricMemberRestarts
-	InitContainerRestarts      map[string]MetricMemberRestarts
-	EphemeralContainerRestarts map[string]MetricMemberRestarts
+	ContainerRestarts          MetricContainerRestarts
+	InitContainerRestarts      MetricContainerRestarts
+	EphemeralContainerRestarts MetricContainerRestarts
 }
 
-type MetricMemberRestarts map[int32]uint64
+type MetricContainerRestarts map[string]MetricMemberRestarts
+
+type MetricMemberRestarts map[int32]MetricMemberRestartReason
+
+type MetricMemberRestartReason map[string]uint64
 
 func (d *Resources) CollectMetrics(m metrics.PushMetric) {
 	for member, info := range d.metrics.Members {
 		// Containers
 		for container, restarts := range info.ContainerRestarts {
-			for code, count := range restarts {
-				m.Push(metric_descriptions.ArangodbOperatorMembersUnexpectedContainerExitCodesCounter(float64(count), d.namespace, d.name, member, container, "container", fmt.Sprintf("%d", code)))
+			for code, reasons := range restarts {
+				for reason, count := range reasons {
+					m.Push(metric_descriptions.ArangodbOperatorMembersUnexpectedContainerExitCodesCounter(float64(count), d.namespace, d.name, member, container, "container", fmt.Sprintf("%d", code), reason))
+				}
 			}
 		}
 		// InitContainers
 		for container, restarts := range info.InitContainerRestarts {
-			for code, count := range restarts {
-				m.Push(metric_descriptions.ArangodbOperatorMembersUnexpectedContainerExitCodesCounter(float64(count), d.namespace, d.name, member, container, "initContainer", fmt.Sprintf("%d", code)))
+			for code, reasons := range restarts {
+				for reason, count := range reasons {
+					m.Push(metric_descriptions.ArangodbOperatorMembersUnexpectedContainerExitCodesCounter(float64(count), d.namespace, d.name, member, container, "initContainer", fmt.Sprintf("%d", code), reason))
+				}
 			}
 		}
 		// EphemeralContainers
 		for container, restarts := range info.EphemeralContainerRestarts {
-			for code, count := range restarts {
-				m.Push(metric_descriptions.ArangodbOperatorMembersUnexpectedContainerExitCodesCounter(float64(count), d.namespace, d.name, member, container, "ephemeralContainer", fmt.Sprintf("%d", code)))
+			for code, reasons := range restarts {
+				for reason, count := range reasons {
+					m.Push(metric_descriptions.ArangodbOperatorMembersUnexpectedContainerExitCodesCounter(float64(count), d.namespace, d.name, member, container, "ephemeralContainer", fmt.Sprintf("%d", code), reason))
+				}
 			}
 		}
 	}

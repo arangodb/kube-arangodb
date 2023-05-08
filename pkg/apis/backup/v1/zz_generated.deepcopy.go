@@ -310,6 +310,11 @@ func (in *ArangoBackupSpecBackOff) DeepCopyInto(out *ArangoBackupSpecBackOff) {
 		*out = new(int)
 		**out = **in
 	}
+	if in.MaxIterations != nil {
+		in, out := &in.MaxIterations, &out.MaxIterations
+		*out = new(int)
+		**out = **in
+	}
 	return
 }
 

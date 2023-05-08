@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,65 +29,65 @@ import (
 func Test_MetricsInc_Container(t *testing.T) {
 	var m Metrics
 
-	m.IncMemberContainerRestarts("ID", "server", 137)
+	m.IncMemberContainerRestarts("ID", "server", "OOMKill", 137)
 
-	require.EqualValues(t, 1, m.Members["ID"].ContainerRestarts["server"][137])
+	require.EqualValues(t, 1, m.Members["ID"].ContainerRestarts["server"][137]["OOMKill"])
 
-	m.IncMemberContainerRestarts("ID", "server", 137)
-	require.EqualValues(t, 2, m.Members["ID"].ContainerRestarts["server"][137])
+	m.IncMemberContainerRestarts("ID", "server", "OOMKill", 137)
+	require.EqualValues(t, 2, m.Members["ID"].ContainerRestarts["server"][137]["OOMKill"])
 
-	m.IncMemberContainerRestarts("ID", "server2", 137)
-	require.EqualValues(t, 2, m.Members["ID"].ContainerRestarts["server"][137])
-	require.EqualValues(t, 1, m.Members["ID"].ContainerRestarts["server2"][137])
+	m.IncMemberContainerRestarts("ID", "server2", "OOMKill", 137)
+	require.EqualValues(t, 2, m.Members["ID"].ContainerRestarts["server"][137]["OOMKill"])
+	require.EqualValues(t, 1, m.Members["ID"].ContainerRestarts["server2"][137]["OOMKill"])
 
-	m.IncMemberContainerRestarts("ID2", "server", 137)
-	m.IncMemberContainerRestarts("ID", "server", 138)
-	require.EqualValues(t, 2, m.Members["ID"].ContainerRestarts["server"][137])
-	require.EqualValues(t, 1, m.Members["ID"].ContainerRestarts["server2"][137])
-	require.EqualValues(t, 1, m.Members["ID2"].ContainerRestarts["server"][137])
-	require.EqualValues(t, 1, m.Members["ID"].ContainerRestarts["server"][138])
+	m.IncMemberContainerRestarts("ID2", "server", "OOMKill", 137)
+	m.IncMemberContainerRestarts("ID", "server", "OOMKill", 138)
+	require.EqualValues(t, 2, m.Members["ID"].ContainerRestarts["server"][137]["OOMKill"])
+	require.EqualValues(t, 1, m.Members["ID"].ContainerRestarts["server2"][137]["OOMKill"])
+	require.EqualValues(t, 1, m.Members["ID2"].ContainerRestarts["server"][137]["OOMKill"])
+	require.EqualValues(t, 1, m.Members["ID"].ContainerRestarts["server"][138]["OOMKill"])
 }
 
 func Test_MetricsInc_InitContainer(t *testing.T) {
 	var m Metrics
 
-	m.IncMemberInitContainerRestarts("ID", "server", 137)
+	m.IncMemberInitContainerRestarts("ID", "server", "OOMKill", 137)
 
-	require.EqualValues(t, 1, m.Members["ID"].InitContainerRestarts["server"][137])
+	require.EqualValues(t, 1, m.Members["ID"].InitContainerRestarts["server"][137]["OOMKill"])
 
-	m.IncMemberInitContainerRestarts("ID", "server", 137)
-	require.EqualValues(t, 2, m.Members["ID"].InitContainerRestarts["server"][137])
+	m.IncMemberInitContainerRestarts("ID", "server", "OOMKill", 137)
+	require.EqualValues(t, 2, m.Members["ID"].InitContainerRestarts["server"][137]["OOMKill"])
 
-	m.IncMemberInitContainerRestarts("ID", "server2", 137)
-	require.EqualValues(t, 2, m.Members["ID"].InitContainerRestarts["server"][137])
-	require.EqualValues(t, 1, m.Members["ID"].InitContainerRestarts["server2"][137])
+	m.IncMemberInitContainerRestarts("ID", "server2", "OOMKill", 137)
+	require.EqualValues(t, 2, m.Members["ID"].InitContainerRestarts["server"][137]["OOMKill"])
+	require.EqualValues(t, 1, m.Members["ID"].InitContainerRestarts["server2"][137]["OOMKill"])
 
-	m.IncMemberInitContainerRestarts("ID2", "server", 137)
-	m.IncMemberInitContainerRestarts("ID", "server", 138)
-	require.EqualValues(t, 2, m.Members["ID"].InitContainerRestarts["server"][137])
-	require.EqualValues(t, 1, m.Members["ID"].InitContainerRestarts["server2"][137])
-	require.EqualValues(t, 1, m.Members["ID2"].InitContainerRestarts["server"][137])
-	require.EqualValues(t, 1, m.Members["ID"].InitContainerRestarts["server"][138])
+	m.IncMemberInitContainerRestarts("ID2", "server", "OOMKill", 137)
+	m.IncMemberInitContainerRestarts("ID", "server", "OOMKill", 138)
+	require.EqualValues(t, 2, m.Members["ID"].InitContainerRestarts["server"][137]["OOMKill"])
+	require.EqualValues(t, 1, m.Members["ID"].InitContainerRestarts["server2"][137]["OOMKill"])
+	require.EqualValues(t, 1, m.Members["ID2"].InitContainerRestarts["server"][137]["OOMKill"])
+	require.EqualValues(t, 1, m.Members["ID"].InitContainerRestarts["server"][138]["OOMKill"])
 }
 
 func Test_MetricsInc_EphemeralContainer(t *testing.T) {
 	var m Metrics
 
-	m.IncMemberEphemeralContainerRestarts("ID", "server", 137)
+	m.IncMemberEphemeralContainerRestarts("ID", "server", "OOMKill", 137)
 
-	require.EqualValues(t, 1, m.Members["ID"].EphemeralContainerRestarts["server"][137])
+	require.EqualValues(t, 1, m.Members["ID"].EphemeralContainerRestarts["server"][137]["OOMKill"])
 
-	m.IncMemberEphemeralContainerRestarts("ID", "server", 137)
-	require.EqualValues(t, 2, m.Members["ID"].EphemeralContainerRestarts["server"][137])
+	m.IncMemberEphemeralContainerRestarts("ID", "server", "OOMKill", 137)
+	require.EqualValues(t, 2, m.Members["ID"].EphemeralContainerRestarts["server"][137]["OOMKill"])
 
-	m.IncMemberEphemeralContainerRestarts("ID", "server2", 137)
-	require.EqualValues(t, 2, m.Members["ID"].EphemeralContainerRestarts["server"][137])
-	require.EqualValues(t, 1, m.Members["ID"].EphemeralContainerRestarts["server2"][137])
+	m.IncMemberEphemeralContainerRestarts("ID", "server2", "OOMKill", 137)
+	require.EqualValues(t, 2, m.Members["ID"].EphemeralContainerRestarts["server"][137]["OOMKill"])
+	require.EqualValues(t, 1, m.Members["ID"].EphemeralContainerRestarts["server2"][137]["OOMKill"])
 
-	m.IncMemberEphemeralContainerRestarts("ID2", "server", 137)
-	m.IncMemberEphemeralContainerRestarts("ID", "server", 138)
-	require.EqualValues(t, 2, m.Members["ID"].EphemeralContainerRestarts["server"][137])
-	require.EqualValues(t, 1, m.Members["ID"].EphemeralContainerRestarts["server2"][137])
-	require.EqualValues(t, 1, m.Members["ID2"].EphemeralContainerRestarts["server"][137])
-	require.EqualValues(t, 1, m.Members["ID"].EphemeralContainerRestarts["server"][138])
+	m.IncMemberEphemeralContainerRestarts("ID2", "server", "OOMKill", 137)
+	m.IncMemberEphemeralContainerRestarts("ID", "server", "OOMKill", 138)
+	require.EqualValues(t, 2, m.Members["ID"].EphemeralContainerRestarts["server"][137]["OOMKill"])
+	require.EqualValues(t, 1, m.Members["ID"].EphemeralContainerRestarts["server2"][137]["OOMKill"])
+	require.EqualValues(t, 1, m.Members["ID2"].EphemeralContainerRestarts["server"][137]["OOMKill"])
+	require.EqualValues(t, 1, m.Members["ID"].EphemeralContainerRestarts["server"][138]["OOMKill"])
 }
