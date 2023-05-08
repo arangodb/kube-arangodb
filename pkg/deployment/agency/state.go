@@ -154,7 +154,7 @@ func (s State) GetDBServerWithLowestShards() Server {
 	var resultServer Server = ""
 	var resultShards int
 
-	for server, shards := range s.ShardsByDbServers() {
+	for server, shards := range s.ShardsByDBServers() {
 		// init first server as result
 		if resultServer == "" {
 			resultServer = server

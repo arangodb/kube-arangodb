@@ -27,7 +27,6 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
-	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -214,13 +213,13 @@ func getDbServerWithLowestShards(ctx reconciler.ArangoAgencyGet, g api.ServerGro
 
 		dbServersShards := a.ShardsByDBServers()
 		for _, member := range m {
-			if _, ok := dbServersShards[agencyCache.Server(member.ID)]; !ok {
+			if _, ok := dbServersShards[agency.Server(member.ID)]; !ok {
 				// member is not in agency cache, so it has no shards
 				return member.ID, nil
 			}
 		}
 
-		var resultServer agencyCache.Server = ""
+		var resultServer agency.Server = ""
 		var resultShards int
 
 		for server, shards := range dbServersShards {
