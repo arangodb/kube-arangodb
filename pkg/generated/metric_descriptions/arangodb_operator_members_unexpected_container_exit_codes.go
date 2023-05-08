@@ -23,7 +23,7 @@ package metric_descriptions
 import "github.com/arangodb/kube-arangodb/pkg/util/metrics"
 
 var (
-	arangodbOperatorMembersUnexpectedContainerExitCodes = metrics.NewDescription("arangodb_operator_members_unexpected_container_exit_codes", "Counter of unexpected restarts in pod (Containers/InitContainers/EphemeralContainers)", []string{`namespace`, `name`, `member`, `container`, `container_type`, `code`}, nil)
+	arangodbOperatorMembersUnexpectedContainerExitCodes = metrics.NewDescription("arangodb_operator_members_unexpected_container_exit_codes", "Counter of unexpected restarts in pod (Containers/InitContainers/EphemeralContainers)", []string{`namespace`, `name`, `member`, `container`, `container_type`, `code`, `reason`}, nil)
 )
 
 func init() {
@@ -34,6 +34,6 @@ func ArangodbOperatorMembersUnexpectedContainerExitCodes() metrics.Description {
 	return arangodbOperatorMembersUnexpectedContainerExitCodes
 }
 
-func ArangodbOperatorMembersUnexpectedContainerExitCodesCounter(value float64, namespace string, name string, member string, container string, containerType string, code string) metrics.Metric {
-	return ArangodbOperatorMembersUnexpectedContainerExitCodes().Gauge(value, namespace, name, member, container, containerType, code)
+func ArangodbOperatorMembersUnexpectedContainerExitCodesCounter(value float64, namespace string, name string, member string, container string, containerType string, code string, reason string) metrics.Metric {
+	return ArangodbOperatorMembersUnexpectedContainerExitCodes().Gauge(value, namespace, name, member, container, containerType, code, reason)
 }
