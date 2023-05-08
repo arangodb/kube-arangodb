@@ -219,6 +219,8 @@ namespaces:
             description: "Container/InitContainer/EphemeralContainer"
           - key: code
             description: "ExitCode"
+          - key: reason
+            description: "Reason"
     engine:
       panics_recovered:
         shortDescription: "Number of Panics recovered inside Operator reconciliation loop"

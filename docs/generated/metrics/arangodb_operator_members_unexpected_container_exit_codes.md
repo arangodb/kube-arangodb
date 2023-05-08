@@ -14,3 +14,4 @@ Counter of unexpected restarts in pod (Containers/InitContainers/EphemeralContai
 |   container    | Container Name                             |
 | container_type | Container/InitContainer/EphemeralContainer |
 |      code      | ExitCode                                   |
+|     reason     | Reason                                     |
