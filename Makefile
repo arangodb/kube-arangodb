@@ -275,12 +275,7 @@ linter-fix:
 .PHONY: vulncheck
 vulncheck:
 	@echo ">> Checking for known vulnerabilities"
-ifeq ($(GOBASEVERSION),1.19)
-	-@$(GOPATH)/bin/govulncheck --tags $(RELEASE_MODE) ./...
-	@echo "Warning! vulncheck exit code ignored for go1.19!"
-else
 	@$(GOPATH)/bin/govulncheck --tags $(RELEASE_MODE) ./...
-endif
 
 .PHONY: build
 build: docker manifests
