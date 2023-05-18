@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,6 +36,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/endpoints"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/mods"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/node"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolume"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget"
@@ -86,6 +87,7 @@ type Inspector interface {
 	arangodeployment.Inspector
 
 	node.Inspector
+	persistentvolume.Inspector
 	arangoclustersynchronization.Inspector
 	arangotask.Inspector
 

@@ -52,7 +52,7 @@ func Test_PDB_Versions(t *testing.T) {
 				GitVersion: v,
 			})
 
-			tc := throttle.NewThrottleComponents(time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour)
+			tc := throttle.NewThrottleComponents(time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour)
 
 			i := NewInspector(tc, c, "test", "test")
 			require.NoError(t, i.Refresh(context.Background()))

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,27 +18,27 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package inspector
+package persistentvolume
 
 import (
-	"time"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/gvk"
+	v1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolume/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/refresh"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
 )
 
-func NewDefaultThrottle() throttle.Components {
-	return throttle.NewThrottleComponents(
-		30*time.Second, // ArangoDeploymentSynchronization
-		30*time.Second, // ArangoMember
-		30*time.Second, // ArangoTask
-		30*time.Second, // Node
-		30*time.Second, // PV
-		15*time.Second, // PVC
-		time.Second,    // Pod
-		30*time.Second, // PDB
-		10*time.Second, // Secret
-		10*time.Second, // Service
-		30*time.Second, // SA
-		30*time.Second, // ServiceMonitor
-		15*time.Second) // Endpoints
+type Inspector interface {
+	PersistentVolume() Definition
+}
+
+type Definition interface {
+	refresh.Inspector
+
+	gvk.GK
+	anonymous.Impl
+
+	Version() version.Version
+
+	V1() (v1.Inspector, error)
 }
