@@ -46,6 +46,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/endpoints"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/node"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolume"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget"
@@ -128,6 +129,7 @@ type inspectorState struct {
 	services                      *servicesInspector
 	serviceAccounts               *serviceAccountsInspector
 	nodes                         *nodesInspector
+	persistentVolumes             *persistentVolumesInspector
 	podDisruptionBudgets          *podDisruptionBudgetsInspector
 	serviceMonitors               *serviceMonitorsInspector
 	arangoMembers                 *arangoMembersInspector
@@ -218,6 +220,7 @@ func (i *inspectorState) AnonymousObjects() []anonymous.Impl {
 		i.services,
 		i.serviceAccounts,
 		i.nodes,
+		i.persistentVolumes,
 		i.podDisruptionBudgets,
 		i.serviceMonitors,
 		i.arangoMembers,
@@ -300,6 +303,10 @@ func (i *inspectorState) GetVersionInfo() driver.Version {
 
 func (i *inspectorState) Node() node.Definition {
 	return i.nodes
+}
+
+func (i *inspectorState) PersistentVolume() persistentvolume.Definition {
+	return i.persistentVolumes
 }
 
 func (i *inspectorState) ArangoClusterSynchronization() arangoclustersynchronization.Definition {
@@ -441,6 +448,10 @@ func (i *inspectorState) validate() error {
 		return err
 	}
 
+	if err := i.persistentVolumes.validate(); err != nil {
+		return err
+	}
+
 	if err := i.podDisruptionBudgets.validate(); err != nil {
 		return err
 	}
@@ -479,6 +490,7 @@ func (i *inspectorState) copyCore() *inspectorState {
 		services:                      i.services,
 		serviceAccounts:               i.serviceAccounts,
 		nodes:                         i.nodes,
+		persistentVolumes:             i.persistentVolumes,
 		podDisruptionBudgets:          i.podDisruptionBudgets,
 		serviceMonitors:               i.serviceMonitors,
 		arangoMembers:                 i.arangoMembers,

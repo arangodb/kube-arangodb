@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -71,6 +71,14 @@ var loaderTestDefinitions = map[string]loaderTestDefinition{
 			return i.Node()
 		},
 	},
+	"PersistentVolume": {
+		tg: func(t throttle.Components) throttle.Throttle {
+			return t.PersistentVolume()
+		},
+		get: func(i inspector.Inspector) refresh.Inspector {
+			return i.PersistentVolume()
+		},
+	},
 	"Pod": {
 		tg: func(t throttle.Components) throttle.Throttle {
 			return t.Pod()
@@ -134,7 +142,7 @@ func getAllTypes() []string {
 func Test_Inspector_RefreshMatrix(t *testing.T) {
 	c := kclient.NewFakeClient()
 
-	tc := throttle.NewThrottleComponents(time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour)
+	tc := throttle.NewThrottleComponents(time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour)
 
 	i := NewInspector(tc, c, "test", "test")
 
@@ -294,7 +302,7 @@ func Test_Inspector_Load(t *testing.T) {
 func Test_Inspector_Invalidate(t *testing.T) {
 	c := kclient.NewFakeClient()
 
-	tc := throttle.NewThrottleComponents(time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour)
+	tc := throttle.NewThrottleComponents(time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour, time.Hour)
 
 	i := NewInspector(tc, c, "test", "test")
 

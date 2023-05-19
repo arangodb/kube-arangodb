@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,15 +32,16 @@ type Inspector interface {
 }
 
 func NewAlwaysThrottleComponents() Components {
-	return NewThrottleComponents(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+	return NewThrottleComponents(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 }
 
-func NewThrottleComponents(acs, am, at, node, pvc, pod, pdb, secret, service, serviceAccount, sm, endpoints time.Duration) Components {
+func NewThrottleComponents(acs, am, at, node, pvc, pod, pv, pdb, secret, service, serviceAccount, sm, endpoints time.Duration) Components {
 	return &throttleComponents{
 		arangoClusterSynchronization: NewThrottle(acs),
 		arangoMember:                 NewThrottle(am),
 		arangoTask:                   NewThrottle(at),
 		node:                         NewThrottle(node),
+		persistentVolume:             NewThrottle(pv),
 		persistentVolumeClaim:        NewThrottle(pvc),
 		pod:                          NewThrottle(pod),
 		podDisruptionBudget:          NewThrottle(pdb),
@@ -57,6 +58,7 @@ type Components interface {
 	ArangoMember() Throttle
 	ArangoTask() Throttle
 	Node() Throttle
+	PersistentVolume() Throttle
 	PersistentVolumeClaim() Throttle
 	Pod() Throttle
 	PodDisruptionBudget() Throttle
@@ -78,6 +80,7 @@ type throttleComponents struct {
 	arangoMember                 Throttle
 	arangoTask                   Throttle
 	node                         Throttle
+	persistentVolume             Throttle
 	persistentVolumeClaim        Throttle
 	pod                          Throttle
 	podDisruptionBudget          Throttle
@@ -86,6 +89,10 @@ type throttleComponents struct {
 	serviceAccount               Throttle
 	serviceMonitor               Throttle
 	endpoints                    Throttle
+}
+
+func (t *throttleComponents) PersistentVolume() Throttle {
+	return t.persistentVolume
 }
 
 func (t *throttleComponents) Endpoints() Throttle {
@@ -121,6 +128,8 @@ func (t *throttleComponents) Get(c definitions.Component) Throttle {
 		return t.arangoTask
 	case definitions.Node:
 		return t.node
+	case definitions.PersistentVolume:
+		return t.persistentVolume
 	case definitions.PersistentVolumeClaim:
 		return t.persistentVolumeClaim
 	case definitions.Pod:
@@ -148,6 +157,7 @@ func (t *throttleComponents) Copy() Components {
 		arangoMember:                 t.arangoMember.Copy(),
 		arangoTask:                   t.arangoTask.Copy(),
 		node:                         t.node.Copy(),
+		persistentVolume:             t.persistentVolume.Copy(),
 		persistentVolumeClaim:        t.persistentVolumeClaim.Copy(),
 		pod:                          t.pod.Copy(),
 		podDisruptionBudget:          t.podDisruptionBudget.Copy(),

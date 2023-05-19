@@ -3,6 +3,7 @@
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Feature) ArangoBackup create retries and MaxIterations limit
 - (Feature) Add Reason in OOM Metric
+- (Feature) PersistentVolume Inspector
 
 ## [1.2.27](https://github.com/arangodb/kube-arangodb/tree/1.2.27) (2023-04-27)
 - (Feature) Add InSync Cache
