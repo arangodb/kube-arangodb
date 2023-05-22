@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import (
 
 	core "k8s.io/api/core/v1"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -51,14 +52,12 @@ func GetArangoDBImageIDFromPod(pod *core.Pod) (string, error) {
 		return "", errors.New("empty list of ContainerStatuses")
 	}
 
-	rawImageID := pod.Status.ContainerStatuses[0].ImageID
-	if len(pod.Status.ContainerStatuses) > 1 {
-		for _, containerStatus := range pod.Status.ContainerStatuses {
-			if strings.Contains(containerStatus.ImageID, "arango") {
-				rawImageID = containerStatus.ImageID
-			}
+	for _, cs := range pod.Status.ContainerStatuses {
+		if cs.Name == shared.ServerContainerName {
+			return ConvertImageID2Image(cs.ImageID), nil
 		}
 	}
 
-	return ConvertImageID2Image(rawImageID), nil
+	// If Server container is not found use first container
+	return ConvertImageID2Image(pod.Status.ContainerStatuses[0].ImageID), nil
 }
