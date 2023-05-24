@@ -7,6 +7,7 @@
 - (Bugfix) Discover Arango image during ID phase
 - (Feature) PV Unschedulable condition
 - (Feature) Features startup logging
+- (Bugfix) Fix creating sync components with EA type set to Managed and headless svc
 
 ## [1.2.27](https://github.com/arangodb/kube-arangodb/tree/1.2.27) (2023-04-27)
 - (Feature) Add InSync Cache
