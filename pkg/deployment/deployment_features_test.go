@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 			Name: "DBserver POD with disabled foxx services",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 				},
@@ -96,7 +96,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 			Name: "DBserver POD with enabled foxx services",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 				},
@@ -113,7 +113,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 				deployment.currentObjectStatus.Members.DBServers[0].IsInitialized = true
 
 				deployment.currentObject.Spec.Features = &api.DeploymentFeatures{
-					FoxxQueues: util.NewBool(false),
+					FoxxQueues: util.NewType[bool](false),
 				}
 
 				testCase.createTestPodData(deployment, api.ServerGroupDBServers, firstDBServerStatus)
@@ -159,7 +159,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 			Name: "Coordinator POD with undefined foxx services",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 				},
@@ -218,7 +218,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 			Name: "Coordinator POD with disabled foxx services",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 				},
@@ -235,7 +235,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 				deployment.currentObjectStatus.Members.Coordinators[0].IsInitialized = true
 
 				deployment.currentObject.Spec.Features = &api.DeploymentFeatures{
-					FoxxQueues: util.NewBool(false),
+					FoxxQueues: util.NewType[bool](false),
 				}
 
 				testCase.createTestPodData(deployment, api.ServerGroupCoordinators, firstCoordinatorStatus)
@@ -281,7 +281,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 			Name: "Coordinator POD with enabled foxx services",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 				},
@@ -298,7 +298,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 				deployment.currentObjectStatus.Members.Coordinators[0].IsInitialized = true
 
 				deployment.currentObject.Spec.Features = &api.DeploymentFeatures{
-					FoxxQueues: util.NewBool(true),
+					FoxxQueues: util.NewType[bool](true),
 				}
 
 				testCase.createTestPodData(deployment, api.ServerGroupCoordinators, firstCoordinatorStatus)
@@ -344,7 +344,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 			Name: "Single POD with undefined foxx services",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 				},
@@ -405,7 +405,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 			Name: "Single POD with disabled foxx services",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 				},
@@ -422,7 +422,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 				deployment.currentObjectStatus.Members.Single[0].IsInitialized = true
 
 				deployment.currentObject.Spec.Features = &api.DeploymentFeatures{
-					FoxxQueues: util.NewBool(false),
+					FoxxQueues: util.NewType[bool](false),
 				}
 
 				testCase.createTestPodData(deployment, api.ServerGroupSingle, singleStatus)
@@ -470,7 +470,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 			Name: "Single POD with enabled foxx services",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 				},
@@ -487,7 +487,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 				deployment.currentObjectStatus.Members.Single[0].IsInitialized = true
 
 				deployment.currentObject.Spec.Features = &api.DeploymentFeatures{
-					FoxxQueues: util.NewBool(true),
+					FoxxQueues: util.NewType[bool](true),
 				}
 
 				testCase.createTestPodData(deployment, api.ServerGroupSingle, singleStatus)

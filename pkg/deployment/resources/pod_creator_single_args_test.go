@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -133,7 +133,7 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 			Spec: api.DeploymentSpec{
 				Mode: api.NewMode(api.DeploymentModeSingle),
 				TLS: api.TLSSpec{
-					CASecretName: util.NewString("None"),
+					CASecretName: util.NewType[string]("None"),
 				},
 			},
 		}
@@ -222,7 +222,7 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 				Mode: api.NewMode(api.DeploymentModeSingle),
 			},
 		}
-		apiObject.Spec.Authentication.JWTSecretName = util.NewString("None")
+		apiObject.Spec.Authentication.JWTSecretName = util.NewType[string]("None")
 		apiObject.Spec.SetDefaults("test")
 		input := pod.Input{
 			ApiObject:   apiObject,

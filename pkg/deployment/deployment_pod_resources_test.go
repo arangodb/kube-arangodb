@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -98,7 +98,7 @@ func TestEnsurePod_ArangoDB_Resources(t *testing.T) {
 			Name: "DBserver POD with resource requirements",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 					DBServers: api.ServerGroupSpec{
@@ -155,12 +155,12 @@ func TestEnsurePod_ArangoDB_Resources(t *testing.T) {
 			Name: "DBserver POD with resource requirements, with override flag",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 					DBServers: api.ServerGroupSpec{
 						Resources:                   resourcesUnfiltered,
-						OverrideDetectedTotalMemory: util.NewBool(false),
+						OverrideDetectedTotalMemory: util.NewType[bool](false),
 					},
 				},
 			},
@@ -213,11 +213,11 @@ func TestEnsurePod_ArangoDB_Resources(t *testing.T) {
 			Name: "DBserver POD without resource requirements, with override flag",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 					DBServers: api.ServerGroupSpec{
-						OverrideDetectedTotalMemory: util.NewBool(true),
+						OverrideDetectedTotalMemory: util.NewType[bool](true),
 					},
 				},
 			},

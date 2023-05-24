@@ -437,7 +437,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 				defer c()
 
 				if err := cachedStatus.PodsModInterface().V1().Delete(nctx, pod.GetName(), meta.DeleteOptions{
-					GracePeriodSeconds: util.NewInt64(gps),
+					GracePeriodSeconds: util.NewType[int64](gps),
 					Preconditions:      meta.NewUIDPreconditions(string(pod.GetUID())),
 				}); err != nil {
 					if kerrors.IsNotFound(err) {

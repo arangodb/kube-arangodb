@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -223,7 +223,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 	if s := ib.Spec.License; s.HasSecretName() {
 		if secret, ok := cachedStatus.Secret().V1().GetSimple(s.GetSecretName()); ok {
 			if _, ok := secret.Data[constants.SecretKeyToken]; ok {
-				license = util.NewString(s.GetSecretName())
+				license = util.NewType[string](s.GetSecretName())
 			}
 		}
 	}

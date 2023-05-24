@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -53,30 +53,30 @@ func TestDeploymentSpecResetImmutableFields(t *testing.T) {
 	}{
 		// Valid "changes"
 		{
-			DeploymentSpec{Image: util.NewString("foo")},
-			DeploymentSpec{Image: util.NewString("foo2")},
-			DeploymentSpec{Image: util.NewString("foo2")},
+			DeploymentSpec{Image: util.NewType[string]("foo")},
+			DeploymentSpec{Image: util.NewType[string]("foo2")},
+			DeploymentSpec{Image: util.NewType[string]("foo2")},
 			false,
 			nil,
 		},
 		{
-			DeploymentSpec{Image: util.NewString("foo")},
-			DeploymentSpec{Image: util.NewString("foo2")},
-			DeploymentSpec{Image: util.NewString("foo2")},
+			DeploymentSpec{Image: util.NewType[string]("foo")},
+			DeploymentSpec{Image: util.NewType[string]("foo2")},
+			DeploymentSpec{Image: util.NewType[string]("foo2")},
 			true,
 			nil,
 		},
 		{
-			DeploymentSpec{ImagePullPolicy: util.NewPullPolicy(core.PullAlways)},
-			DeploymentSpec{ImagePullPolicy: util.NewPullPolicy(core.PullNever)},
-			DeploymentSpec{ImagePullPolicy: util.NewPullPolicy(core.PullNever)},
+			DeploymentSpec{ImagePullPolicy: util.NewType[core.PullPolicy](core.PullAlways)},
+			DeploymentSpec{ImagePullPolicy: util.NewType[core.PullPolicy](core.PullNever)},
+			DeploymentSpec{ImagePullPolicy: util.NewType[core.PullPolicy](core.PullNever)},
 			false,
 			nil,
 		},
 		{
-			DeploymentSpec{ImagePullPolicy: util.NewPullPolicy(core.PullAlways)},
-			DeploymentSpec{ImagePullPolicy: util.NewPullPolicy(core.PullNever)},
-			DeploymentSpec{ImagePullPolicy: util.NewPullPolicy(core.PullNever)},
+			DeploymentSpec{ImagePullPolicy: util.NewType[core.PullPolicy](core.PullAlways)},
+			DeploymentSpec{ImagePullPolicy: util.NewType[core.PullPolicy](core.PullNever)},
+			DeploymentSpec{ImagePullPolicy: util.NewType[core.PullPolicy](core.PullNever)},
 			true,
 			nil,
 		},
@@ -97,9 +97,9 @@ func TestDeploymentSpecResetImmutableFields(t *testing.T) {
 			[]string{"mode", "agents.count"},
 		},
 		{
-			DeploymentSpec{DisableIPv6: util.NewBool(false)},
-			DeploymentSpec{DisableIPv6: util.NewBool(true)},
-			DeploymentSpec{DisableIPv6: util.NewBool(false)},
+			DeploymentSpec{DisableIPv6: util.NewType[bool](false)},
+			DeploymentSpec{DisableIPv6: util.NewType[bool](true)},
+			DeploymentSpec{DisableIPv6: util.NewType[bool](false)},
 			false,
 			[]string{"disableIPv6"},
 		},

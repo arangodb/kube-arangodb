@@ -317,7 +317,7 @@ func (s shutdownNow) CheckProgress(ctx context.Context) (bool, bool, error) {
 	// Terminate pod.
 	options := meta.DeleteOptions{
 		// Leave one second to clean a PVC.
-		GracePeriodSeconds: util.NewInt64(1),
+		GracePeriodSeconds: util.NewType[int64](1),
 	}
 	if err := cache.Client().Kubernetes().CoreV1().Pods(cache.Namespace()).Delete(ctx, podName, options); err != nil {
 		if !kerrors.IsNotFound(err) {

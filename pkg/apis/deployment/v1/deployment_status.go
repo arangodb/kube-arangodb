@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -139,7 +139,7 @@ func (ds *DeploymentStatus) Equal(other DeploymentStatus) bool {
 
 // IsForceReload returns true if ForceStatusReload is set to true
 func (ds *DeploymentStatus) IsForceReload() bool {
-	return util.BoolOrDefault(ds.ForceStatusReload, false)
+	return util.TypeOrDefault[bool](ds.ForceStatusReload, false)
 }
 
 func (ds *DeploymentStatus) IsPlanEmpty() bool {

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -68,7 +68,7 @@ const (
 
 // GetCASecretName returns the value of caSecretName.
 func (s TLSSpec) GetCASecretName() string {
-	return util.StringOrDefault(s.CASecretName)
+	return util.TypeOrDefault[string](s.CASecretName)
 }
 
 // GetAltNames returns the value of altNames.
@@ -132,7 +132,7 @@ func (s *TLSSpec) SetDefaults(defaultCASecretName string) {
 	if s.GetCASecretName() == "" {
 		// Note that we don't check for nil here, since even a specified, but empty
 		// string should result in the default value.
-		s.CASecretName = util.NewString(defaultCASecretName)
+		s.CASecretName = util.NewType[string](defaultCASecretName)
 	}
 	if s.GetTTL() == "" {
 		// Note that we don't check for nil here, since even a specified, but zero
@@ -144,7 +144,7 @@ func (s *TLSSpec) SetDefaults(defaultCASecretName string) {
 // SetDefaultsFrom fills unspecified fields with a value from given source spec.
 func (s *TLSSpec) SetDefaultsFrom(source TLSSpec) {
 	if s.CASecretName == nil {
-		s.CASecretName = util.NewStringOrNil(source.CASecretName)
+		s.CASecretName = util.NewTypeOrNil[string](source.CASecretName)
 	}
 	if s.AltNames == nil {
 		s.AltNames = source.AltNames

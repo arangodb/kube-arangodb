@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -56,10 +56,10 @@ func TestEnsurePod_ArangoDB_ImagePropagation(t *testing.T) {
 			Name: "Agent Pod with defined image",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:           util.NewString(image),
+					Image:           util.NewType[string](image),
 					Authentication:  noAuthentication,
 					TLS:             noTLS,
-					ImagePullPolicy: util.NewPullPolicy(core.PullAlways),
+					ImagePullPolicy: util.NewType[core.PullPolicy](core.PullAlways),
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
@@ -107,11 +107,11 @@ func TestEnsurePod_ArangoDB_ImagePropagation(t *testing.T) {
 			Name: "Agent Pod with defined image and defined kubelet mode",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:              util.NewString(image),
+					Image:              util.NewType[string](image),
 					ImageDiscoveryMode: api.NewDeploymentImageDiscoveryModeSpec(api.DeploymentImageDiscoveryKubeletMode),
 					Authentication:     noAuthentication,
 					TLS:                noTLS,
-					ImagePullPolicy:    util.NewPullPolicy(core.PullAlways),
+					ImagePullPolicy:    util.NewType[core.PullPolicy](core.PullAlways),
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
@@ -159,11 +159,11 @@ func TestEnsurePod_ArangoDB_ImagePropagation(t *testing.T) {
 			Name: "Agent Pod with defined image and defined direct mode",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:              util.NewString(image),
+					Image:              util.NewType[string](image),
 					ImageDiscoveryMode: api.NewDeploymentImageDiscoveryModeSpec(api.DeploymentImageDiscoveryDirectMode),
 					Authentication:     noAuthentication,
 					TLS:                noTLS,
-					ImagePullPolicy:    util.NewPullPolicy(core.PullAlways),
+					ImagePullPolicy:    util.NewType[core.PullPolicy](core.PullAlways),
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
