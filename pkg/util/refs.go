@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -144,6 +144,15 @@ func UInt16OrDefault(input *uint16, defaultValue ...uint16) uint16 {
 		return 0
 	}
 	return *input
+}
+
+// BoolSwitch define bool switch for defined types - in case of true t T is returned, in case of false f T
+func BoolSwitch[T interface{}](s bool, t, f T) T {
+	if s {
+		return t
+	}
+
+	return f
 }
 
 // NewBool returns a reference to a bool with given value.
