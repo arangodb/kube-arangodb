@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ func Test_State_UploadError_Reschedule(t *testing.T) {
 		ID:                string(backupMeta.ID),
 		Version:           backupMeta.Version,
 		CreationTimestamp: meta.Now(),
-		Uploaded:          util.NewBool(true),
+		Uploaded:          util.NewType[bool](true),
 	}
 
 	obj.Status.Time.Time = time.Now().Add(-2 * downloadDelay)
@@ -86,7 +86,7 @@ func Test_State_UploadError_Wait(t *testing.T) {
 		ID:                string(backupMeta.ID),
 		Version:           backupMeta.Version,
 		CreationTimestamp: meta.Now(),
-		Uploaded:          util.NewBool(true),
+		Uploaded:          util.NewType[bool](true),
 	}
 	obj.Status.Backoff = &backupApi.ArangoBackupStatusBackOff{
 		Next: meta.Time{Time: time.Now().Add(5 * time.Second)},
@@ -122,7 +122,7 @@ func Test_State_UploadError_BackToReady(t *testing.T) {
 		ID:                string(backupMeta.ID),
 		Version:           backupMeta.Version,
 		CreationTimestamp: meta.Now(),
-		Uploaded:          util.NewBool(true),
+		Uploaded:          util.NewType[bool](true),
 	}
 
 	obj.Status.Time.Time = time.Now().Add(2 * downloadDelay)

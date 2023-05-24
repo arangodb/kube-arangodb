@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,16 +30,16 @@ import (
 
 func TestSyncSpecValidate(t *testing.T) {
 	// Valid
-	auth := SyncAuthenticationSpec{JWTSecretName: util.NewString("foo"), ClientCASecretName: util.NewString("foo-client")}
-	tls := TLSSpec{CASecretName: util.NewString("None")}
+	auth := SyncAuthenticationSpec{JWTSecretName: util.NewType[string]("foo"), ClientCASecretName: util.NewType[string]("foo-client")}
+	tls := TLSSpec{CASecretName: util.NewType[string]("None")}
 	assert.Nil(t, SyncSpec{Authentication: auth}.Validate(DeploymentModeSingle))
 	assert.Nil(t, SyncSpec{Authentication: auth}.Validate(DeploymentModeActiveFailover))
 	assert.Nil(t, SyncSpec{Authentication: auth}.Validate(DeploymentModeCluster))
-	assert.Nil(t, SyncSpec{Authentication: auth, TLS: tls, Enabled: util.NewBool(true)}.Validate(DeploymentModeCluster))
+	assert.Nil(t, SyncSpec{Authentication: auth, TLS: tls, Enabled: util.NewType[bool](true)}.Validate(DeploymentModeCluster))
 
 	// Not valid
-	assert.Error(t, SyncSpec{Authentication: auth, TLS: tls, Enabled: util.NewBool(true)}.Validate(DeploymentModeSingle))
-	assert.Error(t, SyncSpec{Authentication: auth, TLS: tls, Enabled: util.NewBool(true)}.Validate(DeploymentModeActiveFailover))
+	assert.Error(t, SyncSpec{Authentication: auth, TLS: tls, Enabled: util.NewType[bool](true)}.Validate(DeploymentModeSingle))
+	assert.Error(t, SyncSpec{Authentication: auth, TLS: tls, Enabled: util.NewType[bool](true)}.Validate(DeploymentModeActiveFailover))
 }
 
 func TestSyncSpecSetDefaults(t *testing.T) {
@@ -49,11 +49,11 @@ func TestSyncSpecSetDefaults(t *testing.T) {
 	}
 
 	assert.False(t, def(SyncSpec{}).IsEnabled())
-	assert.False(t, def(SyncSpec{Enabled: util.NewBool(false)}).IsEnabled())
-	assert.True(t, def(SyncSpec{Enabled: util.NewBool(true)}).IsEnabled())
+	assert.False(t, def(SyncSpec{Enabled: util.NewType[bool](false)}).IsEnabled())
+	assert.True(t, def(SyncSpec{Enabled: util.NewType[bool](true)}).IsEnabled())
 	assert.Equal(t, "test-jwt", def(SyncSpec{}).Authentication.GetJWTSecretName())
 	assert.Equal(t, "test-mon", def(SyncSpec{}).Monitoring.GetTokenSecretName())
-	assert.Equal(t, "foo", def(SyncSpec{Authentication: SyncAuthenticationSpec{JWTSecretName: util.NewString("foo")}}).Authentication.GetJWTSecretName())
+	assert.Equal(t, "foo", def(SyncSpec{Authentication: SyncAuthenticationSpec{JWTSecretName: util.NewType[string]("foo")}}).Authentication.GetJWTSecretName())
 }
 
 func TestSyncSpecResetImmutableFields(t *testing.T) {
@@ -65,33 +65,33 @@ func TestSyncSpecResetImmutableFields(t *testing.T) {
 	}{
 		// Valid "changes"
 		{
-			SyncSpec{Enabled: util.NewBool(false)},
-			SyncSpec{Enabled: util.NewBool(true)},
-			SyncSpec{Enabled: util.NewBool(true)},
+			SyncSpec{Enabled: util.NewType[bool](false)},
+			SyncSpec{Enabled: util.NewType[bool](true)},
+			SyncSpec{Enabled: util.NewType[bool](true)},
 			nil,
 		},
 		{
-			SyncSpec{Enabled: util.NewBool(true)},
-			SyncSpec{Enabled: util.NewBool(false)},
-			SyncSpec{Enabled: util.NewBool(false)},
+			SyncSpec{Enabled: util.NewType[bool](true)},
+			SyncSpec{Enabled: util.NewType[bool](false)},
+			SyncSpec{Enabled: util.NewType[bool](false)},
 			nil,
 		},
 		{
-			SyncSpec{Authentication: SyncAuthenticationSpec{JWTSecretName: util.NewString("None"), ClientCASecretName: util.NewString("some")}},
-			SyncSpec{Authentication: SyncAuthenticationSpec{JWTSecretName: util.NewString("None"), ClientCASecretName: util.NewString("some")}},
-			SyncSpec{Authentication: SyncAuthenticationSpec{JWTSecretName: util.NewString("None"), ClientCASecretName: util.NewString("some")}},
+			SyncSpec{Authentication: SyncAuthenticationSpec{JWTSecretName: util.NewType[string]("None"), ClientCASecretName: util.NewType[string]("some")}},
+			SyncSpec{Authentication: SyncAuthenticationSpec{JWTSecretName: util.NewType[string]("None"), ClientCASecretName: util.NewType[string]("some")}},
+			SyncSpec{Authentication: SyncAuthenticationSpec{JWTSecretName: util.NewType[string]("None"), ClientCASecretName: util.NewType[string]("some")}},
 			nil,
 		},
 		{
-			SyncSpec{Authentication: SyncAuthenticationSpec{JWTSecretName: util.NewString("foo"), ClientCASecretName: util.NewString("some")}},
-			SyncSpec{Authentication: SyncAuthenticationSpec{JWTSecretName: util.NewString("foo"), ClientCASecretName: util.NewString("some")}},
-			SyncSpec{Authentication: SyncAuthenticationSpec{JWTSecretName: util.NewString("foo"), ClientCASecretName: util.NewString("some")}},
+			SyncSpec{Authentication: SyncAuthenticationSpec{JWTSecretName: util.NewType[string]("foo"), ClientCASecretName: util.NewType[string]("some")}},
+			SyncSpec{Authentication: SyncAuthenticationSpec{JWTSecretName: util.NewType[string]("foo"), ClientCASecretName: util.NewType[string]("some")}},
+			SyncSpec{Authentication: SyncAuthenticationSpec{JWTSecretName: util.NewType[string]("foo"), ClientCASecretName: util.NewType[string]("some")}},
 			nil,
 		},
 		{
-			SyncSpec{Authentication: SyncAuthenticationSpec{JWTSecretName: util.NewString("foo"), ClientCASecretName: util.NewString("some")}},
-			SyncSpec{Authentication: SyncAuthenticationSpec{JWTSecretName: util.NewString("foo2"), ClientCASecretName: util.NewString("some")}},
-			SyncSpec{Authentication: SyncAuthenticationSpec{JWTSecretName: util.NewString("foo2"), ClientCASecretName: util.NewString("some")}},
+			SyncSpec{Authentication: SyncAuthenticationSpec{JWTSecretName: util.NewType[string]("foo"), ClientCASecretName: util.NewType[string]("some")}},
+			SyncSpec{Authentication: SyncAuthenticationSpec{JWTSecretName: util.NewType[string]("foo2"), ClientCASecretName: util.NewType[string]("some")}},
+			SyncSpec{Authentication: SyncAuthenticationSpec{JWTSecretName: util.NewType[string]("foo2"), ClientCASecretName: util.NewType[string]("some")}},
 			nil,
 		},
 	}

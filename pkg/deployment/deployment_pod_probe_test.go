@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -45,7 +45,7 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 			Name: "Agent Pod default probes",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 				},
@@ -95,13 +95,13 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 			Name: "Agent Pod customized probes",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 					Agents: api.ServerGroupSpec{
 						Probes: &api.ServerGroupProbesSpec{
 							LivenessProbeSpec: &api.ServerGroupProbeSpec{
-								TimeoutSeconds: util.NewInt32(50),
+								TimeoutSeconds: util.NewType[int32](50),
 							},
 						},
 					},
@@ -154,13 +154,13 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 			Name: "Agent Pod enabled probes",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 					Agents: api.ServerGroupSpec{
 						Probes: &api.ServerGroupProbesSpec{
-							LivenessProbeDisabled:  util.NewBool(false),
-							ReadinessProbeDisabled: util.NewBool(false),
+							LivenessProbeDisabled:  util.NewType[bool](false),
+							ReadinessProbeDisabled: util.NewType[bool](false),
 						},
 					},
 				},
@@ -211,7 +211,7 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 			Name: "DBServer Pod default probes",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 				},
@@ -261,13 +261,13 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 			Name: "DBServer Pod enabled probes",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 					DBServers: api.ServerGroupSpec{
 						Probes: &api.ServerGroupProbesSpec{
-							LivenessProbeDisabled:  util.NewBool(false),
-							ReadinessProbeDisabled: util.NewBool(false),
+							LivenessProbeDisabled:  util.NewType[bool](false),
+							ReadinessProbeDisabled: util.NewType[bool](false),
 						},
 					},
 				},
@@ -318,7 +318,7 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 			Name: "Coordinator Pod default probes",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 				},
@@ -368,13 +368,13 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 			Name: "Coordinator Pod enabled probes",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 					Coordinators: api.ServerGroupSpec{
 						Probes: &api.ServerGroupProbesSpec{
-							LivenessProbeDisabled:  util.NewBool(false),
-							ReadinessProbeDisabled: util.NewBool(false),
+							LivenessProbeDisabled:  util.NewType[bool](false),
+							ReadinessProbeDisabled: util.NewType[bool](false),
 						},
 					},
 				},
@@ -425,7 +425,7 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 			Name: "DBServer with early connections",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(createTestImageForVersion("3.10.0")),
+					Image:          util.NewType[string](createTestImageForVersion("3.10.0")),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 				},
@@ -482,7 +482,7 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 			Name: "DBServer without early connections because version is lower than 3.10.0",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(createTestImageForVersion("3.9.2")),
+					Image:          util.NewType[string](createTestImageForVersion("3.9.2")),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 				},
@@ -536,7 +536,7 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 			Name: "DBServer without early connections because 3.10 feature is disabled",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(createTestImageForVersion("3.10.0")),
+					Image:          util.NewType[string](createTestImageForVersion("3.10.0")),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 				},
@@ -590,7 +590,7 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 			Name: "Coordinator should be without early connections",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(createTestImageForVersion("3.10.0")),
+					Image:          util.NewType[string](createTestImageForVersion("3.10.0")),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 				},
@@ -644,7 +644,7 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 			Name: "Agent should be without early connections",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(createTestImageForVersion("3.10.0")),
+					Image:          util.NewType[string](createTestImageForVersion("3.10.0")),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 				},

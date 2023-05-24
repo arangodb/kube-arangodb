@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -102,7 +102,7 @@ func (r *Resources) runPodFinalizers(ctx context.Context, p *core.Pod, memberSta
 			groupSpec := r.context.GetSpec().GetServerGroupSpec(group)
 			if t := p.ObjectMeta.DeletionTimestamp; t != nil {
 				d := time.Duration(groupSpec.GetShutdownDelay(group)) * time.Second
-				gr := time.Duration(util.Int64OrDefault(p.ObjectMeta.GetDeletionGracePeriodSeconds(), 0)) * time.Second
+				gr := time.Duration(util.TypeOrDefault[int64](p.ObjectMeta.GetDeletionGracePeriodSeconds(), 0)) * time.Second
 				e := t.Time.Add(-1 * gr).Sub(time.Now().Add(-1 * d))
 				log.Str("finalizer", f).Str("left", e.String()).Error("Delay finalizer status")
 				if e < 0 || d == 0 {

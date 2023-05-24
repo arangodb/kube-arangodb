@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -68,7 +68,7 @@ func TestEnsureImages(t *testing.T) {
 			Name: "Image has not been changed",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image: util.NewString(testImage),
+					Image: util.NewType[string](testImage),
 				},
 			},
 		},
@@ -76,7 +76,7 @@ func TestEnsureImages(t *testing.T) {
 			Name: "Image has been changed",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image: util.NewString(testNewImage),
+					Image: util.NewType[string](testNewImage),
 				},
 			},
 			RetrySoon: true,
@@ -132,9 +132,9 @@ func TestEnsureImages(t *testing.T) {
 			Name: "Image not been changed with license (proper one)",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image: util.NewString(testNewImage),
+					Image: util.NewType[string](testNewImage),
 					License: api.LicenseSpec{
-						SecretName: util.NewString(testLicense),
+						SecretName: util.NewType[string](testLicense),
 					},
 				},
 			},
@@ -179,9 +179,9 @@ func TestEnsureImages(t *testing.T) {
 			Name: "Image not been changed with license (missing one)",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image: util.NewString(testNewImage),
+					Image: util.NewType[string](testNewImage),
 					License: api.LicenseSpec{
-						SecretName: util.NewString(testLicense),
+						SecretName: util.NewType[string](testLicense),
 					},
 				},
 			},
@@ -235,9 +235,9 @@ func TestEnsureImages(t *testing.T) {
 			Name: "Image not been changed with license (missing key)",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image: util.NewString(testNewImage),
+					Image: util.NewType[string](testNewImage),
 					License: api.LicenseSpec{
-						SecretName: util.NewString(testLicense),
+						SecretName: util.NewType[string](testLicense),
 					},
 				},
 			},
@@ -278,7 +278,7 @@ func TestEnsureImages(t *testing.T) {
 			Name: "Image is being updated in failed phase",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image: util.NewString(testNewImage),
+					Image: util.NewType[string](testNewImage),
 				},
 			},
 			Before: func(t *testing.T, deployment *Deployment) {
@@ -305,7 +305,7 @@ func TestEnsureImages(t *testing.T) {
 			Name: "Image is being updated too long in failed phase",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image: util.NewString(testNewImage),
+					Image: util.NewType[string](testNewImage),
 				},
 			},
 			Before: func(t *testing.T, deployment *Deployment) {
@@ -329,7 +329,7 @@ func TestEnsureImages(t *testing.T) {
 			Name: "Image is being updated in not ready phase",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image: util.NewString(testNewImage),
+					Image: util.NewType[string](testNewImage),
 				},
 			},
 			RetrySoon: true,
@@ -358,7 +358,7 @@ func TestEnsureImages(t *testing.T) {
 			Name: "Image is being updated in ready phase with empty statuses list",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image: util.NewString(testNewImage),
+					Image: util.NewType[string](testNewImage),
 				},
 			},
 			RetrySoon: true,
@@ -388,7 +388,7 @@ func TestEnsureImages(t *testing.T) {
 			Name: "Can not get API version of arnagod",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image: util.NewString(testNewImage),
+					Image: util.NewType[string](testNewImage),
 				},
 			},
 			RetrySoon: true,

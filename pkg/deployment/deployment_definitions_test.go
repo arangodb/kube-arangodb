@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -81,31 +81,31 @@ var (
 	}
 
 	noAuthentication = api.AuthenticationSpec{
-		JWTSecretName: util.NewString(api.JWTSecretNameDisabled),
+		JWTSecretName: util.NewType[string](api.JWTSecretNameDisabled),
 	}
 
 	noTLS = api.TLSSpec{
-		CASecretName: util.NewString(api.CASecretNameDisabled),
+		CASecretName: util.NewType[string](api.CASecretNameDisabled),
 	}
 
 	authenticationSpec = api.AuthenticationSpec{
-		JWTSecretName: util.NewString(testJWTSecretName),
+		JWTSecretName: util.NewType[string](testJWTSecretName),
 	}
 	tlsSpec = api.TLSSpec{
-		CASecretName: util.NewString(testCASecretName),
+		CASecretName: util.NewType[string](testCASecretName),
 	}
 
 	rocksDBSpec = api.RocksDBSpec{
 		Encryption: api.RocksDBEncryptionSpec{
-			KeySecretName: util.NewString(testRocksDBEncryptionKey),
+			KeySecretName: util.NewType[string](testRocksDBEncryptionKey),
 		},
 	}
 
 	metricsSpec = api.MetricsSpec{
-		Enabled: util.NewBool(true),
-		Image:   util.NewString(testImage),
+		Enabled: util.NewType[bool](true),
+		Image:   util.NewType[string](testImage),
 		Authentication: api.MetricsAuthenticationSpec{
-			JWTTokenSecretName: util.NewString(testExporterToken),
+			JWTTokenSecretName: util.NewType[string](testExporterToken),
 		},
 	}
 

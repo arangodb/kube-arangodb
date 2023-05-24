@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,12 +31,12 @@ import (
 func TestMonitoringSpecValidate(t *testing.T) {
 	// Valid
 	assert.Nil(t, MonitoringSpec{TokenSecretName: nil}.Validate())
-	assert.Nil(t, MonitoringSpec{TokenSecretName: util.NewString("")}.Validate())
-	assert.Nil(t, MonitoringSpec{TokenSecretName: util.NewString("foo")}.Validate())
-	assert.Nil(t, MonitoringSpec{TokenSecretName: util.NewString("foo")}.Validate())
+	assert.Nil(t, MonitoringSpec{TokenSecretName: util.NewType[string]("")}.Validate())
+	assert.Nil(t, MonitoringSpec{TokenSecretName: util.NewType[string]("foo")}.Validate())
+	assert.Nil(t, MonitoringSpec{TokenSecretName: util.NewType[string]("foo")}.Validate())
 
 	// Not valid
-	assert.Error(t, MonitoringSpec{TokenSecretName: util.NewString("Foo")}.Validate())
+	assert.Error(t, MonitoringSpec{TokenSecretName: util.NewType[string]("Foo")}.Validate())
 }
 
 func TestMonitoringSpecSetDefaults(t *testing.T) {
@@ -51,5 +51,5 @@ func TestMonitoringSpecSetDefaults(t *testing.T) {
 
 	assert.Equal(t, "", def(MonitoringSpec{}).GetTokenSecretName())
 	assert.Equal(t, "def2", def2(MonitoringSpec{}).GetTokenSecretName())
-	assert.Equal(t, "foo", def(MonitoringSpec{TokenSecretName: util.NewString("foo")}).GetTokenSecretName())
+	assert.Equal(t, "foo", def(MonitoringSpec{TokenSecretName: util.NewType[string]("foo")}).GetTokenSecretName())
 }

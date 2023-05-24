@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -42,7 +42,7 @@ func TestEnsurePod_Sync_Error(t *testing.T) {
 			Name: "Sync Pod does not work for enterprise image",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image: util.NewString(testImage),
+					Image: util.NewType[string](testImage),
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
@@ -61,7 +61,7 @@ func TestEnsurePod_Sync_Error(t *testing.T) {
 			Name: "Sync Pod cannot get master JWT secret",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image: util.NewString(testImage),
+					Image: util.NewType[string](testImage),
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
@@ -81,9 +81,9 @@ func TestEnsurePod_Sync_Error(t *testing.T) {
 			Name: "Sync Pod cannot get monitoring token secret",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image: util.NewString(testImage),
+					Image: util.NewType[string](testImage),
 					Sync: api.SyncSpec{
-						Enabled: util.NewBool(true),
+						Enabled: util.NewType[bool](true),
 					},
 				},
 			},
@@ -115,9 +115,9 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 			Name: "Sync Master Pod cannot create TLS keyfile secret",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image: util.NewString(testImage),
+					Image: util.NewType[string](testImage),
 					Sync: api.SyncSpec{
-						Enabled: util.NewBool(true),
+						Enabled: util.NewType[bool](true),
 					},
 				},
 			},
@@ -142,10 +142,10 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 			Name: "Sync Master Pod cannot get cluster JWT secret",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: authenticationSpec,
 					Sync: api.SyncSpec{
-						Enabled: util.NewBool(true),
+						Enabled: util.NewType[bool](true),
 					},
 				},
 			},
@@ -170,10 +170,10 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 			Name: "Sync Master Pod cannot get authentication CA certificate",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: authenticationSpec,
 					Sync: api.SyncSpec{
-						Enabled: util.NewBool(true),
+						Enabled: util.NewType[bool](true),
 					},
 				},
 			},
@@ -200,13 +200,13 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				"liveness probe, priority class name, resource requirements",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: authenticationSpec,
 					Sync: api.SyncSpec{
-						Enabled: util.NewBool(true),
+						Enabled: util.NewType[bool](true),
 					},
 					SyncMasters: api.ServerGroupSpec{
-						ServiceAccountName: util.NewString(testServiceAccountName),
+						ServiceAccountName: util.NewType[string](testServiceAccountName),
 						NodeSelector:       nodeSelectorTest,
 						PriorityClassName:  testPriorityClassName,
 						Resources:          resourcesUnfiltered,
@@ -292,14 +292,14 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 			},
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					Environment:    api.NewEnvironment(api.EnvironmentProduction),
 					Sync: api.SyncSpec{
-						Enabled: util.NewBool(true),
+						Enabled: util.NewType[bool](true),
 					},
 					License: api.LicenseSpec{
-						SecretName: util.NewString(testLicense),
+						SecretName: util.NewType[string](testLicense),
 					},
 				},
 			},
@@ -380,11 +380,11 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 			},
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					Environment:    api.NewEnvironment(api.EnvironmentProduction),
 					Sync: api.SyncSpec{
-						Enabled: util.NewBool(true),
+						Enabled: util.NewType[bool](true),
 						ExternalAccess: api.SyncExternalAccessSpec{
 							MasterEndpoint: []string{
 								"https://arangodb.xyz:8629",
@@ -392,7 +392,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 						},
 					},
 					License: api.LicenseSpec{
-						SecretName: util.NewString(testLicense),
+						SecretName: util.NewType[string](testLicense),
 					},
 				},
 			},
@@ -492,11 +492,11 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 			},
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					Environment:    api.NewEnvironment(api.EnvironmentProduction),
 					Sync: api.SyncSpec{
-						Enabled: util.NewBool(true),
+						Enabled: util.NewType[bool](true),
 						ExternalAccess: api.SyncExternalAccessSpec{
 							MasterEndpoint: []string{
 								"https://arangodb.xyz:8629",
@@ -504,7 +504,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 						},
 					},
 					License: api.LicenseSpec{
-						SecretName: util.NewString(testLicense),
+						SecretName: util.NewType[string](testLicense),
 					},
 				},
 			},
@@ -585,11 +585,11 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 			},
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					Environment:    api.NewEnvironment(api.EnvironmentProduction),
 					Sync: api.SyncSpec{
-						Enabled: util.NewBool(true),
+						Enabled: util.NewType[bool](true),
 						ExternalAccess: api.SyncExternalAccessSpec{
 							MasterEndpoint: []string{
 								"https://arangodb.xyz:8629",
@@ -597,7 +597,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 						},
 					},
 					License: api.LicenseSpec{
-						SecretName: util.NewString(testLicense),
+						SecretName: util.NewType[string](testLicense),
 					},
 				},
 			},
@@ -686,11 +686,11 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 			},
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					Environment:    api.NewEnvironment(api.EnvironmentProduction),
 					Sync: api.SyncSpec{
-						Enabled: util.NewBool(true),
+						Enabled: util.NewType[bool](true),
 						ExternalAccess: api.SyncExternalAccessSpec{
 							MasterEndpoint: []string{
 								"https://127.0.0.1:8629",
@@ -698,7 +698,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 						},
 					},
 					License: api.LicenseSpec{
-						SecretName: util.NewString(testLicense),
+						SecretName: util.NewType[string](testLicense),
 					},
 				},
 			},
@@ -790,14 +790,14 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 			},
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					Environment:    api.NewEnvironment(api.EnvironmentProduction),
 					Sync: api.SyncSpec{
-						Enabled: util.NewBool(true),
+						Enabled: util.NewType[bool](true),
 					},
 					License: api.LicenseSpec{
-						SecretName: util.NewString(testLicense),
+						SecretName: util.NewType[string](testLicense),
 					},
 				},
 			},
@@ -889,11 +889,11 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 			},
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					Environment:    api.NewEnvironment(api.EnvironmentProduction),
 					Sync: api.SyncSpec{
-						Enabled: util.NewBool(true),
+						Enabled: util.NewType[bool](true),
 						ExternalAccess: api.SyncExternalAccessSpec{
 							MasterEndpoint: []string{
 								"https://arangodb.xyz:8629",
@@ -903,7 +903,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 						},
 					},
 					License: api.LicenseSpec{
-						SecretName: util.NewString(testLicense),
+						SecretName: util.NewType[string](testLicense),
 					},
 				},
 			},
@@ -1005,11 +1005,11 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 			},
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					Environment:    api.NewEnvironment(api.EnvironmentProduction),
 					Sync: api.SyncSpec{
-						Enabled: util.NewBool(true),
+						Enabled: util.NewType[bool](true),
 						ExternalAccess: api.SyncExternalAccessSpec{
 							MasterEndpoint: []string{
 								"https://arangodb.xyz:8629",
@@ -1019,7 +1019,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 						},
 					},
 					License: api.LicenseSpec{
-						SecretName: util.NewString(testLicense),
+						SecretName: util.NewType[string](testLicense),
 					},
 				},
 			},
@@ -1119,11 +1119,11 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 			},
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					Environment:    api.NewEnvironment(api.EnvironmentProduction),
 					Sync: api.SyncSpec{
-						Enabled: util.NewBool(true),
+						Enabled: util.NewType[bool](true),
 						ExternalAccess: api.SyncExternalAccessSpec{
 							MasterEndpoint: []string{
 								"https://arangodb2.xyz:8629",
@@ -1133,7 +1133,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 						},
 					},
 					License: api.LicenseSpec{
-						SecretName: util.NewString(testLicense),
+						SecretName: util.NewType[string](testLicense),
 					},
 				},
 			},
@@ -1242,19 +1242,19 @@ func TestEnsurePod_Sync_Worker(t *testing.T) {
 			},
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					Sync: api.SyncSpec{
-						Enabled: util.NewBool(true),
+						Enabled: util.NewType[bool](true),
 					},
 					SyncWorkers: api.ServerGroupSpec{
-						ServiceAccountName: util.NewString(testServiceAccountName),
+						ServiceAccountName: util.NewType[string](testServiceAccountName),
 						NodeSelector:       nodeSelectorTest,
 						PriorityClassName:  testPriorityClassName,
 						Resources:          resourcesUnfiltered,
 					},
 					License: api.LicenseSpec{
-						SecretName: util.NewString(testLicense),
+						SecretName: util.NewType[string](testLicense),
 					},
 				},
 			},

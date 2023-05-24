@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,12 +41,12 @@ type EndpointAuthenticationSpec struct {
 
 // GetKeyfileSecretName returns the value of keyfileSecretName.
 func (s EndpointAuthenticationSpec) GetKeyfileSecretName() string {
-	return util.StringOrDefault(s.KeyfileSecretName)
+	return util.TypeOrDefault[string](s.KeyfileSecretName)
 }
 
 // GetUserSecretName returns the value of userSecretName.
 func (s EndpointAuthenticationSpec) GetUserSecretName() string {
-	return util.StringOrDefault(s.UserSecretName)
+	return util.TypeOrDefault[string](s.UserSecretName)
 }
 
 // Validate the given spec, returning an error on validation
@@ -71,10 +71,10 @@ func (s *EndpointAuthenticationSpec) SetDefaults() {
 // SetDefaultsFrom fills empty field with default values from the given source.
 func (s *EndpointAuthenticationSpec) SetDefaultsFrom(source EndpointAuthenticationSpec) {
 	if s.KeyfileSecretName == nil {
-		s.KeyfileSecretName = util.NewStringOrNil(source.KeyfileSecretName)
+		s.KeyfileSecretName = util.NewTypeOrNil[string](source.KeyfileSecretName)
 	}
 	if s.UserSecretName == nil {
-		s.UserSecretName = util.NewStringOrNil(source.UserSecretName)
+		s.UserSecretName = util.NewTypeOrNil[string](source.UserSecretName)
 	}
 }
 

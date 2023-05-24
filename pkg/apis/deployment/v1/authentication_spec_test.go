@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,18 +30,18 @@ import (
 
 func TestAuthenticationSpecValidate(t *testing.T) {
 	// Valid
-	assert.Nil(t, AuthenticationSpec{JWTSecretName: util.NewString("None")}.Validate(false))
-	assert.Nil(t, AuthenticationSpec{JWTSecretName: util.NewString("foo")}.Validate(false))
-	assert.Nil(t, AuthenticationSpec{JWTSecretName: util.NewString("foo")}.Validate(true))
+	assert.Nil(t, AuthenticationSpec{JWTSecretName: util.NewType[string]("None")}.Validate(false))
+	assert.Nil(t, AuthenticationSpec{JWTSecretName: util.NewType[string]("foo")}.Validate(false))
+	assert.Nil(t, AuthenticationSpec{JWTSecretName: util.NewType[string]("foo")}.Validate(true))
 
 	// Not valid
-	assert.Error(t, AuthenticationSpec{JWTSecretName: util.NewString("Foo")}.Validate(false))
+	assert.Error(t, AuthenticationSpec{JWTSecretName: util.NewType[string]("Foo")}.Validate(false))
 }
 
 func TestAuthenticationSpecIsAuthenticated(t *testing.T) {
-	assert.False(t, AuthenticationSpec{JWTSecretName: util.NewString("None")}.IsAuthenticated())
-	assert.True(t, AuthenticationSpec{JWTSecretName: util.NewString("foo")}.IsAuthenticated())
-	assert.True(t, AuthenticationSpec{JWTSecretName: util.NewString("")}.IsAuthenticated())
+	assert.False(t, AuthenticationSpec{JWTSecretName: util.NewType[string]("None")}.IsAuthenticated())
+	assert.True(t, AuthenticationSpec{JWTSecretName: util.NewType[string]("foo")}.IsAuthenticated())
+	assert.True(t, AuthenticationSpec{JWTSecretName: util.NewType[string]("")}.IsAuthenticated())
 }
 
 func TestAuthenticationSpecSetDefaults(t *testing.T) {
@@ -51,7 +51,7 @@ func TestAuthenticationSpecSetDefaults(t *testing.T) {
 	}
 
 	assert.Equal(t, "test-jwt", def(AuthenticationSpec{}).GetJWTSecretName())
-	assert.Equal(t, "foo", def(AuthenticationSpec{JWTSecretName: util.NewString("foo")}).GetJWTSecretName())
+	assert.Equal(t, "foo", def(AuthenticationSpec{JWTSecretName: util.NewType[string]("foo")}).GetJWTSecretName())
 }
 
 func TestAuthenticationSpecResetImmutableFields(t *testing.T) {
@@ -63,35 +63,35 @@ func TestAuthenticationSpecResetImmutableFields(t *testing.T) {
 	}{
 		// Valid "changes"
 		{
-			AuthenticationSpec{JWTSecretName: util.NewString("None")},
-			AuthenticationSpec{JWTSecretName: util.NewString("None")},
-			AuthenticationSpec{JWTSecretName: util.NewString("None")},
+			AuthenticationSpec{JWTSecretName: util.NewType[string]("None")},
+			AuthenticationSpec{JWTSecretName: util.NewType[string]("None")},
+			AuthenticationSpec{JWTSecretName: util.NewType[string]("None")},
 			nil,
 		},
 		{
-			AuthenticationSpec{JWTSecretName: util.NewString("foo")},
-			AuthenticationSpec{JWTSecretName: util.NewString("foo")},
-			AuthenticationSpec{JWTSecretName: util.NewString("foo")},
+			AuthenticationSpec{JWTSecretName: util.NewType[string]("foo")},
+			AuthenticationSpec{JWTSecretName: util.NewType[string]("foo")},
+			AuthenticationSpec{JWTSecretName: util.NewType[string]("foo")},
 			nil,
 		},
 		{
-			AuthenticationSpec{JWTSecretName: util.NewString("foo")},
-			AuthenticationSpec{JWTSecretName: util.NewString("foo2")},
-			AuthenticationSpec{JWTSecretName: util.NewString("foo2")},
+			AuthenticationSpec{JWTSecretName: util.NewType[string]("foo")},
+			AuthenticationSpec{JWTSecretName: util.NewType[string]("foo2")},
+			AuthenticationSpec{JWTSecretName: util.NewType[string]("foo2")},
 			nil,
 		},
 
 		// Invalid changes
 		{
-			AuthenticationSpec{JWTSecretName: util.NewString("foo")},
-			AuthenticationSpec{JWTSecretName: util.NewString("None")},
-			AuthenticationSpec{JWTSecretName: util.NewString("foo")},
+			AuthenticationSpec{JWTSecretName: util.NewType[string]("foo")},
+			AuthenticationSpec{JWTSecretName: util.NewType[string]("None")},
+			AuthenticationSpec{JWTSecretName: util.NewType[string]("foo")},
 			[]string{"test.jwtSecretName"},
 		},
 		{
-			AuthenticationSpec{JWTSecretName: util.NewString("None")},
-			AuthenticationSpec{JWTSecretName: util.NewString("foo")},
-			AuthenticationSpec{JWTSecretName: util.NewString("None")},
+			AuthenticationSpec{JWTSecretName: util.NewType[string]("None")},
+			AuthenticationSpec{JWTSecretName: util.NewType[string]("foo")},
+			AuthenticationSpec{JWTSecretName: util.NewType[string]("None")},
 			[]string{"test.jwtSecretName"},
 		},
 	}

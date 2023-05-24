@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -106,7 +106,7 @@ func (s *MetricsSpec) GetPort() uint16 {
 
 // IsEnabled returns whether metrics are enabled or not
 func (s *MetricsSpec) IsEnabled() bool {
-	return util.BoolOrDefault(s.Enabled, false)
+	return util.TypeOrDefault[bool](s.Enabled, false)
 }
 
 // HasImage returns whether a image was specified or not
@@ -118,22 +118,22 @@ func (s *MetricsSpec) HasImage() bool {
 // GetImage returns the Image or empty string
 // Deprecated
 func (s *MetricsSpec) GetImage() string {
-	return util.StringOrDefault(s.Image)
+	return util.TypeOrDefault[string](s.Image)
 }
 
 // SetDefaults sets default values
 func (s *MetricsSpec) SetDefaults(defaultTokenName string, isAuthenticated bool) {
 	if s.Enabled == nil {
-		s.Enabled = util.NewBool(false)
+		s.Enabled = util.NewType[bool](false)
 	}
 	if s.GetJWTTokenSecretName() == "" {
-		s.Authentication.JWTTokenSecretName = util.NewString(defaultTokenName)
+		s.Authentication.JWTTokenSecretName = util.NewType[string](defaultTokenName)
 	}
 }
 
 // GetJWTTokenSecretName returns the token secret name or empty string
 func (s *MetricsSpec) GetJWTTokenSecretName() string {
-	return util.StringOrDefault(s.Authentication.JWTTokenSecretName)
+	return util.TypeOrDefault[string](s.Authentication.JWTTokenSecretName)
 }
 
 // HasJWTTokenSecretName returns true if a secret name was specified
@@ -144,13 +144,13 @@ func (s *MetricsSpec) HasJWTTokenSecretName() bool {
 // SetDefaultsFrom fills unspecified fields with a value from given source spec.
 func (s *MetricsSpec) SetDefaultsFrom(source MetricsSpec) {
 	if s.Enabled == nil {
-		s.Enabled = util.NewBoolOrNil(source.Enabled)
+		s.Enabled = util.NewTypeOrNil[bool](source.Enabled)
 	}
 	if s.Image == nil {
-		s.Image = util.NewStringOrNil(source.Image)
+		s.Image = util.NewTypeOrNil[string](source.Image)
 	}
 	if s.Authentication.JWTTokenSecretName == nil {
-		s.Authentication.JWTTokenSecretName = util.NewStringOrNil(source.Authentication.JWTTokenSecretName)
+		s.Authentication.JWTTokenSecretName = util.NewTypeOrNil[string](source.Authentication.JWTTokenSecretName)
 	}
 	setStorageDefaultsFromResourceList(&s.Resources.Limits, source.Resources.Limits)
 	setStorageDefaultsFromResourceList(&s.Resources.Requests, source.Resources.Requests)

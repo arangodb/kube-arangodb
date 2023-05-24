@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import (
 	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -62,15 +63,36 @@ func TestGetArangoDBImageIDFromPod(t *testing.T) {
 			},
 			want: "test",
 		},
-		"image ID from two containers": {
+		"image ID from two containers - first one as server": {
 			args: args{
 				pod: &core.Pod{
 					Status: core.PodStatus{
 						ContainerStatuses: []core.ContainerStatus{
 							{
+								Name:    shared.ServerContainerName,
 								ImageID: dockerPullableImageIDPrefix + "test_arango",
 							},
 							{
+								Name:    "other",
+								ImageID: dockerPullableImageIDPrefix + "test1_arango",
+							},
+						},
+					},
+				},
+			},
+			want: "test_arango",
+		},
+		"image ID from two containers - second one as server": {
+			args: args{
+				pod: &core.Pod{
+					Status: core.PodStatus{
+						ContainerStatuses: []core.ContainerStatus{
+							{
+								Name:    "other",
+								ImageID: dockerPullableImageIDPrefix + "test_arango",
+							},
+							{
+								Name:    shared.ServerContainerName,
 								ImageID: dockerPullableImageIDPrefix + "test1_arango",
 							},
 						},
@@ -78,6 +100,25 @@ func TestGetArangoDBImageIDFromPod(t *testing.T) {
 				},
 			},
 			want: "test1_arango",
+		},
+		"image ID from two containers - no server": {
+			args: args{
+				pod: &core.Pod{
+					Status: core.PodStatus{
+						ContainerStatuses: []core.ContainerStatus{
+							{
+								Name:    "other2",
+								ImageID: dockerPullableImageIDPrefix + "test_arango",
+							},
+							{
+								Name:    "other",
+								ImageID: dockerPullableImageIDPrefix + "test1_arango",
+							},
+						},
+					},
+				},
+			},
+			want: "test_arango",
 		},
 	}
 

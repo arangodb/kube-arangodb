@@ -70,7 +70,7 @@ func Test_State_Create_SuccessForced(t *testing.T) {
 
 	obj, deployment := newObjectSet(backupApi.ArangoBackupStateCreate)
 	obj.Spec.Options = &backupApi.ArangoBackupSpecOptions{
-		AllowInconsistent: util.NewBool(true),
+		AllowInconsistent: util.NewType[bool](true),
 	}
 
 	// Act
@@ -194,8 +194,8 @@ func Test_State_CreateError_Transfer_To_Failed(t *testing.T) {
 	}
 
 	obj.Spec.Backoff = &backupApi.ArangoBackupSpecBackOff{
-		Iterations:    util.NewInt(1),
-		MaxIterations: util.NewInt(2),
+		Iterations:    util.NewType[int](1),
+		MaxIterations: util.NewType[int](2),
 	}
 
 	obj.Status.Time.Time = time.Now().Add(-2 * downloadDelay)

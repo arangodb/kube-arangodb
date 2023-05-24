@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,12 +34,12 @@ type SyncAuthenticationSpec struct {
 
 // GetJWTSecretName returns the value of jwtSecretName.
 func (s SyncAuthenticationSpec) GetJWTSecretName() string {
-	return util.StringOrDefault(s.JWTSecretName)
+	return util.TypeOrDefault[string](s.JWTSecretName)
 }
 
 // GetClientCASecretName returns the value of clientCASecretName.
 func (s SyncAuthenticationSpec) GetClientCASecretName() string {
-	return util.StringOrDefault(s.ClientCASecretName)
+	return util.TypeOrDefault[string](s.ClientCASecretName)
 }
 
 // Validate the given spec
@@ -58,22 +58,22 @@ func (s *SyncAuthenticationSpec) SetDefaults(defaultJWTSecretName, defaultClient
 	if s.GetJWTSecretName() == "" {
 		// Note that we don't check for nil here, since even a specified, but empty
 		// string should result in the default value.
-		s.JWTSecretName = util.NewString(defaultJWTSecretName)
+		s.JWTSecretName = util.NewType[string](defaultJWTSecretName)
 	}
 	if s.GetClientCASecretName() == "" {
 		// Note that we don't check for nil here, since even a specified, but empty
 		// string should result in the default value.
-		s.ClientCASecretName = util.NewString(defaultClientCASecretName)
+		s.ClientCASecretName = util.NewType[string](defaultClientCASecretName)
 	}
 }
 
 // SetDefaultsFrom fills unspecified fields with a value from given source spec.
 func (s *SyncAuthenticationSpec) SetDefaultsFrom(source SyncAuthenticationSpec) {
 	if s.JWTSecretName == nil {
-		s.JWTSecretName = util.NewStringOrNil(source.JWTSecretName)
+		s.JWTSecretName = util.NewTypeOrNil[string](source.JWTSecretName)
 	}
 	if s.ClientCASecretName == nil {
-		s.ClientCASecretName = util.NewStringOrNil(source.ClientCASecretName)
+		s.ClientCASecretName = util.NewTypeOrNil[string](source.ClientCASecretName)
 	}
 }
 
