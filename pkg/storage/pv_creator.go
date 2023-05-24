@@ -37,6 +37,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner"
 	resources "github.com/arangodb/kube-arangodb/pkg/storage/resources"
@@ -271,7 +272,7 @@ func createNodeSelector(nodeName string) *core.NodeSelector {
 			core.NodeSelectorTerm{
 				MatchExpressions: []core.NodeSelectorRequirement{
 					core.NodeSelectorRequirement{
-						Key:      "kubernetes.io/hostname",
+						Key:      shared.TopologyKeyHostname,
 						Operator: core.NodeSelectorOpIn,
 						Values:   []string{nodeName},
 					},
