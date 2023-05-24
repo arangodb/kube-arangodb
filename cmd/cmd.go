@@ -295,6 +295,11 @@ func executeMain(cmd *cobra.Command, args []string) {
 
 	logger.Info("nice to meet you")
 
+	// Print all enabled featured
+	features.Iterate(func(name string, feature features.Feature) {
+		logger.Info("Operator Feature %s (%s) is %s.", name, features.GetFeatureArgName(name), util.BoolSwitch(feature.Enabled(), "enabled", "disabled"))
+	})
+
 	// Check operating mode
 	if !operatorOptions.enableDeployment && !operatorOptions.enableDeploymentReplication && !operatorOptions.enableStorage &&
 		!operatorOptions.enableBackup && !operatorOptions.enableApps && !operatorOptions.enableK2KClusterSync {
