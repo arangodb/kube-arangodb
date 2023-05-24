@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ type EndpointSpec struct {
 
 // GetDeploymentName returns the value of deploymentName.
 func (s EndpointSpec) GetDeploymentName() string {
-	return util.StringOrDefault(s.DeploymentName)
+	return util.TypeOrDefault[string](s.DeploymentName)
 }
 
 // HasDeploymentName returns the true when a non-empty deployment name it set.
@@ -85,7 +85,7 @@ func (s *EndpointSpec) SetDefaults() {
 // SetDefaultsFrom fills empty field with default values from the given source.
 func (s *EndpointSpec) SetDefaultsFrom(source EndpointSpec) {
 	if s.DeploymentName == nil {
-		s.DeploymentName = util.NewStringOrNil(source.DeploymentName)
+		s.DeploymentName = util.NewTypeOrNil[string](source.DeploymentName)
 	}
 	s.Authentication.SetDefaultsFrom(source.Authentication)
 	s.TLS.SetDefaultsFrom(source.TLS)

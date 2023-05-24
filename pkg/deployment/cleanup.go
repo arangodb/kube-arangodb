@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -55,7 +55,7 @@ func (d *Deployment) removePodFinalizers(ctx context.Context, cachedStatus inspe
 		defer cancel()
 
 		if err := d.PodsModInterface().Delete(ctxChild, pod.GetName(), meta.DeleteOptions{
-			GracePeriodSeconds: util.NewInt64(0),
+			GracePeriodSeconds: util.NewType[int64](0),
 		}); err != nil {
 			if !kerrors.IsNotFound(err) {
 				log.Err(err).Warn("Failed to remove pod")

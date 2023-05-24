@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -83,7 +83,7 @@ func Test_ArangoD_TerminationGracePeriodSeconds(t *testing.T) {
 				pod.Spec.TerminationGracePeriodSeconds = nil
 			}),
 			status: buildPodSpec(func(pod *core.PodTemplateSpec) {
-				pod.Spec.TerminationGracePeriodSeconds = util.NewInt64(30)
+				pod.Spec.TerminationGracePeriodSeconds = util.NewType[int64](30)
 			}),
 
 			TestCaseOverride: TestCaseOverride{
@@ -93,7 +93,7 @@ func Test_ArangoD_TerminationGracePeriodSeconds(t *testing.T) {
 		{
 			name: "Remove",
 			spec: buildPodSpec(func(pod *core.PodTemplateSpec) {
-				pod.Spec.TerminationGracePeriodSeconds = util.NewInt64(30)
+				pod.Spec.TerminationGracePeriodSeconds = util.NewType[int64](30)
 			}),
 			status: buildPodSpec(func(pod *core.PodTemplateSpec) {
 				pod.Spec.TerminationGracePeriodSeconds = nil
@@ -106,10 +106,10 @@ func Test_ArangoD_TerminationGracePeriodSeconds(t *testing.T) {
 		{
 			name: "Update",
 			spec: buildPodSpec(func(pod *core.PodTemplateSpec) {
-				pod.Spec.TerminationGracePeriodSeconds = util.NewInt64(33)
+				pod.Spec.TerminationGracePeriodSeconds = util.NewType[int64](33)
 			}),
 			status: buildPodSpec(func(pod *core.PodTemplateSpec) {
-				pod.Spec.TerminationGracePeriodSeconds = util.NewInt64(30)
+				pod.Spec.TerminationGracePeriodSeconds = util.NewType[int64](30)
 			}),
 
 			TestCaseOverride: TestCaseOverride{

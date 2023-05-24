@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -923,7 +923,7 @@ func (testCase *testCaseStruct) createTestEnvVariables(deployment *Deployment, g
 						LocalObjectReference: core.LocalObjectReference{
 							Name: features.ConfigMapName(),
 						},
-						Optional: util.NewBool(true),
+						Optional: util.NewType[bool](true),
 					},
 				},
 			}

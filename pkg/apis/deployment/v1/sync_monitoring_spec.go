@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ type MonitoringSpec struct {
 
 // GetTokenSecretName returns the value of tokenSecretName.
 func (s MonitoringSpec) GetTokenSecretName() string {
-	return util.StringOrDefault(s.TokenSecretName)
+	return util.TypeOrDefault[string](s.TokenSecretName)
 }
 
 // Validate the given spec
@@ -49,13 +49,13 @@ func (s *MonitoringSpec) SetDefaults(defaultTokenSecretName string) {
 	if s.GetTokenSecretName() == "" {
 		// Note that we don't check for nil here, since even a specified, but empty
 		// string should result in the default value.
-		s.TokenSecretName = util.NewString(defaultTokenSecretName)
+		s.TokenSecretName = util.NewType[string](defaultTokenSecretName)
 	}
 }
 
 // SetDefaultsFrom fills unspecified fields with a value from given source spec.
 func (s *MonitoringSpec) SetDefaultsFrom(source MonitoringSpec) {
 	if s.TokenSecretName == nil {
-		s.TokenSecretName = util.NewStringOrNil(source.TokenSecretName)
+		s.TokenSecretName = util.NewTypeOrNil[string](source.TokenSecretName)
 	}
 }

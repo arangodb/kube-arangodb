@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -62,8 +62,8 @@ func (d *description) Labels(labels ...string) []*dto.LabelPair {
 	for k, v := range d.constLabels {
 		var z dto.LabelPair
 
-		z.Name = util.NewString(k)
-		z.Value = util.NewString(v)
+		z.Name = util.NewType[string](k)
+		z.Value = util.NewType[string](v)
 		l = append(l, &z)
 	}
 
@@ -74,8 +74,8 @@ func (d *description) Labels(labels ...string) []*dto.LabelPair {
 
 		var z dto.LabelPair
 
-		z.Name = util.NewString(d.variableLabels[id])
-		z.Value = util.NewString(labels[id])
+		z.Name = util.NewType[string](d.variableLabels[id])
+		z.Value = util.NewType[string](labels[id])
 		l = append(l, &z)
 	}
 

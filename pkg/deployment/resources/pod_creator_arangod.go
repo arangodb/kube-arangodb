@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -173,7 +173,7 @@ func (a *ArangoDContainer) GetImage() string {
 	switch a.spec.ImageDiscoveryMode.Get() {
 	case api.DeploymentImageDiscoveryDirectMode:
 		// In case of direct mode ignore discovery
-		return util.StringOrDefault(a.spec.Image, a.imageInfo.ImageID)
+		return util.TypeOrDefault[string](a.spec.Image, a.imageInfo.ImageID)
 	default:
 		return a.imageInfo.ImageID
 	}
@@ -255,7 +255,7 @@ func (a *ArangoDContainer) GetEnvs() ([]core.EnvVar, []core.EnvFromSource) {
 					Name: features.ConfigMapName(),
 				},
 				// Optional in case if operator could not create it when process started.
-				Optional: util.NewBool(true),
+				Optional: util.NewType[bool](true),
 			},
 		},
 	}

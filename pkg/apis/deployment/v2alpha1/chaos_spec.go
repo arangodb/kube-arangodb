@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,12 +39,12 @@ type ChaosSpec struct {
 
 // IsEnabled returns the value of enabled.
 func (s ChaosSpec) IsEnabled() bool {
-	return util.BoolOrDefault(s.Enabled)
+	return util.TypeOrDefault[bool](s.Enabled)
 }
 
 // GetInterval returns the value of interval.
 func (s ChaosSpec) GetInterval() time.Duration {
-	return util.DurationOrDefault(s.Interval)
+	return util.TypeOrDefault[time.Duration](s.Interval)
 }
 
 // GetKillPodProbability returns the value of kill-pod-probability.
@@ -68,7 +68,7 @@ func (s ChaosSpec) Validate() error {
 // SetDefaults fills in missing defaults
 func (s *ChaosSpec) SetDefaults() {
 	if s.GetInterval() == 0 {
-		s.Interval = util.NewDuration(time.Minute)
+		s.Interval = util.NewType[time.Duration](time.Minute)
 	}
 	if s.GetKillPodProbability() == 0 {
 		s.KillPodProbability = NewPercent(50)
@@ -78,10 +78,10 @@ func (s *ChaosSpec) SetDefaults() {
 // SetDefaultsFrom fills unspecified fields with a value from given source spec.
 func (s *ChaosSpec) SetDefaultsFrom(source ChaosSpec) {
 	if s.Enabled == nil {
-		s.Enabled = util.NewBoolOrNil(source.Enabled)
+		s.Enabled = util.NewTypeOrNil[bool](source.Enabled)
 	}
 	if s.Interval == nil {
-		s.Interval = util.NewDurationOrNil(source.Interval)
+		s.Interval = util.NewTypeOrNil[time.Duration](source.Interval)
 	}
 	if s.KillPodProbability == nil {
 		s.KillPodProbability = NewPercentOrNil(source.KillPodProbability)

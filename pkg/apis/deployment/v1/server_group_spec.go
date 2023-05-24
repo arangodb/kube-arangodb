@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -284,17 +284,17 @@ func (s ServerGroupSpec) GetVolumeClaimTemplate() *core.PersistentVolumeClaim {
 
 // GetCount returns the value of count.
 func (s ServerGroupSpec) GetCount() int {
-	return util.IntOrDefault(s.Count)
+	return util.TypeOrDefault[int](s.Count)
 }
 
 // GetMinCount returns MinCount or 1 if not set
 func (s ServerGroupSpec) GetMinCount() int {
-	return util.IntOrDefault(s.MinCount, 1)
+	return util.TypeOrDefault[int](s.MinCount, 1)
 }
 
 // GetMaxCount returns MaxCount or
 func (s ServerGroupSpec) GetMaxCount() int {
-	return util.IntOrDefault(s.MaxCount, math.MaxInt32)
+	return util.TypeOrDefault[int](s.MaxCount, math.MaxInt32)
 }
 
 // GetNodeSelector returns the selectors for nodes of this group
@@ -315,9 +315,9 @@ func (s ServerGroupSpec) GetArgs() []string {
 // GetStorageClassName returns the value of storageClassName.
 func (s ServerGroupSpec) GetStorageClassName() string {
 	if pvc := s.GetVolumeClaimTemplate(); pvc != nil {
-		return util.StringOrDefault(pvc.Spec.StorageClassName)
+		return util.TypeOrDefault[string](pvc.Spec.StorageClassName)
 	}
-	return util.StringOrDefault(s.StorageClassName)
+	return util.TypeOrDefault[string](s.StorageClassName)
 }
 
 // GetTolerations returns the value of tolerations.
@@ -327,7 +327,7 @@ func (s ServerGroupSpec) GetTolerations() []core.Toleration {
 
 // GetServiceAccountName returns the value of serviceAccountName.
 func (s ServerGroupSpec) GetServiceAccountName() string {
-	return util.StringOrDefault(s.ServiceAccountName)
+	return util.TypeOrDefault[string](s.ServiceAccountName)
 }
 
 // HasProbesSpec returns true if Probes is non nil
@@ -522,12 +522,12 @@ func (s *ServerGroupSpec) SetDefaults(group ServerGroup, used bool, mode Deploym
 		switch group {
 		case ServerGroupSingle:
 			if mode == DeploymentModeSingle {
-				s.Count = util.NewInt(1) // Single server
+				s.Count = util.NewType[int](1) // Single server
 			} else {
-				s.Count = util.NewInt(2) // ActiveFailover
+				s.Count = util.NewType[int](2) // ActiveFailover
 			}
 		default:
-			s.Count = util.NewInt(3)
+			s.Count = util.NewType[int](3)
 		}
 	} else if s.GetCount() > 0 && !used {
 		s.Count = nil
@@ -574,25 +574,25 @@ func setStorageDefaultsFromResourceList(s *core.ResourceList, source core.Resour
 // SetDefaultsFrom fills unspecified fields with a value from given source spec.
 func (s *ServerGroupSpec) SetDefaultsFrom(source ServerGroupSpec) {
 	if s.Count == nil {
-		s.Count = util.NewIntOrNil(source.Count)
+		s.Count = util.NewTypeOrNil[int](source.Count)
 	}
 	if s.MinCount == nil {
-		s.MinCount = util.NewIntOrNil(source.MinCount)
+		s.MinCount = util.NewTypeOrNil[int](source.MinCount)
 	}
 	if s.MaxCount == nil {
-		s.MaxCount = util.NewIntOrNil(source.MaxCount)
+		s.MaxCount = util.NewTypeOrNil[int](source.MaxCount)
 	}
 	if s.Args == nil {
 		s.Args = source.Args
 	}
 	if s.StorageClassName == nil {
-		s.StorageClassName = util.NewStringOrNil(source.StorageClassName)
+		s.StorageClassName = util.NewTypeOrNil[string](source.StorageClassName)
 	}
 	if s.Tolerations == nil {
 		s.Tolerations = source.Tolerations
 	}
 	if s.ServiceAccountName == nil {
-		s.ServiceAccountName = util.NewStringOrNil(source.ServiceAccountName)
+		s.ServiceAccountName = util.NewTypeOrNil[string](source.ServiceAccountName)
 	}
 	if s.NodeSelector == nil {
 		s.NodeSelector = source.NodeSelector
@@ -610,7 +610,7 @@ func (s ServerGroupSpec) ResetImmutableFields(group ServerGroup, fieldPrefix str
 	var resetFields []string
 	if group == ServerGroupAgents {
 		if s.GetCount() != target.GetCount() {
-			target.Count = util.NewIntOrNil(s.Count)
+			target.Count = util.NewTypeOrNil[int](s.Count)
 			resetFields = append(resetFields, fieldPrefix+".count")
 		}
 	}

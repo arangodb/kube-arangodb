@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -56,7 +56,7 @@ func TestEnsurePod_ArangoDB_Volumes(t *testing.T) {
 			Name: "DBserver POD with Volume",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 					DBServers: api.ServerGroupSpec{
@@ -115,7 +115,7 @@ func TestEnsurePod_ArangoDB_Volumes(t *testing.T) {
 			Name: "DBserver POD with Volumes",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 					DBServers: api.ServerGroupSpec{
@@ -176,7 +176,7 @@ func TestEnsurePod_ArangoDB_Volumes(t *testing.T) {
 			Name: "DBserver POD with Volume Mount",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 					DBServers: api.ServerGroupSpec{

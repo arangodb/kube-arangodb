@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -202,7 +202,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			Spec: api.DeploymentSpec{
 				Mode: api.NewMode(api.DeploymentModeCluster),
 				TLS: api.TLSSpec{
-					CASecretName: util.NewString("None"),
+					CASecretName: util.NewType[string]("None"),
 				},
 			},
 		}
@@ -266,7 +266,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
-		apiObject.Spec.Authentication.JWTSecretName = util.NewString("None")
+		apiObject.Spec.Authentication.JWTSecretName = util.NewType[string]("None")
 		apiObject.Spec.StorageEngine = api.NewStorageEngine(api.StorageEngineMMFiles)
 		agents := api.MemberStatusList{
 			api.MemberStatus{ID: "a1"},

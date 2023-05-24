@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,10 +41,10 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			Name: "Agent Pod with image pull policy",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:           util.NewString(testImage),
+					Image:           util.NewType[string](testImage),
 					Authentication:  noAuthentication,
 					TLS:             noTLS,
-					ImagePullPolicy: util.NewPullPolicy(core.PullAlways),
+					ImagePullPolicy: util.NewType[core.PullPolicy](core.PullAlways),
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
@@ -92,10 +92,10 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			Name: "Agent Pod with image pull policy",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:           util.NewString(testImage),
+					Image:           util.NewType[string](testImage),
 					Authentication:  noAuthentication,
 					TLS:             noTLS,
-					ImagePullPolicy: util.NewPullPolicy(core.PullAlways),
+					ImagePullPolicy: util.NewType[core.PullPolicy](core.PullAlways),
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
@@ -143,7 +143,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			Name: "Agent Pod with sidecar",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 					Agents: api.ServerGroupSpec{
@@ -209,7 +209,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			Name: "Agent Pod with image pull secrets",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:            util.NewString(testImage),
+					Image:            util.NewType[string](testImage),
 					Authentication:   noAuthentication,
 					TLS:              noTLS,
 					ImagePullSecrets: []string{"docker-registry", "other-registry"},
@@ -268,7 +268,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			Name: "Agent Pod with alpine init container",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 				},
@@ -325,7 +325,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			Name: "DBserver POD with resource requirements",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 					DBServers: api.ServerGroupSpec{
@@ -382,7 +382,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			Name: "DBserver POD with resource requirements and memory override",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 					DBServers: api.ServerGroupSpec{
@@ -439,7 +439,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			Name: "DBserver POD with resource requirements and persistent volume claim",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 					DBServers: api.ServerGroupSpec{
@@ -499,7 +499,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			Name: "Initialized DBserver POD with alpine init container",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 				},
@@ -558,7 +558,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			Name: "Agent Pod without TLS, authentication, persistent volume claim, metrics, rocksDB encryption, license",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 				},
@@ -609,7 +609,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			Name: "Agent Pod with persistent volume claim",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 				},
@@ -666,7 +666,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			Name: "Agent Pod with TLS",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            tlsSpec,
 				},
@@ -719,7 +719,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			Name: "Agent Pod with authentication and unsecured liveness",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: authenticationSpec,
 					TLS:            noTLS,
 					Environment:    api.NewEnvironment(api.EnvironmentProduction),
@@ -777,10 +777,10 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			Name: "Agent Pod with TLS and authentication and secured liveness probe",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: authenticationSpec,
 					TLS: api.TLSSpec{
-						CASecretName: util.NewString(testCASecretName),
+						CASecretName: util.NewType[string](testCASecretName),
 					},
 				},
 			},
@@ -838,7 +838,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			Name: "Agent Pod with encrypted rocksdb",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 					RocksDB:        rocksDBSpec,
@@ -895,7 +895,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			Name: "DBserver Pod with internal metrics exporter",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: authenticationSpec,
 					TLS:            noTLS,
 					Metrics:        metricsSpec,
@@ -956,14 +956,14 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			Name: "DBserver Pod with metrics exporter which contains resource requirements",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: authenticationSpec,
 					TLS:            noTLS,
 					Metrics: api.MetricsSpec{
-						Enabled: util.NewBool(true),
-						Image:   util.NewString(testImage),
+						Enabled: util.NewType[bool](true),
+						Image:   util.NewType[string](testImage),
 						Authentication: api.MetricsAuthenticationSpec{
-							JWTTokenSecretName: util.NewString(testExporterToken),
+							JWTTokenSecretName: util.NewType[string](testExporterToken),
 						},
 						Resources: resourcesUnfiltered,
 					},
@@ -1024,7 +1024,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			Name: "DBserver Pod with lifecycle init container which contains resource requirements",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: authenticationSpec,
 					TLS:            noTLS,
 					Metrics:        metricsSpec,
@@ -1097,7 +1097,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			Name: "DBserver Pod with metrics exporter and lifecycle init container and alpine init container",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: authenticationSpec,
 					TLS:            noTLS,
 					Metrics:        metricsSpec,
@@ -1167,11 +1167,11 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			Name: "Coordinator Pod with TLS and authentication and readiness and liveness",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: authenticationSpec,
 					Environment:    api.NewEnvironment(api.EnvironmentProduction),
 					TLS: api.TLSSpec{
-						CASecretName: util.NewString(testCASecretName),
+						CASecretName: util.NewType[string](testCASecretName),
 					},
 				},
 			},
@@ -1229,10 +1229,10 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			Name: "Single Pod with TLS and authentication and readiness and readiness",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: authenticationSpec,
 					TLS: api.TLSSpec{
-						CASecretName: util.NewString(testCASecretName),
+						CASecretName: util.NewType[string](testCASecretName),
 					},
 				},
 			},
@@ -1294,13 +1294,13 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			Name: "Single Pod with TLS and authentication and readiness and port override",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: authenticationSpec,
 					TLS: api.TLSSpec{
-						CASecretName: util.NewString(testCASecretName),
+						CASecretName: util.NewType[string](testCASecretName),
 					},
 					Single: api.ServerGroupSpec{
-						Port: util.NewUInt16(18529),
+						Port: util.NewType[uint16](18529),
 					},
 				},
 			},
@@ -1365,14 +1365,14 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			},
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: authenticationSpec,
 					Environment:    api.NewEnvironment(api.EnvironmentProduction),
 					TLS: api.TLSSpec{
-						CASecretName: util.NewString(testCASecretName),
+						CASecretName: util.NewType[string](testCASecretName),
 					},
 					Coordinators: api.ServerGroupSpec{
-						Port: util.NewUInt16(18529),
+						Port: util.NewType[uint16](18529),
 					},
 				},
 			},

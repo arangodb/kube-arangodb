@@ -457,12 +457,12 @@ func TestCreatePlanSingleScale(t *testing.T) {
 	assert.True(t, changed)
 	assert.Len(t, newPlan, 0) // Single mode does not scale
 
-	spec.Single.Count = util.NewInt(2)
+	spec.Single.Count = util.NewType[int](2)
 	newPlan, _, changed = r.createNormalPlan(ctx, depl, nil, spec, status, c)
 	assert.True(t, changed)
 	assert.Len(t, newPlan, 0) // Single mode does not scale
 
-	spec.Single.Count = util.NewInt(1)
+	spec.Single.Count = util.NewType[int](1)
 	// Test with 2 single members (which should not happen) and try to scale down
 	status.Members.Single = api.MemberStatusList{
 		api.MemberStatus{
@@ -494,7 +494,7 @@ func TestCreatePlanActiveFailoverScale(t *testing.T) {
 		Mode: api.NewMode(api.DeploymentModeActiveFailover),
 	}
 	spec.SetDefaults("test")
-	spec.Single.Count = util.NewInt(2)
+	spec.Single.Count = util.NewType[int](2)
 	depl := &api.ArangoDeployment{
 		ObjectMeta: meta.ObjectMeta{
 			Name:      "test_depl",
@@ -673,8 +673,8 @@ func TestCreatePlanClusterScale(t *testing.T) {
 			},
 		},
 	}
-	spec.DBServers.Count = util.NewInt(1)
-	spec.Coordinators.Count = util.NewInt(1)
+	spec.DBServers.Count = util.NewType[int](1)
+	spec.Coordinators.Count = util.NewType[int](1)
 	newPlan, _, changed = r.createNormalPlan(ctx, depl, nil, spec, status, c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 7) // Note: Downscaling is done 1 at a time
@@ -774,7 +774,7 @@ func TestCreatePlan(t *testing.T) {
 		Spec: api.DeploymentSpec{
 			Mode: api.NewMode(api.DeploymentModeCluster),
 			TLS: api.TLSSpec{
-				CASecretName: util.NewString(api.CASecretNameDisabled),
+				CASecretName: util.NewType[string](api.CASecretNameDisabled),
 			},
 		},
 		Status: api.DeploymentStatus{
@@ -825,7 +825,7 @@ func TestCreatePlan(t *testing.T) {
 				PVCS: map[string]*core.PersistentVolumeClaim{
 					pvcName: {
 						Spec: core.PersistentVolumeClaimSpec{
-							StorageClassName: util.NewString("oldStorage"),
+							StorageClassName: util.NewType[string]("oldStorage"),
 						},
 					},
 				},
@@ -838,10 +838,10 @@ func TestCreatePlan(t *testing.T) {
 			},
 			Helper: func(ad *api.ArangoDeployment) {
 				ad.Spec.DBServers = api.ServerGroupSpec{
-					Count: util.NewInt(3),
+					Count: util.NewType[int](3),
 					VolumeClaimTemplate: &core.PersistentVolumeClaim{
 						Spec: core.PersistentVolumeClaimSpec{
-							StorageClassName: util.NewString("newStorage"),
+							StorageClassName: util.NewType[string]("newStorage"),
 						},
 					},
 				}
@@ -878,7 +878,7 @@ func TestCreatePlan(t *testing.T) {
 				PVCS: map[string]*core.PersistentVolumeClaim{
 					pvcName: {
 						Spec: core.PersistentVolumeClaimSpec{
-							StorageClassName: util.NewString("oldStorage"),
+							StorageClassName: util.NewType[string]("oldStorage"),
 						},
 					},
 				},
@@ -888,10 +888,10 @@ func TestCreatePlan(t *testing.T) {
 			},
 			Helper: func(ad *api.ArangoDeployment) {
 				ad.Spec.DBServers = api.ServerGroupSpec{
-					Count: util.NewInt(3),
+					Count: util.NewType[int](3),
 					VolumeClaimTemplate: &core.PersistentVolumeClaim{
 						Spec: core.PersistentVolumeClaimSpec{
-							StorageClassName: util.NewString("newStorage"),
+							StorageClassName: util.NewType[string]("newStorage"),
 						},
 					},
 				}
@@ -912,7 +912,7 @@ func TestCreatePlan(t *testing.T) {
 				PVCS: map[string]*core.PersistentVolumeClaim{
 					pvcName: {
 						Spec: core.PersistentVolumeClaimSpec{
-							StorageClassName: util.NewString(""),
+							StorageClassName: util.NewType[string](""),
 						},
 					},
 				},
@@ -922,8 +922,8 @@ func TestCreatePlan(t *testing.T) {
 			},
 			Helper: func(ad *api.ArangoDeployment) {
 				ad.Spec.Agents = api.ServerGroupSpec{
-					Count:            util.NewInt(2),
-					StorageClassName: util.NewString("newStorage"),
+					Count:            util.NewType[int](2),
+					StorageClassName: util.NewType[string]("newStorage"),
 				}
 				ad.Status.Members.Agents[0].Phase = api.MemberPhaseCreated
 				ad.Status.Members.Agents[0].PersistentVolumeClaim = &api.MemberPersistentVolumeClaimStatus{
@@ -951,7 +951,7 @@ func TestCreatePlan(t *testing.T) {
 				PVCS: map[string]*core.PersistentVolumeClaim{
 					pvcName: {
 						Spec: core.PersistentVolumeClaimSpec{
-							StorageClassName: util.NewString("oldStorage"),
+							StorageClassName: util.NewType[string]("oldStorage"),
 						},
 					},
 				},
@@ -961,10 +961,10 @@ func TestCreatePlan(t *testing.T) {
 			},
 			Helper: func(ad *api.ArangoDeployment) {
 				ad.Spec.Coordinators = api.ServerGroupSpec{
-					Count: util.NewInt(3),
+					Count: util.NewType[int](3),
 					VolumeClaimTemplate: &core.PersistentVolumeClaim{
 						Spec: core.PersistentVolumeClaimSpec{
-							StorageClassName: util.NewString("newStorage"),
+							StorageClassName: util.NewType[string]("newStorage"),
 						},
 					},
 				}
@@ -994,7 +994,7 @@ func TestCreatePlan(t *testing.T) {
 				PVCS: map[string]*core.PersistentVolumeClaim{
 					"pvc_test": {
 						Spec: core.PersistentVolumeClaimSpec{
-							StorageClassName: util.NewString("oldStorage"),
+							StorageClassName: util.NewType[string]("oldStorage"),
 						},
 						Status: core.PersistentVolumeClaimStatus{
 							Conditions: []core.PersistentVolumeClaimCondition{
@@ -1055,10 +1055,10 @@ func TestCreatePlan(t *testing.T) {
 			},
 			Helper: func(ad *api.ArangoDeployment) {
 				ad.Spec.Agents = api.ServerGroupSpec{
-					Count: util.NewInt(2),
+					Count: util.NewType[int](2),
 					VolumeClaimTemplate: &core.PersistentVolumeClaim{
 						Spec: core.PersistentVolumeClaimSpec{
-							StorageClassName: util.NewString("oldStorage"),
+							StorageClassName: util.NewType[string]("oldStorage"),
 						},
 					},
 				}
@@ -1079,7 +1079,7 @@ func TestCreatePlan(t *testing.T) {
 			},
 			Helper: func(ad *api.ArangoDeployment) {
 				ad.Spec.Agents = api.ServerGroupSpec{
-					Count: util.NewInt(2),
+					Count: util.NewType[int](2),
 				}
 				ad.Status.Members.Agents[0].Phase = api.MemberPhaseFailed
 				ad.Status.Members.Agents[0].ID = "id"
@@ -1102,7 +1102,7 @@ func TestCreatePlan(t *testing.T) {
 			},
 			Helper: func(ad *api.ArangoDeployment) {
 				ad.Spec.Coordinators = api.ServerGroupSpec{
-					Count: util.NewInt(2),
+					Count: util.NewType[int](2),
 				}
 				ad.Status.Members.Coordinators[0].Phase = api.MemberPhaseFailed
 				ad.Status.Members.Coordinators[0].ID = "id"
@@ -1122,7 +1122,7 @@ func TestCreatePlan(t *testing.T) {
 			},
 			Helper: func(ad *api.ArangoDeployment) {
 				ad.Spec.DBServers = api.ServerGroupSpec{
-					Count: util.NewInt(3),
+					Count: util.NewType[int](3),
 				}
 				ad.Status.Members.DBServers[0].Phase = api.MemberPhaseFailed
 				ad.Status.Members.DBServers[0].ID = "id"
@@ -1142,7 +1142,7 @@ func TestCreatePlan(t *testing.T) {
 			},
 			Helper: func(ad *api.ArangoDeployment) {
 				ad.Spec.DBServers = api.ServerGroupSpec{
-					Count: util.NewInt(2),
+					Count: util.NewType[int](2),
 				}
 				ad.Status.Members.DBServers[2].Phase = api.MemberPhaseFailed
 				ad.Status.Members.DBServers[2].ID = "id3"
@@ -1162,7 +1162,7 @@ func TestCreatePlan(t *testing.T) {
 			},
 			Helper: func(ad *api.ArangoDeployment) {
 				ad.Spec.DBServers = api.ServerGroupSpec{
-					Count: util.NewInt(3),
+					Count: util.NewType[int](3),
 				}
 				ad.Status.Members.DBServers[0].Phase = api.MemberPhaseCreated
 				ad.Status.Members.DBServers[0].Conditions = api.ConditionList{
@@ -1187,7 +1187,7 @@ func TestCreatePlan(t *testing.T) {
 			},
 			Helper: func(ad *api.ArangoDeployment) {
 				ad.Spec.DBServers = api.ServerGroupSpec{
-					Count: util.NewInt(2),
+					Count: util.NewType[int](2),
 				}
 				ad.Status.Members.DBServers[2].ID = "id3"
 				ad.Status.Members.DBServers[2].Phase = api.MemberPhaseCreated
@@ -1213,7 +1213,7 @@ func TestCreatePlan(t *testing.T) {
 			},
 			Helper: func(ad *api.ArangoDeployment) {
 				ad.Spec.DBServers = api.ServerGroupSpec{
-					Count: util.NewInt(2),
+					Count: util.NewType[int](2),
 				}
 				ad.Status.Members.DBServers[0].Phase = api.MemberPhaseCreated
 			},

@@ -175,7 +175,7 @@ func testModClientMetrics[S meta.Object](t *testing.T, definition definitions.Co
 
 		t.Run("ForceDelete", func(t *testing.T) {
 			err := in.Delete(context.Background(), obj.GetName(), meta.DeleteOptions{
-				GracePeriodSeconds: util.NewInt64(0),
+				GracePeriodSeconds: util.NewType[int64](0),
 			})
 			require.NoError(t, err)
 
@@ -186,7 +186,7 @@ func testModClientMetrics[S meta.Object](t *testing.T, definition definitions.Co
 
 		t.Run("ForceDelete - missing", func(t *testing.T) {
 			err := in.Delete(context.Background(), obj.GetName(), meta.DeleteOptions{
-				GracePeriodSeconds: util.NewInt64(0),
+				GracePeriodSeconds: util.NewType[int64](0),
 			})
 			require.Error(t, err)
 

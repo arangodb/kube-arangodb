@@ -125,7 +125,7 @@ func (r *Reconciler) isStorageClassChanged(_ context.Context, apiObject k8sutil.
 		r.log.Str("role", group.AsRole()).Str("id", member.ID).Warn("Failed to get PVC")
 		return false, "", fmt.Errorf("failed to get PVC %s", member.PersistentVolumeClaim.GetName())
 	} else {
-		pvcClassName := util.StringOrDefault(pvc.Spec.StorageClassName)
+		pvcClassName := util.TypeOrDefault[string](pvc.Spec.StorageClassName)
 		if pvcClassName == storageClassName {
 			// A storage class has not been changed.
 			return false, "", nil

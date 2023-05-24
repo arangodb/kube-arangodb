@@ -217,7 +217,7 @@ func (s *DeploymentSpec) GetAllowMemberRecreation(group ServerGroup) bool {
 
 // GetRestoreFrom returns the restore from string or empty string if not set
 func (s *DeploymentSpec) GetRestoreFrom() string {
-	return util.StringOrDefault(s.RestoreFrom)
+	return util.TypeOrDefault[string](s.RestoreFrom)
 }
 
 // HasRestoreFrom returns true if RestoreFrom is set
@@ -252,7 +252,7 @@ func (s DeploymentSpec) GetStorageEngine() StorageEngine {
 
 // GetImage returns the value of image.
 func (s DeploymentSpec) GetImage() string {
-	return util.StringOrDefault(s.Image)
+	return util.TypeOrDefault[string](s.Image)
 }
 
 // GetSyncImage returns, if set, Sync.Image or the default image.
@@ -265,22 +265,22 @@ func (s DeploymentSpec) GetSyncImage() string {
 
 // GetImagePullPolicy returns the value of imagePullPolicy.
 func (s DeploymentSpec) GetImagePullPolicy() core.PullPolicy {
-	return util.PullPolicyOrDefault(s.ImagePullPolicy)
+	return util.TypeOrDefault[core.PullPolicy](s.ImagePullPolicy)
 }
 
 // IsDowntimeAllowed returns the value of downtimeAllowed.
 func (s DeploymentSpec) IsDowntimeAllowed() bool {
-	return util.BoolOrDefault(s.DowntimeAllowed)
+	return util.TypeOrDefault[bool](s.DowntimeAllowed)
 }
 
 // IsDisableIPv6 returns the value of disableIPv6.
 func (s DeploymentSpec) IsDisableIPv6() bool {
-	return util.BoolOrDefault(s.DisableIPv6)
+	return util.TypeOrDefault[bool](s.DisableIPv6)
 }
 
 // IsNetworkAttachedVolumes returns the value of networkAttachedVolumes, default false
 func (s DeploymentSpec) IsNetworkAttachedVolumes() bool {
-	return util.BoolOrDefault(s.NetworkAttachedVolumes, false)
+	return util.TypeOrDefault[bool](s.NetworkAttachedVolumes, false)
 }
 
 // GetListenAddr returns "[::]" or "0.0.0.0" depending on IsDisableIPv6
@@ -353,10 +353,10 @@ func (s *DeploymentSpec) SetDefaults(deploymentName string) {
 		s.StorageEngine = NewStorageEngine(StorageEngineRocksDB)
 	}
 	if s.GetImage() == "" && s.IsDevelopment() {
-		s.Image = util.NewString(DefaultImage)
+		s.Image = util.NewType[string](DefaultImage)
 	}
 	if s.GetImagePullPolicy() == "" {
-		s.ImagePullPolicy = util.NewPullPolicy(core.PullIfNotPresent)
+		s.ImagePullPolicy = util.NewType[core.PullPolicy](core.PullIfNotPresent)
 	}
 	s.ExternalAccess.SetDefaults()
 	s.RocksDB.SetDefaults()
@@ -386,20 +386,20 @@ func (s *DeploymentSpec) SetDefaultsFrom(source DeploymentSpec) {
 		s.StorageEngine = NewStorageEngineOrNil(source.StorageEngine)
 	}
 	if s.Image == nil {
-		s.Image = util.NewStringOrNil(source.Image)
+		s.Image = util.NewTypeOrNil[string](source.Image)
 	}
 	if s.ImagePullPolicy == nil {
-		s.ImagePullPolicy = util.NewPullPolicyOrNil(source.ImagePullPolicy)
+		s.ImagePullPolicy = util.NewTypeOrNil[core.PullPolicy](source.ImagePullPolicy)
 	}
 	if s.DowntimeAllowed == nil {
-		s.DowntimeAllowed = util.NewBoolOrNil(source.DowntimeAllowed)
+		s.DowntimeAllowed = util.NewTypeOrNil[bool](source.DowntimeAllowed)
 	}
 	if s.DisableIPv6 == nil {
-		s.DisableIPv6 = util.NewBoolOrNil(source.DisableIPv6)
+		s.DisableIPv6 = util.NewTypeOrNil[bool](source.DisableIPv6)
 	}
 
 	if s.AllowUnsafeUpgrade == nil {
-		s.AllowUnsafeUpgrade = util.NewBoolOrNil(source.AllowUnsafeUpgrade)
+		s.AllowUnsafeUpgrade = util.NewTypeOrNil[bool](source.AllowUnsafeUpgrade)
 	}
 	if s.Database == nil {
 		s.Database = source.Database.DeepCopy()
@@ -516,7 +516,7 @@ func (s DeploymentSpec) ResetImmutableFields(target *DeploymentSpec) []string {
 		resetFields = append(resetFields, "storageEngine")
 	}
 	if s.IsDisableIPv6() != target.IsDisableIPv6() {
-		target.DisableIPv6 = util.NewBoolOrNil(s.DisableIPv6)
+		target.DisableIPv6 = util.NewTypeOrNil[bool](s.DisableIPv6)
 		resetFields = append(resetFields, "disableIPv6")
 	}
 	if l := s.ExternalAccess.ResetImmutableFields("externalAccess", &target.ExternalAccess); l != nil {

@@ -42,8 +42,8 @@ func TestArangoBackupStatusBackOff_Backoff(t *testing.T) {
 
 	t.Run("Test MaxIterations", func(t *testing.T) {
 		var spec = &ArangoBackupSpecBackOff{
-			Iterations:    util.NewInt(2),
-			MaxIterations: util.NewInt(3),
+			Iterations:    util.NewType[int](2),
+			MaxIterations: util.NewType[int](3),
 		}
 		var status *ArangoBackupStatusBackOff
 
