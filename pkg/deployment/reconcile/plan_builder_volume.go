@@ -26,6 +26,7 @@ import (
 	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	sharedApis "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
@@ -51,7 +52,8 @@ func (r *Reconciler) updateMemberConditionTypeMemberVolumeUnschedulableCondition
 				if volumeName := pvc.Spec.VolumeName; volumeName != "" {
 					if pv, ok := volumeClient.GetSimple(volumeName); ok {
 						// We have volume and volumeclaim, lets calculate condition
-						unschedulable := memberConditionTypeMemberVolumeUnschedulableCalculate(cache, pv, pvc)
+						unschedulable := memberConditionTypeMemberVolumeUnschedulableCalculate(cache, pv, pvc,
+							memberConditionTypeMemberVolumeUnschedulableLocalStorageGone)
 
 						if unschedulable == e.Member.Conditions.IsTrue(api.ConditionTypeMemberVolumeUnschedulable) {
 							continue
@@ -77,6 +79,40 @@ func memberConditionTypeMemberVolumeUnschedulableCalculate(cache inspectorInterf
 	for _, f := range funcs {
 		if f(cache, pv, pvc) {
 			return true
+		}
+	}
+
+	return false
+}
+
+func memberConditionTypeMemberVolumeUnschedulableLocalStorageGone(cache inspectorInterface.Inspector, pv *core.PersistentVolume, _ *core.PersistentVolumeClaim) bool {
+	nodes, err := cache.Node().V1()
+	if err != nil {
+		return false
+	}
+
+	if pv.Spec.PersistentVolumeSource.Local == nil {
+		// We are not on LocalStorage
+		return false
+	}
+
+	if nodeAffinity := pv.Spec.NodeAffinity; nodeAffinity != nil {
+		if required := nodeAffinity.Required; required != nil {
+			for _, nst := range required.NodeSelectorTerms {
+				for _, expr := range nst.MatchExpressions {
+					if expr.Key == sharedApis.TopologyKeyHostname && expr.Operator == core.NodeSelectorOpIn {
+						// We got exact key which is required for PV
+						if len(expr.Values) == 1 {
+							// Only one host assigned, we use it as localStorage - check if node exists
+							_, ok := nodes.GetSimple(expr.Values[0])
+							if !ok {
+								// Node is missing!
+								return true
+							}
+						}
+					}
+				}
+			}
 		}
 	}
 

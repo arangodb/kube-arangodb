@@ -9,6 +9,7 @@
 - (Feature) Features startup logging
 - (Maintenance) Generics for type handling
 - (Bugfix) Fix creating sync components with EA type set to Managed and headless svc
+- (Feature) Check if Volume with LocalStorage is missing
 
 ## [1.2.27](https://github.com/arangodb/kube-arangodb/tree/1.2.27) (2023-04-27)
 - (Feature) Add InSync Cache
