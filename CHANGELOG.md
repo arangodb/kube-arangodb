@@ -5,6 +5,7 @@
 - (Feature) Add Reason in OOM Metric
 - (Feature) PersistentVolume Inspector
 - (Bugfix) Discover Arango image during ID phase
+- (Feature) PV Unschedulable condition
 
 ## [1.2.27](https://github.com/arangodb/kube-arangodb/tree/1.2.27) (2023-04-27)
 - (Feature) Add InSync Cache

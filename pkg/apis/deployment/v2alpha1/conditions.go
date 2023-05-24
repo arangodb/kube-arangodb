@@ -72,6 +72,8 @@ const (
 	ConditionTypeSpecAccepted ConditionType = "SpecAccepted"
 	// ConditionTypeSpecPropagated indicates that the deployment has been at least once UpToDate after spec acceptance.
 	ConditionTypeSpecPropagated ConditionType = "SpecPropagated"
+	// ConditionTypeMemberVolumeUnschedulable indicates that the member cannot schedued due to volume issue.
+	ConditionTypeMemberVolumeUnschedulable ConditionType = "MemberVolumeUnschedulable"
 	// ConditionTypeMarkedToRemove indicates that the member is marked to be removed.
 	ConditionTypeMarkedToRemove ConditionType = "MarkedToRemove"
 	// ConditionTypeScaleDownCandidate indicates that the member will be picked in ScaleDown operaion.
