@@ -25,10 +25,13 @@ import (
 )
 
 type ArangoBackupPolicySpec struct {
+	// Schedule is cron-compatible specification of backup schedule
 	Schedule string `json:"schedule"`
-
+	// DisallowConcurrent if true, ArangoBackup will not be created when previous Backups are not finished
+	DisallowConcurrent bool `json:"disallowConcurrent,omitempty"`
+	// DeploymentSelector specifies which deployments should get a backup
 	DeploymentSelector *meta.LabelSelector `json:"selector,omitempty"`
-
+	// ArangoBackupTemplate specifies additional options for newly created ArangoBackup
 	BackupTemplate ArangoBackupTemplate `json:"template"`
 }
 

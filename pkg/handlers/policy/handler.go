@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,16 +32,19 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+	deployment "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 const (
-	backupCreated = "ArangoBackupCreated"
-	policyError   = "Error"
-	rescheduled   = "Rescheduled"
+	backupCreated   = "ArangoBackupCreated"
+	policyError     = "Error"
+	rescheduled     = "Rescheduled"
+	scheduleSkipped = "ScheduleSkipped"
 )
 
 type handler struct {
@@ -153,8 +156,25 @@ func (h *handler) processBackupPolicy(policy *backupApi.ArangoBackupPolicy) back
 	}
 
 	for _, deployment := range deployments.Items {
-		b := policy.NewBackup(deployment.DeepCopy())
+		depl := deployment.DeepCopy()
 
+		if policy.Spec.DisallowConcurrent {
+			previousBackupInProgress, err := h.isPreviousBackupInProgress(context.Background(), depl, policy.Name)
+			if err != nil {
+				h.eventRecorder.Warning(policy, policyError, "Policy Error: %s", err.Error())
+				return backupApi.ArangoBackupPolicyStatus{
+					Scheduled: policy.Status.Scheduled,
+					Message:   fmt.Sprintf("backup creation failed: %s", err.Error()),
+				}
+			}
+			if previousBackupInProgress {
+				eventMsg := fmt.Sprintf("Skipping ArangoBackup creation because earlier backup still running %s/%s", deployment.Namespace, deployment.Name)
+				h.eventRecorder.Normal(policy, scheduleSkipped, eventMsg)
+				continue
+			}
+		}
+
+		b := policy.NewBackup(depl)
 		if _, err := h.client.BackupV1().ArangoBackups(b.Namespace).Create(context.Background(), b, meta.CreateOptions{}); err != nil {
 			h.eventRecorder.Warning(policy, policyError, "Policy Error: %s", err.Error())
 
@@ -182,4 +202,31 @@ func (*handler) CanBeHandled(item operation.Item) bool {
 	return item.Group == backupApi.SchemeGroupVersion.Group &&
 		item.Version == backupApi.SchemeGroupVersion.Version &&
 		item.Kind == backup.ArangoBackupPolicyResourceKind
+}
+
+func (h *handler) isPreviousBackupInProgress(ctx context.Context, d *deployment.ArangoDeployment, policyName string) (bool, error) {
+	// It would be nice to List CRs with fieldSelector set, but this is not supported:
+	// https://github.com/kubernetes/kubernetes/issues/53459
+	// Instead we fetch all ArangoBackups:
+	backups, err := h.client.BackupV1().ArangoBackups(d.Namespace).List(ctx, meta.ListOptions{})
+	if err != nil {
+		return false, errors.Wrap(err, "Failed to list ArangoBackups")
+	}
+
+	for _, b := range backups.Items {
+		if b.Spec.PolicyName == nil || *b.Spec.PolicyName != policyName {
+			continue
+		}
+		if b.Spec.Download != nil {
+			continue
+		}
+		if b.Spec.Deployment.Name != d.Name {
+			continue
+		}
+		if !backupApi.IsTerminalState(b.Status.State) {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }

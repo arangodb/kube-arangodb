@@ -107,3 +107,18 @@ func (a *ArangoBackupProgress) Equal(b *ArangoBackupProgress) bool {
 	return a.JobID == b.JobID &&
 		a.Progress == b.Progress
 }
+
+func IsTerminalState(other state.State) bool {
+	var terminalStates = []state.State{
+		ArangoBackupStateReady,
+		ArangoBackupStateDeleted,
+		ArangoBackupStateFailed,
+		ArangoBackupStateUnavailable,
+	}
+	for _, curr := range terminalStates {
+		if curr == other {
+			return true
+		}
+	}
+	return false
+}
