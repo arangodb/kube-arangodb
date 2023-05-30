@@ -69,7 +69,7 @@ func newItemFromBackupPolicy(operation operation.Operation, policy *backupApi.Ar
 	return newItem(operation, policy.Namespace, policy.Name)
 }
 
-func newArangoBackupPolicy(schedule, namespace, name string, selector map[string]string, template backupApi.ArangoBackupTemplate) *backupApi.ArangoBackupPolicy {
+func newArangoBackupPolicy(schedule, namespace, name string, selector map[string]string, disallowConcurrent bool, template backupApi.ArangoBackupTemplate) *backupApi.ArangoBackupPolicy {
 	return &backupApi.ArangoBackupPolicy{
 		TypeMeta: meta.TypeMeta{
 			APIVersion: backupApi.SchemeGroupVersion.String(),
@@ -86,7 +86,8 @@ func newArangoBackupPolicy(schedule, namespace, name string, selector map[string
 			UID: uuid.NewUUID(),
 		},
 		Spec: backupApi.ArangoBackupPolicySpec{
-			Schedule: schedule,
+			Schedule:           schedule,
+			DisallowConcurrent: disallowConcurrent,
 			DeploymentSelector: &meta.LabelSelector{
 				MatchLabels: selector,
 			},

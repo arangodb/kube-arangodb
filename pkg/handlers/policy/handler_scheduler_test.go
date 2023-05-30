@@ -21,6 +21,7 @@
 package policy
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -39,7 +40,7 @@ func Test_Scheduler_Schedule(t *testing.T) {
 	name := string(uuid.NewUUID())
 	namespace := string(uuid.NewUUID())
 
-	policy := newArangoBackupPolicy("* * * */2 *", namespace, name, map[string]string{}, backupApi.ArangoBackupTemplate{})
+	policy := newArangoBackupPolicy("* * * */2 *", namespace, name, map[string]string{}, false, backupApi.ArangoBackupTemplate{})
 
 	database := newArangoDeployment(namespace, map[string]string{
 		"test": "me",
@@ -67,7 +68,7 @@ func Test_Scheduler_InvalidSchedule(t *testing.T) {
 	name := string(uuid.NewUUID())
 	namespace := string(uuid.NewUUID())
 
-	policy := newArangoBackupPolicy("", namespace, name, map[string]string{}, backupApi.ArangoBackupTemplate{})
+	policy := newArangoBackupPolicy("", namespace, name, map[string]string{}, false, backupApi.ArangoBackupTemplate{})
 
 	database := newArangoDeployment(namespace, map[string]string{})
 
@@ -93,7 +94,7 @@ func Test_Scheduler_Valid_OneObject_SelectAll(t *testing.T) {
 	name := string(uuid.NewUUID())
 	namespace := string(uuid.NewUUID())
 
-	policy := newArangoBackupPolicy("* * * */2 *", namespace, name, map[string]string{}, backupApi.ArangoBackupTemplate{})
+	policy := newArangoBackupPolicy("* * * */2 *", namespace, name, map[string]string{}, false, backupApi.ArangoBackupTemplate{})
 	policy.Status.Scheduled = meta.Time{
 		Time: time.Now().Add(-1 * time.Hour),
 	}
@@ -132,7 +133,7 @@ func Test_Scheduler_Valid_OneObject_Selector(t *testing.T) {
 		"SELECTOR": string(uuid.NewUUID()),
 	}
 
-	policy := newArangoBackupPolicy("* * * */2 *", namespace, name, selectors, backupApi.ArangoBackupTemplate{})
+	policy := newArangoBackupPolicy("* * * */2 *", namespace, name, selectors, false, backupApi.ArangoBackupTemplate{})
 	policy.Status.Scheduled = meta.Time{
 		Time: time.Now().Add(-1 * time.Hour),
 	}
@@ -170,7 +171,7 @@ func Test_Scheduler_Valid_MultipleObject_Selector(t *testing.T) {
 		"SELECTOR": string(uuid.NewUUID()),
 	}
 
-	policy := newArangoBackupPolicy("* * * */2 *", namespace, name, selectors, backupApi.ArangoBackupTemplate{})
+	policy := newArangoBackupPolicy("* * * */2 *", namespace, name, selectors, false, backupApi.ArangoBackupTemplate{})
 	policy.Status.Scheduled = meta.Time{
 		Time: time.Now().Add(-1 * time.Hour),
 	}
@@ -211,7 +212,7 @@ func Test_Reschedule(t *testing.T) {
 		"SELECTOR": string(uuid.NewUUID()),
 	}
 
-	policy := newArangoBackupPolicy("* 13 * * *", namespace, name, selectors, backupApi.ArangoBackupTemplate{})
+	policy := newArangoBackupPolicy("* 13 * * *", namespace, name, selectors, false, backupApi.ArangoBackupTemplate{})
 
 	// Act
 	createArangoBackupPolicy(t, handler, policy)
@@ -270,7 +271,7 @@ func Test_Validate(t *testing.T) {
 				"SELECTOR": string(uuid.NewUUID()),
 			}
 
-			policy := newArangoBackupPolicy(c, namespace, name, selectors, backupApi.ArangoBackupTemplate{})
+			policy := newArangoBackupPolicy(c, namespace, name, selectors, false, backupApi.ArangoBackupTemplate{})
 
 			require.NoError(t, policy.Validate())
 
@@ -285,4 +286,54 @@ func Test_Validate(t *testing.T) {
 			require.NotEmpty(t, newPolicy.Status.Scheduled)
 		})
 	}
+}
+
+func Test_DisallowConcurrent(t *testing.T) {
+	handler := newFakeHandler()
+
+	name := string(uuid.NewUUID())
+	namespace := string(uuid.NewUUID())
+
+	policy := newArangoBackupPolicy("* * * */2 *", namespace, name, map[string]string{}, true, backupApi.ArangoBackupTemplate{})
+	policy.Status.Scheduled = meta.Time{
+		Time: time.Now().Add(-1 * time.Hour),
+	}
+
+	database := newArangoDeployment(namespace, map[string]string{
+		"test": "me",
+	})
+
+	createArangoBackupPolicy(t, handler, policy)
+	createArangoDeployment(t, handler, database)
+
+	// "create" first backup
+	require.NoError(t, handler.Handle(newItemFromBackupPolicy(operation.Update, policy)))
+	backups := listArangoBackups(t, handler, namespace)
+	require.Len(t, backups, 1)
+
+	// "try create" second backup but first one still is not in TerminalState
+	policy = refreshArangoBackupPolicy(t, handler, policy)
+	policy.Status.Scheduled = meta.Time{
+		Time: time.Now().Add(-1 * time.Hour),
+	}
+	updateArangoBackupPolicy(t, handler, policy)
+	require.NoError(t, handler.Handle(newItemFromBackupPolicy(operation.Update, policy)))
+	backups = listArangoBackups(t, handler, namespace)
+	require.Len(t, backups, 1)
+
+	// mark previous backup as Ready
+	backup := backups[0].DeepCopy()
+	backup.Status.State = backupApi.ArangoBackupStateReady
+	_, err := handler.client.BackupV1().ArangoBackups(namespace).UpdateStatus(context.Background(), backup, meta.UpdateOptions{})
+	require.NoError(t, err)
+
+	// "try create" second backup again, should succeed
+	policy = refreshArangoBackupPolicy(t, handler, policy)
+	policy.Status.Scheduled = meta.Time{
+		Time: time.Now().Add(-1 * time.Hour),
+	}
+	updateArangoBackupPolicy(t, handler, policy)
+	require.NoError(t, handler.Handle(newItemFromBackupPolicy(operation.Update, policy)))
+	backups = listArangoBackups(t, handler, namespace)
+	require.Len(t, backups, 2)
 }
