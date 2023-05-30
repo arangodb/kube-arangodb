@@ -40,7 +40,7 @@ func Test_Scheduler_Schedule(t *testing.T) {
 	name := string(uuid.NewUUID())
 	namespace := string(uuid.NewUUID())
 
-	policy := newArangoBackupPolicy("* * * */2 *", namespace, name, map[string]string{}, false, backupApi.ArangoBackupTemplate{})
+	policy := newArangoBackupPolicy(namespace, name, newSimpleArangoBackupPolicySpec("* * * */2 *"))
 
 	database := newArangoDeployment(namespace, map[string]string{
 		"test": "me",
@@ -68,7 +68,7 @@ func Test_Scheduler_InvalidSchedule(t *testing.T) {
 	name := string(uuid.NewUUID())
 	namespace := string(uuid.NewUUID())
 
-	policy := newArangoBackupPolicy("", namespace, name, map[string]string{}, false, backupApi.ArangoBackupTemplate{})
+	policy := newArangoBackupPolicy(namespace, name, newSimpleArangoBackupPolicySpec(""))
 
 	database := newArangoDeployment(namespace, map[string]string{})
 
@@ -94,7 +94,7 @@ func Test_Scheduler_Valid_OneObject_SelectAll(t *testing.T) {
 	name := string(uuid.NewUUID())
 	namespace := string(uuid.NewUUID())
 
-	policy := newArangoBackupPolicy("* * * */2 *", namespace, name, map[string]string{}, false, backupApi.ArangoBackupTemplate{})
+	policy := newArangoBackupPolicy(namespace, name, newSimpleArangoBackupPolicySpec("* * * */2 *"))
 	policy.Status.Scheduled = meta.Time{
 		Time: time.Now().Add(-1 * time.Hour),
 	}
@@ -132,8 +132,9 @@ func Test_Scheduler_Valid_OneObject_Selector(t *testing.T) {
 	selectors := map[string]string{
 		"SELECTOR": string(uuid.NewUUID()),
 	}
-
-	policy := newArangoBackupPolicy("* * * */2 *", namespace, name, selectors, false, backupApi.ArangoBackupTemplate{})
+	spec := newSimpleArangoBackupPolicySpec("* * * */2 *")
+	spec.DeploymentSelector = &meta.LabelSelector{MatchLabels: selectors}
+	policy := newArangoBackupPolicy(namespace, name, spec)
 	policy.Status.Scheduled = meta.Time{
 		Time: time.Now().Add(-1 * time.Hour),
 	}
@@ -171,7 +172,9 @@ func Test_Scheduler_Valid_MultipleObject_Selector(t *testing.T) {
 		"SELECTOR": string(uuid.NewUUID()),
 	}
 
-	policy := newArangoBackupPolicy("* * * */2 *", namespace, name, selectors, false, backupApi.ArangoBackupTemplate{})
+	spec := newSimpleArangoBackupPolicySpec("* * * */2 *")
+	spec.DeploymentSelector = &meta.LabelSelector{MatchLabels: selectors}
+	policy := newArangoBackupPolicy(namespace, name, spec)
 	policy.Status.Scheduled = meta.Time{
 		Time: time.Now().Add(-1 * time.Hour),
 	}
@@ -212,7 +215,9 @@ func Test_Reschedule(t *testing.T) {
 		"SELECTOR": string(uuid.NewUUID()),
 	}
 
-	policy := newArangoBackupPolicy("* 13 * * *", namespace, name, selectors, false, backupApi.ArangoBackupTemplate{})
+	spec := newSimpleArangoBackupPolicySpec("* 13 * * *")
+	spec.DeploymentSelector = &meta.LabelSelector{MatchLabels: selectors}
+	policy := newArangoBackupPolicy(namespace, name, spec)
 
 	// Act
 	createArangoBackupPolicy(t, handler, policy)
@@ -270,8 +275,9 @@ func Test_Validate(t *testing.T) {
 			selectors := map[string]string{
 				"SELECTOR": string(uuid.NewUUID()),
 			}
-
-			policy := newArangoBackupPolicy(c, namespace, name, selectors, false, backupApi.ArangoBackupTemplate{})
+			spec := newSimpleArangoBackupPolicySpec(c)
+			spec.DeploymentSelector = &meta.LabelSelector{MatchLabels: selectors}
+			policy := newArangoBackupPolicy(namespace, name, spec)
 
 			require.NoError(t, policy.Validate())
 
@@ -294,7 +300,9 @@ func Test_DisallowConcurrent(t *testing.T) {
 	name := string(uuid.NewUUID())
 	namespace := string(uuid.NewUUID())
 
-	policy := newArangoBackupPolicy("* * * */2 *", namespace, name, map[string]string{}, true, backupApi.ArangoBackupTemplate{})
+	spec := newSimpleArangoBackupPolicySpec("* * * */2 *")
+	spec.DisallowConcurrent = true
+	policy := newArangoBackupPolicy(namespace, name, spec)
 	policy.Status.Scheduled = meta.Time{
 		Time: time.Now().Add(-1 * time.Hour),
 	}
