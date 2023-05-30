@@ -27,10 +27,57 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	sharedApis "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 )
+
+func (r *Reconciler) volumeMemberReplacement(ctx context.Context, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	context PlanBuilderContext) api.Plan {
+	if !features.LocalVolumeReplacementCheck().Enabled() {
+		return nil
+	}
+
+	cache, ok := context.GetAgencyCache()
+	if !ok {
+		// Cache is not ready
+		return nil
+	}
+
+	servers := cache.PlanLeaderServers()
+
+	for _, member := range status.Members.AsList() {
+		if member.Member.Conditions.IsTrue(api.ConditionTypeScheduled) {
+			continue
+		}
+
+		if !member.Member.Conditions.IsTrue(api.ConditionTypeMemberVolumeUnschedulable) {
+			continue
+		}
+
+		if servers.Contains(agency.Server(member.Member.ID)) {
+			continue
+		}
+
+		if pvc := member.Member.PersistentVolumeClaim; pvc != nil {
+			if n := pvc.GetName(); n != "" {
+				client, ok := context.ACS().ClusterCache(member.Member.ClusterID)
+				if ok {
+					if pvc, ok := client.PersistentVolumeClaim().V1().GetSimple(n); ok {
+						// Server is not part of plan and is not ready
+						return api.Plan{actions.NewAction(api.ActionTypeRemoveMemberPVC, member.Group, member.Member, "PVC is unschedulable").AddParam("pvc", string(pvc.GetUID()))}
+					}
+				}
+			}
+		}
+	}
+
+	return nil
+}
 
 // updateMemberPhasePlan creates plan to update member phase
 func (r *Reconciler) updateMemberConditionTypeMemberVolumeUnschedulableCondition(ctx context.Context, apiObject k8sutil.APIObject,
@@ -55,6 +102,11 @@ func (r *Reconciler) updateMemberConditionTypeMemberVolumeUnschedulableCondition
 						unschedulable := memberConditionTypeMemberVolumeUnschedulableCalculate(cache, pv, pvc,
 							memberConditionTypeMemberVolumeUnschedulableLocalStorageGone)
 
+						if e.Member.Conditions.IsTrue(api.ConditionTypeScheduled) {
+							// We are scheduled, above checks can be ignored
+							unschedulable = false
+						}
+
 						if unschedulable == e.Member.Conditions.IsTrue(api.ConditionTypeMemberVolumeUnschedulable) {
 							continue
 						} else if unschedulable && !e.Member.Conditions.IsTrue(api.ConditionTypeMemberVolumeUnschedulable) {
@@ -63,7 +115,6 @@ func (r *Reconciler) updateMemberConditionTypeMemberVolumeUnschedulableCondition
 						} else if !unschedulable && e.Member.Conditions.IsTrue(api.ConditionTypeMemberVolumeUnschedulable) {
 							plan = append(plan, shared.RemoveMemberConditionActionV2("PV Schedulable", api.ConditionTypeMemberVolumeUnschedulable, e.Group, e.Member.ID))
 						}
-
 					}
 				}
 			}

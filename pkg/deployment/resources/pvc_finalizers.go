@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -81,6 +81,13 @@ func (r *Resources) inspectFinalizerPVCMemberExists(ctx context.Context, group a
 		log.Debug("Member is already failed, safe to remove member-exists finalizer")
 		return nil
 	}
+
+	if memberStatus.Conditions.IsTrue(api.ConditionTypeMemberVolumeUnschedulable) &&
+		!memberStatus.Conditions.IsTrue(api.ConditionTypeScheduled) {
+		log.Debug("Member is not scheduled and Volume is unschedulable")
+		return nil
+	}
+
 	// Inspect deployment deletion state
 	apiObject := r.context.GetAPIObject()
 	if apiObject.GetDeletionTimestamp() != nil {

@@ -51,6 +51,7 @@
 |           RecreateMember           |    no    |  15m0s  |    no    | Community & Enterprise |                                       Recreate member with same ID and Data                                        |
 |    RefreshTLSKeyfileCertificate    |    no    |  30m0s  |    no    |    Enterprise Only     |                                       Recreate Server TLS Certificate secret                                       |
 |            RemoveMember            |    no    |  15m0s  |    no    | Community & Enterprise |                                     Removes member from the Cluster and Status                                     |
+|          RemoveMemberPVC           |    no    |  15m0s  |    no    | Community & Enterprise |                                 Removes member PVC and enforce recreate procedure                                  |
 |       RenewTLSCACertificate        |    no    |  30m0s  |    no    |    Enterprise Only     |                                             Recreate Managed CA secret                                             |
 |        RenewTLSCertificate         |    no    |  30m0s  |    no    |    Enterprise Only     |                                       Recreate Server TLS Certificate secret                                       |
 |          ResignLeadership          |    no    |  30m0s  |   yes    | Community & Enterprise |                                      Run the ResignLeadership job on DBServer                                      |
@@ -139,6 +140,7 @@ spec:
       RecreateMember: 15m0s
       RefreshTLSKeyfileCertificate: 30m0s
       RemoveMember: 15m0s
+      RemoveMemberPVC: 15m0s
       RenewTLSCACertificate: 30m0s
       RenewTLSCertificate: 30m0s
       ResignLeadership: 30m0s
