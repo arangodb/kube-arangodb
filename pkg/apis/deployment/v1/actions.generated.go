@@ -117,6 +117,8 @@ const (
 	ActionRefreshTLSKeyfileCertificateDefaultTimeout time.Duration = 1800 * time.Second // 30m0s
 	// ActionRemoveMemberDefaultTimeout define default timeout for action ActionRemoveMember
 	ActionRemoveMemberDefaultTimeout time.Duration = 900 * time.Second // 15m0s
+	// ActionRemoveMemberPVCDefaultTimeout define default timeout for action ActionRemoveMemberPVC
+	ActionRemoveMemberPVCDefaultTimeout time.Duration = 900 * time.Second // 15m0s
 	// ActionRenewTLSCACertificateDefaultTimeout define default timeout for action ActionRenewTLSCACertificate
 	ActionRenewTLSCACertificateDefaultTimeout time.Duration = 1800 * time.Second // 30m0s
 	// ActionRenewTLSCertificateDefaultTimeout define default timeout for action ActionRenewTLSCertificate
@@ -276,6 +278,8 @@ const (
 	ActionTypeRefreshTLSKeyfileCertificate ActionType = "RefreshTLSKeyfileCertificate"
 	// ActionTypeRemoveMember in scopes Normal. Removes member from the Cluster and Status
 	ActionTypeRemoveMember ActionType = "RemoveMember"
+	// ActionTypeRemoveMemberPVC in scopes Normal. Removes member PVC and enforce recreate procedure
+	ActionTypeRemoveMemberPVC ActionType = "RemoveMemberPVC"
 	// ActionTypeRenewTLSCACertificate in scopes Normal. Recreate Managed CA secret
 	ActionTypeRenewTLSCACertificate ActionType = "RenewTLSCACertificate"
 	// ActionTypeRenewTLSCertificate in scopes Normal. Recreate Server TLS Certificate secret
@@ -436,6 +440,8 @@ func (a ActionType) DefaultTimeout() time.Duration {
 		return ActionRefreshTLSKeyfileCertificateDefaultTimeout
 	case ActionTypeRemoveMember:
 		return ActionRemoveMemberDefaultTimeout
+	case ActionTypeRemoveMemberPVC:
+		return ActionRemoveMemberPVCDefaultTimeout
 	case ActionTypeRenewTLSCACertificate:
 		return ActionRenewTLSCACertificateDefaultTimeout
 	case ActionTypeRenewTLSCertificate:
@@ -599,6 +605,8 @@ func (a ActionType) Priority() ActionPriority {
 	case ActionTypeRefreshTLSKeyfileCertificate:
 		return ActionPriorityNormal
 	case ActionTypeRemoveMember:
+		return ActionPriorityNormal
+	case ActionTypeRemoveMemberPVC:
 		return ActionPriorityNormal
 	case ActionTypeRenewTLSCACertificate:
 		return ActionPriorityNormal
@@ -773,6 +781,8 @@ func (a ActionType) Optional() bool {
 	case ActionTypeRefreshTLSKeyfileCertificate:
 		return false
 	case ActionTypeRemoveMember:
+		return false
+	case ActionTypeRemoveMemberPVC:
 		return false
 	case ActionTypeRenewTLSCACertificate:
 		return false

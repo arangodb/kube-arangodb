@@ -271,6 +271,30 @@ func (s State) PlanServers() Servers {
 	return r
 }
 
+// PlanLeaderServers returns all servers which are part of the plan as a leader
+func (s State) PlanLeaderServers() Servers {
+	q := map[Server]bool{}
+
+	for _, db := range s.Plan.Collections {
+		for _, col := range db {
+			for _, shards := range col.Shards {
+				if len(shards) == 0 {
+					continue
+				}
+				q[shards[0]] = true
+			}
+		}
+	}
+
+	r := make([]Server, 0, len(q))
+
+	for k := range q {
+		r = append(r, k)
+	}
+
+	return r
+}
+
 type CollectionShardDetails []CollectionShardDetail
 
 type CollectionShardDetail struct {
