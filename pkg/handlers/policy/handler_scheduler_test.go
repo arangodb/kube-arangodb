@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 package policy
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -30,6 +31,7 @@ import (
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 func Test_Scheduler_Schedule(t *testing.T) {
@@ -39,7 +41,7 @@ func Test_Scheduler_Schedule(t *testing.T) {
 	name := string(uuid.NewUUID())
 	namespace := string(uuid.NewUUID())
 
-	policy := newArangoBackupPolicy("* * * */2 *", namespace, name, map[string]string{}, backupApi.ArangoBackupTemplate{})
+	policy := newArangoBackupPolicy(namespace, name, newSimpleArangoBackupPolicySpec("* * * */2 *"))
 
 	database := newArangoDeployment(namespace, map[string]string{
 		"test": "me",
@@ -67,7 +69,7 @@ func Test_Scheduler_InvalidSchedule(t *testing.T) {
 	name := string(uuid.NewUUID())
 	namespace := string(uuid.NewUUID())
 
-	policy := newArangoBackupPolicy("", namespace, name, map[string]string{}, backupApi.ArangoBackupTemplate{})
+	policy := newArangoBackupPolicy(namespace, name, newSimpleArangoBackupPolicySpec(""))
 
 	database := newArangoDeployment(namespace, map[string]string{})
 
@@ -93,7 +95,7 @@ func Test_Scheduler_Valid_OneObject_SelectAll(t *testing.T) {
 	name := string(uuid.NewUUID())
 	namespace := string(uuid.NewUUID())
 
-	policy := newArangoBackupPolicy("* * * */2 *", namespace, name, map[string]string{}, backupApi.ArangoBackupTemplate{})
+	policy := newArangoBackupPolicy(namespace, name, newSimpleArangoBackupPolicySpec("* * * */2 *"))
 	policy.Status.Scheduled = meta.Time{
 		Time: time.Now().Add(-1 * time.Hour),
 	}
@@ -131,8 +133,9 @@ func Test_Scheduler_Valid_OneObject_Selector(t *testing.T) {
 	selectors := map[string]string{
 		"SELECTOR": string(uuid.NewUUID()),
 	}
-
-	policy := newArangoBackupPolicy("* * * */2 *", namespace, name, selectors, backupApi.ArangoBackupTemplate{})
+	spec := newSimpleArangoBackupPolicySpec("* * * */2 *")
+	spec.DeploymentSelector = &meta.LabelSelector{MatchLabels: selectors}
+	policy := newArangoBackupPolicy(namespace, name, spec)
 	policy.Status.Scheduled = meta.Time{
 		Time: time.Now().Add(-1 * time.Hour),
 	}
@@ -170,7 +173,9 @@ func Test_Scheduler_Valid_MultipleObject_Selector(t *testing.T) {
 		"SELECTOR": string(uuid.NewUUID()),
 	}
 
-	policy := newArangoBackupPolicy("* * * */2 *", namespace, name, selectors, backupApi.ArangoBackupTemplate{})
+	spec := newSimpleArangoBackupPolicySpec("* * * */2 *")
+	spec.DeploymentSelector = &meta.LabelSelector{MatchLabels: selectors}
+	policy := newArangoBackupPolicy(namespace, name, spec)
 	policy.Status.Scheduled = meta.Time{
 		Time: time.Now().Add(-1 * time.Hour),
 	}
@@ -211,7 +216,9 @@ func Test_Reschedule(t *testing.T) {
 		"SELECTOR": string(uuid.NewUUID()),
 	}
 
-	policy := newArangoBackupPolicy("* 13 * * *", namespace, name, selectors, backupApi.ArangoBackupTemplate{})
+	spec := newSimpleArangoBackupPolicySpec("* 13 * * *")
+	spec.DeploymentSelector = &meta.LabelSelector{MatchLabels: selectors}
+	policy := newArangoBackupPolicy(namespace, name, spec)
 
 	// Act
 	createArangoBackupPolicy(t, handler, policy)
@@ -269,8 +276,9 @@ func Test_Validate(t *testing.T) {
 			selectors := map[string]string{
 				"SELECTOR": string(uuid.NewUUID()),
 			}
-
-			policy := newArangoBackupPolicy(c, namespace, name, selectors, backupApi.ArangoBackupTemplate{})
+			spec := newSimpleArangoBackupPolicySpec(c)
+			spec.DeploymentSelector = &meta.LabelSelector{MatchLabels: selectors}
+			policy := newArangoBackupPolicy(namespace, name, spec)
 
 			require.NoError(t, policy.Validate())
 
@@ -285,4 +293,73 @@ func Test_Validate(t *testing.T) {
 			require.NotEmpty(t, newPolicy.Status.Scheduled)
 		})
 	}
+}
+
+func Test_Concurrent(t *testing.T) {
+	testCase := func(t *testing.T, allowConcurrent *bool) {
+		handler := newFakeHandler()
+
+		name := string(uuid.NewUUID())
+		namespace := string(uuid.NewUUID())
+
+		spec := newSimpleArangoBackupPolicySpec("* * * */2 *")
+		spec.AllowConcurrent = allowConcurrent
+		policy := newArangoBackupPolicy(namespace, name, spec)
+		policy.Status.Scheduled = meta.Time{
+			Time: time.Now().Add(-1 * time.Hour),
+		}
+
+		database := newArangoDeployment(namespace, map[string]string{
+			"test": "me",
+		})
+
+		createArangoBackupPolicy(t, handler, policy)
+		createArangoDeployment(t, handler, database)
+
+		// "create" first backup
+		require.NoError(t, handler.Handle(newItemFromBackupPolicy(operation.Update, policy)))
+		backups := listArangoBackups(t, handler, namespace)
+		require.Len(t, backups, 1)
+
+		// "try create" second backup but first one still is not in TerminalState
+		policy = refreshArangoBackupPolicy(t, handler, policy)
+		policy.Status.Scheduled = meta.Time{
+			Time: time.Now().Add(-1 * time.Hour),
+		}
+		updateArangoBackupPolicy(t, handler, policy)
+		require.NoError(t, handler.Handle(newItemFromBackupPolicy(operation.Update, policy)))
+		backups = listArangoBackups(t, handler, namespace)
+		require.Len(t, backups, util.BoolSwitch(policy.Spec.GetAllowConcurrent(), 2, 1))
+
+		// mark previous backup as Ready
+		backup := backups[0].DeepCopy()
+		backup.Status.State = backupApi.ArangoBackupStateReady
+		backup.Status.Backup = &backupApi.ArangoBackupDetails{
+			ID: "SOME_ID",
+		}
+		_, err := handler.client.BackupV1().ArangoBackups(namespace).UpdateStatus(context.Background(), backup, meta.UpdateOptions{})
+		require.NoError(t, err)
+
+		// "try create" second backup again, should succeed
+		policy = refreshArangoBackupPolicy(t, handler, policy)
+		policy.Status.Scheduled = meta.Time{
+			Time: time.Now().Add(-1 * time.Hour),
+		}
+		updateArangoBackupPolicy(t, handler, policy)
+		require.NoError(t, handler.Handle(newItemFromBackupPolicy(operation.Update, policy)))
+		backups = listArangoBackups(t, handler, namespace)
+		require.Len(t, backups, util.BoolSwitch(policy.Spec.GetAllowConcurrent(), 3, 2))
+	}
+
+	t.Run("Explicit Allow", func(t *testing.T) {
+		testCase(t, util.NewType(true))
+	})
+
+	t.Run("Default Allow", func(t *testing.T) {
+		testCase(t, nil)
+	})
+
+	t.Run("Explicit Disallow", func(t *testing.T) {
+		testCase(t, util.NewType(false))
+	})
 }
