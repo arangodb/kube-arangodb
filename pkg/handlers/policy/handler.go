@@ -38,6 +38,8 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 const (
@@ -158,7 +160,7 @@ func (h *handler) processBackupPolicy(policy *backupApi.ArangoBackupPolicy) back
 	for _, deployment := range deployments.Items {
 		depl := deployment.DeepCopy()
 
-		if policy.Spec.DisallowConcurrent {
+		if !policy.Spec.GetAllowConcurrent() {
 			previousBackupInProgress, err := h.isPreviousBackupInProgress(context.Background(), depl, policy.Name)
 			if err != nil {
 				h.eventRecorder.Warning(policy, policyError, "Policy Error: %s", err.Error())
@@ -204,26 +206,56 @@ func (*handler) CanBeHandled(item operation.Item) bool {
 		item.Kind == backup.ArangoBackupPolicyResourceKind
 }
 
+func (h *handler) listAllBackupsForPolicy(ctx context.Context, d *deployment.ArangoDeployment, policyName string) ([]*backupApi.ArangoBackup, error) {
+	var r []*backupApi.ArangoBackup
+
+	if err := k8sutil.APIList[*backupApi.ArangoBackupList](ctx, h.client.BackupV1().ArangoBackups(d.Namespace), meta.ListOptions{
+		Limit: globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
+	}, func(result *backupApi.ArangoBackupList, err error) error {
+		if err != nil {
+			return err
+		}
+
+		for _, b := range result.Items {
+			if b.Spec.PolicyName == nil || *b.Spec.PolicyName != policyName {
+				continue
+			}
+			if b.Spec.Deployment.Name != d.Name {
+				continue
+			}
+			r = append(r, b.DeepCopy())
+		}
+
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+
+	return r, nil
+}
+
 func (h *handler) isPreviousBackupInProgress(ctx context.Context, d *deployment.ArangoDeployment, policyName string) (bool, error) {
 	// It would be nice to List CRs with fieldSelector set, but this is not supported:
 	// https://github.com/kubernetes/kubernetes/issues/53459
 	// Instead we fetch all ArangoBackups:
-	backups, err := h.client.BackupV1().ArangoBackups(d.Namespace).List(ctx, meta.ListOptions{})
+	backups, err := h.listAllBackupsForPolicy(ctx, d, policyName)
 	if err != nil {
 		return false, errors.Wrap(err, "Failed to list ArangoBackups")
 	}
 
-	for _, b := range backups.Items {
-		if b.Spec.PolicyName == nil || *b.Spec.PolicyName != policyName {
+	for _, b := range backups {
+		// Check if we are in the failed state
+		switch b.Status.State {
+		case backupApi.ArangoBackupStateFailed:
 			continue
 		}
+
 		if b.Spec.Download != nil {
 			continue
 		}
-		if b.Spec.Deployment.Name != d.Name {
-			continue
-		}
-		if !backupApi.IsTerminalState(b.Status.State) {
+
+		// Backup is not yet done
+		if b.Status.Backup == nil {
 			return true, nil
 		}
 	}

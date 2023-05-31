@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ import (
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 func Test_Scheduler_Schedule(t *testing.T) {
@@ -294,54 +295,71 @@ func Test_Validate(t *testing.T) {
 	}
 }
 
-func Test_DisallowConcurrent(t *testing.T) {
-	handler := newFakeHandler()
+func Test_Concurrent(t *testing.T) {
+	testCase := func(t *testing.T, allowConcurrent *bool) {
+		handler := newFakeHandler()
 
-	name := string(uuid.NewUUID())
-	namespace := string(uuid.NewUUID())
+		name := string(uuid.NewUUID())
+		namespace := string(uuid.NewUUID())
 
-	spec := newSimpleArangoBackupPolicySpec("* * * */2 *")
-	spec.DisallowConcurrent = true
-	policy := newArangoBackupPolicy(namespace, name, spec)
-	policy.Status.Scheduled = meta.Time{
-		Time: time.Now().Add(-1 * time.Hour),
+		spec := newSimpleArangoBackupPolicySpec("* * * */2 *")
+		spec.AllowConcurrent = allowConcurrent
+		policy := newArangoBackupPolicy(namespace, name, spec)
+		policy.Status.Scheduled = meta.Time{
+			Time: time.Now().Add(-1 * time.Hour),
+		}
+
+		database := newArangoDeployment(namespace, map[string]string{
+			"test": "me",
+		})
+
+		createArangoBackupPolicy(t, handler, policy)
+		createArangoDeployment(t, handler, database)
+
+		// "create" first backup
+		require.NoError(t, handler.Handle(newItemFromBackupPolicy(operation.Update, policy)))
+		backups := listArangoBackups(t, handler, namespace)
+		require.Len(t, backups, 1)
+
+		// "try create" second backup but first one still is not in TerminalState
+		policy = refreshArangoBackupPolicy(t, handler, policy)
+		policy.Status.Scheduled = meta.Time{
+			Time: time.Now().Add(-1 * time.Hour),
+		}
+		updateArangoBackupPolicy(t, handler, policy)
+		require.NoError(t, handler.Handle(newItemFromBackupPolicy(operation.Update, policy)))
+		backups = listArangoBackups(t, handler, namespace)
+		require.Len(t, backups, util.BoolSwitch(policy.Spec.GetAllowConcurrent(), 2, 1))
+
+		// mark previous backup as Ready
+		backup := backups[0].DeepCopy()
+		backup.Status.State = backupApi.ArangoBackupStateReady
+		backup.Status.Backup = &backupApi.ArangoBackupDetails{
+			ID: "SOME_ID",
+		}
+		_, err := handler.client.BackupV1().ArangoBackups(namespace).UpdateStatus(context.Background(), backup, meta.UpdateOptions{})
+		require.NoError(t, err)
+
+		// "try create" second backup again, should succeed
+		policy = refreshArangoBackupPolicy(t, handler, policy)
+		policy.Status.Scheduled = meta.Time{
+			Time: time.Now().Add(-1 * time.Hour),
+		}
+		updateArangoBackupPolicy(t, handler, policy)
+		require.NoError(t, handler.Handle(newItemFromBackupPolicy(operation.Update, policy)))
+		backups = listArangoBackups(t, handler, namespace)
+		require.Len(t, backups, util.BoolSwitch(policy.Spec.GetAllowConcurrent(), 3, 2))
 	}
 
-	database := newArangoDeployment(namespace, map[string]string{
-		"test": "me",
+	t.Run("Explicit Allow", func(t *testing.T) {
+		testCase(t, util.NewType(true))
 	})
 
-	createArangoBackupPolicy(t, handler, policy)
-	createArangoDeployment(t, handler, database)
+	t.Run("Default Allow", func(t *testing.T) {
+		testCase(t, nil)
+	})
 
-	// "create" first backup
-	require.NoError(t, handler.Handle(newItemFromBackupPolicy(operation.Update, policy)))
-	backups := listArangoBackups(t, handler, namespace)
-	require.Len(t, backups, 1)
-
-	// "try create" second backup but first one still is not in TerminalState
-	policy = refreshArangoBackupPolicy(t, handler, policy)
-	policy.Status.Scheduled = meta.Time{
-		Time: time.Now().Add(-1 * time.Hour),
-	}
-	updateArangoBackupPolicy(t, handler, policy)
-	require.NoError(t, handler.Handle(newItemFromBackupPolicy(operation.Update, policy)))
-	backups = listArangoBackups(t, handler, namespace)
-	require.Len(t, backups, 1)
-
-	// mark previous backup as Ready
-	backup := backups[0].DeepCopy()
-	backup.Status.State = backupApi.ArangoBackupStateReady
-	_, err := handler.client.BackupV1().ArangoBackups(namespace).UpdateStatus(context.Background(), backup, meta.UpdateOptions{})
-	require.NoError(t, err)
-
-	// "try create" second backup again, should succeed
-	policy = refreshArangoBackupPolicy(t, handler, policy)
-	policy.Status.Scheduled = meta.Time{
-		Time: time.Now().Add(-1 * time.Hour),
-	}
-	updateArangoBackupPolicy(t, handler, policy)
-	require.NoError(t, handler.Handle(newItemFromBackupPolicy(operation.Update, policy)))
-	backups = listArangoBackups(t, handler, namespace)
-	require.Len(t, backups, 2)
+	t.Run("Explicit Disallow", func(t *testing.T) {
+		testCase(t, util.NewType(false))
+	})
 }
