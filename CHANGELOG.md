@@ -71,6 +71,7 @@
 - (Feature) Check if Volume with LocalStorage is missing
 - (Feature) Add allowConcurrent option to ArangoBackupPolicy
 - (Feature) Allow to recreate Local volumes
+- (Feature) Add maxBackups option to ArangoBackupPolicy
 
 ## [1.2.27](https://github.com/arangodb/kube-arangodb/tree/1.2.27) (2023-04-27)
 - (Feature) Add InSync Cache

@@ -37,16 +37,19 @@ import (
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
 const (
-	backupCreated   = "ArangoBackupCreated"
-	policyError     = "Error"
-	rescheduled     = "Rescheduled"
-	scheduleSkipped = "ScheduleSkipped"
+	backupCreated       = "ArangoBackupCreated"
+	policyError         = "Error"
+	rescheduled         = "Rescheduled"
+	scheduleSkipped     = "ScheduleSkipped"
+	cleanedUpOldBackups = "CleanedUpOldBackups"
 )
 
 type handler struct {
@@ -138,7 +141,6 @@ func (h *handler) processBackupPolicy(policy *backupApi.ArangoBackupPolicy) back
 
 	// Schedule new deployments
 	listOptions := meta.ListOptions{}
-
 	if policy.Spec.DeploymentSelector != nil &&
 		(policy.Spec.DeploymentSelector.MatchLabels != nil &&
 			len(policy.Spec.DeploymentSelector.MatchLabels) > 0 ||
@@ -147,7 +149,6 @@ func (h *handler) processBackupPolicy(policy *backupApi.ArangoBackupPolicy) back
 	}
 
 	deployments, err := h.client.DatabaseV1().ArangoDeployments(policy.Namespace).List(context.Background(), listOptions)
-
 	if err != nil {
 		h.eventRecorder.Warning(policy, policyError, "Policy Error: %s", err.Error())
 
@@ -157,11 +158,13 @@ func (h *handler) processBackupPolicy(policy *backupApi.ArangoBackupPolicy) back
 		}
 	}
 
+	needToListBackups := !policy.Spec.GetAllowConcurrent() || policy.Spec.MaxBackups > 0
 	for _, deployment := range deployments.Items {
 		depl := deployment.DeepCopy()
+		ctx := context.Background()
 
-		if !policy.Spec.GetAllowConcurrent() {
-			previousBackupInProgress, err := h.isPreviousBackupInProgress(context.Background(), depl, policy.Name)
+		if needToListBackups {
+			backups, err := h.listAllBackupsForPolicy(ctx, depl, policy.Name)
 			if err != nil {
 				h.eventRecorder.Warning(policy, policyError, "Policy Error: %s", err.Error())
 				return backupApi.ArangoBackupPolicyStatus{
@@ -169,7 +172,17 @@ func (h *handler) processBackupPolicy(policy *backupApi.ArangoBackupPolicy) back
 					Message:   fmt.Sprintf("backup creation failed: %s", err.Error()),
 				}
 			}
-			if previousBackupInProgress {
+			if numRemoved, err := h.removeOldHealthyBackups(ctx, policy.Spec.MaxBackups, backups); err != nil {
+				h.eventRecorder.Warning(policy, policyError, "Policy Error: %s", err.Error())
+				return backupApi.ArangoBackupPolicyStatus{
+					Scheduled: policy.Status.Scheduled,
+					Message:   fmt.Sprintf("automatic backup cleanup failed: %s", err.Error()),
+				}
+			} else if numRemoved > 0 {
+				eventMsg := fmt.Sprintf("Cleaned up %d old backups due to maxBackups setting %s/%s", numRemoved, deployment.Namespace, deployment.Name)
+				h.eventRecorder.Normal(policy, cleanedUpOldBackups, eventMsg)
+			}
+			if !policy.Spec.GetAllowConcurrent() && h.isPreviousBackupInProgress(backups) {
 				eventMsg := fmt.Sprintf("Skipping ArangoBackup creation because earlier backup still running %s/%s", deployment.Namespace, deployment.Name)
 				h.eventRecorder.Normal(policy, scheduleSkipped, eventMsg)
 				continue
@@ -177,7 +190,7 @@ func (h *handler) processBackupPolicy(policy *backupApi.ArangoBackupPolicy) back
 		}
 
 		b := policy.NewBackup(depl)
-		if _, err := h.client.BackupV1().ArangoBackups(b.Namespace).Create(context.Background(), b, meta.CreateOptions{}); err != nil {
+		if _, err := h.client.BackupV1().ArangoBackups(b.Namespace).Create(ctx, b, meta.CreateOptions{}); err != nil {
 			h.eventRecorder.Warning(policy, policyError, "Policy Error: %s", err.Error())
 
 			return backupApi.ArangoBackupPolicyStatus{
@@ -206,7 +219,7 @@ func (*handler) CanBeHandled(item operation.Item) bool {
 		item.Kind == backup.ArangoBackupPolicyResourceKind
 }
 
-func (h *handler) listAllBackupsForPolicy(ctx context.Context, d *deployment.ArangoDeployment, policyName string) ([]*backupApi.ArangoBackup, error) {
+func (h *handler) listAllBackupsForPolicy(ctx context.Context, d *deployment.ArangoDeployment, policyName string) (util.List[*backupApi.ArangoBackup], error) {
 	var r []*backupApi.ArangoBackup
 
 	if err := k8sutil.APIList[*backupApi.ArangoBackupList](ctx, h.client.BackupV1().ArangoBackups(d.Namespace), meta.ListOptions{
@@ -228,37 +241,57 @@ func (h *handler) listAllBackupsForPolicy(ctx context.Context, d *deployment.Ara
 
 		return nil
 	}); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "Failed to list ArangoBackups")
 	}
 
 	return r, nil
 }
 
-func (h *handler) isPreviousBackupInProgress(ctx context.Context, d *deployment.ArangoDeployment, policyName string) (bool, error) {
-	// It would be nice to List CRs with fieldSelector set, but this is not supported:
-	// https://github.com/kubernetes/kubernetes/issues/53459
-	// Instead we fetch all ArangoBackups:
-	backups, err := h.listAllBackupsForPolicy(ctx, d, policyName)
-	if err != nil {
-		return false, errors.Wrap(err, "Failed to list ArangoBackups")
-	}
-
-	for _, b := range backups {
-		// Check if we are in the failed state
+func (h *handler) isPreviousBackupInProgress(backups util.List[*backupApi.ArangoBackup]) bool {
+	inProgressBackups := backups.Count(func(b *backupApi.ArangoBackup) bool {
 		switch b.Status.State {
 		case backupApi.ArangoBackupStateFailed:
-			continue
+			return false
 		}
 
 		if b.Spec.Download != nil {
-			continue
+			return false
 		}
 
 		// Backup is not yet done
 		if b.Status.Backup == nil {
-			return true, nil
+			return true
 		}
+		return false
+	})
+	return inProgressBackups > 0
+}
+
+func (h *handler) removeOldHealthyBackups(ctx context.Context, limit int, backups util.List[*backupApi.ArangoBackup]) (int, error) {
+	if limit <= 0 {
+		// no limit set
+		return 0, nil
 	}
 
-	return false, nil
+	healthyBackups := backups.Filter(func(b *backupApi.ArangoBackup) bool {
+		return b.Status.Available && b.Status.State == backupApi.ArangoBackupStateReady
+	}).Sort(func(a *backupApi.ArangoBackup, b *backupApi.ArangoBackup) bool {
+		// newest first
+		return a.CreationTimestamp.After(b.CreationTimestamp.Time)
+	})
+	if len(healthyBackups) < limit {
+		return 0, nil
+	}
+	toDelete := healthyBackups[limit-1:]
+	numDeleted := 0
+	for _, b := range toDelete {
+		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			return h.client.BackupV1().ArangoBackups(b.Namespace).Delete(ctx, b.Name, meta.DeleteOptions{})
+		})
+		if err != nil && !kerrors.IsNotFound(err) {
+			return numDeleted, errors.Wrapf(err, "could not trigger deletion of backup %s", b.Name)
+		}
+		numDeleted++
+	}
+	return numDeleted, nil
 }
