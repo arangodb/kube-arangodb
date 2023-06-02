@@ -274,7 +274,7 @@ func (h *handler) removeOldHealthyBackups(ctx context.Context, limit int, backup
 	}
 
 	healthyBackups := backups.Filter(func(b *backupApi.ArangoBackup) bool {
-		return b.Status.Available && b.Status.State == backupApi.ArangoBackupStateReady
+		return b.Status.State == backupApi.ArangoBackupStateReady
 	}).Sort(func(a *backupApi.ArangoBackup, b *backupApi.ArangoBackup) bool {
 		// newest first
 		return a.CreationTimestamp.After(b.CreationTimestamp.Time)
