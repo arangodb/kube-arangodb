@@ -104,7 +104,7 @@ func (o *operator) processObject(obj interface{}) error {
 
 	if err = o.processItem(item); err != nil {
 		o.workqueue.AddRateLimited(key)
-		return errors.Newf("error syncing '%s': %s, requeuing", key, err.Error())
+		return errors.Newf("error syncing '%s': %s, re-queuing", key, err.Error())
 	}
 
 	loggerWorker.Trace("Processed Item Action: %s, Type: %s/%s/%s, Namespace: %s, Name: %s",
