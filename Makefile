@@ -224,7 +224,7 @@ PROTOSOURCES := $(shell find ./ -type f  -name '*.proto' $(foreach EXCLUDE_DIR,$
 all: check-vars verify-generated build
 
 .PHONY: compile
-compile:	check-vars build
+compile: check-vars build
 
 # allall  is now obsolete
 .PHONY: allall
@@ -276,6 +276,11 @@ linter:
 .PHONY: linter-fix
 linter-fix:
 	@$(GOPATH)/bin/golangci-lint run --fix --build-tags "$(RELEASE_MODE)" $(foreach LINT_EXCLUDE,$(LINT_EXCLUDES),--exclude '$(LINT_EXCLUDE)') ./...
+
+.PHONY: vulncheck
+vulncheck:
+	@echo ">> Checking for known vulnerabilities"
+	@$(GOPATH)/bin/govulncheck --tags $(RELEASE_MODE) ./...
 
 .PHONY: build
 build: docker manifests
@@ -533,7 +538,7 @@ init: vendor tools update-generated $(BIN)
 .PHONY: tools-min
 tools-min: update-vendor
 	@echo ">> Fetching golangci-lint linter"
-	@GOBIN=$(GOPATH)/bin go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.50.1
+	@GOBIN=$(GOPATH)/bin go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.52.2
 	@echo ">> Fetching goimports"
 	@GOBIN=$(GOPATH)/bin go install golang.org/x/tools/cmd/goimports@0bb7e5c47b1a31f85d4f173edc878a8e049764a5
 	@echo ">> Fetching license check"
@@ -555,6 +560,8 @@ tools: tools-min
 	@echo ">> Fetching protoc go plugins..."
 	@GOBIN=$(GOPATH)/bin go install github.com/golang/protobuf/protoc-gen-go@v1.5.2
 	@GOBIN=$(GOPATH)/bin go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
+	@echo ">> Fetching govulncheck"
+	@GOBIN=$(GOPATH)/bin go install golang.org/x/vuln/cmd/govulncheck@v0.1.0
 
 .PHONY: vendor
 vendor:
@@ -635,7 +642,7 @@ check-community:
 	@$(MAKE) _check RELEASE_MODE=community
 
 _check: sync-crds
-	@$(MAKE) fmt yamlfmt license-verify linter run-unit-tests bin
+	@$(MAKE) fmt yamlfmt license-verify linter run-unit-tests bin vulncheck
 
 generate: generate-internal generate-proto fmt
 

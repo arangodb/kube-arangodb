@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Maintenance) Add govulncheck to pipeline, update golangci-linter
 
 ## [1.2.28](https://github.com/arangodb/kube-arangodb/tree/1.2.28) (2023-06-05)
 - (Feature) ArangoBackup create retries and MaxIterations limit
