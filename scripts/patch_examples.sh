@@ -14,14 +14,7 @@ ARANGODB_VERSION=3.7.10
 function replaceInFile {
     local EXPR=$1
     local FILE=$2
-    case $(uname) in
-        Darwin)
-            sed -E -e  "${EXPR}" -i "" ${FILE}
-            ;;
-        *)
-            sed -E -i --expression "${EXPR}" ${FILE}
-            ;;
-    esac
+    sed -E -i --expression "${EXPR}" ${FILE}
 }
 
 FILES=$(find ./examples -type f -name '*.yaml')
