@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -102,16 +102,12 @@ func (p serviceMonitorsInspectorLoader) getV1ServiceMonitorsList(ctx context.Con
 	ptrs := make([]*monitoring.ServiceMonitor, 0, s)
 
 	for {
-		for id := range items {
-			ptrs = append(ptrs, items[id])
-		}
-
+		ptrs = append(ptrs, items...)
 		if cont == "" {
 			break
 		}
 
 		items, cont, err = p.getV1ServiceMonitorsListRequest(ctx, i, cont)
-
 		if err != nil {
 			return nil, err
 		}
