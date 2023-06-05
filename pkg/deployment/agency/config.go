@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,41 +22,23 @@ package agency
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 
-	"github.com/arangodb/go-driver"
-	"github.com/arangodb/go-driver/agency"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func GetAgencyConfig(ctx context.Context, client agency.Agency) (*Config, error) {
-	return GetAgencyConfigC(ctx, client.Connection())
-}
-
-func GetAgencyConfigC(ctx context.Context, conn driver.Connection) (*Config, error) {
-	req, err := conn.NewRequest(http.MethodGet, "/_api/agency/config")
+func GetAgencyConfig(ctx context.Context, connection conn.Connection) (*Config, error) {
+	resp, code, err := conn.NewExecutor[any, Config](connection).ExecuteGet(ctx, "/_api/agency/config")
 	if err != nil {
 		return nil, err
 	}
 
-	var data []byte
-
-	resp, err := conn.Do(driver.WithRawResponse(ctx, &data), req)
-	if err != nil {
-		return nil, err
+	if code != http.StatusOK {
+		return nil, errors.Newf("Unknown response code %d", code)
 	}
 
-	if err := resp.CheckStatus(http.StatusOK); err != nil {
-		return nil, err
-	}
-
-	var c Config
-
-	if err := json.Unmarshal(data, &c); err != nil {
-		return nil, err
-	}
-
-	return &c, nil
+	return resp, nil
 }
 
 type Config struct {

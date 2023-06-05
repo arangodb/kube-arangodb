@@ -27,22 +27,21 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"github.com/arangodb/go-driver"
-	"github.com/arangodb/go-driver/agency"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/generated/metric_descriptions"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
 )
 
+type Connections map[string]conn.Connection
+
 type health struct {
 	namespace, name string
 
 	leaderID string
-	leader   driver.Connection
 
 	agencySize int
 
@@ -50,14 +49,6 @@ type health struct {
 	commitIndexes map[string]uint64
 	leaders       map[string]string
 	election      map[string]int
-}
-
-func (h health) Leader() (driver.Connection, bool) {
-	if l := h.leader; l != nil {
-		return l, true
-	}
-
-	return nil, false
 }
 
 func (h health) CollectMetrics(m metrics.PushMetric) {
@@ -145,14 +136,11 @@ type Health interface {
 	// LeaderID returns a leader ID or empty string if a leader is not known.
 	LeaderID() string
 
-	// Leader returns connection to the Agency leader
-	Leader() (driver.Connection, bool)
-
 	CollectMetrics(m metrics.PushMetric)
 }
 
 type Cache interface {
-	Reload(ctx context.Context, size int, clients map[string]agency.Agency) (uint64, error)
+	Reload(ctx context.Context, size int, clients Connections) (uint64, error)
 	Data() (State, bool)
 	DataDB() (StateDB, bool)
 	CommitIndex() uint64
@@ -206,7 +194,7 @@ func (c cacheSingle) Health() (Health, bool) {
 	return nil, false
 }
 
-func (c cacheSingle) Reload(_ context.Context, _ int, _ map[string]agency.Agency) (uint64, error) {
+func (c cacheSingle) Reload(_ context.Context, _ int, _ Connections) (uint64, error) {
 	return 0, nil
 }
 
@@ -278,7 +266,7 @@ func (c *cache) Health() (Health, bool) {
 	return nil, false
 }
 
-func (c *cache) Reload(ctx context.Context, size int, clients map[string]agency.Agency) (uint64, error) {
+func (c *cache) Reload(ctx context.Context, size int, clients Connections) (uint64, error) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
@@ -313,7 +301,7 @@ func (c *cache) Reload(ctx context.Context, size int, clients map[string]agency.
 	return index, nil
 }
 
-func (c *cache) reload(ctx context.Context, size int, clients map[string]agency.Agency) (uint64, error) {
+func (c *cache) reload(ctx context.Context, size int, clients Connections) (uint64, error) {
 	leaderCli, leaderConfig, health, err := c.getLeader(ctx, size, clients)
 	if err != nil {
 		// Invalidate a leader ID and agency state.
@@ -363,7 +351,7 @@ func (c *cache) ShardsInSyncMap() (ShardsSyncStatus, bool) {
 
 // getLeader returns config and client to a leader agency, and health to check if agencies are on the same page.
 // If there is no quorum for the leader then error is returned.
-func (c *cache) getLeader(ctx context.Context, size int, clients map[string]agency.Agency) (agency.Agency, *Config, health, error) {
+func (c *cache) getLeader(ctx context.Context, size int, clients Connections) (conn.Connection, *Config, health, error) {
 	configs := make([]*Config, len(clients))
 	errs := make([]error, len(clients))
 	names := make([]string, 0, len(clients))
@@ -427,7 +415,6 @@ func (c *cache) getLeader(ctx context.Context, size int, clients map[string]agen
 
 	for id := range names {
 		if h.leaderID == h.names[id] {
-			h.leader = clients[names[id]].Connection()
 			if cfg := configs[id]; cfg != nil {
 				return clients[names[id]], cfg, h, nil
 			}
