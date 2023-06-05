@@ -29,7 +29,7 @@ import (
 )
 
 func (c *cache) loadState(ctx context.Context, connection conn.Connection) (StateRoot, error) {
-	resp, code, err := conn.NewExecutor[ReadRequest, StateRoots](connection).Execute(ctx, http.MethodPost, "/_api/agency/config", GetAgencyReadRequestFields())
+	resp, code, err := conn.NewExecutor[ReadRequest, StateRoots](connection).Execute(ctx, http.MethodPost, "/_api/agency/read", GetAgencyReadRequestFields())
 	if err != nil {
 		return StateRoot{}, err
 	}

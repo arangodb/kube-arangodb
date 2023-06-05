@@ -22,6 +22,7 @@ package reconcile
 
 import (
 	"context"
+	"time"
 
 	core "k8s.io/api/core/v1"
 
@@ -33,6 +34,10 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
+)
+
+const (
+	persistentVolumeClaimPostCreationDelay = time.Minute
 )
 
 func (r *Reconciler) volumeMemberReplacement(ctx context.Context, apiObject k8sutil.APIObject,
@@ -68,6 +73,23 @@ func (r *Reconciler) volumeMemberReplacement(ctx context.Context, apiObject k8su
 				client, ok := context.ACS().ClusterCache(member.Member.ClusterID)
 				if ok {
 					if pvc, ok := client.PersistentVolumeClaim().V1().GetSimple(n); ok {
+						if pvc.Status.Phase == core.ClaimPending {
+							continue
+						}
+
+						// Check if pvc was not created too recently
+						if t := pvc.GetCreationTimestamp(); !t.IsZero() {
+							if time.Since(t.Time) < persistentVolumeClaimPostCreationDelay {
+								// PVC was recreated recently, continue
+								continue
+							}
+						}
+
+						if t := pvc.GetDeletionTimestamp(); t != nil {
+							// PVC already under deletion
+							return nil
+						}
+
 						// Server is not part of plan and is not ready
 						return api.Plan{actions.NewAction(api.ActionTypeRemoveMemberPVC, member.Group, member.Member, "PVC is unschedulable").AddParam("pvc", string(pvc.GetUID()))}
 					}
@@ -87,37 +109,16 @@ func (r *Reconciler) updateMemberConditionTypeMemberVolumeUnschedulableCondition
 
 	cache := context.ACS().CurrentClusterCache()
 
-	volumeClient, err := cache.PersistentVolume().V1()
-	if err != nil {
-		// We cant fetch volumes, continue
-		return nil
-	}
-
 	for _, e := range status.Members.AsList() {
-		if pvcStatus := e.Member.PersistentVolumeClaim; pvcStatus != nil {
-			if pvc, ok := context.ACS().CurrentClusterCache().PersistentVolumeClaim().V1().GetSimple(pvcStatus.GetName()); ok {
-				if volumeName := pvc.Spec.VolumeName; volumeName != "" {
-					if pv, ok := volumeClient.GetSimple(volumeName); ok {
-						// We have volume and volumeclaim, lets calculate condition
-						unschedulable := memberConditionTypeMemberVolumeUnschedulableCalculate(cache, pv, pvc,
-							memberConditionTypeMemberVolumeUnschedulableLocalStorageGone)
+		unschedulable := memberConditionTypeMemberVolumeUnschedulableRoot(cache, e)
 
-						if e.Member.Conditions.IsTrue(api.ConditionTypeScheduled) {
-							// We are scheduled, above checks can be ignored
-							unschedulable = false
-						}
-
-						if unschedulable == e.Member.Conditions.IsTrue(api.ConditionTypeMemberVolumeUnschedulable) {
-							continue
-						} else if unschedulable && !e.Member.Conditions.IsTrue(api.ConditionTypeMemberVolumeUnschedulable) {
-							plan = append(plan, shared.UpdateMemberConditionActionV2("PV Unschedulable", api.ConditionTypeMemberVolumeUnschedulable, e.Group, e.Member.ID, true,
-								"PV Unschedulable", "PV Unschedulable", ""))
-						} else if !unschedulable && e.Member.Conditions.IsTrue(api.ConditionTypeMemberVolumeUnschedulable) {
-							plan = append(plan, shared.RemoveMemberConditionActionV2("PV Schedulable", api.ConditionTypeMemberVolumeUnschedulable, e.Group, e.Member.ID))
-						}
-					}
-				}
-			}
+		if unschedulable == e.Member.Conditions.IsTrue(api.ConditionTypeMemberVolumeUnschedulable) {
+			continue
+		} else if unschedulable && !e.Member.Conditions.IsTrue(api.ConditionTypeMemberVolumeUnschedulable) {
+			plan = append(plan, shared.UpdateMemberConditionActionV2("PV Unschedulable", api.ConditionTypeMemberVolumeUnschedulable, e.Group, e.Member.ID, true,
+				"PV Unschedulable", "PV Unschedulable", ""))
+		} else if !unschedulable && e.Member.Conditions.IsTrue(api.ConditionTypeMemberVolumeUnschedulable) {
+			plan = append(plan, shared.RemoveMemberConditionActionV2("PV Schedulable", api.ConditionTypeMemberVolumeUnschedulable, e.Group, e.Member.ID))
 		}
 	}
 
@@ -125,6 +126,33 @@ func (r *Reconciler) updateMemberConditionTypeMemberVolumeUnschedulableCondition
 }
 
 type memberConditionTypeMemberVolumeUnschedulableCalculateFunc func(cache inspectorInterface.Inspector, pv *core.PersistentVolume, pvc *core.PersistentVolumeClaim) bool
+
+func memberConditionTypeMemberVolumeUnschedulableRoot(cache inspectorInterface.Inspector, member api.DeploymentStatusMemberElement) bool {
+	volumeClient, err := cache.PersistentVolume().V1()
+	if err != nil {
+		// We cant fetch volumes, remove condition as it cannot be evaluated
+		return false
+	}
+
+	if member.Member.Conditions.IsTrue(api.ConditionTypeScheduled) {
+		// Scheduled member ignore PV Unschedulable condition
+		return false
+	}
+
+	if pvcStatus := member.Member.PersistentVolumeClaim; pvcStatus != nil {
+		if pvc, ok := cache.PersistentVolumeClaim().V1().GetSimple(pvcStatus.GetName()); ok {
+			if volumeName := pvc.Spec.VolumeName; volumeName != "" {
+				if pv, ok := volumeClient.GetSimple(volumeName); ok {
+					// We have volume and volumeclaim, lets calculate condition
+					return memberConditionTypeMemberVolumeUnschedulableCalculate(cache, pv, pvc,
+						memberConditionTypeMemberVolumeUnschedulableLocalStorageGone)
+				}
+			}
+		}
+	}
+
+	return false
+}
 
 func memberConditionTypeMemberVolumeUnschedulableCalculate(cache inspectorInterface.Inspector, pv *core.PersistentVolume, pvc *core.PersistentVolumeClaim, funcs ...memberConditionTypeMemberVolumeUnschedulableCalculateFunc) bool {
 	for _, f := range funcs {

@@ -3,6 +3,7 @@
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Maintenance) Add govulncheck to pipeline, update golangci-linter
 - (Feature) Agency Cache memory usage reduction
+- (Bugfix) (LocalStorage) Add feature to pass ReclaimPolicy from StorageClass to PersistentVolumes
 
 ## [1.2.28](https://github.com/arangodb/kube-arangodb/tree/1.2.28) (2023-06-05)
 - (Feature) ArangoBackup create retries and MaxIterations limit

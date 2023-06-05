@@ -39,8 +39,10 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner"
 	resources "github.com/arangodb/kube-arangodb/pkg/storage/resources"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -63,11 +65,16 @@ var (
 func (ls *LocalStorage) createPVs(ctx context.Context, apiObject *api.ArangoLocalStorage, unboundClaims []core.PersistentVolumeClaim) (bool, error) {
 	// Fetch StorageClass name
 	var bm = storage.VolumeBindingImmediate
+	var reclaimPolicy = core.PersistentVolumeReclaimRetain
 
 	if sc, err := ls.deps.Client.Kubernetes().StorageV1().StorageClasses().Get(ctx, ls.apiObject.Spec.StorageClass.Name, meta.GetOptions{}); err == nil {
 		// We are able to fetch storageClass
 		if b := sc.VolumeBindingMode; b != nil {
 			bm = *b
+		}
+
+		if c := sc.ReclaimPolicy; c != nil {
+			reclaimPolicy = *c
 		}
 	}
 
@@ -142,7 +149,7 @@ func (ls *LocalStorage) createPVs(ctx context.Context, apiObject *api.ArangoLoca
 		}
 
 		// Create PV
-		if err := ls.createPV(ctx, apiObject, allowedClients, i, volSize, claim, deplName, role); err != nil {
+		if err := ls.createPV(ctx, apiObject, allowedClients, i, volSize, claim, reclaimPolicy, deplName, role); err != nil {
 			ls.log.Err(err).Error("Failed to create PersistentVolume")
 		}
 
@@ -153,7 +160,7 @@ func (ls *LocalStorage) createPVs(ctx context.Context, apiObject *api.ArangoLoca
 }
 
 // createPV creates a PersistentVolume.
-func (ls *LocalStorage) createPV(ctx context.Context, apiObject *api.ArangoLocalStorage, clients Clients, clientsOffset int, volSize int64, claim core.PersistentVolumeClaim, deploymentName, role string) error {
+func (ls *LocalStorage) createPV(ctx context.Context, apiObject *api.ArangoLocalStorage, clients Clients, clientsOffset int, volSize int64, claim core.PersistentVolumeClaim, storageClassReclaimPolicy core.PersistentVolumeReclaimPolicy, deploymentName, role string) error {
 	// Try clients
 	keys := clients.Keys()
 
@@ -180,6 +187,13 @@ func (ls *LocalStorage) createPV(ctx context.Context, apiObject *api.ArangoLocal
 				log.Err(err).Error("Failed to prepare local path")
 				continue
 			}
+
+			reclaimPolicy := core.PersistentVolumeReclaimRetain
+
+			if features.LocalStorageReclaimPolicyPass().Enabled() {
+				reclaimPolicy = storageClassReclaimPolicy
+			}
+
 			// Create a volume
 			pvName := strings.ToLower(apiObject.GetName() + "-" + shortHash(info.NodeName) + "-" + name)
 			volumeMode := core.PersistentVolumeFilesystem
@@ -195,12 +209,15 @@ func (ls *LocalStorage) createPV(ctx context.Context, apiObject *api.ArangoLocal
 						k8sutil.LabelKeyArangoDeployment: deploymentName,
 						k8sutil.LabelKeyRole:             role,
 					},
+					Finalizers: util.BoolSwitch(features.LocalStorageReclaimPolicyPass().Enabled(), []string{
+						FinalizerPersistentVolumeCleanup,
+					}, nil),
 				},
 				Spec: core.PersistentVolumeSpec{
 					Capacity: core.ResourceList{
 						core.ResourceStorage: *resource.NewQuantity(volSize, resource.BinarySI),
 					},
-					PersistentVolumeReclaimPolicy: core.PersistentVolumeReclaimRetain,
+					PersistentVolumeReclaimPolicy: reclaimPolicy,
 					PersistentVolumeSource: core.PersistentVolumeSource{
 						Local: &core.LocalVolumeSource{
 							Path: localPath,
@@ -237,8 +254,12 @@ func (ls *LocalStorage) createPV(ctx context.Context, apiObject *api.ArangoLocal
 			// Bind claim to volume
 			if err := ls.bindClaimToVolume(claim, pv.GetName()); err != nil {
 				// Try to delete the PV now
-				if err := ls.deps.Client.Kubernetes().CoreV1().PersistentVolumes().Delete(context.Background(), pv.GetName(), meta.DeleteOptions{}); err != nil {
-					log.Err(err).Error("Failed to delete PV after binding PVC failed")
+				if features.LocalStorageReclaimPolicyPass().Enabled() {
+					ls.removePVObjectWithLog(pv)
+				} else {
+					if err := ls.deps.Client.Kubernetes().CoreV1().PersistentVolumes().Delete(context.Background(), pv.GetName(), meta.DeleteOptions{}); err != nil {
+						log.Err(err).Error("Failed to delete PV after binding PVC failed")
+					}
 				}
 				return errors.WithStack(err)
 			}

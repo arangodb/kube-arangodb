@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,14 +21,18 @@
 package v1alpha
 
 import (
+	core "k8s.io/api/core/v1"
+
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 // StorageClassSpec contains specification for create StorageClass.
 type StorageClassSpec struct {
-	Name      string `json:"name,omitempty"`
-	IsDefault bool   `json:"isDefault,omitempty"`
+	Name          string                              `json:"name,omitempty"`
+	IsDefault     bool                                `json:"isDefault,omitempty"`
+	ReclaimPolicy *core.PersistentVolumeReclaimPolicy `json:"reclaimPolicy,omitempty"`
 }
 
 // Validate the given spec, returning an error on validation
@@ -37,6 +41,13 @@ func (s StorageClassSpec) Validate() error {
 	if err := shared.ValidateResourceName(s.Name); err != nil {
 		return errors.WithStack(err)
 	}
+
+	switch r := s.GetReclaimPolicy(); r {
+	case core.PersistentVolumeReclaimRetain, core.PersistentVolumeReclaimDelete:
+	default:
+		return errors.Newf("Unsupported ReclaimPolicy: %s", r)
+	}
+
 	return nil
 }
 
@@ -47,6 +58,11 @@ func (s *StorageClassSpec) SetDefaults(localStorageName string) {
 	}
 }
 
+// GetReclaimPolicy returns StorageClass Reclaim Policy
+func (s *StorageClassSpec) GetReclaimPolicy() core.PersistentVolumeReclaimPolicy {
+	return util.TypeOrDefault(s.ReclaimPolicy, core.PersistentVolumeReclaimRetain)
+}
+
 // ResetImmutableFields replaces all immutable fields in the given target with values from the source spec.
 // It returns a list of fields that have been reset.
 // Field names are relative to `spec.`.
@@ -55,6 +71,10 @@ func (s StorageClassSpec) ResetImmutableFields(fieldPrefix string, target *Stora
 	if s.Name != target.Name {
 		target.Name = s.Name
 		result = append(result, fieldPrefix+"name")
+	}
+	if s.GetReclaimPolicy() != target.GetReclaimPolicy() {
+		target.ReclaimPolicy = s.ReclaimPolicy
+		result = append(result, fieldPrefix+"reclaimPolicy")
 	}
 	return result
 }
