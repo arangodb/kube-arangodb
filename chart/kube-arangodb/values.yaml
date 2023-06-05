@@ -1,5 +1,5 @@
 operator:
-  image: arangodb/kube-arangodb:1.2.27
+  image: arangodb/kube-arangodb:1.2.28
   imagePullPolicy: IfNotPresent
   imagePullSecrets: []
   scope: legacy
