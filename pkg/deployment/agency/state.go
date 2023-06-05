@@ -132,8 +132,8 @@ func (s State) CountShards() int {
 	return count
 }
 
-// ShardsByDbServers returns a map of DBServers and the amount of shards they have
-func (s State) ShardsByDbServers() map[Server]int {
+// ShardsByDBServers returns a map of DBServers and the amount of shards they have
+func (s State) ShardsByDBServers() map[Server]int {
 	result := make(map[Server]int)
 
 	for _, collections := range s.Current.Collections {
@@ -154,7 +154,7 @@ func (s State) GetDBServerWithLowestShards() Server {
 	var resultServer Server = ""
 	var resultShards int
 
-	for server, shards := range s.ShardsByDbServers() {
+	for server, shards := range s.ShardsByDBServers() {
 		// init first server as result
 		if resultServer == "" {
 			resultServer = server
@@ -258,6 +258,30 @@ func (s State) PlanServers() Servers {
 				for _, shard := range shards {
 					q[shard] = true
 				}
+			}
+		}
+	}
+
+	r := make([]Server, 0, len(q))
+
+	for k := range q {
+		r = append(r, k)
+	}
+
+	return r
+}
+
+// PlanLeaderServers returns all servers which are part of the plan as a leader
+func (s State) PlanLeaderServers() Servers {
+	q := map[Server]bool{}
+
+	for _, db := range s.Plan.Collections {
+		for _, col := range db {
+			for _, shards := range col.Shards {
+				if len(shards) == 0 {
+					continue
+				}
+				q[shards[0]] = true
 			}
 		}
 	}

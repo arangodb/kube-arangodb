@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -43,9 +43,9 @@ func TestArangoBackupSpecBackOff_Backoff(t *testing.T) {
 	})
 	t.Run("Custom", func(t *testing.T) {
 		b := &ArangoBackupSpecBackOff{
-			MinDelay:   util.NewInt(20),
-			MaxDelay:   util.NewInt(120),
-			Iterations: util.NewInt(10),
+			MinDelay:   util.NewType[int](20),
+			MaxDelay:   util.NewType[int](120),
+			Iterations: util.NewType[int](10),
 		}
 
 		assert.Equal(t, 20*time.Second, b.Backoff(0))
@@ -64,9 +64,9 @@ func TestArangoBackupSpecBackOff_Backoff(t *testing.T) {
 
 	t.Run("Invalid", func(t *testing.T) {
 		b := &ArangoBackupSpecBackOff{
-			MinDelay:   util.NewInt(-1),
-			MaxDelay:   util.NewInt(-1),
-			Iterations: util.NewInt(0),
+			MinDelay:   util.NewType[int](-1),
+			MaxDelay:   util.NewType[int](-1),
+			Iterations: util.NewType[int](0),
 		}
 
 		assert.Equal(t, 0, b.GetMinDelay())
@@ -78,8 +78,8 @@ func TestArangoBackupSpecBackOff_Backoff(t *testing.T) {
 
 	t.Run("Max < Min", func(t *testing.T) {
 		b := &ArangoBackupSpecBackOff{
-			MinDelay: util.NewInt(50),
-			MaxDelay: util.NewInt(20),
+			MinDelay: util.NewType[int](50),
+			MaxDelay: util.NewType[int](20),
 		}
 
 		assert.Equal(t, 20, b.GetMinDelay())

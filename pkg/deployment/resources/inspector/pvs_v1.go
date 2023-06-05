@@ -1,0 +1,122 @@
+//
+// DISCLAIMER
+//
+// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Copyright holder is ArangoDB GmbH, Cologne, Germany
+//
+
+package inspector
+
+import (
+	"context"
+
+	core "k8s.io/api/core/v1"
+	apiErrors "k8s.io/apimachinery/pkg/api/errors"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
+	ins "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolume/v1"
+)
+
+func (p *persistentVolumesInspector) V1() (ins.Inspector, error) {
+	if p.v1.err != nil {
+		return nil, p.v1.err
+	}
+
+	return p.v1, nil
+}
+
+type persistentVolumesInspectorV1 struct {
+	persistentVolumeInspector *persistentVolumesInspector
+
+	persistentVolumes map[string]*core.PersistentVolume
+	err               error
+}
+
+func (p *persistentVolumesInspectorV1) validate() error {
+	if p == nil {
+		return errors.Newf("PersistentVolumesV1Inspector is nil")
+	}
+
+	if p.persistentVolumeInspector == nil {
+		return errors.Newf("Parent is nil")
+	}
+
+	if p.persistentVolumes == nil && p.err == nil {
+		return errors.Newf("PersistentVolumes or err should be not nil")
+	}
+
+	if p.persistentVolumes != nil && p.err != nil {
+		return errors.Newf("PersistentVolumes or err cannot be not nil together")
+	}
+
+	return nil
+}
+
+func (p *persistentVolumesInspectorV1) ListSimple() []*core.PersistentVolume {
+	var r []*core.PersistentVolume
+	for _, persistentVolume := range p.persistentVolumes {
+		r = append(r, persistentVolume)
+	}
+
+	return r
+}
+
+func (p *persistentVolumesInspectorV1) GetSimple(name string) (*core.PersistentVolume, bool) {
+	persistentVolume, ok := p.persistentVolumes[name]
+	if !ok {
+		return nil, false
+	}
+
+	return persistentVolume, true
+}
+
+func (p *persistentVolumesInspectorV1) Iterate(action ins.Action, filters ...ins.Filter) error {
+	for _, persistentVolume := range p.persistentVolumes {
+		if err := p.iteratePersistentVolume(persistentVolume, action, filters...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (p *persistentVolumesInspectorV1) iteratePersistentVolume(persistentVolume *core.PersistentVolume, action ins.Action, filters ...ins.Filter) error {
+	for _, f := range filters {
+		if f == nil {
+			continue
+		}
+
+		if !f(persistentVolume) {
+			return nil
+		}
+	}
+
+	return action(persistentVolume)
+}
+
+func (p *persistentVolumesInspectorV1) Read() ins.ReadInterface {
+	return p
+}
+
+func (p *persistentVolumesInspectorV1) Get(ctx context.Context, name string, opts meta.GetOptions) (*core.PersistentVolume, error) {
+	if s, ok := p.GetSimple(name); !ok {
+		return nil, apiErrors.NewNotFound(constants.PersistentVolumeGR(), name)
+	} else {
+		return s, nil
+	}
+}

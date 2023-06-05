@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ type EndpointTLSSpec struct {
 
 // GetCASecretName returns the value of caSecretName.
 func (s EndpointTLSSpec) GetCASecretName() string {
-	return util.StringOrDefault(s.CASecretName)
+	return util.TypeOrDefault[string](s.CASecretName)
 }
 
 // Validate the given spec, returning an error on validation
@@ -57,7 +57,7 @@ func (s *EndpointTLSSpec) SetDefaults() {
 // SetDefaultsFrom fills empty field with default values from the given source.
 func (s *EndpointTLSSpec) SetDefaultsFrom(source EndpointTLSSpec) {
 	if s.CASecretName == nil {
-		s.CASecretName = util.NewStringOrNil(source.CASecretName)
+		s.CASecretName = util.NewTypeOrNil[string](source.CASecretName)
 	}
 }
 

@@ -83,11 +83,11 @@ func GenerateReadme(root string) error {
 			for _, v := range p.Versions {
 				if err := t.AddRow(map[md.Column]string{
 					platform: p.Name,
-					kVersion: util.StringOrDefault(v.KubernetesVersion, ""),
-					aVersion: util.StringOrDefault(v.ArangoDBVersion, ""),
-					state:    util.StringOrDefault(v.State, ""),
-					remarks:  util.StringOrDefault(v.Remarks, ""),
-					pRemarks: util.StringOrDefault(v.ProviderRemarks, ""),
+					kVersion: util.TypeOrDefault[string](v.KubernetesVersion, ""),
+					aVersion: util.TypeOrDefault[string](v.ArangoDBVersion, ""),
+					state:    util.TypeOrDefault[string](v.State, ""),
+					remarks:  util.TypeOrDefault[string](v.Remarks, ""),
+					pRemarks: util.TypeOrDefault[string](v.ProviderRemarks, ""),
 				}); err != nil {
 					return err
 				}

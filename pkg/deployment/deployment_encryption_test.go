@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 			Name: "Agent CE 3.7.0 Pod with encrypted rocksdb",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 					RocksDB:        rocksDBSpec,
@@ -99,14 +99,14 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 			Name: "DBserver CE 3.7.0 Pod with metrics exporter, lifecycle, tls, authentication, license, rocksDB encryption, secured liveness",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: authenticationSpec,
 					TLS:            tlsSpec,
 					Metrics:        metricsSpec,
 					RocksDB:        rocksDBSpec,
 					Environment:    api.NewEnvironment(api.EnvironmentProduction),
 					License: api.LicenseSpec{
-						SecretName: util.NewString(testLicense),
+						SecretName: util.NewType[string](testLicense),
 					},
 				},
 			},
@@ -186,7 +186,7 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 			Name: "Agent EE 3.7.0 Pod with encrypted rocksdb, disabled feature",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 					RocksDB:        rocksDBSpec,
@@ -246,7 +246,7 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 			Name: "Agent EE 3.7.0 Pod with encrypted rocksdb, enabled feature",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 					RocksDB:        rocksDBSpec,

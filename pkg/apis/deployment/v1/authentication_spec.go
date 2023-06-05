@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ const (
 
 // GetJWTSecretName returns the value of jwtSecretName.
 func (s AuthenticationSpec) GetJWTSecretName() string {
-	return util.StringOrDefault(s.JWTSecretName)
+	return util.TypeOrDefault[string](s.JWTSecretName)
 }
 
 // IsAuthenticated returns true if authentication is enabled.
@@ -65,14 +65,14 @@ func (s *AuthenticationSpec) SetDefaults(defaultJWTSecretName string) {
 	if s.GetJWTSecretName() == "" {
 		// Note that we don't check for nil here, since even a specified, but empty
 		// string should result in the default value.
-		s.JWTSecretName = util.NewString(defaultJWTSecretName)
+		s.JWTSecretName = util.NewType[string](defaultJWTSecretName)
 	}
 }
 
 // SetDefaultsFrom fills unspecified fields with a value from given source spec.
 func (s *AuthenticationSpec) SetDefaultsFrom(source AuthenticationSpec) {
 	if s.JWTSecretName == nil {
-		s.JWTSecretName = util.NewStringOrNil(source.JWTSecretName)
+		s.JWTSecretName = util.NewTypeOrNil[string](source.JWTSecretName)
 	}
 }
 
@@ -83,7 +83,7 @@ func (s AuthenticationSpec) ResetImmutableFields(fieldPrefix string, target *Aut
 	var resetFields []string
 	if s.IsAuthenticated() != target.IsAuthenticated() {
 		// Note: You can change the name, but not from empty to non-empty (or reverse).
-		target.JWTSecretName = util.NewStringOrNil(s.JWTSecretName)
+		target.JWTSecretName = util.NewTypeOrNil[string](s.JWTSecretName)
 		resetFields = append(resetFields, fieldPrefix+".jwtSecretName")
 	}
 	return resetFields

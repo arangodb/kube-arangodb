@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -168,7 +168,7 @@ func TestCreateArangodArgsDBServer(t *testing.T) {
 			},
 			Spec: api.DeploymentSpec{
 				Mode:          api.NewMode(api.DeploymentModeCluster),
-				ClusterDomain: util.NewString("cluster.local"),
+				ClusterDomain: util.NewType[string]("cluster.local"),
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
@@ -230,7 +230,7 @@ func TestCreateArangodArgsDBServer(t *testing.T) {
 			Spec: api.DeploymentSpec{
 				Mode: api.NewMode(api.DeploymentModeCluster),
 				TLS: api.TLSSpec{
-					CASecretName: util.NewString("None"),
+					CASecretName: util.NewType[string]("None"),
 				},
 			},
 		}
@@ -292,7 +292,7 @@ func TestCreateArangodArgsDBServer(t *testing.T) {
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
-		apiObject.Spec.Authentication.JWTSecretName = util.NewString("None")
+		apiObject.Spec.Authentication.JWTSecretName = util.NewType[string]("None")
 		agents := api.MemberStatusList{
 			api.MemberStatus{ID: "a1"},
 			api.MemberStatus{ID: "a2"},

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,7 +51,19 @@ func (a *ArangoBackupStatusBackOff) GetNext() meta.Time {
 	return a.Next
 }
 
+func (a *ArangoBackupStatusBackOff) ShouldBackoff(spec *ArangoBackupSpecBackOff) bool {
+	return spec == nil || spec.MaxIterations == nil || a.GetIterations() < *spec.MaxIterations
+}
+
 func (a *ArangoBackupStatusBackOff) Backoff(spec *ArangoBackupSpecBackOff) *ArangoBackupStatusBackOff {
+	if !a.ShouldBackoff(spec) {
+		// Do not backoff anymore
+		return &ArangoBackupStatusBackOff{
+			Iterations: a.GetIterations(),
+			Next:       a.GetNext(),
+		}
+	}
+
 	return &ArangoBackupStatusBackOff{
 		Iterations: a.GetIterations() + 1,
 		Next:       meta.Time{Time: time.Now().Add(spec.Backoff(a.GetIterations()))},

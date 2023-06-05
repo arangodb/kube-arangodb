@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -56,5 +56,5 @@ func TestCreatePodDNSNameWithDomain(t *testing.T) {
 	}
 
 	assert.Equal(t, "test-agent-id1.test-int.ns.svc", CreatePodDNSNameWithDomain(depl, nil, "agent", "id1"))
-	assert.Equal(t, "test-agent-id1.test-int.ns.svc.cluster.local", CreatePodDNSNameWithDomain(depl, util.NewString("cluster.local"), "agent", "id1"))
+	assert.Equal(t, "test-agent-id1.test-int.ns.svc.cluster.local", CreatePodDNSNameWithDomain(depl, util.NewType[string]("cluster.local"), "agent", "id1"))
 }

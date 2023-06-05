@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,12 +38,12 @@ type SyncSpec struct {
 
 // IsEnabled returns the value of enabled.
 func (s SyncSpec) IsEnabled() bool {
-	return util.BoolOrDefault(s.Enabled)
+	return util.TypeOrDefault[bool](s.Enabled)
 }
 
 // GetSyncImage returns the syncer image or empty string
 func (s SyncSpec) GetSyncImage() string {
-	return util.StringOrDefault(s.Image)
+	return util.TypeOrDefault[string](s.Image)
 }
 
 // HasSyncImage returns whether a special sync image is set
@@ -84,10 +84,10 @@ func (s *SyncSpec) SetDefaults(defaultJWTSecretName, defaultClientAuthCASecretNa
 // SetDefaultsFrom fills unspecified fields with a value from given source spec.
 func (s *SyncSpec) SetDefaultsFrom(source SyncSpec) {
 	if s.Enabled == nil {
-		s.Enabled = util.NewBoolOrNil(source.Enabled)
+		s.Enabled = util.NewTypeOrNil[bool](source.Enabled)
 	}
 	if s.Image == nil {
-		s.Image = util.NewStringOrNil(source.Image)
+		s.Image = util.NewTypeOrNil[string](source.Image)
 	}
 	s.ExternalAccess.SetDefaultsFrom(source.ExternalAccess)
 	s.Authentication.SetDefaultsFrom(source.Authentication)

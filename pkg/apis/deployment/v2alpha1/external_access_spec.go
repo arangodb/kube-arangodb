@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -55,17 +55,17 @@ func (s ExternalAccessSpec) GetType() ExternalAccessType {
 
 // GetNodePort returns the value of nodePort.
 func (s ExternalAccessSpec) GetNodePort() int {
-	return util.IntOrDefault(s.NodePort)
+	return util.TypeOrDefault[int](s.NodePort)
 }
 
 // GetLoadBalancerIP returns the value of loadBalancerIP.
 func (s ExternalAccessSpec) GetLoadBalancerIP() string {
-	return util.StringOrDefault(s.LoadBalancerIP)
+	return util.TypeOrDefault[string](s.LoadBalancerIP)
 }
 
 // GetAdvertisedEndpoint returns the advertised endpoint or empty string if none was specified
 func (s ExternalAccessSpec) GetAdvertisedEndpoint() string {
-	return util.StringOrDefault(s.AdvertisedEndpoint)
+	return util.TypeOrDefault[string](s.AdvertisedEndpoint)
 }
 
 // GetManagedServiceNames returns a list of managed service names.
@@ -107,10 +107,10 @@ func (s *ExternalAccessSpec) SetDefaultsFrom(source ExternalAccessSpec) {
 		s.Type = NewExternalAccessTypeOrNil(source.Type)
 	}
 	if s.NodePort == nil {
-		s.NodePort = util.NewIntOrNil(source.NodePort)
+		s.NodePort = util.NewTypeOrNil[int](source.NodePort)
 	}
 	if s.LoadBalancerIP == nil {
-		s.LoadBalancerIP = util.NewStringOrNil(source.LoadBalancerIP)
+		s.LoadBalancerIP = util.NewTypeOrNil[string](source.LoadBalancerIP)
 	}
 	if s.LoadBalancerSourceRanges == nil && len(source.LoadBalancerSourceRanges) > 0 {
 		s.LoadBalancerSourceRanges = append([]string{}, source.LoadBalancerSourceRanges...)

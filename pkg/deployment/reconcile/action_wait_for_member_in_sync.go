@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -74,7 +74,7 @@ func (a *actionWaitForMemberInSync) check() (bool, error) {
 
 	groupSpec := spec.GetServerGroupSpec(a.action.Group)
 
-	if !util.BoolOrDefault(groupSpec.ExtendedRotationCheck, false) {
+	if !util.TypeOrDefault[bool](groupSpec.ExtendedRotationCheck, false) {
 		return true, nil
 	}
 

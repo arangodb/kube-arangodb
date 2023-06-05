@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ func (s LicenseSpec) HasSecretName() bool {
 
 // GetSecretName returns the license key if set. Empty string otherwise.
 func (s LicenseSpec) GetSecretName() string {
-	return util.StringOrDefault(s.SecretName)
+	return util.TypeOrDefault[string](s.SecretName)
 }
 
 // Validate validates the LicenseSpec
@@ -54,6 +54,6 @@ func (s LicenseSpec) Validate() error {
 // SetDefaultsFrom fills all values not set in s with values from other
 func (s *LicenseSpec) SetDefaultsFrom(other LicenseSpec) {
 	if !s.HasSecretName() {
-		s.SecretName = util.NewStringOrNil(other.SecretName)
+		s.SecretName = util.NewTypeOrNil[string](other.SecretName)
 	}
 }

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,13 +37,13 @@ func TestEnsurePod_Metrics(t *testing.T) {
 			Name: "DBserver Pod with metrics exporter and port override",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 					Metrics: func() api.MetricsSpec {
 						m := metricsSpec.DeepCopy()
 
-						m.Port = util.NewUInt16(9999)
+						m.Port = util.NewType[uint16](9999)
 
 						return *m
 					}(),
@@ -97,7 +97,7 @@ func TestEnsurePod_Metrics(t *testing.T) {
 			Name: "DBserver Pod with metrics exporter with mode",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 					Metrics: func() api.MetricsSpec {
@@ -157,7 +157,7 @@ func TestEnsurePod_Metrics(t *testing.T) {
 			Name: "DBserver Pod with metrics exporter with internal mode",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 					Metrics: func() api.MetricsSpec {
@@ -225,7 +225,7 @@ func TestEnsurePod_Metrics(t *testing.T) {
 			Name: "Agent Pod with metrics exporter with internal mode",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 					Metrics: func() api.MetricsSpec {

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -350,8 +350,8 @@ func (r *Resources) probeBuilderReadinessSimpleCoreOperator(spec api.DeploymentS
 	}
 
 	p.SetSpec(&api.ServerGroupProbeSpec{
-		InitialDelaySeconds: util.NewInt32(15),
-		PeriodSeconds:       util.NewInt32(10),
+		InitialDelaySeconds: util.NewType[int32](15),
+		PeriodSeconds:       util.NewType[int32](10),
 	})
 
 	return p, nil
@@ -369,8 +369,8 @@ func (r *Resources) probeBuilderReadinessSimpleCore(spec api.DeploymentSpec, gro
 	}
 
 	p.SetSpec(&api.ServerGroupProbeSpec{
-		InitialDelaySeconds: util.NewInt32(15),
-		PeriodSeconds:       util.NewInt32(10),
+		InitialDelaySeconds: util.NewType[int32](15),
+		PeriodSeconds:       util.NewType[int32](10),
 	})
 
 	return p, nil

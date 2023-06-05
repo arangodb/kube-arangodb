@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@ var (
 		backupApi.ArangoBackupStatePending:       statePendingHandler,
 		backupApi.ArangoBackupStateScheduled:     stateScheduledHandler,
 		backupApi.ArangoBackupStateCreate:        stateCreateHandler,
+		backupApi.ArangoBackupStateCreateError:   stateCreateErrorHandler,
 		backupApi.ArangoBackupStateUpload:        stateUploadHandler,
 		backupApi.ArangoBackupStateUploading:     stateUploadingHandler,
 		backupApi.ArangoBackupStateUploadError:   stateUploadErrorHandler,

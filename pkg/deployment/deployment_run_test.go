@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -223,7 +223,7 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 		pods, err := d.deps.Client.Kubernetes().CoreV1().Pods(testNamespace).List(context.Background(), meta.ListOptions{})
 		require.NoError(t, err)
 		require.Len(t, pods.Items, 1)
-		if util.BoolOrDefault(testCase.CompareChecksum, true) {
+		if util.TypeOrDefault[bool](testCase.CompareChecksum, true) {
 			compareSpec(t, testCase.ExpectedPod.Spec, pods.Items[0].Spec)
 		}
 		require.Equal(t, testCase.ExpectedPod.Spec, pods.Items[0].Spec)

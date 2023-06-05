@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 func TestArangoBackupStatusBackOff_Backoff(t *testing.T) {
@@ -36,5 +38,22 @@ func TestArangoBackupStatusBackOff_Backoff(t *testing.T) {
 
 		require.Equal(t, 1, n.GetIterations())
 		require.True(t, n.GetNext().After(time.Now().Add(time.Duration(9.9*float64(time.Second)))))
+	})
+
+	t.Run("Test MaxIterations", func(t *testing.T) {
+		var spec = &ArangoBackupSpecBackOff{
+			Iterations:    util.NewType[int](2),
+			MaxIterations: util.NewType[int](3),
+		}
+		var status *ArangoBackupStatusBackOff
+
+		n := status.Backoff(spec)
+		require.Equal(t, 1, n.GetIterations())
+		require.True(t, n.ShouldBackoff(spec))
+
+		n.Iterations = 3
+		n = n.Backoff(spec)
+		require.Equal(t, 3, n.GetIterations())
+		require.False(t, n.ShouldBackoff(spec))
 	})
 }

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner"
 	resources "github.com/arangodb/kube-arangodb/pkg/storage/resources"
@@ -168,7 +169,7 @@ func (ls *LocalStorage) createPV(ctx context.Context, apiObject *api.ArangoLocal
 				continue
 			}
 			if info.Available < volSize {
-				ls.log.Debug("Not enough available size")
+				ls.log.Error("Not enough available size")
 				continue
 			}
 			// Ok, prepare a directory
@@ -271,7 +272,7 @@ func createNodeSelector(nodeName string) *core.NodeSelector {
 			core.NodeSelectorTerm{
 				MatchExpressions: []core.NodeSelectorRequirement{
 					core.NodeSelectorRequirement{
-						Key:      "kubernetes.io/hostname",
+						Key:      shared.TopologyKeyHostname,
 						Operator: core.NodeSelectorOpIn,
 						Values:   []string{nodeName},
 					},

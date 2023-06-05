@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -292,7 +292,7 @@ func Test_State_Ready_DownloadDoNothing(t *testing.T) {
 	require.NoError(t, err)
 
 	obj.Status.Backup = createBackupFromMeta(backupMeta, &backupApi.ArangoBackupDetails{
-		Downloaded: util.NewBool(true),
+		Downloaded: util.NewType[bool](true),
 	})
 
 	// Act
@@ -325,8 +325,8 @@ func Test_State_Ready_DoUploadDownloadedBackup(t *testing.T) {
 	require.NoError(t, err)
 
 	obj.Status.Backup = createBackupFromMeta(backupMeta, &backupApi.ArangoBackupDetails{
-		Downloaded: util.NewBool(true),
-		Uploaded:   util.NewBool(false),
+		Downloaded: util.NewType[bool](true),
+		Uploaded:   util.NewType[bool](false),
 	})
 
 	// Act
@@ -358,7 +358,7 @@ func Test_State_Ready_DoNotReUploadBackup(t *testing.T) {
 	require.NoError(t, err)
 
 	obj.Status.Backup = createBackupFromMeta(backupMeta, &backupApi.ArangoBackupDetails{
-		Uploaded: util.NewBool(true),
+		Uploaded: util.NewType[bool](true),
 	})
 
 	// Act
@@ -388,7 +388,7 @@ func Test_State_Ready_RemoveUploadedFlag(t *testing.T) {
 	require.NoError(t, err)
 
 	obj.Status.Backup = createBackupFromMeta(backupMeta, &backupApi.ArangoBackupDetails{
-		Uploaded: util.NewBool(true),
+		Uploaded: util.NewType[bool](true),
 	})
 
 	// Act

@@ -205,10 +205,34 @@ func getDbServerWithLowestShards(ctx reconciler.ArangoAgencyGet, g api.ServerGro
 		if g != api.ServerGroupDBServers {
 			return "", nil
 		}
-		if a, ok := ctx.GetAgencyCache(); ok {
-			return string(a.GetDBServerWithLowestShards()), nil
+
+		a, ok := ctx.GetAgencyCache()
+		if !ok {
+			return "", nil
 		}
-		return "", nil
+
+		dbServersShards := a.ShardsByDBServers()
+		for _, member := range m {
+			if _, ok := dbServersShards[agency.Server(member.ID)]; !ok {
+				// member is not in agency cache, so it has no shards
+				return member.ID, nil
+			}
+		}
+
+		var resultServer agency.Server = ""
+		var resultShards int
+
+		for server, shards := range dbServersShards {
+			// init first server as result
+			if resultServer == "" {
+				resultServer = server
+				resultShards = shards
+			} else if shards < resultShards {
+				resultServer = server
+				resultShards = shards
+			}
+		}
+		return string(resultServer), nil
 	}
 }
 

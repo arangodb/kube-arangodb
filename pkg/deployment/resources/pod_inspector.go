@@ -205,7 +205,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 									Time("finished", t.FinishedAt.Time).
 									Warn("Pod failed in unexpected way: Init Container failed")
 
-								r.metrics.IncMemberInitContainerRestarts(memberStatus.ID, container, t.ExitCode)
+								r.metrics.IncMemberInitContainerRestarts(memberStatus.ID, container, t.Reason, t.ExitCode)
 							}
 						}
 					}
@@ -227,7 +227,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 									Time("finished", t.FinishedAt.Time).
 									Warn("Pod failed in unexpected way: Core Container failed")
 
-								r.metrics.IncMemberContainerRestarts(memberStatus.ID, container, t.ExitCode)
+								r.metrics.IncMemberContainerRestarts(memberStatus.ID, container, t.Reason, t.ExitCode)
 							}
 						}
 					}
@@ -437,7 +437,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 				defer c()
 
 				if err := cachedStatus.PodsModInterface().V1().Delete(nctx, pod.GetName(), meta.DeleteOptions{
-					GracePeriodSeconds: util.NewInt64(gps),
+					GracePeriodSeconds: util.NewType[int64](gps),
 					Preconditions:      meta.NewUIDPreconditions(string(pod.GetUID())),
 				}); err != nil {
 					if kerrors.IsNotFound(err) {

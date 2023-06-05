@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ var metricsExporter = &feature{
 	enterpriseRequired: false,
 	enabledByDefault:   true,
 	deprecated:         "It is always set to True",
-	constValue:         util.NewBool(true),
+	constValue:         util.NewType[bool](true),
 	hidden:             true,
 }
 

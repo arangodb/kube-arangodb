@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -81,7 +81,7 @@ func (a *actionArangoMemberUpdatePodSpec) Start(ctx context.Context) (bool, erro
 
 	if m.Endpoint == nil || *m.Endpoint != endpoint {
 		// Update endpoint
-		m.Endpoint = util.NewString(endpoint)
+		m.Endpoint = util.NewType[string](endpoint)
 		if err := status.Members.Update(m, a.action.Group); err != nil {
 			a.log.Err(err).Error("Unable to update endpoint")
 			return false, err

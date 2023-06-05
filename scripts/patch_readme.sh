@@ -13,14 +13,7 @@ fi
 function replaceInFile {
     local EXPR=$1
     local FILE=$2
-    case $(uname) in
-        Darwin)
-            sed -e "${EXPR}" -i "" ${FILE}
-            ;;
-        *)
-            sed -E -i --expression "${EXPR}" ${FILE}
-            ;;
-    esac
+    sed -E -i --expression "${EXPR}" ${FILE}
 }
 
 

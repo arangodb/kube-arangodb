@@ -12,6 +12,9 @@ actions:
   RemoveMember:
     description: Removes member from the Cluster and Status
     timeout: 15m
+  RemoveMemberPVC:
+    description: Removes member PVC and enforce recreate procedure
+    timeout: 15m
   RecreateMember:
     description: Recreate member with same ID and Data
     timeout: 15m

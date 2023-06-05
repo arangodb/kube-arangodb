@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,200 +20,37 @@
 
 package util
 
-import (
-	"time"
-
-	core "k8s.io/api/core/v1"
-)
-
-// NewString returns a reference to a string with given value.
-func NewString(input string) *string {
+// NewType returns a reference to a simple type with given value.
+func NewType[T interface{}](input T) *T {
 	return &input
 }
 
-// NewStringOrNil returns nil if input is nil, otherwise returns a clone of the given value.
-func NewStringOrNil(input *string) *string {
+// NewTypeOrNil returns nil if input is nil, otherwise returns a clone of the given value.
+func NewTypeOrNil[T interface{}](input *T) *T {
 	if input == nil {
 		return nil
 	}
-	return NewString(*input)
+
+	return NewType(*input)
 }
 
-// StringOrDefault returns the default value (or empty string) if input is nil, otherwise returns the referenced value.
-func StringOrDefault(input *string, defaultValue ...string) string {
+// TypeOrDefault returns the default value (or T default value) if input is nil, otherwise returns the referenced value.
+func TypeOrDefault[T interface{}](input *T, defaultValue ...T) T {
 	if input == nil {
 		if len(defaultValue) > 0 {
 			return defaultValue[0]
 		}
-		return ""
+		var def T
+		return def
 	}
 	return *input
 }
 
-// NewInt returns a reference to an int with given value.
-func NewInt(input int) *int {
-	return &input
-}
-
-// NewIntOrNil returns nil if input is nil, otherwise returns a clone of the given value.
-func NewIntOrNil(input *int) *int {
-	if input == nil {
-		return nil
+// BoolSwitch define bool switch for defined types - in case of true t T is returned, in case of false f T
+func BoolSwitch[T interface{}](s bool, t, f T) T {
+	if s {
+		return t
 	}
-	return NewInt(*input)
-}
 
-// IntOrDefault returns the default value (or 0) if input is nil, otherwise returns the referenced value.
-func IntOrDefault(input *int, defaultValue ...int) int {
-	if input == nil {
-		if len(defaultValue) > 0 {
-			return defaultValue[0]
-		}
-		return 0
-	}
-	return *input
-}
-
-// New32Int returns a reference to an int with given value.
-func NewInt32(input int32) *int32 {
-	return &input
-}
-
-// New32IntOrNil returns nil if input is nil, otherwise returns a clone of the given value.
-func NewInt32OrNil(input *int32) *int32 {
-	if input == nil {
-		return nil
-	}
-	return NewInt32(*input)
-}
-
-// Int32OrDefault returns the default value (or 0) if input is nil, otherwise returns the referenced value.
-func Int32OrDefault(input *int32, defaultValue ...int32) int32 {
-	if input == nil {
-		if len(defaultValue) > 0 {
-			return defaultValue[0]
-		}
-		return 0
-	}
-	return *input
-}
-
-// NewInt64 returns a reference to an int64 with given value.
-func NewInt64(input int64) *int64 {
-	return &input
-}
-
-// NewInt64OrNil returns nil if input is nil, otherwise returns a clone of the given value.
-func NewInt64OrNil(input *int64) *int64 {
-	if input == nil {
-		return nil
-	}
-	return NewInt64(*input)
-}
-
-// Int64OrDefault returns the default value (or 0) if input is nil, otherwise returns the referenced value.
-func Int64OrDefault(input *int64, defaultValue ...int64) int64 {
-	if input == nil {
-		if len(defaultValue) > 0 {
-			return defaultValue[0]
-		}
-		return 0
-	}
-	return *input
-}
-
-// NewUInt16 returns a reference to an uint16 with given value.
-func NewUInt16(input uint16) *uint16 {
-	return &input
-}
-
-// NewUInt16OrNil returns nil if input is nil, otherwise returns a clone of the given value.
-func NewUInt16OrNil(input *uint16) *uint16 {
-	if input == nil {
-		return nil
-	}
-	return NewUInt16(*input)
-}
-
-// UInt16OrDefault returns the default value (or 0) if input is nil, otherwise returns the referenced value.
-func UInt16OrDefault(input *uint16, defaultValue ...uint16) uint16 {
-	if input == nil {
-		if len(defaultValue) > 0 {
-			return defaultValue[0]
-		}
-		return 0
-	}
-	return *input
-}
-
-// NewBool returns a reference to a bool with given value.
-func NewBool(input bool) *bool {
-	return &input
-}
-
-// NewBoolOrNil returns nil if input is nil, otherwise returns a clone of the given value.
-func NewBoolOrNil(input *bool) *bool {
-	if input == nil {
-		return nil
-	}
-	return NewBool(*input)
-}
-
-// BoolOrDefault returns the default value (or false) if input is nil, otherwise returns the referenced value.
-func BoolOrDefault(input *bool, defaultValue ...bool) bool {
-	if input == nil {
-		if len(defaultValue) > 0 {
-			return defaultValue[0]
-		}
-		return false
-	}
-	return *input
-}
-
-// NewDuration returns a reference to a duration with given value.
-func NewDuration(input time.Duration) *time.Duration {
-	return &input
-}
-
-// NewDurationOrNil returns nil if input is nil, otherwise returns a clone of the given value.
-func NewDurationOrNil(input *time.Duration) *time.Duration {
-	if input == nil {
-		return nil
-	}
-	return NewDuration(*input)
-}
-
-// DurationOrDefault returns the default value (or 0) if input is nil, otherwise returns the referenced value.
-func DurationOrDefault(input *time.Duration, defaultValue ...time.Duration) time.Duration {
-	if input == nil {
-		if len(defaultValue) > 0 {
-			return defaultValue[0]
-		}
-		return 0
-	}
-	return *input
-}
-
-// NewPullPolicy returns a reference to a pull policy with given value.
-func NewPullPolicy(input core.PullPolicy) *core.PullPolicy {
-	return &input
-}
-
-// NewPullPolicyOrNil returns nil if input is nil, otherwise returns a clone of the given value.
-func NewPullPolicyOrNil(input *core.PullPolicy) *core.PullPolicy {
-	if input == nil {
-		return nil
-	}
-	return NewPullPolicy(*input)
-}
-
-// PullPolicyOrDefault returns the default value (or 0) if input is nil, otherwise returns the referenced value.
-func PullPolicyOrDefault(input *core.PullPolicy, defaultValue ...core.PullPolicy) core.PullPolicy {
-	if input == nil {
-		if len(defaultValue) > 0 {
-			return defaultValue[0]
-		}
-		return ""
-	}
-	return *input
+	return f
 }

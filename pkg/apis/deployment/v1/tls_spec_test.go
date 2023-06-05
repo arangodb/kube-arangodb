@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,23 +31,23 @@ import (
 
 func TestTLSSpecValidate(t *testing.T) {
 	// Valid
-	assert.Nil(t, TLSSpec{CASecretName: util.NewString("foo")}.Validate())
-	assert.Nil(t, TLSSpec{CASecretName: util.NewString("None")}.Validate())
-	assert.Nil(t, TLSSpec{CASecretName: util.NewString("None"), AltNames: []string{}}.Validate())
-	assert.Nil(t, TLSSpec{CASecretName: util.NewString("None"), AltNames: []string{"foo"}}.Validate())
-	assert.Nil(t, TLSSpec{CASecretName: util.NewString("None"), AltNames: []string{"email@example.com", "127.0.0.1"}}.Validate())
+	assert.Nil(t, TLSSpec{CASecretName: util.NewType[string]("foo")}.Validate())
+	assert.Nil(t, TLSSpec{CASecretName: util.NewType[string]("None")}.Validate())
+	assert.Nil(t, TLSSpec{CASecretName: util.NewType[string]("None"), AltNames: []string{}}.Validate())
+	assert.Nil(t, TLSSpec{CASecretName: util.NewType[string]("None"), AltNames: []string{"foo"}}.Validate())
+	assert.Nil(t, TLSSpec{CASecretName: util.NewType[string]("None"), AltNames: []string{"email@example.com", "127.0.0.1"}}.Validate())
 
 	// Not valid
 	assert.Error(t, TLSSpec{CASecretName: nil}.Validate())
-	assert.Error(t, TLSSpec{CASecretName: util.NewString("")}.Validate())
-	assert.Error(t, TLSSpec{CASecretName: util.NewString("Foo")}.Validate())
-	assert.Error(t, TLSSpec{CASecretName: util.NewString("foo"), AltNames: []string{"@@"}}.Validate())
+	assert.Error(t, TLSSpec{CASecretName: util.NewType[string]("")}.Validate())
+	assert.Error(t, TLSSpec{CASecretName: util.NewType[string]("Foo")}.Validate())
+	assert.Error(t, TLSSpec{CASecretName: util.NewType[string]("foo"), AltNames: []string{"@@"}}.Validate())
 }
 
 func TestTLSSpecIsSecure(t *testing.T) {
-	assert.True(t, TLSSpec{CASecretName: util.NewString("")}.IsSecure())
-	assert.True(t, TLSSpec{CASecretName: util.NewString("foo")}.IsSecure())
-	assert.False(t, TLSSpec{CASecretName: util.NewString("None")}.IsSecure())
+	assert.True(t, TLSSpec{CASecretName: util.NewType[string]("")}.IsSecure())
+	assert.True(t, TLSSpec{CASecretName: util.NewType[string]("foo")}.IsSecure())
+	assert.False(t, TLSSpec{CASecretName: util.NewType[string]("None")}.IsSecure())
 }
 
 func TestTLSSpecSetDefaults(t *testing.T) {
@@ -57,7 +57,7 @@ func TestTLSSpecSetDefaults(t *testing.T) {
 	}
 
 	assert.Equal(t, "", def(TLSSpec{}).GetCASecretName())
-	assert.Equal(t, "foo", def(TLSSpec{CASecretName: util.NewString("foo")}).GetCASecretName())
+	assert.Equal(t, "foo", def(TLSSpec{CASecretName: util.NewType[string]("foo")}).GetCASecretName())
 	assert.Len(t, def(TLSSpec{}).GetAltNames(), 0)
 	assert.Len(t, def(TLSSpec{AltNames: []string{"foo.local"}}).GetAltNames(), 1)
 	assert.Equal(t, defaultTLSTTL, def(TLSSpec{}).GetTTL())

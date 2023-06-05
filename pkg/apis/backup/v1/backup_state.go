@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ const (
 	ArangoBackupStateDownloadError state.State = "DownloadError"
 	ArangoBackupStateDownloading   state.State = "Downloading"
 	ArangoBackupStateCreate        state.State = "Create"
+	ArangoBackupStateCreateError   state.State = "CreateError"
 	ArangoBackupStateUpload        state.State = "Upload"
 	ArangoBackupStateUploading     state.State = "Uploading"
 	ArangoBackupStateUploadError   state.State = "UploadError"
@@ -50,7 +51,8 @@ var ArangoBackupStateMap = state.Map{
 	ArangoBackupStateDownload:      {ArangoBackupStateDownloading, ArangoBackupStateFailed, ArangoBackupStateDownloadError},
 	ArangoBackupStateDownloading:   {ArangoBackupStateReady, ArangoBackupStateFailed, ArangoBackupStateDownloadError},
 	ArangoBackupStateDownloadError: {ArangoBackupStatePending, ArangoBackupStateFailed},
-	ArangoBackupStateCreate:        {ArangoBackupStateReady, ArangoBackupStateFailed},
+	ArangoBackupStateCreate:        {ArangoBackupStateReady, ArangoBackupStateFailed, ArangoBackupStateCreateError},
+	ArangoBackupStateCreateError:   {ArangoBackupStateFailed, ArangoBackupStateCreate},
 	ArangoBackupStateUpload:        {ArangoBackupStateUploading, ArangoBackupStateFailed, ArangoBackupStateDeleted, ArangoBackupStateUploadError},
 	ArangoBackupStateUploading:     {ArangoBackupStateReady, ArangoBackupStateFailed, ArangoBackupStateUploadError},
 	ArangoBackupStateUploadError:   {ArangoBackupStateFailed, ArangoBackupStateReady},

@@ -2,7 +2,15 @@
 
 ## Overview
 
-TODO
+Right now during DBServer restart (so also during the upgrade) we can face an issue with out-synced shards.
+
+This is known problem and occurs when Leader and Follower disagree on the number of documents in a shard, 
+they will not be able to get in sync, and retry forever.
+
+This feature is designed to solve this problem by forcing rebuild of out-synced shards with broken Merkle Tree, 
+by using internal DBServer API.
+
+This fix is addressed to the ArangoDB versions lower then: 3.10.6 and 3.9.11.
 
 ## How to use
 

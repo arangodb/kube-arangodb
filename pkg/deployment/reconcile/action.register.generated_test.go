@@ -490,6 +490,16 @@ func Test_Actions(t *testing.T) {
 		})
 	})
 
+	t.Run("RemoveMemberPVC", func(t *testing.T) {
+		ActionsExistence(t, api.ActionTypeRemoveMemberPVC)
+		t.Run("Internal", func(t *testing.T) {
+			require.False(t, api.ActionTypeRemoveMemberPVC.Internal())
+		})
+		t.Run("Optional", func(t *testing.T) {
+			require.False(t, api.ActionTypeRemoveMemberPVC.Optional())
+		})
+	})
+
 	t.Run("RenewTLSCACertificate", func(t *testing.T) {
 		ActionsExistence(t, api.ActionTypeRenewTLSCACertificate)
 		t.Run("Internal", func(t *testing.T) {

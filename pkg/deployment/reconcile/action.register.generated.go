@@ -165,6 +165,9 @@ var (
 	_ Action        = &actionRemoveMember{}
 	_ actionFactory = newRemoveMemberAction
 
+	_ Action        = &actionRemoveMemberPVC{}
+	_ actionFactory = newRemoveMemberPVCAction
+
 	_ Action        = &actionRenewTLSCACertificate{}
 	_ actionFactory = newRenewTLSCACertificateAction
 
@@ -810,6 +813,18 @@ func init() {
 		// Get Action defition
 		function := newRemoveMemberAction
 		action := api.ActionTypeRemoveMember
+
+		// Wrap action main function
+
+		// Register action
+		registerAction(action, function)
+	}
+
+	// RemoveMemberPVC
+	{
+		// Get Action defition
+		function := newRemoveMemberPVCAction
+		action := api.ActionTypeRemoveMemberPVC
 
 		// Wrap action main function
 

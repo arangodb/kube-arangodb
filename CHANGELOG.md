@@ -3,6 +3,19 @@
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Maintenance) Add govulncheck to pipeline, update golangci-linter
 
+## [1.2.28](https://github.com/arangodb/kube-arangodb/tree/1.2.28) (2023-06-05)
+- (Feature) ArangoBackup create retries and MaxIterations limit
+- (Feature) Add Reason in OOM Metric
+- (Feature) PersistentVolume Inspector
+- (Bugfix) Discover Arango image during ID phase
+- (Feature) PV Unschedulable condition
+- (Feature) Features startup logging
+- (Maintenance) Generics for type handling
+- (Bugfix) Fix creating sync components with EA type set to Managed and headless svc
+- (Feature) Check if Volume with LocalStorage is missing
+- (Feature) Add allowConcurrent option to ArangoBackupPolicy
+- (Feature) Allow to recreate Local volumes
+
 ## [1.2.27](https://github.com/arangodb/kube-arangodb/tree/1.2.27) (2023-04-27)
 - (Feature) Add InSync Cache
 - (Feature) Force Rebuild Out Synced Shards

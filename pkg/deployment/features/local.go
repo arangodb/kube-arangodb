@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -57,6 +57,19 @@ var internalCMD = &cobra.Command{
 	Use:   "features",
 	Short: "Describe all operator features",
 	Run:   cmdRun,
+}
+
+// Iterator defines feature definition iterator
+type Iterator func(name string, feature Feature)
+
+// Iterate allows to iterate over all registered functions
+func Iterate(iterator Iterator) {
+	featuresLock.Lock()
+	defer featuresLock.Unlock()
+
+	for name, feature := range features {
+		iterator(name, feature)
+	}
 }
 
 // Init initializes all registered features.

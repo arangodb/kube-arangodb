@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -56,7 +56,7 @@ func TestEnsurePod_ArangoDB_AntiAffinity(t *testing.T) {
 			Name: "DBserver POD with antiAffinity required",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 					DBServers: api.ServerGroupSpec{
@@ -118,7 +118,7 @@ func TestEnsurePod_ArangoDB_AntiAffinity(t *testing.T) {
 			Name: "DBserver POD with antiAffinity prefered",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 					DBServers: api.ServerGroupSpec{
@@ -180,7 +180,7 @@ func TestEnsurePod_ArangoDB_AntiAffinity(t *testing.T) {
 			Name: "DBserver POD with antiAffinity both",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 					DBServers: api.ServerGroupSpec{
@@ -246,7 +246,7 @@ func TestEnsurePod_ArangoDB_AntiAffinity(t *testing.T) {
 			Name: "DBserver POD with antiAffinity mixed",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 					DBServers: api.ServerGroupSpec{
@@ -332,7 +332,7 @@ func TestEnsurePod_ArangoDB_Affinity(t *testing.T) {
 			Name: "DBserver POD with affinity required",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 					DBServers: api.ServerGroupSpec{
@@ -397,7 +397,7 @@ func TestEnsurePod_ArangoDB_Affinity(t *testing.T) {
 			Name: "DBserver POD with affinity prefered",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 					DBServers: api.ServerGroupSpec{
@@ -462,7 +462,7 @@ func TestEnsurePod_ArangoDB_Affinity(t *testing.T) {
 			Name: "DBserver POD with affinity both",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 					DBServers: api.ServerGroupSpec{
@@ -531,7 +531,7 @@ func TestEnsurePod_ArangoDB_Affinity(t *testing.T) {
 			Name: "DBserver POD with affinity mixed",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 					DBServers: api.ServerGroupSpec{
@@ -611,7 +611,7 @@ func TestEnsurePod_ArangoDB_NodeAffinity(t *testing.T) {
 			Name: "DBserver POD with nodeAffinity required",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
+					Image:          util.NewType[string](testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 					DBServers: api.ServerGroupSpec{

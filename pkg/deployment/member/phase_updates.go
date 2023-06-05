@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -104,6 +104,7 @@ func removeMemberConditionsMapFunc(m *api.MemberStatus) {
 	m.Conditions.Remove(api.ConditionTypePVCResizePending)
 	m.Conditions.Remove(api.ConditionTypeArchitectureMismatch)
 	m.Conditions.Remove(api.ConditionTypeArchitectureChangeCannotBeApplied)
+	m.Conditions.Remove(api.ConditionTypeMemberVolumeUnschedulable)
 
 	m.RemoveTerminationsBefore(time.Now().Add(-1 * recentTerminationsKeepPeriod))
 

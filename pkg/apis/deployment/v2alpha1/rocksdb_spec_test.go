@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,16 +31,16 @@ import (
 func TestRocksDBSpecValidate(t *testing.T) {
 	// Valid
 	assert.Nil(t, RocksDBSpec{}.Validate())
-	assert.Nil(t, RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: util.NewString("foo")}}.Validate())
+	assert.Nil(t, RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: util.NewType[string]("foo")}}.Validate())
 
 	// Not valid
-	assert.Error(t, RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: util.NewString("Foo")}}.Validate())
+	assert.Error(t, RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: util.NewType[string]("Foo")}}.Validate())
 }
 
 func TestRocksDBSpecIsEncrypted(t *testing.T) {
 	assert.False(t, RocksDBSpec{}.IsEncrypted())
-	assert.False(t, RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: util.NewString("")}}.IsEncrypted())
-	assert.True(t, RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: util.NewString("foo")}}.IsEncrypted())
+	assert.False(t, RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: util.NewType[string]("")}}.IsEncrypted())
+	assert.True(t, RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: util.NewType[string]("foo")}}.IsEncrypted())
 }
 
 func TestRocksDBSpecSetDefaults(t *testing.T) {
@@ -67,23 +67,23 @@ func TestRocksDBSpecResetImmutableFields(t *testing.T) {
 			nil,
 		},
 		{
-			RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: util.NewString("foo")}},
-			RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: util.NewString("foo")}},
-			RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: util.NewString("foo")}},
+			RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: util.NewType[string]("foo")}},
+			RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: util.NewType[string]("foo")}},
+			RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: util.NewType[string]("foo")}},
 			nil,
 		},
 		{
-			RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: util.NewString("foo")}},
-			RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: util.NewString("foo2")}},
-			RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: util.NewString("foo2")}},
+			RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: util.NewType[string]("foo")}},
+			RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: util.NewType[string]("foo2")}},
+			RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: util.NewType[string]("foo2")}},
 			nil,
 		},
 
 		// Invalid changes
 		{
-			RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: util.NewString("foo")}},
-			RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: util.NewString("")}},
-			RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: util.NewString("foo")}},
+			RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: util.NewType[string]("foo")}},
+			RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: util.NewType[string]("")}},
+			RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: util.NewType[string]("foo")}},
 			[]string{"test.encryption.keySecretName"},
 		},
 	}

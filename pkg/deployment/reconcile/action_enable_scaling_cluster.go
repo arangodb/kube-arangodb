@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ import (
 func newEnableClusterScalingAction(action api.Action, actionCtx ActionContext) Action {
 	a := &actionEnableClusterScaling{}
 
-	a.actionImpl = newActionImpl(action, actionCtx, util.NewString(""))
+	a.actionImpl = newActionImpl(action, actionCtx, util.NewType[string](""))
 
 	return a
 }

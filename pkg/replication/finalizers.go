@@ -178,7 +178,7 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 	}
 
 	// Check whether data consistency must be ensured.
-	if syncInfo.Status.IsActive() && util.BoolOrDefault(p.Spec.Cancellation.EnsureInSync, true) {
+	if syncInfo.Status.IsActive() && util.TypeOrDefault[bool](p.Spec.Cancellation.EnsureInSync, true) {
 		if inSync, inSyncShards, totalShards, err := dr.ensureInSync(ctx, destClient); err != nil {
 			return false, err
 		} else if !inSync {
@@ -195,7 +195,7 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 	// From here on this code should be launched only once unless abort option is changed
 	// or replication is not in cancelling state.
 	sourceServerMode := driver.ServerModeDefault
-	if util.BoolOrDefault(p.Spec.Cancellation.SourceReadOnly) {
+	if util.TypeOrDefault[bool](p.Spec.Cancellation.SourceReadOnly) {
 		sourceServerMode = driver.ServerModeReadOnly
 	}
 	req := client.CancelSynchronizationRequest{
