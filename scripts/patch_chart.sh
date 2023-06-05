@@ -14,14 +14,7 @@ fi
 function replaceInFile {
     local EXPR=$1
     local FILE=$2
-    case $(uname) in
-        Darwin)
-            sed -e "${EXPR}" -i "" ${FILE}
-            ;;
-        *)
-            sed -i --expression "${EXPR}" ${FILE}
-            ;;
-    esac
+    sed -i --expression "${EXPR}" ${FILE}
 }
 
 for f in kube-arangodb kube-arangodb-crd; do

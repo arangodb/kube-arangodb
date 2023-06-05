@@ -4,6 +4,11 @@ ROOT:=$(CURRENT)
 SED ?= sed
 REALPATH ?= realpath
 
+ifeq ($(shell uname),Darwin)
+	SED ?= gsed
+	REALPATH ?= grealpath
+endif
+
 PROJECT := arangodb_operator
 SCRIPTDIR := $(shell pwd)
 ROOTDIR := $(shell cd $(SCRIPTDIR) && pwd)
