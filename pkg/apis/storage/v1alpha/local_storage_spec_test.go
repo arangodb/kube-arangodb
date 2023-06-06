@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,22 +29,22 @@ import (
 // Test creation of local storage spec
 func TestLocalStorageSpecCreation(t *testing.T) {
 
-	class := StorageClassSpec{"SpecName", true}
+	class := StorageClassSpec{"SpecName", true, nil}
 	local := LocalStorageSpec{StorageClass: class, LocalPath: []string{""}}
 	assert.Error(t, local.Validate())
 
-	class = StorageClassSpec{"spec-name", true}
+	class = StorageClassSpec{"spec-name", true, nil}
 	local = LocalStorageSpec{StorageClass: class, LocalPath: []string{""}}
 	assert.Error(t, local.Validate(), "should fail as the empty sting is not a valid path")
 
-	class = StorageClassSpec{"spec-name", true}
+	class = StorageClassSpec{"spec-name", true, nil}
 	local = LocalStorageSpec{StorageClass: class, LocalPath: []string{}}
 	assert.True(t, IsValidation(local.Validate()))
 }
 
 // Test reset of local storage spec
 func TestLocalStorageSpecReset(t *testing.T) {
-	class := StorageClassSpec{"spec-name", true}
+	class := StorageClassSpec{"spec-name", true, nil}
 	source := LocalStorageSpec{StorageClass: class, LocalPath: []string{"/a/path", "/another/path"}}
 	target := LocalStorageSpec{}
 	resetImmutableFieldsResult := source.ResetImmutableFields(&target)

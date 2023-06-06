@@ -79,7 +79,7 @@ func (cc *cache) GetRaw(group api.ServerGroup, id string) (conn.Connection, erro
 		return nil, err
 	}
 
-	return cc.factory.RawConnection(endpoint)
+	return cc.factory.RawConnection(cc.extendHost(m.GetEndpoint(endpoint)))
 }
 
 func (cc *cache) Connection(ctx context.Context, host string) (driver.Connection, error) {

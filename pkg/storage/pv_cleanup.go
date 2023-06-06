@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ type pvCleaner struct {
 	mutex        sync.Mutex
 	log          logging.Logger
 	cli          kubernetes.Interface
-	items        []core.PersistentVolume
+	items        []*core.PersistentVolume
 	trigger      trigger.Trigger
 	clientGetter func(ctx context.Context, nodeName string) (provisioner.API, error)
 }
@@ -86,7 +86,7 @@ func (c *pvCleaner) Run(stopCh <-chan struct{}) {
 }
 
 // Add the given volume to the list of items to clean.
-func (c *pvCleaner) Add(pv core.PersistentVolume) {
+func (c *pvCleaner) Add(pv *core.PersistentVolume) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -98,7 +98,7 @@ func (c *pvCleaner) Add(pv core.PersistentVolume) {
 	}
 
 	// Is new, add it
-	c.items = append(c.items, pv)
+	c.items = append(c.items, pv.DeepCopy())
 	c.trigger.Trigger()
 }
 
@@ -108,7 +108,7 @@ func (c *pvCleaner) cleanFirst() (bool, error) {
 	var first *core.PersistentVolume
 	c.mutex.Lock()
 	if len(c.items) > 0 {
-		first = &c.items[0]
+		first = c.items[0]
 	}
 	c.mutex.Unlock()
 

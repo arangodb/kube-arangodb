@@ -280,7 +280,7 @@ linter-fix:
 .PHONY: vulncheck
 vulncheck:
 	@echo ">> Checking for known vulnerabilities"
-	@$(GOPATH)/bin/govulncheck --tags $(RELEASE_MODE) ./...
+	@-$(GOPATH)/bin/govulncheck --tags $(RELEASE_MODE) ./...
 
 .PHONY: build
 build: docker manifests

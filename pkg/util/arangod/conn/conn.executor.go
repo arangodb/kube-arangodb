@@ -46,7 +46,7 @@ func (e executor[IN, OUT]) ExecuteGet(ctx context.Context, endpoint string) (*OU
 
 func (e executor[IN, OUT]) Execute(ctx context.Context, method string, endpoint string, in IN) (*OUT, int, error) {
 	var reader io.Reader
-	if q := reflect.ValueOf(in); q.IsValid() && q.IsZero() && q.IsNil() {
+	if q := reflect.ValueOf(in); q.IsValid() && !q.IsZero() && !q.IsNil() {
 		data, err := json.Marshal(in)
 		if err != nil {
 			return nil, 0, err
@@ -62,6 +62,12 @@ func (e executor[IN, OUT]) Execute(ctx context.Context, method string, endpoint 
 
 	if resp == nil {
 		return nil, code, nil
+	}
+
+	defer resp.Close()
+
+	if err := resp.Close(); err != nil {
+		return nil, 0, err
 	}
 
 	var out OUT

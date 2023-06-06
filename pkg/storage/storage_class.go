@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,11 +23,11 @@ package storage
 import (
 	"context"
 
-	core "k8s.io/api/core/v1"
 	storage "k8s.io/api/storage/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
@@ -42,12 +42,11 @@ var (
 func (l *LocalStorage) ensureStorageClass(apiObject *api.ArangoLocalStorage) error {
 	spec := apiObject.Spec.StorageClass
 	bindingMode := storage.VolumeBindingWaitForFirstConsumer
-	reclaimPolicy := core.PersistentVolumeReclaimRetain
 	sc := &storage.StorageClass{
 		ObjectMeta: meta.ObjectMeta{
 			Name: spec.Name,
 		},
-		ReclaimPolicy:     &reclaimPolicy,
+		ReclaimPolicy:     util.NewType(apiObject.Spec.StorageClass.GetReclaimPolicy()),
 		VolumeBindingMode: &bindingMode,
 		Provisioner:       storageClassProvisioner,
 	}

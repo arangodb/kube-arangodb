@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	core "k8s.io/api/core/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 // test creation of storage class spec
@@ -35,7 +38,16 @@ func TestStorageClassSpecCreation(t *testing.T) {
 	storageClassSpec = StorageClassSpec{Name: "TheSpecName", IsDefault: true}
 	assert.Error(t, storageClassSpec.Validate(), "upper case letters are not allowed in resources")
 
-	storageClassSpec = StorageClassSpec{"the-spec-name", true}
+	storageClassSpec = StorageClassSpec{Name: "the-spec-name", IsDefault: true, ReclaimPolicy: util.NewType[core.PersistentVolumeReclaimPolicy]("Random")}
+	assert.Error(t, storageClassSpec.Validate(), "upper case letters are not allowed in resources")
+
+	storageClassSpec = StorageClassSpec{"the-spec-name", true, util.NewType(core.PersistentVolumeReclaimRetain)}
+	assert.NoError(t, storageClassSpec.Validate())
+
+	storageClassSpec = StorageClassSpec{"the-spec-name", true, util.NewType(core.PersistentVolumeReclaimDelete)}
+	assert.NoError(t, storageClassSpec.Validate())
+
+	storageClassSpec = StorageClassSpec{"the-spec-name", true, nil}
 	assert.NoError(t, storageClassSpec.Validate())
 
 	storageClassSpec = StorageClassSpec{} // no proper name -> invalid
@@ -45,11 +57,22 @@ func TestStorageClassSpecCreation(t *testing.T) {
 
 // test reset of storage class spec
 func TestStorageClassSpecResetImmutableFileds(t *testing.T) {
-	specSource := StorageClassSpec{"source", true}
-	specTarget := StorageClassSpec{"target", true}
+	t.Run("Name", func(t *testing.T) {
+		specSource := StorageClassSpec{"source", true, nil}
+		specTarget := StorageClassSpec{"target", true, nil}
 
-	assert.Equal(t, "target", specTarget.Name)
-	rv := specSource.ResetImmutableFields("fieldPrefix-", &specTarget)
-	assert.Equal(t, "fieldPrefix-name", strings.Join(rv, ", "))
-	assert.Equal(t, "source", specTarget.Name)
+		assert.Equal(t, "target", specTarget.Name)
+		rv := specSource.ResetImmutableFields("fieldPrefix-", &specTarget)
+		assert.Equal(t, "fieldPrefix-name", strings.Join(rv, ", "))
+		assert.Equal(t, "source", specTarget.Name)
+	})
+	t.Run("ReclaimPolicy", func(t *testing.T) {
+		specSource := StorageClassSpec{"source", true, util.NewType(core.PersistentVolumeReclaimRetain)}
+		specTarget := StorageClassSpec{"source", true, util.NewType(core.PersistentVolumeReclaimDelete)}
+
+		assert.Equal(t, core.PersistentVolumeReclaimDelete, *specTarget.ReclaimPolicy)
+		rv := specSource.ResetImmutableFields("fieldPrefix-", &specTarget)
+		assert.Equal(t, "fieldPrefix-reclaimPolicy", strings.Join(rv, ", "))
+		assert.Equal(t, core.PersistentVolumeReclaimRetain, *specTarget.ReclaimPolicy)
+	})
 }

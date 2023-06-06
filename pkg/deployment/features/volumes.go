@@ -22,6 +22,7 @@ package features
 
 func init() {
 	registerFeature(localVolumeReplacementCheck)
+	registerFeature(localStorageReclaimPolicyPass)
 }
 
 var localVolumeReplacementCheck Feature = &feature{
@@ -30,6 +31,18 @@ var localVolumeReplacementCheck Feature = &feature{
 	version:            "3.6.0",
 	enterpriseRequired: false,
 	enabledByDefault:   false,
+}
+
+var localStorageReclaimPolicyPass Feature = &feature{
+	name:               "local-storage.pass-reclaim-policy",
+	description:        "[LocalStorage] Pass ReclaimPolicy from StorageClass instead of using hardcoded Retain",
+	version:            "3.6.0",
+	enterpriseRequired: false,
+	enabledByDefault:   false,
+}
+
+func LocalStorageReclaimPolicyPass() Feature {
+	return localStorageReclaimPolicyPass
 }
 
 func LocalVolumeReplacementCheck() Feature {
