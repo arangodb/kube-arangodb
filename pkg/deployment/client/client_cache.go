@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -43,6 +43,8 @@ type Cache interface {
 
 	Connection(ctx context.Context, host string) (driver.Connection, error)
 
+	GetRaw(group api.ServerGroup, id string) (conn.Connection, error)
+
 	Get(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error)
 	GetDatabase(ctx context.Context) (driver.Client, error)
 	GetAgency(ctx context.Context, agencyIDs ...string) (agency.Agency, error)
@@ -65,6 +67,19 @@ type cache struct {
 	in    CacheGen
 
 	factory conn.Factory
+}
+
+func (cc *cache) GetRaw(group api.ServerGroup, id string) (conn.Connection, error) {
+	cc.mutex.Lock()
+	defer cc.mutex.Unlock()
+	m, _, _ := cc.in.GetStatus().Members.ElementByID(id)
+
+	endpoint, err := cc.in.GenerateMemberEndpoint(group, m)
+	if err != nil {
+		return nil, err
+	}
+
+	return cc.factory.RawConnection(endpoint)
 }
 
 func (cc *cache) Connection(ctx context.Context, host string) (driver.Connection, error) {

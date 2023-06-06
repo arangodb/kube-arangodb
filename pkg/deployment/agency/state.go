@@ -22,68 +22,31 @@ package agency
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 
-	"github.com/arangodb/go-driver"
-	"github.com/arangodb/go-driver/agency"
-
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func (c *cache) loadState(ctx context.Context, client agency.Agency) (StateRoot, error) {
-	conn := client.Connection()
-
-	req, err := client.Connection().NewRequest(http.MethodPost, "/_api/agency/read")
+func (c *cache) loadState(ctx context.Context, connection conn.Connection) (StateRoot, error) {
+	resp, code, err := conn.NewExecutor[ReadRequest, StateRoots](connection).Execute(ctx, http.MethodPost, "/_api/agency/config", GetAgencyReadRequestFields())
 	if err != nil {
 		return StateRoot{}, err
 	}
 
-	var data []byte
-
-	readKeys := []string{
-		GetAgencyKey(ArangoKey, SupervisionKey, SupervisionMaintenanceKey),
-		GetAgencyKey(ArangoKey, PlanKey, PlanCollectionsKey),
-		GetAgencyKey(ArangoKey, PlanKey, PlanDatabasesKey),
-		GetAgencyKey(ArangoKey, CurrentKey, PlanCollectionsKey),
-		GetAgencyKey(ArangoKey, CurrentKey, CurrentMaintenanceServers),
-		GetAgencyKey(ArangoKey, TargetKey, TargetHotBackupKey),
-		GetAgencyKey(ArangoKey, TargetKey, TargetJobToDoKey),
-		GetAgencyKey(ArangoKey, TargetKey, TargetJobPendingKey),
-		GetAgencyKey(ArangoKey, TargetKey, TargetJobFailedKey),
-		GetAgencyKey(ArangoKey, TargetKey, TargetJobFinishedKey),
-		GetAgencyKey(ArangoKey, TargetKey, TargetCleanedServersKey),
-		GetAgencyKey(ArangoDBKey, ArangoSyncKey, ArangoSyncStateKey, ArangoSyncStateIncomingKey, ArangoSyncStateIncomingStateKey),
-		GetAgencyKey(ArangoDBKey, ArangoSyncKey, ArangoSyncStateKey, ArangoSyncStateOutgoingKey, ArangoSyncStateOutgoingTargetsKey),
+	if code != http.StatusOK {
+		return StateRoot{}, errors.Newf("Unknown response code %d", code)
 	}
 
-	req, err = req.SetBody(GetAgencyReadRequest(GetAgencyReadKey(readKeys...)))
-	if err != nil {
-		return StateRoot{}, err
+	if resp == nil {
+		return StateRoot{}, errors.Newf("Missing response body")
 	}
 
-	resp, err := conn.Do(driver.WithRawResponse(ctx, &data), req)
-	if err != nil {
-		return StateRoot{}, err
-	}
-
-	if err := resp.CheckStatus(http.StatusOK); err != nil {
-		return StateRoot{}, err
-	}
-
-	var r StateRoots
-
-	if err := json.Unmarshal(data, &r); err != nil {
-		return StateRoot{}, err
-	}
-
-	if len(r) != 1 {
+	if len(*resp) != 1 {
 		return StateRoot{}, errors.Newf("Invalid response size")
 	}
 
-	state := r[0]
-
-	return state, nil
+	return (*resp)[0], nil
 }
 
 type StateRoots []StateRoot

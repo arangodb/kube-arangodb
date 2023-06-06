@@ -34,7 +34,6 @@ import (
 	"k8s.io/client-go/tools/record"
 
 	"github.com/arangodb/arangosync-client/client"
-	agencydriver "github.com/arangodb/go-driver/agency"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/acs"
@@ -185,9 +184,9 @@ func (d *Deployment) RefreshAgencyCache(ctx context.Context) (uint64, error) {
 
 			rsize := int(*size)
 
-			clients := make(map[string]agencydriver.Agency)
+			clients := agency.Connections{}
 			for _, m := range d.GetStatus().Members.Agents {
-				a, err := d.GetAgency(lCtx, m.ID)
+				a, err := d.clientCache.GetRaw(api.ServerGroupAgents, m.ID)
 				if err != nil {
 					return 0, err
 				}

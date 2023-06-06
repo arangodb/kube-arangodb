@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,9 +22,14 @@
 package conn
 
 import (
+	http2 "net/http"
+
 	"github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
 	"github.com/arangodb/go-driver/http"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 type Auth func() (driver.Authentication, error)
@@ -36,6 +41,8 @@ type Factory interface {
 
 	Client(hosts ...string) (driver.Client, error)
 	Agency(hosts ...string) (agency.Agency, error)
+
+	RawConnection(host string) (Connection, error)
 
 	GetAuth() Auth
 }
@@ -50,6 +57,39 @@ func NewFactory(auth Auth, config Config) Factory {
 type factory struct {
 	auth   Auth
 	config Config
+}
+
+func (f factory) RawConnection(host string) (Connection, error) {
+	cfg, err := f.config()
+	if err != nil {
+		return nil, err
+	}
+
+	var authString *string
+
+	if f.auth != nil {
+		auth, err := f.auth()
+		if err != nil {
+			return nil, err
+		}
+
+		if auth.Type() != driver.AuthenticationTypeRaw {
+			return nil, errors.Newf("Only RAW Authentication is supported")
+		}
+
+		authString = util.NewType(auth.Get("value"))
+	}
+
+	return connection{
+		auth: authString,
+		host: host,
+		client: &http2.Client{
+			Transport: cfg.Transport,
+			CheckRedirect: func(req *http2.Request, via []*http2.Request) error {
+				return http2.ErrUseLastResponse
+			},
+		},
+	}, nil
 }
 
 func (f factory) GetAuth() Auth {
