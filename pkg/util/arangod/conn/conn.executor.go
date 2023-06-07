@@ -66,10 +66,6 @@ func (e executor[IN, OUT]) Execute(ctx context.Context, method string, endpoint 
 
 	defer resp.Close()
 
-	if err := resp.Close(); err != nil {
-		return nil, 0, err
-	}
-
 	var out OUT
 
 	if err := json.NewDecoder(resp).Decode(&out); err != nil {
