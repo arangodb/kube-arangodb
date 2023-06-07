@@ -73,11 +73,13 @@ func (f factory) RawConnection(host string) (Connection, error) {
 			return nil, err
 		}
 
-		if auth.Type() != driver.AuthenticationTypeRaw {
-			return nil, errors.Newf("Only RAW Authentication is supported")
-		}
+		if auth != nil {
+			if auth.Type() != driver.AuthenticationTypeRaw {
+				return nil, errors.Newf("Only RAW Authentication is supported")
+			}
 
-		authString = util.NewType(auth.Get("value"))
+			authString = util.NewType(auth.Get("value"))
+		}
 	}
 
 	return connection{
