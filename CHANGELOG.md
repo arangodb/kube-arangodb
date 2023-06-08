@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.2.29](https://github.com/arangodb/kube-arangodb/tree/1.2.29) (2023-06-08)
 - (Maintenance) Add govulncheck to pipeline, update golangci-linter
 - (Feature) Agency Cache memory usage reduction
 - (Bugfix) (LocalStorage) Add feature to pass ReclaimPolicy from StorageClass to PersistentVolumes
