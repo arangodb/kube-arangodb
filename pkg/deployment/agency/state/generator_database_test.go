@@ -18,7 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package agency
+package state
 
 import (
 	"fmt"
@@ -44,7 +44,7 @@ func NewDatabaseGenerator(name string) DatabaseGeneratorInterface {
 type DatabaseGeneratorInterface interface {
 	Collection(name string) CollectionGeneratorInterface
 	RandomCollection() CollectionGeneratorInterface
-	Add() StateGenerator
+	Add() Generator
 }
 
 type databaseGenerator struct {
@@ -64,14 +64,14 @@ func (d databaseGenerator) Collection(name string) CollectionGeneratorInterface 
 	}
 }
 
-func (d databaseGenerator) Add() StateGenerator {
+func (d databaseGenerator) Add() Generator {
 	return func(t *testing.T, s *State) {
 		if s.Plan.Collections == nil {
-			s.Plan.Collections = StatePlanCollections{}
+			s.Plan.Collections = PlanCollections{}
 		}
 
 		if s.Current.Collections == nil {
-			s.Current.Collections = StateCurrentCollections{}
+			s.Current.Collections = CurrentCollections{}
 		}
 
 		_, ok := s.Plan.Collections[d.db]
@@ -80,21 +80,21 @@ func (d databaseGenerator) Add() StateGenerator {
 		_, ok = s.Current.Collections[d.db]
 		require.False(t, ok)
 
-		plan := StatePlanDBCollections{}
-		current := StateCurrentDBCollections{}
+		plan := PlanDBCollections{}
+		current := CurrentDBCollections{}
 
 		for col, colDet := range d.collections {
 			planShards := Shards{}
-			currentShards := StateCurrentDBCollection{}
+			currentShards := CurrentDBCollection{}
 
 			for shard, shardDet := range colDet.shards {
 				n := fmt.Sprintf("s%d", shard)
 
 				planShards[n] = shardDet.plan
-				currentShards[n] = StateCurrentDBShard{Servers: shardDet.current}
+				currentShards[n] = CurrentDBShard{Servers: shardDet.current}
 			}
 
-			planCol := StatePlanCollection{
+			planCol := PlanCollection{
 				Name:              util.NewType[string](col),
 				Shards:            planShards,
 				WriteConcern:      colDet.wc,

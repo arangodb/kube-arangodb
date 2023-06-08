@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,10 +18,35 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package agency
+package state
 
-type PlanDatabases map[string]PlanDatabase
+import (
+	"sync"
+	"testing"
+)
 
-type PlanDatabase struct {
-	ID string `json:"id"`
+var (
+	currentID int
+	idLock    sync.Mutex
+)
+
+func id() int {
+	idLock.Lock()
+	defer idLock.Unlock()
+
+	z := currentID
+	currentID++
+	return z
+}
+
+type Generator func(t *testing.T, s *State)
+
+func GenerateState(t *testing.T, generators ...Generator) State {
+	var s State
+
+	for _, g := range generators {
+		g(t, &s)
+	}
+
+	return s
 }

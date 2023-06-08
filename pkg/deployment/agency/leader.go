@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,4 +20,24 @@
 
 package agency
 
-type Shards map[string]Servers
+import (
+	"context"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
+)
+
+type LeaderDiscovery interface {
+	Discover(ctx context.Context) (conn.Connection, error)
+}
+
+func StaticLeaderDiscovery(in conn.Connection) LeaderDiscovery {
+	return staticLeaderDiscovery{conn: in}
+}
+
+type staticLeaderDiscovery struct {
+	conn conn.Connection
+}
+
+func (s staticLeaderDiscovery) Discover(ctx context.Context) (conn.Connection, error) {
+	return s.conn, nil
+}

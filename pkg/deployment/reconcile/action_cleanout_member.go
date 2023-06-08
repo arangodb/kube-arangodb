@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import (
 	driver "github.com/arangodb/go-driver"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
@@ -125,12 +125,12 @@ func (a *actionCleanOutMember) CheckProgress(ctx context.Context) (bool, bool, e
 		return false, false, nil
 	}
 
-	if !cache.Target.CleanedServers.Contains(agency.Server(a.action.MemberID)) {
+	if !cache.Target.CleanedServers.Contains(state.Server(a.action.MemberID)) {
 		// We're not done yet, check job status
 		a.log.Debug("IsCleanedOut returned false")
 
-		details, jobStatus := cache.Target.GetJob(agency.JobID(m.CleanoutJobID))
-		if jobStatus == agency.JobPhaseFailed {
+		details, jobStatus := cache.Target.GetJob(state.JobID(m.CleanoutJobID))
+		if jobStatus == state.JobPhaseFailed {
 			a.log.Str("reason", details.Reason).Warn("Cleanout Job failed. Aborting plan")
 			// Revert cleanout state
 			m.Phase = api.MemberPhaseCreated
@@ -149,7 +149,7 @@ func (a *actionCleanOutMember) CheckProgress(ctx context.Context) (bool, bool, e
 		}
 	}
 
-	if cache.PlanServers().Contains(agency.Server(m.ID)) {
+	if cache.PlanServers().Contains(state.Server(m.ID)) {
 		// Something is wrong, servers is CleanedOut but still exists in the Plan
 		a.actionCtx.CreateOperatorEngineOpsAlertEvent("DBServer %s still exists in Plan after CleanOut", m.ID)
 		return false, true, nil

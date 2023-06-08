@@ -30,7 +30,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
@@ -476,7 +476,7 @@ func groupReadyForRestart(context PlanBuilderContext, status api.DeploymentStatu
 			return false, "Unable to get agency cache"
 		}
 
-		blockingRestartShards := agency.GetDBServerBlockingRestartShards(agencyState, agency.Server(member.ID))
+		blockingRestartShards := state.GetDBServerBlockingRestartShards(agencyState, state.Server(member.ID))
 
 		if s := len(blockingRestartShards); s > 0 {
 			return false, fmt.Sprintf("There are %d shards which are blocking restart", s)

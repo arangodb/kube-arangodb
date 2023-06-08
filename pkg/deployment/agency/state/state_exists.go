@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,35 +18,37 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package agency
+package state
 
 import (
-	"sync"
-	"testing"
+	"crypto/sha256"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-var (
-	currentID int
-	idLock    sync.Mutex
-)
+type Exists []byte
 
-func id() int {
-	idLock.Lock()
-	defer idLock.Unlock()
-
-	z := currentID
-	currentID++
-	return z
-}
-
-type StateGenerator func(t *testing.T, s *State)
-
-func GenerateState(t *testing.T, generators ...StateGenerator) State {
-	var s State
-
-	for _, g := range generators {
-		g(t, &s)
+func (d Exists) Hash() string {
+	if d == nil {
+		return ""
 	}
 
-	return s
+	return util.SHA256(d)
+}
+
+func (d Exists) Exists() bool {
+	return d != nil
+}
+
+func (d *Exists) UnmarshalJSON(bytes []byte) error {
+	if bytes == nil {
+		*d = nil
+		return nil
+	}
+
+	data := sha256.Sum256(bytes)
+	allData := data[:]
+
+	*d = allData
+	return nil
 }

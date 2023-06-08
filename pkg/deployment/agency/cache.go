@@ -28,6 +28,7 @@ import (
 	"github.com/rs/zerolog"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
 	"github.com/arangodb/kube-arangodb/pkg/generated/metric_descriptions"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
@@ -141,13 +142,13 @@ type Health interface {
 
 type Cache interface {
 	Reload(ctx context.Context, size int, clients Connections) (uint64, error)
-	Data() (State, bool)
-	DataDB() (StateDB, bool)
+	Data() (state.State, bool)
+	DataDB() (state.DB, bool)
 	CommitIndex() uint64
 	// Health returns true when healthy object is available.
 	Health() (Health, bool)
 	// ShardsInSyncMap returns last in sync state of shards. If no state is available, false is returned.
-	ShardsInSyncMap() (ShardsSyncStatus, bool)
+	ShardsInSyncMap() (state.ShardsSyncStatus, bool)
 }
 
 func NewCache(namespace, name string, mode *api.DeploymentMode) Cache {
@@ -162,10 +163,11 @@ func NewAgencyCache(namespace, name string) Cache {
 	c := &cache{
 		namespace:        namespace,
 		name:             name,
-		shardsSyncStatus: ShardsSyncStatus{},
+		shardsSyncStatus: state.ShardsSyncStatus{},
 	}
 
 	c.log = logger.WrapObj(c)
+	c.loader = getLoader()
 
 	return c
 }
@@ -177,12 +179,12 @@ func NewSingleCache() Cache {
 type cacheSingle struct {
 }
 
-func (c cacheSingle) ShardsInSyncMap() (ShardsSyncStatus, bool) {
+func (c cacheSingle) ShardsInSyncMap() (state.ShardsSyncStatus, bool) {
 	return nil, false
 }
 
-func (c cacheSingle) DataDB() (StateDB, bool) {
-	return StateDB{}, false
+func (c cacheSingle) DataDB() (state.DB, bool) {
+	return state.DB{}, false
 }
 
 func (c cacheSingle) CommitIndex() uint64 {
@@ -198,8 +200,8 @@ func (c cacheSingle) Reload(_ context.Context, _ int, _ Connections) (uint64, er
 	return 0, nil
 }
 
-func (c cacheSingle) Data() (State, bool) {
-	return State{}, true
+func (c cacheSingle) Data() (state.State, bool) {
+	return state.State{}, true
 }
 
 type cache struct {
@@ -209,16 +211,11 @@ type cache struct {
 
 	lock sync.RWMutex
 
-	valid bool
-
-	commitIndex uint64
-
-	data   State
-	dataDB StateDB
+	loader StateLoader
 
 	health Health
 
-	shardsSyncStatus ShardsSyncStatus
+	shardsSyncStatus state.ShardsSyncStatus
 }
 
 func (c *cache) WrapLogger(in *zerolog.Event) *zerolog.Event {
@@ -229,29 +226,32 @@ func (c *cache) CommitIndex() uint64 {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 
-	return c.commitIndex
+	_, index, _ := c.loader.State()
+	return index
 }
 
-func (c *cache) Data() (State, bool) {
+func (c *cache) Data() (state.State, bool) {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 
-	if !c.valid {
-		return State{}, false
+	data, _, ok := c.loader.State()
+	if ok {
+		return data.Arango, true
 	}
 
-	return c.data, true
+	return state.State{}, false
 }
 
-func (c *cache) DataDB() (StateDB, bool) {
+func (c *cache) DataDB() (state.DB, bool) {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 
-	if !c.valid {
-		return StateDB{}, false
+	data, _, ok := c.loader.State()
+	if ok {
+		return data.ArangoDB, true
 	}
 
-	return c.dataDB, c.valid
+	return state.DB{}, false
 }
 
 // Health returns always false for single cache.
@@ -270,17 +270,13 @@ func (c *cache) Reload(ctx context.Context, size int, clients Connections) (uint
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	index, err := c.reload(ctx, size, clients)
+	data, index, err := c.reload(ctx, size, clients)
 	if err != nil {
 		return index, err
 	}
 
-	if !c.valid {
-		return index, nil
-	}
-
 	// Refresh map of the shards
-	shardNames := c.data.GetShardsStatus()
+	shardNames := data.Arango.GetShardsStatus()
 
 	n := time.Now()
 
@@ -301,44 +297,39 @@ func (c *cache) Reload(ctx context.Context, size int, clients Connections) (uint
 	return index, nil
 }
 
-func (c *cache) reload(ctx context.Context, size int, clients Connections) (uint64, error) {
-	leaderCli, leaderConfig, health, err := c.getLeader(ctx, size, clients)
+func (c *cache) reload(ctx context.Context, size int, clients Connections) (*state.Root, uint64, error) {
+	leaderCli, health, err := c.getLeader(ctx, size, clients)
 	if err != nil {
 		// Invalidate a leader ID and agency state.
 		// In the next iteration leaderID will be sat because `valid` will be false.
-		c.valid = false
+		c.loader.Invalidate()
 		c.health = nil
 
-		return 0, err
+		return nil, 0, err
 	}
 
 	health.namespace = c.namespace
 	health.name = c.name
 
 	c.health = health
-	if leaderConfig.CommitIndex == c.commitIndex && c.valid {
-		// We are on same index, nothing to do
-		return leaderConfig.CommitIndex, nil
+
+	if err := c.loader.Refresh(ctx, StaticLeaderDiscovery(leaderCli)); err != nil {
+		return nil, 0, err
 	}
 
-	// A leader should be known even if an agency state is invalid.
-	if data, err := c.loadState(ctx, leaderCli); err != nil {
-		c.valid = false
-		return leaderConfig.CommitIndex, err
-	} else {
-		c.data = data.Arango
-		c.dataDB = data.ArangoDB
-		c.valid = true
-		c.commitIndex = leaderConfig.CommitIndex
-		return leaderConfig.CommitIndex, nil
+	data, index, ok := c.loader.State()
+	if !ok {
+		return nil, 0, errors.Newf("State is invalid after reload")
 	}
+
+	return data, index, nil
 }
 
-func (c *cache) ShardsInSyncMap() (ShardsSyncStatus, bool) {
+func (c *cache) ShardsInSyncMap() (state.ShardsSyncStatus, bool) {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 
-	if !c.valid {
+	if !c.loader.Valid() {
 		return nil, false
 	}
 
@@ -351,7 +342,7 @@ func (c *cache) ShardsInSyncMap() (ShardsSyncStatus, bool) {
 
 // getLeader returns config and client to a leader agency, and health to check if agencies are on the same page.
 // If there is no quorum for the leader then error is returned.
-func (c *cache) getLeader(ctx context.Context, size int, clients Connections) (conn.Connection, *Config, health, error) {
+func (c *cache) getLeader(ctx context.Context, size int, clients Connections) (conn.Connection, health, error) {
 	configs := make([]*Config, len(clients))
 	errs := make([]error, len(clients))
 	names := make([]string, 0, len(clients))
@@ -406,7 +397,7 @@ func (c *cache) getLeader(ctx context.Context, size int, clients Connections) (c
 
 	if err := h.Serving(); err != nil {
 		c.log.Err(err).Warn("Agency Not serving")
-		return nil, nil, h, err
+		return nil, h, err
 	}
 
 	if err := h.Healthy(); err != nil {
@@ -416,10 +407,10 @@ func (c *cache) getLeader(ctx context.Context, size int, clients Connections) (c
 	for id := range names {
 		if h.leaderID == h.names[id] {
 			if cfg := configs[id]; cfg != nil {
-				return clients[names[id]], cfg, h, nil
+				return clients[names[id]], h, nil
 			}
 		}
 	}
 
-	return nil, nil, h, errors.Newf("Unable to find agent")
+	return nil, h, errors.Newf("Unable to find agent")
 }

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package agency
+package state
 
 import (
 	"encoding/json"
@@ -27,11 +27,23 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_Databases(t *testing.T) {
-	var s DumpState
-	require.NoError(t, json.Unmarshal(agencyDump39HotBackup, &s))
+func Test_Target_HotBackup(t *testing.T) {
+	t.Run("Exists", func(t *testing.T) {
+		var s DumpState
+		require.NoError(t, json.Unmarshal(agencyDump39HotBackup, &s))
 
-	require.Contains(t, s.Agency.Arango.Plan.Databases, "_system")
+		require.True(t, s.Agency.Arango.Target.HotBackup.Create.Exists())
 
-	require.False(t, s.Agency.ArangoDB.ArangoSync.IsSyncInProgress())
+		t.Log(s.Agency.Arango.Target.HotBackup.Create.time.String())
+
+		require.False(t, s.Agency.ArangoDB.ArangoSync.IsSyncInProgress())
+	})
+	t.Run("Does Not Exists", func(t *testing.T) {
+		var s DumpState
+		require.NoError(t, json.Unmarshal(agencyDump39Satellite, &s))
+
+		require.False(t, s.Agency.Arango.Target.HotBackup.Create.Exists())
+
+		require.False(t, s.Agency.ArangoDB.ArangoSync.IsSyncInProgress())
+	})
 }

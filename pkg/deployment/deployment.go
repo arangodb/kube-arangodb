@@ -39,6 +39,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/acs"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/acs/sutil"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/chaos"
 	deploymentClient "github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
@@ -155,7 +156,7 @@ func (d *Deployment) GetMembersState() memberState.StateInspector {
 	return d.memberState
 }
 
-func (d *Deployment) GetAgencyCache() (agency.State, bool) {
+func (d *Deployment) GetAgencyCache() (state.State, bool) {
 	return d.agencyCache.Data()
 }
 
@@ -164,11 +165,11 @@ func (d *Deployment) GetAgencyHealth() (agency.Health, bool) {
 }
 
 // ShardsInSyncMap returns last in sync state of shards. If no state is available, false is returned.
-func (d *Deployment) ShardsInSyncMap() (agency.ShardsSyncStatus, bool) {
+func (d *Deployment) ShardsInSyncMap() (state.ShardsSyncStatus, bool) {
 	return d.agencyCache.ShardsInSyncMap()
 }
 
-func (d *Deployment) GetAgencyArangoDBCache() (agency.StateDB, bool) {
+func (d *Deployment) GetAgencyArangoDBCache() (state.DB, bool) {
 	return d.agencyCache.DataDB()
 }
 

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package agency
+package state
 
 import (
 	"encoding/json"
@@ -28,7 +28,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-type StateTimestamp struct {
+type Timestamp struct {
 	hash   string
 	data   string
 	time   time.Time
@@ -36,7 +36,7 @@ type StateTimestamp struct {
 	exists bool
 }
 
-func (s *StateTimestamp) Hash() string {
+func (s *Timestamp) Hash() string {
 	if s == nil {
 		return util.SHA256FromString("")
 	}
@@ -44,7 +44,7 @@ func (s *StateTimestamp) Hash() string {
 	return s.hash
 }
 
-func (s *StateTimestamp) Exists() bool {
+func (s *Timestamp) Exists() bool {
 	if s == nil {
 		return false
 	}
@@ -52,7 +52,7 @@ func (s *StateTimestamp) Exists() bool {
 	return s.exists
 }
 
-func (s *StateTimestamp) Time() (time.Time, bool) {
+func (s *Timestamp) Time() (time.Time, bool) {
 	if s == nil {
 		return time.Time{}, false
 	}
@@ -64,7 +64,7 @@ func (s *StateTimestamp) Time() (time.Time, bool) {
 	return s.time, true
 }
 
-func (s *StateTimestamp) UnmarshalJSON(bytes []byte) error {
+func (s *Timestamp) UnmarshalJSON(bytes []byte) error {
 	if s == nil {
 		return errors.Newf("Object is nil")
 	}
@@ -80,8 +80,8 @@ func (s *StateTimestamp) UnmarshalJSON(bytes []byte) error {
 	return nil
 }
 
-func unmarshalJSONStateTimestamp(s string) StateTimestamp {
-	var ts = StateTimestamp{
+func unmarshalJSONStateTimestamp(s string) Timestamp {
+	var ts = Timestamp{
 		hash:   util.SHA256([]byte(s)),
 		data:   s,
 		exists: true,
