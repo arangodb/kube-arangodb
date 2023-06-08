@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package agency
+package state
 
 import (
 	_ "embed"
@@ -148,7 +148,7 @@ func Test_Unmarshal_Jobs(t *testing.T) {
 }
 
 func Test_Unmarshal_LongData(t *testing.T) {
-	var s StateRoots
+	var s Roots
 
 	require.NoError(t, json.Unmarshal(longData, &s))
 
@@ -157,7 +157,7 @@ func Test_Unmarshal_LongData(t *testing.T) {
 
 func Test_IsDBServerInSync(t *testing.T) {
 	type testCase struct {
-		generator StateGenerator
+		generator Generator
 		inSync    []string
 		notInSync []string
 	}
@@ -204,7 +204,7 @@ func Test_IsDBServerInSync(t *testing.T) {
 
 func Test_IsDBServerReadyToRestart(t *testing.T) {
 	type testCase struct {
-		generator StateGenerator
+		generator Generator
 		ready     []string
 		notReady  []string
 	}

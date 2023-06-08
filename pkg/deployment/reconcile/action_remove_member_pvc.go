@@ -27,7 +27,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
@@ -75,7 +75,7 @@ func (a *actionRemoveMemberPVC) Start(ctx context.Context) (bool, error) {
 		return true, errors.Newf("Agency is not ready")
 	}
 
-	if agencyCache.PlanLeaderServers().Contains(agency.Server(m.ID)) {
+	if agencyCache.PlanLeaderServers().Contains(state.Server(m.ID)) {
 		return true, errors.Newf("Server is still used in cluster")
 	}
 

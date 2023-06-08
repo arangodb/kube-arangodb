@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import (
 	"github.com/arangodb/go-driver"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
@@ -129,22 +129,22 @@ func (a *actionResignLeadership) CheckProgress(ctx context.Context) (bool, bool,
 		return true, false, nil
 	}
 
-	_, jobStatus := agencyState.Target.GetJob(agency.JobID(m.CleanoutJobID))
+	_, jobStatus := agencyState.Target.GetJob(state.JobID(m.CleanoutJobID))
 	switch jobStatus {
-	case agency.JobPhaseFailed:
+	case state.JobPhaseFailed:
 		m.CleanoutJobID = ""
 		if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
 			return false, false, errors.WithStack(err)
 		}
 		a.log.Error("Resign server job failed")
 		return true, false, nil
-	case agency.JobPhaseFinished:
+	case state.JobPhaseFinished:
 		m.CleanoutJobID = ""
 		if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
 			return false, false, errors.WithStack(err)
 		}
 		return true, false, nil
-	case agency.JobPhaseUnknown:
+	case state.JobPhaseUnknown:
 		a.log.Debug("Job not found, but proceeding")
 		return true, false, nil
 	}

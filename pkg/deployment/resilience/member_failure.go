@@ -25,7 +25,7 @@ import (
 	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -117,11 +117,11 @@ func (r *Resilience) isMemberFailureAcceptable(group api.ServerGroup, m api.Memb
 			return false, "AgencyHealth is not present"
 		}
 
-		if agencyState.Plan.Collections.IsDBServerPresent(agency.Server(m.ID)) {
+		if agencyState.Plan.Collections.IsDBServerPresent(state.Server(m.ID)) {
 			return false, "DBServer still in Plan"
 		}
 
-		if agencyState.Current.Collections.IsDBServerPresent(agency.Server(m.ID)) {
+		if agencyState.Current.Collections.IsDBServerPresent(state.Server(m.ID)) {
 			return false, "DBServer still in Current"
 		}
 

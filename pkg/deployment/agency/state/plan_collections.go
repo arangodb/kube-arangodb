@@ -18,12 +18,12 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package agency
+package state
 
-// StatePlanCollections is a map of database name to collections
-type StatePlanCollections map[string]StatePlanDBCollections
+// PlanCollections is a map of database name to collections
+type PlanCollections map[string]PlanDBCollections
 
-func (a StatePlanCollections) IsDBServerPresent(name Server) bool {
+func (a PlanCollections) IsDBServerPresent(name Server) bool {
 	for _, collections := range a {
 		if collections.IsDBServerInCollections(name) {
 			return true
@@ -32,7 +32,7 @@ func (a StatePlanCollections) IsDBServerPresent(name Server) bool {
 	return false
 }
 
-func (a StatePlanCollections) IsDBServerLeader(name Server) bool {
+func (a PlanCollections) IsDBServerLeader(name Server) bool {
 	for _, collections := range a {
 		if collections.IsDBServerLeaderInCollections(name) {
 			return true
@@ -41,10 +41,10 @@ func (a StatePlanCollections) IsDBServerLeader(name Server) bool {
 	return false
 }
 
-// StatePlanDBCollections is a map of collection name to collection details
-type StatePlanDBCollections map[string]StatePlanCollection
+// PlanDBCollections is a map of collection name to collection details
+type PlanDBCollections map[string]PlanCollection
 
-func (a StatePlanDBCollections) IsDBServerInCollections(name Server) bool {
+func (a PlanDBCollections) IsDBServerInCollections(name Server) bool {
 	for _, collection := range a {
 		if collection.IsDBServerInShards(name) {
 			return true
@@ -53,7 +53,7 @@ func (a StatePlanDBCollections) IsDBServerInCollections(name Server) bool {
 	return false
 }
 
-func (a StatePlanDBCollections) IsDBServerLeaderInCollections(name Server) bool {
+func (a PlanDBCollections) IsDBServerLeaderInCollections(name Server) bool {
 	for _, collection := range a {
 		if collection.IsDBServerLeader(name) {
 			return true
@@ -62,7 +62,7 @@ func (a StatePlanDBCollections) IsDBServerLeaderInCollections(name Server) bool 
 	return false
 }
 
-func (a StatePlanDBCollections) CountShards() int {
+func (a PlanDBCollections) CountShards() int {
 	count := 0
 
 	for _, d := range a {
@@ -72,7 +72,7 @@ func (a StatePlanDBCollections) CountShards() int {
 	return count
 }
 
-type StatePlanCollection struct {
+type PlanCollection struct {
 	Name   *string `json:"name"`
 	Shards Shards  `json:"shards"`
 	// deprecated
@@ -83,7 +83,7 @@ type StatePlanCollection struct {
 	DistributeShardsLike *string            `json:"distributeShardsLike,omitempty"`
 }
 
-func (a *StatePlanCollection) GetReplicationFactor(shard string) ReplicationFactor {
+func (a *PlanCollection) GetReplicationFactor(shard string) ReplicationFactor {
 	if a == nil {
 		return 0
 	}
@@ -101,7 +101,7 @@ func (a *StatePlanCollection) GetReplicationFactor(shard string) ReplicationFact
 	}
 }
 
-func (a *StatePlanCollection) GetWriteConcern(def int) int {
+func (a *PlanCollection) GetWriteConcern(def int) int {
 	if p := a.GetWriteConcernP(); p != nil {
 		return *p
 	}
@@ -109,7 +109,7 @@ func (a *StatePlanCollection) GetWriteConcern(def int) int {
 	return def
 }
 
-func (a *StatePlanCollection) GetWriteConcernP() *int {
+func (a *PlanCollection) GetWriteConcernP() *int {
 	if a == nil {
 		return nil
 	}
@@ -121,7 +121,7 @@ func (a *StatePlanCollection) GetWriteConcernP() *int {
 	return a.WriteConcern
 }
 
-func (a StatePlanCollection) GetName(d string) string {
+func (a PlanCollection) GetName(d string) string {
 	if a.Name == nil {
 		return d
 	}
@@ -129,7 +129,7 @@ func (a StatePlanCollection) GetName(d string) string {
 	return *a.Name
 }
 
-func (a *StatePlanCollection) IsDBServerInShards(name Server) bool {
+func (a *PlanCollection) IsDBServerInShards(name Server) bool {
 	if a == nil {
 		return false
 	}
@@ -142,7 +142,7 @@ func (a *StatePlanCollection) IsDBServerInShards(name Server) bool {
 	return false
 }
 
-func (a *StatePlanCollection) IsDBServerLeader(name Server) bool {
+func (a *PlanCollection) IsDBServerLeader(name Server) bool {
 	if a == nil {
 		return false
 	}

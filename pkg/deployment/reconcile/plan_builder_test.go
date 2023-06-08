@@ -44,6 +44,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/acs/sutil"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/member"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	pod2 "github.com/arangodb/kube-arangodb/pkg/deployment/pod"
@@ -90,7 +91,7 @@ func (c *testContext) IsSyncEnabled() bool {
 	return false
 }
 
-func (c *testContext) GetAgencyArangoDBCache() (agencyCache.StateDB, bool) {
+func (c *testContext) GetAgencyArangoDBCache() (state.DB, bool) {
 	//TODO implement me
 	panic("implement me")
 }
@@ -115,7 +116,7 @@ func (c *testContext) GetAgencyHealth() (agencyCache.Health, bool) {
 	panic("implement me")
 }
 
-func (c *testContext) ShardsInSyncMap() (agencyCache.ShardsSyncStatus, bool) {
+func (c *testContext) ShardsInSyncMap() (state.ShardsSyncStatus, bool) {
 	//TODO implement me
 	panic("implement me")
 }
@@ -174,8 +175,8 @@ func (c *testContext) GenerateMemberEndpoint(group api.ServerGroup, member api.M
 	return pod2.GenerateMemberEndpoint(c.Inspector, c.ArangoDeployment, c.ArangoDeployment.Spec, group, member)
 }
 
-func (c *testContext) GetAgencyCache() (agencyCache.State, bool) {
-	return agencyCache.State{}, true
+func (c *testContext) GetAgencyCache() (state.State, bool) {
+	return state.State{}, true
 }
 
 func (c *testContext) SecretsModInterface() secretv1.ModInterface {

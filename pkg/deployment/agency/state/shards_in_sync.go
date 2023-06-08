@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,37 +18,25 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package agency
+package state
 
-import (
-	"crypto/sha256"
+import "time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util"
-)
+type ShardsSyncStatus map[string]time.Time
 
-type StateExists []byte
+// NotInSyncSince returns a list of shards that have not been in sync for at least t.
+func (s ShardsSyncStatus) NotInSyncSince(t time.Duration) []string {
+	r := make([]string, 0, len(s))
 
-func (d StateExists) Hash() string {
-	if d == nil {
-		return ""
+	for k, v := range s {
+		if v.IsZero() {
+			continue
+		}
+
+		if time.Since(v) > t {
+			r = append(r, k)
+		}
 	}
 
-	return util.SHA256(d)
-}
-
-func (d StateExists) Exists() bool {
-	return d != nil
-}
-
-func (d *StateExists) UnmarshalJSON(bytes []byte) error {
-	if bytes == nil {
-		*d = nil
-		return nil
-	}
-
-	data := sha256.Sum256(bytes)
-	allData := data[:]
-
-	*d = allData
-	return nil
+	return r
 }

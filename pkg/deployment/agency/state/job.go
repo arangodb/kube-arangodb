@@ -18,25 +18,23 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package agency
+package state
 
-import (
-	_ "embed"
-	"encoding/json"
-	"testing"
+type JobPhase string
 
-	"github.com/stretchr/testify/require"
+var (
+	JobPhaseUnknown  JobPhase = ""
+	JobPhaseToDo     JobPhase = "ToDo"
+	JobPhasePending  JobPhase = "Pending"
+	JobPhaseFailed   JobPhase = "Failed"
+	JobPhaseFinished JobPhase = "Finished"
 )
 
-//go:embed state/testdata/config.json
-var config []byte
+type JobID string
 
-func Test_Config_Unmarshal(t *testing.T) {
-	var cfg Config
+type Jobs map[JobID]Job
 
-	require.NoError(t, json.Unmarshal(config, &cfg))
-
-	require.Equal(t, "AGNT-fd0f4fc7-b60b-44bb-9f5e-5fc91f708f82", cfg.LeaderId)
-	require.Equal(t, uint64(94), cfg.CommitIndex)
-	require.Equal(t, "AGNT-fd0f4fc7-b60b-44bb-9f5e-5fc91f708f82", cfg.Configuration.ID)
+type Job struct {
+	Type   string `json:"type,omitempty"`
+	Reason string `json:"reason,omitempty"`
 }

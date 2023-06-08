@@ -18,7 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package agency
+package state
 
 import (
 	"testing"
@@ -28,10 +28,10 @@ import (
 
 func Test_ShardsInSync(t *testing.T) {
 	s := State{
-		Current: StateCurrent{
-			Collections: map[string]StateCurrentDBCollections{
-				"a": map[string]StateCurrentDBCollection{
-					"a": map[string]StateCurrentDBShard{
+		Current: Current{
+			Collections: map[string]CurrentDBCollections{
+				"a": map[string]CurrentDBCollection{
+					"a": map[string]CurrentDBShard{
 						"s0001": {
 							Servers: Servers{
 								"A",

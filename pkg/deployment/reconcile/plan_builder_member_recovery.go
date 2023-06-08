@@ -25,7 +25,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
@@ -81,12 +81,12 @@ func (r *Reconciler) createMemberFailedRestoreInternal(_ context.Context, _ k8su
 					continue
 				}
 
-				if agencyState.Target.CleanedServers.Contains(agency.Server(m.ID)) {
+				if agencyState.Target.CleanedServers.Contains(state.Server(m.ID)) {
 					memberLog.Info("Member is CleanedOut")
 					continue
 				}
 
-				if agencyState.Plan.Collections.IsDBServerLeader(agency.Server(m.ID)) {
+				if agencyState.Plan.Collections.IsDBServerLeader(state.Server(m.ID)) {
 					memberLog.Info("Recreating leader DBServer - it cannot be removed gracefully")
 					plan = append(plan, actions.NewAction(api.ActionTypeRecreateMember, group, m))
 
@@ -98,7 +98,7 @@ func (r *Reconciler) createMemberFailedRestoreInternal(_ context.Context, _ k8su
 					continue
 				}
 
-				if agencyState.Plan.Collections.IsDBServerPresent(agency.Server(m.ID)) {
+				if agencyState.Plan.Collections.IsDBServerPresent(state.Server(m.ID)) {
 					// DBServer still exists in agency plan! Will not be removed, but needs to be recreated.
 					memberLog.Info("Recreating DBServer - it cannot be removed gracefully")
 					plan = append(plan, actions.NewAction(api.ActionTypeRecreateMember, group, m))

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,11 +18,11 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package agency
+package state
 
-type StateCurrentMaintenanceServers map[Server]StateCurrentMaintenanceServer
+type CurrentMaintenanceServers map[Server]CurrentMaintenanceServer
 
-func (s StateCurrentMaintenanceServers) InMaintenance(server Server) bool {
+func (s CurrentMaintenanceServers) InMaintenance(server Server) bool {
 	if v, ok := s[server]; ok {
 		return v.InMaintenance()
 	}
@@ -30,21 +30,21 @@ func (s StateCurrentMaintenanceServers) InMaintenance(server Server) bool {
 	return false
 }
 
-type StateCurrentMaintenanceServerMode string
+type CurrentMaintenanceServerMode string
 
 const (
-	StateCurrentMaintenanceServerModeMaintenance StateCurrentMaintenanceServerMode = "maintenance"
+	CurrentMaintenanceServerModeMaintenance CurrentMaintenanceServerMode = "maintenance"
 )
 
-type StateCurrentMaintenanceServer struct {
-	Mode  *StateCurrentMaintenanceServerMode `json:"Mode,omitempty"`
-	Until StateTimestamp                     `json:"Until,omitempty"`
+type CurrentMaintenanceServer struct {
+	Mode  *CurrentMaintenanceServerMode `json:"Mode,omitempty"`
+	Until Timestamp                     `json:"Until,omitempty"`
 }
 
-func (s *StateCurrentMaintenanceServer) InMaintenance() bool {
+func (s *CurrentMaintenanceServer) InMaintenance() bool {
 	if s != nil {
 		if m := s.Mode; m != nil {
-			if *m == StateCurrentMaintenanceServerModeMaintenance {
+			if *m == CurrentMaintenanceServerModeMaintenance {
 				return true
 			}
 		}

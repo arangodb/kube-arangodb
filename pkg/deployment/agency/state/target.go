@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,9 +18,9 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package agency
+package state
 
-type StateTarget struct {
+type Target struct {
 	// Jobs Section
 
 	JobToDo     Jobs `json:"ToDo,omitempty"`
@@ -35,10 +35,10 @@ type StateTarget struct {
 
 	// HotBackup section
 
-	HotBackup StateTargetHotBackup `json:"HotBackup,omitempty"`
+	HotBackup TargetHotBackup `json:"HotBackup,omitempty"`
 }
 
-func (s StateTarget) GetJob(id JobID) (Job, JobPhase) {
+func (s Target) GetJob(id JobID) (Job, JobPhase) {
 	if v, ok := s.JobToDo[id]; ok {
 		return v, JobPhaseToDo
 	}
@@ -55,7 +55,7 @@ func (s StateTarget) GetJob(id JobID) (Job, JobPhase) {
 	return Job{}, JobPhaseUnknown
 }
 
-func (s StateTarget) GetJobIDs() []JobID {
+func (s Target) GetJobIDs() []JobID {
 	r := make([]JobID, 0, len(s.JobToDo)+len(s.JobPending)+len(s.JobFinished)+len(s.JobFailed))
 
 	for k := range s.JobToDo {
@@ -77,6 +77,6 @@ func (s StateTarget) GetJobIDs() []JobID {
 	return r
 }
 
-type StateTargetHotBackup struct {
-	Create StateTimestamp `json:"Create,omitempty"`
+type TargetHotBackup struct {
+	Create Timestamp `json:"Create,omitempty"`
 }

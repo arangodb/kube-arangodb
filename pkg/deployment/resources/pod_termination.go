@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -255,9 +255,9 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, p *core.P
 			return errors.Newf("AgencyCache is not ready")
 		}
 
-		details, jobStatus := cache.Target.GetJob(agency.JobID(memberStatus.CleanoutJobID))
+		details, jobStatus := cache.Target.GetJob(state.JobID(memberStatus.CleanoutJobID))
 		switch jobStatus {
-		case agency.JobPhaseFailed:
+		case state.JobPhaseFailed:
 			log.Str("reason", details.Reason).Warn("Job failed")
 			// Revert cleanout state
 			memberStatus.Phase = api.MemberPhaseCreated
@@ -267,7 +267,7 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, p *core.P
 			}
 			log.Error("Cleanout/Resign server job failed, continue anyway")
 			return nil
-		case agency.JobPhaseFinished:
+		case state.JobPhaseFinished:
 			memberStatus.CleanoutJobID = ""
 			memberStatus.Phase = api.MemberPhaseCreated
 		}
@@ -278,9 +278,9 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, p *core.P
 			return errors.Newf("AgencyCache is not ready")
 		}
 
-		details, jobStatus := cache.Target.GetJob(agency.JobID(memberStatus.CleanoutJobID))
+		details, jobStatus := cache.Target.GetJob(state.JobID(memberStatus.CleanoutJobID))
 		switch jobStatus {
-		case agency.JobPhaseFailed:
+		case state.JobPhaseFailed:
 			log.Str("reason", details.Reason).Warn("Resign Job failed")
 			// Revert cleanout state
 			memberStatus.Phase = api.MemberPhaseCreated
@@ -290,7 +290,7 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, p *core.P
 			}
 			log.Error("Cleanout/Resign server job failed, continue anyway")
 			return nil
-		case agency.JobPhaseFinished:
+		case state.JobPhaseFinished:
 			log.Str("reason", details.Reason).Debug("Resign Job finished")
 			memberStatus.CleanoutJobID = ""
 			memberStatus.Phase = api.MemberPhaseCreated

@@ -18,12 +18,12 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package agency
+package state
 
-// StateCurrentCollections is a map of database name to collections
-type StateCurrentCollections map[string]StateCurrentDBCollections
+// CurrentCollections is a map of database name to collections
+type CurrentCollections map[string]CurrentDBCollections
 
-func (a StateCurrentCollections) IsDBServerPresent(name Server) bool {
+func (a CurrentCollections) IsDBServerPresent(name Server) bool {
 	for _, v := range a {
 		if v.IsDBServerPresent(name) {
 			return true
@@ -33,10 +33,10 @@ func (a StateCurrentCollections) IsDBServerPresent(name Server) bool {
 	return false
 }
 
-// StateCurrentDBCollections is a map of collection name to shards
-type StateCurrentDBCollections map[string]StateCurrentDBCollection
+// CurrentDBCollections is a map of collection name to shards
+type CurrentDBCollections map[string]CurrentDBCollection
 
-func (a StateCurrentDBCollections) IsDBServerPresent(name Server) bool {
+func (a CurrentDBCollections) IsDBServerPresent(name Server) bool {
 	for _, v := range a {
 		if v.IsDBServerPresent(name) {
 			return true
@@ -46,10 +46,10 @@ func (a StateCurrentDBCollections) IsDBServerPresent(name Server) bool {
 	return false
 }
 
-// StateCurrentDBCollection is a map of Shard name to Shard details
-type StateCurrentDBCollection map[string]StateCurrentDBShard
+// CurrentDBCollection is a map of Shard name to Shard details
+type CurrentDBCollection map[string]CurrentDBShard
 
-func (a StateCurrentDBCollection) IsDBServerPresent(name Server) bool {
+func (a CurrentDBCollection) IsDBServerPresent(name Server) bool {
 
 	for _, v := range a {
 		if v.Servers.Contains(name) {
@@ -60,6 +60,6 @@ func (a StateCurrentDBCollection) IsDBServerPresent(name Server) bool {
 	return false
 }
 
-type StateCurrentDBShard struct {
+type CurrentDBShard struct {
 	Servers Servers `json:"servers,omitempty"`
 }

@@ -32,6 +32,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/acs/sutil"
 	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/member"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
@@ -255,15 +256,15 @@ func (ac *actionContext) GetAgencyHealth() (agencyCache.Health, bool) {
 	return ac.context.GetAgencyHealth()
 }
 
-func (ac *actionContext) ShardsInSyncMap() (agencyCache.ShardsSyncStatus, bool) {
+func (ac *actionContext) ShardsInSyncMap() (state.ShardsSyncStatus, bool) {
 	return ac.context.ShardsInSyncMap()
 }
 
-func (ac *actionContext) GetAgencyCache() (agencyCache.State, bool) {
+func (ac *actionContext) GetAgencyCache() (state.State, bool) {
 	return ac.context.GetAgencyCache()
 }
 
-func (ac *actionContext) GetAgencyArangoDBCache() (agencyCache.StateDB, bool) {
+func (ac *actionContext) GetAgencyArangoDBCache() (state.DB, bool) {
 	return ac.context.GetAgencyArangoDBCache()
 }
 

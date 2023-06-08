@@ -29,7 +29,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	sharedApis "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -64,7 +64,7 @@ func (r *Reconciler) volumeMemberReplacement(ctx context.Context, apiObject k8su
 			continue
 		}
 
-		if servers.Contains(agency.Server(member.Member.ID)) {
+		if servers.Contains(state.Server(member.Member.ID)) {
 			continue
 		}
 

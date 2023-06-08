@@ -32,7 +32,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -307,7 +307,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 
 		// Member Maintenance
 		if agencyCachePresent {
-			if agencyCache.Current.MaintenanceServers.InMaintenance(agency.Server(memberStatus.ID)) {
+			if agencyCache.Current.MaintenanceServers.InMaintenance(state.Server(memberStatus.ID)) {
 				if memberStatus.Conditions.Update(api.ConditionTypeMemberMaintenanceMode, true, "ArangoDB Member maintenance enabled", "") {
 					updateMemberStatusNeeded = true
 					nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)

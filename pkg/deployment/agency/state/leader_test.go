@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package agency
+package state
 
 import (
 	"testing"
@@ -28,12 +28,12 @@ import (
 
 func Test_LeaderCheck_DBServerIsLeader(t *testing.T) {
 	t.Run("Empty collection", func(t *testing.T) {
-		p := StatePlanCollections{}
+		p := PlanCollections{}
 
 		require.False(t, p.IsDBServerLeader("A"))
 	})
 	t.Run("Empty shards", func(t *testing.T) {
-		p := StatePlanCollections{
+		p := PlanCollections{
 			"a": {
 				"a": {
 					Shards: nil,
@@ -44,7 +44,7 @@ func Test_LeaderCheck_DBServerIsLeader(t *testing.T) {
 		require.False(t, p.IsDBServerLeader("A"))
 	})
 	t.Run("Empty shard list", func(t *testing.T) {
-		p := StatePlanCollections{
+		p := PlanCollections{
 			"a": {
 				"a": {
 					Shards: Shards{
@@ -57,7 +57,7 @@ func Test_LeaderCheck_DBServerIsLeader(t *testing.T) {
 		require.False(t, p.IsDBServerLeader("A"))
 	})
 	t.Run("Follower", func(t *testing.T) {
-		p := StatePlanCollections{
+		p := PlanCollections{
 			"a": {
 				"a": {
 					Shards: Shards{
@@ -73,7 +73,7 @@ func Test_LeaderCheck_DBServerIsLeader(t *testing.T) {
 		require.False(t, p.IsDBServerLeader("A"))
 	})
 	t.Run("Leader", func(t *testing.T) {
-		p := StatePlanCollections{
+		p := PlanCollections{
 			"a": {
 				"a": {
 					Shards: Shards{

@@ -43,13 +43,19 @@ func Init(cmd *cobra.Command) error {
 	}
 
 	f.DurationVar(&global.RefreshDelay, "agency.refresh-delay", util.BoolSwitch(ee, 500*time.Millisecond, 0), "The Agency refresh delay (0 = no delay)")
+	f.DurationVar(&global.RefreshDelay, "agency.refresh-interval", 0, "The Agency refresh interval (0 = do not refresh)")
 
 	return nil
 }
 
 var global Config
 
+func GlobalConfig() Config {
+	return global
+}
+
 type Config struct {
-	PollEnabled  bool
-	RefreshDelay time.Duration
+	PollEnabled     bool
+	RefreshDelay    time.Duration
+	RefreshInterval time.Duration
 }
