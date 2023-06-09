@@ -24,26 +24,22 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-
-	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/version"
 )
 
 func Init(cmd *cobra.Command) error {
 	f := cmd.PersistentFlags()
 
-	ee := version.GetVersionV1().IsEnterprise()
+	f.Bool("agency.poll-enabled", false, "The Agency poll functionality enablement (EnterpriseEdition Only)")
 
-	f.BoolVar(&global.PollEnabled, "agency.poll-enabled", ee, "The Agency poll functionality enablement (EnterpriseEdition Only)")
-
-	if !ee {
-		if err := f.MarkHidden("agency.poll-enabled"); err != nil {
-			return err
-		}
+	if err := f.MarkHidden("agency.poll-enabled"); err != nil {
+		return err
+	}
+	if err := f.MarkDeprecated("agency.poll-enabled", "Flag moved to feature"); err != nil {
+		return err
 	}
 
-	f.DurationVar(&global.RefreshDelay, "agency.refresh-delay", util.BoolSwitch(ee, 500*time.Millisecond, 0), "The Agency refresh delay (0 = no delay)")
-	f.DurationVar(&global.RefreshDelay, "agency.refresh-interval", 0, "The Agency refresh interval (0 = do not refresh)")
+	f.DurationVar(&global.RefreshDelay, "agency.refresh-delay", 500*time.Millisecond, "The Agency refresh delay (0 = no delay)")
+	f.DurationVar(&global.RefreshInterval, "agency.refresh-interval", 0, "The Agency refresh interval (0 = do not refresh)")
 
 	return nil
 }
@@ -55,7 +51,6 @@ func GlobalConfig() Config {
 }
 
 type Config struct {
-	PollEnabled     bool
 	RefreshDelay    time.Duration
 	RefreshInterval time.Duration
 }
