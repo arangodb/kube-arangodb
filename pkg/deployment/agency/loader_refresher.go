@@ -32,8 +32,8 @@ func RefreshLoader[T interface{}](loader StateLoader[T], delay time.Duration) St
 	}
 
 	return &refresherLoader[T]{
-		parent: loader,
-		delay:  delay,
+		StateLoader: loader,
+		delay:       delay,
 	}
 }
 
@@ -43,35 +43,7 @@ type refresherLoader[T interface{}] struct {
 	last  time.Time
 	delay time.Duration
 
-	parent StateLoader[T]
-}
-
-func (i *refresherLoader[T]) UpdateTime() time.Time {
-	i.lock.Lock()
-	defer i.lock.Unlock()
-
-	return i.parent.UpdateTime()
-}
-
-func (i *refresherLoader[T]) Valid() bool {
-	i.lock.Lock()
-	defer i.lock.Unlock()
-
-	return i.parent.Valid()
-}
-
-func (i *refresherLoader[T]) State() (*T, uint64, bool) {
-	i.lock.Lock()
-	defer i.lock.Unlock()
-
-	return i.parent.State()
-}
-
-func (i *refresherLoader[T]) Invalidate() {
-	i.lock.Lock()
-	defer i.lock.Unlock()
-
-	i.parent.Invalidate()
+	StateLoader[T]
 }
 
 func (i *refresherLoader[T]) Refresh(ctx context.Context, discovery LeaderDiscovery) error {
@@ -80,10 +52,10 @@ func (i *refresherLoader[T]) Refresh(ctx context.Context, discovery LeaderDiscov
 
 	if i.last.IsZero() || time.Since(i.last) > i.delay {
 		i.last = time.Now()
-		i.parent.Invalidate()
+		i.StateLoader.Invalidate()
 	}
 
-	if err := i.parent.Refresh(ctx, discovery); err != nil {
+	if err := i.StateLoader.Refresh(ctx, discovery); err != nil {
 		return err
 	}
 

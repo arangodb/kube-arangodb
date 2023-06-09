@@ -32,8 +32,8 @@ func DelayLoader[T interface{}](loader StateLoader[T], delay time.Duration) Stat
 	}
 
 	return &delayerLoader[T]{
-		parent: loader,
-		delay:  delay,
+		StateLoader: loader,
+		delay:       delay,
 	}
 }
 
@@ -43,43 +43,15 @@ type delayerLoader[T interface{}] struct {
 	last  time.Time
 	delay time.Duration
 
-	parent StateLoader[T]
-}
-
-func (i *delayerLoader[T]) UpdateTime() time.Time {
-	i.lock.Lock()
-	defer i.lock.Unlock()
-
-	return i.parent.UpdateTime()
-}
-
-func (i *delayerLoader[T]) Valid() bool {
-	i.lock.Lock()
-	defer i.lock.Unlock()
-
-	return i.parent.Valid()
-}
-
-func (i *delayerLoader[T]) State() (*T, uint64, bool) {
-	i.lock.Lock()
-	defer i.lock.Unlock()
-
-	return i.parent.State()
-}
-
-func (i *delayerLoader[T]) Invalidate() {
-	i.lock.Lock()
-	defer i.lock.Unlock()
-
-	i.parent.Invalidate()
+	StateLoader[T]
 }
 
 func (i *delayerLoader[T]) Refresh(ctx context.Context, discovery LeaderDiscovery) error {
 	i.lock.Lock()
 	defer i.lock.Unlock()
 
-	if !i.parent.Valid() || i.last.IsZero() || time.Since(i.last) > i.delay {
-		if err := i.parent.Refresh(ctx, discovery); err != nil {
+	if !i.StateLoader.Valid() || i.last.IsZero() || time.Since(i.last) > i.delay {
+		if err := i.StateLoader.Refresh(ctx, discovery); err != nil {
 			return err
 		}
 

@@ -23,47 +23,18 @@ package agency
 import (
 	"context"
 	"sync"
-	"time"
 )
 
 func InvalidateOnErrorLoader[T interface{}](loader StateLoader[T]) StateLoader[T] {
 	return &invalidateOnErrorLoader[T]{
-		parent: loader,
+		StateLoader: loader,
 	}
 }
 
 type invalidateOnErrorLoader[T interface{}] struct {
 	lock sync.Mutex
 
-	parent StateLoader[T]
-}
-
-func (i *invalidateOnErrorLoader[T]) UpdateTime() time.Time {
-	i.lock.Lock()
-	defer i.lock.Unlock()
-
-	return i.parent.UpdateTime()
-}
-
-func (i *invalidateOnErrorLoader[T]) Valid() bool {
-	i.lock.Lock()
-	defer i.lock.Unlock()
-
-	return i.parent.Valid()
-}
-
-func (i *invalidateOnErrorLoader[T]) State() (*T, uint64, bool) {
-	i.lock.Lock()
-	defer i.lock.Unlock()
-
-	return i.parent.State()
-}
-
-func (i *invalidateOnErrorLoader[T]) Invalidate() {
-	i.lock.Lock()
-	defer i.lock.Unlock()
-
-	i.parent.Invalidate()
+	StateLoader[T]
 }
 
 func (i *invalidateOnErrorLoader[T]) Refresh(ctx context.Context, discovery LeaderDiscovery) (err error) {
@@ -72,16 +43,16 @@ func (i *invalidateOnErrorLoader[T]) Refresh(ctx context.Context, discovery Lead
 
 	defer func() {
 		if err != nil {
-			i.parent.Invalidate()
+			i.StateLoader.Invalidate()
 		}
 	}()
 
 	defer func() {
 		if p := recover(); p != nil {
-			i.parent.Invalidate()
+			i.StateLoader.Invalidate()
 			panic(p)
 		}
 	}()
 
-	return i.parent.Refresh(ctx, discovery)
+	return i.StateLoader.Refresh(ctx, discovery)
 }
