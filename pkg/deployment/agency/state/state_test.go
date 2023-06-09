@@ -148,7 +148,7 @@ func Test_Unmarshal_Jobs(t *testing.T) {
 }
 
 func Test_Unmarshal_LongData(t *testing.T) {
-	var s Roots
+	var s []Root
 
 	require.NoError(t, json.Unmarshal(longData, &s))
 

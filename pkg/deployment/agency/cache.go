@@ -167,7 +167,7 @@ func NewAgencyCache(namespace, name string) Cache {
 	}
 
 	c.log = logger.WrapObj(c)
-	c.loader = getLoader()
+	c.loader = getLoader[state.Root]()
 
 	return c
 }
@@ -211,7 +211,7 @@ type cache struct {
 
 	lock sync.RWMutex
 
-	loader StateLoader
+	loader StateLoader[state.Root]
 
 	health Health
 
@@ -382,6 +382,10 @@ func (c *cache) getLeader(ctx context.Context, size int, clients Connections) (c
 	h.election = make(map[string]int, len(clients))
 
 	for id := range configs {
+		if err := errs[id]; err != nil {
+			c.log.Err(err).Str("agent", names[id]).Warn("Agent config request failed")
+		}
+
 		if config := configs[id]; config != nil {
 			name := config.Configuration.ID
 			if name == h.names[id] {
@@ -390,6 +394,8 @@ func (c *cache) getLeader(ctx context.Context, size int, clients Connections) (c
 					h.leaders[name] = config.LeaderId
 					h.election[config.LeaderId]++
 					h.leaderID = config.LeaderId
+				} else {
+					c.log.Str("agent", names[id]).Warn("Agent does not have leader")
 				}
 			}
 		}

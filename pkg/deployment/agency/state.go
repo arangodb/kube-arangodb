@@ -24,27 +24,28 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func GetAgencyState(ctx context.Context, connection conn.Connection) (state.Root, error) {
-	resp, code, err := conn.NewExecutor[ReadRequest, state.Roots](connection).Execute(ctx, http.MethodPost, "/_api/agency/read", GetAgencyReadRequestFields())
+func GetAgencyState[T interface{}](ctx context.Context, connection conn.Connection) (T, error) {
+	var def T
+
+	resp, code, err := conn.NewExecutor[ReadRequest, []T](connection).Execute(ctx, http.MethodPost, "/_api/agency/read", GetAgencyReadRequestFields())
 	if err != nil {
-		return state.Root{}, err
+		return def, err
 	}
 
 	if code != http.StatusOK {
-		return state.Root{}, errors.Newf("Unknown response code %d", code)
+		return def, errors.Newf("Unknown response code %d", code)
 	}
 
 	if resp == nil {
-		return state.Root{}, errors.Newf("Missing response body")
+		return def, errors.Newf("Missing response body")
 	}
 
 	if len(*resp) != 1 {
-		return state.Root{}, errors.Newf("Invalid response size")
+		return def, errors.Newf("Invalid response size")
 	}
 
 	return (*resp)[0], nil
