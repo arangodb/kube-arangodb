@@ -26,30 +26,29 @@ import (
 	"time"
 
 	agencyCecheConfig "github.com/arangodb/kube-arangodb/pkg/deployment/agency/cache"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
 )
 
-func getLoader() StateLoader {
-	loader := getLoaderBase()
+func getLoader[T interface{}]() StateLoader[T] {
+	loader := getLoaderBase[T]()
 
-	loader = InvalidateOnErrorLoader(loader)
+	loader = InvalidateOnErrorLoader[T](loader)
 
-	loader = DelayLoader(loader, agencyCecheConfig.GlobalConfig().RefreshDelay)
-	loader = RefreshLoader(loader, agencyCecheConfig.GlobalConfig().RefreshInterval)
+	loader = DelayLoader[T](loader, agencyCecheConfig.GlobalConfig().RefreshDelay)
+	loader = RefreshLoader[T](loader, agencyCecheConfig.GlobalConfig().RefreshInterval)
 
 	return loader
 }
 
-func getLoaderBase() StateLoader {
+func getLoaderBase[T interface{}]() StateLoader[T] {
 	if agencyCecheConfig.GlobalConfig().PollEnabled {
-		return NewSimpleStateLoader()
+		return NewSimpleStateLoader[T]()
 	} else {
-		return NewSimpleStateLoader()
+		return NewSimpleStateLoader[T]()
 	}
 }
 
-type StateLoader interface {
-	State() (*state.Root, uint64, bool)
+type StateLoader[T interface{}] interface {
+	State() (*T, uint64, bool)
 
 	Invalidate()
 	Valid() bool
@@ -59,35 +58,35 @@ type StateLoader interface {
 	Refresh(ctx context.Context, discovery LeaderDiscovery) error
 }
 
-func NewSimpleStateLoader() StateLoader {
-	return &simpleStateLoader{}
+func NewSimpleStateLoader[T interface{}]() StateLoader[T] {
+	return &simpleStateLoader[T]{}
 }
 
-type simpleStateLoader struct {
+type simpleStateLoader[T interface{}] struct {
 	lock sync.Mutex
 
-	state *state.Root
+	state *T
 	index uint64
 	valid bool
 
 	updateTime time.Time
 }
 
-func (s *simpleStateLoader) UpdateTime() time.Time {
+func (s *simpleStateLoader[T]) UpdateTime() time.Time {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
 	return s.updateTime
 }
 
-func (s *simpleStateLoader) Valid() bool {
+func (s *simpleStateLoader[T]) Valid() bool {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
 	return s.valid
 }
 
-func (s *simpleStateLoader) State() (*state.Root, uint64, bool) {
+func (s *simpleStateLoader[T]) State() (*T, uint64, bool) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -98,14 +97,14 @@ func (s *simpleStateLoader) State() (*state.Root, uint64, bool) {
 	return s.state, s.index, true
 }
 
-func (s *simpleStateLoader) Invalidate() {
+func (s *simpleStateLoader[T]) Invalidate() {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
 	s.valid = false
 }
 
-func (s *simpleStateLoader) Refresh(ctx context.Context, discovery LeaderDiscovery) error {
+func (s *simpleStateLoader[T]) Refresh(ctx context.Context, discovery LeaderDiscovery) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -121,7 +120,7 @@ func (s *simpleStateLoader) Refresh(ctx context.Context, discovery LeaderDiscove
 
 	if s.index != cfg.CommitIndex {
 		// Full reload
-		state, err := GetAgencyState(ctx, conn)
+		state, err := GetAgencyState[T](ctx, conn)
 		if err != nil {
 			return err
 		}

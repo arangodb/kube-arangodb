@@ -24,59 +24,57 @@ import (
 	"context"
 	"sync"
 	"time"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
 )
 
-func RefreshLoader(loader StateLoader, delay time.Duration) StateLoader {
+func RefreshLoader[T interface{}](loader StateLoader[T], delay time.Duration) StateLoader[T] {
 	if delay <= 0 {
 		return loader
 	}
 
-	return &refresherLoader{
+	return &refresherLoader[T]{
 		parent: loader,
 		delay:  delay,
 	}
 }
 
-type refresherLoader struct {
+type refresherLoader[T interface{}] struct {
 	lock sync.Mutex
 
 	last  time.Time
 	delay time.Duration
 
-	parent StateLoader
+	parent StateLoader[T]
 }
 
-func (i *refresherLoader) UpdateTime() time.Time {
+func (i *refresherLoader[T]) UpdateTime() time.Time {
 	i.lock.Lock()
 	defer i.lock.Unlock()
 
 	return i.parent.UpdateTime()
 }
 
-func (i *refresherLoader) Valid() bool {
+func (i *refresherLoader[T]) Valid() bool {
 	i.lock.Lock()
 	defer i.lock.Unlock()
 
 	return i.parent.Valid()
 }
 
-func (i *refresherLoader) State() (*state.Root, uint64, bool) {
+func (i *refresherLoader[T]) State() (*T, uint64, bool) {
 	i.lock.Lock()
 	defer i.lock.Unlock()
 
 	return i.parent.State()
 }
 
-func (i *refresherLoader) Invalidate() {
+func (i *refresherLoader[T]) Invalidate() {
 	i.lock.Lock()
 	defer i.lock.Unlock()
 
 	i.parent.Invalidate()
 }
 
-func (i *refresherLoader) Refresh(ctx context.Context, discovery LeaderDiscovery) error {
+func (i *refresherLoader[T]) Refresh(ctx context.Context, discovery LeaderDiscovery) error {
 	i.lock.Lock()
 	defer i.lock.Unlock()
 

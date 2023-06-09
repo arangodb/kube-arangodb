@@ -24,51 +24,49 @@ import (
 	"context"
 	"sync"
 	"time"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
 )
 
-func InvalidateOnErrorLoader(loader StateLoader) StateLoader {
-	return &invalidateOnErrorLoader{
+func InvalidateOnErrorLoader[T interface{}](loader StateLoader[T]) StateLoader[T] {
+	return &invalidateOnErrorLoader[T]{
 		parent: loader,
 	}
 }
 
-type invalidateOnErrorLoader struct {
+type invalidateOnErrorLoader[T interface{}] struct {
 	lock sync.Mutex
 
-	parent StateLoader
+	parent StateLoader[T]
 }
 
-func (i *invalidateOnErrorLoader) UpdateTime() time.Time {
+func (i *invalidateOnErrorLoader[T]) UpdateTime() time.Time {
 	i.lock.Lock()
 	defer i.lock.Unlock()
 
 	return i.parent.UpdateTime()
 }
 
-func (i *invalidateOnErrorLoader) Valid() bool {
+func (i *invalidateOnErrorLoader[T]) Valid() bool {
 	i.lock.Lock()
 	defer i.lock.Unlock()
 
 	return i.parent.Valid()
 }
 
-func (i *invalidateOnErrorLoader) State() (*state.Root, uint64, bool) {
+func (i *invalidateOnErrorLoader[T]) State() (*T, uint64, bool) {
 	i.lock.Lock()
 	defer i.lock.Unlock()
 
 	return i.parent.State()
 }
 
-func (i *invalidateOnErrorLoader) Invalidate() {
+func (i *invalidateOnErrorLoader[T]) Invalidate() {
 	i.lock.Lock()
 	defer i.lock.Unlock()
 
 	i.parent.Invalidate()
 }
 
-func (i *invalidateOnErrorLoader) Refresh(ctx context.Context, discovery LeaderDiscovery) (err error) {
+func (i *invalidateOnErrorLoader[T]) Refresh(ctx context.Context, discovery LeaderDiscovery) (err error) {
 	i.lock.Lock()
 	defer i.lock.Unlock()
 

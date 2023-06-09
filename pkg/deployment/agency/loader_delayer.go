@@ -24,59 +24,57 @@ import (
 	"context"
 	"sync"
 	"time"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
 )
 
-func DelayLoader(loader StateLoader, delay time.Duration) StateLoader {
+func DelayLoader[T interface{}](loader StateLoader[T], delay time.Duration) StateLoader[T] {
 	if delay <= 0 {
 		return loader
 	}
 
-	return &delayerLoader{
+	return &delayerLoader[T]{
 		parent: loader,
 		delay:  delay,
 	}
 }
 
-type delayerLoader struct {
+type delayerLoader[T interface{}] struct {
 	lock sync.Mutex
 
 	last  time.Time
 	delay time.Duration
 
-	parent StateLoader
+	parent StateLoader[T]
 }
 
-func (i *delayerLoader) UpdateTime() time.Time {
+func (i *delayerLoader[T]) UpdateTime() time.Time {
 	i.lock.Lock()
 	defer i.lock.Unlock()
 
 	return i.parent.UpdateTime()
 }
 
-func (i *delayerLoader) Valid() bool {
+func (i *delayerLoader[T]) Valid() bool {
 	i.lock.Lock()
 	defer i.lock.Unlock()
 
 	return i.parent.Valid()
 }
 
-func (i *delayerLoader) State() (*state.Root, uint64, bool) {
+func (i *delayerLoader[T]) State() (*T, uint64, bool) {
 	i.lock.Lock()
 	defer i.lock.Unlock()
 
 	return i.parent.State()
 }
 
-func (i *delayerLoader) Invalidate() {
+func (i *delayerLoader[T]) Invalidate() {
 	i.lock.Lock()
 	defer i.lock.Unlock()
 
 	i.parent.Invalidate()
 }
 
-func (i *delayerLoader) Refresh(ctx context.Context, discovery LeaderDiscovery) error {
+func (i *delayerLoader[T]) Refresh(ctx context.Context, discovery LeaderDiscovery) error {
 	i.lock.Lock()
 	defer i.lock.Unlock()
 

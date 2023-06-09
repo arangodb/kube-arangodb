@@ -20,8 +20,6 @@
 
 package state
 
-type Roots []Root
-
 type Root struct {
 	Arango   State `json:"arango"`
 	ArangoDB DB    `json:"arangodb,omitempty"`
