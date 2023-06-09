@@ -39,14 +39,6 @@ func getLoader[T interface{}]() StateLoader[T] {
 	return loader
 }
 
-func getLoaderBase[T interface{}]() StateLoader[T] {
-	if agencyCecheConfig.GlobalConfig().PollEnabled {
-		return NewSimpleStateLoader[T]()
-	} else {
-		return NewSimpleStateLoader[T]()
-	}
-}
-
 type StateLoader[T interface{}] interface {
 	State() (*T, uint64, bool)
 

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import (
 	"github.com/arangodb/go-driver"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/version"
 )
 
 const (
@@ -38,6 +39,7 @@ type Feature interface {
 	Description() string
 	Version() driver.Version
 	EnterpriseRequired() bool
+	OperatorEnterpriseRequired() bool
 	EnabledByDefault() bool
 	Enabled() bool
 	EnabledPointer() *bool
@@ -48,12 +50,12 @@ type Feature interface {
 }
 
 type feature struct {
-	name, description                             string
-	version                                       driver.Version
-	enterpriseRequired, enabledByDefault, enabled bool
-	deprecated                                    string
-	constValue                                    *bool
-	hidden                                        bool
+	name, description                                                         string
+	version                                                                   driver.Version
+	enterpriseRequired, operatorEnterpriseRequired, enabledByDefault, enabled bool
+	deprecated                                                                string
+	constValue                                                                *bool
+	hidden                                                                    bool
 }
 
 func (f feature) ImageSupported(i *api.ImageInfo) bool {
@@ -73,6 +75,13 @@ func (f feature) Supported(v driver.Version, enterprise bool) bool {
 }
 
 func (f feature) Enabled() bool {
+	if f.operatorEnterpriseRequired {
+		// Operator Enterprise is required for this feature
+		if !version.GetVersionV1().IsEnterprise() {
+			return false
+		}
+	}
+
 	if f.constValue != nil {
 		return *f.constValue
 	}
@@ -94,6 +103,10 @@ func (f feature) Version() driver.Version {
 
 func (f feature) EnterpriseRequired() bool {
 	return f.enterpriseRequired
+}
+
+func (f feature) OperatorEnterpriseRequired() bool {
+	return f.operatorEnterpriseRequired
 }
 
 func (f feature) EnabledByDefault() bool {
