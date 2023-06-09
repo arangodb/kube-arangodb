@@ -39,7 +39,7 @@ func Init(cmd *cobra.Command) error {
 	}
 
 	f.DurationVar(&global.RefreshDelay, "agency.refresh-delay", 500*time.Millisecond, "The Agency refresh delay (0 = no delay)")
-	f.DurationVar(&global.RefreshDelay, "agency.refresh-interval", 0, "The Agency refresh interval (0 = do not refresh)")
+	f.DurationVar(&global.RefreshInterval, "agency.refresh-interval", 0, "The Agency refresh interval (0 = do not refresh)")
 
 	return nil
 }
