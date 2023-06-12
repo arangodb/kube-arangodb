@@ -35,5 +35,5 @@ func ArangodbOperatorEngineOpsAlerts() metrics.Description {
 }
 
 func ArangodbOperatorEngineOpsAlertsCounter(value float64, namespace string, name string) metrics.Metric {
-	return ArangodbOperatorEngineOpsAlerts().Gauge(value, namespace, name)
+	return ArangodbOperatorEngineOpsAlerts().Counter(value, namespace, name)
 }

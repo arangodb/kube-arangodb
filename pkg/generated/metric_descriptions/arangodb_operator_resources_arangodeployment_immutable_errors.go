@@ -35,5 +35,5 @@ func ArangodbOperatorResourcesArangodeploymentImmutableErrors() metrics.Descript
 }
 
 func ArangodbOperatorResourcesArangodeploymentImmutableErrorsCounter(value float64, namespace string, name string) metrics.Metric {
-	return ArangodbOperatorResourcesArangodeploymentImmutableErrors().Gauge(value, namespace, name)
+	return ArangodbOperatorResourcesArangodeploymentImmutableErrors().Counter(value, namespace, name)
 }

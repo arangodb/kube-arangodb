@@ -35,5 +35,5 @@ func ArangodbOperatorEnginePanicsRecovered() metrics.Description {
 }
 
 func ArangodbOperatorEnginePanicsRecoveredCounter(value float64, section string) metrics.Metric {
-	return ArangodbOperatorEnginePanicsRecovered().Gauge(value, section)
+	return ArangodbOperatorEnginePanicsRecovered().Counter(value, section)
 }

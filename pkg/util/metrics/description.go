@@ -34,12 +34,17 @@ type Description interface {
 	Collect(out chan<- prometheus.Metric, collect func(p Producer) error)
 
 	Gauge(value float64, labels ...string) Metric
+	Counter(value float64, labels ...string) Metric
 }
 
 type description struct {
 	variableLabels []string
 	constLabels    prometheus.Labels
 	desc           *prometheus.Desc
+}
+
+func (d *description) Counter(value float64, labels ...string) Metric {
+	return newCounter(d, value, labels...)
 }
 
 func (d *description) Gauge(value float64, labels ...string) Metric {

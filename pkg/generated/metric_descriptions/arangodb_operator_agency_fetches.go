@@ -35,5 +35,5 @@ func ArangodbOperatorAgencyFetches() metrics.Description {
 }
 
 func ArangodbOperatorAgencyFetchesCounter(value float64, namespace string, name string) metrics.Metric {
-	return ArangodbOperatorAgencyFetches().Gauge(value, namespace, name)
+	return ArangodbOperatorAgencyFetches().Counter(value, namespace, name)
 }

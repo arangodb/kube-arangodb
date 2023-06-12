@@ -35,5 +35,5 @@ func ArangodbOperatorResourcesArangodeploymentValidationErrors() metrics.Descrip
 }
 
 func ArangodbOperatorResourcesArangodeploymentValidationErrorsCounter(value float64, namespace string, name string) metrics.Metric {
-	return ArangodbOperatorResourcesArangodeploymentValidationErrors().Gauge(value, namespace, name)
+	return ArangodbOperatorResourcesArangodeploymentValidationErrors().Counter(value, namespace, name)
 }
