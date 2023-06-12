@@ -27,6 +27,8 @@ import (
 	"io"
 	"net/http"
 	"reflect"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/metrics/nctx"
 )
 
 func NewExecutor[IN, OUT interface{}](conn Connection) Executor[IN, OUT] {
@@ -68,7 +70,7 @@ func (e executor[IN, OUT]) Execute(ctx context.Context, method string, endpoint 
 
 	var out OUT
 
-	if err := json.NewDecoder(resp).Decode(&out); err != nil {
+	if err := json.NewDecoder(nctx.WithRequestReadBytes(ctx, resp)).Decode(&out); err != nil {
 		return nil, 0, err
 	}
 
