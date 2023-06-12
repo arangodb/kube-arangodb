@@ -23,6 +23,8 @@
 
 package agency
 
-func getLoaderBase[T interface{}]() StateLoader[T] {
+import agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency/cache"
+
+func getLoaderBase[T interface{}]() agencyCache.StateLoader[T] {
 	return NewSimpleStateLoader[T]()
 }

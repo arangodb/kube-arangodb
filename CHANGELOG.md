@@ -5,6 +5,7 @@
 - (Feature) Agency Cache Poll EE Extension
 - (Feature) Metrics Counter
 - (Feature) Requests Bytes Counter
+- (Feature) Agency Poll System
 
 ## [1.2.29](https://github.com/arangodb/kube-arangodb/tree/1.2.29) (2023-06-08)
 - (Maintenance) Add govulncheck to pipeline, update golangci-linter

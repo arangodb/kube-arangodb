@@ -28,6 +28,7 @@ import (
 	"github.com/rs/zerolog"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency/cache"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
 	"github.com/arangodb/kube-arangodb/pkg/generated/metric_descriptions"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
@@ -211,7 +212,7 @@ type cache struct {
 
 	lock sync.RWMutex
 
-	loader StateLoader[state.Root]
+	loader agencyCache.StateLoader[state.Root]
 
 	health Health
 

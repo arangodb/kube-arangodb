@@ -24,9 +24,11 @@ import (
 	"context"
 	"sync"
 	"time"
+
+	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency/cache"
 )
 
-func InvalidateOnErrorLoader[T interface{}](loader StateLoader[T]) StateLoader[T] {
+func InvalidateOnErrorLoader[T interface{}](loader agencyCache.StateLoader[T]) agencyCache.StateLoader[T] {
 	return &invalidateOnErrorLoader[T]{
 		parent: loader,
 	}
@@ -35,7 +37,7 @@ func InvalidateOnErrorLoader[T interface{}](loader StateLoader[T]) StateLoader[T
 type invalidateOnErrorLoader[T interface{}] struct {
 	lock sync.Mutex
 
-	parent StateLoader[T]
+	parent agencyCache.StateLoader[T]
 }
 
 func (i *invalidateOnErrorLoader[T]) UpdateTime() time.Time {
@@ -66,7 +68,7 @@ func (i *invalidateOnErrorLoader[T]) Invalidate() {
 	i.parent.Invalidate()
 }
 
-func (i *invalidateOnErrorLoader[T]) Refresh(ctx context.Context, discovery LeaderDiscovery) (err error) {
+func (i *invalidateOnErrorLoader[T]) Refresh(ctx context.Context, discovery agencyCache.LeaderDiscovery) (err error) {
 	i.lock.Lock()
 	defer i.lock.Unlock()
 

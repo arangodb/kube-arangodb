@@ -25,16 +25,16 @@ import (
 	"sync"
 	"time"
 
-	agencyCecheConfig "github.com/arangodb/kube-arangodb/pkg/deployment/agency/cache"
+	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency/cache"
 )
 
-func getLoader[T interface{}]() StateLoader[T] {
+func getLoader[T interface{}]() agencyCache.StateLoader[T] {
 	loader := getLoaderBase[T]()
 
 	loader = InvalidateOnErrorLoader[T](loader)
 
-	loader = DelayLoader[T](loader, agencyCecheConfig.GlobalConfig().RefreshDelay)
-	loader = RefreshLoader[T](loader, agencyCecheConfig.GlobalConfig().RefreshInterval)
+	loader = DelayLoader[T](loader, agencyCache.GlobalConfig().RefreshDelay)
+	loader = RefreshLoader[T](loader, agencyCache.GlobalConfig().RefreshInterval)
 
 	return loader
 }
@@ -47,10 +47,10 @@ type StateLoader[T interface{}] interface {
 
 	UpdateTime() time.Time
 
-	Refresh(ctx context.Context, discovery LeaderDiscovery) error
+	Refresh(ctx context.Context, discovery agencyCache.LeaderDiscovery) error
 }
 
-func NewSimpleStateLoader[T interface{}]() StateLoader[T] {
+func NewSimpleStateLoader[T interface{}]() agencyCache.StateLoader[T] {
 	return &simpleStateLoader[T]{}
 }
 
@@ -60,6 +60,9 @@ type simpleStateLoader[T interface{}] struct {
 	state *T
 	index uint64
 	valid bool
+
+	metrics struct {
+	}
 
 	updateTime time.Time
 }
@@ -96,7 +99,7 @@ func (s *simpleStateLoader[T]) Invalidate() {
 	s.valid = false
 }
 
-func (s *simpleStateLoader[T]) Refresh(ctx context.Context, discovery LeaderDiscovery) error {
+func (s *simpleStateLoader[T]) Refresh(ctx context.Context, discovery agencyCache.LeaderDiscovery) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
