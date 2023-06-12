@@ -35,5 +35,5 @@ func ArangodbOperatorMembersUnexpectedContainerExitCodes() metrics.Description {
 }
 
 func ArangodbOperatorMembersUnexpectedContainerExitCodesCounter(value float64, namespace string, name string, member string, container string, containerType string, code string, reason string) metrics.Metric {
-	return ArangodbOperatorMembersUnexpectedContainerExitCodes().Gauge(value, namespace, name, member, container, containerType, code, reason)
+	return ArangodbOperatorMembersUnexpectedContainerExitCodes().Counter(value, namespace, name, member, container, containerType, code, reason)
 }

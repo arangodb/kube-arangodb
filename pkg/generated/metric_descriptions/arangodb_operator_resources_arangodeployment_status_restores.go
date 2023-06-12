@@ -35,5 +35,5 @@ func ArangodbOperatorResourcesArangodeploymentStatusRestores() metrics.Descripti
 }
 
 func ArangodbOperatorResourcesArangodeploymentStatusRestoresCounter(value float64, namespace string, name string) metrics.Metric {
-	return ArangodbOperatorResourcesArangodeploymentStatusRestores().Gauge(value, namespace, name)
+	return ArangodbOperatorResourcesArangodeploymentStatusRestores().Counter(value, namespace, name)
 }

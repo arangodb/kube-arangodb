@@ -35,5 +35,5 @@ func ArangodbOperatorRebalancerMovesGenerated() metrics.Description {
 }
 
 func ArangodbOperatorRebalancerMovesGeneratedCounter(value float64, namespace string, name string) metrics.Metric {
-	return ArangodbOperatorRebalancerMovesGenerated().Gauge(value, namespace, name)
+	return ArangodbOperatorRebalancerMovesGenerated().Counter(value, namespace, name)
 }

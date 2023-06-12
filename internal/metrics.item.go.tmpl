@@ -35,5 +35,5 @@ func {{ .ename }}() metrics.Description {
 }
 
 func {{ .ename }}{{ .type }}({{ .fparams }}) metrics.Metric {
-    return {{ .ename }}().Gauge({{ .fkeys }})
+    return {{ .ename }}().{{ .type }}({{ .fkeys }})
 }

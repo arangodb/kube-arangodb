@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,30 +25,36 @@ import (
 	dto "github.com/prometheus/client_model/go"
 )
 
-type Metric interface {
-	prometheus.Metric
-}
-
-type Error interface {
+type Counter interface {
 	Metric
 }
 
-type errorRet struct {
-	desc Description
-	err  error
-}
-
-func (e errorRet) Desc() *prometheus.Desc {
-	return e.desc.Desc()
-}
-
-func (e errorRet) Write(metric *dto.Metric) error {
-	return e.err
-}
-
-func newError(desc Description, value error) Error {
-	return errorRet{
-		desc: desc,
-		err:  value,
+func newCounter(desc Description, value float64, labels ...string) Counter {
+	return couter{
+		desc:   desc,
+		labels: labels,
+		value:  value,
 	}
+}
+
+type couter struct {
+	desc Description
+
+	labels []string
+
+	value float64
+}
+
+func (g couter) Desc() *prometheus.Desc {
+	return g.desc.Desc()
+}
+
+func (g couter) Write(metric *dto.Metric) error {
+	metric.Label = g.desc.Labels(g.labels...)
+
+	metric.Counter = &dto.Counter{
+		Value: &g.value,
+	}
+
+	return nil
 }

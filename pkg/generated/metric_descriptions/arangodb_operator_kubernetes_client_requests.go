@@ -35,5 +35,5 @@ func ArangodbOperatorKubernetesClientRequests() metrics.Description {
 }
 
 func ArangodbOperatorKubernetesClientRequestsCounter(value float64, component string, verb string) metrics.Metric {
-	return ArangodbOperatorKubernetesClientRequests().Gauge(value, component, verb)
+	return ArangodbOperatorKubernetesClientRequests().Counter(value, component, verb)
 }
