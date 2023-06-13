@@ -30,7 +30,7 @@ var agencyPoll = &feature{
 	version:                    "3.5.0",
 	enterpriseRequired:         false,
 	operatorEnterpriseRequired: true,
-	enabledByDefault:           false,
+	enabledByDefault:           true,
 }
 
 func AgencyPoll() Feature {

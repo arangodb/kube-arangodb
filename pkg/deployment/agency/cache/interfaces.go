@@ -18,23 +18,26 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package agency
+package cache
 
 import (
 	"context"
+	"time"
 
-	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 )
 
-func StaticLeaderDiscovery(in conn.Connection) agencyCache.LeaderDiscovery {
-	return staticLeaderDiscovery{conn: in}
+type LeaderDiscovery interface {
+	Discover(ctx context.Context) (conn.Connection, error)
 }
 
-type staticLeaderDiscovery struct {
-	conn conn.Connection
-}
+type StateLoader[T interface{}] interface {
+	State() (*T, uint64, bool)
 
-func (s staticLeaderDiscovery) Discover(ctx context.Context) (conn.Connection, error) {
-	return s.conn, nil
+	Invalidate()
+	Valid() bool
+
+	UpdateTime() time.Time
+
+	Refresh(ctx context.Context, discovery LeaderDiscovery) error
 }

@@ -24,9 +24,11 @@ import (
 	"context"
 	"sync"
 	"time"
+
+	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency/cache"
 )
 
-func RefreshLoader[T interface{}](loader StateLoader[T], delay time.Duration) StateLoader[T] {
+func RefreshLoader[T interface{}](loader agencyCache.StateLoader[T], delay time.Duration) agencyCache.StateLoader[T] {
 	if delay <= 0 {
 		return loader
 	}
@@ -43,7 +45,7 @@ type refresherLoader[T interface{}] struct {
 	last  time.Time
 	delay time.Duration
 
-	parent StateLoader[T]
+	parent agencyCache.StateLoader[T]
 }
 
 func (i *refresherLoader[T]) UpdateTime() time.Time {
@@ -74,7 +76,7 @@ func (i *refresherLoader[T]) Invalidate() {
 	i.parent.Invalidate()
 }
 
-func (i *refresherLoader[T]) Refresh(ctx context.Context, discovery LeaderDiscovery) error {
+func (i *refresherLoader[T]) Refresh(ctx context.Context, discovery agencyCache.LeaderDiscovery) error {
 	i.lock.Lock()
 	defer i.lock.Unlock()
 
