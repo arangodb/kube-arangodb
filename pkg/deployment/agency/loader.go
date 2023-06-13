@@ -61,9 +61,6 @@ type simpleStateLoader[T interface{}] struct {
 	index uint64
 	valid bool
 
-	metrics struct {
-	}
-
 	updateTime time.Time
 }
 
