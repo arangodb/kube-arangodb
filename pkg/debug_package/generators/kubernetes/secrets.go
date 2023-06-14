@@ -21,8 +21,13 @@
 package kubernetes
 
 import (
-	"github.com/rs/zerolog"
+	"context"
 
+	"github.com/rs/zerolog"
+	core "k8s.io/api/core/v1"
+	"k8s.io/client-go/kubernetes"
+
+	"github.com/arangodb/kube-arangodb/pkg/debug_package/cli"
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
@@ -32,26 +37,27 @@ func Secrets() shared.Factory {
 	return shared.NewFactory("kubernetes-secrets", true, secrets)
 }
 
+func listSecrets(client kubernetes.Interface) func() ([]*core.Secret, error) {
+	return func() ([]*core.Secret, error) {
+		return ListObjects[*core.SecretList, *core.Secret](context.Background(), client.CoreV1().Secrets(cli.GetInput().Namespace), func(result *core.SecretList) []*core.Secret {
+			q := make([]*core.Secret, len(result.Items))
+
+			for id, e := range result.Items {
+				q[id] = e.DeepCopy()
+			}
+
+			return q
+		})
+	}
+}
+
 func secrets(logger zerolog.Logger, files chan<- shared.File) error {
 	k, ok := kclient.GetDefaultFactory().Client()
 	if !ok {
 		return errors.Newf("Client is not initialised")
 	}
 
-	secrets, err := ListSecrets(k)
-	if err != nil {
-		return err
-	}
-
-	files <- shared.NewYAMLFile("kubernetes/secrets.yaml", func() ([]interface{}, error) {
-		q := make([]interface{}, 0, len(secrets))
-
-		for _, e := range secrets {
-			q = append(q, e)
-		}
-
-		return q, nil
-	})
+	files <- shared.NewYAMLFile("kubernetes/secrets.yaml", listSecrets(k.Kubernetes()))
 
 	return nil
 }

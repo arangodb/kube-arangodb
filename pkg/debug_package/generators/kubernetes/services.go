@@ -25,8 +25,11 @@ import (
 	"fmt"
 
 	"github.com/rs/zerolog"
+	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 
+	"github.com/arangodb/kube-arangodb/pkg/debug_package/cli"
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
@@ -36,25 +39,33 @@ func Services() shared.Factory {
 	return shared.NewFactory("kubernetes-services", true, services)
 }
 
+func listServices(client kubernetes.Interface) func() ([]*core.Service, error) {
+	return func() ([]*core.Service, error) {
+		return ListObjects[*core.ServiceList, *core.Service](context.Background(), client.CoreV1().Services(cli.GetInput().Namespace), func(result *core.ServiceList) []*core.Service {
+			q := make([]*core.Service, len(result.Items))
+
+			for id, e := range result.Items {
+				q[id] = e.DeepCopy()
+			}
+
+			return q
+		})
+	}
+}
+
 func services(logger zerolog.Logger, files chan<- shared.File) error {
 	k, ok := kclient.GetDefaultFactory().Client()
 	if !ok {
 		return errors.Newf("Client is not initialised")
 	}
 
-	services, err := ListServices(k)
+	services, err := listServices(k.Kubernetes())()
 	if err != nil {
 		return err
 	}
 
-	files <- shared.NewYAMLFile("kubernetes/services.yaml", func() ([]interface{}, error) {
-		q := make([]interface{}, 0, len(services))
-
-		for _, e := range services {
-			q = append(q, e)
-		}
-
-		return q, nil
+	files <- shared.NewYAMLFile("kubernetes/services.yaml", func() ([]*core.Service, error) {
+		return services, nil
 	})
 
 	for _, svc := range services {

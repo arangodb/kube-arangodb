@@ -27,6 +27,7 @@ import (
 
 	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
+	"k8s.io/client-go/kubernetes"
 
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/cli"
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/shared"
@@ -38,31 +39,37 @@ func Pods() shared.Factory {
 	return shared.NewFactory("kubernetes-pods", true, pods)
 }
 
+func listPods(client kubernetes.Interface) func() ([]*core.Pod, error) {
+	return func() ([]*core.Pod, error) {
+		return ListObjects[*core.PodList, *core.Pod](context.Background(), client.CoreV1().Pods(cli.GetInput().Namespace), func(result *core.PodList) []*core.Pod {
+			q := make([]*core.Pod, len(result.Items))
+
+			for id, e := range result.Items {
+				q[id] = e.DeepCopy()
+			}
+
+			return q
+		})
+	}
+}
+
 func pods(logger zerolog.Logger, files chan<- shared.File) error {
 	k, ok := kclient.GetDefaultFactory().Client()
 	if !ok {
 		return errors.Newf("Client is not initialised")
 	}
 
-	pods, err := ListPods(k)
+	pods, err := listPods(k.Kubernetes())()
 	if err != nil {
 		return err
 	}
 
-	podsList := pods.AsList()
-
-	files <- shared.NewYAMLFile("kubernetes/pods.yaml", func() ([]interface{}, error) {
-		q := make([]interface{}, len(podsList))
-
-		for id := range podsList {
-			q[id] = podsList[id]
-		}
-
-		return q, nil
+	files <- shared.NewYAMLFile("kubernetes/pods.yaml", func() ([]*core.Pod, error) {
+		return pods, nil
 	})
 
 	if cli.GetInput().PodLogs {
-		if err := podsLogs(k, files, podsList...); err != nil {
+		if err := podsLogs(k, files, pods...); err != nil {
 			logger.Err(err).Msgf("Error while collecting pod logs")
 		}
 	}

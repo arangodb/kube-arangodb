@@ -110,7 +110,7 @@ func (s *simpleStateLoader[T]) Refresh(ctx context.Context, discovery agencyCach
 		return err
 	}
 
-	if s.index != cfg.CommitIndex {
+	if !s.valid || s.index != cfg.CommitIndex {
 		// Full reload
 		state, err := GetAgencyState[T](ctx, conn)
 		if err != nil {

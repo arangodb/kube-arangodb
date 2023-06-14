@@ -51,7 +51,7 @@ func agencyDump(logger zerolog.Logger, files chan<- shared.File) error {
 		return errors.Newf("Client is not initialised")
 	}
 
-	deployments, err := ListDeployments(k)
+	deployments, err := listArangoDeployments(k.Arango())()
 	if err != nil {
 		return err
 	}
@@ -102,7 +102,7 @@ func discoverExecFunc() (ArangoOperatorExecFunc, error) {
 			return nil, errors.Newf("Client is not initialised")
 		}
 
-		pods, err := ListPods(k)
+		pods, err := listPods(k.Kubernetes())()
 		if err != nil {
 			return nil, err
 		}

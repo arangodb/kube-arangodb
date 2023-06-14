@@ -30,6 +30,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/cli"
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/shared"
+	arangoClient "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
@@ -38,20 +39,32 @@ func Deployments() shared.Factory {
 	return shared.NewFactory("deployments", true, deployments)
 }
 
+func listArangoDeployments(client arangoClient.Interface) func() ([]*api.ArangoDeployment, error) {
+	return func() ([]*api.ArangoDeployment, error) {
+		return ListObjects[*api.ArangoDeploymentList, *api.ArangoDeployment](context.Background(), client.DatabaseV1().ArangoDeployments(cli.GetInput().Namespace), func(result *api.ArangoDeploymentList) []*api.ArangoDeployment {
+			q := make([]*api.ArangoDeployment, len(result.Items))
+
+			for id, e := range result.Items {
+				q[id] = e.DeepCopy()
+			}
+
+			return q
+		})
+	}
+}
+
 func deployments(logger zerolog.Logger, files chan<- shared.File) error {
 	k, ok := kclient.GetDefaultFactory().Client()
 	if !ok {
 		return errors.Newf("Client is not initialised")
 	}
 
-	deployments, err := ListDeployments(k)
+	deploymentList, err := listArangoDeployments(k.Arango())()
 	if err != nil {
 		return err
 	}
 
-	deploymentList := deployments.AsList()
-
-	errDeployments := make([]error, len(deployments))
+	errDeployments := make([]error, len(deploymentList))
 
 	for id := range deploymentList {
 		errDeployments[id] = deployment(k, deploymentList[id], files)
