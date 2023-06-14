@@ -24,7 +24,7 @@ import "github.com/spf13/cobra"
 
 func Register(cmd *cobra.Command) {
 	f := cmd.Flags()
-	f.StringVar(&input.Namespace, "namespace", "default", "Kubernetes namespace")
+	f.StringVarP(&input.Namespace, "namespace", "n", "default", "Kubernetes namespace")
 	f.BoolVar(&input.HideSensitiveData, "hide-sensitive-data", true, "Hide sensitive data")
 	f.BoolVar(&input.PodLogs, "pod-logs", true, "Collect pod logs")
 }

@@ -25,7 +25,6 @@ import (
 	"encoding/json"
 
 	"github.com/rs/zerolog"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
 )
 
@@ -36,34 +35,18 @@ type File interface {
 	Write() ([]byte, error)
 }
 
-func NewJSONFile(path string, write func() ([]interface{}, error)) File {
+func NewJSONFile[T interface{}](path string, write func() ([]T, error)) File {
 	return NewFile(path, func() ([]byte, error) {
 		obj, err := write()
 		if err != nil {
 			return nil, err
 		}
 
-		for z := range obj {
-			obj[z] = cleanObject(&obj[z])
-		}
-
 		return json.Marshal(obj)
 	})
 }
 
-func cleanObject(obj interface{}) interface{} {
-	if obj == nil {
-		return nil
-	}
-
-	if v, ok := obj.(meta.Object); ok {
-		v.SetManagedFields(nil)
-	}
-
-	return obj
-}
-
-func NewYAMLFile(path string, write func() ([]interface{}, error)) File {
+func NewYAMLFile[T interface{}](path string, write func() ([]T, error)) File {
 	return NewFile(path, func() ([]byte, error) {
 		obj, err := write()
 		if err != nil {
@@ -71,10 +54,6 @@ func NewYAMLFile(path string, write func() ([]interface{}, error)) File {
 		}
 
 		buff := bytes.NewBuffer(nil)
-
-		for z := range obj {
-			obj[z] = cleanObject(&obj[z])
-		}
 
 		for z := range obj {
 			d, err := yaml.Marshal(obj[z])
