@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.2.30](https://github.com/arangodb/kube-arangodb/tree/1.2.30) (2023-06-16)
 - (Feature) AgencyCache Interface
 - (Feature) Agency Cache Poll EE Extension
 - (Feature) Metrics Counter
