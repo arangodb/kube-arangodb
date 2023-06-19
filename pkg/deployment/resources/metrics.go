@@ -168,13 +168,13 @@ type MetricMemberRestarts map[int32]MetricMemberRestartReason
 
 type MetricMemberRestartReason map[string]uint64
 
-func (d *Resources) CollectMetrics(m metrics.PushMetric) {
-	for member, info := range d.metrics.Members {
+func (r *Resources) CollectMetrics(m metrics.PushMetric) {
+	for member, info := range r.metrics.Members {
 		// Containers
 		for container, restarts := range info.ContainerRestarts {
 			for code, reasons := range restarts {
 				for reason, count := range reasons {
-					m.Push(metric_descriptions.ArangodbOperatorMembersUnexpectedContainerExitCodesCounter(float64(count), d.namespace, d.name, member, container, "container", fmt.Sprintf("%d", code), reason))
+					m.Push(metric_descriptions.ArangodbOperatorMembersUnexpectedContainerExitCodesCounter(float64(count), r.namespace, r.name, member, container, "container", fmt.Sprintf("%d", code), reason))
 				}
 			}
 		}
@@ -182,7 +182,7 @@ func (d *Resources) CollectMetrics(m metrics.PushMetric) {
 		for container, restarts := range info.InitContainerRestarts {
 			for code, reasons := range restarts {
 				for reason, count := range reasons {
-					m.Push(metric_descriptions.ArangodbOperatorMembersUnexpectedContainerExitCodesCounter(float64(count), d.namespace, d.name, member, container, "initContainer", fmt.Sprintf("%d", code), reason))
+					m.Push(metric_descriptions.ArangodbOperatorMembersUnexpectedContainerExitCodesCounter(float64(count), r.namespace, r.name, member, container, "initContainer", fmt.Sprintf("%d", code), reason))
 				}
 			}
 		}
@@ -190,7 +190,7 @@ func (d *Resources) CollectMetrics(m metrics.PushMetric) {
 		for container, restarts := range info.EphemeralContainerRestarts {
 			for code, reasons := range restarts {
 				for reason, count := range reasons {
-					m.Push(metric_descriptions.ArangodbOperatorMembersUnexpectedContainerExitCodesCounter(float64(count), d.namespace, d.name, member, container, "ephemeralContainer", fmt.Sprintf("%d", code), reason))
+					m.Push(metric_descriptions.ArangodbOperatorMembersUnexpectedContainerExitCodesCounter(float64(count), r.namespace, r.name, member, container, "ephemeralContainer", fmt.Sprintf("%d", code), reason))
 				}
 			}
 		}

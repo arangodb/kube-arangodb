@@ -22,6 +22,7 @@ package resources
 
 import (
 	"context"
+	"strings"
 	"sync"
 
 	core "k8s.io/api/core/v1"
@@ -150,11 +151,11 @@ func (r *Resources) EnsureLeader(ctx context.Context, cachedStatus inspectorInte
 	return errors.Reconcile()
 }
 
-// getSingleServerLeaderID returns id of a single server leader.
-func (r *Resources) getSingleServerLeaderID(ctx context.Context) (string, error) {
+// getSingleServerLeaderID returns ids of a single server leaders.
+func (r *Resources) getSingleServerLeaderID(ctx context.Context) ([]string, error) {
 	status := r.context.GetStatus()
 	var mutex sync.Mutex
-	var leaderID string
+	var leaderIDs []string
 	var anyError error
 
 	ctxCancel, cancel := context.WithCancel(ctx)
@@ -177,10 +178,8 @@ func (r *Resources) getSingleServerLeaderID(ctx context.Context) (string, error)
 					return errors.New("not available")
 				}
 
-				// Other requests can be interrupted, because a leader is known already.
-				cancel()
 				mutex.Lock()
-				leaderID = id
+				leaderIDs = append(leaderIDs, id)
 				mutex.Unlock()
 				return nil
 			})
@@ -194,15 +193,15 @@ func (r *Resources) getSingleServerLeaderID(ctx context.Context) (string, error)
 	}
 	wg.Wait()
 
-	if len(leaderID) > 0 {
-		return leaderID, nil
+	if len(leaderIDs) > 0 {
+		return leaderIDs, nil
 	}
 
 	if anyError != nil {
-		return "", errors.WithMessagef(anyError, "unable to get a leader")
+		return nil, errors.WithMessagef(anyError, "unable to get a leader")
 	}
 
-	return "", errors.New("unable to get a leader")
+	return nil, errors.New("unable to get a leader")
 }
 
 // setSingleServerLeadership adds or removes leadership label on a single server pod.
@@ -212,9 +211,15 @@ func (r *Resources) ensureSingleServerLeader(ctx context.Context, cachedStatus i
 	enabled := features.FailoverLeadership().Enabled()
 	var leaderID string
 	if enabled {
-		var err error
-		if leaderID, err = r.getSingleServerLeaderID(ctx); err != nil {
+		leaderIDs, err := r.getSingleServerLeaderID(ctx)
+		if err != nil {
 			return err
+		}
+
+		if len(leaderIDs) == 1 {
+			leaderID = leaderIDs[0]
+		} else if len(leaderIDs) > 1 {
+			r.log.Error("multiple leaders found: %s. Blocking traffic to the deployment services", strings.Join(leaderIDs, ", "))
 		}
 	}
 

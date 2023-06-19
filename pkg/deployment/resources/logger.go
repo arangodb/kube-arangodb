@@ -30,6 +30,6 @@ var (
 	logger = logging.Global().RegisterAndGetLogger("deployment-resources", logging.Info)
 )
 
-func (d *Resources) WrapLogger(in *zerolog.Event) *zerolog.Event {
-	return in.Str("namespace", d.namespace).Str("name", d.name)
+func (r *Resources) WrapLogger(in *zerolog.Event) *zerolog.Event {
+	return in.Str("namespace", r.namespace).Str("name", r.name)
 }
