@@ -22,7 +22,7 @@ This feature is disabled by default.
 
 Here is the example `helm` command which enables this feature and sets shard-rebuild timeout to 10 minutes:
 ```shell
-export VER=1.2.27; helm upgrade --install kube-arangodb \
+helm upgrade --install kube-arangodb \
 https://github.com/arangodb/kube-arangodb/releases/download/$VER/kube-arangodb-$VER.tgz \
   --set "operator.args={--deployment.feature.force-rebuild-out-synced-shards,--timeout.shard-rebuild=10m}"
 ```
