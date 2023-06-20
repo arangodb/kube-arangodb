@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Improvement) Block traffic on the services if there is more than 1 active leader in ActiveFailover mode
 
 ## [1.2.30](https://github.com/arangodb/kube-arangodb/tree/1.2.30) (2023-06-16)
 - (Feature) AgencyCache Interface
