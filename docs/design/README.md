@@ -1,5 +1,6 @@
 # ArangoDB operator design documents
 
+- [Architecture change](./arch_change.md)
 - [Constraints](./constraints.md)
 - [Health](./health.md)
 - [Metrics](./metrics.md)
@@ -17,4 +18,7 @@
 - [Operator API](./api.md)
 - [Logging](./logging.md)
 - [Manual Recovery](./recovery.md)
-- [Force rebuild out-synced Shards with broken Merkle Tree](./rebuild_out_synced_shards.md)
+
+## Features
+- [Force rebuild out-synced Shards with broken Merkle Tree](./features/rebuild_out_synced_shards.md)
+- [Failover Leader service](./features/failover_leader_service.md)
