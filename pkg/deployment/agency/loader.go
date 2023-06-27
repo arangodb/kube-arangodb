@@ -36,6 +36,8 @@ func getLoader[T interface{}]() agencyCache.StateLoader[T] {
 	loader = DelayLoader[T](loader, agencyCache.GlobalConfig().RefreshDelay)
 	loader = RefreshLoader[T](loader, agencyCache.GlobalConfig().RefreshInterval)
 
+	loader = RetryLoader[T](loader, agencyCache.GlobalConfig().Retries)
+
 	return loader
 }
 

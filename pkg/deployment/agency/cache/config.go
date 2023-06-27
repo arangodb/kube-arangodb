@@ -40,6 +40,7 @@ func Init(cmd *cobra.Command) error {
 
 	f.DurationVar(&global.RefreshDelay, "agency.refresh-delay", 500*time.Millisecond, "The Agency refresh delay (0 = no delay)")
 	f.DurationVar(&global.RefreshInterval, "agency.refresh-interval", 0, "The Agency refresh interval (0 = do not refresh)")
+	f.IntVar(&global.Retries, "agency.retries", 1, "The Agency retries (0 = no retries)")
 
 	return nil
 }
@@ -53,4 +54,5 @@ func GlobalConfig() Config {
 type Config struct {
 	RefreshDelay    time.Duration
 	RefreshInterval time.Duration
+	Retries         int
 }
