@@ -180,9 +180,6 @@ func (d *Deployment) RefreshAgencyCache(ctx context.Context) (uint64, error) {
 
 	if info := d.currentObject.Status.Agency; info != nil {
 		if size := info.Size; size != nil {
-			lCtx, c := globals.GetGlobalTimeouts().Agency().WithTimeout(ctx)
-			defer c()
-
 			rsize := int(*size)
 
 			clients := agency.Connections{}
@@ -195,7 +192,7 @@ func (d *Deployment) RefreshAgencyCache(ctx context.Context) (uint64, error) {
 				clients[m.ID] = a
 			}
 
-			return d.agencyCache.Reload(lCtx, rsize, clients)
+			return d.agencyCache.Reload(ctx, rsize, clients)
 		}
 	}
 
