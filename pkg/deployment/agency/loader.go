@@ -32,6 +32,8 @@ import (
 func getLoader[T interface{}]() agencyCache.StateLoader[T] {
 	loader := getLoaderBase[T]()
 
+	loader = TimeoutLoader[T](loader, globals.GetGlobalTimeouts().Agency().Get())
+
 	loader = InvalidateOnErrorLoader[T](loader)
 
 	loader = DelayLoader[T](loader, agencyCache.GlobalConfig().RefreshDelay)
@@ -103,18 +105,12 @@ func (s *simpleStateLoader[T]) Refresh(ctx context.Context, discovery agencyCach
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	lctx, cancel := globals.GetGlobalTimeouts().Agency().WithTimeout(ctx)
-	defer cancel()
-
-	conn, err := discovery.Discover(lctx)
+	conn, err := discovery.Discover(ctx)
 	if err != nil {
 		return err
 	}
 
-	cctx, cancel := globals.GetGlobalTimeouts().Agency().WithTimeout(ctx)
-	defer cancel()
-
-	cfg, err := GetAgencyConfig(cctx, conn)
+	cfg, err := GetAgencyConfig(ctx, conn)
 	if err != nil {
 		return err
 	}
@@ -122,10 +118,7 @@ func (s *simpleStateLoader[T]) Refresh(ctx context.Context, discovery agencyCach
 	if !s.valid || s.index != cfg.CommitIndex {
 		// Full reload
 
-		sctx, cancel := globals.GetGlobalTimeouts().Agency().WithTimeout(ctx)
-		defer cancel()
-
-		state, err := GetAgencyState[T](sctx, conn)
+		state, err := GetAgencyState[T](ctx, conn)
 		if err != nil {
 			return err
 		}
