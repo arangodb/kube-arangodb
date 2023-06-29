@@ -102,3 +102,37 @@ func TestSyncSpecResetImmutableFields(t *testing.T) {
 		assert.Equal(t, test.Expected, test.Target)
 	}
 }
+
+func TestSyncSpecMasterEndpointValidate(t *testing.T) {
+	auth := SyncAuthenticationSpec{
+		JWTSecretName:      util.NewType[string]("foo"),
+		ClientCASecretName: util.NewType[string]("foo-client"),
+	}
+	tls := TLSSpec{
+		CASecretName: util.NewType[string]("None"),
+	}
+	t.Run("Valid MasterEndpoint", func(t *testing.T) {
+		err := SyncSpec{
+			Authentication: auth,
+			TLS:            tls,
+			ExternalAccess: SyncExternalAccessSpec{
+				MasterEndpoint: []string{"https://arangodb.xyz:8629"},
+			},
+			Enabled: util.NewType[bool](true),
+		}.Validate(DeploymentModeCluster)
+		assert.Nil(t, err)
+	})
+
+	t.Run("Invalid MasterEndpoint without protocol", func(t *testing.T) {
+		err := SyncSpec{
+			Authentication: auth,
+			TLS:            tls,
+			ExternalAccess: SyncExternalAccessSpec{
+				MasterEndpoint: []string{"example.com:8629"},
+			},
+			Enabled: util.NewType[bool](true),
+		}.Validate(DeploymentModeCluster)
+		assert.Error(t, err)
+		assert.Equal(t, "Invalid scheme 'example.com' in master endpoint 'example.com:8629'", err.Error())
+	})
+}

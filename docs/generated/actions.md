@@ -45,8 +45,11 @@
 |             PVCResized             |    no    |  15m0s  |    no    | Community & Enterprise |                                        Waits for PVC resize to be completed                                        |
 |            PlaceHolder             |    no    |  10m0s  |    no    | Community & Enterprise |                                              Empty placeholder action                                              |
 |          RebalancerCheck           |    no    |  10m0s  |    no    |    Enterprise Only     |                                           Check Rebalancer job progress                                            |
+|         RebalancerCheckV2          |    no    |  10m0s  |    no    | Community & Enterprise |                                           Check Rebalancer job progress                                            |
 |          RebalancerClean           |    no    |  10m0s  |    no    |    Enterprise Only     |                                               Cleans Rebalancer jobs                                               |
+|         RebalancerCleanV2          |    no    |  10m0s  |    no    | Community & Enterprise |                                               Cleans Rebalancer jobs                                               |
 |         RebalancerGenerate         |   yes    |  10m0s  |    no    |    Enterprise Only     |                                           Generates the Rebalancer plan                                            |
+|        RebalancerGenerateV2        |   yes    |  10m0s  |    no    | Community & Enterprise |                                           Generates the Rebalancer plan                                            |
 |       RebuildOutSyncedShards       |    no    | 24h0m0s |    no    | Community & Enterprise |                               Run Rebuild Out Synced Shards procedure for DBServers                                |
 |           RecreateMember           |    no    |  15m0s  |    no    | Community & Enterprise |                                       Recreate member with same ID and Data                                        |
 |    RefreshTLSKeyfileCertificate    |    no    |  30m0s  |    no    |    Enterprise Only     |                                       Recreate Server TLS Certificate secret                                       |
@@ -134,8 +137,11 @@ spec:
       PVCResized: 15m0s
       PlaceHolder: 10m0s
       RebalancerCheck: 10m0s
+      RebalancerCheckV2: 10m0s
       RebalancerClean: 10m0s
+      RebalancerCleanV2: 10m0s
       RebalancerGenerate: 10m0s
+      RebalancerGenerateV2: 10m0s
       RebuildOutSyncedShards: 24h0m0s
       RecreateMember: 15m0s
       RefreshTLSKeyfileCertificate: 30m0s

@@ -355,3 +355,14 @@ func FilterDBServerShardsNotInSync(serverID Server) ShardFilter {
 		return true
 	})
 }
+
+// GetCollectionDatabaseByID find Database name by Collection ID
+func (s State) GetCollectionDatabaseByID(id string) (string, bool) {
+	for db, cols := range s.Current.Collections {
+		if _, ok := cols[id]; ok {
+			return db, true
+		}
+	}
+
+	return "", false
+}

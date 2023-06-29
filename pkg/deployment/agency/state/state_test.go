@@ -303,3 +303,16 @@ func Test_IsDBServerReadyToRestart(t *testing.T) {
 		})
 	}
 }
+
+func Test_GetCollectionDatabaseByID(t *testing.T) {
+	var s DumpState
+	require.NoError(t, json.Unmarshal(agencyDump39, &s))
+
+	v, ok := s.Agency.Arango.GetCollectionDatabaseByID("10013")
+	require.True(t, ok)
+	require.Equal(t, "_system", v)
+
+	v, ok = s.Agency.Arango.GetCollectionDatabaseByID("UNKNOWN")
+	require.False(t, ok)
+	require.Equal(t, "", v)
+}

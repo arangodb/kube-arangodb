@@ -54,3 +54,13 @@ func BoolSwitch[T interface{}](s bool, t, f T) T {
 
 	return f
 }
+
+// InitType initialise object if it is nil pointer
+func InitType[T interface{}](in *T) *T {
+	if in != nil {
+		return in
+	}
+
+	var q T
+	return &q
+}
