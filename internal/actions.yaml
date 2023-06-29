@@ -30,7 +30,10 @@ actions:
     timeout: 30m
     optional: true
   KillMemberPod:
-    description: Execute Delete on Pod 9put pod in Terminating state)
+    description: Execute Delete on Pod (put pod in Terminating state)
+    scopes:
+      - Normal
+      - High
   RotateMember:
     description: Waits for Pod restart and recreation
     timeout: 15m
