@@ -22,3 +22,4 @@
 ## Features
 - [Force rebuild out-synced Shards with broken Merkle Tree](./features/rebuild_out_synced_shards.md)
 - [Failover Leader service](./features/failover_leader_service.md)
+- [Restore defaults from last accepted state of deployment](./features/deployment_spec_defaults.md)
