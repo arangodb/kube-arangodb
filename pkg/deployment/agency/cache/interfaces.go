@@ -24,7 +24,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
+	"github.com/arangodb-helper/go-helper/pkg/arangod/conn"
 )
 
 type LeaderDiscovery interface {

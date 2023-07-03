@@ -38,6 +38,7 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 	recordfake "k8s.io/client-go/tools/record"
 
+	"github.com/arangodb-helper/go-helper/pkg/arangod/conn"
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/jwt"
 
@@ -50,7 +51,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	arangofake "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/fake"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"

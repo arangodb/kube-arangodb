@@ -26,11 +26,11 @@ import (
 	"path"
 	"time"
 
+	"github.com/arangodb-helper/go-helper/pkg/arangod/conn"
 	"github.com/arangodb/go-driver"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 

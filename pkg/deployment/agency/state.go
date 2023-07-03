@@ -24,7 +24,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
+	"github.com/arangodb-helper/go-helper/pkg/arangod/conn"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 

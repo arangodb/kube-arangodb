@@ -23,12 +23,13 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb-helper/go-helper/pkg/arangod/conn"
+
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/acs/sutil"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/member"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 )
 
 type CreateMemberMod func(s *api.DeploymentStatus, g api.ServerGroup, m *api.MemberStatus) error

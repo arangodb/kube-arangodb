@@ -26,6 +26,7 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/arangodb-helper/go-helper/pkg/arangod/conn"
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
 
@@ -33,7 +34,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
