@@ -26,10 +26,13 @@ import (
 	"time"
 
 	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency/cache"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 
 func getLoader[T interface{}]() agencyCache.StateLoader[T] {
 	loader := getLoaderBase[T]()
+
+	loader = TimeoutLoader[T](loader, globals.GetGlobalTimeouts().Agency().Get())
 
 	loader = InvalidateOnErrorLoader[T](loader)
 
@@ -114,6 +117,7 @@ func (s *simpleStateLoader[T]) Refresh(ctx context.Context, discovery agencyCach
 
 	if !s.valid || s.index != cfg.CommitIndex {
 		// Full reload
+
 		state, err := GetAgencyState[T](ctx, conn)
 		if err != nil {
 			return err
