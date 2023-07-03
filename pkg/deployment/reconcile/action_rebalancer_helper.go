@@ -24,8 +24,6 @@ import (
 	"context"
 
 	"github.com/arangodb/go-driver"
-	"github.com/arangodb/rebalancer/pkg/inventory/server"
-	"github.com/arangodb/rebalancer/pkg/inventory/shard"
 )
 
 type RebalanceActions []RebalanceAction
@@ -34,9 +32,9 @@ type RebalanceAction struct {
 	Database   string `json:"database"`
 	Collection string `json:"collection"`
 
-	Shard shard.ID  `json:"shard"`
-	From  server.ID `json:"from"`
-	To    server.ID `json:"to"`
+	Shard string `json:"shard"`
+	From  string `json:"from"`
+	To    string `json:"to"`
 
 	DependsOn []int `json:"depends_on,omitempty"`
 }

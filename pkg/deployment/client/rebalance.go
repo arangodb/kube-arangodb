@@ -26,9 +26,6 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	"github.com/arangodb/rebalancer/pkg/inventory/server"
-	"github.com/arangodb/rebalancer/pkg/inventory/shard"
-
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
@@ -55,9 +52,9 @@ type RebalancePlanResponseResult struct {
 type RebalancePlanMoves []RebalancePlanMove
 
 type RebalancePlanMove struct {
-	From  server.ID `json:"from"`
-	To    server.ID `json:"to"`
-	Shard shard.ID  `json:"shard"`
+	From  string `json:"from"`
+	To    string `json:"to"`
+	Shard string `json:"shard"`
 
 	Collection intstr.IntOrString `json:"collection"`
 }

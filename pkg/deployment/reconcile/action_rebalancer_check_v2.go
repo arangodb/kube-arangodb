@@ -25,9 +25,8 @@ import (
 
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/arangodb/rebalancer/pkg/shared/job"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -56,17 +55,16 @@ func (r actionRebalancerCheckV2) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	client, err := r.actionCtx.GetMembersState().State().GetDatabaseClient()
-	if err != nil {
-		r.log.Err(err).Warn("Unable to get client")
+	cache, ok := r.actionCtx.GetAgencyCache()
+	if !ok {
+		r.log.Debug("AgencyCache is not ready")
 		return true, nil
 	}
 
-	statuses := make([]job.Status, len(rebalancerStatus.MoveJobs))
-	errors := make([]error, len(rebalancerStatus.MoveJobs))
+	statuses := make([]state.JobPhase, len(rebalancerStatus.MoveJobs))
 
 	for id := range rebalancerStatus.MoveJobs {
-		statuses[id], errors[id] = job.GetJobStatus(ctx, client.Connection(), job.Job(rebalancerStatus.MoveJobs[id]))
+		_, statuses[id] = cache.Target.GetJob(state.JobID(rebalancerStatus.MoveJobs[id]))
 	}
 
 	if err := r.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
@@ -75,13 +73,13 @@ func (r actionRebalancerCheckV2) Start(ctx context.Context) (bool, error) {
 		var m []string
 
 		for id := range rebalancerStatus.MoveJobs {
-			if errors[id] != nil {
-				r.log.Err(errors[id]).Warn("Error while moving job")
+			if statuses[id] == state.JobPhaseFailed || statuses[id] == state.JobPhaseUnknown {
+				r.log.Warn("Error while moving job")
 				r.actionCtx.Metrics().GetRebalancer().AddFailures(1)
 				continue
 			}
 
-			if statuses[id] == job.Finished {
+			if statuses[id] == state.JobPhaseFinished {
 				r.actionCtx.Metrics().GetRebalancer().AddSuccesses(1)
 				continue
 			}
