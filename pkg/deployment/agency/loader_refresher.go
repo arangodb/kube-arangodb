@@ -25,7 +25,7 @@ import (
 	"sync"
 	"time"
 
-	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency/cache"
+	agencyCache "github.com/arangodb-helper/go-helper/pkg/arangod/agency/cache"
 )
 
 func RefreshLoader[T interface{}](loader agencyCache.StateLoader[T], delay time.Duration) agencyCache.StateLoader[T] {

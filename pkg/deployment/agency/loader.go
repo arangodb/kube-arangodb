@@ -25,7 +25,9 @@ import (
 	"sync"
 	"time"
 
-	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency/cache"
+	agencyCache "github.com/arangodb-helper/go-helper/pkg/arangod/agency/cache"
+
+	agencyConfig "github.com/arangodb/kube-arangodb/pkg/deployment/agency/config"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 
@@ -36,23 +38,12 @@ func getLoader[T interface{}]() agencyCache.StateLoader[T] {
 
 	loader = InvalidateOnErrorLoader[T](loader)
 
-	loader = DelayLoader[T](loader, agencyCache.GlobalConfig().RefreshDelay)
-	loader = RefreshLoader[T](loader, agencyCache.GlobalConfig().RefreshInterval)
+	loader = DelayLoader[T](loader, agencyConfig.GlobalConfig().RefreshDelay)
+	loader = RefreshLoader[T](loader, agencyConfig.GlobalConfig().RefreshInterval)
 
-	loader = RetryLoader[T](loader, agencyCache.GlobalConfig().Retries)
+	loader = RetryLoader[T](loader, agencyConfig.GlobalConfig().Retries)
 
 	return loader
-}
-
-type StateLoader[T interface{}] interface {
-	State() (*T, uint64, bool)
-
-	Invalidate()
-	Valid() bool
-
-	UpdateTime() time.Time
-
-	Refresh(ctx context.Context, discovery agencyCache.LeaderDiscovery) error
 }
 
 func NewSimpleStateLoader[T interface{}]() agencyCache.StateLoader[T] {
