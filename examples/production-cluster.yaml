@@ -4,5 +4,5 @@ metadata:
   name: "production-cluster"
 spec:
   mode: Cluster
-  image: 'arangodb/arangodb:3.10.6'
+  image: 'arangodb/arangodb:3.10.8'
   environment: Production

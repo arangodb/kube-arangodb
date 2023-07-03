@@ -13,4 +13,4 @@ spec:
     prometheus.io/port: '9101'
     prometheus.io/scrape_interval: '5s'
   mode: Cluster
-  image: 'arangodb/arangodb:3.10.6'
+  image: 'arangodb/arangodb:3.10.8'
