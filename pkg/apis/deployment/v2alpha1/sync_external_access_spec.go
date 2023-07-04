@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -63,8 +63,15 @@ func (s SyncExternalAccessSpec) Validate() error {
 		return errors.WithStack(err)
 	}
 	for _, ep := range s.MasterEndpoint {
-		if _, err := url.Parse(ep); err != nil {
+		if u, err := url.Parse(ep); err != nil {
 			return errors.WithStack(errors.Newf("Failed to parse master endpoint '%s': %s", ep, err))
+		} else {
+			if u.Scheme != "http" && u.Scheme != "https" {
+				return errors.WithStack(errors.Newf("Invalid scheme '%s' in master endpoint '%s'", u.Scheme, ep))
+			}
+			if u.Host == "" {
+				return errors.WithStack(errors.Newf("Missing host in master endpoint '%s'", ep))
+			}
 		}
 	}
 	for _, name := range s.AccessPackageSecretNames {

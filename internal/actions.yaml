@@ -232,6 +232,13 @@ actions:
   RebalancerClean:
     enterprise: true
     description: Cleans Rebalancer jobs
+  RebalancerGenerateV2:
+    description: Generates the Rebalancer plan
+    isInternal: true
+  RebalancerCheckV2:
+    description: Check Rebalancer job progress
+  RebalancerCleanV2:
+    description: Cleans Rebalancer jobs
   ResourceSync:
     description: Runs the Resource sync
   TimezoneSecretSet:

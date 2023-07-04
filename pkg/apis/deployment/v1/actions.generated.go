@@ -105,10 +105,16 @@ const (
 	ActionPlaceHolderDefaultTimeout time.Duration = ActionsDefaultTimeout
 	// ActionRebalancerCheckDefaultTimeout define default timeout for action ActionRebalancerCheck
 	ActionRebalancerCheckDefaultTimeout time.Duration = ActionsDefaultTimeout
+	// ActionRebalancerCheckV2DefaultTimeout define default timeout for action ActionRebalancerCheckV2
+	ActionRebalancerCheckV2DefaultTimeout time.Duration = ActionsDefaultTimeout
 	// ActionRebalancerCleanDefaultTimeout define default timeout for action ActionRebalancerClean
 	ActionRebalancerCleanDefaultTimeout time.Duration = ActionsDefaultTimeout
+	// ActionRebalancerCleanV2DefaultTimeout define default timeout for action ActionRebalancerCleanV2
+	ActionRebalancerCleanV2DefaultTimeout time.Duration = ActionsDefaultTimeout
 	// ActionRebalancerGenerateDefaultTimeout define default timeout for action ActionRebalancerGenerate
 	ActionRebalancerGenerateDefaultTimeout time.Duration = ActionsDefaultTimeout
+	// ActionRebalancerGenerateV2DefaultTimeout define default timeout for action ActionRebalancerGenerateV2
+	ActionRebalancerGenerateV2DefaultTimeout time.Duration = ActionsDefaultTimeout
 	// ActionRebuildOutSyncedShardsDefaultTimeout define default timeout for action ActionRebuildOutSyncedShards
 	ActionRebuildOutSyncedShardsDefaultTimeout time.Duration = 86400 * time.Second // 24h0m0s
 	// ActionRecreateMemberDefaultTimeout define default timeout for action ActionRecreateMember
@@ -266,10 +272,16 @@ const (
 	ActionTypePlaceHolder ActionType = "PlaceHolder"
 	// ActionTypeRebalancerCheck in scopes Normal. Check Rebalancer job progress
 	ActionTypeRebalancerCheck ActionType = "RebalancerCheck"
+	// ActionTypeRebalancerCheckV2 in scopes Normal. Check Rebalancer job progress
+	ActionTypeRebalancerCheckV2 ActionType = "RebalancerCheckV2"
 	// ActionTypeRebalancerClean in scopes Normal. Cleans Rebalancer jobs
 	ActionTypeRebalancerClean ActionType = "RebalancerClean"
+	// ActionTypeRebalancerCleanV2 in scopes Normal. Cleans Rebalancer jobs
+	ActionTypeRebalancerCleanV2 ActionType = "RebalancerCleanV2"
 	// ActionTypeRebalancerGenerate in scopes Normal. Generates the Rebalancer plan
 	ActionTypeRebalancerGenerate ActionType = "RebalancerGenerate"
+	// ActionTypeRebalancerGenerateV2 in scopes Normal. Generates the Rebalancer plan
+	ActionTypeRebalancerGenerateV2 ActionType = "RebalancerGenerateV2"
 	// ActionTypeRebuildOutSyncedShards in scopes High. Run Rebuild Out Synced Shards procedure for DBServers
 	ActionTypeRebuildOutSyncedShards ActionType = "RebuildOutSyncedShards"
 	// ActionTypeRecreateMember in scopes Normal. Recreate member with same ID and Data
@@ -428,10 +440,16 @@ func (a ActionType) DefaultTimeout() time.Duration {
 		return ActionPlaceHolderDefaultTimeout
 	case ActionTypeRebalancerCheck:
 		return ActionRebalancerCheckDefaultTimeout
+	case ActionTypeRebalancerCheckV2:
+		return ActionRebalancerCheckV2DefaultTimeout
 	case ActionTypeRebalancerClean:
 		return ActionRebalancerCleanDefaultTimeout
+	case ActionTypeRebalancerCleanV2:
+		return ActionRebalancerCleanV2DefaultTimeout
 	case ActionTypeRebalancerGenerate:
 		return ActionRebalancerGenerateDefaultTimeout
+	case ActionTypeRebalancerGenerateV2:
+		return ActionRebalancerGenerateV2DefaultTimeout
 	case ActionTypeRebuildOutSyncedShards:
 		return ActionRebuildOutSyncedShardsDefaultTimeout
 	case ActionTypeRecreateMember:
@@ -594,9 +612,15 @@ func (a ActionType) Priority() ActionPriority {
 		return ActionPriorityNormal
 	case ActionTypeRebalancerCheck:
 		return ActionPriorityNormal
+	case ActionTypeRebalancerCheckV2:
+		return ActionPriorityNormal
 	case ActionTypeRebalancerClean:
 		return ActionPriorityNormal
+	case ActionTypeRebalancerCleanV2:
+		return ActionPriorityNormal
 	case ActionTypeRebalancerGenerate:
+		return ActionPriorityNormal
+	case ActionTypeRebalancerGenerateV2:
 		return ActionPriorityNormal
 	case ActionTypeRebuildOutSyncedShards:
 		return ActionPriorityHigh
@@ -681,6 +705,8 @@ func (a ActionType) Priority() ActionPriority {
 func (a ActionType) Internal() bool {
 	switch a {
 	case ActionTypeRebalancerGenerate:
+		return true
+	case ActionTypeRebalancerGenerateV2:
 		return true
 	default:
 		return false
@@ -770,9 +796,15 @@ func (a ActionType) Optional() bool {
 		return false
 	case ActionTypeRebalancerCheck:
 		return false
+	case ActionTypeRebalancerCheckV2:
+		return false
 	case ActionTypeRebalancerClean:
 		return false
+	case ActionTypeRebalancerCleanV2:
+		return false
 	case ActionTypeRebalancerGenerate:
+		return false
+	case ActionTypeRebalancerGenerateV2:
 		return false
 	case ActionTypeRebuildOutSyncedShards:
 		return false

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +19,8 @@
 //
 
 package v1
+
+const ArangoDeploymentRebalancerDefaultParallelMoves = 32
 
 type ArangoDeploymentRebalancerSpec struct {
 	Enabled *bool `json:"enabled"`
@@ -42,19 +44,21 @@ func (a *ArangoDeploymentRebalancerSpec) IsEnabled() bool {
 	return *a.Enabled
 }
 
-func (a *ArangoDeploymentRebalancerSpec) GetParallelMoves(d int) int {
+func (a *ArangoDeploymentRebalancerSpec) GetParallelMoves() int {
 	if !a.IsEnabled() {
-		return d
+		return ArangoDeploymentRebalancerDefaultParallelMoves
 	}
 
 	if a == nil || a.ParallelMoves == nil {
-		return d
+		return ArangoDeploymentRebalancerDefaultParallelMoves
 	}
 
 	return *a.ParallelMoves
 }
 
 type ArangoDeploymentRebalancerReadersSpec struct {
+	// deprecated does not work in Rebalancer V2
+	// Count Enable Shard Count machanism
 	Count *bool `json:"count,omitempty"`
 }
 

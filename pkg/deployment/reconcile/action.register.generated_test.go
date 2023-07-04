@@ -430,6 +430,16 @@ func Test_Actions(t *testing.T) {
 		})
 	})
 
+	t.Run("RebalancerCheckV2", func(t *testing.T) {
+		ActionsExistence(t, api.ActionTypeRebalancerCheckV2)
+		t.Run("Internal", func(t *testing.T) {
+			require.False(t, api.ActionTypeRebalancerCheckV2.Internal())
+		})
+		t.Run("Optional", func(t *testing.T) {
+			require.False(t, api.ActionTypeRebalancerCheckV2.Optional())
+		})
+	})
+
 	t.Run("RebalancerClean", func(t *testing.T) {
 		ActionsExistence(t, api.ActionTypeRebalancerClean)
 		t.Run("Internal", func(t *testing.T) {
@@ -440,6 +450,16 @@ func Test_Actions(t *testing.T) {
 		})
 	})
 
+	t.Run("RebalancerCleanV2", func(t *testing.T) {
+		ActionsExistence(t, api.ActionTypeRebalancerCleanV2)
+		t.Run("Internal", func(t *testing.T) {
+			require.False(t, api.ActionTypeRebalancerCleanV2.Internal())
+		})
+		t.Run("Optional", func(t *testing.T) {
+			require.False(t, api.ActionTypeRebalancerCleanV2.Optional())
+		})
+	})
+
 	t.Run("RebalancerGenerate", func(t *testing.T) {
 		ActionsExistence(t, api.ActionTypeRebalancerGenerate)
 		t.Run("Internal", func(t *testing.T) {
@@ -447,6 +467,16 @@ func Test_Actions(t *testing.T) {
 		})
 		t.Run("Optional", func(t *testing.T) {
 			require.False(t, api.ActionTypeRebalancerGenerate.Optional())
+		})
+	})
+
+	t.Run("RebalancerGenerateV2", func(t *testing.T) {
+		ActionsExistence(t, api.ActionTypeRebalancerGenerateV2)
+		t.Run("Internal", func(t *testing.T) {
+			require.True(t, api.ActionTypeRebalancerGenerateV2.Internal())
+		})
+		t.Run("Optional", func(t *testing.T) {
+			require.False(t, api.ActionTypeRebalancerGenerateV2.Optional())
 		})
 	})
 
