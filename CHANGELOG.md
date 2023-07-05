@@ -7,6 +7,7 @@
 - (Bugfix) Fix agency timeout
 - (Improvement) Extract Agency Timeout
 - (Feature) Rebalancer V2
+- (Bugfix) Fix for ContextExceeded error during backup upload
 
 ## [1.2.30](https://github.com/arangodb/kube-arangodb/tree/1.2.30) (2023-06-16)
 - (Feature) AgencyCache Interface
@@ -84,7 +85,6 @@
 - (Bugfix) Ensure PDBs Consistency
 - (Bugfix) Fix LocalStorage WaitForFirstConsumer mode
 - (Bugfix) Fix Tolerations propagation in case of toleration removal
-- (Bugfix) Fix for ContextExceeded error during backup upload
 
 ## [1.2.22](https://github.com/arangodb/kube-arangodb/tree/1.2.22) (2022-12-13)
 - (Bugfix) Do not manage ports in managed ExternalAccess mode

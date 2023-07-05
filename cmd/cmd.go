@@ -216,6 +216,8 @@ func init() {
 	f.DurationVar(&operatorTimeouts.reconciliation, "timeout.reconciliation", globals.DefaultReconciliationTimeout, "The reconciliation timeout to the ArangoDB CR")
 	f.DurationVar(&operatorTimeouts.shardRebuild, "timeout.shard-rebuild", globals.DefaultOutSyncedShardRebuildTimeout, "Timeout after which particular out-synced shard is considered as failed and rebuild is triggered")
 	f.DurationVar(&operatorTimeouts.shardRebuildRetry, "timeout.shard-rebuild-retry", globals.DefaultOutSyncedShardRebuildRetryTimeout, "Timeout after which rebuild shards retry flow is triggered")
+	f.DurationVar(&operatorTimeouts.shardRebuildRetry, "timeout.backup-arangod", globals.BackupDefaultArangoClientTimeout, "The request timeout to the ArangoDB during backup calls")
+	f.DurationVar(&operatorTimeouts.shardRebuildRetry, "timeout.backup-upload", globals.BackupUploadArangoClientTimeout, "The request timeout to the ArangoDB during uploading files")
 	f.DurationVar(&shutdownOptions.delay, "shutdown.delay", defaultShutdownDelay, "The delay before running shutdown handlers")
 	f.DurationVar(&shutdownOptions.timeout, "shutdown.timeout", defaultShutdownTimeout, "Timeout for shutdown handlers")
 	f.BoolVar(&operatorOptions.scalingIntegrationEnabled, "internal.scaling-integration", false, "Enable Scaling Integration")
