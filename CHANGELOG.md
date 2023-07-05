@@ -8,6 +8,7 @@
 - (Improvement) Extract Agency Timeout
 - (Feature) Rebalancer V2
 - (Bugfix) Fix for ContextExceeded error during backup upload
+- (Feature) Version Check V2
 
 ## [1.2.30](https://github.com/arangodb/kube-arangodb/tree/1.2.30) (2023-06-16)
 - (Feature) AgencyCache Interface
