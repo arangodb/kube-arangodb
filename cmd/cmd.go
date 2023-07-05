@@ -155,13 +155,15 @@ var (
 		concurrentUploads int
 	}
 	operatorTimeouts struct {
-		k8s               time.Duration
-		arangoD           time.Duration
-		arangoDCheck      time.Duration
-		reconciliation    time.Duration
-		agency            time.Duration
-		shardRebuild      time.Duration
-		shardRebuildRetry time.Duration
+		k8s                 time.Duration
+		arangoD             time.Duration
+		arangoDCheck        time.Duration
+		reconciliation      time.Duration
+		agency              time.Duration
+		shardRebuild        time.Duration
+		shardRebuildRetry   time.Duration
+		backupArangoD       time.Duration
+		backupUploadArangoD time.Duration
 	}
 	chaosOptions struct {
 		allowed bool
@@ -216,8 +218,8 @@ func init() {
 	f.DurationVar(&operatorTimeouts.reconciliation, "timeout.reconciliation", globals.DefaultReconciliationTimeout, "The reconciliation timeout to the ArangoDB CR")
 	f.DurationVar(&operatorTimeouts.shardRebuild, "timeout.shard-rebuild", globals.DefaultOutSyncedShardRebuildTimeout, "Timeout after which particular out-synced shard is considered as failed and rebuild is triggered")
 	f.DurationVar(&operatorTimeouts.shardRebuildRetry, "timeout.shard-rebuild-retry", globals.DefaultOutSyncedShardRebuildRetryTimeout, "Timeout after which rebuild shards retry flow is triggered")
-	f.DurationVar(&operatorTimeouts.shardRebuildRetry, "timeout.backup-arangod", globals.BackupDefaultArangoClientTimeout, "The request timeout to the ArangoDB during backup calls")
-	f.DurationVar(&operatorTimeouts.shardRebuildRetry, "timeout.backup-upload", globals.BackupUploadArangoClientTimeout, "The request timeout to the ArangoDB during uploading files")
+	f.DurationVar(&operatorTimeouts.backupArangoD, "timeout.backup-arangod", globals.BackupDefaultArangoClientTimeout, "The request timeout to the ArangoDB during backup calls")
+	f.DurationVar(&operatorTimeouts.backupUploadArangoD, "timeout.backup-upload", globals.BackupUploadArangoClientTimeout, "The request timeout to the ArangoDB during uploading files")
 	f.DurationVar(&shutdownOptions.delay, "shutdown.delay", defaultShutdownDelay, "The delay before running shutdown handlers")
 	f.DurationVar(&shutdownOptions.timeout, "shutdown.timeout", defaultShutdownTimeout, "Timeout for shutdown handlers")
 	f.BoolVar(&operatorOptions.scalingIntegrationEnabled, "internal.scaling-integration", false, "Enable Scaling Integration")
@@ -269,6 +271,9 @@ func executeMain(cmd *cobra.Command, args []string) {
 	globals.GetGlobalTimeouts().Reconciliation().Set(operatorTimeouts.reconciliation)
 	globals.GetGlobalTimeouts().ShardRebuild().Set(operatorTimeouts.shardRebuild)
 	globals.GetGlobalTimeouts().ShardRebuildRetry().Set(operatorTimeouts.shardRebuildRetry)
+	globals.GetGlobalTimeouts().BackupArangoClientTimeout().Set(operatorTimeouts.backupArangoD)
+	globals.GetGlobalTimeouts().BackupArangoClientUploadTimeout().Set(operatorTimeouts.backupUploadArangoD)
+
 	globals.GetGlobals().Kubernetes().RequestBatchSize().Set(operatorKubernetesOptions.maxBatchSize)
 	globals.GetGlobals().Backup().ConcurrentUploads().Set(operatorBackup.concurrentUploads)
 

@@ -89,7 +89,7 @@ func (ac *arangoClientBackupImpl) Create() (ArangoBackupCreateResponse, error) {
 		}
 	}
 
-	ctx, cancel := globals.GetGlobalTimeouts().BackupArangoClientTimeout().WithTimeout(context.Background())
+	ctx, cancel := context.WithTimeout(context.Background(), dt)
 	defer cancel()
 
 	id, resp, err := ac.driver.Backup().Create(ctx, &co)
