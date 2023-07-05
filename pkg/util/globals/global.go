@@ -29,6 +29,9 @@ const (
 	DefaultArangoDCheckTimeout   = time.Second * 2
 	DefaultReconciliationTimeout = time.Minute
 
+	BackupDefaultArangoClientTimeout = 30 * time.Second
+	BackupUploadArangoClientTimeout  = 300 * time.Second
+
 	// DefaultOutSyncedShardRebuildTimeout
 	// timeout after which particular out-synced shard is considered as failed and rebuild is triggered
 	DefaultOutSyncedShardRebuildTimeout = time.Minute * 60
@@ -42,13 +45,15 @@ const (
 
 var globalObj = &globals{
 	timeouts: &globalTimeouts{
-		requests:          NewTimeout(DefaultKubernetesTimeout),
-		arangod:           NewTimeout(DefaultArangoDTimeout),
-		arangodCheck:      NewTimeout(DefaultArangoDCheckTimeout),
-		reconciliation:    NewTimeout(DefaultReconciliationTimeout),
-		agency:            NewTimeout(DefaultArangoDAgencyTimeout),
-		shardRebuild:      NewTimeout(DefaultOutSyncedShardRebuildTimeout),
-		shardRebuildRetry: NewTimeout(DefaultOutSyncedShardRebuildRetryTimeout),
+		requests:                        NewTimeout(DefaultKubernetesTimeout),
+		arangod:                         NewTimeout(DefaultArangoDTimeout),
+		arangodCheck:                    NewTimeout(DefaultArangoDCheckTimeout),
+		reconciliation:                  NewTimeout(DefaultReconciliationTimeout),
+		agency:                          NewTimeout(DefaultArangoDAgencyTimeout),
+		shardRebuild:                    NewTimeout(DefaultOutSyncedShardRebuildTimeout),
+		shardRebuildRetry:               NewTimeout(DefaultOutSyncedShardRebuildRetryTimeout),
+		backupArangoClientTimeout:       NewTimeout(BackupDefaultArangoClientTimeout),
+		backupArangoClientUploadTimeout: NewTimeout(BackupUploadArangoClientTimeout),
 	},
 	kubernetes: &globalKubernetes{
 		requestBatchSize: NewInt64(DefaultKubernetesRequestBatchSize),
@@ -123,10 +128,15 @@ type GlobalTimeouts interface {
 	ArangoD() Timeout
 	ArangoDCheck() Timeout
 	Agency() Timeout
+
+	BackupArangoClientTimeout() Timeout
+	BackupArangoClientUploadTimeout() Timeout
 }
 
 type globalTimeouts struct {
 	requests, arangod, reconciliation, arangodCheck, agency, shardRebuild, shardRebuildRetry Timeout
+	backupArangoClientTimeout                                                                Timeout
+	backupArangoClientUploadTimeout                                                          Timeout
 }
 
 func (g *globalTimeouts) Agency() Timeout {
@@ -155,4 +165,12 @@ func (g *globalTimeouts) ArangoD() Timeout {
 
 func (g *globalTimeouts) Kubernetes() Timeout {
 	return g.requests
+}
+
+func (g *globalTimeouts) BackupArangoClientTimeout() Timeout {
+	return g.backupArangoClientTimeout
+}
+
+func (g *globalTimeouts) BackupArangoClientUploadTimeout() Timeout {
+	return g.backupArangoClientUploadTimeout
 }

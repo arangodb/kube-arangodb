@@ -53,8 +53,6 @@ func RegisterInformer(operator operator.Operator, recorder event.Recorder, clien
 		eventRecorder: newEventInstance(recorder),
 
 		operator: operator,
-
-		arangoClientTimeout: defaultArangoClientTimeout,
 	}
 	h.arangoClientFactory = newArangoClientBackupFactory(h)
 

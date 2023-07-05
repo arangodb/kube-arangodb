@@ -63,7 +63,7 @@ func newArangoClientBackupFactory(handler *handler) ArangoClientFactory {
 }
 
 func (ac *arangoClientBackupImpl) List() (map[driver.BackupID]driver.BackupMeta, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), defaultArangoClientTimeout)
+	ctx, cancel := globals.GetGlobalTimeouts().BackupArangoClientTimeout().WithTimeout(context.Background())
 	defer cancel()
 
 	backups, err := ac.driver.Backup().List(ctx, nil)
@@ -75,7 +75,7 @@ func (ac *arangoClientBackupImpl) List() (map[driver.BackupID]driver.BackupMeta,
 }
 
 func (ac *arangoClientBackupImpl) Create() (ArangoBackupCreateResponse, error) {
-	dt := defaultArangoClientTimeout
+	dt := globals.GetGlobalTimeouts().BackupArangoClientTimeout().Get()
 
 	co := driver.BackupCreateOptions{}
 
@@ -110,7 +110,7 @@ func (ac *arangoClientBackupImpl) Create() (ArangoBackupCreateResponse, error) {
 }
 
 func (ac *arangoClientBackupImpl) Get(backupID driver.BackupID) (driver.BackupMeta, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), defaultArangoClientTimeout)
+	ctx, cancel := globals.GetGlobalTimeouts().BackupArangoClientTimeout().WithTimeout(context.Background())
 	defer cancel()
 
 	// list, err := ac.driver.Backup().List(ctx, &driver.BackupListOptions{ID: backupID})
@@ -148,7 +148,7 @@ func (ac *arangoClientBackupImpl) getCredentialsFromSecret(ctx context.Context, 
 }
 
 func (ac *arangoClientBackupImpl) Upload(backupID driver.BackupID) (driver.BackupTransferJobID, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), defaultArangoClientTimeout)
+	ctx, cancel := globals.GetGlobalTimeouts().BackupArangoClientUploadTimeout().WithTimeout(context.Background())
 	defer cancel()
 
 	uploadSpec := ac.backup.Spec.Upload
@@ -165,7 +165,7 @@ func (ac *arangoClientBackupImpl) Upload(backupID driver.BackupID) (driver.Backu
 }
 
 func (ac *arangoClientBackupImpl) Download(backupID driver.BackupID) (driver.BackupTransferJobID, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), defaultArangoClientTimeout)
+	ctx, cancel := globals.GetGlobalTimeouts().BackupArangoClientUploadTimeout().WithTimeout(context.Background())
 	defer cancel()
 
 	downloadSpec := ac.backup.Spec.Download
@@ -182,7 +182,7 @@ func (ac *arangoClientBackupImpl) Download(backupID driver.BackupID) (driver.Bac
 }
 
 func (ac *arangoClientBackupImpl) Progress(jobID driver.BackupTransferJobID) (ArangoBackupProgress, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), defaultArangoClientTimeout)
+	ctx, cancel := globals.GetGlobalTimeouts().BackupArangoClientTimeout().WithTimeout(context.Background())
 	defer cancel()
 
 	report, err := ac.driver.Backup().Progress(ctx, jobID)
@@ -243,14 +243,14 @@ func (ac *arangoClientBackupImpl) Exists(backupID driver.BackupID) (bool, error)
 }
 
 func (ac *arangoClientBackupImpl) Delete(backupID driver.BackupID) error {
-	ctx, cancel := context.WithTimeout(context.Background(), defaultArangoClientTimeout)
+	ctx, cancel := globals.GetGlobalTimeouts().BackupArangoClientTimeout().WithTimeout(context.Background())
 	defer cancel()
 
 	return ac.driver.Backup().Delete(ctx, backupID)
 }
 
 func (ac *arangoClientBackupImpl) Abort(jobID driver.BackupTransferJobID) error {
-	ctx, cancel := context.WithTimeout(context.Background(), defaultArangoClientTimeout)
+	ctx, cancel := globals.GetGlobalTimeouts().BackupArangoClientTimeout().WithTimeout(context.Background())
 	defer cancel()
 
 	return ac.driver.Backup().Abort(ctx, jobID)
