@@ -50,9 +50,6 @@ import (
 var logger = logging.Global().RegisterAndGetLogger("backup-operator", logging.Info)
 
 const (
-	defaultArangoClientTimeout      = 30 * time.Second
-	backupUploadArangoClientTimeout = 300 * time.Second
-
 	retryCount = 25
 	retryDelay = time.Second
 
@@ -73,7 +70,6 @@ type handler struct {
 	eventRecorder event.RecorderInstance
 
 	arangoClientFactory ArangoClientFactory
-	arangoClientTimeout time.Duration
 
 	operator operator.Operator
 }

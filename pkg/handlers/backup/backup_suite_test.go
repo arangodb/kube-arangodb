@@ -52,11 +52,9 @@ func newFakeHandler() *handler {
 	k := fake.NewSimpleClientset()
 
 	return &handler{
-		client:     f,
-		kubeClient: k,
-
-		arangoClientTimeout: defaultArangoClientTimeout,
-		eventRecorder:       newEventInstance(event.NewEventRecorder("mock", k)),
+		client:        f,
+		kubeClient:    k,
+		eventRecorder: newEventInstance(event.NewEventRecorder("mock", k)),
 	}
 }
 
