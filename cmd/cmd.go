@@ -242,6 +242,10 @@ func Execute() int {
 	flag.CommandLine.AddGoFlagSet(goflag.CommandLine)
 
 	if err := cmdMain.Execute(); err != nil {
+		if v, ok := err.(CommandExitCode); ok {
+			return v.ExitCode
+		}
+
 		return 1
 	}
 

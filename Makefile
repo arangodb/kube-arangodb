@@ -506,6 +506,7 @@ run-unit-tests: $(SOURCES)
 		$(REPOPATH)/pkg/storage \
 	    $(REPOPATH)/pkg/crd/... \
 		$(REPOPATH)/pkg/util/... \
+		$(REPOPATH)/cmd/... \
 		$(REPOPATH)/pkg/handlers/...
 
 # Release building

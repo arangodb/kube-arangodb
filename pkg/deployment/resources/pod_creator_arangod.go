@@ -470,21 +470,27 @@ func (m *MemberArangoDPod) GetInitContainers(cachedStatus interfaces.Inspector) 
 
 		// VersionCheck Container
 		{
-			versionArgs := pod.UpgradeVersionCheck().Args(m.AsInput())
-			if len(versionArgs) > 0 {
-				upgradeContainer := &ArangoVersionCheckContainer{
-					m.GetContainerCreator(),
-					cachedStatus,
-					m.AsInput(),
-					versionArgs,
-				}
+			switch m.group {
+			case api.ServerGroupAgents, api.ServerGroupDBServers, api.ServerGroupSingle:
+				if features.UpgradeVersionCheckV2().Enabled() {
+					c := k8sutil.ArangodVersionCheckInitContainer(api.ServerGroupReservedInitContainerNameVersionCheck, executable, m.resources.context.GetOperatorImage(),
+						m.imageInfo.ArangoDBVersion, m.groupSpec.SecurityContext.NewSecurityContext())
+					initContainers = append(initContainers, c)
+				} else if features.UpgradeVersionCheck().Enabled() {
+					upgradeContainer := &ArangoVersionCheckContainer{
+						m.GetContainerCreator(),
+						cachedStatus,
+						m.AsInput(),
+						pod.UpgradeVersionCheck().Args(m.AsInput()),
+					}
 
-				c, err := k8sutil.NewContainer(upgradeContainer)
-				if err != nil {
-					return nil, err
-				}
+					c, err := k8sutil.NewContainer(upgradeContainer)
+					if err != nil {
+						return nil, err
+					}
 
-				initContainers = append(initContainers, c)
+					initContainers = append(initContainers, c)
+				}
 			}
 		}
 	}
