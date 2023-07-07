@@ -38,7 +38,7 @@ var upgradeVersionCheckV2 Feature = &feature{
 	description:        "Enable initContainer with pre version check based by Operator",
 	version:            "3.6.0",
 	enterpriseRequired: false,
-	enabledByDefault:   true,
+	enabledByDefault:   false,
 }
 
 func UpgradeVersionCheck() Feature {
