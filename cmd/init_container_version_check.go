@@ -83,7 +83,7 @@ func (c *cmdVersionCheckInitContainersInputStruct) Run(cmd *cobra.Command, args 
 			}
 		}
 
-		log.Msg("Version check complete")
+		log.Info().Msg("Version check complete")
 
 		return nil
 	}
