@@ -58,7 +58,7 @@ func init() {
 	f.IntVar(&cmdVersionCheckInitContainersInput.minor, "minor", 0, "Minor version of the ArangoDB. 0 if check is disabled")
 }
 
-func (c cmdVersionCheckInitContainersInputStruct) Run(cmd *cobra.Command, args []string) error {
+func (c *cmdVersionCheckInitContainersInputStruct) Run(cmd *cobra.Command, args []string) error {
 	if c.versionPath == "" {
 		return errors.Errorf("Path cannot be empty")
 	}
@@ -82,6 +82,8 @@ func (c cmdVersionCheckInitContainersInputStruct) Run(cmd *cobra.Command, args [
 				}
 			}
 		}
+
+		log.Info().Msg("Version check complete")
 
 		return nil
 	}
