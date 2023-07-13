@@ -72,6 +72,7 @@ covers individual newer features separately.
 | [Failover Leader service](docs/design/features/failover_leader_service.md)           | 1.2.13           | >= 3.7.0         | Community, Enterprise | 1.2.13     | Production   | False   | --deployment.feature.failover-leadership              | N/A                                                                      |
 | [Spec Default Restore](docs/design/features/deployment_spec_defaults.md)             | 1.2.21           | >= 3.7.0         | Community, Enterprise | 1.2.21     | Beta         | True    | --deployment.feature.deployment-spec-defaults-restore | If set to False Operator will not change ArangoDeployment Spec           |
 | [Force Rebuild Out Synced Shards](docs/design/features/rebuild_out_synced_shards.md) | 1.2.27           | >= 3.8.0         | Community, Enterprise | 1.2.27     | Beta         | False   | --deployment.feature.force-rebuild-out-synced-shards  | It should be used only if user is aware of the risks.                    |
+| [Rebalancer V2](docs/design/features/rebalancer_v2.md)                               | 1.2.31           | >= 3.10.0        | Community, Enterprise | 1.2.31     | Alpha        | False   | --deployment.feature.rebalancer-v2                    | N/A                                                                      |
 
 ## Operator Community Edition (CE)
 
