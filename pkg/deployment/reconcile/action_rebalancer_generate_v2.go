@@ -104,8 +104,8 @@ func (r actionRebalancerGenerateV2) Start(ctx context.Context) (bool, error) {
 				Database:   db,
 				Collection: move.Collection.String(),
 				Shard:      move.Shard,
-				From:       move.To,
-				To:         move.From,
+				From:       move.From,
+				To:         move.To,
 			}
 		}
 
