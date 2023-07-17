@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.2.31](https://github.com/arangodb/kube-arangodb/tree/1.2.31) (2023-07-14)
 - (Improvement) Block traffic on the services if there is more than 1 active leader in ActiveFailover mode
 - (Improvement) Improve master endpoint validation.
 - (Feature) Agency Improvements
@@ -10,6 +12,7 @@
 - (Bugfix) Fix for ContextExceeded error during backup upload
 - (Feature) Version Check V2
 - (Bugfix) Disable VersionCheck V2 by default
+- (Bugfix) Fix Rebalancer V2 Job (From/To)
 
 ## [1.2.30](https://github.com/arangodb/kube-arangodb/tree/1.2.30) (2023-06-16)
 - (Feature) AgencyCache Interface
