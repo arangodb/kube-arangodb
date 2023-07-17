@@ -45,7 +45,7 @@ const (
 )
 
 var ArangoBackupStateMap = state.Map{
-	ArangoBackupStateNone:          {ArangoBackupStatePending},
+	ArangoBackupStateNone:          {ArangoBackupStatePending, ArangoBackupStateFailed},
 	ArangoBackupStatePending:       {ArangoBackupStateScheduled, ArangoBackupStateFailed},
 	ArangoBackupStateScheduled:     {ArangoBackupStateDownload, ArangoBackupStateCreate, ArangoBackupStateFailed},
 	ArangoBackupStateDownload:      {ArangoBackupStateDownloading, ArangoBackupStateFailed, ArangoBackupStateDownloadError},

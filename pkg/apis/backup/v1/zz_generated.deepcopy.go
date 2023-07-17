@@ -284,6 +284,11 @@ func (in *ArangoBackupSpec) DeepCopyInto(out *ArangoBackupSpec) {
 		*out = new(ArangoBackupSpecBackOff)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.Lifetime != nil {
+		in, out := &in.Lifetime, &out.Lifetime
+		*out = new(metav1.Duration)
+		**out = **in
+	}
 	return
 }
 

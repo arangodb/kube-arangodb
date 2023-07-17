@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,8 @@
 package backup
 
 import (
+	"time"
+
 	"github.com/arangodb/go-driver"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
@@ -54,6 +56,20 @@ func stateReadyHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.A
 		return wrapUpdateStatus(backup,
 			updateStatusAvailable(true),
 		)
+	}
+
+	if backup.Spec.Lifetime != nil {
+		if backupMeta.DateTime.Add(backup.Spec.Lifetime.Duration).Before(time.Now()) {
+			err = client.Delete(driver.BackupID(backup.Status.Backup.ID))
+			if err != nil {
+				return nil, err
+			}
+
+			return wrapUpdateStatus(backup,
+				updateStatusState(backupApi.ArangoBackupStateDeleted, "Backup expired by lifetime"),
+				updateStatusAvailable(false),
+			)
+		}
 	}
 
 	var available = backupMeta.Available
