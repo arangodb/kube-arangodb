@@ -9,12 +9,12 @@ Operator will use above functionality to check shard movement plan and enforce i
 
 ## How to use
 
-To enable this feature use `--deployment.feature.rabalancer-v2` arg, which needs be passed to the operator:
+To enable this feature use `--deployment.feature.rebalancer-v2` arg, which needs be passed to the operator:
 
 ```shell
 helm upgrade --install kube-arangodb \
 https://github.com/arangodb/kube-arangodb/releases/download/$VER/kube-arangodb-$VER.tgz \
-  --set "operator.args={--deployment.feature.rabalancer-v2}"
+  --set "operator.args={--deployment.feature.rebalancer-v2}"
 ```
 
 To enable Rebalancer in ArangoDeployment:
