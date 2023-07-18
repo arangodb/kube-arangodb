@@ -21,6 +21,8 @@
 package features
 
 import (
+	"sort"
+
 	"github.com/arangodb/go-driver"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -32,11 +34,30 @@ const (
 	Disabled = "false"
 )
 
+type Features []Feature
+
+func (f Features) Get(name string) (Feature, bool) {
+	for _, feature := range features {
+		if feature.Name() == name {
+			return feature, true
+		}
+	}
+
+	return nil, false
+}
+
+func (f Features) Sort() {
+	sort.Slice(f, func(i, j int) bool {
+		return f[i].Name() < f[j].Name()
+	})
+}
+
 var _ Feature = &feature{}
 
 type Feature interface {
 	Name() string
 	Description() string
+	Dependencies() []Feature
 	Version() driver.Version
 	EnterpriseRequired() bool
 	OperatorEnterpriseRequired() bool
@@ -56,6 +77,19 @@ type feature struct {
 	deprecated                                                                string
 	constValue                                                                *bool
 	hidden                                                                    bool
+	dependencies                                                              []Feature
+}
+
+func (f feature) Dependencies() []Feature {
+	if len(f.dependencies) == 0 {
+		return nil
+	}
+
+	q := make([]Feature, len(f.dependencies))
+
+	copy(q, f.dependencies)
+
+	return q
 }
 
 func (f feature) ImageSupported(i *api.ImageInfo) bool {
@@ -78,6 +112,12 @@ func (f feature) Enabled() bool {
 	if f.operatorEnterpriseRequired {
 		// Operator Enterprise is required for this feature
 		if !version.GetVersionV1().IsEnterprise() {
+			return false
+		}
+	}
+
+	for _, dep := range f.dependencies {
+		if !dep.Enabled() {
 			return false
 		}
 	}
