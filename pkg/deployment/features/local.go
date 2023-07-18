@@ -23,6 +23,7 @@ package features
 import (
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/spf13/cobra"
@@ -34,7 +35,7 @@ import (
 
 const prefixArg = "deployment.feature"
 
-var features = map[string]Feature{}
+var features Features
 var featuresLock sync.Mutex
 var enableAll = false
 
@@ -42,15 +43,13 @@ func registerFeature(f Feature) {
 	featuresLock.Lock()
 	defer featuresLock.Unlock()
 
-	if f == nil {
-		panic("Feature cannot be nil")
-	}
-
-	if _, ok := features[f.Name()]; ok {
+	if _, ok := features.Get(f.Name()); ok {
 		panic("Feature already registered")
 	}
 
-	features[f.Name()] = f
+	features = append(features, f)
+
+	features.Sort()
 }
 
 var internalCMD = &cobra.Command{
@@ -67,8 +66,8 @@ func Iterate(iterator Iterator) {
 	featuresLock.Lock()
 	defer featuresLock.Unlock()
 
-	for name, feature := range features {
-		iterator(name, feature)
+	for _, feature := range features {
+		iterator(feature.Name(), feature)
 	}
 }
 
@@ -130,6 +129,13 @@ func cmdRun(_ *cobra.Command, _ []string) {
 	for _, feature := range features {
 		println(fmt.Sprintf("Feature: %s", feature.Name()))
 		println(fmt.Sprintf("Description: %s", feature.Description()))
+		if deps := feature.Dependencies(); len(deps) > 0 {
+			names := make([]string, len(deps))
+			for id := range names {
+				names[id] = deps[id].Name()
+			}
+			println(fmt.Sprintf("Dependencies: %s", strings.Join(names, ", ")))
+		}
 		if feature.EnabledByDefault() {
 			println("Enabled: true")
 		} else {
@@ -155,6 +161,7 @@ func cmdRun(_ *cobra.Command, _ []string) {
 
 // Supported returns false when:
 // - feature is disabled.
+// - any feature dependency is disabled.
 // - a given version is lower than minimum feature version.
 // - feature expects enterprise but a given enterprise arg is not true.
 func Supported(f Feature, v driver.Version, enterprise bool) bool {
@@ -165,6 +172,12 @@ func Supported(f Feature, v driver.Version, enterprise bool) bool {
 	if f.EnterpriseRequired() && !enterprise {
 		// This feature requires enterprise version but current version is not enterprise.
 		return false
+	}
+
+	for _, dependency := range f.Dependencies() {
+		if !Supported(dependency, v, enterprise) {
+			return false
+		}
 	}
 
 	return v.CompareTo(f.Version()) >= 0

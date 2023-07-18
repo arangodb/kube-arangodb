@@ -41,6 +41,8 @@ var optionalGracefulShutdown = &feature{
 	enterpriseRequired: false,
 	enabledByDefault:   false,
 	hidden:             true,
+
+	dependencies: []Feature{gracefulShutdown},
 }
 
 func GracefulShutdown() Feature {

@@ -304,9 +304,12 @@ func executeMain(cmd *cobra.Command, args []string) {
 
 	podNameParts := strings.Split(name, "-")
 	operatorID := podNameParts[len(podNameParts)-1]
-	logging.Global().RegisterWrappers(func(in *zerolog.Event) *zerolog.Event {
-		return in.Str("operator-id", operatorID)
-	})
+
+	if operatorID != "" {
+		logging.Global().RegisterWrappers(func(in *zerolog.Event) *zerolog.Event {
+			return in.Str("operator-id", operatorID)
+		})
+	}
 
 	logger.Info("nice to meet you")
 
