@@ -110,7 +110,7 @@ func (a *ArangoSyncContainer) GetExecutor() string {
 }
 
 func (a *ArangoSyncContainer) GetSecurityContext() *core.SecurityContext {
-	return a.groupSpec.SecurityContext.NewSecurityContext()
+	return k8sutil.CreateSecurityContext(a.groupSpec.SecurityContext)
 }
 
 func (a *ArangoSyncContainer) GetProbes() (*core.Probe, *core.Probe, *core.Probe, error) {
@@ -291,8 +291,8 @@ func (m *MemberSyncPod) GetInitContainers(cachedStatus interfaces.Inspector) ([]
 	}
 
 	{
-		c, err := k8sutil.InitLifecycleContainer(m.resources.context.GetOperatorImage(), &m.spec.Lifecycle.Resources,
-			m.groupSpec.SecurityContext.NewSecurityContext())
+		sc := k8sutil.CreateSecurityContext(m.groupSpec.SecurityContext)
+		c, err := k8sutil.InitLifecycleContainer(m.resources.context.GetOperatorImage(), &m.spec.Lifecycle.Resources, sc)
 		if err != nil {
 			return nil, err
 		}

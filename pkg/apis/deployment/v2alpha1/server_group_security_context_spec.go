@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,17 @@
 
 package v2alpha1
 
-import core "k8s.io/api/core/v1"
+import (
+	core "k8s.io/api/core/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
+)
+
+const (
+	defaultRunAsUser  = 1000
+	defaultRunAsGroup = 2000
+	defaultFSGroup    = 3000
+)
 
 // ServerGroupSpecSecurityContext contains specification for pod security context
 type ServerGroupSpecSecurityContext struct {
@@ -69,24 +79,31 @@ func (s *ServerGroupSpecSecurityContext) GetAddCapabilities() []core.Capability 
 	return s.AddCapabilities
 }
 
-// NewSecurityContext creates new pod security context
-func (s *ServerGroupSpecSecurityContext) NewPodSecurityContext() *core.PodSecurityContext {
-	if s == nil {
-		return nil
+// NewPodSecurityContext creates new pod security context
+func (s *ServerGroupSpecSecurityContext) NewPodSecurityContext(secured bool) *core.PodSecurityContext {
+	var psc *core.PodSecurityContext
+	if s != nil && (s.FSGroup != nil || len(s.SupplementalGroups) > 0) {
+		psc = &core.PodSecurityContext{
+			SupplementalGroups: s.SupplementalGroups,
+			FSGroup:            s.FSGroup,
+		}
 	}
 
-	if s.FSGroup == nil && len(s.SupplementalGroups) == 0 {
-		return nil
+	if secured {
+		if psc == nil {
+			psc = &core.PodSecurityContext{}
+		}
+
+		if psc.FSGroup == nil {
+			psc.FSGroup = util.NewType[int64](defaultFSGroup)
+		}
 	}
 
-	return &core.PodSecurityContext{
-		SupplementalGroups: s.SupplementalGroups,
-		FSGroup:            s.FSGroup,
-	}
+	return psc
 }
 
 // NewSecurityContext creates new security context
-func (s *ServerGroupSpecSecurityContext) NewSecurityContext() *core.SecurityContext {
+func (s *ServerGroupSpecSecurityContext) NewSecurityContext(secured ...bool) *core.SecurityContext {
 	r := &core.SecurityContext{}
 
 	if s != nil {
@@ -113,6 +130,27 @@ func (s *ServerGroupSpecSecurityContext) NewSecurityContext() *core.SecurityCont
 		capabilities.Add = []core.Capability{}
 
 		capabilities.Add = append(capabilities.Add, caps...)
+	}
+
+	if len(secured) > 0 && secured[0] {
+		if r.RunAsUser == nil {
+			r.RunAsUser = util.NewType[int64](defaultRunAsUser)
+		}
+		if r.RunAsGroup == nil {
+			r.RunAsGroup = util.NewType[int64](defaultRunAsGroup)
+		}
+		if r.RunAsNonRoot == nil {
+			r.RunAsNonRoot = util.NewType[bool](true)
+		}
+		if r.ReadOnlyRootFilesystem == nil {
+			r.ReadOnlyRootFilesystem = util.NewType[bool](true)
+		}
+
+		if capabilities.Drop == nil {
+			capabilities.Drop = []core.Capability{
+				"ALL",
+			}
+		}
 	}
 
 	r.Capabilities = capabilities

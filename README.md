@@ -73,6 +73,7 @@ covers individual newer features separately.
 | [Spec Default Restore](docs/design/features/deployment_spec_defaults.md)             | 1.2.21           | >= 3.7.0         | Community, Enterprise | 1.2.21     | Beta         | True    | --deployment.feature.deployment-spec-defaults-restore | If set to False Operator will not change ArangoDeployment Spec           |
 | [Force Rebuild Out Synced Shards](docs/design/features/rebuild_out_synced_shards.md) | 1.2.27           | >= 3.8.0         | Community, Enterprise | 1.2.27     | Beta         | False   | --deployment.feature.force-rebuild-out-synced-shards  | It should be used only if user is aware of the risks.                    |
 | [Rebalancer V2](docs/design/features/rebalancer_v2.md)                               | 1.2.31           | >= 3.10.0        | Community, Enterprise | 1.2.31     | Alpha        | False   | --deployment.feature.rebalancer-v2                    | N/A                                                                      |
+| Secured containers                                                                   | 1.2.26           | >= 3.7.0         | Community, Enterprise | 1.2.26     | Beta         | False   | --deployment.feature.secured-containers               | If set to True Operator will run containers in secure mode               |
 
 ## Operator Community Edition (CE)
 
