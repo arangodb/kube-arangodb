@@ -31,11 +31,11 @@ func init() {
 var securedContainers = &feature{
 	name: "secured-containers",
 	description: fmt.Sprintf("Create server's containers with non root privileges. "+
-		"It enables '%s' feature implicitly", EphemeralVolumes().Name()),
+		"It enables '%s' feature implicitly", ephemeralVolumes.Name()),
 	version:            "3.7.0",
 	enterpriseRequired: false,
 	enabledByDefault:   false,
-	dependencies:       []Feature{EphemeralVolumes()},
+	dependencies:       []Feature{ephemeralVolumes},
 }
 
 // SecuredContainers returns secured containers feature.
