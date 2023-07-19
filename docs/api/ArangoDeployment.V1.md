@@ -2,65 +2,6 @@
 
 ## Spec
 
-### .spec.agents.[]envs.name: string
-
-Code Reference: [server_group_env_var.go:26](/pkg/apis/deployment/v1/server_group_env_var.go#L26)
-
-### .spec.agents.[]envs.value: string
-
-Code Reference: [server_group_env_var.go:27](/pkg/apis/deployment/v1/server_group_env_var.go#L27)
-
-### .spec.agents.[]volumes.configMap: core.ConfigMapVolumeSource
-
-ConfigMap which should be mounted into pod
-
-Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#configmapvolumesource-v1-core)
-
-Code Reference: [server_group_volume.go:138](/pkg/apis/deployment/v1/server_group_volume.go#L138)
-
-### .spec.agents.[]volumes.emptyDir: core.EmptyDirVolumeSource
-
-EmptyDir
-
-Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#emptydirvolumesource-v1-core)
-
-Code Reference: [server_group_volume.go:143](/pkg/apis/deployment/v1/server_group_volume.go#L143)
-
-### .spec.agents.[]volumes.hostPath: core.HostPathVolumeSource
-
-HostPath
-
-Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#hostpathvolumesource-v1-core)
-
-Code Reference: [server_group_volume.go:148](/pkg/apis/deployment/v1/server_group_volume.go#L148)
-
-### .spec.agents.[]volumes.name: string
-
-Name of volume
-
-Code Reference: [server_group_volume.go:128](/pkg/apis/deployment/v1/server_group_volume.go#L128)
-
-### .spec.agents.[]volumes.persistentVolumeClaim: core.PersistentVolumeClaimVolumeSource
-
-PersistentVolumeClaim
-
-Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaimvolumesource-v1-core)
-
-Code Reference: [server_group_volume.go:153](/pkg/apis/deployment/v1/server_group_volume.go#L153)
-
-### .spec.agents.[]volumes.secret: core.SecretVolumeSource
-
-Secret which should be mounted into pod
-
-Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#secretvolumesource-v1-core)
-
-Code Reference: [server_group_volume.go:133](/pkg/apis/deployment/v1/server_group_volume.go#L133)
-
 ### .spec.agents.affinity: core.PodAffinity
 
 Affinity specified additional affinity settings in ArangoDB Pod definitions
@@ -120,6 +61,14 @@ Code Reference: [server_group_spec.go:72](/pkg/apis/deployment/v1/server_group_s
 Entrypoint overrides container executable
 
 Code Reference: [server_group_spec.go:80](/pkg/apis/deployment/v1/server_group_spec.go#L80)
+
+### .spec.agents.envs\[int\].name: string
+
+Code Reference: [server_group_env_var.go:26](/pkg/apis/deployment/v1/server_group_env_var.go#L26)
+
+### .spec.agents.envs\[int\].value: string
+
+Code Reference: [server_group_env_var.go:27](/pkg/apis/deployment/v1/server_group_env_var.go#L27)
 
 ### .spec.agents.ephemeralVolumes.apps.size: resource.Quantity
 
@@ -518,6 +467,57 @@ Links:
 
 Code Reference: [server_group_spec.go:153](/pkg/apis/deployment/v1/server_group_spec.go#L153)
 
+### .spec.agents.volumes\[int\].configMap: core.ConfigMapVolumeSource
+
+ConfigMap which should be mounted into pod
+
+Links:
+* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#configmapvolumesource-v1-core)
+
+Code Reference: [server_group_volume.go:138](/pkg/apis/deployment/v1/server_group_volume.go#L138)
+
+### .spec.agents.volumes\[int\].emptyDir: core.EmptyDirVolumeSource
+
+EmptyDir
+
+Links:
+* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#emptydirvolumesource-v1-core)
+
+Code Reference: [server_group_volume.go:143](/pkg/apis/deployment/v1/server_group_volume.go#L143)
+
+### .spec.agents.volumes\[int\].hostPath: core.HostPathVolumeSource
+
+HostPath
+
+Links:
+* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#hostpathvolumesource-v1-core)
+
+Code Reference: [server_group_volume.go:148](/pkg/apis/deployment/v1/server_group_volume.go#L148)
+
+### .spec.agents.volumes\[int\].name: string
+
+Name of volume
+
+Code Reference: [server_group_volume.go:128](/pkg/apis/deployment/v1/server_group_volume.go#L128)
+
+### .spec.agents.volumes\[int\].persistentVolumeClaim: core.PersistentVolumeClaimVolumeSource
+
+PersistentVolumeClaim
+
+Links:
+* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaimvolumesource-v1-core)
+
+Code Reference: [server_group_volume.go:153](/pkg/apis/deployment/v1/server_group_volume.go#L153)
+
+### .spec.agents.volumes\[int\].secret: core.SecretVolumeSource
+
+Secret which should be mounted into pod
+
+Links:
+* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#secretvolumesource-v1-core)
+
+Code Reference: [server_group_volume.go:133](/pkg/apis/deployment/v1/server_group_volume.go#L133)
+
 ### .spec.allowUnsafeUpgrade: bool
 
 AllowUnsafeUpgrade determines if upgrade on missing member or with not in sync shards is allowed
@@ -592,65 +592,6 @@ CommunicationMethod define communication method used in deployment
 
 Code Reference: [deployment_spec.go:187](/pkg/apis/deployment/v1/deployment_spec.go#L187)
 
-### .spec.coordinators.[]envs.name: string
-
-Code Reference: [server_group_env_var.go:26](/pkg/apis/deployment/v1/server_group_env_var.go#L26)
-
-### .spec.coordinators.[]envs.value: string
-
-Code Reference: [server_group_env_var.go:27](/pkg/apis/deployment/v1/server_group_env_var.go#L27)
-
-### .spec.coordinators.[]volumes.configMap: core.ConfigMapVolumeSource
-
-ConfigMap which should be mounted into pod
-
-Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#configmapvolumesource-v1-core)
-
-Code Reference: [server_group_volume.go:138](/pkg/apis/deployment/v1/server_group_volume.go#L138)
-
-### .spec.coordinators.[]volumes.emptyDir: core.EmptyDirVolumeSource
-
-EmptyDir
-
-Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#emptydirvolumesource-v1-core)
-
-Code Reference: [server_group_volume.go:143](/pkg/apis/deployment/v1/server_group_volume.go#L143)
-
-### .spec.coordinators.[]volumes.hostPath: core.HostPathVolumeSource
-
-HostPath
-
-Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#hostpathvolumesource-v1-core)
-
-Code Reference: [server_group_volume.go:148](/pkg/apis/deployment/v1/server_group_volume.go#L148)
-
-### .spec.coordinators.[]volumes.name: string
-
-Name of volume
-
-Code Reference: [server_group_volume.go:128](/pkg/apis/deployment/v1/server_group_volume.go#L128)
-
-### .spec.coordinators.[]volumes.persistentVolumeClaim: core.PersistentVolumeClaimVolumeSource
-
-PersistentVolumeClaim
-
-Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaimvolumesource-v1-core)
-
-Code Reference: [server_group_volume.go:153](/pkg/apis/deployment/v1/server_group_volume.go#L153)
-
-### .spec.coordinators.[]volumes.secret: core.SecretVolumeSource
-
-Secret which should be mounted into pod
-
-Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#secretvolumesource-v1-core)
-
-Code Reference: [server_group_volume.go:133](/pkg/apis/deployment/v1/server_group_volume.go#L133)
-
 ### .spec.coordinators.affinity: core.PodAffinity
 
 Affinity specified additional affinity settings in ArangoDB Pod definitions
@@ -710,6 +651,14 @@ Code Reference: [server_group_spec.go:72](/pkg/apis/deployment/v1/server_group_s
 Entrypoint overrides container executable
 
 Code Reference: [server_group_spec.go:80](/pkg/apis/deployment/v1/server_group_spec.go#L80)
+
+### .spec.coordinators.envs\[int\].name: string
+
+Code Reference: [server_group_env_var.go:26](/pkg/apis/deployment/v1/server_group_env_var.go#L26)
+
+### .spec.coordinators.envs\[int\].value: string
+
+Code Reference: [server_group_env_var.go:27](/pkg/apis/deployment/v1/server_group_env_var.go#L27)
 
 ### .spec.coordinators.ephemeralVolumes.apps.size: resource.Quantity
 
@@ -1108,21 +1057,7 @@ Links:
 
 Code Reference: [server_group_spec.go:153](/pkg/apis/deployment/v1/server_group_spec.go#L153)
 
-### .spec.database.maintenance: bool
-
-Maintenance manage maintenance mode on Cluster side. Requires maintenance feature to be enabled
-
-Code Reference: [database_spec.go:25](/pkg/apis/deployment/v1/database_spec.go#L25)
-
-### .spec.dbservers.[]envs.name: string
-
-Code Reference: [server_group_env_var.go:26](/pkg/apis/deployment/v1/server_group_env_var.go#L26)
-
-### .spec.dbservers.[]envs.value: string
-
-Code Reference: [server_group_env_var.go:27](/pkg/apis/deployment/v1/server_group_env_var.go#L27)
-
-### .spec.dbservers.[]volumes.configMap: core.ConfigMapVolumeSource
+### .spec.coordinators.volumes\[int\].configMap: core.ConfigMapVolumeSource
 
 ConfigMap which should be mounted into pod
 
@@ -1131,7 +1066,7 @@ Links:
 
 Code Reference: [server_group_volume.go:138](/pkg/apis/deployment/v1/server_group_volume.go#L138)
 
-### .spec.dbservers.[]volumes.emptyDir: core.EmptyDirVolumeSource
+### .spec.coordinators.volumes\[int\].emptyDir: core.EmptyDirVolumeSource
 
 EmptyDir
 
@@ -1140,7 +1075,7 @@ Links:
 
 Code Reference: [server_group_volume.go:143](/pkg/apis/deployment/v1/server_group_volume.go#L143)
 
-### .spec.dbservers.[]volumes.hostPath: core.HostPathVolumeSource
+### .spec.coordinators.volumes\[int\].hostPath: core.HostPathVolumeSource
 
 HostPath
 
@@ -1149,13 +1084,13 @@ Links:
 
 Code Reference: [server_group_volume.go:148](/pkg/apis/deployment/v1/server_group_volume.go#L148)
 
-### .spec.dbservers.[]volumes.name: string
+### .spec.coordinators.volumes\[int\].name: string
 
 Name of volume
 
 Code Reference: [server_group_volume.go:128](/pkg/apis/deployment/v1/server_group_volume.go#L128)
 
-### .spec.dbservers.[]volumes.persistentVolumeClaim: core.PersistentVolumeClaimVolumeSource
+### .spec.coordinators.volumes\[int\].persistentVolumeClaim: core.PersistentVolumeClaimVolumeSource
 
 PersistentVolumeClaim
 
@@ -1164,7 +1099,7 @@ Links:
 
 Code Reference: [server_group_volume.go:153](/pkg/apis/deployment/v1/server_group_volume.go#L153)
 
-### .spec.dbservers.[]volumes.secret: core.SecretVolumeSource
+### .spec.coordinators.volumes\[int\].secret: core.SecretVolumeSource
 
 Secret which should be mounted into pod
 
@@ -1172,6 +1107,12 @@ Links:
 * [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#secretvolumesource-v1-core)
 
 Code Reference: [server_group_volume.go:133](/pkg/apis/deployment/v1/server_group_volume.go#L133)
+
+### .spec.database.maintenance: bool
+
+Maintenance manage maintenance mode on Cluster side. Requires maintenance feature to be enabled
+
+Code Reference: [database_spec.go:25](/pkg/apis/deployment/v1/database_spec.go#L25)
 
 ### .spec.dbservers.affinity: core.PodAffinity
 
@@ -1232,6 +1173,14 @@ Code Reference: [server_group_spec.go:72](/pkg/apis/deployment/v1/server_group_s
 Entrypoint overrides container executable
 
 Code Reference: [server_group_spec.go:80](/pkg/apis/deployment/v1/server_group_spec.go#L80)
+
+### .spec.dbservers.envs\[int\].name: string
+
+Code Reference: [server_group_env_var.go:26](/pkg/apis/deployment/v1/server_group_env_var.go#L26)
+
+### .spec.dbservers.envs\[int\].value: string
+
+Code Reference: [server_group_env_var.go:27](/pkg/apis/deployment/v1/server_group_env_var.go#L27)
 
 ### .spec.dbservers.ephemeralVolumes.apps.size: resource.Quantity
 
@@ -1630,6 +1579,57 @@ Links:
 
 Code Reference: [server_group_spec.go:153](/pkg/apis/deployment/v1/server_group_spec.go#L153)
 
+### .spec.dbservers.volumes\[int\].configMap: core.ConfigMapVolumeSource
+
+ConfigMap which should be mounted into pod
+
+Links:
+* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#configmapvolumesource-v1-core)
+
+Code Reference: [server_group_volume.go:138](/pkg/apis/deployment/v1/server_group_volume.go#L138)
+
+### .spec.dbservers.volumes\[int\].emptyDir: core.EmptyDirVolumeSource
+
+EmptyDir
+
+Links:
+* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#emptydirvolumesource-v1-core)
+
+Code Reference: [server_group_volume.go:143](/pkg/apis/deployment/v1/server_group_volume.go#L143)
+
+### .spec.dbservers.volumes\[int\].hostPath: core.HostPathVolumeSource
+
+HostPath
+
+Links:
+* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#hostpathvolumesource-v1-core)
+
+Code Reference: [server_group_volume.go:148](/pkg/apis/deployment/v1/server_group_volume.go#L148)
+
+### .spec.dbservers.volumes\[int\].name: string
+
+Name of volume
+
+Code Reference: [server_group_volume.go:128](/pkg/apis/deployment/v1/server_group_volume.go#L128)
+
+### .spec.dbservers.volumes\[int\].persistentVolumeClaim: core.PersistentVolumeClaimVolumeSource
+
+PersistentVolumeClaim
+
+Links:
+* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaimvolumesource-v1-core)
+
+Code Reference: [server_group_volume.go:153](/pkg/apis/deployment/v1/server_group_volume.go#L153)
+
+### .spec.dbservers.volumes\[int\].secret: core.SecretVolumeSource
+
+Secret which should be mounted into pod
+
+Links:
+* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#secretvolumesource-v1-core)
+
+Code Reference: [server_group_volume.go:133](/pkg/apis/deployment/v1/server_group_volume.go#L133)
+
 ### .spec.disableIPv6: bool
 
 Code Reference: [deployment_spec.go:122](/pkg/apis/deployment/v1/deployment_spec.go#L122)
@@ -1965,65 +1965,6 @@ Code Reference: [deployment_spec.go:143](/pkg/apis/deployment/v1/deployment_spec
 
 Code Reference: [rocksdb_spec.go:31](/pkg/apis/deployment/v1/rocksdb_spec.go#L31)
 
-### .spec.single.[]envs.name: string
-
-Code Reference: [server_group_env_var.go:26](/pkg/apis/deployment/v1/server_group_env_var.go#L26)
-
-### .spec.single.[]envs.value: string
-
-Code Reference: [server_group_env_var.go:27](/pkg/apis/deployment/v1/server_group_env_var.go#L27)
-
-### .spec.single.[]volumes.configMap: core.ConfigMapVolumeSource
-
-ConfigMap which should be mounted into pod
-
-Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#configmapvolumesource-v1-core)
-
-Code Reference: [server_group_volume.go:138](/pkg/apis/deployment/v1/server_group_volume.go#L138)
-
-### .spec.single.[]volumes.emptyDir: core.EmptyDirVolumeSource
-
-EmptyDir
-
-Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#emptydirvolumesource-v1-core)
-
-Code Reference: [server_group_volume.go:143](/pkg/apis/deployment/v1/server_group_volume.go#L143)
-
-### .spec.single.[]volumes.hostPath: core.HostPathVolumeSource
-
-HostPath
-
-Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#hostpathvolumesource-v1-core)
-
-Code Reference: [server_group_volume.go:148](/pkg/apis/deployment/v1/server_group_volume.go#L148)
-
-### .spec.single.[]volumes.name: string
-
-Name of volume
-
-Code Reference: [server_group_volume.go:128](/pkg/apis/deployment/v1/server_group_volume.go#L128)
-
-### .spec.single.[]volumes.persistentVolumeClaim: core.PersistentVolumeClaimVolumeSource
-
-PersistentVolumeClaim
-
-Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaimvolumesource-v1-core)
-
-Code Reference: [server_group_volume.go:153](/pkg/apis/deployment/v1/server_group_volume.go#L153)
-
-### .spec.single.[]volumes.secret: core.SecretVolumeSource
-
-Secret which should be mounted into pod
-
-Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#secretvolumesource-v1-core)
-
-Code Reference: [server_group_volume.go:133](/pkg/apis/deployment/v1/server_group_volume.go#L133)
-
 ### .spec.single.affinity: core.PodAffinity
 
 Affinity specified additional affinity settings in ArangoDB Pod definitions
@@ -2083,6 +2024,14 @@ Code Reference: [server_group_spec.go:72](/pkg/apis/deployment/v1/server_group_s
 Entrypoint overrides container executable
 
 Code Reference: [server_group_spec.go:80](/pkg/apis/deployment/v1/server_group_spec.go#L80)
+
+### .spec.single.envs\[int\].name: string
+
+Code Reference: [server_group_env_var.go:26](/pkg/apis/deployment/v1/server_group_env_var.go#L26)
+
+### .spec.single.envs\[int\].value: string
+
+Code Reference: [server_group_env_var.go:27](/pkg/apis/deployment/v1/server_group_env_var.go#L27)
 
 ### .spec.single.ephemeralVolumes.apps.size: resource.Quantity
 
@@ -2481,6 +2430,57 @@ Links:
 
 Code Reference: [server_group_spec.go:153](/pkg/apis/deployment/v1/server_group_spec.go#L153)
 
+### .spec.single.volumes\[int\].configMap: core.ConfigMapVolumeSource
+
+ConfigMap which should be mounted into pod
+
+Links:
+* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#configmapvolumesource-v1-core)
+
+Code Reference: [server_group_volume.go:138](/pkg/apis/deployment/v1/server_group_volume.go#L138)
+
+### .spec.single.volumes\[int\].emptyDir: core.EmptyDirVolumeSource
+
+EmptyDir
+
+Links:
+* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#emptydirvolumesource-v1-core)
+
+Code Reference: [server_group_volume.go:143](/pkg/apis/deployment/v1/server_group_volume.go#L143)
+
+### .spec.single.volumes\[int\].hostPath: core.HostPathVolumeSource
+
+HostPath
+
+Links:
+* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#hostpathvolumesource-v1-core)
+
+Code Reference: [server_group_volume.go:148](/pkg/apis/deployment/v1/server_group_volume.go#L148)
+
+### .spec.single.volumes\[int\].name: string
+
+Name of volume
+
+Code Reference: [server_group_volume.go:128](/pkg/apis/deployment/v1/server_group_volume.go#L128)
+
+### .spec.single.volumes\[int\].persistentVolumeClaim: core.PersistentVolumeClaimVolumeSource
+
+PersistentVolumeClaim
+
+Links:
+* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaimvolumesource-v1-core)
+
+Code Reference: [server_group_volume.go:153](/pkg/apis/deployment/v1/server_group_volume.go#L153)
+
+### .spec.single.volumes\[int\].secret: core.SecretVolumeSource
+
+Secret which should be mounted into pod
+
+Links:
+* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#secretvolumesource-v1-core)
+
+Code Reference: [server_group_volume.go:133](/pkg/apis/deployment/v1/server_group_volume.go#L133)
+
 ### .spec.storageEngine: string
 
 Code Reference: [deployment_spec.go:116](/pkg/apis/deployment/v1/deployment_spec.go#L116)
@@ -2569,72 +2569,13 @@ Code Reference: [tls_spec.go:57](/pkg/apis/deployment/v1/tls_spec.go#L57)
 
 Code Reference: [tls_spec.go:61](/pkg/apis/deployment/v1/tls_spec.go#L61)
 
-### .spec.sync.tls.sni.<string>mapping: []string
+### .spec.sync.tls.sni.mapping.\<string\>: []string
 
 Code Reference: [tls_sni_spec.go:30](/pkg/apis/deployment/v1/tls_sni_spec.go#L30)
 
 ### .spec.sync.tls.ttl: string
 
 Code Reference: [tls_spec.go:59](/pkg/apis/deployment/v1/tls_spec.go#L59)
-
-### .spec.syncmasters.[]envs.name: string
-
-Code Reference: [server_group_env_var.go:26](/pkg/apis/deployment/v1/server_group_env_var.go#L26)
-
-### .spec.syncmasters.[]envs.value: string
-
-Code Reference: [server_group_env_var.go:27](/pkg/apis/deployment/v1/server_group_env_var.go#L27)
-
-### .spec.syncmasters.[]volumes.configMap: core.ConfigMapVolumeSource
-
-ConfigMap which should be mounted into pod
-
-Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#configmapvolumesource-v1-core)
-
-Code Reference: [server_group_volume.go:138](/pkg/apis/deployment/v1/server_group_volume.go#L138)
-
-### .spec.syncmasters.[]volumes.emptyDir: core.EmptyDirVolumeSource
-
-EmptyDir
-
-Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#emptydirvolumesource-v1-core)
-
-Code Reference: [server_group_volume.go:143](/pkg/apis/deployment/v1/server_group_volume.go#L143)
-
-### .spec.syncmasters.[]volumes.hostPath: core.HostPathVolumeSource
-
-HostPath
-
-Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#hostpathvolumesource-v1-core)
-
-Code Reference: [server_group_volume.go:148](/pkg/apis/deployment/v1/server_group_volume.go#L148)
-
-### .spec.syncmasters.[]volumes.name: string
-
-Name of volume
-
-Code Reference: [server_group_volume.go:128](/pkg/apis/deployment/v1/server_group_volume.go#L128)
-
-### .spec.syncmasters.[]volumes.persistentVolumeClaim: core.PersistentVolumeClaimVolumeSource
-
-PersistentVolumeClaim
-
-Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaimvolumesource-v1-core)
-
-Code Reference: [server_group_volume.go:153](/pkg/apis/deployment/v1/server_group_volume.go#L153)
-
-### .spec.syncmasters.[]volumes.secret: core.SecretVolumeSource
-
-Secret which should be mounted into pod
-
-Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#secretvolumesource-v1-core)
-
-Code Reference: [server_group_volume.go:133](/pkg/apis/deployment/v1/server_group_volume.go#L133)
 
 ### .spec.syncmasters.affinity: core.PodAffinity
 
@@ -2695,6 +2636,14 @@ Code Reference: [server_group_spec.go:72](/pkg/apis/deployment/v1/server_group_s
 Entrypoint overrides container executable
 
 Code Reference: [server_group_spec.go:80](/pkg/apis/deployment/v1/server_group_spec.go#L80)
+
+### .spec.syncmasters.envs\[int\].name: string
+
+Code Reference: [server_group_env_var.go:26](/pkg/apis/deployment/v1/server_group_env_var.go#L26)
+
+### .spec.syncmasters.envs\[int\].value: string
+
+Code Reference: [server_group_env_var.go:27](/pkg/apis/deployment/v1/server_group_env_var.go#L27)
 
 ### .spec.syncmasters.ephemeralVolumes.apps.size: resource.Quantity
 
@@ -3093,15 +3042,7 @@ Links:
 
 Code Reference: [server_group_spec.go:153](/pkg/apis/deployment/v1/server_group_spec.go#L153)
 
-### .spec.syncworkers.[]envs.name: string
-
-Code Reference: [server_group_env_var.go:26](/pkg/apis/deployment/v1/server_group_env_var.go#L26)
-
-### .spec.syncworkers.[]envs.value: string
-
-Code Reference: [server_group_env_var.go:27](/pkg/apis/deployment/v1/server_group_env_var.go#L27)
-
-### .spec.syncworkers.[]volumes.configMap: core.ConfigMapVolumeSource
+### .spec.syncmasters.volumes\[int\].configMap: core.ConfigMapVolumeSource
 
 ConfigMap which should be mounted into pod
 
@@ -3110,7 +3051,7 @@ Links:
 
 Code Reference: [server_group_volume.go:138](/pkg/apis/deployment/v1/server_group_volume.go#L138)
 
-### .spec.syncworkers.[]volumes.emptyDir: core.EmptyDirVolumeSource
+### .spec.syncmasters.volumes\[int\].emptyDir: core.EmptyDirVolumeSource
 
 EmptyDir
 
@@ -3119,7 +3060,7 @@ Links:
 
 Code Reference: [server_group_volume.go:143](/pkg/apis/deployment/v1/server_group_volume.go#L143)
 
-### .spec.syncworkers.[]volumes.hostPath: core.HostPathVolumeSource
+### .spec.syncmasters.volumes\[int\].hostPath: core.HostPathVolumeSource
 
 HostPath
 
@@ -3128,13 +3069,13 @@ Links:
 
 Code Reference: [server_group_volume.go:148](/pkg/apis/deployment/v1/server_group_volume.go#L148)
 
-### .spec.syncworkers.[]volumes.name: string
+### .spec.syncmasters.volumes\[int\].name: string
 
 Name of volume
 
 Code Reference: [server_group_volume.go:128](/pkg/apis/deployment/v1/server_group_volume.go#L128)
 
-### .spec.syncworkers.[]volumes.persistentVolumeClaim: core.PersistentVolumeClaimVolumeSource
+### .spec.syncmasters.volumes\[int\].persistentVolumeClaim: core.PersistentVolumeClaimVolumeSource
 
 PersistentVolumeClaim
 
@@ -3143,7 +3084,7 @@ Links:
 
 Code Reference: [server_group_volume.go:153](/pkg/apis/deployment/v1/server_group_volume.go#L153)
 
-### .spec.syncworkers.[]volumes.secret: core.SecretVolumeSource
+### .spec.syncmasters.volumes\[int\].secret: core.SecretVolumeSource
 
 Secret which should be mounted into pod
 
@@ -3211,6 +3152,14 @@ Code Reference: [server_group_spec.go:72](/pkg/apis/deployment/v1/server_group_s
 Entrypoint overrides container executable
 
 Code Reference: [server_group_spec.go:80](/pkg/apis/deployment/v1/server_group_spec.go#L80)
+
+### .spec.syncworkers.envs\[int\].name: string
+
+Code Reference: [server_group_env_var.go:26](/pkg/apis/deployment/v1/server_group_env_var.go#L26)
+
+### .spec.syncworkers.envs\[int\].value: string
+
+Code Reference: [server_group_env_var.go:27](/pkg/apis/deployment/v1/server_group_env_var.go#L27)
 
 ### .spec.syncworkers.ephemeralVolumes.apps.size: resource.Quantity
 
@@ -3609,11 +3558,71 @@ Links:
 
 Code Reference: [server_group_spec.go:153](/pkg/apis/deployment/v1/server_group_spec.go#L153)
 
-### .spec.timeouts.<v1.ActionType>actions: int64
+### .spec.syncworkers.volumes\[int\].configMap: core.ConfigMapVolumeSource
 
-Actions
+ConfigMap which should be mounted into pod
 
-Code Reference: [timeouts.go:39](/pkg/apis/deployment/v1/timeouts.go#L39)
+Links:
+* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#configmapvolumesource-v1-core)
+
+Code Reference: [server_group_volume.go:138](/pkg/apis/deployment/v1/server_group_volume.go#L138)
+
+### .spec.syncworkers.volumes\[int\].emptyDir: core.EmptyDirVolumeSource
+
+EmptyDir
+
+Links:
+* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#emptydirvolumesource-v1-core)
+
+Code Reference: [server_group_volume.go:143](/pkg/apis/deployment/v1/server_group_volume.go#L143)
+
+### .spec.syncworkers.volumes\[int\].hostPath: core.HostPathVolumeSource
+
+HostPath
+
+Links:
+* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#hostpathvolumesource-v1-core)
+
+Code Reference: [server_group_volume.go:148](/pkg/apis/deployment/v1/server_group_volume.go#L148)
+
+### .spec.syncworkers.volumes\[int\].name: string
+
+Name of volume
+
+Code Reference: [server_group_volume.go:128](/pkg/apis/deployment/v1/server_group_volume.go#L128)
+
+### .spec.syncworkers.volumes\[int\].persistentVolumeClaim: core.PersistentVolumeClaimVolumeSource
+
+PersistentVolumeClaim
+
+Links:
+* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaimvolumesource-v1-core)
+
+Code Reference: [server_group_volume.go:153](/pkg/apis/deployment/v1/server_group_volume.go#L153)
+
+### .spec.syncworkers.volumes\[int\].secret: core.SecretVolumeSource
+
+Secret which should be mounted into pod
+
+Links:
+* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#secretvolumesource-v1-core)
+
+Code Reference: [server_group_volume.go:133](/pkg/apis/deployment/v1/server_group_volume.go#L133)
+
+### .spec.timeouts.actions.\<string\>: int64
+
+Actions keep list of the actions timeouts.
+
+Links:
+* [List of supported action names](/docs/generated/actions.md)
+
+Example:
+```yaml
+actions:
+  AddMember: 30m
+```
+
+Code Reference: [timeouts.go:42](/pkg/apis/deployment/v1/timeouts.go#L42)
 
 ### .spec.timeouts.maintenanceGracePeriod: int64
 
@@ -3637,7 +3646,7 @@ Code Reference: [tls_spec.go:57](/pkg/apis/deployment/v1/tls_spec.go#L57)
 
 Code Reference: [tls_spec.go:61](/pkg/apis/deployment/v1/tls_spec.go#L61)
 
-### .spec.tls.sni.<string>mapping: []string
+### .spec.tls.sni.mapping.\<string\>: []string
 
 Code Reference: [tls_sni_spec.go:30](/pkg/apis/deployment/v1/tls_sni_spec.go#L30)
 

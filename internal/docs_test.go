@@ -61,10 +61,26 @@ func (d DocDefinitions) Render(t *testing.T) []byte {
 			write(t, out, "Links:\n")
 
 			for _, link := range el.Links {
-				write(t, out, "* [Documentation](%s)\n", link)
+				z := strings.Split(link, "|")
+				if len(z) == 1 {
+					write(t, out, "* [Documentation](%s)\n", z[0])
+				} else if len(z) == 2 {
+					write(t, out, "* [%s](%s)\n", z[0], z[1])
+				} else {
+					require.Fail(t, "Invalid link format")
+				}
 			}
 
 			write(t, out, "\n")
+		}
+
+		if len(el.Example) > 0 {
+			write(t, out, "Example:\n")
+			write(t, out, "```yaml\n")
+			for _, example := range el.Example {
+				write(t, out, "%s\n", example)
+			}
+			write(t, out, "```\n\n")
 		}
 
 		if d := el.Default; d != nil {
@@ -89,6 +105,7 @@ type DocDefinition struct {
 	Links []string
 
 	Default *string
+	Example []string
 }
 
 func Test_GenerateAPIDocs(t *testing.T) {
@@ -149,6 +166,10 @@ func generateDocs(t *testing.T, objects map[string]map[string]interface{}, paths
 
 						if d, ok := extract(field, "default"); ok {
 							def.Default = util.NewType[string](d[0])
+						}
+
+						if example, ok := extract(field, "example"); ok {
+							def.Example = example
 						}
 
 						if docs, ok := extractNotTags(field); !ok {
@@ -224,7 +245,7 @@ func iterateOverObjectDirect(t *testing.T, docs map[string]*ast.Field, name stri
 			}
 		}
 
-		for k, v := range iterateOverObjectDirect(t, docs, fmt.Sprintf("[]%s", name), object.Elem(), path) {
+		for k, v := range iterateOverObjectDirect(t, docs, fmt.Sprintf("%s\\[int\\]", name), object.Elem(), path) {
 			r[k] = v
 		}
 	case reflect.Map:
@@ -234,7 +255,7 @@ func iterateOverObjectDirect(t *testing.T, docs map[string]*ast.Field, name stri
 			}
 		}
 
-		for k, v := range iterateOverObjectDirect(t, docs, fmt.Sprintf("<%s>%s", object.Key().String(), name), object.Elem(), path) {
+		for k, v := range iterateOverObjectDirect(t, docs, fmt.Sprintf("%s.\\<%s\\>", name, object.Key().Kind().String()), object.Elem(), path) {
 			r[k] = v
 		}
 	case reflect.Struct:

@@ -35,7 +35,10 @@ type Timeouts struct {
 	// MaintenanceGracePeriod action timeout
 	MaintenanceGracePeriod *Timeout `json:"maintenanceGracePeriod,omitempty"`
 
-	// Actions
+	// Actions keep list of the actions timeouts.
+	// +doc/link: List of supported action names|/docs/generated/actions.md
+	// +doc/example: actions:
+	// +doc/example:   AddMember: 30m
 	Actions ActionTimeouts `json:"actions,omitempty"`
 
 	// deprecated
