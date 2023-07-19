@@ -3611,7 +3611,7 @@ Code Reference: [server_group_volume.go:133](/pkg/apis/deployment/v1/server_grou
 
 ### .spec.timeouts.actions: map[string]meta.Duration
 
-Actions keep list of the actions timeouts.
+Actions keep map of the actions timeouts.
 
 Links:
 * [List of supported action names](/docs/generated/actions.md)
