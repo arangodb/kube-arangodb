@@ -597,15 +597,15 @@ LivenessProbeDisabled if true livenessProbes are disabled
 
 ### .spec.coordinators.probes.livenessProbeSpec.timeoutSeconds: int32
 
-### .spec.coordinators.probes.readinessProbeDisabled: bool
-
-ReadinessProbeDisabled override flag for probe disabled in good manner (lowercase) with backward compatibility
-
 ### .spec.coordinators.probes.ReadinessProbeDisabled: bool
 
 OldReadinessProbeDisabled if true readinessProbes are disabled
 
 Deprecated: This field is deprecated, keept only for backward compatibility.
+
+### .spec.coordinators.probes.readinessProbeDisabled: bool
+
+ReadinessProbeDisabled override flag for probe disabled in good manner (lowercase) with backward compatibility
 
 ### .spec.coordinators.probes.readinessProbeSpec.failureThreshold: int32
 
@@ -1912,15 +1912,15 @@ LivenessProbeDisabled if true livenessProbes are disabled
 
 ### .spec.syncmasters.probes.livenessProbeSpec.timeoutSeconds: int32
 
-### .spec.syncmasters.probes.readinessProbeDisabled: bool
-
-ReadinessProbeDisabled override flag for probe disabled in good manner (lowercase) with backward compatibility
-
 ### .spec.syncmasters.probes.ReadinessProbeDisabled: bool
 
 OldReadinessProbeDisabled if true readinessProbes are disabled
 
 Deprecated: This field is deprecated, keept only for backward compatibility.
+
+### .spec.syncmasters.probes.readinessProbeDisabled: bool
+
+ReadinessProbeDisabled override flag for probe disabled in good manner (lowercase) with backward compatibility
 
 ### .spec.syncmasters.probes.readinessProbeSpec.failureThreshold: int32
 
@@ -2404,10 +2404,6 @@ VolumeMounts define list of volume mounts mounted into server container
 
 Links:
 * [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#volumemount-v1-core)
-
-### .spec.timeouts.-: int64
-
-deprecated
 
 ### .spec.timeouts.<v1.ActionType>actions: int64
 

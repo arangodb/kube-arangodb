@@ -118,7 +118,11 @@ func generateDocs(t *testing.T, objects map[string]map[string]interface{}, paths
 					}
 
 					sort.Slice(elements, func(i, j int) bool {
-						return strings.ToLower(elements[i]) < strings.ToLower(elements[j])
+						if a, b := strings.ToLower(elements[i]), strings.ToLower(elements[j]); a == b {
+							return elements[i] < elements[j]
+						} else {
+							return a < b
+						}
 					})
 
 					defs := make(DocDefinitions, len(elements))
@@ -233,6 +237,10 @@ func iterateOverObjectDirect(t *testing.T, docs map[string]*ast.Field, name stri
 			}
 
 			n, inline := extractTag(tag)
+
+			if n == "-" {
+				continue
+			}
 
 			docName := fmt.Sprintf("%s.%s", object.String(), f.Name)
 
