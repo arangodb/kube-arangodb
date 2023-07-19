@@ -133,7 +133,7 @@ func (a *ArangoDContainer) GetExecutor() string {
 }
 
 func (a *ArangoDContainer) GetSecurityContext() *core.SecurityContext {
-	return a.groupSpec.SecurityContext.NewSecurityContext()
+	return k8sutil.CreateSecurityContext(a.groupSpec.SecurityContext)
 }
 
 func (a *ArangoDContainer) GetProbes() (*core.Probe, *core.Probe, *core.Probe, error) {
@@ -435,8 +435,8 @@ func (m *MemberArangoDPod) GetInitContainers(cachedStatus interfaces.Inspector) 
 	}
 
 	{
-		c, err := k8sutil.InitLifecycleContainer(m.resources.context.GetOperatorImage(), &m.spec.Lifecycle.Resources,
-			m.groupSpec.SecurityContext.NewSecurityContext())
+		sc := k8sutil.CreateSecurityContext(m.groupSpec.SecurityContext)
+		c, err := k8sutil.InitLifecycleContainer(m.resources.context.GetOperatorImage(), &m.spec.Lifecycle.Resources, sc)
 		if err != nil {
 			return nil, err
 		}
@@ -447,8 +447,9 @@ func (m *MemberArangoDPod) GetInitContainers(cachedStatus interfaces.Inspector) 
 		engine := m.spec.GetStorageEngine().AsArangoArgument()
 		requireUUID := m.group == api.ServerGroupDBServers && m.status.IsInitialized
 
-		c := k8sutil.ArangodInitContainer(api.ServerGroupReservedInitContainerNameUUID, m.status.ID, engine, executable, m.resources.context.GetOperatorImage(), requireUUID,
-			m.groupSpec.SecurityContext.NewSecurityContext())
+		sc := k8sutil.CreateSecurityContext(m.groupSpec.SecurityContext)
+		c := k8sutil.ArangodInitContainer(api.ServerGroupReservedInitContainerNameUUID, m.status.ID, engine, executable,
+			m.resources.context.GetOperatorImage(), requireUUID, sc)
 		initContainers = append(initContainers, c)
 	}
 
@@ -551,8 +552,7 @@ func (m *MemberArangoDPod) createMetricsExporterSidecarInternalExporter() (*core
 }
 
 func (m *MemberArangoDPod) ApplyPodSpec(p *core.PodSpec) error {
-	p.SecurityContext = m.groupSpec.SecurityContext.NewPodSecurityContext()
-
+	p.SecurityContext = k8sutil.CreatePodSecurityContext(m.groupSpec.SecurityContext)
 	if s := m.groupSpec.SchedulerName; s != nil {
 		p.SchedulerName = *s
 	}

@@ -68,6 +68,7 @@ type Feature interface {
 	Hidden() bool
 	Supported(v driver.Version, enterprise bool) bool
 	ImageSupported(i *api.ImageInfo) bool
+	GetDependencies() []string
 }
 
 type feature struct {
@@ -102,6 +103,20 @@ func (f feature) ImageSupported(i *api.ImageInfo) bool {
 
 func (f feature) Hidden() bool {
 	return f.hidden
+}
+
+// GetDependencies returns direct dependencies' names of features.
+func (f feature) GetDependencies() []string {
+	if len(f.dependencies) == 0 {
+		return nil
+	}
+
+	deps := make([]string, 0, len(f.dependencies))
+	for _, dependency := range f.dependencies {
+		deps = append(deps, dependency.Name())
+	}
+
+	return deps
 }
 
 func (f feature) Supported(v driver.Version, enterprise bool) bool {

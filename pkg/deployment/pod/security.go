@@ -39,8 +39,8 @@ func (s security) Args(i Input) k8sutil.OptionPairs {
 	opts := k8sutil.CreateOptionPairs()
 
 	if features.EphemeralVolumes().Enabled() {
-		opts.Add("--temp.path", "/ephemeral/app")
-		opts.Add("--javascript.app-path", "/ephemeral/tmp")
+		opts.Add("--temp.path", "/ephemeral/tmp")
+		opts.Add("--javascript.app-path", "/ephemeral/app")
 	}
 
 	return opts

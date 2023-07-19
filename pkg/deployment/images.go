@@ -388,7 +388,7 @@ func (i *ImageUpdatePod) Validate(_ interfaces.Inspector) error {
 
 func (i *ImageUpdatePod) ApplyPodSpec(p *core.PodSpec) error {
 	if id := i.spec.ID; id != nil {
-		p.SecurityContext = i.spec.ID.SecurityContext.NewPodSecurityContext()
+		p.SecurityContext = k8sutil.CreatePodSecurityContext(i.spec.ID.SecurityContext)
 	}
 	return nil
 }
@@ -441,7 +441,7 @@ func (a *ContainerIdentity) GetResourceRequirements() core.ResourceRequirements 
 }
 
 func (a *ContainerIdentity) GetSecurityContext() *core.SecurityContext {
-	return a.ID.Get().SecurityContext.NewSecurityContext()
+	return k8sutil.CreateSecurityContext(a.ID.Get().SecurityContext)
 }
 
 // GetVolumeMounts returns nil for the basic container identity.

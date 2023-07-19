@@ -30,6 +30,7 @@ import (
 
 	"github.com/arangodb/go-driver"
 
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
@@ -119,7 +120,52 @@ func Init(cmd *cobra.Command) error {
 
 	f.StringVar(&configMapName, "features-config-map-name", DefaultFeaturesConfigMap, "Name of the Feature Map ConfigMap")
 
+	checkDependencies(cmd)
+
 	return nil
+}
+
+func checkDependencies(cmd *cobra.Command) {
+
+	enableDeps := func(_ *cobra.Command, _ []string) {
+		// Turn on dependencies. This function will be called when all process's arguments are passed, so
+		// all required features are enabled and dependencies should be enabled too.
+		EnableDependencies()
+
+		// Log enabled features when process starts.
+		for _, f := range features {
+			if !f.Enabled() {
+				continue
+			}
+
+			l := logging.Global().RegisterAndGetLogger("features", logging.Info)
+			if deps := f.GetDependencies(); len(deps) > 0 {
+				l = l.Strs("dependencies", deps...)
+			}
+
+			l.Bool("enterpriseArangoDBRequired", f.EnterpriseRequired()).
+				Str("minArangoDBVersion", string(f.Version())).
+				Str("name", f.Name()).
+				Info("feature enabled")
+		}
+	}
+
+	// Wrap pre-run function if it set.
+	if cmd.PreRunE != nil {
+		local := cmd.PreRunE
+		cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
+			enableDeps(cmd, args)
+			return local(cmd, args)
+		}
+	} else if cmd.PreRun != nil {
+		local := cmd.PreRun
+		cmd.PreRun = func(cmd *cobra.Command, args []string) {
+			enableDeps(cmd, args)
+			local(cmd, args)
+		}
+	} else {
+		cmd.PreRun = enableDeps
+	}
 }
 
 func cmdRun(_ *cobra.Command, _ []string) {
@@ -149,6 +195,10 @@ func cmdRun(_ *cobra.Command, _ []string) {
 			println("ArangoDB Edition Required: Enterprise")
 		} else {
 			println("ArangoDB Edition Required: Community, Enterprise")
+		}
+
+		if deps := feature.GetDependencies(); len(deps) > 0 {
+			println(fmt.Sprintf("Dependencies: %v", deps))
 		}
 
 		if ok, reason := feature.Deprecated(); ok {
@@ -201,4 +251,46 @@ func GetFeatureArgName(featureName string) string {
 // isEnabledFeatureFromEnv returns true if argument is enabled as an environment variable.
 func isEnabledFeatureFromEnv(arg string) bool {
 	return os.Getenv(util.NormalizeEnv(arg)) == Enabled
+}
+
+// EnableDependencies enables dependencies for features if it is required.
+func EnableDependencies() {
+	for {
+		var changed bool
+
+		for _, f := range features {
+			if !f.Enabled() {
+				continue
+			}
+
+			for _, depName := range f.GetDependencies() {
+				// Don't use `dependency.Enabled` here because `constValue` is involved here, and it can not be changed.
+				if enableDependencyByName(depName) {
+					// Dependency is changed so list of features must be iterated once again, because this
+					// dependency can turn on other dependencies.
+					changed = true
+				}
+			}
+		}
+
+		if !changed {
+			return
+		}
+	}
+}
+
+// enableDependencyByName enables dependency by name of a feature.
+func enableDependencyByName(name string) bool {
+	for _, f := range features {
+		if name != f.Name() {
+			continue
+		}
+
+		if ep := f.EnabledPointer(); !*ep {
+			*ep = true
+			return true
+		}
+	}
+
+	return false
 }
