@@ -60,7 +60,7 @@ func (e *EphemeralVolumes) getTempSize(d *resource.Quantity) *resource.Quantity 
 type EphemeralVolume struct {
 	// Size define size of the ephemeral volume
 	// +doc/type: resource.Quantity
-	// +doc/link: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#quantity-resource-core
+	// +doc/link: Documentation of resource.Quantity|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#quantity-resource-core
 	Size *resource.Quantity `json:"size"`
 }
 

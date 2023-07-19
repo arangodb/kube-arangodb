@@ -7,7 +7,7 @@
 Affinity specified additional affinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podaffinity-v1-core)
+* [Documentation of core.PodAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podaffinity-v1-core)
 
 Code Reference: [server_group_spec.go:134](/pkg/apis/deployment/v1/server_group_spec.go#L134)
 
@@ -40,7 +40,7 @@ Code Reference: [server_group_spec.go:102](/pkg/apis/deployment/v1/server_group_
 AntiAffinity specified additional antiAffinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podantiaffinity-v1-core)
+* [Documentation of core.Pod.AntiAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podantiaffinity-v1-core)
 
 Code Reference: [server_group_spec.go:130](/pkg/apis/deployment/v1/server_group_spec.go#L130)
 
@@ -75,7 +75,7 @@ Code Reference: [server_group_env_var.go:27](/pkg/apis/deployment/v1/server_grou
 Size define size of the ephemeral volume
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#quantity-resource-core)
+* [Documentation of resource.Quantity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#quantity-resource-core)
 
 Code Reference: [server_group_ephemeral_volumes.go:64](/pkg/apis/deployment/v1/server_group_ephemeral_volumes.go#L64)
 
@@ -84,7 +84,7 @@ Code Reference: [server_group_ephemeral_volumes.go:64](/pkg/apis/deployment/v1/s
 Size define size of the ephemeral volume
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#quantity-resource-core)
+* [Documentation of resource.Quantity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#quantity-resource-core)
 
 Code Reference: [server_group_ephemeral_volumes.go:64](/pkg/apis/deployment/v1/server_group_ephemeral_volumes.go#L64)
 
@@ -117,7 +117,7 @@ Code Reference: [server_group_spec.go:175](/pkg/apis/deployment/v1/server_group_
 Containers contains list of containers
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
+* [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
 
 Code Reference: [server_group_init_containers.go:91](/pkg/apis/deployment/v1/server_group_init_containers.go#L91)
 
@@ -174,7 +174,7 @@ Code Reference: [server_group_spec.go:74](/pkg/apis/deployment/v1/server_group_s
 NodeAffinity specified additional nodeAffinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#weightedpodaffinityterm-v1-core)
+* [Documentation of code.NodeAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#nodeaffinity-v1-core)
 
 Code Reference: [server_group_spec.go:138](/pkg/apis/deployment/v1/server_group_spec.go#L138)
 
@@ -313,7 +313,7 @@ Code Reference: [server_group_spec.go:124](/pkg/apis/deployment/v1/server_group_
 Resources holds resource requests & limits
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core)
+* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core)
 
 Code Reference: [server_group_spec.go:88](/pkg/apis/deployment/v1/server_group_spec.go#L88)
 
@@ -370,7 +370,7 @@ Code Reference: [server_group_security_context_spec.go:48](/pkg/apis/deployment/
 SeccompProfile defines a pod/container's seccomp profile settings. Only one profile source may be set.
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#seccompprofile-v1-core)
+* [Documentation of core.SeccompProfile](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#seccompprofile-v1-core)
 
 Code Reference: [server_group_security_context_spec.go:57](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L57)
 
@@ -379,7 +379,7 @@ Code Reference: [server_group_security_context_spec.go:57](/pkg/apis/deployment/
 SELinuxOptions are the labels to be applied to the container
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#selinuxoptions-v1-core)
+* [Documentation of core.SELinuxOptions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#selinuxoptions-v1-core)
 
 Code Reference: [server_group_security_context_spec.go:62](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L62)
 
@@ -418,7 +418,7 @@ Code Reference: [server_group_spec.go:141](/pkg/apis/deployment/v1/server_group_
 Sidecars specifies a list of additional containers to be started
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
+* [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
 
 Code Reference: [server_group_spec.go:145](/pkg/apis/deployment/v1/server_group_spec.go#L145)
 
@@ -439,7 +439,7 @@ Code Reference: [server_group_spec.go:173](/pkg/apis/deployment/v1/server_group_
 Tolerations specifies the tolerations added to Pods in this group.
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#toleration-v1-core)
+* [Documentation of core.Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#toleration-v1-core)
 
 Code Reference: [server_group_spec.go:96](/pkg/apis/deployment/v1/server_group_spec.go#L96)
 
@@ -454,7 +454,7 @@ Code Reference: [server_group_spec.go:126](/pkg/apis/deployment/v1/server_group_
 VolumeClaimTemplate specifies a template for volume claims
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaim-v1-core)
+* [Documentation of core.PersistentVolumeClaim](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaim-v1-core)
 
 Code Reference: [server_group_spec.go:122](/pkg/apis/deployment/v1/server_group_spec.go#L122)
 
@@ -463,7 +463,7 @@ Code Reference: [server_group_spec.go:122](/pkg/apis/deployment/v1/server_group_
 VolumeMounts define list of volume mounts mounted into server container
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#volumemount-v1-core)
+* [Documentation of ServerGroupSpecVolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#volumemount-v1-core)
 
 Code Reference: [server_group_spec.go:153](/pkg/apis/deployment/v1/server_group_spec.go#L153)
 
@@ -472,7 +472,7 @@ Code Reference: [server_group_spec.go:153](/pkg/apis/deployment/v1/server_group_
 ConfigMap which should be mounted into pod
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#configmapvolumesource-v1-core)
+* [Documentation of core.ConfigMapVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#configmapvolumesource-v1-core)
 
 Code Reference: [server_group_volume.go:138](/pkg/apis/deployment/v1/server_group_volume.go#L138)
 
@@ -481,7 +481,7 @@ Code Reference: [server_group_volume.go:138](/pkg/apis/deployment/v1/server_grou
 EmptyDir
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#emptydirvolumesource-v1-core)
+* [Documentation of core.EmptyDirVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#emptydirvolumesource-v1-core)
 
 Code Reference: [server_group_volume.go:143](/pkg/apis/deployment/v1/server_group_volume.go#L143)
 
@@ -490,7 +490,7 @@ Code Reference: [server_group_volume.go:143](/pkg/apis/deployment/v1/server_grou
 HostPath
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#hostpathvolumesource-v1-core)
+* [Documentation of core.HostPathVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#hostpathvolumesource-v1-core)
 
 Code Reference: [server_group_volume.go:148](/pkg/apis/deployment/v1/server_group_volume.go#L148)
 
@@ -505,7 +505,7 @@ Code Reference: [server_group_volume.go:128](/pkg/apis/deployment/v1/server_grou
 PersistentVolumeClaim
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaimvolumesource-v1-core)
+* [Documentation of core.PersistentVolumeClaimVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaimvolumesource-v1-core)
 
 Code Reference: [server_group_volume.go:153](/pkg/apis/deployment/v1/server_group_volume.go#L153)
 
@@ -514,7 +514,7 @@ Code Reference: [server_group_volume.go:153](/pkg/apis/deployment/v1/server_grou
 Secret which should be mounted into pod
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#secretvolumesource-v1-core)
+* [Documentation of core.SecretVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#secretvolumesource-v1-core)
 
 Code Reference: [server_group_volume.go:133](/pkg/apis/deployment/v1/server_group_volume.go#L133)
 
@@ -597,7 +597,7 @@ Code Reference: [deployment_spec.go:187](/pkg/apis/deployment/v1/deployment_spec
 Affinity specified additional affinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podaffinity-v1-core)
+* [Documentation of core.PodAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podaffinity-v1-core)
 
 Code Reference: [server_group_spec.go:134](/pkg/apis/deployment/v1/server_group_spec.go#L134)
 
@@ -630,7 +630,7 @@ Code Reference: [server_group_spec.go:102](/pkg/apis/deployment/v1/server_group_
 AntiAffinity specified additional antiAffinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podantiaffinity-v1-core)
+* [Documentation of core.Pod.AntiAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podantiaffinity-v1-core)
 
 Code Reference: [server_group_spec.go:130](/pkg/apis/deployment/v1/server_group_spec.go#L130)
 
@@ -665,7 +665,7 @@ Code Reference: [server_group_env_var.go:27](/pkg/apis/deployment/v1/server_grou
 Size define size of the ephemeral volume
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#quantity-resource-core)
+* [Documentation of resource.Quantity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#quantity-resource-core)
 
 Code Reference: [server_group_ephemeral_volumes.go:64](/pkg/apis/deployment/v1/server_group_ephemeral_volumes.go#L64)
 
@@ -674,7 +674,7 @@ Code Reference: [server_group_ephemeral_volumes.go:64](/pkg/apis/deployment/v1/s
 Size define size of the ephemeral volume
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#quantity-resource-core)
+* [Documentation of resource.Quantity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#quantity-resource-core)
 
 Code Reference: [server_group_ephemeral_volumes.go:64](/pkg/apis/deployment/v1/server_group_ephemeral_volumes.go#L64)
 
@@ -707,7 +707,7 @@ Code Reference: [server_group_spec.go:175](/pkg/apis/deployment/v1/server_group_
 Containers contains list of containers
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
+* [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
 
 Code Reference: [server_group_init_containers.go:91](/pkg/apis/deployment/v1/server_group_init_containers.go#L91)
 
@@ -764,7 +764,7 @@ Code Reference: [server_group_spec.go:74](/pkg/apis/deployment/v1/server_group_s
 NodeAffinity specified additional nodeAffinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#weightedpodaffinityterm-v1-core)
+* [Documentation of code.NodeAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#nodeaffinity-v1-core)
 
 Code Reference: [server_group_spec.go:138](/pkg/apis/deployment/v1/server_group_spec.go#L138)
 
@@ -903,7 +903,7 @@ Code Reference: [server_group_spec.go:124](/pkg/apis/deployment/v1/server_group_
 Resources holds resource requests & limits
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core)
+* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core)
 
 Code Reference: [server_group_spec.go:88](/pkg/apis/deployment/v1/server_group_spec.go#L88)
 
@@ -960,7 +960,7 @@ Code Reference: [server_group_security_context_spec.go:48](/pkg/apis/deployment/
 SeccompProfile defines a pod/container's seccomp profile settings. Only one profile source may be set.
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#seccompprofile-v1-core)
+* [Documentation of core.SeccompProfile](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#seccompprofile-v1-core)
 
 Code Reference: [server_group_security_context_spec.go:57](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L57)
 
@@ -969,7 +969,7 @@ Code Reference: [server_group_security_context_spec.go:57](/pkg/apis/deployment/
 SELinuxOptions are the labels to be applied to the container
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#selinuxoptions-v1-core)
+* [Documentation of core.SELinuxOptions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#selinuxoptions-v1-core)
 
 Code Reference: [server_group_security_context_spec.go:62](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L62)
 
@@ -1008,7 +1008,7 @@ Code Reference: [server_group_spec.go:141](/pkg/apis/deployment/v1/server_group_
 Sidecars specifies a list of additional containers to be started
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
+* [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
 
 Code Reference: [server_group_spec.go:145](/pkg/apis/deployment/v1/server_group_spec.go#L145)
 
@@ -1029,7 +1029,7 @@ Code Reference: [server_group_spec.go:173](/pkg/apis/deployment/v1/server_group_
 Tolerations specifies the tolerations added to Pods in this group.
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#toleration-v1-core)
+* [Documentation of core.Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#toleration-v1-core)
 
 Code Reference: [server_group_spec.go:96](/pkg/apis/deployment/v1/server_group_spec.go#L96)
 
@@ -1044,7 +1044,7 @@ Code Reference: [server_group_spec.go:126](/pkg/apis/deployment/v1/server_group_
 VolumeClaimTemplate specifies a template for volume claims
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaim-v1-core)
+* [Documentation of core.PersistentVolumeClaim](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaim-v1-core)
 
 Code Reference: [server_group_spec.go:122](/pkg/apis/deployment/v1/server_group_spec.go#L122)
 
@@ -1053,7 +1053,7 @@ Code Reference: [server_group_spec.go:122](/pkg/apis/deployment/v1/server_group_
 VolumeMounts define list of volume mounts mounted into server container
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#volumemount-v1-core)
+* [Documentation of ServerGroupSpecVolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#volumemount-v1-core)
 
 Code Reference: [server_group_spec.go:153](/pkg/apis/deployment/v1/server_group_spec.go#L153)
 
@@ -1062,7 +1062,7 @@ Code Reference: [server_group_spec.go:153](/pkg/apis/deployment/v1/server_group_
 ConfigMap which should be mounted into pod
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#configmapvolumesource-v1-core)
+* [Documentation of core.ConfigMapVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#configmapvolumesource-v1-core)
 
 Code Reference: [server_group_volume.go:138](/pkg/apis/deployment/v1/server_group_volume.go#L138)
 
@@ -1071,7 +1071,7 @@ Code Reference: [server_group_volume.go:138](/pkg/apis/deployment/v1/server_grou
 EmptyDir
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#emptydirvolumesource-v1-core)
+* [Documentation of core.EmptyDirVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#emptydirvolumesource-v1-core)
 
 Code Reference: [server_group_volume.go:143](/pkg/apis/deployment/v1/server_group_volume.go#L143)
 
@@ -1080,7 +1080,7 @@ Code Reference: [server_group_volume.go:143](/pkg/apis/deployment/v1/server_grou
 HostPath
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#hostpathvolumesource-v1-core)
+* [Documentation of core.HostPathVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#hostpathvolumesource-v1-core)
 
 Code Reference: [server_group_volume.go:148](/pkg/apis/deployment/v1/server_group_volume.go#L148)
 
@@ -1095,7 +1095,7 @@ Code Reference: [server_group_volume.go:128](/pkg/apis/deployment/v1/server_grou
 PersistentVolumeClaim
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaimvolumesource-v1-core)
+* [Documentation of core.PersistentVolumeClaimVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaimvolumesource-v1-core)
 
 Code Reference: [server_group_volume.go:153](/pkg/apis/deployment/v1/server_group_volume.go#L153)
 
@@ -1104,7 +1104,7 @@ Code Reference: [server_group_volume.go:153](/pkg/apis/deployment/v1/server_grou
 Secret which should be mounted into pod
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#secretvolumesource-v1-core)
+* [Documentation of core.SecretVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#secretvolumesource-v1-core)
 
 Code Reference: [server_group_volume.go:133](/pkg/apis/deployment/v1/server_group_volume.go#L133)
 
@@ -1119,7 +1119,7 @@ Code Reference: [database_spec.go:25](/pkg/apis/deployment/v1/database_spec.go#L
 Affinity specified additional affinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podaffinity-v1-core)
+* [Documentation of core.PodAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podaffinity-v1-core)
 
 Code Reference: [server_group_spec.go:134](/pkg/apis/deployment/v1/server_group_spec.go#L134)
 
@@ -1152,7 +1152,7 @@ Code Reference: [server_group_spec.go:102](/pkg/apis/deployment/v1/server_group_
 AntiAffinity specified additional antiAffinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podantiaffinity-v1-core)
+* [Documentation of core.Pod.AntiAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podantiaffinity-v1-core)
 
 Code Reference: [server_group_spec.go:130](/pkg/apis/deployment/v1/server_group_spec.go#L130)
 
@@ -1187,7 +1187,7 @@ Code Reference: [server_group_env_var.go:27](/pkg/apis/deployment/v1/server_grou
 Size define size of the ephemeral volume
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#quantity-resource-core)
+* [Documentation of resource.Quantity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#quantity-resource-core)
 
 Code Reference: [server_group_ephemeral_volumes.go:64](/pkg/apis/deployment/v1/server_group_ephemeral_volumes.go#L64)
 
@@ -1196,7 +1196,7 @@ Code Reference: [server_group_ephemeral_volumes.go:64](/pkg/apis/deployment/v1/s
 Size define size of the ephemeral volume
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#quantity-resource-core)
+* [Documentation of resource.Quantity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#quantity-resource-core)
 
 Code Reference: [server_group_ephemeral_volumes.go:64](/pkg/apis/deployment/v1/server_group_ephemeral_volumes.go#L64)
 
@@ -1229,7 +1229,7 @@ Code Reference: [server_group_spec.go:175](/pkg/apis/deployment/v1/server_group_
 Containers contains list of containers
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
+* [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
 
 Code Reference: [server_group_init_containers.go:91](/pkg/apis/deployment/v1/server_group_init_containers.go#L91)
 
@@ -1286,7 +1286,7 @@ Code Reference: [server_group_spec.go:74](/pkg/apis/deployment/v1/server_group_s
 NodeAffinity specified additional nodeAffinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#weightedpodaffinityterm-v1-core)
+* [Documentation of code.NodeAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#nodeaffinity-v1-core)
 
 Code Reference: [server_group_spec.go:138](/pkg/apis/deployment/v1/server_group_spec.go#L138)
 
@@ -1425,7 +1425,7 @@ Code Reference: [server_group_spec.go:124](/pkg/apis/deployment/v1/server_group_
 Resources holds resource requests & limits
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core)
+* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core)
 
 Code Reference: [server_group_spec.go:88](/pkg/apis/deployment/v1/server_group_spec.go#L88)
 
@@ -1482,7 +1482,7 @@ Code Reference: [server_group_security_context_spec.go:48](/pkg/apis/deployment/
 SeccompProfile defines a pod/container's seccomp profile settings. Only one profile source may be set.
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#seccompprofile-v1-core)
+* [Documentation of core.SeccompProfile](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#seccompprofile-v1-core)
 
 Code Reference: [server_group_security_context_spec.go:57](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L57)
 
@@ -1491,7 +1491,7 @@ Code Reference: [server_group_security_context_spec.go:57](/pkg/apis/deployment/
 SELinuxOptions are the labels to be applied to the container
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#selinuxoptions-v1-core)
+* [Documentation of core.SELinuxOptions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#selinuxoptions-v1-core)
 
 Code Reference: [server_group_security_context_spec.go:62](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L62)
 
@@ -1530,7 +1530,7 @@ Code Reference: [server_group_spec.go:141](/pkg/apis/deployment/v1/server_group_
 Sidecars specifies a list of additional containers to be started
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
+* [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
 
 Code Reference: [server_group_spec.go:145](/pkg/apis/deployment/v1/server_group_spec.go#L145)
 
@@ -1551,7 +1551,7 @@ Code Reference: [server_group_spec.go:173](/pkg/apis/deployment/v1/server_group_
 Tolerations specifies the tolerations added to Pods in this group.
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#toleration-v1-core)
+* [Documentation of core.Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#toleration-v1-core)
 
 Code Reference: [server_group_spec.go:96](/pkg/apis/deployment/v1/server_group_spec.go#L96)
 
@@ -1566,7 +1566,7 @@ Code Reference: [server_group_spec.go:126](/pkg/apis/deployment/v1/server_group_
 VolumeClaimTemplate specifies a template for volume claims
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaim-v1-core)
+* [Documentation of core.PersistentVolumeClaim](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaim-v1-core)
 
 Code Reference: [server_group_spec.go:122](/pkg/apis/deployment/v1/server_group_spec.go#L122)
 
@@ -1575,7 +1575,7 @@ Code Reference: [server_group_spec.go:122](/pkg/apis/deployment/v1/server_group_
 VolumeMounts define list of volume mounts mounted into server container
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#volumemount-v1-core)
+* [Documentation of ServerGroupSpecVolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#volumemount-v1-core)
 
 Code Reference: [server_group_spec.go:153](/pkg/apis/deployment/v1/server_group_spec.go#L153)
 
@@ -1584,7 +1584,7 @@ Code Reference: [server_group_spec.go:153](/pkg/apis/deployment/v1/server_group_
 ConfigMap which should be mounted into pod
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#configmapvolumesource-v1-core)
+* [Documentation of core.ConfigMapVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#configmapvolumesource-v1-core)
 
 Code Reference: [server_group_volume.go:138](/pkg/apis/deployment/v1/server_group_volume.go#L138)
 
@@ -1593,7 +1593,7 @@ Code Reference: [server_group_volume.go:138](/pkg/apis/deployment/v1/server_grou
 EmptyDir
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#emptydirvolumesource-v1-core)
+* [Documentation of core.EmptyDirVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#emptydirvolumesource-v1-core)
 
 Code Reference: [server_group_volume.go:143](/pkg/apis/deployment/v1/server_group_volume.go#L143)
 
@@ -1602,7 +1602,7 @@ Code Reference: [server_group_volume.go:143](/pkg/apis/deployment/v1/server_grou
 HostPath
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#hostpathvolumesource-v1-core)
+* [Documentation of core.HostPathVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#hostpathvolumesource-v1-core)
 
 Code Reference: [server_group_volume.go:148](/pkg/apis/deployment/v1/server_group_volume.go#L148)
 
@@ -1617,7 +1617,7 @@ Code Reference: [server_group_volume.go:128](/pkg/apis/deployment/v1/server_grou
 PersistentVolumeClaim
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaimvolumesource-v1-core)
+* [Documentation of core.PersistentVolumeClaimVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaimvolumesource-v1-core)
 
 Code Reference: [server_group_volume.go:153](/pkg/apis/deployment/v1/server_group_volume.go#L153)
 
@@ -1626,7 +1626,7 @@ Code Reference: [server_group_volume.go:153](/pkg/apis/deployment/v1/server_grou
 Secret which should be mounted into pod
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#secretvolumesource-v1-core)
+* [Documentation of core.SecretVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#secretvolumesource-v1-core)
 
 Code Reference: [server_group_volume.go:133](/pkg/apis/deployment/v1/server_group_volume.go#L133)
 
@@ -1695,7 +1695,7 @@ Code Reference: [deployment_features.go:24](/pkg/apis/deployment/v1/deployment_f
 Affinity specified additional affinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podaffinity-v1-core)
+* [Documentation of core.PodAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podaffinity-v1-core)
 
 Code Reference: [server_id_group_spec.go:44](/pkg/apis/deployment/v1/server_id_group_spec.go#L44)
 
@@ -1704,7 +1704,7 @@ Code Reference: [server_id_group_spec.go:44](/pkg/apis/deployment/v1/server_id_g
 AntiAffinity specified additional antiAffinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podantiaffinity-v1-core)
+* [Documentation of core.Pod.AntiAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podantiaffinity-v1-core)
 
 Code Reference: [server_id_group_spec.go:40](/pkg/apis/deployment/v1/server_id_group_spec.go#L40)
 
@@ -1719,7 +1719,7 @@ Code Reference: [server_id_group_spec.go:28](/pkg/apis/deployment/v1/server_id_g
 NodeAffinity specified additional nodeAffinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#weightedpodaffinityterm-v1-core)
+* [Documentation of code.NodeAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#nodeaffinity-v1-core)
 
 Code Reference: [server_id_group_spec.go:48](/pkg/apis/deployment/v1/server_id_group_spec.go#L48)
 
@@ -1740,7 +1740,7 @@ Code Reference: [server_id_group_spec.go:36](/pkg/apis/deployment/v1/server_id_g
 Resources holds resource requests & limits
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core)
+* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core)
 
 Code Reference: [server_id_group_spec.go:56](/pkg/apis/deployment/v1/server_id_group_spec.go#L56)
 
@@ -1791,7 +1791,7 @@ Code Reference: [server_group_security_context_spec.go:48](/pkg/apis/deployment/
 SeccompProfile defines a pod/container's seccomp profile settings. Only one profile source may be set.
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#seccompprofile-v1-core)
+* [Documentation of core.SeccompProfile](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#seccompprofile-v1-core)
 
 Code Reference: [server_group_security_context_spec.go:57](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L57)
 
@@ -1800,7 +1800,7 @@ Code Reference: [server_group_security_context_spec.go:57](/pkg/apis/deployment/
 SELinuxOptions are the labels to be applied to the container
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#selinuxoptions-v1-core)
+* [Documentation of core.SELinuxOptions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#selinuxoptions-v1-core)
 
 Code Reference: [server_group_security_context_spec.go:62](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L62)
 
@@ -1819,7 +1819,7 @@ Code Reference: [server_id_group_spec.go:50](/pkg/apis/deployment/v1/server_id_g
 Tolerations specifies the tolerations added to Pods in this group.
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#toleration-v1-core)
+* [Documentation of core.Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#toleration-v1-core)
 
 Code Reference: [server_id_group_spec.go:32](/pkg/apis/deployment/v1/server_id_group_spec.go#L32)
 
@@ -1866,7 +1866,7 @@ Code Reference: [license_spec.go:30](/pkg/apis/deployment/v1/license_spec.go#L30
 Resources holds resource requests & limits
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core)
+* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core)
 
 Code Reference: [lifecycle_spec.go:31](/pkg/apis/deployment/v1/lifecycle_spec.go#L31)
 
@@ -1905,7 +1905,7 @@ Code Reference: [deployment_metrics_spec.go:91](/pkg/apis/deployment/v1/deployme
 Resources holds resource requests & limits
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core)
+* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core)
 
 Code Reference: [deployment_metrics_spec.go:84](/pkg/apis/deployment/v1/deployment_metrics_spec.go#L84)
 
@@ -1970,7 +1970,7 @@ Code Reference: [rocksdb_spec.go:31](/pkg/apis/deployment/v1/rocksdb_spec.go#L31
 Affinity specified additional affinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podaffinity-v1-core)
+* [Documentation of core.PodAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podaffinity-v1-core)
 
 Code Reference: [server_group_spec.go:134](/pkg/apis/deployment/v1/server_group_spec.go#L134)
 
@@ -2003,7 +2003,7 @@ Code Reference: [server_group_spec.go:102](/pkg/apis/deployment/v1/server_group_
 AntiAffinity specified additional antiAffinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podantiaffinity-v1-core)
+* [Documentation of core.Pod.AntiAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podantiaffinity-v1-core)
 
 Code Reference: [server_group_spec.go:130](/pkg/apis/deployment/v1/server_group_spec.go#L130)
 
@@ -2038,7 +2038,7 @@ Code Reference: [server_group_env_var.go:27](/pkg/apis/deployment/v1/server_grou
 Size define size of the ephemeral volume
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#quantity-resource-core)
+* [Documentation of resource.Quantity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#quantity-resource-core)
 
 Code Reference: [server_group_ephemeral_volumes.go:64](/pkg/apis/deployment/v1/server_group_ephemeral_volumes.go#L64)
 
@@ -2047,7 +2047,7 @@ Code Reference: [server_group_ephemeral_volumes.go:64](/pkg/apis/deployment/v1/s
 Size define size of the ephemeral volume
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#quantity-resource-core)
+* [Documentation of resource.Quantity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#quantity-resource-core)
 
 Code Reference: [server_group_ephemeral_volumes.go:64](/pkg/apis/deployment/v1/server_group_ephemeral_volumes.go#L64)
 
@@ -2080,7 +2080,7 @@ Code Reference: [server_group_spec.go:175](/pkg/apis/deployment/v1/server_group_
 Containers contains list of containers
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
+* [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
 
 Code Reference: [server_group_init_containers.go:91](/pkg/apis/deployment/v1/server_group_init_containers.go#L91)
 
@@ -2137,7 +2137,7 @@ Code Reference: [server_group_spec.go:74](/pkg/apis/deployment/v1/server_group_s
 NodeAffinity specified additional nodeAffinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#weightedpodaffinityterm-v1-core)
+* [Documentation of code.NodeAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#nodeaffinity-v1-core)
 
 Code Reference: [server_group_spec.go:138](/pkg/apis/deployment/v1/server_group_spec.go#L138)
 
@@ -2276,7 +2276,7 @@ Code Reference: [server_group_spec.go:124](/pkg/apis/deployment/v1/server_group_
 Resources holds resource requests & limits
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core)
+* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core)
 
 Code Reference: [server_group_spec.go:88](/pkg/apis/deployment/v1/server_group_spec.go#L88)
 
@@ -2333,7 +2333,7 @@ Code Reference: [server_group_security_context_spec.go:48](/pkg/apis/deployment/
 SeccompProfile defines a pod/container's seccomp profile settings. Only one profile source may be set.
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#seccompprofile-v1-core)
+* [Documentation of core.SeccompProfile](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#seccompprofile-v1-core)
 
 Code Reference: [server_group_security_context_spec.go:57](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L57)
 
@@ -2342,7 +2342,7 @@ Code Reference: [server_group_security_context_spec.go:57](/pkg/apis/deployment/
 SELinuxOptions are the labels to be applied to the container
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#selinuxoptions-v1-core)
+* [Documentation of core.SELinuxOptions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#selinuxoptions-v1-core)
 
 Code Reference: [server_group_security_context_spec.go:62](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L62)
 
@@ -2381,7 +2381,7 @@ Code Reference: [server_group_spec.go:141](/pkg/apis/deployment/v1/server_group_
 Sidecars specifies a list of additional containers to be started
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
+* [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
 
 Code Reference: [server_group_spec.go:145](/pkg/apis/deployment/v1/server_group_spec.go#L145)
 
@@ -2402,7 +2402,7 @@ Code Reference: [server_group_spec.go:173](/pkg/apis/deployment/v1/server_group_
 Tolerations specifies the tolerations added to Pods in this group.
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#toleration-v1-core)
+* [Documentation of core.Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#toleration-v1-core)
 
 Code Reference: [server_group_spec.go:96](/pkg/apis/deployment/v1/server_group_spec.go#L96)
 
@@ -2417,7 +2417,7 @@ Code Reference: [server_group_spec.go:126](/pkg/apis/deployment/v1/server_group_
 VolumeClaimTemplate specifies a template for volume claims
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaim-v1-core)
+* [Documentation of core.PersistentVolumeClaim](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaim-v1-core)
 
 Code Reference: [server_group_spec.go:122](/pkg/apis/deployment/v1/server_group_spec.go#L122)
 
@@ -2426,7 +2426,7 @@ Code Reference: [server_group_spec.go:122](/pkg/apis/deployment/v1/server_group_
 VolumeMounts define list of volume mounts mounted into server container
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#volumemount-v1-core)
+* [Documentation of ServerGroupSpecVolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#volumemount-v1-core)
 
 Code Reference: [server_group_spec.go:153](/pkg/apis/deployment/v1/server_group_spec.go#L153)
 
@@ -2435,7 +2435,7 @@ Code Reference: [server_group_spec.go:153](/pkg/apis/deployment/v1/server_group_
 ConfigMap which should be mounted into pod
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#configmapvolumesource-v1-core)
+* [Documentation of core.ConfigMapVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#configmapvolumesource-v1-core)
 
 Code Reference: [server_group_volume.go:138](/pkg/apis/deployment/v1/server_group_volume.go#L138)
 
@@ -2444,7 +2444,7 @@ Code Reference: [server_group_volume.go:138](/pkg/apis/deployment/v1/server_grou
 EmptyDir
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#emptydirvolumesource-v1-core)
+* [Documentation of core.EmptyDirVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#emptydirvolumesource-v1-core)
 
 Code Reference: [server_group_volume.go:143](/pkg/apis/deployment/v1/server_group_volume.go#L143)
 
@@ -2453,7 +2453,7 @@ Code Reference: [server_group_volume.go:143](/pkg/apis/deployment/v1/server_grou
 HostPath
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#hostpathvolumesource-v1-core)
+* [Documentation of core.HostPathVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#hostpathvolumesource-v1-core)
 
 Code Reference: [server_group_volume.go:148](/pkg/apis/deployment/v1/server_group_volume.go#L148)
 
@@ -2468,7 +2468,7 @@ Code Reference: [server_group_volume.go:128](/pkg/apis/deployment/v1/server_grou
 PersistentVolumeClaim
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaimvolumesource-v1-core)
+* [Documentation of core.PersistentVolumeClaimVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaimvolumesource-v1-core)
 
 Code Reference: [server_group_volume.go:153](/pkg/apis/deployment/v1/server_group_volume.go#L153)
 
@@ -2477,7 +2477,7 @@ Code Reference: [server_group_volume.go:153](/pkg/apis/deployment/v1/server_grou
 Secret which should be mounted into pod
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#secretvolumesource-v1-core)
+* [Documentation of core.SecretVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#secretvolumesource-v1-core)
 
 Code Reference: [server_group_volume.go:133](/pkg/apis/deployment/v1/server_group_volume.go#L133)
 
@@ -2582,7 +2582,7 @@ Code Reference: [tls_spec.go:59](/pkg/apis/deployment/v1/tls_spec.go#L59)
 Affinity specified additional affinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podaffinity-v1-core)
+* [Documentation of core.PodAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podaffinity-v1-core)
 
 Code Reference: [server_group_spec.go:134](/pkg/apis/deployment/v1/server_group_spec.go#L134)
 
@@ -2615,7 +2615,7 @@ Code Reference: [server_group_spec.go:102](/pkg/apis/deployment/v1/server_group_
 AntiAffinity specified additional antiAffinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podantiaffinity-v1-core)
+* [Documentation of core.Pod.AntiAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podantiaffinity-v1-core)
 
 Code Reference: [server_group_spec.go:130](/pkg/apis/deployment/v1/server_group_spec.go#L130)
 
@@ -2650,7 +2650,7 @@ Code Reference: [server_group_env_var.go:27](/pkg/apis/deployment/v1/server_grou
 Size define size of the ephemeral volume
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#quantity-resource-core)
+* [Documentation of resource.Quantity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#quantity-resource-core)
 
 Code Reference: [server_group_ephemeral_volumes.go:64](/pkg/apis/deployment/v1/server_group_ephemeral_volumes.go#L64)
 
@@ -2659,7 +2659,7 @@ Code Reference: [server_group_ephemeral_volumes.go:64](/pkg/apis/deployment/v1/s
 Size define size of the ephemeral volume
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#quantity-resource-core)
+* [Documentation of resource.Quantity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#quantity-resource-core)
 
 Code Reference: [server_group_ephemeral_volumes.go:64](/pkg/apis/deployment/v1/server_group_ephemeral_volumes.go#L64)
 
@@ -2692,7 +2692,7 @@ Code Reference: [server_group_spec.go:175](/pkg/apis/deployment/v1/server_group_
 Containers contains list of containers
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
+* [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
 
 Code Reference: [server_group_init_containers.go:91](/pkg/apis/deployment/v1/server_group_init_containers.go#L91)
 
@@ -2749,7 +2749,7 @@ Code Reference: [server_group_spec.go:74](/pkg/apis/deployment/v1/server_group_s
 NodeAffinity specified additional nodeAffinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#weightedpodaffinityterm-v1-core)
+* [Documentation of code.NodeAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#nodeaffinity-v1-core)
 
 Code Reference: [server_group_spec.go:138](/pkg/apis/deployment/v1/server_group_spec.go#L138)
 
@@ -2888,7 +2888,7 @@ Code Reference: [server_group_spec.go:124](/pkg/apis/deployment/v1/server_group_
 Resources holds resource requests & limits
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core)
+* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core)
 
 Code Reference: [server_group_spec.go:88](/pkg/apis/deployment/v1/server_group_spec.go#L88)
 
@@ -2945,7 +2945,7 @@ Code Reference: [server_group_security_context_spec.go:48](/pkg/apis/deployment/
 SeccompProfile defines a pod/container's seccomp profile settings. Only one profile source may be set.
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#seccompprofile-v1-core)
+* [Documentation of core.SeccompProfile](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#seccompprofile-v1-core)
 
 Code Reference: [server_group_security_context_spec.go:57](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L57)
 
@@ -2954,7 +2954,7 @@ Code Reference: [server_group_security_context_spec.go:57](/pkg/apis/deployment/
 SELinuxOptions are the labels to be applied to the container
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#selinuxoptions-v1-core)
+* [Documentation of core.SELinuxOptions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#selinuxoptions-v1-core)
 
 Code Reference: [server_group_security_context_spec.go:62](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L62)
 
@@ -2993,7 +2993,7 @@ Code Reference: [server_group_spec.go:141](/pkg/apis/deployment/v1/server_group_
 Sidecars specifies a list of additional containers to be started
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
+* [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
 
 Code Reference: [server_group_spec.go:145](/pkg/apis/deployment/v1/server_group_spec.go#L145)
 
@@ -3014,7 +3014,7 @@ Code Reference: [server_group_spec.go:173](/pkg/apis/deployment/v1/server_group_
 Tolerations specifies the tolerations added to Pods in this group.
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#toleration-v1-core)
+* [Documentation of core.Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#toleration-v1-core)
 
 Code Reference: [server_group_spec.go:96](/pkg/apis/deployment/v1/server_group_spec.go#L96)
 
@@ -3029,7 +3029,7 @@ Code Reference: [server_group_spec.go:126](/pkg/apis/deployment/v1/server_group_
 VolumeClaimTemplate specifies a template for volume claims
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaim-v1-core)
+* [Documentation of core.PersistentVolumeClaim](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaim-v1-core)
 
 Code Reference: [server_group_spec.go:122](/pkg/apis/deployment/v1/server_group_spec.go#L122)
 
@@ -3038,7 +3038,7 @@ Code Reference: [server_group_spec.go:122](/pkg/apis/deployment/v1/server_group_
 VolumeMounts define list of volume mounts mounted into server container
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#volumemount-v1-core)
+* [Documentation of ServerGroupSpecVolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#volumemount-v1-core)
 
 Code Reference: [server_group_spec.go:153](/pkg/apis/deployment/v1/server_group_spec.go#L153)
 
@@ -3047,7 +3047,7 @@ Code Reference: [server_group_spec.go:153](/pkg/apis/deployment/v1/server_group_
 ConfigMap which should be mounted into pod
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#configmapvolumesource-v1-core)
+* [Documentation of core.ConfigMapVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#configmapvolumesource-v1-core)
 
 Code Reference: [server_group_volume.go:138](/pkg/apis/deployment/v1/server_group_volume.go#L138)
 
@@ -3056,7 +3056,7 @@ Code Reference: [server_group_volume.go:138](/pkg/apis/deployment/v1/server_grou
 EmptyDir
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#emptydirvolumesource-v1-core)
+* [Documentation of core.EmptyDirVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#emptydirvolumesource-v1-core)
 
 Code Reference: [server_group_volume.go:143](/pkg/apis/deployment/v1/server_group_volume.go#L143)
 
@@ -3065,7 +3065,7 @@ Code Reference: [server_group_volume.go:143](/pkg/apis/deployment/v1/server_grou
 HostPath
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#hostpathvolumesource-v1-core)
+* [Documentation of core.HostPathVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#hostpathvolumesource-v1-core)
 
 Code Reference: [server_group_volume.go:148](/pkg/apis/deployment/v1/server_group_volume.go#L148)
 
@@ -3080,7 +3080,7 @@ Code Reference: [server_group_volume.go:128](/pkg/apis/deployment/v1/server_grou
 PersistentVolumeClaim
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaimvolumesource-v1-core)
+* [Documentation of core.PersistentVolumeClaimVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaimvolumesource-v1-core)
 
 Code Reference: [server_group_volume.go:153](/pkg/apis/deployment/v1/server_group_volume.go#L153)
 
@@ -3089,7 +3089,7 @@ Code Reference: [server_group_volume.go:153](/pkg/apis/deployment/v1/server_grou
 Secret which should be mounted into pod
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#secretvolumesource-v1-core)
+* [Documentation of core.SecretVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#secretvolumesource-v1-core)
 
 Code Reference: [server_group_volume.go:133](/pkg/apis/deployment/v1/server_group_volume.go#L133)
 
@@ -3098,7 +3098,7 @@ Code Reference: [server_group_volume.go:133](/pkg/apis/deployment/v1/server_grou
 Affinity specified additional affinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podaffinity-v1-core)
+* [Documentation of core.PodAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podaffinity-v1-core)
 
 Code Reference: [server_group_spec.go:134](/pkg/apis/deployment/v1/server_group_spec.go#L134)
 
@@ -3131,7 +3131,7 @@ Code Reference: [server_group_spec.go:102](/pkg/apis/deployment/v1/server_group_
 AntiAffinity specified additional antiAffinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podantiaffinity-v1-core)
+* [Documentation of core.Pod.AntiAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podantiaffinity-v1-core)
 
 Code Reference: [server_group_spec.go:130](/pkg/apis/deployment/v1/server_group_spec.go#L130)
 
@@ -3166,7 +3166,7 @@ Code Reference: [server_group_env_var.go:27](/pkg/apis/deployment/v1/server_grou
 Size define size of the ephemeral volume
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#quantity-resource-core)
+* [Documentation of resource.Quantity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#quantity-resource-core)
 
 Code Reference: [server_group_ephemeral_volumes.go:64](/pkg/apis/deployment/v1/server_group_ephemeral_volumes.go#L64)
 
@@ -3175,7 +3175,7 @@ Code Reference: [server_group_ephemeral_volumes.go:64](/pkg/apis/deployment/v1/s
 Size define size of the ephemeral volume
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#quantity-resource-core)
+* [Documentation of resource.Quantity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#quantity-resource-core)
 
 Code Reference: [server_group_ephemeral_volumes.go:64](/pkg/apis/deployment/v1/server_group_ephemeral_volumes.go#L64)
 
@@ -3208,7 +3208,7 @@ Code Reference: [server_group_spec.go:175](/pkg/apis/deployment/v1/server_group_
 Containers contains list of containers
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
+* [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
 
 Code Reference: [server_group_init_containers.go:91](/pkg/apis/deployment/v1/server_group_init_containers.go#L91)
 
@@ -3265,7 +3265,7 @@ Code Reference: [server_group_spec.go:74](/pkg/apis/deployment/v1/server_group_s
 NodeAffinity specified additional nodeAffinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#weightedpodaffinityterm-v1-core)
+* [Documentation of code.NodeAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#nodeaffinity-v1-core)
 
 Code Reference: [server_group_spec.go:138](/pkg/apis/deployment/v1/server_group_spec.go#L138)
 
@@ -3404,7 +3404,7 @@ Code Reference: [server_group_spec.go:124](/pkg/apis/deployment/v1/server_group_
 Resources holds resource requests & limits
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core)
+* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core)
 
 Code Reference: [server_group_spec.go:88](/pkg/apis/deployment/v1/server_group_spec.go#L88)
 
@@ -3461,7 +3461,7 @@ Code Reference: [server_group_security_context_spec.go:48](/pkg/apis/deployment/
 SeccompProfile defines a pod/container's seccomp profile settings. Only one profile source may be set.
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#seccompprofile-v1-core)
+* [Documentation of core.SeccompProfile](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#seccompprofile-v1-core)
 
 Code Reference: [server_group_security_context_spec.go:57](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L57)
 
@@ -3470,7 +3470,7 @@ Code Reference: [server_group_security_context_spec.go:57](/pkg/apis/deployment/
 SELinuxOptions are the labels to be applied to the container
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#selinuxoptions-v1-core)
+* [Documentation of core.SELinuxOptions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#selinuxoptions-v1-core)
 
 Code Reference: [server_group_security_context_spec.go:62](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L62)
 
@@ -3509,7 +3509,7 @@ Code Reference: [server_group_spec.go:141](/pkg/apis/deployment/v1/server_group_
 Sidecars specifies a list of additional containers to be started
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
+* [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
 
 Code Reference: [server_group_spec.go:145](/pkg/apis/deployment/v1/server_group_spec.go#L145)
 
@@ -3530,7 +3530,7 @@ Code Reference: [server_group_spec.go:173](/pkg/apis/deployment/v1/server_group_
 Tolerations specifies the tolerations added to Pods in this group.
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#toleration-v1-core)
+* [Documentation of core.Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#toleration-v1-core)
 
 Code Reference: [server_group_spec.go:96](/pkg/apis/deployment/v1/server_group_spec.go#L96)
 
@@ -3545,7 +3545,7 @@ Code Reference: [server_group_spec.go:126](/pkg/apis/deployment/v1/server_group_
 VolumeClaimTemplate specifies a template for volume claims
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaim-v1-core)
+* [Documentation of core.PersistentVolumeClaim](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaim-v1-core)
 
 Code Reference: [server_group_spec.go:122](/pkg/apis/deployment/v1/server_group_spec.go#L122)
 
@@ -3554,7 +3554,7 @@ Code Reference: [server_group_spec.go:122](/pkg/apis/deployment/v1/server_group_
 VolumeMounts define list of volume mounts mounted into server container
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#volumemount-v1-core)
+* [Documentation of ServerGroupSpecVolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#volumemount-v1-core)
 
 Code Reference: [server_group_spec.go:153](/pkg/apis/deployment/v1/server_group_spec.go#L153)
 
@@ -3563,7 +3563,7 @@ Code Reference: [server_group_spec.go:153](/pkg/apis/deployment/v1/server_group_
 ConfigMap which should be mounted into pod
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#configmapvolumesource-v1-core)
+* [Documentation of core.ConfigMapVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#configmapvolumesource-v1-core)
 
 Code Reference: [server_group_volume.go:138](/pkg/apis/deployment/v1/server_group_volume.go#L138)
 
@@ -3572,7 +3572,7 @@ Code Reference: [server_group_volume.go:138](/pkg/apis/deployment/v1/server_grou
 EmptyDir
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#emptydirvolumesource-v1-core)
+* [Documentation of core.EmptyDirVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#emptydirvolumesource-v1-core)
 
 Code Reference: [server_group_volume.go:143](/pkg/apis/deployment/v1/server_group_volume.go#L143)
 
@@ -3581,7 +3581,7 @@ Code Reference: [server_group_volume.go:143](/pkg/apis/deployment/v1/server_grou
 HostPath
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#hostpathvolumesource-v1-core)
+* [Documentation of core.HostPathVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#hostpathvolumesource-v1-core)
 
 Code Reference: [server_group_volume.go:148](/pkg/apis/deployment/v1/server_group_volume.go#L148)
 
@@ -3596,7 +3596,7 @@ Code Reference: [server_group_volume.go:128](/pkg/apis/deployment/v1/server_grou
 PersistentVolumeClaim
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaimvolumesource-v1-core)
+* [Documentation of core.PersistentVolumeClaimVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaimvolumesource-v1-core)
 
 Code Reference: [server_group_volume.go:153](/pkg/apis/deployment/v1/server_group_volume.go#L153)
 
@@ -3605,16 +3605,17 @@ Code Reference: [server_group_volume.go:153](/pkg/apis/deployment/v1/server_grou
 Secret which should be mounted into pod
 
 Links:
-* [Documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#secretvolumesource-v1-core)
+* [Documentation of core.SecretVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#secretvolumesource-v1-core)
 
 Code Reference: [server_group_volume.go:133](/pkg/apis/deployment/v1/server_group_volume.go#L133)
 
-### .spec.timeouts.actions.\<string\>: int64
+### .spec.timeouts.actions: map[string]meta.Duration
 
 Actions keep list of the actions timeouts.
 
 Links:
 * [List of supported action names](/docs/generated/actions.md)
+* [Definition of meta.Duration](https://github.com/kubernetes/apimachinery/blob/v0.26.6/pkg/apis/meta/v1/duration.go)
 
 Example:
 ```yaml
@@ -3622,7 +3623,7 @@ actions:
   AddMember: 30m
 ```
 
-Code Reference: [timeouts.go:42](/pkg/apis/deployment/v1/timeouts.go#L42)
+Code Reference: [timeouts.go:44](/pkg/apis/deployment/v1/timeouts.go#L44)
 
 ### .spec.timeouts.maintenanceGracePeriod: int64
 

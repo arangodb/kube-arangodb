@@ -87,7 +87,7 @@ const (
 type ServerGroupInitContainers struct {
 	// Containers contains list of containers
 	// +doc/type: []core.Container
-	// +doc/link: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core
+	// +doc/link: Documentation of core.Container|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core
 	Containers []core.Container `json:"containers,omitempty"`
 
 	// Mode keep container replace mode

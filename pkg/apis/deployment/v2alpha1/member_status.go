@@ -88,7 +88,7 @@ type MemberStatus struct {
 	// deprecated
 	// SideCarSpecs contains map of specifications specified for side cars
 	// +doc/type: map[string]core.Container
-	// +doc/link: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core
+	// +doc/link: Documentation of core.Container|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core
 	SideCarSpecs map[string]core.Container `json:"sidecars-specs,omitempty"`
 	// deprecated
 	// PodName holds the name of the Pod that currently runs this member

@@ -129,27 +129,27 @@ type ServerGroupSpecVolume struct {
 
 	// Secret which should be mounted into pod
 	// +doc/type: core.SecretVolumeSource
-	// +doc/link: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#secretvolumesource-v1-core
+	// +doc/link: Documentation of core.SecretVolumeSource|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#secretvolumesource-v1-core
 	Secret *ServerGroupSpecVolumeSecret `json:"secret,omitempty"`
 
 	// ConfigMap which should be mounted into pod
 	// +doc/type: core.ConfigMapVolumeSource
-	// +doc/link: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#configmapvolumesource-v1-core
+	// +doc/link: Documentation of core.ConfigMapVolumeSource|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#configmapvolumesource-v1-core
 	ConfigMap *ServerGroupSpecVolumeConfigMap `json:"configMap,omitempty"`
 
 	// EmptyDir
 	// +doc/type: core.EmptyDirVolumeSource
-	// +doc/link: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#emptydirvolumesource-v1-core
+	// +doc/link: Documentation of core.EmptyDirVolumeSource|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#emptydirvolumesource-v1-core
 	EmptyDir *ServerGroupSpecVolumeEmptyDir `json:"emptyDir,omitempty"`
 
 	// HostPath
 	// +doc/type: core.HostPathVolumeSource
-	// +doc/link: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#hostpathvolumesource-v1-core
+	// +doc/link: Documentation of core.HostPathVolumeSource|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#hostpathvolumesource-v1-core
 	HostPath *ServerGroupSpecVolumeHostPath `json:"hostPath,omitempty"`
 
 	// PersistentVolumeClaim
 	// +doc/type: core.PersistentVolumeClaimVolumeSource
-	// +doc/link: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaimvolumesource-v1-core
+	// +doc/link: Documentation of core.PersistentVolumeClaimVolumeSource|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaimvolumesource-v1-core
 	PersistentVolumeClaim *ServerGroupSpecVolumePersistentVolumeClaim `json:"persistentVolumeClaim,omitempty"`
 }
 
