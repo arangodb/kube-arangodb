@@ -30,6 +30,7 @@ import (
 	"io/fs"
 	"os"
 	"path"
+	"path/filepath"
 	"reflect"
 	"sort"
 	"strings"
@@ -69,6 +70,8 @@ func (d DocDefinitions) Render(t *testing.T) []byte {
 		if d := el.Default; d != nil {
 			write(t, out, "Default Value: %s\n\n", *d)
 		}
+
+		write(t, out, "Code Reference: [%s:%d](/%s#L%d)\n\n", filepath.Base(el.File), el.Line, el.File, el.Line)
 	}
 
 	return out.Bytes()
@@ -77,6 +80,9 @@ func (d DocDefinitions) Render(t *testing.T) []byte {
 type DocDefinition struct {
 	Path string
 	Type string
+
+	File string
+	Line int
 
 	Docs []string
 
@@ -101,11 +107,11 @@ func generateDocs(t *testing.T, objects map[string]map[string]interface{}, paths
 	root := os.Getenv("ROOT")
 	require.NotEmpty(t, root)
 
-	docs := getDocs(t, paths...)
+	docs, fs := getDocs(t, paths...)
 
 	for object, sections := range objects {
 		t.Run(object, func(t *testing.T) {
-			render_sections := map[string][]byte{}
+			renderSections := map[string][]byte{}
 			for section, data := range sections {
 				t.Run(section, func(t *testing.T) {
 
@@ -128,31 +134,41 @@ func generateDocs(t *testing.T, objects map[string]map[string]interface{}, paths
 					defs := make(DocDefinitions, len(elements))
 
 					for id, k := range elements {
+						field := res[k]
+
 						var def DocDefinition
 
 						def.Path = strings.Split(k, ":")[0]
 						def.Type = strings.Split(k, ":")[1]
 
-						require.NotNil(t, res[k])
+						require.NotNil(t, field)
 
-						if links, ok := extract(res[k], "link"); ok {
+						if links, ok := extract(field, "link"); ok {
 							def.Links = links
 						}
 
-						if d, ok := extract(res[k], "default"); ok {
+						if d, ok := extract(field, "default"); ok {
 							def.Default = util.NewType[string](d[0])
 						}
 
-						if docs, ok := extractNotTags(res[k]); !ok {
+						if docs, ok := extractNotTags(field); !ok {
 							println(def.Path, " is missing documentation!")
 						} else {
 							def.Docs = docs
 						}
 
+						file := fs.File(field.Pos())
+
+						filePath, err := filepath.Rel(root, file.Name())
+						require.NoError(t, err)
+
+						def.File = filePath
+						def.Line = file.Line(field.Pos())
+
 						defs[id] = def
 					}
 
-					render_sections[section] = defs.Render(t)
+					renderSections[section] = defs.Render(t)
 				})
 			}
 
@@ -165,7 +181,7 @@ func generateDocs(t *testing.T, objects map[string]map[string]interface{}, paths
 
 			write(t, out, "# API Reference for %s\n\n", strings.ReplaceAll(object, ".", " "))
 
-			for name, section := range render_sections {
+			for name, section := range renderSections {
 				write(t, out, "## %s\n\n", name)
 
 				_, err = out.Write(section)
@@ -345,8 +361,8 @@ func extractTag(tag string) (string, bool) {
 	return parts[0], false
 }
 
-func getDocs(t *testing.T, paths ...string) map[string]*ast.Field {
-	d, _ := parseMultipleDirs(t, parser.ParseComments, paths...)
+func getDocs(t *testing.T, paths ...string) (map[string]*ast.Field, *token.FileSet) {
+	d, fs := parseMultipleDirs(t, parser.ParseComments, paths...)
 
 	r := map[string]*ast.Field{}
 
@@ -385,7 +401,7 @@ func getDocs(t *testing.T, paths ...string) map[string]*ast.Field {
 		})
 	}
 
-	return r
+	return r, fs
 }
 
 func parseMultipleDirs(t *testing.T, mode parser.Mode, dirs ...string) (map[string]*ast.Package, *token.FileSet) {
