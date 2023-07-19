@@ -27,22 +27,32 @@ type ServerIDGroupSpec struct {
 	// Entrypoint overrides container executable
 	Entrypoint *string `json:"entrypoint,omitempty"`
 	// Tolerations specifies the tolerations added to Pods in this group.
+	// +doc/type: []core.Toleration
+	// +doc/link: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#toleration-v1-core
 	Tolerations []core.Toleration `json:"tolerations,omitempty"`
 	// NodeSelector speficies a set of selectors for nodes
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 	// PriorityClassName specifies a priority class name
 	PriorityClassName string `json:"priorityClassName,omitempty"`
 	// AntiAffinity specified additional antiAffinity settings in ArangoDB Pod definitions
+	// +doc/type: core.PodAntiAffinity
+	// +doc/link: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podantiaffinity-v1-core
 	AntiAffinity *core.PodAntiAffinity `json:"antiAffinity,omitempty"`
 	// Affinity specified additional affinity settings in ArangoDB Pod definitions
+	// +doc/type: core.PodAffinity
+	// +doc/link: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podaffinity-v1-core
 	Affinity *core.PodAffinity `json:"affinity,omitempty"`
 	// NodeAffinity specified additional nodeAffinity settings in ArangoDB Pod definitions
+	// +doc/type: core.NodeAffinity
+	// +doc/link: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#weightedpodaffinityterm-v1-core
 	NodeAffinity *core.NodeAffinity `json:"nodeAffinity,omitempty"`
 	// ServiceAccountName specifies the name of the service account used for Pods in this group.
 	ServiceAccountName *string `json:"serviceAccountName,omitempty"`
 	// SecurityContext specifies security context for group
 	SecurityContext *ServerGroupSpecSecurityContext `json:"securityContext,omitempty"`
 	// Resources holds resource requests & limits
+	// +doc/type: core.ResourceRequirements
+	// +doc/link: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core
 	Resources *core.ResourceRequirements `json:"resources,omitempty"`
 }
 
