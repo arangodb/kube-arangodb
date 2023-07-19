@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -128,27 +128,27 @@ type ServerGroupSpecVolume struct {
 	Name string `json:"name"`
 
 	// Secret which should be mounted into pod
-	// +doc/type: External
+	// +doc/type: core.SecretVolumeSource
 	// +doc/link: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#secretvolumesource-v1-core
 	Secret *ServerGroupSpecVolumeSecret `json:"secret,omitempty"`
 
 	// ConfigMap which should be mounted into pod
-	// +doc/type: External
+	// +doc/type: core.ConfigMapVolumeSource
 	// +doc/link: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#configmapvolumesource-v1-core
 	ConfigMap *ServerGroupSpecVolumeConfigMap `json:"configMap,omitempty"`
 
 	// EmptyDir
-	// +doc/type: External
+	// +doc/type: core.EmptyDirVolumeSource
 	// +doc/link: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#emptydirvolumesource-v1-core
 	EmptyDir *ServerGroupSpecVolumeEmptyDir `json:"emptyDir,omitempty"`
 
 	// HostPath
-	// +doc/type: External
+	// +doc/type: core.HostPathVolumeSource
 	// +doc/link: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#hostpathvolumesource-v1-core
 	HostPath *ServerGroupSpecVolumeHostPath `json:"hostPath,omitempty"`
 
 	// PersistentVolumeClaim
-	// +doc/type: External
+	// +doc/type: core.PersistentVolumeClaimVolumeSource
 	// +doc/link: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaimvolumesource-v1-core
 	PersistentVolumeClaim *ServerGroupSpecVolumePersistentVolumeClaim `json:"persistentVolumeClaim,omitempty"`
 }

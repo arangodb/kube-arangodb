@@ -79,7 +79,7 @@ type MetricsSpec struct {
 	Image          *string                   `json:"image,omitempty"`
 	Authentication MetricsAuthenticationSpec `json:"authentication,omitempty"`
 	// Resources holds resource requests & limits
-	// +doc/type: External
+	// +doc/type: core.ResourceRequirements
 	// +doc/link: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core
 	Resources core.ResourceRequirements `json:"resources,omitempty"`
 	// deprecated

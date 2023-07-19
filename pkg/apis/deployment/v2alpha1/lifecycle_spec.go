@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import (
 
 type LifecycleSpec struct {
 	// Resources holds resource requests & limits
-	// +doc/type: External
+	// +doc/type: core.ResourceRequirements
 	// +doc/link: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core
 	Resources core.ResourceRequirements `json:"resources,omitempty"`
 }

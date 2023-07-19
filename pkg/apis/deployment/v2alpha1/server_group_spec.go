@@ -83,7 +83,7 @@ type ServerGroupSpec struct {
 	// StorageClassName specifies the classname for storage of the servers.
 	StorageClassName *string `json:"storageClassName,omitempty"`
 	// Resources holds resource requests & limits
-	// +doc/type: External
+	// +doc/type: core.ResourceRequirements
 	// +doc/link: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core
 	Resources core.ResourceRequirements `json:"resources,omitempty"`
 	// OverrideDetectedTotalMemory determines if memory should be overrided based on values in resources.
@@ -91,7 +91,7 @@ type ServerGroupSpec struct {
 	// OverrideDetectedNumberOfCores determines if number of cores should be overrided based on values in resources.
 	OverrideDetectedNumberOfCores *bool `json:"overrideDetectedNumberOfCores,omitempty"`
 	// Tolerations specifies the tolerations added to Pods in this group.
-	// +doc/type: External
+	// +doc/type: []core.Toleration
 	// +doc/link: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#toleration-v1-core
 	Tolerations []core.Toleration `json:"tolerations,omitempty"`
 	// Annotations specified the annotations added to Pods in this group.
@@ -117,7 +117,7 @@ type ServerGroupSpec struct {
 	// PriorityClassName specifies a priority class name
 	PriorityClassName string `json:"priorityClassName,omitempty"`
 	// VolumeClaimTemplate specifies a template for volume claims
-	// +doc/type: External
+	// +doc/type: core.PersistentVolumeClaim
 	// +doc/link: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaim-v1-core
 	VolumeClaimTemplate *core.PersistentVolumeClaim `json:"volumeClaimTemplate,omitempty"`
 	// VolumeResizeMode specified resize mode for pvc
@@ -125,22 +125,22 @@ type ServerGroupSpec struct {
 	// Deprecated: VolumeAllowShrink allows shrink the volume
 	VolumeAllowShrink *bool `json:"volumeAllowShrink,omitempty"`
 	// AntiAffinity specified additional antiAffinity settings in ArangoDB Pod definitions
-	// +doc/type: External
+	// +doc/type: core.PodAntiAffinity
 	// +doc/link: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podantiaffinity-v1-core
 	AntiAffinity *core.PodAntiAffinity `json:"antiAffinity,omitempty"`
 	// Affinity specified additional affinity settings in ArangoDB Pod definitions
-	// +doc/type: External
+	// +doc/type: core.PodAffinity
 	// +doc/link: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podaffinity-v1-core
 	Affinity *core.PodAffinity `json:"affinity,omitempty"`
 	// NodeAffinity specified additional nodeAffinity settings in ArangoDB Pod definitions
-	// +doc/type: External
+	// +doc/type: core.NodeAffinity
 	// +doc/link: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#weightedpodaffinityterm-v1-core
 	NodeAffinity *core.NodeAffinity `json:"nodeAffinity,omitempty"`
 	// SidecarCoreNames is a list of sidecar containers which must run in the pod.
 	// Some names (e.g.: "server", "worker") are reserved, and they don't have any impact.
 	SidecarCoreNames []string `json:"sidecarCoreNames,omitempty"`
 	// Sidecars specifies a list of additional containers to be started
-	// +doc/type: External
+	// +doc/type: []core.Container
 	// +doc/link: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core
 	Sidecars []core.Container `json:"sidecars,omitempty"`
 	// SecurityContext specifies security context for group
@@ -148,7 +148,7 @@ type ServerGroupSpec struct {
 	// Volumes define list of volumes mounted to pod
 	Volumes ServerGroupSpecVolumes `json:"volumes,omitempty"`
 	// VolumeMounts define list of volume mounts mounted into server container
-	// +doc/type: External
+	// +doc/type: []ServerGroupSpecVolumeMount
 	// +doc/link: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#volumemount-v1-core
 	VolumeMounts ServerGroupSpecVolumeMounts `json:"volumeMounts,omitempty"`
 	// EphemeralVolumes keeps information about ephemeral volumes.
