@@ -316,3 +316,60 @@ func Test_GetCollectionDatabaseByID(t *testing.T) {
 	require.False(t, ok)
 	require.Equal(t, "", v)
 }
+
+func Test_MissingDatabaseCase(t *testing.T) {
+	s := State{
+		Plan: Plan{
+			Collections: map[string]PlanDBCollections{
+				"_system": {
+					"10013": {
+						Shards: map[string]Servers{
+							"s10024": {
+								"PRMR-1e4bxazq",
+								"PRMR-rpkgdy5h",
+							},
+						},
+					},
+				},
+				"_test": {
+					"100131": {
+						Shards: map[string]Servers{
+							"s100241": {
+								"PRMR-1e4bxazq",
+								"PRMR-rpkgdy5h",
+							},
+						},
+					},
+				},
+			},
+			Databases: map[string]PlanDatabase{
+				"_system": {},
+			},
+		},
+		Current: Current{
+			Collections: map[string]CurrentDBCollections{
+				"_system": {
+					"10013": {
+						"s10024": {
+							Servers: Servers{
+								"PRMR-1e4bxazq",
+								"PRMR-rpkgdy5h",
+							},
+						},
+					},
+				},
+				"_test": {
+					"100131": {
+						"s100241": {
+							Servers: Servers{
+								"PRMR-1e4bxazq",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	require.Len(t, GetDBServerBlockingRestartShards(s, "PRMR-1e4bxazq"), 0)
+}
