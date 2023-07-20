@@ -21,7 +21,10 @@
 package v1
 
 import (
+	"sort"
+
 	core "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
@@ -50,6 +53,17 @@ type ServerGroupSpecSecurityContext struct {
 
 	SupplementalGroups []int64 `json:"supplementalGroups,omitempty"`
 	FSGroup            *int64  `json:"fsGroup,omitempty"`
+
+	// Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
+	// sysctls (by the container runtime) might fail to launch.
+	// Map Value can be String or Int
+	// +doc/example: sysctls:
+	// +doc/example:   "kernel.shm_rmid_forced": "0"
+	// +doc/example:   "net.core.somaxconn": 1024
+	// +doc/example:   "kernel.msgmax": "65536"
+	// +doc/type: map[string]intstr.IntOrString
+	// +doc/link: Documentation|https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/
+	Sysctls map[string]intstr.IntOrString `json:"sysctls,omitempty"`
 
 	// SeccompProfile defines a pod/container's seccomp profile settings. Only one profile source may be set.
 	// +doc/type: core.SeccompProfile
@@ -94,6 +108,26 @@ func (s *ServerGroupSpecSecurityContext) NewPodSecurityContext(secured bool) *co
 			SupplementalGroups: s.SupplementalGroups,
 			FSGroup:            s.FSGroup,
 		}
+	}
+
+	if s != nil && len(s.Sysctls) > 0 {
+		var sysctls []core.Sysctl
+		for k, v := range s.Sysctls {
+			sysctls = append(sysctls, core.Sysctl{
+				Name:  k,
+				Value: v.String(),
+			})
+		}
+
+		sort.Slice(sysctls, func(i, j int) bool {
+			return sysctls[i].Name < sysctls[j].Name
+		})
+
+		if psc == nil {
+			psc = &core.PodSecurityContext{}
+		}
+
+		psc.Sysctls = sysctls
 	}
 
 	if secured {

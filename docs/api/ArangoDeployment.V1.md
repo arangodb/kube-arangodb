@@ -327,11 +327,11 @@ Code Reference: [server_group_spec.go:82](/pkg/apis/deployment/v1/server_group_s
 
 AddCapabilities add new capabilities to containers
 
-Code Reference: [server_group_security_context_spec.go:42](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L42)
+Code Reference: [server_group_security_context_spec.go:43](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L43)
 
 ### .spec.agents.securityContext.allowPrivilegeEscalation: bool
 
-Code Reference: [server_group_security_context_spec.go:44](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L44)
+Code Reference: [server_group_security_context_spec.go:45](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L45)
 
 ### .spec.agents.securityContext.dropAllCapabilities: bool
 
@@ -339,31 +339,31 @@ DropAllCapabilities specifies if capabilities should be dropped for this pod con
 
 Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
 
-Code Reference: [server_group_security_context_spec.go:40](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L40)
+Code Reference: [server_group_security_context_spec.go:41](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L41)
 
 ### .spec.agents.securityContext.fsGroup: int64
 
-Code Reference: [server_group_security_context_spec.go:52](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L52)
+Code Reference: [server_group_security_context_spec.go:53](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L53)
 
 ### .spec.agents.securityContext.privileged: bool
 
-Code Reference: [server_group_security_context_spec.go:45](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L45)
+Code Reference: [server_group_security_context_spec.go:46](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L46)
 
 ### .spec.agents.securityContext.readOnlyRootFilesystem: bool
 
-Code Reference: [server_group_security_context_spec.go:46](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L46)
+Code Reference: [server_group_security_context_spec.go:47](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L47)
 
 ### .spec.agents.securityContext.runAsGroup: int64
 
-Code Reference: [server_group_security_context_spec.go:49](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L49)
+Code Reference: [server_group_security_context_spec.go:50](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L50)
 
 ### .spec.agents.securityContext.runAsNonRoot: bool
 
-Code Reference: [server_group_security_context_spec.go:47](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L47)
+Code Reference: [server_group_security_context_spec.go:48](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L48)
 
 ### .spec.agents.securityContext.runAsUser: int64
 
-Code Reference: [server_group_security_context_spec.go:48](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L48)
+Code Reference: [server_group_security_context_spec.go:49](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L49)
 
 ### .spec.agents.securityContext.seccompProfile: core.SeccompProfile
 
@@ -372,7 +372,7 @@ SeccompProfile defines a pod/container's seccomp profile settings. Only one prof
 Links:
 * [Documentation of core.SeccompProfile](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#seccompprofile-v1-core)
 
-Code Reference: [server_group_security_context_spec.go:57](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L57)
+Code Reference: [server_group_security_context_spec.go:69](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L69)
 
 ### .spec.agents.securityContext.seLinuxOptions: core.SELinuxOptions
 
@@ -381,11 +381,32 @@ SELinuxOptions are the labels to be applied to the container
 Links:
 * [Documentation of core.SELinuxOptions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#selinuxoptions-v1-core)
 
-Code Reference: [server_group_security_context_spec.go:62](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L62)
+Code Reference: [server_group_security_context_spec.go:74](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L74)
 
 ### .spec.agents.securityContext.supplementalGroups: []int64
 
-Code Reference: [server_group_security_context_spec.go:51](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L51)
+Code Reference: [server_group_security_context_spec.go:52](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L52)
+
+### .spec.agents.securityContext.sysctls: map[string]intstr.IntOrString
+
+Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
+
+sysctls (by the container runtime) might fail to launch.
+
+Map Value can be String or Int
+
+Links:
+* [Documentation](https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/)
+
+Example:
+```yaml
+sysctls:
+  "kernel.shm_rmid_forced": "0"
+  "net.core.somaxconn": 1024
+  "kernel.msgmax": "65536"
+```
+
+Code Reference: [server_group_security_context_spec.go:64](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L64)
 
 ### .spec.agents.serviceAccountName: string
 
@@ -917,11 +938,11 @@ Code Reference: [server_group_spec.go:82](/pkg/apis/deployment/v1/server_group_s
 
 AddCapabilities add new capabilities to containers
 
-Code Reference: [server_group_security_context_spec.go:42](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L42)
+Code Reference: [server_group_security_context_spec.go:43](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L43)
 
 ### .spec.coordinators.securityContext.allowPrivilegeEscalation: bool
 
-Code Reference: [server_group_security_context_spec.go:44](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L44)
+Code Reference: [server_group_security_context_spec.go:45](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L45)
 
 ### .spec.coordinators.securityContext.dropAllCapabilities: bool
 
@@ -929,31 +950,31 @@ DropAllCapabilities specifies if capabilities should be dropped for this pod con
 
 Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
 
-Code Reference: [server_group_security_context_spec.go:40](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L40)
+Code Reference: [server_group_security_context_spec.go:41](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L41)
 
 ### .spec.coordinators.securityContext.fsGroup: int64
 
-Code Reference: [server_group_security_context_spec.go:52](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L52)
+Code Reference: [server_group_security_context_spec.go:53](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L53)
 
 ### .spec.coordinators.securityContext.privileged: bool
 
-Code Reference: [server_group_security_context_spec.go:45](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L45)
+Code Reference: [server_group_security_context_spec.go:46](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L46)
 
 ### .spec.coordinators.securityContext.readOnlyRootFilesystem: bool
 
-Code Reference: [server_group_security_context_spec.go:46](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L46)
+Code Reference: [server_group_security_context_spec.go:47](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L47)
 
 ### .spec.coordinators.securityContext.runAsGroup: int64
 
-Code Reference: [server_group_security_context_spec.go:49](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L49)
+Code Reference: [server_group_security_context_spec.go:50](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L50)
 
 ### .spec.coordinators.securityContext.runAsNonRoot: bool
 
-Code Reference: [server_group_security_context_spec.go:47](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L47)
+Code Reference: [server_group_security_context_spec.go:48](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L48)
 
 ### .spec.coordinators.securityContext.runAsUser: int64
 
-Code Reference: [server_group_security_context_spec.go:48](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L48)
+Code Reference: [server_group_security_context_spec.go:49](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L49)
 
 ### .spec.coordinators.securityContext.seccompProfile: core.SeccompProfile
 
@@ -962,7 +983,7 @@ SeccompProfile defines a pod/container's seccomp profile settings. Only one prof
 Links:
 * [Documentation of core.SeccompProfile](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#seccompprofile-v1-core)
 
-Code Reference: [server_group_security_context_spec.go:57](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L57)
+Code Reference: [server_group_security_context_spec.go:69](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L69)
 
 ### .spec.coordinators.securityContext.seLinuxOptions: core.SELinuxOptions
 
@@ -971,11 +992,32 @@ SELinuxOptions are the labels to be applied to the container
 Links:
 * [Documentation of core.SELinuxOptions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#selinuxoptions-v1-core)
 
-Code Reference: [server_group_security_context_spec.go:62](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L62)
+Code Reference: [server_group_security_context_spec.go:74](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L74)
 
 ### .spec.coordinators.securityContext.supplementalGroups: []int64
 
-Code Reference: [server_group_security_context_spec.go:51](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L51)
+Code Reference: [server_group_security_context_spec.go:52](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L52)
+
+### .spec.coordinators.securityContext.sysctls: map[string]intstr.IntOrString
+
+Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
+
+sysctls (by the container runtime) might fail to launch.
+
+Map Value can be String or Int
+
+Links:
+* [Documentation](https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/)
+
+Example:
+```yaml
+sysctls:
+  "kernel.shm_rmid_forced": "0"
+  "net.core.somaxconn": 1024
+  "kernel.msgmax": "65536"
+```
+
+Code Reference: [server_group_security_context_spec.go:64](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L64)
 
 ### .spec.coordinators.serviceAccountName: string
 
@@ -1439,11 +1481,11 @@ Code Reference: [server_group_spec.go:82](/pkg/apis/deployment/v1/server_group_s
 
 AddCapabilities add new capabilities to containers
 
-Code Reference: [server_group_security_context_spec.go:42](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L42)
+Code Reference: [server_group_security_context_spec.go:43](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L43)
 
 ### .spec.dbservers.securityContext.allowPrivilegeEscalation: bool
 
-Code Reference: [server_group_security_context_spec.go:44](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L44)
+Code Reference: [server_group_security_context_spec.go:45](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L45)
 
 ### .spec.dbservers.securityContext.dropAllCapabilities: bool
 
@@ -1451,31 +1493,31 @@ DropAllCapabilities specifies if capabilities should be dropped for this pod con
 
 Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
 
-Code Reference: [server_group_security_context_spec.go:40](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L40)
+Code Reference: [server_group_security_context_spec.go:41](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L41)
 
 ### .spec.dbservers.securityContext.fsGroup: int64
 
-Code Reference: [server_group_security_context_spec.go:52](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L52)
+Code Reference: [server_group_security_context_spec.go:53](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L53)
 
 ### .spec.dbservers.securityContext.privileged: bool
 
-Code Reference: [server_group_security_context_spec.go:45](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L45)
+Code Reference: [server_group_security_context_spec.go:46](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L46)
 
 ### .spec.dbservers.securityContext.readOnlyRootFilesystem: bool
 
-Code Reference: [server_group_security_context_spec.go:46](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L46)
+Code Reference: [server_group_security_context_spec.go:47](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L47)
 
 ### .spec.dbservers.securityContext.runAsGroup: int64
 
-Code Reference: [server_group_security_context_spec.go:49](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L49)
+Code Reference: [server_group_security_context_spec.go:50](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L50)
 
 ### .spec.dbservers.securityContext.runAsNonRoot: bool
 
-Code Reference: [server_group_security_context_spec.go:47](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L47)
+Code Reference: [server_group_security_context_spec.go:48](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L48)
 
 ### .spec.dbservers.securityContext.runAsUser: int64
 
-Code Reference: [server_group_security_context_spec.go:48](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L48)
+Code Reference: [server_group_security_context_spec.go:49](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L49)
 
 ### .spec.dbservers.securityContext.seccompProfile: core.SeccompProfile
 
@@ -1484,7 +1526,7 @@ SeccompProfile defines a pod/container's seccomp profile settings. Only one prof
 Links:
 * [Documentation of core.SeccompProfile](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#seccompprofile-v1-core)
 
-Code Reference: [server_group_security_context_spec.go:57](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L57)
+Code Reference: [server_group_security_context_spec.go:69](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L69)
 
 ### .spec.dbservers.securityContext.seLinuxOptions: core.SELinuxOptions
 
@@ -1493,11 +1535,32 @@ SELinuxOptions are the labels to be applied to the container
 Links:
 * [Documentation of core.SELinuxOptions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#selinuxoptions-v1-core)
 
-Code Reference: [server_group_security_context_spec.go:62](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L62)
+Code Reference: [server_group_security_context_spec.go:74](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L74)
 
 ### .spec.dbservers.securityContext.supplementalGroups: []int64
 
-Code Reference: [server_group_security_context_spec.go:51](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L51)
+Code Reference: [server_group_security_context_spec.go:52](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L52)
+
+### .spec.dbservers.securityContext.sysctls: map[string]intstr.IntOrString
+
+Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
+
+sysctls (by the container runtime) might fail to launch.
+
+Map Value can be String or Int
+
+Links:
+* [Documentation](https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/)
+
+Example:
+```yaml
+sysctls:
+  "kernel.shm_rmid_forced": "0"
+  "net.core.somaxconn": 1024
+  "kernel.msgmax": "65536"
+```
+
+Code Reference: [server_group_security_context_spec.go:64](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L64)
 
 ### .spec.dbservers.serviceAccountName: string
 
@@ -1748,11 +1811,11 @@ Code Reference: [server_id_group_spec.go:56](/pkg/apis/deployment/v1/server_id_g
 
 AddCapabilities add new capabilities to containers
 
-Code Reference: [server_group_security_context_spec.go:42](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L42)
+Code Reference: [server_group_security_context_spec.go:43](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L43)
 
 ### .spec.id.securityContext.allowPrivilegeEscalation: bool
 
-Code Reference: [server_group_security_context_spec.go:44](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L44)
+Code Reference: [server_group_security_context_spec.go:45](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L45)
 
 ### .spec.id.securityContext.dropAllCapabilities: bool
 
@@ -1760,31 +1823,31 @@ DropAllCapabilities specifies if capabilities should be dropped for this pod con
 
 Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
 
-Code Reference: [server_group_security_context_spec.go:40](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L40)
+Code Reference: [server_group_security_context_spec.go:41](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L41)
 
 ### .spec.id.securityContext.fsGroup: int64
 
-Code Reference: [server_group_security_context_spec.go:52](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L52)
+Code Reference: [server_group_security_context_spec.go:53](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L53)
 
 ### .spec.id.securityContext.privileged: bool
 
-Code Reference: [server_group_security_context_spec.go:45](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L45)
+Code Reference: [server_group_security_context_spec.go:46](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L46)
 
 ### .spec.id.securityContext.readOnlyRootFilesystem: bool
 
-Code Reference: [server_group_security_context_spec.go:46](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L46)
+Code Reference: [server_group_security_context_spec.go:47](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L47)
 
 ### .spec.id.securityContext.runAsGroup: int64
 
-Code Reference: [server_group_security_context_spec.go:49](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L49)
+Code Reference: [server_group_security_context_spec.go:50](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L50)
 
 ### .spec.id.securityContext.runAsNonRoot: bool
 
-Code Reference: [server_group_security_context_spec.go:47](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L47)
+Code Reference: [server_group_security_context_spec.go:48](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L48)
 
 ### .spec.id.securityContext.runAsUser: int64
 
-Code Reference: [server_group_security_context_spec.go:48](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L48)
+Code Reference: [server_group_security_context_spec.go:49](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L49)
 
 ### .spec.id.securityContext.seccompProfile: core.SeccompProfile
 
@@ -1793,7 +1856,7 @@ SeccompProfile defines a pod/container's seccomp profile settings. Only one prof
 Links:
 * [Documentation of core.SeccompProfile](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#seccompprofile-v1-core)
 
-Code Reference: [server_group_security_context_spec.go:57](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L57)
+Code Reference: [server_group_security_context_spec.go:69](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L69)
 
 ### .spec.id.securityContext.seLinuxOptions: core.SELinuxOptions
 
@@ -1802,11 +1865,32 @@ SELinuxOptions are the labels to be applied to the container
 Links:
 * [Documentation of core.SELinuxOptions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#selinuxoptions-v1-core)
 
-Code Reference: [server_group_security_context_spec.go:62](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L62)
+Code Reference: [server_group_security_context_spec.go:74](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L74)
 
 ### .spec.id.securityContext.supplementalGroups: []int64
 
-Code Reference: [server_group_security_context_spec.go:51](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L51)
+Code Reference: [server_group_security_context_spec.go:52](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L52)
+
+### .spec.id.securityContext.sysctls: map[string]intstr.IntOrString
+
+Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
+
+sysctls (by the container runtime) might fail to launch.
+
+Map Value can be String or Int
+
+Links:
+* [Documentation](https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/)
+
+Example:
+```yaml
+sysctls:
+  "kernel.shm_rmid_forced": "0"
+  "net.core.somaxconn": 1024
+  "kernel.msgmax": "65536"
+```
+
+Code Reference: [server_group_security_context_spec.go:64](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L64)
 
 ### .spec.id.serviceAccountName: string
 
@@ -2290,11 +2374,11 @@ Code Reference: [server_group_spec.go:82](/pkg/apis/deployment/v1/server_group_s
 
 AddCapabilities add new capabilities to containers
 
-Code Reference: [server_group_security_context_spec.go:42](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L42)
+Code Reference: [server_group_security_context_spec.go:43](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L43)
 
 ### .spec.single.securityContext.allowPrivilegeEscalation: bool
 
-Code Reference: [server_group_security_context_spec.go:44](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L44)
+Code Reference: [server_group_security_context_spec.go:45](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L45)
 
 ### .spec.single.securityContext.dropAllCapabilities: bool
 
@@ -2302,31 +2386,31 @@ DropAllCapabilities specifies if capabilities should be dropped for this pod con
 
 Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
 
-Code Reference: [server_group_security_context_spec.go:40](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L40)
+Code Reference: [server_group_security_context_spec.go:41](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L41)
 
 ### .spec.single.securityContext.fsGroup: int64
 
-Code Reference: [server_group_security_context_spec.go:52](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L52)
+Code Reference: [server_group_security_context_spec.go:53](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L53)
 
 ### .spec.single.securityContext.privileged: bool
 
-Code Reference: [server_group_security_context_spec.go:45](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L45)
+Code Reference: [server_group_security_context_spec.go:46](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L46)
 
 ### .spec.single.securityContext.readOnlyRootFilesystem: bool
 
-Code Reference: [server_group_security_context_spec.go:46](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L46)
+Code Reference: [server_group_security_context_spec.go:47](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L47)
 
 ### .spec.single.securityContext.runAsGroup: int64
 
-Code Reference: [server_group_security_context_spec.go:49](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L49)
+Code Reference: [server_group_security_context_spec.go:50](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L50)
 
 ### .spec.single.securityContext.runAsNonRoot: bool
 
-Code Reference: [server_group_security_context_spec.go:47](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L47)
+Code Reference: [server_group_security_context_spec.go:48](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L48)
 
 ### .spec.single.securityContext.runAsUser: int64
 
-Code Reference: [server_group_security_context_spec.go:48](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L48)
+Code Reference: [server_group_security_context_spec.go:49](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L49)
 
 ### .spec.single.securityContext.seccompProfile: core.SeccompProfile
 
@@ -2335,7 +2419,7 @@ SeccompProfile defines a pod/container's seccomp profile settings. Only one prof
 Links:
 * [Documentation of core.SeccompProfile](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#seccompprofile-v1-core)
 
-Code Reference: [server_group_security_context_spec.go:57](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L57)
+Code Reference: [server_group_security_context_spec.go:69](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L69)
 
 ### .spec.single.securityContext.seLinuxOptions: core.SELinuxOptions
 
@@ -2344,11 +2428,32 @@ SELinuxOptions are the labels to be applied to the container
 Links:
 * [Documentation of core.SELinuxOptions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#selinuxoptions-v1-core)
 
-Code Reference: [server_group_security_context_spec.go:62](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L62)
+Code Reference: [server_group_security_context_spec.go:74](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L74)
 
 ### .spec.single.securityContext.supplementalGroups: []int64
 
-Code Reference: [server_group_security_context_spec.go:51](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L51)
+Code Reference: [server_group_security_context_spec.go:52](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L52)
+
+### .spec.single.securityContext.sysctls: map[string]intstr.IntOrString
+
+Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
+
+sysctls (by the container runtime) might fail to launch.
+
+Map Value can be String or Int
+
+Links:
+* [Documentation](https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/)
+
+Example:
+```yaml
+sysctls:
+  "kernel.shm_rmid_forced": "0"
+  "net.core.somaxconn": 1024
+  "kernel.msgmax": "65536"
+```
+
+Code Reference: [server_group_security_context_spec.go:64](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L64)
 
 ### .spec.single.serviceAccountName: string
 
@@ -2902,11 +3007,11 @@ Code Reference: [server_group_spec.go:82](/pkg/apis/deployment/v1/server_group_s
 
 AddCapabilities add new capabilities to containers
 
-Code Reference: [server_group_security_context_spec.go:42](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L42)
+Code Reference: [server_group_security_context_spec.go:43](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L43)
 
 ### .spec.syncmasters.securityContext.allowPrivilegeEscalation: bool
 
-Code Reference: [server_group_security_context_spec.go:44](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L44)
+Code Reference: [server_group_security_context_spec.go:45](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L45)
 
 ### .spec.syncmasters.securityContext.dropAllCapabilities: bool
 
@@ -2914,31 +3019,31 @@ DropAllCapabilities specifies if capabilities should be dropped for this pod con
 
 Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
 
-Code Reference: [server_group_security_context_spec.go:40](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L40)
+Code Reference: [server_group_security_context_spec.go:41](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L41)
 
 ### .spec.syncmasters.securityContext.fsGroup: int64
 
-Code Reference: [server_group_security_context_spec.go:52](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L52)
+Code Reference: [server_group_security_context_spec.go:53](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L53)
 
 ### .spec.syncmasters.securityContext.privileged: bool
 
-Code Reference: [server_group_security_context_spec.go:45](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L45)
+Code Reference: [server_group_security_context_spec.go:46](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L46)
 
 ### .spec.syncmasters.securityContext.readOnlyRootFilesystem: bool
 
-Code Reference: [server_group_security_context_spec.go:46](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L46)
+Code Reference: [server_group_security_context_spec.go:47](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L47)
 
 ### .spec.syncmasters.securityContext.runAsGroup: int64
 
-Code Reference: [server_group_security_context_spec.go:49](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L49)
+Code Reference: [server_group_security_context_spec.go:50](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L50)
 
 ### .spec.syncmasters.securityContext.runAsNonRoot: bool
 
-Code Reference: [server_group_security_context_spec.go:47](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L47)
+Code Reference: [server_group_security_context_spec.go:48](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L48)
 
 ### .spec.syncmasters.securityContext.runAsUser: int64
 
-Code Reference: [server_group_security_context_spec.go:48](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L48)
+Code Reference: [server_group_security_context_spec.go:49](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L49)
 
 ### .spec.syncmasters.securityContext.seccompProfile: core.SeccompProfile
 
@@ -2947,7 +3052,7 @@ SeccompProfile defines a pod/container's seccomp profile settings. Only one prof
 Links:
 * [Documentation of core.SeccompProfile](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#seccompprofile-v1-core)
 
-Code Reference: [server_group_security_context_spec.go:57](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L57)
+Code Reference: [server_group_security_context_spec.go:69](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L69)
 
 ### .spec.syncmasters.securityContext.seLinuxOptions: core.SELinuxOptions
 
@@ -2956,11 +3061,32 @@ SELinuxOptions are the labels to be applied to the container
 Links:
 * [Documentation of core.SELinuxOptions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#selinuxoptions-v1-core)
 
-Code Reference: [server_group_security_context_spec.go:62](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L62)
+Code Reference: [server_group_security_context_spec.go:74](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L74)
 
 ### .spec.syncmasters.securityContext.supplementalGroups: []int64
 
-Code Reference: [server_group_security_context_spec.go:51](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L51)
+Code Reference: [server_group_security_context_spec.go:52](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L52)
+
+### .spec.syncmasters.securityContext.sysctls: map[string]intstr.IntOrString
+
+Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
+
+sysctls (by the container runtime) might fail to launch.
+
+Map Value can be String or Int
+
+Links:
+* [Documentation](https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/)
+
+Example:
+```yaml
+sysctls:
+  "kernel.shm_rmid_forced": "0"
+  "net.core.somaxconn": 1024
+  "kernel.msgmax": "65536"
+```
+
+Code Reference: [server_group_security_context_spec.go:64](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L64)
 
 ### .spec.syncmasters.serviceAccountName: string
 
@@ -3418,11 +3544,11 @@ Code Reference: [server_group_spec.go:82](/pkg/apis/deployment/v1/server_group_s
 
 AddCapabilities add new capabilities to containers
 
-Code Reference: [server_group_security_context_spec.go:42](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L42)
+Code Reference: [server_group_security_context_spec.go:43](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L43)
 
 ### .spec.syncworkers.securityContext.allowPrivilegeEscalation: bool
 
-Code Reference: [server_group_security_context_spec.go:44](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L44)
+Code Reference: [server_group_security_context_spec.go:45](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L45)
 
 ### .spec.syncworkers.securityContext.dropAllCapabilities: bool
 
@@ -3430,31 +3556,31 @@ DropAllCapabilities specifies if capabilities should be dropped for this pod con
 
 Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
 
-Code Reference: [server_group_security_context_spec.go:40](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L40)
+Code Reference: [server_group_security_context_spec.go:41](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L41)
 
 ### .spec.syncworkers.securityContext.fsGroup: int64
 
-Code Reference: [server_group_security_context_spec.go:52](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L52)
+Code Reference: [server_group_security_context_spec.go:53](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L53)
 
 ### .spec.syncworkers.securityContext.privileged: bool
 
-Code Reference: [server_group_security_context_spec.go:45](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L45)
+Code Reference: [server_group_security_context_spec.go:46](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L46)
 
 ### .spec.syncworkers.securityContext.readOnlyRootFilesystem: bool
 
-Code Reference: [server_group_security_context_spec.go:46](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L46)
+Code Reference: [server_group_security_context_spec.go:47](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L47)
 
 ### .spec.syncworkers.securityContext.runAsGroup: int64
 
-Code Reference: [server_group_security_context_spec.go:49](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L49)
+Code Reference: [server_group_security_context_spec.go:50](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L50)
 
 ### .spec.syncworkers.securityContext.runAsNonRoot: bool
 
-Code Reference: [server_group_security_context_spec.go:47](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L47)
+Code Reference: [server_group_security_context_spec.go:48](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L48)
 
 ### .spec.syncworkers.securityContext.runAsUser: int64
 
-Code Reference: [server_group_security_context_spec.go:48](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L48)
+Code Reference: [server_group_security_context_spec.go:49](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L49)
 
 ### .spec.syncworkers.securityContext.seccompProfile: core.SeccompProfile
 
@@ -3463,7 +3589,7 @@ SeccompProfile defines a pod/container's seccomp profile settings. Only one prof
 Links:
 * [Documentation of core.SeccompProfile](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#seccompprofile-v1-core)
 
-Code Reference: [server_group_security_context_spec.go:57](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L57)
+Code Reference: [server_group_security_context_spec.go:69](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L69)
 
 ### .spec.syncworkers.securityContext.seLinuxOptions: core.SELinuxOptions
 
@@ -3472,11 +3598,32 @@ SELinuxOptions are the labels to be applied to the container
 Links:
 * [Documentation of core.SELinuxOptions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#selinuxoptions-v1-core)
 
-Code Reference: [server_group_security_context_spec.go:62](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L62)
+Code Reference: [server_group_security_context_spec.go:74](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L74)
 
 ### .spec.syncworkers.securityContext.supplementalGroups: []int64
 
-Code Reference: [server_group_security_context_spec.go:51](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L51)
+Code Reference: [server_group_security_context_spec.go:52](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L52)
+
+### .spec.syncworkers.securityContext.sysctls: map[string]intstr.IntOrString
+
+Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
+
+sysctls (by the container runtime) might fail to launch.
+
+Map Value can be String or Int
+
+Links:
+* [Documentation](https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/)
+
+Example:
+```yaml
+sysctls:
+  "kernel.shm_rmid_forced": "0"
+  "net.core.somaxconn": 1024
+  "kernel.msgmax": "65536"
+```
+
+Code Reference: [server_group_security_context_spec.go:64](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L64)
 
 ### .spec.syncworkers.serviceAccountName: string
 
