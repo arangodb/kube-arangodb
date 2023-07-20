@@ -65,10 +65,6 @@ func GetAgencyKey(parts ...string) string {
 	return fmt.Sprintf("/%s", strings.Join(parts, "/"))
 }
 
-func GetAgencyReadKey(elements ...string) []string {
-	return elements
-}
-
 func GetAgencyReadRequest(elements ...[]string) ReadRequest {
 	return elements
 }
@@ -79,6 +75,7 @@ func GetAgencyReadRequestFields() ReadRequest {
 		GetAgencyKey(ArangoKey, PlanKey, PlanCollectionsKey),
 		GetAgencyKey(ArangoKey, PlanKey, PlanDatabasesKey),
 		GetAgencyKey(ArangoKey, CurrentKey, PlanCollectionsKey),
+		GetAgencyKey(ArangoKey, CurrentKey, CurrentServersKnown),
 		GetAgencyKey(ArangoKey, CurrentKey, CurrentMaintenanceServers),
 		GetAgencyKey(ArangoKey, TargetKey, TargetHotBackupKey),
 		GetAgencyKey(ArangoKey, TargetKey, TargetJobToDoKey),

@@ -373,3 +373,20 @@ func Test_MissingDatabaseCase(t *testing.T) {
 
 	require.Len(t, GetDBServerBlockingRestartShards(s, "PRMR-1e4bxazq"), 0)
 }
+
+func Test_GetRebootID(t *testing.T) {
+	var s DumpState
+	require.NoError(t, json.Unmarshal(agencyDump39, &s))
+
+	t.Run("Existing", func(t *testing.T) {
+		id, ok := s.Agency.Arango.GetRebootID("PRMR-n92yizyp")
+		require.True(t, ok)
+		require.Equal(t, 1, id)
+	})
+
+	t.Run("Missing", func(t *testing.T) {
+		id, ok := s.Agency.Arango.GetRebootID("PRMR-n92yiz")
+		require.False(t, ok)
+		require.Equal(t, 0, id)
+	})
+}
