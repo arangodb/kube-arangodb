@@ -56,7 +56,6 @@ type updateUpgradeDecision struct {
 	updateAllowed       bool
 	updateMessage       string
 	update              bool
-	restartRequired     bool
 }
 
 func (r *Reconciler) createRotateOrUpgradeDecision(spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext) updateUpgradeDecisionMap {
@@ -89,7 +88,6 @@ func (r *Reconciler) createRotateOrUpgradeDecisionMember(spec api.DeploymentSpec
 	if rotation.CheckPossible(element.Member) {
 		if element.Member.Conditions.IsTrue(api.ConditionTypeRestart) {
 			d.update = true
-			d.restartRequired = true
 		} else if element.Member.Conditions.IsTrue(api.ConditionTypePendingUpdate) {
 			if !element.Member.Conditions.IsTrue(api.ConditionTypeUpdating) && !element.Member.Conditions.IsTrue(api.ConditionTypeUpdateFailed) {
 				d.update = true

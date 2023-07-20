@@ -6,6 +6,7 @@
 - (Feature) Run secured containers as a feature
 - (Feature) Expose core.PodSecurityContext Sysctl options
 - (Bugfix) Skip Collection check for missing Database
+- (Feature) Abort resignation of leadership when DB server is restared
 
 ## [1.2.31](https://github.com/arangodb/kube-arangodb/tree/1.2.31) (2023-07-14)
 - (Improvement) Block traffic on the services if there is more than 1 active leader in ActiveFailover mode

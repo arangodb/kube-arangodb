@@ -36,6 +36,7 @@ const (
 	TargetKey  = "Target"
 
 	CurrentMaintenanceServers = "MaintenanceServers"
+	CurrentServersKnown       = "ServersKnown"
 
 	TargetHotBackupKey = "HotBackup"
 

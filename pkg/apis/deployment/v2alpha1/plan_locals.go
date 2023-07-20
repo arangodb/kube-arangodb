@@ -20,10 +20,16 @@
 
 package v2alpha1
 
+import "fmt"
+
 type PlanLocalKey string
 
 func (p PlanLocalKey) String() string {
 	return string(p)
+}
+
+func (p PlanLocalKey) Register(action Action, format string, args ...interface{}) Action {
+	return action.AddParam(p.String(), fmt.Sprintf(format, args...))
 }
 
 type PlanLocals map[PlanLocalKey]string

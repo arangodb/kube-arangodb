@@ -22,6 +22,7 @@ package reconcile
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/arangodb/go-driver"
 
@@ -29,6 +30,10 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+)
+
+const (
+	actionResignLeadershipRebootID api.PlanLocalKey = "rebootID"
 )
 
 // newResignLeadershipAction creates a new Action that implements the given
@@ -63,14 +68,14 @@ func (a *actionResignLeadership) Start(ctx context.Context) (bool, error) {
 	client, err := a.actionCtx.GetMembersState().State().GetDatabaseClient()
 	if err != nil {
 		a.log.Err(err).Error("Unable to get client")
-		return true, errors.WithStack(err)
+		return false, errors.WithStack(err)
 	}
 
 	switch group {
 	case api.ServerGroupDBServers:
 		if agencyState, agencyOK := a.actionCtx.GetAgencyCache(); !agencyOK {
-			a.log.Err(err).Warn("Maintenance is enabled, skipping action")
-			return true, errors.WithStack(err)
+			a.log.Warn("AgencyCache is not ready")
+			return false, nil
 		} else if agencyState.Supervision.Maintenance.Exists() {
 			// We are done, action cannot be handled on maintenance mode
 			a.log.Warn("Maintenance is enabled, skipping action")
@@ -82,7 +87,7 @@ func (a *actionResignLeadership) Start(ctx context.Context) (bool, error) {
 		cluster, err := client.Cluster(ctxChild)
 		if err != nil {
 			a.log.Err(err).Error("Unable to get cluster client")
-			return true, errors.WithStack(err)
+			return false, errors.WithStack(err)
 		}
 
 		var jobID string
@@ -92,13 +97,13 @@ func (a *actionResignLeadership) Start(ctx context.Context) (bool, error) {
 		a.log.Debug("Temporary shutdown, resign leadership")
 		if err := cluster.ResignServer(jobCtx, m.ID); err != nil {
 			a.log.Err(err).Debug("Failed to resign server")
-			return true, errors.WithStack(err)
+			return false, errors.WithStack(err)
 		}
 
 		m.CleanoutJobID = jobID
 
 		if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
-			return true, errors.WithStack(err)
+			return false, errors.WithStack(err)
 		}
 
 		return false, nil
@@ -127,6 +132,8 @@ func (a *actionResignLeadership) CheckProgress(ctx context.Context) (bool, bool,
 			return false, false, errors.WithStack(err)
 		}
 		return true, false, nil
+	} else if a.isServerRebooted(agencyState, driver.ServerID(m.ID)) {
+		return true, false, nil
 	}
 
 	_, jobStatus := agencyState.Target.GetJob(state.JobID(m.CleanoutJobID))
@@ -149,4 +156,32 @@ func (a *actionResignLeadership) CheckProgress(ctx context.Context) (bool, bool,
 		return true, false, nil
 	}
 	return false, false, nil
+}
+
+// isServerRebooted returns true when a given server ID was rebooted during resignation of leadership.
+func (a *actionResignLeadership) isServerRebooted(agencyState state.State, serverID driver.ServerID) bool {
+	rebootID, ok := agencyState.GetRebootID(serverID)
+	if !ok {
+		return false
+	}
+
+	v, ok := a.actionCtx.Get(a.action, actionResignLeadershipRebootID)
+	if !ok {
+		a.log.Warn("missing reboot ID in action's locals", v)
+		return false
+	}
+
+	r, err := strconv.Atoi(v)
+	if err != nil {
+		a.log.Err(err).Warn("reboot ID '%s' supposed to be a number", v)
+		return false
+	}
+
+	if rebootID <= r {
+		// Server has not been restarted.
+		return false
+	}
+
+	a.log.Warn("resign leadership aborted because rebootID has changed from %d to %d", r, rebootID)
+	return true
 }
