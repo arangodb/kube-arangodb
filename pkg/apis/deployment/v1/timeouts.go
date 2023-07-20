@@ -35,7 +35,12 @@ type Timeouts struct {
 	// MaintenanceGracePeriod action timeout
 	MaintenanceGracePeriod *Timeout `json:"maintenanceGracePeriod,omitempty"`
 
-	// Actions
+	// Actions keep map of the actions timeouts.
+	// +doc/type: map[string]meta.Duration
+	// +doc/link: List of supported action names|/docs/generated/actions.md
+	// +doc/link: Definition of meta.Duration|https://github.com/kubernetes/apimachinery/blob/v0.26.6/pkg/apis/meta/v1/duration.go
+	// +doc/example: actions:
+	// +doc/example:   AddMember: 30m
 	Actions ActionTimeouts `json:"actions,omitempty"`
 
 	// deprecated

@@ -51,7 +51,14 @@ type ServerGroupSpecSecurityContext struct {
 	SupplementalGroups []int64 `json:"supplementalGroups,omitempty"`
 	FSGroup            *int64  `json:"fsGroup,omitempty"`
 
+	// SeccompProfile defines a pod/container's seccomp profile settings. Only one profile source may be set.
+	// +doc/type: core.SeccompProfile
+	// +doc/link: Documentation of core.SeccompProfile|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#seccompprofile-v1-core
 	SeccompProfile *core.SeccompProfile `json:"seccompProfile,omitempty" protobuf:"bytes,11,opt,name=seccompProfile"`
+
+	// SELinuxOptions are the labels to be applied to the container
+	// +doc/type: core.SELinuxOptions
+	// +doc/link: Documentation of core.SELinuxOptions|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#selinuxoptions-v1-core
 	SELinuxOptions *core.SELinuxOptions `json:"seLinuxOptions,omitempty" protobuf:"bytes,3,opt,name=seLinuxOptions"`
 }
 

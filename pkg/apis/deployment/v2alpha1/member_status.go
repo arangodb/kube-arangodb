@@ -86,7 +86,9 @@ type MemberStatus struct {
 	SecondaryPersistentVolumeClaim *MemberPersistentVolumeClaimStatus `json:"secondaryPersistentVolumeClaim,omitempty"`
 
 	// deprecated
-	// SideCarSpecs contains list of specifications specified for side cars
+	// SideCarSpecs contains map of specifications specified for side cars
+	// +doc/type: map[string]core.Container
+	// +doc/link: Documentation of core.Container|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core
 	SideCarSpecs map[string]core.Container `json:"sidecars-specs,omitempty"`
 	// deprecated
 	// PodName holds the name of the Pod that currently runs this member

@@ -178,6 +178,9 @@ type DeploymentSpec struct {
 
 	Timeouts *Timeouts `json:"timeouts,omitempty"`
 
+	// ClusterDomain define domain used in the kubernetes cluster.
+	// Required only of domain is not set to default (cluster.local)
+	// +doc/default: cluster.local
 	ClusterDomain *string `json:"ClusterDomain,omitempty"`
 
 	// CommunicationMethod define communication method used in deployment
