@@ -21,10 +21,13 @@
 package v2alpha1
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
@@ -76,11 +79,67 @@ func TestServerGroupSpecSecurityContext_NewPodSecurityContext(t *testing.T) {
 				SupplementalGroups: []int64{1},
 			},
 		},
+		"pass sysctl opts": {
+			sc: &ServerGroupSpecSecurityContext{
+				Sysctls: map[string]intstr.IntOrString{
+					"opt.1": intstr.FromInt(1),
+					"opt.2": intstr.FromString("2"),
+				},
+			},
+			secured: false,
+			want: &core.PodSecurityContext{
+				Sysctls: []core.Sysctl{
+					{
+						Name:  "opt.1",
+						Value: "1",
+					},
+					{
+						Name:  "opt.2",
+						Value: "2",
+					},
+				},
+			},
+		},
 	}
 
 	for testName, testCase := range testCases {
 		t.Run(testName, func(t *testing.T) {
 			actual := testCase.sc.NewPodSecurityContext(testCase.secured)
+			assert.Equalf(t, testCase.want, actual, "NewPodSecurityContext(%v)", testCase.secured)
+		})
+	}
+}
+
+func TestServerGroupSpecSecurityContext_NewPodSecurityContextFromJSON(t *testing.T) {
+	testCases := map[string]struct {
+		sc      string
+		secured bool
+		want    *core.PodSecurityContext
+	}{
+		"pass sysctl opts": {
+			sc:      `{"sysctls":{"opt.1":1, "opt.2":"2"}}`,
+			secured: false,
+			want: &core.PodSecurityContext{
+				Sysctls: []core.Sysctl{
+					{
+						Name:  "opt.1",
+						Value: "1",
+					},
+					{
+						Name:  "opt.2",
+						Value: "2",
+					},
+				},
+			},
+		},
+	}
+
+	for testName, testCase := range testCases {
+		t.Run(testName, func(t *testing.T) {
+			var p ServerGroupSpecSecurityContext
+			require.NoError(t, json.Unmarshal([]byte(testCase.sc), &p))
+
+			actual := p.NewPodSecurityContext(testCase.secured)
 			assert.Equalf(t, testCase.want, actual, "NewPodSecurityContext(%v)", testCase.secured)
 		})
 	}
