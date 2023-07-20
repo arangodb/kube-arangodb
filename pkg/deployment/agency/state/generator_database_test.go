@@ -66,6 +66,11 @@ func (d databaseGenerator) Collection(name string) CollectionGeneratorInterface 
 
 func (d databaseGenerator) Add() Generator {
 	return func(t *testing.T, s *State) {
+		if s.Plan.Databases == nil {
+			s.Plan.Databases = map[string]PlanDatabase{}
+		}
+		s.Plan.Databases[d.db] = PlanDatabase{}
+
 		if s.Plan.Collections == nil {
 			s.Plan.Collections = PlanCollections{}
 		}

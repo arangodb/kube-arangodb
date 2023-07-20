@@ -276,6 +276,11 @@ func GetDBServerBlockingRestartShards(s State, serverID Server) CollectionShardD
 func FilterDBServerShardRestart(serverID Server) ShardFilter {
 	return NegateFilter(func(s State, db, col, shard string) bool {
 		// Filter all shards which are not blocking restart of server
+		if _, ok := s.Plan.Databases[db]; !ok {
+			// DB Is missing, restart possible
+			return true
+		}
+
 		plan := s.Plan.Collections[db][col]
 		planShard := plan.Shards[shard]
 
