@@ -64,3 +64,22 @@ func InitType[T interface{}](in *T) *T {
 	var q T
 	return &q
 }
+
+type ConditionalFunction[T interface{}] func() (T, bool)
+type ConditionalP1Function[T, P1 interface{}] func(p1 P1) (T, bool)
+
+func CheckConditionalNil[T interface{}](in ConditionalFunction[T]) *T {
+	if v, ok := in(); ok {
+		return &v
+	}
+
+	return nil
+}
+
+func CheckConditionalP1Nil[T, P1 interface{}](in ConditionalP1Function[T, P1], p1 P1) *T {
+	if v, ok := in(p1); ok {
+		return &v
+	}
+
+	return nil
+}

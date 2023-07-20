@@ -116,3 +116,40 @@ func Test_Refs(t *testing.T) {
 	testRefs[time.Duration](t, time.Duration(500), time.Duration(1500), time.Duration(0))
 	testRefs[core.PullPolicy](t, core.PullAlways, core.PullNever, "")
 }
+
+func generateConditionalP0Function[T interface{}](ret T, ok bool) *T {
+	return CheckConditionalNil[T](func() (T, bool) {
+		return ret, ok
+	})
+}
+
+func generateConditionalP1Function[T interface{}](ret T, ok bool) *T {
+	return CheckConditionalP1Nil[T, int](func(in int) (T, bool) {
+		return ret, ok
+	}, 1)
+}
+
+func Test_CheckConditionalNil(t *testing.T) {
+	t.Run("P0", func(t *testing.T) {
+		t.Run("Nil if false", func(t *testing.T) {
+			v := generateConditionalP0Function(0, false)
+			require.Nil(t, v)
+		})
+		t.Run("NotNil if true", func(t *testing.T) {
+			v := generateConditionalP0Function(0, true)
+			require.NotNil(t, v)
+			require.EqualValues(t, 0, *v)
+		})
+	})
+	t.Run("P1", func(t *testing.T) {
+		t.Run("Nil if false", func(t *testing.T) {
+			v := generateConditionalP1Function(0, false)
+			require.Nil(t, v)
+		})
+		t.Run("NotNil if true", func(t *testing.T) {
+			v := generateConditionalP1Function(0, true)
+			require.NotNil(t, v)
+			require.EqualValues(t, 0, *v)
+		})
+	})
+}

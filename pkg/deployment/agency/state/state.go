@@ -20,6 +20,8 @@
 
 package state
 
+import "github.com/arangodb/go-driver"
+
 type Root struct {
 	Arango   State `json:"arango"`
 	ArangoDB DB    `json:"arangodb,omitempty"`
@@ -40,9 +42,18 @@ type State struct {
 	Target      Target      `json:"Target"`
 }
 
+// ServerKnown stores information about single ArangoDB server.
+type ServerKnown struct {
+	// RebootID is an incremental value which describes how many times server was restarted.
+	RebootID int `json:"rebootId"`
+}
+
 type Current struct {
 	MaintenanceServers CurrentMaintenanceServers `json:"MaintenanceServers,omitempty"`
 	Collections        CurrentCollections        `json:"Collections"`
+
+	// ServersKnown stores information about ArangoDB servers.
+	ServersKnown map[driver.ServerID]ServerKnown `json:"ServersKnown,omitempty"`
 }
 
 type Plan struct {
@@ -370,4 +381,14 @@ func (s State) GetCollectionDatabaseByID(id string) (string, bool) {
 	}
 
 	return "", false
+}
+
+// GetRebootID returns reboot ID for a given server ID.
+// returns false when a server ID does not exist in cache.
+func (s State) GetRebootID(id driver.ServerID) (int, bool) {
+	if v, ok := s.Current.ServersKnown[id]; ok {
+		return v.RebootID, true
+	}
+
+	return 0, false
 }

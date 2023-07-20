@@ -31,24 +31,24 @@ import (
 // createRotateMemberPlan creates a plan to rotate (stop-recreate-start) an existing
 // member.
 func (r *Reconciler) createRotateMemberPlan(member api.MemberStatus,
-	group api.ServerGroup, spec api.DeploymentSpec, reason string) api.Plan {
+	group api.ServerGroup, spec api.DeploymentSpec, reason string, rebootId *int) api.Plan {
 	r.log.
 		Str("id", member.ID).
 		Str("role", group.AsRole()).
 		Str("reason", reason).
 		Debug("Creating rotation plan")
-	return createRotateMemberPlanWithAction(member, group, api.ActionTypeRotateMember, spec, reason)
+	return createRotateMemberPlanWithAction(member, group, api.ActionTypeRotateMember, spec, reason, rebootId)
 }
 
 // createRotateMemberPlanWithAction creates a plan to rotate (stop-<action>>-start) an existing
 // member.
 func createRotateMemberPlanWithAction(member api.MemberStatus,
-	group api.ServerGroup, action api.ActionType, spec api.DeploymentSpec, reason string) api.Plan {
+	group api.ServerGroup, action api.ActionType, spec api.DeploymentSpec, reason string, rebootId *int) api.Plan {
 
 	var plan = api.Plan{
 		actions.NewAction(api.ActionTypeCleanTLSKeyfileCertificate, group, member, "Remove server keyfile and enforce renewal/recreation"),
 	}
-	plan = withSecureWrap(member, group, spec, plan...)
+	plan = withSecureWrap(member, group, spec, rebootId, plan...)
 
 	plan = plan.After(
 		actions.NewAction(api.ActionTypeKillMemberPod, group, member, reason),

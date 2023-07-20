@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -59,12 +59,17 @@ func withMemberMaintenance(group api.ServerGroup, member api.MemberStatus, reaso
 		actions.NewAction(api.ActionTypeDisableMemberMaintenance, group, member, reason))
 }
 
-func withResignLeadership(group api.ServerGroup, member api.MemberStatus, reason string, plan api.Plan) api.Plan {
+func withResignLeadership(group api.ServerGroup, member api.MemberStatus, reason string, plan api.Plan, rebootID *int) api.Plan {
 	if member.Image == nil {
 		return plan
 	}
 
-	return api.AsPlan(plan).Before(actions.NewAction(api.ActionTypeResignLeadership, group, member, reason))
+	action := actions.NewAction(api.ActionTypeResignLeadership, group, member, reason)
+	if rebootID != nil {
+		action = actionResignLeadershipRebootID.Register(action, "%d", *rebootID)
+	}
+
+	return api.AsPlan(plan).Before(action)
 }
 
 func cleanOutMember(group api.ServerGroup, m api.MemberStatus) api.Plan {

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,10 +20,16 @@
 
 package v2alpha1
 
+import "fmt"
+
 type PlanLocalKey string
 
 func (p PlanLocalKey) String() string {
 	return string(p)
+}
+
+func (p PlanLocalKey) Register(action Action, format string, args ...interface{}) Action {
+	return action.AddParam(p.String(), fmt.Sprintf(format, args...))
 }
 
 type PlanLocals map[PlanLocalKey]string

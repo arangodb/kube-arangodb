@@ -35,6 +35,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -117,10 +118,16 @@ func (r *Reconciler) createMarkToRemovePlan(ctx context.Context, apiObject k8sut
 func (r *Reconciler) createRotateOrUpgradePlanInternal(apiObject k8sutil.APIObject, spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext) (api.Plan, bool) {
 	decision := r.createRotateOrUpgradeDecision(spec, status, context)
 
+	agencyCache, ok := context.GetAgencyCache()
+	if !ok {
+		// Unable to get agency state, do not restart
+		return nil, true
+	}
+
 	if decision.IsUpgrade() {
-		return r.createUpgradePlanInternalCondition(apiObject, spec, status, context, decision)
+		return r.createUpgradePlanInternalCondition(apiObject, spec, status, context, decision, agencyCache)
 	} else if decision.IsUpdate() {
-		return r.createUpdatePlanInternalCondition(apiObject, spec, status, decision, context)
+		return r.createUpdatePlanInternalCondition(apiObject, spec, status, decision, context, agencyCache)
 	} else {
 		upgradeCondition := status.Conditions.IsTrue(api.ConditionTypeUpgradeInProgress)
 		updateCondition := status.Conditions.IsTrue(api.ConditionTypeUpdateInProgress)
@@ -143,8 +150,8 @@ func (r *Reconciler) createRotateOrUpgradePlanInternal(apiObject k8sutil.APIObje
 	return nil, false
 }
 
-func (r *Reconciler) createUpdatePlanInternalCondition(apiObject k8sutil.APIObject, spec api.DeploymentSpec, status api.DeploymentStatus, decision updateUpgradeDecisionMap, context PlanBuilderContext) (api.Plan, bool) {
-	plan, idle := r.createUpdatePlanInternal(apiObject, spec, status, decision, context)
+func (r *Reconciler) createUpdatePlanInternalCondition(apiObject k8sutil.APIObject, spec api.DeploymentSpec, status api.DeploymentStatus, decision updateUpgradeDecisionMap, context PlanBuilderContext, agencyCache state.State) (api.Plan, bool) {
+	plan, idle := r.createUpdatePlanInternal(apiObject, spec, status, decision, context, agencyCache)
 
 	if idle || len(plan) > 0 {
 		if !status.Conditions.IsTrue(api.ConditionTypeUpdateInProgress) {
@@ -157,8 +164,9 @@ func (r *Reconciler) createUpdatePlanInternalCondition(apiObject k8sutil.APIObje
 	return plan, idle
 }
 
-func (r *Reconciler) createUpdatePlanInternal(apiObject k8sutil.APIObject, spec api.DeploymentSpec, status api.DeploymentStatus, decision updateUpgradeDecisionMap, context PlanBuilderContext) (api.Plan, bool) {
+func (r *Reconciler) createUpdatePlanInternal(apiObject k8sutil.APIObject, spec api.DeploymentSpec, status api.DeploymentStatus, decision updateUpgradeDecisionMap, context PlanBuilderContext, agencyCache state.State) (api.Plan, bool) {
 	// Update phase
+
 	for _, m := range status.Members.AsList() {
 		d := decision[m.Member.ID]
 		if !d.update {
@@ -175,7 +183,7 @@ func (r *Reconciler) createUpdatePlanInternal(apiObject k8sutil.APIObject, spec 
 		}
 
 		if m.Member.Conditions.IsTrue(api.ConditionTypeRestart) {
-			return r.createRotateMemberPlan(m.Member, m.Group, spec, "Restart flag present"), false
+			return r.createRotateMemberPlan(m.Member, m.Group, spec, "Restart flag present", util.CheckConditionalP1Nil(agencyCache.GetRebootID, driver.ServerID(m.Member.ID))), false
 		}
 
 		arangoMember, ok := context.ACS().CurrentClusterCache().ArangoMember().V1().GetSimple(m.Member.ArangoMemberName(apiObject.GetName(), m.Group))
@@ -224,8 +232,8 @@ func (r *Reconciler) createUpdatePlanInternal(apiObject k8sutil.APIObject, spec 
 	return nil, true
 }
 
-func (r *Reconciler) createUpgradePlanInternalCondition(apiObject k8sutil.APIObject, spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext, decision updateUpgradeDecisionMap) (api.Plan, bool) {
-	plan, idle := r.createUpgradePlanInternal(apiObject, spec, status, context, decision)
+func (r *Reconciler) createUpgradePlanInternalCondition(apiObject k8sutil.APIObject, spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext, decision updateUpgradeDecisionMap, agencyCache state.State) (api.Plan, bool) {
+	plan, idle := r.createUpgradePlanInternal(apiObject, spec, status, context, decision, agencyCache)
 
 	if idle || len(plan) > 0 {
 		if !status.Conditions.IsTrue(api.ConditionTypeUpgradeInProgress) {
@@ -238,7 +246,7 @@ func (r *Reconciler) createUpgradePlanInternalCondition(apiObject k8sutil.APIObj
 	return plan, idle
 }
 
-func (r *Reconciler) createUpgradePlanInternal(apiObject k8sutil.APIObject, spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext, decision updateUpgradeDecisionMap) (api.Plan, bool) {
+func (r *Reconciler) createUpgradePlanInternal(apiObject k8sutil.APIObject, spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext, decision updateUpgradeDecisionMap, agencyCache state.State) (api.Plan, bool) {
 	for _, m := range status.Members.AsList() {
 		// Pre-check
 		d := decision[m.Member.ID]
@@ -285,10 +293,10 @@ func (r *Reconciler) createUpgradePlanInternal(apiObject k8sutil.APIObject, spec
 		if d.updateAllowed {
 			// We are fine, group is alive so we can proceed
 			r.planLogger.Str("member", m.Member.ID).Str("Reason", d.updateMessage).Info("Upgrade allowed")
-			return r.createUpgradeMemberPlan(m.Member, m.Group, "Version upgrade", spec, status, !d.upgradeDecision.AutoUpgradeNeeded), false
+			return r.createUpgradeMemberPlan(m.Member, m.Group, "Version upgrade", spec, status, !d.upgradeDecision.AutoUpgradeNeeded, agencyCache), false
 		} else if d.unsafeUpdateAllowed {
 			r.planLogger.Str("member", m.Member.ID).Str("Reason", d.updateMessage).Info("Pod needs upgrade but cluster is not ready. Either some shards are not in sync or some member is not ready, but unsafe upgrade is allowed")
-			return r.createUpgradeMemberPlan(m.Member, m.Group, "Version upgrade", spec, status, !d.upgradeDecision.AutoUpgradeNeeded), false
+			return r.createUpgradeMemberPlan(m.Member, m.Group, "Version upgrade", spec, status, !d.upgradeDecision.AutoUpgradeNeeded, agencyCache), false
 		} else {
 			r.planLogger.Str("member", m.Member.ID).Str("Reason", d.updateMessage).Info("Pod needs upgrade but cluster is not ready. Either some shards are not in sync or some member is not ready.")
 			return nil, true
@@ -499,7 +507,7 @@ func groupReadyForRestart(context PlanBuilderContext, status api.DeploymentStatu
 // createUpgradeMemberPlan creates a plan to upgrade (stop-recreateWithAutoUpgrade-stop-start) an existing
 // member.
 func (r *Reconciler) createUpgradeMemberPlan(member api.MemberStatus,
-	group api.ServerGroup, reason string, spec api.DeploymentSpec, status api.DeploymentStatus, rotateStatefull bool) api.Plan {
+	group api.ServerGroup, reason string, spec api.DeploymentSpec, status api.DeploymentStatus, rotateStatefull bool, agencyCache state.State) api.Plan {
 	upgradeAction := api.ActionTypeUpgradeMember
 	if rotateStatefull || group.IsStateless() {
 		upgradeAction = api.ActionTypeRotateMember
@@ -511,7 +519,7 @@ func (r *Reconciler) createUpgradeMemberPlan(member api.MemberStatus,
 		Str("action", string(upgradeAction)).
 		Info("Creating upgrade plan")
 
-	plan := createRotateMemberPlanWithAction(member, group, upgradeAction, spec, reason)
+	plan := createRotateMemberPlanWithAction(member, group, upgradeAction, spec, reason, util.CheckConditionalP1Nil(agencyCache.GetRebootID, driver.ServerID(member.ID)))
 
 	if member.Image == nil || member.Image.Image != spec.GetImage() {
 		plan = plan.Before(actions.NewAction(api.ActionTypeSetMemberCurrentImage, group, member, reason).SetImage(spec.GetImage()))
@@ -524,7 +532,7 @@ func (r *Reconciler) createUpgradeMemberPlan(member api.MemberStatus,
 }
 
 func withSecureWrap(member api.MemberStatus,
-	group api.ServerGroup, spec api.DeploymentSpec, plan ...api.Action) api.Plan {
+	group api.ServerGroup, spec api.DeploymentSpec, rebootID *int, plan ...api.Action) api.Plan {
 	image := member.Image
 	if image == nil {
 		return plan
@@ -534,7 +542,7 @@ func withSecureWrap(member api.MemberStatus,
 		// In this case we skip resign leadership but we enable maintenance
 		return withMaintenanceStart(plan...)
 	} else {
-		return withResignLeadership(group, member, "ResignLeadership", plan)
+		return withResignLeadership(group, member, "ResignLeadership", plan, rebootID)
 	}
 }
 
