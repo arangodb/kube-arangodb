@@ -46,6 +46,22 @@ func TypeOrDefault[T interface{}](input *T, defaultValue ...T) T {
 	return *input
 }
 
+// First returns first not nil value
+func First[T interface{}](input ...*T) *T {
+	for _, i := range input {
+		if i != nil {
+			return i
+		}
+	}
+
+	return nil
+}
+
+// LastFromList returns last element on the list
+func LastFromList[T interface{}](in []T) T {
+	return in[len(in)-1]
+}
+
 // BoolSwitch define bool switch for defined types - in case of true t T is returned, in case of false f T
 func BoolSwitch[T interface{}](s bool, t, f T) T {
 	if s {
