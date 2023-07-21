@@ -30,7 +30,12 @@ import (
 
 // ExternalAccessSpec holds configuration for the external access provided for the deployment.
 type ExternalAccessSpec struct {
-	// Type of external access
+	// Type specifies the type of Service that will be created to provide access to the ArangoDB deployment from outside the Kubernetes cluster.
+	// Possible values are:
+	// - `None` To limit access to application running inside the Kubernetes cluster.
+	// - `LoadBalancer` To create a Service of type LoadBalancer for the ArangoDB deployment.
+	// - `NodePort` To create a Service of type NodePort for the ArangoDB deployment.
+	// - `Auto` (default) To create a Service of type LoadBalancer and fallback to a Service or type NodePort when the LoadBalancer is not assigned an IP address.
 	Type *ExternalAccessType `json:"type,omitempty"`
 	// Optional port used in case of Auto or NodePort type.
 	NodePort *int `json:"nodePort,omitempty"`

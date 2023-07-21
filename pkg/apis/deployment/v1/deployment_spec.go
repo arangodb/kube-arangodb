@@ -119,94 +119,181 @@ type DeploymentSpec struct {
 	// +doc/immutable: Change of the ArangoDeployment Mode is not possible after creation.
 	Mode *DeploymentMode `json:"mode,omitempty"`
 
-	Environment      *Environment     `json:"environment,omitempty"`
-	StorageEngine    *StorageEngine   `json:"storageEngine,omitempty"`
-	Image            *string          `json:"image,omitempty"`
-	ImagePullPolicy  *core.PullPolicy `json:"imagePullPolicy,omitempty"`
-	ImagePullSecrets []string         `json:"imagePullSecrets,omitempty"`
+	// Environment setting specifies the type of environment in which the deployment is created.
+	// Possible values are:
+	// - `Development` This value optimizes the deployment for development use. It is possible to run a deployment on a small number of nodes (e.g. minikube).
+	// - `Production` This value optimizes the deployment for production use. It puts required affinity constraints on all pods to avoid Agents & DB-Servers from running on the same machine.
+	// +doc/default: Development
+	Environment *Environment `json:"environment,omitempty"`
+	// StorageEngine specifies the type of storage engine used for all servers in the cluster.
+	// Possible values are:
+	// - `MMFiles` To use the MMFiles storage engine. Deprecated.
+	// - `RocksDB` To use the RocksDB storage engine.
+	// This setting cannot be changed after the cluster has been created.
+	// +doc/default: RocksDB
+	StorageEngine *StorageEngine `json:"storageEngine,omitempty"`
+	// Image specifies the docker image to use for all ArangoDB servers.
+	// In a development environment this setting defaults to arangodb/arangodb:latest.
+	// For production environments this is a required setting without a default value.
+	// It is highly recommend to use explicit version (not latest) for production environments.
+	Image *string `json:"image,omitempty"`
+	// ImagePullPolicy specifies the pull policy for the docker image to use for all ArangoDB servers.
+	// +doc/type: core.PullPolicy
+	// +doc/link: Documentation of core.PullPolicy|https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy
+	ImagePullPolicy *core.PullPolicy `json:"imagePullPolicy,omitempty"`
+	// ImagePullSecrets specifies the list of image pull secrets for the docker image to use for all ArangoDB servers.
+	ImagePullSecrets []string `json:"imagePullSecrets,omitempty"`
 
 	// ImageDiscoveryMode specifies the image discovery mode.
 	// +doc/enum: kubelet|Use sha256 of the discovered image in the pods
 	// +doc/enum: direct|Use image provided in the spec.image directly in the pods
 	ImageDiscoveryMode *DeploymentImageDiscoveryModeSpec `json:"imageDiscoveryMode,omitempty"`
 
+	// DowntimeAllowed setting is used to allow automatic reconciliation actions that yield some downtime of the ArangoDB deployment.
+	// When this setting is set to false, no automatic action that may result in downtime is allowed.
+	// If the need for such an action is detected, an event is added to the ArangoDeployment.
+	// Once this setting is set to true, the automatic action is executed.
+	// Operations that may result in downtime are:
+	// - Rotating TLS CA certificate
+	// Note: It is still possible that there is some downtime when the Kubernetes cluster is down, or in a bad state, irrespective of the value of this setting.
+	// +doc/default: false
 	DowntimeAllowed *bool `json:"downtimeAllowed,omitempty"`
-	DisableIPv6     *bool `json:"disableIPv6,omitempty"`
-
+	// DisableIPv6 setting prevents the use of IPv6 addresses by ArangoDB servers.
+	// This setting cannot be changed after the deployment has been created.
+	// +doc/default: false
+	DisableIPv6 *bool `json:"disableIPv6,omitempty"`
+	// Upgrade allows to configure upgrade-related options
+	// +doc/type: DeploymentUpgradeSpec
 	Upgrade *DeploymentUpgradeSpec `json:"upgrade,omitempty"`
-
+	// Features allows to configure feature flags
+	// +doc/type: DeploymentFeatures
 	Features *DeploymentFeatures `json:"features,omitempty"`
-
+	// NetworkAttachedVolumes
+	// If set to `true`, a ResignLeadership operation will be triggered when a DB-Server pod is evicted (rather than a CleanOutServer operation).
+	// Furthermore, the pod will simply be redeployed on a different node, rather than cleaned and retired and replaced by a new member.
+	// You must only set this option to true if your persistent volumes are “movable” in the sense that they can be mounted from a different k8s node, like in the case of network attached volumes.
+	// If your persistent volumes are tied to a specific pod, you must leave this option on false.
+	// +doc/default: false
 	NetworkAttachedVolumes *bool `json:"networkAttachedVolumes,omitempty"`
-
-	// Annotations specified the annotations added to Pods in this group.
+	// Annotations specifies the annotations added to all ArangoDeployment owned resources (pods, services, PVC’s, PDB’s).
 	Annotations map[string]string `json:"annotations,omitempty"`
 	// AnnotationsIgnoreList list regexp or plain definitions which annotations should be ignored
 	AnnotationsIgnoreList []string `json:"annotationsIgnoreList,omitempty"`
-	// AnnotationsMode Define annotations mode which should be use while overriding annotations
+	// AnnotationsMode defines annotations mode which should be use while overriding annotations.
+	// Possible values are:
+	// - `disabled` disable annotations/labels override. Default if there is no annotations/labels set in ArangoDeployment
+	// - `append` add new annotations/labels without affecting old ones
+	// - `replace` replace existing annotations/labels
 	AnnotationsMode *LabelsMode `json:"annotationsMode,omitempty"`
-	// Labels specified the labels added to Pods in this group.
+	// Labels specifies the labels added to Pods in this group.
 	Labels map[string]string `json:"labels,omitempty"`
 	// LabelsIgnoreList list regexp or plain definitions which labels should be ignored
 	LabelsIgnoreList []string `json:"labelsIgnoreList,omitempty"`
 	// LabelsMode Define labels mode which should be use while overriding labels
+	// Possible values are:
+	// - `disabled` disable annotations/labels override. Default if there is no annotations/labels set in ArangoDeployment
+	// - `append` add new annotations/labels without affecting old ones
+	// - `replace` replace existing annotations/labels
 	LabelsMode *LabelsMode `json:"labelsMode,omitempty"`
-
+	// RestoreFrom setting specifies a `ArangoBackup` resource name the cluster should be restored from.
+	// After a restore or failure to do so, the status of the deployment contains information about the restore operation in the restore key.
+	// It will contain some of the following fields:
+	// - `requestedFrom`: name of the ArangoBackup used to restore from.
+	// - `message`: optional message explaining why the restore failed.
+	// - `state`: state indicating if the restore was successful or not. Possible values: Restoring, Restored, RestoreFailed
+	// If the restoreFrom key is removed from the spec, the restore key is deleted as well.
+	// A new restore attempt is made if and only if either in the status restore is not set or if spec.restoreFrom and status.requestedFrom are different.
 	RestoreFrom *string `json:"restoreFrom,omitempty"`
-
+	// RestoreEncryptionSecret specifies optional name of secret which contains encryption key used for restore
 	RestoreEncryptionSecret *string `json:"restoreEncryptionSecret,omitempty"`
-
 	// AllowUnsafeUpgrade determines if upgrade on missing member or with not in sync shards is allowed
 	AllowUnsafeUpgrade *bool `json:"allowUnsafeUpgrade,omitempty"`
-
+	// ExternalAccess holds configuration for the external access provided for the deployment.
+	// +doc/type: ExternalAccessSpec
 	ExternalAccess ExternalAccessSpec `json:"externalAccess"`
-	RocksDB        RocksDBSpec        `json:"rocksdb"`
+	// RocksDB holds rocksdb-specific configuration settings
+	// +doc/type: RocksDBSpec
+	RocksDB RocksDBSpec `json:"rocksdb"`
+	// Authentication holds authentication configuration settings
+	// +doc/type: AuthenticationSpec
 	Authentication AuthenticationSpec `json:"auth"`
-	TLS            TLSSpec            `json:"tls"`
-	Sync           SyncSpec           `json:"sync"`
-	License        LicenseSpec        `json:"license"`
-	Metrics        MetricsSpec        `json:"metrics"`
-	Lifecycle      LifecycleSpec      `json:"lifecycle,omitempty"`
-
+	// TLS holds TLS configuration settings
+	// +doc/type: TLSSpec
+	TLS TLSSpec `json:"tls"`
+	// Sync holds Deployment-to-Deployment synchronization configuration settings
+	// +doc/type: SyncSpec
+	Sync SyncSpec `json:"sync"`
+	// License holds license settings
+	// +doc/type: LicenseSpec
+	License LicenseSpec `json:"license"`
+	// Metrics holds metrics configuration settings
+	// +doc/type: MetricsSpec
+	Metrics MetricsSpec `json:"metrics"`
+	// Lifecycle holds lifecycle configuration settings
+	// +doc/type: LifecycleSpec
+	Lifecycle LifecycleSpec `json:"lifecycle,omitempty"`
+	// ServerIDGroupSpec contains the specification for Image Discovery image.
+	// +doc/type: ServerIDGroupSpec
 	ID *ServerIDGroupSpec `json:"id,omitempty"`
-
 	// Database holds information about database state, like maintenance mode
+	// +doc/type: DatabaseSpec
 	Database *DatabaseSpec `json:"database,omitempty"`
-
-	Single       ServerGroupSpec `json:"single"`
-	Agents       ServerGroupSpec `json:"agents"`
-	DBServers    ServerGroupSpec `json:"dbservers"`
+	// Single contains specification for servers running in deployment mode `Single` or `ActiveFailover`.
+	// +doc/type: ServerGroupSpec
+	Single ServerGroupSpec `json:"single"`
+	// Agents contains specification for Agency pods running in deployment mode `Cluster` or `ActiveFailover`.
+	// +doc/type: ServerGroupSpec
+	Agents ServerGroupSpec `json:"agents"`
+	// DBServers contains specification for DBServer pods running in deployment mode `Cluster` or `ActiveFailover`.
+	// +doc/type: ServerGroupSpec
+	DBServers ServerGroupSpec `json:"dbservers"`
+	// Coordinators contains specification for Coordinator pods running in deployment mode `Cluster` or `ActiveFailover`.
+	// +doc/type: ServerGroupSpec
 	Coordinators ServerGroupSpec `json:"coordinators"`
-	SyncMasters  ServerGroupSpec `json:"syncmasters"`
-	SyncWorkers  ServerGroupSpec `json:"syncworkers"`
-
+	// SyncMasters contains specification for Syncmaster pods running in deployment mode `Cluster`.
+	// +doc/type: ServerGroupSpec
+	SyncMasters ServerGroupSpec `json:"syncmasters"`
+	// SyncWorkers contains specification for Syncworker pods running in deployment mode `Cluster`.
+	// +doc/type: ServerGroupSpec
+	SyncWorkers ServerGroupSpec `json:"syncworkers"`
+	// MemberPropagationMode defines how changes to pod spec should be propogated.
+	// Changes to a pod’s configuration require a restart of that pod in almost all cases.
+	// Pods are restarted eagerly by default, which can cause more restarts than desired, especially when updating arangod as well as the operator.
+	// The propagation of the configuration changes can be deferred to the next restart, either triggered manually by the user or by another operation like an upgrade.
+	// This reduces the number of restarts for upgrading both the server and the operator from two to one.
+	// - `always`: Restart the member as soon as a configuration change is discovered
+	// - `on-restart`: Wait until the next restart to change the member configuration
 	MemberPropagationMode *DeploymentMemberPropagationMode `json:"memberPropagationMode,omitempty"`
-
+	// ChaosSpec can be used for chaos-monkey testing of your ArangoDeployment
+	// +doc/type: ChaosSpec
 	Chaos ChaosSpec `json:"chaos"`
-
+	// Recovery specifies configuration related to cluster recovery.
+	// +doc/type: ArangoDeploymentRecoverySpec
 	Recovery *ArangoDeploymentRecoverySpec `json:"recovery,omitempty"`
-
+	// Bootstrap contains information for cluster bootstrapping
+	// +doc/type: BootstrapSpec
 	Bootstrap BootstrapSpec `json:"bootstrap,omitempty"`
-
+	// Timeouts object allows to configure various time-outs
+	// +doc/type: Timeouts
 	Timeouts *Timeouts `json:"timeouts,omitempty"`
-
 	// ClusterDomain define domain used in the kubernetes cluster.
 	// Required only of domain is not set to default (cluster.local)
 	// +doc/default: cluster.local
 	ClusterDomain *string `json:"ClusterDomain,omitempty"`
-
 	// CommunicationMethod define communication method used in deployment
 	CommunicationMethod *DeploymentCommunicationMethod `json:"communicationMethod,omitempty"`
-
 	// Topology define topology adjustment details, Enterprise only
+	// +doc/type: TopologySpec
 	Topology *TopologySpec `json:"topology,omitempty"`
-
-	// Rebalancer define the rebalancer specification
+	// Rebalancer defines the rebalancer specification
+	// +doc/type: ArangoDeploymentRebalancerSpec
 	Rebalancer *ArangoDeploymentRebalancerSpec `json:"rebalancer,omitempty"`
-
-	// Architecture definition of supported architectures
+	// Architecture defines the list of supported architectures.
+	// +doc/type: ArangoDeploymentArchitecture
+	// +doc/default: ['amd64']
 	Architecture ArangoDeploymentArchitecture `json:"architecture,omitempty"`
-
+	// Timezone if specified, will set a timezone for deployment.
+	// Must be in format accepted by "tzdata", e.g. `America/New_York` or `Europe/London`
 	Timezone *string `json:"timezone,omitempty"`
 }
 
