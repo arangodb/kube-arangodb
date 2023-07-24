@@ -88,6 +88,8 @@ covers individual newer features separately.
 
 #### Operator Enterprise Only Features
 
+To upgrade to the Enterprise Edition, you need to get in touch with the ArangoDB team. [Contact us](https://www.arangodb.com/contact/) for more details.
+
 <!-- START(featuresEnterpriseTable) -->
 | Feature                                                | Operator Version | Introduced | ArangoDB Version | ArangoDB Edition | State      | Enabled | Flag | Remarks                                                                     |
 |:-------------------------------------------------------|:-----------------|:-----------|:-----------------|:-----------------|:-----------|:--------|:-----|:----------------------------------------------------------------------------|
