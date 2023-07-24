@@ -111,7 +111,14 @@ const (
 
 // DeploymentSpec contains the spec part of a ArangoDeployment resource.
 type DeploymentSpec struct {
-	Mode             *DeploymentMode  `json:"mode,omitempty"`
+
+	// Mode specifies the type of ArangoDB deployment to create.
+	// +doc/enum: Cluster|Full cluster. Defaults to 3 Agents, 3 DB-Servers & 3 Coordinators.
+	// +doc/enum: ActiveFailover|Active-failover single pair. Defaults to 3 Agents and 2 single servers.
+	// +doc/enum: Single|Single server only (note this does not provide high availability or reliability).
+	// +doc/immutable: Change of the ArangoDeployment Mode is not possible after creation.
+	Mode *DeploymentMode `json:"mode,omitempty"`
+
 	Environment      *Environment     `json:"environment,omitempty"`
 	StorageEngine    *StorageEngine   `json:"storageEngine,omitempty"`
 	Image            *string          `json:"image,omitempty"`
