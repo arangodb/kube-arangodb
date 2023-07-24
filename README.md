@@ -14,6 +14,15 @@ The ArangoDB Kubernetes Operator is Production ready.
 
 [Documentation](https://www.arangodb.com/docs/stable/deployment-kubernetes.html)
 
+### Limits
+
+<!-- START(limits) -->
+| Limit              | Description                                                                  | Community | Enterprise |
+|:-------------------|:-----------------------------------------------------------------------------|:----------|:-----------|
+| Cluster size limit | Limits of the nodes (DBServers & Coordinators) supported in the Cluster mode | 64        | 1024       |
+
+<!-- END(limits) -->
+
 ### Production readiness state
 
 Beginning with Version 0.3.11 we maintain a production readiness
@@ -29,52 +38,67 @@ Kubernetes versions starting from 1.18 are supported and tested, charts and mani
 The following table has the general readiness state, the table below
 covers individual newer features separately.
 
-<!-- START(metricsTable) -->
+<!-- START(kubernetesVersionsTable) -->
 | Platform            | Kubernetes Version | ArangoDB Version | State      | Remarks                                   | Provider Remarks                   |
 |:--------------------|:-------------------|:-----------------|:-----------|:------------------------------------------|:-----------------------------------|
-| Google GKE          | 1.21-1.25          | >= 3.6.0         | Production | Don't use micro nodes                     |                                    |
-| Azure AKS           | 1.21-1.24          | >= 3.6.0         | Production |                                           |                                    |
-| Amazon EKS          | 1.21-1.24          | >= 3.6.0         | Production |                                           | [Amazon EKS](./docs/providers/eks) |
+| Google GKE          | 1.21-1.26          | >= 3.6.0         | Production | Don't use micro nodes                     |                                    |
+| Azure AKS           | 1.21-1.26          | >= 3.6.0         | Production |                                           |                                    |
+| Amazon EKS          | 1.21-1.26          | >= 3.6.0         | Production |                                           | [Amazon EKS](./docs/providers/eks) |
 | IBM Cloud           | 1.17               | >= 3.6.0         | Deprecated | Support will be dropped in Operator 1.5.0 |                                    |
 | IBM Cloud           | 1.18-1.21          | >= 3.6.0         | Production |                                           |                                    |
 | OpenShift           | 3.11               | >= 3.6.0         | Deprecated | Support will be dropped in Operator 1.5.0 |                                    |
-| OpenShift           | 4.2-4.11           | >= 3.6.0         | Production |                                           |                                    |
+| OpenShift           | 4.2-4.13           | >= 3.6.0         | Production |                                           |                                    |
 | BareMetal (kubeadm) | <= 1.20            | >= 3.6.0         | Deprecated | Support will be dropped in Operator 1.5.0 |                                    |
-| BareMetal (kubeadm) | 1.21-1.25          | >= 3.6.0         | Production |                                           |                                    |
-| Minikube            | 1.21-1.25          | >= 3.6.0         | Devel Only |                                           |                                    |
-| Other               | 1.21-1.25          | >= 3.6.0         | Devel Only |                                           |                                    |
+| BareMetal (kubeadm) | 1.21-1.27          | >= 3.6.0         | Production |                                           |                                    |
+| Minikube            | 1.21-1.27          | >= 3.6.0         | Devel Only |                                           |                                    |
+| Other               | 1.21-1.27          | >= 3.6.0         | Devel Only |                                           |                                    |
 
-<!-- END(metricsTable) -->
+<!-- END(kubernetesVersionsTable) -->
 
-#### Feature-wise production readiness table:
+#### Operator Features
 
-| Feature                                                                              | Operator Version | ArangoDB Version | ArangoDB Edition      | Introduced | State        | Enabled | Flag                                                  | Remarks                                                                  |
-|--------------------------------------------------------------------------------------|------------------|------------------|-----------------------|------------|--------------|---------|-------------------------------------------------------|--------------------------------------------------------------------------|
-| Pod Disruption Budgets                                                               | 0.3.11           | Any              | Community, Enterprise | 0.3.10     | Production   | True    | N/A                                                   | N/A                                                                      |
-| Volume Resizing                                                                      | 0.3.11           | Any              | Community, Enterprise | 0.3.10     | Production   | True    | N/A                                                   | N/A                                                                      |
-| Disabling of liveness probes                                                         | 0.3.11           | Any              | Community, Enterprise | 0.3.10     | Production   | True    | N/A                                                   | N/A                                                                      |
-| Volume Claim Templates                                                               | 1.0.0            | Any              | Community, Enterprise | 0.3.10     | Production   | True    | N/A                                                   | N/A                                                                      |
-| Prometheus Metrics Exporter                                                          | 1.0.0            | Any              | Community, Enterprise | 0.3.10     | Production   | True    | N/A                                                   | Prometheus required                                                      |
-| Sidecar Containers                                                                   | 1.0.0            | Any              | Community, Enterprise | 0.3.10     | Production   | True    | N/A                                                   | N/A                                                                      |
-| Operator Single Mode                                                                 | 1.0.4            | Any              | Community, Enterprise | 1.0.4      | Production   | False   | --mode.single                                         | Only 1 instance of Operator allowed in namespace when feature is enabled |
-| TLS SNI Support                                                                      | 1.0.3            | >= 3.7.0         | Enterprise            | 1.0.3      | Production   | True    | --deployment.feature.tls-sni                          | N/A                                                                      |
-| TLS Runtime Rotation Support                                                         | 1.1.0            | > 3.7.0          | Enterprise            | 1.0.4      | Production   | True    | --deployment.feature.tls-rotation                     | N/A                                                                      |
-| JWT Rotation Support                                                                 | 1.1.0            | > 3.7.0          | Enterprise            | 1.0.3      | Production   | True    | --deployment.feature.jwt-rotation                     | N/A                                                                      |
-| Encryption Key Rotation Support                                                      | 1.2.0            | > 3.7.0          | Enterprise            | 1.0.3      | NotSupported | False   | --deployment.feature.encryption-rotation              | N/A                                                                      |
-| Version Check                                                                        | 1.1.4            | >= 3.6.0         | Community, Enterprise | 1.1.4      | Alpha        | False   | --deployment.feature.upgrade-version-check            | N/A                                                                      |
-| Version Check                                                                        | 1.2.23           | >= 3.6.0         | Community, Enterprise | 1.1.4      | Production   | True    | --deployment.feature.upgrade-version-check            | N/A                                                                      |
-| Version Check V2                                                                     | 1.2.31           | >= 3.6.0         | Community, Enterprise | 1.2.31     | Alpha        | False   | --deployment.feature.upgrade-version-check-v2         | N/A                                                                      |
-| Operator Maintenance Management Support                                              | 1.2.0            | >= 3.6.0         | Community, Enterprise | 1.0.7      | Production   | True    | --deployment.feature.maintenance                      | N/A                                                                      |
-| Graceful Restart                                                                     | 1.2.5            | >= 3.6.0         | Community, Enterprise | 1.0.7      | Production   | True    | --deployment.feature.graceful-shutdown                | N/A                                                                      |
-| Optional Graceful Restart                                                            | 1.2.25           | >= 3.6.0         | Community, Enterprise | 1.2.5      | Beta         | True    | --deployment.feature.optional-graceful-shutdown       | N/A                                                                      |
-| Operator Internal Metrics Exporter                                                   | 1.2.0            | >= 3.6.0         | Community, Enterprise | 1.2.0      | Production   | True    | --deployment.feature.metrics-exporter                 | N/A                                                                      |
-| [Operator Ephemeral Volumes](docs/design/features/ephemeral_volumes.md)             | 1.2.2            | >= 3.7.0         | Community, Enterprise | 1.2.2      | Alpha        | False   | --deployment.feature.ephemeral-volumes                | N/A                                                                      |
-| [Operator Ephemeral Volumes](docs/design/features/ephemeral_volumes.md)              | 1.2.2            | >= 3.7.0         | Community, Enterprise | 1.2.31     | Beta         | False   | --deployment.feature.ephemeral-volumes                | N/A                                                                      |
-| [Failover Leader service](docs/design/features/failover_leader_service.md)           | 1.2.13           | >= 3.7.0         | Community, Enterprise | 1.2.13     | Production   | False   | --deployment.feature.failover-leadership              | N/A                                                                      |
-| [Spec Default Restore](docs/design/features/deployment_spec_defaults.md)             | 1.2.21           | >= 3.7.0         | Community, Enterprise | 1.2.21     | Beta         | True    | --deployment.feature.deployment-spec-defaults-restore | If set to False Operator will not change ArangoDeployment Spec           |
-| [Force Rebuild Out Synced Shards](docs/design/features/rebuild_out_synced_shards.md) | 1.2.27           | >= 3.8.0         | Community, Enterprise | 1.2.27     | Beta         | False   | --deployment.feature.force-rebuild-out-synced-shards  | It should be used only if user is aware of the risks.                    |
-| [Rebalancer V2](docs/design/features/rebalancer_v2.md)                               | 1.2.31           | >= 3.10.0        | Community, Enterprise | 1.2.31     | Alpha        | False   | --deployment.feature.rebalancer-v2                    | N/A                                                                      |
-| [Secured containers](docs/design/features/secured_containers.md)                     | 1.2.31           | >= 3.7.0         | Community, Enterprise | 1.2.31     | Alpha        | False   | --deployment.feature.secured-containers               | If set to True Operator will run containers in secure mode               |
+<!-- START(featuresCommunityTable) -->
+| Feature                                                                              | Operator Version | Introduced | ArangoDB Version | ArangoDB Edition      | State        | Enabled | Flag                                                  | Remarks                                                                  |
+|:-------------------------------------------------------------------------------------|:-----------------|:-----------|:-----------------|:----------------------|:-------------|:--------|:------------------------------------------------------|:-------------------------------------------------------------------------|
+| [Rebalancer V2](docs/design/features/rebalancer_v2.md)                               | 1.2.31           | 1.2.31     | >= 3.10.0        | Community, Enterprise | Alpha        | False   | --deployment.feature.rebalancer-v2                    | N/A                                                                      |
+| [Secured containers](docs/design/features/secured_containers.md)                     | 1.2.31           | 1.2.31     | >= 3.8.0         | Community, Enterprise | Alpha        | False   | --deployment.feature.secured-containers               | If set to True Operator will run containers in secure mode               |
+| Version Check V2                                                                     | 1.2.31           | 1.2.31     | >= 3.8.0         | Community, Enterprise | Alpha        | False   | --deployment.feature.upgrade-version-check-V2         | N/A                                                                      |
+| [Operator Ephemeral Volumes](docs/design/features/ephemeral_volumes.md)              | 1.2.31           | 1.2.2      | >= 3.8.0         | Community, Enterprise | Beta         | False   | --deployment.feature.ephemeral-volumes                | N/A                                                                      |
+| [Force Rebuild Out Synced Shards](docs/design/features/rebuild_out_synced_shards.md) | 1.2.27           | 1.2.27     | >= 3.8.0         | Community, Enterprise | Production   | False   | --deployment.feature.force-rebuild-out-synced-shards  | It should be used only if user is aware of the risks.                    |
+| [Spec Default Restore](docs/design/features/deployment_spec_defaults.md)             | 1.2.25           | 1.2.21     | >= 3.8.0         | Community, Enterprise | Beta         | True    | --deployment.feature.deployment-spec-defaults-restore | If set to False Operator will not change ArangoDeployment Spec           |
+| Version Check                                                                        | 1.2.23           | 1.1.4      | >= 3.8.0         | Community, Enterprise | Production   | True    | --deployment.feature.upgrade-version-check            | N/A                                                                      |
+| [Failover Leader service](docs/design/features/failover_leader_service.md)           | 1.2.13           | 1.2.13     | >= 3.8.0         | Community, Enterprise | Production   | False   | --deployment.feature.failover-leadership              | N/A                                                                      |
+| Graceful Restart                                                                     | 1.2.5            | 1.0.7      | >= 3.8.0         | Community, Enterprise | Production   | True    | ---deployment.feature.graceful-shutdown               | N/A                                                                      |
+| Optional Graceful Restart                                                            | 1.2.0            | 1.2.5      | >= 3.8.0         | Community, Enterprise | Production   | False   | --deployment.feature.optional-graceful-shutdown       | N/A                                                                      |
+| Operator Internal Metrics Exporter                                                   | 1.2.0            | 1.2.0      | >= 3.8.0         | Community, Enterprise | Production   | True    | --deployment.feature.metrics-exporter                 | N/A                                                                      |
+| Operator Maintenance Management Support                                              | 1.2.0            | 1.0.7      | >= 3.8.0         | Community, Enterprise | Production   | True    | --deployment.feature.maintenance                      | N/A                                                                      |
+| Encryption Key Rotation Support                                                      | 1.2.0            | 1.0.3      | >= 3.8.0         | Enterprise            | NotSupported | False   | --deployment.feature.encryption-rotation              | N/A                                                                      |
+| TLS Runtime Rotation Support                                                         | 1.1.0            | 1.0.4      | >= 3.8.0         | Enterprise            | Production   | True    | --deployment.feature.tls-rotation                     | N/A                                                                      |
+| JWT Rotation Support                                                                 | 1.1.0            | 1.0.3      | >= 3.8.0         | Enterprise            | Production   | True    | --deployment.feature.jwt-rotation                     | N/A                                                                      |
+| Operator Single Mode                                                                 | 1.0.4            | 1.0.4      | >= 3.8.0         | Community, Enterprise | Production   | False   | --mode.single                                         | Only 1 instance of Operator allowed in namespace when feature is enabled |
+| TLS SNI Support                                                                      | 1.0.3            | 1.0.3      | >= 3.8.0         | Enterprise            | Production   | True    | --deployment.feature.tls-sni                          | N/A                                                                      |
+| Disabling of liveness probes                                                         | 0.3.11           | 0.3.10     | >= 3.8.0         | Community, Enterprise | Production   | True    | N/A                                                   | N/A                                                                      |
+| Pod Disruption Budgets                                                               | 0.3.11           | 0.3.10     | >= 3.8.0         | Community, Enterprise | Production   | True    | N/A                                                   | N/A                                                                      |
+| Prometheus Metrics Exporter                                                          | 0.3.11           | 0.3.10     | >= 3.8.0         | Community, Enterprise | Production   | True    | N/A                                                   | Prometheus required                                                      |
+| Sidecar Containers                                                                   | 0.3.11           | 0.3.10     | >= 3.8.0         | Community, Enterprise | Production   | True    | N/A                                                   | N/A                                                                      |
+| Volume Claim Templates                                                               | 0.3.11           | 0.3.10     | >= 3.8.0         | Community, Enterprise | Production   | True    | N/A                                                   | N/A                                                                      |
+| Volume Resizing                                                                      | 0.3.11           | 0.3.10     | >= 3.8.0         | Community, Enterprise | Production   | True    | N/A                                                   | N/A                                                                      |
+
+<!-- END(featuresCommunityTable) -->
+
+#### Operator Enterprise Only Features
+
+To upgrade to the Enterprise Edition, you need to get in touch with the ArangoDB team. [Contact us](https://www.arangodb.com/contact/) for more details.
+
+<!-- START(featuresEnterpriseTable) -->
+| Feature                                                | Operator Version | Introduced | ArangoDB Version | ArangoDB Edition | State      | Enabled | Flag | Remarks                                                                     |
+|:-------------------------------------------------------|:-----------------|:-----------|:-----------------|:-----------------|:-----------|:--------|:-----|:----------------------------------------------------------------------------|
+| AgencyCache                                            | 1.2.30           | 1.2.30     | >= 3.8.0         | Enterprise       | Production | True    | N/A  | Enable Agency Cache mechanism in the Operator (Increase limit of the nodes) |
+| Member Maintenance Support                             | 1.2.25           | 1.2.16     | >= 3.8.0         | Enterprise       | Production | True    | N/A  | Enable Member Maintenance during planned restarts                           |
+| [Rebalancer](docs/design/features/rebalancer.md)       | 1.2.15           | 1.2.5      | >= 3.8.0         | Enterprise       | Production | True    | N/A  | N/A                                                                         |
+| [TopologyAwareness](docs/design/topology_awareness.md) | 1.2.4            | 1.2.4      | >= 3.8.0         | Enterprise       | Production | True    | N/A  | N/A                                                                         |
+
+<!-- END(featuresEnterpriseTable) -->
 
 ## Operator Community Edition (CE)
 

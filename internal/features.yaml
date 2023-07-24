@@ -1,0 +1,215 @@
+features:
+  - name: Pod Disruption Budgets
+    enabled: true
+    releases:
+      - operatorVersion: 0.3.10
+        state: Alpha
+      - operatorVersion: 0.3.11
+        state: Production
+  - name: Volume Resizing
+    enabled: true
+    releases:
+      - operatorVersion: 0.3.10
+        state: Alpha
+      - operatorVersion: 0.3.11
+        state: Production
+  - name: Disabling of liveness probes
+    enabled: true
+    releases:
+      - operatorVersion: 0.3.10
+        state: Alpha
+      - operatorVersion: 0.3.11
+        state: Production
+  - name: Volume Claim Templates
+    enabled: true
+    releases:
+      - operatorVersion: 0.3.10
+        state: Alpha
+      - operatorVersion: 0.3.11
+        state: Production
+  - name: Prometheus Metrics Exporter
+    enabled: true
+    remarks: Prometheus required
+    releases:
+      - operatorVersion: 0.3.10
+        state: Alpha
+      - operatorVersion: 0.3.11
+        state: Production
+  - name: Sidecar Containers
+    enabled: true
+    releases:
+      - operatorVersion: 0.3.10
+        state: Alpha
+      - operatorVersion: 0.3.11
+        state: Production
+  - name: Operator Single Mode
+    enabled: False
+    flag: --mode.single
+    remarks: Only 1 instance of Operator allowed in namespace when feature is enabled
+    releases:
+      - operatorVersion: 1.0.4
+        state: Production
+  - name: TLS SNI Support
+    arangoDBEditions: Enterprise
+    enabled: true
+    flag: --deployment.feature.tls-sni
+    releases:
+      - operatorVersion: 1.0.3
+        state: Production
+  - name: TLS Runtime Rotation Support
+    arangoDBEditions: Enterprise
+    enabled: true
+    flag: --deployment.feature.tls-rotation
+    releases:
+      - operatorVersion: 1.0.4
+        state: Alpha
+      - operatorVersion: 1.1.0
+        state: Production
+  - name: JWT Rotation Support
+    arangoDBEditions: Enterprise
+    enabled: true
+    flag: --deployment.feature.jwt-rotation
+    releases:
+      - operatorVersion: 1.0.3
+        state: Alpha
+      - operatorVersion: 1.1.0
+        state: Production
+  - name: Encryption Key Rotation Support
+    arangoDBEditions: Enterprise
+    flag: --deployment.feature.encryption-rotation
+    enabled: false
+    releases:
+      - operatorVersion: 1.0.3
+        state: Alpha
+      - operatorVersion: 1.2.0
+        state: NotSupported
+  - name: Version Check
+    flag: --deployment.feature.upgrade-version-check
+    enabled: true
+    releases:
+      - operatorVersion: 1.1.4
+        state: Alpha
+      - operatorVersion: 1.2.23
+        state: Production
+  - name: Version Check V2
+    flag: --deployment.feature.upgrade-version-check-V2
+    enabled: false
+    releases:
+      - operatorVersion: 1.2.31
+        state: Alpha
+  - name: Operator Maintenance Management Support
+    flag: --deployment.feature.maintenance
+    enabled: true
+    releases:
+      - operatorVersion: 1.0.7
+        state: Alpha
+      - operatorVersion: 1.2.0
+        state: Production
+  - name: Graceful Restart
+    flag: '---deployment.feature.graceful-shutdown'
+    enabled: true
+    releases:
+      - operatorVersion: 1.0.7
+        state: Alpha
+      - operatorVersion: 1.2.5
+        state: Production
+  - name: Optional Graceful Restart
+    flag: --deployment.feature.optional-graceful-shutdown
+    enabled: false
+    releases:
+      - operatorVersion: 1.2.5
+        state: Beta
+      - operatorVersion: 1.2.0
+        state: Production
+  - name: Operator Internal Metrics Exporter
+    flag: --deployment.feature.metrics-exporter
+    enabled: true
+    releases:
+      - operatorVersion: 1.2.0
+        state: Production
+  - name: Operator Ephemeral Volumes
+    doc: docs/design/features/ephemeral_volumes.md
+    flag: --deployment.feature.ephemeral-volumes
+    enabled: false
+    releases:
+      - operatorVersion: 1.2.2
+        state: Alpha
+      - operatorVersion: 1.2.31
+        state: Beta
+  - name: Failover Leader service
+    doc: docs/design/features/failover_leader_service.md
+    flag: --deployment.feature.failover-leadership
+    enabled: false
+    releases:
+      - operatorVersion: 1.2.13
+        state: Production
+  - name: Spec Default Restore
+    doc: docs/design/features/deployment_spec_defaults.md
+    flag: --deployment.feature.deployment-spec-defaults-restore
+    enabled: true
+    remarks: If set to False Operator will not change ArangoDeployment Spec
+    releases:
+      - operatorVersion: 1.2.21
+        state: Alpha
+      - operatorVersion: 1.2.25
+        state: Beta
+  - name: Force Rebuild Out Synced Shards
+    doc: docs/design/features/rebuild_out_synced_shards.md
+    flag: --deployment.feature.force-rebuild-out-synced-shards
+    enabled: false
+    remarks: It should be used only if user is aware of the risks.
+    releases:
+      - operatorVersion: 1.2.27
+        state: Production
+  - name: Rebalancer
+    doc: docs/design/features/rebalancer.md
+    enabled: true
+    operatorEditions: Enterprise
+    arangoDBEditions: Enterprise
+    releases:
+      - operatorVersion: 1.2.5
+        state: Alpha
+      - operatorVersion: 1.2.15
+        state: Production
+  - name: Rebalancer V2
+    doc: docs/design/features/rebalancer_v2.md
+    arangoDBVersion: ">= 3.10.0"
+    flag: --deployment.feature.rebalancer-v2
+    enabled: false
+    releases:
+      - operatorVersion: 1.2.31
+        state: Alpha
+  - name: Secured containers
+    doc: docs/design/features/secured_containers.md
+    flag: --deployment.feature.secured-containers
+    enabled: false
+    remarks: If set to True Operator will run containers in secure mode
+    releases:
+      - operatorVersion: 1.2.31
+        state: Alpha
+  - name: TopologyAwareness
+    doc: docs/design/topology_awareness.md
+    enabled: true
+    operatorEditions: Enterprise
+    arangoDBEditions: Enterprise
+    releases:
+      - operatorVersion: 1.2.4
+        state: Production
+  - name: AgencyCache
+    enabled: true
+    operatorEditions: Enterprise
+    arangoDBEditions: Enterprise
+    remarks: Enable Agency Cache mechanism in the Operator (Increase limit of the nodes)
+    releases:
+      - operatorVersion: 1.2.30
+        state: Production
+  - name: Member Maintenance Support
+    enabled: true
+    operatorEditions: Enterprise
+    arangoDBEditions: Enterprise
+    remarks: Enable Member Maintenance during planned restarts
+    releases:
+      - operatorVersion: 1.2.16
+        state: Alpha
+      - operatorVersion: 1.2.25
+        state: Production

@@ -1,0 +1,5 @@
+limits:
+  - name: "Cluster size limit"
+    description: "Limits of the nodes (DBServers & Coordinators) supported in the Cluster mode"
+    community: "64"
+    enterprise: "1024"
