@@ -624,6 +624,8 @@ set-api-version/%:
 	  | cut -d ':' -f 1 | sort | uniq \
 	  | xargs -n 1 $(SED) -i "s#ReplicationV[A-Za-z0-9]\+()\.#ReplicationV$(API_VERSION)().#g"
 
+synchronize: synchronize-v2alpha1-with-v1
+
 synchronize-v2alpha1-with-v1:
 	@rm -f pkg/apis/deployment/v1/zz_generated.deepcopy.go pkg/apis/deployment/v2alpha1/zz_generated.deepcopy.go
 	@for file in $$(find "$(ROOT)/pkg/apis/deployment/v1/" -type f -exec $(REALPATH) --relative-to "$(ROOT)/pkg/apis/deployment/v1/" {} \;); do if [ ! -d "$(ROOT)/pkg/apis/deployment/v2alpha1/$$(dirname $${file})" ]; then mkdir -p "$(ROOT)/pkg/apis/deployment/v2alpha1/$$(dirname $${file})"; fi; done
