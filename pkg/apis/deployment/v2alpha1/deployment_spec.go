@@ -111,15 +111,20 @@ const (
 
 // DeploymentSpec contains the spec part of a ArangoDeployment resource.
 type DeploymentSpec struct {
-	Mode               *DeploymentMode                   `json:"mode,omitempty"`
-	Environment        *Environment                      `json:"environment,omitempty"`
-	StorageEngine      *StorageEngine                    `json:"storageEngine,omitempty"`
-	Image              *string                           `json:"image,omitempty"`
-	ImagePullPolicy    *core.PullPolicy                  `json:"imagePullPolicy,omitempty"`
-	ImagePullSecrets   []string                          `json:"imagePullSecrets,omitempty"`
+	Mode             *DeploymentMode  `json:"mode,omitempty"`
+	Environment      *Environment     `json:"environment,omitempty"`
+	StorageEngine    *StorageEngine   `json:"storageEngine,omitempty"`
+	Image            *string          `json:"image,omitempty"`
+	ImagePullPolicy  *core.PullPolicy `json:"imagePullPolicy,omitempty"`
+	ImagePullSecrets []string         `json:"imagePullSecrets,omitempty"`
+
+	// ImageDiscoveryMode specifies the image discovery mode.
+	// +doc/enum: kubelet|Use sha256 of the discovered image in the pods
+	// +doc/enum: direct|Use image provided in the spec.image directly in the pods
 	ImageDiscoveryMode *DeploymentImageDiscoveryModeSpec `json:"imageDiscoveryMode,omitempty"`
-	DowntimeAllowed    *bool                             `json:"downtimeAllowed,omitempty"`
-	DisableIPv6        *bool                             `json:"disableIPv6,omitempty"`
+
+	DowntimeAllowed *bool `json:"downtimeAllowed,omitempty"`
+	DisableIPv6     *bool `json:"disableIPv6,omitempty"`
 
 	Upgrade *DeploymentUpgradeSpec `json:"upgrade,omitempty"`
 

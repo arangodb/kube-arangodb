@@ -53,8 +53,9 @@ func (d DocDefinitions) Render(t *testing.T) []byte {
 
 		if len(el.Docs) > 0 {
 			for _, doc := range el.Docs {
-				write(t, out, "%s\n\n", doc)
+				write(t, out, "%s\n", doc)
 			}
+			write(t, out, "\n")
 		}
 
 		if len(el.Links) > 0 {
@@ -83,11 +84,31 @@ func (d DocDefinitions) Render(t *testing.T) []byte {
 			write(t, out, "```\n\n")
 		}
 
-		if d := el.Default; d != nil {
-			write(t, out, "Default Value: %s\n\n", *d)
+		if len(el.Enum) > 0 {
+			write(t, out, "Possible Values: \n")
+			for id, enum := range el.Enum {
+				z := strings.Split(enum, "|")
+
+				if id == 0 {
+					z[0] = fmt.Sprintf("%s (default)", z[0])
+				}
+
+				if len(z) == 1 {
+					write(t, out, "* %s\n", z[0])
+				} else if len(z) == 2 {
+					write(t, out, "* %s - %s\n", z[0], z[1])
+				} else {
+					require.Fail(t, "Invalid enum format")
+				}
+			}
+			write(t, out, "\n")
+		} else {
+			if d := el.Default; d != nil {
+				write(t, out, "Default Value: %s\n\n", *d)
+			}
 		}
 
-		write(t, out, "Code Reference: [%s:%d](/%s#L%d)\n\n", filepath.Base(el.File), el.Line, el.File, el.Line)
+		write(t, out, "[Code Reference](/%s#L%d)\n\n", el.File, el.Line)
 	}
 
 	return out.Bytes()
@@ -103,6 +124,8 @@ type DocDefinition struct {
 	Docs []string
 
 	Links []string
+
+	Enum []string
 
 	Default *string
 	Example []string
@@ -170,6 +193,10 @@ func generateDocs(t *testing.T, objects map[string]map[string]interface{}, paths
 
 						if example, ok := extract(field, "example"); ok {
 							def.Example = example
+						}
+
+						if enum, ok := extract(field, "enum"); ok {
+							def.Enum = enum
 						}
 
 						if docs, ok := extractNotTags(field); !ok {
