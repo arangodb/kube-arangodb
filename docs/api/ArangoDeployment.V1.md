@@ -538,31 +538,31 @@ Links:
 
 AllowUnsafeUpgrade determines if upgrade on missing member or with not in sync shards is allowed
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L153)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L160)
 
 ### .spec.annotations: map[string]string
 
 Annotations specified the annotations added to Pods in this group.
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L136)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L143)
 
 ### .spec.annotationsIgnoreList: []string
 
 AnnotationsIgnoreList list regexp or plain definitions which annotations should be ignored
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L138)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L145)
 
 ### .spec.annotationsMode: string
 
 AnnotationsMode Define annotations mode which should be use while overriding annotations
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L140)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L147)
 
 ### .spec.architecture: []string
 
 Architecture definition of supported architectures
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L201)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L208)
 
 ### .spec.auth.jwtSecretName: string
 
@@ -599,13 +599,13 @@ Required only of domain is not set to default (cluster.local)
 
 Default Value: cluster.local
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L189)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L196)
 
 ### .spec.communicationMethod: string
 
 CommunicationMethod define communication method used in deployment
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L192)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L199)
 
 ### .spec.coordinators.affinity: core.PodAffinity
 
@@ -1679,15 +1679,15 @@ Links:
 
 ### .spec.disableIPv6: bool
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L127)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L134)
 
 ### .spec.downtimeAllowed: bool
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L126)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L133)
 
 ### .spec.environment: string
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L115)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L122)
 
 ### .spec.externalAccess.advertisedEndpoint: string
 
@@ -1886,7 +1886,7 @@ Links:
 
 ### .spec.image: string
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L117)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L124)
 
 ### .spec.imageDiscoveryMode: string
 
@@ -1896,33 +1896,33 @@ Possible Values:
 * kubelet (default) - Use sha256 of the discovered image in the pods
 * direct - Use image provided in the spec.image directly in the pods
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L124)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L131)
 
 ### .spec.imagePullPolicy: string
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L118)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L125)
 
 ### .spec.imagePullSecrets: []string
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L119)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L126)
 
 ### .spec.labels: map[string]string
 
 Labels specified the labels added to Pods in this group.
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L142)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L149)
 
 ### .spec.labelsIgnoreList: []string
 
 LabelsIgnoreList list regexp or plain definitions which labels should be ignored
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L144)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L151)
 
 ### .spec.labelsMode: string
 
 LabelsMode Define labels mode which should be use while overriding labels
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L146)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L153)
 
 ### .spec.license.secretName: string
 
@@ -1939,7 +1939,7 @@ Links:
 
 ### .spec.memberPropagationMode: string
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L176)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L183)
 
 ### .spec.metrics.authentication.jwtTokenSecretName: string
 
@@ -1990,11 +1990,20 @@ Links:
 
 ### .spec.mode: string
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L114)
+Mode specifies the type of ArangoDB deployment to create.
+
+Possible Values: 
+* Cluster (default) - Full cluster. Defaults to 3 Agents, 3 DB-Servers & 3 Coordinators.
+* ActiveFailover - Active-failover single pair. Defaults to 3 Agents and 2 single servers.
+* Single - Single server only (note this does not provide high availability or reliability).
+
+This field is **immutable**: Change of the ArangoDeployment Mode is not possible after creation.
+
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L120)
 
 ### .spec.networkAttachedVolumes: bool
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L133)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L140)
 
 ### .spec.rebalancer.enabled: bool
 
@@ -2021,11 +2030,11 @@ Count Enable Shard Count machanism
 
 ### .spec.restoreEncryptionSecret: string
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L150)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L157)
 
 ### .spec.restoreFrom: string
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L148)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L155)
 
 ### .spec.rocksdb.encryption.keySecretName: string
 
@@ -2565,7 +2574,7 @@ Links:
 
 ### .spec.storageEngine: string
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L116)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L123)
 
 ### .spec.sync.auth.clientCASecretName: string
 
@@ -3743,7 +3752,7 @@ MaintenanceGracePeriod action timeout
 
 ### .spec.timezone: string
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L203)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L210)
 
 ### .spec.tls.altNames: []string
 

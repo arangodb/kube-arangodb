@@ -108,6 +108,10 @@ func (d DocDefinitions) Render(t *testing.T) []byte {
 			}
 		}
 
+		if d := el.Immutable; d != nil {
+			write(t, out, "This field is **immutable**: %s\n\n", *d)
+		}
+
 		write(t, out, "[Code Reference](/%s#L%d)\n\n", el.File, el.Line)
 	}
 
@@ -126,6 +130,8 @@ type DocDefinition struct {
 	Links []string
 
 	Enum []string
+
+	Immutable *string
 
 	Default *string
 	Example []string
@@ -197,6 +203,10 @@ func generateDocs(t *testing.T, objects map[string]map[string]interface{}, paths
 
 						if enum, ok := extract(field, "enum"); ok {
 							def.Enum = enum
+						}
+
+						if immutable, ok := extract(field, "immutable"); ok {
+							def.Immutable = util.NewType[string](immutable[0])
 						}
 
 						if docs, ok := extractNotTags(field); !ok {
