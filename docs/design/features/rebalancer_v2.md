@@ -1,4 +1,4 @@
-# ArangoDB Rebalancer Support
+# ArangoDB Rebalancer V2 Support
 
 ## Overview
 

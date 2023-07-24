@@ -106,7 +106,7 @@ features:
       - operatorVersion: 1.2.0
         state: Production
   - name: Graceful Restart
-    flag: ---deployment.feature.graceful-shutdown
+    flag: '---deployment.feature.graceful-shutdown'
     enabled: true
     releases:
       - operatorVersion: 1.0.7
@@ -128,7 +128,7 @@ features:
       - operatorVersion: 1.2.0
         state: Production
   - name: Operator Ephemeral Volumes
-    doc: /docs/design/features/ephemeral_volumes.md
+    doc: docs/design/features/ephemeral_volumes.md
     flag: --deployment.feature.ephemeral-volumes
     enabled: false
     releases:
@@ -137,14 +137,14 @@ features:
       - operatorVersion: 1.2.31
         state: Beta
   - name: Failover Leader service
-    doc: /docs/design/features/failover_leader_service.md
+    doc: docs/design/features/failover_leader_service.md
     flag: --deployment.feature.failover-leadership
     enabled: false
     releases:
       - operatorVersion: 1.2.13
         state: Production
   - name: Spec Default Restore
-    doc: /docs/design/features/deployment_spec_defaults.md
+    doc: docs/design/features/deployment_spec_defaults.md
     flag: --deployment.feature.deployment-spec-defaults-restore
     enabled: true
     remarks: If set to False Operator will not change ArangoDeployment Spec
@@ -154,15 +154,25 @@ features:
       - operatorVersion: 1.2.25
         state: Beta
   - name: Force Rebuild Out Synced Shards
-    doc: /docs/design/features/rebuild_out_synced_shards.md
+    doc: docs/design/features/rebuild_out_synced_shards.md
     flag: --deployment.feature.force-rebuild-out-synced-shards
     enabled: false
     remarks: It should be used only if user is aware of the risks.
     releases:
       - operatorVersion: 1.2.27
         state: Production
+  - name: Rebalancer
+    doc: docs/design/features/rebalancer.md
+    enabled: true
+    operatorEditions: Enterprise
+    arangoDBEditions: Enterprise
+    releases:
+      - operatorVersion: 1.2.5
+        state: Alpha
+      - operatorVersion: 1.2.15
+        state: Production
   - name: Rebalancer V2
-    doc: /docs/design/features/rebalancer_v2.md
+    doc: docs/design/features/rebalancer_v2.md
     arangoDBVersion: ">= 3.10.0"
     flag: --deployment.feature.rebalancer-v2
     enabled: false
@@ -170,10 +180,36 @@ features:
       - operatorVersion: 1.2.31
         state: Alpha
   - name: Secured containers
-    doc: /docs/design/features/secured_containers.md
+    doc: docs/design/features/secured_containers.md
     flag: --deployment.feature.secured-containers
     enabled: false
     remarks: If set to True Operator will run containers in secure mode
     releases:
       - operatorVersion: 1.2.31
         state: Alpha
+  - name: TopologyAwareness
+    doc: docs/design/topology_awareness.md
+    enabled: true
+    operatorEditions: Enterprise
+    arangoDBEditions: Enterprise
+    releases:
+      - operatorVersion: 1.2.4
+        state: Production
+  - name: AgencyCache
+    enabled: true
+    operatorEditions: Enterprise
+    arangoDBEditions: Enterprise
+    remarks: Enable Agency Cache mechanism in the Operator (Increase limit of the nodes)
+    releases:
+      - operatorVersion: 1.2.30
+        state: Production
+  - name: Member Maintenance Support
+    enabled: true
+    operatorEditions: Enterprise
+    arangoDBEditions: Enterprise
+    remarks: Enable Member Maintenance during planned restarts
+    releases:
+      - operatorVersion: 1.2.16
+        state: Alpha
+      - operatorVersion: 1.2.25
+        state: Production

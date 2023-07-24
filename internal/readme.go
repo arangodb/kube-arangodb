@@ -22,12 +22,14 @@ package internal
 
 import (
 	"fmt"
-	"github.com/arangodb/go-driver"
 	"os"
 	"path"
 	"sort"
+	"strings"
 
 	"gopkg.in/yaml.v3"
+
+	"github.com/arangodb/go-driver"
 
 	"github.com/arangodb/kube-arangodb/internal/md"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -85,6 +87,19 @@ type FeatureRelease struct {
 	Enabled *bool `json:"enabled,omitempty" yaml:"enabled,omitempty"`
 }
 
+type LimitsDoc struct {
+	Limits Limits `json:"limits,omitempty" yaml:"limits,omitempty"`
+}
+
+type Limits []Limit
+
+type Limit struct {
+	Name        string  `json:"name" yaml:"name"`
+	Description string  `json:"description" yaml:"description"`
+	Community   *string `json:"community,omitempty" yaml:"community,omitempty"`
+	Enterprise  *string `json:"enterprise,omitempty" yaml:"enterprise,omitempty"`
+}
+
 func GenerateReadme(root string) error {
 	readmeSections := map[string]string{}
 
@@ -94,10 +109,22 @@ func GenerateReadme(root string) error {
 		readmeSections["kubernetesVersionsTable"] = section
 	}
 
-	if section, err := GenerateReadmeFeatures(root); err != nil {
+	if section, err := GenerateReadmeFeatures(root, true); err != nil {
 		return err
 	} else {
-		readmeSections["featuresTable"] = section
+		readmeSections["featuresEnterpriseTable"] = section
+	}
+
+	if section, err := GenerateReadmeFeatures(root, false); err != nil {
+		return err
+	} else {
+		readmeSections["featuresCommunityTable"] = section
+	}
+
+	if section, err := GenerateReadmeLimits(root); err != nil {
+		return err
+	} else {
+		readmeSections["limits"] = section
 	}
 
 	if err := md.ReplaceSectionsInFile(path.Join(root, "README.md"), readmeSections); err != nil {
@@ -107,11 +134,10 @@ func GenerateReadme(root string) error {
 	return nil
 }
 
-func GenerateReadmeFeatures(root string) (string, error) {
+func GenerateReadmeFeatures(root string, eeOnly bool) (string, error) {
 	feature := md.NewColumn("Feature", md.ColumnLeftAlign)
 	introduced := md.NewColumn("Introduced", md.ColumnLeftAlign)
 	oVersion := md.NewColumn("Operator Version", md.ColumnLeftAlign)
-	oEdition := md.NewColumn("Operator Edition", md.ColumnLeftAlign)
 	aVersion := md.NewColumn("ArangoDB Version", md.ColumnLeftAlign)
 	aEdition := md.NewColumn("ArangoDB Edition", md.ColumnLeftAlign)
 	state := md.NewColumn("State", md.ColumnLeftAlign)
@@ -121,7 +147,6 @@ func GenerateReadmeFeatures(root string) (string, error) {
 	t := md.NewTable(
 		feature,
 		oVersion,
-		oEdition,
 		introduced,
 		aVersion,
 		aEdition,
@@ -145,14 +170,25 @@ func GenerateReadmeFeatures(root string) (string, error) {
 	// Sort list
 
 	sort.Slice(d.Features, func(i, j int) bool {
-		av := util.First(util.LastFromList(d.Features[i].Releases).OperatorVersion, d.Features[i].OperatorVersion)
-		bv := util.First(util.LastFromList(d.Features[j].Releases).OperatorVersion, d.Features[j].OperatorVersion)
+		{
+			av := util.First(util.LastFromList(d.Features[i].Releases).OperatorVersion, d.Features[i].OperatorVersion)
+			bv := util.First(util.LastFromList(d.Features[j].Releases).OperatorVersion, d.Features[j].OperatorVersion)
 
-		a := driver.Version(util.TypeOrDefault[string](av, "1.0.0"))
-		b := driver.Version(util.TypeOrDefault[string](bv, "1.0.0"))
+			a := driver.Version(util.TypeOrDefault[string](av, "1.0.0"))
+			b := driver.Version(util.TypeOrDefault[string](bv, "1.0.0"))
 
-		if c := a.CompareTo(b); c != 0 {
-			return c > 0
+			if c := a.CompareTo(b); c != 0 {
+				return c > 0
+			}
+		}
+
+		{
+			a := driver.Version(util.TypeOrDefault[string](d.Features[i].Releases[0].OperatorVersion, "1.0.0"))
+			b := driver.Version(util.TypeOrDefault[string](d.Features[j].Releases[0].OperatorVersion, "1.0.0"))
+
+			if c := a.CompareTo(b); c != 0 {
+				return c > 0
+			}
 		}
 
 		return d.Features[i].Name < d.Features[j].Name
@@ -160,6 +196,10 @@ func GenerateReadmeFeatures(root string) (string, error) {
 
 	for _, f := range d.Features {
 		r := f.Releases[len(f.Releases)-1]
+
+		if community := strings.Contains(util.TypeOrDefault(util.First(r.OperatorEdition, f.OperatorEdition), "Community, Enterprise"), "Community"); community == eeOnly {
+			continue
+		}
 
 		n := f.Name
 
@@ -170,7 +210,6 @@ func GenerateReadmeFeatures(root string) (string, error) {
 		if err := t.AddRow(map[md.Column]string{
 			feature:    n,
 			oVersion:   util.TypeOrDefault[string](util.First(r.OperatorVersion, f.OperatorVersion), "ANY"),
-			oEdition:   util.TypeOrDefault[string](util.First(r.OperatorEdition, f.OperatorEdition), "Community, Enterprise"),
 			introduced: util.TypeOrDefault[string](f.Releases[0].OperatorVersion, "ANY"),
 			aVersion:   util.TypeOrDefault[string](util.First(r.ArangoDBVersion, f.ArangoDBVersion), minSupportedArangoDBVersion),
 			aEdition:   util.TypeOrDefault[string](util.First(r.ArangoDBEdition, f.ArangoDBEdition), "Community, Enterprise"),
@@ -179,6 +218,43 @@ func GenerateReadmeFeatures(root string) (string, error) {
 			enabled:    util.BoolSwitch[string](util.TypeOrDefault[bool](util.First(r.Enabled, f.Enabled), true), "True", "False"),
 			flag:       util.TypeOrDefault[string](util.First(r.Flag, f.Flag), "N/A"),
 			remarks:    util.TypeOrDefault[string](util.First(r.Remarks, f.Remarks), "N/A"),
+		}); err != nil {
+			return "", err
+		}
+	}
+
+	return md.WrapWithNewLines(t.Render()), nil
+}
+
+func GenerateReadmeLimits(root string) (string, error) {
+	limit := md.NewColumn("Limit", md.ColumnLeftAlign)
+	description := md.NewColumn("Description", md.ColumnLeftAlign)
+	community := md.NewColumn("Community", md.ColumnLeftAlign)
+	enterprise := md.NewColumn("Enterprise", md.ColumnLeftAlign)
+	t := md.NewTable(
+		limit,
+		description,
+		community,
+		enterprise,
+	)
+
+	var d LimitsDoc
+
+	data, err := os.ReadFile(path.Join(root, "internal", "limits.yaml"))
+	if err != nil {
+		return "", err
+	}
+
+	if err := yaml.Unmarshal(data, &d); err != nil {
+		return "", err
+	}
+
+	for _, l := range d.Limits {
+		if err := t.AddRow(map[md.Column]string{
+			limit:       l.Name,
+			description: l.Description,
+			community:   util.TypeOrDefault[string](l.Community, "N/A"),
+			enterprise:  util.TypeOrDefault[string](l.Enterprise, "N/A"),
 		}); err != nil {
 			return "", err
 		}
