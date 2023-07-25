@@ -1746,7 +1746,9 @@ LoadBalancerSourceRanges define LoadBalancerSourceRanges used for LoadBalancer S
 If specified and supported by the platform, this will restrict traffic through the cloud-provider
 load-balancer will be restricted to the specified client IPs. This field will be ignored if the
 cloud-provider does not support the feature.
-+docs/link: Cloud Provider Firewall|https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/
+
+Links:
+* [Cloud Provider Firewall](https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/)
 
 [Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L52)
 
@@ -1766,10 +1768,12 @@ NodePort define optional port used in case of Auto or NodePort type.
 ### .spec.externalAccess.type: string
 
 Type specifies the type of Service that will be created to provide access to the ArangoDB deployment from outside the Kubernetes cluster.
-+ doc/enum: Auto|Create a Service of type LoadBalancer and fallback to a Service or type NodePort when the LoadBalancer is not assigned an IP address.
-+ doc/enum: None|limit access to application running inside the Kubernetes cluster.
-+ doc/enum: LoadBalancer|Create a Service of type LoadBalancer for the ArangoDB deployment.
-+ doc/enum: NodePort|Create a Service of type NodePort for the ArangoDB deployment.
+
+Possible Values: 
+* Auto (default) - Create a Service of type LoadBalancer and fallback to a Service or type NodePort when the LoadBalancer is not assigned an IP address.
+* None - limit access to application running inside the Kubernetes cluster.
+* LoadBalancer - Create a Service of type LoadBalancer for the ArangoDB deployment.
+* NodePort - Create a Service of type NodePort for the ArangoDB deployment.
 
 [Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L39)
 
@@ -2712,7 +2716,9 @@ LoadBalancerSourceRanges define LoadBalancerSourceRanges used for LoadBalancer S
 If specified and supported by the platform, this will restrict traffic through the cloud-provider
 load-balancer will be restricted to the specified client IPs. This field will be ignored if the
 cloud-provider does not support the feature.
-+docs/link: Cloud Provider Firewall|https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/
+
+Links:
+* [Cloud Provider Firewall](https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/)
 
 [Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L52)
 
@@ -2736,10 +2742,12 @@ NodePort define optional port used in case of Auto or NodePort type.
 ### .spec.sync.externalAccess.type: string
 
 Type specifies the type of Service that will be created to provide access to the ArangoDB deployment from outside the Kubernetes cluster.
-+ doc/enum: Auto|Create a Service of type LoadBalancer and fallback to a Service or type NodePort when the LoadBalancer is not assigned an IP address.
-+ doc/enum: None|limit access to application running inside the Kubernetes cluster.
-+ doc/enum: LoadBalancer|Create a Service of type LoadBalancer for the ArangoDB deployment.
-+ doc/enum: NodePort|Create a Service of type NodePort for the ArangoDB deployment.
+
+Possible Values: 
+* Auto (default) - Create a Service of type LoadBalancer and fallback to a Service or type NodePort when the LoadBalancer is not assigned an IP address.
+* None - limit access to application running inside the Kubernetes cluster.
+* LoadBalancer - Create a Service of type LoadBalancer for the ArangoDB deployment.
+* NodePort - Create a Service of type NodePort for the ArangoDB deployment.
 
 [Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L39)
 
