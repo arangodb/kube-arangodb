@@ -79,6 +79,9 @@ type DeploymentSpec struct {
 
 	// ImagePullPolicy specifies the pull policy for the docker image to use for all ArangoDB servers.
 	// +doc/type: core.PullPolicy
+	// +doc/enum: Always|Means that kubelet always attempts to pull the latest image. Container will fail If the pull fails.
+	// +doc/enum: Never|Means that kubelet never pulls an image, but only uses a local image. Container will fail if the image isn't present
+	// +doc/enum: IfNotPresent|Means that kubelet pulls if the image isn't present on disk. Container will fail if the image isn't present and the pull fails.
 	// +doc/link: Documentation of core.PullPolicy|https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy
 	ImagePullPolicy *core.PullPolicy `json:"imagePullPolicy,omitempty"`
 
@@ -106,11 +109,9 @@ type DeploymentSpec struct {
 	DisableIPv6 *bool `json:"disableIPv6,omitempty"`
 
 	// Upgrade allows to configure upgrade-related options
-	// +doc/type: DeploymentUpgradeSpec
 	Upgrade *DeploymentUpgradeSpec `json:"upgrade,omitempty"`
 
 	// Features allows to configure feature flags
-	// +doc/type: DeploymentFeatures
 	Features *DeploymentFeatures `json:"features,omitempty"`
 
 	// NetworkAttachedVolumes

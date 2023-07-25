@@ -538,19 +538,19 @@ Links:
 
 AllowUnsafeUpgrade determines if upgrade on missing member or with not in sync shards is allowed
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L163)
 
 ### .spec.annotations: map[string]string
 
 Annotations specifies the annotations added to all ArangoDeployment owned resources (pods, services, PVC’s, PDB’s).
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L185)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L126)
 
 ### .spec.annotationsIgnoreList: []string
 
 AnnotationsIgnoreList list regexp or plain definitions which annotations should be ignored
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L188)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L129)
 
 ### .spec.annotationsMode: string
 
@@ -561,7 +561,7 @@ Possible Values:
 * append - Add new annotations/labels without affecting old ones
 * replace - Replace existing annotations/labels
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L194)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L135)
 
 ### .spec.architecture: []string
 
@@ -573,7 +573,7 @@ Links:
 
 Default Value: ['amd64']
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L317)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L258)
 
 ### .spec.auth.jwtSecretName: string
 
@@ -610,7 +610,7 @@ Required only of domain is not set to default (cluster.local)
 
 Default Value: cluster.local
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L296)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L237)
 
 ### .spec.communicationMethod: string
 
@@ -623,7 +623,7 @@ Possible Values:
 * headless-dns - Define Headless Service DNS based communication.
 * ip - Define ClusterIP Service IP based communication.
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L304)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L245)
 
 ### .spec.coordinators.affinity: core.PodAffinity
 
@@ -1702,7 +1702,7 @@ This setting cannot be changed after the deployment has been created.
 
 Default Value: false
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L166)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L109)
 
 ### .spec.downtimeAllowed: bool
 
@@ -1716,7 +1716,7 @@ Note: It is still possible that there is some downtime when the Kubernetes clust
 
 Default Value: false
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L161)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L104)
 
 ### .spec.environment: string
 
@@ -1726,7 +1726,7 @@ Possible Values:
 * Development (default) - This value optimizes the deployment for development use. It is possible to run a deployment on a small number of nodes (e.g. minikube).
 * Production - This value optimizes the deployment for production use. It puts required affinity constraints on all pods to avoid Agents & DB-Servers from running on the same machine.
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L125)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L65)
 
 ### .spec.externalAccess.advertisedEndpoint: string
 
@@ -1773,11 +1773,9 @@ Possible values are:
 
 [Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L39)
 
-### .spec.features: DeploymentFeatures
+### .spec.features.foxx.queues: bool
 
-Features allows to configure feature flags
-
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L174)
+[Code Reference](/pkg/apis/deployment/v1/deployment_features.go#L24)
 
 ### .spec.id.affinity: core.PodAffinity
 
@@ -1937,7 +1935,7 @@ In a development environment this setting defaults to arangodb/arangodb:latest.
 For production environments this is a required setting without a default value.
 It is highly recommend to use explicit version (not latest) for production environments.
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L138)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L78)
 
 ### .spec.imageDiscoveryMode: string
 
@@ -1947,7 +1945,7 @@ Possible Values:
 * kubelet (default) - Use sha256 of the discovered image in the pods
 * direct - Use image provided in the spec.image directly in the pods
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L151)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L94)
 
 ### .spec.imagePullPolicy: core.PullPolicy
 
@@ -1956,25 +1954,30 @@ ImagePullPolicy specifies the pull policy for the docker image to use for all Ar
 Links:
 * [Documentation of core.PullPolicy](https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy)
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L143)
+Possible Values: 
+* Always (default) - Means that kubelet always attempts to pull the latest image. Container will fail If the pull fails.
+* Never - Means that kubelet never pulls an image, but only uses a local image. Container will fail if the image isn't present
+* IfNotPresent - Means that kubelet pulls if the image isn't present on disk. Container will fail if the image isn't present and the pull fails.
+
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L86)
 
 ### .spec.imagePullSecrets: []string
 
 ImagePullSecrets specifies the list of image pull secrets for the docker image to use for all ArangoDB servers.
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L146)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L89)
 
 ### .spec.labels: map[string]string
 
 Labels specifies the labels added to Pods in this group.
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L197)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L138)
 
 ### .spec.labelsIgnoreList: []string
 
 LabelsIgnoreList list regexp or plain definitions which labels should be ignored
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L200)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L141)
 
 ### .spec.labelsMode: string
 
@@ -1985,7 +1988,7 @@ Possible Values:
 * append - Add new annotations/labels without affecting old ones
 * replace - Replace existing annotations/labels
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L206)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L147)
 
 ### .spec.license.secretName: string
 
@@ -2012,7 +2015,7 @@ Possible Values:
 * always (default) - Restart the member as soon as a configuration change is discovered
 * on-restart - Wait until the next restart to change the member configuration
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L279)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L220)
 
 ### .spec.metrics.authentication.jwtTokenSecretName: string
 
@@ -2072,7 +2075,7 @@ Possible Values:
 
 This field is **immutable**: Change of the ArangoDeployment Mode is not possible after creation.
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L120)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L60)
 
 ### .spec.networkAttachedVolumes: bool
 
@@ -2084,7 +2087,7 @@ If your persistent volumes are tied to a specific pod, you must leave this optio
 
 Default Value: true
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L182)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L123)
 
 ### .spec.rebalancer.enabled: bool
 
@@ -2113,7 +2116,7 @@ Count Enable Shard Count machanism
 
 RestoreEncryptionSecret specifies optional name of secret which contains encryption key used for restore
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L219)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L160)
 
 ### .spec.restoreFrom: string
 
@@ -2126,7 +2129,7 @@ It will contain some of the following fields:
 If the restoreFrom key is removed from the spec, the restore key is deleted as well.
 A new restore attempt is made if and only if either in the status restore is not set or if spec.restoreFrom and status.requestedFrom are different.
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L216)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L157)
 
 ### .spec.rocksdb.encryption.keySecretName: string
 
@@ -2673,7 +2676,7 @@ Possible Values:
 * RocksDB (default) - To use the RocksDB storage engine.
 * MMFiles - To use the MMFiles storage engine. Deprecated.
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L132)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L72)
 
 ### .spec.sync.auth.clientCASecretName: string
 
@@ -3859,7 +3862,7 @@ MaintenanceGracePeriod action timeout
 Timezone if specified, will set a timezone for deployment.
 Must be in format accepted by "tzdata", e.g. `America/New_York` or `Europe/London`
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L321)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L262)
 
 ### .spec.tls.altNames: []string
 
@@ -3893,9 +3896,9 @@ Must be in format accepted by "tzdata", e.g. `America/New_York` or `Europe/Londo
 
 [Code Reference](/pkg/apis/deployment/v1/topology_spec.go#L27)
 
-### .spec.upgrade: DeploymentUpgradeSpec
+### .spec.upgrade.autoUpgrade: bool
 
-Upgrade allows to configure upgrade-related options
+Flag specify if upgrade should be auto-injected, even if is not required (in case of stuck)
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L170)
+[Code Reference](/pkg/apis/deployment/v1/deployment_upgrade_spec.go#L25)
 
