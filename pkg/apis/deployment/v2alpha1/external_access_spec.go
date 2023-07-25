@@ -30,24 +30,30 @@ import (
 
 // ExternalAccessSpec holds configuration for the external access provided for the deployment.
 type ExternalAccessSpec struct {
+
 	// Type specifies the type of Service that will be created to provide access to the ArangoDB deployment from outside the Kubernetes cluster.
-	// Possible values are:
-	// - `None` To limit access to application running inside the Kubernetes cluster.
-	// - `LoadBalancer` To create a Service of type LoadBalancer for the ArangoDB deployment.
-	// - `NodePort` To create a Service of type NodePort for the ArangoDB deployment.
-	// - `Auto` (default) To create a Service of type LoadBalancer and fallback to a Service or type NodePort when the LoadBalancer is not assigned an IP address.
+	// + doc/enum: Auto|Create a Service of type LoadBalancer and fallback to a Service or type NodePort when the LoadBalancer is not assigned an IP address.
+	// + doc/enum: None|limit access to application running inside the Kubernetes cluster.
+	// + doc/enum: LoadBalancer|Create a Service of type LoadBalancer for the ArangoDB deployment.
+	// + doc/enum: NodePort|Create a Service of type NodePort for the ArangoDB deployment.
 	Type *ExternalAccessType `json:"type,omitempty"`
-	// Optional port used in case of Auto or NodePort type.
+
+	// NodePort define optional port used in case of Auto or NodePort type.
 	NodePort *int `json:"nodePort,omitempty"`
-	// Optional IP used to configure a load-balancer on, in case of Auto or LoadBalancer type.
+
+	// LoadBalancerIP define optional IP used to configure a load-balancer on, in case of Auto or LoadBalancer type.
 	LoadBalancerIP *string `json:"loadBalancerIP,omitempty"`
+
+	// LoadBalancerSourceRanges define LoadBalancerSourceRanges used for LoadBalancer Service type
 	// If specified and supported by the platform, this will restrict traffic through the cloud-provider
 	// load-balancer will be restricted to the specified client IPs. This field will be ignored if the
 	// cloud-provider does not support the feature.
-	// More info: https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/
+	// +docs/link: Cloud Provider Firewall|https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/
 	LoadBalancerSourceRanges []string `json:"loadBalancerSourceRanges,omitempty"`
+
 	// AdvertisedEndpoint is passed to the coordinators/single servers for advertising a specific endpoint
 	AdvertisedEndpoint *string `json:"advertisedEndpoint,omitempty"`
+
 	// ManagedServiceNames keeps names of services which are not managed by KubeArangoDB.
 	// It is only relevant when type of service is `managed`.
 	ManagedServiceNames []string `json:"managedServiceNames,omitempty"`

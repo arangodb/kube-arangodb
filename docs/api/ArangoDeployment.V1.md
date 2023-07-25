@@ -1732,44 +1732,44 @@ Possible Values:
 
 AdvertisedEndpoint is passed to the coordinators/single servers for advertising a specific endpoint
 
-[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L50)
+[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L55)
 
 ### .spec.externalAccess.loadBalancerIP: string
 
-Optional IP used to configure a load-balancer on, in case of Auto or LoadBalancer type.
+LoadBalancerIP define optional IP used to configure a load-balancer on, in case of Auto or LoadBalancer type.
 
-[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L43)
+[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L45)
 
 ### .spec.externalAccess.loadBalancerSourceRanges: []string
 
+LoadBalancerSourceRanges define LoadBalancerSourceRanges used for LoadBalancer Service type
 If specified and supported by the platform, this will restrict traffic through the cloud-provider
 load-balancer will be restricted to the specified client IPs. This field will be ignored if the
 cloud-provider does not support the feature.
-More info: https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/
++docs/link: Cloud Provider Firewall|https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/
 
-[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L48)
+[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L52)
 
 ### .spec.externalAccess.managedServiceNames: []string
 
 ManagedServiceNames keeps names of services which are not managed by KubeArangoDB.
 It is only relevant when type of service is `managed`.
 
-[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L53)
+[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L59)
 
 ### .spec.externalAccess.nodePort: int
 
-Optional port used in case of Auto or NodePort type.
+NodePort define optional port used in case of Auto or NodePort type.
 
-[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L41)
+[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L42)
 
 ### .spec.externalAccess.type: string
 
 Type specifies the type of Service that will be created to provide access to the ArangoDB deployment from outside the Kubernetes cluster.
-Possible values are:
-- `None` To limit access to application running inside the Kubernetes cluster.
-- `LoadBalancer` To create a Service of type LoadBalancer for the ArangoDB deployment.
-- `NodePort` To create a Service of type NodePort for the ArangoDB deployment.
-- `Auto` (default) To create a Service of type LoadBalancer and fallback to a Service or type NodePort when the LoadBalancer is not assigned an IP address.
++ doc/enum: Auto|Create a Service of type LoadBalancer and fallback to a Service or type NodePort when the LoadBalancer is not assigned an IP address.
++ doc/enum: None|limit access to application running inside the Kubernetes cluster.
++ doc/enum: LoadBalancer|Create a Service of type LoadBalancer for the ArangoDB deployment.
++ doc/enum: NodePort|Create a Service of type NodePort for the ArangoDB deployment.
 
 [Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L39)
 
@@ -2698,29 +2698,30 @@ Possible Values:
 
 AdvertisedEndpoint is passed to the coordinators/single servers for advertising a specific endpoint
 
-[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L50)
+[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L55)
 
 ### .spec.sync.externalAccess.loadBalancerIP: string
 
-Optional IP used to configure a load-balancer on, in case of Auto or LoadBalancer type.
+LoadBalancerIP define optional IP used to configure a load-balancer on, in case of Auto or LoadBalancer type.
 
-[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L43)
+[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L45)
 
 ### .spec.sync.externalAccess.loadBalancerSourceRanges: []string
 
+LoadBalancerSourceRanges define LoadBalancerSourceRanges used for LoadBalancer Service type
 If specified and supported by the platform, this will restrict traffic through the cloud-provider
 load-balancer will be restricted to the specified client IPs. This field will be ignored if the
 cloud-provider does not support the feature.
-More info: https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/
++docs/link: Cloud Provider Firewall|https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/
 
-[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L48)
+[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L52)
 
 ### .spec.sync.externalAccess.managedServiceNames: []string
 
 ManagedServiceNames keeps names of services which are not managed by KubeArangoDB.
 It is only relevant when type of service is `managed`.
 
-[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L53)
+[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L59)
 
 ### .spec.sync.externalAccess.masterEndpoint: []string
 
@@ -2728,18 +2729,17 @@ It is only relevant when type of service is `managed`.
 
 ### .spec.sync.externalAccess.nodePort: int
 
-Optional port used in case of Auto or NodePort type.
+NodePort define optional port used in case of Auto or NodePort type.
 
-[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L41)
+[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L42)
 
 ### .spec.sync.externalAccess.type: string
 
 Type specifies the type of Service that will be created to provide access to the ArangoDB deployment from outside the Kubernetes cluster.
-Possible values are:
-- `None` To limit access to application running inside the Kubernetes cluster.
-- `LoadBalancer` To create a Service of type LoadBalancer for the ArangoDB deployment.
-- `NodePort` To create a Service of type NodePort for the ArangoDB deployment.
-- `Auto` (default) To create a Service of type LoadBalancer and fallback to a Service or type NodePort when the LoadBalancer is not assigned an IP address.
++ doc/enum: Auto|Create a Service of type LoadBalancer and fallback to a Service or type NodePort when the LoadBalancer is not assigned an IP address.
++ doc/enum: None|limit access to application running inside the Kubernetes cluster.
++ doc/enum: LoadBalancer|Create a Service of type LoadBalancer for the ArangoDB deployment.
++ doc/enum: NodePort|Create a Service of type NodePort for the ArangoDB deployment.
 
 [Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L39)
 
