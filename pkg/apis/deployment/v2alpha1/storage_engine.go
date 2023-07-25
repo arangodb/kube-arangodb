@@ -31,6 +31,7 @@ type StorageEngine string
 
 const (
 	// StorageEngineMMFiles yields a cluster using the mmfiles storage engine
+	// deprecated
 	StorageEngineMMFiles StorageEngine = "MMFiles"
 	// StorageEngineRocksDB yields a cluster using the rocksdb storage engine
 	StorageEngineRocksDB StorageEngine = "RocksDB"
