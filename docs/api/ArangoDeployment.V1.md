@@ -538,31 +538,42 @@ Links:
 
 AllowUnsafeUpgrade determines if upgrade on missing member or with not in sync shards is allowed
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L160)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L163)
 
 ### .spec.annotations: map[string]string
 
-Annotations specified the annotations added to Pods in this group.
+Annotations specifies the annotations added to all ArangoDeployment owned resources (pods, services, PVC’s, PDB’s).
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L143)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L126)
 
 ### .spec.annotationsIgnoreList: []string
 
 AnnotationsIgnoreList list regexp or plain definitions which annotations should be ignored
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L145)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L129)
 
 ### .spec.annotationsMode: string
 
-AnnotationsMode Define annotations mode which should be use while overriding annotations
+AnnotationsMode defines annotations mode which should be use while overriding annotations.
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L147)
+Possible Values: 
+* disabled (default) - Disable annotations/labels override. Default if there is no annotations/labels set in ArangoDeployment
+* append - Add new annotations/labels without affecting old ones
+* replace - Replace existing annotations/labels
+
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L135)
 
 ### .spec.architecture: []string
 
-Architecture definition of supported architectures
+Architecture defines the list of supported architectures.
+First element on the list is marked as default architecture.
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L208)
+Links:
+* [Architecture Change](/docs/design/arch_change.md)
+
+Default Value: ['amd64']
+
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L258)
 
 ### .spec.auth.jwtSecretName: string
 
@@ -599,13 +610,20 @@ Required only of domain is not set to default (cluster.local)
 
 Default Value: cluster.local
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L196)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L237)
 
 ### .spec.communicationMethod: string
 
 CommunicationMethod define communication method used in deployment
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L199)
+Possible Values: 
+* headless (default) - Define old communication mechanism, based on headless service.
+* dns - Define ClusterIP Service DNS based communication.
+* short-dns - Define ClusterIP Service DNS based communication. Use namespaced short DNS (used in migration)
+* headless-dns - Define Headless Service DNS based communication.
+* ip - Define ClusterIP Service IP based communication.
+
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L245)
 
 ### .spec.coordinators.affinity: core.PodAffinity
 
@@ -1679,55 +1697,81 @@ Links:
 
 ### .spec.disableIPv6: bool
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L134)
+DisableIPv6 setting prevents the use of IPv6 addresses by ArangoDB servers.
+This setting cannot be changed after the deployment has been created.
+
+Default Value: false
+
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L109)
 
 ### .spec.downtimeAllowed: bool
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L133)
+DowntimeAllowed setting is used to allow automatic reconciliation actions that yield some downtime of the ArangoDB deployment.
+When this setting is set to false, no automatic action that may result in downtime is allowed.
+If the need for such an action is detected, an event is added to the ArangoDeployment.
+Once this setting is set to true, the automatic action is executed.
+Operations that may result in downtime are:
+- Rotating TLS CA certificate
+Note: It is still possible that there is some downtime when the Kubernetes cluster is down, or in a bad state, irrespective of the value of this setting.
+
+Default Value: false
+
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L104)
 
 ### .spec.environment: string
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L122)
+Environment setting specifies the type of environment in which the deployment is created.
+
+Possible Values: 
+* Development (default) - This value optimizes the deployment for development use. It is possible to run a deployment on a small number of nodes (e.g. minikube).
+* Production - This value optimizes the deployment for production use. It puts required affinity constraints on all pods to avoid Agents & DB-Servers from running on the same machine.
+
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L65)
 
 ### .spec.externalAccess.advertisedEndpoint: string
 
 AdvertisedEndpoint is passed to the coordinators/single servers for advertising a specific endpoint
 
-[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L45)
+[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L55)
 
 ### .spec.externalAccess.loadBalancerIP: string
 
-Optional IP used to configure a load-balancer on, in case of Auto or LoadBalancer type.
+LoadBalancerIP define optional IP used to configure a load-balancer on, in case of Auto or LoadBalancer type.
 
-[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L38)
+[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L45)
 
 ### .spec.externalAccess.loadBalancerSourceRanges: []string
 
+LoadBalancerSourceRanges define LoadBalancerSourceRanges used for LoadBalancer Service type
 If specified and supported by the platform, this will restrict traffic through the cloud-provider
 load-balancer will be restricted to the specified client IPs. This field will be ignored if the
 cloud-provider does not support the feature.
-More info: https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/
++docs/link: Cloud Provider Firewall|https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/
 
-[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L43)
+[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L52)
 
 ### .spec.externalAccess.managedServiceNames: []string
 
 ManagedServiceNames keeps names of services which are not managed by KubeArangoDB.
 It is only relevant when type of service is `managed`.
 
-[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L48)
+[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L59)
 
 ### .spec.externalAccess.nodePort: int
 
-Optional port used in case of Auto or NodePort type.
+NodePort define optional port used in case of Auto or NodePort type.
 
-[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L36)
+[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L42)
 
 ### .spec.externalAccess.type: string
 
-Type of external access
+Type specifies the type of Service that will be created to provide access to the ArangoDB deployment from outside the Kubernetes cluster.
++ doc/enum: Auto|Create a Service of type LoadBalancer and fallback to a Service or type NodePort when the LoadBalancer is not assigned an IP address.
++ doc/enum: None|limit access to application running inside the Kubernetes cluster.
++ doc/enum: LoadBalancer|Create a Service of type LoadBalancer for the ArangoDB deployment.
++ doc/enum: NodePort|Create a Service of type NodePort for the ArangoDB deployment.
 
-[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L34)
+[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L39)
 
 ### .spec.features.foxx.queues: bool
 
@@ -1886,7 +1930,12 @@ Links:
 
 ### .spec.image: string
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L124)
+Image specifies the docker image to use for all ArangoDB servers.
+In a development environment this setting defaults to arangodb/arangodb:latest.
+For production environments this is a required setting without a default value.
+It is highly recommend to use explicit version (not latest) for production environments.
+
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L78)
 
 ### .spec.imageDiscoveryMode: string
 
@@ -1896,33 +1945,50 @@ Possible Values:
 * kubelet (default) - Use sha256 of the discovered image in the pods
 * direct - Use image provided in the spec.image directly in the pods
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L131)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L94)
 
-### .spec.imagePullPolicy: string
+### .spec.imagePullPolicy: core.PullPolicy
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L125)
+ImagePullPolicy specifies the pull policy for the docker image to use for all ArangoDB servers.
+
+Links:
+* [Documentation of core.PullPolicy](https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy)
+
+Possible Values: 
+* Always (default) - Means that kubelet always attempts to pull the latest image. Container will fail If the pull fails.
+* Never - Means that kubelet never pulls an image, but only uses a local image. Container will fail if the image isn't present
+* IfNotPresent - Means that kubelet pulls if the image isn't present on disk. Container will fail if the image isn't present and the pull fails.
+
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L86)
 
 ### .spec.imagePullSecrets: []string
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L126)
+ImagePullSecrets specifies the list of image pull secrets for the docker image to use for all ArangoDB servers.
+
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L89)
 
 ### .spec.labels: map[string]string
 
-Labels specified the labels added to Pods in this group.
+Labels specifies the labels added to Pods in this group.
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L149)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L138)
 
 ### .spec.labelsIgnoreList: []string
 
 LabelsIgnoreList list regexp or plain definitions which labels should be ignored
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L151)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L141)
 
 ### .spec.labelsMode: string
 
 LabelsMode Define labels mode which should be use while overriding labels
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L153)
+Possible Values: 
+* disabled (default) - Disable annotations/labels override. Default if there is no annotations/labels set in ArangoDeployment
+* append - Add new annotations/labels without affecting old ones
+* replace - Replace existing annotations/labels
+
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L147)
 
 ### .spec.license.secretName: string
 
@@ -1939,7 +2005,17 @@ Links:
 
 ### .spec.memberPropagationMode: string
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L183)
+MemberPropagationMode defines how changes to pod spec should be propogated.
+Changes to a pod’s configuration require a restart of that pod in almost all cases.
+Pods are restarted eagerly by default, which can cause more restarts than desired, especially when updating arangod as well as the operator.
+The propagation of the configuration changes can be deferred to the next restart, either triggered manually by the user or by another operation like an upgrade.
+This reduces the number of restarts for upgrading both the server and the operator from two to one.
+
+Possible Values: 
+* always (default) - Restart the member as soon as a configuration change is discovered
+* on-restart - Wait until the next restart to change the member configuration
+
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L220)
 
 ### .spec.metrics.authentication.jwtTokenSecretName: string
 
@@ -1999,11 +2075,19 @@ Possible Values:
 
 This field is **immutable**: Change of the ArangoDeployment Mode is not possible after creation.
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L120)
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L60)
 
 ### .spec.networkAttachedVolumes: bool
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L140)
+NetworkAttachedVolumes
+If set to `true`, a ResignLeadership operation will be triggered when a DB-Server pod is evicted (rather than a CleanOutServer operation).
+Furthermore, the pod will simply be redeployed on a different node, rather than cleaned and retired and replaced by a new member.
+You must only set this option to true if your persistent volumes are “movable” in the sense that they can be mounted from a different k8s node, like in the case of network attached volumes.
+If your persistent volumes are tied to a specific pod, you must leave this option on false.
+
+Default Value: true
+
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L123)
 
 ### .spec.rebalancer.enabled: bool
 
@@ -2030,11 +2114,22 @@ Count Enable Shard Count machanism
 
 ### .spec.restoreEncryptionSecret: string
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L157)
+RestoreEncryptionSecret specifies optional name of secret which contains encryption key used for restore
+
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L160)
 
 ### .spec.restoreFrom: string
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L155)
+RestoreFrom setting specifies a `ArangoBackup` resource name the cluster should be restored from.
+After a restore or failure to do so, the status of the deployment contains information about the restore operation in the restore key.
+It will contain some of the following fields:
+- `requestedFrom`: name of the ArangoBackup used to restore from.
+- `message`: optional message explaining why the restore failed.
+- `state`: state indicating if the restore was successful or not. Possible values: Restoring, Restored, RestoreFailed
+If the restoreFrom key is removed from the spec, the restore key is deleted as well.
+A new restore attempt is made if and only if either in the status restore is not set or if spec.restoreFrom and status.requestedFrom are different.
+
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L157)
 
 ### .spec.rocksdb.encryption.keySecretName: string
 
@@ -2574,7 +2669,14 @@ Links:
 
 ### .spec.storageEngine: string
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L123)
+StorageEngine specifies the type of storage engine used for all servers in the cluster.
+This setting cannot be changed after the cluster has been created.
+
+Possible Values: 
+* RocksDB (default) - To use the RocksDB storage engine.
+* MMFiles - To use the MMFiles storage engine. Deprecated.
+
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L72)
 
 ### .spec.sync.auth.clientCASecretName: string
 
@@ -2596,29 +2698,30 @@ Links:
 
 AdvertisedEndpoint is passed to the coordinators/single servers for advertising a specific endpoint
 
-[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L45)
+[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L55)
 
 ### .spec.sync.externalAccess.loadBalancerIP: string
 
-Optional IP used to configure a load-balancer on, in case of Auto or LoadBalancer type.
+LoadBalancerIP define optional IP used to configure a load-balancer on, in case of Auto or LoadBalancer type.
 
-[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L38)
+[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L45)
 
 ### .spec.sync.externalAccess.loadBalancerSourceRanges: []string
 
+LoadBalancerSourceRanges define LoadBalancerSourceRanges used for LoadBalancer Service type
 If specified and supported by the platform, this will restrict traffic through the cloud-provider
 load-balancer will be restricted to the specified client IPs. This field will be ignored if the
 cloud-provider does not support the feature.
-More info: https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/
++docs/link: Cloud Provider Firewall|https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/
 
-[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L43)
+[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L52)
 
 ### .spec.sync.externalAccess.managedServiceNames: []string
 
 ManagedServiceNames keeps names of services which are not managed by KubeArangoDB.
 It is only relevant when type of service is `managed`.
 
-[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L48)
+[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L59)
 
 ### .spec.sync.externalAccess.masterEndpoint: []string
 
@@ -2626,15 +2729,19 @@ It is only relevant when type of service is `managed`.
 
 ### .spec.sync.externalAccess.nodePort: int
 
-Optional port used in case of Auto or NodePort type.
+NodePort define optional port used in case of Auto or NodePort type.
 
-[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L36)
+[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L42)
 
 ### .spec.sync.externalAccess.type: string
 
-Type of external access
+Type specifies the type of Service that will be created to provide access to the ArangoDB deployment from outside the Kubernetes cluster.
++ doc/enum: Auto|Create a Service of type LoadBalancer and fallback to a Service or type NodePort when the LoadBalancer is not assigned an IP address.
++ doc/enum: None|limit access to application running inside the Kubernetes cluster.
++ doc/enum: LoadBalancer|Create a Service of type LoadBalancer for the ArangoDB deployment.
++ doc/enum: NodePort|Create a Service of type NodePort for the ArangoDB deployment.
 
-[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L34)
+[Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L39)
 
 ### .spec.sync.image: string
 
@@ -3752,7 +3859,10 @@ MaintenanceGracePeriod action timeout
 
 ### .spec.timezone: string
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L210)
+Timezone if specified, will set a timezone for deployment.
+Must be in format accepted by "tzdata", e.g. `America/New_York` or `Europe/London`
+
+[Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L262)
 
 ### .spec.tls.altNames: []string
 
