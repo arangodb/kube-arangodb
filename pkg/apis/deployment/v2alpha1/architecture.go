@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,12 +30,8 @@ import (
 )
 
 // ArangoDeploymentArchitecture defines the list of supported architectures.
-// Possible values are:
-// - `amd64`: Use processors with the x86-64 architecture.
-// - `arm64`: Use processors with the 64-bit ARM architecture.
-// The setting expects a list of strings, but you should only specify a single list item for the architecture, except when you want to migrate from one architecture to the other.
-// The first list item defines the new default architecture for the deployment that you want to migrate to.
-// To use the ARM architecture, you need to enable it in the operator first using --set "operator.architectures={amd64,arm64}". See Installation with Helm.
+// +doc/enum: amd64|Use processors with the x86-64 architecture.
+// +doc/enum: arm64|Use processors with the 64-bit ARM architecture.
 type ArangoDeploymentArchitecture []ArangoDeploymentArchitectureType
 
 func (a ArangoDeploymentArchitecture) GetDefault() ArangoDeploymentArchitectureType {
