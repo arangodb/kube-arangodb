@@ -180,6 +180,9 @@ type ServerGroupSpec struct {
 	Port *uint16 `json:"port,omitempty"`
 	// ExporterPort define Port used by exporter
 	ExporterPort *uint16 `json:"exporterPort,omitempty"`
+
+	// Numactl define Numactl options passed to the process
+	Numactl *ServerGroupSpecNumactl `json:"numactl,omitempty"`
 }
 
 // ServerGroupProbesSpec contains specification for probes for pods of the server group

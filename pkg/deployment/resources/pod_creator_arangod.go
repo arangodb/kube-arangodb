@@ -121,7 +121,21 @@ func (a *ArangoDContainer) GetPorts() []core.ContainerPort {
 }
 
 func (a *ArangoDContainer) GetArgs() ([]string, error) {
-	return createArangodArgs(a.cachedStatus, a.input)
+	args, err := createArangodArgs(a.cachedStatus, a.input)
+	if err != nil {
+		return nil, err
+	}
+
+	if nmargs := createArangodNumactl(a.groupSpec); len(nmargs) > 0 {
+		vs := make([]string, len(args)+len(nmargs))
+
+		copy(vs, nmargs)
+		copy(vs[len(nmargs):], args)
+
+		return vs, nil
+	}
+
+	return args, nil
 }
 
 func (a *ArangoDContainer) GetName() string {

@@ -188,6 +188,44 @@ func createArangodArgs(cachedStatus interfaces.Inspector, input pod.Input, addit
 	return args, nil
 }
 
+// createArangodNumactl creates command line arguments for a numactl in the given group.
+func createArangodNumactl(spec api.ServerGroupSpec) []string {
+	if !spec.Numactl.IsEnabled() {
+		return nil
+	}
+
+	args := spec.Numactl.GetArgs()
+
+	if len(args) == 0 {
+		return []string{
+			spec.Numactl.GetPath(),
+		}
+	}
+
+	r := make([]string, len(args)+1)
+
+	r[0] = spec.Numactl.GetPath()
+
+	copy(r[1:], args)
+
+	return r
+}
+
+// withArangodNumactl creates command line arguments with a numactl in a given group.
+func withArangodNumactl(spec api.ServerGroupSpec, args ...string) []string {
+	nmctl := createArangodNumactl(spec)
+	if len(nmctl) == 0 {
+		return args
+	}
+
+	vs := make([]string, len(args)+len(nmctl))
+
+	copy(vs, nmctl)
+	copy(vs[len(nmctl):], args)
+
+	return vs
+}
+
 // createArangoSyncArgs creates command line arguments for an arangosync server in the given group.
 func createArangoSyncArgs(apiObject meta.Object, spec api.DeploymentSpec, group api.ServerGroup,
 	groupSpec api.ServerGroupSpec, member api.MemberStatus) []string {

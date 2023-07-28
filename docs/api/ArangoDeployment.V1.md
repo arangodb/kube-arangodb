@@ -184,6 +184,30 @@ NodeSelector speficies a set of selectors for nodes
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L114)
 
+### .spec.agents.numactl.args: []string
+
+Args define list of the numactl process
+
+Default Value: []
+
+[Code Reference](/pkg/apis/deployment/v1/server_group_numactl_spec.go#L38)
+
+### .spec.agents.numactl.enabled: bool
+
+Enabled define if numactl should be enabled
+
+Default Value: false
+
+[Code Reference](/pkg/apis/deployment/v1/server_group_numactl_spec.go#L30)
+
+### .spec.agents.numactl.path: string
+
+Path define numactl path within the container
+
+Default Value: /usr/bin/numactl
+
+[Code Reference](/pkg/apis/deployment/v1/server_group_numactl_spec.go#L34)
+
 ### .spec.agents.overrideDetectedNumberOfCores: bool
 
 OverrideDetectedNumberOfCores determines if number of cores should be overrided based on values in resources.
@@ -220,86 +244,86 @@ PriorityClassName specifies a priority class name
 
 LivenessProbeDisabled if true livenessProbes are disabled
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L188)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L191)
 
 ### .spec.agents.probes.livenessProbeSpec.failureThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
 
 ### .spec.agents.probes.livenessProbeSpec.initialDelaySeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L218)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
 
 ### .spec.agents.probes.livenessProbeSpec.periodSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L219)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
 
 ### .spec.agents.probes.livenessProbeSpec.successThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.agents.probes.livenessProbeSpec.timeoutSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L220)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
 
 ### .spec.agents.probes.ReadinessProbeDisabled: bool
 
 OldReadinessProbeDisabled if true readinessProbes are disabled
 Deprecated: This field is deprecated, keept only for backward compatibility.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L195)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L198)
 
 ### .spec.agents.probes.readinessProbeDisabled: bool
 
 ReadinessProbeDisabled override flag for probe disabled in good manner (lowercase) with backward compatibility
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L197)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L200)
 
 ### .spec.agents.probes.readinessProbeSpec.failureThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
 
 ### .spec.agents.probes.readinessProbeSpec.initialDelaySeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L218)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
 
 ### .spec.agents.probes.readinessProbeSpec.periodSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L219)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
 
 ### .spec.agents.probes.readinessProbeSpec.successThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.agents.probes.readinessProbeSpec.timeoutSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L220)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
 
 ### .spec.agents.probes.startupProbeDisabled: bool
 
 StartupProbeDisabled if true startupProbes are disabled
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L202)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L205)
 
 ### .spec.agents.probes.startupProbeSpec.failureThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
 
 ### .spec.agents.probes.startupProbeSpec.initialDelaySeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L218)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
 
 ### .spec.agents.probes.startupProbeSpec.periodSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L219)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
 
 ### .spec.agents.probes.startupProbeSpec.successThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.agents.probes.startupProbeSpec.timeoutSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L220)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
 
 ### .spec.agents.pvcResizeMode: string
 
@@ -807,6 +831,30 @@ NodeSelector speficies a set of selectors for nodes
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L114)
 
+### .spec.coordinators.numactl.args: []string
+
+Args define list of the numactl process
+
+Default Value: []
+
+[Code Reference](/pkg/apis/deployment/v1/server_group_numactl_spec.go#L38)
+
+### .spec.coordinators.numactl.enabled: bool
+
+Enabled define if numactl should be enabled
+
+Default Value: false
+
+[Code Reference](/pkg/apis/deployment/v1/server_group_numactl_spec.go#L30)
+
+### .spec.coordinators.numactl.path: string
+
+Path define numactl path within the container
+
+Default Value: /usr/bin/numactl
+
+[Code Reference](/pkg/apis/deployment/v1/server_group_numactl_spec.go#L34)
+
 ### .spec.coordinators.overrideDetectedNumberOfCores: bool
 
 OverrideDetectedNumberOfCores determines if number of cores should be overrided based on values in resources.
@@ -843,86 +891,86 @@ PriorityClassName specifies a priority class name
 
 LivenessProbeDisabled if true livenessProbes are disabled
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L188)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L191)
 
 ### .spec.coordinators.probes.livenessProbeSpec.failureThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
 
 ### .spec.coordinators.probes.livenessProbeSpec.initialDelaySeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L218)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
 
 ### .spec.coordinators.probes.livenessProbeSpec.periodSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L219)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
 
 ### .spec.coordinators.probes.livenessProbeSpec.successThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.coordinators.probes.livenessProbeSpec.timeoutSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L220)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
 
 ### .spec.coordinators.probes.ReadinessProbeDisabled: bool
 
 OldReadinessProbeDisabled if true readinessProbes are disabled
 Deprecated: This field is deprecated, keept only for backward compatibility.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L195)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L198)
 
 ### .spec.coordinators.probes.readinessProbeDisabled: bool
 
 ReadinessProbeDisabled override flag for probe disabled in good manner (lowercase) with backward compatibility
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L197)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L200)
 
 ### .spec.coordinators.probes.readinessProbeSpec.failureThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
 
 ### .spec.coordinators.probes.readinessProbeSpec.initialDelaySeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L218)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
 
 ### .spec.coordinators.probes.readinessProbeSpec.periodSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L219)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
 
 ### .spec.coordinators.probes.readinessProbeSpec.successThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.coordinators.probes.readinessProbeSpec.timeoutSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L220)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
 
 ### .spec.coordinators.probes.startupProbeDisabled: bool
 
 StartupProbeDisabled if true startupProbes are disabled
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L202)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L205)
 
 ### .spec.coordinators.probes.startupProbeSpec.failureThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
 
 ### .spec.coordinators.probes.startupProbeSpec.initialDelaySeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L218)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
 
 ### .spec.coordinators.probes.startupProbeSpec.periodSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L219)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
 
 ### .spec.coordinators.probes.startupProbeSpec.successThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.coordinators.probes.startupProbeSpec.timeoutSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L220)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
 
 ### .spec.coordinators.pvcResizeMode: string
 
@@ -1345,6 +1393,30 @@ NodeSelector speficies a set of selectors for nodes
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L114)
 
+### .spec.dbservers.numactl.args: []string
+
+Args define list of the numactl process
+
+Default Value: []
+
+[Code Reference](/pkg/apis/deployment/v1/server_group_numactl_spec.go#L38)
+
+### .spec.dbservers.numactl.enabled: bool
+
+Enabled define if numactl should be enabled
+
+Default Value: false
+
+[Code Reference](/pkg/apis/deployment/v1/server_group_numactl_spec.go#L30)
+
+### .spec.dbservers.numactl.path: string
+
+Path define numactl path within the container
+
+Default Value: /usr/bin/numactl
+
+[Code Reference](/pkg/apis/deployment/v1/server_group_numactl_spec.go#L34)
+
 ### .spec.dbservers.overrideDetectedNumberOfCores: bool
 
 OverrideDetectedNumberOfCores determines if number of cores should be overrided based on values in resources.
@@ -1381,86 +1453,86 @@ PriorityClassName specifies a priority class name
 
 LivenessProbeDisabled if true livenessProbes are disabled
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L188)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L191)
 
 ### .spec.dbservers.probes.livenessProbeSpec.failureThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
 
 ### .spec.dbservers.probes.livenessProbeSpec.initialDelaySeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L218)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
 
 ### .spec.dbservers.probes.livenessProbeSpec.periodSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L219)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
 
 ### .spec.dbservers.probes.livenessProbeSpec.successThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.dbservers.probes.livenessProbeSpec.timeoutSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L220)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
 
 ### .spec.dbservers.probes.ReadinessProbeDisabled: bool
 
 OldReadinessProbeDisabled if true readinessProbes are disabled
 Deprecated: This field is deprecated, keept only for backward compatibility.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L195)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L198)
 
 ### .spec.dbservers.probes.readinessProbeDisabled: bool
 
 ReadinessProbeDisabled override flag for probe disabled in good manner (lowercase) with backward compatibility
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L197)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L200)
 
 ### .spec.dbservers.probes.readinessProbeSpec.failureThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
 
 ### .spec.dbservers.probes.readinessProbeSpec.initialDelaySeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L218)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
 
 ### .spec.dbservers.probes.readinessProbeSpec.periodSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L219)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
 
 ### .spec.dbservers.probes.readinessProbeSpec.successThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.dbservers.probes.readinessProbeSpec.timeoutSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L220)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
 
 ### .spec.dbservers.probes.startupProbeDisabled: bool
 
 StartupProbeDisabled if true startupProbes are disabled
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L202)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L205)
 
 ### .spec.dbservers.probes.startupProbeSpec.failureThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
 
 ### .spec.dbservers.probes.startupProbeSpec.initialDelaySeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L218)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
 
 ### .spec.dbservers.probes.startupProbeSpec.periodSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L219)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
 
 ### .spec.dbservers.probes.startupProbeSpec.successThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.dbservers.probes.startupProbeSpec.timeoutSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L220)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
 
 ### .spec.dbservers.pvcResizeMode: string
 
@@ -2321,6 +2393,30 @@ NodeSelector speficies a set of selectors for nodes
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L114)
 
+### .spec.single.numactl.args: []string
+
+Args define list of the numactl process
+
+Default Value: []
+
+[Code Reference](/pkg/apis/deployment/v1/server_group_numactl_spec.go#L38)
+
+### .spec.single.numactl.enabled: bool
+
+Enabled define if numactl should be enabled
+
+Default Value: false
+
+[Code Reference](/pkg/apis/deployment/v1/server_group_numactl_spec.go#L30)
+
+### .spec.single.numactl.path: string
+
+Path define numactl path within the container
+
+Default Value: /usr/bin/numactl
+
+[Code Reference](/pkg/apis/deployment/v1/server_group_numactl_spec.go#L34)
+
 ### .spec.single.overrideDetectedNumberOfCores: bool
 
 OverrideDetectedNumberOfCores determines if number of cores should be overrided based on values in resources.
@@ -2357,86 +2453,86 @@ PriorityClassName specifies a priority class name
 
 LivenessProbeDisabled if true livenessProbes are disabled
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L188)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L191)
 
 ### .spec.single.probes.livenessProbeSpec.failureThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
 
 ### .spec.single.probes.livenessProbeSpec.initialDelaySeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L218)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
 
 ### .spec.single.probes.livenessProbeSpec.periodSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L219)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
 
 ### .spec.single.probes.livenessProbeSpec.successThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.single.probes.livenessProbeSpec.timeoutSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L220)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
 
 ### .spec.single.probes.ReadinessProbeDisabled: bool
 
 OldReadinessProbeDisabled if true readinessProbes are disabled
 Deprecated: This field is deprecated, keept only for backward compatibility.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L195)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L198)
 
 ### .spec.single.probes.readinessProbeDisabled: bool
 
 ReadinessProbeDisabled override flag for probe disabled in good manner (lowercase) with backward compatibility
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L197)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L200)
 
 ### .spec.single.probes.readinessProbeSpec.failureThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
 
 ### .spec.single.probes.readinessProbeSpec.initialDelaySeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L218)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
 
 ### .spec.single.probes.readinessProbeSpec.periodSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L219)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
 
 ### .spec.single.probes.readinessProbeSpec.successThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.single.probes.readinessProbeSpec.timeoutSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L220)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
 
 ### .spec.single.probes.startupProbeDisabled: bool
 
 StartupProbeDisabled if true startupProbes are disabled
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L202)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L205)
 
 ### .spec.single.probes.startupProbeSpec.failureThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
 
 ### .spec.single.probes.startupProbeSpec.initialDelaySeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L218)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
 
 ### .spec.single.probes.startupProbeSpec.periodSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L219)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
 
 ### .spec.single.probes.startupProbeSpec.successThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.single.probes.startupProbeSpec.timeoutSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L220)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
 
 ### .spec.single.pvcResizeMode: string
 
@@ -2961,6 +3057,30 @@ NodeSelector speficies a set of selectors for nodes
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L114)
 
+### .spec.syncmasters.numactl.args: []string
+
+Args define list of the numactl process
+
+Default Value: []
+
+[Code Reference](/pkg/apis/deployment/v1/server_group_numactl_spec.go#L38)
+
+### .spec.syncmasters.numactl.enabled: bool
+
+Enabled define if numactl should be enabled
+
+Default Value: false
+
+[Code Reference](/pkg/apis/deployment/v1/server_group_numactl_spec.go#L30)
+
+### .spec.syncmasters.numactl.path: string
+
+Path define numactl path within the container
+
+Default Value: /usr/bin/numactl
+
+[Code Reference](/pkg/apis/deployment/v1/server_group_numactl_spec.go#L34)
+
 ### .spec.syncmasters.overrideDetectedNumberOfCores: bool
 
 OverrideDetectedNumberOfCores determines if number of cores should be overrided based on values in resources.
@@ -2997,86 +3117,86 @@ PriorityClassName specifies a priority class name
 
 LivenessProbeDisabled if true livenessProbes are disabled
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L188)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L191)
 
 ### .spec.syncmasters.probes.livenessProbeSpec.failureThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
 
 ### .spec.syncmasters.probes.livenessProbeSpec.initialDelaySeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L218)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
 
 ### .spec.syncmasters.probes.livenessProbeSpec.periodSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L219)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
 
 ### .spec.syncmasters.probes.livenessProbeSpec.successThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.syncmasters.probes.livenessProbeSpec.timeoutSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L220)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
 
 ### .spec.syncmasters.probes.ReadinessProbeDisabled: bool
 
 OldReadinessProbeDisabled if true readinessProbes are disabled
 Deprecated: This field is deprecated, keept only for backward compatibility.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L195)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L198)
 
 ### .spec.syncmasters.probes.readinessProbeDisabled: bool
 
 ReadinessProbeDisabled override flag for probe disabled in good manner (lowercase) with backward compatibility
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L197)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L200)
 
 ### .spec.syncmasters.probes.readinessProbeSpec.failureThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
 
 ### .spec.syncmasters.probes.readinessProbeSpec.initialDelaySeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L218)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
 
 ### .spec.syncmasters.probes.readinessProbeSpec.periodSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L219)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
 
 ### .spec.syncmasters.probes.readinessProbeSpec.successThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.syncmasters.probes.readinessProbeSpec.timeoutSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L220)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
 
 ### .spec.syncmasters.probes.startupProbeDisabled: bool
 
 StartupProbeDisabled if true startupProbes are disabled
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L202)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L205)
 
 ### .spec.syncmasters.probes.startupProbeSpec.failureThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
 
 ### .spec.syncmasters.probes.startupProbeSpec.initialDelaySeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L218)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
 
 ### .spec.syncmasters.probes.startupProbeSpec.periodSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L219)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
 
 ### .spec.syncmasters.probes.startupProbeSpec.successThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.syncmasters.probes.startupProbeSpec.timeoutSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L220)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
 
 ### .spec.syncmasters.pvcResizeMode: string
 
@@ -3493,6 +3613,30 @@ NodeSelector speficies a set of selectors for nodes
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L114)
 
+### .spec.syncworkers.numactl.args: []string
+
+Args define list of the numactl process
+
+Default Value: []
+
+[Code Reference](/pkg/apis/deployment/v1/server_group_numactl_spec.go#L38)
+
+### .spec.syncworkers.numactl.enabled: bool
+
+Enabled define if numactl should be enabled
+
+Default Value: false
+
+[Code Reference](/pkg/apis/deployment/v1/server_group_numactl_spec.go#L30)
+
+### .spec.syncworkers.numactl.path: string
+
+Path define numactl path within the container
+
+Default Value: /usr/bin/numactl
+
+[Code Reference](/pkg/apis/deployment/v1/server_group_numactl_spec.go#L34)
+
 ### .spec.syncworkers.overrideDetectedNumberOfCores: bool
 
 OverrideDetectedNumberOfCores determines if number of cores should be overrided based on values in resources.
@@ -3529,86 +3673,86 @@ PriorityClassName specifies a priority class name
 
 LivenessProbeDisabled if true livenessProbes are disabled
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L188)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L191)
 
 ### .spec.syncworkers.probes.livenessProbeSpec.failureThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
 
 ### .spec.syncworkers.probes.livenessProbeSpec.initialDelaySeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L218)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
 
 ### .spec.syncworkers.probes.livenessProbeSpec.periodSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L219)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
 
 ### .spec.syncworkers.probes.livenessProbeSpec.successThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.syncworkers.probes.livenessProbeSpec.timeoutSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L220)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
 
 ### .spec.syncworkers.probes.ReadinessProbeDisabled: bool
 
 OldReadinessProbeDisabled if true readinessProbes are disabled
 Deprecated: This field is deprecated, keept only for backward compatibility.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L195)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L198)
 
 ### .spec.syncworkers.probes.readinessProbeDisabled: bool
 
 ReadinessProbeDisabled override flag for probe disabled in good manner (lowercase) with backward compatibility
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L197)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L200)
 
 ### .spec.syncworkers.probes.readinessProbeSpec.failureThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
 
 ### .spec.syncworkers.probes.readinessProbeSpec.initialDelaySeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L218)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
 
 ### .spec.syncworkers.probes.readinessProbeSpec.periodSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L219)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
 
 ### .spec.syncworkers.probes.readinessProbeSpec.successThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.syncworkers.probes.readinessProbeSpec.timeoutSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L220)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
 
 ### .spec.syncworkers.probes.startupProbeDisabled: bool
 
 StartupProbeDisabled if true startupProbes are disabled
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L202)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L205)
 
 ### .spec.syncworkers.probes.startupProbeSpec.failureThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
 
 ### .spec.syncworkers.probes.startupProbeSpec.initialDelaySeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L218)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
 
 ### .spec.syncworkers.probes.startupProbeSpec.periodSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L219)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
 
 ### .spec.syncworkers.probes.startupProbeSpec.successThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.syncworkers.probes.startupProbeSpec.timeoutSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L220)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
 
 ### .spec.syncworkers.pvcResizeMode: string
 
