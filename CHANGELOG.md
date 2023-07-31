@@ -9,6 +9,7 @@
 - (Feature) Abort resignation of leadership when DB server is restared
 - (Feature) Numactl Options
 - (Maintenance) Bump K8S Version to 1.23.17
+- (Maintenance) Bump K8S Version to 1.24.16
 
 ## [1.2.31](https://github.com/arangodb/kube-arangodb/tree/1.2.31) (2023-07-14)
 - (Improvement) Block traffic on the services if there is more than 1 active leader in ActiveFailover mode
