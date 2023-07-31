@@ -83,7 +83,7 @@ func (config HTTPProbeConfig) Create() *core.Probe {
 	}
 
 	return &core.Probe{
-		Handler: core.Handler{
+		ProbeHandler: core.ProbeHandler{
 			HTTPGet: &core.HTTPGetAction{
 				Path:        config.LocalPath,
 				Port:        intstr.FromString(def(config.PortName, shared.ServerPortName)),
@@ -125,7 +125,7 @@ func (config *CMDProbeConfig) SetSpec(spec *api.ServerGroupProbeSpec) {
 // Create creates a probe from given config
 func (config CMDProbeConfig) Create() *core.Probe {
 	return &core.Probe{
-		Handler: core.Handler{
+		ProbeHandler: core.ProbeHandler{
 			Exec: &core.ExecAction{
 				Command: config.Command,
 			},

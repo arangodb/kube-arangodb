@@ -9,6 +9,9 @@ ifeq ($(shell uname),Darwin)
 	REALPATH ?= grealpath
 endif
 
+KUBERNETES_VERSION_MINOR:=23
+KUBERNETES_VERSION_PATCH:=17
+
 PROJECT := arangodb_operator
 SCRIPTDIR := $(shell pwd)
 ROOTDIR := $(shell cd $(SCRIPTDIR) && pwd)
@@ -301,10 +304,40 @@ ifndef DOCKERNAMESPACE
 endif
 	@echo "Using docker namespace: $(DOCKERNAMESPACE)"
 
+KUBERNETES_APIS := k8s.io/api \
+					k8s.io/apiextensions-apiserver \
+					k8s.io/apimachinery \
+					k8s.io/apiserver \
+					k8s.io/client-go \
+					k8s.io/cloud-provider \
+					k8s.io/cluster-bootstrap \
+					k8s.io/code-generator \
+					k8s.io/component-base \
+					k8s.io/kubernetes \
+					k8s.io/metrics
+
+KUBERNETES_MODS := k8s.io/api \
+					k8s.io/apiextensions-apiserver \
+					k8s.io/apimachinery \
+					k8s.io/apiserver \
+					k8s.io/client-go \
+					k8s.io/cloud-provider \
+					k8s.io/cluster-bootstrap \
+					k8s.io/code-generator \
+					k8s.io/component-base \
+					k8s.io/metrics
+
+.PHONY: update-kubernetes-version
+update-kubernetes-version:
+	@$(foreach API,$(KUBERNETES_APIS), sed -i 's#$(API) => $(API) .*#$(API) => $(API) v0.$(KUBERNETES_VERSION_MINOR).$(KUBERNETES_VERSION_PATCH)#g' '$(ROOT)/go.mod' &&) echo "Replaced to K8S 1.$(KUBERNETES_VERSION_MINOR).$(KUBERNETES_VERSION_PATCH)"
+
+update-kubernetes-version-go:
+	@$(foreach API,$(KUBERNETES_MODS), go get '$(API)@v0.$(KUBERNETES_VERSION_MINOR).$(KUBERNETES_VERSION_PATCH)' &&) echo "Go Upgraded to K8S 1.$(KUBERNETES_VERSION_MINOR).$(KUBERNETES_VERSION_PATCH)"
+
 .PHONY: update-vendor
 update-vendor:
 	@rm -Rf $(VENDORDIR)/k8s.io/code-generator
-	@git clone --branch kubernetes-1.22.15 https://github.com/kubernetes/code-generator.git $(VENDORDIR)/k8s.io/code-generator
+	@git clone --branch "kubernetes-1.$(KUBERNETES_VERSION_MINOR).$(KUBERNETES_VERSION_PATCH)" https://github.com/kubernetes/code-generator.git $(VENDORDIR)/k8s.io/code-generator
 	@rm -Rf $(VENDORDIR)/k8s.io/code-generator/.git
 
 
