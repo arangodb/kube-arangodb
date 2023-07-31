@@ -121,7 +121,7 @@ func (c *FakeArangoJobs) UpdateStatus(ctx context.Context, arangoJob *appsv1.Ara
 // Delete takes name of the arangoJob and deletes it. Returns an error if one occurs.
 func (c *FakeArangoJobs) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(arangojobsResource, c.ns, name), &appsv1.ArangoJob{})
+		Invokes(testing.NewDeleteActionWithOptions(arangojobsResource, c.ns, name, opts), &appsv1.ArangoJob{})
 
 	return err
 }

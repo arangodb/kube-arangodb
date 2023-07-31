@@ -43,17 +43,17 @@ func TestCreate(t *testing.T) {
 	assert.Equal(t, probe.SuccessThreshold, int32(1))
 	assert.Equal(t, probe.FailureThreshold, int32(10))
 
-	assert.Equal(t, probe.Handler.HTTPGet.Path, path)
-	assert.Equal(t, probe.Handler.HTTPGet.HTTPHeaders[0].Name, "Authorization")
-	assert.Equal(t, probe.Handler.HTTPGet.HTTPHeaders[0].Value, secret)
-	assert.Equal(t, probe.Handler.HTTPGet.Port.String(), shared.ServerPortName)
-	assert.Equal(t, probe.Handler.HTTPGet.Scheme, core.URISchemeHTTP)
+	assert.Equal(t, probe.ProbeHandler.HTTPGet.Path, path)
+	assert.Equal(t, probe.ProbeHandler.HTTPGet.HTTPHeaders[0].Name, "Authorization")
+	assert.Equal(t, probe.ProbeHandler.HTTPGet.HTTPHeaders[0].Value, secret)
+	assert.Equal(t, probe.ProbeHandler.HTTPGet.Port.String(), shared.ServerPortName)
+	assert.Equal(t, probe.ProbeHandler.HTTPGet.Scheme, core.URISchemeHTTP)
 
 	// https
 	config = HTTPProbeConfig{path, true, secret, "", 0, 0, 0, 0, 0}
 	probe = config.Create()
 
-	assert.Equal(t, probe.Handler.HTTPGet.Scheme, core.URISchemeHTTPS)
+	assert.Equal(t, probe.ProbeHandler.HTTPGet.Scheme, core.URISchemeHTTPS)
 
 	// http, custom timing
 	config = HTTPProbeConfig{path, false, secret, "", 1, 2, 3, 4, 5}

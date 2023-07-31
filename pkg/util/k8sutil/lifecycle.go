@@ -93,7 +93,7 @@ func NewLifecyclePort() (*core.Lifecycle, error) {
 func NewLifecycle(t string) (*core.Lifecycle, error) {
 	exePath := LifecycleBinary()
 	lifecycle := &core.Lifecycle{
-		PreStop: &core.Handler{
+		PreStop: &core.LifecycleHandler{
 			Exec: &core.ExecAction{
 				Command: append([]string{exePath}, "lifecycle", "preStop", t),
 			},
