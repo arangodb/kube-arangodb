@@ -9,8 +9,8 @@ ifeq ($(shell uname),Darwin)
 	REALPATH ?= grealpath
 endif
 
-KUBERNETES_VERSION_MINOR:=23
-KUBERNETES_VERSION_PATCH:=17
+KUBERNETES_VERSION_MINOR:=24
+KUBERNETES_VERSION_PATCH:=16
 
 PROJECT := arangodb_operator
 SCRIPTDIR := $(shell pwd)
