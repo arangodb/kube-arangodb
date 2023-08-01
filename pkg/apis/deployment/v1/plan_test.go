@@ -23,8 +23,10 @@ package v1
 import (
 	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func Test_Action_Marshal(t *testing.T) {
@@ -33,4 +35,55 @@ func Test_Action_Marshal(t *testing.T) {
 	data, err := json.Marshal(a)
 	require.NoError(t, err)
 	require.Equal(t, `{"id":"","type":"","creationTime":null}`, string(data))
+}
+
+func Test_Action_Equal(t *testing.T) {
+	a := Action{
+		ID:       "9ktKQsBAqe5Ra8ZJ",
+		SetID:    "",
+		Type:     ActionTypeAddMember,
+		MemberID: "",
+		Group:    2,
+		CreationTime: meta.Time{
+			Time: time.Date(2023, time.August, 1, 20, 6, 53, 0, time.UTC),
+		},
+		StartTime:    nil,
+		Reason:       "",
+		Image:        "",
+		Params:       nil,
+		Locals:       nil,
+		TaskID:       "",
+		Architecture: "",
+		Progress:     "",
+	}
+	b := Action{
+		ID:       "9ktKQsBAqe5Ra8ZJ",
+		SetID:    "",
+		Type:     ActionTypeAddMember,
+		MemberID: "",
+		Group:    2,
+		CreationTime: meta.Time{
+			Time: time.Date(2023, time.August, 1, 20, 6, 53, 0, time.UTC),
+		},
+		StartTime:    nil,
+		Reason:       "",
+		Image:        "",
+		Params:       nil,
+		Locals:       nil,
+		TaskID:       "",
+		Architecture: "",
+		Progress:     "",
+	}
+
+	require.True(t, a.Equal(a))
+	require.True(t, a.Equal(b))
+	require.True(t, b.Equal(a))
+	require.True(t, b.Equal(b))
+
+	now := time.Now()
+	a.StartTime = &meta.Time{Time: now}
+	require.True(t, a.Equal(a))
+	require.False(t, a.Equal(b))
+	require.False(t, b.Equal(a))
+	require.True(t, b.Equal(b))
 }

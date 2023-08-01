@@ -35,8 +35,11 @@ func TimeCompareEqual(a, b meta.Time) bool {
 }
 
 // TimeCompareEqualPointer compares two times, allowing an error of 1s
+// Returns true if both pointers are nil
 func TimeCompareEqualPointer(a, b *meta.Time) bool {
-	if a == nil || b == nil {
+	if a == nil && b == nil {
+		return true
+	} else if a == nil || b == nil {
 		return false
 	} else if a == b {
 		return true
