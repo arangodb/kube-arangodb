@@ -22,13 +22,13 @@ package backup
 
 import (
 	"fmt"
-	"math/rand"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/arangodb/go-driver"
 
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -59,7 +59,7 @@ func Test_Errors_Temporary(t *testing.T) {
 
 	// generate some other data
 	for id := 0; id < 8; {
-		n := rand.Intn(30000)
+		n := util.Rand().Intn(30000)
 
 		if temporaryErrorNum.Has(n) {
 			continue

@@ -22,7 +22,6 @@ package k8sutil
 
 import (
 	"context"
-	"math/rand"
 	"net"
 	"strconv"
 	"strings"
@@ -33,6 +32,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	servicev1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service/v1"
@@ -299,7 +299,7 @@ func CreateServiceURL(svc core.Service, scheme string, portPredicate func(core.S
 		if len(nodeList) == 0 {
 			return "", errors.WithStack(errors.Newf("No nodes found"))
 		}
-		node := nodeList[rand.Intn(len(nodeList))]
+		node := nodeList[util.Rand().Intn(len(nodeList))]
 		if len(node.Status.Addresses) > 0 {
 			host = node.Status.Addresses[0].Address
 		}

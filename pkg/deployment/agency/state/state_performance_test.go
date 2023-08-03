@@ -22,11 +22,12 @@ package state
 
 import (
 	"fmt"
-	"math/rand"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 func runCountWithMeasure(t *testing.T, c int, name string, f func(t *testing.T)) {
@@ -157,7 +158,7 @@ func generateServersSublist(servers int) Servers {
 		s[id] = Server(fmt.Sprintf("server-%d", id))
 	}
 
-	rand.Shuffle(len(s), func(i, j int) {
+	util.Rand().Shuffle(len(s), func(i, j int) {
 		s[i], s[j] = s[j], s[i]
 	})
 

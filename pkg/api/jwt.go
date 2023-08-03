@@ -22,13 +22,13 @@ package api
 
 import (
 	"context"
-	"crypto/rand"
 	"fmt"
 	"time"
 
 	jg "github.com/golang-jwt/jwt"
 	typedCore "k8s.io/client-go/kubernetes/typed/core/v1"
 
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -81,7 +81,7 @@ func generateAndSaveJWT(secrets secret.Interface, cfg ServerConfig) error {
 
 func createSigningKey(secrets secret.ModInterface, keySecretName string) (string, error) {
 	signingKey := make([]byte, 32)
-	_, err := rand.Read(signingKey)
+	_, err := util.Rand().Read(signingKey)
 	if err != nil {
 		return "", errors.WithStack(err)
 	}

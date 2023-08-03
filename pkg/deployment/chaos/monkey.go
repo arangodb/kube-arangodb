@@ -22,12 +22,12 @@ package chaos
 
 import (
 	"context"
-	"math/rand"
 
 	"github.com/rs/zerolog"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/logging"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/timer"
 )
@@ -69,7 +69,7 @@ func (m Monkey) Run(stopCh <-chan struct{}) {
 		if spec.Chaos.IsEnabled() {
 			// Gamble to set if we must introduce chaos
 			chance := float64(spec.Chaos.GetKillPodProbability()) / 100.0
-			if rand.Float64() < chance {
+			if util.Rand().Float64() < chance {
 				// Let's introduce pod chaos
 				if err := m.killRandomPod(ctx); err != nil {
 					m.log.Err(err).Info("Failed to kill random pod")
@@ -97,7 +97,7 @@ func (m Monkey) killRandomPod(ctx context.Context) error {
 		// Not enough pods
 		return nil
 	}
-	p := pods[rand.Intn(len(pods))]
+	p := pods[util.Rand().Intn(len(pods))]
 	m.log.Str("pod-name", p.GetName()).Info("Killing pod")
 	if err := m.context.DeletePod(ctx, p.GetName(), meta.DeleteOptions{}); err != nil {
 		return errors.WithStack(err)

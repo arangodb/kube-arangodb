@@ -19,7 +19,6 @@
 //
 
 //go:build !enterprise
-// +build !enterprise
 
 package agency
 

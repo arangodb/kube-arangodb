@@ -21,7 +21,6 @@
 package backup
 
 import (
-	"math/rand"
 	"sync"
 	"time"
 
@@ -31,6 +30,7 @@ import (
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -205,16 +205,16 @@ func (m *mockArangoClientBackup) Create() (ArangoBackupCreateResponse, error) {
 		}
 	}
 
-	servers := uint(rand.Uint32())
+	servers := uint(util.Rand().Uint32())
 
 	meta := driver.BackupMeta{
 		ID:                      id,
 		Version:                 mockVersion,
 		NumberOfDBServers:       servers,
 		DateTime:                time.Now(),
-		SizeInBytes:             rand.Uint64(),
+		SizeInBytes:             util.Rand().Uint64(),
 		PotentiallyInconsistent: inconsistent,
-		NumberOfFiles:           uint(rand.Uint32()),
+		NumberOfFiles:           uint(util.Rand().Uint32()),
 		NumberOfPiecesPresent:   servers,
 		Available:               true,
 	}

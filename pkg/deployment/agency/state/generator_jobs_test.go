@@ -22,8 +22,9 @@ package state
 
 import (
 	"fmt"
-	"math/rand"
 	"testing"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 func NewJobsGenerator() JobsGeneratorInterface {
@@ -52,7 +53,7 @@ func (j *jobsGenerator) Jobs(phase JobPhase, jobs int, jobTypes ...string) JobsG
 		j.id++
 		id := fmt.Sprintf("s%07d", q)
 		z[JobID(id)] = Job{
-			Type: jobTypes[rand.Intn(len(jobTypes))],
+			Type: jobTypes[util.Rand().Intn(len(jobTypes))],
 		}
 	}
 
