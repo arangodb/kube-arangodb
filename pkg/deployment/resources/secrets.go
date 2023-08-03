@@ -22,7 +22,6 @@ package resources
 
 import (
 	"context"
-	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -339,7 +338,7 @@ func (r *Resources) createSecretWithKey(ctx context.Context, secrets secretv1.Mo
 
 func (r *Resources) createTokenSecret(ctx context.Context, secrets secretv1.ModInterface, secretName string) error {
 	tokenData := make([]byte, 32)
-	rand.Read(tokenData)
+	util.Rand().Read(tokenData)
 	token := hex.EncodeToString(tokenData)
 
 	// Create secret

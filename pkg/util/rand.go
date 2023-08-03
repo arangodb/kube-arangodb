@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,10 +16,17 @@
 // limitations under the License.
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
-//go:build !enterprise
+//
 
-package reconcile
+package util
 
-type actionRebalancerGenerate struct {
-	actionEmpty
+import (
+	"math/rand"
+	"time"
+)
+
+var localRand = rand.New(rand.NewSource(time.Now().Unix()))
+
+func Rand() *rand.Rand {
+	return localRand
 }

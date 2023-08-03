@@ -21,13 +21,13 @@
 package operator
 
 import (
-	"math/rand"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 const (
@@ -38,7 +38,7 @@ func randomString(len int) string {
 	r := make([]byte, len)
 
 	for id := range r {
-		r[id] = charset[rand.Intn(len)]
+		r[id] = charset[util.Rand().Intn(len)]
 	}
 
 	return string(r)

@@ -23,7 +23,6 @@ package operator
 import (
 	"context"
 	"fmt"
-	"math/rand"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -248,7 +247,7 @@ func (o *Operator) onStartOperatorV2(operatorType operatorV2type, stop <-chan st
 	operatorName := fmt.Sprintf("arangodb-%s-operator", operatorType)
 	operator := operatorV2.NewOperator(operatorName, o.Namespace, o.OperatorImage)
 
-	rand.Seed(time.Now().Unix())
+	util.Rand().Seed(time.Now().Unix())
 
 	zerolog.SetGlobalLevel(zerolog.DebugLevel)
 

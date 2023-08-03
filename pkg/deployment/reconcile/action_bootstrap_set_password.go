@@ -22,7 +22,6 @@ package reconcile
 
 import (
 	"context"
-	"crypto/rand"
 	"encoding/hex"
 
 	"github.com/arangodb/go-driver"
@@ -133,7 +132,7 @@ func (a actionBootstrapSetPassword) ensureUserPasswordSecret(ctx context.Context
 	if auth, ok := a.actionCtx.ACS().CurrentClusterCache().Secret().V1().GetSimple(secret); !ok {
 		// Create new one
 		tokenData := make([]byte, 32)
-		if _, err := rand.Read(tokenData); err != nil {
+		if _, err := util.Rand().Read(tokenData); err != nil {
 			return "", err
 		}
 		token := hex.EncodeToString(tokenData)

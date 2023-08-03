@@ -21,12 +21,12 @@
 package v2alpha1
 
 import (
-	"math/rand"
 	"sort"
 	"time"
 
 	core "k8s.io/api/core/v1"
 
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -188,7 +188,7 @@ func (l MemberStatusList) SelectMemberToRemove(selectors ...MemberToRemoveSelect
 		}
 
 		// Pick a random member that is in created state
-		perm := rand.Perm(len(l))
+		perm := util.Rand().Perm(len(l))
 		for _, idx := range perm {
 			m := l[idx]
 			if m.Phase == MemberPhaseCreated {

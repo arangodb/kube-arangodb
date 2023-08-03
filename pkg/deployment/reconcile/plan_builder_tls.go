@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ package reconcile
 import (
 	"context"
 	"crypto/tls"
-	"crypto/x509"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -456,11 +455,11 @@ func checkServerValidCertRequest(ctx context.Context, context PlanBuilderContext
 }
 
 // keyfileRenewalRequired checks if a keyfile renewal is required and if recreation should be made
-func (r *Reconciler) keyfileRenewalRequired(ctx context.Context, apiObject k8sutil.APIObject, tls api.TLSSpec,
+func (r *Reconciler) keyfileRenewalRequired(ctx context.Context, apiObject k8sutil.APIObject, tlsSpec api.TLSSpec,
 	spec api.DeploymentSpec, cachedStatus inspectorInterface.Inspector,
 	context PlanBuilderContext,
 	group api.ServerGroup, member api.MemberStatus, mode api.TLSRotateMode) (bool, bool) {
-	if !tls.IsSecure() {
+	if !tlsSpec.IsSecure() {
 		return false, false
 	}
 
@@ -472,15 +471,15 @@ func (r *Reconciler) keyfileRenewalRequired(ctx context.Context, apiObject k8sut
 		return false, false
 	}
 
-	caSecret, exists := cachedStatus.Secret().V1().GetSimple(tls.GetCASecretName())
+	caSecret, exists := cachedStatus.Secret().V1().GetSimple(tlsSpec.GetCASecretName())
 	if !exists {
-		r.planLogger.Str("secret", tls.GetCASecretName()).Warn("CA Secret does not exists")
+		r.planLogger.Str("secret", tlsSpec.GetCASecretName()).Warn("CA Secret does not exists")
 		return false, false
 	}
 
 	ca, _, err := resources.GetKeyCertFromSecret(caSecret, resources.CACertName, resources.CAKeyName)
 	if err != nil {
-		r.planLogger.Err(err).Str("secret", tls.GetCASecretName()).Warn("CA Secret does not contains Cert")
+		r.planLogger.Err(err).Str("secret", tlsSpec.GetCASecretName()).Warn("CA Secret does not contains Cert")
 		return false, false
 	}
 
@@ -488,13 +487,12 @@ func (r *Reconciler) keyfileRenewalRequired(ctx context.Context, apiObject k8sut
 	if err != nil {
 		switch v := err.(type) {
 		case *url.Error:
-			switch v.Err.(type) {
-			case x509.UnknownAuthorityError, x509.CertificateInvalidError:
+			if isCertificateVerificationError(v.Err) {
 				r.planLogger.Err(v.Err).Str("type", reflect.TypeOf(v.Err).String()).Debug("Validation of cert for %s failed, renewal is required", memberName)
 				return true, true
-			default:
-				r.planLogger.Err(v.Err).Str("type", reflect.TypeOf(v.Err).String()).Debug("Validation of cert for %s failed, but cert looks fine - continuing", memberName)
 			}
+
+			r.planLogger.Err(v.Err).Str("type", reflect.TypeOf(v.Err).String()).Debug("Validation of cert for %s failed, but cert looks fine - continuing", memberName)
 		default:
 			r.planLogger.Err(err).Str("type", reflect.TypeOf(err).String()).Debug("Validation of cert for %s failed, will try again next time", memberName)
 		}
@@ -519,9 +517,9 @@ func (r *Reconciler) keyfileRenewalRequired(ctx context.Context, apiObject k8sut
 		// Verify AltNames
 		var altNames memberTls.KeyfileInput
 		if group.IsArangosync() {
-			altNames, err = memberTls.GetSyncAltNames(apiObject, spec, tls, group, member)
+			altNames, err = memberTls.GetSyncAltNames(apiObject, spec, tlsSpec, group, member)
 		} else {
-			altNames, err = memberTls.GetServerAltNames(apiObject, spec, tls, service, group, member)
+			altNames, err = memberTls.GetServerAltNames(apiObject, spec, tlsSpec, service, group, member)
 		}
 
 		if err != nil {

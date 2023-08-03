@@ -22,13 +22,13 @@ package resources
 
 import (
 	"context"
-	"math/rand"
 
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	typedCore "k8s.io/client-go/kubernetes/typed/core/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/storage/utils"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 type Nodes []*core.Node
@@ -74,7 +74,7 @@ func (p Nodes) PickAny() *core.Node {
 		return nil
 	}
 
-	rand.Shuffle(len(p), func(i, j int) {
+	util.Rand().Shuffle(len(p), func(i, j int) {
 		p[i], p[j] = p[j], p[i]
 	})
 

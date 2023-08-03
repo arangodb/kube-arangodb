@@ -22,10 +22,11 @@ package state
 
 import (
 	"fmt"
-	"math/rand"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 func caseJobPerformance(t *testing.T, jobs int) {
@@ -38,7 +39,7 @@ func caseJobPerformance(t *testing.T, jobs int) {
 		JobPhasePending,
 		JobPhaseFinished,
 	} {
-		z := rand.Intn(currentJobs + 1)
+		z := util.Rand().Intn(currentJobs + 1)
 
 		j = j.Jobs(p, z)
 		currentJobs -= z
@@ -63,7 +64,7 @@ func caseJobPerformance(t *testing.T, jobs int) {
 		})
 
 		runCountWithMeasure(t, 16, "Lookup", func(t *testing.T) {
-			id := jids[rand.Intn(len(jids))]
+			id := jids[util.Rand().Intn(len(jids))]
 
 			_, z := s.Target.GetJob(id)
 			require.NotEqual(t, JobPhaseUnknown, z)

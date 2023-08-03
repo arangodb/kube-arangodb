@@ -22,7 +22,6 @@ package member
 
 import (
 	"context"
-	"math/rand"
 	"sync"
 
 	"github.com/rs/zerolog"
@@ -33,6 +32,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
@@ -164,7 +164,7 @@ func (s *stateInspector) RefreshState(ctx context.Context, members api.Deploymen
 				if v, ok := h.Members[driver.ServerID(m.Member.ID)]; ok {
 					results[i].IsClusterHealthy = v.Status == driver.ServerStatusGood
 					if results[i].IsServing() && v.SyncStatus == driver.ServerSyncStatusServing {
-						if cs.client == nil || rand.Intn(100) > 50 {
+						if cs.client == nil || util.Rand().Intn(100) > 50 {
 							// Set client from nil or take next client with 50% probability.
 							cs.client = results[i].client
 							cs.Version = results[i].Version

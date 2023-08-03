@@ -1,6 +1,6 @@
 module github.com/arangodb/kube-arangodb
 
-go 1.19
+go 1.20
 
 replace (
 	github.com/arangodb/go-driver => github.com/arangodb/go-driver v1.2.1

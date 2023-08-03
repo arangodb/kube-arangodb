@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,10 +16,21 @@
 // limitations under the License.
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
-//go:build !enterprise
+//
+
+//go:build !go1.20
 
 package reconcile
 
-type actionRebalancerGenerate struct {
-	actionEmpty
+import (
+	"crypto/x509"
+)
+
+func isCertificateVerificationError(err error) bool {
+	switch err.(type) {
+	case x509.UnknownAuthorityError, x509.CertificateInvalidError:
+		return true
+	}
+
+	return false
 }

@@ -21,8 +21,9 @@
 package utils
 
 import (
-	"math/rand"
 	"sort"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 var (
@@ -90,7 +91,7 @@ func RandomString(n int) string {
 func RandomStringFrom(n int, base []rune) string {
 	runes := make([]rune, n)
 	for id := range runes {
-		runes[id] = base[rand.Intn(len(base))]
+		runes[id] = base[util.Rand().Intn(len(base))]
 	}
 
 	return string(runes)
