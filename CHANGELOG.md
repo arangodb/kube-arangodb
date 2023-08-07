@@ -1,12 +1,14 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.2.32](https://github.com/arangodb/kube-arangodb/tree/1.2.32) (2023-08-07)
 - (Feature) Backup lifetime - remove Backup once its lifetime has been reached
 - (Feature) Add Feature dependency
 - (Feature) Run secured containers as a feature
 - (Feature) Expose core.PodSecurityContext Sysctl options
 - (Bugfix) Skip Collection check for missing Database
-- (Feature) Abort resignation of leadership when DB server is restared
+- (Feature) Abort resignation of leadership when DB server is restarted
 - (Feature) Numactl Options
 - (Maintenance) Bump K8S Version to 1.23.17
 - (Maintenance) Bump K8S Version to 1.24.16
