@@ -47,12 +47,39 @@ func (r *Reconciler) createRotateServerStorageResizePlanRotate(ctx context.Conte
 func (r *Reconciler) createRotateServerStorageResizePlanInternal(spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext, mode api.PVCResizeMode) api.Plan {
 	var plan api.Plan
 
+	pvcs := map[string]*core.PersistentVolumeClaim{}
+
 	for _, member := range status.Members.AsList() {
 		cache, ok := context.ACS().ClusterCache(member.Member.ClusterID)
 		if !ok {
 			// Do not work without cache
 			continue
 		}
+
+		if member.Member.PersistentVolumeClaim.GetName() == "" {
+			// Plan is irrelevant without PVC
+			continue
+		}
+
+		pvc, exists := cache.PersistentVolumeClaim().V1().GetSimple(member.Member.PersistentVolumeClaim.GetName())
+		if exists {
+			pvcs[member.Member.ID] = pvc.DeepCopy()
+		}
+	}
+
+	resizing := 0
+
+	for _, pvc := range pvcs {
+		if k8sutil.IsPersistentVolumeClaimResizing(pvc) {
+			resizing++
+		}
+	}
+
+	for _, member := range status.Members.AsList() {
+		if resizing >= ActionsConfigGlobal.PVCResize.Concurrency {
+			break
+		}
+
 		if member.Member.Phase != api.MemberPhaseCreated {
 			// Only make changes when phase is created
 			continue
@@ -73,7 +100,7 @@ func (r *Reconciler) createRotateServerStorageResizePlanInternal(spec api.Deploy
 		}
 
 		// Load PVC
-		pvc, exists := cache.PersistentVolumeClaim().V1().GetSimple(member.Member.PersistentVolumeClaim.GetName())
+		pvc, exists := pvcs[member.Member.PersistentVolumeClaim.GetName()]
 		if !exists {
 			r.planLogger.
 				Str("role", member.Group.AsRole()).

@@ -22,7 +22,9 @@ package reconcile
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/spf13/cobra"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -31,6 +33,18 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
+
+type ActionPVCResizeConfig struct {
+	Concurrency int
+}
+
+func (a *ActionPVCResizeConfig) Init(cmd *cobra.Command, section string) error {
+	f := cmd.Flags()
+
+	f.IntVar(&a.Concurrency, fmt.Sprintf("%s.concurrency", section), 32, "Define limit of concurrent PVC Resizes on the cluster")
+
+	return nil
+}
 
 // newRotateMemberAction creates a new Action that implements the given
 // planned RotateMember action.

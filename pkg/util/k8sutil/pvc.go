@@ -48,6 +48,16 @@ func IsPersistentVolumeClaimFileSystemResizePending(pvc *core.PersistentVolumeCl
 	return false
 }
 
+// IsPersistentVolumeClaimResizing returns true if the pvc has Resizing set to true
+func IsPersistentVolumeClaimResizing(pvc *core.PersistentVolumeClaim) bool {
+	for _, c := range pvc.Status.Conditions {
+		if c.Type == core.PersistentVolumeClaimResizing && c.Status == core.ConditionTrue {
+			return true
+		}
+	}
+	return false
+}
+
 // ExtractStorageResourceRequirement filters resource requirements for Pods.
 func ExtractStorageResourceRequirement(resources core.ResourceRequirements) core.ResourceRequirements {
 
