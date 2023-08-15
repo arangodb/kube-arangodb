@@ -51,6 +51,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/crd"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/cache"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/metrics/collector"
@@ -234,6 +235,9 @@ func init() {
 		panic(err.Error())
 	}
 	if err := cache.Init(&cmdMain); err != nil {
+		panic(err.Error())
+	}
+	if err := reconcile.ActionsConfigGlobal.Init(&cmdMain); err != nil {
 		panic(err.Error())
 	}
 }
