@@ -46,6 +46,9 @@ var actionsGoTemplate []byte
 //go:embed actions.register.go.tmpl
 var actionsRegisterGoTemplate []byte
 
+//go:embed actions.config.go.tmpl
+var actionsConfigGoTemplate []byte
+
 //go:embed actions.register.test.go.tmpl
 var actionsRegisterTestGoTemplate []byte
 
@@ -175,6 +178,16 @@ func (i ActionsInput) Timeouts() map[string]string {
 	return r
 }
 
+func (i ActionsInput) Configurable() []string {
+	var r []string
+	for k, a := range i.Actions {
+		if a.Configurable {
+			r = append(r, k)
+		}
+	}
+	return r
+}
+
 type Action struct {
 	Timeout                   *meta.Duration `json:"timeout,omitempty"`
 	StartupFailureGracePeriod *meta.Duration `json:"startupFailureGracePeriod,omitempty"`
@@ -188,6 +201,8 @@ type Action struct {
 	IsInternal bool `json:"isInternal"`
 
 	Optional bool `json:"optional"`
+
+	Configurable bool `json:"configurable"`
 }
 
 func (a Action) InScope(scope string) bool {
@@ -258,6 +273,30 @@ func RenderActions(root string) error {
 		if err := i.Execute(out, map[string]interface{}{
 			"actions":                    in.Keys(),
 			"startupFailureGracePeriods": in.StartFailureGracePeriods(),
+		}); err != nil {
+			return err
+		}
+
+		if err := out.Close(); err != nil {
+			return err
+		}
+	}
+
+	{
+		actions := path.Join(root, "pkg", "deployment", "reconcile", "action.config.generated.go")
+
+		out, err := os.OpenFile(actions, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+		if err != nil {
+			return err
+		}
+
+		i, err := template.New("actions").Parse(string(actionsConfigGoTemplate))
+		if err != nil {
+			return err
+		}
+
+		if err := i.Execute(out, map[string]interface{}{
+			"configurable": in.Configurable(),
 		}); err != nil {
 			return err
 		}
