@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -42,6 +42,16 @@ func IsPersistentVolumeClaimMarkedForDeletion(pvc *core.PersistentVolumeClaim) b
 func IsPersistentVolumeClaimFileSystemResizePending(pvc *core.PersistentVolumeClaim) bool {
 	for _, c := range pvc.Status.Conditions {
 		if c.Type == core.PersistentVolumeClaimFileSystemResizePending && c.Status == core.ConditionTrue {
+			return true
+		}
+	}
+	return false
+}
+
+// IsPersistentVolumeClaimResizing returns true if the pvc has Resizing set to true
+func IsPersistentVolumeClaimResizing(pvc *core.PersistentVolumeClaim) bool {
+	for _, c := range pvc.Status.Conditions {
+		if c.Type == core.PersistentVolumeClaimResizing && c.Status == core.ConditionTrue {
 			return true
 		}
 	}

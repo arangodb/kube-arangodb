@@ -23,9 +23,14 @@ import "github.com/spf13/cobra"
 var ActionsConfigGlobal ActionsConfig
 
 type ActionsConfig struct {
+	// PVCResize keeps configuration for action api.ActionTypePVCResize
+	PVCResize ActionPVCResizeConfig
 }
 
 // Init initializes all registered actions config options.
 func (a *ActionsConfig) Init(cmd *cobra.Command) error {
+	if err := a.PVCResize.Init(cmd, "action.PVCResize"); err != nil {
+		return err
+	}
 	return nil
 }

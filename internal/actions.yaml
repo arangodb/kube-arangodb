@@ -106,6 +106,7 @@ actions:
   PVCResize:
     description: Start the resize procedure. Updates PVC Requests field
     timeout: 30m
+    configurable: true
   PVCResized:
     description: Waits for PVC resize to be completed
     timeout: 15m
