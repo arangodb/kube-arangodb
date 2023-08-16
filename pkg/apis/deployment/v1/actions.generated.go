@@ -134,6 +134,9 @@ const (
 	// ActionMemberRIDUpdateDefaultTimeout define default timeout for action ActionMemberRIDUpdate
 	ActionMemberRIDUpdateDefaultTimeout time.Duration = ActionsDefaultTimeout
 
+	// ActionMemberStatusSyncDefaultTimeout define default timeout for action ActionMemberStatusSync
+	ActionMemberStatusSyncDefaultTimeout time.Duration = ActionsDefaultTimeout
+
 	// ActionPVCResizeDefaultTimeout define default timeout for action ActionPVCResize
 	ActionPVCResizeDefaultTimeout time.Duration = 1800 * time.Second // 30m0s
 
@@ -388,6 +391,9 @@ const (
 	// Deprecated: action is not used anymore
 	ActionTypeMemberRIDUpdate ActionType = "MemberRIDUpdate"
 
+	// ActionTypeMemberStatusSync in scopes High. Sync ArangoMember Status with ArangoDeployment Status, to keep Member information up to date
+	ActionTypeMemberStatusSync ActionType = "MemberStatusSync"
+
 	// ActionTypePVCResize in scopes Normal. Start the resize procedure. Updates PVC Requests field
 	ActionTypePVCResize ActionType = "PVCResize"
 
@@ -605,6 +611,8 @@ func (a ActionType) DefaultTimeout() time.Duration {
 		return ActionMemberPhaseUpdateDefaultTimeout
 	case ActionTypeMemberRIDUpdate:
 		return ActionMemberRIDUpdateDefaultTimeout
+	case ActionTypeMemberStatusSync:
+		return ActionMemberStatusSyncDefaultTimeout
 	case ActionTypePVCResize:
 		return ActionPVCResizeDefaultTimeout
 	case ActionTypePVCResized:
@@ -776,6 +784,8 @@ func (a ActionType) Priority() ActionPriority {
 	case ActionTypeMemberPhaseUpdate:
 		return ActionPriorityHigh
 	case ActionTypeMemberRIDUpdate:
+		return ActionPriorityHigh
+	case ActionTypeMemberStatusSync:
 		return ActionPriorityHigh
 	case ActionTypePVCResize:
 		return ActionPriorityNormal
@@ -960,6 +970,8 @@ func (a ActionType) Optional() bool {
 	case ActionTypeMemberPhaseUpdate:
 		return false
 	case ActionTypeMemberRIDUpdate:
+		return false
+	case ActionTypeMemberStatusSync:
 		return false
 	case ActionTypePVCResize:
 		return false
