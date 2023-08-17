@@ -66,17 +66,11 @@ var (
 	_ Action        = &actionClusterMemberCleanup{}
 	_ actionFactory = newClusterMemberCleanupAction
 
-	_ Action        = &actionDisableClusterScaling{}
-	_ actionFactory = newDisableClusterScalingAction
-
 	_ Action        = &actionDisableMaintenance{}
 	_ actionFactory = newDisableMaintenanceAction
 
 	_ Action        = &actionDisableMemberMaintenance{}
 	_ actionFactory = newDisableMemberMaintenanceAction
-
-	_ Action        = &actionEnableClusterScaling{}
-	_ actionFactory = newEnableClusterScalingAction
 
 	_ Action        = &actionEnableMaintenance{}
 	_ actionFactory = newEnableMaintenanceAction
@@ -131,9 +125,6 @@ var (
 
 	_ Action        = &actionMemberPhaseUpdate{}
 	_ actionFactory = newMemberPhaseUpdateAction
-
-	_ Action        = &actionMemberRIDUpdate{}
-	_ actionFactory = newMemberRIDUpdateAction
 
 	_ Action        = &actionPVCResize{}
 	_ actionFactory = newPVCResizeAction
@@ -207,9 +198,6 @@ var (
 	_ Action        = &actionRuntimeContainerSyncTolerations{}
 	_ actionFactory = newRuntimeContainerSyncTolerationsAction
 
-	_ Action        = &actionSetCondition{}
-	_ actionFactory = newSetConditionAction
-
 	_ Action        = &actionSetConditionV2{}
 	_ actionFactory = newSetConditionV2Action
 
@@ -221,9 +209,6 @@ var (
 
 	_ Action        = &actionSetMaintenanceCondition{}
 	_ actionFactory = newSetMaintenanceConditionAction
-
-	_ Action        = &actionSetMemberCondition{}
-	_ actionFactory = newSetMemberConditionAction
 
 	_ Action        = &actionSetMemberConditionV2{}
 	_ actionFactory = newSetMemberConditionV2Action
@@ -279,9 +264,11 @@ func init() {
 
 	// AddMember
 	{
+		// Get Action type
+		action := api.ActionTypeAddMember
+
 		// Get Action defition
 		function := newAddMemberAction
-		action := api.ActionTypeAddMember
 
 		// Wrap action main function
 
@@ -291,9 +278,11 @@ func init() {
 
 	// AppendTLSCACertificate
 	{
+		// Get Action type
+		action := api.ActionTypeAppendTLSCACertificate
+
 		// Get Action defition
 		function := newAppendTLSCACertificateAction
-		action := api.ActionTypeAppendTLSCACertificate
 
 		// Wrap action main function
 
@@ -303,9 +292,11 @@ func init() {
 
 	// ArangoMemberUpdatePodSpec
 	{
+		// Get Action type
+		action := api.ActionTypeArangoMemberUpdatePodSpec
+
 		// Get Action defition
 		function := newArangoMemberUpdatePodSpecAction
-		action := api.ActionTypeArangoMemberUpdatePodSpec
 
 		// Wrap action main function
 
@@ -315,9 +306,11 @@ func init() {
 
 	// ArangoMemberUpdatePodStatus
 	{
+		// Get Action type
+		action := api.ActionTypeArangoMemberUpdatePodStatus
+
 		// Get Action defition
 		function := newArangoMemberUpdatePodStatusAction
-		action := api.ActionTypeArangoMemberUpdatePodStatus
 
 		// Wrap action main function
 
@@ -327,9 +320,11 @@ func init() {
 
 	// BackupRestore
 	{
+		// Get Action type
+		action := api.ActionTypeBackupRestore
+
 		// Get Action defition
 		function := newBackupRestoreAction
-		action := api.ActionTypeBackupRestore
 
 		// Wrap action main function
 
@@ -339,9 +334,11 @@ func init() {
 
 	// BackupRestoreClean
 	{
+		// Get Action type
+		action := api.ActionTypeBackupRestoreClean
+
 		// Get Action defition
 		function := newBackupRestoreCleanAction
-		action := api.ActionTypeBackupRestoreClean
 
 		// Wrap action main function
 
@@ -351,9 +348,11 @@ func init() {
 
 	// BootstrapSetPassword
 	{
+		// Get Action type
+		action := api.ActionTypeBootstrapSetPassword
+
 		// Get Action defition
 		function := newBootstrapSetPasswordAction
-		action := api.ActionTypeBootstrapSetPassword
 
 		// Wrap action main function
 
@@ -363,9 +362,11 @@ func init() {
 
 	// BootstrapUpdate
 	{
+		// Get Action type
+		action := api.ActionTypeBootstrapUpdate
+
 		// Get Action defition
 		function := newBootstrapUpdateAction
-		action := api.ActionTypeBootstrapUpdate
 
 		// Wrap action main function
 
@@ -375,9 +376,11 @@ func init() {
 
 	// CleanMemberService
 	{
+		// Get Action type
+		action := api.ActionTypeCleanMemberService
+
 		// Get Action defition
 		function := newCleanMemberServiceAction
-		action := api.ActionTypeCleanMemberService
 
 		// Wrap action main function
 
@@ -387,9 +390,11 @@ func init() {
 
 	// CleanOutMember
 	{
+		// Get Action type
+		action := api.ActionTypeCleanOutMember
+
 		// Get Action defition
 		function := newCleanOutMemberAction
-		action := api.ActionTypeCleanOutMember
 
 		// Wrap action main function
 
@@ -399,9 +404,11 @@ func init() {
 
 	// CleanTLSCACertificate
 	{
+		// Get Action type
+		action := api.ActionTypeCleanTLSCACertificate
+
 		// Get Action defition
 		function := newCleanTLSCACertificateAction
-		action := api.ActionTypeCleanTLSCACertificate
 
 		// Wrap action main function
 
@@ -411,9 +418,11 @@ func init() {
 
 	// CleanTLSKeyfileCertificate
 	{
+		// Get Action type
+		action := api.ActionTypeCleanTLSKeyfileCertificate
+
 		// Get Action defition
 		function := newCleanTLSKeyfileCertificateAction
-		action := api.ActionTypeCleanTLSKeyfileCertificate
 
 		// Wrap action main function
 
@@ -423,9 +432,11 @@ func init() {
 
 	// ClusterMemberCleanup
 	{
+		// Get Action type
+		action := api.ActionTypeClusterMemberCleanup
+
 		// Get Action defition
 		function := newClusterMemberCleanupAction
-		action := api.ActionTypeClusterMemberCleanup
 
 		// Wrap action main function
 
@@ -435,11 +446,12 @@ func init() {
 
 	// DisableClusterScaling
 	{
-		// Get Action defition
-		function := newDisableClusterScalingAction
+		// Get Action type
+		// nolint:staticcheck
 		action := api.ActionTypeDisableClusterScaling
 
-		// Wrap action main function
+		// Get Empty (Deprecated) Action Definition
+		function := newDeprecatedAction
 
 		// Register action
 		registerAction(action, function)
@@ -447,9 +459,11 @@ func init() {
 
 	// DisableMaintenance
 	{
+		// Get Action type
+		action := api.ActionTypeDisableMaintenance
+
 		// Get Action defition
 		function := newDisableMaintenanceAction
-		action := api.ActionTypeDisableMaintenance
 
 		// Wrap action main function
 
@@ -459,9 +473,11 @@ func init() {
 
 	// DisableMemberMaintenance
 	{
+		// Get Action type
+		action := api.ActionTypeDisableMemberMaintenance
+
 		// Get Action defition
 		function := newDisableMemberMaintenanceAction
-		action := api.ActionTypeDisableMemberMaintenance
 
 		// Wrap action main function
 
@@ -471,11 +487,12 @@ func init() {
 
 	// EnableClusterScaling
 	{
-		// Get Action defition
-		function := newEnableClusterScalingAction
+		// Get Action type
+		// nolint:staticcheck
 		action := api.ActionTypeEnableClusterScaling
 
-		// Wrap action main function
+		// Get Empty (Deprecated) Action Definition
+		function := newDeprecatedAction
 
 		// Register action
 		registerAction(action, function)
@@ -483,9 +500,11 @@ func init() {
 
 	// EnableMaintenance
 	{
+		// Get Action type
+		action := api.ActionTypeEnableMaintenance
+
 		// Get Action defition
 		function := newEnableMaintenanceAction
-		action := api.ActionTypeEnableMaintenance
 
 		// Wrap action main function
 
@@ -495,9 +514,11 @@ func init() {
 
 	// EnableMemberMaintenance
 	{
+		// Get Action type
+		action := api.ActionTypeEnableMemberMaintenance
+
 		// Get Action defition
 		function := newEnableMemberMaintenanceAction
-		action := api.ActionTypeEnableMemberMaintenance
 
 		// Wrap action main function
 
@@ -507,9 +528,11 @@ func init() {
 
 	// EncryptionKeyAdd
 	{
+		// Get Action type
+		action := api.ActionTypeEncryptionKeyAdd
+
 		// Get Action defition
 		function := newEncryptionKeyAddAction
-		action := api.ActionTypeEncryptionKeyAdd
 
 		// Wrap action main function
 
@@ -519,9 +542,11 @@ func init() {
 
 	// EncryptionKeyPropagated
 	{
+		// Get Action type
+		action := api.ActionTypeEncryptionKeyPropagated
+
 		// Get Action defition
 		function := newEncryptionKeyPropagatedAction
-		action := api.ActionTypeEncryptionKeyPropagated
 
 		// Wrap action main function
 
@@ -531,9 +556,11 @@ func init() {
 
 	// EncryptionKeyRefresh
 	{
+		// Get Action type
+		action := api.ActionTypeEncryptionKeyRefresh
+
 		// Get Action defition
 		function := newEncryptionKeyRefreshAction
-		action := api.ActionTypeEncryptionKeyRefresh
 
 		// Wrap action main function
 
@@ -543,9 +570,11 @@ func init() {
 
 	// EncryptionKeyRemove
 	{
+		// Get Action type
+		action := api.ActionTypeEncryptionKeyRemove
+
 		// Get Action defition
 		function := newEncryptionKeyRemoveAction
-		action := api.ActionTypeEncryptionKeyRemove
 
 		// Wrap action main function
 
@@ -555,9 +584,11 @@ func init() {
 
 	// EncryptionKeyStatusUpdate
 	{
+		// Get Action type
+		action := api.ActionTypeEncryptionKeyStatusUpdate
+
 		// Get Action defition
 		function := newEncryptionKeyStatusUpdateAction
-		action := api.ActionTypeEncryptionKeyStatusUpdate
 
 		// Wrap action main function
 
@@ -567,9 +598,11 @@ func init() {
 
 	// Idle
 	{
+		// Get Action type
+		action := api.ActionTypeIdle
+
 		// Get Action defition
 		function := newIdleAction
-		action := api.ActionTypeIdle
 
 		// Wrap action main function
 
@@ -579,9 +612,11 @@ func init() {
 
 	// JWTAdd
 	{
+		// Get Action type
+		action := api.ActionTypeJWTAdd
+
 		// Get Action defition
 		function := newJWTAddAction
-		action := api.ActionTypeJWTAdd
 
 		// Wrap action main function
 
@@ -591,9 +626,11 @@ func init() {
 
 	// JWTClean
 	{
+		// Get Action type
+		action := api.ActionTypeJWTClean
+
 		// Get Action defition
 		function := newJWTCleanAction
-		action := api.ActionTypeJWTClean
 
 		// Wrap action main function
 
@@ -603,9 +640,11 @@ func init() {
 
 	// JWTPropagated
 	{
+		// Get Action type
+		action := api.ActionTypeJWTPropagated
+
 		// Get Action defition
 		function := newJWTPropagatedAction
-		action := api.ActionTypeJWTPropagated
 
 		// Wrap action main function
 
@@ -615,9 +654,11 @@ func init() {
 
 	// JWTRefresh
 	{
+		// Get Action type
+		action := api.ActionTypeJWTRefresh
+
 		// Get Action defition
 		function := newJWTRefreshAction
-		action := api.ActionTypeJWTRefresh
 
 		// Wrap action main function
 
@@ -627,9 +668,11 @@ func init() {
 
 	// JWTSetActive
 	{
+		// Get Action type
+		action := api.ActionTypeJWTSetActive
+
 		// Get Action defition
 		function := newJWTSetActiveAction
-		action := api.ActionTypeJWTSetActive
 
 		// Wrap action main function
 
@@ -639,9 +682,11 @@ func init() {
 
 	// JWTStatusUpdate
 	{
+		// Get Action type
+		action := api.ActionTypeJWTStatusUpdate
+
 		// Get Action defition
 		function := newJWTStatusUpdateAction
-		action := api.ActionTypeJWTStatusUpdate
 
 		// Wrap action main function
 
@@ -651,9 +696,11 @@ func init() {
 
 	// KillMemberPod
 	{
+		// Get Action type
+		action := api.ActionTypeKillMemberPod
+
 		// Get Action defition
 		function := newKillMemberPodAction
-		action := api.ActionTypeKillMemberPod
 
 		// Wrap action main function
 
@@ -663,9 +710,11 @@ func init() {
 
 	// LicenseSet
 	{
+		// Get Action type
+		action := api.ActionTypeLicenseSet
+
 		// Get Action defition
 		function := newLicenseSetAction
-		action := api.ActionTypeLicenseSet
 
 		// Wrap action main function
 
@@ -675,9 +724,11 @@ func init() {
 
 	// MarkToRemoveMember
 	{
+		// Get Action type
+		action := api.ActionTypeMarkToRemoveMember
+
 		// Get Action defition
 		function := newMarkToRemoveMemberAction
-		action := api.ActionTypeMarkToRemoveMember
 
 		// Wrap action main function
 
@@ -687,9 +738,11 @@ func init() {
 
 	// MemberPhaseUpdate
 	{
+		// Get Action type
+		action := api.ActionTypeMemberPhaseUpdate
+
 		// Get Action defition
 		function := newMemberPhaseUpdateAction
-		action := api.ActionTypeMemberPhaseUpdate
 
 		// Wrap action main function
 
@@ -699,11 +752,12 @@ func init() {
 
 	// MemberRIDUpdate
 	{
-		// Get Action defition
-		function := newMemberRIDUpdateAction
+		// Get Action type
+		// nolint:staticcheck
 		action := api.ActionTypeMemberRIDUpdate
 
-		// Wrap action main function
+		// Get Empty (Deprecated) Action Definition
+		function := newDeprecatedAction
 
 		// Register action
 		registerAction(action, function)
@@ -711,9 +765,11 @@ func init() {
 
 	// PVCResize
 	{
+		// Get Action type
+		action := api.ActionTypePVCResize
+
 		// Get Action defition
 		function := newPVCResizeAction
-		action := api.ActionTypePVCResize
 
 		// Wrap action main function
 
@@ -723,9 +779,11 @@ func init() {
 
 	// PVCResized
 	{
+		// Get Action type
+		action := api.ActionTypePVCResized
+
 		// Get Action defition
 		function := newPVCResizedAction
-		action := api.ActionTypePVCResized
 
 		// Wrap action main function
 
@@ -735,9 +793,11 @@ func init() {
 
 	// PlaceHolder
 	{
+		// Get Action type
+		action := api.ActionTypePlaceHolder
+
 		// Get Action defition
 		function := newPlaceHolderAction
-		action := api.ActionTypePlaceHolder
 
 		// Wrap action main function
 
@@ -747,9 +807,11 @@ func init() {
 
 	// RebalancerCheck
 	{
+		// Get Action type
+		action := api.ActionTypeRebalancerCheck
+
 		// Get Action defition
 		function := newRebalancerCheckAction
-		action := api.ActionTypeRebalancerCheck
 
 		// Wrap action main function
 
@@ -759,9 +821,11 @@ func init() {
 
 	// RebalancerCheckV2
 	{
+		// Get Action type
+		action := api.ActionTypeRebalancerCheckV2
+
 		// Get Action defition
 		function := newRebalancerCheckV2Action
-		action := api.ActionTypeRebalancerCheckV2
 
 		// Wrap action main function
 
@@ -771,9 +835,11 @@ func init() {
 
 	// RebalancerClean
 	{
+		// Get Action type
+		action := api.ActionTypeRebalancerClean
+
 		// Get Action defition
 		function := newRebalancerCleanAction
-		action := api.ActionTypeRebalancerClean
 
 		// Wrap action main function
 
@@ -783,9 +849,11 @@ func init() {
 
 	// RebalancerCleanV2
 	{
+		// Get Action type
+		action := api.ActionTypeRebalancerCleanV2
+
 		// Get Action defition
 		function := newRebalancerCleanV2Action
-		action := api.ActionTypeRebalancerCleanV2
 
 		// Wrap action main function
 
@@ -795,9 +863,11 @@ func init() {
 
 	// RebalancerGenerate
 	{
+		// Get Action type
+		action := api.ActionTypeRebalancerGenerate
+
 		// Get Action defition
 		function := newRebalancerGenerateAction
-		action := api.ActionTypeRebalancerGenerate
 
 		// Wrap action main function
 
@@ -807,9 +877,11 @@ func init() {
 
 	// RebalancerGenerateV2
 	{
+		// Get Action type
+		action := api.ActionTypeRebalancerGenerateV2
+
 		// Get Action defition
 		function := newRebalancerGenerateV2Action
-		action := api.ActionTypeRebalancerGenerateV2
 
 		// Wrap action main function
 
@@ -819,9 +891,11 @@ func init() {
 
 	// RebuildOutSyncedShards
 	{
+		// Get Action type
+		action := api.ActionTypeRebuildOutSyncedShards
+
 		// Get Action defition
 		function := newRebuildOutSyncedShardsAction
-		action := api.ActionTypeRebuildOutSyncedShards
 
 		// Wrap action main function
 
@@ -831,9 +905,11 @@ func init() {
 
 	// RecreateMember
 	{
+		// Get Action type
+		action := api.ActionTypeRecreateMember
+
 		// Get Action defition
 		function := newRecreateMemberAction
-		action := api.ActionTypeRecreateMember
 
 		// Wrap action main function
 
@@ -843,9 +919,11 @@ func init() {
 
 	// RefreshTLSKeyfileCertificate
 	{
+		// Get Action type
+		action := api.ActionTypeRefreshTLSKeyfileCertificate
+
 		// Get Action defition
 		function := newRefreshTLSKeyfileCertificateAction
-		action := api.ActionTypeRefreshTLSKeyfileCertificate
 
 		// Wrap action main function
 
@@ -855,9 +933,11 @@ func init() {
 
 	// RemoveMember
 	{
+		// Get Action type
+		action := api.ActionTypeRemoveMember
+
 		// Get Action defition
 		function := newRemoveMemberAction
-		action := api.ActionTypeRemoveMember
 
 		// Wrap action main function
 
@@ -867,9 +947,11 @@ func init() {
 
 	// RemoveMemberPVC
 	{
+		// Get Action type
+		action := api.ActionTypeRemoveMemberPVC
+
 		// Get Action defition
 		function := newRemoveMemberPVCAction
-		action := api.ActionTypeRemoveMemberPVC
 
 		// Wrap action main function
 
@@ -879,9 +961,11 @@ func init() {
 
 	// RenewTLSCACertificate
 	{
+		// Get Action type
+		action := api.ActionTypeRenewTLSCACertificate
+
 		// Get Action defition
 		function := newRenewTLSCACertificateAction
-		action := api.ActionTypeRenewTLSCACertificate
 
 		// Wrap action main function
 
@@ -891,9 +975,11 @@ func init() {
 
 	// RenewTLSCertificate
 	{
+		// Get Action type
+		action := api.ActionTypeRenewTLSCertificate
+
 		// Get Action defition
 		function := newRenewTLSCertificateAction
-		action := api.ActionTypeRenewTLSCertificate
 
 		// Wrap action main function
 
@@ -903,9 +989,11 @@ func init() {
 
 	// ResignLeadership
 	{
+		// Get Action type
+		action := api.ActionTypeResignLeadership
+
 		// Get Action defition
 		function := newResignLeadershipAction
-		action := api.ActionTypeResignLeadership
 
 		// Wrap action main function
 
@@ -915,9 +1003,11 @@ func init() {
 
 	// ResourceSync
 	{
+		// Get Action type
+		action := api.ActionTypeResourceSync
+
 		// Get Action defition
 		function := newResourceSyncAction
-		action := api.ActionTypeResourceSync
 
 		// Wrap action main function
 
@@ -927,11 +1017,15 @@ func init() {
 
 	// RotateMember
 	{
-		// Get Action defition
-		function := newRotateMemberAction
+		// Get Action type
 		action := api.ActionTypeRotateMember
 
+		// Get Action defition
+		function := newRotateMemberAction
+
 		// Wrap action main function
+
+		// With StartupFailureGracePeriod
 		function = withActionStartFailureGracePeriod(function, 60*time.Second)
 
 		// Register action
@@ -940,11 +1034,15 @@ func init() {
 
 	// RotateStartMember
 	{
-		// Get Action defition
-		function := newRotateStartMemberAction
+		// Get Action type
 		action := api.ActionTypeRotateStartMember
 
+		// Get Action defition
+		function := newRotateStartMemberAction
+
 		// Wrap action main function
+
+		// With StartupFailureGracePeriod
 		function = withActionStartFailureGracePeriod(function, 60*time.Second)
 
 		// Register action
@@ -953,9 +1051,11 @@ func init() {
 
 	// RotateStopMember
 	{
+		// Get Action type
+		action := api.ActionTypeRotateStopMember
+
 		// Get Action defition
 		function := newRotateStopMemberAction
-		action := api.ActionTypeRotateStopMember
 
 		// Wrap action main function
 
@@ -965,9 +1065,11 @@ func init() {
 
 	// RuntimeContainerArgsLogLevelUpdate
 	{
+		// Get Action type
+		action := api.ActionTypeRuntimeContainerArgsLogLevelUpdate
+
 		// Get Action defition
 		function := newRuntimeContainerArgsLogLevelUpdateAction
-		action := api.ActionTypeRuntimeContainerArgsLogLevelUpdate
 
 		// Wrap action main function
 
@@ -977,9 +1079,11 @@ func init() {
 
 	// RuntimeContainerImageUpdate
 	{
+		// Get Action type
+		action := api.ActionTypeRuntimeContainerImageUpdate
+
 		// Get Action defition
 		function := newRuntimeContainerImageUpdateAction
-		action := api.ActionTypeRuntimeContainerImageUpdate
 
 		// Wrap action main function
 
@@ -989,9 +1093,11 @@ func init() {
 
 	// RuntimeContainerSyncTolerations
 	{
+		// Get Action type
+		action := api.ActionTypeRuntimeContainerSyncTolerations
+
 		// Get Action defition
 		function := newRuntimeContainerSyncTolerationsAction
-		action := api.ActionTypeRuntimeContainerSyncTolerations
 
 		// Wrap action main function
 
@@ -1001,11 +1107,12 @@ func init() {
 
 	// SetCondition
 	{
-		// Get Action defition
-		function := newSetConditionAction
+		// Get Action type
+		// nolint:staticcheck
 		action := api.ActionTypeSetCondition
 
-		// Wrap action main function
+		// Get Empty (Deprecated) Action Definition
+		function := newDeprecatedAction
 
 		// Register action
 		registerAction(action, function)
@@ -1013,9 +1120,11 @@ func init() {
 
 	// SetConditionV2
 	{
+		// Get Action type
+		action := api.ActionTypeSetConditionV2
+
 		// Get Action defition
 		function := newSetConditionV2Action
-		action := api.ActionTypeSetConditionV2
 
 		// Wrap action main function
 
@@ -1025,9 +1134,11 @@ func init() {
 
 	// SetCurrentImage
 	{
+		// Get Action type
+		action := api.ActionTypeSetCurrentImage
+
 		// Get Action defition
 		function := newSetCurrentImageAction
-		action := api.ActionTypeSetCurrentImage
 
 		// Wrap action main function
 
@@ -1037,9 +1148,11 @@ func init() {
 
 	// SetCurrentMemberArch
 	{
+		// Get Action type
+		action := api.ActionTypeSetCurrentMemberArch
+
 		// Get Action defition
 		function := newSetCurrentMemberArchAction
-		action := api.ActionTypeSetCurrentMemberArch
 
 		// Wrap action main function
 
@@ -1049,9 +1162,11 @@ func init() {
 
 	// SetMaintenanceCondition
 	{
+		// Get Action type
+		action := api.ActionTypeSetMaintenanceCondition
+
 		// Get Action defition
 		function := newSetMaintenanceConditionAction
-		action := api.ActionTypeSetMaintenanceCondition
 
 		// Wrap action main function
 
@@ -1061,11 +1176,12 @@ func init() {
 
 	// SetMemberCondition
 	{
-		// Get Action defition
-		function := newSetMemberConditionAction
+		// Get Action type
+		// nolint:staticcheck
 		action := api.ActionTypeSetMemberCondition
 
-		// Wrap action main function
+		// Get Empty (Deprecated) Action Definition
+		function := newDeprecatedAction
 
 		// Register action
 		registerAction(action, function)
@@ -1073,9 +1189,11 @@ func init() {
 
 	// SetMemberConditionV2
 	{
+		// Get Action type
+		action := api.ActionTypeSetMemberConditionV2
+
 		// Get Action defition
 		function := newSetMemberConditionV2Action
-		action := api.ActionTypeSetMemberConditionV2
 
 		// Wrap action main function
 
@@ -1085,9 +1203,11 @@ func init() {
 
 	// SetMemberCurrentImage
 	{
+		// Get Action type
+		action := api.ActionTypeSetMemberCurrentImage
+
 		// Get Action defition
 		function := newSetMemberCurrentImageAction
-		action := api.ActionTypeSetMemberCurrentImage
 
 		// Wrap action main function
 
@@ -1097,11 +1217,15 @@ func init() {
 
 	// ShutdownMember
 	{
-		// Get Action defition
-		function := newShutdownMemberAction
+		// Get Action type
 		action := api.ActionTypeShutdownMember
 
+		// Get Action defition
+		function := newShutdownMemberAction
+
 		// Wrap action main function
+
+		// With StartupFailureGracePeriod
 		function = withActionStartFailureGracePeriod(function, 60*time.Second)
 
 		// Register action
@@ -1110,9 +1234,11 @@ func init() {
 
 	// TLSKeyStatusUpdate
 	{
+		// Get Action type
+		action := api.ActionTypeTLSKeyStatusUpdate
+
 		// Get Action defition
 		function := newTLSKeyStatusUpdateAction
-		action := api.ActionTypeTLSKeyStatusUpdate
 
 		// Wrap action main function
 
@@ -1122,9 +1248,11 @@ func init() {
 
 	// TLSPropagated
 	{
+		// Get Action type
+		action := api.ActionTypeTLSPropagated
+
 		// Get Action defition
 		function := newTLSPropagatedAction
-		action := api.ActionTypeTLSPropagated
 
 		// Wrap action main function
 
@@ -1134,9 +1262,11 @@ func init() {
 
 	// TimezoneSecretSet
 	{
+		// Get Action type
+		action := api.ActionTypeTimezoneSecretSet
+
 		// Get Action defition
 		function := newTimezoneSecretSetAction
-		action := api.ActionTypeTimezoneSecretSet
 
 		// Wrap action main function
 
@@ -1146,9 +1276,11 @@ func init() {
 
 	// TopologyDisable
 	{
+		// Get Action type
+		action := api.ActionTypeTopologyDisable
+
 		// Get Action defition
 		function := newTopologyDisableAction
-		action := api.ActionTypeTopologyDisable
 
 		// Wrap action main function
 
@@ -1158,9 +1290,11 @@ func init() {
 
 	// TopologyEnable
 	{
+		// Get Action type
+		action := api.ActionTypeTopologyEnable
+
 		// Get Action defition
 		function := newTopologyEnableAction
-		action := api.ActionTypeTopologyEnable
 
 		// Wrap action main function
 
@@ -1170,9 +1304,11 @@ func init() {
 
 	// TopologyMemberAssignment
 	{
+		// Get Action type
+		action := api.ActionTypeTopologyMemberAssignment
+
 		// Get Action defition
 		function := newTopologyMemberAssignmentAction
-		action := api.ActionTypeTopologyMemberAssignment
 
 		// Wrap action main function
 
@@ -1182,9 +1318,11 @@ func init() {
 
 	// TopologyZonesUpdate
 	{
+		// Get Action type
+		action := api.ActionTypeTopologyZonesUpdate
+
 		// Get Action defition
 		function := newTopologyZonesUpdateAction
-		action := api.ActionTypeTopologyZonesUpdate
 
 		// Wrap action main function
 
@@ -1194,9 +1332,11 @@ func init() {
 
 	// UpToDateUpdate
 	{
+		// Get Action type
+		action := api.ActionTypeUpToDateUpdate
+
 		// Get Action defition
 		function := newUpToDateUpdateAction
-		action := api.ActionTypeUpToDateUpdate
 
 		// Wrap action main function
 
@@ -1206,9 +1346,11 @@ func init() {
 
 	// UpdateTLSSNI
 	{
+		// Get Action type
+		action := api.ActionTypeUpdateTLSSNI
+
 		// Get Action defition
 		function := newUpdateTLSSNIAction
-		action := api.ActionTypeUpdateTLSSNI
 
 		// Wrap action main function
 
@@ -1218,9 +1360,11 @@ func init() {
 
 	// UpgradeMember
 	{
+		// Get Action type
+		action := api.ActionTypeUpgradeMember
+
 		// Get Action defition
 		function := newUpgradeMemberAction
-		action := api.ActionTypeUpgradeMember
 
 		// Wrap action main function
 
@@ -1230,9 +1374,11 @@ func init() {
 
 	// WaitForMemberInSync
 	{
+		// Get Action type
+		action := api.ActionTypeWaitForMemberInSync
+
 		// Get Action defition
 		function := newWaitForMemberInSyncAction
-		action := api.ActionTypeWaitForMemberInSync
 
 		// Wrap action main function
 
@@ -1242,9 +1388,11 @@ func init() {
 
 	// WaitForMemberReady
 	{
+		// Get Action type
+		action := api.ActionTypeWaitForMemberReady
+
 		// Get Action defition
 		function := newWaitForMemberReadyAction
-		action := api.ActionTypeWaitForMemberReady
 
 		// Wrap action main function
 
@@ -1254,13 +1402,16 @@ func init() {
 
 	// WaitForMemberUp
 	{
+		// Get Action type
+		action := api.ActionTypeWaitForMemberUp
+
 		// Get Action defition
 		function := newWaitForMemberUpAction
-		action := api.ActionTypeWaitForMemberUp
 
 		// Wrap action main function
 
 		// Register action
 		registerAction(action, function)
 	}
+
 }

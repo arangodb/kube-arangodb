@@ -33,6 +33,9 @@ func Test_Actions(t *testing.T) {
 {{- range .actions }}
 
     t.Run("{{ . }}", func(t *testing.T) {
+{{ if (index $root.deprecated .) -}}
+        // nolint:staticcheck
+{{ end -}}
         ActionsExistence(t, api.ActionType{{ . }})
 {{- $startupFailureGracePeriod := index $root.startupFailureGracePeriods . -}}
 {{- if $startupFailureGracePeriod }}
@@ -40,6 +43,9 @@ func Test_Actions(t *testing.T) {
 {{- end }}
 {{- $isInternal := index $root.internal . }}
         t.Run("Internal", func(t *testing.T) {
+{{- if (index $root.deprecated .) }}
+        // nolint:staticcheck
+{{- end }}
 {{- if $isInternal }}
             require.True(t, api.ActionType{{ . }}.Internal())
 {{- else }}
@@ -48,6 +54,9 @@ func Test_Actions(t *testing.T) {
         })
 {{- $isOptional := index $root.optional . }}
         t.Run("Optional", func(t *testing.T) {
+{{- if (index $root.deprecated .) }}
+        // nolint:staticcheck
+{{- end }}
 {{- if $isOptional }}
             require.True(t, api.ActionType{{ . }}.Optional())
 {{- else }}

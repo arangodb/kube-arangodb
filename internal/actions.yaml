@@ -100,9 +100,11 @@ actions:
   SetMemberCurrentImage:
     description: Update Member current image
   DisableClusterScaling:
-    description: (Deprecated) Disable Cluster Scaling integration
+    description: Disable Cluster Scaling integration
+    deprecated: "action is not used anymore"
   EnableClusterScaling:
-    description: (Deprecated) Enable Cluster Scaling integration
+    description: Enable Cluster Scaling integration
+    deprecated: "action is not used anymore"
   PVCResize:
     description: Start the resize procedure. Updates PVC Requests field
     timeout: 30m
@@ -176,17 +178,19 @@ actions:
     scopes:
       - High
   SetMemberCondition:
-    description: (Deprecated) Set member condition
+    description: Set member condition
     scopes:
       - High
+    deprecated: "action is not used anymore"
   SetMemberConditionV2:
     description: Set member condition
     scopes:
       - High
   SetCondition:
-    description: (Deprecated) Set deployment condition
+    description: Set deployment condition
     scopes:
       - High
+    deprecated: "action is not used anymore"
   SetConditionV2:
     description: Set deployment condition
     scopes:
@@ -195,6 +199,7 @@ actions:
     description: Update Run ID of member
     scopes:
       - High
+    deprecated: "action is not used anymore"
   ArangoMemberUpdatePodSpec:
     description: Propagate Member Pod spec (requested)
     scopes:

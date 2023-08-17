@@ -18,10 +18,10 @@
 |       CleanTLSCACertificate        |    no    |  30m0s  |    no    |    Enterprise Only     |                                       Remove Certificate from CA TrustStore                                        |
 |     CleanTLSKeyfileCertificate     |    no    |  30m0s  |    no    |    Enterprise Only     |                                       Remove old TLS certificate from server                                       |
 |        ClusterMemberCleanup        |    no    |  10m0s  |    no    | Community & Enterprise |                          Remove member from Cluster if it is gone already (Coordinators)                           |
-|       DisableClusterScaling        |    no    |  10m0s  |    no    | Community & Enterprise |                                  (Deprecated) Disable Cluster Scaling integration                                  |
+|     ~~DisableClusterScaling~~      |    no    |  10m0s  |    no    | Community & Enterprise |                                        Disable Cluster Scaling integration                                         |
 |         DisableMaintenance         |    no    |  10m0s  |    no    | Community & Enterprise |                                         Disable ArangoDB maintenance mode                                          |
 |      DisableMemberMaintenance      |    no    |  10m0s  |    no    |    Enterprise Only     |                                     Disable ArangoDB DBServer maintenance mode                                     |
-|        EnableClusterScaling        |    no    |  10m0s  |    no    | Community & Enterprise |                                  (Deprecated) Enable Cluster Scaling integration                                   |
+|      ~~EnableClusterScaling~~      |    no    |  10m0s  |    no    | Community & Enterprise |                                         Enable Cluster Scaling integration                                         |
 |         EnableMaintenance          |    no    |  10m0s  |    no    | Community & Enterprise |                                          Enable ArangoDB maintenance mode                                          |
 |      EnableMemberMaintenance       |    no    |  10m0s  |    no    |    Enterprise Only     |                                     Enable ArangoDB DBServer maintenance mode                                      |
 |          EncryptionKeyAdd          |    no    |  10m0s  |    no    |    Enterprise Only     |                                         Add the encryption key to the pool                                         |
@@ -40,7 +40,7 @@
 |             LicenseSet             |    no    |  10m0s  |    no    | Community & Enterprise |                                           Update Cluster license (3.9+)                                            |
 |         MarkToRemoveMember         |    no    |  10m0s  |    no    | Community & Enterprise |               Marks member to be removed. Used when member Pod is annotated with replace annotation                |
 |         MemberPhaseUpdate          |    no    |  10m0s  |    no    | Community & Enterprise |                                                Change member phase                                                 |
-|          MemberRIDUpdate           |    no    |  10m0s  |    no    | Community & Enterprise |                                              Update Run ID of member                                               |
+|        ~~MemberRIDUpdate~~         |    no    |  10m0s  |    no    | Community & Enterprise |                                              Update Run ID of member                                               |
 |             PVCResize              |    no    |  30m0s  |    no    | Community & Enterprise |                               Start the resize procedure. Updates PVC Requests field                               |
 |             PVCResized             |    no    |  15m0s  |    no    | Community & Enterprise |                                        Waits for PVC resize to be completed                                        |
 |            PlaceHolder             |    no    |  10m0s  |    no    | Community & Enterprise |                                              Empty placeholder action                                              |
@@ -65,12 +65,12 @@
 | RuntimeContainerArgsLogLevelUpdate |    no    |  10m0s  |    no    | Community & Enterprise |                                    Change ArangoDB Member log levels in runtime                                    |
 |    RuntimeContainerImageUpdate     |    no    |  10m0s  |    no    | Community & Enterprise |                                         Update Container Image in runtime                                          |
 |  RuntimeContainerSyncTolerations   |    no    |  10m0s  |    no    | Community & Enterprise |                                         Update Pod Tolerations in runtime                                          |
-|            SetCondition            |    no    |  10m0s  |    no    | Community & Enterprise |                                       (Deprecated) Set deployment condition                                        |
+|          ~~SetCondition~~          |    no    |  10m0s  |    no    | Community & Enterprise |                                              Set deployment condition                                              |
 |           SetConditionV2           |    no    |  10m0s  |    no    | Community & Enterprise |                                              Set deployment condition                                              |
 |          SetCurrentImage           |    no    | 6h0m0s  |    no    | Community & Enterprise |                               Update deployment current image after image discovery                                |
 |        SetCurrentMemberArch        |    no    |  10m0s  |    no    | Community & Enterprise |                                          Set current member architecture                                           |
 |      SetMaintenanceCondition       |    no    |  10m0s  |    no    | Community & Enterprise |                                       Update ArangoDB maintenance condition                                        |
-|         SetMemberCondition         |    no    |  10m0s  |    no    | Community & Enterprise |                                         (Deprecated) Set member condition                                          |
+|       ~~SetMemberCondition~~       |    no    |  10m0s  |    no    | Community & Enterprise |                                                Set member condition                                                |
 |        SetMemberConditionV2        |    no    |  10m0s  |    no    | Community & Enterprise |                                                Set member condition                                                |
 |       SetMemberCurrentImage        |    no    |  10m0s  |    no    | Community & Enterprise |                                            Update Member current image                                             |
 |           ShutdownMember           |    no    |  30m0s  |    no    | Community & Enterprise |                           Sends Shutdown requests and waits for container to be stopped                            |

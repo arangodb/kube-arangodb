@@ -26,16 +26,23 @@ const (
 
     // ActionsDefaultTimeout define default timeout
     ActionsDefaultTimeout time.Duration = {{ $root.defaultTimeout }}
-{{- range .actions }}
+
+{{ range .actions -}}
     // Action{{ . }}DefaultTimeout define default timeout for action Action{{ . }}
     Action{{ . }}DefaultTimeout time.Duration = {{ index $root.timeouts . }}
-{{- end }}
 
+{{ end }}
     // Actions
-{{ range .actions }}
+
+{{ range .actions -}}
     // ActionType{{ . }} in scopes {{ index $root.scopes . }}. {{ index $root.descriptions . }}
+{{ if (index $root.deprecated .) -}}
+	//
+	// Deprecated: {{ index $root.deprecated . }}
+{{ end -}}
     ActionType{{ . }} ActionType = "{{ . }}"
-{{- end }}
+
+{{ end -}}
 )
 
 func (a ActionType) DefaultTimeout() time.Duration {

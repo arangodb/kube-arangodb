@@ -203,9 +203,10 @@ func (r *Reconciler) createUpdatePlanInternal(apiObject k8sutil.APIObject, spec 
 
 		if svc, ok := cache.Service().V1().GetSimple(arangoMember.GetName()); ok {
 			if k8sutil.IsServiceRotationRequired(spec, svc) {
-				return api.Plan{actions.NewAction(api.ActionTypeSetMemberCondition, m.Group, m.Member, "Cleaning update").
-					AddParam(api.ConditionTypePendingUpdate.String(), "").
-					AddParam(api.ConditionTypeUpdating.String(), "T")}, false
+				return api.Plan{
+					shared.RemoveMemberConditionActionV2("Cleaning update", api.ConditionTypePendingUpdate, m.Group, m.Member.ID),
+					shared.UpdateMemberConditionActionV2("Cleaning update", api.ConditionTypeUpdating, m.Group, m.Member.ID, true, "Cleaning update", "", ""),
+				}, false
 			}
 		}
 
@@ -213,18 +214,20 @@ func (r *Reconciler) createUpdatePlanInternal(apiObject k8sutil.APIObject, spec 
 			r.planLogger.Err(err).Str("member", m.Member.ID).Error("Error while generating update plan")
 			continue
 		} else if mode != rotation.InPlaceRotation {
-			return api.Plan{actions.NewAction(api.ActionTypeSetMemberCondition, m.Group, m.Member, "Cleaning update").
-				AddParam(api.ConditionTypePendingUpdate.String(), "").
-				AddParam(api.ConditionTypeUpdating.String(), "T")}, false
+			return api.Plan{
+				shared.RemoveMemberConditionActionV2(reason, api.ConditionTypePendingUpdate, m.Group, m.Member.ID),
+				shared.UpdateMemberConditionActionV2(reason, api.ConditionTypeUpdating, m.Group, m.Member.ID, true, reason, "", ""),
+			}, false
 		} else {
 			p = withWaitForMember(p, m.Group, m.Member)
 
 			p = append(p, actions.NewAction(api.ActionTypeArangoMemberUpdatePodStatus, m.Group, m.Member, "Propagating status of pod").AddParam(ActionTypeArangoMemberUpdatePodStatusChecksum, checksum))
-
-			p = p.Wrap(actions.NewAction(api.ActionTypeSetMemberCondition, m.Group, m.Member, reason).
-				AddParam(api.ConditionTypePendingUpdate.String(), "").AddParam(api.ConditionTypeUpdating.String(), "T"),
-				actions.NewAction(api.ActionTypeSetMemberCondition, m.Group, m.Member, reason).
-					AddParam(api.ConditionTypeUpdating.String(), ""))
+			p.WrapWithPlan(api.Plan{
+				shared.RemoveMemberConditionActionV2(reason, api.ConditionTypePendingUpdate, m.Group, m.Member.ID),
+				shared.UpdateMemberConditionActionV2(reason, api.ConditionTypeUpdating, m.Group, m.Member.ID, true, reason, "", ""),
+			}, api.Plan{
+				shared.RemoveMemberConditionActionV2(reason, api.ConditionTypeUpdating, m.Group, m.Member.ID),
+			})
 
 			return p, false
 		}
