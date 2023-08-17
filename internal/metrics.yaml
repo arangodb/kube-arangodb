@@ -229,6 +229,17 @@ namespaces:
         labels:
           - key: section
             description: "Panic Section"
+      assertions:
+        shortDescription: "Number of assertions invoked during Operator runtime"
+        description: "Number of assertions invoked during Operator runtime"
+        type: "Counter"
+        labels:
+          - key: key
+            description: "Assertion Key"
+        alertingRules:
+          - priority: Warning
+            query: irate(arangodb_operator_engine_assertions[1m]) > 1
+            description: "Trigger an alert if OPS attention is needed"
       ops_alerts:
         shortDescription: "Counter for actions which requires ops attention"
         description: "Counter for actions which requires ops attention"
