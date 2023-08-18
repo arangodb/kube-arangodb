@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
+	"github.com/arangodb/kube-arangodb/pkg/util/assertion"
 )
 
 var (
@@ -122,4 +123,26 @@ func (a actionImpl) wrap(in *zerolog.Event) *zerolog.Event {
 // MemberID returns the member ID used / created in the current action.
 func (a actionImpl) MemberID() string {
 	return *a.memberIDRef
+}
+
+func newDeprecatedAction(action api.Action, actionCtx ActionContext) Action {
+	a := actionDeprecated{}
+
+	a.actionImpl = newActionImplDefRef(action, actionCtx)
+
+	return a
+}
+
+type actionDeprecated struct {
+	actionImpl
+
+	actionEmptyCheckProgress
+}
+
+func (a actionDeprecated) Start(ctx context.Context) (bool, error) {
+	a.log.Warn("Deprecated Action call")
+
+	assertion.Assert(true, assertion.DeprecatedActionKey, "Action %s is deprecated", a.action.Type.String())
+
+	return true, nil
 }

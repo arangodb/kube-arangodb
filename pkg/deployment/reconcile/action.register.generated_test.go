@@ -161,11 +161,14 @@ func Test_Actions(t *testing.T) {
 	})
 
 	t.Run("DisableClusterScaling", func(t *testing.T) {
+		// nolint:staticcheck
 		ActionsExistence(t, api.ActionTypeDisableClusterScaling)
 		t.Run("Internal", func(t *testing.T) {
+			// nolint:staticcheck
 			require.False(t, api.ActionTypeDisableClusterScaling.Internal())
 		})
 		t.Run("Optional", func(t *testing.T) {
+			// nolint:staticcheck
 			require.False(t, api.ActionTypeDisableClusterScaling.Optional())
 		})
 	})
@@ -191,11 +194,14 @@ func Test_Actions(t *testing.T) {
 	})
 
 	t.Run("EnableClusterScaling", func(t *testing.T) {
+		// nolint:staticcheck
 		ActionsExistence(t, api.ActionTypeEnableClusterScaling)
 		t.Run("Internal", func(t *testing.T) {
+			// nolint:staticcheck
 			require.False(t, api.ActionTypeEnableClusterScaling.Internal())
 		})
 		t.Run("Optional", func(t *testing.T) {
+			// nolint:staticcheck
 			require.False(t, api.ActionTypeEnableClusterScaling.Optional())
 		})
 	})
@@ -381,11 +387,14 @@ func Test_Actions(t *testing.T) {
 	})
 
 	t.Run("MemberRIDUpdate", func(t *testing.T) {
+		// nolint:staticcheck
 		ActionsExistence(t, api.ActionTypeMemberRIDUpdate)
 		t.Run("Internal", func(t *testing.T) {
+			// nolint:staticcheck
 			require.False(t, api.ActionTypeMemberRIDUpdate.Internal())
 		})
 		t.Run("Optional", func(t *testing.T) {
+			// nolint:staticcheck
 			require.False(t, api.ActionTypeMemberRIDUpdate.Optional())
 		})
 	})
@@ -633,11 +642,14 @@ func Test_Actions(t *testing.T) {
 	})
 
 	t.Run("SetCondition", func(t *testing.T) {
+		// nolint:staticcheck
 		ActionsExistence(t, api.ActionTypeSetCondition)
 		t.Run("Internal", func(t *testing.T) {
+			// nolint:staticcheck
 			require.False(t, api.ActionTypeSetCondition.Internal())
 		})
 		t.Run("Optional", func(t *testing.T) {
+			// nolint:staticcheck
 			require.False(t, api.ActionTypeSetCondition.Optional())
 		})
 	})
@@ -683,11 +695,14 @@ func Test_Actions(t *testing.T) {
 	})
 
 	t.Run("SetMemberCondition", func(t *testing.T) {
+		// nolint:staticcheck
 		ActionsExistence(t, api.ActionTypeSetMemberCondition)
 		t.Run("Internal", func(t *testing.T) {
+			// nolint:staticcheck
 			require.False(t, api.ActionTypeSetMemberCondition.Internal())
 		})
 		t.Run("Optional", func(t *testing.T) {
+			// nolint:staticcheck
 			require.False(t, api.ActionTypeSetMemberCondition.Optional())
 		})
 	})

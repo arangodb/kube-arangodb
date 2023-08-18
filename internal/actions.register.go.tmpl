@@ -27,30 +27,47 @@ import (
 var (
     // Ensure implementation
 {{- range .actions }}
+{{- if not (index $root.deprecated .) }}
 
     _ Action = &action{{ . }}{}
     _ actionFactory = new{{ . }}Action
+{{- end }}
 {{- end }}
 )
 
 func init() {
     // Register all actions
-{{- range .actions }}
 
+{{ range .actions -}}
     // {{ . }}
     {
-        // Get Action defition
-        function := new{{ . }}Action
+        // Get Action type
+{{ if (index $root.deprecated .) -}}
+        // nolint:staticcheck
+{{ end -}}
         action := api.ActionType{{ . }}
 
+{{ if (index $root.deprecated .) -}}
+        // Get Empty (Deprecated) Action Definition
+        function := newDeprecatedAction
+
+{{ else -}}
+        // Get Action defition
+        function := new{{ . }}Action
+
         // Wrap action main function
-{{- $startupFailureGracePeriod := index $root.startupFailureGracePeriods . -}}
-{{- if $startupFailureGracePeriod }}
+
+{{ $startupFailureGracePeriod := index $root.startupFailureGracePeriods . -}}
+{{ if $startupFailureGracePeriod -}}
+        // With StartupFailureGracePeriod
         function = withActionStartFailureGracePeriod(function, {{ $startupFailureGracePeriod }})
-{{- end }}
+
+{{ end -}}
+{{ end -}}
 
         // Register action
 	    registerAction(action, function)
     }
-{{- end }}
+
+{{ end -}}
 }

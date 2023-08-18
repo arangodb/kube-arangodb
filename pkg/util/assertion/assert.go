@@ -27,7 +27,8 @@ import (
 type Key string
 
 const (
-	KeyUnknown Key = ""
+	KeyUnknown          Key = ""
+	DeprecatedActionKey Key = "DeprecatedAction"
 )
 
 func (k Key) Assert(condition bool, msg string, args ...interface{}) {

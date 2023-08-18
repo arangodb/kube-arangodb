@@ -34,6 +34,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/internal/md"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
 
@@ -188,6 +189,14 @@ func (i ActionsInput) Configurable() []string {
 	return r
 }
 
+func (i ActionsInput) Deprecated() map[string]string {
+	r := map[string]string{}
+	for k, a := range i.Actions {
+		r[k] = util.TypeOrDefault(a.Deprecated, "")
+	}
+	return r
+}
+
 type Action struct {
 	Timeout                   *meta.Duration `json:"timeout,omitempty"`
 	StartupFailureGracePeriod *meta.Duration `json:"startupFailureGracePeriod,omitempty"`
@@ -203,6 +212,8 @@ type Action struct {
 	Optional bool `json:"optional"`
 
 	Configurable bool `json:"configurable"`
+
+	Deprecated *string `json:"deprecated"`
 }
 
 func (a Action) InScope(scope string) bool {
@@ -247,6 +258,7 @@ func RenderActions(root string) error {
 			"timeouts":       in.Timeouts(),
 			"descriptions":   in.Descriptions(),
 			"optionals":      in.Optionals(),
+			"deprecated":     in.Deprecated(),
 			"defaultTimeout": fmt.Sprintf("%d * time.Second // %s", in.DefaultTimeout.Duration/time.Second, in.DefaultTimeout.Duration.String()),
 		}); err != nil {
 			return err
@@ -273,6 +285,7 @@ func RenderActions(root string) error {
 		if err := i.Execute(out, map[string]interface{}{
 			"actions":                    in.Keys(),
 			"startupFailureGracePeriods": in.StartFailureGracePeriods(),
+			"deprecated":                 in.Deprecated(),
 		}); err != nil {
 			return err
 		}
@@ -324,6 +337,7 @@ func RenderActions(root string) error {
 			"startupFailureGracePeriods": in.StartFailureGracePeriods(),
 			"internal":                   in.Internal(),
 			"optional":                   in.Optionals(),
+			"deprecated":                 in.Deprecated(),
 		}); err != nil {
 			return err
 		}
@@ -352,6 +366,11 @@ func RenderActions(root string) error {
 		)
 
 		for _, k := range in.Keys() {
+			name := k
+			if in.Actions[k].Deprecated != nil {
+				name = fmt.Sprintf("~~%s~~", name)
+			}
+
 			a := in.Actions[k]
 			v := in.DefaultTimeout.Duration.String()
 			if t := a.Timeout; t != nil {
@@ -372,7 +391,7 @@ func RenderActions(root string) error {
 			}
 
 			if err := t.AddRow(map[md.Column]string{
-				action:      k,
+				action:      name,
 				timeout:     v,
 				description: a.Description,
 				edition:     vr,
