@@ -177,6 +177,10 @@ actions:
     description: Change member phase
     scopes:
       - High
+  MemberStatusSync:
+    description: Sync ArangoMember Status with ArangoDeployment Status, to keep Member information up to date
+    scopes:
+      - High
   SetMemberCondition:
     description: Set member condition
     scopes:

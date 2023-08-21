@@ -49,6 +49,7 @@ func (r *Reconciler) createHighPlan(ctx context.Context, apiObject k8sutil.APIOb
 		ApplyIfEmpty(r.updateMemberPodTemplateSpec).
 		ApplyIfEmpty(r.updateMemberPhasePlan).
 		ApplyIfEmpty(r.createCleanOutPlan).
+		ApplyIfEmpty(r.syncMemberStatus).
 		ApplyIfEmpty(r.createSyncPlan).
 		ApplyIfEmpty(r.updateMemberUpdateConditionsPlan).
 		ApplyIfEmpty(r.updateMemberRotationConditionsPlan).
@@ -85,6 +86,35 @@ func (r *Reconciler) updateMemberPodTemplateSpec(ctx context.Context, apiObject 
 			if reason, changed := r.arangoMemberPodTemplateNeedsUpdate(ctx, apiObject, spec, e.Group, status, e.Member, context); changed {
 				plan = append(plan, actions.NewAction(api.ActionTypeArangoMemberUpdatePodSpec, e.Group, e.Member, reason))
 			}
+		}
+	}
+
+	return plan
+}
+
+// syncMemberStatus creates plan to sync member status
+func (r *Reconciler) syncMemberStatus(ctx context.Context, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	context PlanBuilderContext) api.Plan {
+	var plan api.Plan
+
+	for _, e := range status.Members.AsList() {
+		cache, ok := context.ACS().ClusterCache(e.Member.ClusterID)
+		if !ok {
+			r.log.Error("Unable to get cache")
+			continue
+		}
+
+		name := e.Member.ArangoMemberName(context.GetName(), e.Group)
+
+		amember, ok := cache.ArangoMember().V1().GetSimple(name)
+		if !ok {
+			r.log.Error("Unable to get cache")
+			continue
+		}
+
+		if !amember.Status.InSync(e.Member) {
+			plan = append(plan, actions.NewAction(api.ActionTypeMemberStatusSync, e.Group, e.Member, "Sync Status of ArangoMember"))
 		}
 	}
 

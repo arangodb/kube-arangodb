@@ -399,6 +399,16 @@ func Test_Actions(t *testing.T) {
 		})
 	})
 
+	t.Run("MemberStatusSync", func(t *testing.T) {
+		ActionsExistence(t, api.ActionTypeMemberStatusSync)
+		t.Run("Internal", func(t *testing.T) {
+			require.False(t, api.ActionTypeMemberStatusSync.Internal())
+		})
+		t.Run("Optional", func(t *testing.T) {
+			require.False(t, api.ActionTypeMemberStatusSync.Optional())
+		})
+	})
+
 	t.Run("PVCResize", func(t *testing.T) {
 		ActionsExistence(t, api.ActionTypePVCResize)
 		t.Run("Internal", func(t *testing.T) {

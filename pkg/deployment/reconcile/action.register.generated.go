@@ -126,6 +126,9 @@ var (
 	_ Action        = &actionMemberPhaseUpdate{}
 	_ actionFactory = newMemberPhaseUpdateAction
 
+	_ Action        = &actionMemberStatusSync{}
+	_ actionFactory = newMemberStatusSyncAction
+
 	_ Action        = &actionPVCResize{}
 	_ actionFactory = newPVCResizeAction
 
@@ -758,6 +761,20 @@ func init() {
 
 		// Get Empty (Deprecated) Action Definition
 		function := newDeprecatedAction
+
+		// Register action
+		registerAction(action, function)
+	}
+
+	// MemberStatusSync
+	{
+		// Get Action type
+		action := api.ActionTypeMemberStatusSync
+
+		// Get Action defition
+		function := newMemberStatusSyncAction
+
+		// Wrap action main function
 
 		// Register action
 		registerAction(action, function)

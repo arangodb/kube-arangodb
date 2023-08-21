@@ -286,6 +286,19 @@ func (p Plan) Before(action ...Action) Plan {
 	return n
 }
 
+// WrapWithPlan wraps plan with plan
+func (p Plan) WrapWithPlan(before, after Plan) Plan {
+	n := Plan{}
+
+	n = append(n, before...)
+
+	n = append(n, p...)
+
+	n = append(n, after...)
+
+	return n
+}
+
 // Wrap wraps plan with actions
 func (p Plan) Wrap(before, after Action) Plan {
 	n := Plan{}
