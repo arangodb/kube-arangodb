@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -205,10 +205,12 @@ func getDeploymentAndCredentials(ctx context.Context,
 	}
 
 	var secrets = kubeCli.CoreV1().Secrets(d.GetNamespace())
-	certCA, err = getCACertificate(ctx, secrets, d.GetAcceptedSpec().TLS.GetCASecretName())
-	if err != nil {
-		err = errors.WithMessage(err, "failed to get CA certificate")
-		return
+	if d.GetAcceptedSpec().TLS.IsSecure() {
+		certCA, err = getCACertificate(ctx, secrets, d.GetAcceptedSpec().TLS.GetCASecretName())
+		if err != nil {
+			err = errors.WithMessage(err, "failed to get CA certificate")
+			return
+		}
 	}
 
 	if d.GetAcceptedSpec().IsAuthenticated() {

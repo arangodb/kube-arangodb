@@ -44,7 +44,7 @@ rules:
       verbs: ["list"]
     - apiGroups: [""]
       resources: ["pods/log"]
-      verbs: ["get", "ist"]
+      verbs: ["get", "list"]
 {{- end }}
 {{- if .Values.rbac.extensions.monitoring }}
     - apiGroups: ["monitoring.coreos.com"]
