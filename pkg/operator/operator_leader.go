@@ -57,22 +57,22 @@ func (o *Operator) runLeaderElection(lockName, label string, onStart func(stop <
 			o.Dependencies.EventRecorder.Event(eventTarget, core.EventTypeNormal, reason, message)
 		}
 	}
-	rl, err := resourcelock.New("endpoints",
-		namespace,
-		lockName,
-		kubecli.CoreV1(),
-		kubecli.CoordinationV1(),
-		resourcelock.ResourceLockConfig{
+
+	lock := &resourcelock.LeaseLock{
+		LeaseMeta: meta.ObjectMeta{
+			Name:      lockName,
+			Namespace: namespace,
+		},
+		Client: kubecli.CoordinationV1(),
+		LockConfig: resourcelock.ResourceLockConfig{
 			Identity:      o.Config.ID,
 			EventRecorder: o.Dependencies.EventRecorder,
-		})
-	if err != nil {
-		log.Err(err).Fatal("Failed to create resource lock")
+		},
 	}
 
 	ctx := context.Background()
 	leaderelection.RunOrDie(ctx, leaderelection.LeaderElectionConfig{
-		Lock:          rl,
+		Lock:          lock,
 		LeaseDuration: 15 * time.Second,
 		RenewDeadline: 10 * time.Second,
 		RetryPeriod:   2 * time.Second,
