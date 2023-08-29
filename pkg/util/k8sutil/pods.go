@@ -295,10 +295,9 @@ func IsPodMarkedForDeletion(pod *core.Pod) bool {
 	return pod.DeletionTimestamp != nil
 }
 
-// IsPodTerminating returns true if the pod has been marked for deletion
-// but is still running.
+// IsPodTerminating returns true if the pod has been marked for deletion.
 func IsPodTerminating(pod *core.Pod) bool {
-	return IsPodMarkedForDeletion(pod) && pod.Status.Phase == core.PodRunning
+	return IsPodMarkedForDeletion(pod)
 }
 
 // getPodCondition returns the condition of given type in the given status.

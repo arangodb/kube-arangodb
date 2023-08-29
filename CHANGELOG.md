@@ -7,6 +7,7 @@
 - (Feature) Deprecate Actions
 - (Bugfix) Debug mode
 - (Improvement) Switch to Lease API
+- (Bugfix) Fix Member Terminating state discovery
 
 ## [1.2.32](https://github.com/arangodb/kube-arangodb/tree/1.2.32) (2023-08-07)
 - (Feature) Backup lifetime - remove Backup once its lifetime has been reached
