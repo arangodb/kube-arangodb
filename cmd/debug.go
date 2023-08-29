@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -42,7 +42,7 @@ func init() {
 
 var debugPackage = &cobra.Command{
 	Use:   "debugPackage",
-	Short: "[WiP] Generate debug package for debugging",
+	Short: "Generate debug package for debugging",
 	RunE:  debugPackageFunc,
 }
 
@@ -63,7 +63,7 @@ func debugPackageStdOut(cmd *cobra.Command) (returnError error) {
 }
 
 func debugPackageFile(cmd *cobra.Command) (returnError error) {
-	out, err := os.OpenFile("./out.tar.gz", os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0644)
+	out, err := os.OpenFile(debugPackageInput.Output, os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
 		return err
 	}
