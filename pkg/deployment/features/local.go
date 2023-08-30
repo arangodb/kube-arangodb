@@ -30,7 +30,6 @@ import (
 
 	"github.com/arangodb/go-driver"
 
-	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
@@ -120,52 +119,7 @@ func Init(cmd *cobra.Command) error {
 
 	f.StringVar(&configMapName, "features-config-map-name", DefaultFeaturesConfigMap, "Name of the Feature Map ConfigMap")
 
-	checkDependencies(cmd)
-
 	return nil
-}
-
-func checkDependencies(cmd *cobra.Command) {
-
-	enableDeps := func(_ *cobra.Command, _ []string) {
-		// Turn on dependencies. This function will be called when all process's arguments are passed, so
-		// all required features are enabled and dependencies should be enabled too.
-		EnableDependencies()
-
-		// Log enabled features when process starts.
-		for _, f := range features {
-			if !f.Enabled() {
-				continue
-			}
-
-			l := logging.Global().RegisterAndGetLogger("features", logging.Info)
-			if deps := f.GetDependencies(); len(deps) > 0 {
-				l = l.Strs("dependencies", deps...)
-			}
-
-			l.Bool("enterpriseArangoDBRequired", f.EnterpriseRequired()).
-				Str("minArangoDBVersion", string(f.Version())).
-				Str("name", f.Name()).
-				Info("feature enabled")
-		}
-	}
-
-	// Wrap pre-run function if it set.
-	if cmd.PreRunE != nil {
-		local := cmd.PreRunE
-		cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
-			enableDeps(cmd, args)
-			return local(cmd, args)
-		}
-	} else if cmd.PreRun != nil {
-		local := cmd.PreRun
-		cmd.PreRun = func(cmd *cobra.Command, args []string) {
-			enableDeps(cmd, args)
-			local(cmd, args)
-		}
-	} else {
-		cmd.PreRun = enableDeps
-	}
 }
 
 func cmdRun(_ *cobra.Command, _ []string) {

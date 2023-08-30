@@ -29,7 +29,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jessevdk/go-assets"
-	prometheus "github.com/prometheus/client_golang/prometheus/promhttp"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	typedCore "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -39,6 +38,7 @@ import (
 	"github.com/arangodb/kube-arangodb/dashboard"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
+	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util/probe"
 	"github.com/arangodb/kube-arangodb/pkg/version"
 )
@@ -177,7 +177,7 @@ func NewServer(cli typedCore.CoreV1Interface, cfg Config, deps Dependencies) (*S
 		readyProbes = append(readyProbes, deps.Storage.Probe)
 	}
 	r.GET("/ready", gin.WrapF(ready(readyProbes...)))
-	r.GET("/metrics", gin.WrapH(prometheus.Handler()))
+	r.GET("/metrics", gin.WrapF(metrics.Handler()))
 	r.POST("/login", s.auth.handleLogin)
 	api := r.Group("/api", s.auth.checkAuthentication)
 	{
