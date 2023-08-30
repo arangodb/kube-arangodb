@@ -11,6 +11,7 @@
 - (Bugfix) Fix CRD yaml (chart)
 - (Bugfix) (EE) Fix MemberMaintenance Context and ClusterMaintenance discovery
 - (Feature) Add proper Prometheus endpoint compression + 204 response code
+- (Bugfix) Use ArangoMember as owner reference for syncmaster secrets instead of Deployment
 
 ## [1.2.32](https://github.com/arangodb/kube-arangodb/tree/1.2.32) (2023-08-07)
 - (Feature) Backup lifetime - remove Backup once its lifetime has been reached
