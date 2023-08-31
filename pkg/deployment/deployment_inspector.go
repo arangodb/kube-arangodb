@@ -24,6 +24,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/rs/zerolog/log"
+
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
@@ -50,6 +52,11 @@ var (
 // Returns the delay until this function should be called again.
 func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval {
 	start := time.Now()
+
+	if delay := d.delayer.Wait(); delay > 0 {
+		log.Info().Dur("delay", delay).Msgf("Reconciliation loop execution was delayed")
+	}
+	defer d.delayer.Delay(d.config.ReconciliationDelay)
 
 	ctxReconciliation, cancelReconciliation := globals.GetGlobalTimeouts().Reconciliation().WithTimeout(context.Background())
 	defer cancelReconciliation()
