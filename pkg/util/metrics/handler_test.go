@@ -21,6 +21,7 @@
 package metrics
 
 import (
+	"compress/gzip"
 	"fmt"
 	"io"
 	"net/http"
@@ -111,7 +112,60 @@ func Test_Handler(t *testing.T) {
 		require.True(t, len(data) == 0)
 	})
 
-	t.Run("Read metrics", func(t *testing.T) {
+	t.Run("Read metrics - plain", func(t *testing.T) {
+		mfChan := make(chan *dto.MetricFamily, 1024*1024)
+
+		r, err := http.NewRequest("GET", metricsEndpoint, nil)
+		require.NoError(t, err)
+
+		r.Header.Add("Accept-Encoding", "identity")
+
+		resp, err := http.DefaultClient.Do(r)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusOK, resp.StatusCode)
+
+		require.NoError(t, prom2json.ParseReader(resp.Body, mfChan))
+
+		metrics := map[string]bool{}
+
+		for mf := range mfChan {
+			result := prom2json.NewFamily(mf)
+			metrics[result.Name] = true
+		}
+
+		require.Contains(t, metrics, "go_info")
+	})
+
+	t.Run("Read metrics - gzip", func(t *testing.T) {
+		mfChan := make(chan *dto.MetricFamily, 1024*1024)
+
+		r, err := http.NewRequest("GET", metricsEndpoint, nil)
+		require.NoError(t, err)
+
+		r.Header.Add("Accept-Encoding", "gzip")
+
+		resp, err := http.DefaultClient.Do(r)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusOK, resp.StatusCode)
+
+		reader, err := gzip.NewReader(resp.Body)
+		require.NoError(t, err)
+
+		require.NoError(t, prom2json.ParseReader(reader, mfChan))
+
+		metrics := map[string]bool{}
+
+		for mf := range mfChan {
+			result := prom2json.NewFamily(mf)
+			metrics[result.Name] = true
+		}
+
+		require.Contains(t, metrics, "go_info")
+	})
+
+	t.Run("Read metrics - default", func(t *testing.T) {
 		mfChan := make(chan *dto.MetricFamily, 1024*1024)
 
 		r, err := http.NewRequest("GET", metricsEndpoint, nil)
