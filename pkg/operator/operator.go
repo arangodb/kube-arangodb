@@ -106,6 +106,7 @@ type Config struct {
 	ScalingIntegrationEnabled   bool
 	SingleMode                  bool
 	Scope                       scope.Scope
+	ReconciliationDelay         time.Duration
 	ShutdownDelay               time.Duration
 	ShutdownTimeout             time.Duration
 }

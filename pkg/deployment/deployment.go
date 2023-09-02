@@ -60,6 +60,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
+	"github.com/arangodb/kube-arangodb/pkg/util/timer"
 	"github.com/arangodb/kube-arangodb/pkg/util/trigger"
 )
 
@@ -70,6 +71,7 @@ type Config struct {
 	ScalingIntegrationEnabled bool
 	OperatorImage             string
 	ArangoImage               string
+	ReconciliationDelay       time.Duration
 	Scope                     scope.Scope
 }
 
@@ -106,6 +108,8 @@ type Deployment struct {
 	name      string
 	uid       types.UID
 	namespace string
+
+	delayer timer.Delayer
 
 	currentObject       *api.ArangoDeployment
 	currentObjectStatus *api.DeploymentStatus
@@ -256,6 +260,7 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 		stopCh:              make(chan struct{}),
 		agencyCache:         agency.NewCache(apiObject.GetNamespace(), apiObject.GetName(), apiObject.GetAcceptedSpec().Mode),
 		acs:                 acs.NewACS(apiObject.GetUID(), i),
+		delayer:             timer.NewDelayer(),
 	}
 
 	d.log = logger.WrapObj(d)
