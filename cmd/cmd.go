@@ -136,6 +136,8 @@ var (
 
 		alpineImage, metricsExporterImage, arangoImage string
 
+		reconciliationDelay time.Duration
+
 		singleMode bool
 		scope      string
 	}
@@ -224,6 +226,7 @@ func init() {
 	f.DurationVar(&shutdownOptions.delay, "shutdown.delay", defaultShutdownDelay, "The delay before running shutdown handlers")
 	f.DurationVar(&shutdownOptions.timeout, "shutdown.timeout", defaultShutdownTimeout, "Timeout for shutdown handlers")
 	f.BoolVar(&operatorOptions.scalingIntegrationEnabled, "internal.scaling-integration", false, "Enable Scaling Integration")
+	f.DurationVar(&operatorOptions.reconciliationDelay, "reconciliation.delay", 0, "Delay between reconciliation loops (<= 0 -> Disabled)")
 	f.Int64Var(&operatorKubernetesOptions.maxBatchSize, "kubernetes.max-batch-size", globals.DefaultKubernetesRequestBatchSize, "Size of batch during objects read")
 	f.Float32Var(&operatorKubernetesOptions.qps, "kubernetes.qps", kclient.DefaultQPS, "Number of queries per second for k8s API")
 	f.IntVar(&operatorKubernetesOptions.burst, "kubernetes.burst", kclient.DefaultBurst, "Burst for the k8s API")
@@ -530,6 +533,7 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		ArangoImage:                 operatorOptions.arangoImage,
 		SingleMode:                  operatorOptions.singleMode,
 		Scope:                       scope,
+		ReconciliationDelay:         operatorOptions.reconciliationDelay,
 		ShutdownDelay:               shutdownOptions.delay,
 		ShutdownTimeout:             shutdownOptions.timeout,
 	}
