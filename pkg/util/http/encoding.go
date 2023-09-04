@@ -45,8 +45,6 @@ func WithEncoding(in http.HandlerFunc) http.HandlerFunc {
 		default:
 			WithIdentityEncoding(in)(writer, request)
 		}
-
-		in(writer, request)
 	}
 }
 
@@ -58,8 +56,14 @@ func WithIdentityEncoding(in http.HandlerFunc) http.HandlerFunc {
 
 func WithGZipEncoding(in http.HandlerFunc) http.HandlerFunc {
 	return func(responseWriter http.ResponseWriter, request *http.Request) {
+		responseWriter.Header().Add(EncodingResponseHeader, "gzip")
+
 		stream := gzip.NewWriter(responseWriter)
 
 		in(NewWriter(responseWriter, stream), request)
+
+		if err := stream.Close(); err != nil {
+			logger.Err(err).Warn("Unable to write GZIP response")
+		}
 	}
 }

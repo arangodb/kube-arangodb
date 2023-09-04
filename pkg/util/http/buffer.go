@@ -46,8 +46,6 @@ func WithBuffer(maxSize int, in http.HandlerFunc) http.HandlerFunc {
 			// We have constant size
 			bytes := data.Bytes()
 
-			println(len(bytes))
-
 			writer.Header().Set(ContentLengthHeader, fmt.Sprintf("%d", len(bytes)))
 
 			_, err := util.WriteAll(writer, bytes)
