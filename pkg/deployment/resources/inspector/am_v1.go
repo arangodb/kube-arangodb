@@ -81,6 +81,14 @@ func (p *arangoMembersInspectorV1) GetSimple(name string) (*api.ArangoMember, bo
 	return arangoMember, true
 }
 
+func (p *arangoMembersInspectorV1) GetSimpleOptional(name string) *api.ArangoMember {
+	a, ok := p.GetSimple(name)
+	if !ok {
+		return &api.ArangoMember{}
+	}
+	return a
+}
+
 func (p *arangoMembersInspectorV1) Iterate(action ins.Action, filters ...ins.Filter) error {
 	for _, arangoMember := range p.arangoMembers {
 		if err := p.iterateArangoMember(arangoMember, action, filters...); err != nil {

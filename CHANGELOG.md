@@ -16,6 +16,7 @@
 - (Bugfix) Fix PVC Rotation Discovery
 - (Feature) Allow to pass EphemeralStorage Resource to the Pods
 - (Feature) Add basic metrics for ArangoDeploymentReplication CR
+- (Feature) Add ArangoMember overrides
 
 ## [1.2.32](https://github.com/arangodb/kube-arangodb/tree/1.2.32) (2023-08-07)
 - (Feature) Backup lifetime - remove Backup once its lifetime has been reached

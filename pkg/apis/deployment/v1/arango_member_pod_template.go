@@ -48,11 +48,18 @@ func GetArangoMemberPodTemplate(pod *core.PodTemplateSpec, podSpecChecksum strin
 }
 
 type ArangoMemberPodTemplate struct {
-	PodSpec         *core.PodTemplateSpec `json:"podSpec,omitempty"`
-	PodSpecChecksum string                `json:"podSpecChecksum,omitempty"`
-	Checksum        string                `json:"checksum,omitempty"`
+	// PodSpec specifies the Pod Spec used for this Member.
+	// +doc/type: core.PodTemplateSpec
+	// +doc/link: Documentation of core.PodTemplateSpec|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podtemplatespec-v1-core
+	PodSpec *core.PodTemplateSpec `json:"podSpec,omitempty"`
 
-	// deprecated
+	// PodSpecChecksum keep the Pod Spec Checksum (without ignored fields).
+	PodSpecChecksum string `json:"podSpecChecksum,omitempty"`
+
+	// Checksum keep the Pod Spec Checksum (with ignored fields).
+	Checksum string `json:"checksum,omitempty"`
+
+	// Deprecated: Endpoint is not saved into the template
 	Endpoint *string `json:"endpoint,omitempty"`
 }
 

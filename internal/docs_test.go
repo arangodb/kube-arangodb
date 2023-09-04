@@ -147,6 +147,13 @@ func Test_GenerateAPIDocs(t *testing.T) {
 		},
 	},
 		fmt.Sprintf("%s/pkg/apis/deployment/v1", root))
+
+	generateDocs(t, map[string]map[string]interface{}{
+		"ArangoMember.V1": {
+			"Spec": api.ArangoMember{}.Spec,
+		},
+	},
+		fmt.Sprintf("%s/pkg/apis/deployment/v1", root))
 }
 
 func generateDocs(t *testing.T, objects map[string]map[string]interface{}, paths ...string) {
@@ -320,7 +327,7 @@ func iterateOverObjectDirect(t *testing.T, docs map[string]*ast.Field, name stri
 
 			doc, ok := docs[docName]
 			if !ok && !f.Anonymous {
-				require.True(t, ok, docName)
+				require.True(t, ok, docName, f.Name)
 			}
 
 			if !f.Anonymous {

@@ -25,9 +25,17 @@ import (
 )
 
 type ArangoMemberSpec struct {
-	Group         ServerGroup `json:"group,omitempty"`
-	ID            string      `json:"id,omitempty"`
-	DeploymentUID types.UID   `json:"deploymentUID,omitempty"`
+	// Group define Member Groups.
+	Group ServerGroup `json:"group,omitempty"`
 
+	ID string `json:"id,omitempty"`
+
+	// DeploymentUID define Deployment UID.
+	DeploymentUID types.UID `json:"deploymentUID,omitempty"`
+
+	// Overrides define Member Overrides (Override values from ServerGroup).
+	Overrides *ArangoMemberSpecOverrides `json:"overrides,omitempty"`
+
+	// Template keeps template which is gonna be applied on the Pod.
 	Template *ArangoMemberPodTemplate `json:"template,omitempty"`
 }

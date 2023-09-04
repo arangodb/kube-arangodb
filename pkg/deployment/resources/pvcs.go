@@ -61,10 +61,15 @@ func (r *Resources) EnsurePVCs(ctx context.Context, cachedStatus inspectorInterf
 				continue
 			}
 
-			storageClassName := spec.GetStorageClassName()
+			am, exists := cachedStatus.ArangoMember().V1().GetSimple(m.ArangoMemberName(deploymentName, group))
+			if !exists {
+				continue
+			}
+
+			storageClassName := am.Spec.Overrides.GetStorageClassName(&spec)
 			role := group.AsRole()
-			resources := spec.Resources
-			vct := spec.VolumeClaimTemplate
+			resources := am.Spec.Overrides.GetResources(&spec)
+			vct := am.Spec.Overrides.GetVolumeClaimTemplate(&spec)
 			finalizers := r.createPVCFinalizers()
 			err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				return k8sutil.CreatePersistentVolumeClaim(ctxChild, cachedStatus.PersistentVolumeClaimsModInterface().V1(),

@@ -89,11 +89,13 @@ func (a *actionPVCResize) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
+	am := cache.ArangoMember().V1().GetSimpleOptional(m.ArangoMemberName(a.actionCtx.GetName(), group))
+
 	var res core.ResourceList
-	if groupSpec.HasVolumeClaimTemplate() {
-		res = groupSpec.GetVolumeClaimTemplate().Spec.Resources.Requests
+	if am.Spec.Overrides.HasVolumeClaimTemplate(&groupSpec) {
+		res = am.Spec.Overrides.GetVolumeClaimTemplate(&groupSpec).Spec.Resources.Requests
 	} else {
-		res = groupSpec.Resources.Requests
+		res = am.Spec.Overrides.GetResources(&groupSpec).Requests
 	}
 
 	if requestedSize, ok := res[core.ResourceStorage]; ok {

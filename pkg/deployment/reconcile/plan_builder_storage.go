@@ -84,11 +84,20 @@ func (r *Reconciler) createRotateServerStorageResizePlanInternal(spec api.Deploy
 			// Only make changes when phase is created
 			continue
 		}
+
 		if member.Member.PersistentVolumeClaim.GetName() == "" {
 			// Plan is irrelevant without PVC
 			continue
 		}
 		groupSpec := spec.GetServerGroupSpec(member.Group)
+
+		cache, ok := context.ACS().ClusterCache(member.Member.ClusterID)
+		if !ok {
+			// Do not work without cache
+			continue
+		}
+
+		am := cache.ArangoMember().V1().GetSimpleOptional(member.Member.ArangoMemberName(context.GetName(), member.Group))
 
 		if groupSpec.VolumeResizeMode.Get() != mode {
 			continue
@@ -110,10 +119,10 @@ func (r *Reconciler) createRotateServerStorageResizePlanInternal(spec api.Deploy
 		}
 
 		var res core.ResourceList
-		if groupSpec.HasVolumeClaimTemplate() {
-			res = groupSpec.GetVolumeClaimTemplate().Spec.Resources.Requests
+		if am.Spec.Overrides.HasVolumeClaimTemplate(&groupSpec) {
+			res = am.Spec.Overrides.GetVolumeClaimTemplate(&groupSpec).Spec.Resources.Requests
 		} else {
-			res = groupSpec.Resources.Requests
+			res = am.Spec.Overrides.GetResources(&groupSpec).Requests
 		}
 		if requestedSize, ok := res[core.ResourceStorage]; ok {
 			if volumeSize, ok := pvc.Spec.Resources.Requests[core.ResourceStorage]; ok {

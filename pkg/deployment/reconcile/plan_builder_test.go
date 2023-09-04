@@ -56,6 +56,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors/panics"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	arangomemberv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember/v1"
@@ -701,7 +702,10 @@ type LastLogRecord struct {
 }
 
 func (l *LastLogRecord) Run(e *zerolog.Event, level zerolog.Level, msg string) {
-	l.t.Log(msg)
+	for _, s := range panics.GetStack(0) {
+		l.t.Logf("Stack: %s", s.String())
+	}
+	l.t.Logf(msg)
 	l.msg = msg
 }
 
@@ -717,6 +721,7 @@ type testCase struct {
 
 	kclient.FakeDataInput
 	Extender func(t *testing.T, r *Reconciler, c *testCase)
+	Data     func(t *testing.T, in kclient.FakeDataInput, c *testCase) kclient.FakeDataInput
 }
 
 func (t testCase) Inspector(test *testing.T) inspectorInterface.Inspector {
@@ -1235,6 +1240,10 @@ func TestCreatePlan(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
+			if testCase.Data != nil {
+				testCase.FakeDataInput = testCase.Data(t, testCase.FakeDataInput, &testCase)
+			}
+
 			i := testCase.Inspector(t)
 
 			testCase.context.Inspector = i
@@ -1262,6 +1271,10 @@ func TestCreatePlan(t *testing.T) {
 			}
 
 			err, _ := r.CreatePlan(ctx)
+
+			if event := testCase.context.RecordedEvent; event != nil {
+				t.Logf("Event recorded: %s : %s : %s", event.Type, event.Reason, event.Message)
+			}
 
 			// Assert
 			if testCase.ExpectedEvent != nil {

@@ -29,6 +29,7 @@ type Inspector interface {
 	gvk.GVK
 
 	GetSimple(name string) (*api.ArangoMember, bool)
+	GetSimpleOptional(name string) *api.ArangoMember
 	Iterate(action Action, filters ...Filter) error
 	Read() ReadInterface
 }

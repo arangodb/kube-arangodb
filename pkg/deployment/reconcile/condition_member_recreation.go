@@ -108,15 +108,17 @@ func (r *Reconciler) isStorageClassChanged(_ context.Context, apiObject k8sutil.
 		return false, "", nil
 	}
 
-	groupSpec := spec.GetServerGroupSpec(group)
-	storageClassName := groupSpec.GetStorageClassName()
-	if storageClassName == "" {
-		// A storage class is not set.
+	cache, ok := context.ACS().ClusterCache(member.ClusterID)
+	if !ok {
 		return false, "", nil
 	}
 
-	cache, ok := context.ACS().ClusterCache(member.ClusterID)
-	if !ok {
+	am := cache.ArangoMember().V1().GetSimpleOptional(member.ArangoMemberName(context.GetName(), group))
+
+	groupSpec := spec.GetServerGroupSpec(group)
+	storageClassName := am.Spec.Overrides.GetStorageClassName(&groupSpec)
+	if storageClassName == "" {
+		// A storage class is not set.
 		return false, "", nil
 	}
 
@@ -184,6 +186,8 @@ func (r *Reconciler) isVolumeSizeChanged(_ context.Context, _ k8sutil.APIObject,
 		return false, "", nil
 	}
 
+	am := cache.ArangoMember().V1().GetSimpleOptional(member.ArangoMemberName(context.GetName(), group))
+
 	pvc, ok := cache.PersistentVolumeClaim().V1().GetSimple(member.PersistentVolumeClaim.GetName())
 	if !ok {
 		r.log.
@@ -195,7 +199,7 @@ func (r *Reconciler) isVolumeSizeChanged(_ context.Context, _ k8sutil.APIObject,
 	}
 
 	groupSpec := spec.GetServerGroupSpec(group)
-	ok, volumeSize, requestedSize := shouldVolumeResize(groupSpec, pvc)
+	ok, volumeSize, requestedSize := shouldVolumeResize(groupSpec, am, pvc)
 	if !ok {
 		return false, "", nil
 	}
@@ -227,13 +231,14 @@ func (r *Reconciler) isVolumeSizeChanged(_ context.Context, _ k8sutil.APIObject,
 // shouldVolumeResize returns false when a volume should not resize.
 // Currently, it is only possible to shrink a volume size.
 // When return true then the actual and required volume size are returned.
-func shouldVolumeResize(groupSpec api.ServerGroupSpec,
+func shouldVolumeResize(groupSpec api.ServerGroupSpec, am *api.ArangoMember,
 	pvc *core.PersistentVolumeClaim) (bool, resource.Quantity, resource.Quantity) {
 	var res core.ResourceList
-	if groupSpec.HasVolumeClaimTemplate() {
-		res = groupSpec.GetVolumeClaimTemplate().Spec.Resources.Requests
+
+	if am.Spec.Overrides.HasVolumeClaimTemplate(&groupSpec) {
+		res = am.Spec.Overrides.GetVolumeClaimTemplate(&groupSpec).Spec.Resources.Requests
 	} else {
-		res = groupSpec.Resources.Requests
+		res = am.Spec.Overrides.GetResources(&groupSpec).Requests
 	}
 
 	if requestedSize, ok := res[core.ResourceStorage]; ok {

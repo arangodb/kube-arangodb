@@ -82,6 +82,8 @@ github.com/arangodb/go-upgrade-rules v0.0.0-20180809110947-031b4774ff21 h1:+W7D5
 github.com/arangodb/go-upgrade-rules v0.0.0-20180809110947-031b4774ff21/go.mod h1:RkPIG6JJ2pcJUoymc18NxAJGraZd+iAEVnOTDjZey/w=
 github.com/arangodb/go-velocypack v0.0.0-20200318135517-5af53c29c67e h1:Xg+hGrY2LcQBbxd0ZFdbGSyRKTYMZCfBbw/pMJFOk1g=
 github.com/arangodb/go-velocypack v0.0.0-20200318135517-5af53c29c67e/go.mod h1:mq7Shfa/CaixoDxiyAAc5jZ6CVBAyPaNQCGS7mkj4Ho=
+github.com/arangodb/rebalancer v0.1.1 h1:8MikmxlhywKnw/wiDqctD8FFwBZhAAF1E3mIqh8nzCA=
+github.com/arangodb/rebalancer v0.1.1/go.mod h1:wLvglmYNuoTUYbLQq/UESIMVkINmSX9eZWC5QB9kNyk=
 github.com/armon/circbuf v0.0.0-20150827004946-bbbad097214e/go.mod h1:3U/XgcO3hCbHZ8TKRvWD2dDTCfh9M9ya+I9JpbB7O8o=
 github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da/go.mod h1:Q73ZrmVTwzkszR9V5SSuryQ31EELlFMUz1kKyl939pY=
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=

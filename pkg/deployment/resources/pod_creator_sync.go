@@ -55,6 +55,7 @@ type ArangoSyncContainer struct {
 	imageInfo              api.ImageInfo
 	apiObject              meta.Object
 	memberStatus           api.MemberStatus
+	arangoMember           api.ArangoMember
 	tlsKeyfileSecretName   string
 	clientAuthCASecretName string
 	masterJWTSecretName    string
@@ -147,7 +148,7 @@ func (a *ArangoSyncContainer) GetProbes() (*core.Probe, *core.Probe, *core.Probe
 }
 
 func (a *ArangoSyncContainer) GetResourceRequirements() core.ResourceRequirements {
-	return k8sutil.ExtractPodResourceRequirement(a.groupSpec.Resources)
+	return k8sutil.ExtractPodResourceRequirement(a.arangoMember.Spec.Overrides.GetResources(&a.groupSpec))
 }
 
 func (a *ArangoSyncContainer) GetLifecycle() (*core.Lifecycle, error) {
@@ -319,6 +320,7 @@ func (m *MemberSyncPod) GetContainerCreator() interfaces.ContainerCreator {
 		imageInfo:              m.imageInfo,
 		apiObject:              m.apiObject,
 		memberStatus:           m.memberStatus,
+		arangoMember:           m.arangoMember,
 		tlsKeyfileSecretName:   m.tlsKeyfileSecretName,
 		clientAuthCASecretName: m.clientAuthCASecretName,
 		masterJWTSecretName:    m.masterJWTSecretName,

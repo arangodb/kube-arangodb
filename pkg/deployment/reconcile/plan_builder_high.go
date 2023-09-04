@@ -109,7 +109,7 @@ func (r *Reconciler) syncMemberStatus(ctx context.Context, apiObject k8sutil.API
 
 		amember, ok := cache.ArangoMember().V1().GetSimple(name)
 		if !ok {
-			r.log.Error("Unable to get cache")
+			r.log.Error("Unable to get member")
 			continue
 		}
 
