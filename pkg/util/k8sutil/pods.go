@@ -534,21 +534,33 @@ func operatorInitContainer(name, operatorImage string, command []string, securit
 
 // ExtractPodResourceRequirement filters resource requirements for Pods.
 func ExtractPodResourceRequirement(resources core.ResourceRequirements) core.ResourceRequirements {
-
-	filterStorage := func(list core.ResourceList) core.ResourceList {
-		newlist := make(core.ResourceList)
-		if q, ok := list[core.ResourceCPU]; ok {
-			newlist[core.ResourceCPU] = q
-		}
-		if q, ok := list[core.ResourceMemory]; ok {
-			newlist[core.ResourceMemory] = q
-		}
-		return newlist
-	}
+	filter := PodResourceRequirementsFilter(core.ResourceCPU, core.ResourceMemory, core.ResourceEphemeralStorage)
 
 	return core.ResourceRequirements{
-		Limits:   filterStorage(resources.Limits),
-		Requests: filterStorage(resources.Requests),
+		Limits:   filter(resources.Limits),
+		Requests: filter(resources.Requests),
+	}
+}
+
+func PodResourceRequirementsFilter(filters ...core.ResourceName) func(in core.ResourceList) core.ResourceList {
+	return func(in core.ResourceList) core.ResourceList {
+		filtered := map[core.ResourceName]bool{}
+
+		for _, k := range filters {
+			filtered[k] = true
+		}
+
+		n := core.ResourceList{}
+
+		for k, v := range in {
+			if _, ok := filtered[k]; !ok {
+				continue
+			}
+
+			n[k] = v
+		}
+
+		return n
 	}
 }
 
