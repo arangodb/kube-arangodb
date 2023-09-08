@@ -213,3 +213,10 @@ features:
         state: Alpha
       - operatorVersion: 1.2.25
         state: Production
+  - name: init-containers-copy-limits
+    enabled: true
+    remarks: Copy resource limits to init containers if they are not specified
+    flag: --deployment.feature.init-containers-copy-limits
+    releases:
+      - operatorVersion: 1.2.33
+        state: Production

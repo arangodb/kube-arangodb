@@ -125,6 +125,69 @@ func TestEnsurePod_ArangoDB_Resources(t *testing.T) {
 					Volumes: []core.Volume{
 						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
 					},
+					InitContainers: []core.Container{
+						createTestLifecycleContainer(emptyResources),
+					},
+					Containers: []core.Container{
+						{
+							Name:      shared.ServerContainerName,
+							Image:     testImage,
+							Command:   createTestCommandForDBServer(firstDBServerStatus.ID, false, false, false),
+							Ports:     createTestPorts(api.ServerGroupAgents),
+							Resources: k8sutil.ExtractPodResourceRequirement(resourcesUnfiltered),
+							VolumeMounts: []core.VolumeMount{
+								k8sutil.ArangodVolumeMount(),
+							},
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName),
+							ImagePullPolicy: core.PullIfNotPresent,
+							SecurityContext: securityContext.NewSecurityContext(),
+							Env:             withDefaultEnvs(t, resourcesUnfiltered),
+						},
+					},
+					RestartPolicy:                 core.RestartPolicyNever,
+					TerminationGracePeriodSeconds: &defaultDBServerTerminationTimeout,
+					Hostname: testDeploymentName + "-" + api.ServerGroupDBServersString + "-" +
+						firstDBServerStatus.ID,
+					Subdomain: testDeploymentName + "-int",
+					Affinity: k8sutil.CreateAffinity(testDeploymentName, api.ServerGroupDBServersString,
+						false, ""),
+				},
+			},
+		},
+		{
+			Name: "DBserver POD with resource requirements, init-container-copy-limits feature false",
+			ArangoDeployment: &api.ArangoDeployment{
+				Spec: api.DeploymentSpec{
+					Image:          util.NewType[string](testImage),
+					Authentication: noAuthentication,
+					TLS:            noTLS,
+					DBServers: api.ServerGroupSpec{
+						Resources: resourcesUnfiltered,
+					},
+				},
+			},
+			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
+				deployment.currentObjectStatus = &api.DeploymentStatus{
+					Members: api.DeploymentStatusMembers{
+						DBServers: api.MemberStatusList{
+							firstDBServerStatus,
+						},
+					},
+					Images: createTestImages(false),
+				}
+				deployment.currentObjectStatus.Members.DBServers[0].IsInitialized = true
+
+				testCase.createTestPodData(deployment, api.ServerGroupDBServers, firstDBServerStatus)
+			},
+			ExpectedEvent: "member dbserver is created",
+			Features: testCaseFeatures{
+				InitContainersCopyLimits: util.NewType(false),
+			},
+			ExpectedPod: core.Pod{
+				Spec: core.PodSpec{
+					Volumes: []core.Volume{
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
+					},
 					Containers: []core.Container{
 						{
 							Name:      shared.ServerContainerName,

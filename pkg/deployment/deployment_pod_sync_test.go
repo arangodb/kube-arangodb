@@ -1325,6 +1325,101 @@ func TestEnsurePod_Sync_Worker(t *testing.T) {
 				},
 			},
 		},
+		{
+			DropInit: true,
+			Name: "Sync Worker Pod with monitoring, service account, node selector, lifecycle, license " +
+				"liveness probe, priority class name, resource requirements without alpine, with init-containers-copy-limits feature off",
+			Features: testCaseFeatures{
+				InitContainersCopyLimits: util.NewType(false),
+			},
+			config: Config{
+				OperatorImage: testImageOperator,
+			},
+			ArangoDeployment: &api.ArangoDeployment{
+				Spec: api.DeploymentSpec{
+					Image:          util.NewType[string](testImage),
+					Authentication: noAuthentication,
+					Sync: api.SyncSpec{
+						Enabled: util.NewType[bool](true),
+					},
+					SyncWorkers: api.ServerGroupSpec{
+						ServiceAccountName: util.NewType[string](testServiceAccountName),
+						NodeSelector:       nodeSelectorTest,
+						PriorityClassName:  testPriorityClassName,
+						Resources:          resourcesUnfiltered,
+					},
+					License: api.LicenseSpec{
+						SecretName: util.NewType[string](testLicense),
+					},
+				},
+			},
+			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
+				deployment.currentObjectStatus = &api.DeploymentStatus{
+					Members: api.DeploymentStatusMembers{
+						SyncWorkers: api.MemberStatusList{
+							firstSyncWorker,
+						},
+					},
+					Images: createTestImages(true),
+				}
+
+				testCase.createTestPodData(deployment, api.ServerGroupSyncWorkers, firstSyncWorker)
+
+				name := testCase.ArangoDeployment.Spec.Sync.Monitoring.GetTokenSecretName()
+				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
+				require.NoError(t, err)
+
+				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe("", true, "bearer "+auth, shared.ServerPortName)
+			},
+			ExpectedEvent: "member syncworker is created",
+			ExpectedPod: core.Pod{
+				Spec: core.PodSpec{
+					Volumes: []core.Volume{
+						k8sutil.LifecycleVolume(),
+						k8sutil.CreateVolumeWithSecret(shared.MasterJWTSecretVolumeName, testDeploymentName+"-sync-jwt"),
+					},
+					InitContainers: []core.Container{
+						createTestLifecycleContainer(emptyResources),
+					},
+					Containers: []core.Container{
+						{
+							Name:    shared.ServerContainerName,
+							Image:   testImage,
+							Command: createTestCommandForSyncWorker(firstSyncWorker.ID, true, true),
+							Ports:   createTestPorts(api.ServerGroupSyncWorkers),
+							Env: []core.EnvVar{
+								k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoSyncMonitoringToken,
+									testDeploymentName+"-sync-mt", constants.SecretKeyToken),
+								k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoLicenseKey,
+									testLicense, constants.SecretKeyToken),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorPodName, "metadata.name"),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorPodNamespace, "metadata.namespace"),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorNodeName, "spec.nodeName"),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorNodeNameArango, "spec.nodeName"),
+							},
+							ImagePullPolicy: core.PullIfNotPresent,
+							Lifecycle:       createTestLifecycle(api.ServerGroupSyncMasters),
+							Resources:       k8sutil.ExtractPodResourceRequirement(resourcesUnfiltered),
+							SecurityContext: securityContext.NewSecurityContext(),
+							VolumeMounts: []core.VolumeMount{
+								k8sutil.LifecycleVolumeMount(),
+								k8sutil.MasterJWTVolumeMount(),
+							},
+						},
+					},
+					PriorityClassName:             testPriorityClassName,
+					RestartPolicy:                 core.RestartPolicyNever,
+					ServiceAccountName:            testServiceAccountName,
+					NodeSelector:                  nodeSelectorTest,
+					TerminationGracePeriodSeconds: &defaultSyncWorkerTerminationTimeout,
+					Hostname: testDeploymentName + "-" + api.ServerGroupSyncWorkersString + "-" +
+						firstSyncWorker.ID,
+					Subdomain: testDeploymentName + "-int",
+					Affinity: k8sutil.CreateAffinity(testDeploymentName, api.ServerGroupSyncWorkersString,
+						false, api.ServerGroupDBServersString),
+				},
+			},
+		},
 	}
 
 	runTestCases(t, testCases...)

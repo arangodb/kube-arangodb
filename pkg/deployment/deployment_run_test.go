@@ -41,7 +41,7 @@ import (
 )
 
 func runTestCases(t *testing.T, testCases ...testCaseStruct) {
-	// This esure idempotency in generated outputs
+	// This ensures idempotency in generated outputs
 	for i := 0; i < 25; i++ {
 		t.Run(fmt.Sprintf("Iteration %d", i), func(t *testing.T) {
 			for _, testCase := range testCases {
@@ -101,6 +101,16 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 					f[0].Group),
 				podDataSort())
 		}
+		if util.TypeOrDefault(testCase.Features.InitContainersCopyLimits, features.InitContainerCopyLimits().EnabledByDefault()) {
+			pSpec := &testCase.ExpectedPod.Spec
+			// ensure all init containers have limits set
+			for i, c := range pSpec.InitContainers {
+				if len(c.Resources.Limits) == 0 {
+					mainContainer := pSpec.Containers[0]
+					pSpec.InitContainers[i].Resources.Limits = mainContainer.Resources.Limits.DeepCopy()
+				}
+			}
+		}
 
 		// Create custom resource in the fake kubernetes API
 		_, err := d.deps.Client.Arango().DatabaseV1().ArangoDeployments(testNamespace).Create(context.Background(), d.currentObject, meta.CreateOptions{})
@@ -117,12 +127,17 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 			require.Equal(t, testCase.Features.EncryptionRotation, *features.EncryptionRotation().EnabledPointer())
 			*features.JWTRotation().EnabledPointer() = testCase.Features.JWTRotation
 			*features.TLSSNI().EnabledPointer() = testCase.Features.TLSSNI
-			if g := testCase.Features.Graceful; g != nil {
-				*features.GracefulShutdown().EnabledPointer() = *g
-			} else {
-				*features.GracefulShutdown().EnabledPointer() = features.GracefulShutdown().EnabledByDefault()
-			}
 			*features.TLSRotation().EnabledPointer() = testCase.Features.TLSRotation
+
+			fromPtr := func(f features.Feature, b *bool) {
+				if b != nil {
+					*f.EnabledPointer() = *b
+				} else {
+					*f.EnabledPointer() = f.EnabledByDefault()
+				}
+			}
+			fromPtr(features.GracefulShutdown(), testCase.Features.Graceful)
+			fromPtr(features.InitContainerCopyLimits(), testCase.Features.InitContainersCopyLimits)
 		}
 
 		// Set Pending phase

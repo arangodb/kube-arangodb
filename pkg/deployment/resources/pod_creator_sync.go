@@ -300,7 +300,7 @@ func (m *MemberSyncPod) GetInitContainers(cachedStatus interfaces.Inspector) ([]
 		initContainers = append(initContainers, c)
 	}
 
-	return initContainers, nil
+	return applyInitContainersResourceLimits(initContainers, &m.groupSpec.Resources), nil
 }
 
 func (m *MemberSyncPod) GetFinalizers() []string {
