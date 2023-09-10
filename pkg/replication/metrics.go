@@ -22,6 +22,7 @@ package replication
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/generated/metric_descriptions"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
 )
 
@@ -34,17 +35,10 @@ type Metrics struct {
 func (dr *DeploymentReplication) CollectMetrics(m metrics.PushMetric) {
 	name, namespace := dr.apiObject.GetName(), dr.apiObject.GetNamespace()
 
-	toGauge := func(b bool) float64 {
-		if b {
-			return 1
-		}
-		return 0
-	}
-
 	m.Push(metric_descriptions.ArangodbOperatorResourcesArangodeploymentreplicationActiveGauge(
-		toGauge(dr.metrics.DeploymentReplication.Active), namespace, name),
+		util.BoolSwitch[float64](dr.metrics.DeploymentReplication.Active, 1, 0), namespace, name),
 	)
 	m.Push(metric_descriptions.ArangodbOperatorResourcesArangodeploymentreplicationFailedGauge(
-		toGauge(dr.metrics.DeploymentReplication.Failed), namespace, name),
+		util.BoolSwitch[float64](dr.metrics.DeploymentReplication.Failed, 1, 0), namespace, name),
 	)
 }
