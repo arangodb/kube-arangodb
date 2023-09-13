@@ -155,7 +155,7 @@ func TestEnsurePod_ArangoDB_Resources(t *testing.T) {
 			},
 		},
 		{
-			Name: "DBserver POD with resource requirements, init-container-copy-limits feature false",
+			Name: "DBserver POD with resource requirements, init-container-copy-resources feature false",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
 					Image:          util.NewType[string](testImage),
@@ -181,7 +181,7 @@ func TestEnsurePod_ArangoDB_Resources(t *testing.T) {
 			},
 			ExpectedEvent: "member dbserver is created",
 			Features: testCaseFeatures{
-				InitContainersCopyLimits: util.NewType(false),
+				InitContainersCopyResources: util.NewType(false),
 			},
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{

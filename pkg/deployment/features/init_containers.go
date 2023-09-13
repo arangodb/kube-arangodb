@@ -21,18 +21,18 @@
 package features
 
 func init() {
-	registerFeature(initContainerCopyLimits)
+	registerFeature(initContainerCopyResources)
 }
 
-var initContainerCopyLimits = &feature{
-	name:               "init-containers-copy-limits",
-	description:        "Copy resource limits to init containers if they are not specified",
+var initContainerCopyResources = &feature{
+	name:               "init-containers-copy-resources",
+	description:        "Copy resources spec to init containers if they are not specified",
 	version:            "3.6.0",
 	enterpriseRequired: false,
 	enabledByDefault:   true,
 	hidden:             false,
 }
 
-func InitContainerCopyLimits() Feature {
-	return initContainerCopyLimits
+func InitContainerCopyResources() Feature {
+	return initContainerCopyResources
 }

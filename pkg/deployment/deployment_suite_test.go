@@ -79,7 +79,7 @@ const (
 
 type testCaseFeatures struct {
 	TLSSNI, TLSRotation, JWTRotation, EncryptionRotation, Version310 bool
-	Graceful, InitContainersCopyLimits                               *bool
+	Graceful, InitContainersCopyResources                            *bool
 }
 
 type testCaseStruct struct {

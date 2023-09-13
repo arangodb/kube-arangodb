@@ -1328,9 +1328,9 @@ func TestEnsurePod_Sync_Worker(t *testing.T) {
 		{
 			DropInit: true,
 			Name: "Sync Worker Pod with monitoring, service account, node selector, lifecycle, license " +
-				"liveness probe, priority class name, resource requirements without alpine, with init-containers-copy-limits feature off",
+				"liveness probe, priority class name, resource requirements without alpine, with init-containers-copy-resources feature off",
 			Features: testCaseFeatures{
-				InitContainersCopyLimits: util.NewType(false),
+				InitContainersCopyResources: util.NewType(false),
 			},
 			config: Config{
 				OperatorImage: testImageOperator,

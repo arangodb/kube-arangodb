@@ -28,13 +28,16 @@ import (
 
 // applyInitContainersResourceLimits updates all passed init containers to ensure that resource limits are set (if such feature is enabled)
 func applyInitContainersResourceLimits(initContainers []core.Container, mainContainerResources *core.ResourceRequirements) []core.Container {
-	if !features.InitContainerCopyLimits().Enabled() || mainContainerResources == nil || len(mainContainerResources.Limits) == 0 {
+	if !features.InitContainerCopyResources().Enabled() || mainContainerResources == nil || len(mainContainerResources.Limits) == 0 {
 		return initContainers
 	}
 
 	for i, c := range initContainers {
 		if len(c.Resources.Limits) == 0 {
 			initContainers[i].Resources.Limits = mainContainerResources.Limits.DeepCopy()
+		}
+		if len(c.Resources.Requests) == 0 {
+			initContainers[i].Resources.Requests = mainContainerResources.Requests.DeepCopy()
 		}
 	}
 	return initContainers

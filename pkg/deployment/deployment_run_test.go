@@ -101,13 +101,16 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 					f[0].Group),
 				podDataSort())
 		}
-		if util.TypeOrDefault(testCase.Features.InitContainersCopyLimits, features.InitContainerCopyLimits().EnabledByDefault()) {
+		if util.TypeOrDefault(testCase.Features.InitContainersCopyResources, features.InitContainerCopyResources().EnabledByDefault()) {
 			pSpec := &testCase.ExpectedPod.Spec
-			// ensure all init containers have limits set
+			// ensure all init containers have resources set
 			for i, c := range pSpec.InitContainers {
+				mainContainer := pSpec.Containers[0]
 				if len(c.Resources.Limits) == 0 {
-					mainContainer := pSpec.Containers[0]
 					pSpec.InitContainers[i].Resources.Limits = mainContainer.Resources.Limits.DeepCopy()
+				}
+				if len(c.Resources.Requests) == 0 {
+					pSpec.InitContainers[i].Resources.Requests = mainContainer.Resources.Requests.DeepCopy()
 				}
 			}
 		}
@@ -137,7 +140,7 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 				}
 			}
 			fromPtr(features.GracefulShutdown(), testCase.Features.Graceful)
-			fromPtr(features.InitContainerCopyLimits(), testCase.Features.InitContainersCopyLimits)
+			fromPtr(features.InitContainerCopyResources(), testCase.Features.InitContainersCopyResources)
 		}
 
 		// Set Pending phase
