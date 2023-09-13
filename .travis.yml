@@ -1,5 +1,8 @@
 language: go
 
+git:
+  depth: false
+
 go:
   - "1.19"
   - "1.20"
