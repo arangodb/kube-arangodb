@@ -11,6 +11,8 @@ env:
 
 script:
   - |
+    set -e
+    ls -al .
     if [ "$TRAVIS_PULL_REQUEST" != "false" ] || [ ! -z "$ALWAYS" ]; then
       make init
       make license-verify license-range-verify fmt-verify linter
