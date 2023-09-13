@@ -50,8 +50,12 @@ func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.
 		dr.log.Err(err).Warn("Failed to add finalizers")
 	}
 
+	isFailed := dr.status.Phase.IsFailed()
+	dr.metrics.DeploymentReplication.Failed = isFailed
+	dr.metrics.DeploymentReplication.Active = dr.status.Conditions.IsTrue(api.ConditionTypeConfigured)
+
 	// Is the deployment in failed state, if so, give up.
-	if dr.status.Phase.IsFailed() {
+	if isFailed {
 		dr.log.Debug("Deployment replication is in Failed state.")
 		return nextInterval
 	}
