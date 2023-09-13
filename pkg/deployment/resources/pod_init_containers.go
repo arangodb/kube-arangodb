@@ -26,8 +26,8 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 )
 
-// applyInitContainersResourceLimits updates all passed init containers to ensure that resource limits are set (if such feature is enabled)
-func applyInitContainersResourceLimits(initContainers []core.Container, mainContainerResources *core.ResourceRequirements) []core.Container {
+// applyInitContainersResourceResources updates all passed init containers to ensure that resources are set (if such feature is enabled)
+func applyInitContainersResourceResources(initContainers []core.Container, mainContainerResources *core.ResourceRequirements) []core.Container {
 	if !features.InitContainerCopyResources().Enabled() || mainContainerResources == nil || len(mainContainerResources.Limits) == 0 {
 		return initContainers
 	}
