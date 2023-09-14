@@ -1,5 +1,8 @@
 language: go
 
+git:
+  depth: false
+
 go:
   - "1.19"
   - "1.20"
@@ -11,6 +14,7 @@ env:
 
 script:
   - |
+    set -e
     if [ "$TRAVIS_PULL_REQUEST" != "false" ] || [ ! -z "$ALWAYS" ]; then
       make init
       make license-verify license-range-verify fmt-verify linter

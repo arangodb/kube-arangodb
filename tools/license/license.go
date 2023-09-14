@@ -69,6 +69,7 @@ func mainE() error {
 		}
 
 		files[file] = d.Year()
+
 	}
 
 	// Extract license dates
