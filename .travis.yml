@@ -17,7 +17,7 @@ script:
     set -e
     if [ "$TRAVIS_PULL_REQUEST" != "false" ] || [ ! -z "$ALWAYS" ]; then
       make init
-      make license-verify license-range-verify fmt-verify linter
+      make license-verify license-range-verify fmt-verify linter vulncheck
       make run-unit-tests
       make bin
     else
