@@ -286,9 +286,13 @@ linter:
 linter-fix:
 	@$(GOPATH)/bin/golangci-lint run --fix --build-tags "$(GOBUILDTAGS)" $(foreach LINT_EXCLUDE,$(LINT_EXCLUDES),--exclude '$(LINT_EXCLUDE)') ./...
 
-.PHONY: vulncheck
+.PHONY: vulncheck vulncheck-optional
 vulncheck:
-	@echo ">> Checking for known vulnerabilities"
+	@echo ">> Checking for known vulnerabilities (required)"
+	@$(GOPATH)/bin/govulncheck --tags $(GOBUILDTAGS) ./...
+
+vulncheck-optional:
+	@echo ">> Checking for known vulnerabilities (optional)"
 	@-$(GOPATH)/bin/govulncheck --tags $(GOBUILDTAGS) ./...
 
 .PHONY: build
@@ -684,7 +688,7 @@ check-community:
 	@$(MAKE) _check RELEASE_MODE=community
 
 _check: sync-crds
-	@$(MAKE) fmt yamlfmt license-verify linter run-unit-tests bin vulncheck
+	@$(MAKE) fmt yamlfmt license-verify linter run-unit-tests bin vulncheck-optional
 
 generate: generate-internal generate-proto fmt
 
