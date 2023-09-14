@@ -23,21 +23,35 @@ package resources
 import (
 	core "k8s.io/api/core/v1"
 
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 )
 
-// applyInitContainersResourceResources updates all passed init containers to ensure that resources are set (if such feature is enabled)
+// applyInitContainersResourceResources updates passed init containers to ensure that resources are set (if such feature is enabled)
+// This is applied only to containers added by operator itself
 func applyInitContainersResourceResources(initContainers []core.Container, mainContainerResources *core.ResourceRequirements) []core.Container {
-	if !features.InitContainerCopyResources().Enabled() || mainContainerResources == nil || len(mainContainerResources.Limits) == 0 {
+	if !features.InitContainerCopyResources().Enabled() || mainContainerResources == nil {
 		return initContainers
 	}
 
 	for i, c := range initContainers {
+		if !api.IsReservedServerGroupInitContainerName(c.Name) {
+			continue
+		}
+
 		if len(c.Resources.Limits) == 0 {
-			initContainers[i].Resources.Limits = mainContainerResources.Limits.DeepCopy()
+			if mainContainerResources.Limits == nil {
+				initContainers[i].Resources.Limits = make(core.ResourceList)
+			} else {
+				initContainers[i].Resources.Limits = mainContainerResources.Limits.DeepCopy()
+			}
 		}
 		if len(c.Resources.Requests) == 0 {
-			initContainers[i].Resources.Requests = mainContainerResources.Requests.DeepCopy()
+			if mainContainerResources.Requests == nil {
+				initContainers[i].Resources.Requests = make(core.ResourceList)
+			} else {
+				initContainers[i].Resources.Requests = mainContainerResources.Requests.DeepCopy()
+			}
 		}
 	}
 	return initContainers

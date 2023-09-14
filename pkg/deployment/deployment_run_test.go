@@ -103,8 +103,11 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 		}
 		if util.TypeOrDefault(testCase.Features.InitContainersCopyResources, features.InitContainerCopyResources().EnabledByDefault()) {
 			pSpec := &testCase.ExpectedPod.Spec
-			// ensure all init containers have resources set
+			// ensure all "built-in" init containers have resources set
 			for i, c := range pSpec.InitContainers {
+				if !api.IsReservedServerGroupInitContainerName(c.Name) {
+					continue
+				}
 				mainContainer := pSpec.Containers[0]
 				if len(c.Resources.Limits) == 0 {
 					pSpec.InitContainers[i].Resources.Limits = mainContainer.Resources.Limits.DeepCopy()
