@@ -36,7 +36,7 @@
 |             JWTRefresh             |    no    |  10m0s  |    no    |    Enterprise Only     |                                     Refresh current JWT secrets on the member                                      |
 |            JWTSetActive            |    no    |  10m0s  |    no    |    Enterprise Only     |                                        Change active JWT key on the cluster                                        |
 |          JWTStatusUpdate           |    no    |  10m0s  |    no    |    Enterprise Only     |                                          Update status of JWT propagation                                          |
-|           KillMemberPod            |    no    |  10m0s  |    no    | Community & Enterprise |                                Execute Delete on Pod 9put pod in Terminating state)                                |
+|           KillMemberPod            |    no    |  10m0s  |    no    | Community & Enterprise |                                Execute Delete on Pod (put pod in Terminating state)                                |
 |             LicenseSet             |    no    |  10m0s  |    no    | Community & Enterprise |                                           Update Cluster license (3.9+)                                            |
 |         MarkToRemoveMember         |    no    |  10m0s  |    no    | Community & Enterprise |               Marks member to be removed. Used when member Pod is annotated with replace annotation                |
 |         MemberPhaseUpdate          |    no    |  10m0s  |    no    | Community & Enterprise |                                                Change member phase                                                 |

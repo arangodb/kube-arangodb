@@ -13,6 +13,9 @@
 - (Feature) Add proper Prometheus endpoint compression + 204 response code
 - (Feature) Reconciliation Loop Interval option
 - (Bugfix) Fix GZIP encoding in case of small responses
+- (Bugfix) Fix PVC Rotation Discovery
+- (Feature) Allow to pass EphemeralStorage Resource to the Pods
+- (Feature) Add basic metrics for ArangoDeploymentReplication CR
 - (Bugfix) Use ArangoMember as owner reference for syncmaster secrets instead of Deployment
 
 ## [1.2.32](https://github.com/arangodb/kube-arangodb/tree/1.2.32) (2023-08-07)
@@ -27,6 +30,7 @@
 - (Maintenance) Bump K8S Version to 1.24.16
 - (Maintenance) Bump K8S Version to 1.25.12
 - (Maintenance) Bump Go to 1.20.7
+- (Improvement) Remove PodSchedulingFailure condition instead of setting to false, restart pod if it could not be scheduled
 
 ## [1.2.31](https://github.com/arangodb/kube-arangodb/tree/1.2.31) (2023-07-14)
 - (Improvement) Block traffic on the services if there is more than 1 active leader in ActiveFailover mode

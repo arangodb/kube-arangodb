@@ -201,6 +201,24 @@ namespaces:
             description: "Deployment Namespace"
           - key: name
             description: "Deployment Name"
+      arangodeploymentreplication_active:
+        shortDescription: "Defines if ArangoDeploymentReplication is configured and running"
+        description: "Defines if ArangoDeploymentReplication is configured and running"
+        type: "Gauge"
+        labels:
+          - key: namespace
+            description: "DeploymentReplication Namespace"
+          - key: name
+            description: "DeploymentReplication Name"
+      arangodeploymentreplication_failed:
+        shortDescription: "Defines if ArangoDeploymentReplication is in Failed phase"
+        description: "Defines if ArangoDeploymentReplication is in Failed phase"
+        type: "Gauge"
+        labels:
+          - key: namespace
+            description: "DeploymentReplication Namespace"
+          - key: name
+            description: "DeploymentReplication Name"
     members:
       unexpected_container_exit_codes:
         shortDescription: "Counter of unexpected restarts in pod (Containers/InitContainers/EphemeralContainers)"

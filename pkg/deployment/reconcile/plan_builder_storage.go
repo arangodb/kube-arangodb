@@ -100,7 +100,7 @@ func (r *Reconciler) createRotateServerStorageResizePlanInternal(spec api.Deploy
 		}
 
 		// Load PVC
-		pvc, exists := pvcs[member.Member.PersistentVolumeClaim.GetName()]
+		pvc, exists := pvcs[member.Member.ID]
 		if !exists {
 			r.planLogger.
 				Str("role", member.Group.AsRole()).

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -85,6 +85,7 @@ type DeploymentReplication struct {
 	status    api.DeploymentReplicationStatus  // Internal status of the CR
 	config    Config
 	deps      Dependencies
+	metrics   Metrics
 
 	eventCh chan *deploymentReplicationEvent
 	stopCh  chan struct{}
@@ -111,6 +112,8 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeploymentReplic
 
 	dr.log = logger.WrapObj(dr)
 
+	localInventory.Add(dr)
+
 	go dr.run()
 
 	return dr, nil
@@ -126,7 +129,7 @@ func (dr *DeploymentReplication) Update(apiObject *api.ArangoDeploymentReplicati
 }
 
 // Delete the deployment replication.
-// Called when the local storage was deleted by the user.
+// Called when the CR was deleted by the user.
 func (dr *DeploymentReplication) Delete() {
 	dr.log.Info("deployment replication is deleted by user")
 	if atomic.CompareAndSwapInt32(&dr.stopped, 0, 1) {

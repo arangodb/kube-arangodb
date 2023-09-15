@@ -10,7 +10,7 @@ ifeq ($(shell uname),Darwin)
 endif
 
 KUBERNETES_VERSION_MINOR:=25
-KUBERNETES_VERSION_PATCH:=12
+KUBERNETES_VERSION_PATCH:=13
 
 PROJECT := arangodb_operator
 SCRIPTDIR := $(shell pwd)
@@ -48,7 +48,7 @@ endif
 
 TEST_BUILD ?= 0
 GOBUILDARGS ?=
-GOBASEVERSION := 1.19
+GOBASEVERSION := 1.20.8
 GOVERSION := $(GOBASEVERSION)-alpine3.17
 DISTRIBUTION := alpine:3.15
 GOBUILDTAGS := $(RELEASE_MODE)
@@ -286,9 +286,13 @@ linter:
 linter-fix:
 	@$(GOPATH)/bin/golangci-lint run --fix --build-tags "$(GOBUILDTAGS)" $(foreach LINT_EXCLUDE,$(LINT_EXCLUDES),--exclude '$(LINT_EXCLUDE)') ./...
 
-.PHONY: vulncheck
+.PHONY: vulncheck vulncheck-optional
 vulncheck:
-	@echo ">> Checking for known vulnerabilities"
+	@echo ">> Checking for known vulnerabilities (required)"
+	@$(GOPATH)/bin/govulncheck --tags $(GOBUILDTAGS) ./...
+
+vulncheck-optional:
+	@echo ">> Checking for known vulnerabilities (optional)"
 	@-$(GOPATH)/bin/govulncheck --tags $(GOBUILDTAGS) ./...
 
 .PHONY: build
@@ -684,7 +688,7 @@ check-community:
 	@$(MAKE) _check RELEASE_MODE=community
 
 _check: sync-crds
-	@$(MAKE) fmt yamlfmt license-verify linter run-unit-tests bin vulncheck
+	@$(MAKE) fmt yamlfmt license-verify linter run-unit-tests bin vulncheck-optional
 
 generate: generate-internal generate-proto fmt
 
