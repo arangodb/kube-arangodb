@@ -518,7 +518,7 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 				return errors.WithStack(errors.Wrapf(err, "Failed to render alt names"))
 			}
 
-			owner := apiObject.AsOwner()
+			owner := arangoMember.AsOwner()
 			_, err = createTLSServerCertificate(ctx, log, cachedStatus, cachedStatus.SecretsModInterface().V1(), names, spec.Sync.TLS, tlsKeyfileSecretName, &owner)
 			if err != nil && !kerrors.IsAlreadyExists(err) {
 				return errors.WithStack(errors.Wrapf(err, "Failed to create TLS keyfile secret"))

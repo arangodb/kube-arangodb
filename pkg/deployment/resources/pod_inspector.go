@@ -527,9 +527,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 		}
 	} else if status.Conditions.IsTrue(api.ConditionTypePodSchedulingFailure) &&
 		len(unscheduledPodNames) == 0 {
-		if status.Conditions.Update(api.ConditionTypePodSchedulingFailure, false,
-			"Pods Scheduling Resolved",
-			"No pod reports a scheduling timeout") {
+		if status.Conditions.Remove(api.ConditionTypePodSchedulingFailure) {
 			r.context.CreateEvent(k8sutil.NewPodsSchedulingResolvedEvent(r.context.GetAPIObject()))
 		}
 	}
