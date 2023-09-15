@@ -292,12 +292,12 @@ func (s ServerGroupSpec) GetSidecars() []core.Container {
 }
 
 // HasVolumeClaimTemplate returns whether there is a volumeClaimTemplate or not
-func (s ServerGroupSpec) PHasVolumeClaimTemplate() bool {
+func (s ServerGroupSpec) HasVolumeClaimTemplate() bool {
 	return s.VolumeClaimTemplate != nil
 }
 
 // GetVolumeClaimTemplate returns a pointer to a volume claim template or nil if none is specified
-func (s ServerGroupSpec) PGetVolumeClaimTemplate() *core.PersistentVolumeClaim {
+func (s ServerGroupSpec) GetVolumeClaimTemplate() *core.PersistentVolumeClaim {
 	return s.VolumeClaimTemplate
 }
 
@@ -333,7 +333,7 @@ func (s ServerGroupSpec) GetArgs() []string {
 
 // GetStorageClassName returns the value of storageClassName.
 func (s ServerGroupSpec) GetStorageClassName() string {
-	if pvc := s.PGetVolumeClaimTemplate(); pvc != nil {
+	if pvc := s.GetVolumeClaimTemplate(); pvc != nil {
 		return util.TypeOrDefault[string](pvc.Spec.StorageClassName)
 	}
 	return util.TypeOrDefault[string](s.StorageClassName)
@@ -553,7 +553,7 @@ func (s *ServerGroupSpec) SetDefaults(group ServerGroup, used bool, mode Deploym
 		s.MinCount = nil
 		s.MaxCount = nil
 	}
-	if !s.PHasVolumeClaimTemplate() {
+	if !s.HasVolumeClaimTemplate() {
 		if _, found := s.Resources.Requests[core.ResourceStorage]; !found {
 			switch group {
 			case ServerGroupSingle, ServerGroupAgents, ServerGroupDBServers:
@@ -633,8 +633,8 @@ func (s ServerGroupSpec) ResetImmutableFields(group ServerGroup, fieldPrefix str
 			resetFields = append(resetFields, fieldPrefix+".count")
 		}
 	}
-	if s.PHasVolumeClaimTemplate() != target.PHasVolumeClaimTemplate() {
-		target.VolumeClaimTemplate = s.PGetVolumeClaimTemplate()
+	if s.HasVolumeClaimTemplate() != target.HasVolumeClaimTemplate() {
+		target.VolumeClaimTemplate = s.GetVolumeClaimTemplate()
 		resetFields = append(resetFields, fieldPrefix+".volumeClaimTemplate")
 	}
 	return resetFields

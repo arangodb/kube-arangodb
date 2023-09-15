@@ -40,7 +40,7 @@ type ArangoMemberSpecOverrides struct {
 
 func (a *ArangoMemberSpecOverrides) HasVolumeClaimTemplate(g *ServerGroupSpec) bool {
 	if g != nil {
-		if g.PHasVolumeClaimTemplate() {
+		if g.HasVolumeClaimTemplate() {
 			return true
 		}
 	}
