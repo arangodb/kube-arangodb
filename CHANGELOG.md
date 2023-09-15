@@ -29,6 +29,7 @@
 - (Maintenance) Bump K8S Version to 1.24.16
 - (Maintenance) Bump K8S Version to 1.25.12
 - (Maintenance) Bump Go to 1.20.7
+- (Improvement) Remove PodSchedulingFailure condition instead of setting to false, restart pod if it could not be scheduled
 
 ## [1.2.31](https://github.com/arangodb/kube-arangodb/tree/1.2.31) (2023-07-14)
 - (Improvement) Block traffic on the services if there is more than 1 active leader in ActiveFailover mode

@@ -374,7 +374,7 @@ const (
 	// ActionTypeJWTStatusUpdate in scopes Normal. Update status of JWT propagation
 	ActionTypeJWTStatusUpdate ActionType = "JWTStatusUpdate"
 
-	// ActionTypeKillMemberPod in scopes Normal. Execute Delete on Pod 9put pod in Terminating state)
+	// ActionTypeKillMemberPod in scopes Normal. Execute Delete on Pod (put pod in Terminating state)
 	ActionTypeKillMemberPod ActionType = "KillMemberPod"
 
 	// ActionTypeLicenseSet in scopes Normal. Update Cluster license (3.9+)
