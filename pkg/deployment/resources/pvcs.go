@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -61,10 +61,15 @@ func (r *Resources) EnsurePVCs(ctx context.Context, cachedStatus inspectorInterf
 				continue
 			}
 
-			storageClassName := spec.GetStorageClassName()
+			am, exists := cachedStatus.ArangoMember().V1().GetSimple(m.ArangoMemberName(deploymentName, group))
+			if !exists {
+				continue
+			}
+
+			storageClassName := am.Spec.Overrides.GetStorageClassName(&spec)
 			role := group.AsRole()
-			resources := spec.Resources
-			vct := spec.VolumeClaimTemplate
+			resources := am.Spec.Overrides.GetResources(&spec)
+			vct := am.Spec.Overrides.GetVolumeClaimTemplate(&spec)
 			finalizers := r.createPVCFinalizers()
 			err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				return k8sutil.CreatePersistentVolumeClaim(ctxChild, cachedStatus.PersistentVolumeClaimsModInterface().V1(),

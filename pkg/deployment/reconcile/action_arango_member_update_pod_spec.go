@@ -118,11 +118,6 @@ func (a *actionArangoMemberUpdatePodSpec) Start(ctx context.Context) (bool, erro
 		return false, err
 	}
 
-	if z := m.Endpoint; z != nil {
-		q := *z
-		template.Endpoint = &q
-	}
-
 	if err := inspector.WithArangoMemberUpdate(ctx, cache, name, func(member *api.ArangoMember) (bool, error) {
 		if !member.Spec.Template.Equals(template) {
 			member.Spec.Template = template.DeepCopy()

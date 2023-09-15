@@ -76,6 +76,7 @@ type ArangoDContainer struct {
 	groupSpec    api.ServerGroupSpec
 	spec         api.DeploymentSpec
 	group        api.ServerGroup
+	arangoMember api.ArangoMember
 	imageInfo    api.ImageInfo
 	cachedStatus interfaces.Inspector
 	input        pod.Input
@@ -206,9 +207,11 @@ func (a *ArangoDContainer) GetEnvs() ([]core.EnvVar, []core.EnvFromSource) {
 
 	envs.Add(true, k8sutil.GetLifecycleEnv()...)
 
-	if a.groupSpec.Resources.Limits != nil {
+	resources := a.member.arangoMember.Spec.Overrides.GetResources(&a.groupSpec)
+
+	if resources.Limits != nil {
 		if a.groupSpec.GetOverrideDetectedTotalMemory() {
-			if limits, ok := a.groupSpec.Resources.Limits[core.ResourceMemory]; ok {
+			if limits, ok := resources.Limits[core.ResourceMemory]; ok {
 				envs.Add(true, core.EnvVar{
 					Name:  ArangoDBOverrideDetectedTotalMemoryEnv,
 					Value: fmt.Sprintf("%d", limits.Value()),
@@ -217,7 +220,7 @@ func (a *ArangoDContainer) GetEnvs() ([]core.EnvVar, []core.EnvFromSource) {
 		}
 
 		if a.groupSpec.GetOverrideDetectedNumberOfCores() {
-			if limits, ok := a.groupSpec.Resources.Limits[core.ResourceCPU]; ok {
+			if limits, ok := resources.Limits[core.ResourceCPU]; ok {
 				envs.Add(true, core.EnvVar{
 					Name:  ArangoDBOverrideDetectedNumberOfCoresEnv,
 					Value: fmt.Sprintf("%d", limits.Value()),
@@ -278,7 +281,7 @@ func (a *ArangoDContainer) GetEnvs() ([]core.EnvVar, []core.EnvFromSource) {
 }
 
 func (a *ArangoDContainer) GetResourceRequirements() core.ResourceRequirements {
-	return k8sutil.ExtractPodResourceRequirement(a.groupSpec.Resources)
+	return k8sutil.ExtractPodResourceRequirement(a.arangoMember.Spec.Overrides.GetResources(&a.groupSpec))
 }
 
 func (a *ArangoDContainer) GetLifecycle() (*core.Lifecycle, error) {
@@ -529,6 +532,7 @@ func (m *MemberArangoDPod) GetContainerCreator() interfaces.ContainerCreator {
 		resources:    m.resources,
 		imageInfo:    m.imageInfo,
 		groupSpec:    m.groupSpec,
+		arangoMember: m.arangoMember,
 		cachedStatus: m.cachedStatus,
 		input:        m.AsInput(),
 		status:       m.status,

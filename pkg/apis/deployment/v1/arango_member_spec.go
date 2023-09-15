@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,9 +25,17 @@ import (
 )
 
 type ArangoMemberSpec struct {
-	Group         ServerGroup `json:"group,omitempty"`
-	ID            string      `json:"id,omitempty"`
-	DeploymentUID types.UID   `json:"deploymentUID,omitempty"`
+	// Group define Member Groups.
+	Group ServerGroup `json:"group,omitempty"`
 
+	ID string `json:"id,omitempty"`
+
+	// DeploymentUID define Deployment UID.
+	DeploymentUID types.UID `json:"deploymentUID,omitempty"`
+
+	// Overrides define Member Overrides (Override values from ServerGroup).
+	Overrides *ArangoMemberSpecOverrides `json:"overrides,omitempty"`
+
+	// Template keeps template which is gonna be applied on the Pod.
 	Template *ArangoMemberPodTemplate `json:"template,omitempty"`
 }
