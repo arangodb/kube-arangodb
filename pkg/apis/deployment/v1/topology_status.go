@@ -140,6 +140,14 @@ func (t *TopologyStatus) IsTopologyEvenlyDistributed(group ServerGroup) bool {
 	return min+1 >= max
 }
 
+func (t *TopologyStatus) GetID() types.UID {
+	if t == nil {
+		return ""
+	}
+
+	return t.ID
+}
+
 func (t *TopologyStatus) Enabled() bool {
 	return t != nil
 }
