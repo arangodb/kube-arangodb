@@ -50,7 +50,7 @@ func (r *Reconciler) createMemberPodSchedulingFailurePlan(ctx context.Context,
 			continue
 		}
 
-		if m.Member.Conditions.IsTrue(api.ConditionTypeScheduled) {
+		if m.Member.Conditions.IsTrue(api.ConditionTypeScheduled) || m.Member.Conditions.IsTrue(api.ConditionTypeTerminating) {
 			// Action is needed only for pods which are not scheduled yet
 			continue
 		}
