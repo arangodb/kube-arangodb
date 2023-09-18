@@ -55,11 +55,3 @@ func (r *Reconciler) createTopologyUpdatePlan(ctx context.Context, apiObject k8s
 	context PlanBuilderContext) api.Plan {
 	return nil
 }
-
-func topologyMissingMemberToRemoveSelector(s *api.TopologyStatus) api.MemberToRemoveSelector {
-	return nil
-}
-
-func topologyAwarenessMemberToRemoveSelector(g api.ServerGroup, s *api.TopologyStatus) api.MemberToRemoveSelector {
-	return nil
-}

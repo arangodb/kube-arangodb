@@ -18,27 +18,16 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package util
+//go:build !enterprise
 
-import (
-	"math/rand"
-	"time"
-)
+package reconcile
 
-var localRand = rand.New(rand.NewSource(time.Now().Unix()))
+import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 
-func Rand() *rand.Rand {
-	return localRand
+func planBuilderScaleDownTopologyMissing(context PlanBuilderContext, status api.DeploymentStatus, group api.ServerGroup, in api.MemberStatusList) (api.MemberStatus, bool, error) {
+	return api.MemberStatus{}, false, nil
 }
 
-func RandomElement[T interface{}](in []T) (T, bool) {
-	if len(in) == 0 {
-		return Default[T](), false
-	}
-
-	if len(in) == 1 {
-		return in[0], true
-	}
-
-	return in[Rand().Perm(len(in))[0]], true
+func planBuilderScaleDownTopologyAwarenessMember(context PlanBuilderContext, status api.DeploymentStatus, group api.ServerGroup, in api.MemberStatusList) (api.MemberStatus, bool, error) {
+	return api.MemberStatus{}, false, nil
 }

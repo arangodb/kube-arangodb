@@ -544,6 +544,11 @@ func (in *ArangoMemberSpec) DeepCopyInto(out *ArangoMemberSpec) {
 		*out = new(ArangoMemberPodTemplate)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.DeletionPriority != nil {
+		in, out := &in.DeletionPriority, &out.DeletionPriority
+		*out = new(int)
+		**out = **in
+	}
 	return
 }
 

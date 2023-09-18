@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -138,6 +138,14 @@ func (t *TopologyStatus) IsTopologyEvenlyDistributed(group ServerGroup) bool {
 	}
 
 	return min+1 >= max
+}
+
+func (t *TopologyStatus) GetID() types.UID {
+	if t == nil {
+		return ""
+	}
+
+	return t.ID
 }
 
 func (t *TopologyStatus) Enabled() bool {

@@ -26,9 +26,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -94,12 +92,7 @@ func (r *Reconciler) createScalePlan(status api.DeploymentStatus, members api.Me
 	} else if len(members) > count {
 		// Note, we scale down 1 member at a time
 
-		if m, err := members.SelectMemberToRemove(
-			getCleanedServer(context),
-			getToBeCleanedServer(context),
-			topologyMissingMemberToRemoveSelector(status.Topology),
-			topologyAwarenessMemberToRemoveSelector(group, status.Topology),
-			getDbServerWithLowestShards(context, group)); err != nil {
+		if m, err := planBuilderScaleDownFilter(context, status, group, members); err != nil {
 			r.planLogger.Err(err).Str("role", group.AsRole()).Warn("Failed to select member to remove")
 		} else {
 			ready, message := groupReadyForRestart(context, status, m, group)
@@ -172,68 +165,6 @@ func (r *Reconciler) createReplaceMemberPlan(ctx context.Context, apiObject k8su
 
 func filterScaleUP(a api.Action) bool {
 	return a.Type == api.ActionTypeAddMember
-}
-
-func getCleanedServer(ctx reconciler.ArangoAgencyGet) api.MemberToRemoveSelector {
-	return func(m api.MemberStatusList) (string, error) {
-		if a, ok := ctx.GetAgencyCache(); ok {
-			for _, member := range m {
-				if a.Target.CleanedServers.Contains(state.Server(member.ID)) {
-					return member.ID, nil
-				}
-			}
-		}
-		return "", nil
-	}
-}
-
-func getToBeCleanedServer(ctx reconciler.ArangoAgencyGet) api.MemberToRemoveSelector {
-	return func(m api.MemberStatusList) (string, error) {
-		if a, ok := ctx.GetAgencyCache(); ok {
-			for _, member := range m {
-				if a.Target.ToBeCleanedServers.Contains(state.Server(member.ID)) {
-					return member.ID, nil
-				}
-			}
-		}
-		return "", nil
-	}
-}
-
-func getDbServerWithLowestShards(ctx reconciler.ArangoAgencyGet, g api.ServerGroup) api.MemberToRemoveSelector {
-	return func(m api.MemberStatusList) (string, error) {
-		if g != api.ServerGroupDBServers {
-			return "", nil
-		}
-
-		a, ok := ctx.GetAgencyCache()
-		if !ok {
-			return "", nil
-		}
-
-		dbServersShards := a.ShardsByDBServers()
-		for _, member := range m {
-			if _, ok := dbServersShards[state.Server(member.ID)]; !ok {
-				// member is not in agency cache, so it has no shards
-				return member.ID, nil
-			}
-		}
-
-		var resultServer state.Server = ""
-		var resultShards int
-
-		for server, shards := range dbServersShards {
-			// init first server as result
-			if resultServer == "" {
-				resultServer = server
-				resultShards = shards
-			} else if shards < resultShards {
-				resultServer = server
-				resultShards = shards
-			}
-		}
-		return string(resultServer), nil
-	}
 }
 
 func (r *Reconciler) scaleDownCandidate(ctx context.Context, apiObject k8sutil.APIObject,

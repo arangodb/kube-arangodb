@@ -22,6 +22,8 @@ package v2alpha1
 
 import (
 	"k8s.io/apimachinery/pkg/types"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 type ArangoMemberSpec struct {
@@ -38,4 +40,14 @@ type ArangoMemberSpec struct {
 
 	// Template keeps template which is gonna be applied on the Pod.
 	Template *ArangoMemberPodTemplate `json:"template,omitempty"`
+
+	DeletionPriority *int `json:"deletion_priority,omitempty"`
+}
+
+func (a *ArangoMemberSpec) GetDeletionPriority() int {
+	if a == nil {
+		return 0
+	}
+
+	return util.TypeOrDefault[int](a.DeletionPriority, 0)
 }
