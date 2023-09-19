@@ -513,7 +513,7 @@ func (m *MemberArangoDPod) GetInitContainers(cachedStatus interfaces.Inspector) 
 		}
 	}
 
-	return initContainers, nil
+	return applyInitContainersResourceResources(initContainers, &m.groupSpec.Resources), nil
 }
 
 func (m *MemberArangoDPod) GetFinalizers() []string {

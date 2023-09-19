@@ -79,7 +79,7 @@ const (
 
 type testCaseFeatures struct {
 	TLSSNI, TLSRotation, JWTRotation, EncryptionRotation, Version310 bool
-	Graceful                                                         *bool
+	Graceful, InitContainersCopyResources                            *bool
 }
 
 type testCaseStruct struct {
@@ -864,7 +864,6 @@ func podDataSort() func(t *testing.T, p *core.Pod) {
 func addLifecycle(name string, uuidRequired bool, license string, group api.ServerGroup) func(t *testing.T, p *core.Pod) {
 	return func(t *testing.T, p *core.Pod) {
 		if group.IsArangosync() {
-
 			return
 		}
 
@@ -894,15 +893,21 @@ func addLifecycle(name string, uuidRequired bool, license string, group api.Serv
 			}
 
 			if _, ok := k8sutil.GetAnyContainerByName(p.Spec.InitContainers, "init-lifecycle"); !ok {
-				p.Spec.InitContainers = append([]core.Container{createTestLifecycleContainer(emptyResources)}, p.Spec.InitContainers...)
-
+				p.Spec.InitContainers = append(
+					[]core.Container{createTestLifecycleContainer(emptyResources)},
+					p.Spec.InitContainers...,
+				)
 			}
 		}
 
 		if _, ok := k8sutil.GetAnyContainerByName(p.Spec.InitContainers, "uuid"); !ok {
 			binaryPath, _ := os.Executable()
-			p.Spec.InitContainers = append([]core.Container{k8sutil.ArangodInitContainer("uuid", name, "rocksdb", binaryPath, testImageOperator, uuidRequired, securityContext.NewSecurityContext())}, p.Spec.InitContainers...)
-
+			p.Spec.InitContainers = append(
+				[]core.Container{
+					k8sutil.ArangodInitContainer("uuid", name, "rocksdb", binaryPath, testImageOperator, uuidRequired, securityContext.NewSecurityContext()),
+				},
+				p.Spec.InitContainers...,
+			)
 		}
 	}
 }
