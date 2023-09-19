@@ -33,6 +33,9 @@ type ArangoBackupPolicySpec struct {
 	AllowConcurrent *bool `json:"allowConcurrent,omitempty"`
 	// DeploymentSelector specifies which deployments should get a backup
 	DeploymentSelector *meta.LabelSelector `json:"selector,omitempty"`
+	// MaxBackups defines how many backups should be kept in history (per deployment). Oldest Backups will be deleted.
+	// If not specified or 0 then no limit is applied
+	MaxBackups int `json:"maxBackups,omitempty"`
 	// ArangoBackupTemplate specifies additional options for newly created ArangoBackup
 	BackupTemplate ArangoBackupTemplate `json:"template"`
 }
