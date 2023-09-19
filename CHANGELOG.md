@@ -20,6 +20,7 @@
 - (Improvement) Remove PodSchedulingFailure condition instead of setting to false, restart pod if it could not be scheduled
 - (Feature) Add ArangoMember overrides
 - (Feature) ArangoMember Removal Priority
+- (Feature) Add maxBackups option to ArangoBackupPolicy
 
 ## [1.2.32](https://github.com/arangodb/kube-arangodb/tree/1.2.32) (2023-08-07)
 - (Feature) Backup lifetime - remove Backup once its lifetime has been reached
@@ -71,7 +72,6 @@
 - (Feature) Check if Volume with LocalStorage is missing
 - (Feature) Add allowConcurrent option to ArangoBackupPolicy
 - (Feature) Allow to recreate Local volumes
-- (Feature) Add maxBackups option to ArangoBackupPolicy
 
 ## [1.2.27](https://github.com/arangodb/kube-arangodb/tree/1.2.27) (2023-04-27)
 - (Feature) Add InSync Cache
