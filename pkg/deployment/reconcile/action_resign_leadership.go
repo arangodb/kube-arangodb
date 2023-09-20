@@ -165,9 +165,9 @@ func (a *actionResignLeadership) isServerRebooted(agencyState state.State, serve
 		return false
 	}
 
-	v, ok := a.actionCtx.Get(a.action, actionResignLeadershipRebootID)
+	v, ok := a.action.Params[actionResignLeadershipRebootID.String()]
 	if !ok {
-		a.log.Warn("missing reboot ID in action's locals", v)
+		a.log.Warn("missing reboot ID in action's locals")
 		return false
 	}
 
