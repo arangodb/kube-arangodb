@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -86,10 +86,10 @@ func (p *Provisioner) GetInfo(ctx context.Context, localPath string) (provisione
 	}
 
 	// Available is blocks available * fragment size
-	available := int64(statfs.Bavail) * statfs.Bsize // nolint:typecheck
+	available := int64(statfs.Bavail) * int64(statfs.Bsize) // nolint:typecheck,unconvert
 
 	// Capacity is total block count * fragment size
-	capacity := int64(statfs.Blocks) * statfs.Bsize // nolint:typecheck
+	capacity := int64(statfs.Blocks) * int64(statfs.Bsize) // nolint:typecheck,unconvert
 
 	log.
 		Str("node-name", p.NodeName).
