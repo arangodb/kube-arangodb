@@ -148,7 +148,7 @@ func (a *ArangoSyncContainer) GetProbes() (*core.Probe, *core.Probe, *core.Probe
 }
 
 func (a *ArangoSyncContainer) GetResourceRequirements() core.ResourceRequirements {
-	return k8sutil.ExtractPodResourceRequirement(a.arangoMember.Spec.Overrides.GetResources(&a.groupSpec))
+	return k8sutil.ExtractPodAcceptedResourceRequirement(a.arangoMember.Spec.Overrides.GetResources(&a.groupSpec))
 }
 
 func (a *ArangoSyncContainer) GetLifecycle() (*core.Lifecycle, error) {
@@ -300,7 +300,7 @@ func (m *MemberSyncPod) GetInitContainers(cachedStatus interfaces.Inspector) ([]
 		initContainers = append(initContainers, c)
 	}
 
-	return applyInitContainersResourceResources(initContainers, &m.groupSpec.Resources), nil
+	return applyInitContainersResourceResources(initContainers, k8sutil.ExtractPodInitContainerAcceptedResourceRequirement(m.GetContainerCreator().GetResourceRequirements())), nil
 }
 
 func (m *MemberSyncPod) GetFinalizers() []string {

@@ -60,17 +60,7 @@ func IsPersistentVolumeClaimResizing(pvc *core.PersistentVolumeClaim) bool {
 
 // ExtractStorageResourceRequirement filters resource requirements for Pods.
 func ExtractStorageResourceRequirement(resources core.ResourceRequirements) core.ResourceRequirements {
-
-	filterStorage := func(list core.ResourceList) core.ResourceList {
-		newlist := make(core.ResourceList)
-		for k, v := range list {
-			if k != core.ResourceStorage && k != "iops" {
-				continue
-			}
-			newlist[k] = v
-		}
-		return newlist
-	}
+	filterStorage := NewPodResourceListFilter(core.ResourceStorage, "iops")
 
 	return core.ResourceRequirements{
 		Limits:   filterStorage(resources.Limits),

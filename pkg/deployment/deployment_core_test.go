@@ -358,7 +358,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 							Image:     testImage,
 							Command:   createTestCommandForDBServer(firstDBServerStatus.ID, false, false, false),
 							Ports:     createTestPorts(api.ServerGroupDBServers),
-							Resources: k8sutil.ExtractPodResourceRequirement(resourcesUnfiltered),
+							Resources: k8sutil.ExtractPodAcceptedResourceRequirement(resourcesUnfiltered),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
@@ -415,7 +415,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 							Image:     testImage,
 							Command:   createTestCommandForDBServer(firstDBServerStatus.ID, false, false, false),
 							Ports:     createTestPorts(api.ServerGroupDBServers),
-							Resources: k8sutil.ExtractPodResourceRequirement(resourcesUnfiltered),
+							Resources: k8sutil.ExtractPodAcceptedResourceRequirement(resourcesUnfiltered),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
@@ -475,7 +475,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 							Image:     testImage,
 							Command:   createTestCommandForDBServer(firstDBServerStatus.ID, false, false, false),
 							Ports:     createTestPorts(api.ServerGroupDBServers),
-							Resources: k8sutil.ExtractPodResourceRequirement(resourcesUnfiltered),
+							Resources: k8sutil.ExtractPodAcceptedResourceRequirement(resourcesUnfiltered),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
@@ -1009,7 +1009,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
-						testArangodbInternalExporterContainer(false, true, k8sutil.ExtractPodResourceRequirement(resourcesUnfiltered)),
+						testArangodbInternalExporterContainer(false, true, k8sutil.ExtractPodAcceptedResourceRequirement(resourcesUnfiltered)),
 					},
 					RestartPolicy:                 core.RestartPolicyNever,
 					TerminationGracePeriodSeconds: &defaultDBServerTerminationTimeout,
@@ -1064,7 +1064,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 						k8sutil.LifecycleVolume(),
 					},
 					InitContainers: []core.Container{
-						createTestLifecycleContainer(k8sutil.ExtractPodResourceRequirement(resourcesUnfiltered)),
+						createTestLifecycleContainer(k8sutil.ExtractPodAcceptedResourceRequirement(resourcesUnfiltered)),
 					},
 					Containers: []core.Container{
 						{

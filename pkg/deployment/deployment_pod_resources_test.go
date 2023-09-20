@@ -134,7 +134,7 @@ func TestEnsurePod_ArangoDB_Resources(t *testing.T) {
 							Image:     testImage,
 							Command:   createTestCommandForDBServer(firstDBServerStatus.ID, false, false, false),
 							Ports:     createTestPorts(api.ServerGroupAgents),
-							Resources: k8sutil.ExtractPodResourceRequirement(resourcesUnfiltered),
+							Resources: k8sutil.ExtractPodAcceptedResourceRequirement(resourcesUnfiltered),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
@@ -194,7 +194,7 @@ func TestEnsurePod_ArangoDB_Resources(t *testing.T) {
 							Image:     testImage,
 							Command:   createTestCommandForDBServer(firstDBServerStatus.ID, false, false, false),
 							Ports:     createTestPorts(api.ServerGroupAgents),
-							Resources: k8sutil.ExtractPodResourceRequirement(resourcesUnfiltered),
+							Resources: k8sutil.ExtractPodAcceptedResourceRequirement(resourcesUnfiltered),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
@@ -252,7 +252,7 @@ func TestEnsurePod_ArangoDB_Resources(t *testing.T) {
 							Image:     testImage,
 							Command:   createTestCommandForDBServer(firstDBServerStatus.ID, false, false, false),
 							Ports:     createTestPorts(api.ServerGroupAgents),
-							Resources: k8sutil.ExtractPodResourceRequirement(resourcesUnfiltered),
+							Resources: k8sutil.ExtractPodAcceptedResourceRequirement(resourcesUnfiltered),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
