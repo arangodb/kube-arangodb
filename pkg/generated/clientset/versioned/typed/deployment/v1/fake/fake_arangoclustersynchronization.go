@@ -121,7 +121,7 @@ func (c *FakeArangoClusterSynchronizations) UpdateStatus(ctx context.Context, ar
 // Delete takes name of the arangoClusterSynchronization and deletes it. Returns an error if one occurs.
 func (c *FakeArangoClusterSynchronizations) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteActionWithOptions(arangoclustersynchronizationsResource, c.ns, name, opts), &deploymentv1.ArangoClusterSynchronization{})
+		Invokes(testing.NewDeleteAction(arangoclustersynchronizationsResource, c.ns, name), &deploymentv1.ArangoClusterSynchronization{})
 
 	return err
 }

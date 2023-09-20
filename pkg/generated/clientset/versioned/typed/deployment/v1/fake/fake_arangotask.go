@@ -121,7 +121,7 @@ func (c *FakeArangoTasks) UpdateStatus(ctx context.Context, arangoTask *deployme
 // Delete takes name of the arangoTask and deletes it. Returns an error if one occurs.
 func (c *FakeArangoTasks) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteActionWithOptions(arangotasksResource, c.ns, name, opts), &deploymentv1.ArangoTask{})
+		Invokes(testing.NewDeleteAction(arangotasksResource, c.ns, name), &deploymentv1.ArangoTask{})
 
 	return err
 }

@@ -121,7 +121,7 @@ func (c *FakeArangoBackupPolicies) UpdateStatus(ctx context.Context, arangoBacku
 // Delete takes name of the arangoBackupPolicy and deletes it. Returns an error if one occurs.
 func (c *FakeArangoBackupPolicies) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteActionWithOptions(arangobackuppoliciesResource, c.ns, name, opts), &backupv1.ArangoBackupPolicy{})
+		Invokes(testing.NewDeleteAction(arangobackuppoliciesResource, c.ns, name), &backupv1.ArangoBackupPolicy{})
 
 	return err
 }

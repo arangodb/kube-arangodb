@@ -121,7 +121,7 @@ func (c *FakeArangoDeploymentReplications) UpdateStatus(ctx context.Context, ara
 // Delete takes name of the arangoDeploymentReplication and deletes it. Returns an error if one occurs.
 func (c *FakeArangoDeploymentReplications) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteActionWithOptions(arangodeploymentreplicationsResource, c.ns, name, opts), &replicationv1.ArangoDeploymentReplication{})
+		Invokes(testing.NewDeleteAction(arangodeploymentreplicationsResource, c.ns, name), &replicationv1.ArangoDeploymentReplication{})
 
 	return err
 }
