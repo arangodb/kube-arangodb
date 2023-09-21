@@ -86,6 +86,10 @@ func (a *actionMemberStatusSync) Start(ctx context.Context) (bool, error) {
 		if _, err := cache.ArangoMemberModInterface().V1().UpdateStatus(nctx, amemberc, meta.UpdateOptions{}); err != nil {
 			return false, errors.WithStack(err)
 		}
+
+		if err := cache.Refresh(nctx); err != nil {
+			return false, errors.WithStack(err)
+		}
 	}
 
 	return true, nil
