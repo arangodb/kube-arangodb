@@ -222,7 +222,7 @@ func (r *Reconciler) createUpdatePlanInternal(apiObject k8sutil.APIObject, spec 
 			p = withWaitForMember(p, m.Group, m.Member)
 
 			p = append(p, actions.NewAction(api.ActionTypeArangoMemberUpdatePodStatus, m.Group, m.Member, "Propagating status of pod").AddParam(ActionTypeArangoMemberUpdatePodStatusChecksum, checksum))
-			p.WrapWithPlan(api.Plan{
+			p = p.WrapWithPlan(api.Plan{
 				shared.RemoveMemberConditionActionV2(reason, api.ConditionTypePendingUpdate, m.Group, m.Member.ID),
 				shared.UpdateMemberConditionActionV2(reason, api.ConditionTypeUpdating, m.Group, m.Member.ID, true, reason, "", ""),
 			}, api.Plan{
