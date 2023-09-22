@@ -248,21 +248,21 @@ func (dr *DeploymentReplication) inspectIncomingSynchronizationStatus(destStatus
 
 	var totalShardsFromStatus, shardsInSync int
 	dbs := make(map[string]api.DatabaseSynchronizationStatus, 0)
-	for _, s := range destStatus.Shards {
-		db := dbs[s.Database]
+	for _, shard := range destStatus.Shards {
+		db := dbs[shard.Database]
 		db.ShardsTotal++
 		totalShardsFromStatus++
-		if s.Status == client.SyncStatusRunning {
+		if shard.Status == client.SyncStatusRunning {
 			db.ShardsInSync++
 			shardsInSync++
-		} else if s.Status == client.SyncStatusFailed && len(db.Errors) < maxReportedIncomingSyncErrorsPerDatabase {
+		} else if shard.Status == client.SyncStatusFailed && len(db.Errors) < maxReportedIncomingSyncErrorsPerDatabase {
 			db.Errors = append(db.Errors, api.DatabaseSynchronizationError{
-				Collection: s.Collection,
-				Shard:      strconv.Itoa(s.ShardIndex),
-				Message:    fmt.Sprintf("shard sync failed: %s", s.StatusMessage),
+				Collection: shard.Collection,
+				Shard:      strconv.Itoa(shard.ShardIndex),
+				Message:    fmt.Sprintf("shard sync failed: %s", shard.StatusMessage),
 			})
 		}
-		dbs[s.Database] = db
+		dbs[shard.Database] = db
 	}
 
 	var totalShards = destStatus.TotalShardsCount
@@ -276,7 +276,7 @@ func (dr *DeploymentReplication) inspectIncomingSynchronizationStatus(destStatus
 	}
 	return api.SynchronizationStatus{
 		Progress:  progress,
-		AllInSync: destStatus.Status == client.SyncStatusRunning,
+		AllInSync: destStatus.Status == client.SyncStatusRunning && shardsInSync == totalShards,
 		Databases: dbs,
 		Error:     "",
 	}
