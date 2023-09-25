@@ -30,18 +30,17 @@ import (
 
 // applyInitContainersResourceResources updates passed init containers to ensure that all resources are set (if such feature is enabled)
 // This is applied only to containers added by operator itself
-func applyInitContainersResourceResources(initContainers []core.Container, mainContainerResources *core.ResourceRequirements) []core.Container {
-	if !features.InitContainerCopyResources().Enabled() || mainContainerResources == nil {
+func applyInitContainersResourceResources(initContainers []core.Container, mainContainerResources core.ResourceRequirements) []core.Container {
+	if !features.InitContainerCopyResources().Enabled() {
 		return initContainers
 	}
 
-	for i, c := range initContainers {
-		if !api.IsReservedServerGroupInitContainerName(c.Name) {
+	for i := range initContainers {
+		if !api.IsReservedServerGroupInitContainerName(initContainers[i].Name) {
 			continue
 		}
 
-		k8sutil.EnsureAllResourcesNotEmpty(mainContainerResources.Limits, &initContainers[i].Resources.Limits)
-		k8sutil.EnsureAllResourcesNotEmpty(mainContainerResources.Requests, &initContainers[i].Resources.Requests)
+		k8sutil.ApplyContainerResourceRequirements(&initContainers[i], mainContainerResources)
 	}
 	return initContainers
 }

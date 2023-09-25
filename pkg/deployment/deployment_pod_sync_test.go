@@ -1304,7 +1304,7 @@ func TestEnsurePod_Sync_Worker(t *testing.T) {
 							},
 							ImagePullPolicy: core.PullIfNotPresent,
 							Lifecycle:       createTestLifecycle(api.ServerGroupSyncMasters),
-							Resources:       k8sutil.ExtractPodResourceRequirement(resourcesUnfiltered),
+							Resources:       k8sutil.ExtractPodAcceptedResourceRequirement(resourcesUnfiltered),
 							SecurityContext: securityContext.NewSecurityContext(),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.LifecycleVolumeMount(),
@@ -1399,7 +1399,7 @@ func TestEnsurePod_Sync_Worker(t *testing.T) {
 							},
 							ImagePullPolicy: core.PullIfNotPresent,
 							Lifecycle:       createTestLifecycle(api.ServerGroupSyncMasters),
-							Resources:       k8sutil.ExtractPodResourceRequirement(resourcesUnfiltered),
+							Resources:       k8sutil.ExtractPodAcceptedResourceRequirement(resourcesUnfiltered),
 							SecurityContext: securityContext.NewSecurityContext(),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.LifecycleVolumeMount(),

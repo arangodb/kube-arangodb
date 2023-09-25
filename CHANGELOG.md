@@ -23,6 +23,7 @@
 - (Feature) Add --deployment.feature.init-containers-copy-resources (default enabled)
 - (Feature) Add maxBackups option to ArangoBackupPolicy
 - (Improvement) Better detection for AllInSync condition for DC2DC sync status
+- (Bugfix) Fix resource propagation to InitContainers
 
 ## [1.2.32](https://github.com/arangodb/kube-arangodb/tree/1.2.32) (2023-08-07)
 - (Feature) Backup lifetime - remove Backup once its lifetime has been reached

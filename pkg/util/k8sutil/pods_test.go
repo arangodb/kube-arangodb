@@ -22,17 +22,14 @@ package k8sutil
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
-	resource "k8s.io/apimachinery/pkg/api/resource"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
-	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
@@ -417,63 +414,5 @@ func Test_EnsureFinalizer(t *testing.T) {
 		require.Len(t, pod.Finalizers, 0)
 		require.NotContains(t, pod.Finalizers, constants.FinalizerPodGracefulShutdown)
 		require.NotContains(t, pod.Finalizers, f)
-	})
-}
-
-func Test_ExtractPodResourceRequirement(t *testing.T) {
-	v, err := resource.ParseQuantity("1Gi")
-	require.NoError(t, err)
-
-	t.Run("Filter Storage", func(t *testing.T) {
-		in := core.ResourceRequirements{
-			Limits: map[core.ResourceName]resource.Quantity{
-				core.ResourceCPU:     v,
-				core.ResourceStorage: v,
-			},
-		}
-		require.Len(t, in.Limits, 2)
-		require.Len(t, in.Requests, 0)
-
-		out := ExtractPodResourceRequirement(in)
-		require.Len(t, out.Limits, 1)
-		require.Contains(t, out.Limits, core.ResourceCPU)
-		require.NotContains(t, out.Limits, core.ResourceStorage)
-		require.Len(t, out.Requests, 0)
-	})
-
-	t.Run("Ensure that all required Resources are filtered", func(t *testing.T) {
-		resources := map[core.ResourceName]bool{
-			core.ResourceCPU:              true,
-			core.ResourceMemory:           true,
-			core.ResourceStorage:          false,
-			core.ResourceEphemeralStorage: true,
-		}
-
-		in := core.ResourceRequirements{
-			Limits:   core.ResourceList{},
-			Requests: core.ResourceList{},
-		}
-
-		for k := range resources {
-			in.Limits[k] = v
-			in.Requests[k] = v
-		}
-
-		out := ExtractPodResourceRequirement(in)
-
-		for k, v := range resources {
-			t.Run(fmt.Sprintf("Resource %s should be %s", k, util.BoolSwitch(v, "present", "missing")), func(t *testing.T) {
-				require.Contains(t, in.Requests, k)
-				require.Contains(t, in.Limits, k)
-
-				if v {
-					require.Contains(t, out.Requests, k)
-					require.Contains(t, out.Limits, k)
-				} else {
-					require.NotContains(t, out.Requests, k)
-					require.NotContains(t, out.Limits, k)
-				}
-			})
-		}
 	})
 }

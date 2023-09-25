@@ -74,7 +74,7 @@ func InitLifecycleContainer(image string, resources *core.ResourceRequirements, 
 	}
 
 	if resources != nil {
-		c.Resources = ExtractPodResourceRequirement(*resources)
+		c.Resources = ExtractPodAcceptedResourceRequirement(*resources)
 	}
 	return c, nil
 }

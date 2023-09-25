@@ -24,15 +24,89 @@ import (
 	core "k8s.io/api/core/v1"
 )
 
-// EnsureAllResourcesNotEmpty copies resource specifications from src to dst if such resource is not defined in dst
-func EnsureAllResourcesNotEmpty(src core.ResourceList, dst *core.ResourceList) {
-	if dst == nil {
-		l := make(core.ResourceList)
-		dst = &l
+func ApplyContainerResourceRequirements(container *core.Container, resources core.ResourceRequirements) {
+	if container == nil {
+		return
 	}
-	for k, v := range src {
-		if _, ok := (*dst)[k]; !ok {
-			(*dst)[k] = v.DeepCopy()
+
+	container.Resources.Limits = ApplyContainerResourceList(container.Resources.Limits, resources.Limits)
+	container.Resources.Requests = ApplyContainerResourceList(container.Resources.Requests, resources.Requests)
+}
+
+// ApplyContainerResourceList adds non-existing resources from `from` to `to` ResourceList
+func ApplyContainerResourceList(to core.ResourceList, from core.ResourceList) core.ResourceList {
+	if len(from) == 0 {
+		return to
+	}
+
+	if to == nil {
+		to = core.ResourceList{}
+	}
+
+	for k, v := range from {
+		if _, ok := to[k]; !ok {
+			to[k] = v
 		}
+	}
+
+	return to
+}
+
+// ExtractPodInitContainerAcceptedResourceRequirement filters resource requirements for InitContainers.
+func ExtractPodInitContainerAcceptedResourceRequirement(resources core.ResourceRequirements) core.ResourceRequirements {
+	return NewPodResourceRequirementsFilter(PodResourceRequirementsInitContainersAcceptedResourceRequirements()...)(resources)
+}
+
+// PodResourceRequirementsInitContainersAcceptedResourceRequirements returns struct if accepted Pod resource types
+func PodResourceRequirementsInitContainersAcceptedResourceRequirements() []core.ResourceName {
+	return []core.ResourceName{core.ResourceCPU, core.ResourceMemory, core.ResourceEphemeralStorage}
+}
+
+// ExtractPodAcceptedResourceRequirement filters resource requirements for Pods.
+func ExtractPodAcceptedResourceRequirement(resources core.ResourceRequirements) core.ResourceRequirements {
+	return NewPodResourceRequirementsFilter(PodResourceRequirementsPodAcceptedResourceRequirements()...)(resources)
+}
+
+// PodResourceRequirementsPodAcceptedResourceRequirements returns struct if accepted Pod resource types
+func PodResourceRequirementsPodAcceptedResourceRequirements() []core.ResourceName {
+	return []core.ResourceName{core.ResourceCPU, core.ResourceMemory, core.ResourceEphemeralStorage}
+}
+
+type PodResourceRequirementsFilter func(in core.ResourceRequirements) core.ResourceRequirements
+
+// NewPodResourceRequirementsFilter returns function which filter out not accepted resources from resource requirements
+func NewPodResourceRequirementsFilter(filters ...core.ResourceName) PodResourceRequirementsFilter {
+	return func(in core.ResourceRequirements) core.ResourceRequirements {
+		filter := NewPodResourceListFilter(filters...)
+
+		return core.ResourceRequirements{
+			Limits:   filter(in.Limits),
+			Requests: filter(in.Requests),
+		}
+	}
+}
+
+type PodResourceListFilter func(in core.ResourceList) core.ResourceList
+
+// NewPodResourceListFilter returns function which filter out not accepted resources from list
+func NewPodResourceListFilter(filters ...core.ResourceName) PodResourceListFilter {
+	return func(in core.ResourceList) core.ResourceList {
+		filtered := map[core.ResourceName]bool{}
+
+		for _, k := range filters {
+			filtered[k] = true
+		}
+
+		n := core.ResourceList{}
+
+		for k, v := range in {
+			if _, ok := filtered[k]; !ok {
+				continue
+			}
+
+			n[k] = v
+		}
+
+		return n
 	}
 }

@@ -54,7 +54,7 @@ func ArangodbInternalExporterContainer(image string, args []string, livenessProb
 				Protocol:      core.ProtocolTCP,
 			},
 		},
-		Resources:       k8sutil.ExtractPodResourceRequirement(resources),
+		Resources:       k8sutil.ExtractPodAcceptedResourceRequirement(resources),
 		SecurityContext: k8sutil.CreateSecurityContext(groupSpec.SecurityContext),
 		ImagePullPolicy: core.PullIfNotPresent,
 		VolumeMounts:    []core.VolumeMount{k8sutil.LifecycleVolumeMount()},
