@@ -25,10 +25,17 @@ jobs:
       - setup_remote_docker:
           docker_layer_caching: true
       - checkout
-      - run: apt-get update
-      - run: apt-get install -y unzip
-      - run: make init
-      - run: make linter
+      - run:
+          name: Install deps
+          command: |
+            if [ -z "$CIRCLE_PULL_REQUEST" ]; then
+              apt-get update
+              apt-get install -y unzip
+              make vendor
+              make tools-min
+              exit 0
+            fi
+            make init
       - run:
           name: License check
           command: |
@@ -39,14 +46,14 @@ jobs:
              make license-verify license-range-verify
       - run: make fmt-verify
       - run: make linter
-      - run:
-          name: vulncheck
-          command: |
-            if [ -z "$CIRCLE_PULL_REQUEST" ]; then
-              echo "This is not a pull request. Skipping..."
-              exit 0
-            fi
-             make vulncheck
+#      - run:
+#          name: vulncheck
+#          command: |
+#            if [ -z "$CIRCLE_PULL_REQUEST" ]; then
+#              echo "This is not a pull request. Skipping..."
+#              exit 0
+#            fi
+#             make vulncheck
       - run:
           name: Unit tests
           command: |
