@@ -29,12 +29,12 @@ jobs:
           name: Install deps
           command: |
             if [ -z "$CIRCLE_PULL_REQUEST" ]; then
-              apt-get update
-              apt-get install -y unzip
               make vendor
               make tools-min
               exit 0
             fi
+            apt-get update
+            apt-get install -y unzip
             make init
       - run:
           name: License check
