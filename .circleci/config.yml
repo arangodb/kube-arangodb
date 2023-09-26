@@ -5,18 +5,7 @@ orbs:
 executors:
   golang-executor:
     docker:
-      - image: gcr.io/gcr-for-testing/golang:1.20.7
-  machine-executor:
-    machine:
-      image: ubuntu-2204:current
-      docker_layer_caching: true
-
-aliases:
-  - &notify_slack_on_fail
-    slack/notify:
-      channel: 'C056RL4BXG9' #status-go channel
-      event: fail
-      template: basic_fail_1
+      - image: gcr.io/gcr-for-testing/golang:1.20.8
 
 jobs:
   check-code:
@@ -46,14 +35,6 @@ jobs:
              make license-verify license-range-verify
       - run: make fmt-verify
       - run: make linter
-#      - run:
-#          name: vulncheck
-#          command: |
-#            if [ -z "$CIRCLE_PULL_REQUEST" ]; then
-#              echo "This is not a pull request. Skipping..."
-#              exit 0
-#            fi
-#             make vulncheck
       - run:
           name: Unit tests
           command: |
@@ -70,18 +51,16 @@ jobs:
               exit 0
             fi
              make bin
+      - run:
+          name: vulncheck
+          command: |
+            if [ -z "$CIRCLE_PULL_REQUEST" ]; then
+              echo "This is not a pull request. Skipping..."
+              exit 0
+            fi
+             make vulncheck
     environment:
       GO111MODULES: off
-
-  vulncheck:
-    executor: golang-executor
-    steps:
-      - setup_remote_docker:
-          docker_layer_caching: true
-      - checkout
-      - run: make tools
-      - run: make vulncheck
-      - *notify_slack_on_fail
 
 workflows:
   version: 2
@@ -90,17 +69,3 @@ workflows:
   run_tests:
     jobs:
       - check-code
-
-  # Monthly vulnerability check
-  monthly_vulncheck:
-    jobs:
-      - vulncheck:
-          context:
-            - slack
-    triggers:
-      - schedule:
-          # 8:00 at 1st day of month
-          cron: 0 8 1 * *
-          filters:
-            branches:
-              only: master
