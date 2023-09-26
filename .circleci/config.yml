@@ -1,14 +1,15 @@
 version: 2.1
 orbs:
   slack: circleci/slack@4.1
-executors:
-  golang-executor:
-    docker:
-      - image: gcr.io/gcr-for-testing/golang:1.20.7
-  machine-executor:
-    machine:
-      image: ubuntu-2204:current
-      docker_layer_caching: true
+  go: circleci/go@1.20.8
+#executors:
+#  golang-executor:
+#    docker:
+#      - image: gcr.io/gcr-for-testing/golang:1.20.7
+#  machine-executor:
+#    machine:
+#      image: ubuntu-2204:current
+#      docker_layer_caching: true
 aliases:
   - &notify_slack_on_fail
     slack/notify:
@@ -16,22 +17,7 @@ aliases:
       event: fail
       template: basic_fail_1
 
-parameters:
-  goImage:
-    type: string
-    default: "gcr.io/gcr-for-testing/golang:1.20.7"
-  arangodbImage:
-    type: string
-    default: "gcr.io/gcr-for-testing/arangodb/enterprise-preview:devel-nightly"
-  alpineImage:
-    type: string
-    default: "gcr.io/gcr-for-testing/alpine:3.17"
-  starterImage:
-    type: string
-    default: "arangodb/arangodb-starter:latest"
-
 jobs:
-
   check-code:
     executor: golang-executor
     steps:
