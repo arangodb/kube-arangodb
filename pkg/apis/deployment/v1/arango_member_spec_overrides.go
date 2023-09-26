@@ -65,7 +65,7 @@ func (a *ArangoMemberSpecOverrides) GetVolumeClaimTemplate(g *ServerGroupSpec) *
 		}
 	}
 
-	return &core.PersistentVolumeClaim{}
+	return nil
 }
 
 func (a *ArangoMemberSpecOverrides) GetResources(g *ServerGroupSpec) core.ResourceRequirements {
