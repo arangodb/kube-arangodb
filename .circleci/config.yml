@@ -1,15 +1,16 @@
 version: 2.1
 orbs:
   slack: circleci/slack@4.1
-  go: circleci/go@1.20.8
-#executors:
-#  golang-executor:
-#    docker:
-#      - image: gcr.io/gcr-for-testing/golang:1.20.7
-#  machine-executor:
-#    machine:
-#      image: ubuntu-2204:current
-#      docker_layer_caching: true
+
+executors:
+  golang-executor:
+    docker:
+      - image: gcr.io/gcr-for-testing/golang:1.20.7
+  machine-executor:
+    machine:
+      image: ubuntu-2204:current
+      docker_layer_caching: true
+
 aliases:
   - &notify_slack_on_fail
     slack/notify:
@@ -24,6 +25,8 @@ jobs:
       - setup_remote_docker:
           docker_layer_caching: true
       - checkout
+      - run: apt-get update
+      - run: apt-get install -y unzip
       - run: make init
       - run: make linter
       - run:
