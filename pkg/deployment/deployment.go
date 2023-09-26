@@ -406,7 +406,7 @@ func (d *Deployment) run() {
 	}
 }
 
-// validateNewSpec returns (canProceed, changed, error)
+// acceptNewSpec returns (canProceed, changed, error)
 func (d *Deployment) acceptNewSpec(ctx context.Context, depl *api.ArangoDeployment) (bool, bool, error) {
 	spec := depl.Spec.DeepCopy()
 

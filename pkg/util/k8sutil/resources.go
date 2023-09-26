@@ -77,7 +77,7 @@ type PodResourceRequirementsFilter func(in core.ResourceRequirements) core.Resou
 // NewPodResourceRequirementsFilter returns function which filter out not accepted resources from resource requirements
 func NewPodResourceRequirementsFilter(filters ...core.ResourceName) PodResourceRequirementsFilter {
 	return func(in core.ResourceRequirements) core.ResourceRequirements {
-		filter := NewPodResourceListFilter(filters...)
+		filter := NewPodResourceListFilterExclude(filters...)
 
 		return core.ResourceRequirements{
 			Limits:   filter(in.Limits),
@@ -88,8 +88,8 @@ func NewPodResourceRequirementsFilter(filters ...core.ResourceName) PodResourceR
 
 type PodResourceListFilter func(in core.ResourceList) core.ResourceList
 
-// NewPodResourceListFilter returns function which filter out not accepted resources from list
-func NewPodResourceListFilter(filters ...core.ResourceName) PodResourceListFilter {
+// NewPodResourceListFilterExclude returns function which filter out not accepted resources from list
+func NewPodResourceListFilterExclude(filters ...core.ResourceName) PodResourceListFilter {
 	return func(in core.ResourceList) core.ResourceList {
 		filtered := map[core.ResourceName]bool{}
 
@@ -107,6 +107,25 @@ func NewPodResourceListFilter(filters ...core.ResourceName) PodResourceListFilte
 			n[k] = v
 		}
 
+		return n
+	}
+}
+
+// NewPodResourceListFilterInclude returns function which filter out resources which are not present in list
+func NewPodResourceListFilterInclude(filters ...core.ResourceName) PodResourceListFilter {
+	return func(in core.ResourceList) core.ResourceList {
+		filtered := map[core.ResourceName]bool{}
+		for _, k := range filters {
+			filtered[k] = true
+		}
+
+		n := core.ResourceList{}
+		for k, v := range in {
+			if _, ok := filtered[k]; ok {
+				n[k] = v
+
+			}
+		}
 		return n
 	}
 }
