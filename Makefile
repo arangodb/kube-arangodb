@@ -213,6 +213,9 @@ EXCLUDE_FILES := *generated.deepcopy.go
 SOURCES_QUERY := find ./ -type f -name '*.go' ! -name '*.pb.go' $(foreach EXCLUDE_DIR,$(EXCLUDE_DIRS), ! -path "*/$(EXCLUDE_DIR)/*") $(foreach EXCLUDE_FILE,$(EXCLUDE_FILES), ! -path "*/$(EXCLUDE_FILE)")
 SOURCES := $(shell $(SOURCES_QUERY))
 
+NON_EE_SOURCES_QUERY := $(SOURCES_QUERY) ! -name '*.enterprise.go'
+NON_EE_SOURCES := $(shell $(NON_EE_SOURCES_QUERY))
+
 YAML_EXCLUDE_DIRS := vendor .gobuild deps tools pkg/generated/clientset pkg/generated/informers pkg/generated/listers chart/kube-arangodb/templates chart/kube-arangodb-crd/templates chart/arangodb-ingress-proxy/templates
 YAML_EXCLUDE_FILES :=
 YAML_QUERY := find ./ -type f -name '*.yaml' $(foreach EXCLUDE_DIR,$(YAML_EXCLUDE_DIRS), ! -path "*/$(EXCLUDE_DIR)/*") $(foreach EXCLUDE_FILE,$(YAML_EXCLUDE_FILES), ! -path "*/$(EXCLUDE_FILE)")
@@ -246,7 +249,7 @@ allall: all
 .PHONY: license-verify
 license-verify:
 	@echo ">> Verify license of files"
-	@$(GOPATH)/bin/addlicense -f "./tools/codegen/license-header.txt" -check $(SOURCES) $(PROTOSOURCES)
+	@$(GOPATH)/bin/addlicense -f "./tools/codegen/license-header.txt" -check $(NON_EE_SOURCES) $(PROTOSOURCES)
 
 .PHONY: license-range-verify
 license-range-verify:
@@ -271,7 +274,7 @@ yamlfmt:
 .PHONY: license
 license:
 	@echo ">> Ensuring license of files"
-	@$(GOPATH)/bin/addlicense -f "./tools/codegen/license-header.txt" $(SOURCES) $(PROTOSOURCES)
+	@$(GOPATH)/bin/addlicense -f "./tools/codegen/license-header.txt" $(NON_EE_SOURCES) $(PROTOSOURCES)
 
 .PHONY: fmt-verify
 fmt-verify: license-verify
