@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Improvement) Allow tcp:// and ssl:// protocols in endpoints for members
 
 ## [1.2.33](https://github.com/arangodb/kube-arangodb/tree/1.2.33) (2023-09-27)
 - (Maintenance) Bump golang.org/x/net to v0.13.0

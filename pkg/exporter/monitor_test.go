@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,23 +18,27 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package arangod
+package exporter
 
-import "net/url"
+import (
+	"testing"
 
-// IsSameEndpoint returns true when the 2 given endpoints
-// refer to the same server.
-func IsSameEndpoint_(a, b string) bool {
-	if a == b {
-		return true
+	"github.com/stretchr/testify/require"
+)
+
+func Test_prepareEndpointURL(t *testing.T) {
+	tcs := []struct {
+		url, path, expected string
+	}{
+		{"http://some-host", "health", "http://some-host/health"},
+		{"https://some-host", "health", "https://some-host/health"},
+		{"tcp://some-host", "health", "http://some-host/health"},
+		{"ssl://some-host", "health", "https://some-host/health"},
 	}
-	ua, err := url.Parse(a)
-	if err != nil {
-		return false
+
+	for i, tc := range tcs {
+		u, err := prepareEndpointURL(tc.url, tc.path)
+		require.NoErrorf(t, err, "case %d", i)
+		require.Equalf(t, tc.expected, u.String(), "case %d", i)
 	}
-	ub, err := url.Parse(b)
-	if err != nil {
-		return false
-	}
-	return ua.Hostname() == ub.Hostname()
 }
