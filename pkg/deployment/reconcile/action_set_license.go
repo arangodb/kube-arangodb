@@ -68,7 +68,7 @@ func (a *actionLicenseSet) Start(ctx context.Context) (bool, error) {
 	}
 
 	c, err := a.actionCtx.GetMembersState().GetMemberClient(m.ID)
-	if !ok {
+	if err != nil {
 		a.log.Err(err).Error("Unable to get client")
 		return true, nil
 	}
