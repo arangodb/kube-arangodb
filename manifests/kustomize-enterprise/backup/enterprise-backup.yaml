@@ -265,12 +265,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
-            - name: RELATED_IMAGE_UBI
-              value: "alpine:3.11"
-            - name: RELATED_IMAGE_METRICSEXPORTER
-              value: "arangodb/arangodb-exporter:0.1.7"
-            - name: RELATED_IMAGE_DATABASE
-              value: "arangodb/arangodb:latest"
           ports:
             - name: metrics
               containerPort: 8528

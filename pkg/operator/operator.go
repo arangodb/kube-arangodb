@@ -95,7 +95,6 @@ type Config struct {
 	PodName                     string
 	ServiceAccount              string
 	OperatorImage               string
-	ArangoImage                 string
 	EnableDeployment            bool
 	EnableDeploymentReplication bool
 	EnableStorage               bool

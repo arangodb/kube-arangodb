@@ -47,7 +47,6 @@ import (
 	"k8s.io/client-go/tools/record"
 
 	"github.com/arangodb/kube-arangodb/pkg/api"
-	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/crd"
 	agencyConfig "github.com/arangodb/kube-arangodb/pkg/deployment/agency/config"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
@@ -72,23 +71,16 @@ import (
 )
 
 const (
-	defaultServerHost           = "0.0.0.0"
-	defaultServerPort           = 8528
-	defaultAPIHTTPPort          = 8628
-	defaultAPIGRPCPort          = 8728
-	defaultLogLevel             = "debug"
-	defaultAdminSecretName      = "arangodb-operator-dashboard"
-	defaultAPIJWTSecretName     = "arangodb-operator-api-jwt"
-	defaultAPIJWTKeySecretName  = "arangodb-operator-api-jwt-key"
-	defaultAlpineImage          = "alpine:3.7"
-	defaultMetricsExporterImage = "arangodb/arangodb-exporter:0.1.6"
-	defaultArangoImage          = "arangodb/arangodb:latest"
-	defaultShutdownDelay        = 2 * time.Second
-	defaultShutdownTimeout      = 30 * time.Second
-
-	UBIImageEnv             util.EnvironmentVariable = "RELATED_IMAGE_UBI"
-	ArangoImageEnv          util.EnvironmentVariable = "RELATED_IMAGE_DATABASE"
-	MetricsExporterImageEnv util.EnvironmentVariable = "RELATED_IMAGE_METRICSEXPORTER"
+	defaultServerHost          = "0.0.0.0"
+	defaultServerPort          = 8528
+	defaultAPIHTTPPort         = 8628
+	defaultAPIGRPCPort         = 8728
+	defaultLogLevel            = "debug"
+	defaultAdminSecretName     = "arangodb-operator-dashboard"
+	defaultAPIJWTSecretName    = "arangodb-operator-api-jwt"
+	defaultAPIJWTKeySecretName = "arangodb-operator-api-jwt-key"
+	defaultShutdownDelay       = 2 * time.Second
+	defaultShutdownTimeout     = 30 * time.Second
 )
 
 var (
@@ -133,8 +125,6 @@ var (
 		operatorFeatureConfigMap string // ConfigMap name
 
 		scalingIntegrationEnabled bool
-
-		alpineImage, metricsExporterImage, arangoImage string
 
 		reconciliationDelay time.Duration
 
@@ -184,6 +174,7 @@ var (
 )
 
 func init() {
+	var deprecatedStr string
 
 	f := cmdMain.Flags()
 	f.StringVar(&serverOptions.host, "server.host", defaultServerHost, "Host to listen on")
@@ -207,10 +198,12 @@ func init() {
 	f.BoolVar(&operatorOptions.enableK2KClusterSync, "operator.k2k-cluster-sync", false, "Enable to run the ListSimple operator")
 	f.MarkDeprecated("operator.k2k-cluster-sync", "Enabled within deployment operator")
 	f.BoolVar(&operatorOptions.versionOnly, "operator.version", false, "Enable only version endpoint in Operator")
-	f.StringVar(&operatorOptions.alpineImage, "operator.alpine-image", UBIImageEnv.GetOrDefault(defaultAlpineImage), "Docker image used for alpine containers")
+	f.StringVar(&deprecatedStr, "operator.alpine-image", "alpine:3.7", "Docker image used for alpine containers")
 	f.MarkDeprecated("operator.alpine-image", "Value is not used anymore")
-	f.StringVar(&operatorOptions.metricsExporterImage, "operator.metrics-exporter-image", MetricsExporterImageEnv.GetOrDefault(defaultMetricsExporterImage), "Docker image used for metrics containers by default")
-	f.StringVar(&operatorOptions.arangoImage, "operator.arango-image", ArangoImageEnv.GetOrDefault(defaultArangoImage), "Docker image used for arango by default")
+	f.StringVar(&deprecatedStr, "operator.metrics-exporter-image", "arangodb/arangodb-exporter:0.1.6", "Docker image used for metrics containers by default")
+	f.MarkDeprecated("operator.metrics-exporter-image", "Value is not used anymore")
+	f.StringVar(&deprecatedStr, "operator.arango-image", "arangodb/arangodb:latest", "Docker image used for arango by default")
+	f.MarkDeprecated("operator.arango-image", "Value is not used anymore")
 	f.BoolVar(&chaosOptions.allowed, "chaos.allowed", false, "Set to allow chaos in deployments. Only activated when allowed and enabled in deployment")
 	f.BoolVar(&operatorOptions.singleMode, "mode.single", false, "Enable single mode in Operator. WARNING: There should be only one replica of Operator, otherwise Operator can take unexpected actions")
 	f.StringVar(&operatorOptions.scope, "scope", scope.DefaultScope.String(), "Define scope on which Operator works. Legacy - pre 1.1.0 scope with limited cluster access")
@@ -272,8 +265,6 @@ func executeMain(cmd *cobra.Command, args []string) {
 	ip := os.Getenv(constants.EnvOperatorPodIP)
 
 	go monitorMemoryLimit()
-
-	deploymentApi.DefaultImage = operatorOptions.arangoImage
 
 	globals.GetGlobalTimeouts().Kubernetes().Set(operatorTimeouts.k8s)
 	globals.GetGlobalTimeouts().ArangoD().Set(operatorTimeouts.arangoD)
@@ -530,7 +521,6 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		EnableK2KClusterSync:        operatorOptions.enableK2KClusterSync,
 		AllowChaos:                  chaosOptions.allowed,
 		ScalingIntegrationEnabled:   operatorOptions.scalingIntegrationEnabled,
-		ArangoImage:                 operatorOptions.arangoImage,
 		SingleMode:                  operatorOptions.singleMode,
 		Scope:                       scope,
 		ReconciliationDelay:         operatorOptions.reconciliationDelay,

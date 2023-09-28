@@ -553,10 +553,6 @@ func (d *Deployment) SelectImageForMember(spec api.DeploymentSpec, status api.De
 	return d.resources.SelectImageForMember(spec, status, member)
 }
 
-func (d *Deployment) GetArangoImage() string {
-	return d.config.ArangoImage
-}
-
 func (d *Deployment) WithStatusUpdateErr(ctx context.Context, action reconciler.DeploymentStatusUpdateErrFunc) error {
 	status := d.GetStatus()
 

@@ -198,7 +198,6 @@ func (o *Operator) makeDeploymentConfigAndDeps() (deployment.Config, deployment.
 	cfg := deployment.Config{
 		ServiceAccount:            o.Config.ServiceAccount,
 		OperatorImage:             o.Config.OperatorImage,
-		ArangoImage:               o.ArangoImage,
 		AllowChaos:                o.Config.AllowChaos,
 		ScalingIntegrationEnabled: o.Config.ScalingIntegrationEnabled,
 		ReconciliationDelay:       o.Config.ReconciliationDelay,

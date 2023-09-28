@@ -70,7 +70,6 @@ type Config struct {
 	AllowChaos                bool
 	ScalingIntegrationEnabled bool
 	OperatorImage             string
-	ArangoImage               string
 	ReconciliationDelay       time.Duration
 	Scope                     scope.Scope
 }

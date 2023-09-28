@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -52,8 +52,6 @@ type Context interface {
 	GetServerGroupIterator() reconciler.ServerGroupIterator
 	// GetOperatorImage returns the image name of operator image
 	GetOperatorImage() string
-	// GetArangoImage returns the image name containing the default arango image
-	GetArangoImage() string
 	// CreateEvent creates a given event.
 	// On error, the error is logged.
 	CreateEvent(evt *k8sutil.Event)
