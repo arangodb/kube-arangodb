@@ -10,5 +10,6 @@ deps/
 **/*.enterprise.go
 **/enterprise/**
 enterprise.mk
+license-header.enterprise.txt
 local/
 tools/codegen/boilerplate.go.txt
