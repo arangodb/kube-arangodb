@@ -1,7 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
-
+- (Bugfix) Fix make manifests-crd-file command
+ 
 ## [1.2.33](https://github.com/arangodb/kube-arangodb/tree/1.2.33) (2023-09-27)
 - (Maintenance) Bump golang.org/x/net to v0.13.0
 - (Feature) PVCResize action concurrency limit
