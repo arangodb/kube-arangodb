@@ -1,0 +1,71 @@
+version: 2.1
+orbs:
+  slack: circleci/slack@4.1
+
+executors:
+  golang-executor:
+    docker:
+      - image: gcr.io/gcr-for-testing/golang:1.20.8
+
+jobs:
+  check-code:
+    executor: golang-executor
+    steps:
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - checkout
+      - run:
+          name: Install deps
+          command: |
+            if [ -z "$CIRCLE_PULL_REQUEST" ]; then
+              make vendor
+              make tools-min
+              exit 0
+            fi
+            apt-get update
+            apt-get install -y unzip
+            make init
+      - run:
+          name: License check
+          command: |
+            if [ -z "$CIRCLE_PULL_REQUEST" ]; then
+              echo "This is not a pull request. Skipping..."
+              exit 0
+            fi
+             make license-verify license-range-verify
+      - run: make fmt-verify
+      - run: make linter
+      - run:
+          name: Unit tests
+          command: |
+            if [ -z "$CIRCLE_PULL_REQUEST" ]; then
+              echo "This is not a pull request. Skipping..."
+              exit 0
+            fi
+             make run-unit-tests
+      - run:
+          name: make bin
+          command: |
+            if [ -z "$CIRCLE_PULL_REQUEST" ]; then
+              echo "This is not a pull request. Skipping..."
+              exit 0
+            fi
+             make bin
+      - run:
+          name: vulncheck
+          command: |
+            if [ -z "$CIRCLE_PULL_REQUEST" ]; then
+              echo "This is not a pull request. Skipping..."
+              exit 0
+            fi
+             make vulncheck
+    environment:
+      GO111MODULES: off
+
+workflows:
+  version: 2
+
+  # Default workflow
+  run_tests:
+    jobs:
+      - check-code
