@@ -456,10 +456,9 @@ manifests:
 .PHONY: manifests-crd-file
 manifests-crd-file:
 	@echo Building manifests for CRD - $(MANIFESTPATHCRD)
-	@echo -n > $(MANIFESTPATHCRD)
-	@$(foreach FILE,$(CRDS),echo '---\n# File: chart/kube-arangodb/crds/$(FILE).yaml' >> $(MANIFESTPATHCRD) && \
-                           cat '$(ROOT)/chart/kube-arangodb/crds/$(FILE).yaml' >> $(MANIFESTPATHCRD) && \
-                           echo '\n' >> $(MANIFESTPATHCRD);)
+	@printf "" > $(MANIFESTPATHCRD)
+	@$(foreach FILE,$(CRDS),printf '%s\n# File: chart/kube-arangodb/crds/%s.yaml\n' '---' $(FILE) >> $(MANIFESTPATHCRD) && \
+                           cat '$(ROOT)/chart/kube-arangodb/crds/$(FILE).yaml' >> $(MANIFESTPATHCRD);)
 manifests: manifests-crd-file
 
 .PHONY: manifests-crd-kustomize
