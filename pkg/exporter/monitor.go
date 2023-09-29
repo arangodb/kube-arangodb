@@ -34,6 +34,7 @@ import (
 	"time"
 
 	"github.com/arangodb/go-driver"
+	"github.com/arangodb/go-driver/util"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
@@ -51,7 +52,7 @@ var logger = logging.Global().RegisterAndGetLogger("monitor", logging.Info)
 var currentMembersStatus atomic.Value
 
 func NewMonitor(arangodbEndpoint string, auth Authentication, sslVerify bool, timeout time.Duration) *monitor {
-	uri, err := setPath(arangodbEndpoint, shared.ArangoExporterClusterHealthEndpoint)
+	uri, err := prepareEndpointURL(arangodbEndpoint, shared.ArangoExporterClusterHealthEndpoint)
 	if err != nil {
 		logger.Err(err).Error("Fatal")
 		os.Exit(1)
@@ -75,14 +76,14 @@ func (m monitor) UpdateMonitorStatus(ctx context.Context) {
 
 		health, err := m.GetClusterHealth()
 		if err != nil {
-			logger.Err(err).Error("GetClusterHealth error")
+			logger.Err(err).Info("GetClusterHealth error")
 			sleep = failRefreshInterval
 		} else {
 			var output strings.Builder
 			for key, value := range health.Health {
 				entry, err := m.GetMemberStatus(key, value)
 				if err != nil {
-					logger.Err(err).Error("GetMemberStatus error")
+					logger.Err(err).Info("GetMemberStatus error")
 					sleep = failRefreshInterval
 				}
 				output.WriteString(entry)
@@ -134,7 +135,7 @@ func (m monitor) GetMemberStatus(id driver.ServerID, member driver.ServerHealth)
 		return result, err
 	}
 
-	req.URL, err = setPath(member.Endpoint, shared.ArangoExporterStatusEndpoint)
+	req.URL, err = prepareEndpointURL(member.Endpoint, shared.ArangoExporterStatusEndpoint)
 	if err != nil {
 		return result, err
 	}
@@ -155,7 +156,9 @@ func (m monitor) GetMemberStatus(id driver.ServerID, member driver.ServerHealth)
 	return fmt.Sprintf(monitorMetricTemplate, member.Role, id, 1), nil
 }
 
-func setPath(uri, uriPath string) (*url.URL, error) {
+func prepareEndpointURL(uri, uriPath string) (*url.URL, error) {
+	uri = util.FixupEndpointURLScheme(uri)
+
 	u, err := url.Parse(uri)
 	if err != nil {
 		return u, err
