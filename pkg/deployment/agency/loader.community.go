@@ -22,7 +22,7 @@
 
 package agency
 
-import agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency/cache"
+import agencyCache "github.com/arangodb-helper/go-helper/pkg/arangod/agency/cache"
 
 func getLoaderBase[T interface{}]() agencyCache.StateLoader[T] {
 	return NewSimpleStateLoader[T]()

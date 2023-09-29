@@ -34,6 +34,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
+	"github.com/arangodb-helper/go-helper/pkg/arangod/conn"
 	"github.com/arangodb/arangosync-client/client"
 	"github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
@@ -54,7 +55,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors/panics"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"

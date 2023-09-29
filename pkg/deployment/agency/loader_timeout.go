@@ -24,7 +24,7 @@ import (
 	"context"
 	"time"
 
-	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency/cache"
+	agencyCache "github.com/arangodb-helper/go-helper/pkg/arangod/agency/cache"
 )
 
 func TimeoutLoader[T interface{}](loader agencyCache.StateLoader[T], timeout time.Duration) agencyCache.StateLoader[T] {
