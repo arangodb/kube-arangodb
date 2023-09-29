@@ -268,8 +268,8 @@ fmt:
 .PHONY: yamlfmt
 yamlfmt:
 	@echo ">> Ensuring style of yaml files"
-	@$(GOPATH)/bin/yamlfmt -w $(YAMLS)
-	@$(GOPATH)/bin/yamlfmt -w $(YAMLS)
+	@$(foreach YAML,$(YAMLS),echo "yamlfmt $(YAML):" && $(GOPATH)/bin/yamlfmt -w $(YAML) || exit 1; )
+	@$(foreach YAML,$(YAMLS),echo "yamlfmt $(YAML):" && $(GOPATH)/bin/yamlfmt -w $(YAML) || exit 1; )
 
 .PHONY: license
 license:
