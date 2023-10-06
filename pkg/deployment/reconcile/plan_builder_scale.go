@@ -190,8 +190,8 @@ func (r *Reconciler) scaleDownCandidate(ctx context.Context, apiObject k8sutil.A
 			annotationExists = true
 		}
 
-		//nolint:staticcheck
 		if pod, ok := cache.Pod().V1().GetSimple(m.Member.Pod.GetName()); ok {
+			//nolint:staticcheck
 			if _, ok := pod.Annotations[deployment.ArangoDeploymentPodScaleDownCandidateAnnotation]; ok {
 				annotationExists = true
 			}
