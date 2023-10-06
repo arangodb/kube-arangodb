@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,12 +21,14 @@
 package deployment
 
 const (
-	ArangoDeploymentAnnotationPrefix                = "deployment.arangodb.com"
-	ArangoDeploymentPodMaintenanceAnnotation        = ArangoDeploymentAnnotationPrefix + "/maintenance"
-	ArangoDeploymentPodChangeArchAnnotation         = ArangoDeploymentAnnotationPrefix + "/arch"
-	ArangoDeploymentPodRotateAnnotation             = ArangoDeploymentAnnotationPrefix + "/rotate"
-	ArangoDeploymentPodReplaceAnnotation            = ArangoDeploymentAnnotationPrefix + "/replace"
-	ArangoDeploymentPodDeleteNow                    = ArangoDeploymentAnnotationPrefix + "/delete_now"
+	ArangoDeploymentAnnotationPrefix         = "deployment.arangodb.com"
+	ArangoDeploymentPodMaintenanceAnnotation = ArangoDeploymentAnnotationPrefix + "/maintenance"
+	ArangoDeploymentPodChangeArchAnnotation  = ArangoDeploymentAnnotationPrefix + "/arch"
+	ArangoDeploymentPodRotateAnnotation      = ArangoDeploymentAnnotationPrefix + "/rotate"
+	ArangoDeploymentPodReplaceAnnotation     = ArangoDeploymentAnnotationPrefix + "/replace"
+	ArangoDeploymentPodDeleteNow             = ArangoDeploymentAnnotationPrefix + "/delete_now"
+	ArangoDeploymentPlanCleanAnnotation      = "plan." + ArangoDeploymentAnnotationPrefix + "/clean"
+
+	// Deprecated: use ArangoMemberSpec.DeletionPriority instead
 	ArangoDeploymentPodScaleDownCandidateAnnotation = ArangoDeploymentAnnotationPrefix + "/scale_down_candidate"
-	ArangoDeploymentPlanCleanAnnotation             = "plan." + ArangoDeploymentAnnotationPrefix + "/clean"
 )
