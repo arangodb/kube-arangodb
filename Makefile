@@ -606,7 +606,7 @@ manifest-verify-helm-ce: manifests-verify-env-reset
 
 manifest-verify-helm-ee: manifests-verify-env-reset
 	@echo "Trying to install via Helm charts"
-	helm install --generate-name --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.33" --set "operator.features.storage=true" \
+	helm install --generate-name --set "operator.image=arangodb/kube-arangodb-enterprise:$(VERSION_MAJOR_MINOR_PATCH)" --set "operator.features.storage=true" \
 		./bin/charts/kube-arangodb-$(VERSION_MAJOR_MINOR_PATCH).tgz
 
 
