@@ -30,7 +30,7 @@ state for individual new features, since we expect that new
 features will first be released with an "alpha" or "beta" readiness
 state and over time move to full "production readiness".
 
-Operator will supports versions supported on providers and maintained by Kubernetes.
+Operator will support Kubernetes versions supported on providers and maintained by Kubernetes.
 Once version is not supported anymore it will go into "Deprecating" state and will be marked as deprecated on Minor release.
 
 Kubernetes versions starting from 1.18 are supported and tested, charts and manifests can use API Versions which are not present in older versions.
@@ -61,7 +61,7 @@ covers individual newer features separately.
 | Feature                                                                              | Operator Version | Introduced | ArangoDB Version | ArangoDB Edition      | State        | Enabled | Flag                                                  | Remarks                                                                            |
 |:-------------------------------------------------------------------------------------|:-----------------|:-----------|:-----------------|:----------------------|:-------------|:--------|:------------------------------------------------------|:-----------------------------------------------------------------------------------|
 | Enforced ResignLeadership                                                            | 1.2.34           | 1.2.34     | >= 3.8.0         | Community, Enterprise | Production   | True    | --deployment.feature.enforced-resign-leadership       | Enforce ResignLeadership and ensure that Leaders are moved from restarted DBServer |
-| Copy resources spec to init containers                                               | 1.2.33           | 1.2.33     | >= 3.8.0         | Community, Enterprise | Production   | True    | --deployment.feature.init-containers-copy-resources   | Copy resources spec to built-in init containers if they are not specified          |
+| Copy resources spec to init containers                                               | 1.2.34           | 1.2.34     | >= 3.8.0         | Community, Enterprise | Production   | True    | --deployment.feature.init-containers-copy-resources   | Copy resources spec to built-in init containers if they are not specified          |
 | [Rebalancer V2](docs/design/features/rebalancer_v2.md)                               | 1.2.31           | 1.2.31     | >= 3.10.0        | Community, Enterprise | Alpha        | False   | --deployment.feature.rebalancer-v2                    | N/A                                                                                |
 | [Secured containers](docs/design/features/secured_containers.md)                     | 1.2.31           | 1.2.31     | >= 3.8.0         | Community, Enterprise | Alpha        | False   | --deployment.feature.secured-containers               | If set to True Operator will run containers in secure mode                         |
 | Version Check V2                                                                     | 1.2.31           | 1.2.31     | >= 3.8.0         | Community, Enterprise | Alpha        | False   | --deployment.feature.upgrade-version-check-V2         | N/A                                                                                |
@@ -102,12 +102,18 @@ To upgrade to the Enterprise Edition, you need to get in touch with the ArangoDB
 
 <!-- END(featuresEnterpriseTable) -->
 
-## Operator Community Edition (CE)
+## Installation and Usage
 
-Image: `arangodb/kube-arangodb:1.2.34`
+Docker images:
+- Community Edition: `arangodb/kube-arangodb:1.2.34`
+- Enterprise Edition: `arangodb/kube-arangodb-enterprise:1.2.34`
 
-### Installation of latest CE release using Kubectl
+### Installation of latest release using Kubectl
 
+This procedure can also be used for upgrades and will not harm any
+running ArangoDB deployments.
+
+##### Community Edition
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.34/manifests/arango-crd.yaml
 kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.34/manifests/arango-deployment.yaml
@@ -117,83 +123,7 @@ kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.34
 kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.34/manifests/arango-deployment-replication.yaml
 ```
 
-This procedure can also be used for upgrades and will not harm any
-running ArangoDB deployments.
-
-### Installation of latest CE release using kustomize
-
-Installation using [kustomize](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/) looks like installation from yaml files,
-but user is allowed to modify namespace or resource names without yaml modifications.
-
-IT is recommended to use kustomization instead of handcrafting namespace in yaml files - kustomization will replace not only resource namespaces,
-but also namespace references in resources like ClusterRoleBinding.
-
-Example kustomization file:
-```
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-
-namespace: my-custom-namespace
-
-bases:
-  - https://github.com/arangodb/kube-arangodb/manifests/kustomize/deployment/?ref=1.0.3
-```
-
-### Installation of latest CE release using Helm
-
-Only use this procedure for a new install of the operator. See below for
-upgrades.
-
-```bash
-# The following will install the operator for `ArangoDeployment` &
-# `ArangoDeploymentReplication` resources.
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.34/kube-arangodb-1.2.34.tgz
-# To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.34/kube-arangodb-1.2.34.tgz --set "operator.features.storage=true"
-```
-
-### Upgrading the operator using Helm
-
-To upgrade the operator to the latest version with Helm, you have to
-delete the previous deployment and then install the latest. **HOWEVER**:
-You *must not delete* the deployment of the custom resource definitions
-(CRDs), or your ArangoDB deployments will be deleted!
-
-Therefore, you have to use `helm list` to find the deployments for the
-operator (`kube-arangodb`) and of the storage operator
-(`kube-arangodb-storage`) and use `helm delete` to delete them using the
-automatically generated deployment names. Here is an example of a `helm
-list` output:
-
-```
-% helm list
-NAME            	REVISION	UPDATED                 	STATUS  	CHART                               	APP VERSION	NAMESPACE
-vetoed-ladybird 	1       	Mon Apr  8 11:36:58 2019	DEPLOYED	kube-arangodb-0.3.10-preview        	           	default  
-```
-
-So here, you would have to do
-
-```bash
-helm delete vetoed-ladybird
-```
-
-but **not delete `steely-mule`**. Then you could install the new version
-with `helm install` as normal:
-
-```bash
-# The following will install the operator for `ArangoDeployment` &
-# `ArangoDeploymentReplication` resources.
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.34/kube-arangodb-1.2.34.tgz
-# To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.34/kube-arangodb-1.2.34.tgz --set "operator.features.storage=true"
-```
-
-## Operator Enterprise Edition (EE)
-
-Image: `arangodb/kube-arangodb-enterprise:1.2.34`
-
-### Installation of latest EE release using Kubectl
-
+##### Enterprise Edition
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.34/manifests/enterprise-crd.yaml
 kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.34/manifests/enterprise-deployment.yaml
@@ -203,75 +133,89 @@ kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.34
 kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.34/manifests/enterprise-deployment-replication.yaml
 ```
 
-This procedure can also be used for upgrades and will not harm any
-running ArangoDB deployments.
-
-### Installation of latest EE release using kustomize
+### Installation of latest release using kustomize
 
 Installation using [kustomize](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/) looks like installation from yaml files,
 but user is allowed to modify namespace or resource names without yaml modifications.
 
-IT is recommended to use kustomization instead of handcrafting namespace in yaml files - kustomization will replace not only resource namespaces,
+It is recommended to use kustomization instead of handcrafting namespace in yaml files - kustomization will replace not only resource namespaces,
 but also namespace references in resources like ClusterRoleBinding.
 
-Example kustomization file:
+##### Community Edition example
 ```
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-
 namespace: my-custom-namespace
+bases:
+  - https://github.com/arangodb/kube-arangodb/manifests/kustomize/deployment/?ref=1.0.3
+```
 
+##### Enterprise Edition example
+```
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: my-custom-namespace
 bases:
   - https://github.com/arangodb/kube-arangodb/manifests/kustomize-enterprise/deployment/?ref=1.0.3
 ```
 
-### Installation of latest EE release using Helm
+### Installation of latest release using Helm
 
-Only use this procedure for a new install of the operator. See below for
-upgrades.
+Only use this procedure for clean installation of the operator. For upgrades see next section
 
+##### Community Edition
 ```bash
-# The following will install the operator for `ArangoDeployment` &
-# `ArangoDeploymentReplication` resources.
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.34/kube-arangodb-1.2.34.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.34"
+# The following will install the operator and basic CRDs resources.
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.34/kube-arangodb-1.2.34.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.34/kube-arangodb-1.2.34.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.34" --set "operator.features.storage=true"
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.34/kube-arangodb-1.2.34.tgz --set "operator.features.storage=true"
+```
+
+##### Enterprise Edition
+```bash
+# The following will install the operator and basic CRDs resources.
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.34/kube-arangodb-1.2.34.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.34"
+# To use `ArangoLocalStorage`, set field `operator.features.storage` to true
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.34/kube-arangodb-1.2.34.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.34" --set "operator.features.storage=true"
 ```
 
 ### Upgrading the operator using Helm
 
 To upgrade the operator to the latest version with Helm, you have to
-delete the previous deployment and then install the latest. **HOWEVER**:
-You *must not delete* the deployment of the custom resource definitions
-(CRDs), or your ArangoDB deployments will be deleted!
+delete the previous operator deployment and then install the latest. **HOWEVER**:
+You *must not delete* the custom resource definitions (CRDs),
+or your ArangoDB deployments will be deleted!
 
 Therefore, you have to use `helm list` to find the deployments for the
-operator (`kube-arangodb`) and of the storage operator
-(`kube-arangodb-storage`) and use `helm delete` to delete them using the
-automatically generated deployment names. Here is an example of a `helm
-list` output:
+operator (`kube-arangodb`) and use `helm delete` to delete them using the
+automatically generated deployment names. Here is an example of a `helm list` output:
 
 ```
-% helm list
-NAME            	REVISION	UPDATED                 	STATUS  	CHART                               	APP VERSION	NAMESPACE
-vetoed-ladybird 	1       	Mon Apr  8 11:36:58 2019	DEPLOYED	kube-arangodb-0.3.10-preview        	           	default  
+NAME                      	NAMESPACE	REVISION	UPDATED                                 	STATUS  	CHART               	APP VERSION
+kube-arangodb-1-1696919877	default  	1       	2023-10-10 08:37:57.884783199 +0200 CEST	deployed	kube-arangodb-1.2.31	
 ```
 
 So here, you would have to do
-
 ```bash
-helm delete vetoed-ladybird
+helm delete kube-arangodb-1-1696919877
 ```
 
-but **not delete `steely-mule`**. Then you could install the new version
-with `helm install` as normal:
+Then you can install the new version with `helm install` as normal:
 
+##### Community Edition
 ```bash
-# The following will install the operator for `ArangoDeployment` &
-# `ArangoDeploymentReplication` resources.
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.34/kube-arangodb-1.2.34.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.34"
+# The following will install the operator and basic CRDs resources.
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.34/kube-arangodb-1.2.34.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.34/kube-arangodb-1.2.34.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.34" --set "operator.features.storage=true"
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.34/kube-arangodb-1.2.34.tgz --set "operator.features.storage=true"
+```
+
+##### Enterprise Edition
+```bash
+# The following will install the operator and basic CRDs resources.
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.34/kube-arangodb-1.2.34.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.34"
+# To use `ArangoLocalStorage`, set field `operator.features.storage` to true
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.34/kube-arangodb-1.2.34.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.34" --set "operator.features.storage=true"
 ```
 
 ## Building
