@@ -141,13 +141,16 @@ but user is allowed to modify namespace or resource names without yaml modificat
 It is recommended to use kustomization instead of handcrafting namespace in yaml files - kustomization will replace not only resource namespaces,
 but also namespace references in resources like ClusterRoleBinding.
 
+See `manifests/kustomize` directory for available combinations of installed features.
+
 ##### Community Edition example
 ```
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: my-custom-namespace
-bases:
-  - https://github.com/arangodb/kube-arangodb/manifests/kustomize/deployment/?ref=1.0.3
+resources:
+  - https://github.com/arangodb/kube-arangodb/manifests/kustomize/crd?ref=1.2.33
+  - https://github.com/arangodb/kube-arangodb/manifests/kustomize/deployment?ref=1.2.33
 ```
 
 ##### Enterprise Edition example
@@ -155,8 +158,9 @@ bases:
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: my-custom-namespace
-bases:
-  - https://github.com/arangodb/kube-arangodb/manifests/kustomize-enterprise/deployment/?ref=1.0.3
+resources:
+  - https://github.com/arangodb/kube-arangodb/manifests/kustomize-enterprise/crd?ref=1.2.33
+  - https://github.com/arangodb/kube-arangodb/manifests/kustomize-enterprise/deployment?ref=1.2.33
 ```
 
 ### Installation of latest release using Helm
