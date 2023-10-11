@@ -82,8 +82,11 @@ type MemberSyncPod struct {
 	cachedStatus           interfaces.Inspector
 }
 
-func (a *ArangoSyncContainer) GetArgs() ([]string, error) {
-	return createArangoSyncArgs(a.apiObject, a.spec, a.group, a.groupSpec, a.memberStatus), nil
+func (a *ArangoSyncContainer) GetCommand() ([]string, error) {
+	cmd := make([]string, 0, 128)
+	cmd = append(cmd, a.GetExecutor())
+	cmd = append(cmd, createArangoSyncArgs(a.apiObject, a.spec, a.group, a.groupSpec, a.memberStatus)...)
+	return cmd, nil
 }
 
 func (a *ArangoSyncContainer) GetName() string {

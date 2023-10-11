@@ -5,6 +5,7 @@
 - (Improvement) Allow tcp:// and ssl:// protocols in endpoints for members
 - (Maintenance) Reorganize package imports / move common code to separate repos
 - (Maintenance) Remove support for RELATED_IMAGE_UBI, RELATED_IMAGE_DATABASE and RELATED_IMAGE_METRICSEXPORTER env vars
+- (Bugfix) Fix numactl options
  
 ## [1.2.33](https://github.com/arangodb/kube-arangodb/tree/1.2.33) (2023-09-27)
 - (Maintenance) Bump golang.org/x/net to v0.13.0
