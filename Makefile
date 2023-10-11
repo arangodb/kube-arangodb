@@ -71,7 +71,7 @@ UPPER_ENV = $(shell echo '$1' | tr '[:lower:]' '[:upper:]' | tr -d '-')
 .PHONY: helm
 helm:
 ifeq ($(HELM),)
-	$(error Before templating you need to install helm in PATH or export helm binary using "export HELM=<path to helm>")
+	$(error "Before templating you need to install helm in PATH or export helm binary using 'export HELM=<path to helm>'")
 endif
 
 HELM_OPTIONS = --set "operator.image=$(OPERATORIMAGE)" \
@@ -537,6 +537,78 @@ chart-operator: helm
 	@$(HELM_PACKAGE_CMD)
 
 manifests: chart-operator
+
+.PHONY: manifests-verify
+manifests-verify:
+	$(MAKE) manifest-verify-plain-ce
+	$(MAKE) manifest-verify-plain-ee
+	$(MAKE) manifest-verify-kustomize-ce
+	$(MAKE) manifest-verify-kustomize-ee
+	$(MAKE) manifest-verify-helm-ce
+	$(MAKE) manifest-verify-helm-ee
+
+manifests-verify-env-reset:
+	@minikube delete && minikube start
+
+manifest-verify-plain-ce: manifests-verify-env-reset
+	@echo "Trying to install via plain manifests"
+	kubectl apply -f ./manifests/arango-all.yaml
+	kubectl apply -f ./manifests/arango-apps.yaml
+	kubectl apply -f ./manifests/arango-backup.yaml
+	kubectl apply -f ./manifests/arango-crd.yaml
+	kubectl apply -f ./manifests/arango-deployment.yaml
+	kubectl apply -f ./manifests/arango-deployment-replication.yaml
+	kubectl apply -f ./manifests/arango-k2kclustersync.yaml
+	kubectl apply -f ./manifests/arango-storage.yaml
+
+manifest-verify-plain-ee: manifests-verify-env-reset
+	kubectl apply -f ./manifests/enterprise-all.yaml
+	kubectl apply -f ./manifests/enterprise-apps.yaml
+	kubectl apply -f ./manifests/enterprise-backup.yaml
+	kubectl apply -f ./manifests/enterprise-crd.yaml
+	kubectl apply -f ./manifests/enterprise-deployment.yaml
+	kubectl apply -f ./manifests/enterprise-deployment-replication.yaml
+	kubectl apply -f ./manifests/enterprise-k2kclustersync.yaml
+	kubectl apply -f ./manifests/enterprise-storage.yaml
+
+define KUSTOMIZE_YAML =
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ./all
+  - ./apps
+  - ./backup
+  - ./crd
+  - ./deployment
+  - ./deployment-replication
+  - ./k2kclustersync
+endef
+export KUSTOMIZE_YAML
+
+manifest-verify-kustomize-ce: manifests-verify-env-reset
+	@echo "Trying to install via Kustomize"
+	@-rm -rf ./kustomize_test
+	@cp -r ./manifests/kustomize ./kustomize_test
+	@echo "$$KUSTOMIZE_YAML" > ./kustomize_test/kustomization.yaml
+	@kubectl create -k ./kustomize_test/
+
+manifest-verify-kustomize-ee: manifests-verify-env-reset
+	@echo "Trying to install via Kustomize"
+	@-rm -rf ./kustomize_test
+	@cp -r ./manifests/kustomize-enterprise ./kustomize_test
+	@echo "$$KUSTOMIZE_YAML" > ./kustomize_test/kustomization.yaml
+	@kubectl create -k ./kustomize_test/
+
+manifest-verify-helm-ce: manifests-verify-env-reset
+	@echo "Trying to install via Helm charts"
+	helm install --generate-name --set "operator.features.storage=true" \
+		./bin/charts/kube-arangodb-$(VERSION_MAJOR_MINOR_PATCH).tgz
+
+manifest-verify-helm-ee: manifests-verify-env-reset
+	@echo "Trying to install via Helm charts"
+	helm install --generate-name --set "operator.image=arangodb/kube-arangodb-enterprise:$(VERSION_MAJOR_MINOR_PATCH)" --set "operator.features.storage=true" \
+		./bin/charts/kube-arangodb-$(VERSION_MAJOR_MINOR_PATCH).tgz
+
 
 # Testing
 
