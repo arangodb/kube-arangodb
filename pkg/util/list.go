@@ -41,6 +41,14 @@ func (l List[T]) Count(fn func(T) bool) int {
 	return len(l.Filter(fn))
 }
 
+func (l List[T]) Append(items ...T) List[T] {
+	return append(l, items...)
+}
+
+func (l List[T]) List() []T {
+	return l
+}
+
 func (l List[T]) Sort(fn func(T, T) bool) List[T] {
 	clone := l
 	sort.Slice(clone, func(i, j int) bool {

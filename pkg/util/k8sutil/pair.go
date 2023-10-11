@@ -126,6 +126,18 @@ func (o OptionPairs) Sort() OptionPairs {
 	return o
 }
 
+func (o OptionPairs) AsArgsWithCommand(command string) []string {
+	s := make([]string, len(o)+1)
+
+	s[0] = command
+
+	for id, pair := range o {
+		s[id+1] = pair.String()
+	}
+
+	return s
+}
+
 func (o OptionPairs) AsArgs() []string {
 	s := make([]string, len(o))
 

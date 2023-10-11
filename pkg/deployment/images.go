@@ -393,8 +393,8 @@ func (i *ImageUpdatePod) ApplyPodSpec(p *core.PodSpec) error {
 	return nil
 }
 
-func (a *ContainerIdentity) GetArgs() ([]string, error) {
-	return nil, nil
+func (a *ContainerIdentity) GetCommand() ([]string, error) {
+	return []string{a.GetExecutor()}, nil
 }
 
 // GetEnvs returns environment variables for identity containers.
@@ -449,8 +449,8 @@ func (a *ContainerIdentity) GetVolumeMounts() []core.VolumeMount {
 	return nil
 }
 
-// GetArgs returns the list of arguments for the ArangoD container identification.
-func (a *ArangoDIdentity) GetArgs() ([]string, error) {
+// GetCommand returns the command for the ArangoD container identification.
+func (a *ArangoDIdentity) GetCommand() ([]string, error) {
 	options := k8sutil.CreateOptionPairs(64)
 	options.Add("--server.authentication", "false")
 	options.Addf("--server.endpoint", "tcp://%s:%d", a.ipAddress, shared.ArangoPort)
@@ -460,7 +460,7 @@ func (a *ArangoDIdentity) GetArgs() ([]string, error) {
 	// Security
 	options.Merge(pod.Security().Args(a.input))
 
-	return options.Copy().Sort().AsArgs(), nil
+	return options.Copy().Sort().AsArgsWithCommand(a.GetExecutor()), nil
 }
 
 // GetEnvs returns environment variables for Arango identity containers.
