@@ -49,4 +49,9 @@ type ArangoBackupTemplate struct {
 	Options *ArangoBackupSpecOptions `json:"options,omitempty"`
 
 	Upload *ArangoBackupSpecOperation `json:"upload,omitempty"`
+
+	Backoff *ArangoBackupSpecBackOff `json:"backoff,omitempty"`
+
+	// Lifetime is the time after which the backup will be deleted. Format: "1.5h" or "2h45m".
+	Lifetime *meta.Duration `json:"lifetime,omitempty"`
 }
