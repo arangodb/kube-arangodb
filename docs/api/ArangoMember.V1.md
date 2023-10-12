@@ -2,21 +2,25 @@
 
 ## Spec
 
+### .spec.deletion_priority: int
+
+[Code Reference](/pkg/apis/deployment/v1/arango_member_spec.go#L44)
+
 ### .spec.deploymentUID: string
 
 DeploymentUID define Deployment UID.
 
-[Code Reference](/pkg/apis/deployment/v1/arango_member_spec.go#L34)
+[Code Reference](/pkg/apis/deployment/v1/arango_member_spec.go#L36)
 
 ### .spec.group: int
 
 Group define Member Groups.
 
-[Code Reference](/pkg/apis/deployment/v1/arango_member_spec.go#L29)
+[Code Reference](/pkg/apis/deployment/v1/arango_member_spec.go#L31)
 
 ### .spec.id: string
 
-[Code Reference](/pkg/apis/deployment/v1/arango_member_spec.go#L31)
+[Code Reference](/pkg/apis/deployment/v1/arango_member_spec.go#L33)
 
 ### .spec.overrides.resources: core.ResourceRequirements
 

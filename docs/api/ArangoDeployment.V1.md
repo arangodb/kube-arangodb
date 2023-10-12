@@ -92,7 +92,7 @@ Links:
 
 ExporterPort define Port used by exporter
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L182)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L184)
 
 ### .spec.agents.extendedRotationCheck: bool
 
@@ -110,7 +110,11 @@ ExternalPortEnabled if external port should be enabled. If is set to false, port
 
 IndexMethod define group Indexing method
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L175)
+Possible Values: 
+* random (default) - Pick random ID for member. Enforced on the Community Operator.
+* ordered - Use sequential number as Member ID, starting from 0. Enterprise Operator required.
+
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L177)
 
 ### .spec.agents.initContainers.containers: []core.Container
 
@@ -232,7 +236,7 @@ OverrideDetectedTotalMemory determines if memory should be overrided based on va
 
 Port define Port used by member
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L180)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L182)
 
 ### .spec.agents.priorityClassName: string
 
@@ -244,86 +248,86 @@ PriorityClassName specifies a priority class name
 
 LivenessProbeDisabled if true livenessProbes are disabled
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L191)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L193)
 
 ### .spec.agents.probes.livenessProbeSpec.failureThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L227)
 
 ### .spec.agents.probes.livenessProbeSpec.initialDelaySeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
 
 ### .spec.agents.probes.livenessProbeSpec.periodSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.agents.probes.livenessProbeSpec.successThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L226)
 
 ### .spec.agents.probes.livenessProbeSpec.timeoutSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
 
 ### .spec.agents.probes.ReadinessProbeDisabled: bool
 
 OldReadinessProbeDisabled if true readinessProbes are disabled
 Deprecated: This field is deprecated, keept only for backward compatibility.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L198)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L200)
 
 ### .spec.agents.probes.readinessProbeDisabled: bool
 
 ReadinessProbeDisabled override flag for probe disabled in good manner (lowercase) with backward compatibility
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L200)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L202)
 
 ### .spec.agents.probes.readinessProbeSpec.failureThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L227)
 
 ### .spec.agents.probes.readinessProbeSpec.initialDelaySeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
 
 ### .spec.agents.probes.readinessProbeSpec.periodSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.agents.probes.readinessProbeSpec.successThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L226)
 
 ### .spec.agents.probes.readinessProbeSpec.timeoutSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
 
 ### .spec.agents.probes.startupProbeDisabled: bool
 
 StartupProbeDisabled if true startupProbes are disabled
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L205)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L207)
 
 ### .spec.agents.probes.startupProbeSpec.failureThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L227)
 
 ### .spec.agents.probes.startupProbeSpec.initialDelaySeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
 
 ### .spec.agents.probes.startupProbeSpec.periodSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.agents.probes.startupProbeSpec.successThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L226)
 
 ### .spec.agents.probes.startupProbeSpec.timeoutSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
 
 ### .spec.agents.pvcResizeMode: string
 
@@ -739,7 +743,7 @@ Links:
 
 ExporterPort define Port used by exporter
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L182)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L184)
 
 ### .spec.coordinators.extendedRotationCheck: bool
 
@@ -757,7 +761,11 @@ ExternalPortEnabled if external port should be enabled. If is set to false, port
 
 IndexMethod define group Indexing method
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L175)
+Possible Values: 
+* random (default) - Pick random ID for member. Enforced on the Community Operator.
+* ordered - Use sequential number as Member ID, starting from 0. Enterprise Operator required.
+
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L177)
 
 ### .spec.coordinators.initContainers.containers: []core.Container
 
@@ -879,7 +887,7 @@ OverrideDetectedTotalMemory determines if memory should be overrided based on va
 
 Port define Port used by member
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L180)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L182)
 
 ### .spec.coordinators.priorityClassName: string
 
@@ -891,86 +899,86 @@ PriorityClassName specifies a priority class name
 
 LivenessProbeDisabled if true livenessProbes are disabled
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L191)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L193)
 
 ### .spec.coordinators.probes.livenessProbeSpec.failureThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L227)
 
 ### .spec.coordinators.probes.livenessProbeSpec.initialDelaySeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
 
 ### .spec.coordinators.probes.livenessProbeSpec.periodSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.coordinators.probes.livenessProbeSpec.successThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L226)
 
 ### .spec.coordinators.probes.livenessProbeSpec.timeoutSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
 
 ### .spec.coordinators.probes.ReadinessProbeDisabled: bool
 
 OldReadinessProbeDisabled if true readinessProbes are disabled
 Deprecated: This field is deprecated, keept only for backward compatibility.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L198)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L200)
 
 ### .spec.coordinators.probes.readinessProbeDisabled: bool
 
 ReadinessProbeDisabled override flag for probe disabled in good manner (lowercase) with backward compatibility
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L200)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L202)
 
 ### .spec.coordinators.probes.readinessProbeSpec.failureThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L227)
 
 ### .spec.coordinators.probes.readinessProbeSpec.initialDelaySeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
 
 ### .spec.coordinators.probes.readinessProbeSpec.periodSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.coordinators.probes.readinessProbeSpec.successThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L226)
 
 ### .spec.coordinators.probes.readinessProbeSpec.timeoutSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
 
 ### .spec.coordinators.probes.startupProbeDisabled: bool
 
 StartupProbeDisabled if true startupProbes are disabled
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L205)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L207)
 
 ### .spec.coordinators.probes.startupProbeSpec.failureThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L227)
 
 ### .spec.coordinators.probes.startupProbeSpec.initialDelaySeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
 
 ### .spec.coordinators.probes.startupProbeSpec.periodSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.coordinators.probes.startupProbeSpec.successThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L226)
 
 ### .spec.coordinators.probes.startupProbeSpec.timeoutSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
 
 ### .spec.coordinators.pvcResizeMode: string
 
@@ -1301,7 +1309,7 @@ Links:
 
 ExporterPort define Port used by exporter
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L182)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L184)
 
 ### .spec.dbservers.extendedRotationCheck: bool
 
@@ -1319,7 +1327,11 @@ ExternalPortEnabled if external port should be enabled. If is set to false, port
 
 IndexMethod define group Indexing method
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L175)
+Possible Values: 
+* random (default) - Pick random ID for member. Enforced on the Community Operator.
+* ordered - Use sequential number as Member ID, starting from 0. Enterprise Operator required.
+
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L177)
 
 ### .spec.dbservers.initContainers.containers: []core.Container
 
@@ -1441,7 +1453,7 @@ OverrideDetectedTotalMemory determines if memory should be overrided based on va
 
 Port define Port used by member
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L180)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L182)
 
 ### .spec.dbservers.priorityClassName: string
 
@@ -1453,86 +1465,86 @@ PriorityClassName specifies a priority class name
 
 LivenessProbeDisabled if true livenessProbes are disabled
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L191)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L193)
 
 ### .spec.dbservers.probes.livenessProbeSpec.failureThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L227)
 
 ### .spec.dbservers.probes.livenessProbeSpec.initialDelaySeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
 
 ### .spec.dbservers.probes.livenessProbeSpec.periodSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.dbservers.probes.livenessProbeSpec.successThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L226)
 
 ### .spec.dbservers.probes.livenessProbeSpec.timeoutSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
 
 ### .spec.dbservers.probes.ReadinessProbeDisabled: bool
 
 OldReadinessProbeDisabled if true readinessProbes are disabled
 Deprecated: This field is deprecated, keept only for backward compatibility.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L198)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L200)
 
 ### .spec.dbservers.probes.readinessProbeDisabled: bool
 
 ReadinessProbeDisabled override flag for probe disabled in good manner (lowercase) with backward compatibility
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L200)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L202)
 
 ### .spec.dbservers.probes.readinessProbeSpec.failureThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L227)
 
 ### .spec.dbservers.probes.readinessProbeSpec.initialDelaySeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
 
 ### .spec.dbservers.probes.readinessProbeSpec.periodSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.dbservers.probes.readinessProbeSpec.successThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L226)
 
 ### .spec.dbservers.probes.readinessProbeSpec.timeoutSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
 
 ### .spec.dbservers.probes.startupProbeDisabled: bool
 
 StartupProbeDisabled if true startupProbes are disabled
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L205)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L207)
 
 ### .spec.dbservers.probes.startupProbeSpec.failureThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L227)
 
 ### .spec.dbservers.probes.startupProbeSpec.initialDelaySeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
 
 ### .spec.dbservers.probes.startupProbeSpec.periodSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.dbservers.probes.startupProbeSpec.successThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L226)
 
 ### .spec.dbservers.probes.startupProbeSpec.timeoutSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
 
 ### .spec.dbservers.pvcResizeMode: string
 
@@ -2301,7 +2313,7 @@ Links:
 
 ExporterPort define Port used by exporter
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L182)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L184)
 
 ### .spec.single.extendedRotationCheck: bool
 
@@ -2319,7 +2331,11 @@ ExternalPortEnabled if external port should be enabled. If is set to false, port
 
 IndexMethod define group Indexing method
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L175)
+Possible Values: 
+* random (default) - Pick random ID for member. Enforced on the Community Operator.
+* ordered - Use sequential number as Member ID, starting from 0. Enterprise Operator required.
+
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L177)
 
 ### .spec.single.initContainers.containers: []core.Container
 
@@ -2441,7 +2457,7 @@ OverrideDetectedTotalMemory determines if memory should be overrided based on va
 
 Port define Port used by member
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L180)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L182)
 
 ### .spec.single.priorityClassName: string
 
@@ -2453,86 +2469,86 @@ PriorityClassName specifies a priority class name
 
 LivenessProbeDisabled if true livenessProbes are disabled
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L191)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L193)
 
 ### .spec.single.probes.livenessProbeSpec.failureThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L227)
 
 ### .spec.single.probes.livenessProbeSpec.initialDelaySeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
 
 ### .spec.single.probes.livenessProbeSpec.periodSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.single.probes.livenessProbeSpec.successThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L226)
 
 ### .spec.single.probes.livenessProbeSpec.timeoutSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
 
 ### .spec.single.probes.ReadinessProbeDisabled: bool
 
 OldReadinessProbeDisabled if true readinessProbes are disabled
 Deprecated: This field is deprecated, keept only for backward compatibility.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L198)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L200)
 
 ### .spec.single.probes.readinessProbeDisabled: bool
 
 ReadinessProbeDisabled override flag for probe disabled in good manner (lowercase) with backward compatibility
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L200)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L202)
 
 ### .spec.single.probes.readinessProbeSpec.failureThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L227)
 
 ### .spec.single.probes.readinessProbeSpec.initialDelaySeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
 
 ### .spec.single.probes.readinessProbeSpec.periodSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.single.probes.readinessProbeSpec.successThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L226)
 
 ### .spec.single.probes.readinessProbeSpec.timeoutSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
 
 ### .spec.single.probes.startupProbeDisabled: bool
 
 StartupProbeDisabled if true startupProbes are disabled
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L205)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L207)
 
 ### .spec.single.probes.startupProbeSpec.failureThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L227)
 
 ### .spec.single.probes.startupProbeSpec.initialDelaySeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
 
 ### .spec.single.probes.startupProbeSpec.periodSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.single.probes.startupProbeSpec.successThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L226)
 
 ### .spec.single.probes.startupProbeSpec.timeoutSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
 
 ### .spec.single.pvcResizeMode: string
 
@@ -2965,7 +2981,7 @@ Links:
 
 ExporterPort define Port used by exporter
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L182)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L184)
 
 ### .spec.syncmasters.extendedRotationCheck: bool
 
@@ -2983,7 +2999,11 @@ ExternalPortEnabled if external port should be enabled. If is set to false, port
 
 IndexMethod define group Indexing method
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L175)
+Possible Values: 
+* random (default) - Pick random ID for member. Enforced on the Community Operator.
+* ordered - Use sequential number as Member ID, starting from 0. Enterprise Operator required.
+
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L177)
 
 ### .spec.syncmasters.initContainers.containers: []core.Container
 
@@ -3105,7 +3125,7 @@ OverrideDetectedTotalMemory determines if memory should be overrided based on va
 
 Port define Port used by member
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L180)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L182)
 
 ### .spec.syncmasters.priorityClassName: string
 
@@ -3117,86 +3137,86 @@ PriorityClassName specifies a priority class name
 
 LivenessProbeDisabled if true livenessProbes are disabled
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L191)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L193)
 
 ### .spec.syncmasters.probes.livenessProbeSpec.failureThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L227)
 
 ### .spec.syncmasters.probes.livenessProbeSpec.initialDelaySeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
 
 ### .spec.syncmasters.probes.livenessProbeSpec.periodSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.syncmasters.probes.livenessProbeSpec.successThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L226)
 
 ### .spec.syncmasters.probes.livenessProbeSpec.timeoutSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
 
 ### .spec.syncmasters.probes.ReadinessProbeDisabled: bool
 
 OldReadinessProbeDisabled if true readinessProbes are disabled
 Deprecated: This field is deprecated, keept only for backward compatibility.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L198)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L200)
 
 ### .spec.syncmasters.probes.readinessProbeDisabled: bool
 
 ReadinessProbeDisabled override flag for probe disabled in good manner (lowercase) with backward compatibility
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L200)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L202)
 
 ### .spec.syncmasters.probes.readinessProbeSpec.failureThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L227)
 
 ### .spec.syncmasters.probes.readinessProbeSpec.initialDelaySeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
 
 ### .spec.syncmasters.probes.readinessProbeSpec.periodSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.syncmasters.probes.readinessProbeSpec.successThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L226)
 
 ### .spec.syncmasters.probes.readinessProbeSpec.timeoutSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
 
 ### .spec.syncmasters.probes.startupProbeDisabled: bool
 
 StartupProbeDisabled if true startupProbes are disabled
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L205)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L207)
 
 ### .spec.syncmasters.probes.startupProbeSpec.failureThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L227)
 
 ### .spec.syncmasters.probes.startupProbeSpec.initialDelaySeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
 
 ### .spec.syncmasters.probes.startupProbeSpec.periodSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.syncmasters.probes.startupProbeSpec.successThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L226)
 
 ### .spec.syncmasters.probes.startupProbeSpec.timeoutSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
 
 ### .spec.syncmasters.pvcResizeMode: string
 
@@ -3521,7 +3541,7 @@ Links:
 
 ExporterPort define Port used by exporter
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L182)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L184)
 
 ### .spec.syncworkers.extendedRotationCheck: bool
 
@@ -3539,7 +3559,11 @@ ExternalPortEnabled if external port should be enabled. If is set to false, port
 
 IndexMethod define group Indexing method
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L175)
+Possible Values: 
+* random (default) - Pick random ID for member. Enforced on the Community Operator.
+* ordered - Use sequential number as Member ID, starting from 0. Enterprise Operator required.
+
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L177)
 
 ### .spec.syncworkers.initContainers.containers: []core.Container
 
@@ -3661,7 +3685,7 @@ OverrideDetectedTotalMemory determines if memory should be overrided based on va
 
 Port define Port used by member
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L180)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L182)
 
 ### .spec.syncworkers.priorityClassName: string
 
@@ -3673,86 +3697,86 @@ PriorityClassName specifies a priority class name
 
 LivenessProbeDisabled if true livenessProbes are disabled
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L191)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L193)
 
 ### .spec.syncworkers.probes.livenessProbeSpec.failureThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L227)
 
 ### .spec.syncworkers.probes.livenessProbeSpec.initialDelaySeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
 
 ### .spec.syncworkers.probes.livenessProbeSpec.periodSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.syncworkers.probes.livenessProbeSpec.successThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L226)
 
 ### .spec.syncworkers.probes.livenessProbeSpec.timeoutSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
 
 ### .spec.syncworkers.probes.ReadinessProbeDisabled: bool
 
 OldReadinessProbeDisabled if true readinessProbes are disabled
 Deprecated: This field is deprecated, keept only for backward compatibility.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L198)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L200)
 
 ### .spec.syncworkers.probes.readinessProbeDisabled: bool
 
 ReadinessProbeDisabled override flag for probe disabled in good manner (lowercase) with backward compatibility
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L200)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L202)
 
 ### .spec.syncworkers.probes.readinessProbeSpec.failureThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L227)
 
 ### .spec.syncworkers.probes.readinessProbeSpec.initialDelaySeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
 
 ### .spec.syncworkers.probes.readinessProbeSpec.periodSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.syncworkers.probes.readinessProbeSpec.successThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L226)
 
 ### .spec.syncworkers.probes.readinessProbeSpec.timeoutSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
 
 ### .spec.syncworkers.probes.startupProbeDisabled: bool
 
 StartupProbeDisabled if true startupProbes are disabled
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L205)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L207)
 
 ### .spec.syncworkers.probes.startupProbeSpec.failureThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L227)
 
 ### .spec.syncworkers.probes.startupProbeSpec.initialDelaySeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L221)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
 
 ### .spec.syncworkers.probes.startupProbeSpec.periodSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.syncworkers.probes.startupProbeSpec.successThreshold: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L226)
 
 ### .spec.syncworkers.probes.startupProbeSpec.timeoutSeconds: int32
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L223)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L225)
 
 ### .spec.syncworkers.pvcResizeMode: string
 

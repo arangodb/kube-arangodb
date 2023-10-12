@@ -172,6 +172,8 @@ type ServerGroupSpec struct {
 	// TerminationGracePeriodSeconds override default TerminationGracePeriodSeconds for pods - via silent rotation
 	TerminationGracePeriodSeconds *int64 `json:"terminationGracePeriodSeconds,omitempty"`
 	// IndexMethod define group Indexing method
+	// +doc/enum: random|Pick random ID for member. Enforced on the Community Operator.
+	// +doc/enum: ordered|Use sequential number as Member ID, starting from 0. Enterprise Operator required.
 	IndexMethod *ServerGroupIndexMethod `json:"indexMethod,omitempty"`
 
 	// PodModes define additional modes enabled on the Pod level
