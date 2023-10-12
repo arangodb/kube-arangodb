@@ -655,9 +655,16 @@ func CreateArangoDVolumes(status api.MemberStatus, input pod.Input, spec api.Dep
 	return volumes
 }
 
-// GetArgs returns list of arguments for the ArangoD upgrade container.
-func (a *ArangoUpgradeContainer) GetArgs() ([]string, error) {
-	return createArangodArgsWithUpgrade(a.cachedStatus, a.input)
+// GetCommand returns list of arguments for the ArangoD upgrade container.
+func (a *ArangoUpgradeContainer) GetCommand() ([]string, error) {
+	args, err := a.ContainerCreator.GetCommand()
+	if err != nil {
+		return nil, err
+	}
+
+	upgradeArgs := pod.AutoUpgrade().Args(a.input).Sort().AsArgs()
+
+	return append(args, upgradeArgs...), nil
 }
 
 // GetLifecycle returns no lifecycle for the ArangoD upgrade container.
@@ -675,9 +682,14 @@ func (a *ArangoUpgradeContainer) GetProbes() (*core.Probe, *core.Probe, *core.Pr
 	return nil, nil, nil, nil
 }
 
-// GetArgs returns list of arguments for the ArangoD version check container.
-func (a *ArangoVersionCheckContainer) GetArgs() ([]string, error) {
-	return createArangodArgs(a.cachedStatus, a.input, a.versionArgs...)
+// GetCommand returns list of arguments for the ArangoD version check container.
+func (a *ArangoVersionCheckContainer) GetCommand() ([]string, error) {
+	args, err := a.ContainerCreator.GetCommand()
+	if err != nil {
+		return nil, err
+	}
+
+	return append(args, a.versionArgs.Sort().AsArgs()...), nil
 }
 
 // GetLifecycle returns no lifecycle for the ArangoD version check container.
