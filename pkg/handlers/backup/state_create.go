@@ -21,8 +21,6 @@
 package backup
 
 import (
-	"time"
-
 	"github.com/arangodb/go-driver"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
@@ -68,23 +66,4 @@ func stateCreateHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.
 		updateStatusBackup(backupMeta),
 		cleanBackOff(),
 	)
-}
-
-func stateCreateErrorHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.ArangoBackupStatus, error) {
-	// no more retries - move to failed state
-	if !backup.Status.Backoff.ShouldBackoff(backup.Spec.Backoff) {
-		return wrapUpdateStatus(backup,
-			updateStatusState(backupApi.ArangoBackupStateFailed, "out of Create retries"),
-			cleanStatusJob())
-	}
-
-	// if we should retry - move to create state
-	if backup.Status.Backoff.ShouldBackoff(backup.Spec.Backoff) && !backup.Status.Backoff.GetNext().After(time.Now()) {
-		return wrapUpdateStatus(backup,
-			updateStatusState(backupApi.ArangoBackupStateCreate, ""),
-			cleanStatusJob())
-	}
-
-	// no ready to retry - wait (do not change state)
-	return wrapUpdateStatus(backup)
 }

@@ -352,6 +352,7 @@ update-vendor:
 	@rm -Rf $(VENDORDIR)/k8s.io/code-generator
 	@git clone --branch "kubernetes-1.$(KUBERNETES_VERSION_MINOR).$(KUBERNETES_VERSION_PATCH)" https://github.com/kubernetes/code-generator.git $(VENDORDIR)/k8s.io/code-generator
 	@rm -Rf $(VENDORDIR)/k8s.io/code-generator/.git
+	@(cd "$(VENDORDIR)/k8s.io/code-generator"; go mod download; go mod vendor)
 
 
 .PHONY: update-generated

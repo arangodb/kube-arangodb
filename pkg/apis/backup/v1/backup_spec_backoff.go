@@ -92,3 +92,7 @@ func (a *ArangoBackupSpecBackOff) Backoff(iteration int) time.Duration {
 		return time.Duration(min+int(float64(iteration)/float64(maxIterations)*float64(max-min))) * time.Second
 	}
 }
+
+func (a *ArangoBackupSpecBackOff) Enabled() bool {
+	return a != nil && a.MaxIterations != nil
+}
