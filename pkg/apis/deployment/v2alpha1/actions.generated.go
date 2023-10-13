@@ -98,6 +98,9 @@ const (
 	// ActionEncryptionKeyStatusUpdateDefaultTimeout define default timeout for action ActionEncryptionKeyStatusUpdate
 	ActionEncryptionKeyStatusUpdateDefaultTimeout time.Duration = ActionsDefaultTimeout
 
+	// ActionEnforceResignLeadershipDefaultTimeout define default timeout for action ActionEnforceResignLeadership
+	ActionEnforceResignLeadershipDefaultTimeout time.Duration = 2700 * time.Second // 45m0s
+
 	// ActionIdleDefaultTimeout define default timeout for action ActionIdle
 	ActionIdleDefaultTimeout time.Duration = ActionsDefaultTimeout
 
@@ -353,6 +356,9 @@ const (
 	// ActionTypeEncryptionKeyStatusUpdate in scopes Normal. Update status of encryption propagation
 	ActionTypeEncryptionKeyStatusUpdate ActionType = "EncryptionKeyStatusUpdate"
 
+	// ActionTypeEnforceResignLeadership in scopes Normal. Run the ResignLeadership job on DBServer and checks data compatibility after
+	ActionTypeEnforceResignLeadership ActionType = "EnforceResignLeadership"
+
 	// ActionTypeIdle in scopes Normal. Define idle operation in case if preconditions are not meet
 	ActionTypeIdle ActionType = "Idle"
 
@@ -587,6 +593,8 @@ func (a ActionType) DefaultTimeout() time.Duration {
 		return ActionEncryptionKeyRemoveDefaultTimeout
 	case ActionTypeEncryptionKeyStatusUpdate:
 		return ActionEncryptionKeyStatusUpdateDefaultTimeout
+	case ActionTypeEnforceResignLeadership:
+		return ActionEnforceResignLeadershipDefaultTimeout
 	case ActionTypeIdle:
 		return ActionIdleDefaultTimeout
 	case ActionTypeJWTAdd:
@@ -760,6 +768,8 @@ func (a ActionType) Priority() ActionPriority {
 	case ActionTypeEncryptionKeyRemove:
 		return ActionPriorityNormal
 	case ActionTypeEncryptionKeyStatusUpdate:
+		return ActionPriorityNormal
+	case ActionTypeEnforceResignLeadership:
 		return ActionPriorityNormal
 	case ActionTypeIdle:
 		return ActionPriorityNormal
@@ -947,6 +957,8 @@ func (a ActionType) Optional() bool {
 		return false
 	case ActionTypeEncryptionKeyStatusUpdate:
 		return false
+	case ActionTypeEnforceResignLeadership:
+		return true
 	case ActionTypeIdle:
 		return false
 	case ActionTypeJWTAdd:

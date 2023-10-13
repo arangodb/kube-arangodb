@@ -10,6 +10,7 @@
 - (Bugfix) Fix ArangoBackup Create Backoff & ArangoBackupPolicy propagation
 - (Maintenance) Add IndexMethod Documentation
 - (Bugfix) Fix VersionCheck args propagation
+- (Feature) EnforcedResignLeadership action
  
 ## [1.2.33](https://github.com/arangodb/kube-arangodb/tree/1.2.33) (2023-09-27)
 - (Maintenance) Bump golang.org/x/net to v0.13.0

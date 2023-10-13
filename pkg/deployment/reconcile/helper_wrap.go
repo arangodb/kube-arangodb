@@ -64,7 +64,7 @@ func withResignLeadership(group api.ServerGroup, member api.MemberStatus, reason
 		return plan
 	}
 
-	action := actions.NewAction(api.ActionTypeResignLeadership, group, member, reason)
+	action := actions.NewAction(getResignLeadershipActionType(), group, member, reason)
 	if rebootID != nil {
 		action = actionResignLeadershipRebootID.Register(action, "%d", *rebootID)
 	}

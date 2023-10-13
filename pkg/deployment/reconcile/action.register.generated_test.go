@@ -276,6 +276,16 @@ func Test_Actions(t *testing.T) {
 		})
 	})
 
+	t.Run("EnforceResignLeadership", func(t *testing.T) {
+		ActionsExistence(t, api.ActionTypeEnforceResignLeadership)
+		t.Run("Internal", func(t *testing.T) {
+			require.False(t, api.ActionTypeEnforceResignLeadership.Internal())
+		})
+		t.Run("Optional", func(t *testing.T) {
+			require.True(t, api.ActionTypeEnforceResignLeadership.Optional())
+		})
+	})
+
 	t.Run("Idle", func(t *testing.T) {
 		ActionsExistence(t, api.ActionTypeIdle)
 		t.Run("Internal", func(t *testing.T) {
