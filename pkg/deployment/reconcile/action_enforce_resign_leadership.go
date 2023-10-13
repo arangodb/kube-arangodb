@@ -76,7 +76,7 @@ func (a *actionEnforceResignLeadership) Start(ctx context.Context) (bool, error)
 	}
 }
 
-// CheckProgress checks if Job is completed.
+// CheckProgress checks if the Job is completed, if not then start it. Repeat in case of error or if still a leader
 func (a *actionEnforceResignLeadership) CheckProgress(ctx context.Context) (bool, bool, error) {
 	group := a.action.Group
 	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
@@ -132,6 +132,7 @@ func (a *actionEnforceResignLeadership) CheckProgress(ctx context.Context) (bool
 		// Job is Finished, check if we are not a leader anymore
 		if agencyState.PlanLeaderServers().Contains(state.Server(m.ID)) {
 			// We are still a leader!
+			a.log.Warn("DBServers is still a leader for shards")
 			return false, false, nil
 		}
 		return true, false, nil
