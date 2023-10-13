@@ -41,6 +41,9 @@ type ArangoMemberSpec struct {
 	// Template keeps template which is gonna be applied on the Pod.
 	Template *ArangoMemberPodTemplate `json:"template,omitempty"`
 
+	// DeletionPriority define Deletion Priority.
+	// Higher value means higher priority. Default is 0.
+	// Example: set 1 for Coordinator which should be deleted first and scale down coordinators by one.
 	DeletionPriority *int `json:"deletion_priority,omitempty"`
 }
 

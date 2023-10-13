@@ -185,11 +185,13 @@ func (r *Reconciler) scaleDownCandidate(ctx context.Context, apiObject k8sutil.A
 			continue
 		}
 
+		//nolint:staticcheck
 		if _, ok := am.Annotations[deployment.ArangoDeploymentPodScaleDownCandidateAnnotation]; ok {
 			annotationExists = true
 		}
 
 		if pod, ok := cache.Pod().V1().GetSimple(m.Member.Pod.GetName()); ok {
+			//nolint:staticcheck
 			if _, ok := pod.Annotations[deployment.ArangoDeploymentPodScaleDownCandidateAnnotation]; ok {
 				annotationExists = true
 			}
