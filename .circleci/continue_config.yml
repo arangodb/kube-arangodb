@@ -1,0 +1,118 @@
+version: 2.1
+orbs:
+  slack: circleci/slack@4.1
+
+parameters:
+  manifests-verify:
+    type: boolean
+    default: false
+  minikube-version:
+    type: string
+    default: v1.31.2
+  helm-version:
+    type: string
+    default: v3.13.0
+
+executors:
+  golang-executor:
+    docker:
+      - image: gcr.io/gcr-for-testing/golang:1.20.10
+  machine-executor:
+    machine:
+      image: ubuntu-2204:current
+      docker_layer_caching: true
+
+jobs:
+  check-code:
+    executor: golang-executor
+    steps:
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - checkout
+      - run:
+          name: Install deps
+          command: |
+            if [ -z "$CIRCLE_PULL_REQUEST" ]; then
+              make vendor
+              make tools-min
+              exit 0
+            fi
+            apt-get update
+            apt-get install -y unzip
+            make init
+      - run:
+          name: License check
+          command: |
+            if [ -z "$CIRCLE_PULL_REQUEST" ]; then
+              echo "This is not a pull request. Skipping..."
+              exit 0
+            fi
+             make license-verify license-range-verify
+      - run: make fmt-verify
+      - run: make linter
+      - run:
+          name: Unit tests
+          command: |
+            if [ -z "$CIRCLE_PULL_REQUEST" ]; then
+              echo "This is not a pull request. Skipping..."
+              exit 0
+            fi
+             make run-unit-tests
+      - run:
+          name: make bin
+          command: |
+            if [ -z "$CIRCLE_PULL_REQUEST" ]; then
+              echo "This is not a pull request. Skipping..."
+              exit 0
+            fi
+             make bin
+      - run:
+          name: vulncheck
+          command: |
+            if [ -z "$CIRCLE_PULL_REQUEST" ]; then
+              echo "This is not a pull request. Skipping..."
+              exit 0
+            fi
+             make vulncheck
+    environment:
+      GO111MODULES: off
+
+  manifests_verify:
+    executor: machine-executor
+    steps:
+      - checkout
+      - run:
+          name: Install Kubectl Executable
+          command: |-
+            curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" &&
+            chmod +x kubectl &&
+            sudo mv kubectl /usr/local/bin/
+            mkdir -p ${HOME}/.kube && touch ${HOME}/.kube/config
+      - run:
+          name: Install Minikube Executable
+          command: |-
+            curl -Lo minikube https://github.com/kubernetes/minikube/releases/download/<< pipeline.parameters.minikube-version >>/minikube-linux-amd64 &&
+            chmod +x minikube &&
+            sudo mv minikube /usr/local/bin/
+      - run:
+          name: Install Helm Service
+          command: |-
+            export DESIRED_VERSION=<< pipeline.parameters.helm-version >>
+            curl https://raw.githubusercontent.com/helm/helm/master/scripts/get | bash
+      - run:
+          command: make manifests
+      - run:
+          command: make manifests-verify
+
+workflows:
+  version: 2
+
+  run_tests:
+    jobs:
+      - check-code
+
+  manifests-verify:
+    when:
+      equal: [ true, << pipeline.parameters.manifests-verify >> ]
+    jobs:
+      - manifests_verify

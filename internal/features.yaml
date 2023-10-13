@@ -220,3 +220,10 @@ features:
     releases:
       - operatorVersion: 1.2.33
         state: Production
+  - name: Enforced ResignLeadership
+    enabled: true
+    remarks: Enforce ResignLeadership and ensure that Leaders are moved from restarted DBServer
+    flag: --deployment.feature.enforced-resign-leadership
+    releases:
+      - operatorVersion: 1.2.34
+        state: Production

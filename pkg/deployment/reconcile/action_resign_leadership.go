@@ -22,7 +22,6 @@ package reconcile
 
 import (
 	"context"
-	"strconv"
 
 	"github.com/arangodb/go-driver"
 
@@ -132,7 +131,7 @@ func (a *actionResignLeadership) CheckProgress(ctx context.Context) (bool, bool,
 			return false, false, errors.WithStack(err)
 		}
 		return true, false, nil
-	} else if a.isServerRebooted(agencyState, driver.ServerID(m.ID)) {
+	} else if isServerRebooted(a.log, a.action, agencyState, driver.ServerID(m.ID)) {
 		return true, false, nil
 	}
 
@@ -156,32 +155,4 @@ func (a *actionResignLeadership) CheckProgress(ctx context.Context) (bool, bool,
 		return true, false, nil
 	}
 	return false, false, nil
-}
-
-// isServerRebooted returns true when a given server ID was rebooted during resignation of leadership.
-func (a *actionResignLeadership) isServerRebooted(agencyState state.State, serverID driver.ServerID) bool {
-	rebootID, ok := agencyState.GetRebootID(serverID)
-	if !ok {
-		return false
-	}
-
-	v, ok := a.action.Params[actionResignLeadershipRebootID.String()]
-	if !ok {
-		a.log.Warn("missing reboot ID in action's locals")
-		return false
-	}
-
-	r, err := strconv.Atoi(v)
-	if err != nil {
-		a.log.Err(err).Warn("reboot ID '%s' supposed to be a number", v)
-		return false
-	}
-
-	if rebootID <= r {
-		// Server has not been restarted.
-		return false
-	}
-
-	a.log.Warn("resign leadership aborted because rebootID has changed from %d to %d", r, rebootID)
-	return true
 }

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -124,6 +124,18 @@ func (o OptionPairs) Sort() OptionPairs {
 	})
 
 	return o
+}
+
+func (o OptionPairs) AsArgsWithCommand(command string) []string {
+	s := make([]string, len(o)+1)
+
+	s[0] = command
+
+	for id, pair := range o {
+		s[id+1] = pair.String()
+	}
+
+	return s
 }
 
 func (o OptionPairs) AsArgs() []string {

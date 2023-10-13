@@ -89,6 +89,190 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			},
 		},
 		{
+			Name: "Agent Pod with numactl",
+			ArangoDeployment: &api.ArangoDeployment{
+				Spec: api.DeploymentSpec{
+					Image:           util.NewType[string](testImage),
+					Authentication:  noAuthentication,
+					TLS:             noTLS,
+					ImagePullPolicy: util.NewType[core.PullPolicy](core.PullAlways),
+
+					Agents: api.ServerGroupSpec{
+						Numactl: &api.ServerGroupSpecNumactl{
+							Enabled: util.NewType(true),
+						},
+					},
+				},
+			},
+			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
+				deployment.currentObjectStatus = &api.DeploymentStatus{
+					Members: api.DeploymentStatusMembers{
+						Agents: api.MemberStatusList{
+							firstAgentStatus,
+						},
+					},
+					Images: createTestImages(false),
+				}
+				testCase.createTestPodData(deployment, api.ServerGroupAgents, firstAgentStatus)
+			},
+			ExpectedEvent: "member agent is created",
+			ExpectedPod: core.Pod{
+				Spec: core.PodSpec{
+					Volumes: []core.Volume{
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
+					},
+					Containers: []core.Container{
+						{
+							Name:  shared.ServerContainerName,
+							Image: testImage,
+							Command: util.List[string]{api.ServerGroupSpecNumactlPathDefault}.
+								Append(createTestCommandForAgent(firstAgentStatus.ID, false, false, false)...).
+								List(),
+							Ports: createTestPorts(api.ServerGroupAgents),
+							VolumeMounts: []core.VolumeMount{
+								k8sutil.ArangodVolumeMount(),
+							},
+							Resources:       emptyResources,
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName),
+							ImagePullPolicy: core.PullAlways,
+							SecurityContext: securityContext.NewSecurityContext(),
+						},
+					},
+					RestartPolicy:                 core.RestartPolicyNever,
+					TerminationGracePeriodSeconds: &defaultAgentTerminationTimeout,
+					Hostname:                      testDeploymentName + "-" + api.ServerGroupAgentsString + "-" + firstAgentStatus.ID,
+					Subdomain:                     testDeploymentName + "-int",
+					Affinity: k8sutil.CreateAffinity(testDeploymentName, api.ServerGroupAgentsString,
+						false, ""),
+				},
+			},
+		},
+		{
+			Name: "Agent Pod with numactl with opts and override",
+			ArangoDeployment: &api.ArangoDeployment{
+				Spec: api.DeploymentSpec{
+					Image:           util.NewType[string](testImage),
+					Authentication:  noAuthentication,
+					TLS:             noTLS,
+					ImagePullPolicy: util.NewType[core.PullPolicy](core.PullAlways),
+
+					Agents: api.ServerGroupSpec{
+						Numactl: &api.ServerGroupSpecNumactl{
+							Enabled: util.NewType(true),
+							Args: []string{
+								"--example=all",
+							},
+							Path: util.NewType("numactl-random-version"),
+						},
+					},
+				},
+			},
+			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
+				deployment.currentObjectStatus = &api.DeploymentStatus{
+					Members: api.DeploymentStatusMembers{
+						Agents: api.MemberStatusList{
+							firstAgentStatus,
+						},
+					},
+					Images: createTestImages(false),
+				}
+				testCase.createTestPodData(deployment, api.ServerGroupAgents, firstAgentStatus)
+			},
+			ExpectedEvent: "member agent is created",
+			ExpectedPod: core.Pod{
+				Spec: core.PodSpec{
+					Volumes: []core.Volume{
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
+					},
+					Containers: []core.Container{
+						{
+							Name:  shared.ServerContainerName,
+							Image: testImage,
+							Command: util.List[string]{"numactl-random-version", "--example=all"}.
+								Append(createTestCommandForAgent(firstAgentStatus.ID, false, false, false)...).
+								List(),
+							Ports: createTestPorts(api.ServerGroupAgents),
+							VolumeMounts: []core.VolumeMount{
+								k8sutil.ArangodVolumeMount(),
+							},
+							Resources:       emptyResources,
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName),
+							ImagePullPolicy: core.PullAlways,
+							SecurityContext: securityContext.NewSecurityContext(),
+						},
+					},
+					RestartPolicy:                 core.RestartPolicyNever,
+					TerminationGracePeriodSeconds: &defaultAgentTerminationTimeout,
+					Hostname:                      testDeploymentName + "-" + api.ServerGroupAgentsString + "-" + firstAgentStatus.ID,
+					Subdomain:                     testDeploymentName + "-int",
+					Affinity: k8sutil.CreateAffinity(testDeploymentName, api.ServerGroupAgentsString,
+						false, ""),
+				},
+			},
+		},
+		{
+			Name: "Agent Pod with numactl with opts",
+			ArangoDeployment: &api.ArangoDeployment{
+				Spec: api.DeploymentSpec{
+					Image:           util.NewType[string](testImage),
+					Authentication:  noAuthentication,
+					TLS:             noTLS,
+					ImagePullPolicy: util.NewType[core.PullPolicy](core.PullAlways),
+
+					Agents: api.ServerGroupSpec{
+						Numactl: &api.ServerGroupSpecNumactl{
+							Enabled: util.NewType(true),
+							Args: []string{
+								"--example=all",
+							},
+						},
+					},
+				},
+			},
+			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
+				deployment.currentObjectStatus = &api.DeploymentStatus{
+					Members: api.DeploymentStatusMembers{
+						Agents: api.MemberStatusList{
+							firstAgentStatus,
+						},
+					},
+					Images: createTestImages(false),
+				}
+				testCase.createTestPodData(deployment, api.ServerGroupAgents, firstAgentStatus)
+			},
+			ExpectedEvent: "member agent is created",
+			ExpectedPod: core.Pod{
+				Spec: core.PodSpec{
+					Volumes: []core.Volume{
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
+					},
+					Containers: []core.Container{
+						{
+							Name:  shared.ServerContainerName,
+							Image: testImage,
+							Command: util.List[string]{api.ServerGroupSpecNumactlPathDefault, "--example=all"}.
+								Append(createTestCommandForAgent(firstAgentStatus.ID, false, false, false)...).
+								List(),
+							Ports: createTestPorts(api.ServerGroupAgents),
+							VolumeMounts: []core.VolumeMount{
+								k8sutil.ArangodVolumeMount(),
+							},
+							Resources:       emptyResources,
+							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName),
+							ImagePullPolicy: core.PullAlways,
+							SecurityContext: securityContext.NewSecurityContext(),
+						},
+					},
+					RestartPolicy:                 core.RestartPolicyNever,
+					TerminationGracePeriodSeconds: &defaultAgentTerminationTimeout,
+					Hostname:                      testDeploymentName + "-" + api.ServerGroupAgentsString + "-" + firstAgentStatus.ID,
+					Subdomain:                     testDeploymentName + "-int",
+					Affinity: k8sutil.CreateAffinity(testDeploymentName, api.ServerGroupAgentsString,
+						false, ""),
+				},
+			},
+		},
+		{
 			Name: "Agent Pod with image pull policy",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
