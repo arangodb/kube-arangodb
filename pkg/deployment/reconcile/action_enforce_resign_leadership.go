@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,42 +32,31 @@ import (
 )
 
 const (
-	actionResignLeadershipRebootID api.PlanLocalKey = "rebootID"
+	resignLeadershipJobID api.PlanLocalKey = "resignLeadershipJobID"
 )
 
-// newResignLeadershipAction creates a new Action that implements the given
+// newEnforceResignLeadershipAction creates a new Action that implements the given
 // planned ResignLeadership action.
-func newResignLeadershipAction(action api.Action, actionCtx ActionContext) Action {
-	a := &actionResignLeadership{}
+func newEnforceResignLeadershipAction(action api.Action, actionCtx ActionContext) Action {
+	a := &actionEnforceResignLeadership{}
 
 	a.actionImpl = newActionImplDefRef(action, actionCtx)
 
 	return a
 }
 
-// actionResignLeadership implements an ResignLeadershipAction.
-type actionResignLeadership struct {
+// actionEnforceResignLeadership implements an ResignLeadershipAction.
+type actionEnforceResignLeadership struct {
 	actionImpl
 }
 
 // Start performs the start of the ReasignLeadership process on DBServer.
-func (a *actionResignLeadership) Start(ctx context.Context) (bool, error) {
+func (a *actionEnforceResignLeadership) Start(ctx context.Context) (bool, error) {
 	group := a.action.Group
-	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
-	if !ok {
-		a.log.Error("No such member")
-		return true, nil
-	}
 
 	if a.actionCtx.GetSpec().Mode.Get() != api.DeploymentModeCluster {
 		a.log.Debug("Resign only allowed in cluster mode")
 		return true, nil
-	}
-
-	client, err := a.actionCtx.GetMembersState().State().GetDatabaseClient()
-	if err != nil {
-		a.log.Err(err).Error("Unable to get client")
-		return false, errors.WithStack(err)
 	}
 
 	switch group {
@@ -81,30 +70,6 @@ func (a *actionResignLeadership) Start(ctx context.Context) (bool, error) {
 			return true, nil
 		}
 
-		ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-		defer cancel()
-		cluster, err := client.Cluster(ctxChild)
-		if err != nil {
-			a.log.Err(err).Error("Unable to get cluster client")
-			return false, errors.WithStack(err)
-		}
-
-		var jobID string
-		ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-		defer cancel()
-		jobCtx := driver.WithJobIDResponse(ctxChild, &jobID)
-		a.log.Debug("Temporary shutdown, resign leadership")
-		if err := cluster.ResignServer(jobCtx, m.ID); err != nil {
-			a.log.Err(err).Debug("Failed to resign server")
-			return false, errors.WithStack(err)
-		}
-
-		m.CleanoutJobID = jobID
-
-		if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
-			return false, errors.WithStack(err)
-		}
-
 		return false, nil
 	default:
 		return true, nil
@@ -112,10 +77,16 @@ func (a *actionResignLeadership) Start(ctx context.Context) (bool, error) {
 }
 
 // CheckProgress checks if Job is completed.
-func (a *actionResignLeadership) CheckProgress(ctx context.Context) (bool, bool, error) {
+func (a *actionEnforceResignLeadership) CheckProgress(ctx context.Context) (bool, bool, error) {
+	group := a.action.Group
 	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !ok {
 		a.log.Error("No such member")
+		return true, false, nil
+	}
+
+	if group != api.ServerGroupDBServers {
+		// Only DBServers can use ResignLeadership job
 		return true, false, nil
 	}
 
@@ -135,24 +106,63 @@ func (a *actionResignLeadership) CheckProgress(ctx context.Context) (bool, bool,
 		return true, false, nil
 	}
 
-	_, jobStatus := agencyState.Target.GetJob(state.JobID(m.CleanoutJobID))
-	switch jobStatus {
-	case state.JobPhaseFailed:
-		m.CleanoutJobID = ""
-		if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
-			return false, false, errors.WithStack(err)
+	// Lets start resign job if required
+	if j, ok := a.actionCtx.Get(a.action, resignLeadershipJobID); ok && j != "" {
+		_, jobStatus := agencyState.Target.GetJob(state.JobID(m.CleanoutJobID))
+		switch jobStatus {
+		case state.JobPhaseFailed:
+			m.CleanoutJobID = ""
+			if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
+				return false, false, errors.WithStack(err)
+			}
+			a.log.Error("Resign server job failed")
+			return false, false, nil
+		case state.JobPhaseFinished:
+			m.CleanoutJobID = ""
+			if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
+				return false, false, errors.WithStack(err)
+			}
+		default:
+			return false, false, nil
 		}
-		a.log.Error("Resign server job failed")
-		return true, false, nil
-	case state.JobPhaseFinished:
-		m.CleanoutJobID = ""
-		if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
-			return false, false, errors.WithStack(err)
+
+		// Remove key
+		a.actionCtx.Add(resignLeadershipJobID, "", true)
+
+		// Job is Finished, check if we are not a leader anymore
+		if agencyState.PlanLeaderServers().Contains(state.Server(m.ID)) {
+			// We are still a leader!
+			return false, false, nil
 		}
-		return true, false, nil
-	case state.JobPhaseUnknown:
-		a.log.Debug("Job not found, but proceeding")
 		return true, false, nil
 	}
+
+	// Job not in progress, start it
+	client, err := a.actionCtx.GetMembersState().State().GetDatabaseClient()
+	if err != nil {
+		a.log.Err(err).Error("Unable to get client")
+		return false, false, errors.WithStack(err)
+	}
+
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
+	defer cancel()
+	cluster, err := client.Cluster(ctxChild)
+	if err != nil {
+		a.log.Err(err).Error("Unable to get cluster client")
+		return false, false, errors.WithStack(err)
+	}
+
+	var jobID string
+	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
+	defer cancel()
+	jobCtx := driver.WithJobIDResponse(ctxChild, &jobID)
+	a.log.Debug("Temporary shutdown, resign leadership")
+	if err := cluster.ResignServer(jobCtx, m.ID); err != nil {
+		a.log.Err(err).Debug("Failed to resign server")
+		return false, false, errors.WithStack(err)
+	}
+
+	a.actionCtx.Add(resignLeadershipJobID, jobID, true)
+
 	return false, false, nil
 }

@@ -93,6 +93,9 @@ var (
 	_ Action        = &actionEncryptionKeyStatusUpdate{}
 	_ actionFactory = newEncryptionKeyStatusUpdateAction
 
+	_ Action        = &actionEnforceResignLeadership{}
+	_ actionFactory = newEnforceResignLeadershipAction
+
 	_ Action        = &actionIdle{}
 	_ actionFactory = newIdleAction
 
@@ -592,6 +595,20 @@ func init() {
 
 		// Get Action defition
 		function := newEncryptionKeyStatusUpdateAction
+
+		// Wrap action main function
+
+		// Register action
+		registerAction(action, function)
+	}
+
+	// EnforceResignLeadership
+	{
+		// Get Action type
+		action := api.ActionTypeEnforceResignLeadership
+
+		// Get Action defition
+		function := newEnforceResignLeadershipAction
 
 		// Wrap action main function
 
