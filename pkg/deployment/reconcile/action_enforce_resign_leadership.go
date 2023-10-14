@@ -97,10 +97,6 @@ func (a *actionEnforceResignLeadership) CheckProgress(ctx context.Context) (bool
 	} else if agencyState.Supervision.Maintenance.Exists() {
 		a.log.Warn("Maintenance is enabled, skipping action")
 		// We are done, action cannot be handled on maintenance mode
-		m.CleanoutJobID = ""
-		if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
-			return false, false, errors.WithStack(err)
-		}
 		return true, false, nil
 	} else if isServerRebooted(a.log, a.action, agencyState, driver.ServerID(m.ID)) {
 		return true, false, nil
@@ -108,26 +104,23 @@ func (a *actionEnforceResignLeadership) CheckProgress(ctx context.Context) (bool
 
 	// Lets start resign job if required
 	if j, ok := a.actionCtx.Get(a.action, resignLeadershipJobID); ok && j != "" {
-		_, jobStatus := agencyState.Target.GetJob(state.JobID(m.CleanoutJobID))
+		_, jobStatus := agencyState.Target.GetJob(state.JobID(j))
 		switch jobStatus {
 		case state.JobPhaseFailed:
-			m.CleanoutJobID = ""
-			if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
-				return false, false, errors.WithStack(err)
-			}
 			a.log.Error("Resign server job failed")
+			// Remove key
+			a.actionCtx.Add(resignLeadershipJobID, "", true)
 			return false, false, nil
 		case state.JobPhaseFinished:
-			m.CleanoutJobID = ""
-			if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
-				return false, false, errors.WithStack(err)
-			}
+			a.log.Info("Job finished")
+			// Remove key
+			a.actionCtx.Add(resignLeadershipJobID, "", true)
+		case state.JobPhaseUnknown:
+			a.log.Str("status", string(jobStatus)).Error("Resign server job unknown status")
+			return false, false, nil
 		default:
 			return false, false, nil
 		}
-
-		// Remove key
-		a.actionCtx.Add(resignLeadershipJobID, "", true)
 
 		// Job is Finished, check if we are not a leader anymore
 		if agencyState.PlanLeaderServers().Contains(state.Server(m.ID)) {
