@@ -12,6 +12,7 @@
 - (Bugfix) Fix VersionCheck args propagation
 - (Feature) EnforcedResignLeadership action
 - (Maintenance) Make scale_down_candidate annotation obsolete
+- (Bugfix) Fix ResignJob ID propagation
  
 ## [1.2.33](https://github.com/arangodb/kube-arangodb/tree/1.2.33) (2023-09-27)
 - (Maintenance) Bump golang.org/x/net to v0.13.0

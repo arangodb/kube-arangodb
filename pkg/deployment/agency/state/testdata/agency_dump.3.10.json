@@ -1,0 +1,1516 @@
+{
+  "agency": {
+    "arango": {
+      "SystemCollectionsCreated": true,
+      "ClusterUpgradeVersion": 31009,
+      "Bootstrap": "CRDN-ztbhomgn: done",
+      "Sync": {
+        "UserVersion": 2,
+        "ServerStates": {},
+        "LatestID": 10030001,
+        "Problems": {},
+        "HeartbeatIntervalMs": 1000
+      },
+      "Supervision": {
+        "State": {
+          "Timestamp": "2023-10-14T14:28:34Z",
+          "Mode": "Normal"
+        },
+        "Shards": {},
+        "Health": {
+          "CRDN-tl9xhyyw": {
+            "Timestamp": "2023-10-14T14:28:37Z",
+            "SyncStatus": "SERVING",
+            "ShortName": "Coordinator0001",
+            "Status": "GOOD",
+            "LastAckedTime": "2023-10-14T14:28:37Z",
+            "Host": "ip-10-0-101-248.eu-central-1.compute.internal",
+            "Engine": "rocksdb",
+            "Version": "3.10.9",
+            "SyncTime": "2023-10-14T14:28:36Z",
+            "Endpoint": "ssl://cluster-ivikxa-coordinator-tl9xhyyw.cluster-ivikxa-int.e0aa680f-3419-4c72-869c-047b47fd77c6.svc:8529"
+          },
+          "CRDN-ztbhomgn": {
+            "Timestamp": "2023-10-14T14:28:37Z",
+            "SyncStatus": "SERVING",
+            "ShortName": "Coordinator0002",
+            "Status": "GOOD",
+            "LastAckedTime": "2023-10-14T14:28:37Z",
+            "Host": "ip-10-0-100-38.eu-central-1.compute.internal",
+            "Engine": "rocksdb",
+            "Version": "3.10.9",
+            "SyncTime": "2023-10-14T14:28:36Z",
+            "Endpoint": "ssl://cluster-ivikxa-coordinator-ztbhomgn.cluster-ivikxa-int.e0aa680f-3419-4c72-869c-047b47fd77c6.svc:8529"
+          },
+          "PRMR-nm2hk9oh": {
+            "Timestamp": "2023-10-14T14:28:38Z",
+            "SyncStatus": "SERVING",
+            "ShortName": "DBServer0002",
+            "Status": "GOOD",
+            "LastAckedTime": "2023-10-14T14:28:38Z",
+            "Host": "ip-10-0-101-186.eu-central-1.compute.internal",
+            "Engine": "rocksdb",
+            "Version": "3.10.9",
+            "SyncTime": "2023-10-14T14:28:37Z",
+            "Endpoint": "ssl://cluster-ivikxa-dbserver-nm2hk9oh.cluster-ivikxa-int.e0aa680f-3419-4c72-869c-047b47fd77c6.svc:8529"
+          },
+          "CRDN-pkf5bz5s": {
+            "Timestamp": "2023-10-14T14:28:37Z",
+            "SyncStatus": "SERVING",
+            "ShortName": "Coordinator0003",
+            "Status": "GOOD",
+            "LastAckedTime": "2023-10-14T14:28:37Z",
+            "Host": "ip-10-0-102-58.eu-central-1.compute.internal",
+            "Engine": "rocksdb",
+            "Version": "3.10.9",
+            "SyncTime": "2023-10-14T14:28:36Z",
+            "Endpoint": "ssl://cluster-ivikxa-coordinator-pkf5bz5s.cluster-ivikxa-int.e0aa680f-3419-4c72-869c-047b47fd77c6.svc:8529"
+          },
+          "PRMR-txsd4acm": {
+            "Timestamp": "2023-10-14T14:28:38Z",
+            "SyncStatus": "SERVING",
+            "ShortName": "DBServer0003",
+            "Status": "GOOD",
+            "LastAckedTime": "2023-10-14T14:28:38Z",
+            "Host": "ip-10-0-100-189.eu-central-1.compute.internal",
+            "Engine": "rocksdb",
+            "Version": "3.10.9",
+            "SyncTime": "2023-10-14T14:28:37Z",
+            "Endpoint": "ssl://cluster-ivikxa-dbserver-txsd4acm.cluster-ivikxa-int.e0aa680f-3419-4c72-869c-047b47fd77c6.svc:8529"
+          },
+          "PRMR-bdoiz1zq": {
+            "Timestamp": "2023-10-14T14:28:38Z",
+            "SyncStatus": "SERVING",
+            "ShortName": "DBServer0001",
+            "Status": "GOOD",
+            "LastAckedTime": "2023-10-14T14:28:38Z",
+            "Host": "ip-10-0-102-235.eu-central-1.compute.internal",
+            "Engine": "rocksdb",
+            "Version": "3.10.9",
+            "SyncTime": "2023-10-14T14:28:37Z",
+            "Endpoint": "ssl://cluster-ivikxa-dbserver-bdoiz1zq.cluster-ivikxa-int.e0aa680f-3419-4c72-869c-047b47fd77c6.svc:8529"
+          }
+        },
+        "DBServers": {}
+      },
+      "Target": {
+        "ReturnLeadership": {
+          "s10002": {
+            "timeStamp": "2023-10-14T14:32:18Z",
+            "removeIfNotStartedBy": "2023-10-14T14:52:18Z",
+            "rebootId": 1,
+            "moveShard": {
+              "type": "moveShard",
+              "collection": "10001",
+              "database": "_system",
+              "creator": "10041",
+              "remainsFollower": true,
+              "fromServer": "PRMR-bdoiz1zq",
+              "isLeader": true,
+              "jobId": "10041-0",
+              "parentJob": "10041",
+              "timeStarted": "2023-10-14T14:32:16Z",
+              "shard": "s10002",
+              "timeCreated": "2023-10-14T14:32:15Z",
+              "toServer": "PRMR-txsd4acm",
+              "tryUndo": true
+            }
+          }
+        },
+        "LatestDBServerId": 3,
+        "CleanedServers": [],
+        "NumberOfCoordinators": null,
+        "Failed": {},
+        "Lock": "UNLOCKED",
+        "LatestCoordinatorId": 3,
+        "FailedServers": {},
+        "Pending": {},
+        "Finished": {
+          "10041": {
+            "timeStarted": "2023-10-14T14:32:15Z",
+            "timeFinished": "2023-10-14T14:32:19Z",
+            "timeCreated": "2023-10-14T14:32:14Z",
+            "type": "resignLeadership",
+            "jobId": "10041",
+            "server": "PRMR-bdoiz1zq",
+            "creator": "CRDN-ztbhomgn"
+          },
+          "10041-0": {
+            "type": "moveShard",
+            "tryUndo": true,
+            "collection": "10001",
+            "database": "_system",
+            "creator": "10041",
+            "remainsFollower": true,
+            "fromServer": "PRMR-bdoiz1zq",
+            "isLeader": true,
+            "jobId": "10041-0",
+            "parentJob": "10041",
+            "timeStarted": "2023-10-14T14:32:16Z",
+            "shard": "s10002",
+            "timeCreated": "2023-10-14T14:32:15Z",
+            "timeFinished": "2023-10-14T14:32:18Z",
+            "toServer": "PRMR-txsd4acm"
+          }
+        },
+        "ToBeCleanedServers": [],
+        "ToDo": {},
+        "MapUniqueToShortID": {
+          "CRDN-ztbhomgn": {
+            "TransactionID": 2,
+            "ShortName": "Coordinator0002"
+          },
+          "PRMR-nm2hk9oh": {
+            "TransactionID": 2,
+            "ShortName": "DBServer0002"
+          },
+          "CRDN-pkf5bz5s": {
+            "TransactionID": 3,
+            "ShortName": "Coordinator0003"
+          },
+          "PRMR-txsd4acm": {
+            "TransactionID": 3,
+            "ShortName": "DBServer0003"
+          },
+          "PRMR-bdoiz1zq": {
+            "TransactionID": 1,
+            "ShortName": "DBServer0001"
+          },
+          "CRDN-tl9xhyyw": {
+            "TransactionID": 1,
+            "ShortName": "Coordinator0001"
+          }
+        },
+        "NumberOfDBServers": null,
+        "Version": 1
+      },
+      "InitDone": true,
+      "Plan": {
+        "Views": {
+          "_system": {}
+        },
+        "Version": 28,
+        "Lock": "UNLOCKED",
+        "Databases": {
+          "_system": {
+            "name": "_system",
+            "id": "1"
+          }
+        },
+        "Coordinators": {
+          "CRDN-pkf5bz5s": "none",
+          "CRDN-ztbhomgn": "none",
+          "CRDN-tl9xhyyw": "none"
+        },
+        "Metrics": {
+          "ServerId": "CRDN-ztbhomgn",
+          "RebootId": 1
+        },
+        "AsyncReplication": {},
+        "Singles": {},
+        "DBServers": {
+          "PRMR-nm2hk9oh": "none",
+          "PRMR-txsd4acm": "none",
+          "PRMR-bdoiz1zq": "none"
+        },
+        "Collections": {
+          "_system": {
+            "10011": {
+              "writeConcern": 1,
+              "waitForSync": false,
+              "usesRevisionsAsDocumentIds": true,
+              "syncByRevision": true,
+              "shards": {
+                "s10022": [
+                  "PRMR-txsd4acm",
+                  "PRMR-bdoiz1zq"
+                ]
+              },
+              "schema": null,
+              "type": 2,
+              "status": 3,
+              "replicationFactor": 2,
+              "name": "_apps",
+              "cacheEnabled": false,
+              "isSystem": true,
+              "computedValues": null,
+              "shardingStrategy": "hash",
+              "distributeShardsLike": "10001",
+              "internalValidatorType": 0,
+              "deleted": false,
+              "isSmartChild": false,
+              "shardKeys": [
+                "_key"
+              ],
+              "indexes": [
+                {
+                  "id": "0",
+                  "type": "primary",
+                  "name": "primary",
+                  "fields": [
+                    "_key"
+                  ],
+                  "unique": true,
+                  "sparse": false
+                },
+                {
+                  "cacheEnabled": false,
+                  "deduplicate": true,
+                  "estimates": false,
+                  "fields": [
+                    "mount"
+                  ],
+                  "id": "10029",
+                  "inBackground": false,
+                  "name": "idx_1779741457462067201",
+                  "sparse": true,
+                  "type": "hash",
+                  "unique": true
+                }
+              ],
+              "isDisjoint": false,
+              "numberOfShards": 1,
+              "id": "10011",
+              "minReplicationFactor": 1,
+              "statusString": "loaded",
+              "isSmart": false,
+              "keyOptions": {
+                "type": "traditional",
+                "allowUserKeys": true
+              }
+            },
+            "10013": {
+              "writeConcern": 1,
+              "waitForSync": false,
+              "usesRevisionsAsDocumentIds": true,
+              "syncByRevision": true,
+              "shards": {
+                "s10024": [
+                  "PRMR-txsd4acm",
+                  "PRMR-bdoiz1zq"
+                ]
+              },
+              "schema": null,
+              "type": 2,
+              "status": 3,
+              "replicationFactor": 2,
+              "name": "_frontend",
+              "cacheEnabled": false,
+              "isSystem": true,
+              "computedValues": null,
+              "shardingStrategy": "hash",
+              "distributeShardsLike": "10001",
+              "internalValidatorType": 0,
+              "deleted": false,
+              "isSmartChild": false,
+              "shardKeys": [
+                "_key"
+              ],
+              "indexes": [
+                {
+                  "id": "0",
+                  "type": "primary",
+                  "name": "primary",
+                  "fields": [
+                    "_key"
+                  ],
+                  "unique": true,
+                  "sparse": false
+                }
+              ],
+              "isDisjoint": false,
+              "numberOfShards": 1,
+              "id": "10013",
+              "minReplicationFactor": 1,
+              "statusString": "loaded",
+              "isSmart": false,
+              "keyOptions": {
+                "type": "traditional",
+                "allowUserKeys": true
+              }
+            },
+            "10009": {
+              "writeConcern": 1,
+              "waitForSync": false,
+              "usesRevisionsAsDocumentIds": true,
+              "syncByRevision": true,
+              "shards": {
+                "s10020": [
+                  "PRMR-txsd4acm",
+                  "PRMR-bdoiz1zq"
+                ]
+              },
+              "schema": null,
+              "type": 2,
+              "status": 3,
+              "replicationFactor": 2,
+              "name": "_queues",
+              "cacheEnabled": false,
+              "isSystem": true,
+              "computedValues": null,
+              "shardingStrategy": "hash",
+              "distributeShardsLike": "10001",
+              "internalValidatorType": 0,
+              "deleted": false,
+              "isSmartChild": false,
+              "shardKeys": [
+                "_key"
+              ],
+              "indexes": [
+                {
+                  "id": "0",
+                  "type": "primary",
+                  "name": "primary",
+                  "fields": [
+                    "_key"
+                  ],
+                  "unique": true,
+                  "sparse": false
+                }
+              ],
+              "isDisjoint": false,
+              "numberOfShards": 1,
+              "id": "10009",
+              "minReplicationFactor": 1,
+              "statusString": "loaded",
+              "isSmart": false,
+              "keyOptions": {
+                "type": "traditional",
+                "allowUserKeys": true
+              }
+            },
+            "10005": {
+              "writeConcern": 1,
+              "waitForSync": false,
+              "usesRevisionsAsDocumentIds": true,
+              "syncByRevision": true,
+              "shards": {
+                "s10016": [
+                  "PRMR-txsd4acm",
+                  "PRMR-bdoiz1zq"
+                ]
+              },
+              "schema": null,
+              "type": 2,
+              "status": 3,
+              "replicationFactor": 2,
+              "name": "_statistics15",
+              "cacheEnabled": false,
+              "isSystem": true,
+              "computedValues": null,
+              "shardingStrategy": "hash",
+              "distributeShardsLike": "10001",
+              "internalValidatorType": 0,
+              "deleted": false,
+              "isSmartChild": false,
+              "shardKeys": [
+                "_key"
+              ],
+              "indexes": [
+                {
+                  "id": "0",
+                  "type": "primary",
+                  "name": "primary",
+                  "fields": [
+                    "_key"
+                  ],
+                  "unique": true,
+                  "sparse": false
+                },
+                {
+                  "cacheEnabled": false,
+                  "deduplicate": true,
+                  "estimates": false,
+                  "fields": [
+                    "time"
+                  ],
+                  "id": "10027",
+                  "inBackground": false,
+                  "name": "idx_1779741457424318465",
+                  "sparse": false,
+                  "type": "skiplist",
+                  "unique": false
+                }
+              ],
+              "isDisjoint": false,
+              "numberOfShards": 1,
+              "id": "10005",
+              "minReplicationFactor": 1,
+              "statusString": "loaded",
+              "isSmart": false,
+              "keyOptions": {
+                "type": "traditional",
+                "allowUserKeys": true
+              }
+            },
+            "10012": {
+              "writeConcern": 1,
+              "waitForSync": false,
+              "usesRevisionsAsDocumentIds": true,
+              "syncByRevision": true,
+              "shards": {
+                "s10023": [
+                  "PRMR-txsd4acm",
+                  "PRMR-bdoiz1zq"
+                ]
+              },
+              "schema": null,
+              "type": 2,
+              "status": 3,
+              "replicationFactor": 2,
+              "name": "_appbundles",
+              "cacheEnabled": false,
+              "isSystem": true,
+              "computedValues": null,
+              "shardingStrategy": "hash",
+              "distributeShardsLike": "10001",
+              "internalValidatorType": 0,
+              "deleted": false,
+              "isSmartChild": false,
+              "shardKeys": [
+                "_key"
+              ],
+              "indexes": [
+                {
+                  "id": "0",
+                  "type": "primary",
+                  "name": "primary",
+                  "fields": [
+                    "_key"
+                  ],
+                  "unique": true,
+                  "sparse": false
+                }
+              ],
+              "isDisjoint": false,
+              "numberOfShards": 1,
+              "id": "10012",
+              "minReplicationFactor": 1,
+              "statusString": "loaded",
+              "isSmart": false,
+              "keyOptions": {
+                "type": "traditional",
+                "allowUserKeys": true
+              }
+            },
+            "10010": {
+              "writeConcern": 1,
+              "waitForSync": false,
+              "usesRevisionsAsDocumentIds": true,
+              "syncByRevision": true,
+              "shards": {
+                "s10021": [
+                  "PRMR-txsd4acm",
+                  "PRMR-bdoiz1zq"
+                ]
+              },
+              "schema": null,
+              "type": 2,
+              "status": 3,
+              "replicationFactor": 2,
+              "name": "_jobs",
+              "cacheEnabled": false,
+              "isSystem": true,
+              "computedValues": null,
+              "shardingStrategy": "hash",
+              "distributeShardsLike": "10001",
+              "internalValidatorType": 0,
+              "deleted": false,
+              "isSmartChild": false,
+              "shardKeys": [
+                "_key"
+              ],
+              "indexes": [
+                {
+                  "id": "0",
+                  "type": "primary",
+                  "name": "primary",
+                  "fields": [
+                    "_key"
+                  ],
+                  "unique": true,
+                  "sparse": false
+                },
+                {
+                  "cacheEnabled": false,
+                  "deduplicate": true,
+                  "estimates": false,
+                  "fields": [
+                    "queue",
+                    "status",
+                    "delayUntil"
+                  ],
+                  "id": "10030",
+                  "inBackground": false,
+                  "name": "idx_1779741457480941569",
+                  "sparse": false,
+                  "type": "skiplist",
+                  "unique": false
+                },
+                {
+                  "cacheEnabled": false,
+                  "deduplicate": true,
+                  "estimates": false,
+                  "fields": [
+                    "status",
+                    "queue",
+                    "delayUntil"
+                  ],
+                  "id": "10031",
+                  "inBackground": false,
+                  "name": "idx_1779741457498767361",
+                  "sparse": false,
+                  "type": "skiplist",
+                  "unique": false
+                }
+              ],
+              "isDisjoint": false,
+              "numberOfShards": 1,
+              "id": "10010",
+              "minReplicationFactor": 1,
+              "statusString": "loaded",
+              "isSmart": false,
+              "keyOptions": {
+                "type": "traditional",
+                "allowUserKeys": true
+              }
+            },
+            "10004": {
+              "writeConcern": 1,
+              "waitForSync": false,
+              "usesRevisionsAsDocumentIds": true,
+              "syncByRevision": true,
+              "shards": {
+                "s10015": [
+                  "PRMR-txsd4acm",
+                  "PRMR-bdoiz1zq"
+                ]
+              },
+              "schema": null,
+              "type": 2,
+              "status": 3,
+              "replicationFactor": 2,
+              "name": "_statistics",
+              "cacheEnabled": false,
+              "isSystem": true,
+              "computedValues": null,
+              "shardingStrategy": "hash",
+              "distributeShardsLike": "10001",
+              "internalValidatorType": 0,
+              "deleted": false,
+              "isSmartChild": false,
+              "shardKeys": [
+                "_key"
+              ],
+              "indexes": [
+                {
+                  "id": "0",
+                  "type": "primary",
+                  "name": "primary",
+                  "fields": [
+                    "_key"
+                  ],
+                  "unique": true,
+                  "sparse": false
+                },
+                {
+                  "cacheEnabled": false,
+                  "deduplicate": true,
+                  "estimates": false,
+                  "fields": [
+                    "time"
+                  ],
+                  "id": "10026",
+                  "inBackground": false,
+                  "name": "idx_1779741457401249793",
+                  "sparse": false,
+                  "type": "skiplist",
+                  "unique": false
+                }
+              ],
+              "isDisjoint": false,
+              "numberOfShards": 1,
+              "id": "10004",
+              "minReplicationFactor": 1,
+              "statusString": "loaded",
+              "isSmart": false,
+              "keyOptions": {
+                "type": "traditional",
+                "allowUserKeys": true
+              }
+            },
+            "10006": {
+              "writeConcern": 1,
+              "waitForSync": false,
+              "usesRevisionsAsDocumentIds": true,
+              "syncByRevision": true,
+              "shards": {
+                "s10017": [
+                  "PRMR-txsd4acm",
+                  "PRMR-bdoiz1zq"
+                ]
+              },
+              "schema": null,
+              "type": 2,
+              "status": 3,
+              "replicationFactor": 2,
+              "name": "_statisticsRaw",
+              "cacheEnabled": false,
+              "isSystem": true,
+              "computedValues": null,
+              "shardingStrategy": "hash",
+              "distributeShardsLike": "10001",
+              "internalValidatorType": 0,
+              "deleted": false,
+              "isSmartChild": false,
+              "shardKeys": [
+                "_key"
+              ],
+              "indexes": [
+                {
+                  "id": "0",
+                  "type": "primary",
+                  "name": "primary",
+                  "fields": [
+                    "_key"
+                  ],
+                  "unique": true,
+                  "sparse": false
+                },
+                {
+                  "cacheEnabled": false,
+                  "deduplicate": true,
+                  "estimates": false,
+                  "fields": [
+                    "time"
+                  ],
+                  "id": "10028",
+                  "inBackground": false,
+                  "name": "idx_1779741457443192833",
+                  "sparse": false,
+                  "type": "skiplist",
+                  "unique": false
+                }
+              ],
+              "isDisjoint": false,
+              "numberOfShards": 1,
+              "id": "10006",
+              "minReplicationFactor": 1,
+              "statusString": "loaded",
+              "isSmart": false,
+              "keyOptions": {
+                "type": "traditional",
+                "allowUserKeys": true
+              }
+            },
+            "10003": {
+              "writeConcern": 1,
+              "waitForSync": false,
+              "usesRevisionsAsDocumentIds": true,
+              "syncByRevision": true,
+              "shards": {
+                "s10014": [
+                  "PRMR-txsd4acm",
+                  "PRMR-bdoiz1zq"
+                ]
+              },
+              "schema": null,
+              "type": 2,
+              "status": 3,
+              "replicationFactor": 2,
+              "name": "_graphs",
+              "cacheEnabled": false,
+              "isSystem": true,
+              "computedValues": null,
+              "shardingStrategy": "hash",
+              "distributeShardsLike": "10001",
+              "internalValidatorType": 0,
+              "deleted": false,
+              "isSmartChild": false,
+              "shardKeys": [
+                "_key"
+              ],
+              "indexes": [
+                {
+                  "id": "0",
+                  "type": "primary",
+                  "name": "primary",
+                  "fields": [
+                    "_key"
+                  ],
+                  "unique": true,
+                  "sparse": false
+                }
+              ],
+              "isDisjoint": false,
+              "numberOfShards": 1,
+              "id": "10003",
+              "minReplicationFactor": 1,
+              "statusString": "loaded",
+              "isSmart": false,
+              "keyOptions": {
+                "type": "traditional",
+                "allowUserKeys": true
+              }
+            },
+            "10008": {
+              "writeConcern": 1,
+              "waitForSync": false,
+              "usesRevisionsAsDocumentIds": true,
+              "syncByRevision": true,
+              "shards": {
+                "s10019": [
+                  "PRMR-txsd4acm",
+                  "PRMR-bdoiz1zq"
+                ]
+              },
+              "schema": null,
+              "type": 2,
+              "status": 3,
+              "replicationFactor": 2,
+              "name": "_aqlfunctions",
+              "cacheEnabled": false,
+              "isSystem": true,
+              "computedValues": null,
+              "shardingStrategy": "hash",
+              "distributeShardsLike": "10001",
+              "internalValidatorType": 0,
+              "deleted": false,
+              "isSmartChild": false,
+              "shardKeys": [
+                "_key"
+              ],
+              "indexes": [
+                {
+                  "id": "0",
+                  "type": "primary",
+                  "name": "primary",
+                  "fields": [
+                    "_key"
+                  ],
+                  "unique": true,
+                  "sparse": false
+                }
+              ],
+              "isDisjoint": false,
+              "numberOfShards": 1,
+              "id": "10008",
+              "minReplicationFactor": 1,
+              "statusString": "loaded",
+              "isSmart": false,
+              "keyOptions": {
+                "type": "traditional",
+                "allowUserKeys": true
+              }
+            },
+            "10007": {
+              "writeConcern": 1,
+              "waitForSync": false,
+              "usesRevisionsAsDocumentIds": true,
+              "syncByRevision": true,
+              "shards": {
+                "s10018": [
+                  "PRMR-txsd4acm",
+                  "PRMR-bdoiz1zq"
+                ]
+              },
+              "schema": null,
+              "type": 2,
+              "status": 3,
+              "replicationFactor": 2,
+              "name": "_analyzers",
+              "cacheEnabled": false,
+              "isSystem": true,
+              "computedValues": null,
+              "shardingStrategy": "hash",
+              "distributeShardsLike": "10001",
+              "internalValidatorType": 0,
+              "deleted": false,
+              "isSmartChild": false,
+              "shardKeys": [
+                "_key"
+              ],
+              "indexes": [
+                {
+                  "id": "0",
+                  "type": "primary",
+                  "name": "primary",
+                  "fields": [
+                    "_key"
+                  ],
+                  "unique": true,
+                  "sparse": false
+                }
+              ],
+              "isDisjoint": false,
+              "numberOfShards": 1,
+              "id": "10007",
+              "minReplicationFactor": 1,
+              "statusString": "loaded",
+              "isSmart": false,
+              "keyOptions": {
+                "type": "traditional",
+                "allowUserKeys": true
+              }
+            },
+            "10001": {
+              "writeConcern": 1,
+              "waitForSync": false,
+              "usesRevisionsAsDocumentIds": true,
+              "syncByRevision": true,
+              "shards": {
+                "s10002": [
+                  "PRMR-txsd4acm",
+                  "PRMR-bdoiz1zq"
+                ]
+              },
+              "shardingStrategy": "hash",
+              "schema": null,
+              "type": 2,
+              "status": 3,
+              "replicationFactor": 2,
+              "cacheEnabled": false,
+              "isSystem": true,
+              "computedValues": null,
+              "internalValidatorType": 0,
+              "deleted": false,
+              "isSmartChild": false,
+              "shardKeys": [
+                "_key"
+              ],
+              "indexes": [
+                {
+                  "id": "0",
+                  "type": "primary",
+                  "name": "primary",
+                  "fields": [
+                    "_key"
+                  ],
+                  "unique": true,
+                  "sparse": false
+                },
+                {
+                  "cacheEnabled": false,
+                  "deduplicate": true,
+                  "estimates": false,
+                  "fields": [
+                    "user"
+                  ],
+                  "id": "10025",
+                  "inBackground": false,
+                  "name": "idx_1779741457379229697",
+                  "sparse": true,
+                  "type": "hash",
+                  "unique": true
+                }
+              ],
+              "isDisjoint": false,
+              "numberOfShards": 1,
+              "id": "10001",
+              "minReplicationFactor": 1,
+              "statusString": "loaded",
+              "isSmart": false,
+              "name": "_users",
+              "keyOptions": {
+                "type": "traditional",
+                "allowUserKeys": true
+              }
+            }
+          }
+        },
+        "Analyzers": {
+          "_system": {
+            "revision": 0,
+            "buildingRevision": 0
+          }
+        }
+      },
+      "Current": {
+        "FoxxmasterQueueupdate": false,
+        "AsyncReplication": {},
+        "Collections": {
+          "_system": {
+            "10011": {
+              "s10022": {
+                "servers": [
+                  "PRMR-txsd4acm",
+                  "PRMR-bdoiz1zq"
+                ],
+                "indexes": [
+                  {
+                    "fields": [
+                      "_key"
+                    ],
+                    "id": "0",
+                    "name": "primary",
+                    "objectId": "4010042",
+                    "sparse": false,
+                    "type": "primary",
+                    "unique": true
+                  },
+                  {
+                    "cacheEnabled": false,
+                    "deduplicate": true,
+                    "estimates": true,
+                    "fields": [
+                      "mount"
+                    ],
+                    "id": "10029",
+                    "name": "idx_1779741457462067201",
+                    "objectId": "4010164",
+                    "sparse": true,
+                    "type": "hash",
+                    "unique": true
+                  }
+                ],
+                "failoverCandidates": [
+                  "PRMR-txsd4acm",
+                  "PRMR-bdoiz1zq"
+                ],
+                "errorNum": 0,
+                "errorMessage": "",
+                "error": false
+              }
+            },
+            "10013": {
+              "s10024": {
+                "servers": [
+                  "PRMR-txsd4acm",
+                  "PRMR-bdoiz1zq"
+                ],
+                "indexes": [
+                  {
+                    "fields": [
+                      "_key"
+                    ],
+                    "id": "0",
+                    "name": "primary",
+                    "objectId": "4010040",
+                    "sparse": false,
+                    "type": "primary",
+                    "unique": true
+                  }
+                ],
+                "failoverCandidates": [
+                  "PRMR-txsd4acm",
+                  "PRMR-bdoiz1zq"
+                ],
+                "errorNum": 0,
+                "errorMessage": "",
+                "error": false
+              }
+            },
+            "10009": {
+              "s10020": {
+                "servers": [
+                  "PRMR-txsd4acm",
+                  "PRMR-bdoiz1zq"
+                ],
+                "indexes": [
+                  {
+                    "fields": [
+                      "_key"
+                    ],
+                    "id": "0",
+                    "name": "primary",
+                    "objectId": "4010038",
+                    "sparse": false,
+                    "type": "primary",
+                    "unique": true
+                  }
+                ],
+                "failoverCandidates": [
+                  "PRMR-txsd4acm",
+                  "PRMR-bdoiz1zq"
+                ],
+                "errorNum": 0,
+                "errorMessage": "",
+                "error": false
+              }
+            },
+            "10005": {
+              "s10016": {
+                "servers": [
+                  "PRMR-txsd4acm",
+                  "PRMR-bdoiz1zq"
+                ],
+                "indexes": [
+                  {
+                    "fields": [
+                      "_key"
+                    ],
+                    "id": "0",
+                    "name": "primary",
+                    "objectId": "4010036",
+                    "sparse": false,
+                    "type": "primary",
+                    "unique": true
+                  },
+                  {
+                    "cacheEnabled": false,
+                    "deduplicate": true,
+                    "estimates": false,
+                    "fields": [
+                      "time"
+                    ],
+                    "id": "10027",
+                    "name": "idx_1779741457424318465",
+                    "objectId": "4010144",
+                    "sparse": false,
+                    "type": "skiplist",
+                    "unique": false
+                  }
+                ],
+                "failoverCandidates": [
+                  "PRMR-txsd4acm",
+                  "PRMR-bdoiz1zq"
+                ],
+                "errorNum": 0,
+                "errorMessage": "",
+                "error": false
+              }
+            },
+            "10012": {
+              "s10023": {
+                "servers": [
+                  "PRMR-txsd4acm",
+                  "PRMR-bdoiz1zq"
+                ],
+                "indexes": [
+                  {
+                    "fields": [
+                      "_key"
+                    ],
+                    "id": "0",
+                    "name": "primary",
+                    "objectId": "4010034",
+                    "sparse": false,
+                    "type": "primary",
+                    "unique": true
+                  }
+                ],
+                "failoverCandidates": [
+                  "PRMR-txsd4acm",
+                  "PRMR-bdoiz1zq"
+                ],
+                "errorNum": 0,
+                "errorMessage": "",
+                "error": false
+              }
+            },
+            "10010": {
+              "s10021": {
+                "servers": [
+                  "PRMR-txsd4acm",
+                  "PRMR-bdoiz1zq"
+                ],
+                "indexes": [
+                  {
+                    "fields": [
+                      "_key"
+                    ],
+                    "id": "0",
+                    "name": "primary",
+                    "objectId": "4010032",
+                    "sparse": false,
+                    "type": "primary",
+                    "unique": true
+                  },
+                  {
+                    "cacheEnabled": false,
+                    "deduplicate": true,
+                    "estimates": false,
+                    "fields": [
+                      "queue",
+                      "status",
+                      "delayUntil"
+                    ],
+                    "id": "10030",
+                    "name": "idx_1779741457480941569",
+                    "objectId": "4010174",
+                    "sparse": false,
+                    "type": "skiplist",
+                    "unique": false
+                  },
+                  {
+                    "cacheEnabled": false,
+                    "deduplicate": true,
+                    "estimates": false,
+                    "fields": [
+                      "status",
+                      "queue",
+                      "delayUntil"
+                    ],
+                    "id": "10031",
+                    "name": "idx_1779741457498767361",
+                    "objectId": "4010186",
+                    "sparse": false,
+                    "type": "skiplist",
+                    "unique": false
+                  }
+                ],
+                "failoverCandidates": [
+                  "PRMR-txsd4acm",
+                  "PRMR-bdoiz1zq"
+                ],
+                "errorNum": 0,
+                "errorMessage": "",
+                "error": false
+              }
+            },
+            "10004": {
+              "s10015": {
+                "servers": [
+                  "PRMR-txsd4acm",
+                  "PRMR-bdoiz1zq"
+                ],
+                "indexes": [
+                  {
+                    "fields": [
+                      "_key"
+                    ],
+                    "id": "0",
+                    "name": "primary",
+                    "objectId": "4010030",
+                    "sparse": false,
+                    "type": "primary",
+                    "unique": true
+                  },
+                  {
+                    "cacheEnabled": false,
+                    "deduplicate": true,
+                    "estimates": false,
+                    "fields": [
+                      "time"
+                    ],
+                    "id": "10026",
+                    "name": "idx_1779741457401249793",
+                    "objectId": "4010134",
+                    "sparse": false,
+                    "type": "skiplist",
+                    "unique": false
+                  }
+                ],
+                "failoverCandidates": [
+                  "PRMR-txsd4acm",
+                  "PRMR-bdoiz1zq"
+                ],
+                "errorNum": 0,
+                "errorMessage": "",
+                "error": false
+              }
+            },
+            "10006": {
+              "s10017": {
+                "servers": [
+                  "PRMR-txsd4acm",
+                  "PRMR-bdoiz1zq"
+                ],
+                "indexes": [
+                  {
+                    "fields": [
+                      "_key"
+                    ],
+                    "id": "0",
+                    "name": "primary",
+                    "objectId": "4010028",
+                    "sparse": false,
+                    "type": "primary",
+                    "unique": true
+                  },
+                  {
+                    "cacheEnabled": false,
+                    "deduplicate": true,
+                    "estimates": false,
+                    "fields": [
+                      "time"
+                    ],
+                    "id": "10028",
+                    "name": "idx_1779741457443192833",
+                    "objectId": "4010154",
+                    "sparse": false,
+                    "type": "skiplist",
+                    "unique": false
+                  }
+                ],
+                "failoverCandidates": [
+                  "PRMR-txsd4acm",
+                  "PRMR-bdoiz1zq"
+                ],
+                "errorNum": 0,
+                "errorMessage": "",
+                "error": false
+              }
+            },
+            "10003": {
+              "s10014": {
+                "servers": [
+                  "PRMR-txsd4acm",
+                  "PRMR-bdoiz1zq"
+                ],
+                "indexes": [
+                  {
+                    "fields": [
+                      "_key"
+                    ],
+                    "id": "0",
+                    "name": "primary",
+                    "objectId": "4010024",
+                    "sparse": false,
+                    "type": "primary",
+                    "unique": true
+                  }
+                ],
+                "failoverCandidates": [
+                  "PRMR-txsd4acm",
+                  "PRMR-bdoiz1zq"
+                ],
+                "errorNum": 0,
+                "errorMessage": "",
+                "error": false
+              }
+            },
+            "10008": {
+              "s10019": {
+                "servers": [
+                  "PRMR-txsd4acm",
+                  "PRMR-bdoiz1zq"
+                ],
+                "indexes": [
+                  {
+                    "fields": [
+                      "_key"
+                    ],
+                    "id": "0",
+                    "name": "primary",
+                    "objectId": "4010025",
+                    "sparse": false,
+                    "type": "primary",
+                    "unique": true
+                  }
+                ],
+                "failoverCandidates": [
+                  "PRMR-txsd4acm",
+                  "PRMR-bdoiz1zq"
+                ],
+                "errorNum": 0,
+                "errorMessage": "",
+                "error": false
+              }
+            },
+            "10007": {
+              "s10018": {
+                "servers": [
+                  "PRMR-txsd4acm",
+                  "PRMR-bdoiz1zq"
+                ],
+                "indexes": [
+                  {
+                    "fields": [
+                      "_key"
+                    ],
+                    "id": "0",
+                    "name": "primary",
+                    "objectId": "4010026",
+                    "sparse": false,
+                    "type": "primary",
+                    "unique": true
+                  }
+                ],
+                "failoverCandidates": [
+                  "PRMR-txsd4acm",
+                  "PRMR-bdoiz1zq"
+                ],
+                "errorNum": 0,
+                "errorMessage": "",
+                "error": false
+              }
+            },
+            "10001": {
+              "s10002": {
+                "servers": [
+                  "PRMR-txsd4acm",
+                  "PRMR-bdoiz1zq"
+                ],
+                "indexes": [
+                  {
+                    "fields": [
+                      "_key"
+                    ],
+                    "id": "0",
+                    "name": "primary",
+                    "objectId": "4010002",
+                    "sparse": false,
+                    "type": "primary",
+                    "unique": true
+                  },
+                  {
+                    "cacheEnabled": false,
+                    "deduplicate": true,
+                    "estimates": true,
+                    "fields": [
+                      "user"
+                    ],
+                    "id": "10025",
+                    "name": "idx_1779741457379229697",
+                    "objectId": "4010124",
+                    "sparse": true,
+                    "type": "hash",
+                    "unique": true
+                  }
+                ],
+                "failoverCandidates": [
+                  "PRMR-txsd4acm",
+                  "PRMR-bdoiz1zq"
+                ],
+                "errorNum": 0,
+                "errorMessage": "",
+                "error": false
+              }
+            }
+          }
+        },
+        "DBServers": {
+          "PRMR-nm2hk9oh": "none",
+          "PRMR-txsd4acm": "none",
+          "PRMR-bdoiz1zq": "none"
+        },
+        "Singles": {},
+        "Databases": {
+          "_system": {
+            "PRMR-nm2hk9oh": {
+              "id": "1",
+              "errorNum": 0,
+              "name": "_system",
+              "errorMessage": "",
+              "error": false
+            },
+            "PRMR-txsd4acm": {
+              "id": "1",
+              "errorNum": 0,
+              "name": "_system",
+              "errorMessage": "",
+              "error": false
+            },
+            "PRMR-bdoiz1zq": {
+              "id": "1",
+              "errorNum": 0,
+              "name": "_system",
+              "errorMessage": "",
+              "error": false
+            }
+          }
+        },
+        "Lock": "UNLOCKED",
+        "ServersKnown": {
+          "CRDN-ztbhomgn": {
+            "rebootId": 1
+          },
+          "PRMR-nm2hk9oh": {
+            "rebootId": 1
+          },
+          "CRDN-pkf5bz5s": {
+            "rebootId": 1
+          },
+          "PRMR-txsd4acm": {
+            "rebootId": 1
+          },
+          "PRMR-bdoiz1zq": {
+            "rebootId": 1
+          },
+          "CRDN-tl9xhyyw": {
+            "rebootId": 1
+          }
+        },
+        "Coordinators": {
+          "CRDN-pkf5bz5s": "none",
+          "CRDN-ztbhomgn": "none",
+          "CRDN-tl9xhyyw": "none"
+        },
+        "NewServers": {},
+        "ServersRegistered": {
+          "CRDN-ztbhomgn": {
+            "timestamp": "2023-10-14T14:28:33Z",
+            "host": "ip-10-0-100-38.eu-central-1.compute.internal",
+            "versionString": "3.10.9",
+            "extendedNamesDatabases": false,
+            "version": 31009,
+            "numberOfCores": 2,
+            "engine": "rocksdb",
+            "endpoint": "ssl://cluster-ivikxa-coordinator-ztbhomgn.cluster-ivikxa-int.e0aa680f-3419-4c72-869c-047b47fd77c6.svc:8529",
+            "physicalMemory": 2147483648,
+            "advertisedEndpoint": ""
+          },
+          "PRMR-nm2hk9oh": {
+            "timestamp": "2023-10-14T14:28:33Z",
+            "host": "ip-10-0-101-186.eu-central-1.compute.internal",
+            "versionString": "3.10.9",
+            "extendedNamesDatabases": false,
+            "version": 31009,
+            "numberOfCores": 2,
+            "engine": "rocksdb",
+            "endpoint": "ssl://cluster-ivikxa-dbserver-nm2hk9oh.cluster-ivikxa-int.e0aa680f-3419-4c72-869c-047b47fd77c6.svc:8529",
+            "physicalMemory": 2147483648,
+            "advertisedEndpoint": ""
+          },
+          "CRDN-pkf5bz5s": {
+            "timestamp": "2023-10-14T14:28:34Z",
+            "host": "ip-10-0-102-58.eu-central-1.compute.internal",
+            "versionString": "3.10.9",
+            "extendedNamesDatabases": false,
+            "version": 31009,
+            "numberOfCores": 2,
+            "engine": "rocksdb",
+            "endpoint": "ssl://cluster-ivikxa-coordinator-pkf5bz5s.cluster-ivikxa-int.e0aa680f-3419-4c72-869c-047b47fd77c6.svc:8529",
+            "physicalMemory": 2147483648,
+            "advertisedEndpoint": ""
+          },
+          "PRMR-txsd4acm": {
+            "timestamp": "2023-10-14T14:28:34Z",
+            "host": "ip-10-0-100-189.eu-central-1.compute.internal",
+            "versionString": "3.10.9",
+            "extendedNamesDatabases": false,
+            "version": 31009,
+            "numberOfCores": 2,
+            "engine": "rocksdb",
+            "endpoint": "ssl://cluster-ivikxa-dbserver-txsd4acm.cluster-ivikxa-int.e0aa680f-3419-4c72-869c-047b47fd77c6.svc:8529",
+            "physicalMemory": 2147483648,
+            "advertisedEndpoint": ""
+          },
+          "PRMR-bdoiz1zq": {
+            "timestamp": "2023-10-14T14:28:33Z",
+            "host": "ip-10-0-102-235.eu-central-1.compute.internal",
+            "versionString": "3.10.9",
+            "extendedNamesDatabases": false,
+            "version": 31009,
+            "numberOfCores": 2,
+            "engine": "rocksdb",
+            "endpoint": "ssl://cluster-ivikxa-dbserver-bdoiz1zq.cluster-ivikxa-int.e0aa680f-3419-4c72-869c-047b47fd77c6.svc:8529",
+            "physicalMemory": 2147483648,
+            "advertisedEndpoint": ""
+          },
+          "CRDN-tl9xhyyw": {
+            "timestamp": "2023-10-14T14:28:33Z",
+            "host": "ip-10-0-101-248.eu-central-1.compute.internal",
+            "versionString": "3.10.9",
+            "extendedNamesDatabases": false,
+            "version": 31009,
+            "numberOfCores": 2,
+            "engine": "rocksdb",
+            "endpoint": "ssl://cluster-ivikxa-coordinator-tl9xhyyw.cluster-ivikxa-int.e0aa680f-3419-4c72-869c-047b47fd77c6.svc:8529",
+            "physicalMemory": 2147483648,
+            "advertisedEndpoint": ""
+          },
+          "Version": 1
+        },
+        "ShardsCopied": {},
+        "Version": 81,
+        "Foxxmaster": "CRDN-ztbhomgn"
+      },
+      "Cluster": "4c39b846-b8e4-4216-9dfd-3603e6a18d75",
+      "Agency": {
+        "Definition": 1
+      }
+    }
+  }
+}

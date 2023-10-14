@@ -40,6 +40,9 @@ var agencyDump38 []byte
 //go:embed testdata/agency_dump.3.9.json
 var agencyDump39 []byte
 
+//go:embed testdata/agency_dump.3.10.json
+var agencyDump310 []byte
+
 //go:embed testdata/agency_dump.3.9.satellite.json
 var agencyDump39Satellite []byte
 
