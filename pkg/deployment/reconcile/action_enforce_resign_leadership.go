@@ -133,7 +133,7 @@ func (a *actionEnforceResignLeadership) CheckProgress(ctx context.Context) (bool
 				return false, false, nil
 			}
 			// Nothing to do as RF is set to 1
-			a.log.Warn("DBServers is still a leader for shards, but ReplicationFactor is set to 1")
+			a.log.Warn("DBServer is still a leader for shards, but ReplicationFactor is set to 1")
 		}
 		return true, false, nil
 	}
