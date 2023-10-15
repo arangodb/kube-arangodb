@@ -103,18 +103,18 @@ func (a *actionEnforceResignLeadership) CheckProgress(ctx context.Context) (bool
 	}
 
 	// Lets start resign job if required
-	if j, ok := a.actionCtx.Get(a.action, resignLeadershipJobID); ok && j != "" {
+	if j, ok := a.actionCtx.Get(a.action, resignLeadershipJobID); ok && j != "" && j != "N/A" {
 		_, jobStatus := agencyState.Target.GetJob(state.JobID(j))
 		switch jobStatus {
 		case state.JobPhaseFailed:
 			a.log.Error("Resign server job failed")
 			// Remove key
-			a.actionCtx.Add(resignLeadershipJobID, "", true)
+			a.actionCtx.Add(resignLeadershipJobID, "N/A", true)
 			return false, false, nil
 		case state.JobPhaseFinished:
 			a.log.Info("Job finished")
 			// Remove key
-			a.actionCtx.Add(resignLeadershipJobID, "", true)
+			a.actionCtx.Add(resignLeadershipJobID, "N/A", true)
 		case state.JobPhaseUnknown:
 			a.log.Str("status", string(jobStatus)).Error("Resign server job unknown status")
 			return false, false, nil
@@ -122,11 +122,18 @@ func (a *actionEnforceResignLeadership) CheckProgress(ctx context.Context) (bool
 			return false, false, nil
 		}
 
+		a.actionCtx.Add(resignLeadershipJobID, "N/A", true)
+
 		// Job is Finished, check if we are not a leader anymore
 		if agencyState.PlanLeaderServers().Contains(state.Server(m.ID)) {
 			// We are still a leader!
-			a.log.Warn("DBServers is still a leader for shards")
-			return false, false, nil
+			if agencyState.PlanLeaderServersWithFailOver().Contains(state.Server(m.ID)) {
+				// We need to retry
+				a.log.Warn("DBServers is still a leader for shards")
+				return false, false, nil
+			}
+			// Nothing to do as RF is set to 1
+			a.log.Warn("DBServers is still a leader for shards, but ReplicationFactor is set to 1")
 		}
 		return true, false, nil
 	}

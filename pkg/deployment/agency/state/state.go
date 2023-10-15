@@ -238,6 +238,30 @@ func (s State) PlanLeaderServers() Servers {
 	return r
 }
 
+// PlanLeaderServersWithFailOver returns all servers which are part of the plan as a leader and can fail over
+func (s State) PlanLeaderServersWithFailOver() Servers {
+	q := map[Server]bool{}
+
+	for _, db := range s.Plan.Collections {
+		for _, col := range db {
+			for _, shards := range col.Shards {
+				if len(shards) <= 1 {
+					continue
+				}
+				q[shards[0]] = true
+			}
+		}
+	}
+
+	r := make([]Server, 0, len(q))
+
+	for k := range q {
+		r = append(r, k)
+	}
+
+	return r
+}
+
 type CollectionShardDetails []CollectionShardDetail
 
 type CollectionShardDetail struct {
