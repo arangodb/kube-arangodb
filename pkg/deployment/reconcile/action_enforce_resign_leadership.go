@@ -129,7 +129,7 @@ func (a *actionEnforceResignLeadership) CheckProgress(ctx context.Context) (bool
 			// We are still a leader!
 			if agencyState.PlanLeaderServersWithFailOver().Contains(state.Server(m.ID)) {
 				// We need to retry
-				a.log.Warn("DBServers is still a leader for shards")
+				a.log.Warn("DBServer is still a leader for shards")
 				return false, false, nil
 			}
 			// Nothing to do as RF is set to 1
