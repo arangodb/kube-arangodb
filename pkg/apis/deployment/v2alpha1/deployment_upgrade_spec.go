@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,8 +21,11 @@
 package v2alpha1
 
 type DeploymentUpgradeSpec struct {
-	// Flag specify if upgrade should be auto-injected, even if is not required (in case of stuck)
+	// AutoUpgrade flag specifies if upgrade should be auto-injected, even if is not required (in case of stuck)
 	AutoUpgrade bool `json:"autoUpgrade"`
+	// DebugLog flag specifies if containers running upgrade process should print more debugging information.
+	// This applies only to init containers.
+	DebugLog bool `json:"debugLog"`
 }
 
 func (d *DeploymentUpgradeSpec) Get() DeploymentUpgradeSpec {
