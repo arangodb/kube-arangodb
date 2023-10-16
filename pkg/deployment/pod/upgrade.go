@@ -57,3 +57,32 @@ func (u autoUpgrade) Args(i Input) k8sutil.OptionPairs {
 
 	return k8sutil.NewOptionPair(k8sutil.OptionPair{Key: "--database.auto-upgrade", Value: "true"})
 }
+
+func UpgradeDebug() Builder {
+	return upgradeDebug{}
+}
+
+type upgradeDebug struct{}
+
+func (u upgradeDebug) Envs(i Input) []core.EnvVar {
+	return nil
+}
+
+func (u upgradeDebug) Verify(i Input, cachedStatus interfaces.Inspector) error {
+	return nil
+}
+
+func (u upgradeDebug) Volumes(i Input) ([]core.Volume, []core.VolumeMount) {
+	return nil, nil
+}
+
+func (u upgradeDebug) Args(i Input) k8sutil.OptionPairs {
+	pairs := k8sutil.NewOptionPair()
+	if i.Deployment.Upgrade.Get().AutoUpgrade {
+		pairs = append(pairs, k8sutil.OptionPair{
+			Key:   "--log.level",
+			Value: "all=debug",
+		})
+	}
+	return pairs
+}
