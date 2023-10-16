@@ -78,7 +78,7 @@ func (u upgradeDebug) Volumes(i Input) ([]core.Volume, []core.VolumeMount) {
 
 func (u upgradeDebug) Args(i Input) k8sutil.OptionPairs {
 	pairs := k8sutil.NewOptionPair()
-	if i.Deployment.Upgrade.Get().AutoUpgrade {
+	if i.Deployment.Upgrade.Get().DebugLog {
 		pairs = append(pairs, k8sutil.OptionPair{
 			Key:   "--log.level",
 			Value: "all=debug",
