@@ -107,7 +107,7 @@ func (a actionBootstrapSetPassword) setUserPassword(ctx context.Context, user, s
 	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	if u, err := client.User(ctxChild, user); err != nil {
-		if !driver.IsNotFound(err) {
+		if !driver.IsNotFoundGeneral(err) {
 			return "", err
 		}
 

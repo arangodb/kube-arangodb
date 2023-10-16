@@ -3,7 +3,6 @@ module github.com/arangodb/kube-arangodb
 go 1.20
 
 replace (
-	github.com/arangodb/go-driver => github.com/arangodb/go-driver v1.2.1
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring => github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.46.0
 	github.com/prometheus-operator/prometheus-operator/pkg/client => github.com/prometheus-operator/prometheus-operator/pkg/client v0.46.0
 	github.com/stretchr/testify => github.com/stretchr/testify v1.5.1
