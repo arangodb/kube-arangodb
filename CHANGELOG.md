@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.2.34](https://github.com/arangodb/kube-arangodb/tree/1.2.34) (2023-10-16
 - (Bugfix) Fix make manifests-crd-file command
 - (Improvement) Allow tcp:// and ssl:// protocols in endpoints for members
 - (Maintenance) Reorganize package imports / move common code to separate repos
