@@ -144,4 +144,5 @@ spec:
     prometheus.io/scrape_interval: '5s'
 ```
 
-See the [list of exposed ArangoDB metrics](https://www.arangodb.com/docs/stable/http/administration-and-monitoring-metrics.html#list-of-exposed-metrics)
+See the [Metrics HTTP API documentation](https://docs.arangodb.com/stable/develop/http/monitoring/#metrics)
+for the metrics exposed by ArangoDB deployments.
