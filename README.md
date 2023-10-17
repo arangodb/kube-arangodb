@@ -61,7 +61,7 @@ covers individual newer features separately.
 | Feature                                                                              | Operator Version | Introduced | ArangoDB Version | ArangoDB Edition      | State        | Enabled | Flag                                                  | Remarks                                                                            |
 |:-------------------------------------------------------------------------------------|:-----------------|:-----------|:-----------------|:----------------------|:-------------|:--------|:------------------------------------------------------|:-----------------------------------------------------------------------------------|
 | Enforced ResignLeadership                                                            | 1.2.34           | 1.2.34     | >= 3.8.0         | Community, Enterprise | Production   | True    | --deployment.feature.enforced-resign-leadership       | Enforce ResignLeadership and ensure that Leaders are moved from restarted DBServer |
-| Copy resources spec to init containers                                               | 1.2.34           | 1.2.34     | >= 3.8.0         | Community, Enterprise | Production   | True    | --deployment.feature.init-containers-copy-resources   | Copy resources spec to built-in init containers if they are not specified          |
+| Copy resources spec to init containers                                               | 1.2.33           | 1.2.33     | >= 3.8.0         | Community, Enterprise | Production   | True    | --deployment.feature.init-containers-copy-resources   | Copy resources spec to built-in init containers if they are not specified          |
 | [Rebalancer V2](docs/design/features/rebalancer_v2.md)                               | 1.2.31           | 1.2.31     | >= 3.10.0        | Community, Enterprise | Alpha        | False   | --deployment.feature.rebalancer-v2                    | N/A                                                                                |
 | [Secured containers](docs/design/features/secured_containers.md)                     | 1.2.31           | 1.2.31     | >= 3.8.0         | Community, Enterprise | Alpha        | False   | --deployment.feature.secured-containers               | If set to True Operator will run containers in secure mode                         |
 | Version Check V2                                                                     | 1.2.31           | 1.2.31     | >= 3.8.0         | Community, Enterprise | Alpha        | False   | --deployment.feature.upgrade-version-check-V2         | N/A                                                                                |
@@ -149,8 +149,8 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: my-custom-namespace
 resources:
-  - https://github.com/arangodb/kube-arangodb/manifests/kustomize/crd?ref=1.2.33
-  - https://github.com/arangodb/kube-arangodb/manifests/kustomize/deployment?ref=1.2.33
+  - https://github.com/arangodb/kube-arangodb/manifests/kustomize/crd?ref=1.2.34
+  - https://github.com/arangodb/kube-arangodb/manifests/kustomize/deployment?ref=1.2.34
 ```
 
 ##### Enterprise Edition example
@@ -159,8 +159,8 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: my-custom-namespace
 resources:
-  - https://github.com/arangodb/kube-arangodb/manifests/kustomize-enterprise/crd?ref=1.2.33
-  - https://github.com/arangodb/kube-arangodb/manifests/kustomize-enterprise/deployment?ref=1.2.33
+  - https://github.com/arangodb/kube-arangodb/manifests/kustomize-enterprise/crd?ref=1.2.34
+  - https://github.com/arangodb/kube-arangodb/manifests/kustomize-enterprise/deployment?ref=1.2.34
 ```
 
 ### Installation of latest release using Helm
