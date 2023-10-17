@@ -232,7 +232,7 @@ func (ac *arangoClientBackupImpl) Progress(jobID driver.BackupTransferJobID) (Ar
 func (ac *arangoClientBackupImpl) Exists(backupID driver.BackupID) (bool, error) {
 	_, err := ac.Get(backupID)
 	if err != nil {
-		if driver.IsNotFound(err) {
+		if driver.IsNotFoundGeneral(err) {
 			return false, nil
 		}
 

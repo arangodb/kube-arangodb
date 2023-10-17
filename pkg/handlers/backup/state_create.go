@@ -49,7 +49,7 @@ func stateCreateHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.
 
 	backupMeta, err := client.Get(response.ID)
 	if err != nil {
-		if driver.IsNotFound(err) {
+		if driver.IsNotFoundGeneral(err) {
 			return wrapUpdateStatus(backup,
 				updateStatusState(backupApi.ArangoBackupStateFailed,
 					"backup is not present after creation"),
