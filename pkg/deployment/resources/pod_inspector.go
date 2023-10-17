@@ -380,8 +380,9 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 		}
 
 		if k8sutil.IsPodScheduled(pod) {
-			if memberStatus.Conditions.Update(api.ConditionTypeScheduled, true, "Pod is scheduled", "") {
-				log.Str("pod-name", pod.GetName()).Str("node", pod.Spec.NodeName).Debug("Member has been scheduled")
+			msg := fmt.Sprintf("Assigned to node %s", pod.Spec.NodeName)
+			if memberStatus.Conditions.Update(api.ConditionTypeScheduled, true, "Pod is scheduled", msg) {
+				log.Str("pod-name", pod.GetName()).Str("node", pod.Spec.NodeName).Info("Member has been scheduled")
 				updateMemberStatusNeeded = true
 				nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
 			}
