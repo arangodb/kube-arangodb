@@ -54,7 +54,7 @@ func stateDownloadingHandler(h *handler, backup *backupApi.ArangoBackup) (*backu
 
 	details, err := client.Progress(driver.BackupTransferJobID(backup.Status.Progress.JobID))
 	if err != nil {
-		if driver.IsNotFound(err) {
+		if driver.IsNotFoundGeneral(err) {
 			return wrapUpdateStatus(backup,
 				updateStatusState(backupApi.ArangoBackupStateDownloadError,
 					"job with id %s does not exist anymore", backup.Status.Progress.JobID),
@@ -76,7 +76,7 @@ func stateDownloadingHandler(h *handler, backup *backupApi.ArangoBackup) (*backu
 	if details.Completed {
 		backupMeta, err := client.Get(driver.BackupID(backup.Spec.Download.ID))
 		if err != nil {
-			if driver.IsNotFound(err) {
+			if driver.IsNotFoundGeneral(err) {
 				return wrapUpdateStatus(backup,
 					updateStatusState(backupApi.ArangoBackupStateDownloadError,
 						"backup is not present after download"),

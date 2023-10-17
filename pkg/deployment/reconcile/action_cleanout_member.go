@@ -81,7 +81,7 @@ func (a *actionCleanOutMember) Start(ctx context.Context) (bool, error) {
 	var jobID string
 	ctxJobID := driver.WithJobIDResponse(ctxChild, &jobID)
 	if err := cluster.CleanOutServer(ctxJobID, a.action.MemberID); err != nil {
-		if driver.IsNotFound(err) {
+		if driver.IsNotFoundGeneral(err) {
 			// Member not found, it could be that it never connected to the cluster
 			return true, nil
 		}

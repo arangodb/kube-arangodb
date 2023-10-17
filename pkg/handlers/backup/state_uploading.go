@@ -50,7 +50,7 @@ func stateUploadingHandler(h *handler, backup *backupApi.ArangoBackup) (*backupA
 
 	details, err := client.Progress(driver.BackupTransferJobID(backup.Status.Progress.JobID))
 	if err != nil {
-		if driver.IsNotFound(err) {
+		if driver.IsNotFoundGeneral(err) {
 			return wrapUpdateStatus(backup,
 				updateStatusState(backupApi.ArangoBackupStateUploadError,
 					"job with id %s does not exist anymore", backup.Status.Progress.JobID),

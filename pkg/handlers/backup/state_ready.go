@@ -46,7 +46,7 @@ func stateReadyHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.A
 
 	backupMeta, err := client.Get(driver.BackupID(backup.Status.Backup.ID))
 	if err != nil {
-		if driver.IsNotFound(err) {
+		if driver.IsNotFoundGeneral(err) {
 			return wrapUpdateStatus(backup,
 				updateStatusState(backupApi.ArangoBackupStateDeleted, ""),
 				updateStatusAvailable(false),
