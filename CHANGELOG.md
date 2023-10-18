@@ -3,6 +3,7 @@
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Maintenance) Update go-driver to v1.6.0, update IsNotFound() checks
 - (Improvement) Print assigned node name to log and condition message when pod is scheduled
+- (Feature) Add `spec.upgrade.debugLog` option to configure upgrade container logging
 
 ## [1.2.34](https://github.com/arangodb/kube-arangodb/tree/1.2.34) (2023-10-16
 - (Bugfix) Fix make manifests-crd-file command
@@ -18,7 +19,6 @@
 - (Maintenance) Make scale_down_candidate annotation obsolete
 - (Bugfix) Fix ResignJob ID propagation
 - (Bugfix) Allow shards with RF1 in EnforcedResignLeadership action
-- (Feature) Add `spec.upgrade.debugLog` option to configure upgrade container logging
  
 ## [1.2.33](https://github.com/arangodb/kube-arangodb/tree/1.2.33) (2023-09-27)
 - (Maintenance) Bump golang.org/x/net to v0.13.0
