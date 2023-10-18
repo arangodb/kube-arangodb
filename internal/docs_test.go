@@ -141,26 +141,25 @@ func Test_GenerateAPIDocs(t *testing.T) {
 	root := os.Getenv("ROOT")
 	require.NotEmpty(t, root)
 
-	generateDocs(t, map[string]map[string]interface{}{
+	docs := map[string]map[string]interface{}{
 		"ArangoDeployment.V1": {
 			"Spec": api.ArangoDeployment{}.Spec,
 		},
-	},
-		fmt.Sprintf("%s/pkg/apis/deployment/v1", root))
-
-	generateDocs(t, map[string]map[string]interface{}{
 		"ArangoMember.V1": {
 			"Spec": api.ArangoMember{}.Spec,
 		},
-	},
-		fmt.Sprintf("%s/pkg/apis/deployment/v1", root))
+	}
+	resultPaths := generateDocs(t, docs, fmt.Sprintf("%s/pkg/apis/deployment/v1", root))
+
+	generateIndex(t, resultPaths)
 }
 
-func generateDocs(t *testing.T, objects map[string]map[string]interface{}, paths ...string) {
+func generateDocs(t *testing.T, objects map[string]map[string]interface{}, paths ...string) map[string]string {
 	root := os.Getenv("ROOT")
 	require.NotEmpty(t, root)
 
 	docs, fs := getDocs(t, paths...)
+	outPaths := make(map[string]string)
 
 	for object, sections := range objects {
 		t.Run(object, func(t *testing.T) {
@@ -237,7 +236,10 @@ func generateDocs(t *testing.T, objects map[string]map[string]interface{}, paths
 				})
 			}
 
-			out, err := os.OpenFile(path.Join(root, "docs/api", fmt.Sprintf("%s.md", object)), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+			fileName := fmt.Sprintf("%s.md", object)
+			outPaths[object] = fileName
+			outPath := path.Join(root, "docs/api", fmt.Sprintf("%s.md", object))
+			out, err := os.OpenFile(outPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 			require.NoError(t, err)
 
 			defer func() {
@@ -254,6 +256,26 @@ func generateDocs(t *testing.T, objects map[string]map[string]interface{}, paths
 			}
 		})
 	}
+	return outPaths
+}
+
+func generateIndex(t *testing.T, apiDocs map[string]string) {
+	root := os.Getenv("ROOT")
+	require.NotEmpty(t, root)
+	outPath := path.Join(root, "docs/api/README.md")
+
+	out, err := os.OpenFile(outPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+	require.NoError(t, err)
+	defer func() {
+		require.NoError(t, out.Close())
+	}()
+
+	write(t, out, "# Custom Resources API Reference\n\n")
+
+	for name, filePath := range apiDocs {
+		write(t, out, " - [%s](./%s)\n", name, filePath)
+	}
+	write(t, out, "\n")
 }
 
 func write(t *testing.T, out io.Writer, format string, args ...interface{}) {

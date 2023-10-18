@@ -597,7 +597,7 @@ Architecture defines the list of supported architectures.
 First element on the list is marked as default architecture.
 
 Links:
-* [Architecture Change](/docs/design/arch_change.md)
+* [Architecture Change](/docs/how-to/arch_change.md)
 
 Default Value: ['amd64']
 
