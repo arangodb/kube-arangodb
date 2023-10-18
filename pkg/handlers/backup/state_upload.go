@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -43,7 +43,7 @@ func stateUploadHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.
 
 	meta, err := client.Get(driver.BackupID(backup.Status.Backup.ID))
 	if err != nil {
-		if driver.IsNotFound(err) {
+		if driver.IsNotFoundGeneral(err) {
 			return wrapUpdateStatus(backup,
 				updateStatusState(backupApi.ArangoBackupStateDeleted, ""),
 				updateStatusAvailable(false),

@@ -76,8 +76,8 @@ github.com/arangodb-helper/go-helper v0.4.2 h1:Ekf8EtPYQdhlwtqJAEn17i7zbtuavksWa
 github.com/arangodb-helper/go-helper v0.4.2/go.mod h1:RHgEwQTFWdJ9wFDGUCgUZzaz9NLaFUskSsHgOPM5XR4=
 github.com/arangodb/arangosync-client v0.9.0 h1:XhY+5gGGpl9Gk8Prqmdv0SpK3HydFUXvN2CmTIKUxKI=
 github.com/arangodb/arangosync-client v0.9.0/go.mod h1:kU2UaOkv2AeHLAFMEo4Ug3qLbUQVKOuRtkfr6pZqmuk=
-github.com/arangodb/go-driver v1.2.1 h1:HREDHhDmzdIWxHmfkfTESbYUnRjESjPh4WUuXq7FZa8=
-github.com/arangodb/go-driver v1.2.1/go.mod h1:zdDkJJnCj8DAkfbtIjIXnsTrWIiy6VhP3Vy14p+uQeY=
+github.com/arangodb/go-driver v1.6.0 h1:NFWj/idqXZxhFVueihMSI2R9NotNIsgvNfM/xmpekb4=
+github.com/arangodb/go-driver v1.6.0/go.mod h1:HQmdGkvNMVBTE3SIPSQ8T/ZddC6iwNsfMR+dDJQxIsI=
 github.com/arangodb/go-driver/v2 v2.0.0-20230616090327-3b9171814ae4 h1:LpIIPBcrbZ/mVDG2ioZN92Pbgb5HQ2Vnqj/UaQAyN4E=
 github.com/arangodb/go-driver/v2 v2.0.0-20230616090327-3b9171814ae4/go.mod h1:bnCd24JXOgd5rpG8uwSpHPsF6NCcH4m6rKtKh1EJ7Lo=
 github.com/arangodb/go-upgrade-rules v0.0.0-20180809110947-031b4774ff21 h1:+W7D5ttxi/Ygh/39vialtypE23p9KI7P0J2qtoqUV4w=
@@ -134,7 +134,6 @@ github.com/cockroachdb/errors v1.2.4/go.mod h1:rQD95gz6FARkaKkQXUksEje/d9a6wBJoC
 github.com/cockroachdb/logtags v0.0.0-20190617123548-eb05cc24525f/go.mod h1:i/u985jwjWRlyHXQbwatDASoW0RMlZ/3i9yJHE2xLkI=
 github.com/coreos/bbolt v1.3.2/go.mod h1:iRUV2dpdMOn7Bo10OQBFzIJO9kkE559Wcmn+qkEiiKk=
 github.com/coreos/etcd v3.3.13+incompatible/go.mod h1:uF7uidLiAD3TWHmW31ZFd/JWoc32PjwdhPthX9715RE=
-github.com/coreos/go-iptables v0.4.3/go.mod h1:/mVI274lEDI2ns62jHCDnCyBF9Iwsmekav8Dbxlm1MU=
 github.com/coreos/go-oidc v2.1.0+incompatible/go.mod h1:CgnwVTmzoESiwO9qyAFEMiHoZ1nMCKZlZ9V6mm3/LKc=
 github.com/coreos/go-semver v0.3.0/go.mod h1:nnelYz7RCh+5ahJtPPxZlU+153eP4D4r3EedlOD2RNk=
 github.com/coreos/go-systemd v0.0.0-20190321100706-95778dfbb74e/go.mod h1:F5haX7vjVVG0kc13fIWeqUViNPyEJxv/OmvnBo0Yme4=
@@ -309,7 +308,6 @@ github.com/google/pprof v0.0.0-20210601050228-01bbb1931b22/go.mod h1:kpwsk12EmLe
 github.com/google/pprof v0.0.0-20210609004039-a478d1d731e9/go.mod h1:kpwsk12EmLew5upagYY7GY0pfYCcupk39gWOCRROcvE=
 github.com/google/pprof v0.0.0-20210720184732-4bb14d4b1be1/go.mod h1:kpwsk12EmLew5upagYY7GY0pfYCcupk39gWOCRROcvE=
 github.com/google/renameio v0.1.0/go.mod h1:KWCgfxg9yswjAJkECMjeO8J8rahYeXnNhOm40UhjYkI=
-github.com/google/uuid v1.1.1/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/google/uuid v1.1.2/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/google/uuid v1.3.0 h1:t6JiXgmwXMjEs8VusXIJk2BXHsn+wx8BZdTaoZ5fu7I=
 github.com/google/uuid v1.3.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
