@@ -6,13 +6,13 @@ ArangoDB Kubernetes Operator helps to run ArangoDB deployments
 on Kubernetes clusters.
 
 To get started, follow the Installation instructions below and/or
-read the [tutorial](https://www.arangodb.com/docs/stable/deployment-kubernetes-usage.html).
+read the [tutorial](docs/using-the-operator.md).  
 
 ## State
 
 The ArangoDB Kubernetes Operator is Production ready.
 
-[Documentation](https://www.arangodb.com/docs/stable/deployment-kubernetes.html)
+[Documentation](docs/README.md)
 
 ### Limits
 

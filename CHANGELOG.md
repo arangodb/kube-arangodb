@@ -5,6 +5,7 @@
 - (Improvement) Print assigned node name to log and condition message when pod is scheduled
 - (Maintenance) Remove obsolete docs, restructure for better UX, generate index files
 - (Feature) Add `spec.upgrade.debugLog` option to configure upgrade container logging
+- (Documentation) Move documentation from ArangoDB into this repo, update and improve structure
 
 ## [1.2.34](https://github.com/arangodb/kube-arangodb/tree/1.2.34) (2023-10-16)
 - (Bugfix) Fix make manifests-crd-file command
