@@ -662,7 +662,10 @@ func (a *ArangoUpgradeContainer) GetCommand() ([]string, error) {
 		return nil, err
 	}
 
-	upgradeArgs := pod.AutoUpgrade().Args(a.input).Sort().AsArgs()
+	upgradeArgs := append(
+		pod.AutoUpgrade().Args(a.input).Sort().AsArgs(),
+		pod.UpgradeDebug().Args(a.input).Sort().AsArgs()...,
+	)
 
 	return append(args, upgradeArgs...), nil
 }
