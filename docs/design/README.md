@@ -1,4 +1,4 @@
-# ArangoDB operator architecture details
+# ArangoDB operator architecture overview
 
 - [Operator API](./api.md)
 - [Backups](./backup.md)
@@ -9,5 +9,4 @@
 - [Pod eviction and replacement](./pod_eviction_and_replacement.md)
 - [Kubernetes Pod name versus cluster ID](./pod_name_versus_cluster_id.md)
 - [Resources & labels](./resources_and_labels.md)
-- [Scaling](./scaling.md)
 - [Topology awareness](./topology_awareness.md)
