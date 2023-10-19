@@ -51,6 +51,10 @@ func (d DocDefinitions) Render(t *testing.T) []byte {
 
 		write(t, out, "### %s: %s\n\n", el.Path, el.Type)
 
+		if d := el.Important; d != nil {
+			write(t, out, "**Important**: %s\n\n", *d)
+		}
+
 		if len(el.Docs) > 0 {
 			for _, doc := range el.Docs {
 				write(t, out, "%s\n", doc)
@@ -128,6 +132,8 @@ type DocDefinition struct {
 	Docs []string
 
 	Links []string
+
+	Important *string
 
 	Enum []string
 
@@ -213,6 +219,10 @@ func generateDocs(t *testing.T, objects map[string]map[string]interface{}, paths
 
 						if immutable, ok := extract(field, "immutable"); ok {
 							def.Immutable = util.NewType[string](immutable[0])
+						}
+
+						if important, ok := extract(field, "important"); ok {
+							def.Important = util.NewType[string](important[0])
 						}
 
 						if docs, ok := extractNotTags(field); !ok {
