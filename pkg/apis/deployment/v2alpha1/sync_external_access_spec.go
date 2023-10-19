@@ -32,7 +32,20 @@ import (
 // SyncExternalAccessSpec holds configuration for the external access provided for the sync deployment.
 type SyncExternalAccessSpec struct {
 	ExternalAccessSpec
-	MasterEndpoint           []string `json:"masterEndpoint,omitempty"`
+	// MasterEndpoint setting specifies the master endpoint(s) advertised by the ArangoSync SyncMasters.
+	// If not set, this setting defaults to:
+	// - If `spec.sync.externalAccess.loadBalancerIP` is set, it defaults to `https://<load-balancer-ip>:<8629>`.
+	// - Otherwise it defaults to `https://<sync-service-dns-name>:<8629>`.
+	// +doc/type: []string
+	MasterEndpoint []string `json:"masterEndpoint,omitempty"`
+	// AccessPackageSecretNames setting specifies the names of zero of more `Secrets` that will be created by the deployment
+	// operator containing "access packages". An access package contains those `Secrets` that are needed
+	// to access the SyncMasters of this `ArangoDeployment`.
+	// By removing a name from this setting, the corresponding `Secret` is also deleted.
+	// Note that to remove all access packages, leave an empty array in place (`[]`).
+	// Completely removing the setting results in not modifying the list.
+	// +doc/type: []string
+	// +doc/link: See the ArangoDeploymentReplication specification|deployment-replication-resource-reference.md
 	AccessPackageSecretNames []string `json:"accessPackageSecretNames,omitempty"`
 }
 

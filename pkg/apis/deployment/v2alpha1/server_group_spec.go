@@ -68,13 +68,20 @@ const (
 type ServerGroupSpec struct {
 	group ServerGroup `json:"-"`
 
-	// Count holds the requested number of servers
+	// Count setting specifies the number of servers to start for the given group.
+	// For the Agent group, this value must be a positive, odd number.
+	// The default value is `3` for all groups except `single` (there the default is `1`
+	// for `spec.mode: Single` and `2` for `spec.mode: ActiveFailover`).
+	// For the `syncworkers` group, it is highly recommended to use the same number
+	// as for the `dbservers` group.
 	Count *int `json:"count,omitempty"`
-	// MinCount specifies a lower limit for count
+	// MinCount specifies a minimum for the count of servers. If set, a specification is invalid if `count < minCount`.
 	MinCount *int `json:"minCount,omitempty"`
-	// MaxCount specifies a upper limit for count
+	// MaxCount specifies a maximum for the count of servers. If set, a specification is invalid if `count > maxCount`.
 	MaxCount *int `json:"maxCount,omitempty"`
-	// Args holds additional commandline arguments
+	// Args setting specifies additional command-line arguments passed to all servers of this group.
+	// +doc/type: []string
+	// +doc/default: []
 	Args []string `json:"args,omitempty"`
 	// Entrypoint overrides container executable
 	Entrypoint *string `json:"entrypoint,omitempty"`
@@ -99,10 +106,16 @@ type ServerGroupSpec struct {
 	// +doc/link: Docs of the ArangoDB Envs|https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/
 	OverrideDetectedNumberOfCores *bool `json:"overrideDetectedNumberOfCores,omitempty"`
 	// Tolerations specifies the tolerations added to Pods in this group.
+	// By default, suitable tolerations are set for the following keys with the `NoExecute` effect:
+	// - `node.kubernetes.io/not-ready`
+	// - `node.kubernetes.io/unreachable`
+	// - `node.alpha.kubernetes.io/unreachable` (will be removed in future version)
+	// For more information on tolerations, consult the https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
 	// +doc/type: []core.Toleration
 	// +doc/link: Documentation of core.Toleration|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#toleration-v1-core
 	Tolerations []core.Toleration `json:"tolerations,omitempty"`
 	// Annotations specified the annotations added to Pods in this group.
+	// Annotations are merged with `spec.annotations`.
 	Annotations map[string]string `json:"annotations,omitempty"`
 	// AnnotationsIgnoreList list regexp or plain definitions which annotations should be ignored
 	AnnotationsIgnoreList []string `json:"annotationsIgnoreList,omitempty"`
@@ -116,19 +129,38 @@ type ServerGroupSpec struct {
 	LabelsMode *LabelsMode `json:"labelsMode,omitempty"`
 	// Envs allow to specify additional envs in this group.
 	Envs ServerGroupEnvVars `json:"envs,omitempty"`
-	// ServiceAccountName specifies the name of the service account used for Pods in this group.
+	// ServiceAccountName setting specifies the `serviceAccountName` for the `Pods` created
+	// for each server of this group. If empty, it defaults to using the
+	// `default` service account.
+	// Using an alternative `ServiceAccount` is typically used to separate access rights.
+	// The ArangoDB deployments need some very minimal access rights. With the
+	// deployment of the operator, we grant the rights to 'get' all 'pod' resources.
+	// If you are using a different service account, please grant these rights
+	// to that service account.
 	ServiceAccountName *string `json:"serviceAccountName,omitempty"`
-	// NodeSelector speficies a set of selectors for nodes
+	// NodeSelector setting specifies a set of labels to be used as `nodeSelector` for Pods of this node.
+	// +doc/type: map[string]string
+	// +doc/link: Kubernetes documentation|https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 	// Probes specifies additional behaviour for probes
 	Probes *ServerGroupProbesSpec `json:"probes,omitempty"`
 	// PriorityClassName specifies a priority class name
+	// Will be forwarded to the pod spec.
+	// +doc/link: Kubernetes documentation|https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/
 	PriorityClassName string `json:"priorityClassName,omitempty"`
-	// VolumeClaimTemplate specifies a template for volume claims
+	// VolumeClaimTemplate specifies a volumeClaimTemplate used by operator to create to volume claims for pods of this group.
+	// This setting is not available for group `coordinators`, `syncmasters` & `syncworkers`.
+	// The default value describes a volume with `8Gi` storage, `ReadWriteOnce` access mode and volume mode set to `PersistentVolumeFilesystem`.
+	// If this field is not set and `spec.<group>.resources.requests.storage` is set, then a default volume claim
+	// with size as specified by `spec.<group>.resources.requests.storage` will be created. In that case `storage`
+	// and `iops` is not forwarded to the pods resource requirements.
 	// +doc/type: core.PersistentVolumeClaim
 	// +doc/link: Documentation of core.PersistentVolumeClaim|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaim-v1-core
 	VolumeClaimTemplate *core.PersistentVolumeClaim `json:"volumeClaimTemplate,omitempty"`
-	// VolumeResizeMode specified resize mode for pvc
+	// VolumeResizeMode specified resize mode for PVCs and PVs
+	// +doc/enum: runtime|PVC will be resized in Pod runtime (EKS, GKE)
+	// +doc/enum: rotate|Pod will be shutdown and PVC will be resized (AKS)
+	// +doc/default: runtime
 	VolumeResizeMode *PVCResizeMode `json:"pvcResizeMode,omitempty"`
 	// Deprecated: VolumeAllowShrink allows shrink the volume
 	VolumeAllowShrink *bool `json:"volumeAllowShrink,omitempty"`
@@ -151,7 +183,9 @@ type ServerGroupSpec struct {
 	// +doc/type: []core.Container
 	// +doc/link: Documentation of core.Container|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core
 	Sidecars []core.Container `json:"sidecars,omitempty"`
-	// SecurityContext specifies security context for group
+	// SecurityContext specifies additional `securityContext` settings in ArangoDB Pod definitions.
+	// This is similar (but not fully compatible) to k8s SecurityContext definition.
+	// +doc/link: Kubernetes documentation|https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
 	SecurityContext *ServerGroupSpecSecurityContext `json:"securityContext,omitempty"`
 	// Volumes define list of volumes mounted to pod
 	Volumes ServerGroupSpecVolumes `json:"volumes,omitempty"`
@@ -175,7 +209,10 @@ type ServerGroupSpec struct {
 	InternalPortProtocol *ServerGroupPortProtocol `json:"internalPortProtocol,omitempty"`
 	// ExternalPortEnabled if external port should be enabled. If is set to false, ports needs to be exposed via sidecar. Only for ArangoD members
 	ExternalPortEnabled *bool `json:"externalPortEnabled,omitempty"`
-	// AllowMemberRecreation allows to recreate member. Value is used only for Coordinator and DBServer with default to True, for all other groups set to false.
+	// AllowMemberRecreation allows to recreate member.
+	// This setting changes the member recreation logic based on group:
+	// - For Sync Masters, Sync Workers, Coordinator and DB-Servers it determines if a member can be recreated in case of failure (default `true`)
+	// - For Agents and Single this value is hardcoded to `false` and the value provided in spec is ignored.
 	AllowMemberRecreation *bool `json:"allowMemberRecreation,omitempty"`
 	// TerminationGracePeriodSeconds override default TerminationGracePeriodSeconds for pods - via silent rotation
 	TerminationGracePeriodSeconds *int64 `json:"terminationGracePeriodSeconds,omitempty"`
@@ -197,7 +234,8 @@ type ServerGroupSpec struct {
 
 // ServerGroupProbesSpec contains specification for probes for pods of the server group
 type ServerGroupProbesSpec struct {
-	// LivenessProbeDisabled if true livenessProbes are disabled
+	// LivenessProbeDisabled if set to true, the operator does not generate a liveness probe for new pods belonging to this group
+	// +doc/default: false
 	LivenessProbeDisabled *bool `json:"livenessProbeDisabled,omitempty"`
 	// LivenessProbeSpec override liveness probe configuration
 	LivenessProbeSpec *ServerGroupProbeSpec `json:"livenessProbeSpec,omitempty"`
@@ -228,11 +266,27 @@ func (s ServerGroupProbesSpec) GetReadinessProbeDisabled() *bool {
 
 // ServerGroupProbeSpec
 type ServerGroupProbeSpec struct {
+	// InitialDelaySeconds specifies number of seconds after the container has started before liveness or readiness probes are initiated.
+	// Minimum value is 0.
+	// +doc/default: 2
 	InitialDelaySeconds *int32 `json:"initialDelaySeconds,omitempty"`
-	PeriodSeconds       *int32 `json:"periodSeconds,omitempty"`
-	TimeoutSeconds      *int32 `json:"timeoutSeconds,omitempty"`
-	SuccessThreshold    *int32 `json:"successThreshold,omitempty"`
-	FailureThreshold    *int32 `json:"failureThreshold,omitempty"`
+	// PeriodSeconds How often (in seconds) to perform the probe.
+	// Minimum value is 1.
+	// +doc/default: 10
+	PeriodSeconds *int32 `json:"periodSeconds,omitempty"`
+	// TimeoutSeconds specifies number of seconds after which the probe times out
+	// Minimum value is 1.
+	// +doc/default: 2
+	TimeoutSeconds *int32 `json:"timeoutSeconds,omitempty"`
+	// SuccessThreshold Minimum consecutive successes for the probe to be considered successful after having failed.
+	// Minimum value is 1.
+	// +doc/default: 1
+	SuccessThreshold *int32 `json:"successThreshold,omitempty"`
+	// FailureThreshold when a Pod starts and the probe fails, Kubernetes will try failureThreshold times before giving up.
+	// Giving up means restarting the container.
+	// Minimum value is 1.
+	// +doc/default: 3
+	FailureThreshold *int32 `json:"failureThreshold,omitempty"`
 }
 
 // GetInitialDelaySeconds return InitialDelaySeconds valid value. In case if InitialDelaySeconds is nil default is returned.

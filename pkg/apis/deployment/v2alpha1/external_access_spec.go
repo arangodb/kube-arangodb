@@ -39,9 +39,12 @@ type ExternalAccessSpec struct {
 	Type *ExternalAccessType `json:"type,omitempty"`
 
 	// NodePort define optional port used in case of Auto or NodePort type.
+	// This setting is used when `spec.externalAccess.type` is set to `NodePort` or `Auto`.
+	// If you do not specify this setting, a random port will be chosen automatically.
 	NodePort *int `json:"nodePort,omitempty"`
 
 	// LoadBalancerIP define optional IP used to configure a load-balancer on, in case of Auto or LoadBalancer type.
+	// If you do not specify this setting, an IP will be chosen automatically by the load-balancer provisioner.
 	LoadBalancerIP *string `json:"loadBalancerIP,omitempty"`
 
 	// LoadBalancerSourceRanges define LoadBalancerSourceRanges used for LoadBalancer Service type

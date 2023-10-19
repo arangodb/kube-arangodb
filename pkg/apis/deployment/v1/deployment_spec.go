@@ -252,6 +252,13 @@ type DeploymentSpec struct {
 
 	// Architecture defines the list of supported architectures.
 	// First element on the list is marked as default architecture.
+	// Possible values are:
+	// - `amd64`: Use processors with the x86-64 architecture.
+	// - `arm64`: Use processors with the 64-bit ARM architecture.
+	// The setting expects a list of strings, but you should only specify a single
+	// list item for the architecture, except when you want to migrate from one
+	// architecture to the other. The first list item defines the new default
+	// architecture for the deployment that you want to migrate to.
 	// +doc/link: Architecture Change|/docs/how-to/arch_change.md
 	// +doc/type: []string
 	// +doc/default: ['amd64']

@@ -27,6 +27,9 @@ import (
 
 // LicenseSpec holds the license related information
 type LicenseSpec struct {
+	// SecretName setting specifies the name of a kubernetes `Secret` that contains
+	// the license key token used for enterprise images. This value is not used for
+	// the Community Edition.
 	SecretName *string `json:"secretName,omitempty"`
 }
 

@@ -28,6 +28,9 @@ import (
 
 // MonitoringSpec holds monitoring specific configuration settings
 type MonitoringSpec struct {
+	// TokenSecretName setting specifies the name of a kubernetes `Secret` that contains
+	// the bearer token used for accessing all monitoring endpoints of all arangod/arangosync servers.
+	// When not specified, no monitoring token is used.
 	TokenSecretName *string `json:"tokenSecretName,omitempty"`
 }
 
