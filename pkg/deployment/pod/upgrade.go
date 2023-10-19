@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -56,4 +56,33 @@ func (u autoUpgrade) Args(i Input) k8sutil.OptionPairs {
 	}
 
 	return k8sutil.NewOptionPair(k8sutil.OptionPair{Key: "--database.auto-upgrade", Value: "true"})
+}
+
+func UpgradeDebug() Builder {
+	return upgradeDebug{}
+}
+
+type upgradeDebug struct{}
+
+func (u upgradeDebug) Envs(i Input) []core.EnvVar {
+	return nil
+}
+
+func (u upgradeDebug) Verify(i Input, cachedStatus interfaces.Inspector) error {
+	return nil
+}
+
+func (u upgradeDebug) Volumes(i Input) ([]core.Volume, []core.VolumeMount) {
+	return nil, nil
+}
+
+func (u upgradeDebug) Args(i Input) k8sutil.OptionPairs {
+	pairs := k8sutil.NewOptionPair()
+	if i.Deployment.Upgrade.Get().DebugLog {
+		pairs = append(pairs, k8sutil.OptionPair{
+			Key:   "--log.level",
+			Value: "all=debug",
+		})
+	}
+	return pairs
 }

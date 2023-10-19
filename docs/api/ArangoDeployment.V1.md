@@ -4074,7 +4074,18 @@ Must be in format accepted by "tzdata", e.g. `America/New_York` or `Europe/Londo
 
 ### .spec.upgrade.autoUpgrade: bool
 
-Flag specify if upgrade should be auto-injected, even if is not required (in case of stuck)
+AutoUpgrade flag specifies if upgrade should be auto-injected, even if is not required (in case of stuck)
 
-[Code Reference](/pkg/apis/deployment/v1/deployment_upgrade_spec.go#L25)
+Default Value: false
+
+[Code Reference](/pkg/apis/deployment/v1/deployment_upgrade_spec.go#L26)
+
+### .spec.upgrade.debugLog: bool
+
+DebugLog flag specifies if containers running upgrade process should print more debugging information.
+This applies only to init containers.
+
+Default Value: false
+
+[Code Reference](/pkg/apis/deployment/v1/deployment_upgrade_spec.go#L30)
 
