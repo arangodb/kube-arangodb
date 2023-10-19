@@ -214,13 +214,13 @@ Default Value: /usr/bin/numactl
 
 ### .spec.agents.overrideDetectedNumberOfCores: bool
 
-**Important**: Values set by this feature overrides user-provided `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` Container Environment Variable
+**Important**: Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` Container Environment Variable
 
-OverrideDetectedNumberOfCores determines if number of cores should be overrided based on values in resources.
+OverrideDetectedNumberOfCores determines if number of cores should be overridden based on values in resources.
 If is set to true and Container CPU Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` to the value from the Container CPU Limits.
 
 Links:
-* [Docs of the ArangoDB Envs](https://docs.arangodb.com/3.11/components/arangodb-server/environment-variables/)
+* [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
 
 Default Value: true
 
@@ -228,13 +228,13 @@ Default Value: true
 
 ### .spec.agents.overrideDetectedTotalMemory: bool
 
-**Important**: Values set by this feature overrides user-provided `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` Container Environment Variable
+**Important**: Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` Container Environment Variable
 
-OverrideDetectedTotalMemory determines if memory should be overrided based on values in resources.
+OverrideDetectedTotalMemory determines if memory should be overridden based on values in resources.
 If is set to true and Container Memory Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` to the value from the Container Memory Limits.
 
 Links:
-* [Docs of the ArangoDB Envs](https://docs.arangodb.com/3.11/components/arangodb-server/environment-variables/)
+* [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
 
 Default Value: true
 
@@ -881,13 +881,13 @@ Default Value: /usr/bin/numactl
 
 ### .spec.coordinators.overrideDetectedNumberOfCores: bool
 
-**Important**: Values set by this feature overrides user-provided `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` Container Environment Variable
+**Important**: Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` Container Environment Variable
 
-OverrideDetectedNumberOfCores determines if number of cores should be overrided based on values in resources.
+OverrideDetectedNumberOfCores determines if number of cores should be overridden based on values in resources.
 If is set to true and Container CPU Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` to the value from the Container CPU Limits.
 
 Links:
-* [Docs of the ArangoDB Envs](https://docs.arangodb.com/3.11/components/arangodb-server/environment-variables/)
+* [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
 
 Default Value: true
 
@@ -895,13 +895,13 @@ Default Value: true
 
 ### .spec.coordinators.overrideDetectedTotalMemory: bool
 
-**Important**: Values set by this feature overrides user-provided `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` Container Environment Variable
+**Important**: Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` Container Environment Variable
 
-OverrideDetectedTotalMemory determines if memory should be overrided based on values in resources.
+OverrideDetectedTotalMemory determines if memory should be overridden based on values in resources.
 If is set to true and Container Memory Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` to the value from the Container Memory Limits.
 
 Links:
-* [Docs of the ArangoDB Envs](https://docs.arangodb.com/3.11/components/arangodb-server/environment-variables/)
+* [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
 
 Default Value: true
 
@@ -1463,13 +1463,13 @@ Default Value: /usr/bin/numactl
 
 ### .spec.dbservers.overrideDetectedNumberOfCores: bool
 
-**Important**: Values set by this feature overrides user-provided `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` Container Environment Variable
+**Important**: Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` Container Environment Variable
 
-OverrideDetectedNumberOfCores determines if number of cores should be overrided based on values in resources.
+OverrideDetectedNumberOfCores determines if number of cores should be overridden based on values in resources.
 If is set to true and Container CPU Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` to the value from the Container CPU Limits.
 
 Links:
-* [Docs of the ArangoDB Envs](https://docs.arangodb.com/3.11/components/arangodb-server/environment-variables/)
+* [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
 
 Default Value: true
 
@@ -1477,13 +1477,13 @@ Default Value: true
 
 ### .spec.dbservers.overrideDetectedTotalMemory: bool
 
-**Important**: Values set by this feature overrides user-provided `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` Container Environment Variable
+**Important**: Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` Container Environment Variable
 
-OverrideDetectedTotalMemory determines if memory should be overrided based on values in resources.
+OverrideDetectedTotalMemory determines if memory should be overridden based on values in resources.
 If is set to true and Container Memory Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` to the value from the Container Memory Limits.
 
 Links:
-* [Docs of the ArangoDB Envs](https://docs.arangodb.com/3.11/components/arangodb-server/environment-variables/)
+* [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
 
 Default Value: true
 
@@ -2483,13 +2483,13 @@ Default Value: /usr/bin/numactl
 
 ### .spec.single.overrideDetectedNumberOfCores: bool
 
-**Important**: Values set by this feature overrides user-provided `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` Container Environment Variable
+**Important**: Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` Container Environment Variable
 
-OverrideDetectedNumberOfCores determines if number of cores should be overrided based on values in resources.
+OverrideDetectedNumberOfCores determines if number of cores should be overridden based on values in resources.
 If is set to true and Container CPU Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` to the value from the Container CPU Limits.
 
 Links:
-* [Docs of the ArangoDB Envs](https://docs.arangodb.com/3.11/components/arangodb-server/environment-variables/)
+* [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
 
 Default Value: true
 
@@ -2497,13 +2497,13 @@ Default Value: true
 
 ### .spec.single.overrideDetectedTotalMemory: bool
 
-**Important**: Values set by this feature overrides user-provided `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` Container Environment Variable
+**Important**: Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` Container Environment Variable
 
-OverrideDetectedTotalMemory determines if memory should be overrided based on values in resources.
+OverrideDetectedTotalMemory determines if memory should be overridden based on values in resources.
 If is set to true and Container Memory Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` to the value from the Container Memory Limits.
 
 Links:
-* [Docs of the ArangoDB Envs](https://docs.arangodb.com/3.11/components/arangodb-server/environment-variables/)
+* [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
 
 Default Value: true
 
@@ -3167,13 +3167,13 @@ Default Value: /usr/bin/numactl
 
 ### .spec.syncmasters.overrideDetectedNumberOfCores: bool
 
-**Important**: Values set by this feature overrides user-provided `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` Container Environment Variable
+**Important**: Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` Container Environment Variable
 
-OverrideDetectedNumberOfCores determines if number of cores should be overrided based on values in resources.
+OverrideDetectedNumberOfCores determines if number of cores should be overridden based on values in resources.
 If is set to true and Container CPU Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` to the value from the Container CPU Limits.
 
 Links:
-* [Docs of the ArangoDB Envs](https://docs.arangodb.com/3.11/components/arangodb-server/environment-variables/)
+* [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
 
 Default Value: true
 
@@ -3181,13 +3181,13 @@ Default Value: true
 
 ### .spec.syncmasters.overrideDetectedTotalMemory: bool
 
-**Important**: Values set by this feature overrides user-provided `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` Container Environment Variable
+**Important**: Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` Container Environment Variable
 
-OverrideDetectedTotalMemory determines if memory should be overrided based on values in resources.
+OverrideDetectedTotalMemory determines if memory should be overridden based on values in resources.
 If is set to true and Container Memory Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` to the value from the Container Memory Limits.
 
 Links:
-* [Docs of the ArangoDB Envs](https://docs.arangodb.com/3.11/components/arangodb-server/environment-variables/)
+* [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
 
 Default Value: true
 
@@ -3743,13 +3743,13 @@ Default Value: /usr/bin/numactl
 
 ### .spec.syncworkers.overrideDetectedNumberOfCores: bool
 
-**Important**: Values set by this feature overrides user-provided `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` Container Environment Variable
+**Important**: Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` Container Environment Variable
 
-OverrideDetectedNumberOfCores determines if number of cores should be overrided based on values in resources.
+OverrideDetectedNumberOfCores determines if number of cores should be overridden based on values in resources.
 If is set to true and Container CPU Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` to the value from the Container CPU Limits.
 
 Links:
-* [Docs of the ArangoDB Envs](https://docs.arangodb.com/3.11/components/arangodb-server/environment-variables/)
+* [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
 
 Default Value: true
 
@@ -3757,13 +3757,13 @@ Default Value: true
 
 ### .spec.syncworkers.overrideDetectedTotalMemory: bool
 
-**Important**: Values set by this feature overrides user-provided `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` Container Environment Variable
+**Important**: Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` Container Environment Variable
 
-OverrideDetectedTotalMemory determines if memory should be overrided based on values in resources.
+OverrideDetectedTotalMemory determines if memory should be overridden based on values in resources.
 If is set to true and Container Memory Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` to the value from the Container Memory Limits.
 
 Links:
-* [Docs of the ArangoDB Envs](https://docs.arangodb.com/3.11/components/arangodb-server/environment-variables/)
+* [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
 
 Default Value: true
 
