@@ -1,4 +1,4 @@
-# ArangoDeployment Custom Resource
+# ArangoDeployment Custom Resource Overview
 
 [Full CustomResourceDefinition reference ->](./api/ArangoDeployment.V1.md)
 
