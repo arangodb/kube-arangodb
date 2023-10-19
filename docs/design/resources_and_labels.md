@@ -60,17 +60,8 @@ For a full cluster deployment, the following Kubernetes resources are created:
     - `arangodb_deployment: <deployment-name>`
     - `role: dbserver`
 
-- Headless `Service` for accessing the all server, named `<deployment-name>_servers`.
-  The service will provide access all server server from within the k8s cluster.
-  - Labels:
-    - `app=arangodb`
-    - `arangodb_deployment: <deployment-name>`
-  - Selector:
-    - `app=arangodb`
-    - `arangodb_deployment: <deployment-name>`
-
-- `Service` for accessing the all coordinators, named `<deployment-name>`.
-  The service will provide access all coordinators from within the k8s cluster.
+- `Service` for accessing all coordinators, named `<deployment-name>`.
+  The service will provide access to all coordinators from within the k8s cluster.
   - Labels:
     - `app=arangodb`
     - `arangodb_deployment: <deployment-name>`
@@ -86,17 +77,17 @@ For a full cluster with datacenter replication deployment,
 the same resources are created as for a Full cluster, with the following
 additions:
 
-- `Pods` running ArangoSync workers named `<deployment-name>_syncworker_<x>`.
+- `Pods` running ArangoSync workers named `<deployment-name>-syncworker-<x>`.
   - Labels:
     - `app=arangodb`
     - `arangodb_deployment: <deployment-name>`
     - `role: syncworker`
 
-- `Pods` running ArangoSync master named `<deployment-name>_syncmaster_<x>`.
+- `Pods` running ArangoSync master named `<deployment-name>-syncmaster-<x>`.
   - Labels:
     - `app=arangodb`
     - `arangodb_deployment: <deployment-name>`
     - `role: syncmaster`
 
-- `Service` for accessing the sync masters, named `<deployment-name>_sync`.
+- `Service` for accessing the sync masters, named `<deployment-name>-sync`.
   The service will provide access to all syncmaster from within the Kubernetes cluster.

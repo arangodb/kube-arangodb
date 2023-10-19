@@ -4,7 +4,11 @@
 
 ### .spec.deletion_priority: int
 
-[Code Reference](/pkg/apis/deployment/v1/arango_member_spec.go#L44)
+DeletionPriority define Deletion Priority.
+Higher value means higher priority. Default is 0.
+Example: set 1 for Coordinator which should be deleted first and scale down coordinators by one.
+
+[Code Reference](/pkg/apis/deployment/v1/arango_member_spec.go#L47)
 
 ### .spec.deploymentUID: string
 

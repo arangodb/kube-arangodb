@@ -5,7 +5,7 @@
 ### Log level
 
 To adjust logging level of the operator, you can use `operator.args` in chart template value 
-as described in [Additional configuration](./additional_configuration.md).
+as described in [Additional configuration](additional_configuration.md).
 
 For example, to set log level to `INFO` and `DEBUG` for `requests` package, you can use the following value:
 ```yaml

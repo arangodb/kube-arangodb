@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -109,13 +110,14 @@ func GenerateReadme(root string) error {
 		readmeSections["kubernetesVersionsTable"] = section
 	}
 
-	if section, err := GenerateReadmeFeatures(root, true); err != nil {
+	const basePath = ""
+	if section, err := GenerateReadmeFeatures(root, basePath, true); err != nil {
 		return err
 	} else {
 		readmeSections["featuresEnterpriseTable"] = section
 	}
 
-	if section, err := GenerateReadmeFeatures(root, false); err != nil {
+	if section, err := GenerateReadmeFeatures(root, basePath, false); err != nil {
 		return err
 	} else {
 		readmeSections["featuresCommunityTable"] = section
@@ -134,7 +136,7 @@ func GenerateReadme(root string) error {
 	return nil
 }
 
-func GenerateReadmeFeatures(root string, eeOnly bool) (string, error) {
+func GenerateReadmeFeatures(root, basePath string, eeOnly bool) (string, error) {
 	feature := md.NewColumn("Feature", md.ColumnLeftAlign)
 	introduced := md.NewColumn("Introduced", md.ColumnLeftAlign)
 	oVersion := md.NewColumn("Operator Version", md.ColumnLeftAlign)
@@ -204,7 +206,12 @@ func GenerateReadmeFeatures(root string, eeOnly bool) (string, error) {
 		n := f.Name
 
 		if v := util.First(r.Doc, f.Doc); v != nil {
-			n = fmt.Sprintf("[%s](%s)", n, *v)
+			p, err := filepath.Rel(basePath, *v)
+			if err != nil {
+				return "", err
+			}
+
+			n = fmt.Sprintf("[%s](%s)", n, p)
 		}
 
 		if err := t.AddRow(map[md.Column]string{

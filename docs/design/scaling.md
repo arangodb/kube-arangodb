@@ -1,28 +1,21 @@
 # Scaling
 
-The internal process followed by the ArangoDB operator
-when scaling up is as follows:
+Number of running servers is controlled through `spec.<server_group>.count` field.
 
-- Set CR state to `Scaling`
-- Create an additional server Pod
-- Wait until server is ready before continuing
-- Set CR state to `Ready`
+### Scale-up
+When increasing the `count`, operator will try to create missing pods.
+When scaling up make sure that you have enough computational resources / nodes, otherwise pod will stuck in Pending state.
 
-The internal process followed by the ArangoDB operator
-when scaling down a dbserver is as follows:
 
-- Set CR state to `Scaling`
-- Drain the dbserver (TODO fill in procedure)
-- Shutdown the dbserver such that it removes itself from the agency
-- Remove the dbserver Pod
-- Set CR state to `Ready`
+### Scale-down
 
-The internal process followed by the ArangoDB operator
-when scaling down a coordinator is as follows:
+Scaling down is always done 1 server at a time.
 
-- Set CR state to `Scaling`
-- Shutdown the coordinator such that it removes itself from the agency
-- Remove the coordinator Pod
-- Set CR state to `Ready`
+Scale down is possible only when all other actions on ArangoDeployment are finished.
 
-Note: Scaling is always done 1 server at a time.
+The internal process followed by the ArangoDB operator when scaling up is as follows:
+- It chooses a member to be evicted. First it will try to remove unhealthy members or fall-back to the member with highest deletion_priority.  
+- Making an internal calls, it forces the server to resign leadership.
+  In case of DB servers it means that all shard leaders will be switched to other servers.
+- Wait until server is cleaned out from cluster
+- Pod finalized
