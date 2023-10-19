@@ -77,7 +77,7 @@ type MetricsSpec struct {
 	// Enabled if this is set to `true`, the operator runs a sidecar container for
 	// every Agent, DB-Server, Coordinator and Single server.
 	// +doc/default: false
-	// +doc/link: Metrics collection|docs/metrics.md
+	// +doc/link: Metrics collection|/docs/metrics.md
 	Enabled *bool `json:"enabled,omitempty"`
 	// deprecated
 	Image          *string                   `json:"image,omitempty"`

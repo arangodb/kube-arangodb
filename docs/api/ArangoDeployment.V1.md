@@ -789,7 +789,7 @@ There are two magic values for the secret name:
 - `Auto` specifies automatic name generation, which is `<deploymentname>-root-password`.
 
 Links:
-* [How to set root user password](docs/how-to/set_root_user_password.md)
+* [How to set root user password](/docs/how-to/set_root_user_password.md)
 
 [Code Reference](/pkg/apis/deployment/v1/bootstrap.go#L62)
 
@@ -2628,7 +2628,7 @@ Enabled if this is set to `true`, the operator runs a sidecar container for
 every Agent, DB-Server, Coordinator and Single server.
 
 Links:
-* [Metrics collection](docs/metrics.md)
+* [Metrics collection](/docs/metrics.md)
 
 Default Value: false
 

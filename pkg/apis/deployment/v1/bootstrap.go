@@ -58,7 +58,7 @@ type BootstrapSpec struct {
 	// - `None` specifies no action. This disables root password randomization. This is the default value. (Thus the root password is empty - not recommended)
 	// - `Auto` specifies automatic name generation, which is `<deploymentname>-root-password`.
 	// +doc/type: map[string]string
-	// +doc/link: How to set root user password|docs/how-to/set_root_user_password.md
+	// +doc/link: How to set root user password|/docs/how-to/set_root_user_password.md
 	PasswordSecretNames PasswordSecretNameList `json:"passwordSecretNames,omitempty"`
 }
 
