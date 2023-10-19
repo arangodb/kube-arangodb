@@ -86,9 +86,17 @@ type ServerGroupSpec struct {
 	// +doc/type: core.ResourceRequirements
 	// +doc/link: Documentation of core.ResourceRequirements|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core
 	Resources core.ResourceRequirements `json:"resources,omitempty"`
-	// OverrideDetectedTotalMemory determines if memory should be overrided based on values in resources.
+	// OverrideDetectedTotalMemory determines if memory should be overridden based on values in resources.
+	// If is set to true and Container Memory Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` to the value from the Container Memory Limits.
+	// +doc/important: Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` Container Environment Variable
+	// +doc/default: true
+	// +doc/link: Docs of the ArangoDB Envs|https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/
 	OverrideDetectedTotalMemory *bool `json:"overrideDetectedTotalMemory,omitempty"`
-	// OverrideDetectedNumberOfCores determines if number of cores should be overrided based on values in resources.
+	// OverrideDetectedNumberOfCores determines if number of cores should be overridden based on values in resources.
+	// If is set to true and Container CPU Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` to the value from the Container CPU Limits.
+	// +doc/important: Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` Container Environment Variable
+	// +doc/default: true
+	// +doc/link: Docs of the ArangoDB Envs|https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/
 	OverrideDetectedNumberOfCores *bool `json:"overrideDetectedNumberOfCores,omitempty"`
 	// Tolerations specifies the tolerations added to Pods in this group.
 	// +doc/type: []core.Toleration
