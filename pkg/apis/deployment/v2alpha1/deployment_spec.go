@@ -252,7 +252,7 @@ type DeploymentSpec struct {
 
 	// Architecture defines the list of supported architectures.
 	// First element on the list is marked as default architecture.
-	// +doc/link: Architecture Change|/docs/design/arch_change.md
+	// +doc/link: Architecture Change|/docs/how-to/arch_change.md
 	// +doc/type: []string
 	// +doc/default: ['amd64']
 	Architecture ArangoDeploymentArchitecture `json:"architecture,omitempty"`
