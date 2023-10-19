@@ -1,10 +1,8 @@
-# Rotation
-
-## ArangoDeployment
+# How to rotate Pod
 
 Rotation of ArangoDeployment Pods can be triggered by Pod deletion or by annotation (safe way).
 
-Using annotation Pods gonna be rotated one-by-one which will keep cluster alive.
+Using annotation is preferred way to rotate pods while keeping cluster in health state.
 
 Key: `deployment.arangodb.com/rotate`
 Value: `true`

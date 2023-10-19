@@ -15,7 +15,7 @@ Change Default settings of:
 
 ## Dependencies
 
-- [Operator Ephemeral Volumes](./ephemeral_volumes.md) should be Enabled and Supported. 
+- [Operator Ephemeral Volumes](ephemeral_volumes.md) should be Enabled and Supported. 
 
 ## How to use
 

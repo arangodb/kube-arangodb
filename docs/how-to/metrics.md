@@ -1,10 +1,10 @@
-# Metrics
+# Metrics collection
 
 Operator provides metrics of its operations in a format supported by [Prometheus](https://prometheus.io/).
 
 The metrics are exposed through HTTPS on port `8528` under path `/metrics`.
 
-For a full list of available metrics, see [here](./../generated/metrics/README.md).
+For a full list of available metrics, see [here](../generated/metrics/README.md).
 
 #### Contents
 - [Integration with standard Prometheus installation (no TLS)](#Integration-with-standard-Prometheus-installation-no-TLS)
