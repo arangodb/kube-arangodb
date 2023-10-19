@@ -22,9 +22,11 @@ package v2alpha1
 
 type DeploymentUpgradeSpec struct {
 	// AutoUpgrade flag specifies if upgrade should be auto-injected, even if is not required (in case of stuck)
+	// +doc/default: false
 	AutoUpgrade bool `json:"autoUpgrade"`
 	// DebugLog flag specifies if containers running upgrade process should print more debugging information.
 	// This applies only to init containers.
+	// +doc/default: false
 	DebugLog bool `json:"debugLog"`
 }
 
