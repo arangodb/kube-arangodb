@@ -38,7 +38,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
@@ -147,24 +148,39 @@ func Test_GenerateAPIDocs(t *testing.T) {
 	root := os.Getenv("ROOT")
 	require.NotEmpty(t, root)
 
-	docs := map[string]map[string]interface{}{
-		"ArangoDeployment.V1": {
-			"Spec": api.ArangoDeployment{}.Spec,
+	input := map[string]map[string]map[string]interface{}{
+		fmt.Sprintf("%s/pkg/apis/deployment/v1", root): {
+			"ArangoDeployment.V1": {
+				"Spec": deploymentApi.ArangoDeployment{}.Spec,
+			},
+			"ArangoMember.V1": {
+				"Spec": deploymentApi.ArangoMember{}.Spec,
+			},
 		},
-		"ArangoMember.V1": {
-			"Spec": api.ArangoMember{}.Spec,
+		fmt.Sprintf("%s/pkg/apis/backup/v1", root): {
+			"ArangoBackup.V1": {
+				"Spec":   backupApi.ArangoBackup{}.Spec,
+				"Status": backupApi.ArangoBackup{}.Status,
+			},
+			"ArangoBackupPolicy.V1": {
+				"Spec":   backupApi.ArangoBackupPolicy{}.Spec,
+				"Status": backupApi.ArangoBackupPolicy{}.Status,
+			},
 		},
 	}
-	resultPaths := generateDocs(t, docs, fmt.Sprintf("%s/pkg/apis/deployment/v1", root))
 
+	resultPaths := make(map[string]string)
+	for apiDir, docs := range input {
+		astFields, fileSets := parseSourceFiles(t, apiDir)
+		util.CopyMap(resultPaths, generateDocs(t, docs, astFields, fileSets))
+	}
 	generateIndex(t, resultPaths)
 }
 
-func generateDocs(t *testing.T, objects map[string]map[string]interface{}, paths ...string) map[string]string {
+func generateDocs(t *testing.T, objects map[string]map[string]interface{}, docs map[string]*ast.Field, fs *token.FileSet) map[string]string {
 	root := os.Getenv("ROOT")
 	require.NotEmpty(t, root)
 
-	docs, fs := getDocs(t, paths...)
 	outPaths := make(map[string]string)
 
 	for object, sections := range objects {
@@ -258,12 +274,12 @@ func generateDocs(t *testing.T, objects map[string]map[string]interface{}, paths
 
 			write(t, out, "# API Reference for %s\n\n", strings.ReplaceAll(object, ".", " "))
 
-			for name, section := range renderSections {
+			util.IterateSorted(renderSections, func(name string, section []byte) {
 				write(t, out, "## %s\n\n", name)
 
 				_, err = out.Write(section)
 				require.NoError(t, err)
-			}
+			})
 		})
 	}
 	return outPaths
@@ -282,9 +298,9 @@ func generateIndex(t *testing.T, apiDocs map[string]string) {
 
 	write(t, out, "# Custom Resources API Reference\n\n")
 
-	for name, filePath := range apiDocs {
+	util.IterateSorted(apiDocs, func(name string, filePath string) {
 		write(t, out, " - [%s](./%s)\n", name, filePath)
-	}
+	})
 	write(t, out, "\n")
 }
 
@@ -359,7 +375,7 @@ func iterateOverObjectDirect(t *testing.T, docs map[string]*ast.Field, name stri
 
 			doc, ok := docs[docName]
 			if !ok && !f.Anonymous {
-				require.True(t, ok, docName, f.Name)
+				require.True(t, ok, "field %s was not parsed from source", docName)
 			}
 
 			if !f.Anonymous {
@@ -391,7 +407,7 @@ func iterateOverObjectDirect(t *testing.T, docs map[string]*ast.Field, name stri
 			r[k] = v
 		}
 	default:
-		require.Fail(t, object.String())
+		require.Failf(t, "unsupported type", "%s for %s at %s", object.String(), name, path)
 	}
 
 	return r
@@ -437,7 +453,11 @@ func extractNotTags(n *ast.Field) ([]string, bool) {
 
 func isSimpleType(obj reflect.Type) (string, bool) {
 	switch obj.Kind() {
-	case reflect.String, reflect.Int64, reflect.Bool, reflect.Int, reflect.Uint16, reflect.Int32:
+	case reflect.String,
+		reflect.Bool,
+		reflect.Int, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint16, reflect.Uint64,
+		reflect.Float32:
 		return obj.Kind().String(), true
 	}
 
@@ -458,7 +478,7 @@ func extractTag(tag string) (string, bool) {
 	return parts[0], false
 }
 
-func getDocs(t *testing.T, paths ...string) (map[string]*ast.Field, *token.FileSet) {
+func parseSourceFiles(t *testing.T, paths ...string) (map[string]*ast.Field, *token.FileSet) {
 	d, fs := parseMultipleDirs(t, parser.ParseComments, paths...)
 
 	r := map[string]*ast.Field{}
@@ -513,8 +533,7 @@ func parseMultipleDirs(t *testing.T, mode parser.Mode, dirs ...string) (map[stri
 		require.NoError(t, err)
 
 		for k, v := range d {
-			_, ok := r[k]
-			require.False(t, ok)
+			require.NotContains(t, r, k)
 			r[k] = v
 		}
 	}

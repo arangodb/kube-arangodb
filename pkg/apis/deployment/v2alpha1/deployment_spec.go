@@ -67,7 +67,7 @@ type DeploymentSpec struct {
 	// StorageEngine specifies the type of storage engine used for all servers in the cluster.
 	// +doc/enum: RocksDB|To use the RocksDB storage engine.
 	// +doc/enum: MMFiles|To use the MMFiles storage engine. Deprecated.
-	// This setting cannot be changed after the cluster has been created.
+	// +doc/immutable: This setting cannot be changed after the cluster has been created.
 	// +doc/default: RocksDB
 	StorageEngine *StorageEngine `json:"storageEngine,omitempty"`
 
