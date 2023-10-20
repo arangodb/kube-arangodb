@@ -7,6 +7,7 @@
 - (Feature) Add `spec.upgrade.debugLog` option to configure upgrade container logging
 - (Documentation) Move documentation from ArangoDB into this repo, update and improve structure
 - (Documentation) Update ArangoDeployment CR auto-generated docs
+- (Feature) Member Memory Reservation
 
 ## [1.2.34](https://github.com/arangodb/kube-arangodb/tree/1.2.34) (2023-10-16)
 - (Bugfix) Fix make manifests-crd-file command

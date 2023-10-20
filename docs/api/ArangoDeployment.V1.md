@@ -9,7 +9,7 @@ Affinity specified additional affinity settings in ArangoDB Pod definitions
 Links:
 * [Documentation of core.PodAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podaffinity-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L174)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L180)
 
 ### .spec.agents.allowMemberRecreation: bool
 
@@ -18,26 +18,26 @@ This setting changes the member recreation logic based on group:
 - For Sync Masters, Sync Workers, Coordinator and DB-Servers it determines if a member can be recreated in case of failure (default `true`)
 - For Agents and Single this value is hardcoded to `false` and the value provided in spec is ignored.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L216)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
 
 ### .spec.agents.annotations: map[string]string
 
 Annotations specified the annotations added to Pods in this group.
 Annotations are merged with `spec.annotations`.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L119)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L125)
 
 ### .spec.agents.annotationsIgnoreList: []string
 
 AnnotationsIgnoreList list regexp or plain definitions which annotations should be ignored
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L121)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L127)
 
 ### .spec.agents.annotationsMode: string
 
 AnnotationsMode Define annotations mode which should be use while overriding annotations
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L123)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L129)
 
 ### .spec.agents.antiAffinity: core.PodAntiAffinity
 
@@ -46,7 +46,7 @@ AntiAffinity specified additional antiAffinity settings in ArangoDB Pod definiti
 Links:
 * [Documentation of core.Pod.AntiAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podantiaffinity-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L170)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L176)
 
 ### .spec.agents.args: []string
 
@@ -103,19 +103,19 @@ Links:
 
 ExporterPort define Port used by exporter
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L229)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L235)
 
 ### .spec.agents.extendedRotationCheck: bool
 
 ExtendedRotationCheck extend checks for rotation
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L199)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L205)
 
 ### .spec.agents.externalPortEnabled: bool
 
 ExternalPortEnabled if external port should be enabled. If is set to false, ports needs to be exposed via sidecar. Only for ArangoD members
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L211)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L217)
 
 ### .spec.agents.indexMethod: string
 
@@ -125,7 +125,7 @@ Possible Values:
 * random (default) - Pick random ID for member. Enforced on the Community Operator.
 * ordered - Use sequential number as Member ID, starting from 0. Enterprise Operator required.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L228)
 
 ### .spec.agents.initContainers.containers: []core.Container
 
@@ -146,37 +146,50 @@ Mode keep container replace mode
 
 InternalPort define port used in internal communication, can be accessed over localhost via sidecar. Only for ArangoD members
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L207)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L213)
 
 ### .spec.agents.internalPortProtocol: string
 
 InternalPortProtocol define protocol of port used in internal communication, can be accessed over localhost via sidecar. Only for ArangoD members
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L209)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L215)
 
 ### .spec.agents.labels: map[string]string
 
 Labels specified the labels added to Pods in this group.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L125)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L131)
 
 ### .spec.agents.labelsIgnoreList: []string
 
 LabelsIgnoreList list regexp or plain definitions which labels should be ignored
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L127)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L133)
 
 ### .spec.agents.labelsMode: string
 
 LabelsMode Define labels mode which should be use while overriding labels
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L129)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L135)
 
 ### .spec.agents.maxCount: int
 
 MaxCount specifies a maximum for the count of servers. If set, a specification is invalid if `count > maxCount`.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L81)
+
+### .spec.agents.memoryReservation: int64
+
+MemoryReservation determines system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.
+If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by specified value in percents.
+Accepted Range <0, 50>. If value is outside accepted range, it is adjusted to the closest value.
+
+Links:
+* [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+
+Default Value: 0
+
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L107)
 
 ### .spec.agents.minCount: int
 
@@ -191,7 +204,7 @@ NodeAffinity specified additional nodeAffinity settings in ArangoDB Pod definiti
 Links:
 * [Documentation of code.NodeAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#nodeaffinity-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L178)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L184)
 
 ### .spec.agents.nodeSelector: map[string]string
 
@@ -200,7 +213,7 @@ NodeSelector setting specifies a set of labels to be used as `nodeSelector` for 
 Links:
 * [Kubernetes documentation](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L144)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L150)
 
 ### .spec.agents.numactl.args: []string
 
@@ -238,7 +251,7 @@ Links:
 
 Default Value: true
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L107)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L113)
 
 ### .spec.agents.overrideDetectedTotalMemory: bool
 
@@ -266,7 +279,7 @@ Default Value: true
 
 Port define Port used by member
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L227)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L233)
 
 ### .spec.agents.priorityClassName: string
 
@@ -276,7 +289,7 @@ Will be forwarded to the pod spec.
 Links:
 * [Kubernetes documentation](https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L150)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L156)
 
 ### .spec.agents.probes.livenessProbeDisabled: bool
 
@@ -284,7 +297,7 @@ LivenessProbeDisabled if set to true, the operator does not generate a liveness 
 
 Default Value: false
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L239)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L245)
 
 ### .spec.agents.probes.livenessProbeSpec.failureThreshold: int32
 
@@ -294,7 +307,7 @@ Minimum value is 1.
 
 Default Value: 3
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L289)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L295)
 
 ### .spec.agents.probes.livenessProbeSpec.initialDelaySeconds: int32
 
@@ -303,7 +316,7 @@ Minimum value is 0.
 
 Default Value: 2
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L272)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L278)
 
 ### .spec.agents.probes.livenessProbeSpec.periodSeconds: int32
 
@@ -312,7 +325,7 @@ Minimum value is 1.
 
 Default Value: 10
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L276)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L282)
 
 ### .spec.agents.probes.livenessProbeSpec.successThreshold: int32
 
@@ -321,7 +334,7 @@ Minimum value is 1.
 
 Default Value: 1
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L284)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L290)
 
 ### .spec.agents.probes.livenessProbeSpec.timeoutSeconds: int32
 
@@ -330,20 +343,20 @@ Minimum value is 1.
 
 Default Value: 2
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L280)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L286)
 
 ### .spec.agents.probes.ReadinessProbeDisabled: bool
 
 OldReadinessProbeDisabled if true readinessProbes are disabled
 Deprecated: This field is deprecated, keept only for backward compatibility.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L246)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L252)
 
 ### .spec.agents.probes.readinessProbeDisabled: bool
 
 ReadinessProbeDisabled override flag for probe disabled in good manner (lowercase) with backward compatibility
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L248)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L254)
 
 ### .spec.agents.probes.readinessProbeSpec.failureThreshold: int32
 
@@ -353,7 +366,7 @@ Minimum value is 1.
 
 Default Value: 3
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L289)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L295)
 
 ### .spec.agents.probes.readinessProbeSpec.initialDelaySeconds: int32
 
@@ -362,7 +375,7 @@ Minimum value is 0.
 
 Default Value: 2
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L272)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L278)
 
 ### .spec.agents.probes.readinessProbeSpec.periodSeconds: int32
 
@@ -371,7 +384,7 @@ Minimum value is 1.
 
 Default Value: 10
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L276)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L282)
 
 ### .spec.agents.probes.readinessProbeSpec.successThreshold: int32
 
@@ -380,7 +393,7 @@ Minimum value is 1.
 
 Default Value: 1
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L284)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L290)
 
 ### .spec.agents.probes.readinessProbeSpec.timeoutSeconds: int32
 
@@ -389,13 +402,13 @@ Minimum value is 1.
 
 Default Value: 2
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L280)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L286)
 
 ### .spec.agents.probes.startupProbeDisabled: bool
 
 StartupProbeDisabled if true startupProbes are disabled
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L253)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L259)
 
 ### .spec.agents.probes.startupProbeSpec.failureThreshold: int32
 
@@ -405,7 +418,7 @@ Minimum value is 1.
 
 Default Value: 3
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L289)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L295)
 
 ### .spec.agents.probes.startupProbeSpec.initialDelaySeconds: int32
 
@@ -414,7 +427,7 @@ Minimum value is 0.
 
 Default Value: 2
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L272)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L278)
 
 ### .spec.agents.probes.startupProbeSpec.periodSeconds: int32
 
@@ -423,7 +436,7 @@ Minimum value is 1.
 
 Default Value: 10
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L276)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L282)
 
 ### .spec.agents.probes.startupProbeSpec.successThreshold: int32
 
@@ -432,7 +445,7 @@ Minimum value is 1.
 
 Default Value: 1
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L284)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L290)
 
 ### .spec.agents.probes.startupProbeSpec.timeoutSeconds: int32
 
@@ -441,7 +454,7 @@ Minimum value is 1.
 
 Default Value: 2
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L280)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L286)
 
 ### .spec.agents.pvcResizeMode: string
 
@@ -451,7 +464,7 @@ Possible Values:
 * runtime (default) - PVC will be resized in Pod runtime (EKS, GKE)
 * rotate - Pod will be shutdown and PVC will be resized (AKS)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L164)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L170)
 
 ### .spec.agents.resources: core.ResourceRequirements
 
@@ -579,26 +592,26 @@ deployment of the operator, we grant the rights to 'get' all 'pod' resources.
 If you are using a different service account, please grant these rights
 to that service account.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L140)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L146)
 
 ### .spec.agents.shutdownDelay: int
 
 ShutdownDelay define how long operator should delay finalizer removal after shutdown
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L205)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L211)
 
 ### .spec.agents.shutdownMethod: string
 
 ShutdownMethod describe procedure of member shutdown taken by Operator
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L203)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L209)
 
 ### .spec.agents.sidecarCoreNames: []string
 
 SidecarCoreNames is a list of sidecar containers which must run in the pod.
 Some names (e.g.: "server", "worker") are reserved, and they don't have any impact.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L181)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L187)
 
 ### .spec.agents.sidecars: []core.Container
 
@@ -607,7 +620,7 @@ Sidecars specifies a list of additional containers to be started
 Links:
 * [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L185)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L191)
 
 ### .spec.agents.storageClassName: string
 
@@ -619,7 +632,7 @@ StorageClassName specifies the classname for storage of the servers.
 
 TerminationGracePeriodSeconds override default TerminationGracePeriodSeconds for pods - via silent rotation
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L218)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.agents.tolerations: []core.Toleration
 
@@ -633,13 +646,13 @@ For more information on tolerations, consult the https://kubernetes.io/docs/conc
 Links:
 * [Documentation of core.Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#toleration-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L116)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L122)
 
 ### .spec.agents.volumeAllowShrink: bool
 
 Deprecated: VolumeAllowShrink allows shrink the volume
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L166)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L172)
 
 ### .spec.agents.volumeClaimTemplate: core.PersistentVolumeClaim
 
@@ -653,7 +666,7 @@ and `iops` is not forwarded to the pods resource requirements.
 Links:
 * [Documentation of core.PersistentVolumeClaim](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaim-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L159)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L165)
 
 ### .spec.agents.volumeMounts: []ServerGroupSpecVolumeMount
 
@@ -662,7 +675,7 @@ VolumeMounts define list of volume mounts mounted into server container
 Links:
 * [Documentation of ServerGroupSpecVolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#volumemount-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L195)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L201)
 
 ### .spec.agents.volumes\[int\].configMap: core.ConfigMapVolumeSource
 
@@ -840,7 +853,7 @@ Affinity specified additional affinity settings in ArangoDB Pod definitions
 Links:
 * [Documentation of core.PodAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podaffinity-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L174)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L180)
 
 ### .spec.coordinators.allowMemberRecreation: bool
 
@@ -849,26 +862,26 @@ This setting changes the member recreation logic based on group:
 - For Sync Masters, Sync Workers, Coordinator and DB-Servers it determines if a member can be recreated in case of failure (default `true`)
 - For Agents and Single this value is hardcoded to `false` and the value provided in spec is ignored.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L216)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
 
 ### .spec.coordinators.annotations: map[string]string
 
 Annotations specified the annotations added to Pods in this group.
 Annotations are merged with `spec.annotations`.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L119)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L125)
 
 ### .spec.coordinators.annotationsIgnoreList: []string
 
 AnnotationsIgnoreList list regexp or plain definitions which annotations should be ignored
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L121)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L127)
 
 ### .spec.coordinators.annotationsMode: string
 
 AnnotationsMode Define annotations mode which should be use while overriding annotations
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L123)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L129)
 
 ### .spec.coordinators.antiAffinity: core.PodAntiAffinity
 
@@ -877,7 +890,7 @@ AntiAffinity specified additional antiAffinity settings in ArangoDB Pod definiti
 Links:
 * [Documentation of core.Pod.AntiAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podantiaffinity-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L170)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L176)
 
 ### .spec.coordinators.args: []string
 
@@ -934,19 +947,19 @@ Links:
 
 ExporterPort define Port used by exporter
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L229)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L235)
 
 ### .spec.coordinators.extendedRotationCheck: bool
 
 ExtendedRotationCheck extend checks for rotation
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L199)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L205)
 
 ### .spec.coordinators.externalPortEnabled: bool
 
 ExternalPortEnabled if external port should be enabled. If is set to false, ports needs to be exposed via sidecar. Only for ArangoD members
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L211)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L217)
 
 ### .spec.coordinators.indexMethod: string
 
@@ -956,7 +969,7 @@ Possible Values:
 * random (default) - Pick random ID for member. Enforced on the Community Operator.
 * ordered - Use sequential number as Member ID, starting from 0. Enterprise Operator required.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L228)
 
 ### .spec.coordinators.initContainers.containers: []core.Container
 
@@ -977,37 +990,50 @@ Mode keep container replace mode
 
 InternalPort define port used in internal communication, can be accessed over localhost via sidecar. Only for ArangoD members
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L207)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L213)
 
 ### .spec.coordinators.internalPortProtocol: string
 
 InternalPortProtocol define protocol of port used in internal communication, can be accessed over localhost via sidecar. Only for ArangoD members
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L209)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L215)
 
 ### .spec.coordinators.labels: map[string]string
 
 Labels specified the labels added to Pods in this group.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L125)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L131)
 
 ### .spec.coordinators.labelsIgnoreList: []string
 
 LabelsIgnoreList list regexp or plain definitions which labels should be ignored
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L127)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L133)
 
 ### .spec.coordinators.labelsMode: string
 
 LabelsMode Define labels mode which should be use while overriding labels
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L129)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L135)
 
 ### .spec.coordinators.maxCount: int
 
 MaxCount specifies a maximum for the count of servers. If set, a specification is invalid if `count > maxCount`.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L81)
+
+### .spec.coordinators.memoryReservation: int64
+
+MemoryReservation determines system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.
+If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by specified value in percents.
+Accepted Range <0, 50>. If value is outside accepted range, it is adjusted to the closest value.
+
+Links:
+* [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+
+Default Value: 0
+
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L107)
 
 ### .spec.coordinators.minCount: int
 
@@ -1022,7 +1048,7 @@ NodeAffinity specified additional nodeAffinity settings in ArangoDB Pod definiti
 Links:
 * [Documentation of code.NodeAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#nodeaffinity-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L178)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L184)
 
 ### .spec.coordinators.nodeSelector: map[string]string
 
@@ -1031,7 +1057,7 @@ NodeSelector setting specifies a set of labels to be used as `nodeSelector` for 
 Links:
 * [Kubernetes documentation](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L144)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L150)
 
 ### .spec.coordinators.numactl.args: []string
 
@@ -1069,7 +1095,7 @@ Links:
 
 Default Value: true
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L107)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L113)
 
 ### .spec.coordinators.overrideDetectedTotalMemory: bool
 
@@ -1097,7 +1123,7 @@ Default Value: true
 
 Port define Port used by member
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L227)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L233)
 
 ### .spec.coordinators.priorityClassName: string
 
@@ -1107,7 +1133,7 @@ Will be forwarded to the pod spec.
 Links:
 * [Kubernetes documentation](https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L150)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L156)
 
 ### .spec.coordinators.probes.livenessProbeDisabled: bool
 
@@ -1115,7 +1141,7 @@ LivenessProbeDisabled if set to true, the operator does not generate a liveness 
 
 Default Value: false
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L239)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L245)
 
 ### .spec.coordinators.probes.livenessProbeSpec.failureThreshold: int32
 
@@ -1125,7 +1151,7 @@ Minimum value is 1.
 
 Default Value: 3
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L289)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L295)
 
 ### .spec.coordinators.probes.livenessProbeSpec.initialDelaySeconds: int32
 
@@ -1134,7 +1160,7 @@ Minimum value is 0.
 
 Default Value: 2
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L272)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L278)
 
 ### .spec.coordinators.probes.livenessProbeSpec.periodSeconds: int32
 
@@ -1143,7 +1169,7 @@ Minimum value is 1.
 
 Default Value: 10
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L276)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L282)
 
 ### .spec.coordinators.probes.livenessProbeSpec.successThreshold: int32
 
@@ -1152,7 +1178,7 @@ Minimum value is 1.
 
 Default Value: 1
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L284)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L290)
 
 ### .spec.coordinators.probes.livenessProbeSpec.timeoutSeconds: int32
 
@@ -1161,20 +1187,20 @@ Minimum value is 1.
 
 Default Value: 2
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L280)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L286)
 
 ### .spec.coordinators.probes.ReadinessProbeDisabled: bool
 
 OldReadinessProbeDisabled if true readinessProbes are disabled
 Deprecated: This field is deprecated, keept only for backward compatibility.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L246)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L252)
 
 ### .spec.coordinators.probes.readinessProbeDisabled: bool
 
 ReadinessProbeDisabled override flag for probe disabled in good manner (lowercase) with backward compatibility
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L248)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L254)
 
 ### .spec.coordinators.probes.readinessProbeSpec.failureThreshold: int32
 
@@ -1184,7 +1210,7 @@ Minimum value is 1.
 
 Default Value: 3
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L289)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L295)
 
 ### .spec.coordinators.probes.readinessProbeSpec.initialDelaySeconds: int32
 
@@ -1193,7 +1219,7 @@ Minimum value is 0.
 
 Default Value: 2
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L272)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L278)
 
 ### .spec.coordinators.probes.readinessProbeSpec.periodSeconds: int32
 
@@ -1202,7 +1228,7 @@ Minimum value is 1.
 
 Default Value: 10
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L276)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L282)
 
 ### .spec.coordinators.probes.readinessProbeSpec.successThreshold: int32
 
@@ -1211,7 +1237,7 @@ Minimum value is 1.
 
 Default Value: 1
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L284)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L290)
 
 ### .spec.coordinators.probes.readinessProbeSpec.timeoutSeconds: int32
 
@@ -1220,13 +1246,13 @@ Minimum value is 1.
 
 Default Value: 2
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L280)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L286)
 
 ### .spec.coordinators.probes.startupProbeDisabled: bool
 
 StartupProbeDisabled if true startupProbes are disabled
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L253)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L259)
 
 ### .spec.coordinators.probes.startupProbeSpec.failureThreshold: int32
 
@@ -1236,7 +1262,7 @@ Minimum value is 1.
 
 Default Value: 3
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L289)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L295)
 
 ### .spec.coordinators.probes.startupProbeSpec.initialDelaySeconds: int32
 
@@ -1245,7 +1271,7 @@ Minimum value is 0.
 
 Default Value: 2
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L272)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L278)
 
 ### .spec.coordinators.probes.startupProbeSpec.periodSeconds: int32
 
@@ -1254,7 +1280,7 @@ Minimum value is 1.
 
 Default Value: 10
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L276)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L282)
 
 ### .spec.coordinators.probes.startupProbeSpec.successThreshold: int32
 
@@ -1263,7 +1289,7 @@ Minimum value is 1.
 
 Default Value: 1
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L284)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L290)
 
 ### .spec.coordinators.probes.startupProbeSpec.timeoutSeconds: int32
 
@@ -1272,7 +1298,7 @@ Minimum value is 1.
 
 Default Value: 2
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L280)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L286)
 
 ### .spec.coordinators.pvcResizeMode: string
 
@@ -1282,7 +1308,7 @@ Possible Values:
 * runtime (default) - PVC will be resized in Pod runtime (EKS, GKE)
 * rotate - Pod will be shutdown and PVC will be resized (AKS)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L164)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L170)
 
 ### .spec.coordinators.resources: core.ResourceRequirements
 
@@ -1410,26 +1436,26 @@ deployment of the operator, we grant the rights to 'get' all 'pod' resources.
 If you are using a different service account, please grant these rights
 to that service account.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L140)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L146)
 
 ### .spec.coordinators.shutdownDelay: int
 
 ShutdownDelay define how long operator should delay finalizer removal after shutdown
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L205)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L211)
 
 ### .spec.coordinators.shutdownMethod: string
 
 ShutdownMethod describe procedure of member shutdown taken by Operator
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L203)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L209)
 
 ### .spec.coordinators.sidecarCoreNames: []string
 
 SidecarCoreNames is a list of sidecar containers which must run in the pod.
 Some names (e.g.: "server", "worker") are reserved, and they don't have any impact.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L181)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L187)
 
 ### .spec.coordinators.sidecars: []core.Container
 
@@ -1438,7 +1464,7 @@ Sidecars specifies a list of additional containers to be started
 Links:
 * [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L185)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L191)
 
 ### .spec.coordinators.storageClassName: string
 
@@ -1450,7 +1476,7 @@ StorageClassName specifies the classname for storage of the servers.
 
 TerminationGracePeriodSeconds override default TerminationGracePeriodSeconds for pods - via silent rotation
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L218)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.coordinators.tolerations: []core.Toleration
 
@@ -1464,13 +1490,13 @@ For more information on tolerations, consult the https://kubernetes.io/docs/conc
 Links:
 * [Documentation of core.Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#toleration-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L116)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L122)
 
 ### .spec.coordinators.volumeAllowShrink: bool
 
 Deprecated: VolumeAllowShrink allows shrink the volume
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L166)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L172)
 
 ### .spec.coordinators.volumeClaimTemplate: core.PersistentVolumeClaim
 
@@ -1484,7 +1510,7 @@ and `iops` is not forwarded to the pods resource requirements.
 Links:
 * [Documentation of core.PersistentVolumeClaim](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaim-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L159)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L165)
 
 ### .spec.coordinators.volumeMounts: []ServerGroupSpecVolumeMount
 
@@ -1493,7 +1519,7 @@ VolumeMounts define list of volume mounts mounted into server container
 Links:
 * [Documentation of ServerGroupSpecVolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#volumemount-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L195)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L201)
 
 ### .spec.coordinators.volumes\[int\].configMap: core.ConfigMapVolumeSource
 
@@ -1559,7 +1585,7 @@ Affinity specified additional affinity settings in ArangoDB Pod definitions
 Links:
 * [Documentation of core.PodAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podaffinity-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L174)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L180)
 
 ### .spec.dbservers.allowMemberRecreation: bool
 
@@ -1568,26 +1594,26 @@ This setting changes the member recreation logic based on group:
 - For Sync Masters, Sync Workers, Coordinator and DB-Servers it determines if a member can be recreated in case of failure (default `true`)
 - For Agents and Single this value is hardcoded to `false` and the value provided in spec is ignored.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L216)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
 
 ### .spec.dbservers.annotations: map[string]string
 
 Annotations specified the annotations added to Pods in this group.
 Annotations are merged with `spec.annotations`.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L119)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L125)
 
 ### .spec.dbservers.annotationsIgnoreList: []string
 
 AnnotationsIgnoreList list regexp or plain definitions which annotations should be ignored
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L121)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L127)
 
 ### .spec.dbservers.annotationsMode: string
 
 AnnotationsMode Define annotations mode which should be use while overriding annotations
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L123)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L129)
 
 ### .spec.dbservers.antiAffinity: core.PodAntiAffinity
 
@@ -1596,7 +1622,7 @@ AntiAffinity specified additional antiAffinity settings in ArangoDB Pod definiti
 Links:
 * [Documentation of core.Pod.AntiAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podantiaffinity-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L170)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L176)
 
 ### .spec.dbservers.args: []string
 
@@ -1653,19 +1679,19 @@ Links:
 
 ExporterPort define Port used by exporter
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L229)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L235)
 
 ### .spec.dbservers.extendedRotationCheck: bool
 
 ExtendedRotationCheck extend checks for rotation
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L199)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L205)
 
 ### .spec.dbservers.externalPortEnabled: bool
 
 ExternalPortEnabled if external port should be enabled. If is set to false, ports needs to be exposed via sidecar. Only for ArangoD members
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L211)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L217)
 
 ### .spec.dbservers.indexMethod: string
 
@@ -1675,7 +1701,7 @@ Possible Values:
 * random (default) - Pick random ID for member. Enforced on the Community Operator.
 * ordered - Use sequential number as Member ID, starting from 0. Enterprise Operator required.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L228)
 
 ### .spec.dbservers.initContainers.containers: []core.Container
 
@@ -1696,37 +1722,50 @@ Mode keep container replace mode
 
 InternalPort define port used in internal communication, can be accessed over localhost via sidecar. Only for ArangoD members
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L207)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L213)
 
 ### .spec.dbservers.internalPortProtocol: string
 
 InternalPortProtocol define protocol of port used in internal communication, can be accessed over localhost via sidecar. Only for ArangoD members
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L209)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L215)
 
 ### .spec.dbservers.labels: map[string]string
 
 Labels specified the labels added to Pods in this group.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L125)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L131)
 
 ### .spec.dbservers.labelsIgnoreList: []string
 
 LabelsIgnoreList list regexp or plain definitions which labels should be ignored
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L127)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L133)
 
 ### .spec.dbservers.labelsMode: string
 
 LabelsMode Define labels mode which should be use while overriding labels
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L129)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L135)
 
 ### .spec.dbservers.maxCount: int
 
 MaxCount specifies a maximum for the count of servers. If set, a specification is invalid if `count > maxCount`.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L81)
+
+### .spec.dbservers.memoryReservation: int64
+
+MemoryReservation determines system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.
+If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by specified value in percents.
+Accepted Range <0, 50>. If value is outside accepted range, it is adjusted to the closest value.
+
+Links:
+* [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+
+Default Value: 0
+
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L107)
 
 ### .spec.dbservers.minCount: int
 
@@ -1741,7 +1780,7 @@ NodeAffinity specified additional nodeAffinity settings in ArangoDB Pod definiti
 Links:
 * [Documentation of code.NodeAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#nodeaffinity-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L178)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L184)
 
 ### .spec.dbservers.nodeSelector: map[string]string
 
@@ -1750,7 +1789,7 @@ NodeSelector setting specifies a set of labels to be used as `nodeSelector` for 
 Links:
 * [Kubernetes documentation](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L144)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L150)
 
 ### .spec.dbservers.numactl.args: []string
 
@@ -1788,7 +1827,7 @@ Links:
 
 Default Value: true
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L107)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L113)
 
 ### .spec.dbservers.overrideDetectedTotalMemory: bool
 
@@ -1816,7 +1855,7 @@ Default Value: true
 
 Port define Port used by member
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L227)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L233)
 
 ### .spec.dbservers.priorityClassName: string
 
@@ -1826,7 +1865,7 @@ Will be forwarded to the pod spec.
 Links:
 * [Kubernetes documentation](https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L150)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L156)
 
 ### .spec.dbservers.probes.livenessProbeDisabled: bool
 
@@ -1834,7 +1873,7 @@ LivenessProbeDisabled if set to true, the operator does not generate a liveness 
 
 Default Value: false
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L239)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L245)
 
 ### .spec.dbservers.probes.livenessProbeSpec.failureThreshold: int32
 
@@ -1844,7 +1883,7 @@ Minimum value is 1.
 
 Default Value: 3
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L289)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L295)
 
 ### .spec.dbservers.probes.livenessProbeSpec.initialDelaySeconds: int32
 
@@ -1853,7 +1892,7 @@ Minimum value is 0.
 
 Default Value: 2
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L272)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L278)
 
 ### .spec.dbservers.probes.livenessProbeSpec.periodSeconds: int32
 
@@ -1862,7 +1901,7 @@ Minimum value is 1.
 
 Default Value: 10
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L276)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L282)
 
 ### .spec.dbservers.probes.livenessProbeSpec.successThreshold: int32
 
@@ -1871,7 +1910,7 @@ Minimum value is 1.
 
 Default Value: 1
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L284)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L290)
 
 ### .spec.dbservers.probes.livenessProbeSpec.timeoutSeconds: int32
 
@@ -1880,20 +1919,20 @@ Minimum value is 1.
 
 Default Value: 2
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L280)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L286)
 
 ### .spec.dbservers.probes.ReadinessProbeDisabled: bool
 
 OldReadinessProbeDisabled if true readinessProbes are disabled
 Deprecated: This field is deprecated, keept only for backward compatibility.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L246)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L252)
 
 ### .spec.dbservers.probes.readinessProbeDisabled: bool
 
 ReadinessProbeDisabled override flag for probe disabled in good manner (lowercase) with backward compatibility
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L248)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L254)
 
 ### .spec.dbservers.probes.readinessProbeSpec.failureThreshold: int32
 
@@ -1903,7 +1942,7 @@ Minimum value is 1.
 
 Default Value: 3
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L289)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L295)
 
 ### .spec.dbservers.probes.readinessProbeSpec.initialDelaySeconds: int32
 
@@ -1912,7 +1951,7 @@ Minimum value is 0.
 
 Default Value: 2
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L272)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L278)
 
 ### .spec.dbservers.probes.readinessProbeSpec.periodSeconds: int32
 
@@ -1921,7 +1960,7 @@ Minimum value is 1.
 
 Default Value: 10
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L276)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L282)
 
 ### .spec.dbservers.probes.readinessProbeSpec.successThreshold: int32
 
@@ -1930,7 +1969,7 @@ Minimum value is 1.
 
 Default Value: 1
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L284)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L290)
 
 ### .spec.dbservers.probes.readinessProbeSpec.timeoutSeconds: int32
 
@@ -1939,13 +1978,13 @@ Minimum value is 1.
 
 Default Value: 2
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L280)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L286)
 
 ### .spec.dbservers.probes.startupProbeDisabled: bool
 
 StartupProbeDisabled if true startupProbes are disabled
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L253)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L259)
 
 ### .spec.dbservers.probes.startupProbeSpec.failureThreshold: int32
 
@@ -1955,7 +1994,7 @@ Minimum value is 1.
 
 Default Value: 3
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L289)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L295)
 
 ### .spec.dbservers.probes.startupProbeSpec.initialDelaySeconds: int32
 
@@ -1964,7 +2003,7 @@ Minimum value is 0.
 
 Default Value: 2
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L272)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L278)
 
 ### .spec.dbservers.probes.startupProbeSpec.periodSeconds: int32
 
@@ -1973,7 +2012,7 @@ Minimum value is 1.
 
 Default Value: 10
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L276)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L282)
 
 ### .spec.dbservers.probes.startupProbeSpec.successThreshold: int32
 
@@ -1982,7 +2021,7 @@ Minimum value is 1.
 
 Default Value: 1
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L284)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L290)
 
 ### .spec.dbservers.probes.startupProbeSpec.timeoutSeconds: int32
 
@@ -1991,7 +2030,7 @@ Minimum value is 1.
 
 Default Value: 2
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L280)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L286)
 
 ### .spec.dbservers.pvcResizeMode: string
 
@@ -2001,7 +2040,7 @@ Possible Values:
 * runtime (default) - PVC will be resized in Pod runtime (EKS, GKE)
 * rotate - Pod will be shutdown and PVC will be resized (AKS)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L164)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L170)
 
 ### .spec.dbservers.resources: core.ResourceRequirements
 
@@ -2129,26 +2168,26 @@ deployment of the operator, we grant the rights to 'get' all 'pod' resources.
 If you are using a different service account, please grant these rights
 to that service account.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L140)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L146)
 
 ### .spec.dbservers.shutdownDelay: int
 
 ShutdownDelay define how long operator should delay finalizer removal after shutdown
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L205)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L211)
 
 ### .spec.dbservers.shutdownMethod: string
 
 ShutdownMethod describe procedure of member shutdown taken by Operator
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L203)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L209)
 
 ### .spec.dbservers.sidecarCoreNames: []string
 
 SidecarCoreNames is a list of sidecar containers which must run in the pod.
 Some names (e.g.: "server", "worker") are reserved, and they don't have any impact.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L181)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L187)
 
 ### .spec.dbservers.sidecars: []core.Container
 
@@ -2157,7 +2196,7 @@ Sidecars specifies a list of additional containers to be started
 Links:
 * [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L185)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L191)
 
 ### .spec.dbservers.storageClassName: string
 
@@ -2169,7 +2208,7 @@ StorageClassName specifies the classname for storage of the servers.
 
 TerminationGracePeriodSeconds override default TerminationGracePeriodSeconds for pods - via silent rotation
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L218)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.dbservers.tolerations: []core.Toleration
 
@@ -2183,13 +2222,13 @@ For more information on tolerations, consult the https://kubernetes.io/docs/conc
 Links:
 * [Documentation of core.Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#toleration-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L116)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L122)
 
 ### .spec.dbservers.volumeAllowShrink: bool
 
 Deprecated: VolumeAllowShrink allows shrink the volume
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L166)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L172)
 
 ### .spec.dbservers.volumeClaimTemplate: core.PersistentVolumeClaim
 
@@ -2203,7 +2242,7 @@ and `iops` is not forwarded to the pods resource requirements.
 Links:
 * [Documentation of core.PersistentVolumeClaim](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaim-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L159)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L165)
 
 ### .spec.dbservers.volumeMounts: []ServerGroupSpecVolumeMount
 
@@ -2212,7 +2251,7 @@ VolumeMounts define list of volume mounts mounted into server container
 Links:
 * [Documentation of ServerGroupSpecVolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#volumemount-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L195)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L201)
 
 ### .spec.dbservers.volumes\[int\].configMap: core.ConfigMapVolumeSource
 
@@ -2762,7 +2801,7 @@ Affinity specified additional affinity settings in ArangoDB Pod definitions
 Links:
 * [Documentation of core.PodAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podaffinity-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L174)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L180)
 
 ### .spec.single.allowMemberRecreation: bool
 
@@ -2771,26 +2810,26 @@ This setting changes the member recreation logic based on group:
 - For Sync Masters, Sync Workers, Coordinator and DB-Servers it determines if a member can be recreated in case of failure (default `true`)
 - For Agents and Single this value is hardcoded to `false` and the value provided in spec is ignored.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L216)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
 
 ### .spec.single.annotations: map[string]string
 
 Annotations specified the annotations added to Pods in this group.
 Annotations are merged with `spec.annotations`.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L119)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L125)
 
 ### .spec.single.annotationsIgnoreList: []string
 
 AnnotationsIgnoreList list regexp or plain definitions which annotations should be ignored
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L121)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L127)
 
 ### .spec.single.annotationsMode: string
 
 AnnotationsMode Define annotations mode which should be use while overriding annotations
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L123)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L129)
 
 ### .spec.single.antiAffinity: core.PodAntiAffinity
 
@@ -2799,7 +2838,7 @@ AntiAffinity specified additional antiAffinity settings in ArangoDB Pod definiti
 Links:
 * [Documentation of core.Pod.AntiAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podantiaffinity-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L170)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L176)
 
 ### .spec.single.args: []string
 
@@ -2856,19 +2895,19 @@ Links:
 
 ExporterPort define Port used by exporter
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L229)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L235)
 
 ### .spec.single.extendedRotationCheck: bool
 
 ExtendedRotationCheck extend checks for rotation
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L199)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L205)
 
 ### .spec.single.externalPortEnabled: bool
 
 ExternalPortEnabled if external port should be enabled. If is set to false, ports needs to be exposed via sidecar. Only for ArangoD members
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L211)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L217)
 
 ### .spec.single.indexMethod: string
 
@@ -2878,7 +2917,7 @@ Possible Values:
 * random (default) - Pick random ID for member. Enforced on the Community Operator.
 * ordered - Use sequential number as Member ID, starting from 0. Enterprise Operator required.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L228)
 
 ### .spec.single.initContainers.containers: []core.Container
 
@@ -2899,37 +2938,50 @@ Mode keep container replace mode
 
 InternalPort define port used in internal communication, can be accessed over localhost via sidecar. Only for ArangoD members
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L207)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L213)
 
 ### .spec.single.internalPortProtocol: string
 
 InternalPortProtocol define protocol of port used in internal communication, can be accessed over localhost via sidecar. Only for ArangoD members
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L209)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L215)
 
 ### .spec.single.labels: map[string]string
 
 Labels specified the labels added to Pods in this group.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L125)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L131)
 
 ### .spec.single.labelsIgnoreList: []string
 
 LabelsIgnoreList list regexp or plain definitions which labels should be ignored
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L127)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L133)
 
 ### .spec.single.labelsMode: string
 
 LabelsMode Define labels mode which should be use while overriding labels
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L129)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L135)
 
 ### .spec.single.maxCount: int
 
 MaxCount specifies a maximum for the count of servers. If set, a specification is invalid if `count > maxCount`.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L81)
+
+### .spec.single.memoryReservation: int64
+
+MemoryReservation determines system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.
+If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by specified value in percents.
+Accepted Range <0, 50>. If value is outside accepted range, it is adjusted to the closest value.
+
+Links:
+* [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+
+Default Value: 0
+
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L107)
 
 ### .spec.single.minCount: int
 
@@ -2944,7 +2996,7 @@ NodeAffinity specified additional nodeAffinity settings in ArangoDB Pod definiti
 Links:
 * [Documentation of code.NodeAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#nodeaffinity-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L178)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L184)
 
 ### .spec.single.nodeSelector: map[string]string
 
@@ -2953,7 +3005,7 @@ NodeSelector setting specifies a set of labels to be used as `nodeSelector` for 
 Links:
 * [Kubernetes documentation](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L144)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L150)
 
 ### .spec.single.numactl.args: []string
 
@@ -2991,7 +3043,7 @@ Links:
 
 Default Value: true
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L107)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L113)
 
 ### .spec.single.overrideDetectedTotalMemory: bool
 
@@ -3019,7 +3071,7 @@ Default Value: true
 
 Port define Port used by member
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L227)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L233)
 
 ### .spec.single.priorityClassName: string
 
@@ -3029,7 +3081,7 @@ Will be forwarded to the pod spec.
 Links:
 * [Kubernetes documentation](https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L150)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L156)
 
 ### .spec.single.probes.livenessProbeDisabled: bool
 
@@ -3037,7 +3089,7 @@ LivenessProbeDisabled if set to true, the operator does not generate a liveness 
 
 Default Value: false
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L239)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L245)
 
 ### .spec.single.probes.livenessProbeSpec.failureThreshold: int32
 
@@ -3047,7 +3099,7 @@ Minimum value is 1.
 
 Default Value: 3
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L289)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L295)
 
 ### .spec.single.probes.livenessProbeSpec.initialDelaySeconds: int32
 
@@ -3056,7 +3108,7 @@ Minimum value is 0.
 
 Default Value: 2
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L272)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L278)
 
 ### .spec.single.probes.livenessProbeSpec.periodSeconds: int32
 
@@ -3065,7 +3117,7 @@ Minimum value is 1.
 
 Default Value: 10
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L276)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L282)
 
 ### .spec.single.probes.livenessProbeSpec.successThreshold: int32
 
@@ -3074,7 +3126,7 @@ Minimum value is 1.
 
 Default Value: 1
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L284)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L290)
 
 ### .spec.single.probes.livenessProbeSpec.timeoutSeconds: int32
 
@@ -3083,20 +3135,20 @@ Minimum value is 1.
 
 Default Value: 2
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L280)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L286)
 
 ### .spec.single.probes.ReadinessProbeDisabled: bool
 
 OldReadinessProbeDisabled if true readinessProbes are disabled
 Deprecated: This field is deprecated, keept only for backward compatibility.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L246)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L252)
 
 ### .spec.single.probes.readinessProbeDisabled: bool
 
 ReadinessProbeDisabled override flag for probe disabled in good manner (lowercase) with backward compatibility
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L248)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L254)
 
 ### .spec.single.probes.readinessProbeSpec.failureThreshold: int32
 
@@ -3106,7 +3158,7 @@ Minimum value is 1.
 
 Default Value: 3
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L289)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L295)
 
 ### .spec.single.probes.readinessProbeSpec.initialDelaySeconds: int32
 
@@ -3115,7 +3167,7 @@ Minimum value is 0.
 
 Default Value: 2
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L272)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L278)
 
 ### .spec.single.probes.readinessProbeSpec.periodSeconds: int32
 
@@ -3124,7 +3176,7 @@ Minimum value is 1.
 
 Default Value: 10
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L276)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L282)
 
 ### .spec.single.probes.readinessProbeSpec.successThreshold: int32
 
@@ -3133,7 +3185,7 @@ Minimum value is 1.
 
 Default Value: 1
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L284)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L290)
 
 ### .spec.single.probes.readinessProbeSpec.timeoutSeconds: int32
 
@@ -3142,13 +3194,13 @@ Minimum value is 1.
 
 Default Value: 2
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L280)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L286)
 
 ### .spec.single.probes.startupProbeDisabled: bool
 
 StartupProbeDisabled if true startupProbes are disabled
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L253)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L259)
 
 ### .spec.single.probes.startupProbeSpec.failureThreshold: int32
 
@@ -3158,7 +3210,7 @@ Minimum value is 1.
 
 Default Value: 3
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L289)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L295)
 
 ### .spec.single.probes.startupProbeSpec.initialDelaySeconds: int32
 
@@ -3167,7 +3219,7 @@ Minimum value is 0.
 
 Default Value: 2
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L272)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L278)
 
 ### .spec.single.probes.startupProbeSpec.periodSeconds: int32
 
@@ -3176,7 +3228,7 @@ Minimum value is 1.
 
 Default Value: 10
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L276)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L282)
 
 ### .spec.single.probes.startupProbeSpec.successThreshold: int32
 
@@ -3185,7 +3237,7 @@ Minimum value is 1.
 
 Default Value: 1
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L284)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L290)
 
 ### .spec.single.probes.startupProbeSpec.timeoutSeconds: int32
 
@@ -3194,7 +3246,7 @@ Minimum value is 1.
 
 Default Value: 2
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L280)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L286)
 
 ### .spec.single.pvcResizeMode: string
 
@@ -3204,7 +3256,7 @@ Possible Values:
 * runtime (default) - PVC will be resized in Pod runtime (EKS, GKE)
 * rotate - Pod will be shutdown and PVC will be resized (AKS)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L164)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L170)
 
 ### .spec.single.resources: core.ResourceRequirements
 
@@ -3332,26 +3384,26 @@ deployment of the operator, we grant the rights to 'get' all 'pod' resources.
 If you are using a different service account, please grant these rights
 to that service account.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L140)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L146)
 
 ### .spec.single.shutdownDelay: int
 
 ShutdownDelay define how long operator should delay finalizer removal after shutdown
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L205)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L211)
 
 ### .spec.single.shutdownMethod: string
 
 ShutdownMethod describe procedure of member shutdown taken by Operator
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L203)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L209)
 
 ### .spec.single.sidecarCoreNames: []string
 
 SidecarCoreNames is a list of sidecar containers which must run in the pod.
 Some names (e.g.: "server", "worker") are reserved, and they don't have any impact.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L181)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L187)
 
 ### .spec.single.sidecars: []core.Container
 
@@ -3360,7 +3412,7 @@ Sidecars specifies a list of additional containers to be started
 Links:
 * [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L185)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L191)
 
 ### .spec.single.storageClassName: string
 
@@ -3372,7 +3424,7 @@ StorageClassName specifies the classname for storage of the servers.
 
 TerminationGracePeriodSeconds override default TerminationGracePeriodSeconds for pods - via silent rotation
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L218)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.single.tolerations: []core.Toleration
 
@@ -3386,13 +3438,13 @@ For more information on tolerations, consult the https://kubernetes.io/docs/conc
 Links:
 * [Documentation of core.Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#toleration-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L116)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L122)
 
 ### .spec.single.volumeAllowShrink: bool
 
 Deprecated: VolumeAllowShrink allows shrink the volume
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L166)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L172)
 
 ### .spec.single.volumeClaimTemplate: core.PersistentVolumeClaim
 
@@ -3406,7 +3458,7 @@ and `iops` is not forwarded to the pods resource requirements.
 Links:
 * [Documentation of core.PersistentVolumeClaim](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaim-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L159)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L165)
 
 ### .spec.single.volumeMounts: []ServerGroupSpecVolumeMount
 
@@ -3415,7 +3467,7 @@ VolumeMounts define list of volume mounts mounted into server container
 Links:
 * [Documentation of ServerGroupSpecVolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#volumemount-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L195)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L201)
 
 ### .spec.single.volumes\[int\].configMap: core.ConfigMapVolumeSource
 
@@ -3645,7 +3697,7 @@ Affinity specified additional affinity settings in ArangoDB Pod definitions
 Links:
 * [Documentation of core.PodAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podaffinity-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L174)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L180)
 
 ### .spec.syncmasters.allowMemberRecreation: bool
 
@@ -3654,26 +3706,26 @@ This setting changes the member recreation logic based on group:
 - For Sync Masters, Sync Workers, Coordinator and DB-Servers it determines if a member can be recreated in case of failure (default `true`)
 - For Agents and Single this value is hardcoded to `false` and the value provided in spec is ignored.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L216)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
 
 ### .spec.syncmasters.annotations: map[string]string
 
 Annotations specified the annotations added to Pods in this group.
 Annotations are merged with `spec.annotations`.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L119)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L125)
 
 ### .spec.syncmasters.annotationsIgnoreList: []string
 
 AnnotationsIgnoreList list regexp or plain definitions which annotations should be ignored
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L121)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L127)
 
 ### .spec.syncmasters.annotationsMode: string
 
 AnnotationsMode Define annotations mode which should be use while overriding annotations
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L123)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L129)
 
 ### .spec.syncmasters.antiAffinity: core.PodAntiAffinity
 
@@ -3682,7 +3734,7 @@ AntiAffinity specified additional antiAffinity settings in ArangoDB Pod definiti
 Links:
 * [Documentation of core.Pod.AntiAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podantiaffinity-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L170)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L176)
 
 ### .spec.syncmasters.args: []string
 
@@ -3739,19 +3791,19 @@ Links:
 
 ExporterPort define Port used by exporter
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L229)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L235)
 
 ### .spec.syncmasters.extendedRotationCheck: bool
 
 ExtendedRotationCheck extend checks for rotation
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L199)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L205)
 
 ### .spec.syncmasters.externalPortEnabled: bool
 
 ExternalPortEnabled if external port should be enabled. If is set to false, ports needs to be exposed via sidecar. Only for ArangoD members
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L211)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L217)
 
 ### .spec.syncmasters.indexMethod: string
 
@@ -3761,7 +3813,7 @@ Possible Values:
 * random (default) - Pick random ID for member. Enforced on the Community Operator.
 * ordered - Use sequential number as Member ID, starting from 0. Enterprise Operator required.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L228)
 
 ### .spec.syncmasters.initContainers.containers: []core.Container
 
@@ -3782,37 +3834,50 @@ Mode keep container replace mode
 
 InternalPort define port used in internal communication, can be accessed over localhost via sidecar. Only for ArangoD members
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L207)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L213)
 
 ### .spec.syncmasters.internalPortProtocol: string
 
 InternalPortProtocol define protocol of port used in internal communication, can be accessed over localhost via sidecar. Only for ArangoD members
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L209)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L215)
 
 ### .spec.syncmasters.labels: map[string]string
 
 Labels specified the labels added to Pods in this group.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L125)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L131)
 
 ### .spec.syncmasters.labelsIgnoreList: []string
 
 LabelsIgnoreList list regexp or plain definitions which labels should be ignored
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L127)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L133)
 
 ### .spec.syncmasters.labelsMode: string
 
 LabelsMode Define labels mode which should be use while overriding labels
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L129)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L135)
 
 ### .spec.syncmasters.maxCount: int
 
 MaxCount specifies a maximum for the count of servers. If set, a specification is invalid if `count > maxCount`.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L81)
+
+### .spec.syncmasters.memoryReservation: int64
+
+MemoryReservation determines system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.
+If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by specified value in percents.
+Accepted Range <0, 50>. If value is outside accepted range, it is adjusted to the closest value.
+
+Links:
+* [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+
+Default Value: 0
+
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L107)
 
 ### .spec.syncmasters.minCount: int
 
@@ -3827,7 +3892,7 @@ NodeAffinity specified additional nodeAffinity settings in ArangoDB Pod definiti
 Links:
 * [Documentation of code.NodeAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#nodeaffinity-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L178)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L184)
 
 ### .spec.syncmasters.nodeSelector: map[string]string
 
@@ -3836,7 +3901,7 @@ NodeSelector setting specifies a set of labels to be used as `nodeSelector` for 
 Links:
 * [Kubernetes documentation](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L144)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L150)
 
 ### .spec.syncmasters.numactl.args: []string
 
@@ -3874,7 +3939,7 @@ Links:
 
 Default Value: true
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L107)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L113)
 
 ### .spec.syncmasters.overrideDetectedTotalMemory: bool
 
@@ -3902,7 +3967,7 @@ Default Value: true
 
 Port define Port used by member
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L227)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L233)
 
 ### .spec.syncmasters.priorityClassName: string
 
@@ -3912,7 +3977,7 @@ Will be forwarded to the pod spec.
 Links:
 * [Kubernetes documentation](https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L150)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L156)
 
 ### .spec.syncmasters.probes.livenessProbeDisabled: bool
 
@@ -3920,7 +3985,7 @@ LivenessProbeDisabled if set to true, the operator does not generate a liveness 
 
 Default Value: false
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L239)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L245)
 
 ### .spec.syncmasters.probes.livenessProbeSpec.failureThreshold: int32
 
@@ -3930,7 +3995,7 @@ Minimum value is 1.
 
 Default Value: 3
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L289)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L295)
 
 ### .spec.syncmasters.probes.livenessProbeSpec.initialDelaySeconds: int32
 
@@ -3939,7 +4004,7 @@ Minimum value is 0.
 
 Default Value: 2
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L272)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L278)
 
 ### .spec.syncmasters.probes.livenessProbeSpec.periodSeconds: int32
 
@@ -3948,7 +4013,7 @@ Minimum value is 1.
 
 Default Value: 10
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L276)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L282)
 
 ### .spec.syncmasters.probes.livenessProbeSpec.successThreshold: int32
 
@@ -3957,7 +4022,7 @@ Minimum value is 1.
 
 Default Value: 1
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L284)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L290)
 
 ### .spec.syncmasters.probes.livenessProbeSpec.timeoutSeconds: int32
 
@@ -3966,20 +4031,20 @@ Minimum value is 1.
 
 Default Value: 2
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L280)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L286)
 
 ### .spec.syncmasters.probes.ReadinessProbeDisabled: bool
 
 OldReadinessProbeDisabled if true readinessProbes are disabled
 Deprecated: This field is deprecated, keept only for backward compatibility.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L246)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L252)
 
 ### .spec.syncmasters.probes.readinessProbeDisabled: bool
 
 ReadinessProbeDisabled override flag for probe disabled in good manner (lowercase) with backward compatibility
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L248)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L254)
 
 ### .spec.syncmasters.probes.readinessProbeSpec.failureThreshold: int32
 
@@ -3989,7 +4054,7 @@ Minimum value is 1.
 
 Default Value: 3
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L289)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L295)
 
 ### .spec.syncmasters.probes.readinessProbeSpec.initialDelaySeconds: int32
 
@@ -3998,7 +4063,7 @@ Minimum value is 0.
 
 Default Value: 2
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L272)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L278)
 
 ### .spec.syncmasters.probes.readinessProbeSpec.periodSeconds: int32
 
@@ -4007,7 +4072,7 @@ Minimum value is 1.
 
 Default Value: 10
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L276)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L282)
 
 ### .spec.syncmasters.probes.readinessProbeSpec.successThreshold: int32
 
@@ -4016,7 +4081,7 @@ Minimum value is 1.
 
 Default Value: 1
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L284)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L290)
 
 ### .spec.syncmasters.probes.readinessProbeSpec.timeoutSeconds: int32
 
@@ -4025,13 +4090,13 @@ Minimum value is 1.
 
 Default Value: 2
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L280)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L286)
 
 ### .spec.syncmasters.probes.startupProbeDisabled: bool
 
 StartupProbeDisabled if true startupProbes are disabled
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L253)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L259)
 
 ### .spec.syncmasters.probes.startupProbeSpec.failureThreshold: int32
 
@@ -4041,7 +4106,7 @@ Minimum value is 1.
 
 Default Value: 3
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L289)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L295)
 
 ### .spec.syncmasters.probes.startupProbeSpec.initialDelaySeconds: int32
 
@@ -4050,7 +4115,7 @@ Minimum value is 0.
 
 Default Value: 2
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L272)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L278)
 
 ### .spec.syncmasters.probes.startupProbeSpec.periodSeconds: int32
 
@@ -4059,7 +4124,7 @@ Minimum value is 1.
 
 Default Value: 10
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L276)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L282)
 
 ### .spec.syncmasters.probes.startupProbeSpec.successThreshold: int32
 
@@ -4068,7 +4133,7 @@ Minimum value is 1.
 
 Default Value: 1
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L284)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L290)
 
 ### .spec.syncmasters.probes.startupProbeSpec.timeoutSeconds: int32
 
@@ -4077,7 +4142,7 @@ Minimum value is 1.
 
 Default Value: 2
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L280)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L286)
 
 ### .spec.syncmasters.pvcResizeMode: string
 
@@ -4087,7 +4152,7 @@ Possible Values:
 * runtime (default) - PVC will be resized in Pod runtime (EKS, GKE)
 * rotate - Pod will be shutdown and PVC will be resized (AKS)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L164)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L170)
 
 ### .spec.syncmasters.resources: core.ResourceRequirements
 
@@ -4215,26 +4280,26 @@ deployment of the operator, we grant the rights to 'get' all 'pod' resources.
 If you are using a different service account, please grant these rights
 to that service account.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L140)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L146)
 
 ### .spec.syncmasters.shutdownDelay: int
 
 ShutdownDelay define how long operator should delay finalizer removal after shutdown
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L205)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L211)
 
 ### .spec.syncmasters.shutdownMethod: string
 
 ShutdownMethod describe procedure of member shutdown taken by Operator
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L203)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L209)
 
 ### .spec.syncmasters.sidecarCoreNames: []string
 
 SidecarCoreNames is a list of sidecar containers which must run in the pod.
 Some names (e.g.: "server", "worker") are reserved, and they don't have any impact.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L181)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L187)
 
 ### .spec.syncmasters.sidecars: []core.Container
 
@@ -4243,7 +4308,7 @@ Sidecars specifies a list of additional containers to be started
 Links:
 * [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L185)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L191)
 
 ### .spec.syncmasters.storageClassName: string
 
@@ -4255,7 +4320,7 @@ StorageClassName specifies the classname for storage of the servers.
 
 TerminationGracePeriodSeconds override default TerminationGracePeriodSeconds for pods - via silent rotation
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L218)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.syncmasters.tolerations: []core.Toleration
 
@@ -4269,13 +4334,13 @@ For more information on tolerations, consult the https://kubernetes.io/docs/conc
 Links:
 * [Documentation of core.Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#toleration-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L116)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L122)
 
 ### .spec.syncmasters.volumeAllowShrink: bool
 
 Deprecated: VolumeAllowShrink allows shrink the volume
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L166)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L172)
 
 ### .spec.syncmasters.volumeClaimTemplate: core.PersistentVolumeClaim
 
@@ -4289,7 +4354,7 @@ and `iops` is not forwarded to the pods resource requirements.
 Links:
 * [Documentation of core.PersistentVolumeClaim](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaim-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L159)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L165)
 
 ### .spec.syncmasters.volumeMounts: []ServerGroupSpecVolumeMount
 
@@ -4298,7 +4363,7 @@ VolumeMounts define list of volume mounts mounted into server container
 Links:
 * [Documentation of ServerGroupSpecVolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#volumemount-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L195)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L201)
 
 ### .spec.syncmasters.volumes\[int\].configMap: core.ConfigMapVolumeSource
 
@@ -4358,7 +4423,7 @@ Affinity specified additional affinity settings in ArangoDB Pod definitions
 Links:
 * [Documentation of core.PodAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podaffinity-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L174)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L180)
 
 ### .spec.syncworkers.allowMemberRecreation: bool
 
@@ -4367,26 +4432,26 @@ This setting changes the member recreation logic based on group:
 - For Sync Masters, Sync Workers, Coordinator and DB-Servers it determines if a member can be recreated in case of failure (default `true`)
 - For Agents and Single this value is hardcoded to `false` and the value provided in spec is ignored.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L216)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
 
 ### .spec.syncworkers.annotations: map[string]string
 
 Annotations specified the annotations added to Pods in this group.
 Annotations are merged with `spec.annotations`.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L119)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L125)
 
 ### .spec.syncworkers.annotationsIgnoreList: []string
 
 AnnotationsIgnoreList list regexp or plain definitions which annotations should be ignored
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L121)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L127)
 
 ### .spec.syncworkers.annotationsMode: string
 
 AnnotationsMode Define annotations mode which should be use while overriding annotations
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L123)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L129)
 
 ### .spec.syncworkers.antiAffinity: core.PodAntiAffinity
 
@@ -4395,7 +4460,7 @@ AntiAffinity specified additional antiAffinity settings in ArangoDB Pod definiti
 Links:
 * [Documentation of core.Pod.AntiAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podantiaffinity-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L170)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L176)
 
 ### .spec.syncworkers.args: []string
 
@@ -4452,19 +4517,19 @@ Links:
 
 ExporterPort define Port used by exporter
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L229)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L235)
 
 ### .spec.syncworkers.extendedRotationCheck: bool
 
 ExtendedRotationCheck extend checks for rotation
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L199)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L205)
 
 ### .spec.syncworkers.externalPortEnabled: bool
 
 ExternalPortEnabled if external port should be enabled. If is set to false, ports needs to be exposed via sidecar. Only for ArangoD members
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L211)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L217)
 
 ### .spec.syncworkers.indexMethod: string
 
@@ -4474,7 +4539,7 @@ Possible Values:
 * random (default) - Pick random ID for member. Enforced on the Community Operator.
 * ordered - Use sequential number as Member ID, starting from 0. Enterprise Operator required.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L228)
 
 ### .spec.syncworkers.initContainers.containers: []core.Container
 
@@ -4495,37 +4560,50 @@ Mode keep container replace mode
 
 InternalPort define port used in internal communication, can be accessed over localhost via sidecar. Only for ArangoD members
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L207)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L213)
 
 ### .spec.syncworkers.internalPortProtocol: string
 
 InternalPortProtocol define protocol of port used in internal communication, can be accessed over localhost via sidecar. Only for ArangoD members
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L209)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L215)
 
 ### .spec.syncworkers.labels: map[string]string
 
 Labels specified the labels added to Pods in this group.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L125)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L131)
 
 ### .spec.syncworkers.labelsIgnoreList: []string
 
 LabelsIgnoreList list regexp or plain definitions which labels should be ignored
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L127)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L133)
 
 ### .spec.syncworkers.labelsMode: string
 
 LabelsMode Define labels mode which should be use while overriding labels
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L129)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L135)
 
 ### .spec.syncworkers.maxCount: int
 
 MaxCount specifies a maximum for the count of servers. If set, a specification is invalid if `count > maxCount`.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L81)
+
+### .spec.syncworkers.memoryReservation: int64
+
+MemoryReservation determines system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.
+If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by specified value in percents.
+Accepted Range <0, 50>. If value is outside accepted range, it is adjusted to the closest value.
+
+Links:
+* [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+
+Default Value: 0
+
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L107)
 
 ### .spec.syncworkers.minCount: int
 
@@ -4540,7 +4618,7 @@ NodeAffinity specified additional nodeAffinity settings in ArangoDB Pod definiti
 Links:
 * [Documentation of code.NodeAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#nodeaffinity-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L178)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L184)
 
 ### .spec.syncworkers.nodeSelector: map[string]string
 
@@ -4549,7 +4627,7 @@ NodeSelector setting specifies a set of labels to be used as `nodeSelector` for 
 Links:
 * [Kubernetes documentation](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L144)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L150)
 
 ### .spec.syncworkers.numactl.args: []string
 
@@ -4587,7 +4665,7 @@ Links:
 
 Default Value: true
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L107)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L113)
 
 ### .spec.syncworkers.overrideDetectedTotalMemory: bool
 
@@ -4615,7 +4693,7 @@ Default Value: true
 
 Port define Port used by member
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L227)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L233)
 
 ### .spec.syncworkers.priorityClassName: string
 
@@ -4625,7 +4703,7 @@ Will be forwarded to the pod spec.
 Links:
 * [Kubernetes documentation](https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L150)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L156)
 
 ### .spec.syncworkers.probes.livenessProbeDisabled: bool
 
@@ -4633,7 +4711,7 @@ LivenessProbeDisabled if set to true, the operator does not generate a liveness 
 
 Default Value: false
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L239)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L245)
 
 ### .spec.syncworkers.probes.livenessProbeSpec.failureThreshold: int32
 
@@ -4643,7 +4721,7 @@ Minimum value is 1.
 
 Default Value: 3
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L289)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L295)
 
 ### .spec.syncworkers.probes.livenessProbeSpec.initialDelaySeconds: int32
 
@@ -4652,7 +4730,7 @@ Minimum value is 0.
 
 Default Value: 2
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L272)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L278)
 
 ### .spec.syncworkers.probes.livenessProbeSpec.periodSeconds: int32
 
@@ -4661,7 +4739,7 @@ Minimum value is 1.
 
 Default Value: 10
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L276)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L282)
 
 ### .spec.syncworkers.probes.livenessProbeSpec.successThreshold: int32
 
@@ -4670,7 +4748,7 @@ Minimum value is 1.
 
 Default Value: 1
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L284)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L290)
 
 ### .spec.syncworkers.probes.livenessProbeSpec.timeoutSeconds: int32
 
@@ -4679,20 +4757,20 @@ Minimum value is 1.
 
 Default Value: 2
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L280)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L286)
 
 ### .spec.syncworkers.probes.ReadinessProbeDisabled: bool
 
 OldReadinessProbeDisabled if true readinessProbes are disabled
 Deprecated: This field is deprecated, keept only for backward compatibility.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L246)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L252)
 
 ### .spec.syncworkers.probes.readinessProbeDisabled: bool
 
 ReadinessProbeDisabled override flag for probe disabled in good manner (lowercase) with backward compatibility
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L248)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L254)
 
 ### .spec.syncworkers.probes.readinessProbeSpec.failureThreshold: int32
 
@@ -4702,7 +4780,7 @@ Minimum value is 1.
 
 Default Value: 3
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L289)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L295)
 
 ### .spec.syncworkers.probes.readinessProbeSpec.initialDelaySeconds: int32
 
@@ -4711,7 +4789,7 @@ Minimum value is 0.
 
 Default Value: 2
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L272)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L278)
 
 ### .spec.syncworkers.probes.readinessProbeSpec.periodSeconds: int32
 
@@ -4720,7 +4798,7 @@ Minimum value is 1.
 
 Default Value: 10
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L276)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L282)
 
 ### .spec.syncworkers.probes.readinessProbeSpec.successThreshold: int32
 
@@ -4729,7 +4807,7 @@ Minimum value is 1.
 
 Default Value: 1
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L284)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L290)
 
 ### .spec.syncworkers.probes.readinessProbeSpec.timeoutSeconds: int32
 
@@ -4738,13 +4816,13 @@ Minimum value is 1.
 
 Default Value: 2
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L280)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L286)
 
 ### .spec.syncworkers.probes.startupProbeDisabled: bool
 
 StartupProbeDisabled if true startupProbes are disabled
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L253)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L259)
 
 ### .spec.syncworkers.probes.startupProbeSpec.failureThreshold: int32
 
@@ -4754,7 +4832,7 @@ Minimum value is 1.
 
 Default Value: 3
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L289)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L295)
 
 ### .spec.syncworkers.probes.startupProbeSpec.initialDelaySeconds: int32
 
@@ -4763,7 +4841,7 @@ Minimum value is 0.
 
 Default Value: 2
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L272)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L278)
 
 ### .spec.syncworkers.probes.startupProbeSpec.periodSeconds: int32
 
@@ -4772,7 +4850,7 @@ Minimum value is 1.
 
 Default Value: 10
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L276)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L282)
 
 ### .spec.syncworkers.probes.startupProbeSpec.successThreshold: int32
 
@@ -4781,7 +4859,7 @@ Minimum value is 1.
 
 Default Value: 1
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L284)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L290)
 
 ### .spec.syncworkers.probes.startupProbeSpec.timeoutSeconds: int32
 
@@ -4790,7 +4868,7 @@ Minimum value is 1.
 
 Default Value: 2
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L280)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L286)
 
 ### .spec.syncworkers.pvcResizeMode: string
 
@@ -4800,7 +4878,7 @@ Possible Values:
 * runtime (default) - PVC will be resized in Pod runtime (EKS, GKE)
 * rotate - Pod will be shutdown and PVC will be resized (AKS)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L164)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L170)
 
 ### .spec.syncworkers.resources: core.ResourceRequirements
 
@@ -4928,26 +5006,26 @@ deployment of the operator, we grant the rights to 'get' all 'pod' resources.
 If you are using a different service account, please grant these rights
 to that service account.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L140)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L146)
 
 ### .spec.syncworkers.shutdownDelay: int
 
 ShutdownDelay define how long operator should delay finalizer removal after shutdown
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L205)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L211)
 
 ### .spec.syncworkers.shutdownMethod: string
 
 ShutdownMethod describe procedure of member shutdown taken by Operator
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L203)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L209)
 
 ### .spec.syncworkers.sidecarCoreNames: []string
 
 SidecarCoreNames is a list of sidecar containers which must run in the pod.
 Some names (e.g.: "server", "worker") are reserved, and they don't have any impact.
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L181)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L187)
 
 ### .spec.syncworkers.sidecars: []core.Container
 
@@ -4956,7 +5034,7 @@ Sidecars specifies a list of additional containers to be started
 Links:
 * [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L185)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L191)
 
 ### .spec.syncworkers.storageClassName: string
 
@@ -4968,7 +5046,7 @@ StorageClassName specifies the classname for storage of the servers.
 
 TerminationGracePeriodSeconds override default TerminationGracePeriodSeconds for pods - via silent rotation
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L218)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L224)
 
 ### .spec.syncworkers.tolerations: []core.Toleration
 
@@ -4982,13 +5060,13 @@ For more information on tolerations, consult the https://kubernetes.io/docs/conc
 Links:
 * [Documentation of core.Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#toleration-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L116)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L122)
 
 ### .spec.syncworkers.volumeAllowShrink: bool
 
 Deprecated: VolumeAllowShrink allows shrink the volume
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L166)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L172)
 
 ### .spec.syncworkers.volumeClaimTemplate: core.PersistentVolumeClaim
 
@@ -5002,7 +5080,7 @@ and `iops` is not forwarded to the pods resource requirements.
 Links:
 * [Documentation of core.PersistentVolumeClaim](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaim-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L159)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L165)
 
 ### .spec.syncworkers.volumeMounts: []ServerGroupSpecVolumeMount
 
@@ -5011,7 +5089,7 @@ VolumeMounts define list of volume mounts mounted into server container
 Links:
 * [Documentation of ServerGroupSpecVolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#volumemount-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L195)
+[Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L201)
 
 ### .spec.syncworkers.volumes\[int\].configMap: core.ConfigMapVolumeSource
 
