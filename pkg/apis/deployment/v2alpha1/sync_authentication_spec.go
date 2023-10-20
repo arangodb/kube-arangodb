@@ -28,8 +28,17 @@ import (
 
 // SyncAuthenticationSpec holds dc2dc sync authentication specific configuration settings
 type SyncAuthenticationSpec struct {
-	JWTSecretName      *string `json:"jwtSecretName,omitempty"`      // JWT secret for sync masters
-	ClientCASecretName *string `json:"clientCASecretName,omitempty"` // Secret containing client authentication CA
+	// JWTSecretName setting specifies the name of a kubernetes `Secret` that contains
+	// the JWT token used for accessing all ArangoSync master servers.
+	// When not specified, the `spec.auth.jwtSecretName` value is used.
+	// If you specify a name of a `Secret` that does not exist, a random token is created
+	// and stored in a `Secret` with given name.
+	JWTSecretName *string `json:"jwtSecretName,omitempty"`
+	// ClientCASecretName setting specifies the name of a kubernetes `Secret` that contains
+	// a PEM encoded CA certificate used for client certificate verification
+	// in all ArangoSync master servers.
+	// This is a required setting when `spec.sync.enabled` is `true`.
+	ClientCASecretName *string `json:"clientCASecretName,omitempty"`
 }
 
 // GetJWTSecretName returns the value of jwtSecretName.

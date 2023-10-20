@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -50,6 +50,15 @@ type PasswordSecretNameList map[string]PasswordSecretName
 // BootstrapSpec contains information for cluster bootstrapping
 type BootstrapSpec struct {
 	// PasswordSecretNames contains a map of username to password-secret-name
+	// This setting specifies a secret name for the credentials per specific users.
+	// When a deployment is created the operator will setup the user accounts
+	// according to the credentials given by the secret. If the secret doesn't exist
+	// the operator creates a secret with a random password.
+	// There are two magic values for the secret name:
+	// - `None` specifies no action. This disables root password randomization. This is the default value. (Thus the root password is empty - not recommended)
+	// - `Auto` specifies automatic name generation, which is `<deploymentname>-root-password`.
+	// +doc/type: map[string]string
+	// +doc/link: How to set root user password|/docs/how-to/set_root_user_password.md
 	PasswordSecretNames PasswordSecretNameList `json:"passwordSecretNames,omitempty"`
 }
 

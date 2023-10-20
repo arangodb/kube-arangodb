@@ -28,6 +28,15 @@ import (
 
 // AuthenticationSpec holds authentication specific configuration settings
 type AuthenticationSpec struct {
+	// JWTSecretName setting specifies the name of a kubernetes `Secret` that contains
+	// the JWT token used for accessing all ArangoDB servers.
+	// When no name is specified, it defaults to `<deployment-name>-jwt`.
+	// To disable authentication, set this value to `None`.
+	// If you specify a name of a `Secret`, that secret must have the token
+	// in a data field named `token`.
+	// If you specify a name of a `Secret` that does not exist, a random token is created
+	// and stored in a `Secret` with given name.
+	// Changing a JWT token results in restarting of a whole cluster.
 	JWTSecretName *string `json:"jwtSecretName,omitempty"`
 }
 

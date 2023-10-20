@@ -42,17 +42,28 @@ type ServerGroupSpecSecurityContext struct {
 	// Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
 	DropAllCapabilities *bool `json:"dropAllCapabilities,omitempty"`
 	// AddCapabilities add new capabilities to containers
+	// +doc/type: []core.Capability
 	AddCapabilities []core.Capability `json:"addCapabilities,omitempty"`
 
-	AllowPrivilegeEscalation *bool  `json:"allowPrivilegeEscalation,omitempty"`
-	Privileged               *bool  `json:"privileged,omitempty"`
-	ReadOnlyRootFilesystem   *bool  `json:"readOnlyRootFilesystem,omitempty"`
-	RunAsNonRoot             *bool  `json:"runAsNonRoot,omitempty"`
-	RunAsUser                *int64 `json:"runAsUser,omitempty"`
-	RunAsGroup               *int64 `json:"runAsGroup,omitempty"`
+	// AllowPrivilegeEscalation Controls whether a process can gain more privileges than its parent process.
+	AllowPrivilegeEscalation *bool `json:"allowPrivilegeEscalation,omitempty"`
+	// Privileged If true, runs container in privileged mode. Processes in privileged containers are
+	// essentially equivalent to root on the host.
+	Privileged *bool `json:"privileged,omitempty"`
+	// ReadOnlyRootFilesystem if true, mounts the container's root filesystem as read-only.
+	ReadOnlyRootFilesystem *bool `json:"readOnlyRootFilesystem,omitempty"`
+	// RunAsNonRoot if true, indicates that the container must run as a non-root user.
+	RunAsNonRoot *bool `json:"runAsNonRoot,omitempty"`
+	// RunAsUser is the UID to run the entrypoint of the container process.
+	RunAsUser *int64 `json:"runAsUser,omitempty"`
+	// RunAsGroup is the GID to run the entrypoint of the container process.
+	RunAsGroup *int64 `json:"runAsGroup,omitempty"`
 
+	// SupplementalGroups is a list of groups applied to the first process run in each container, in addition to the container's primary GID,
+	// the fsGroup (if specified), and group memberships defined in the container image for the uid of the container process.
 	SupplementalGroups []int64 `json:"supplementalGroups,omitempty"`
-	FSGroup            *int64  `json:"fsGroup,omitempty"`
+	// FSGroup is a special supplemental group that applies to all containers in a pod.
+	FSGroup *int64 `json:"fsGroup,omitempty"`
 
 	// Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
 	// sysctls (by the container runtime) might fail to launch.

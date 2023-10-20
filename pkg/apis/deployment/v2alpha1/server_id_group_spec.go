@@ -30,7 +30,7 @@ type ServerIDGroupSpec struct {
 	// +doc/type: []core.Toleration
 	// +doc/link: Documentation of core.Toleration|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#toleration-v1-core
 	Tolerations []core.Toleration `json:"tolerations,omitempty"`
-	// NodeSelector speficies a set of selectors for nodes
+	// NodeSelector specifies a set of selectors for nodes
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 	// PriorityClassName specifies a priority class name
 	PriorityClassName string `json:"priorityClassName,omitempty"`

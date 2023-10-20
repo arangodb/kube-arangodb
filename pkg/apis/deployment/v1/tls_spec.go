@@ -54,11 +54,31 @@ const (
 
 // TLSSpec holds TLS specific configuration settings
 type TLSSpec struct {
-	CASecretName *string        `json:"caSecretName,omitempty"`
-	AltNames     []string       `json:"altNames,omitempty"`
-	TTL          *Duration      `json:"ttl,omitempty"`
-	SNI          *TLSSNISpec    `json:"sni,omitempty"`
-	Mode         *TLSRotateMode `json:"mode,omitempty"`
+	// CASecretName  setting specifies the name of a kubernetes `Secret` that contains
+	// a standard CA certificate + private key used to sign certificates for individual
+	// ArangoDB servers.
+	// When no name is specified, it defaults to `<deployment-name>-ca`.
+	// To disable authentication, set this value to `None`.
+	// If you specify a name of a `Secret` that does not exist, a self-signed CA certificate + key is created
+	// and stored in a `Secret` with given name.
+	// The specified `Secret`, must contain the following data fields:
+	// - `ca.crt` PEM encoded public key of the CA certificate
+	// - `ca.key` PEM encoded private key of the CA certificate
+	CASecretName *string `json:"caSecretName,omitempty"`
+	// AltNames setting specifies a list of alternate names that will be added to all generated
+	// certificates. These names can be DNS names or email addresses.
+	// The default value is empty.
+	// +doc/type: []string
+	AltNames []string `json:"altNames,omitempty"`
+	// TTL setting specifies the time to live of all generated server certificates.
+	// When the server certificate is about to expire, it will be automatically replaced
+	// by a new one and the affected server will be restarted.
+	// Note: The time to live of the CA certificate (when created automatically)
+	// will be set to 10 years.
+	// +doc/default: "2160h" (about 3 months)
+	TTL  *Duration      `json:"ttl,omitempty"`
+	SNI  *TLSSNISpec    `json:"sni,omitempty"`
+	Mode *TLSRotateMode `json:"mode,omitempty"`
 }
 
 const (

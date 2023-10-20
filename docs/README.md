@@ -40,18 +40,15 @@ that you deploy in your Kubernetes cluster to:
 
 Each of these uses involves a different custom resource.
 
-- Use an [`ArangoDeployment` resource](deployment-resource-reference.md) to
-  create an ArangoDB database deployment.
-- Use an [`ArangoBackup`](backup-resource.md) and `ArangoBackupPolicy` resources to
-  create ArangoDB backups.
-- Use an [`ArangoLocalStorage` resource](storage-resource.md) to
-  provide local `PersistentVolumes` for optimal I/O performance.
-- Use an [`ArangoDeploymentReplication` resource](deployment-replication-resource-reference.md) to
-  configure ArangoDB Datacenter-to-Datacenter Replication.
+- Use an [ArangoDeployment resource](deployment-resource-reference.md) to create an ArangoDB database deployment.
+- Use an [ArangoMember resource](api/ArangoMember.V1.md) to observe and adjust individual deployment members.
+- Use an [ArangoBackup](backup-resource.md) and [ArangoBackupPolicy](backuppolicy-resource.md) resources to create ArangoDB backups.
+- Use an [ArangoLocalStorage resource](storage-resource.md) to provide local `PersistentVolumes` for optimal I/O performance.
+- Use an [ArangoDeploymentReplication resource](deployment-replication-resource-reference.md) to configure ArangoDB Datacenter-to-Datacenter Replication.
 
 Continue with [Using the ArangoDB Kubernetes Operator](using-the-operator.md)
 to learn how to install the ArangoDB Kubernetes operator and create
 your first deployment.
 
 For more information about the production readiness state, please refer to the
-[ArangoDB Kubernetes Operator repository](https://github.com/arangodb/kube-arangodb#production-readiness-state).
+[main README file](https://github.com/arangodb/kube-arangodb#production-readiness-state).

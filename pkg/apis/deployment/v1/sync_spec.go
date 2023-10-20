@@ -27,6 +27,10 @@ import (
 
 // SyncSpec holds dc2dc replication specific configuration settings
 type SyncSpec struct {
+	// Enabled setting enables/disables support for data center 2 data center
+	// replication in the cluster. When enabled, the cluster will contain
+	// a number of `syncmaster` & `syncworker` servers.
+	// +doc/default: false
 	Enabled *bool `json:"enabled,omitempty"`
 
 	ExternalAccess SyncExternalAccessSpec `json:"externalAccess"`

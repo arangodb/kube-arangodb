@@ -28,6 +28,12 @@ import (
 
 // RocksDBEncryptionSpec holds rocksdb encryption at rest specific configuration settings
 type RocksDBEncryptionSpec struct {
+	// KeySecretName setting specifies the name of a Kubernetes `Secret` that contains an encryption key used for encrypting all data stored by ArangoDB servers.
+	// When an encryption key is used, encryption of the data in the cluster is enabled, without it encryption is disabled.
+	// The default value is empty.
+	// This requires the Enterprise Edition.
+	// The encryption key cannot be changed after the cluster has been created.
+	// The secret specified by this setting, must have a data field named 'key' containing an encryption key that is exactly 32 bytes long.
 	KeySecretName *string `json:"keySecretName,omitempty"`
 }
 

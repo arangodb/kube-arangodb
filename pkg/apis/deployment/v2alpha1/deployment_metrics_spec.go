@@ -74,6 +74,10 @@ func (m *MetricsMode) Get() MetricsMode {
 
 // MetricsSpec contains spec for arangodb exporter
 type MetricsSpec struct {
+	// Enabled if this is set to `true`, the operator runs a sidecar container for
+	// every Agent, DB-Server, Coordinator and Single server.
+	// +doc/default: false
+	// +doc/link: Metrics collection|/docs/metrics.md
 	Enabled *bool `json:"enabled,omitempty"`
 	// deprecated
 	Image          *string                   `json:"image,omitempty"`
@@ -84,7 +88,11 @@ type MetricsSpec struct {
 	Resources core.ResourceRequirements `json:"resources,omitempty"`
 	// deprecated
 	Mode *MetricsMode `json:"mode,omitempty"`
-	TLS  *bool        `json:"tls,omitempty"`
+	// TLS defines if TLS should be enabled on Metrics exporter endpoint.
+	// This option will enable TLS only if TLS is enabled on ArangoDeployment,
+	// otherwise `true` value will not take any effect.
+	// +doc/default: true
+	TLS *bool `json:"tls,omitempty"`
 
 	ServiceMonitor *MetricsServiceMonitorSpec `json:"serviceMonitor,omitempty"`
 
