@@ -2318,6 +2318,11 @@ func (in *ServerGroupSpec) DeepCopyInto(out *ServerGroupSpec) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.MemoryReservation != nil {
+		in, out := &in.MemoryReservation, &out.MemoryReservation
+		*out = new(int64)
+		**out = **in
+	}
 	if in.OverrideDetectedNumberOfCores != nil {
 		in, out := &in.OverrideDetectedNumberOfCores, &out.OverrideDetectedNumberOfCores
 		*out = new(bool)

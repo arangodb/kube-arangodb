@@ -99,6 +99,12 @@ type ServerGroupSpec struct {
 	// +doc/default: true
 	// +doc/link: Docs of the ArangoDB Envs|https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/
 	OverrideDetectedTotalMemory *bool `json:"overrideDetectedTotalMemory,omitempty"`
+	// MemoryReservation determines system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.
+	// If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by specified value in percents.
+	// Accepted Range <0, 50>. If value is outside accepted range, it is adjusted to the closest value.
+	// +doc/default: 0
+	// +doc/link: Docs of the ArangoDB Envs|https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/
+	MemoryReservation *int64 `json:"memoryReservation,omitempty"`
 	// OverrideDetectedNumberOfCores determines if number of cores should be overridden based on values in resources.
 	// If is set to true and Container CPU Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` to the value from the Container CPU Limits.
 	// +doc/important: Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` Container Environment Variable
@@ -785,4 +791,16 @@ func (s *ServerGroupSpec) GetExporterPort() uint16 {
 	}
 
 	return shared.ArangoExporterPort
+}
+
+func (s *ServerGroupSpec) GetMemoryReservation() int64 {
+	if s != nil {
+		if v := s.MemoryReservation; v != nil {
+			if q := *v; q >= 0 && q <= 50 {
+				return q
+			}
+		}
+	}
+
+	return 0
 }
