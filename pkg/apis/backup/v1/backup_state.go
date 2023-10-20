@@ -64,14 +64,28 @@ var ArangoBackupStateMap = state.Map{
 
 type ArangoBackupState struct {
 	// State holds the current high level state of the backup
+	// +doc/enum: Pending|state in which Custom Resource is queued. If Backup is possible changed to "Scheduled"
+	// +doc/enum: Scheduled|state which will start create/download process
+	// +doc/enum: Download|state in which download request will be created on ArangoDB
+	// +doc/enum: DownloadError|state when download failed
+	// +doc/enum: Downloading|state for downloading progress
+	// +doc/enum: Create|state for creation, field available set to true
+	// +doc/enum: Upload|state in which upload request will be created on ArangoDB
+	// +doc/enum: Uploading|state for uploading progress
+	// +doc/enum: UploadError|state when uploading failed
+	// +doc/enum: Ready|state when Backup is finished
+	// +doc/enum: Deleted|state when Backup was once in ready, but has been deleted
+	// +doc/enum: Failed|state for failure
+	// +doc/enum: Unavailable|state when Backup is not available on the ArangoDB. It can happen in case of upgrades, node restarts etc.
 	State state.State `json:"state"`
 
+	// Time is the time in UTC when state of the ArangoBackup Custom Resource changed.
 	Time meta.Time `json:"time"`
 
 	// Message for the state this object is in.
 	Message string `json:"message,omitempty"`
 
-	// Progress for the operation
+	// Progress info of the uploading and downloading process
 	Progress *ArangoBackupProgress `json:"progress,omitempty"`
 }
 
@@ -91,7 +105,10 @@ func (a *ArangoBackupState) Equal(b *ArangoBackupState) bool {
 }
 
 type ArangoBackupProgress struct {
-	JobID    string `json:"jobID"`
+	// JobID ArangoDB job ID for uploading or downloading
+	JobID string `json:"jobID"`
+	// Progress ArangoDB job progress in percents
+	// +doc/example: 90%
 	Progress string `json:"progress"`
 }
 

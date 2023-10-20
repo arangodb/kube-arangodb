@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,11 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// ArangoBackupPolicyStatus Status of the ArangoBackupPolicy Custom Resource managed by operator
 type ArangoBackupPolicyStatus struct {
+	// Scheduled Next scheduled time in UTC
+	// +doc/type: meta.Time
 	Scheduled meta.Time `json:"scheduled,omitempty"`
-	Message   string    `json:"message,omitempty"`
+	// Message from the operator in case of failures - schedule not valid, ArangoBackupPolicy not valid
+	Message string `json:"message,omitempty"`
 }
