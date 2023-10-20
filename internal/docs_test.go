@@ -36,8 +36,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	"maps"
+
+	"github.com/stretchr/testify/require"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
