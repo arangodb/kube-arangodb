@@ -213,9 +213,15 @@ func (a *ArangoDContainer) GetEnvs() ([]core.EnvVar, []core.EnvFromSource) {
 	if resources.Limits != nil {
 		if a.groupSpec.GetOverrideDetectedTotalMemory() {
 			if limits, ok := resources.Limits[core.ResourceMemory]; ok {
+				value := limits.Value()
+
+				if memoryReservation := a.groupSpec.GetMemoryReservation(); memoryReservation > 0 {
+					value = (value / 100) * (100 - memoryReservation)
+				}
+
 				envs.Add(true, core.EnvVar{
 					Name:  ArangoDBOverrideDetectedTotalMemoryEnv,
-					Value: fmt.Sprintf("%d", limits.Value()),
+					Value: fmt.Sprintf("%d", value),
 				})
 			}
 		}
