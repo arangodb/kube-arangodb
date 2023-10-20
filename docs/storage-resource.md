@@ -1,5 +1,7 @@
 # ArangoLocalStorage Custom Resource
 
+[Full CustomResourceDefinition reference ->](./api/ArangoLocalStorage.V1Alpha.md)
+
 The ArangoDB Storage Operator creates and maintains ArangoDB
 storage resources in a Kubernetes cluster, given a storage specification.
 This storage specification is a `CustomResource` following
@@ -31,33 +33,3 @@ This definition results in:
 
 The provisioned volumes will have a capacity that matches
 the requested capacity of volume claims.
-
-## Specification reference
-
-Below you'll find all settings of the `ArangoLocalStorage` custom resource.
-
-### `spec.storageClass.name: string`
-
-This setting specifies the name of the storage class that
-created `PersistentVolume` will use.
-
-If empty, this field defaults to the name of the `ArangoLocalStorage`
-object.
-
-If a `StorageClass` with given name does not yet exist, it
-will be created.
-
-### `spec.storageClass.isDefault: bool`
-
-This setting specifies if the created `StorageClass` will
-be marked as default storage class. (default is `false`)
-
-### `spec.localPath: stringList`
-
-This setting specifies one of more local directories
-(on the nodes) used to create persistent volumes in.
-
-### `spec.nodeSelector: nodeSelector`
-
-This setting specifies which nodes the operator will
-provision persistent volumes on.

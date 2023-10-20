@@ -30,6 +30,7 @@ import (
 // in either source or destination endpoint.
 type EndpointTLSSpec struct {
 	// CASecretName holds the name of a Secret containing a ca.crt public key for TLS validation.
+	// This setting is required, unless `deploymentName` has been set.
 	CASecretName *string `json:"caSecretName,omitempty"`
 }
 

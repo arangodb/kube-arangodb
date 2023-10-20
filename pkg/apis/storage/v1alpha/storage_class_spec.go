@@ -30,8 +30,19 @@ import (
 
 // StorageClassSpec contains specification for create StorageClass.
 type StorageClassSpec struct {
-	Name          string                              `json:"name,omitempty"`
-	IsDefault     bool                                `json:"isDefault,omitempty"`
+	// Name setting specifies the name of the storage class that
+	// created `PersistentVolume` will use.
+	// If empty, this field defaults to the name of the `ArangoLocalStorage` object.
+	// If a `StorageClass` with given name does not yet exist, it will be created.
+	// +doc/default: ""
+	Name string `json:"name,omitempty"`
+	// IsDefault setting specifies if the created `StorageClass` will
+	// be marked as default storage class.
+	// +doc/default: false
+	IsDefault bool `json:"isDefault,omitempty"`
+	// ReclaimPolicy defines what happens to a persistent volume when released from its claim.
+	// +doc/type: core.PersistentVolumeReclaimPolicy
+	// +doc/link: Documentation of core.PersistentVolumeReclaimPolicy|https://kubernetes.io/docs/concepts/storage/persistent-volumes#reclaiming
 	ReclaimPolicy *core.PersistentVolumeReclaimPolicy `json:"reclaimPolicy,omitempty"`
 }
 

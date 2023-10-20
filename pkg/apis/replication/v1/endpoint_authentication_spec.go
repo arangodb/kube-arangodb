@@ -31,6 +31,9 @@ import (
 type EndpointAuthenticationSpec struct {
 	// KeyfileSecretName holds the name of a Secret containing a client authentication
 	// certificate formatted at keyfile in a `tls.keyfile` field.
+	// If `userSecretName` has not been set,
+	// the client authentication certificate found in the secret with this name is also used to configure
+	// the synchronization and fetch the synchronization status.
 	KeyfileSecretName *string `json:"keyfileSecretName,omitempty"`
 	// UserSecretName holds the name of a Secret containing a `username` & `password`
 	// field used for basic authentication.
