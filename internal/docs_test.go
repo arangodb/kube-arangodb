@@ -36,8 +36,6 @@ import (
 	"strings"
 	"testing"
 
-	"maps"
-
 	"github.com/stretchr/testify/require"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
@@ -174,7 +172,7 @@ func Test_GenerateAPIDocs(t *testing.T) {
 	resultPaths := make(map[string]string)
 	for apiDir, docs := range input {
 		astFields, fileSets := parseSourceFiles(t, apiDir)
-		maps.Copy(resultPaths, generateDocs(t, docs, astFields, fileSets))
+		util.CopyMap(resultPaths, generateDocs(t, docs, astFields, fileSets))
 	}
 	generateIndex(t, resultPaths)
 }
@@ -276,12 +274,12 @@ func generateDocs(t *testing.T, objects map[string]map[string]interface{}, docs 
 
 			write(t, out, "# API Reference for %s\n\n", strings.ReplaceAll(object, ".", " "))
 
-			for name, section := range renderSections {
+			util.IterateSorted(renderSections, func(name string, section []byte) {
 				write(t, out, "## %s\n\n", name)
 
 				_, err = out.Write(section)
 				require.NoError(t, err)
-			}
+			})
 		})
 	}
 	return outPaths
@@ -300,9 +298,9 @@ func generateIndex(t *testing.T, apiDocs map[string]string) {
 
 	write(t, out, "# Custom Resources API Reference\n\n")
 
-	for name, filePath := range apiDocs {
+	util.IterateSorted(apiDocs, func(name string, filePath string) {
 		write(t, out, " - [%s](./%s)\n", name, filePath)
-	}
+	})
 	write(t, out, "\n")
 }
 
