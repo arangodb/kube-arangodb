@@ -3471,11 +3471,12 @@ Links:
 ### .spec.storageEngine: string
 
 StorageEngine specifies the type of storage engine used for all servers in the cluster.
-This setting cannot be changed after the cluster has been created.
 
 Possible Values: 
 * RocksDB (default) - To use the RocksDB storage engine.
 * MMFiles - To use the MMFiles storage engine. Deprecated.
+
+This field is **immutable**: This setting cannot be changed after the cluster has been created.
 
 [Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L72)
 

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,9 +30,12 @@ import (
 // an ArangoBackup.
 type ArangoBackupStatus struct {
 	ArangoBackupState `json:",inline"`
-	Backup            *ArangoBackupDetails       `json:"backup,omitempty"`
-	Available         bool                       `json:"available"`
-	Backoff           *ArangoBackupStatusBackOff `json:"backoff,omitempty"`
+	// Backup ArangoBackup details
+	Backup *ArangoBackupDetails `json:"backup,omitempty"`
+	// Available Determines if we can restore from ArangoBackup
+	Available bool `json:"available"`
+	// Backoff shows current backoff status
+	Backoff *ArangoBackupStatusBackOff `json:"backoff,omitempty"`
 }
 
 func (a *ArangoBackupStatus) Equal(b *ArangoBackupStatus) bool {
@@ -50,16 +53,21 @@ func (a *ArangoBackupStatus) Equal(b *ArangoBackupStatus) bool {
 }
 
 type ArangoBackupDetails struct {
-	ID                      string          `json:"id"`
-	Version                 string          `json:"version"`
-	PotentiallyInconsistent *bool           `json:"potentiallyInconsistent,omitempty"`
-	SizeInBytes             uint64          `json:"sizeInBytes,omitempty"`
-	NumberOfDBServers       uint            `json:"numberOfDBServers,omitempty"`
-	Uploaded                *bool           `json:"uploaded,omitempty"`
-	Downloaded              *bool           `json:"downloaded,omitempty"`
-	Imported                *bool           `json:"imported,omitempty"`
-	CreationTimestamp       meta.Time       `json:"createdAt"`
-	Keys                    shared.HashList `json:"keys,omitempty"`
+	ID                      string `json:"id"`
+	Version                 string `json:"version"`
+	PotentiallyInconsistent *bool  `json:"potentiallyInconsistent,omitempty"`
+	// SizeInBytes Size of the Backup in ArangoDB.
+	SizeInBytes uint64 `json:"sizeInBytes,omitempty"`
+	// NumberOfDBServers Cluster size of the Backup in ArangoDB
+	NumberOfDBServers uint `json:"numberOfDBServers,omitempty"`
+	// Uploaded Determines if ArangoBackup has been uploaded
+	Uploaded *bool `json:"uploaded,omitempty"`
+	// Downloaded Determines if ArangoBackup has been downloaded.
+	Downloaded *bool `json:"downloaded,omitempty"`
+	Imported   *bool `json:"imported,omitempty"`
+	// CreationTimestamp ArangoBackup Custom Resource creation time in UTC
+	CreationTimestamp meta.Time       `json:"createdAt"`
+	Keys              shared.HashList `json:"keys,omitempty"`
 }
 
 func (a *ArangoBackupDetails) Equal(b *ArangoBackupDetails) bool {
