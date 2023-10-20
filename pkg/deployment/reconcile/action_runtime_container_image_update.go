@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -227,13 +227,8 @@ func (a actionRuntimeContainerImageUpdate) Start(ctx context.Context) (bool, err
 		return true, nil
 	}
 
-	spec := member.Spec.Template.PodSpec
-	status := member.Status.Template.PodSpec
-
 	for id := range pod.Spec.Containers {
-		if pod.Spec.Containers[id].Name != spec.Spec.Containers[id].Name ||
-			pod.Spec.Containers[id].Name != status.Spec.Containers[id].Name ||
-			pod.Spec.Containers[id].Name != name {
+		if pod.Spec.Containers[id].Name != name {
 			continue
 		}
 
@@ -249,10 +244,14 @@ func (a actionRuntimeContainerImageUpdate) Start(ctx context.Context) (bool, err
 			return false, nil
 		}
 
+		a.log.Info("Image is UpToDate")
+
 		return true, nil
 	}
 
-	return true, nil
+	a.log.Str("container", name).Str("pod", pod.GetName()).Warn("Container not found")
+
+	return false, errors.Newf("Container %s not found in Pod %s", name, pod.GetName())
 }
 
 func (a actionRuntimeContainerImageUpdate) CheckProgress(ctx context.Context) (bool, bool, error) {
