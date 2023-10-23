@@ -32,9 +32,13 @@ import (
 // in either source or destination mode.
 type EndpointSpec struct {
 	// DeploymentName holds the name of an ArangoDeployment resource.
-	// If set this provides default values for masterEndpoint, auth & tls.
+	// If set, this provides default values for masterEndpoint, auth & tls.
 	DeploymentName *string `json:"deploymentName,omitempty"`
-	// MasterEndpoint holds a list of URLs used to reach the syncmaster(s).
+	// MasterEndpoint holds a list of URLs used to reach the syncmaster(s)
+	// Use this setting if the source cluster is not running inside a Kubernetes cluster
+	// that is reachable from the Kubernetes cluster the `ArangoDeploymentReplication` resource is deployed in.
+	// Specifying this setting and `deploymentName` at the same time is not allowed.
+	// +doc/default: []
 	MasterEndpoint []string `json:"masterEndpoint,omitempty"`
 	// Authentication holds settings needed to authentication at the syncmaster.
 	Authentication EndpointAuthenticationSpec `json:"auth"`

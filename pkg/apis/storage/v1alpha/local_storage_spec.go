@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,11 +32,17 @@ import (
 // an ArangoLocalStorage.
 type LocalStorageSpec struct {
 	StorageClass StorageClassSpec `json:"storageClass"`
-	LocalPath    []string         `json:"localPath,omitempty"`
+	// LocalPath setting specifies one or more local directories (on the nodes) used to create persistent volumes in.
+	LocalPath []string `json:"localPath,omitempty"`
 
-	Tolerations  []core.Toleration `json:"tolerations,omitempty"`
+	// Tolerations specifies the tolerations added to pods of storage provisioner
+	// +doc/type: []core.Toleration
+	// +doc/link: Documentation of core.Toleration|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#toleration-v1-core
+	Tolerations []core.Toleration `json:"tolerations,omitempty"`
+	// NodeSelector setting specifies which nodes the operator will provision persistent volumes on.
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
-	Privileged   *bool             `json:"privileged,omitempty"`
+	// Privileged if set, passes Privileged flag to SecurityContext for pods of storage provisioner
+	Privileged *bool `json:"privileged,omitempty"`
 
 	PodCustomization *LocalStoragePodCustomization `json:"podCustomization,omitempty"`
 }

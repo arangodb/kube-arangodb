@@ -2,6 +2,7 @@
 
 #### Enterprise Edition only
 
+[Full CustomResourceDefinition reference ->](./api/ArangoDeploymentReplication.V1.md)
 
 The ArangoDB Replication Operator creates and maintains ArangoDB
 `arangosync` configurations in a Kubernetes cluster, given a replication specification.
@@ -183,95 +184,6 @@ running in Kubernetes:
    As soon as the replication is configured, the `Add collection` button in the `Collections`
    page of the web interface (of the destination cluster) will be grayed out.
 
-## Specification reference
-
-Below you'll find all settings of the `ArangoDeploymentReplication` custom resource.
-
-### `spec.source.deploymentName: string`
-
-This setting specifies the name of an `ArangoDeployment` resource that runs a cluster
-with sync enabled.
-
-This cluster configured as the replication source.
-
-### `spec.source.masterEndpoint: []string`
-
-This setting specifies zero or more master endpoint URLs of the source cluster.
-
-Use this setting if the source cluster is not running inside a Kubernetes cluster
-that is reachable from the Kubernetes cluster the `ArangoDeploymentReplication` resource is deployed in.
-
-Specifying this setting and `spec.source.deploymentName` at the same time is not allowed.
-
-### `spec.source.auth.keyfileSecretName: string`
-
-This setting specifies the name of a `Secret` containing a client authentication certificate called `tls.keyfile` used to authenticate
-with the SyncMaster at the specified source.
-
-If `spec.source.auth.userSecretName` has not been set,
-the client authentication certificate found in the secret with this name is also used to configure
-the synchronization and fetch the synchronization status.
-
-This setting is required.
-
-### `spec.source.auth.userSecretName: string`
-
-This setting specifies the name of a `Secret` containing a `username` & `password` used to authenticate
-with the SyncMaster at the specified source in order to configure synchronization and fetch synchronization status.
-
-The user identified by the username must have write access in the `_system` database of the source ArangoDB cluster.
-
-### `spec.source.tls.caSecretName: string`
-
-This setting specifies the name of a `Secret` containing a TLS CA certificate `ca.crt` used to verify
-the TLS connection created by the SyncMaster at the specified source.
-
-This setting is required, unless `spec.source.deploymentName` has been set.
-
-### `spec.destination.deploymentName: string`
-
-This setting specifies the name of an `ArangoDeployment` resource that runs a cluster
-with sync enabled.
-
-This cluster configured as the replication destination.
-
-### `spec.destination.masterEndpoint: []string`
-
-This setting specifies zero or more master endpoint URLs of the destination cluster.
-
-Use this setting if the destination cluster is not running inside a Kubernetes cluster
-that is reachable from the Kubernetes cluster the `ArangoDeploymentReplication` resource is deployed in.
-
-Specifying this setting and `spec.destination.deploymentName` at the same time is not allowed.
-
-### `spec.destination.auth.keyfileSecretName: string`
-
-This setting specifies the name of a `Secret` containing a client authentication certificate called `tls.keyfile` used to authenticate
-with the SyncMaster at the specified destination.
-
-If `spec.destination.auth.userSecretName` has not been set,
-the client authentication certificate found in the secret with this name is also used to configure
-the synchronization and fetch the synchronization status.
-
-This setting is required, unless `spec.destination.deploymentName` or `spec.destination.auth.userSecretName` has been set.
-
-Specifying this setting and `spec.destination.userSecretName` at the same time is not allowed.
-
-### `spec.destination.auth.userSecretName: string`
-
-This setting specifies the name of a `Secret` containing a `username` & `password` used to authenticate
-with the SyncMaster at the specified destination in order to configure synchronization and fetch synchronization status.
-
-The user identified by the username must have write access in the `_system` database of the destination ArangoDB cluster.
-
-Specifying this setting and `spec.destination.keyfileSecretName` at the same time is not allowed.
-
-### `spec.destination.tls.caSecretName: string`
-
-This setting specifies the name of a `Secret` containing a TLS CA certificate `ca.crt` used to verify
-the TLS connection created by the SyncMaster at the specified destination.
-
-This setting is required, unless `spec.destination.deploymentName` has been set.
 
 ## Authentication details
 

@@ -40,6 +40,8 @@ import (
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	replicationApi "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
+	storageApi "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
@@ -165,6 +167,16 @@ func Test_GenerateAPIDocs(t *testing.T) {
 			"ArangoBackupPolicy.V1": {
 				"Spec":   backupApi.ArangoBackupPolicy{}.Spec,
 				"Status": backupApi.ArangoBackupPolicy{}.Status,
+			},
+		},
+		fmt.Sprintf("%s/pkg/apis/replication/v1", root): {
+			"ArangoDeploymentReplication.V1": {
+				"Spec": replicationApi.ArangoDeploymentReplication{}.Spec,
+			},
+		},
+		fmt.Sprintf("%s/pkg/apis/storage/v1alpha", root): {
+			"ArangoLocalStorage.V1Alpha": {
+				"Spec": storageApi.ArangoLocalStorage{}.Spec,
 			},
 		},
 	}
