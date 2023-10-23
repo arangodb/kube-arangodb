@@ -2,6 +2,62 @@ apiVersion: v1
 entries:
   kube-arangodb:
   - apiVersion: v1
+    created: "2023-10-23T08:20:47.117117874Z"
+    description: ArangoDB Kubernetes Operator
+    digest: 50d9be69162b0301ad18fce40d784981e5df09207b24c04eee53ad1284a74315
+    name: kube-arangodb
+    urls:
+    - https://github.com/arangodb/kube-arangodb/releases/download/1.2.33/kube-arangodb-1.2.33.tgz
+    version: 1.2.33
+  - apiVersion: v1
+    created: "2023-10-23T08:20:46.939045677Z"
+    description: ArangoDB Kubernetes Operator
+    digest: 3e18bb565c52378116752b18c43aa117b0a950dbbd424d6a99aa40b4d6ef960c
+    name: kube-arangodb
+    urls:
+    - https://github.com/arangodb/kube-arangodb/releases/download/1.2.32/kube-arangodb-1.2.32.tgz
+    version: 1.2.32
+  - apiVersion: v1
+    created: "2023-10-23T08:20:45.73557341Z"
+    description: ArangoDB Kubernetes Operator
+    digest: 97f897eff23fa382f4a7aa139a88b8c200875cdd066e0d38bb5c2738a5d03e55
+    name: kube-arangodb
+    urls:
+    - https://github.com/arangodb/kube-arangodb/releases/download/1.2.31/kube-arangodb-1.2.31.tgz
+    version: 1.2.31
+  - apiVersion: v1
+    created: "2023-10-23T08:20:45.545556058Z"
+    description: ArangoDB Kubernetes Operator
+    digest: 20d0bbcbaad5583d9d5ee3e67429bfa126add50d165466807b8f13ec2d00a9a6
+    name: kube-arangodb
+    urls:
+    - https://github.com/arangodb/kube-arangodb/releases/download/1.2.30/kube-arangodb-1.2.30.tgz
+    version: 1.2.30
+  - apiVersion: v1
+    created: "2023-10-23T08:20:45.36519724Z"
+    description: ArangoDB Kubernetes Operator
+    digest: 0cd4f51a785ad67abba6454adddaf0305a43494cde156ebaaab6ee980c1d7316
+    name: kube-arangodb
+    urls:
+    - https://github.com/arangodb/kube-arangodb/releases/download/1.2.29/kube-arangodb-1.2.29.tgz
+    version: 1.2.29
+  - apiVersion: v1
+    created: "2023-10-23T08:20:45.175097584Z"
+    description: ArangoDB Kubernetes Operator
+    digest: 8f71a1a589f65c4fe8441b89f1bc871de56adfea8f013c4d27cc0597a64a64a3
+    name: kube-arangodb
+    urls:
+    - https://github.com/arangodb/kube-arangodb/releases/download/1.2.28/kube-arangodb-1.2.28.tgz
+    version: 1.2.28
+  - apiVersion: v1
+    created: "2023-10-23T08:20:44.99562148Z"
+    description: ArangoDB Kubernetes Operator
+    digest: 133e2a2969807a5a10cea6f621804ef288815ea7f4ded71bd9985c4e90d3a5a2
+    name: kube-arangodb
+    urls:
+    - https://github.com/arangodb/kube-arangodb/releases/download/1.2.27/kube-arangodb-1.2.27.tgz
+    version: 1.2.27
+  - apiVersion: v1
     created: "2023-04-19T11:34:34.97969+02:00"
     description: ArangoDB Kubernetes Operator
     digest: e56dc031bfbbc7a5f86218c5bd3b11e64a6e70b718a9f674dc61aa7303f4e22b
@@ -459,4 +515,4 @@ entries:
     urls:
     - https://github.com/arangodb/kube-arangodb/releases/download/1.2.1/kube-arangodb-crd-1.2.1.tgz
     version: 1.2.1
-generated: "2023-04-19T11:34:35.46188+02:00"
+generated: "2023-10-23T08:20:47.117868035Z"
