@@ -1,0 +1,30 @@
+# ArangoDB operator design documents
+
+- [Architecture change](./arch_change.md)
+- [Constraints](./constraints.md)
+- [Health](./health.md)
+- [Metrics](./metrics.md)
+- [Kubernetes Pod name versus cluster ID](./pod_name_versus_cluster_id.md)
+- [Resource & labels](./resource_and_labels.md)
+- [Resource Management](./resource_management.md)
+- [Scaling](./scaling.md)
+- [Status](./status.md)
+- [Upgrading](./upgrading.md)
+- [Rotating Pods](./rotating.md)
+- [Maintenance](./maintenance.md)
+- [Additional configuration](./additional_configuration.md)
+- [Topology awareness](./topology_awareness.md)
+- [Configuring timezone](./configuring_tz.md)
+- [Operator API](./api.md)
+- [Logging](./logging.md)
+- [Manual Recovery](./recovery.md)
+- [Backup](./backup.md)
+
+## Features
+- [Force rebuild out-synced Shards with broken Merkle Tree](./features/rebuild_out_synced_shards.md)
+- [Failover Leader service](./features/failover_leader_service.md)
+- [Restore defaults from last accepted state of deployment](./features/deployment_spec_defaults.md)
+
+## Debugging
+- [Collecting debug info](./debugging.md)
+- 
