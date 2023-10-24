@@ -59,6 +59,11 @@ type ArangoBackupCreateResponse struct {
 // ArangoBackupClient interface with backup functionality for database
 type ArangoBackupClient interface {
 	Create() (ArangoBackupCreateResponse, error)
+
+	// CreateAsync creates a new backup asynchronously and returns the job ID in the error
+	// pass empty string to create a new backup
+	CreateAsync(jobID string) (ArangoBackupCreateResponse, error)
+
 	Get(driver.BackupID) (driver.BackupMeta, error)
 
 	Upload(driver.BackupID) (driver.BackupTransferJobID, error)

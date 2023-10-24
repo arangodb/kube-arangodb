@@ -48,7 +48,7 @@ type arangoClientBackupImpl struct {
 func newArangoClientBackupFactory(handler *handler) ArangoClientFactory {
 	return func(deployment *database.ArangoDeployment, backup *backupApi.ArangoBackup) (ArangoBackupClient, error) {
 		ctx := context.Background()
-		client, err := arangod.CreateArangodDatabaseClient(ctx, handler.kubeClient.CoreV1(), deployment, false)
+		client, err := arangod.CreateArangodDatabaseClient(ctx, handler.kubeClient.CoreV1(), deployment, false, true)
 		if err != nil {
 			return nil, err
 		}
@@ -91,6 +91,43 @@ func (ac *arangoClientBackupImpl) Create() (ArangoBackupCreateResponse, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), dt)
 	defer cancel()
+
+	id, resp, err := ac.driver.Backup().Create(ctx, &co)
+	if err != nil {
+		return ArangoBackupCreateResponse{}, err
+	}
+
+	// Now ask for the version
+	meta, err := ac.Get(id)
+	if err != nil {
+		return ArangoBackupCreateResponse{}, err
+	}
+
+	return ArangoBackupCreateResponse{
+		PotentiallyInconsistent: resp.PotentiallyInconsistent,
+		BackupMeta:              meta,
+	}, nil
+}
+
+func (ac *arangoClientBackupImpl) CreateAsync(jobID string) (ArangoBackupCreateResponse, error) {
+	dt := globals.GetGlobalTimeouts().BackupArangoClientTimeout().Get()
+
+	co := driver.BackupCreateOptions{}
+
+	if opt := ac.backup.Spec.Options; opt != nil {
+		if allowInconsistent := opt.AllowInconsistent; allowInconsistent != nil {
+			co.AllowInconsistent = *allowInconsistent
+		}
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), dt)
+	defer cancel()
+
+	if jobID == "" {
+		ctx = driver.WithAsync(ctx)
+	} else {
+		ctx = driver.WithAsyncID(ctx, jobID)
+	}
 
 	id, resp, err := ac.driver.Backup().Create(ctx, &co)
 	if err != nil {
@@ -217,11 +254,11 @@ func (ac *arangoClientBackupImpl) Progress(jobID driver.BackupTransferJobID) (Ar
 		case "":
 			completedCount++
 		default:
-			return ArangoBackupProgress{}, errors.Newf("Unknown transfere status: %s", status.Status)
+			return ArangoBackupProgress{}, errors.Newf("Unknown transfer status: %s", status.Status)
 		}
 	}
 
-	// Check if all defined servers are completed and total number of files is greater than 0 (there is at least 1 file per server)
+	// Check if all defined servers are completed and the total number of files is greater than 0 (there is at least 1 file per server)
 	ret.Completed = completedCount == len(report.DBServers) && total > 0
 	if total != 0 {
 		ret.Progress = (100 * done) / total

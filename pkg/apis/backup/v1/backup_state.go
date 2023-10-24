@@ -34,6 +34,7 @@ const (
 	ArangoBackupStateDownloadError state.State = "DownloadError"
 	ArangoBackupStateDownloading   state.State = "Downloading"
 	ArangoBackupStateCreate        state.State = "Create"
+	ArangoBackupStateCreating      state.State = "Creating"
 	ArangoBackupStateCreateError   state.State = "CreateError"
 	ArangoBackupStateUpload        state.State = "Upload"
 	ArangoBackupStateUploading     state.State = "Uploading"
@@ -51,7 +52,8 @@ var ArangoBackupStateMap = state.Map{
 	ArangoBackupStateDownload:      {ArangoBackupStateDownloading, ArangoBackupStateFailed, ArangoBackupStateDownloadError},
 	ArangoBackupStateDownloading:   {ArangoBackupStateReady, ArangoBackupStateFailed, ArangoBackupStateDownloadError},
 	ArangoBackupStateDownloadError: {ArangoBackupStatePending, ArangoBackupStateFailed},
-	ArangoBackupStateCreate:        {ArangoBackupStateReady, ArangoBackupStateFailed, ArangoBackupStateCreateError},
+	ArangoBackupStateCreate:        {ArangoBackupStateReady, ArangoBackupStateFailed, ArangoBackupStateCreateError, ArangoBackupStateCreating},
+	ArangoBackupStateCreating:      {ArangoBackupStateReady, ArangoBackupStateFailed, ArangoBackupStateCreateError},
 	ArangoBackupStateCreateError:   {ArangoBackupStateFailed, ArangoBackupStateCreate},
 	ArangoBackupStateUpload:        {ArangoBackupStateUploading, ArangoBackupStateFailed, ArangoBackupStateDeleted, ArangoBackupStateUploadError},
 	ArangoBackupStateUploading:     {ArangoBackupStateReady, ArangoBackupStateFailed, ArangoBackupStateUploadError},

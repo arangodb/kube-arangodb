@@ -25,7 +25,7 @@ require (
 	github.com/arangodb-helper/go-certificates v0.0.0-20180821055445-9fca24fc2680
 	github.com/arangodb-helper/go-helper v0.4.2
 	github.com/arangodb/arangosync-client v0.9.0
-	github.com/arangodb/go-driver v1.6.0
+	github.com/arangodb/go-driver v1.6.1-0.20231024071052-4e88e7d50c0c
 	github.com/arangodb/go-driver/v2 v2.0.0-20230616090327-3b9171814ae4
 	github.com/arangodb/go-upgrade-rules v0.0.0-20180809110947-031b4774ff21
 	//github.com/arangodb/rebalancer v0.1.1

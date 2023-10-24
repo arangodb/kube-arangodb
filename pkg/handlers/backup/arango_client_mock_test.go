@@ -227,6 +227,10 @@ func (m *mockArangoClientBackup) Create() (ArangoBackupCreateResponse, error) {
 	}, nil
 }
 
+func (m *mockArangoClientBackup) CreateAsync(jobID string) (ArangoBackupCreateResponse, error) {
+	return m.Create()
+}
+
 func (m *mockArangoClientBackup) getIDs() []string {
 	ret := make([]string, 0, len(m.state.backups))
 
