@@ -16,12 +16,13 @@ The ArangoDB Kubernetes Operator is Production ready.
 
 ### Limits
 
-<!-- START(limits) -->
+[START_INJECT]: # (limits)
+
 | Limit              | Description                                                                  | Community | Enterprise |
 |:-------------------|:-----------------------------------------------------------------------------|:----------|:-----------|
 | Cluster size limit | Limits of the nodes (DBServers & Coordinators) supported in the Cluster mode | 64        | 1024       |
 
-<!-- END(limits) -->
+[END_INJECT]: # (limits)
 
 ### Production readiness state
 
@@ -38,7 +39,8 @@ Kubernetes versions starting from 1.18 are supported and tested, charts and mani
 The following table has the general readiness state, the table below
 covers individual newer features separately.
 
-<!-- START(kubernetesVersionsTable) -->
+[START_INJECT]: # (kubernetesVersionsTable)
+
 | Platform            | Kubernetes Version | ArangoDB Version | State      | Remarks                                   | Provider Remarks                   |
 |:--------------------|:-------------------|:-----------------|:-----------|:------------------------------------------|:-----------------------------------|
 | Google GKE          | 1.21-1.26          | >= 3.6.0         | Production | Don't use micro nodes                     |                                    |
@@ -53,11 +55,12 @@ covers individual newer features separately.
 | Minikube            | 1.21-1.27          | >= 3.6.0         | Devel Only |                                           |                                    |
 | Other               | 1.21-1.27          | >= 3.6.0         | Devel Only |                                           |                                    |
 
-<!-- END(kubernetesVersionsTable) -->
+[END_INJECT]: # (kubernetesVersionsTable)
 
 #### Operator Features
 
-<!-- START(featuresCommunityTable) -->
+[START_INJECT]: # (featuresCommunityTable)
+
 | Feature                                                                       | Operator Version | Introduced | ArangoDB Version | ArangoDB Edition      | State        | Enabled | Flag                                                  | Remarks                                                                            |
 |:------------------------------------------------------------------------------|:-----------------|:-----------|:-----------------|:----------------------|:-------------|:--------|:------------------------------------------------------|:-----------------------------------------------------------------------------------|
 | Enforced ResignLeadership                                                     | 1.2.34           | 1.2.34     | >= 3.8.0         | Community, Enterprise | Production   | True    | --deployment.feature.enforced-resign-leadership       | Enforce ResignLeadership and ensure that Leaders are moved from restarted DBServer |
@@ -86,13 +89,14 @@ covers individual newer features separately.
 | Volume Claim Templates                                                        | 0.3.11           | 0.3.10     | >= 3.8.0         | Community, Enterprise | Production   | True    | N/A                                                   | N/A                                                                                |
 | Volume Resizing                                                               | 0.3.11           | 0.3.10     | >= 3.8.0         | Community, Enterprise | Production   | True    | N/A                                                   | N/A                                                                                |
 
-<!-- END(featuresCommunityTable) -->
+[END_INJECT]: # (featuresCommunityTable)
 
 #### Operator Enterprise Only Features
 
 To upgrade to the Enterprise Edition, you need to get in touch with the ArangoDB team. [Contact us](https://www.arangodb.com/contact/) for more details.
 
-<!-- START(featuresEnterpriseTable) -->
+[START_INJECT]: # (featuresEnterpriseTable)
+
 | Feature                                                | Operator Version | Introduced | ArangoDB Version | ArangoDB Edition | State      | Enabled | Flag | Remarks                                                                     |
 |:-------------------------------------------------------|:-----------------|:-----------|:-----------------|:-----------------|:-----------|:--------|:-----|:----------------------------------------------------------------------------|
 | AgencyCache                                            | 1.2.30           | 1.2.30     | >= 3.8.0         | Enterprise       | Production | True    | N/A  | Enable Agency Cache mechanism in the Operator (Increase limit of the nodes) |
@@ -100,7 +104,7 @@ To upgrade to the Enterprise Edition, you need to get in touch with the ArangoDB
 | [Rebalancer](docs/features/rebalancer.md)              | 1.2.15           | 1.2.5      | >= 3.8.0         | Enterprise       | Production | True    | N/A  | N/A                                                                         |
 | [TopologyAwareness](docs/design/topology_awareness.md) | 1.2.4            | 1.2.4      | >= 3.8.0         | Enterprise       | Production | True    | N/A  | N/A                                                                         |
 
-<!-- END(featuresEnterpriseTable) -->
+[END_INJECT]: # (featuresEnterpriseTable)
 
 ## Installation and Usage
 
