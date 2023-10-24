@@ -16,12 +16,12 @@ The ArangoDB Kubernetes Operator is Production ready.
 
 ### Limits
 
-[//]: # (START(limits))
+[//]: # (START limits)
 | Limit              | Description                                                                  | Community | Enterprise |
 |:-------------------|:-----------------------------------------------------------------------------|:----------|:-----------|
 | Cluster size limit | Limits of the nodes (DBServers & Coordinators) supported in the Cluster mode | 64        | 1024       |
 
-[//]: # (END(limits))
+[//]: # (END limits)
 
 ### Production readiness state
 
