@@ -28,16 +28,25 @@ import (
 	"github.com/arangodb/go-driver"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 func Test_State_Create_Common(t *testing.T) {
+	*features.AsyncBackupCreation().EnabledPointer() = false
+	wrapperUndefinedDeployment(t, backupApi.ArangoBackupStateCreate)
+	wrapperConnectionIssues(t, backupApi.ArangoBackupStateCreate)
+}
+
+func Test_State_Create_Common_Async(t *testing.T) {
+	*features.AsyncBackupCreation().EnabledPointer() = true
 	wrapperUndefinedDeployment(t, backupApi.ArangoBackupStateCreate)
 	wrapperConnectionIssues(t, backupApi.ArangoBackupStateCreate)
 }
 
 func Test_State_Create_Success(t *testing.T) {
+	*features.AsyncBackupCreation().EnabledPointer() = false
 	// Arrange
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
@@ -62,7 +71,27 @@ func Test_State_Create_Success(t *testing.T) {
 	compareBackupMeta(t, backupMeta, newObj)
 }
 
+func Test_State_Create_Success_Async(t *testing.T) {
+	*features.AsyncBackupCreation().EnabledPointer() = true
+	// Arrange
+	handler, _ := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
+
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStateCreate)
+
+	// Act
+	createArangoDeployment(t, handler, deployment)
+	createArangoBackup(t, handler, obj)
+
+	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+
+	// Assert
+	newObj := refreshArangoBackup(t, handler, obj)
+	checkBackup(t, newObj, backupApi.ArangoBackupStateCreating, false)
+}
+
 func Test_State_Create_SuccessForced(t *testing.T) {
+	*features.AsyncBackupCreation().EnabledPointer() = false
+
 	// Arrange
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
@@ -93,6 +122,8 @@ func Test_State_Create_SuccessForced(t *testing.T) {
 }
 
 func Test_State_Create_Upload(t *testing.T) {
+	*features.AsyncBackupCreation().EnabledPointer() = false
+
 	// Arrange
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
@@ -121,10 +152,34 @@ func Test_State_Create_Upload(t *testing.T) {
 }
 
 func Test_State_Create_CreateError(t *testing.T) {
+	*features.AsyncBackupCreation().EnabledPointer() = false
+
 	// Arrange
-	error := newFatalErrorf("error")
 	handler, _ := newErrorsFakeHandler(mockErrorsArangoClientBackup{
-		createError: error,
+		createError: newFatalErrorf("error"),
+	})
+
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStateCreate)
+
+	// Act
+	createArangoDeployment(t, handler, deployment)
+	createArangoBackup(t, handler, obj)
+
+	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+
+	// Assert
+	newObj := refreshArangoBackup(t, handler, obj)
+	require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateCreateError)
+	require.Nil(t, newObj.Status.Backup)
+	require.False(t, newObj.Status.Available)
+}
+
+func Test_State_Create_CreateError_Async(t *testing.T) {
+	*features.AsyncBackupCreation().EnabledPointer() = true
+
+	// Arrange
+	handler, _ := newErrorsFakeHandler(mockErrorsArangoClientBackup{
+		createError: newFatalErrorf("error"),
 	})
 
 	obj, deployment := newObjectSet(backupApi.ArangoBackupStateCreate)

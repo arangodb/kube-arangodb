@@ -29,8 +29,7 @@ var asyncBackupCreation = &feature{
 	description:        "Create backups asynchronously to avoid blocking the operator and reaching the timeout",
 	version:            "3.7.0",
 	enterpriseRequired: false,
-	// Todo change me to false after testing
-	enabledByDefault: true,
+	enabledByDefault:   false,
 }
 
 // AsyncBackupCreation returns mode for backup creation (sync/async).
