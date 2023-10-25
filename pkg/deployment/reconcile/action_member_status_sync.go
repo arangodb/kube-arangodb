@@ -23,11 +23,8 @@ package reconcile
 import (
 	"context"
 
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 )
 
@@ -77,19 +74,10 @@ func (a *actionMemberStatusSync) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	amemberc := amember.DeepCopy()
-	if amemberc.Status.Propagate(m) {
-		// Change applied
-		nctx, c := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
-		defer c()
-
-		if _, err := cache.ArangoMemberModInterface().V1().UpdateStatus(nctx, amemberc, meta.UpdateOptions{}); err != nil {
-			return false, errors.WithStack(err)
-		}
-
-		if err := cache.Refresh(nctx); err != nil {
-			return false, errors.WithStack(err)
-		}
+	if err := WithArangoMemberStatusUpdate(ctx, cache, amember.GetName(), func(in *api.ArangoMember) (bool, error) {
+		return in.Status.Propagate(m), nil
+	}); err != nil {
+		return false, errors.WithStack(err)
 	}
 
 	return true, nil

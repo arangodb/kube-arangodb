@@ -599,6 +599,7 @@ func (in *ArangoMemberStatus) DeepCopyInto(out *ArangoMemberStatus) {
 		*out = new(ArangoMemberPodTemplate)
 		(*in).DeepCopyInto(*out)
 	}
+	in.LastUpdateTime.DeepCopyInto(&out.LastUpdateTime)
 	return
 }
 

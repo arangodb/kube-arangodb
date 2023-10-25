@@ -32,7 +32,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 )
 
@@ -107,7 +106,7 @@ func (a actionRuntimeContainerArgsLogLevelUpdate) Post(ctx context.Context) erro
 		return false, nil
 	}
 
-	err := inspector.WithArangoMemberStatusUpdate(ctx, cache, memberName, updateMemberStatusArgs)
+	err := WithArangoMemberStatusUpdate(ctx, cache, memberName, updateMemberStatusArgs)
 	if err != nil {
 		return errors.WithMessage(err, "Error while updating member status")
 	}
