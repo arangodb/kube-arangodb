@@ -34,23 +34,23 @@ const (
 )
 
 func init() {
-	if err := yaml.Unmarshal(batabaseDeployment, &batabaseDeploymentCRD); err != nil {
+	if err := yaml.Unmarshal(databaseDeployment, &databaseDeploymentCRD); err != nil {
 		panic(err)
 	}
 }
 
 func DatabaseDeployment() *apiextensions.CustomResourceDefinition {
-	return batabaseDeploymentCRD.DeepCopy()
+	return databaseDeploymentCRD.DeepCopy()
 }
 
 func DatabaseDeploymentDefinition() Definition {
 	return Definition{
 		Version: DatabaseDeploymentVersion,
-		CRD:     batabaseDeploymentCRD.DeepCopy(),
+		CRD:     databaseDeploymentCRD.DeepCopy(),
 	}
 }
 
-var batabaseDeploymentCRD apiextensions.CustomResourceDefinition
+var databaseDeploymentCRD apiextensions.CustomResourceDefinition
 
 //go:embed database-deployment.yaml
-var batabaseDeployment []byte
+var databaseDeployment []byte

@@ -24,15 +24,11 @@ import (
 	"bytes"
 	"fmt"
 	"go/ast"
-	"go/parser"
 	"go/token"
 	"io"
-	"io/fs"
 	"os"
 	"path"
-	"path/filepath"
 	"reflect"
-	"sort"
 	"strings"
 	"testing"
 
@@ -45,9 +41,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-type DocDefinitions []DocDefinition
-
-func (d DocDefinitions) Render(t *testing.T) []byte {
+func (d DocDefinitions) RenderMarkdown(t *testing.T) []byte {
 	out := bytes.NewBuffer(nil)
 
 	for _, el := range d {
@@ -125,31 +119,11 @@ func (d DocDefinitions) Render(t *testing.T) []byte {
 	return out.Bytes()
 }
 
-type DocDefinition struct {
-	Path string
-	Type string
-
-	File string
-	Line int
-
-	Docs []string
-
-	Links []string
-
-	Important *string
-
-	Enum []string
-
-	Immutable *string
-
-	Default *string
-	Example []string
-}
-
 func Test_GenerateAPIDocs(t *testing.T) {
 	root := os.Getenv("ROOT")
 	require.NotEmpty(t, root)
 
+	// package path -> result doc file name -> name of the top-level field to be described -> field instance for reflection
 	input := map[string]map[string]map[string]interface{}{
 		fmt.Sprintf("%s/pkg/apis/deployment/v1", root): {
 			"ArangoDeployment.V1": {
@@ -183,100 +157,35 @@ func Test_GenerateAPIDocs(t *testing.T) {
 
 	resultPaths := make(map[string]string)
 	for apiDir, docs := range input {
-		astFields, fileSets := parseSourceFiles(t, apiDir)
-		util.CopyMap(resultPaths, generateDocs(t, docs, astFields, fileSets))
+		fields, fileSets := parseSourceFiles(t, apiDir)
+		util.CopyMap(resultPaths, generateDocs(t, docs, fields, fileSets))
 	}
 	generateIndex(t, resultPaths)
 }
 
-func generateDocs(t *testing.T, objects map[string]map[string]interface{}, docs map[string]*ast.Field, fs *token.FileSet) map[string]string {
+func generateDocs(t *testing.T, objects map[string]map[string]interface{}, fields map[string]*ast.Field, fs *token.FileSet) map[string]string {
 	root := os.Getenv("ROOT")
 	require.NotEmpty(t, root)
 
 	outPaths := make(map[string]string)
 
-	for object, sections := range objects {
-		t.Run(object, func(t *testing.T) {
+	for objectName, sections := range objects {
+		t.Run(objectName, func(t *testing.T) {
 			renderSections := map[string][]byte{}
-			for section, data := range sections {
+			for section, fieldInstance := range sections {
 				t.Run(section, func(t *testing.T) {
 
-					res := iterateOverObject(t, docs, strings.ToLower(section), reflect.TypeOf(data), "")
+					sectionParsed := iterateOverObject(t, fields, strings.ToLower(section), reflect.TypeOf(fieldInstance), "")
 
-					var elements []string
+					defs := parseDocDefinitions(t, sectionParsed, fs)
 
-					for k := range res {
-						elements = append(elements, k)
-					}
-
-					sort.Slice(elements, func(i, j int) bool {
-						if a, b := strings.ToLower(elements[i]), strings.ToLower(elements[j]); a == b {
-							return elements[i] < elements[j]
-						} else {
-							return a < b
-						}
-					})
-
-					defs := make(DocDefinitions, len(elements))
-
-					for id, k := range elements {
-						field := res[k]
-
-						var def DocDefinition
-
-						def.Path = strings.Split(k, ":")[0]
-						def.Type = strings.Split(k, ":")[1]
-
-						require.NotNil(t, field)
-
-						if links, ok := extract(field, "link"); ok {
-							def.Links = links
-						}
-
-						if d, ok := extract(field, "default"); ok {
-							def.Default = util.NewType[string](d[0])
-						}
-
-						if example, ok := extract(field, "example"); ok {
-							def.Example = example
-						}
-
-						if enum, ok := extract(field, "enum"); ok {
-							def.Enum = enum
-						}
-
-						if immutable, ok := extract(field, "immutable"); ok {
-							def.Immutable = util.NewType[string](immutable[0])
-						}
-
-						if important, ok := extract(field, "important"); ok {
-							def.Important = util.NewType[string](important[0])
-						}
-
-						if docs, ok := extractNotTags(field); !ok {
-							println(def.Path, " is missing documentation!")
-						} else {
-							def.Docs = docs
-						}
-
-						file := fs.File(field.Pos())
-
-						filePath, err := filepath.Rel(root, file.Name())
-						require.NoError(t, err)
-
-						def.File = filePath
-						def.Line = file.Line(field.Pos())
-
-						defs[id] = def
-					}
-
-					renderSections[section] = defs.Render(t)
+					renderSections[section] = defs.RenderMarkdown(t)
 				})
 			}
 
-			fileName := fmt.Sprintf("%s.md", object)
-			outPaths[object] = fileName
-			outPath := path.Join(root, "docs/api", fmt.Sprintf("%s.md", object))
+			fileName := fmt.Sprintf("%s.md", objectName)
+			outPaths[objectName] = fileName
+			outPath := path.Join(root, "docs/api", fmt.Sprintf("%s.md", objectName))
 			out, err := os.OpenFile(outPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 			require.NoError(t, err)
 
@@ -284,7 +193,7 @@ func generateDocs(t *testing.T, objects map[string]map[string]interface{}, docs 
 				require.NoError(t, out.Close())
 			}()
 
-			write(t, out, "# API Reference for %s\n\n", strings.ReplaceAll(object, ".", " "))
+			write(t, out, "# API Reference for %s\n\n", strings.ReplaceAll(objectName, ".", " "))
 
 			util.IterateSorted(renderSections, func(name string, section []byte) {
 				write(t, out, "## %s\n\n", name)
@@ -319,236 +228,4 @@ func generateIndex(t *testing.T, apiDocs map[string]string) {
 func write(t *testing.T, out io.Writer, format string, args ...interface{}) {
 	_, err := out.Write([]byte(fmt.Sprintf(format, args...)))
 	require.NoError(t, err)
-}
-
-func iterateOverObject(t *testing.T, docs map[string]*ast.Field, name string, object reflect.Type, path string) map[string]*ast.Field {
-	r := map[string]*ast.Field{}
-	t.Run(name, func(t *testing.T) {
-		for k, v := range iterateOverObjectDirect(t, docs, name, object, path) {
-			r[k] = v
-		}
-	})
-
-	return r
-}
-
-func iterateOverObjectDirect(t *testing.T, docs map[string]*ast.Field, name string, object reflect.Type, path string) map[string]*ast.Field {
-	if n, simple := isSimpleType(object); simple {
-		return map[string]*ast.Field{
-			fmt.Sprintf("%s.%s:%s", path, name, n): nil,
-		}
-	}
-
-	r := map[string]*ast.Field{}
-
-	switch object.Kind() {
-	case reflect.Array, reflect.Slice:
-		if n, simple := isSimpleType(object.Elem()); simple {
-			return map[string]*ast.Field{
-				fmt.Sprintf("%s.%s:[]%s", path, name, n): nil,
-			}
-		}
-
-		for k, v := range iterateOverObjectDirect(t, docs, fmt.Sprintf("%s\\[int\\]", name), object.Elem(), path) {
-			r[k] = v
-		}
-	case reflect.Map:
-		if n, simple := isSimpleType(object.Elem()); simple {
-			return map[string]*ast.Field{
-				fmt.Sprintf("%s.%s:map[%s]%s", path, name, object.Key().String(), n): nil,
-			}
-		}
-
-		for k, v := range iterateOverObjectDirect(t, docs, fmt.Sprintf("%s.\\<%s\\>", name, object.Key().Kind().String()), object.Elem(), path) {
-			r[k] = v
-		}
-	case reflect.Struct:
-		for field := 0; field < object.NumField(); field++ {
-			f := object.Field(field)
-
-			if !f.IsExported() {
-				continue
-			}
-
-			tag, ok := f.Tag.Lookup("json")
-			if !ok {
-				if f.Anonymous {
-					tag = ",inline"
-				}
-			}
-
-			n, inline := extractTag(tag)
-
-			if n == "-" {
-				continue
-			}
-
-			docName := fmt.Sprintf("%s.%s", object.String(), f.Name)
-
-			doc, ok := docs[docName]
-			if !ok && !f.Anonymous {
-				require.True(t, ok, "field %s was not parsed from source", docName)
-			}
-
-			if !f.Anonymous {
-				if t, ok := extractType(doc); ok {
-					r[fmt.Sprintf("%s.%s.%s:%s", path, name, n, t[0])] = doc
-					continue
-				}
-			}
-
-			if inline {
-				for k, v := range iterateOverObjectDirect(t, docs, name, f.Type, path) {
-					if v == nil {
-						v = doc
-					}
-					r[k] = v
-				}
-			} else {
-
-				for k, v := range iterateOverObject(t, docs, n, f.Type, fmt.Sprintf("%s.%s", path, name)) {
-					if v == nil {
-						v = doc
-					}
-					r[k] = v
-				}
-			}
-		}
-	case reflect.Pointer:
-		for k, v := range iterateOverObjectDirect(t, docs, name, object.Elem(), path) {
-			r[k] = v
-		}
-	default:
-		require.Failf(t, "unsupported type", "%s for %s at %s", object.String(), name, path)
-	}
-
-	return r
-}
-
-func extractType(n *ast.Field) ([]string, bool) {
-	return extract(n, "type")
-}
-
-func extract(n *ast.Field, tag string) ([]string, bool) {
-	if n.Doc == nil {
-		return nil, false
-	}
-
-	var ret []string
-
-	for _, c := range n.Doc.List {
-		if strings.HasPrefix(c.Text, fmt.Sprintf("// +doc/%s: ", tag)) {
-			ret = append(ret, strings.TrimPrefix(c.Text, fmt.Sprintf("// +doc/%s: ", tag)))
-		}
-	}
-
-	return ret, len(ret) > 0
-}
-
-func extractNotTags(n *ast.Field) ([]string, bool) {
-	if n.Doc == nil {
-		return nil, false
-	}
-
-	var ret []string
-
-	for _, c := range n.Doc.List {
-		if strings.HasPrefix(c.Text, "// ") {
-			if !strings.HasPrefix(c.Text, "// +doc/") {
-				ret = append(ret, strings.TrimPrefix(c.Text, "// "))
-			}
-		}
-	}
-
-	return ret, len(ret) > 0
-}
-
-func isSimpleType(obj reflect.Type) (string, bool) {
-	switch obj.Kind() {
-	case reflect.String,
-		reflect.Bool,
-		reflect.Int, reflect.Int32, reflect.Int64,
-		reflect.Uint, reflect.Uint16, reflect.Uint64,
-		reflect.Float32:
-		return obj.Kind().String(), true
-	}
-
-	return "", false
-}
-
-func extractTag(tag string) (string, bool) {
-	parts := strings.SplitN(tag, ",", 2)
-
-	if len(parts) == 1 {
-		return parts[0], false
-	}
-
-	if parts[1] == "inline" {
-		return parts[0], true
-	}
-
-	return parts[0], false
-}
-
-func parseSourceFiles(t *testing.T, paths ...string) (map[string]*ast.Field, *token.FileSet) {
-	d, fs := parseMultipleDirs(t, parser.ParseComments, paths...)
-
-	r := map[string]*ast.Field{}
-
-	for k, f := range d {
-		var ct *ast.TypeSpec
-		var nt *ast.TypeSpec
-
-		ast.Inspect(f, func(n ast.Node) bool {
-			switch x := n.(type) {
-			case *ast.TypeSpec, *ast.FuncDecl, *ast.Field, *ast.Package, *ast.File, *ast.Ident, *ast.StructType:
-			default:
-				if x == nil {
-					return true
-				}
-				return true
-			}
-
-			switch x := n.(type) {
-			case *ast.TypeSpec:
-				ct = x
-			case *ast.StructType:
-				nt = ct
-			case *ast.FuncDecl:
-				nt = nil
-			case *ast.Field:
-				if nt != nil {
-					require.NotEmpty(t, nt.Name)
-
-					for _, name := range x.Names {
-						r[fmt.Sprintf("%s.%s.%s", k, nt.Name, name)] = x
-					}
-				}
-			}
-
-			return true
-		})
-	}
-
-	return r, fs
-}
-
-func parseMultipleDirs(t *testing.T, mode parser.Mode, dirs ...string) (map[string]*ast.Package, *token.FileSet) {
-	fset := token.NewFileSet() // positions are relative to fset
-
-	r := map[string]*ast.Package{}
-
-	for _, dir := range dirs {
-		d, err := parser.ParseDir(fset, dir, func(info fs.FileInfo) bool {
-			return !strings.HasSuffix(info.Name(), "_test.go")
-		}, mode)
-		require.NoError(t, err)
-
-		for k, v := range d {
-			require.NotContains(t, r, k)
-			r[k] = v
-		}
-	}
-
-	return r, fset
 }
