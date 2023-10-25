@@ -74,6 +74,7 @@ jobs:
               exit 0
             fi
              make vulncheck
+      - run: make verify-generated
     environment:
       GO111MODULES: off
 
