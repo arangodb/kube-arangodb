@@ -31,7 +31,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 )
 
 func newRuntimeContainerImageUpdateAction(action api.Action, actionCtx ActionContext) Action {
@@ -121,7 +120,7 @@ func (a actionRuntimeContainerImageUpdate) Post(ctx context.Context) error {
 		return err
 	}
 
-	return inspector.WithArangoMemberStatusUpdate(ctx, cache, name, func(in *api.ArangoMember) (bool, error) {
+	return WithArangoMemberStatusUpdate(ctx, cache, name, func(in *api.ArangoMember) (bool, error) {
 		if in.Spec.Template == nil || in.Status.Template == nil ||
 			in.Spec.Template.PodSpec == nil || in.Status.Template.PodSpec == nil {
 			a.log.Info("Nil Member definition")

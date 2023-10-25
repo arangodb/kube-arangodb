@@ -20,10 +20,18 @@
 
 package v1
 
+import meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 type ArangoMemberStatus struct {
 	Conditions ConditionList `json:"conditions,omitempty"`
 
 	Template *ArangoMemberPodTemplate `json:"template,omitempty"`
+
+	// Message keeps the information about time when ArangoMember Status was modified last time
+	LastUpdateTime meta.Time `json:"lastUpdateTime,omitempty"`
+
+	// Message keeps the information about ArangoMember Message in the String format
+	Message string `json:"message,omitempty"`
 }
 
 func (a ArangoMemberStatus) InSync(status MemberStatus) bool {

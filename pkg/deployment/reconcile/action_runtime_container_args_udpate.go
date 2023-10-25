@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,7 +32,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 )
 
@@ -107,7 +106,7 @@ func (a actionRuntimeContainerArgsLogLevelUpdate) Post(ctx context.Context) erro
 		return false, nil
 	}
 
-	err := inspector.WithArangoMemberStatusUpdate(ctx, cache, memberName, updateMemberStatusArgs)
+	err := WithArangoMemberStatusUpdate(ctx, cache, memberName, updateMemberStatusArgs)
 	if err != nil {
 		return errors.WithMessage(err, "Error while updating member status")
 	}

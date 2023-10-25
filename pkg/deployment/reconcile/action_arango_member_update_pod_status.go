@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 )
 
 const (
@@ -83,7 +82,7 @@ func (a *actionArangoMemberUpdatePodStatus) Start(ctx context.Context) (bool, er
 	}
 
 	if member.Status.Template == nil || !member.Status.Template.Equals(member.Spec.Template) {
-		if err := inspector.WithArangoMemberStatusUpdate(ctx, cache, name, func(in *api.ArangoMember) (bool, error) {
+		if err := WithArangoMemberStatusUpdate(ctx, cache, name, func(in *api.ArangoMember) (bool, error) {
 			if in.Status.Template == nil || !in.Status.Template.Equals(member.Spec.Template) {
 				in.Status.Template = member.Spec.Template.DeepCopy()
 				return true, nil
