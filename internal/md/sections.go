@@ -56,7 +56,7 @@ func ReplaceSections(in string, sections map[string]string) (string, error) {
 }
 
 func ReplaceSection(in, replace, section string) (string, error) {
-	start, end := fmt.Sprintf("<!-- START(%s) -->", section), fmt.Sprintf("<!-- END(%s) -->", section)
+	start, end := fmt.Sprintf("\n[START_INJECT]: # (%s)\n", section), fmt.Sprintf("[END_INJECT]: # (%s)\n", section)
 
 	b := bytes.NewBuffer(nil)
 
@@ -78,7 +78,14 @@ func ReplaceSection(in, replace, section string) (string, error) {
 
 		endID := strings.Index(in, end)
 		if endID == -1 {
-			return "", errors.Newf("END sections is missing")
+			return "", errors.Newf("END_INJECT sections is missing for section %s. Note that newline is required at the end and before tag", section)
+		}
+
+		if strings.HasSuffix(replace, "\n\n") {
+			// if section ends with empty line, we don't need to write newline for END marker
+			end = strings.TrimLeft(end, "\n")
+		} else {
+			end = "\n" + end
 		}
 
 		b.WriteString(end)
