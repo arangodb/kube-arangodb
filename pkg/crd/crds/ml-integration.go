@@ -21,41 +21,36 @@
 package crds
 
 import (
+	_ "embed"
+
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/arangodb/go-driver"
 )
 
-type Definition struct {
-	Version driver.Version
-	CRD     *apiextensions.CustomResourceDefinition
-}
+const (
+	MLIntegrationVersion = driver.Version("1.0.0")
+)
 
-func AllDefinitions() []Definition {
-	return []Definition{
-		// Deployment
-		DatabaseDeploymentDefinition(),
-		DatabaseMemberDefinition(),
-
-		// ACS
-		DatabaseClusterSynchronizationDefinition(),
-
-		// ArangoSync
-		ReplicationDeploymentReplicationDefinition(),
-
-		// Storage
-		StorageLocalStorageDefinition(),
-
-		// Apps
-		AppsJobDefinition(),
-		DatabaseTaskDefinition(),
-
-		// Backups
-		BackupsBackupDefinition(),
-		BackupsBackupPolicyDefinition(),
-
-		// ML
-		MLIntegrationDefinition(),
-		MLStorageDefinition(),
+func init() {
+	if err := yaml.Unmarshal(mlIntegration, &mlIntegrationCRD); err != nil {
+		panic(err)
 	}
 }
+
+func MLIntegration() *apiextensions.CustomResourceDefinition {
+	return mlIntegrationCRD.DeepCopy()
+}
+
+func MLIntegrationDefinition() Definition {
+	return Definition{
+		Version: MLIntegrationVersion,
+		CRD:     mlIntegrationCRD.DeepCopy(),
+	}
+}
+
+var mlIntegrationCRD apiextensions.CustomResourceDefinition
+
+//go:embed ml-integration.yaml
+var mlIntegration []byte

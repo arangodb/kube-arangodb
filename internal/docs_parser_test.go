@@ -29,6 +29,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"sort"
 	"strings"
 	"testing"
 
@@ -37,17 +38,32 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-func parseDocDefinitions(t *testing.T, res map[typeInfo]*ast.Field, fs *token.FileSet) DocDefinitions {
+func parseDocDefinitions(t *testing.T, res map[string]*ast.Field, fs *token.FileSet) DocDefinitions {
 	root := os.Getenv("ROOT")
 	require.NotEmpty(t, root)
 
-	defs := make(DocDefinitions, 0, len(res))
+	var elements []string
+	for k := range res {
+		elements = append(elements, k)
+	}
 
-	for info, field := range res {
-		def := DocDefinition{
-			Path: info.path,
-			Type: info.typ,
+	sort.Slice(elements, func(i, j int) bool {
+		if a, b := strings.ToLower(elements[i]), strings.ToLower(elements[j]); a == b {
+			return elements[i] < elements[j]
+		} else {
+			return a < b
 		}
+	})
+
+	defs := make(DocDefinitions, len(elements))
+
+	for id, k := range elements {
+		field := res[k]
+
+		var def DocDefinition
+
+		def.Path = strings.Split(k, ":")[0]
+		def.Type = strings.Split(k, ":")[1]
 
 		require.NotNil(t, field)
 
@@ -89,18 +105,13 @@ func parseDocDefinitions(t *testing.T, res map[typeInfo]*ast.Field, fs *token.Fi
 		def.File = filePath
 		def.Line = file.Line(field.Pos())
 
-		defs = append(defs, def)
+		defs[id] = def
 	}
 	return defs
 }
 
-type typeInfo struct {
-	path string
-	typ  string
-}
-
-func iterateOverObject(t *testing.T, fields map[string]*ast.Field, name string, object reflect.Type, path string) map[typeInfo]*ast.Field {
-	r := map[typeInfo]*ast.Field{}
+func iterateOverObject(t *testing.T, fields map[string]*ast.Field, name string, object reflect.Type, path string) map[string]*ast.Field {
+	r := map[string]*ast.Field{}
 	t.Run(name, func(t *testing.T) {
 		for k, v := range iterateOverObjectDirect(t, fields, name, object, path) {
 			r[k] = v
@@ -110,26 +121,20 @@ func iterateOverObject(t *testing.T, fields map[string]*ast.Field, name string, 
 	return r
 }
 
-func iterateOverObjectDirect(t *testing.T, fields map[string]*ast.Field, name string, object reflect.Type, path string) map[typeInfo]*ast.Field {
+func iterateOverObjectDirect(t *testing.T, fields map[string]*ast.Field, name string, object reflect.Type, path string) map[string]*ast.Field {
 	if n, simple := isSimpleType(object); simple {
-		return map[typeInfo]*ast.Field{
-			typeInfo{
-				path: fmt.Sprintf("%s.%s", path, name),
-				typ:  n,
-			}: nil,
+		return map[string]*ast.Field{
+			fmt.Sprintf("%s.%s:%s", path, name, n): nil,
 		}
 	}
 
-	r := map[typeInfo]*ast.Field{}
+	r := map[string]*ast.Field{}
 
 	switch object.Kind() {
 	case reflect.Array, reflect.Slice:
-		if _, simple := isSimpleType(object.Elem()); simple {
-			return map[typeInfo]*ast.Field{
-				typeInfo{
-					path: fmt.Sprintf("%s.%s", path, name),
-					typ:  "array",
-				}: nil,
+		if n, simple := isSimpleType(object.Elem()); simple {
+			return map[string]*ast.Field{
+				fmt.Sprintf("%s.%s:[]%s", path, name, n): nil,
 			}
 		}
 
@@ -137,12 +142,9 @@ func iterateOverObjectDirect(t *testing.T, fields map[string]*ast.Field, name st
 			r[k] = v
 		}
 	case reflect.Map:
-		if _, simple := isSimpleType(object.Elem()); simple {
-			return map[typeInfo]*ast.Field{
-				typeInfo{
-					path: fmt.Sprintf("%s.%s", path, name),
-					typ:  "object",
-				}: nil,
+		if n, simple := isSimpleType(object.Elem()); simple {
+			return map[string]*ast.Field{
+				fmt.Sprintf("%s.%s:map[%s]%s", path, name, object.Key().String(), n): nil,
 			}
 		}
 
@@ -179,11 +181,7 @@ func iterateOverObjectDirect(t *testing.T, fields map[string]*ast.Field, name st
 
 			if !f.Anonymous {
 				if t, ok := extractType(doc); ok {
-					info := typeInfo{
-						path: fmt.Sprintf("%s.%s.%s", path, name, n),
-						typ:  t[0],
-					}
-					r[info] = doc
+					r[fmt.Sprintf("%s.%s.%s:%s", path, name, n, t[0])] = doc
 					continue
 				}
 			}
@@ -254,21 +252,16 @@ func extractNotTags(n *ast.Field) ([]string, bool) {
 	return ret, len(ret) > 0
 }
 
-// isSimpleType returns the OpenAPI-compatible type name and boolean indicating if this is simple type or not
 func isSimpleType(obj reflect.Type) (string, bool) {
 	switch obj.Kind() {
-	case reflect.String:
-		return "string", true
-	case reflect.Bool:
-		return "boolean", true
-	case reflect.Int, reflect.Int32,
-		reflect.Uint, reflect.Uint8, reflect.Uint16:
-		return "integer", true
-	case reflect.Int64, reflect.Uint64:
-		return "integer", true
-	case reflect.Float32:
-		return "number", true
+	case reflect.String,
+		reflect.Bool,
+		reflect.Int, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint16, reflect.Uint64,
+		reflect.Float32:
+		return obj.Kind().String(), true
 	}
+
 	return "", false
 }
 

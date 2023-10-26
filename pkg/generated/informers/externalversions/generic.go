@@ -29,6 +29,7 @@ import (
 	backupv1 "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	deploymentv1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	v2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v2alpha1"
+	v1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
 	replicationv1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	replicationv2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v2alpha1"
 	v1alpha "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
@@ -91,6 +92,12 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Database().V2alpha1().ArangoMembers().Informer()}, nil
 	case v2alpha1.SchemeGroupVersion.WithResource("arangotasks"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Database().V2alpha1().ArangoTasks().Informer()}, nil
+
+		// Group=ml.arangodb.com, Version=v1alpha1
+	case v1alpha1.SchemeGroupVersion.WithResource("arangomlintegrations"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Ml().V1alpha1().ArangoMLIntegrations().Informer()}, nil
+	case v1alpha1.SchemeGroupVersion.WithResource("arangomlstorages"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Ml().V1alpha1().ArangoMLStorages().Informer()}, nil
 
 		// Group=replication.database.arangodb.com, Version=v1
 	case replicationv1.SchemeGroupVersion.WithResource("arangodeploymentreplications"):

@@ -37,6 +37,8 @@ linters-settings:
         alias: storage
       - pkg: k8s.io/api/policy/v1
         alias: policy
+      - pkg: github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1
+        alias: mlApi
   gci:
     sections:
       - standard
