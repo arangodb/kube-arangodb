@@ -22,13 +22,13 @@
 
 package v1alpha1
 
-// ArangoMLIntegrationListerExpansion allows custom methods to be added to
-// ArangoMLIntegrationLister.
-type ArangoMLIntegrationListerExpansion interface{}
+// ArangoMLExtensionListerExpansion allows custom methods to be added to
+// ArangoMLExtensionLister.
+type ArangoMLExtensionListerExpansion interface{}
 
-// ArangoMLIntegrationNamespaceListerExpansion allows custom methods to be added to
-// ArangoMLIntegrationNamespaceLister.
-type ArangoMLIntegrationNamespaceListerExpansion interface{}
+// ArangoMLExtensionNamespaceListerExpansion allows custom methods to be added to
+// ArangoMLExtensionNamespaceLister.
+type ArangoMLExtensionNamespaceListerExpansion interface{}
 
 // ArangoMLStorageListerExpansion allows custom methods to be added to
 // ArangoMLStorageLister.

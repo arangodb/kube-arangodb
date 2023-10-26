@@ -94,8 +94,8 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Database().V2alpha1().ArangoTasks().Informer()}, nil
 
 		// Group=ml.arangodb.com, Version=v1alpha1
-	case v1alpha1.SchemeGroupVersion.WithResource("arangomlintegrations"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Ml().V1alpha1().ArangoMLIntegrations().Informer()}, nil
+	case v1alpha1.SchemeGroupVersion.WithResource("arangomlextensions"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Ml().V1alpha1().ArangoMLExtensions().Informer()}, nil
 	case v1alpha1.SchemeGroupVersion.WithResource("arangomlstorages"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Ml().V1alpha1().ArangoMLStorages().Informer()}, nil
 

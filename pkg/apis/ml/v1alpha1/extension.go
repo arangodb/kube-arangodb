@@ -26,22 +26,22 @@ import (
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// ArangoMLIntegrationList is a list of ArangoML Integrations.
-type ArangoMLIntegrationList struct {
+// ArangoMLExtensionList is a list of ArangoML Extensions.
+type ArangoMLExtensionList struct {
 	meta.TypeMeta `json:",inline"`
 	meta.ListMeta `json:"metadata,omitempty"`
 
-	Items []ArangoMLIntegration `json:"items"`
+	Items []ArangoMLExtension `json:"items"`
 }
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// ArangoMLIntegration contains definition and status of the ArangoML Integration.
-type ArangoMLIntegration struct {
+// ArangoMLExtension contains definition and status of the ArangoML Extension.
+type ArangoMLExtension struct {
 	meta.TypeMeta   `json:",inline"`
 	meta.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   ArangoMLIntegrationSpec   `json:"spec"`
-	Status ArangoMLIntegrationStatus `json:"status"`
+	Spec   ArangoMLExtensionSpec   `json:"spec"`
+	Status ArangoMLExtensionStatus `json:"status"`
 }

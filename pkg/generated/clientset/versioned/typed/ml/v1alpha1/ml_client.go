@@ -32,7 +32,7 @@ import (
 
 type MlV1alpha1Interface interface {
 	RESTClient() rest.Interface
-	ArangoMLIntegrationsGetter
+	ArangoMLExtensionsGetter
 	ArangoMLStoragesGetter
 }
 
@@ -41,8 +41,8 @@ type MlV1alpha1Client struct {
 	restClient rest.Interface
 }
 
-func (c *MlV1alpha1Client) ArangoMLIntegrations(namespace string) ArangoMLIntegrationInterface {
-	return newArangoMLIntegrations(c, namespace)
+func (c *MlV1alpha1Client) ArangoMLExtensions(namespace string) ArangoMLExtensionInterface {
+	return newArangoMLExtensions(c, namespace)
 }
 
 func (c *MlV1alpha1Client) ArangoMLStorages(namespace string) ArangoMLStorageInterface {

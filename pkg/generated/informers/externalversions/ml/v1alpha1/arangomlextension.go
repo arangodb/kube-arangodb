@@ -36,59 +36,59 @@ import (
 	cache "k8s.io/client-go/tools/cache"
 )
 
-// ArangoMLIntegrationInformer provides access to a shared informer and lister for
-// ArangoMLIntegrations.
-type ArangoMLIntegrationInformer interface {
+// ArangoMLExtensionInformer provides access to a shared informer and lister for
+// ArangoMLExtensions.
+type ArangoMLExtensionInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha1.ArangoMLIntegrationLister
+	Lister() v1alpha1.ArangoMLExtensionLister
 }
 
-type arangoMLIntegrationInformer struct {
+type arangoMLExtensionInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
 	tweakListOptions internalinterfaces.TweakListOptionsFunc
 	namespace        string
 }
 
-// NewArangoMLIntegrationInformer constructs a new informer for ArangoMLIntegration type.
+// NewArangoMLExtensionInformer constructs a new informer for ArangoMLExtension type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewArangoMLIntegrationInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
-	return NewFilteredArangoMLIntegrationInformer(client, namespace, resyncPeriod, indexers, nil)
+func NewArangoMLExtensionInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
+	return NewFilteredArangoMLExtensionInformer(client, namespace, resyncPeriod, indexers, nil)
 }
 
-// NewFilteredArangoMLIntegrationInformer constructs a new informer for ArangoMLIntegration type.
+// NewFilteredArangoMLExtensionInformer constructs a new informer for ArangoMLExtension type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewFilteredArangoMLIntegrationInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
+func NewFilteredArangoMLExtensionInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
 	return cache.NewSharedIndexInformer(
 		&cache.ListWatch{
 			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.MlV1alpha1().ArangoMLIntegrations(namespace).List(context.TODO(), options)
+				return client.MlV1alpha1().ArangoMLExtensions(namespace).List(context.TODO(), options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.MlV1alpha1().ArangoMLIntegrations(namespace).Watch(context.TODO(), options)
+				return client.MlV1alpha1().ArangoMLExtensions(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&mlv1alpha1.ArangoMLIntegration{},
+		&mlv1alpha1.ArangoMLExtension{},
 		resyncPeriod,
 		indexers,
 	)
 }
 
-func (f *arangoMLIntegrationInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewFilteredArangoMLIntegrationInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
+func (f *arangoMLExtensionInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
+	return NewFilteredArangoMLExtensionInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
 }
 
-func (f *arangoMLIntegrationInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&mlv1alpha1.ArangoMLIntegration{}, f.defaultInformer)
+func (f *arangoMLExtensionInformer) Informer() cache.SharedIndexInformer {
+	return f.factory.InformerFor(&mlv1alpha1.ArangoMLExtension{}, f.defaultInformer)
 }
 
-func (f *arangoMLIntegrationInformer) Lister() v1alpha1.ArangoMLIntegrationLister {
-	return v1alpha1.NewArangoMLIntegrationLister(f.Informer().GetIndexer())
+func (f *arangoMLExtensionInformer) Lister() v1alpha1.ArangoMLExtensionLister {
+	return v1alpha1.NewArangoMLExtensionLister(f.Informer().GetIndexer())
 }

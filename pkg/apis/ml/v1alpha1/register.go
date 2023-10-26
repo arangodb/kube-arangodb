@@ -29,7 +29,7 @@ import (
 )
 
 const (
-	ArangoMLVersion = "v1"
+	ArangoMLVersion = "v1alpha1"
 )
 
 var (
@@ -49,8 +49,8 @@ func addKnownTypes(s *runtime.Scheme) error {
 	s.AddKnownTypes(SchemeGroupVersion,
 		&ArangoMLStorage{},
 		&ArangoMLStorageList{},
-		&ArangoMLIntegration{},
-		&ArangoMLIntegrationList{})
+		&ArangoMLExtension{},
+		&ArangoMLExtensionList{})
 	meta.AddToGroupVersion(s, SchemeGroupVersion)
 	return nil
 }

@@ -32,8 +32,8 @@ type FakeMlV1alpha1 struct {
 	*testing.Fake
 }
 
-func (c *FakeMlV1alpha1) ArangoMLIntegrations(namespace string) v1alpha1.ArangoMLIntegrationInterface {
-	return &FakeArangoMLIntegrations{c, namespace}
+func (c *FakeMlV1alpha1) ArangoMLExtensions(namespace string) v1alpha1.ArangoMLExtensionInterface {
+	return &FakeArangoMLExtensions{c, namespace}
 }
 
 func (c *FakeMlV1alpha1) ArangoMLStorages(namespace string) v1alpha1.ArangoMLStorageInterface {

@@ -22,6 +22,6 @@
 
 package v1alpha1
 
-type ArangoMLIntegrationExpansion interface{}
+type ArangoMLExtensionExpansion interface{}
 
 type ArangoMLStorageExpansion interface{}

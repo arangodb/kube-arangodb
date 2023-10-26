@@ -20,5 +20,5 @@
 
 package v1alpha1
 
-type ArangoMLIntegrationStatus struct {
+type ArangoMLExtensionSpec struct {
 }

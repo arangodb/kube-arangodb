@@ -28,8 +28,8 @@ import (
 
 // Interface provides access to all the informers in this group version.
 type Interface interface {
-	// ArangoMLIntegrations returns a ArangoMLIntegrationInformer.
-	ArangoMLIntegrations() ArangoMLIntegrationInformer
+	// ArangoMLExtensions returns a ArangoMLExtensionInformer.
+	ArangoMLExtensions() ArangoMLExtensionInformer
 	// ArangoMLStorages returns a ArangoMLStorageInformer.
 	ArangoMLStorages() ArangoMLStorageInformer
 }
@@ -45,9 +45,9 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
 }
 
-// ArangoMLIntegrations returns a ArangoMLIntegrationInformer.
-func (v *version) ArangoMLIntegrations() ArangoMLIntegrationInformer {
-	return &arangoMLIntegrationInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+// ArangoMLExtensions returns a ArangoMLExtensionInformer.
+func (v *version) ArangoMLExtensions() ArangoMLExtensionInformer {
+	return &arangoMLExtensionInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // ArangoMLStorages returns a ArangoMLStorageInformer.
