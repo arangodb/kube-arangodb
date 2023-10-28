@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
 
-func compareServerContainerProbes(ds api.DeploymentSpec, g api.ServerGroup, spec, status *core.Container) comparePodContainerFunc {
+func compareServerContainerProbes(ds api.DeploymentSpec, g api.ServerGroup, spec, status *core.Container) compareFunc {
 	return func(builder api.ActionBuilder) (mode Mode, plan api.Plan, err error) {
 		if !areProbesEqual(spec.StartupProbe, status.StartupProbe) {
 			status.StartupProbe = spec.StartupProbe

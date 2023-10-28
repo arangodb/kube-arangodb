@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-func podCompare(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *core.PodSpec) comparePodFunc {
+func podCompare(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *core.PodSpec) compareFunc {
 	return func(builder api.ActionBuilder) (mode Mode, plan api.Plan, err error) {
 		if spec.SchedulerName != status.SchedulerName {
 			status.SchedulerName = spec.SchedulerName
@@ -43,7 +43,7 @@ func podCompare(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *core.PodS
 	}
 }
 
-func affinityCompare(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *core.PodSpec) comparePodFunc {
+func affinityCompare(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *core.PodSpec) compareFunc {
 	return func(builder api.ActionBuilder) (mode Mode, plan api.Plan, e error) {
 		if specC, err := util.SHA256FromJSON(spec.Affinity); err != nil {
 			e = err

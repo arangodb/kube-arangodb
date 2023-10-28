@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 )
 
-func compareServerContainerVolumeMounts(ds api.DeploymentSpec, g api.ServerGroup, spec, status *core.Container) comparePodContainerFunc {
+func compareServerContainerVolumeMounts(ds api.DeploymentSpec, g api.ServerGroup, spec, status *core.Container) compareFunc {
 	return func(builder api.ActionBuilder) (mode Mode, plan api.Plan, err error) {
 		specV := mapVolumeMounts(spec)
 		statusV := mapVolumeMounts(status)
@@ -65,7 +65,7 @@ func compareServerContainerVolumeMounts(ds api.DeploymentSpec, g api.ServerGroup
 	}
 }
 
-func compareAnyContainerVolumeMounts(ds api.DeploymentSpec, g api.ServerGroup, spec, status *core.Container) comparePodContainerFunc {
+func compareAnyContainerVolumeMounts(ds api.DeploymentSpec, g api.ServerGroup, spec, status *core.Container) compareFunc {
 	return func(builder api.ActionBuilder) (mode Mode, plan api.Plan, err error) {
 		specV := mapVolumeMounts(spec)
 		statusV := mapVolumeMounts(status)

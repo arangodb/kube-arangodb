@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ type volumeDiff struct {
 	a, b *core.Volume
 }
 
-func comparePodVolumes(ds api.DeploymentSpec, g api.ServerGroup, spec, status *core.PodSpec) comparePodFunc {
+func comparePodVolumes(ds api.DeploymentSpec, g api.ServerGroup, spec, status *core.PodSpec) compareFunc {
 	return func(builder api.ActionBuilder) (mode Mode, plan api.Plan, err error) {
 		specV := mapVolumes(spec)
 		statusV := mapVolumes(status)

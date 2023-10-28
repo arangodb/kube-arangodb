@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,45 +25,23 @@ import (
 
 	jd "github.com/josephburnett/jd/lib"
 	"github.com/rs/zerolog/log"
-	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 )
 
-type comparePodFuncGen func(deploymentSpec api.DeploymentSpec, group api.ServerGroup, spec, status *core.PodSpec) comparePodFunc
-type comparePodFunc func(builder api.ActionBuilder) (mode Mode, plan api.Plan, err error)
+type compareFuncGen[T any] func(deploymentSpec api.DeploymentSpec, group api.ServerGroup, spec, status *T) compareFunc
+type compareFunc func(builder api.ActionBuilder) (mode Mode, plan api.Plan, err error)
 
-func podFuncGenerator(deploymentSpec api.DeploymentSpec, group api.ServerGroup, spec, status *core.PodSpec) func(c comparePodFuncGen) comparePodFunc {
-	return func(c comparePodFuncGen) comparePodFunc {
+// works for any type like: core.PodSpec, core.Container, core.InitContainer, core.DeploymentSpec, core.StatefulSetSpec
+func genericFuncGenerator[T any](deploymentSpec api.DeploymentSpec, group api.ServerGroup, spec, status *T) func(c compareFuncGen[T]) compareFunc {
+	return func(c compareFuncGen[T]) compareFunc {
 		return c(deploymentSpec, group, spec, status)
 	}
 }
 
-type comparePodContainerFuncGen func(deploymentSpec api.DeploymentSpec, group api.ServerGroup, spec, status *core.Container) comparePodContainerFunc
-type comparePodContainerFunc func(builder api.ActionBuilder) (mode Mode, plan api.Plan, err error)
-
-func podContainerFuncGenerator(deploymentSpec api.DeploymentSpec, group api.ServerGroup, spec, status *core.Container) func(c comparePodContainerFuncGen) comparePodContainerFunc {
-	return func(c comparePodContainerFuncGen) comparePodContainerFunc {
-		return c(deploymentSpec, group, spec, status)
-	}
-}
-
-func comparePodContainer(builder api.ActionBuilder, f ...comparePodContainerFunc) (mode Mode, plan api.Plan, err error) {
-	for _, q := range f {
-		if m, p, err := q(builder); err != nil {
-			return 0, nil, err
-		} else {
-			mode = mode.And(m)
-			plan = append(plan, p...)
-		}
-	}
-
-	return
-}
-
-func comparePod(builder api.ActionBuilder, f ...comparePodFunc) (mode Mode, plan api.Plan, err error) {
+func compareGeneric(builder api.ActionBuilder, f ...compareFunc) (mode Mode, plan api.Plan, err error) {
 	for _, q := range f {
 		if m, p, err := q(builder); err != nil {
 			return 0, nil, err
@@ -92,9 +70,9 @@ func compare(deploymentSpec api.DeploymentSpec, member api.MemberStatus, group a
 	// Try to fill fields
 	b := actions.NewActionBuilderWrap(group, member)
 
-	g := podFuncGenerator(deploymentSpec, group, &spec.PodSpec.Spec, &podStatus.Spec)
+	g := genericFuncGenerator(deploymentSpec, group, &spec.PodSpec.Spec, &podStatus.Spec)
 
-	if m, p, err := comparePod(b, g(podCompare), g(affinityCompare), g(comparePodVolumes), g(containersCompare), g(initContainersCompare), g(comparePodTolerations)); err != nil {
+	if m, p, err := compareGeneric(b, g(podCompare), g(affinityCompare), g(comparePodVolumes), g(containersCompare), g(initContainersCompare), g(comparePodTolerations)); err != nil {
 		log.Err(err).Msg("Error while getting pod diff")
 		return SkippedRotation, nil, err
 	} else {

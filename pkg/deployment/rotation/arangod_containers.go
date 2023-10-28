@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ const (
 	ContainerImage = "image"
 )
 
-func containersCompare(ds api.DeploymentSpec, g api.ServerGroup, spec, status *core.PodSpec) comparePodFunc {
+func containersCompare(ds api.DeploymentSpec, g api.ServerGroup, spec, status *core.PodSpec) compareFunc {
 	return func(builder api.ActionBuilder) (mode Mode, plan api.Plan, err error) {
 		a, b := spec.Containers, status.Containers
 
@@ -59,9 +59,10 @@ func containersCompare(ds api.DeploymentSpec, g api.ServerGroup, spec, status *c
 						mode = mode.And(InPlaceRotation)
 					}
 
-					g := podContainerFuncGenerator(ds, g, ac, bc)
+					//g := podContainerFuncGenerator(ds, g, ac, bc)
+					g := genericFuncGenerator(ds, g, ac, bc)
 
-					if m, p, err := comparePodContainer(builder, g(compareServerContainerVolumeMounts), g(compareServerContainerProbes), g(compareServerContainerEnvs)); err != nil {
+					if m, p, err := compareGeneric(builder, g(compareServerContainerVolumeMounts), g(compareServerContainerProbes), g(compareServerContainerEnvs)); err != nil {
 						log.Err(err).Msg("Error while getting pod diff")
 						return SkippedRotation, nil, err
 					} else {
@@ -97,9 +98,10 @@ func containersCompare(ds api.DeploymentSpec, g api.ServerGroup, spec, status *c
 						mode = mode.And(InPlaceRotation)
 					}
 
-					g := podContainerFuncGenerator(ds, g, ac, bc)
+					//g := podContainerFuncGenerator(ds, g, ac, bc)
+					g := genericFuncGenerator(ds, g, ac, bc)
 
-					if m, p, err := comparePodContainer(builder, g(compareAnyContainerVolumeMounts), g(compareAnyContainerEnvs)); err != nil {
+					if m, p, err := compareGeneric(builder, g(compareAnyContainerVolumeMounts), g(compareAnyContainerEnvs)); err != nil {
 						log.Err(err).Msg("Error while getting pod diff")
 						return SkippedRotation, nil, err
 					} else {
@@ -118,7 +120,7 @@ func containersCompare(ds api.DeploymentSpec, g api.ServerGroup, spec, status *c
 	}
 }
 
-func initContainersCompare(deploymentSpec api.DeploymentSpec, group api.ServerGroup, spec, status *core.PodSpec) comparePodFunc {
+func initContainersCompare(deploymentSpec api.DeploymentSpec, group api.ServerGroup, spec, status *core.PodSpec) compareFunc {
 	return func(builder api.ActionBuilder) (Mode, api.Plan, error) {
 		gs := deploymentSpec.GetServerGroupSpec(group)
 

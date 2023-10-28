@@ -28,7 +28,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
 
-func comparePodTolerations(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *core.PodSpec) comparePodFunc {
+func comparePodTolerations(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *core.PodSpec) compareFunc {
 	return func(builder api.ActionBuilder) (mode Mode, plan api.Plan, err error) {
 		if !reflect.DeepEqual(spec.Tolerations, status.Tolerations) {
 			plan = append(plan, builder.NewAction(api.ActionTypeRuntimeContainerSyncTolerations))
