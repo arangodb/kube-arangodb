@@ -1,0 +1,39 @@
+v1:
+  openAPIV3Schema:
+    properties:
+      spec:
+        properties:
+          details:
+            format: byte
+            type: string
+          type:
+            type: string
+        type: object
+    type: object
+    x-kubernetes-preserve-unknown-fields: true
+v1alpha:
+  openAPIV3Schema:
+    properties:
+      spec:
+        properties:
+          details:
+            format: byte
+            type: string
+          type:
+            type: string
+        type: object
+    type: object
+    x-kubernetes-preserve-unknown-fields: true
+v2alpha1:
+  openAPIV3Schema:
+    properties:
+      spec:
+        properties:
+          details:
+            format: byte
+            type: string
+          type:
+            type: string
+        type: object
+    type: object
+    x-kubernetes-preserve-unknown-fields: true
