@@ -24,7 +24,6 @@ import (
 	_ "embed"
 
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/arangodb/go-driver"
 )
@@ -34,13 +33,7 @@ const (
 )
 
 func init() {
-	if err := yaml.Unmarshal(backupsBackupPolicy, &backupsBackupPolicyCRD); err != nil {
-		panic(err)
-	}
-}
-
-func BackupsBackupPolicyPolicy() *apiextensions.CustomResourceDefinition {
-	return backupsBackupPolicyCRD.DeepCopy()
+	mustLoadCRD(backupsBackupPolicy, backupsBackupPolicySchemaRaw, &backupsBackupPolicyCRD)
 }
 
 func BackupsBackupPolicyDefinition() Definition {
@@ -54,3 +47,6 @@ var backupsBackupPolicyCRD apiextensions.CustomResourceDefinition
 
 //go:embed backups-backuppolicy.yaml
 var backupsBackupPolicy []byte
+
+//go:embed backups-backuppolicy.schema.generated.json
+var backupsBackupPolicySchemaRaw []byte

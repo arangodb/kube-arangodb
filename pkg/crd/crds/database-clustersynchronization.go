@@ -24,7 +24,6 @@ import (
 	_ "embed"
 
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/arangodb/go-driver"
 )
@@ -34,13 +33,7 @@ const (
 )
 
 func init() {
-	if err := yaml.Unmarshal(databaseClusterSynchronization, &databaseClusterSynchronizationCRD); err != nil {
-		panic(err)
-	}
-}
-
-func DatabaseClusterSynchronization() *apiextensions.CustomResourceDefinition {
-	return databaseClusterSynchronizationCRD.DeepCopy()
+	mustLoadCRD(databaseClusterSynchronization, databaseClusterSynchronizationSchemaRaw, &databaseClusterSynchronizationCRD)
 }
 
 func DatabaseClusterSynchronizationDefinition() Definition {
@@ -54,3 +47,6 @@ var databaseClusterSynchronizationCRD apiextensions.CustomResourceDefinition
 
 //go:embed database-clustersynchronization.yaml
 var databaseClusterSynchronization []byte
+
+//go:embed database-clustersynchronization.schema.generated.json
+var databaseClusterSynchronizationSchemaRaw []byte

@@ -26,10 +26,10 @@ import (
 	"go/parser"
 	"go/token"
 	"io/fs"
-	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -37,61 +37,53 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-func parseDocDefinitions(t *testing.T, res map[typeInfo]*ast.Field, fs *token.FileSet) DocDefinitions {
-	root := os.Getenv("ROOT")
-	require.NotEmpty(t, root)
-
-	defs := make(DocDefinitions, 0, len(res))
-
-	for info, field := range res {
-		def := DocDefinition{
-			Path: info.path,
-			Type: info.typ,
-		}
-
-		require.NotNil(t, field)
-
-		if links, ok := extract(field, "link"); ok {
-			def.Links = links
-		}
-
-		if d, ok := extract(field, "default"); ok {
-			def.Default = util.NewType[string](d[0])
-		}
-
-		if example, ok := extract(field, "example"); ok {
-			def.Example = example
-		}
-
-		if enum, ok := extract(field, "enum"); ok {
-			def.Enum = enum
-		}
-
-		if immutable, ok := extract(field, "immutable"); ok {
-			def.Immutable = util.NewType[string](immutable[0])
-		}
-
-		if important, ok := extract(field, "important"); ok {
-			def.Important = util.NewType[string](important[0])
-		}
-
-		if docs, ok := extractNotTags(field); !ok {
-			println(def.Path, " is missing documentation!")
-		} else {
-			def.Docs = docs
-		}
-
-		file := fs.File(field.Pos())
-
-		filePath, err := filepath.Rel(root, file.Name())
-		require.NoError(t, err)
-
-		def.File = filePath
-		def.Line = file.Line(field.Pos())
-
-		defs = append(defs, def)
+func parseDocDefinition(t *testing.T, root, path, typ string, field *ast.Field, fs *token.FileSet) DocDefinition {
+	def := DocDefinition{
+		Path: path,
+		Type: typ,
 	}
-	return defs
+
+	require.NotNil(t, field)
+
+	if links, ok := extract(field, "link"); ok {
+		def.Links = links
+	}
+
+	if d, ok := extract(field, "default"); ok {
+		def.Default = util.NewType[string](d[0])
+	}
+
+	if example, ok := extract(field, "example"); ok {
+		def.Example = example
+	}
+
+	if enum, ok := extract(field, "enum"); ok {
+		def.Enum = enum
+	}
+
+	if immutable, ok := extract(field, "immutable"); ok {
+		def.Immutable = util.NewType[string](immutable[0])
+	}
+
+	if important, ok := extract(field, "important"); ok {
+		def.Important = util.NewType[string](important[0])
+	}
+
+	if docs, ok := extractNotTags(field); !ok {
+		println(def.Path, " is missing documentation!")
+	} else {
+		def.Docs = docs
+	}
+
+	file := fs.File(field.Pos())
+
+	filePath, err := filepath.Rel(root, file.Name())
+	require.NoError(t, err)
+
+	def.File = filePath
+	def.Line = file.Line(field.Pos())
+
+	return def
 }
 
 type typeInfo struct {
@@ -286,9 +278,24 @@ func extractTag(tag string) (string, bool) {
 	return parts[0], false
 }
 
+type parsedSource struct {
+	fields map[string]*ast.Field
+	fs     *token.FileSet
+}
+
+var parsedSourcesCache = make(map[string]parsedSource)
+var parsedSourcesCacheLock sync.Mutex
+
 // parseSourceFiles returns map of <path to field in structure> -> AST for structure Field and the token inspector for all files in package
-func parseSourceFiles(t *testing.T, paths ...string) (map[string]*ast.Field, *token.FileSet) {
-	d, fs := parseMultipleDirs(t, parser.ParseComments, paths...)
+func parseSourceFiles(t *testing.T, path string) (map[string]*ast.Field, *token.FileSet) {
+	parsedSourcesCacheLock.Lock()
+	defer parsedSourcesCacheLock.Unlock()
+
+	if ret, ok := parsedSourcesCache[path]; ok {
+		return ret.fields, ret.fs
+	}
+
+	d, fs := parseMultipleDirs(t, parser.ParseComments, path)
 
 	r := map[string]*ast.Field{}
 
@@ -327,6 +334,7 @@ func parseSourceFiles(t *testing.T, paths ...string) (map[string]*ast.Field, *to
 		})
 	}
 
+	parsedSourcesCache[path] = parsedSource{fields: r, fs: fs}
 	return r, fs
 }
 

@@ -1,0 +1,115 @@
+{
+  "v1alpha": {
+    "openAPIV3Schema": {
+      "type": "object",
+      "properties": {
+        "spec": {
+          "type": "object",
+          "properties": {
+            "localPath": {
+              "description": "LocalPath setting specifies one or more local directories (on the nodes) used to create persistent volumes in.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "externalDocs": {
+                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoLocalStorage.V1Alpha#specstorageclasslocalpath-"
+              }
+            },
+            "nodeSelector": {
+              "description": "NodeSelector setting specifies which nodes the operator will provision persistent volumes on.",
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
+              "externalDocs": {
+                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoLocalStorage.V1Alpha#specstorageclasslocalpathtolerationsnodeselector-"
+              }
+            },
+            "podCustomization": {
+              "type": "object",
+              "properties": {
+                "priority": {
+                  "description": "Priority if defined, sets the priority for pods of storage provisioner",
+                  "type": "integer",
+                  "format": "int32",
+                  "externalDocs": {
+                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoLocalStorage.V1Alpha#specstorageclasslocalpathtolerationsnodeselectorprivilegedpodcustomizationpriority-"
+                  }
+                }
+              },
+              "externalDocs": {
+                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoLocalStorage.V1Alpha#specstorageclasslocalpathtolerationsnodeselectorprivilegedpodcustomization-"
+              }
+            },
+            "privileged": {
+              "description": "Privileged if set, passes Privileged flag to SecurityContext for pods of storage provisioner",
+              "type": "boolean",
+              "externalDocs": {
+                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoLocalStorage.V1Alpha#specstorageclasslocalpathtolerationsnodeselectorprivileged-"
+              }
+            },
+            "storageClass": {
+              "type": "object",
+              "properties": {
+                "isDefault": {
+                  "description": "IsDefault setting specifies if the created `StorageClass` will\nbe marked as default storage class.",
+                  "type": "boolean",
+                  "externalDocs": {
+                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoLocalStorage.V1Alpha#specstorageclassnameisdefault-"
+                  }
+                },
+                "name": {
+                  "description": "Name setting specifies the name of the storage class that\ncreated `PersistentVolume` will use.\nIf empty, this field defaults to the name of the `ArangoLocalStorage` object.\nIf a `StorageClass` with given name does not yet exist, it will be created.",
+                  "type": "string",
+                  "externalDocs": {
+                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoLocalStorage.V1Alpha#specstorageclassname-"
+                  }
+                },
+                "reclaimPolicy": {
+                  "description": "ReclaimPolicy defines what happens to a persistent volume when released from its claim.",
+                  "type": "string",
+                  "externalDocs": {
+                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoLocalStorage.V1Alpha#specstorageclassnameisdefaultreclaimpolicy-"
+                  }
+                }
+              },
+              "externalDocs": {
+                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoLocalStorage.V1Alpha#specstorageclass-"
+              }
+            },
+            "tolerations": {
+              "description": "Tolerations specifies the tolerations added to pods of storage provisioner",
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "effect": {
+                    "type": "string"
+                  },
+                  "key": {
+                    "type": "string"
+                  },
+                  "operator": {
+                    "type": "string"
+                  },
+                  "tolerationSeconds": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                }
+              },
+              "externalDocs": {
+                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoLocalStorage.V1Alpha#specstorageclasslocalpathtolerations-"
+              }
+            }
+          }
+        }
+      },
+      "x-kubernetes-preserve-unknown-fields": true
+    }
+  }
+}

@@ -24,7 +24,6 @@ import (
 	_ "embed"
 
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/arangodb/go-driver"
 )
@@ -34,13 +33,7 @@ const (
 )
 
 func init() {
-	if err := yaml.Unmarshal(appsJobs, &appsJobsCRD); err != nil {
-		panic(err)
-	}
-}
-
-func AppsJob() *apiextensions.CustomResourceDefinition {
-	return appsJobsCRD.DeepCopy()
+	mustLoadCRD(appsJobs, appsJobsSchemaRaw, &appsJobsCRD)
 }
 
 func AppsJobDefinition() Definition {
@@ -54,3 +47,6 @@ var appsJobsCRD apiextensions.CustomResourceDefinition
 
 //go:embed apps-job.yaml
 var appsJobs []byte
+
+//go:embed apps-job.schema.generated.json
+var appsJobsSchemaRaw []byte

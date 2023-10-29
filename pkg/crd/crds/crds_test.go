@@ -36,6 +36,15 @@ import (
 func ensureCRDCompliance(t *testing.T, name string, def Definition) {
 	t.Run(name, func(t *testing.T) {
 		require.Equal(t, name, def.CRD.GetName())
+		for _, ver := range def.CRD.Spec.Versions {
+			t.Run(ver.Name, func(t *testing.T) {
+				require.NotNil(t, ver.Schema)
+				require.NotNil(t, ver.Schema.OpenAPIV3Schema.XPreserveUnknownFields)
+				require.True(t, *ver.Schema.OpenAPIV3Schema.XPreserveUnknownFields)
+				require.Equal(t, "object", ver.Schema.OpenAPIV3Schema.Type)
+				require.NotEmpty(t, ver.Schema.OpenAPIV3Schema.Properties)
+			})
+		}
 	})
 }
 

@@ -21,7 +21,10 @@
 package crds
 
 import (
+	"fmt"
+
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/arangodb/go-driver"
 )
@@ -60,5 +63,24 @@ func AllDefinitions() []Definition {
 
 		MLCronJobDefinition(),
 		MLBatchJobDefinition(),
+	}
+}
+
+func mustLoadCRD(crdRaw, crdSchemasRaw []byte, crd *apiextensions.CustomResourceDefinition) {
+	if err := yaml.Unmarshal(crdRaw, crd); err != nil {
+		panic(err)
+	}
+
+	var crdSchemas map[string]apiextensions.CustomResourceValidation
+	if err := yaml.Unmarshal(crdSchemasRaw, &crdSchemas); err != nil {
+		panic(err)
+	}
+
+	for i, v := range crd.Spec.Versions {
+		schema, ok := crdSchemas[v.Name]
+		if !ok {
+			panic(fmt.Sprintf("Validation schema is not defined for version %s of %s", v.Name, crd.Name))
+		}
+		crd.Spec.Versions[i].Schema = schema.DeepCopy()
 	}
 }

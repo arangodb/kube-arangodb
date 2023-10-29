@@ -1,0 +1,92 @@
+{
+  "v1": {
+    "openAPIV3Schema": {
+      "type": "object",
+      "properties": {
+        "spec": {
+          "type": "object",
+          "properties": {
+            "deploymentName": {
+              "type": "string"
+            },
+            "kubeconfig": {
+              "type": "object",
+              "properties": {
+                "namespace": {
+                  "type": "string"
+                },
+                "secretKey": {
+                  "type": "string"
+                },
+                "secretName": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "x-kubernetes-preserve-unknown-fields": true
+    }
+  },
+  "v1alpha": {
+    "openAPIV3Schema": {
+      "type": "object",
+      "properties": {
+        "spec": {
+          "type": "object",
+          "properties": {
+            "deploymentName": {
+              "type": "string"
+            },
+            "kubeconfig": {
+              "type": "object",
+              "properties": {
+                "namespace": {
+                  "type": "string"
+                },
+                "secretKey": {
+                  "type": "string"
+                },
+                "secretName": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "x-kubernetes-preserve-unknown-fields": true
+    }
+  },
+  "v2alpha1": {
+    "openAPIV3Schema": {
+      "type": "object",
+      "properties": {
+        "spec": {
+          "type": "object",
+          "properties": {
+            "deploymentName": {
+              "type": "string"
+            },
+            "kubeconfig": {
+              "type": "object",
+              "properties": {
+                "namespace": {
+                  "type": "string"
+                },
+                "secretKey": {
+                  "type": "string"
+                },
+                "secretName": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "x-kubernetes-preserve-unknown-fields": true
+    }
+  }
+}

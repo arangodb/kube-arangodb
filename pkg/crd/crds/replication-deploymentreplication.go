@@ -24,7 +24,6 @@ import (
 	_ "embed"
 
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/arangodb/go-driver"
 )
@@ -34,13 +33,7 @@ const (
 )
 
 func init() {
-	if err := yaml.Unmarshal(replicationDeploymentReplication, &replicationDeploymentReplicationCRD); err != nil {
-		panic(err)
-	}
-}
-
-func ReplicationDeploymentReplication() *apiextensions.CustomResourceDefinition {
-	return replicationDeploymentReplicationCRD.DeepCopy()
+	mustLoadCRD(replicationDeploymentReplication, replicationDeploymentReplicationSchemaRaw, &replicationDeploymentReplicationCRD)
 }
 
 func ReplicationDeploymentReplicationDefinition() Definition {
@@ -54,3 +47,6 @@ var replicationDeploymentReplicationCRD apiextensions.CustomResourceDefinition
 
 //go:embed replication-deploymentreplication.yaml
 var replicationDeploymentReplication []byte
+
+//go:embed replication-deploymentreplication.schema.generated.json
+var replicationDeploymentReplicationSchemaRaw []byte

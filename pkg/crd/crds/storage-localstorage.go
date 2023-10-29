@@ -24,7 +24,6 @@ import (
 	_ "embed"
 
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/arangodb/go-driver"
 )
@@ -34,13 +33,7 @@ const (
 )
 
 func init() {
-	if err := yaml.Unmarshal(storageLocalStorage, &storageLocalStorageCRD); err != nil {
-		panic(err)
-	}
-}
-
-func StorageLocalStorage() *apiextensions.CustomResourceDefinition {
-	return storageLocalStorageCRD.DeepCopy()
+	mustLoadCRD(storageLocalStorage, storageLocalStorageSchemaRaw, &storageLocalStorageCRD)
 }
 
 func StorageLocalStorageDefinition() Definition {
@@ -54,3 +47,6 @@ var storageLocalStorageCRD apiextensions.CustomResourceDefinition
 
 //go:embed storage-localstorage.yaml
 var storageLocalStorage []byte
+
+//go:embed storage-localstorage.schema.generated.json
+var storageLocalStorageSchemaRaw []byte
