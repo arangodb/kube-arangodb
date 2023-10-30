@@ -2,7 +2,7 @@
 
 ## Spec
 
-### .spec.allowConcurrent: bool
+### .spec.allowConcurrent: boolean
 
 AllowConcurrent if false, ArangoBackup will not be created when previous Backups are not finished
 
@@ -10,7 +10,7 @@ Default Value: true
 
 [Code Reference](/pkg/apis/backup/v1/backup_policy_spec.go#L35)
 
-### .spec.maxBackups: int
+### .spec.maxBackups: integer
 
 MaxBackups defines how many backups should be kept in history (per deployment). Oldest healthy Backups will be deleted.
 If not specified or 0 then no limit is applied
@@ -35,37 +35,37 @@ Links:
 
 [Code Reference](/pkg/apis/backup/v1/backup_policy_spec.go#L39)
 
-### .spec.template.backoff.iterations: int
+### .spec.template.backoff.iterations: integer
 
 Iterations defines number of iterations before reaching MaxDelay. Default to 5
 
 [Code Reference](/pkg/apis/backup/v1/backup_spec_backoff.go#L31)
 
-### .spec.template.backoff.max_delay: int
+### .spec.template.backoff.max_delay: integer
 
 MaxDelay defines maximum delay in seconds. Default to 600
 
 [Code Reference](/pkg/apis/backup/v1/backup_spec_backoff.go#L29)
 
-### .spec.template.backoff.max_iterations: int
+### .spec.template.backoff.max_iterations: integer
 
 MaxIterations defines maximum number of iterations after backoff will be disabled. Default to nil (no limit)
 
 [Code Reference](/pkg/apis/backup/v1/backup_spec_backoff.go#L33)
 
-### .spec.template.backoff.min_delay: int
+### .spec.template.backoff.min_delay: integer
 
 MinDelay defines minimum delay in seconds. Default to 30
 
 [Code Reference](/pkg/apis/backup/v1/backup_spec_backoff.go#L27)
 
-### .spec.template.lifetime: int64
+### .spec.template.lifetime: integer
 
 Lifetime is the time after which the backup will be deleted. Format: "1.5h" or "2h45m".
 
 [Code Reference](/pkg/apis/backup/v1/backup_policy_spec.go#L61)
 
-### .spec.template.options.allowInconsistent: bool
+### .spec.template.options.allowInconsistent: boolean
 
 AllowInconsistent flag for Backup creation request.
 If this value is set to true, backup is taken even if we are not able to acquire lock.
@@ -76,7 +76,7 @@ This field is **immutable**: can't be changed after backup creation
 
 [Code Reference](/pkg/apis/backup/v1/backup_spec.go#L66)
 
-### .spec.template.options.timeout: float32
+### .spec.template.options.timeout: number
 
 Timeout for Backup creation request in seconds.
 

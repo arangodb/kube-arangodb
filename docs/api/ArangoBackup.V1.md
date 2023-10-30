@@ -2,25 +2,25 @@
 
 ## Spec
 
-### .spec.backoff.iterations: int
+### .spec.backoff.iterations: integer
 
 Iterations defines number of iterations before reaching MaxDelay. Default to 5
 
 [Code Reference](/pkg/apis/backup/v1/backup_spec_backoff.go#L31)
 
-### .spec.backoff.max_delay: int
+### .spec.backoff.max_delay: integer
 
 MaxDelay defines maximum delay in seconds. Default to 600
 
 [Code Reference](/pkg/apis/backup/v1/backup_spec_backoff.go#L29)
 
-### .spec.backoff.max_iterations: int
+### .spec.backoff.max_iterations: integer
 
 MaxIterations defines maximum number of iterations after backoff will be disabled. Default to nil (no limit)
 
 [Code Reference](/pkg/apis/backup/v1/backup_spec_backoff.go#L33)
 
-### .spec.backoff.min_delay: int
+### .spec.backoff.min_delay: integer
 
 MinDelay defines minimum delay in seconds. Default to 30
 
@@ -72,13 +72,13 @@ This field is **immutable**: can't be changed after backup creation
 
 [Code Reference](/pkg/apis/backup/v1/backup_spec.go#L77)
 
-### .spec.lifetime: int64
+### .spec.lifetime: integer
 
 Lifetime is the time after which the backup will be deleted. Format: "1.5h" or "2h45m".
 
 [Code Reference](/pkg/apis/backup/v1/backup_spec.go#L47)
 
-### .spec.options.allowInconsistent: bool
+### .spec.options.allowInconsistent: boolean
 
 AllowInconsistent flag for Backup creation request.
 If this value is set to true, backup is taken even if we are not able to acquire lock.
@@ -89,7 +89,7 @@ This field is **immutable**: can't be changed after backup creation
 
 [Code Reference](/pkg/apis/backup/v1/backup_spec.go#L66)
 
-### .spec.options.timeout: float32
+### .spec.options.timeout: number
 
 Timeout for Backup creation request in seconds.
 
@@ -139,17 +139,17 @@ This field is **immutable**: can't be changed after backup creation
 
 ## Status
 
-### .status.available: bool
+### .status.available: boolean
 
 Available Determines if we can restore from ArangoBackup
 
 [Code Reference](/pkg/apis/backup/v1/backup_status.go#L36)
 
-### .status.backoff.iterations: int
+### .status.backoff.iterations: integer
 
 [Code Reference](/pkg/apis/backup/v1/backup_status_backoff.go#L30)
 
-### .status.backup.downloaded: bool
+### .status.backup.downloaded: boolean
 
 Downloaded Determines if ArangoBackup has been downloaded.
 
@@ -159,31 +159,31 @@ Downloaded Determines if ArangoBackup has been downloaded.
 
 [Code Reference](/pkg/apis/backup/v1/backup_status.go#L56)
 
-### .status.backup.imported: bool
+### .status.backup.imported: boolean
 
 [Code Reference](/pkg/apis/backup/v1/backup_status.go#L67)
 
-### .status.backup.keys: []string
+### .status.backup.keys: array
 
 [Code Reference](/pkg/apis/backup/v1/backup_status.go#L70)
 
-### .status.backup.numberOfDBServers: uint
+### .status.backup.numberOfDBServers: integer
 
 NumberOfDBServers Cluster size of the Backup in ArangoDB
 
 [Code Reference](/pkg/apis/backup/v1/backup_status.go#L62)
 
-### .status.backup.potentiallyInconsistent: bool
+### .status.backup.potentiallyInconsistent: boolean
 
 [Code Reference](/pkg/apis/backup/v1/backup_status.go#L58)
 
-### .status.backup.sizeInBytes: uint64
+### .status.backup.sizeInBytes: integer
 
 SizeInBytes Size of the Backup in ArangoDB.
 
 [Code Reference](/pkg/apis/backup/v1/backup_status.go#L60)
 
-### .status.backup.uploaded: bool
+### .status.backup.uploaded: boolean
 
 Uploaded Determines if ArangoBackup has been uploaded
 

@@ -2,14 +2,14 @@
 
 ## Spec
 
-### .spec.cancellation.ensureInSync: bool
+### .spec.cancellation.ensureInSync: boolean
 
 EnsureInSync if it is true then during cancellation process data consistency is required.
 Default value is true.
 
 [Code Reference](/pkg/apis/replication/v1/replication_spec.go#L38)
 
-### .spec.cancellation.sourceReadOnly: bool
+### .spec.cancellation.sourceReadOnly: boolean
 
 SourceReadOnly if it true then after cancellation source data center should be in read-only mode.
 Default value is false.
@@ -42,7 +42,7 @@ If set, this provides default values for masterEndpoint, auth & tls.
 
 [Code Reference](/pkg/apis/replication/v1/endpoint_spec.go#L36)
 
-### .spec.destination.masterEndpoint: []string
+### .spec.destination.masterEndpoint: array
 
 MasterEndpoint holds a list of URLs used to reach the syncmaster(s)
 Use this setting if the source cluster is not running inside a Kubernetes cluster
@@ -86,7 +86,7 @@ If set, this provides default values for masterEndpoint, auth & tls.
 
 [Code Reference](/pkg/apis/replication/v1/endpoint_spec.go#L36)
 
-### .spec.source.masterEndpoint: []string
+### .spec.source.masterEndpoint: array
 
 MasterEndpoint holds a list of URLs used to reach the syncmaster(s)
 Use this setting if the source cluster is not running inside a Kubernetes cluster
