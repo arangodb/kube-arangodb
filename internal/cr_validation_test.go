@@ -355,15 +355,16 @@ func (b *schemaBuilder) StructToSchema(t *testing.T, structObj reflect.Type, pat
 			continue
 		}
 
+		p := path
 		if !inline {
-			path = fmt.Sprintf("%s.%s", path, n)
+			p = fmt.Sprintf("%s.%s", path, n)
 		}
 
-		s := b.TypeToSchema(t, f.Type, path)
-		require.NotNil(t, s, path)
+		s := b.TypeToSchema(t, f.Type, p)
+		require.NotNil(t, s, p)
 
 		fullFieldName := fmt.Sprintf("%s.%s", structObj.String(), f.Name)
-		def := b.lookupDefinition(t, fullFieldName, path)
+		def := b.lookupDefinition(t, fullFieldName, p)
 		if def != nil {
 			def.ApplyToSchema(b.docName, s)
 		}
@@ -379,11 +380,11 @@ func (b *schemaBuilder) getTypeFormat(obj reflect.Type) (string, string, bool) {
 		return "string", "", true
 	case reflect.Bool:
 		return "boolean", "", true
-	case reflect.Int, reflect.Int32, reflect.Int64,
+	case reflect.Int, reflect.Int32,
 		reflect.Uint, reflect.Uint8, reflect.Uint16:
 		return "integer", "int32", true
-	case reflect.Uint64:
-		return "integer", "int32", true
+	case reflect.Int64, reflect.Uint64:
+		return "integer", "int64", true
 	case reflect.Float32:
 		return "number", "float", true
 	}

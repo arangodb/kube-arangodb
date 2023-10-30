@@ -13,7 +13,7 @@
                 "type": "string"
               },
               "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoLocalStorage.V1Alpha#specstorageclasslocalpath-"
+                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoLocalStorage.V1Alpha#speclocalpath-"
               }
             },
             "nodeSelector": {
@@ -23,7 +23,7 @@
                 "type": "string"
               },
               "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoLocalStorage.V1Alpha#specstorageclasslocalpathtolerationsnodeselector-"
+                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoLocalStorage.V1Alpha#specnodeselector-"
               }
             },
             "podCustomization": {
@@ -34,19 +34,19 @@
                   "type": "integer",
                   "format": "int32",
                   "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoLocalStorage.V1Alpha#specstorageclasslocalpathtolerationsnodeselectorprivilegedpodcustomizationpriority-"
+                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoLocalStorage.V1Alpha#specpodcustomizationpriority-"
                   }
                 }
               },
               "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoLocalStorage.V1Alpha#specstorageclasslocalpathtolerationsnodeselectorprivilegedpodcustomization-"
+                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoLocalStorage.V1Alpha#specpodcustomization-"
               }
             },
             "privileged": {
               "description": "Privileged if set, passes Privileged flag to SecurityContext for pods of storage provisioner",
               "type": "boolean",
               "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoLocalStorage.V1Alpha#specstorageclasslocalpathtolerationsnodeselectorprivileged-"
+                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoLocalStorage.V1Alpha#specprivileged-"
               }
             },
             "storageClass": {
@@ -56,7 +56,7 @@
                   "description": "IsDefault setting specifies if the created `StorageClass` will\nbe marked as default storage class.",
                   "type": "boolean",
                   "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoLocalStorage.V1Alpha#specstorageclassnameisdefault-"
+                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoLocalStorage.V1Alpha#specstorageclassisdefault-"
                   }
                 },
                 "name": {
@@ -70,7 +70,7 @@
                   "description": "ReclaimPolicy defines what happens to a persistent volume when released from its claim.",
                   "type": "string",
                   "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoLocalStorage.V1Alpha#specstorageclassnameisdefaultreclaimpolicy-"
+                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoLocalStorage.V1Alpha#specstorageclassreclaimpolicy-"
                   }
                 }
               },
@@ -95,7 +95,7 @@
                   },
                   "tolerationSeconds": {
                     "type": "integer",
-                    "format": "int32"
+                    "format": "int64"
                   },
                   "value": {
                     "type": "string"
@@ -103,7 +103,7 @@
                 }
               },
               "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoLocalStorage.V1Alpha#specstorageclasslocalpathtolerations-"
+                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoLocalStorage.V1Alpha#spectolerations-"
               }
             }
           }

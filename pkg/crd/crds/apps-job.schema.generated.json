@@ -14,7 +14,7 @@
               "properties": {
                 "activeDeadlineSeconds": {
                   "type": "integer",
-                  "format": "int32"
+                  "format": "int64"
                 },
                 "backoffLimit": {
                   "type": "integer",
@@ -138,7 +138,7 @@
                         },
                         "deletionGracePeriodSeconds": {
                           "type": "integer",
-                          "format": "int32"
+                          "format": "int64"
                         },
                         "deletionTimestamp": {
                           "type": "object",
@@ -159,7 +159,7 @@
                         },
                         "generation": {
                           "type": "integer",
-                          "format": "int32"
+                          "format": "int64"
                         },
                         "labels": {
                           "type": "object",
@@ -249,7 +249,7 @@
                       "properties": {
                         "activeDeadlineSeconds": {
                           "type": "integer",
-                          "format": "int32"
+                          "format": "int64"
                         },
                         "affinity": {
                           "type": "object",
@@ -1113,7 +1113,7 @@
                                   },
                                   "terminationGracePeriodSeconds": {
                                     "type": "integer",
-                                    "format": "int32"
+                                    "format": "int64"
                                   },
                                   "timeoutSeconds": {
                                     "type": "integer",
@@ -1250,7 +1250,7 @@
                                   },
                                   "terminationGracePeriodSeconds": {
                                     "type": "integer",
-                                    "format": "int32"
+                                    "format": "int64"
                                   },
                                   "timeoutSeconds": {
                                     "type": "integer",
@@ -1319,14 +1319,14 @@
                                   },
                                   "runAsGroup": {
                                     "type": "integer",
-                                    "format": "int32"
+                                    "format": "int64"
                                   },
                                   "runAsNonRoot": {
                                     "type": "boolean"
                                   },
                                   "runAsUser": {
                                     "type": "integer",
-                                    "format": "int32"
+                                    "format": "int64"
                                   },
                                   "seLinuxOptions": {
                                     "type": "object",
@@ -1476,7 +1476,7 @@
                                   },
                                   "terminationGracePeriodSeconds": {
                                     "type": "integer",
-                                    "format": "int32"
+                                    "format": "int64"
                                   },
                                   "timeoutSeconds": {
                                     "type": "integer",
@@ -1980,7 +1980,7 @@
                                       },
                                       "terminationGracePeriodSeconds": {
                                         "type": "integer",
-                                        "format": "int32"
+                                        "format": "int64"
                                       },
                                       "timeoutSeconds": {
                                         "type": "integer",
@@ -2117,7 +2117,7 @@
                                       },
                                       "terminationGracePeriodSeconds": {
                                         "type": "integer",
-                                        "format": "int32"
+                                        "format": "int64"
                                       },
                                       "timeoutSeconds": {
                                         "type": "integer",
@@ -2186,14 +2186,14 @@
                                       },
                                       "runAsGroup": {
                                         "type": "integer",
-                                        "format": "int32"
+                                        "format": "int64"
                                       },
                                       "runAsNonRoot": {
                                         "type": "boolean"
                                       },
                                       "runAsUser": {
                                         "type": "integer",
-                                        "format": "int32"
+                                        "format": "int64"
                                       },
                                       "seLinuxOptions": {
                                         "type": "object",
@@ -2343,7 +2343,7 @@
                                       },
                                       "terminationGracePeriodSeconds": {
                                         "type": "integer",
-                                        "format": "int32"
+                                        "format": "int64"
                                       },
                                       "timeoutSeconds": {
                                         "type": "integer",
@@ -2855,7 +2855,7 @@
                                   },
                                   "terminationGracePeriodSeconds": {
                                     "type": "integer",
-                                    "format": "int32"
+                                    "format": "int64"
                                   },
                                   "timeoutSeconds": {
                                     "type": "integer",
@@ -2992,7 +2992,7 @@
                                   },
                                   "terminationGracePeriodSeconds": {
                                     "type": "integer",
-                                    "format": "int32"
+                                    "format": "int64"
                                   },
                                   "timeoutSeconds": {
                                     "type": "integer",
@@ -3061,14 +3061,14 @@
                                   },
                                   "runAsGroup": {
                                     "type": "integer",
-                                    "format": "int32"
+                                    "format": "int64"
                                   },
                                   "runAsNonRoot": {
                                     "type": "boolean"
                                   },
                                   "runAsUser": {
                                     "type": "integer",
-                                    "format": "int32"
+                                    "format": "int64"
                                   },
                                   "seLinuxOptions": {
                                     "type": "object",
@@ -3218,7 +3218,7 @@
                                   },
                                   "terminationGracePeriodSeconds": {
                                     "type": "integer",
-                                    "format": "int32"
+                                    "format": "int64"
                                   },
                                   "timeoutSeconds": {
                                     "type": "integer",
@@ -3350,21 +3350,21 @@
                           "properties": {
                             "fsGroup": {
                               "type": "integer",
-                              "format": "int32"
+                              "format": "int64"
                             },
                             "fsGroupChangePolicy": {
                               "type": "string"
                             },
                             "runAsGroup": {
                               "type": "integer",
-                              "format": "int32"
+                              "format": "int64"
                             },
                             "runAsNonRoot": {
                               "type": "boolean"
                             },
                             "runAsUser": {
                               "type": "integer",
-                              "format": "int32"
+                              "format": "int64"
                             },
                             "seLinuxOptions": {
                               "type": "object",
@@ -3398,7 +3398,7 @@
                               "type": "array",
                               "items": {
                                 "type": "integer",
-                                "format": "int32"
+                                "format": "int64"
                               }
                             },
                             "sysctls": {
@@ -3451,7 +3451,7 @@
                         },
                         "terminationGracePeriodSeconds": {
                           "type": "integer",
-                          "format": "int32"
+                          "format": "int64"
                         },
                         "tolerations": {
                           "type": "array",
@@ -3469,7 +3469,7 @@
                               },
                               "tolerationSeconds": {
                                 "type": "integer",
-                                "format": "int32"
+                                "format": "int64"
                               },
                               "value": {
                                 "type": "string"
@@ -3819,7 +3819,7 @@
                                               },
                                               "deletionGracePeriodSeconds": {
                                                 "type": "integer",
-                                                "format": "int32"
+                                                "format": "int64"
                                               },
                                               "deletionTimestamp": {
                                                 "type": "object",
@@ -3840,7 +3840,7 @@
                                               },
                                               "generation": {
                                                 "type": "integer",
-                                                "format": "int32"
+                                                "format": "int64"
                                               },
                                               "labels": {
                                                 "type": "object",
@@ -4393,7 +4393,7 @@
                                                 },
                                                 "expirationSeconds": {
                                                   "type": "integer",
-                                                  "format": "int32"
+                                                  "format": "int64"
                                                 },
                                                 "path": {
                                                   "type": "string"

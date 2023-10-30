@@ -14,7 +14,7 @@
                   "type": "integer",
                   "format": "int32",
                   "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdeploymentoptionsdownloaduploadpolicynamebackoffmin_delaymax_delayiterations-"
+                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specbackoffiterations-"
                   }
                 },
                 "max_delay": {
@@ -22,7 +22,7 @@
                   "type": "integer",
                   "format": "int32",
                   "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdeploymentoptionsdownloaduploadpolicynamebackoffmin_delaymax_delay-"
+                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specbackoffmax_delay-"
                   }
                 },
                 "max_iterations": {
@@ -30,7 +30,7 @@
                   "type": "integer",
                   "format": "int32",
                   "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdeploymentoptionsdownloaduploadpolicynamebackoffmin_delaymax_delayiterationsmax_iterations-"
+                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specbackoffmax_iterations-"
                   }
                 },
                 "min_delay": {
@@ -38,12 +38,12 @@
                   "type": "integer",
                   "format": "int32",
                   "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdeploymentoptionsdownloaduploadpolicynamebackoffmin_delay-"
+                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specbackoffmin_delay-"
                   }
                 }
               },
               "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdeploymentoptionsdownloaduploadpolicynamebackoff-"
+                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specbackoff-"
               }
             },
             "deployment": {
@@ -79,12 +79,12 @@
                       "description": "CredentialsSecretName is the name of the secret used while accessing repository",
                       "type": "string",
                       "externalDocs": {
-                        "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdeploymentoptionsdownloadrepositoryurlcredentialssecretname-"
+                        "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdownloadcredentialssecretname-"
                       },
                       "x-kubernetes-validations": [
                         {
-                          "rule": "self.spec.deployment.options.download.repositoryURL.credentialsSecretName == oldSelf.spec.deployment.options.download.repositoryURL.credentialsSecretName",
-                          "message": "field spec.deployment.options.download.repositoryURL.credentialsSecretName is immutable"
+                          "rule": "self.spec.download.credentialsSecretName == oldSelf.spec.download.credentialsSecretName",
+                          "message": "field spec.download.credentialsSecretName is immutable"
                         }
                       ]
                     },
@@ -92,12 +92,12 @@
                       "description": "RepositoryURL is the URL path for file storage\nSame repositoryURL needs to be defined in `credentialsSecretName` if protocol is other than local.\nFormat: `\u003cprotocol\u003e:/\u003cpath\u003e`",
                       "type": "string",
                       "externalDocs": {
-                        "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdeploymentoptionsdownloadrepositoryurl-"
+                        "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdownloadrepositoryurl-"
                       },
                       "x-kubernetes-validations": [
                         {
-                          "rule": "self.spec.deployment.options.download.repositoryURL == oldSelf.spec.deployment.options.download.repositoryURL",
-                          "message": "field spec.deployment.options.download.repositoryURL is immutable"
+                          "rule": "self.spec.download.repositoryURL == oldSelf.spec.download.repositoryURL",
+                          "message": "field spec.download.repositoryURL is immutable"
                         }
                       ]
                     }
@@ -107,18 +107,18 @@
                   "description": "ID of the ArangoBackup to be downloaded",
                   "type": "string",
                   "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdeploymentoptionsdownloadid-"
+                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdownloadid-"
                   },
                   "x-kubernetes-validations": [
                     {
-                      "rule": "self.spec.deployment.options.download.id == oldSelf.spec.deployment.options.download.id",
-                      "message": "field spec.deployment.options.download.id is immutable"
+                      "rule": "self.spec.download.id == oldSelf.spec.download.id",
+                      "message": "field spec.download.id is immutable"
                     }
                   ]
                 }
               },
               "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdeploymentoptionsdownload-"
+                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdownload-"
               }
             },
             "lifetime": {
@@ -127,11 +127,11 @@
               "properties": {
                 "": {
                   "type": "integer",
-                  "format": "int32"
+                  "format": "int64"
                 }
               },
               "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdeploymentoptionsdownloaduploadpolicynamebackofflifetime-"
+                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#speclifetime-"
               }
             },
             "options": {
@@ -142,12 +142,12 @@
                   "description": "AllowInconsistent flag for Backup creation request.\nIf this value is set to true, backup is taken even if we are not able to acquire lock.",
                   "type": "boolean",
                   "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdeploymentoptionstimeoutallowinconsistent-"
+                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specoptionsallowinconsistent-"
                   },
                   "x-kubernetes-validations": [
                     {
-                      "rule": "self.spec.deployment.options.timeout.allowInconsistent == oldSelf.spec.deployment.options.timeout.allowInconsistent",
-                      "message": "field spec.deployment.options.timeout.allowInconsistent is immutable"
+                      "rule": "self.spec.options.allowInconsistent == oldSelf.spec.options.allowInconsistent",
+                      "message": "field spec.options.allowInconsistent is immutable"
                     }
                   ]
                 },
@@ -156,30 +156,30 @@
                   "type": "number",
                   "format": "float",
                   "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdeploymentoptionstimeout-"
+                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specoptionstimeout-"
                   },
                   "x-kubernetes-validations": [
                     {
-                      "rule": "self.spec.deployment.options.timeout == oldSelf.spec.deployment.options.timeout",
-                      "message": "field spec.deployment.options.timeout is immutable"
+                      "rule": "self.spec.options.timeout == oldSelf.spec.options.timeout",
+                      "message": "field spec.options.timeout is immutable"
                     }
                   ]
                 }
               },
               "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdeploymentoptions-"
+                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specoptions-"
               }
             },
             "policyName": {
               "description": "PolicyName name of the ArangoBackupPolicy which created this Custom Resource",
               "type": "string",
               "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdeploymentoptionsdownloaduploadpolicyname-"
+                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specpolicyname-"
               },
               "x-kubernetes-validations": [
                 {
-                  "rule": "self.spec.deployment.options.download.upload.policyName == oldSelf.spec.deployment.options.download.upload.policyName",
-                  "message": "field spec.deployment.options.download.upload.policyName is immutable"
+                  "rule": "self.spec.policyName == oldSelf.spec.policyName",
+                  "message": "field spec.policyName is immutable"
                 }
               ]
             },
@@ -191,12 +191,12 @@
                   "description": "CredentialsSecretName is the name of the secret used while accessing repository",
                   "type": "string",
                   "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdeploymentoptionsdownloaduploadrepositoryurlcredentialssecretname-"
+                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specuploadcredentialssecretname-"
                   },
                   "x-kubernetes-validations": [
                     {
-                      "rule": "self.spec.deployment.options.download.upload.repositoryURL.credentialsSecretName == oldSelf.spec.deployment.options.download.upload.repositoryURL.credentialsSecretName",
-                      "message": "field spec.deployment.options.download.upload.repositoryURL.credentialsSecretName is immutable"
+                      "rule": "self.spec.upload.credentialsSecretName == oldSelf.spec.upload.credentialsSecretName",
+                      "message": "field spec.upload.credentialsSecretName is immutable"
                     }
                   ]
                 },
@@ -204,18 +204,18 @@
                   "description": "RepositoryURL is the URL path for file storage\nSame repositoryURL needs to be defined in `credentialsSecretName` if protocol is other than local.\nFormat: `\u003cprotocol\u003e:/\u003cpath\u003e`",
                   "type": "string",
                   "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdeploymentoptionsdownloaduploadrepositoryurl-"
+                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specuploadrepositoryurl-"
                   },
                   "x-kubernetes-validations": [
                     {
-                      "rule": "self.spec.deployment.options.download.upload.repositoryURL == oldSelf.spec.deployment.options.download.upload.repositoryURL",
-                      "message": "field spec.deployment.options.download.upload.repositoryURL is immutable"
+                      "rule": "self.spec.upload.repositoryURL == oldSelf.spec.upload.repositoryURL",
+                      "message": "field spec.upload.repositoryURL is immutable"
                     }
                   ]
                 }
               },
               "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdeploymentoptionsdownloadupload-"
+                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specupload-"
               }
             }
           }
@@ -239,7 +239,7 @@
                   "type": "integer",
                   "format": "int32",
                   "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdeploymentoptionsdownloaduploadpolicynamebackoffmin_delaymax_delayiterations-"
+                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specbackoffiterations-"
                   }
                 },
                 "max_delay": {
@@ -247,7 +247,7 @@
                   "type": "integer",
                   "format": "int32",
                   "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdeploymentoptionsdownloaduploadpolicynamebackoffmin_delaymax_delay-"
+                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specbackoffmax_delay-"
                   }
                 },
                 "max_iterations": {
@@ -255,7 +255,7 @@
                   "type": "integer",
                   "format": "int32",
                   "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdeploymentoptionsdownloaduploadpolicynamebackoffmin_delaymax_delayiterationsmax_iterations-"
+                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specbackoffmax_iterations-"
                   }
                 },
                 "min_delay": {
@@ -263,12 +263,12 @@
                   "type": "integer",
                   "format": "int32",
                   "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdeploymentoptionsdownloaduploadpolicynamebackoffmin_delay-"
+                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specbackoffmin_delay-"
                   }
                 }
               },
               "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdeploymentoptionsdownloaduploadpolicynamebackoff-"
+                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specbackoff-"
               }
             },
             "deployment": {
@@ -304,12 +304,12 @@
                       "description": "CredentialsSecretName is the name of the secret used while accessing repository",
                       "type": "string",
                       "externalDocs": {
-                        "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdeploymentoptionsdownloadrepositoryurlcredentialssecretname-"
+                        "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdownloadcredentialssecretname-"
                       },
                       "x-kubernetes-validations": [
                         {
-                          "rule": "self.spec.deployment.options.download.repositoryURL.credentialsSecretName == oldSelf.spec.deployment.options.download.repositoryURL.credentialsSecretName",
-                          "message": "field spec.deployment.options.download.repositoryURL.credentialsSecretName is immutable"
+                          "rule": "self.spec.download.credentialsSecretName == oldSelf.spec.download.credentialsSecretName",
+                          "message": "field spec.download.credentialsSecretName is immutable"
                         }
                       ]
                     },
@@ -317,12 +317,12 @@
                       "description": "RepositoryURL is the URL path for file storage\nSame repositoryURL needs to be defined in `credentialsSecretName` if protocol is other than local.\nFormat: `\u003cprotocol\u003e:/\u003cpath\u003e`",
                       "type": "string",
                       "externalDocs": {
-                        "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdeploymentoptionsdownloadrepositoryurl-"
+                        "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdownloadrepositoryurl-"
                       },
                       "x-kubernetes-validations": [
                         {
-                          "rule": "self.spec.deployment.options.download.repositoryURL == oldSelf.spec.deployment.options.download.repositoryURL",
-                          "message": "field spec.deployment.options.download.repositoryURL is immutable"
+                          "rule": "self.spec.download.repositoryURL == oldSelf.spec.download.repositoryURL",
+                          "message": "field spec.download.repositoryURL is immutable"
                         }
                       ]
                     }
@@ -332,18 +332,18 @@
                   "description": "ID of the ArangoBackup to be downloaded",
                   "type": "string",
                   "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdeploymentoptionsdownloadid-"
+                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdownloadid-"
                   },
                   "x-kubernetes-validations": [
                     {
-                      "rule": "self.spec.deployment.options.download.id == oldSelf.spec.deployment.options.download.id",
-                      "message": "field spec.deployment.options.download.id is immutable"
+                      "rule": "self.spec.download.id == oldSelf.spec.download.id",
+                      "message": "field spec.download.id is immutable"
                     }
                   ]
                 }
               },
               "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdeploymentoptionsdownload-"
+                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdownload-"
               }
             },
             "lifetime": {
@@ -352,11 +352,11 @@
               "properties": {
                 "": {
                   "type": "integer",
-                  "format": "int32"
+                  "format": "int64"
                 }
               },
               "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdeploymentoptionsdownloaduploadpolicynamebackofflifetime-"
+                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#speclifetime-"
               }
             },
             "options": {
@@ -367,12 +367,12 @@
                   "description": "AllowInconsistent flag for Backup creation request.\nIf this value is set to true, backup is taken even if we are not able to acquire lock.",
                   "type": "boolean",
                   "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdeploymentoptionstimeoutallowinconsistent-"
+                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specoptionsallowinconsistent-"
                   },
                   "x-kubernetes-validations": [
                     {
-                      "rule": "self.spec.deployment.options.timeout.allowInconsistent == oldSelf.spec.deployment.options.timeout.allowInconsistent",
-                      "message": "field spec.deployment.options.timeout.allowInconsistent is immutable"
+                      "rule": "self.spec.options.allowInconsistent == oldSelf.spec.options.allowInconsistent",
+                      "message": "field spec.options.allowInconsistent is immutable"
                     }
                   ]
                 },
@@ -381,30 +381,30 @@
                   "type": "number",
                   "format": "float",
                   "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdeploymentoptionstimeout-"
+                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specoptionstimeout-"
                   },
                   "x-kubernetes-validations": [
                     {
-                      "rule": "self.spec.deployment.options.timeout == oldSelf.spec.deployment.options.timeout",
-                      "message": "field spec.deployment.options.timeout is immutable"
+                      "rule": "self.spec.options.timeout == oldSelf.spec.options.timeout",
+                      "message": "field spec.options.timeout is immutable"
                     }
                   ]
                 }
               },
               "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdeploymentoptions-"
+                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specoptions-"
               }
             },
             "policyName": {
               "description": "PolicyName name of the ArangoBackupPolicy which created this Custom Resource",
               "type": "string",
               "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdeploymentoptionsdownloaduploadpolicyname-"
+                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specpolicyname-"
               },
               "x-kubernetes-validations": [
                 {
-                  "rule": "self.spec.deployment.options.download.upload.policyName == oldSelf.spec.deployment.options.download.upload.policyName",
-                  "message": "field spec.deployment.options.download.upload.policyName is immutable"
+                  "rule": "self.spec.policyName == oldSelf.spec.policyName",
+                  "message": "field spec.policyName is immutable"
                 }
               ]
             },
@@ -416,12 +416,12 @@
                   "description": "CredentialsSecretName is the name of the secret used while accessing repository",
                   "type": "string",
                   "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdeploymentoptionsdownloaduploadrepositoryurlcredentialssecretname-"
+                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specuploadcredentialssecretname-"
                   },
                   "x-kubernetes-validations": [
                     {
-                      "rule": "self.spec.deployment.options.download.upload.repositoryURL.credentialsSecretName == oldSelf.spec.deployment.options.download.upload.repositoryURL.credentialsSecretName",
-                      "message": "field spec.deployment.options.download.upload.repositoryURL.credentialsSecretName is immutable"
+                      "rule": "self.spec.upload.credentialsSecretName == oldSelf.spec.upload.credentialsSecretName",
+                      "message": "field spec.upload.credentialsSecretName is immutable"
                     }
                   ]
                 },
@@ -429,18 +429,18 @@
                   "description": "RepositoryURL is the URL path for file storage\nSame repositoryURL needs to be defined in `credentialsSecretName` if protocol is other than local.\nFormat: `\u003cprotocol\u003e:/\u003cpath\u003e`",
                   "type": "string",
                   "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdeploymentoptionsdownloaduploadrepositoryurl-"
+                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specuploadrepositoryurl-"
                   },
                   "x-kubernetes-validations": [
                     {
-                      "rule": "self.spec.deployment.options.download.upload.repositoryURL == oldSelf.spec.deployment.options.download.upload.repositoryURL",
-                      "message": "field spec.deployment.options.download.upload.repositoryURL is immutable"
+                      "rule": "self.spec.upload.repositoryURL == oldSelf.spec.upload.repositoryURL",
+                      "message": "field spec.upload.repositoryURL is immutable"
                     }
                   ]
                 }
               },
               "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specdeploymentoptionsdownloadupload-"
+                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackup.V1#specupload-"
               }
             }
           }
