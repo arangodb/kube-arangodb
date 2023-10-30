@@ -11,7 +11,7 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L180)
 
-### .spec.agents.allowMemberRecreation: bool
+### .spec.agents.allowMemberRecreation: boolean
 
 AllowMemberRecreation allows to recreate member.
 This setting changes the member recreation logic based on group:
@@ -20,14 +20,14 @@ This setting changes the member recreation logic based on group:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
 
-### .spec.agents.annotations: map[string]string
+### .spec.agents.annotations: object
 
 Annotations specified the annotations added to Pods in this group.
 Annotations are merged with `spec.annotations`.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L125)
 
-### .spec.agents.annotationsIgnoreList: []string
+### .spec.agents.annotationsIgnoreList: array
 
 AnnotationsIgnoreList list regexp or plain definitions which annotations should be ignored
 
@@ -56,7 +56,7 @@ Default Value: []
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L85)
 
-### .spec.agents.count: int
+### .spec.agents.count: integer
 
 Count setting specifies the number of servers to start for the given group.
 For the Agent group, this value must be a positive, odd number.
@@ -99,19 +99,19 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_ephemeral_volumes.go#L64)
 
-### .spec.agents.exporterPort: uint16
+### .spec.agents.exporterPort: integer
 
 ExporterPort define Port used by exporter
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L235)
 
-### .spec.agents.extendedRotationCheck: bool
+### .spec.agents.extendedRotationCheck: boolean
 
 ExtendedRotationCheck extend checks for rotation
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L205)
 
-### .spec.agents.externalPortEnabled: bool
+### .spec.agents.externalPortEnabled: boolean
 
 ExternalPortEnabled if external port should be enabled. If is set to false, ports needs to be exposed via sidecar. Only for ArangoD members
 
@@ -142,7 +142,7 @@ Mode keep container replace mode
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_init_containers.go#L94)
 
-### .spec.agents.internalPort: int
+### .spec.agents.internalPort: integer
 
 InternalPort define port used in internal communication, can be accessed over localhost via sidecar. Only for ArangoD members
 
@@ -154,13 +154,13 @@ InternalPortProtocol define protocol of port used in internal communication, can
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L215)
 
-### .spec.agents.labels: map[string]string
+### .spec.agents.labels: object
 
 Labels specified the labels added to Pods in this group.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L131)
 
-### .spec.agents.labelsIgnoreList: []string
+### .spec.agents.labelsIgnoreList: array
 
 LabelsIgnoreList list regexp or plain definitions which labels should be ignored
 
@@ -172,13 +172,13 @@ LabelsMode Define labels mode which should be use while overriding labels
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L135)
 
-### .spec.agents.maxCount: int
+### .spec.agents.maxCount: integer
 
 MaxCount specifies a maximum for the count of servers. If set, a specification is invalid if `count > maxCount`.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L81)
 
-### .spec.agents.memoryReservation: int64
+### .spec.agents.memoryReservation: integer
 
 MemoryReservation determines system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.
 If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by specified value in percents.
@@ -191,7 +191,7 @@ Default Value: 0
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L107)
 
-### .spec.agents.minCount: int
+### .spec.agents.minCount: integer
 
 MinCount specifies a minimum for the count of servers. If set, a specification is invalid if `count < minCount`.
 
@@ -215,7 +215,7 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L150)
 
-### .spec.agents.numactl.args: []string
+### .spec.agents.numactl.args: array
 
 Args define list of the numactl process
 
@@ -223,7 +223,7 @@ Default Value: []
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_numactl_spec.go#L38)
 
-### .spec.agents.numactl.enabled: bool
+### .spec.agents.numactl.enabled: boolean
 
 Enabled define if numactl should be enabled
 
@@ -239,7 +239,7 @@ Default Value: /usr/bin/numactl
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_numactl_spec.go#L34)
 
-### .spec.agents.overrideDetectedNumberOfCores: bool
+### .spec.agents.overrideDetectedNumberOfCores: boolean
 
 **Important**: Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` Container Environment Variable
 
@@ -253,7 +253,7 @@ Default Value: true
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L113)
 
-### .spec.agents.overrideDetectedTotalMemory: bool
+### .spec.agents.overrideDetectedTotalMemory: boolean
 
 **Important**: Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` Container Environment Variable
 
@@ -275,7 +275,7 @@ Default Value: true
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec_pod_modes.go#L32)
 
-### .spec.agents.port: uint16
+### .spec.agents.port: integer
 
 Port define Port used by member
 
@@ -291,7 +291,7 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L156)
 
-### .spec.agents.probes.livenessProbeDisabled: bool
+### .spec.agents.probes.livenessProbeDisabled: boolean
 
 LivenessProbeDisabled if set to true, the operator does not generate a liveness probe for new pods belonging to this group
 
@@ -299,7 +299,7 @@ Default Value: false
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L245)
 
-### .spec.agents.probes.livenessProbeSpec.failureThreshold: int32
+### .spec.agents.probes.livenessProbeSpec.failureThreshold: integer
 
 FailureThreshold when a Pod starts and the probe fails, Kubernetes will try failureThreshold times before giving up.
 Giving up means restarting the container.
@@ -309,7 +309,7 @@ Default Value: 3
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L295)
 
-### .spec.agents.probes.livenessProbeSpec.initialDelaySeconds: int32
+### .spec.agents.probes.livenessProbeSpec.initialDelaySeconds: integer
 
 InitialDelaySeconds specifies number of seconds after the container has started before liveness or readiness probes are initiated.
 Minimum value is 0.
@@ -318,7 +318,7 @@ Default Value: 2
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L278)
 
-### .spec.agents.probes.livenessProbeSpec.periodSeconds: int32
+### .spec.agents.probes.livenessProbeSpec.periodSeconds: integer
 
 PeriodSeconds How often (in seconds) to perform the probe.
 Minimum value is 1.
@@ -327,7 +327,7 @@ Default Value: 10
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L282)
 
-### .spec.agents.probes.livenessProbeSpec.successThreshold: int32
+### .spec.agents.probes.livenessProbeSpec.successThreshold: integer
 
 SuccessThreshold Minimum consecutive successes for the probe to be considered successful after having failed.
 Minimum value is 1.
@@ -336,7 +336,7 @@ Default Value: 1
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L290)
 
-### .spec.agents.probes.livenessProbeSpec.timeoutSeconds: int32
+### .spec.agents.probes.livenessProbeSpec.timeoutSeconds: integer
 
 TimeoutSeconds specifies number of seconds after which the probe times out
 Minimum value is 1.
@@ -345,20 +345,20 @@ Default Value: 2
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L286)
 
-### .spec.agents.probes.ReadinessProbeDisabled: bool
+### .spec.agents.probes.ReadinessProbeDisabled: boolean
 
 OldReadinessProbeDisabled if true readinessProbes are disabled
 Deprecated: This field is deprecated, keept only for backward compatibility.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L252)
 
-### .spec.agents.probes.readinessProbeDisabled: bool
+### .spec.agents.probes.readinessProbeDisabled: boolean
 
 ReadinessProbeDisabled override flag for probe disabled in good manner (lowercase) with backward compatibility
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L254)
 
-### .spec.agents.probes.readinessProbeSpec.failureThreshold: int32
+### .spec.agents.probes.readinessProbeSpec.failureThreshold: integer
 
 FailureThreshold when a Pod starts and the probe fails, Kubernetes will try failureThreshold times before giving up.
 Giving up means restarting the container.
@@ -368,7 +368,7 @@ Default Value: 3
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L295)
 
-### .spec.agents.probes.readinessProbeSpec.initialDelaySeconds: int32
+### .spec.agents.probes.readinessProbeSpec.initialDelaySeconds: integer
 
 InitialDelaySeconds specifies number of seconds after the container has started before liveness or readiness probes are initiated.
 Minimum value is 0.
@@ -377,7 +377,7 @@ Default Value: 2
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L278)
 
-### .spec.agents.probes.readinessProbeSpec.periodSeconds: int32
+### .spec.agents.probes.readinessProbeSpec.periodSeconds: integer
 
 PeriodSeconds How often (in seconds) to perform the probe.
 Minimum value is 1.
@@ -386,7 +386,7 @@ Default Value: 10
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L282)
 
-### .spec.agents.probes.readinessProbeSpec.successThreshold: int32
+### .spec.agents.probes.readinessProbeSpec.successThreshold: integer
 
 SuccessThreshold Minimum consecutive successes for the probe to be considered successful after having failed.
 Minimum value is 1.
@@ -395,7 +395,7 @@ Default Value: 1
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L290)
 
-### .spec.agents.probes.readinessProbeSpec.timeoutSeconds: int32
+### .spec.agents.probes.readinessProbeSpec.timeoutSeconds: integer
 
 TimeoutSeconds specifies number of seconds after which the probe times out
 Minimum value is 1.
@@ -404,13 +404,13 @@ Default Value: 2
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L286)
 
-### .spec.agents.probes.startupProbeDisabled: bool
+### .spec.agents.probes.startupProbeDisabled: boolean
 
 StartupProbeDisabled if true startupProbes are disabled
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L259)
 
-### .spec.agents.probes.startupProbeSpec.failureThreshold: int32
+### .spec.agents.probes.startupProbeSpec.failureThreshold: integer
 
 FailureThreshold when a Pod starts and the probe fails, Kubernetes will try failureThreshold times before giving up.
 Giving up means restarting the container.
@@ -420,7 +420,7 @@ Default Value: 3
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L295)
 
-### .spec.agents.probes.startupProbeSpec.initialDelaySeconds: int32
+### .spec.agents.probes.startupProbeSpec.initialDelaySeconds: integer
 
 InitialDelaySeconds specifies number of seconds after the container has started before liveness or readiness probes are initiated.
 Minimum value is 0.
@@ -429,7 +429,7 @@ Default Value: 2
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L278)
 
-### .spec.agents.probes.startupProbeSpec.periodSeconds: int32
+### .spec.agents.probes.startupProbeSpec.periodSeconds: integer
 
 PeriodSeconds How often (in seconds) to perform the probe.
 Minimum value is 1.
@@ -438,7 +438,7 @@ Default Value: 10
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L282)
 
-### .spec.agents.probes.startupProbeSpec.successThreshold: int32
+### .spec.agents.probes.startupProbeSpec.successThreshold: integer
 
 SuccessThreshold Minimum consecutive successes for the probe to be considered successful after having failed.
 Minimum value is 1.
@@ -447,7 +447,7 @@ Default Value: 1
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L290)
 
-### .spec.agents.probes.startupProbeSpec.timeoutSeconds: int32
+### .spec.agents.probes.startupProbeSpec.timeoutSeconds: integer
 
 TimeoutSeconds specifies number of seconds after which the probe times out
 Minimum value is 1.
@@ -487,51 +487,51 @@ AddCapabilities add new capabilities to containers
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L46)
 
-### .spec.agents.securityContext.allowPrivilegeEscalation: bool
+### .spec.agents.securityContext.allowPrivilegeEscalation: boolean
 
 AllowPrivilegeEscalation Controls whether a process can gain more privileges than its parent process.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L49)
 
-### .spec.agents.securityContext.dropAllCapabilities: bool
+### .spec.agents.securityContext.dropAllCapabilities: boolean
 
 DropAllCapabilities specifies if capabilities should be dropped for this pod containers
 Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L43)
 
-### .spec.agents.securityContext.fsGroup: int64
+### .spec.agents.securityContext.fsGroup: integer
 
 FSGroup is a special supplemental group that applies to all containers in a pod.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L66)
 
-### .spec.agents.securityContext.privileged: bool
+### .spec.agents.securityContext.privileged: boolean
 
 Privileged If true, runs container in privileged mode. Processes in privileged containers are
 essentially equivalent to root on the host.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L52)
 
-### .spec.agents.securityContext.readOnlyRootFilesystem: bool
+### .spec.agents.securityContext.readOnlyRootFilesystem: boolean
 
 ReadOnlyRootFilesystem if true, mounts the container's root filesystem as read-only.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L54)
 
-### .spec.agents.securityContext.runAsGroup: int64
+### .spec.agents.securityContext.runAsGroup: integer
 
 RunAsGroup is the GID to run the entrypoint of the container process.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L60)
 
-### .spec.agents.securityContext.runAsNonRoot: bool
+### .spec.agents.securityContext.runAsNonRoot: boolean
 
 RunAsNonRoot if true, indicates that the container must run as a non-root user.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L56)
 
-### .spec.agents.securityContext.runAsUser: int64
+### .spec.agents.securityContext.runAsUser: integer
 
 RunAsUser is the UID to run the entrypoint of the container process.
 
@@ -555,7 +555,7 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L87)
 
-### .spec.agents.securityContext.supplementalGroups: []int64
+### .spec.agents.securityContext.supplementalGroups: array
 
 SupplementalGroups is a list of groups applied to the first process run in each container, in addition to the container's primary GID,
 the fsGroup (if specified), and group memberships defined in the container image for the uid of the container process.
@@ -594,7 +594,7 @@ to that service account.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L146)
 
-### .spec.agents.shutdownDelay: int
+### .spec.agents.shutdownDelay: integer
 
 ShutdownDelay define how long operator should delay finalizer removal after shutdown
 
@@ -606,7 +606,7 @@ ShutdownMethod describe procedure of member shutdown taken by Operator
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L209)
 
-### .spec.agents.sidecarCoreNames: []string
+### .spec.agents.sidecarCoreNames: array
 
 SidecarCoreNames is a list of sidecar containers which must run in the pod.
 Some names (e.g.: "server", "worker") are reserved, and they don't have any impact.
@@ -628,7 +628,7 @@ StorageClassName specifies the classname for storage of the servers.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L91)
 
-### .spec.agents.terminationGracePeriodSeconds: int64
+### .spec.agents.terminationGracePeriodSeconds: integer
 
 TerminationGracePeriodSeconds override default TerminationGracePeriodSeconds for pods - via silent rotation
 
@@ -648,7 +648,7 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L122)
 
-### .spec.agents.volumeAllowShrink: bool
+### .spec.agents.volumeAllowShrink: boolean
 
 Deprecated: VolumeAllowShrink allows shrink the volume
 
@@ -728,19 +728,19 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_volume.go#L133)
 
-### .spec.allowUnsafeUpgrade: bool
+### .spec.allowUnsafeUpgrade: boolean
 
 AllowUnsafeUpgrade determines if upgrade on missing member or with not in sync shards is allowed
 
 [Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L163)
 
-### .spec.annotations: map[string]string
+### .spec.annotations: object
 
 Annotations specifies the annotations added to all ArangoDeployment owned resources (pods, services, PVC’s, PDB’s).
 
 [Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L126)
 
-### .spec.annotationsIgnoreList: []string
+### .spec.annotationsIgnoreList: array
 
 AnnotationsIgnoreList list regexp or plain definitions which annotations should be ignored
 
@@ -806,19 +806,19 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/bootstrap.go#L62)
 
-### .spec.chaos.enabled: bool
+### .spec.chaos.enabled: boolean
 
 Enabled switches the chaos monkey for a deployment on or off.
 
 [Code Reference](/pkg/apis/deployment/v1/chaos_spec.go#L33)
 
-### .spec.chaos.interval: int64
+### .spec.chaos.interval: integer
 
 Interval is the time between events
 
 [Code Reference](/pkg/apis/deployment/v1/chaos_spec.go#L35)
 
-### .spec.chaos.kill-pod-probability: int
+### .spec.chaos.kill-pod-probability: integer
 
 KillPodProbability is the chance of a pod being killed during an event
 
@@ -855,7 +855,7 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L180)
 
-### .spec.coordinators.allowMemberRecreation: bool
+### .spec.coordinators.allowMemberRecreation: boolean
 
 AllowMemberRecreation allows to recreate member.
 This setting changes the member recreation logic based on group:
@@ -864,14 +864,14 @@ This setting changes the member recreation logic based on group:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
 
-### .spec.coordinators.annotations: map[string]string
+### .spec.coordinators.annotations: object
 
 Annotations specified the annotations added to Pods in this group.
 Annotations are merged with `spec.annotations`.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L125)
 
-### .spec.coordinators.annotationsIgnoreList: []string
+### .spec.coordinators.annotationsIgnoreList: array
 
 AnnotationsIgnoreList list regexp or plain definitions which annotations should be ignored
 
@@ -900,7 +900,7 @@ Default Value: []
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L85)
 
-### .spec.coordinators.count: int
+### .spec.coordinators.count: integer
 
 Count setting specifies the number of servers to start for the given group.
 For the Agent group, this value must be a positive, odd number.
@@ -943,19 +943,19 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_ephemeral_volumes.go#L64)
 
-### .spec.coordinators.exporterPort: uint16
+### .spec.coordinators.exporterPort: integer
 
 ExporterPort define Port used by exporter
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L235)
 
-### .spec.coordinators.extendedRotationCheck: bool
+### .spec.coordinators.extendedRotationCheck: boolean
 
 ExtendedRotationCheck extend checks for rotation
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L205)
 
-### .spec.coordinators.externalPortEnabled: bool
+### .spec.coordinators.externalPortEnabled: boolean
 
 ExternalPortEnabled if external port should be enabled. If is set to false, ports needs to be exposed via sidecar. Only for ArangoD members
 
@@ -986,7 +986,7 @@ Mode keep container replace mode
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_init_containers.go#L94)
 
-### .spec.coordinators.internalPort: int
+### .spec.coordinators.internalPort: integer
 
 InternalPort define port used in internal communication, can be accessed over localhost via sidecar. Only for ArangoD members
 
@@ -998,13 +998,13 @@ InternalPortProtocol define protocol of port used in internal communication, can
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L215)
 
-### .spec.coordinators.labels: map[string]string
+### .spec.coordinators.labels: object
 
 Labels specified the labels added to Pods in this group.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L131)
 
-### .spec.coordinators.labelsIgnoreList: []string
+### .spec.coordinators.labelsIgnoreList: array
 
 LabelsIgnoreList list regexp or plain definitions which labels should be ignored
 
@@ -1016,13 +1016,13 @@ LabelsMode Define labels mode which should be use while overriding labels
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L135)
 
-### .spec.coordinators.maxCount: int
+### .spec.coordinators.maxCount: integer
 
 MaxCount specifies a maximum for the count of servers. If set, a specification is invalid if `count > maxCount`.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L81)
 
-### .spec.coordinators.memoryReservation: int64
+### .spec.coordinators.memoryReservation: integer
 
 MemoryReservation determines system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.
 If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by specified value in percents.
@@ -1035,7 +1035,7 @@ Default Value: 0
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L107)
 
-### .spec.coordinators.minCount: int
+### .spec.coordinators.minCount: integer
 
 MinCount specifies a minimum for the count of servers. If set, a specification is invalid if `count < minCount`.
 
@@ -1059,7 +1059,7 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L150)
 
-### .spec.coordinators.numactl.args: []string
+### .spec.coordinators.numactl.args: array
 
 Args define list of the numactl process
 
@@ -1067,7 +1067,7 @@ Default Value: []
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_numactl_spec.go#L38)
 
-### .spec.coordinators.numactl.enabled: bool
+### .spec.coordinators.numactl.enabled: boolean
 
 Enabled define if numactl should be enabled
 
@@ -1083,7 +1083,7 @@ Default Value: /usr/bin/numactl
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_numactl_spec.go#L34)
 
-### .spec.coordinators.overrideDetectedNumberOfCores: bool
+### .spec.coordinators.overrideDetectedNumberOfCores: boolean
 
 **Important**: Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` Container Environment Variable
 
@@ -1097,7 +1097,7 @@ Default Value: true
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L113)
 
-### .spec.coordinators.overrideDetectedTotalMemory: bool
+### .spec.coordinators.overrideDetectedTotalMemory: boolean
 
 **Important**: Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` Container Environment Variable
 
@@ -1119,7 +1119,7 @@ Default Value: true
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec_pod_modes.go#L32)
 
-### .spec.coordinators.port: uint16
+### .spec.coordinators.port: integer
 
 Port define Port used by member
 
@@ -1135,7 +1135,7 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L156)
 
-### .spec.coordinators.probes.livenessProbeDisabled: bool
+### .spec.coordinators.probes.livenessProbeDisabled: boolean
 
 LivenessProbeDisabled if set to true, the operator does not generate a liveness probe for new pods belonging to this group
 
@@ -1143,7 +1143,7 @@ Default Value: false
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L245)
 
-### .spec.coordinators.probes.livenessProbeSpec.failureThreshold: int32
+### .spec.coordinators.probes.livenessProbeSpec.failureThreshold: integer
 
 FailureThreshold when a Pod starts and the probe fails, Kubernetes will try failureThreshold times before giving up.
 Giving up means restarting the container.
@@ -1153,7 +1153,7 @@ Default Value: 3
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L295)
 
-### .spec.coordinators.probes.livenessProbeSpec.initialDelaySeconds: int32
+### .spec.coordinators.probes.livenessProbeSpec.initialDelaySeconds: integer
 
 InitialDelaySeconds specifies number of seconds after the container has started before liveness or readiness probes are initiated.
 Minimum value is 0.
@@ -1162,7 +1162,7 @@ Default Value: 2
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L278)
 
-### .spec.coordinators.probes.livenessProbeSpec.periodSeconds: int32
+### .spec.coordinators.probes.livenessProbeSpec.periodSeconds: integer
 
 PeriodSeconds How often (in seconds) to perform the probe.
 Minimum value is 1.
@@ -1171,7 +1171,7 @@ Default Value: 10
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L282)
 
-### .spec.coordinators.probes.livenessProbeSpec.successThreshold: int32
+### .spec.coordinators.probes.livenessProbeSpec.successThreshold: integer
 
 SuccessThreshold Minimum consecutive successes for the probe to be considered successful after having failed.
 Minimum value is 1.
@@ -1180,7 +1180,7 @@ Default Value: 1
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L290)
 
-### .spec.coordinators.probes.livenessProbeSpec.timeoutSeconds: int32
+### .spec.coordinators.probes.livenessProbeSpec.timeoutSeconds: integer
 
 TimeoutSeconds specifies number of seconds after which the probe times out
 Minimum value is 1.
@@ -1189,20 +1189,20 @@ Default Value: 2
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L286)
 
-### .spec.coordinators.probes.ReadinessProbeDisabled: bool
+### .spec.coordinators.probes.ReadinessProbeDisabled: boolean
 
 OldReadinessProbeDisabled if true readinessProbes are disabled
 Deprecated: This field is deprecated, keept only for backward compatibility.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L252)
 
-### .spec.coordinators.probes.readinessProbeDisabled: bool
+### .spec.coordinators.probes.readinessProbeDisabled: boolean
 
 ReadinessProbeDisabled override flag for probe disabled in good manner (lowercase) with backward compatibility
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L254)
 
-### .spec.coordinators.probes.readinessProbeSpec.failureThreshold: int32
+### .spec.coordinators.probes.readinessProbeSpec.failureThreshold: integer
 
 FailureThreshold when a Pod starts and the probe fails, Kubernetes will try failureThreshold times before giving up.
 Giving up means restarting the container.
@@ -1212,7 +1212,7 @@ Default Value: 3
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L295)
 
-### .spec.coordinators.probes.readinessProbeSpec.initialDelaySeconds: int32
+### .spec.coordinators.probes.readinessProbeSpec.initialDelaySeconds: integer
 
 InitialDelaySeconds specifies number of seconds after the container has started before liveness or readiness probes are initiated.
 Minimum value is 0.
@@ -1221,7 +1221,7 @@ Default Value: 2
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L278)
 
-### .spec.coordinators.probes.readinessProbeSpec.periodSeconds: int32
+### .spec.coordinators.probes.readinessProbeSpec.periodSeconds: integer
 
 PeriodSeconds How often (in seconds) to perform the probe.
 Minimum value is 1.
@@ -1230,7 +1230,7 @@ Default Value: 10
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L282)
 
-### .spec.coordinators.probes.readinessProbeSpec.successThreshold: int32
+### .spec.coordinators.probes.readinessProbeSpec.successThreshold: integer
 
 SuccessThreshold Minimum consecutive successes for the probe to be considered successful after having failed.
 Minimum value is 1.
@@ -1239,7 +1239,7 @@ Default Value: 1
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L290)
 
-### .spec.coordinators.probes.readinessProbeSpec.timeoutSeconds: int32
+### .spec.coordinators.probes.readinessProbeSpec.timeoutSeconds: integer
 
 TimeoutSeconds specifies number of seconds after which the probe times out
 Minimum value is 1.
@@ -1248,13 +1248,13 @@ Default Value: 2
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L286)
 
-### .spec.coordinators.probes.startupProbeDisabled: bool
+### .spec.coordinators.probes.startupProbeDisabled: boolean
 
 StartupProbeDisabled if true startupProbes are disabled
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L259)
 
-### .spec.coordinators.probes.startupProbeSpec.failureThreshold: int32
+### .spec.coordinators.probes.startupProbeSpec.failureThreshold: integer
 
 FailureThreshold when a Pod starts and the probe fails, Kubernetes will try failureThreshold times before giving up.
 Giving up means restarting the container.
@@ -1264,7 +1264,7 @@ Default Value: 3
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L295)
 
-### .spec.coordinators.probes.startupProbeSpec.initialDelaySeconds: int32
+### .spec.coordinators.probes.startupProbeSpec.initialDelaySeconds: integer
 
 InitialDelaySeconds specifies number of seconds after the container has started before liveness or readiness probes are initiated.
 Minimum value is 0.
@@ -1273,7 +1273,7 @@ Default Value: 2
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L278)
 
-### .spec.coordinators.probes.startupProbeSpec.periodSeconds: int32
+### .spec.coordinators.probes.startupProbeSpec.periodSeconds: integer
 
 PeriodSeconds How often (in seconds) to perform the probe.
 Minimum value is 1.
@@ -1282,7 +1282,7 @@ Default Value: 10
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L282)
 
-### .spec.coordinators.probes.startupProbeSpec.successThreshold: int32
+### .spec.coordinators.probes.startupProbeSpec.successThreshold: integer
 
 SuccessThreshold Minimum consecutive successes for the probe to be considered successful after having failed.
 Minimum value is 1.
@@ -1291,7 +1291,7 @@ Default Value: 1
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L290)
 
-### .spec.coordinators.probes.startupProbeSpec.timeoutSeconds: int32
+### .spec.coordinators.probes.startupProbeSpec.timeoutSeconds: integer
 
 TimeoutSeconds specifies number of seconds after which the probe times out
 Minimum value is 1.
@@ -1331,51 +1331,51 @@ AddCapabilities add new capabilities to containers
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L46)
 
-### .spec.coordinators.securityContext.allowPrivilegeEscalation: bool
+### .spec.coordinators.securityContext.allowPrivilegeEscalation: boolean
 
 AllowPrivilegeEscalation Controls whether a process can gain more privileges than its parent process.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L49)
 
-### .spec.coordinators.securityContext.dropAllCapabilities: bool
+### .spec.coordinators.securityContext.dropAllCapabilities: boolean
 
 DropAllCapabilities specifies if capabilities should be dropped for this pod containers
 Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L43)
 
-### .spec.coordinators.securityContext.fsGroup: int64
+### .spec.coordinators.securityContext.fsGroup: integer
 
 FSGroup is a special supplemental group that applies to all containers in a pod.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L66)
 
-### .spec.coordinators.securityContext.privileged: bool
+### .spec.coordinators.securityContext.privileged: boolean
 
 Privileged If true, runs container in privileged mode. Processes in privileged containers are
 essentially equivalent to root on the host.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L52)
 
-### .spec.coordinators.securityContext.readOnlyRootFilesystem: bool
+### .spec.coordinators.securityContext.readOnlyRootFilesystem: boolean
 
 ReadOnlyRootFilesystem if true, mounts the container's root filesystem as read-only.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L54)
 
-### .spec.coordinators.securityContext.runAsGroup: int64
+### .spec.coordinators.securityContext.runAsGroup: integer
 
 RunAsGroup is the GID to run the entrypoint of the container process.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L60)
 
-### .spec.coordinators.securityContext.runAsNonRoot: bool
+### .spec.coordinators.securityContext.runAsNonRoot: boolean
 
 RunAsNonRoot if true, indicates that the container must run as a non-root user.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L56)
 
-### .spec.coordinators.securityContext.runAsUser: int64
+### .spec.coordinators.securityContext.runAsUser: integer
 
 RunAsUser is the UID to run the entrypoint of the container process.
 
@@ -1399,7 +1399,7 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L87)
 
-### .spec.coordinators.securityContext.supplementalGroups: []int64
+### .spec.coordinators.securityContext.supplementalGroups: array
 
 SupplementalGroups is a list of groups applied to the first process run in each container, in addition to the container's primary GID,
 the fsGroup (if specified), and group memberships defined in the container image for the uid of the container process.
@@ -1438,7 +1438,7 @@ to that service account.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L146)
 
-### .spec.coordinators.shutdownDelay: int
+### .spec.coordinators.shutdownDelay: integer
 
 ShutdownDelay define how long operator should delay finalizer removal after shutdown
 
@@ -1450,7 +1450,7 @@ ShutdownMethod describe procedure of member shutdown taken by Operator
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L209)
 
-### .spec.coordinators.sidecarCoreNames: []string
+### .spec.coordinators.sidecarCoreNames: array
 
 SidecarCoreNames is a list of sidecar containers which must run in the pod.
 Some names (e.g.: "server", "worker") are reserved, and they don't have any impact.
@@ -1472,7 +1472,7 @@ StorageClassName specifies the classname for storage of the servers.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L91)
 
-### .spec.coordinators.terminationGracePeriodSeconds: int64
+### .spec.coordinators.terminationGracePeriodSeconds: integer
 
 TerminationGracePeriodSeconds override default TerminationGracePeriodSeconds for pods - via silent rotation
 
@@ -1492,7 +1492,7 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L122)
 
-### .spec.coordinators.volumeAllowShrink: bool
+### .spec.coordinators.volumeAllowShrink: boolean
 
 Deprecated: VolumeAllowShrink allows shrink the volume
 
@@ -1572,7 +1572,7 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_volume.go#L133)
 
-### .spec.database.maintenance: bool
+### .spec.database.maintenance: boolean
 
 Maintenance manage maintenance mode on Cluster side. Requires maintenance feature to be enabled
 
@@ -1587,7 +1587,7 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L180)
 
-### .spec.dbservers.allowMemberRecreation: bool
+### .spec.dbservers.allowMemberRecreation: boolean
 
 AllowMemberRecreation allows to recreate member.
 This setting changes the member recreation logic based on group:
@@ -1596,14 +1596,14 @@ This setting changes the member recreation logic based on group:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
 
-### .spec.dbservers.annotations: map[string]string
+### .spec.dbservers.annotations: object
 
 Annotations specified the annotations added to Pods in this group.
 Annotations are merged with `spec.annotations`.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L125)
 
-### .spec.dbservers.annotationsIgnoreList: []string
+### .spec.dbservers.annotationsIgnoreList: array
 
 AnnotationsIgnoreList list regexp or plain definitions which annotations should be ignored
 
@@ -1632,7 +1632,7 @@ Default Value: []
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L85)
 
-### .spec.dbservers.count: int
+### .spec.dbservers.count: integer
 
 Count setting specifies the number of servers to start for the given group.
 For the Agent group, this value must be a positive, odd number.
@@ -1675,19 +1675,19 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_ephemeral_volumes.go#L64)
 
-### .spec.dbservers.exporterPort: uint16
+### .spec.dbservers.exporterPort: integer
 
 ExporterPort define Port used by exporter
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L235)
 
-### .spec.dbservers.extendedRotationCheck: bool
+### .spec.dbservers.extendedRotationCheck: boolean
 
 ExtendedRotationCheck extend checks for rotation
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L205)
 
-### .spec.dbservers.externalPortEnabled: bool
+### .spec.dbservers.externalPortEnabled: boolean
 
 ExternalPortEnabled if external port should be enabled. If is set to false, ports needs to be exposed via sidecar. Only for ArangoD members
 
@@ -1718,7 +1718,7 @@ Mode keep container replace mode
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_init_containers.go#L94)
 
-### .spec.dbservers.internalPort: int
+### .spec.dbservers.internalPort: integer
 
 InternalPort define port used in internal communication, can be accessed over localhost via sidecar. Only for ArangoD members
 
@@ -1730,13 +1730,13 @@ InternalPortProtocol define protocol of port used in internal communication, can
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L215)
 
-### .spec.dbservers.labels: map[string]string
+### .spec.dbservers.labels: object
 
 Labels specified the labels added to Pods in this group.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L131)
 
-### .spec.dbservers.labelsIgnoreList: []string
+### .spec.dbservers.labelsIgnoreList: array
 
 LabelsIgnoreList list regexp or plain definitions which labels should be ignored
 
@@ -1748,13 +1748,13 @@ LabelsMode Define labels mode which should be use while overriding labels
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L135)
 
-### .spec.dbservers.maxCount: int
+### .spec.dbservers.maxCount: integer
 
 MaxCount specifies a maximum for the count of servers. If set, a specification is invalid if `count > maxCount`.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L81)
 
-### .spec.dbservers.memoryReservation: int64
+### .spec.dbservers.memoryReservation: integer
 
 MemoryReservation determines system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.
 If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by specified value in percents.
@@ -1767,7 +1767,7 @@ Default Value: 0
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L107)
 
-### .spec.dbservers.minCount: int
+### .spec.dbservers.minCount: integer
 
 MinCount specifies a minimum for the count of servers. If set, a specification is invalid if `count < minCount`.
 
@@ -1791,7 +1791,7 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L150)
 
-### .spec.dbservers.numactl.args: []string
+### .spec.dbservers.numactl.args: array
 
 Args define list of the numactl process
 
@@ -1799,7 +1799,7 @@ Default Value: []
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_numactl_spec.go#L38)
 
-### .spec.dbservers.numactl.enabled: bool
+### .spec.dbservers.numactl.enabled: boolean
 
 Enabled define if numactl should be enabled
 
@@ -1815,7 +1815,7 @@ Default Value: /usr/bin/numactl
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_numactl_spec.go#L34)
 
-### .spec.dbservers.overrideDetectedNumberOfCores: bool
+### .spec.dbservers.overrideDetectedNumberOfCores: boolean
 
 **Important**: Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` Container Environment Variable
 
@@ -1829,7 +1829,7 @@ Default Value: true
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L113)
 
-### .spec.dbservers.overrideDetectedTotalMemory: bool
+### .spec.dbservers.overrideDetectedTotalMemory: boolean
 
 **Important**: Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` Container Environment Variable
 
@@ -1851,7 +1851,7 @@ Default Value: true
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec_pod_modes.go#L32)
 
-### .spec.dbservers.port: uint16
+### .spec.dbservers.port: integer
 
 Port define Port used by member
 
@@ -1867,7 +1867,7 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L156)
 
-### .spec.dbservers.probes.livenessProbeDisabled: bool
+### .spec.dbservers.probes.livenessProbeDisabled: boolean
 
 LivenessProbeDisabled if set to true, the operator does not generate a liveness probe for new pods belonging to this group
 
@@ -1875,7 +1875,7 @@ Default Value: false
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L245)
 
-### .spec.dbservers.probes.livenessProbeSpec.failureThreshold: int32
+### .spec.dbservers.probes.livenessProbeSpec.failureThreshold: integer
 
 FailureThreshold when a Pod starts and the probe fails, Kubernetes will try failureThreshold times before giving up.
 Giving up means restarting the container.
@@ -1885,7 +1885,7 @@ Default Value: 3
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L295)
 
-### .spec.dbservers.probes.livenessProbeSpec.initialDelaySeconds: int32
+### .spec.dbservers.probes.livenessProbeSpec.initialDelaySeconds: integer
 
 InitialDelaySeconds specifies number of seconds after the container has started before liveness or readiness probes are initiated.
 Minimum value is 0.
@@ -1894,7 +1894,7 @@ Default Value: 2
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L278)
 
-### .spec.dbservers.probes.livenessProbeSpec.periodSeconds: int32
+### .spec.dbservers.probes.livenessProbeSpec.periodSeconds: integer
 
 PeriodSeconds How often (in seconds) to perform the probe.
 Minimum value is 1.
@@ -1903,7 +1903,7 @@ Default Value: 10
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L282)
 
-### .spec.dbservers.probes.livenessProbeSpec.successThreshold: int32
+### .spec.dbservers.probes.livenessProbeSpec.successThreshold: integer
 
 SuccessThreshold Minimum consecutive successes for the probe to be considered successful after having failed.
 Minimum value is 1.
@@ -1912,7 +1912,7 @@ Default Value: 1
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L290)
 
-### .spec.dbservers.probes.livenessProbeSpec.timeoutSeconds: int32
+### .spec.dbservers.probes.livenessProbeSpec.timeoutSeconds: integer
 
 TimeoutSeconds specifies number of seconds after which the probe times out
 Minimum value is 1.
@@ -1921,20 +1921,20 @@ Default Value: 2
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L286)
 
-### .spec.dbservers.probes.ReadinessProbeDisabled: bool
+### .spec.dbservers.probes.ReadinessProbeDisabled: boolean
 
 OldReadinessProbeDisabled if true readinessProbes are disabled
 Deprecated: This field is deprecated, keept only for backward compatibility.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L252)
 
-### .spec.dbservers.probes.readinessProbeDisabled: bool
+### .spec.dbservers.probes.readinessProbeDisabled: boolean
 
 ReadinessProbeDisabled override flag for probe disabled in good manner (lowercase) with backward compatibility
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L254)
 
-### .spec.dbservers.probes.readinessProbeSpec.failureThreshold: int32
+### .spec.dbservers.probes.readinessProbeSpec.failureThreshold: integer
 
 FailureThreshold when a Pod starts and the probe fails, Kubernetes will try failureThreshold times before giving up.
 Giving up means restarting the container.
@@ -1944,7 +1944,7 @@ Default Value: 3
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L295)
 
-### .spec.dbservers.probes.readinessProbeSpec.initialDelaySeconds: int32
+### .spec.dbservers.probes.readinessProbeSpec.initialDelaySeconds: integer
 
 InitialDelaySeconds specifies number of seconds after the container has started before liveness or readiness probes are initiated.
 Minimum value is 0.
@@ -1953,7 +1953,7 @@ Default Value: 2
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L278)
 
-### .spec.dbservers.probes.readinessProbeSpec.periodSeconds: int32
+### .spec.dbservers.probes.readinessProbeSpec.periodSeconds: integer
 
 PeriodSeconds How often (in seconds) to perform the probe.
 Minimum value is 1.
@@ -1962,7 +1962,7 @@ Default Value: 10
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L282)
 
-### .spec.dbservers.probes.readinessProbeSpec.successThreshold: int32
+### .spec.dbservers.probes.readinessProbeSpec.successThreshold: integer
 
 SuccessThreshold Minimum consecutive successes for the probe to be considered successful after having failed.
 Minimum value is 1.
@@ -1971,7 +1971,7 @@ Default Value: 1
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L290)
 
-### .spec.dbservers.probes.readinessProbeSpec.timeoutSeconds: int32
+### .spec.dbservers.probes.readinessProbeSpec.timeoutSeconds: integer
 
 TimeoutSeconds specifies number of seconds after which the probe times out
 Minimum value is 1.
@@ -1980,13 +1980,13 @@ Default Value: 2
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L286)
 
-### .spec.dbservers.probes.startupProbeDisabled: bool
+### .spec.dbservers.probes.startupProbeDisabled: boolean
 
 StartupProbeDisabled if true startupProbes are disabled
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L259)
 
-### .spec.dbservers.probes.startupProbeSpec.failureThreshold: int32
+### .spec.dbservers.probes.startupProbeSpec.failureThreshold: integer
 
 FailureThreshold when a Pod starts and the probe fails, Kubernetes will try failureThreshold times before giving up.
 Giving up means restarting the container.
@@ -1996,7 +1996,7 @@ Default Value: 3
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L295)
 
-### .spec.dbservers.probes.startupProbeSpec.initialDelaySeconds: int32
+### .spec.dbservers.probes.startupProbeSpec.initialDelaySeconds: integer
 
 InitialDelaySeconds specifies number of seconds after the container has started before liveness or readiness probes are initiated.
 Minimum value is 0.
@@ -2005,7 +2005,7 @@ Default Value: 2
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L278)
 
-### .spec.dbservers.probes.startupProbeSpec.periodSeconds: int32
+### .spec.dbservers.probes.startupProbeSpec.periodSeconds: integer
 
 PeriodSeconds How often (in seconds) to perform the probe.
 Minimum value is 1.
@@ -2014,7 +2014,7 @@ Default Value: 10
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L282)
 
-### .spec.dbservers.probes.startupProbeSpec.successThreshold: int32
+### .spec.dbservers.probes.startupProbeSpec.successThreshold: integer
 
 SuccessThreshold Minimum consecutive successes for the probe to be considered successful after having failed.
 Minimum value is 1.
@@ -2023,7 +2023,7 @@ Default Value: 1
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L290)
 
-### .spec.dbservers.probes.startupProbeSpec.timeoutSeconds: int32
+### .spec.dbservers.probes.startupProbeSpec.timeoutSeconds: integer
 
 TimeoutSeconds specifies number of seconds after which the probe times out
 Minimum value is 1.
@@ -2063,51 +2063,51 @@ AddCapabilities add new capabilities to containers
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L46)
 
-### .spec.dbservers.securityContext.allowPrivilegeEscalation: bool
+### .spec.dbservers.securityContext.allowPrivilegeEscalation: boolean
 
 AllowPrivilegeEscalation Controls whether a process can gain more privileges than its parent process.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L49)
 
-### .spec.dbservers.securityContext.dropAllCapabilities: bool
+### .spec.dbservers.securityContext.dropAllCapabilities: boolean
 
 DropAllCapabilities specifies if capabilities should be dropped for this pod containers
 Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L43)
 
-### .spec.dbservers.securityContext.fsGroup: int64
+### .spec.dbservers.securityContext.fsGroup: integer
 
 FSGroup is a special supplemental group that applies to all containers in a pod.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L66)
 
-### .spec.dbservers.securityContext.privileged: bool
+### .spec.dbservers.securityContext.privileged: boolean
 
 Privileged If true, runs container in privileged mode. Processes in privileged containers are
 essentially equivalent to root on the host.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L52)
 
-### .spec.dbservers.securityContext.readOnlyRootFilesystem: bool
+### .spec.dbservers.securityContext.readOnlyRootFilesystem: boolean
 
 ReadOnlyRootFilesystem if true, mounts the container's root filesystem as read-only.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L54)
 
-### .spec.dbservers.securityContext.runAsGroup: int64
+### .spec.dbservers.securityContext.runAsGroup: integer
 
 RunAsGroup is the GID to run the entrypoint of the container process.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L60)
 
-### .spec.dbservers.securityContext.runAsNonRoot: bool
+### .spec.dbservers.securityContext.runAsNonRoot: boolean
 
 RunAsNonRoot if true, indicates that the container must run as a non-root user.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L56)
 
-### .spec.dbservers.securityContext.runAsUser: int64
+### .spec.dbservers.securityContext.runAsUser: integer
 
 RunAsUser is the UID to run the entrypoint of the container process.
 
@@ -2131,7 +2131,7 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L87)
 
-### .spec.dbservers.securityContext.supplementalGroups: []int64
+### .spec.dbservers.securityContext.supplementalGroups: array
 
 SupplementalGroups is a list of groups applied to the first process run in each container, in addition to the container's primary GID,
 the fsGroup (if specified), and group memberships defined in the container image for the uid of the container process.
@@ -2170,7 +2170,7 @@ to that service account.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L146)
 
-### .spec.dbservers.shutdownDelay: int
+### .spec.dbservers.shutdownDelay: integer
 
 ShutdownDelay define how long operator should delay finalizer removal after shutdown
 
@@ -2182,7 +2182,7 @@ ShutdownMethod describe procedure of member shutdown taken by Operator
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L209)
 
-### .spec.dbservers.sidecarCoreNames: []string
+### .spec.dbservers.sidecarCoreNames: array
 
 SidecarCoreNames is a list of sidecar containers which must run in the pod.
 Some names (e.g.: "server", "worker") are reserved, and they don't have any impact.
@@ -2204,7 +2204,7 @@ StorageClassName specifies the classname for storage of the servers.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L91)
 
-### .spec.dbservers.terminationGracePeriodSeconds: int64
+### .spec.dbservers.terminationGracePeriodSeconds: integer
 
 TerminationGracePeriodSeconds override default TerminationGracePeriodSeconds for pods - via silent rotation
 
@@ -2224,7 +2224,7 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L122)
 
-### .spec.dbservers.volumeAllowShrink: bool
+### .spec.dbservers.volumeAllowShrink: boolean
 
 Deprecated: VolumeAllowShrink allows shrink the volume
 
@@ -2304,7 +2304,7 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_volume.go#L133)
 
-### .spec.disableIPv6: bool
+### .spec.disableIPv6: boolean
 
 DisableIPv6 setting prevents the use of IPv6 addresses by ArangoDB servers.
 This setting cannot be changed after the deployment has been created.
@@ -2313,7 +2313,7 @@ Default Value: false
 
 [Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L109)
 
-### .spec.downtimeAllowed: bool
+### .spec.downtimeAllowed: boolean
 
 DowntimeAllowed setting is used to allow automatic reconciliation actions that yield some downtime of the ArangoDB deployment.
 When this setting is set to false, no automatic action that may result in downtime is allowed.
@@ -2350,7 +2350,7 @@ If you do not specify this setting, an IP will be chosen automatically by the lo
 
 [Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L48)
 
-### .spec.externalAccess.loadBalancerSourceRanges: []string
+### .spec.externalAccess.loadBalancerSourceRanges: array
 
 LoadBalancerSourceRanges define LoadBalancerSourceRanges used for LoadBalancer Service type
 If specified and supported by the platform, this will restrict traffic through the cloud-provider
@@ -2362,14 +2362,14 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L55)
 
-### .spec.externalAccess.managedServiceNames: []string
+### .spec.externalAccess.managedServiceNames: array
 
 ManagedServiceNames keeps names of services which are not managed by KubeArangoDB.
 It is only relevant when type of service is `managed`.
 
 [Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L62)
 
-### .spec.externalAccess.nodePort: int
+### .spec.externalAccess.nodePort: integer
 
 NodePort define optional port used in case of Auto or NodePort type.
 This setting is used when `spec.externalAccess.type` is set to `NodePort` or `Auto`.
@@ -2389,7 +2389,7 @@ Possible Values:
 
 [Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L39)
 
-### .spec.features.foxx.queues: bool
+### .spec.features.foxx.queues: boolean
 
 [Code Reference](/pkg/apis/deployment/v1/deployment_features.go#L24)
 
@@ -2426,7 +2426,7 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_id_group_spec.go#L48)
 
-### .spec.id.nodeSelector: map[string]string
+### .spec.id.nodeSelector: object
 
 NodeSelector specifies a set of selectors for nodes
 
@@ -2453,51 +2453,51 @@ AddCapabilities add new capabilities to containers
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L46)
 
-### .spec.id.securityContext.allowPrivilegeEscalation: bool
+### .spec.id.securityContext.allowPrivilegeEscalation: boolean
 
 AllowPrivilegeEscalation Controls whether a process can gain more privileges than its parent process.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L49)
 
-### .spec.id.securityContext.dropAllCapabilities: bool
+### .spec.id.securityContext.dropAllCapabilities: boolean
 
 DropAllCapabilities specifies if capabilities should be dropped for this pod containers
 Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L43)
 
-### .spec.id.securityContext.fsGroup: int64
+### .spec.id.securityContext.fsGroup: integer
 
 FSGroup is a special supplemental group that applies to all containers in a pod.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L66)
 
-### .spec.id.securityContext.privileged: bool
+### .spec.id.securityContext.privileged: boolean
 
 Privileged If true, runs container in privileged mode. Processes in privileged containers are
 essentially equivalent to root on the host.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L52)
 
-### .spec.id.securityContext.readOnlyRootFilesystem: bool
+### .spec.id.securityContext.readOnlyRootFilesystem: boolean
 
 ReadOnlyRootFilesystem if true, mounts the container's root filesystem as read-only.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L54)
 
-### .spec.id.securityContext.runAsGroup: int64
+### .spec.id.securityContext.runAsGroup: integer
 
 RunAsGroup is the GID to run the entrypoint of the container process.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L60)
 
-### .spec.id.securityContext.runAsNonRoot: bool
+### .spec.id.securityContext.runAsNonRoot: boolean
 
 RunAsNonRoot if true, indicates that the container must run as a non-root user.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L56)
 
-### .spec.id.securityContext.runAsUser: int64
+### .spec.id.securityContext.runAsUser: integer
 
 RunAsUser is the UID to run the entrypoint of the container process.
 
@@ -2521,7 +2521,7 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L87)
 
-### .spec.id.securityContext.supplementalGroups: []int64
+### .spec.id.securityContext.supplementalGroups: array
 
 SupplementalGroups is a list of groups applied to the first process run in each container, in addition to the container's primary GID,
 the fsGroup (if specified), and group memberships defined in the container image for the uid of the container process.
@@ -2595,19 +2595,19 @@ Possible Values:
 
 [Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L86)
 
-### .spec.imagePullSecrets: []string
+### .spec.imagePullSecrets: array
 
 ImagePullSecrets specifies the list of image pull secrets for the docker image to use for all ArangoDB servers.
 
 [Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L89)
 
-### .spec.labels: map[string]string
+### .spec.labels: object
 
 Labels specifies the labels added to Pods in this group.
 
 [Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L138)
 
-### .spec.labelsIgnoreList: []string
+### .spec.labelsIgnoreList: array
 
 LabelsIgnoreList list regexp or plain definitions which labels should be ignored
 
@@ -2661,7 +2661,7 @@ JWTTokenSecretName contains the name of the JWT kubernetes secret used for authe
 
 [Code Reference](/pkg/apis/deployment/v1/deployment_metrics_spec.go#L34)
 
-### .spec.metrics.enabled: bool
+### .spec.metrics.enabled: boolean
 
 Enabled if this is set to `true`, the operator runs a sidecar container for
 every Agent, DB-Server, Coordinator and Single server.
@@ -2685,7 +2685,7 @@ deprecated
 
 [Code Reference](/pkg/apis/deployment/v1/deployment_metrics_spec.go#L90)
 
-### .spec.metrics.port: uint16
+### .spec.metrics.port: integer
 
 [Code Reference](/pkg/apis/deployment/v1/deployment_metrics_spec.go#L99)
 
@@ -2698,15 +2698,15 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/deployment_metrics_spec.go#L88)
 
-### .spec.metrics.serviceMonitor.enabled: bool
+### .spec.metrics.serviceMonitor.enabled: boolean
 
 [Code Reference](/pkg/apis/deployment/v1/deployment_metrics_service_monitor_spec.go#L24)
 
-### .spec.metrics.serviceMonitor.labels: map[string]string
+### .spec.metrics.serviceMonitor.labels: object
 
 [Code Reference](/pkg/apis/deployment/v1/deployment_metrics_service_monitor_spec.go#L25)
 
-### .spec.metrics.tls: bool
+### .spec.metrics.tls: boolean
 
 TLS defines if TLS should be enabled on Metrics exporter endpoint.
 This option will enable TLS only if TLS is enabled on ArangoDeployment,
@@ -2729,7 +2729,7 @@ This field is **immutable**: Change of the ArangoDeployment Mode is not possible
 
 [Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L60)
 
-### .spec.networkAttachedVolumes: bool
+### .spec.networkAttachedVolumes: boolean
 
 NetworkAttachedVolumes
 If set to `true`, a ResignLeadership operation will be triggered when a DB-Server pod is evicted (rather than a CleanOutServer operation).
@@ -2741,26 +2741,26 @@ Default Value: true
 
 [Code Reference](/pkg/apis/deployment/v1/deployment_spec.go#L123)
 
-### .spec.rebalancer.enabled: bool
+### .spec.rebalancer.enabled: boolean
 
 [Code Reference](/pkg/apis/deployment/v1/rebalancer_spec.go#L26)
 
-### .spec.rebalancer.optimizers.leader: bool
+### .spec.rebalancer.optimizers.leader: boolean
 
 [Code Reference](/pkg/apis/deployment/v1/rebalancer_spec.go#L74)
 
-### .spec.rebalancer.parallelMoves: int
+### .spec.rebalancer.parallelMoves: integer
 
 [Code Reference](/pkg/apis/deployment/v1/rebalancer_spec.go#L28)
 
-### .spec.rebalancer.readers.count: bool
+### .spec.rebalancer.readers.count: boolean
 
 deprecated does not work in Rebalancer V2
 Count Enable Shard Count machanism
 
 [Code Reference](/pkg/apis/deployment/v1/rebalancer_spec.go#L62)
 
-### .spec.recovery.autoRecover: bool
+### .spec.recovery.autoRecover: boolean
 
 [Code Reference](/pkg/apis/deployment/v1/recovery_spec.go#L26)
 
@@ -2803,7 +2803,7 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L180)
 
-### .spec.single.allowMemberRecreation: bool
+### .spec.single.allowMemberRecreation: boolean
 
 AllowMemberRecreation allows to recreate member.
 This setting changes the member recreation logic based on group:
@@ -2812,14 +2812,14 @@ This setting changes the member recreation logic based on group:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
 
-### .spec.single.annotations: map[string]string
+### .spec.single.annotations: object
 
 Annotations specified the annotations added to Pods in this group.
 Annotations are merged with `spec.annotations`.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L125)
 
-### .spec.single.annotationsIgnoreList: []string
+### .spec.single.annotationsIgnoreList: array
 
 AnnotationsIgnoreList list regexp or plain definitions which annotations should be ignored
 
@@ -2848,7 +2848,7 @@ Default Value: []
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L85)
 
-### .spec.single.count: int
+### .spec.single.count: integer
 
 Count setting specifies the number of servers to start for the given group.
 For the Agent group, this value must be a positive, odd number.
@@ -2891,19 +2891,19 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_ephemeral_volumes.go#L64)
 
-### .spec.single.exporterPort: uint16
+### .spec.single.exporterPort: integer
 
 ExporterPort define Port used by exporter
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L235)
 
-### .spec.single.extendedRotationCheck: bool
+### .spec.single.extendedRotationCheck: boolean
 
 ExtendedRotationCheck extend checks for rotation
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L205)
 
-### .spec.single.externalPortEnabled: bool
+### .spec.single.externalPortEnabled: boolean
 
 ExternalPortEnabled if external port should be enabled. If is set to false, ports needs to be exposed via sidecar. Only for ArangoD members
 
@@ -2934,7 +2934,7 @@ Mode keep container replace mode
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_init_containers.go#L94)
 
-### .spec.single.internalPort: int
+### .spec.single.internalPort: integer
 
 InternalPort define port used in internal communication, can be accessed over localhost via sidecar. Only for ArangoD members
 
@@ -2946,13 +2946,13 @@ InternalPortProtocol define protocol of port used in internal communication, can
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L215)
 
-### .spec.single.labels: map[string]string
+### .spec.single.labels: object
 
 Labels specified the labels added to Pods in this group.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L131)
 
-### .spec.single.labelsIgnoreList: []string
+### .spec.single.labelsIgnoreList: array
 
 LabelsIgnoreList list regexp or plain definitions which labels should be ignored
 
@@ -2964,13 +2964,13 @@ LabelsMode Define labels mode which should be use while overriding labels
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L135)
 
-### .spec.single.maxCount: int
+### .spec.single.maxCount: integer
 
 MaxCount specifies a maximum for the count of servers. If set, a specification is invalid if `count > maxCount`.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L81)
 
-### .spec.single.memoryReservation: int64
+### .spec.single.memoryReservation: integer
 
 MemoryReservation determines system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.
 If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by specified value in percents.
@@ -2983,7 +2983,7 @@ Default Value: 0
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L107)
 
-### .spec.single.minCount: int
+### .spec.single.minCount: integer
 
 MinCount specifies a minimum for the count of servers. If set, a specification is invalid if `count < minCount`.
 
@@ -3007,7 +3007,7 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L150)
 
-### .spec.single.numactl.args: []string
+### .spec.single.numactl.args: array
 
 Args define list of the numactl process
 
@@ -3015,7 +3015,7 @@ Default Value: []
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_numactl_spec.go#L38)
 
-### .spec.single.numactl.enabled: bool
+### .spec.single.numactl.enabled: boolean
 
 Enabled define if numactl should be enabled
 
@@ -3031,7 +3031,7 @@ Default Value: /usr/bin/numactl
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_numactl_spec.go#L34)
 
-### .spec.single.overrideDetectedNumberOfCores: bool
+### .spec.single.overrideDetectedNumberOfCores: boolean
 
 **Important**: Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` Container Environment Variable
 
@@ -3045,7 +3045,7 @@ Default Value: true
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L113)
 
-### .spec.single.overrideDetectedTotalMemory: bool
+### .spec.single.overrideDetectedTotalMemory: boolean
 
 **Important**: Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` Container Environment Variable
 
@@ -3067,7 +3067,7 @@ Default Value: true
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec_pod_modes.go#L32)
 
-### .spec.single.port: uint16
+### .spec.single.port: integer
 
 Port define Port used by member
 
@@ -3083,7 +3083,7 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L156)
 
-### .spec.single.probes.livenessProbeDisabled: bool
+### .spec.single.probes.livenessProbeDisabled: boolean
 
 LivenessProbeDisabled if set to true, the operator does not generate a liveness probe for new pods belonging to this group
 
@@ -3091,7 +3091,7 @@ Default Value: false
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L245)
 
-### .spec.single.probes.livenessProbeSpec.failureThreshold: int32
+### .spec.single.probes.livenessProbeSpec.failureThreshold: integer
 
 FailureThreshold when a Pod starts and the probe fails, Kubernetes will try failureThreshold times before giving up.
 Giving up means restarting the container.
@@ -3101,7 +3101,7 @@ Default Value: 3
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L295)
 
-### .spec.single.probes.livenessProbeSpec.initialDelaySeconds: int32
+### .spec.single.probes.livenessProbeSpec.initialDelaySeconds: integer
 
 InitialDelaySeconds specifies number of seconds after the container has started before liveness or readiness probes are initiated.
 Minimum value is 0.
@@ -3110,7 +3110,7 @@ Default Value: 2
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L278)
 
-### .spec.single.probes.livenessProbeSpec.periodSeconds: int32
+### .spec.single.probes.livenessProbeSpec.periodSeconds: integer
 
 PeriodSeconds How often (in seconds) to perform the probe.
 Minimum value is 1.
@@ -3119,7 +3119,7 @@ Default Value: 10
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L282)
 
-### .spec.single.probes.livenessProbeSpec.successThreshold: int32
+### .spec.single.probes.livenessProbeSpec.successThreshold: integer
 
 SuccessThreshold Minimum consecutive successes for the probe to be considered successful after having failed.
 Minimum value is 1.
@@ -3128,7 +3128,7 @@ Default Value: 1
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L290)
 
-### .spec.single.probes.livenessProbeSpec.timeoutSeconds: int32
+### .spec.single.probes.livenessProbeSpec.timeoutSeconds: integer
 
 TimeoutSeconds specifies number of seconds after which the probe times out
 Minimum value is 1.
@@ -3137,20 +3137,20 @@ Default Value: 2
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L286)
 
-### .spec.single.probes.ReadinessProbeDisabled: bool
+### .spec.single.probes.ReadinessProbeDisabled: boolean
 
 OldReadinessProbeDisabled if true readinessProbes are disabled
 Deprecated: This field is deprecated, keept only for backward compatibility.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L252)
 
-### .spec.single.probes.readinessProbeDisabled: bool
+### .spec.single.probes.readinessProbeDisabled: boolean
 
 ReadinessProbeDisabled override flag for probe disabled in good manner (lowercase) with backward compatibility
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L254)
 
-### .spec.single.probes.readinessProbeSpec.failureThreshold: int32
+### .spec.single.probes.readinessProbeSpec.failureThreshold: integer
 
 FailureThreshold when a Pod starts and the probe fails, Kubernetes will try failureThreshold times before giving up.
 Giving up means restarting the container.
@@ -3160,7 +3160,7 @@ Default Value: 3
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L295)
 
-### .spec.single.probes.readinessProbeSpec.initialDelaySeconds: int32
+### .spec.single.probes.readinessProbeSpec.initialDelaySeconds: integer
 
 InitialDelaySeconds specifies number of seconds after the container has started before liveness or readiness probes are initiated.
 Minimum value is 0.
@@ -3169,7 +3169,7 @@ Default Value: 2
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L278)
 
-### .spec.single.probes.readinessProbeSpec.periodSeconds: int32
+### .spec.single.probes.readinessProbeSpec.periodSeconds: integer
 
 PeriodSeconds How often (in seconds) to perform the probe.
 Minimum value is 1.
@@ -3178,7 +3178,7 @@ Default Value: 10
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L282)
 
-### .spec.single.probes.readinessProbeSpec.successThreshold: int32
+### .spec.single.probes.readinessProbeSpec.successThreshold: integer
 
 SuccessThreshold Minimum consecutive successes for the probe to be considered successful after having failed.
 Minimum value is 1.
@@ -3187,7 +3187,7 @@ Default Value: 1
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L290)
 
-### .spec.single.probes.readinessProbeSpec.timeoutSeconds: int32
+### .spec.single.probes.readinessProbeSpec.timeoutSeconds: integer
 
 TimeoutSeconds specifies number of seconds after which the probe times out
 Minimum value is 1.
@@ -3196,13 +3196,13 @@ Default Value: 2
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L286)
 
-### .spec.single.probes.startupProbeDisabled: bool
+### .spec.single.probes.startupProbeDisabled: boolean
 
 StartupProbeDisabled if true startupProbes are disabled
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L259)
 
-### .spec.single.probes.startupProbeSpec.failureThreshold: int32
+### .spec.single.probes.startupProbeSpec.failureThreshold: integer
 
 FailureThreshold when a Pod starts and the probe fails, Kubernetes will try failureThreshold times before giving up.
 Giving up means restarting the container.
@@ -3212,7 +3212,7 @@ Default Value: 3
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L295)
 
-### .spec.single.probes.startupProbeSpec.initialDelaySeconds: int32
+### .spec.single.probes.startupProbeSpec.initialDelaySeconds: integer
 
 InitialDelaySeconds specifies number of seconds after the container has started before liveness or readiness probes are initiated.
 Minimum value is 0.
@@ -3221,7 +3221,7 @@ Default Value: 2
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L278)
 
-### .spec.single.probes.startupProbeSpec.periodSeconds: int32
+### .spec.single.probes.startupProbeSpec.periodSeconds: integer
 
 PeriodSeconds How often (in seconds) to perform the probe.
 Minimum value is 1.
@@ -3230,7 +3230,7 @@ Default Value: 10
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L282)
 
-### .spec.single.probes.startupProbeSpec.successThreshold: int32
+### .spec.single.probes.startupProbeSpec.successThreshold: integer
 
 SuccessThreshold Minimum consecutive successes for the probe to be considered successful after having failed.
 Minimum value is 1.
@@ -3239,7 +3239,7 @@ Default Value: 1
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L290)
 
-### .spec.single.probes.startupProbeSpec.timeoutSeconds: int32
+### .spec.single.probes.startupProbeSpec.timeoutSeconds: integer
 
 TimeoutSeconds specifies number of seconds after which the probe times out
 Minimum value is 1.
@@ -3279,51 +3279,51 @@ AddCapabilities add new capabilities to containers
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L46)
 
-### .spec.single.securityContext.allowPrivilegeEscalation: bool
+### .spec.single.securityContext.allowPrivilegeEscalation: boolean
 
 AllowPrivilegeEscalation Controls whether a process can gain more privileges than its parent process.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L49)
 
-### .spec.single.securityContext.dropAllCapabilities: bool
+### .spec.single.securityContext.dropAllCapabilities: boolean
 
 DropAllCapabilities specifies if capabilities should be dropped for this pod containers
 Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L43)
 
-### .spec.single.securityContext.fsGroup: int64
+### .spec.single.securityContext.fsGroup: integer
 
 FSGroup is a special supplemental group that applies to all containers in a pod.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L66)
 
-### .spec.single.securityContext.privileged: bool
+### .spec.single.securityContext.privileged: boolean
 
 Privileged If true, runs container in privileged mode. Processes in privileged containers are
 essentially equivalent to root on the host.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L52)
 
-### .spec.single.securityContext.readOnlyRootFilesystem: bool
+### .spec.single.securityContext.readOnlyRootFilesystem: boolean
 
 ReadOnlyRootFilesystem if true, mounts the container's root filesystem as read-only.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L54)
 
-### .spec.single.securityContext.runAsGroup: int64
+### .spec.single.securityContext.runAsGroup: integer
 
 RunAsGroup is the GID to run the entrypoint of the container process.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L60)
 
-### .spec.single.securityContext.runAsNonRoot: bool
+### .spec.single.securityContext.runAsNonRoot: boolean
 
 RunAsNonRoot if true, indicates that the container must run as a non-root user.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L56)
 
-### .spec.single.securityContext.runAsUser: int64
+### .spec.single.securityContext.runAsUser: integer
 
 RunAsUser is the UID to run the entrypoint of the container process.
 
@@ -3347,7 +3347,7 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L87)
 
-### .spec.single.securityContext.supplementalGroups: []int64
+### .spec.single.securityContext.supplementalGroups: array
 
 SupplementalGroups is a list of groups applied to the first process run in each container, in addition to the container's primary GID,
 the fsGroup (if specified), and group memberships defined in the container image for the uid of the container process.
@@ -3386,7 +3386,7 @@ to that service account.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L146)
 
-### .spec.single.shutdownDelay: int
+### .spec.single.shutdownDelay: integer
 
 ShutdownDelay define how long operator should delay finalizer removal after shutdown
 
@@ -3398,7 +3398,7 @@ ShutdownMethod describe procedure of member shutdown taken by Operator
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L209)
 
-### .spec.single.sidecarCoreNames: []string
+### .spec.single.sidecarCoreNames: array
 
 SidecarCoreNames is a list of sidecar containers which must run in the pod.
 Some names (e.g.: "server", "worker") are reserved, and they don't have any impact.
@@ -3420,7 +3420,7 @@ StorageClassName specifies the classname for storage of the servers.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L91)
 
-### .spec.single.terminationGracePeriodSeconds: int64
+### .spec.single.terminationGracePeriodSeconds: integer
 
 TerminationGracePeriodSeconds override default TerminationGracePeriodSeconds for pods - via silent rotation
 
@@ -3440,7 +3440,7 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L122)
 
-### .spec.single.volumeAllowShrink: bool
+### .spec.single.volumeAllowShrink: boolean
 
 Deprecated: VolumeAllowShrink allows shrink the volume
 
@@ -3551,7 +3551,7 @@ and stored in a `Secret` with given name.
 
 [Code Reference](/pkg/apis/deployment/v1/sync_authentication_spec.go#L36)
 
-### .spec.sync.enabled: bool
+### .spec.sync.enabled: boolean
 
 Enabled setting enables/disables support for data center 2 data center
 replication in the cluster. When enabled, the cluster will contain
@@ -3588,7 +3588,7 @@ If you do not specify this setting, an IP will be chosen automatically by the lo
 
 [Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L48)
 
-### .spec.sync.externalAccess.loadBalancerSourceRanges: []string
+### .spec.sync.externalAccess.loadBalancerSourceRanges: array
 
 LoadBalancerSourceRanges define LoadBalancerSourceRanges used for LoadBalancer Service type
 If specified and supported by the platform, this will restrict traffic through the cloud-provider
@@ -3600,7 +3600,7 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/external_access_spec.go#L55)
 
-### .spec.sync.externalAccess.managedServiceNames: []string
+### .spec.sync.externalAccess.managedServiceNames: array
 
 ManagedServiceNames keeps names of services which are not managed by KubeArangoDB.
 It is only relevant when type of service is `managed`.
@@ -3616,7 +3616,7 @@ If not set, this setting defaults to:
 
 [Code Reference](/pkg/apis/deployment/v1/sync_external_access_spec.go#L40)
 
-### .spec.sync.externalAccess.nodePort: int
+### .spec.sync.externalAccess.nodePort: integer
 
 NodePort define optional port used in case of Auto or NodePort type.
 This setting is used when `spec.externalAccess.type` is set to `NodePort` or `Auto`.
@@ -3675,7 +3675,7 @@ The specified `Secret`, must contain the following data fields:
 
 [Code Reference](/pkg/apis/deployment/v1/tls_spec.go#L81)
 
-### .spec.sync.tls.sni.mapping.\<string\>: []string
+### .spec.sync.tls.sni.mapping.\<string\>: array
 
 [Code Reference](/pkg/apis/deployment/v1/tls_sni_spec.go#L30)
 
@@ -3700,7 +3700,7 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L180)
 
-### .spec.syncmasters.allowMemberRecreation: bool
+### .spec.syncmasters.allowMemberRecreation: boolean
 
 AllowMemberRecreation allows to recreate member.
 This setting changes the member recreation logic based on group:
@@ -3709,14 +3709,14 @@ This setting changes the member recreation logic based on group:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
 
-### .spec.syncmasters.annotations: map[string]string
+### .spec.syncmasters.annotations: object
 
 Annotations specified the annotations added to Pods in this group.
 Annotations are merged with `spec.annotations`.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L125)
 
-### .spec.syncmasters.annotationsIgnoreList: []string
+### .spec.syncmasters.annotationsIgnoreList: array
 
 AnnotationsIgnoreList list regexp or plain definitions which annotations should be ignored
 
@@ -3745,7 +3745,7 @@ Default Value: []
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L85)
 
-### .spec.syncmasters.count: int
+### .spec.syncmasters.count: integer
 
 Count setting specifies the number of servers to start for the given group.
 For the Agent group, this value must be a positive, odd number.
@@ -3788,19 +3788,19 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_ephemeral_volumes.go#L64)
 
-### .spec.syncmasters.exporterPort: uint16
+### .spec.syncmasters.exporterPort: integer
 
 ExporterPort define Port used by exporter
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L235)
 
-### .spec.syncmasters.extendedRotationCheck: bool
+### .spec.syncmasters.extendedRotationCheck: boolean
 
 ExtendedRotationCheck extend checks for rotation
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L205)
 
-### .spec.syncmasters.externalPortEnabled: bool
+### .spec.syncmasters.externalPortEnabled: boolean
 
 ExternalPortEnabled if external port should be enabled. If is set to false, ports needs to be exposed via sidecar. Only for ArangoD members
 
@@ -3831,7 +3831,7 @@ Mode keep container replace mode
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_init_containers.go#L94)
 
-### .spec.syncmasters.internalPort: int
+### .spec.syncmasters.internalPort: integer
 
 InternalPort define port used in internal communication, can be accessed over localhost via sidecar. Only for ArangoD members
 
@@ -3843,13 +3843,13 @@ InternalPortProtocol define protocol of port used in internal communication, can
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L215)
 
-### .spec.syncmasters.labels: map[string]string
+### .spec.syncmasters.labels: object
 
 Labels specified the labels added to Pods in this group.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L131)
 
-### .spec.syncmasters.labelsIgnoreList: []string
+### .spec.syncmasters.labelsIgnoreList: array
 
 LabelsIgnoreList list regexp or plain definitions which labels should be ignored
 
@@ -3861,13 +3861,13 @@ LabelsMode Define labels mode which should be use while overriding labels
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L135)
 
-### .spec.syncmasters.maxCount: int
+### .spec.syncmasters.maxCount: integer
 
 MaxCount specifies a maximum for the count of servers. If set, a specification is invalid if `count > maxCount`.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L81)
 
-### .spec.syncmasters.memoryReservation: int64
+### .spec.syncmasters.memoryReservation: integer
 
 MemoryReservation determines system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.
 If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by specified value in percents.
@@ -3880,7 +3880,7 @@ Default Value: 0
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L107)
 
-### .spec.syncmasters.minCount: int
+### .spec.syncmasters.minCount: integer
 
 MinCount specifies a minimum for the count of servers. If set, a specification is invalid if `count < minCount`.
 
@@ -3904,7 +3904,7 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L150)
 
-### .spec.syncmasters.numactl.args: []string
+### .spec.syncmasters.numactl.args: array
 
 Args define list of the numactl process
 
@@ -3912,7 +3912,7 @@ Default Value: []
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_numactl_spec.go#L38)
 
-### .spec.syncmasters.numactl.enabled: bool
+### .spec.syncmasters.numactl.enabled: boolean
 
 Enabled define if numactl should be enabled
 
@@ -3928,7 +3928,7 @@ Default Value: /usr/bin/numactl
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_numactl_spec.go#L34)
 
-### .spec.syncmasters.overrideDetectedNumberOfCores: bool
+### .spec.syncmasters.overrideDetectedNumberOfCores: boolean
 
 **Important**: Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` Container Environment Variable
 
@@ -3942,7 +3942,7 @@ Default Value: true
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L113)
 
-### .spec.syncmasters.overrideDetectedTotalMemory: bool
+### .spec.syncmasters.overrideDetectedTotalMemory: boolean
 
 **Important**: Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` Container Environment Variable
 
@@ -3964,7 +3964,7 @@ Default Value: true
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec_pod_modes.go#L32)
 
-### .spec.syncmasters.port: uint16
+### .spec.syncmasters.port: integer
 
 Port define Port used by member
 
@@ -3980,7 +3980,7 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L156)
 
-### .spec.syncmasters.probes.livenessProbeDisabled: bool
+### .spec.syncmasters.probes.livenessProbeDisabled: boolean
 
 LivenessProbeDisabled if set to true, the operator does not generate a liveness probe for new pods belonging to this group
 
@@ -3988,7 +3988,7 @@ Default Value: false
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L245)
 
-### .spec.syncmasters.probes.livenessProbeSpec.failureThreshold: int32
+### .spec.syncmasters.probes.livenessProbeSpec.failureThreshold: integer
 
 FailureThreshold when a Pod starts and the probe fails, Kubernetes will try failureThreshold times before giving up.
 Giving up means restarting the container.
@@ -3998,7 +3998,7 @@ Default Value: 3
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L295)
 
-### .spec.syncmasters.probes.livenessProbeSpec.initialDelaySeconds: int32
+### .spec.syncmasters.probes.livenessProbeSpec.initialDelaySeconds: integer
 
 InitialDelaySeconds specifies number of seconds after the container has started before liveness or readiness probes are initiated.
 Minimum value is 0.
@@ -4007,7 +4007,7 @@ Default Value: 2
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L278)
 
-### .spec.syncmasters.probes.livenessProbeSpec.periodSeconds: int32
+### .spec.syncmasters.probes.livenessProbeSpec.periodSeconds: integer
 
 PeriodSeconds How often (in seconds) to perform the probe.
 Minimum value is 1.
@@ -4016,7 +4016,7 @@ Default Value: 10
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L282)
 
-### .spec.syncmasters.probes.livenessProbeSpec.successThreshold: int32
+### .spec.syncmasters.probes.livenessProbeSpec.successThreshold: integer
 
 SuccessThreshold Minimum consecutive successes for the probe to be considered successful after having failed.
 Minimum value is 1.
@@ -4025,7 +4025,7 @@ Default Value: 1
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L290)
 
-### .spec.syncmasters.probes.livenessProbeSpec.timeoutSeconds: int32
+### .spec.syncmasters.probes.livenessProbeSpec.timeoutSeconds: integer
 
 TimeoutSeconds specifies number of seconds after which the probe times out
 Minimum value is 1.
@@ -4034,20 +4034,20 @@ Default Value: 2
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L286)
 
-### .spec.syncmasters.probes.ReadinessProbeDisabled: bool
+### .spec.syncmasters.probes.ReadinessProbeDisabled: boolean
 
 OldReadinessProbeDisabled if true readinessProbes are disabled
 Deprecated: This field is deprecated, keept only for backward compatibility.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L252)
 
-### .spec.syncmasters.probes.readinessProbeDisabled: bool
+### .spec.syncmasters.probes.readinessProbeDisabled: boolean
 
 ReadinessProbeDisabled override flag for probe disabled in good manner (lowercase) with backward compatibility
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L254)
 
-### .spec.syncmasters.probes.readinessProbeSpec.failureThreshold: int32
+### .spec.syncmasters.probes.readinessProbeSpec.failureThreshold: integer
 
 FailureThreshold when a Pod starts and the probe fails, Kubernetes will try failureThreshold times before giving up.
 Giving up means restarting the container.
@@ -4057,7 +4057,7 @@ Default Value: 3
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L295)
 
-### .spec.syncmasters.probes.readinessProbeSpec.initialDelaySeconds: int32
+### .spec.syncmasters.probes.readinessProbeSpec.initialDelaySeconds: integer
 
 InitialDelaySeconds specifies number of seconds after the container has started before liveness or readiness probes are initiated.
 Minimum value is 0.
@@ -4066,7 +4066,7 @@ Default Value: 2
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L278)
 
-### .spec.syncmasters.probes.readinessProbeSpec.periodSeconds: int32
+### .spec.syncmasters.probes.readinessProbeSpec.periodSeconds: integer
 
 PeriodSeconds How often (in seconds) to perform the probe.
 Minimum value is 1.
@@ -4075,7 +4075,7 @@ Default Value: 10
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L282)
 
-### .spec.syncmasters.probes.readinessProbeSpec.successThreshold: int32
+### .spec.syncmasters.probes.readinessProbeSpec.successThreshold: integer
 
 SuccessThreshold Minimum consecutive successes for the probe to be considered successful after having failed.
 Minimum value is 1.
@@ -4084,7 +4084,7 @@ Default Value: 1
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L290)
 
-### .spec.syncmasters.probes.readinessProbeSpec.timeoutSeconds: int32
+### .spec.syncmasters.probes.readinessProbeSpec.timeoutSeconds: integer
 
 TimeoutSeconds specifies number of seconds after which the probe times out
 Minimum value is 1.
@@ -4093,13 +4093,13 @@ Default Value: 2
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L286)
 
-### .spec.syncmasters.probes.startupProbeDisabled: bool
+### .spec.syncmasters.probes.startupProbeDisabled: boolean
 
 StartupProbeDisabled if true startupProbes are disabled
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L259)
 
-### .spec.syncmasters.probes.startupProbeSpec.failureThreshold: int32
+### .spec.syncmasters.probes.startupProbeSpec.failureThreshold: integer
 
 FailureThreshold when a Pod starts and the probe fails, Kubernetes will try failureThreshold times before giving up.
 Giving up means restarting the container.
@@ -4109,7 +4109,7 @@ Default Value: 3
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L295)
 
-### .spec.syncmasters.probes.startupProbeSpec.initialDelaySeconds: int32
+### .spec.syncmasters.probes.startupProbeSpec.initialDelaySeconds: integer
 
 InitialDelaySeconds specifies number of seconds after the container has started before liveness or readiness probes are initiated.
 Minimum value is 0.
@@ -4118,7 +4118,7 @@ Default Value: 2
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L278)
 
-### .spec.syncmasters.probes.startupProbeSpec.periodSeconds: int32
+### .spec.syncmasters.probes.startupProbeSpec.periodSeconds: integer
 
 PeriodSeconds How often (in seconds) to perform the probe.
 Minimum value is 1.
@@ -4127,7 +4127,7 @@ Default Value: 10
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L282)
 
-### .spec.syncmasters.probes.startupProbeSpec.successThreshold: int32
+### .spec.syncmasters.probes.startupProbeSpec.successThreshold: integer
 
 SuccessThreshold Minimum consecutive successes for the probe to be considered successful after having failed.
 Minimum value is 1.
@@ -4136,7 +4136,7 @@ Default Value: 1
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L290)
 
-### .spec.syncmasters.probes.startupProbeSpec.timeoutSeconds: int32
+### .spec.syncmasters.probes.startupProbeSpec.timeoutSeconds: integer
 
 TimeoutSeconds specifies number of seconds after which the probe times out
 Minimum value is 1.
@@ -4176,51 +4176,51 @@ AddCapabilities add new capabilities to containers
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L46)
 
-### .spec.syncmasters.securityContext.allowPrivilegeEscalation: bool
+### .spec.syncmasters.securityContext.allowPrivilegeEscalation: boolean
 
 AllowPrivilegeEscalation Controls whether a process can gain more privileges than its parent process.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L49)
 
-### .spec.syncmasters.securityContext.dropAllCapabilities: bool
+### .spec.syncmasters.securityContext.dropAllCapabilities: boolean
 
 DropAllCapabilities specifies if capabilities should be dropped for this pod containers
 Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L43)
 
-### .spec.syncmasters.securityContext.fsGroup: int64
+### .spec.syncmasters.securityContext.fsGroup: integer
 
 FSGroup is a special supplemental group that applies to all containers in a pod.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L66)
 
-### .spec.syncmasters.securityContext.privileged: bool
+### .spec.syncmasters.securityContext.privileged: boolean
 
 Privileged If true, runs container in privileged mode. Processes in privileged containers are
 essentially equivalent to root on the host.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L52)
 
-### .spec.syncmasters.securityContext.readOnlyRootFilesystem: bool
+### .spec.syncmasters.securityContext.readOnlyRootFilesystem: boolean
 
 ReadOnlyRootFilesystem if true, mounts the container's root filesystem as read-only.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L54)
 
-### .spec.syncmasters.securityContext.runAsGroup: int64
+### .spec.syncmasters.securityContext.runAsGroup: integer
 
 RunAsGroup is the GID to run the entrypoint of the container process.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L60)
 
-### .spec.syncmasters.securityContext.runAsNonRoot: bool
+### .spec.syncmasters.securityContext.runAsNonRoot: boolean
 
 RunAsNonRoot if true, indicates that the container must run as a non-root user.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L56)
 
-### .spec.syncmasters.securityContext.runAsUser: int64
+### .spec.syncmasters.securityContext.runAsUser: integer
 
 RunAsUser is the UID to run the entrypoint of the container process.
 
@@ -4244,7 +4244,7 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L87)
 
-### .spec.syncmasters.securityContext.supplementalGroups: []int64
+### .spec.syncmasters.securityContext.supplementalGroups: array
 
 SupplementalGroups is a list of groups applied to the first process run in each container, in addition to the container's primary GID,
 the fsGroup (if specified), and group memberships defined in the container image for the uid of the container process.
@@ -4283,7 +4283,7 @@ to that service account.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L146)
 
-### .spec.syncmasters.shutdownDelay: int
+### .spec.syncmasters.shutdownDelay: integer
 
 ShutdownDelay define how long operator should delay finalizer removal after shutdown
 
@@ -4295,7 +4295,7 @@ ShutdownMethod describe procedure of member shutdown taken by Operator
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L209)
 
-### .spec.syncmasters.sidecarCoreNames: []string
+### .spec.syncmasters.sidecarCoreNames: array
 
 SidecarCoreNames is a list of sidecar containers which must run in the pod.
 Some names (e.g.: "server", "worker") are reserved, and they don't have any impact.
@@ -4317,7 +4317,7 @@ StorageClassName specifies the classname for storage of the servers.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L91)
 
-### .spec.syncmasters.terminationGracePeriodSeconds: int64
+### .spec.syncmasters.terminationGracePeriodSeconds: integer
 
 TerminationGracePeriodSeconds override default TerminationGracePeriodSeconds for pods - via silent rotation
 
@@ -4337,7 +4337,7 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L122)
 
-### .spec.syncmasters.volumeAllowShrink: bool
+### .spec.syncmasters.volumeAllowShrink: boolean
 
 Deprecated: VolumeAllowShrink allows shrink the volume
 
@@ -4426,7 +4426,7 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L180)
 
-### .spec.syncworkers.allowMemberRecreation: bool
+### .spec.syncworkers.allowMemberRecreation: boolean
 
 AllowMemberRecreation allows to recreate member.
 This setting changes the member recreation logic based on group:
@@ -4435,14 +4435,14 @@ This setting changes the member recreation logic based on group:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L222)
 
-### .spec.syncworkers.annotations: map[string]string
+### .spec.syncworkers.annotations: object
 
 Annotations specified the annotations added to Pods in this group.
 Annotations are merged with `spec.annotations`.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L125)
 
-### .spec.syncworkers.annotationsIgnoreList: []string
+### .spec.syncworkers.annotationsIgnoreList: array
 
 AnnotationsIgnoreList list regexp or plain definitions which annotations should be ignored
 
@@ -4471,7 +4471,7 @@ Default Value: []
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L85)
 
-### .spec.syncworkers.count: int
+### .spec.syncworkers.count: integer
 
 Count setting specifies the number of servers to start for the given group.
 For the Agent group, this value must be a positive, odd number.
@@ -4514,19 +4514,19 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_ephemeral_volumes.go#L64)
 
-### .spec.syncworkers.exporterPort: uint16
+### .spec.syncworkers.exporterPort: integer
 
 ExporterPort define Port used by exporter
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L235)
 
-### .spec.syncworkers.extendedRotationCheck: bool
+### .spec.syncworkers.extendedRotationCheck: boolean
 
 ExtendedRotationCheck extend checks for rotation
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L205)
 
-### .spec.syncworkers.externalPortEnabled: bool
+### .spec.syncworkers.externalPortEnabled: boolean
 
 ExternalPortEnabled if external port should be enabled. If is set to false, ports needs to be exposed via sidecar. Only for ArangoD members
 
@@ -4557,7 +4557,7 @@ Mode keep container replace mode
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_init_containers.go#L94)
 
-### .spec.syncworkers.internalPort: int
+### .spec.syncworkers.internalPort: integer
 
 InternalPort define port used in internal communication, can be accessed over localhost via sidecar. Only for ArangoD members
 
@@ -4569,13 +4569,13 @@ InternalPortProtocol define protocol of port used in internal communication, can
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L215)
 
-### .spec.syncworkers.labels: map[string]string
+### .spec.syncworkers.labels: object
 
 Labels specified the labels added to Pods in this group.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L131)
 
-### .spec.syncworkers.labelsIgnoreList: []string
+### .spec.syncworkers.labelsIgnoreList: array
 
 LabelsIgnoreList list regexp or plain definitions which labels should be ignored
 
@@ -4587,13 +4587,13 @@ LabelsMode Define labels mode which should be use while overriding labels
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L135)
 
-### .spec.syncworkers.maxCount: int
+### .spec.syncworkers.maxCount: integer
 
 MaxCount specifies a maximum for the count of servers. If set, a specification is invalid if `count > maxCount`.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L81)
 
-### .spec.syncworkers.memoryReservation: int64
+### .spec.syncworkers.memoryReservation: integer
 
 MemoryReservation determines system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.
 If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by specified value in percents.
@@ -4606,7 +4606,7 @@ Default Value: 0
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L107)
 
-### .spec.syncworkers.minCount: int
+### .spec.syncworkers.minCount: integer
 
 MinCount specifies a minimum for the count of servers. If set, a specification is invalid if `count < minCount`.
 
@@ -4630,7 +4630,7 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L150)
 
-### .spec.syncworkers.numactl.args: []string
+### .spec.syncworkers.numactl.args: array
 
 Args define list of the numactl process
 
@@ -4638,7 +4638,7 @@ Default Value: []
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_numactl_spec.go#L38)
 
-### .spec.syncworkers.numactl.enabled: bool
+### .spec.syncworkers.numactl.enabled: boolean
 
 Enabled define if numactl should be enabled
 
@@ -4654,7 +4654,7 @@ Default Value: /usr/bin/numactl
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_numactl_spec.go#L34)
 
-### .spec.syncworkers.overrideDetectedNumberOfCores: bool
+### .spec.syncworkers.overrideDetectedNumberOfCores: boolean
 
 **Important**: Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` Container Environment Variable
 
@@ -4668,7 +4668,7 @@ Default Value: true
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L113)
 
-### .spec.syncworkers.overrideDetectedTotalMemory: bool
+### .spec.syncworkers.overrideDetectedTotalMemory: boolean
 
 **Important**: Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` Container Environment Variable
 
@@ -4690,7 +4690,7 @@ Default Value: true
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec_pod_modes.go#L32)
 
-### .spec.syncworkers.port: uint16
+### .spec.syncworkers.port: integer
 
 Port define Port used by member
 
@@ -4706,7 +4706,7 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L156)
 
-### .spec.syncworkers.probes.livenessProbeDisabled: bool
+### .spec.syncworkers.probes.livenessProbeDisabled: boolean
 
 LivenessProbeDisabled if set to true, the operator does not generate a liveness probe for new pods belonging to this group
 
@@ -4714,7 +4714,7 @@ Default Value: false
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L245)
 
-### .spec.syncworkers.probes.livenessProbeSpec.failureThreshold: int32
+### .spec.syncworkers.probes.livenessProbeSpec.failureThreshold: integer
 
 FailureThreshold when a Pod starts and the probe fails, Kubernetes will try failureThreshold times before giving up.
 Giving up means restarting the container.
@@ -4724,7 +4724,7 @@ Default Value: 3
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L295)
 
-### .spec.syncworkers.probes.livenessProbeSpec.initialDelaySeconds: int32
+### .spec.syncworkers.probes.livenessProbeSpec.initialDelaySeconds: integer
 
 InitialDelaySeconds specifies number of seconds after the container has started before liveness or readiness probes are initiated.
 Minimum value is 0.
@@ -4733,7 +4733,7 @@ Default Value: 2
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L278)
 
-### .spec.syncworkers.probes.livenessProbeSpec.periodSeconds: int32
+### .spec.syncworkers.probes.livenessProbeSpec.periodSeconds: integer
 
 PeriodSeconds How often (in seconds) to perform the probe.
 Minimum value is 1.
@@ -4742,7 +4742,7 @@ Default Value: 10
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L282)
 
-### .spec.syncworkers.probes.livenessProbeSpec.successThreshold: int32
+### .spec.syncworkers.probes.livenessProbeSpec.successThreshold: integer
 
 SuccessThreshold Minimum consecutive successes for the probe to be considered successful after having failed.
 Minimum value is 1.
@@ -4751,7 +4751,7 @@ Default Value: 1
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L290)
 
-### .spec.syncworkers.probes.livenessProbeSpec.timeoutSeconds: int32
+### .spec.syncworkers.probes.livenessProbeSpec.timeoutSeconds: integer
 
 TimeoutSeconds specifies number of seconds after which the probe times out
 Minimum value is 1.
@@ -4760,20 +4760,20 @@ Default Value: 2
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L286)
 
-### .spec.syncworkers.probes.ReadinessProbeDisabled: bool
+### .spec.syncworkers.probes.ReadinessProbeDisabled: boolean
 
 OldReadinessProbeDisabled if true readinessProbes are disabled
 Deprecated: This field is deprecated, keept only for backward compatibility.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L252)
 
-### .spec.syncworkers.probes.readinessProbeDisabled: bool
+### .spec.syncworkers.probes.readinessProbeDisabled: boolean
 
 ReadinessProbeDisabled override flag for probe disabled in good manner (lowercase) with backward compatibility
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L254)
 
-### .spec.syncworkers.probes.readinessProbeSpec.failureThreshold: int32
+### .spec.syncworkers.probes.readinessProbeSpec.failureThreshold: integer
 
 FailureThreshold when a Pod starts and the probe fails, Kubernetes will try failureThreshold times before giving up.
 Giving up means restarting the container.
@@ -4783,7 +4783,7 @@ Default Value: 3
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L295)
 
-### .spec.syncworkers.probes.readinessProbeSpec.initialDelaySeconds: int32
+### .spec.syncworkers.probes.readinessProbeSpec.initialDelaySeconds: integer
 
 InitialDelaySeconds specifies number of seconds after the container has started before liveness or readiness probes are initiated.
 Minimum value is 0.
@@ -4792,7 +4792,7 @@ Default Value: 2
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L278)
 
-### .spec.syncworkers.probes.readinessProbeSpec.periodSeconds: int32
+### .spec.syncworkers.probes.readinessProbeSpec.periodSeconds: integer
 
 PeriodSeconds How often (in seconds) to perform the probe.
 Minimum value is 1.
@@ -4801,7 +4801,7 @@ Default Value: 10
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L282)
 
-### .spec.syncworkers.probes.readinessProbeSpec.successThreshold: int32
+### .spec.syncworkers.probes.readinessProbeSpec.successThreshold: integer
 
 SuccessThreshold Minimum consecutive successes for the probe to be considered successful after having failed.
 Minimum value is 1.
@@ -4810,7 +4810,7 @@ Default Value: 1
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L290)
 
-### .spec.syncworkers.probes.readinessProbeSpec.timeoutSeconds: int32
+### .spec.syncworkers.probes.readinessProbeSpec.timeoutSeconds: integer
 
 TimeoutSeconds specifies number of seconds after which the probe times out
 Minimum value is 1.
@@ -4819,13 +4819,13 @@ Default Value: 2
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L286)
 
-### .spec.syncworkers.probes.startupProbeDisabled: bool
+### .spec.syncworkers.probes.startupProbeDisabled: boolean
 
 StartupProbeDisabled if true startupProbes are disabled
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L259)
 
-### .spec.syncworkers.probes.startupProbeSpec.failureThreshold: int32
+### .spec.syncworkers.probes.startupProbeSpec.failureThreshold: integer
 
 FailureThreshold when a Pod starts and the probe fails, Kubernetes will try failureThreshold times before giving up.
 Giving up means restarting the container.
@@ -4835,7 +4835,7 @@ Default Value: 3
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L295)
 
-### .spec.syncworkers.probes.startupProbeSpec.initialDelaySeconds: int32
+### .spec.syncworkers.probes.startupProbeSpec.initialDelaySeconds: integer
 
 InitialDelaySeconds specifies number of seconds after the container has started before liveness or readiness probes are initiated.
 Minimum value is 0.
@@ -4844,7 +4844,7 @@ Default Value: 2
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L278)
 
-### .spec.syncworkers.probes.startupProbeSpec.periodSeconds: int32
+### .spec.syncworkers.probes.startupProbeSpec.periodSeconds: integer
 
 PeriodSeconds How often (in seconds) to perform the probe.
 Minimum value is 1.
@@ -4853,7 +4853,7 @@ Default Value: 10
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L282)
 
-### .spec.syncworkers.probes.startupProbeSpec.successThreshold: int32
+### .spec.syncworkers.probes.startupProbeSpec.successThreshold: integer
 
 SuccessThreshold Minimum consecutive successes for the probe to be considered successful after having failed.
 Minimum value is 1.
@@ -4862,7 +4862,7 @@ Default Value: 1
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L290)
 
-### .spec.syncworkers.probes.startupProbeSpec.timeoutSeconds: int32
+### .spec.syncworkers.probes.startupProbeSpec.timeoutSeconds: integer
 
 TimeoutSeconds specifies number of seconds after which the probe times out
 Minimum value is 1.
@@ -4902,51 +4902,51 @@ AddCapabilities add new capabilities to containers
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L46)
 
-### .spec.syncworkers.securityContext.allowPrivilegeEscalation: bool
+### .spec.syncworkers.securityContext.allowPrivilegeEscalation: boolean
 
 AllowPrivilegeEscalation Controls whether a process can gain more privileges than its parent process.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L49)
 
-### .spec.syncworkers.securityContext.dropAllCapabilities: bool
+### .spec.syncworkers.securityContext.dropAllCapabilities: boolean
 
 DropAllCapabilities specifies if capabilities should be dropped for this pod containers
 Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L43)
 
-### .spec.syncworkers.securityContext.fsGroup: int64
+### .spec.syncworkers.securityContext.fsGroup: integer
 
 FSGroup is a special supplemental group that applies to all containers in a pod.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L66)
 
-### .spec.syncworkers.securityContext.privileged: bool
+### .spec.syncworkers.securityContext.privileged: boolean
 
 Privileged If true, runs container in privileged mode. Processes in privileged containers are
 essentially equivalent to root on the host.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L52)
 
-### .spec.syncworkers.securityContext.readOnlyRootFilesystem: bool
+### .spec.syncworkers.securityContext.readOnlyRootFilesystem: boolean
 
 ReadOnlyRootFilesystem if true, mounts the container's root filesystem as read-only.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L54)
 
-### .spec.syncworkers.securityContext.runAsGroup: int64
+### .spec.syncworkers.securityContext.runAsGroup: integer
 
 RunAsGroup is the GID to run the entrypoint of the container process.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L60)
 
-### .spec.syncworkers.securityContext.runAsNonRoot: bool
+### .spec.syncworkers.securityContext.runAsNonRoot: boolean
 
 RunAsNonRoot if true, indicates that the container must run as a non-root user.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L56)
 
-### .spec.syncworkers.securityContext.runAsUser: int64
+### .spec.syncworkers.securityContext.runAsUser: integer
 
 RunAsUser is the UID to run the entrypoint of the container process.
 
@@ -4970,7 +4970,7 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_security_context_spec.go#L87)
 
-### .spec.syncworkers.securityContext.supplementalGroups: []int64
+### .spec.syncworkers.securityContext.supplementalGroups: array
 
 SupplementalGroups is a list of groups applied to the first process run in each container, in addition to the container's primary GID,
 the fsGroup (if specified), and group memberships defined in the container image for the uid of the container process.
@@ -5009,7 +5009,7 @@ to that service account.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L146)
 
-### .spec.syncworkers.shutdownDelay: int
+### .spec.syncworkers.shutdownDelay: integer
 
 ShutdownDelay define how long operator should delay finalizer removal after shutdown
 
@@ -5021,7 +5021,7 @@ ShutdownMethod describe procedure of member shutdown taken by Operator
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L209)
 
-### .spec.syncworkers.sidecarCoreNames: []string
+### .spec.syncworkers.sidecarCoreNames: array
 
 SidecarCoreNames is a list of sidecar containers which must run in the pod.
 Some names (e.g.: "server", "worker") are reserved, and they don't have any impact.
@@ -5043,7 +5043,7 @@ StorageClassName specifies the classname for storage of the servers.
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L91)
 
-### .spec.syncworkers.terminationGracePeriodSeconds: int64
+### .spec.syncworkers.terminationGracePeriodSeconds: integer
 
 TerminationGracePeriodSeconds override default TerminationGracePeriodSeconds for pods - via silent rotation
 
@@ -5063,7 +5063,7 @@ Links:
 
 [Code Reference](/pkg/apis/deployment/v1/server_group_spec.go#L122)
 
-### .spec.syncworkers.volumeAllowShrink: bool
+### .spec.syncworkers.volumeAllowShrink: boolean
 
 Deprecated: VolumeAllowShrink allows shrink the volume
 
@@ -5159,7 +5159,7 @@ actions:
 
 [Code Reference](/pkg/apis/deployment/v1/timeouts.go#L44)
 
-### .spec.timeouts.maintenanceGracePeriod: int64
+### .spec.timeouts.maintenanceGracePeriod: integer
 
 MaintenanceGracePeriod action timeout
 
@@ -5199,7 +5199,7 @@ The specified `Secret`, must contain the following data fields:
 
 [Code Reference](/pkg/apis/deployment/v1/tls_spec.go#L81)
 
-### .spec.tls.sni.mapping.\<string\>: []string
+### .spec.tls.sni.mapping.\<string\>: array
 
 [Code Reference](/pkg/apis/deployment/v1/tls_sni_spec.go#L30)
 
@@ -5215,7 +5215,7 @@ Default Value: "2160h" (about 3 months)
 
 [Code Reference](/pkg/apis/deployment/v1/tls_spec.go#L79)
 
-### .spec.topology.enabled: bool
+### .spec.topology.enabled: boolean
 
 [Code Reference](/pkg/apis/deployment/v1/topology_spec.go#L26)
 
@@ -5223,11 +5223,11 @@ Default Value: "2160h" (about 3 months)
 
 [Code Reference](/pkg/apis/deployment/v1/topology_spec.go#L28)
 
-### .spec.topology.zones: int
+### .spec.topology.zones: integer
 
 [Code Reference](/pkg/apis/deployment/v1/topology_spec.go#L27)
 
-### .spec.upgrade.autoUpgrade: bool
+### .spec.upgrade.autoUpgrade: boolean
 
 AutoUpgrade flag specifies if upgrade should be auto-injected, even if is not required (in case of stuck)
 
@@ -5235,7 +5235,7 @@ Default Value: false
 
 [Code Reference](/pkg/apis/deployment/v1/deployment_upgrade_spec.go#L26)
 
-### .spec.upgrade.debugLog: bool
+### .spec.upgrade.debugLog: boolean
 
 DebugLog flag specifies if containers running upgrade process should print more debugging information.
 This applies only to init containers.

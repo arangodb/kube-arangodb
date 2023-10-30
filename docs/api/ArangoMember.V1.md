@@ -2,7 +2,7 @@
 
 ## Spec
 
-### .spec.deletion_priority: int
+### .spec.deletion_priority: integer
 
 DeletionPriority define Deletion Priority.
 Higher value means higher priority. Default is 0.
@@ -16,7 +16,7 @@ DeploymentUID define Deployment UID.
 
 [Code Reference](/pkg/apis/deployment/v1/arango_member_spec.go#L36)
 
-### .spec.group: int
+### .spec.group: integer
 
 Group define Member Groups.
 

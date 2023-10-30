@@ -2,31 +2,31 @@
 
 ## Spec
 
-### .spec.localPath: []string
+### .spec.localPath: array
 
 LocalPath setting specifies one or more local directories (on the nodes) used to create persistent volumes in.
 
 [Code Reference](/pkg/apis/storage/v1alpha/local_storage_spec.go#L36)
 
-### .spec.nodeSelector: map[string]string
+### .spec.nodeSelector: object
 
 NodeSelector setting specifies which nodes the operator will provision persistent volumes on.
 
 [Code Reference](/pkg/apis/storage/v1alpha/local_storage_spec.go#L43)
 
-### .spec.podCustomization.priority: int32
+### .spec.podCustomization.priority: integer
 
 Priority if defined, sets the priority for pods of storage provisioner
 
 [Code Reference](/pkg/apis/storage/v1alpha/local_storage_pod_customization.go#L25)
 
-### .spec.privileged: bool
+### .spec.privileged: boolean
 
 Privileged if set, passes Privileged flag to SecurityContext for pods of storage provisioner
 
 [Code Reference](/pkg/apis/storage/v1alpha/local_storage_spec.go#L45)
 
-### .spec.storageClass.isDefault: bool
+### .spec.storageClass.isDefault: boolean
 
 IsDefault setting specifies if the created `StorageClass` will
 be marked as default storage class.

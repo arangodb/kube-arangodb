@@ -20,6 +20,11 @@
 
 package internal
 
+import (
+	"sort"
+	"strings"
+)
+
 type DocDefinitions []DocDefinition
 
 type DocDefinition struct {
@@ -41,4 +46,14 @@ type DocDefinition struct {
 
 	Default *string
 	Example []string
+}
+
+func (d DocDefinitions) Sort() {
+	sort.Slice(d, func(i, j int) bool {
+		a, b := strings.ToLower(d[i].Path), strings.ToLower(d[j].Path)
+		if a == b {
+			return d[i].Path < d[j].Path
+		}
+		return a < b
+	})
 }
