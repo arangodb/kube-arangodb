@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,10 +44,18 @@ var (
 	}
 )
 
+var (
+	crdInstallOptions struct {
+		validationSchemaEnabled bool
+	}
+)
+
 func init() {
 	cmdMain.AddCommand(cmdCRD)
 	cmdOps.AddCommand(cmdCRD)
 
+	f := cmdCRDInstall.Flags()
+	f.BoolVar(&crdInstallOptions.validationSchemaEnabled, "crd.validation-schema", false, "Add validation schema to CRDs")
 	cmdCRD.AddCommand(cmdCRDInstall)
 }
 
@@ -60,7 +68,7 @@ func cmdCRDInstallRun(cmd *cobra.Command, args []string) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	err := crd.EnsureCRD(ctx, client, false)
+	err := crd.EnsureCRD(ctx, client, false, crdInstallOptions.validationSchemaEnabled)
 	if err != nil {
 		os.Exit(1)
 	}

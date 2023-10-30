@@ -67,6 +67,7 @@ func (def DocDefinition) ApplyToSchema(docName string, s *apiextensions.JSONSche
 	s.Description = strings.Join(def.Docs, "\n")
 }
 
+// Test_GenerateCRValidationSchemas generates validation schema JSONs for each CRD referenced in `input` (see impl)
 func Test_GenerateCRValidationSchemas(t *testing.T) {
 	root := os.Getenv("ROOT")
 	require.NotEmpty(t, root)
@@ -77,7 +78,7 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 	}
 
 	// CR file prefix -> packages to parse -> versions -> docName and obj
-	input := map[string]map[string]map[string]genSpec{ // TODO: consider moving this into new YAML file which will describe CRD metadata
+	input := map[string]map[string]map[string]genSpec{
 		"apps-job": {
 			fmt.Sprintf("%s/pkg/apis/apps/v1", root): {
 				"v1": {
@@ -210,7 +211,6 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 		},
 	}
 
-	// TODO: consider using "sigs.k8s.io/controller-tools/pkg/crd" for parsing instead
 	for filePrefix, packagesToVersion := range input {
 		validationPerVersion := make(map[string]apiextensions.CustomResourceValidation, len(packagesToVersion))
 		for apiDir, versionMap := range packagesToVersion {
@@ -281,8 +281,6 @@ func (b *schemaBuilder) TypeToSchema(t *testing.T, obj reflect.Type, path string
 					Format: frmt,
 				}
 			} else {
-				// TODO: consider using https://kubernetesjsonschema.dev/ for k8s resources validation
-
 				t.Fatalf("Unsupported obj kind: %s", obj.Kind())
 				return
 			}

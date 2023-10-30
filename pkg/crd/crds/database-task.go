@@ -33,17 +33,19 @@ const (
 )
 
 func init() {
-	mustLoadCRD(databaseTask, databaseTaskSchemaRaw, &databaseTaskCRD)
+	mustLoadCRD(databaseTask, databaseTaskSchemaRaw, &databaseTaskCRD, &databaseTaskCRDWithSchema)
 }
 
 func DatabaseTaskDefinition() Definition {
 	return Definition{
-		Version: DatabaseTaskVersion,
-		CRD:     databaseTaskCRD.DeepCopy(),
+		Version:       DatabaseTaskVersion,
+		CRD:           databaseTaskCRD.DeepCopy(),
+		CRDWithSchema: databaseTaskCRDWithSchema.DeepCopy(),
 	}
 }
 
 var databaseTaskCRD apiextensions.CustomResourceDefinition
+var databaseTaskCRDWithSchema apiextensions.CustomResourceDefinition
 
 //go:embed database-task.yaml
 var databaseTask []byte

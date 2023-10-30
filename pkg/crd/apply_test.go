@@ -55,6 +55,16 @@ func dropLogMessages(t *testing.T, s tests.LogScanner) map[string]string {
 }
 
 func Test_Apply(t *testing.T) {
+	t.Run("NoSchema", func(t *testing.T) {
+		runApply(t, false)
+	})
+	t.Run("WithSchema", func(t *testing.T) {
+		runApply(t, true)
+	})
+}
+
+func runApply(t *testing.T, withValidationSchema bool) {
+	t.Helper()
 	verifyCRDAccessForTests = &authorization.SubjectAccessReviewStatus{
 		Allowed: true,
 	}
@@ -66,7 +76,7 @@ func Test_Apply(t *testing.T) {
 			c := kclient.NewFakeClient()
 
 			t.Run("Ensure", func(t *testing.T) {
-				require.NoError(t, EnsureCRD(context.Background(), c, false))
+				require.NoError(t, EnsureCRD(context.Background(), c, false, withValidationSchema))
 
 				for k, v := range dropLogMessages(t, s) {
 					t.Run(k, func(t *testing.T) {
@@ -92,7 +102,7 @@ func Test_Apply(t *testing.T) {
 			})
 
 			t.Run("Ensure", func(t *testing.T) {
-				require.NoError(t, EnsureCRD(context.Background(), c, false))
+				require.NoError(t, EnsureCRD(context.Background(), c, false, withValidationSchema))
 
 				for k, v := range dropLogMessages(t, s) {
 					t.Run(k, func(t *testing.T) {
@@ -120,7 +130,7 @@ func Test_Apply(t *testing.T) {
 			})
 
 			t.Run("Ensure", func(t *testing.T) {
-				require.NoError(t, EnsureCRD(context.Background(), c, false))
+				require.NoError(t, EnsureCRD(context.Background(), c, false, withValidationSchema))
 
 				for k, v := range dropLogMessages(t, s) {
 					t.Run(k, func(t *testing.T) {

@@ -21,9 +21,11 @@
 package crds
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/apps"
 	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
@@ -33,33 +35,60 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/storage"
 )
 
-func ensureCRDCompliance(t *testing.T, name string, def Definition) {
-	t.Run(name, func(t *testing.T) {
-		require.Equal(t, name, def.CRD.GetName())
-		for _, ver := range def.CRD.Spec.Versions {
-			t.Run(ver.Name, func(t *testing.T) {
-				require.NotNil(t, ver.Schema)
-				require.NotNil(t, ver.Schema.OpenAPIV3Schema.XPreserveUnknownFields)
-				require.True(t, *ver.Schema.OpenAPIV3Schema.XPreserveUnknownFields)
-				require.Equal(t, "object", ver.Schema.OpenAPIV3Schema.Type)
+func ensureCRDCompliance(t *testing.T, name string, crdDef *apiextensions.CustomResourceDefinition, schemaExpected bool) {
+	t.Helper()
+
+	require.NotNil(t, crdDef)
+	require.Equal(t, name, crdDef.GetName())
+	for _, ver := range crdDef.Spec.Versions {
+		t.Run(ver.Name, func(t *testing.T) {
+			require.NotNil(t, ver.Schema)
+			require.NotNil(t, ver.Schema.OpenAPIV3Schema.XPreserveUnknownFields)
+			require.True(t, *ver.Schema.OpenAPIV3Schema.XPreserveUnknownFields)
+			require.Equal(t, "object", ver.Schema.OpenAPIV3Schema.Type)
+			if schemaExpected {
 				require.NotEmpty(t, ver.Schema.OpenAPIV3Schema.Properties)
-			})
-		}
-	})
+			} else {
+				require.Empty(t, ver.Schema.OpenAPIV3Schema.Properties)
+			}
+		})
+	}
 }
 
 func Test_CRD(t *testing.T) {
-	ensureCRDCompliance(t, apps.ArangoJobCRDName, AppsJobDefinition())
-	ensureCRDCompliance(t, backup.ArangoBackupCRDName, BackupsBackupDefinition())
-	ensureCRDCompliance(t, backup.ArangoBackupPolicyCRDName, BackupsBackupPolicyDefinition())
-	ensureCRDCompliance(t, deployment.ArangoClusterSynchronizationCRDName, DatabaseClusterSynchronizationDefinition())
-	ensureCRDCompliance(t, deployment.ArangoDeploymentCRDName, DatabaseDeploymentDefinition())
-	ensureCRDCompliance(t, deployment.ArangoMemberCRDName, DatabaseMemberDefinition())
-	ensureCRDCompliance(t, deployment.ArangoTaskCRDName, DatabaseTaskDefinition())
-	ensureCRDCompliance(t, replication.ArangoDeploymentReplicationCRDName, ReplicationDeploymentReplicationDefinition())
-	ensureCRDCompliance(t, storage.ArangoLocalStorageCRDName, StorageLocalStorageDefinition())
-	ensureCRDCompliance(t, ml.ArangoMLExtensionCRDName, MLExtensionDefinition())
-	ensureCRDCompliance(t, ml.ArangoMLStorageCRDName, MLStorageDefinition())
-	ensureCRDCompliance(t, ml.ArangoMLCronJobCRDName, MLCronJobDefinition())
-	ensureCRDCompliance(t, ml.ArangoMLBatchJobCRDName, MLBatchJobDefinition())
+	testCases := []struct {
+		name string
+		def  Definition
+	}{
+		{apps.ArangoJobCRDName, AppsJobDefinition()},
+		{backup.ArangoBackupCRDName, BackupsBackupDefinition()},
+		{backup.ArangoBackupPolicyCRDName, BackupsBackupPolicyDefinition()},
+		{deployment.ArangoClusterSynchronizationCRDName, DatabaseClusterSynchronizationDefinition()},
+		{deployment.ArangoDeploymentCRDName, DatabaseDeploymentDefinition()},
+		{deployment.ArangoMemberCRDName, DatabaseMemberDefinition()},
+		{deployment.ArangoTaskCRDName, DatabaseTaskDefinition()},
+		{replication.ArangoDeploymentReplicationCRDName, ReplicationDeploymentReplicationDefinition()},
+		{storage.ArangoLocalStorageCRDName, StorageLocalStorageDefinition()},
+		{ml.ArangoMLExtensionCRDName, MLExtensionDefinition()},
+		{ml.ArangoMLStorageCRDName, MLStorageDefinition()},
+		{ml.ArangoMLCronJobCRDName, MLCronJobDefinition()},
+		{ml.ArangoMLBatchJobCRDName, MLBatchJobDefinition()},
+	}
+
+	for _, tc := range testCases {
+		t.Run(fmt.Sprintf("%s-no-schema", tc.name), func(t *testing.T) {
+			ensureCRDCompliance(t, tc.name, tc.def.CRD, false)
+		})
+		t.Run(fmt.Sprintf("%s-with-schema", tc.name), func(t *testing.T) {
+			ensureCRDCompliance(t, tc.name, tc.def.CRDWithSchema, true)
+		})
+	}
+}
+
+func Test_AllDefinitionsDefined(t *testing.T) {
+	for _, def := range AllDefinitions() {
+		require.NotEmpty(t, def.Version)
+		require.NotNil(t, def.CRD)
+		require.NotNil(t, def.CRDWithSchema)
+	}
 }

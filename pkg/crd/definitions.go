@@ -40,14 +40,16 @@ var (
 )
 
 type crd struct {
-	version driver.Version
-	spec    apiextensions.CustomResourceDefinitionSpec
+	version            driver.Version
+	spec               apiextensions.CustomResourceDefinitionSpec
+	specWithValidation apiextensions.CustomResourceDefinitionSpec
 }
 
 func registerCRDWithPanic(c crds.Definition) {
 	if err := registerCRD(c.CRD.GetName(), crd{
-		version: c.Version,
-		spec:    c.CRD.Spec,
+		version:            c.Version,
+		spec:               c.CRD.Spec,
+		specWithValidation: c.CRDWithSchema.Spec,
 	}); err != nil {
 		panic(err)
 	}

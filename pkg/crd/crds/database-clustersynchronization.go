@@ -33,17 +33,19 @@ const (
 )
 
 func init() {
-	mustLoadCRD(databaseClusterSynchronization, databaseClusterSynchronizationSchemaRaw, &databaseClusterSynchronizationCRD)
+	mustLoadCRD(databaseClusterSynchronization, databaseClusterSynchronizationSchemaRaw, &databaseClusterSynchronizationCRD, &databaseClusterSynchronizationCRDWithSchema)
 }
 
 func DatabaseClusterSynchronizationDefinition() Definition {
 	return Definition{
-		Version: DatabaseClusterSynchronizationVersion,
-		CRD:     databaseClusterSynchronizationCRD.DeepCopy(),
+		Version:       DatabaseClusterSynchronizationVersion,
+		CRD:           databaseClusterSynchronizationCRD.DeepCopy(),
+		CRDWithSchema: databaseClusterSynchronizationCRDWithSchema.DeepCopy(),
 	}
 }
 
 var databaseClusterSynchronizationCRD apiextensions.CustomResourceDefinition
+var databaseClusterSynchronizationCRDWithSchema apiextensions.CustomResourceDefinition
 
 //go:embed database-clustersynchronization.yaml
 var databaseClusterSynchronization []byte

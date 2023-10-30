@@ -33,17 +33,19 @@ const (
 )
 
 func init() {
-	mustLoadCRD(databaseMember, databaseMemberSchemaRaw, &databaseMemberCRD)
+	mustLoadCRD(databaseMember, databaseMemberSchemaRaw, &databaseMemberCRD, &databaseMemberCRDWithSchema)
 }
 
 func DatabaseMemberDefinition() Definition {
 	return Definition{
-		Version: DatabaseMemberVersion,
-		CRD:     databaseMemberCRD.DeepCopy(),
+		Version:       DatabaseMemberVersion,
+		CRD:           databaseMemberCRD.DeepCopy(),
+		CRDWithSchema: databaseMemberCRDWithSchema.DeepCopy(),
 	}
 }
 
 var databaseMemberCRD apiextensions.CustomResourceDefinition
+var databaseMemberCRDWithSchema apiextensions.CustomResourceDefinition
 
 //go:embed database-member.yaml
 var databaseMember []byte

@@ -30,8 +30,9 @@ import (
 )
 
 type Definition struct {
-	Version driver.Version
-	CRD     *apiextensions.CustomResourceDefinition
+	Version       driver.Version
+	CRD           *apiextensions.CustomResourceDefinition
+	CRDWithSchema *apiextensions.CustomResourceDefinition
 }
 
 func AllDefinitions() []Definition {
@@ -66,7 +67,7 @@ func AllDefinitions() []Definition {
 	}
 }
 
-func mustLoadCRD(crdRaw, crdSchemasRaw []byte, crd *apiextensions.CustomResourceDefinition) {
+func mustLoadCRD(crdRaw, crdSchemasRaw []byte, crd, crdWithSchema *apiextensions.CustomResourceDefinition) {
 	if err := yaml.Unmarshal(crdRaw, crd); err != nil {
 		panic(err)
 	}
@@ -76,11 +77,13 @@ func mustLoadCRD(crdRaw, crdSchemasRaw []byte, crd *apiextensions.CustomResource
 		panic(err)
 	}
 
-	for i, v := range crd.Spec.Versions {
+	aCopy := crd.DeepCopy()
+	*crdWithSchema = *aCopy
+	for i, v := range crdWithSchema.Spec.Versions {
 		schema, ok := crdSchemas[v.Name]
 		if !ok {
 			panic(fmt.Sprintf("Validation schema is not defined for version %s of %s", v.Name, crd.Name))
 		}
-		crd.Spec.Versions[i].Schema = schema.DeepCopy()
+		crdWithSchema.Spec.Versions[i].Schema = schema.DeepCopy()
 	}
 }

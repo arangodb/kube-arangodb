@@ -33,17 +33,19 @@ const (
 )
 
 func init() {
-	mustLoadCRD(backupsBackup, backupsBackupSchemaRaw, &backupsBackupCRD)
+	mustLoadCRD(backupsBackup, backupsBackupSchemaRaw, &backupsBackupCRD, &backupsBackupCRDWithSchema)
 }
 
 func BackupsBackupDefinition() Definition {
 	return Definition{
-		Version: BackupsBackupVersion,
-		CRD:     backupsBackupCRD.DeepCopy(),
+		Version:       BackupsBackupVersion,
+		CRD:           backupsBackupCRD.DeepCopy(),
+		CRDWithSchema: backupsBackupCRDWithSchema.DeepCopy(),
 	}
 }
 
 var backupsBackupCRD apiextensions.CustomResourceDefinition
+var backupsBackupCRDWithSchema apiextensions.CustomResourceDefinition
 
 //go:embed backups-backup.yaml
 var backupsBackup []byte

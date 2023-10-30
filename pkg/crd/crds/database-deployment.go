@@ -33,17 +33,19 @@ const (
 )
 
 func init() {
-	mustLoadCRD(databaseDeployment, databaseDeploymentSchemaRaw, &databaseDeploymentCRD)
+	mustLoadCRD(databaseDeployment, databaseDeploymentSchemaRaw, &databaseDeploymentCRD, &databaseDeploymentCRDWithSchema)
 }
 
 func DatabaseDeploymentDefinition() Definition {
 	return Definition{
-		Version: DatabaseDeploymentVersion,
-		CRD:     databaseDeploymentCRD.DeepCopy(),
+		Version:       DatabaseDeploymentVersion,
+		CRD:           databaseDeploymentCRD.DeepCopy(),
+		CRDWithSchema: databaseDeploymentCRDWithSchema.DeepCopy(),
 	}
 }
 
 var databaseDeploymentCRD apiextensions.CustomResourceDefinition
+var databaseDeploymentCRDWithSchema apiextensions.CustomResourceDefinition
 
 //go:embed database-deployment.yaml
 var databaseDeployment []byte

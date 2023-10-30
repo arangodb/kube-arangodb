@@ -33,17 +33,19 @@ const (
 )
 
 func init() {
-	mustLoadCRD(appsJobs, appsJobsSchemaRaw, &appsJobsCRD)
+	mustLoadCRD(appsJobs, appsJobsSchemaRaw, &appsJobsCRD, &appsJobsCRDWithSchema)
 }
 
 func AppsJobDefinition() Definition {
 	return Definition{
-		Version: AppsJobVersion,
-		CRD:     appsJobsCRD.DeepCopy(),
+		Version:       AppsJobVersion,
+		CRD:           appsJobsCRD.DeepCopy(),
+		CRDWithSchema: appsJobsCRDWithSchema.DeepCopy(),
 	}
 }
 
 var appsJobsCRD apiextensions.CustomResourceDefinition
+var appsJobsCRDWithSchema apiextensions.CustomResourceDefinition
 
 //go:embed apps-job.yaml
 var appsJobs []byte

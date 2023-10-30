@@ -37,18 +37,18 @@ import (
 
 var logger = logging.Global().RegisterAndGetLogger("crd", logging.Info)
 
-func EnsureCRD(ctx context.Context, client kclient.Client, ignoreErrors bool) error {
+func EnsureCRD(ctx context.Context, client kclient.Client, ignoreErrors, withValidation bool) error {
 	crdsLock.Lock()
 	defer crdsLock.Unlock()
 
-	for crd, spec := range registeredCRDs {
-		getAccess := verifyCRDAccess(ctx, client, crd, "get")
+	for crdName, crdSpec := range registeredCRDs {
+		getAccess := verifyCRDAccess(ctx, client, crdName, "get")
 		if !getAccess.Allowed {
-			logger.Str("crd", crd).Info("Get Operations is not allowed. Continue")
+			logger.Str("crd", crdName).Info("Get Operations is not allowed. Continue")
 			continue
 		}
 
-		err := tryApplyCRD(ctx, client, crd, spec)
+		err := tryApplyCRD(ctx, client, crdName, crdSpec, withValidation)
 		if !ignoreErrors && err != nil {
 			return err
 		}
@@ -56,45 +56,50 @@ func EnsureCRD(ctx context.Context, client kclient.Client, ignoreErrors bool) er
 	return nil
 }
 
-func tryApplyCRD(ctx context.Context, client kclient.Client, crd string, spec crd) error {
+func tryApplyCRD(ctx context.Context, client kclient.Client, crdName string, crdSpec crd, withValidation bool) error {
 	crdDefinitions := client.KubernetesExtensions().ApiextensionsV1().CustomResourceDefinitions()
 
-	c, err := crdDefinitions.Get(ctx, crd, meta.GetOptions{})
+	spec := crdSpec.spec
+	if withValidation {
+		spec = crdSpec.specWithValidation
+	}
+
+	c, err := crdDefinitions.Get(ctx, crdName, meta.GetOptions{})
 	if err != nil {
 		if !errors.IsNotFound(err) {
-			logger.Err(err).Str("crd", crd).Warn("Get Operations is not allowed due to error")
+			logger.Err(err).Str("crd", crdName).Warn("Get Operations is not allowed due to error")
 			return err
 		}
 
-		createAccess := verifyCRDAccess(ctx, client, crd, "create")
+		createAccess := verifyCRDAccess(ctx, client, crdName, "create")
 
 		if !createAccess.Allowed {
-			logger.Str("crd", crd).Info("Create Operations is not allowed but CRD is missing. Continue")
+			logger.Str("crd", crdName).Info("Create Operations is not allowed but CRD is missing. Continue")
 			return nil
 		}
 
 		c = &apiextensions.CustomResourceDefinition{
 			ObjectMeta: meta.ObjectMeta{
-				Name: crd,
+				Name: crdName,
 				Labels: map[string]string{
-					Version: string(spec.version),
+					Version: string(crdSpec.version),
 				},
 			},
-			Spec: spec.spec,
+			Spec: spec,
 		}
 
 		if _, err := crdDefinitions.Create(ctx, c, meta.CreateOptions{}); err != nil {
-			logger.Err(err).Str("crd", crd).Warn("Create Operations is not allowed due to error")
+			logger.Err(err).Str("crd", crdName).Warn("Create Operations is not allowed due to error")
 			return err
 		}
 
-		logger.Str("crd", crd).Info("CRD Created")
+		logger.Str("crd", crdName).Info("CRD Created")
 		return nil
 	}
 
-	updateAccess := verifyCRDAccess(ctx, client, crd, "update")
+	updateAccess := verifyCRDAccess(ctx, client, crdName, "update")
 	if !updateAccess.Allowed {
-		logger.Str("crd", crd).Info("Update Operations is not allowed. Continue")
+		logger.Str("crd", crdName).Info("Update Operations is not allowed. Continue")
 		return nil
 	}
 
@@ -104,21 +109,21 @@ func tryApplyCRD(ctx context.Context, client kclient.Client, crd string, spec cr
 
 	if v, ok := c.ObjectMeta.Labels[Version]; ok {
 		if v != "" {
-			if !isUpdateRequired(spec.version, driver.Version(v)) {
-				logger.Str("crd", crd).Info("CRD Update not required")
+			if !isUpdateRequired(crdSpec.version, driver.Version(v)) {
+				logger.Str("crd", crdName).Info("CRD Update not required")
 				return nil
 			}
 		}
 	}
 
-	c.ObjectMeta.Labels[Version] = string(spec.version)
-	c.Spec = spec.spec
+	c.ObjectMeta.Labels[Version] = string(crdSpec.version)
+	c.Spec = spec
 
 	if _, err := crdDefinitions.Update(ctx, c, meta.UpdateOptions{}); err != nil {
-		logger.Err(err).Str("crd", crd).Warn("Create Operations is not allowed due to error")
+		logger.Err(err).Str("crd", crdName).Warn("Create Operations is not allowed due to error")
 		return err
 	}
-	logger.Str("crd", crd).Info("CRD Updated")
+	logger.Str("crd", crdName).Info("CRD Updated")
 	return nil
 }
 

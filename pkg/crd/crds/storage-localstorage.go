@@ -33,17 +33,19 @@ const (
 )
 
 func init() {
-	mustLoadCRD(storageLocalStorage, storageLocalStorageSchemaRaw, &storageLocalStorageCRD)
+	mustLoadCRD(storageLocalStorage, storageLocalStorageSchemaRaw, &storageLocalStorageCRD, &storageLocalStorageCRDWithSchema)
 }
 
 func StorageLocalStorageDefinition() Definition {
 	return Definition{
-		Version: StorageLocalStorageVersion,
-		CRD:     storageLocalStorageCRD.DeepCopy(),
+		Version:       StorageLocalStorageVersion,
+		CRD:           storageLocalStorageCRD.DeepCopy(),
+		CRDWithSchema: storageLocalStorageCRDWithSchema.DeepCopy(),
 	}
 }
 
 var storageLocalStorageCRD apiextensions.CustomResourceDefinition
+var storageLocalStorageCRDWithSchema apiextensions.CustomResourceDefinition
 
 //go:embed storage-localstorage.yaml
 var storageLocalStorage []byte

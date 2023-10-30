@@ -33,17 +33,19 @@ const (
 )
 
 func init() {
-	mustLoadCRD(replicationDeploymentReplication, replicationDeploymentReplicationSchemaRaw, &replicationDeploymentReplicationCRD)
+	mustLoadCRD(replicationDeploymentReplication, replicationDeploymentReplicationSchemaRaw, &replicationDeploymentReplicationCRD, &replicationDeploymentReplicationCRDWithSchema)
 }
 
 func ReplicationDeploymentReplicationDefinition() Definition {
 	return Definition{
-		Version: ReplicationDeploymentReplicationVersion,
-		CRD:     replicationDeploymentReplicationCRD.DeepCopy(),
+		Version:       ReplicationDeploymentReplicationVersion,
+		CRD:           replicationDeploymentReplicationCRD.DeepCopy(),
+		CRDWithSchema: replicationDeploymentReplicationCRDWithSchema.DeepCopy(),
 	}
 }
 
 var replicationDeploymentReplicationCRD apiextensions.CustomResourceDefinition
+var replicationDeploymentReplicationCRDWithSchema apiextensions.CustomResourceDefinition
 
 //go:embed replication-deploymentreplication.yaml
 var replicationDeploymentReplication []byte
