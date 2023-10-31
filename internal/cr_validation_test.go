@@ -39,7 +39,6 @@ import (
 	replicationv1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	replicationv2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v2alpha1"
 	storagev1alpha "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
-	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 func (def DocDefinition) ApplyToSchema(s *apiextensions.JSONSchemaProps) {
@@ -193,9 +192,8 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 
 				validationPerVersion[version] = apiextensions.CustomResourceValidation{
 					OpenAPIV3Schema: &apiextensions.JSONSchemaProps{
-						Type:                   "object",
-						XPreserveUnknownFields: util.NewType(true),
-						Properties:             map[string]apiextensions.JSONSchemaProps{"spec": *s},
+						Type:       "object",
+						Properties: map[string]apiextensions.JSONSchemaProps{"spec": *s},
 					},
 				}
 			}

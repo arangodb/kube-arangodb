@@ -4877,8 +4877,7 @@
             }
           }
         }
-      },
-      "x-kubernetes-preserve-unknown-fields": true
+      }
     }
   },
   "v1alpha": {
@@ -9759,8 +9758,7 @@
             }
           }
         }
-      },
-      "x-kubernetes-preserve-unknown-fields": true
+      }
     }
   },
   "v2alpha1": {
@@ -14641,8 +14639,7 @@
             }
           }
         }
-      },
-      "x-kubernetes-preserve-unknown-fields": true
+      }
     }
   }
 }

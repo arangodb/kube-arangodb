@@ -4600,8 +4600,7 @@
             }
           }
         }
-      },
-      "x-kubernetes-preserve-unknown-fields": true
+      }
     }
   }
 }

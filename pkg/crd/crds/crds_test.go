@@ -43,13 +43,14 @@ func ensureCRDCompliance(t *testing.T, name string, crdDef *apiextensions.Custom
 	for _, ver := range crdDef.Spec.Versions {
 		t.Run(ver.Name, func(t *testing.T) {
 			require.NotNil(t, ver.Schema)
-			require.NotNil(t, ver.Schema.OpenAPIV3Schema.XPreserveUnknownFields)
-			require.True(t, *ver.Schema.OpenAPIV3Schema.XPreserveUnknownFields)
 			require.Equal(t, "object", ver.Schema.OpenAPIV3Schema.Type)
 			if schemaExpected {
 				require.NotEmpty(t, ver.Schema.OpenAPIV3Schema.Properties)
+				require.Nil(t, ver.Schema.OpenAPIV3Schema.XPreserveUnknownFields)
 			} else {
 				require.Empty(t, ver.Schema.OpenAPIV3Schema.Properties)
+				require.NotNil(t, ver.Schema.OpenAPIV3Schema.XPreserveUnknownFields)
+				require.True(t, *ver.Schema.OpenAPIV3Schema.XPreserveUnknownFields)
 			}
 		})
 	}
