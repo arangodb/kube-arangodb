@@ -8,25 +8,16 @@
           "properties": {
             "allowConcurrent": {
               "description": "AllowConcurrent if false, ArangoBackup will not be created when previous Backups are not finished",
-              "type": "boolean",
-              "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackupPolicy.V1#specallowconcurrent-"
-              }
+              "type": "boolean"
             },
             "maxBackups": {
               "description": "MaxBackups defines how many backups should be kept in history (per deployment). Oldest healthy Backups will be deleted.\nIf not specified or 0 then no limit is applied",
               "type": "integer",
-              "format": "int32",
-              "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackupPolicy.V1#specmaxbackups-"
-              }
+              "format": "int32"
             },
             "schedule": {
               "description": "Schedule is cron-compatible specification of backup schedule\nParsed by https://godoc.org/github.com/robfig/cron",
-              "type": "string",
-              "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackupPolicy.V1#specschedule-"
-              }
+              "type": "string"
             },
             "selector": {
               "description": "DeploymentSelector Selector definition for selecting matching ArangoBackup Custom Resources.",
@@ -58,9 +49,6 @@
                     "type": "string"
                   }
                 }
-              },
-              "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackupPolicy.V1#specselector-"
               }
             },
             "template": {
@@ -73,38 +61,23 @@
                     "iterations": {
                       "description": "Iterations defines number of iterations before reaching MaxDelay. Default to 5",
                       "type": "integer",
-                      "format": "int32",
-                      "externalDocs": {
-                        "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackupPolicy.V1#spectemplatebackoffiterations-"
-                      }
+                      "format": "int32"
                     },
                     "max_delay": {
                       "description": "MaxDelay defines maximum delay in seconds. Default to 600",
                       "type": "integer",
-                      "format": "int32",
-                      "externalDocs": {
-                        "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackupPolicy.V1#spectemplatebackoffmax_delay-"
-                      }
+                      "format": "int32"
                     },
                     "max_iterations": {
                       "description": "MaxIterations defines maximum number of iterations after backoff will be disabled. Default to nil (no limit)",
                       "type": "integer",
-                      "format": "int32",
-                      "externalDocs": {
-                        "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackupPolicy.V1#spectemplatebackoffmax_iterations-"
-                      }
+                      "format": "int32"
                     },
                     "min_delay": {
                       "description": "MinDelay defines minimum delay in seconds. Default to 30",
                       "type": "integer",
-                      "format": "int32",
-                      "externalDocs": {
-                        "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackupPolicy.V1#spectemplatebackoffmin_delay-"
-                      }
+                      "format": "int32"
                     }
-                  },
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackupPolicy.V1#spectemplatebackoff-"
                   }
                 },
                 "lifetime": {
@@ -115,9 +88,6 @@
                       "type": "integer",
                       "format": "int64"
                     }
-                  },
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackupPolicy.V1#spectemplatelifetime-"
                   }
                 },
                 "options": {
@@ -126,9 +96,6 @@
                     "allowInconsistent": {
                       "description": "AllowInconsistent flag for Backup creation request.\nIf this value is set to true, backup is taken even if we are not able to acquire lock.",
                       "type": "boolean",
-                      "externalDocs": {
-                        "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackupPolicy.V1#spectemplateoptionsallowinconsistent-"
-                      },
                       "x-kubernetes-validations": [
                         {
                           "rule": "self.spec.template.options.allowInconsistent == oldSelf.spec.template.options.allowInconsistent",
@@ -140,9 +107,6 @@
                       "description": "Timeout for Backup creation request in seconds.",
                       "type": "number",
                       "format": "float",
-                      "externalDocs": {
-                        "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackupPolicy.V1#spectemplateoptionstimeout-"
-                      },
                       "x-kubernetes-validations": [
                         {
                           "rule": "self.spec.template.options.timeout == oldSelf.spec.template.options.timeout",
@@ -150,9 +114,6 @@
                         }
                       ]
                     }
-                  },
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackupPolicy.V1#spectemplateoptions-"
                   }
                 },
                 "upload": {
@@ -161,9 +122,6 @@
                     "credentialsSecretName": {
                       "description": "CredentialsSecretName is the name of the secret used while accessing repository",
                       "type": "string",
-                      "externalDocs": {
-                        "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackupPolicy.V1#spectemplateuploadcredentialssecretname-"
-                      },
                       "x-kubernetes-validations": [
                         {
                           "rule": "self.spec.template.upload.credentialsSecretName == oldSelf.spec.template.upload.credentialsSecretName",
@@ -174,9 +132,6 @@
                     "repositoryURL": {
                       "description": "RepositoryURL is the URL path for file storage\nSame repositoryURL needs to be defined in `credentialsSecretName` if protocol is other than local.\nFormat: `\u003cprotocol\u003e:/\u003cpath\u003e`",
                       "type": "string",
-                      "externalDocs": {
-                        "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackupPolicy.V1#spectemplateuploadrepositoryurl-"
-                      },
                       "x-kubernetes-validations": [
                         {
                           "rule": "self.spec.template.upload.repositoryURL == oldSelf.spec.template.upload.repositoryURL",
@@ -184,14 +139,8 @@
                         }
                       ]
                     }
-                  },
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackupPolicy.V1#spectemplateupload-"
                   }
                 }
-              },
-              "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackupPolicy.V1#spectemplate-"
               }
             }
           }
@@ -209,25 +158,16 @@
           "properties": {
             "allowConcurrent": {
               "description": "AllowConcurrent if false, ArangoBackup will not be created when previous Backups are not finished",
-              "type": "boolean",
-              "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackupPolicy.V1#specallowconcurrent-"
-              }
+              "type": "boolean"
             },
             "maxBackups": {
               "description": "MaxBackups defines how many backups should be kept in history (per deployment). Oldest healthy Backups will be deleted.\nIf not specified or 0 then no limit is applied",
               "type": "integer",
-              "format": "int32",
-              "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackupPolicy.V1#specmaxbackups-"
-              }
+              "format": "int32"
             },
             "schedule": {
               "description": "Schedule is cron-compatible specification of backup schedule\nParsed by https://godoc.org/github.com/robfig/cron",
-              "type": "string",
-              "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackupPolicy.V1#specschedule-"
-              }
+              "type": "string"
             },
             "selector": {
               "description": "DeploymentSelector Selector definition for selecting matching ArangoBackup Custom Resources.",
@@ -259,9 +199,6 @@
                     "type": "string"
                   }
                 }
-              },
-              "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackupPolicy.V1#specselector-"
               }
             },
             "template": {
@@ -274,38 +211,23 @@
                     "iterations": {
                       "description": "Iterations defines number of iterations before reaching MaxDelay. Default to 5",
                       "type": "integer",
-                      "format": "int32",
-                      "externalDocs": {
-                        "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackupPolicy.V1#spectemplatebackoffiterations-"
-                      }
+                      "format": "int32"
                     },
                     "max_delay": {
                       "description": "MaxDelay defines maximum delay in seconds. Default to 600",
                       "type": "integer",
-                      "format": "int32",
-                      "externalDocs": {
-                        "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackupPolicy.V1#spectemplatebackoffmax_delay-"
-                      }
+                      "format": "int32"
                     },
                     "max_iterations": {
                       "description": "MaxIterations defines maximum number of iterations after backoff will be disabled. Default to nil (no limit)",
                       "type": "integer",
-                      "format": "int32",
-                      "externalDocs": {
-                        "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackupPolicy.V1#spectemplatebackoffmax_iterations-"
-                      }
+                      "format": "int32"
                     },
                     "min_delay": {
                       "description": "MinDelay defines minimum delay in seconds. Default to 30",
                       "type": "integer",
-                      "format": "int32",
-                      "externalDocs": {
-                        "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackupPolicy.V1#spectemplatebackoffmin_delay-"
-                      }
+                      "format": "int32"
                     }
-                  },
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackupPolicy.V1#spectemplatebackoff-"
                   }
                 },
                 "lifetime": {
@@ -316,9 +238,6 @@
                       "type": "integer",
                       "format": "int64"
                     }
-                  },
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackupPolicy.V1#spectemplatelifetime-"
                   }
                 },
                 "options": {
@@ -327,9 +246,6 @@
                     "allowInconsistent": {
                       "description": "AllowInconsistent flag for Backup creation request.\nIf this value is set to true, backup is taken even if we are not able to acquire lock.",
                       "type": "boolean",
-                      "externalDocs": {
-                        "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackupPolicy.V1#spectemplateoptionsallowinconsistent-"
-                      },
                       "x-kubernetes-validations": [
                         {
                           "rule": "self.spec.template.options.allowInconsistent == oldSelf.spec.template.options.allowInconsistent",
@@ -341,9 +257,6 @@
                       "description": "Timeout for Backup creation request in seconds.",
                       "type": "number",
                       "format": "float",
-                      "externalDocs": {
-                        "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackupPolicy.V1#spectemplateoptionstimeout-"
-                      },
                       "x-kubernetes-validations": [
                         {
                           "rule": "self.spec.template.options.timeout == oldSelf.spec.template.options.timeout",
@@ -351,9 +264,6 @@
                         }
                       ]
                     }
-                  },
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackupPolicy.V1#spectemplateoptions-"
                   }
                 },
                 "upload": {
@@ -362,9 +272,6 @@
                     "credentialsSecretName": {
                       "description": "CredentialsSecretName is the name of the secret used while accessing repository",
                       "type": "string",
-                      "externalDocs": {
-                        "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackupPolicy.V1#spectemplateuploadcredentialssecretname-"
-                      },
                       "x-kubernetes-validations": [
                         {
                           "rule": "self.spec.template.upload.credentialsSecretName == oldSelf.spec.template.upload.credentialsSecretName",
@@ -375,9 +282,6 @@
                     "repositoryURL": {
                       "description": "RepositoryURL is the URL path for file storage\nSame repositoryURL needs to be defined in `credentialsSecretName` if protocol is other than local.\nFormat: `\u003cprotocol\u003e:/\u003cpath\u003e`",
                       "type": "string",
-                      "externalDocs": {
-                        "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackupPolicy.V1#spectemplateuploadrepositoryurl-"
-                      },
                       "x-kubernetes-validations": [
                         {
                           "rule": "self.spec.template.upload.repositoryURL == oldSelf.spec.template.upload.repositoryURL",
@@ -385,14 +289,8 @@
                         }
                       ]
                     }
-                  },
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackupPolicy.V1#spectemplateupload-"
                   }
                 }
-              },
-              "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoBackupPolicy.V1#spectemplate-"
               }
             }
           }

@@ -21,7 +21,6 @@
 package internal
 
 import (
-	"fmt"
 	"sort"
 	"strings"
 )
@@ -57,9 +56,4 @@ func (d DocDefinitions) Sort() {
 		}
 		return a < b
 	})
-}
-
-func getDocsLinkForField(docName string, def DocDefinition) string {
-	anchor := fmt.Sprintf("%s-%s", strings.ToLower(strings.ReplaceAll(def.Path, ".", "")), strings.ToLower(def.Type))
-	return fmt.Sprintf("https://arangodb.github.io/kube-arangodb/docs/api/%s#%s", docName, anchor)
 }

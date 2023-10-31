@@ -12,21 +12,12 @@
               "properties": {
                 "ensureInSync": {
                   "description": "EnsureInSync if it is true then during cancellation process data consistency is required.\nDefault value is true.",
-                  "type": "boolean",
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoDeploymentReplication.V1#speccancellationensureinsync-"
-                  }
+                  "type": "boolean"
                 },
                 "sourceReadOnly": {
                   "description": "SourceReadOnly if it true then after cancellation source data center should be in read-only mode.\nDefault value is false.",
-                  "type": "boolean",
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoDeploymentReplication.V1#speccancellationsourcereadonly-"
-                  }
+                  "type": "boolean"
                 }
-              },
-              "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoDeploymentReplication.V1#speccancellation-"
               }
             },
             "destination": {
@@ -38,38 +29,23 @@
                   "properties": {
                     "keyfileSecretName": {
                       "description": "KeyfileSecretName holds the name of a Secret containing a client authentication\ncertificate formatted at keyfile in a `tls.keyfile` field.\nIf `userSecretName` has not been set,\nthe client authentication certificate found in the secret with this name is also used to configure\nthe synchronization and fetch the synchronization status.",
-                      "type": "string",
-                      "externalDocs": {
-                        "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoDeploymentReplication.V1#specdestinationauthkeyfilesecretname-"
-                      }
+                      "type": "string"
                     },
                     "userSecretName": {
                       "description": "UserSecretName holds the name of a Secret containing a `username` \u0026 `password`\nfield used for basic authentication.\nThe user identified by the username must have write access in the `_system` database\nof the ArangoDB cluster at the endpoint.",
-                      "type": "string",
-                      "externalDocs": {
-                        "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoDeploymentReplication.V1#specdestinationauthusersecretname-"
-                      }
+                      "type": "string"
                     }
-                  },
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoDeploymentReplication.V1#specdestinationauth-"
                   }
                 },
                 "deploymentName": {
                   "description": "DeploymentName holds the name of an ArangoDeployment resource.\nIf set, this provides default values for masterEndpoint, auth \u0026 tls.",
-                  "type": "string",
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoDeploymentReplication.V1#specdestinationdeploymentname-"
-                  }
+                  "type": "string"
                 },
                 "masterEndpoint": {
                   "description": "MasterEndpoint holds a list of URLs used to reach the syncmaster(s)\nUse this setting if the source cluster is not running inside a Kubernetes cluster\nthat is reachable from the Kubernetes cluster the `ArangoDeploymentReplication` resource is deployed in.\nSpecifying this setting and `deploymentName` at the same time is not allowed.",
                   "type": "array",
                   "items": {
                     "type": "string"
-                  },
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoDeploymentReplication.V1#specdestinationmasterendpoint-"
                   }
                 },
                 "tls": {
@@ -78,19 +54,10 @@
                   "properties": {
                     "caSecretName": {
                       "description": "CASecretName holds the name of a Secret containing a ca.crt public key for TLS validation.\nThis setting is required, unless `deploymentName` has been set.",
-                      "type": "string",
-                      "externalDocs": {
-                        "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoDeploymentReplication.V1#specdestinationtlscasecretname-"
-                      }
+                      "type": "string"
                     }
-                  },
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoDeploymentReplication.V1#specdestinationtls-"
                   }
                 }
-              },
-              "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoDeploymentReplication.V1#specdestination-"
               }
             },
             "source": {
@@ -102,38 +69,23 @@
                   "properties": {
                     "keyfileSecretName": {
                       "description": "KeyfileSecretName holds the name of a Secret containing a client authentication\ncertificate formatted at keyfile in a `tls.keyfile` field.\nIf `userSecretName` has not been set,\nthe client authentication certificate found in the secret with this name is also used to configure\nthe synchronization and fetch the synchronization status.",
-                      "type": "string",
-                      "externalDocs": {
-                        "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoDeploymentReplication.V1#specsourceauthkeyfilesecretname-"
-                      }
+                      "type": "string"
                     },
                     "userSecretName": {
                       "description": "UserSecretName holds the name of a Secret containing a `username` \u0026 `password`\nfield used for basic authentication.\nThe user identified by the username must have write access in the `_system` database\nof the ArangoDB cluster at the endpoint.",
-                      "type": "string",
-                      "externalDocs": {
-                        "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoDeploymentReplication.V1#specsourceauthusersecretname-"
-                      }
+                      "type": "string"
                     }
-                  },
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoDeploymentReplication.V1#specsourceauth-"
                   }
                 },
                 "deploymentName": {
                   "description": "DeploymentName holds the name of an ArangoDeployment resource.\nIf set, this provides default values for masterEndpoint, auth \u0026 tls.",
-                  "type": "string",
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoDeploymentReplication.V1#specsourcedeploymentname-"
-                  }
+                  "type": "string"
                 },
                 "masterEndpoint": {
                   "description": "MasterEndpoint holds a list of URLs used to reach the syncmaster(s)\nUse this setting if the source cluster is not running inside a Kubernetes cluster\nthat is reachable from the Kubernetes cluster the `ArangoDeploymentReplication` resource is deployed in.\nSpecifying this setting and `deploymentName` at the same time is not allowed.",
                   "type": "array",
                   "items": {
                     "type": "string"
-                  },
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoDeploymentReplication.V1#specsourcemasterendpoint-"
                   }
                 },
                 "tls": {
@@ -142,19 +94,10 @@
                   "properties": {
                     "caSecretName": {
                       "description": "CASecretName holds the name of a Secret containing a ca.crt public key for TLS validation.\nThis setting is required, unless `deploymentName` has been set.",
-                      "type": "string",
-                      "externalDocs": {
-                        "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoDeploymentReplication.V1#specsourcetlscasecretname-"
-                      }
+                      "type": "string"
                     }
-                  },
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoDeploymentReplication.V1#specsourcetls-"
                   }
                 }
-              },
-              "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoDeploymentReplication.V1#specsource-"
               }
             }
           }
@@ -176,21 +119,12 @@
               "properties": {
                 "ensureInSync": {
                   "description": "EnsureInSync if it is true then during cancellation process data consistency is required.\nDefault value is true.",
-                  "type": "boolean",
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoDeploymentReplication.V1#speccancellationensureinsync-"
-                  }
+                  "type": "boolean"
                 },
                 "sourceReadOnly": {
                   "description": "SourceReadOnly if it true then after cancellation source data center should be in read-only mode.\nDefault value is false.",
-                  "type": "boolean",
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoDeploymentReplication.V1#speccancellationsourcereadonly-"
-                  }
+                  "type": "boolean"
                 }
-              },
-              "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoDeploymentReplication.V1#speccancellation-"
               }
             },
             "destination": {
@@ -202,38 +136,23 @@
                   "properties": {
                     "keyfileSecretName": {
                       "description": "KeyfileSecretName holds the name of a Secret containing a client authentication\ncertificate formatted at keyfile in a `tls.keyfile` field.\nIf `userSecretName` has not been set,\nthe client authentication certificate found in the secret with this name is also used to configure\nthe synchronization and fetch the synchronization status.",
-                      "type": "string",
-                      "externalDocs": {
-                        "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoDeploymentReplication.V1#specdestinationauthkeyfilesecretname-"
-                      }
+                      "type": "string"
                     },
                     "userSecretName": {
                       "description": "UserSecretName holds the name of a Secret containing a `username` \u0026 `password`\nfield used for basic authentication.\nThe user identified by the username must have write access in the `_system` database\nof the ArangoDB cluster at the endpoint.",
-                      "type": "string",
-                      "externalDocs": {
-                        "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoDeploymentReplication.V1#specdestinationauthusersecretname-"
-                      }
+                      "type": "string"
                     }
-                  },
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoDeploymentReplication.V1#specdestinationauth-"
                   }
                 },
                 "deploymentName": {
                   "description": "DeploymentName holds the name of an ArangoDeployment resource.\nIf set, this provides default values for masterEndpoint, auth \u0026 tls.",
-                  "type": "string",
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoDeploymentReplication.V1#specdestinationdeploymentname-"
-                  }
+                  "type": "string"
                 },
                 "masterEndpoint": {
                   "description": "MasterEndpoint holds a list of URLs used to reach the syncmaster(s)\nUse this setting if the source cluster is not running inside a Kubernetes cluster\nthat is reachable from the Kubernetes cluster the `ArangoDeploymentReplication` resource is deployed in.\nSpecifying this setting and `deploymentName` at the same time is not allowed.",
                   "type": "array",
                   "items": {
                     "type": "string"
-                  },
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoDeploymentReplication.V1#specdestinationmasterendpoint-"
                   }
                 },
                 "tls": {
@@ -242,19 +161,10 @@
                   "properties": {
                     "caSecretName": {
                       "description": "CASecretName holds the name of a Secret containing a ca.crt public key for TLS validation.\nThis setting is required, unless `deploymentName` has been set.",
-                      "type": "string",
-                      "externalDocs": {
-                        "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoDeploymentReplication.V1#specdestinationtlscasecretname-"
-                      }
+                      "type": "string"
                     }
-                  },
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoDeploymentReplication.V1#specdestinationtls-"
                   }
                 }
-              },
-              "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoDeploymentReplication.V1#specdestination-"
               }
             },
             "source": {
@@ -266,38 +176,23 @@
                   "properties": {
                     "keyfileSecretName": {
                       "description": "KeyfileSecretName holds the name of a Secret containing a client authentication\ncertificate formatted at keyfile in a `tls.keyfile` field.\nIf `userSecretName` has not been set,\nthe client authentication certificate found in the secret with this name is also used to configure\nthe synchronization and fetch the synchronization status.",
-                      "type": "string",
-                      "externalDocs": {
-                        "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoDeploymentReplication.V1#specsourceauthkeyfilesecretname-"
-                      }
+                      "type": "string"
                     },
                     "userSecretName": {
                       "description": "UserSecretName holds the name of a Secret containing a `username` \u0026 `password`\nfield used for basic authentication.\nThe user identified by the username must have write access in the `_system` database\nof the ArangoDB cluster at the endpoint.",
-                      "type": "string",
-                      "externalDocs": {
-                        "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoDeploymentReplication.V1#specsourceauthusersecretname-"
-                      }
+                      "type": "string"
                     }
-                  },
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoDeploymentReplication.V1#specsourceauth-"
                   }
                 },
                 "deploymentName": {
                   "description": "DeploymentName holds the name of an ArangoDeployment resource.\nIf set, this provides default values for masterEndpoint, auth \u0026 tls.",
-                  "type": "string",
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoDeploymentReplication.V1#specsourcedeploymentname-"
-                  }
+                  "type": "string"
                 },
                 "masterEndpoint": {
                   "description": "MasterEndpoint holds a list of URLs used to reach the syncmaster(s)\nUse this setting if the source cluster is not running inside a Kubernetes cluster\nthat is reachable from the Kubernetes cluster the `ArangoDeploymentReplication` resource is deployed in.\nSpecifying this setting and `deploymentName` at the same time is not allowed.",
                   "type": "array",
                   "items": {
                     "type": "string"
-                  },
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoDeploymentReplication.V1#specsourcemasterendpoint-"
                   }
                 },
                 "tls": {
@@ -306,19 +201,10 @@
                   "properties": {
                     "caSecretName": {
                       "description": "CASecretName holds the name of a Secret containing a ca.crt public key for TLS validation.\nThis setting is required, unless `deploymentName` has been set.",
-                      "type": "string",
-                      "externalDocs": {
-                        "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoDeploymentReplication.V1#specsourcetlscasecretname-"
-                      }
+                      "type": "string"
                     }
-                  },
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoDeploymentReplication.V1#specsourcetls-"
                   }
                 }
-              },
-              "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoDeploymentReplication.V1#specsource-"
               }
             }
           }

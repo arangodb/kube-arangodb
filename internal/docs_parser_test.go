@@ -103,7 +103,7 @@ func iterateOverObject(t *testing.T, fields map[string]*ast.Field, name string, 
 }
 
 func iterateOverObjectDirect(t *testing.T, fields map[string]*ast.Field, name string, object reflect.Type, path string) map[typeInfo]*ast.Field {
-	if n, simple := isSimpleType(object); simple {
+	if n, _, simple := isSimpleType(object); simple {
 		return map[typeInfo]*ast.Field{
 			typeInfo{
 				path: fmt.Sprintf("%s.%s", path, name),
@@ -116,7 +116,7 @@ func iterateOverObjectDirect(t *testing.T, fields map[string]*ast.Field, name st
 
 	switch object.Kind() {
 	case reflect.Array, reflect.Slice:
-		if _, simple := isSimpleType(object.Elem()); simple {
+		if _, _, simple := isSimpleType(object.Elem()); simple {
 			return map[typeInfo]*ast.Field{
 				typeInfo{
 					path: fmt.Sprintf("%s.%s", path, name),
@@ -129,7 +129,7 @@ func iterateOverObjectDirect(t *testing.T, fields map[string]*ast.Field, name st
 			r[k] = v
 		}
 	case reflect.Map:
-		if _, simple := isSimpleType(object.Elem()); simple {
+		if _, _, simple := isSimpleType(object.Elem()); simple {
 			return map[typeInfo]*ast.Field{
 				typeInfo{
 					path: fmt.Sprintf("%s.%s", path, name),
@@ -246,22 +246,23 @@ func extractNotTags(n *ast.Field) ([]string, bool) {
 	return ret, len(ret) > 0
 }
 
-// isSimpleType returns the OpenAPI-compatible type name and boolean indicating if this is simple type or not
-func isSimpleType(obj reflect.Type) (string, bool) {
+// isSimpleType returns the OpenAPI-compatible type name, type format and boolean indicating if this is simple type or not
+func isSimpleType(obj reflect.Type) (string, string, bool) {
 	switch obj.Kind() {
 	case reflect.String:
-		return "string", true
+		return "string", "", true
 	case reflect.Bool:
-		return "boolean", true
+		return "boolean", "", true
 	case reflect.Int, reflect.Int32,
 		reflect.Uint, reflect.Uint8, reflect.Uint16:
-		return "integer", true
+		return "integer", "int32", true
 	case reflect.Int64, reflect.Uint64:
-		return "integer", true
+		return "integer", "int64", true
 	case reflect.Float32:
-		return "number", true
+		return "number", "float", true
 	}
-	return "", false
+
+	return "", "", false
 }
 
 func extractTag(tag string) (string, bool) {

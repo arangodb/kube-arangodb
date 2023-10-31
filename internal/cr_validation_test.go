@@ -23,8 +23,6 @@ package internal
 import (
 	"encoding/json"
 	"fmt"
-	"go/ast"
-	"go/token"
 	"os"
 	"path"
 	"reflect"
@@ -44,7 +42,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-func (def DocDefinition) ApplyToSchema(docName string, s *apiextensions.JSONSchemaProps) {
+func (def DocDefinition) ApplyToSchema(s *apiextensions.JSONSchemaProps) {
 	for _, e := range def.Enum {
 		z := strings.Split(e, "|")
 		s.Enum = append(s.Enum, apiextensions.JSON{
@@ -58,12 +56,6 @@ func (def DocDefinition) ApplyToSchema(docName string, s *apiextensions.JSONSche
 			Message: fmt.Sprintf("field %s is immutable", strings.TrimPrefix(def.Path, ".")),
 		})
 	}
-
-	if len(docName) > 0 {
-		s.ExternalDocs = &apiextensions.ExternalDocumentation{
-			URL: getDocsLinkForField(docName, def),
-		}
-	}
 	s.Description = strings.Join(def.Docs, "\n")
 }
 
@@ -73,16 +65,14 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 	require.NotEmpty(t, root)
 
 	type genSpec struct {
-		docName string
-		obj     interface{}
+		obj interface{}
 	}
 
-	// CR file prefix -> packages to parse -> versions -> docName and obj
+	// CR file prefix -> packages to parse -> versions -> obj
 	input := map[string]map[string]map[string]genSpec{
 		"apps-job": {
 			fmt.Sprintf("%s/pkg/apis/apps/v1", root): {
 				"v1": {
-					"",
 					appsv1.ArangoJob{}.Spec,
 				},
 			},
@@ -90,11 +80,9 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 		"backups-backup": {
 			fmt.Sprintf("%s/pkg/apis/backup/v1", root): {
 				"v1": {
-					"ArangoBackup.V1",
 					backupv1.ArangoBackup{}.Spec,
 				},
 				"v1alpha": {
-					"ArangoBackup.V1",
 					backupv1.ArangoBackup{}.Spec,
 				},
 			},
@@ -102,11 +90,9 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 		"backups-backuppolicy": {
 			fmt.Sprintf("%s/pkg/apis/backup/v1", root): {
 				"v1": {
-					"ArangoBackupPolicy.V1",
 					backupv1.ArangoBackupPolicy{}.Spec,
 				},
 				"v1alpha": {
-					"ArangoBackupPolicy.V1",
 					backupv1.ArangoBackupPolicy{}.Spec,
 				},
 			},
@@ -114,17 +100,14 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 		"database-deployment": {
 			fmt.Sprintf("%s/pkg/apis/deployment/v1", root): {
 				"v1": {
-					"ArangoDeployment.V1",
 					deploymentv1.ArangoDeployment{}.Spec,
 				},
 				"v1alpha": {
-					"ArangoDeployment.V1",
 					deploymentv1.ArangoDeployment{}.Spec,
 				},
 			},
 			fmt.Sprintf("%s/pkg/apis/deployment/v2alpha1", root): {
 				"v2alpha1": {
-					"",
 					deploymentv2alpha1.ArangoDeployment{}.Spec,
 				},
 			},
@@ -132,17 +115,14 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 		"database-member": {
 			fmt.Sprintf("%s/pkg/apis/deployment/v1", root): {
 				"v1": {
-					"ArangoMember.V1",
 					deploymentv1.ArangoMember{}.Spec,
 				},
 				"v1alpha": {
-					"ArangoMember.V1",
 					deploymentv1.ArangoMember{}.Spec,
 				},
 			},
 			fmt.Sprintf("%s/pkg/apis/deployment/v2alpha1", root): {
 				"v2alpha1": {
-					"",
 					deploymentv2alpha1.ArangoMember{}.Spec,
 				},
 			},
@@ -150,17 +130,14 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 		"database-clustersynchronization": {
 			fmt.Sprintf("%s/pkg/apis/deployment/v1", root): {
 				"v1": {
-					"",
 					deploymentv1.ArangoClusterSynchronization{}.Spec,
 				},
 				"v1alpha": {
-					"",
 					deploymentv1.ArangoClusterSynchronization{}.Spec,
 				},
 			},
 			fmt.Sprintf("%s/pkg/apis/deployment/v2alpha1", root): {
 				"v2alpha1": {
-					"",
 					deploymentv2alpha1.ArangoClusterSynchronization{}.Spec,
 				},
 			},
@@ -168,17 +145,14 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 		"database-task": {
 			fmt.Sprintf("%s/pkg/apis/deployment/v1", root): {
 				"v1": {
-					"",
 					deploymentv1.ArangoTask{}.Spec,
 				},
 				"v1alpha": {
-					"",
 					deploymentv1.ArangoTask{}.Spec,
 				},
 			},
 			fmt.Sprintf("%s/pkg/apis/deployment/v2alpha1", root): {
 				"v2alpha1": {
-					"",
 					deploymentv2alpha1.ArangoTask{}.Spec,
 				},
 			},
@@ -186,17 +160,14 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 		"replication-deploymentreplication": {
 			fmt.Sprintf("%s/pkg/apis/replication/v1", root): {
 				"v1": {
-					"ArangoDeploymentReplication.V1",
 					replicationv1.ArangoDeploymentReplication{}.Spec,
 				},
 				"v1alpha": {
-					"ArangoDeploymentReplication.V1",
 					replicationv1.ArangoDeploymentReplication{}.Spec,
 				},
 			},
 			fmt.Sprintf("%s/pkg/apis/replication/v2alpha1", root): {
 				"v2alpha1": {
-					"",
 					replicationv2alpha1.ArangoDeploymentReplication{}.Spec,
 				},
 			},
@@ -204,7 +175,6 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 		"storage-localstorage": {
 			fmt.Sprintf("%s/pkg/apis/storage/v1alpha", root): {
 				"v1alpha": {
-					"ArangoLocalStorage.V1Alpha",
 					storagev1alpha.ArangoLocalStorage{}.Spec,
 				},
 			},
@@ -217,7 +187,7 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 			fields, fileSets := parseSourceFiles(t, apiDir)
 
 			for version, generationSpec := range versionMap {
-				sb := newSchemaBuilder(root, generationSpec.docName, fields, fileSets)
+				sb := newSchemaBuilder(root, fields, fileSets)
 				s := sb.TypeToSchema(t, reflect.TypeOf(generationSpec.obj), ".spec")
 				require.NotNil(t, s, version)
 
@@ -244,148 +214,4 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 		err = enc.Encode(validationPerVersion)
 		require.NoError(t, err)
 	}
-}
-
-type schemaBuilder struct {
-	root    string
-	docName string
-	fields  map[string]*ast.Field
-	fs      *token.FileSet
-}
-
-func newSchemaBuilder(root, docName string, fields map[string]*ast.Field, fs *token.FileSet) *schemaBuilder {
-	return &schemaBuilder{
-		root:    root,
-		docName: docName,
-		fields:  fields,
-		fs:      fs,
-	}
-}
-
-func (b *schemaBuilder) TypeToSchema(t *testing.T, obj reflect.Type, path string) *apiextensions.JSONSchemaProps {
-	var schema *apiextensions.JSONSchemaProps
-	t.Run(obj.Name(), func(t *testing.T) {
-		switch obj.Kind() {
-		case reflect.Pointer:
-			schema = b.TypeToSchema(t, obj.Elem(), path)
-		case reflect.Struct:
-			schema = b.StructToSchema(t, obj, path)
-		case reflect.Array, reflect.Slice:
-			schema = b.ArrayToSchema(t, obj.Elem(), path)
-		case reflect.Map:
-			schema = b.MapToSchema(t, obj, path)
-		default:
-			if typ, frmt, simple := b.getTypeFormat(obj); simple {
-				schema = &apiextensions.JSONSchemaProps{
-					Type:   typ,
-					Format: frmt,
-				}
-			} else {
-				t.Fatalf("Unsupported obj kind: %s", obj.Kind())
-				return
-			}
-		}
-	})
-	return schema
-}
-
-func (b *schemaBuilder) lookupDefinition(t *testing.T, fullName, path string) *DocDefinition {
-	f := b.fields[fullName]
-	if f == nil {
-		return nil
-	}
-
-	d := parseDocDefinition(t, b.root, path, "", f, b.fs)
-	return &d
-}
-
-func (b *schemaBuilder) ArrayToSchema(t *testing.T, elemObj reflect.Type, path string) *apiextensions.JSONSchemaProps {
-	isByteArray := elemObj.Kind() == reflect.Uint8
-	if isByteArray {
-		return &apiextensions.JSONSchemaProps{
-			Type:   "string",
-			Format: "byte",
-		}
-	}
-
-	return &apiextensions.JSONSchemaProps{
-		Type: "array",
-		Items: &apiextensions.JSONSchemaPropsOrArray{
-			Schema: b.TypeToSchema(t, elemObj, path),
-		},
-	}
-}
-
-func (b *schemaBuilder) MapToSchema(t *testing.T, mapObj reflect.Type, path string) *apiextensions.JSONSchemaProps {
-	require.Equal(t, reflect.String, mapObj.Key().Kind(), "only string keys for map are supported %s", path)
-
-	return &apiextensions.JSONSchemaProps{
-		Type: "object",
-		AdditionalProperties: &apiextensions.JSONSchemaPropsOrBool{
-			Schema: b.TypeToSchema(t, mapObj.Elem(), path),
-			Allows: true, /* set automatically by serialization, but useful for testing */
-		},
-	}
-}
-
-func (b *schemaBuilder) StructToSchema(t *testing.T, structObj reflect.Type, path string) *apiextensions.JSONSchemaProps {
-	schema := &apiextensions.JSONSchemaProps{
-		Type:       "object",
-		Properties: make(map[string]apiextensions.JSONSchemaProps),
-	}
-
-	for field := 0; field < structObj.NumField(); field++ {
-		f := structObj.Field(field)
-
-		if !f.IsExported() {
-			continue
-		}
-
-		tag, ok := f.Tag.Lookup("json")
-		if !ok {
-			if f.Anonymous {
-				tag = ",inline"
-			}
-		}
-
-		n, inline := extractTag(tag)
-		if n == "-" {
-			continue
-		}
-
-		p := path
-		if !inline {
-			p = fmt.Sprintf("%s.%s", path, n)
-		}
-
-		s := b.TypeToSchema(t, f.Type, p)
-		require.NotNil(t, s, p)
-
-		fullFieldName := fmt.Sprintf("%s.%s", structObj.String(), f.Name)
-		def := b.lookupDefinition(t, fullFieldName, p)
-		if def != nil {
-			def.ApplyToSchema(b.docName, s)
-		}
-
-		schema.Properties[n] = *s
-	}
-	return schema
-}
-
-func (b *schemaBuilder) getTypeFormat(obj reflect.Type) (string, string, bool) {
-	switch obj.Kind() {
-	case reflect.String:
-		return "string", "", true
-	case reflect.Bool:
-		return "boolean", "", true
-	case reflect.Int, reflect.Int32,
-		reflect.Uint, reflect.Uint8, reflect.Uint16:
-		return "integer", "int32", true
-	case reflect.Int64, reflect.Uint64:
-		return "integer", "int64", true
-	case reflect.Float32:
-		return "number", "float", true
-	}
-
-	return "", "", false
 }

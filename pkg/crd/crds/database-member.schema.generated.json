@@ -9,31 +9,19 @@
             "deletion_priority": {
               "description": "DeletionPriority define Deletion Priority.\nHigher value means higher priority. Default is 0.\nExample: set 1 for Coordinator which should be deleted first and scale down coordinators by one.",
               "type": "integer",
-              "format": "int32",
-              "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoMember.V1#specdeletion_priority-"
-              }
+              "format": "int32"
             },
             "deploymentUID": {
               "description": "DeploymentUID define Deployment UID.",
-              "type": "string",
-              "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoMember.V1#specdeploymentuid-"
-              }
+              "type": "string"
             },
             "group": {
               "description": "Group define Member Groups.",
               "type": "integer",
-              "format": "int32",
-              "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoMember.V1#specgroup-"
-              }
+              "format": "int32"
             },
             "id": {
-              "type": "string",
-              "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoMember.V1#specid-"
-              }
+              "type": "string"
             },
             "overrides": {
               "description": "Overrides define Member Overrides (Override values from ServerGroup).",
@@ -65,9 +53,6 @@
                         }
                       }
                     }
-                  },
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoMember.V1#specoverridesresources-"
                   }
                 },
                 "volumeClaimTemplate": {
@@ -391,14 +376,8 @@
                         }
                       }
                     }
-                  },
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoMember.V1#specoverridesvolumeclaimtemplate-"
                   }
                 }
-              },
-              "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoMember.V1#specoverrides-"
               }
             },
             "template": {
@@ -407,17 +386,11 @@
               "properties": {
                 "checksum": {
                   "description": "Checksum keep the Pod Spec Checksum (with ignored fields).",
-                  "type": "string",
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoMember.V1#spectemplatechecksum-"
-                  }
+                  "type": "string"
                 },
                 "endpoint": {
                   "description": "Deprecated: Endpoint is not saved into the template",
-                  "type": "string",
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoMember.V1#spectemplateendpoint-"
-                  }
+                  "type": "string"
                 },
                 "podSpec": {
                   "description": "PodSpec specifies the Pod Spec used for this Member.",
@@ -4894,21 +4867,12 @@
                         }
                       }
                     }
-                  },
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoMember.V1#spectemplatepodspec-"
                   }
                 },
                 "podSpecChecksum": {
                   "description": "PodSpecChecksum keep the Pod Spec Checksum (without ignored fields).",
-                  "type": "string",
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoMember.V1#spectemplatepodspecchecksum-"
-                  }
+                  "type": "string"
                 }
-              },
-              "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoMember.V1#spectemplate-"
               }
             }
           }
@@ -4927,31 +4891,19 @@
             "deletion_priority": {
               "description": "DeletionPriority define Deletion Priority.\nHigher value means higher priority. Default is 0.\nExample: set 1 for Coordinator which should be deleted first and scale down coordinators by one.",
               "type": "integer",
-              "format": "int32",
-              "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoMember.V1#specdeletion_priority-"
-              }
+              "format": "int32"
             },
             "deploymentUID": {
               "description": "DeploymentUID define Deployment UID.",
-              "type": "string",
-              "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoMember.V1#specdeploymentuid-"
-              }
+              "type": "string"
             },
             "group": {
               "description": "Group define Member Groups.",
               "type": "integer",
-              "format": "int32",
-              "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoMember.V1#specgroup-"
-              }
+              "format": "int32"
             },
             "id": {
-              "type": "string",
-              "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoMember.V1#specid-"
-              }
+              "type": "string"
             },
             "overrides": {
               "description": "Overrides define Member Overrides (Override values from ServerGroup).",
@@ -4983,9 +4935,6 @@
                         }
                       }
                     }
-                  },
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoMember.V1#specoverridesresources-"
                   }
                 },
                 "volumeClaimTemplate": {
@@ -5309,14 +5258,8 @@
                         }
                       }
                     }
-                  },
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoMember.V1#specoverridesvolumeclaimtemplate-"
                   }
                 }
-              },
-              "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoMember.V1#specoverrides-"
               }
             },
             "template": {
@@ -5325,17 +5268,11 @@
               "properties": {
                 "checksum": {
                   "description": "Checksum keep the Pod Spec Checksum (with ignored fields).",
-                  "type": "string",
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoMember.V1#spectemplatechecksum-"
-                  }
+                  "type": "string"
                 },
                 "endpoint": {
                   "description": "Deprecated: Endpoint is not saved into the template",
-                  "type": "string",
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoMember.V1#spectemplateendpoint-"
-                  }
+                  "type": "string"
                 },
                 "podSpec": {
                   "description": "PodSpec specifies the Pod Spec used for this Member.",
@@ -9812,21 +9749,12 @@
                         }
                       }
                     }
-                  },
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoMember.V1#spectemplatepodspec-"
                   }
                 },
                 "podSpecChecksum": {
                   "description": "PodSpecChecksum keep the Pod Spec Checksum (without ignored fields).",
-                  "type": "string",
-                  "externalDocs": {
-                    "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoMember.V1#spectemplatepodspecchecksum-"
-                  }
+                  "type": "string"
                 }
-              },
-              "externalDocs": {
-                "url": "https://arangodb.github.io/kube-arangodb/docs/api/ArangoMember.V1#spectemplate-"
               }
             }
           }
