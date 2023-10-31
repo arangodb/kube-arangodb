@@ -22,7 +22,7 @@ package util
 
 import "sort"
 
-type List[T any] []T
+type List[T comparable] []T
 
 func (l List[T]) Filter(fn func(T) bool) List[T] {
 	if l == nil {
@@ -57,7 +57,16 @@ func (l List[T]) Sort(fn func(T, T) bool) List[T] {
 	return clone
 }
 
-func MapList[T, V any](in List[T], fn func(T) V) List[V] {
+func (l List[T]) IndexOf(item T) int {
+	for index, i := range l {
+		if i == item {
+			return index
+		}
+	}
+	return -1
+}
+
+func MapList[T, V comparable](in List[T], fn func(T) V) List[V] {
 	if in == nil {
 		return nil
 	}

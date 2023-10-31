@@ -32,12 +32,17 @@ import (
 	"github.com/arangodb/go-driver"
 
 	"github.com/arangodb/kube-arangodb/pkg/logging"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
 var logger = logging.Global().RegisterAndGetLogger("crd", logging.Info)
 
-func EnsureCRD(ctx context.Context, client kclient.Client, ignoreErrors, withValidation bool) error {
+func ListAvailableNames() util.List[string] {
+	return util.SortKeys(registeredCRDs)
+}
+
+func EnsureCRD(ctx context.Context, client kclient.Client, ignoreErrors bool, validation map[string]bool) error {
 	crdsLock.Lock()
 	defer crdsLock.Unlock()
 
@@ -48,6 +53,7 @@ func EnsureCRD(ctx context.Context, client kclient.Client, ignoreErrors, withVal
 			continue
 		}
 
+		withValidation := validation[crdName]
 		err := tryApplyCRD(ctx, client, crdName, crdSpec, withValidation)
 		if !ignoreErrors && err != nil {
 			return err
