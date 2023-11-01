@@ -10394,12 +10394,6 @@
                 "Cluster",
                 "ActiveFailover",
                 "Single"
-              ],
-              "x-kubernetes-validations": [
-                {
-                  "rule": "self.spec.mode == oldSelf.spec.mode",
-                  "message": "field spec.mode is immutable"
-                }
               ]
             },
             "networkAttachedVolumes": {
@@ -13605,12 +13599,6 @@
               "enum": [
                 "RocksDB",
                 "MMFiles"
-              ],
-              "x-kubernetes-validations": [
-                {
-                  "rule": "self.spec.storageEngine == oldSelf.spec.storageEngine",
-                  "message": "field spec.storageEngine is immutable"
-                }
               ]
             },
             "sync": {
@@ -20109,7 +20097,17 @@
                 }
               }
             }
-          }
+          },
+          "x-kubernetes-validations": [
+            {
+              "rule": "self.mode == oldSelf.mode",
+              "message": "field 'mode' is immutable"
+            },
+            {
+              "rule": "self.storageEngine == oldSelf.storageEngine",
+              "message": "field 'storageEngine' is immutable"
+            }
+          ]
         }
       }
     }
@@ -30509,12 +30507,6 @@
                 "Cluster",
                 "ActiveFailover",
                 "Single"
-              ],
-              "x-kubernetes-validations": [
-                {
-                  "rule": "self.spec.mode == oldSelf.spec.mode",
-                  "message": "field spec.mode is immutable"
-                }
               ]
             },
             "networkAttachedVolumes": {
@@ -33720,12 +33712,6 @@
               "enum": [
                 "RocksDB",
                 "MMFiles"
-              ],
-              "x-kubernetes-validations": [
-                {
-                  "rule": "self.spec.storageEngine == oldSelf.spec.storageEngine",
-                  "message": "field spec.storageEngine is immutable"
-                }
               ]
             },
             "sync": {
@@ -40224,7 +40210,17 @@
                 }
               }
             }
-          }
+          },
+          "x-kubernetes-validations": [
+            {
+              "rule": "self.mode == oldSelf.mode",
+              "message": "field 'mode' is immutable"
+            },
+            {
+              "rule": "self.storageEngine == oldSelf.storageEngine",
+              "message": "field 'storageEngine' is immutable"
+            }
+          ]
         }
       }
     }
@@ -50624,12 +50620,6 @@
                 "Cluster",
                 "ActiveFailover",
                 "Single"
-              ],
-              "x-kubernetes-validations": [
-                {
-                  "rule": "self.spec.mode == oldSelf.spec.mode",
-                  "message": "field spec.mode is immutable"
-                }
               ]
             },
             "networkAttachedVolumes": {
@@ -53835,12 +53825,6 @@
               "enum": [
                 "RocksDB",
                 "MMFiles"
-              ],
-              "x-kubernetes-validations": [
-                {
-                  "rule": "self.spec.storageEngine == oldSelf.spec.storageEngine",
-                  "message": "field spec.storageEngine is immutable"
-                }
               ]
             },
             "sync": {
@@ -60339,7 +60323,17 @@
                 }
               }
             }
-          }
+          },
+          "x-kubernetes-validations": [
+            {
+              "rule": "self.mode == oldSelf.mode",
+              "message": "field 'mode' is immutable"
+            },
+            {
+              "rule": "self.storageEngine == oldSelf.storageEngine",
+              "message": "field 'storageEngine' is immutable"
+            }
+          ]
         }
       }
     }

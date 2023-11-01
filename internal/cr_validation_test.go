@@ -41,7 +41,7 @@ import (
 	storagev1alpha "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 )
 
-func (def DocDefinition) ApplyToSchema(s *apiextensions.JSONSchemaProps) {
+func (def DocDefinition) ApplyToSchema(s, parent *apiextensions.JSONSchemaProps) {
 	for _, e := range def.Enum {
 		z := strings.Split(e, "|")
 		s.Enum = append(s.Enum, apiextensions.JSON{
@@ -49,10 +49,12 @@ func (def DocDefinition) ApplyToSchema(s *apiextensions.JSONSchemaProps) {
 		})
 	}
 
-	if def.Immutable != nil {
-		s.XValidations = append(s.XValidations, apiextensions.ValidationRule{
-			Rule:    fmt.Sprintf("self%s == oldSelf%s", def.Path, def.Path),
-			Message: fmt.Sprintf("field %s is immutable", strings.TrimPrefix(def.Path, ".")),
+	if def.Immutable != nil && parent != nil {
+		parts := strings.Split(def.Path, ".")
+		fieldName := parts[len(parts)-1]
+		parent.XValidations = append(parent.XValidations, apiextensions.ValidationRule{
+			Rule:    fmt.Sprintf("self.%s == oldSelf.%s", fieldName, fieldName),
+			Message: fmt.Sprintf("field '%s' is immutable", fieldName),
 		})
 	}
 	s.Description = strings.Join(def.Docs, "\n")

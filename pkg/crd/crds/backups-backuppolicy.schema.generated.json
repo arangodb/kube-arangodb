@@ -95,51 +95,47 @@
                   "properties": {
                     "allowInconsistent": {
                       "description": "AllowInconsistent flag for Backup creation request.\nIf this value is set to true, backup is taken even if we are not able to acquire lock.",
-                      "type": "boolean",
-                      "x-kubernetes-validations": [
-                        {
-                          "rule": "self.spec.template.options.allowInconsistent == oldSelf.spec.template.options.allowInconsistent",
-                          "message": "field spec.template.options.allowInconsistent is immutable"
-                        }
-                      ]
+                      "type": "boolean"
                     },
                     "timeout": {
                       "description": "Timeout for Backup creation request in seconds.",
                       "type": "number",
-                      "format": "float",
-                      "x-kubernetes-validations": [
-                        {
-                          "rule": "self.spec.template.options.timeout == oldSelf.spec.template.options.timeout",
-                          "message": "field spec.template.options.timeout is immutable"
-                        }
-                      ]
+                      "format": "float"
                     }
-                  }
+                  },
+                  "x-kubernetes-validations": [
+                    {
+                      "rule": "self.timeout == oldSelf.timeout",
+                      "message": "field 'timeout' is immutable"
+                    },
+                    {
+                      "rule": "self.allowInconsistent == oldSelf.allowInconsistent",
+                      "message": "field 'allowInconsistent' is immutable"
+                    }
+                  ]
                 },
                 "upload": {
                   "type": "object",
                   "properties": {
                     "credentialsSecretName": {
                       "description": "CredentialsSecretName is the name of the secret used while accessing repository",
-                      "type": "string",
-                      "x-kubernetes-validations": [
-                        {
-                          "rule": "self.spec.template.upload.credentialsSecretName == oldSelf.spec.template.upload.credentialsSecretName",
-                          "message": "field spec.template.upload.credentialsSecretName is immutable"
-                        }
-                      ]
+                      "type": "string"
                     },
                     "repositoryURL": {
                       "description": "RepositoryURL is the URL path for file storage\nSame repositoryURL needs to be defined in `credentialsSecretName` if protocol is other than local.\nFormat: `\u003cprotocol\u003e:/\u003cpath\u003e`",
-                      "type": "string",
-                      "x-kubernetes-validations": [
-                        {
-                          "rule": "self.spec.template.upload.repositoryURL == oldSelf.spec.template.upload.repositoryURL",
-                          "message": "field spec.template.upload.repositoryURL is immutable"
-                        }
-                      ]
+                      "type": "string"
                     }
-                  }
+                  },
+                  "x-kubernetes-validations": [
+                    {
+                      "rule": "self.repositoryURL == oldSelf.repositoryURL",
+                      "message": "field 'repositoryURL' is immutable"
+                    },
+                    {
+                      "rule": "self.credentialsSecretName == oldSelf.credentialsSecretName",
+                      "message": "field 'credentialsSecretName' is immutable"
+                    }
+                  ]
                 }
               }
             }
@@ -244,51 +240,47 @@
                   "properties": {
                     "allowInconsistent": {
                       "description": "AllowInconsistent flag for Backup creation request.\nIf this value is set to true, backup is taken even if we are not able to acquire lock.",
-                      "type": "boolean",
-                      "x-kubernetes-validations": [
-                        {
-                          "rule": "self.spec.template.options.allowInconsistent == oldSelf.spec.template.options.allowInconsistent",
-                          "message": "field spec.template.options.allowInconsistent is immutable"
-                        }
-                      ]
+                      "type": "boolean"
                     },
                     "timeout": {
                       "description": "Timeout for Backup creation request in seconds.",
                       "type": "number",
-                      "format": "float",
-                      "x-kubernetes-validations": [
-                        {
-                          "rule": "self.spec.template.options.timeout == oldSelf.spec.template.options.timeout",
-                          "message": "field spec.template.options.timeout is immutable"
-                        }
-                      ]
+                      "format": "float"
                     }
-                  }
+                  },
+                  "x-kubernetes-validations": [
+                    {
+                      "rule": "self.timeout == oldSelf.timeout",
+                      "message": "field 'timeout' is immutable"
+                    },
+                    {
+                      "rule": "self.allowInconsistent == oldSelf.allowInconsistent",
+                      "message": "field 'allowInconsistent' is immutable"
+                    }
+                  ]
                 },
                 "upload": {
                   "type": "object",
                   "properties": {
                     "credentialsSecretName": {
                       "description": "CredentialsSecretName is the name of the secret used while accessing repository",
-                      "type": "string",
-                      "x-kubernetes-validations": [
-                        {
-                          "rule": "self.spec.template.upload.credentialsSecretName == oldSelf.spec.template.upload.credentialsSecretName",
-                          "message": "field spec.template.upload.credentialsSecretName is immutable"
-                        }
-                      ]
+                      "type": "string"
                     },
                     "repositoryURL": {
                       "description": "RepositoryURL is the URL path for file storage\nSame repositoryURL needs to be defined in `credentialsSecretName` if protocol is other than local.\nFormat: `\u003cprotocol\u003e:/\u003cpath\u003e`",
-                      "type": "string",
-                      "x-kubernetes-validations": [
-                        {
-                          "rule": "self.spec.template.upload.repositoryURL == oldSelf.spec.template.upload.repositoryURL",
-                          "message": "field spec.template.upload.repositoryURL is immutable"
-                        }
-                      ]
+                      "type": "string"
                     }
-                  }
+                  },
+                  "x-kubernetes-validations": [
+                    {
+                      "rule": "self.repositoryURL == oldSelf.repositoryURL",
+                      "message": "field 'repositoryURL' is immutable"
+                    },
+                    {
+                      "rule": "self.credentialsSecretName == oldSelf.credentialsSecretName",
+                      "message": "field 'credentialsSecretName' is immutable"
+                    }
+                  ]
                 }
               }
             }

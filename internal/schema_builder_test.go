@@ -147,7 +147,7 @@ func (b *schemaBuilder) StructToSchema(t *testing.T, structObj reflect.Type, pat
 		fullFieldName := fmt.Sprintf("%s.%s", structObj.String(), f.Name)
 		def := b.lookupDefinition(t, fullFieldName, p)
 		if def != nil {
-			def.ApplyToSchema(s)
+			def.ApplyToSchema(s, schema)
 		}
 
 		schema.Properties[n] = *s

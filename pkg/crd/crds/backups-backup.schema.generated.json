@@ -37,15 +37,15 @@
               "properties": {
                 "name": {
                   "description": "Name of the ArangoDeployment Custom Resource within same namespace as ArangoBackup Custom Resource.",
-                  "type": "string",
-                  "x-kubernetes-validations": [
-                    {
-                      "rule": "self.spec.deployment.name == oldSelf.spec.deployment.name",
-                      "message": "field spec.deployment.name is immutable"
-                    }
-                  ]
+                  "type": "string"
                 }
-              }
+              },
+              "x-kubernetes-validations": [
+                {
+                  "rule": "self.name == oldSelf.name",
+                  "message": "field 'name' is immutable"
+                }
+              ]
             },
             "download": {
               "description": "Download Backup download settings",
@@ -56,37 +56,35 @@
                   "properties": {
                     "credentialsSecretName": {
                       "description": "CredentialsSecretName is the name of the secret used while accessing repository",
-                      "type": "string",
-                      "x-kubernetes-validations": [
-                        {
-                          "rule": "self.spec.download.credentialsSecretName == oldSelf.spec.download.credentialsSecretName",
-                          "message": "field spec.download.credentialsSecretName is immutable"
-                        }
-                      ]
+                      "type": "string"
                     },
                     "repositoryURL": {
                       "description": "RepositoryURL is the URL path for file storage\nSame repositoryURL needs to be defined in `credentialsSecretName` if protocol is other than local.\nFormat: `\u003cprotocol\u003e:/\u003cpath\u003e`",
-                      "type": "string",
-                      "x-kubernetes-validations": [
-                        {
-                          "rule": "self.spec.download.repositoryURL == oldSelf.spec.download.repositoryURL",
-                          "message": "field spec.download.repositoryURL is immutable"
-                        }
-                      ]
+                      "type": "string"
                     }
-                  }
+                  },
+                  "x-kubernetes-validations": [
+                    {
+                      "rule": "self.repositoryURL == oldSelf.repositoryURL",
+                      "message": "field 'repositoryURL' is immutable"
+                    },
+                    {
+                      "rule": "self.credentialsSecretName == oldSelf.credentialsSecretName",
+                      "message": "field 'credentialsSecretName' is immutable"
+                    }
+                  ]
                 },
                 "id": {
                   "description": "ID of the ArangoBackup to be downloaded",
-                  "type": "string",
-                  "x-kubernetes-validations": [
-                    {
-                      "rule": "self.spec.download.id == oldSelf.spec.download.id",
-                      "message": "field spec.download.id is immutable"
-                    }
-                  ]
+                  "type": "string"
                 }
-              }
+              },
+              "x-kubernetes-validations": [
+                {
+                  "rule": "self.id == oldSelf.id",
+                  "message": "field 'id' is immutable"
+                }
+              ]
             },
             "lifetime": {
               "description": "Lifetime is the time after which the backup will be deleted. Format: \"1.5h\" or \"2h45m\".",
@@ -104,36 +102,28 @@
               "properties": {
                 "allowInconsistent": {
                   "description": "AllowInconsistent flag for Backup creation request.\nIf this value is set to true, backup is taken even if we are not able to acquire lock.",
-                  "type": "boolean",
-                  "x-kubernetes-validations": [
-                    {
-                      "rule": "self.spec.options.allowInconsistent == oldSelf.spec.options.allowInconsistent",
-                      "message": "field spec.options.allowInconsistent is immutable"
-                    }
-                  ]
+                  "type": "boolean"
                 },
                 "timeout": {
                   "description": "Timeout for Backup creation request in seconds.",
                   "type": "number",
-                  "format": "float",
-                  "x-kubernetes-validations": [
-                    {
-                      "rule": "self.spec.options.timeout == oldSelf.spec.options.timeout",
-                      "message": "field spec.options.timeout is immutable"
-                    }
-                  ]
+                  "format": "float"
                 }
-              }
+              },
+              "x-kubernetes-validations": [
+                {
+                  "rule": "self.timeout == oldSelf.timeout",
+                  "message": "field 'timeout' is immutable"
+                },
+                {
+                  "rule": "self.allowInconsistent == oldSelf.allowInconsistent",
+                  "message": "field 'allowInconsistent' is immutable"
+                }
+              ]
             },
             "policyName": {
               "description": "PolicyName name of the ArangoBackupPolicy which created this Custom Resource",
-              "type": "string",
-              "x-kubernetes-validations": [
-                {
-                  "rule": "self.spec.policyName == oldSelf.spec.policyName",
-                  "message": "field spec.policyName is immutable"
-                }
-              ]
+              "type": "string"
             },
             "upload": {
               "description": "Upload Backup upload settings.\nThis field can be removed and created again with different values. This operation will trigger upload again.",
@@ -141,27 +131,31 @@
               "properties": {
                 "credentialsSecretName": {
                   "description": "CredentialsSecretName is the name of the secret used while accessing repository",
-                  "type": "string",
-                  "x-kubernetes-validations": [
-                    {
-                      "rule": "self.spec.upload.credentialsSecretName == oldSelf.spec.upload.credentialsSecretName",
-                      "message": "field spec.upload.credentialsSecretName is immutable"
-                    }
-                  ]
+                  "type": "string"
                 },
                 "repositoryURL": {
                   "description": "RepositoryURL is the URL path for file storage\nSame repositoryURL needs to be defined in `credentialsSecretName` if protocol is other than local.\nFormat: `\u003cprotocol\u003e:/\u003cpath\u003e`",
-                  "type": "string",
-                  "x-kubernetes-validations": [
-                    {
-                      "rule": "self.spec.upload.repositoryURL == oldSelf.spec.upload.repositoryURL",
-                      "message": "field spec.upload.repositoryURL is immutable"
-                    }
-                  ]
+                  "type": "string"
                 }
-              }
+              },
+              "x-kubernetes-validations": [
+                {
+                  "rule": "self.repositoryURL == oldSelf.repositoryURL",
+                  "message": "field 'repositoryURL' is immutable"
+                },
+                {
+                  "rule": "self.credentialsSecretName == oldSelf.credentialsSecretName",
+                  "message": "field 'credentialsSecretName' is immutable"
+                }
+              ]
             }
-          }
+          },
+          "x-kubernetes-validations": [
+            {
+              "rule": "self.policyName == oldSelf.policyName",
+              "message": "field 'policyName' is immutable"
+            }
+          ]
         }
       }
     }
@@ -204,15 +198,15 @@
               "properties": {
                 "name": {
                   "description": "Name of the ArangoDeployment Custom Resource within same namespace as ArangoBackup Custom Resource.",
-                  "type": "string",
-                  "x-kubernetes-validations": [
-                    {
-                      "rule": "self.spec.deployment.name == oldSelf.spec.deployment.name",
-                      "message": "field spec.deployment.name is immutable"
-                    }
-                  ]
+                  "type": "string"
                 }
-              }
+              },
+              "x-kubernetes-validations": [
+                {
+                  "rule": "self.name == oldSelf.name",
+                  "message": "field 'name' is immutable"
+                }
+              ]
             },
             "download": {
               "description": "Download Backup download settings",
@@ -223,37 +217,35 @@
                   "properties": {
                     "credentialsSecretName": {
                       "description": "CredentialsSecretName is the name of the secret used while accessing repository",
-                      "type": "string",
-                      "x-kubernetes-validations": [
-                        {
-                          "rule": "self.spec.download.credentialsSecretName == oldSelf.spec.download.credentialsSecretName",
-                          "message": "field spec.download.credentialsSecretName is immutable"
-                        }
-                      ]
+                      "type": "string"
                     },
                     "repositoryURL": {
                       "description": "RepositoryURL is the URL path for file storage\nSame repositoryURL needs to be defined in `credentialsSecretName` if protocol is other than local.\nFormat: `\u003cprotocol\u003e:/\u003cpath\u003e`",
-                      "type": "string",
-                      "x-kubernetes-validations": [
-                        {
-                          "rule": "self.spec.download.repositoryURL == oldSelf.spec.download.repositoryURL",
-                          "message": "field spec.download.repositoryURL is immutable"
-                        }
-                      ]
+                      "type": "string"
                     }
-                  }
+                  },
+                  "x-kubernetes-validations": [
+                    {
+                      "rule": "self.repositoryURL == oldSelf.repositoryURL",
+                      "message": "field 'repositoryURL' is immutable"
+                    },
+                    {
+                      "rule": "self.credentialsSecretName == oldSelf.credentialsSecretName",
+                      "message": "field 'credentialsSecretName' is immutable"
+                    }
+                  ]
                 },
                 "id": {
                   "description": "ID of the ArangoBackup to be downloaded",
-                  "type": "string",
-                  "x-kubernetes-validations": [
-                    {
-                      "rule": "self.spec.download.id == oldSelf.spec.download.id",
-                      "message": "field spec.download.id is immutable"
-                    }
-                  ]
+                  "type": "string"
                 }
-              }
+              },
+              "x-kubernetes-validations": [
+                {
+                  "rule": "self.id == oldSelf.id",
+                  "message": "field 'id' is immutable"
+                }
+              ]
             },
             "lifetime": {
               "description": "Lifetime is the time after which the backup will be deleted. Format: \"1.5h\" or \"2h45m\".",
@@ -271,36 +263,28 @@
               "properties": {
                 "allowInconsistent": {
                   "description": "AllowInconsistent flag for Backup creation request.\nIf this value is set to true, backup is taken even if we are not able to acquire lock.",
-                  "type": "boolean",
-                  "x-kubernetes-validations": [
-                    {
-                      "rule": "self.spec.options.allowInconsistent == oldSelf.spec.options.allowInconsistent",
-                      "message": "field spec.options.allowInconsistent is immutable"
-                    }
-                  ]
+                  "type": "boolean"
                 },
                 "timeout": {
                   "description": "Timeout for Backup creation request in seconds.",
                   "type": "number",
-                  "format": "float",
-                  "x-kubernetes-validations": [
-                    {
-                      "rule": "self.spec.options.timeout == oldSelf.spec.options.timeout",
-                      "message": "field spec.options.timeout is immutable"
-                    }
-                  ]
+                  "format": "float"
                 }
-              }
+              },
+              "x-kubernetes-validations": [
+                {
+                  "rule": "self.timeout == oldSelf.timeout",
+                  "message": "field 'timeout' is immutable"
+                },
+                {
+                  "rule": "self.allowInconsistent == oldSelf.allowInconsistent",
+                  "message": "field 'allowInconsistent' is immutable"
+                }
+              ]
             },
             "policyName": {
               "description": "PolicyName name of the ArangoBackupPolicy which created this Custom Resource",
-              "type": "string",
-              "x-kubernetes-validations": [
-                {
-                  "rule": "self.spec.policyName == oldSelf.spec.policyName",
-                  "message": "field spec.policyName is immutable"
-                }
-              ]
+              "type": "string"
             },
             "upload": {
               "description": "Upload Backup upload settings.\nThis field can be removed and created again with different values. This operation will trigger upload again.",
@@ -308,27 +292,31 @@
               "properties": {
                 "credentialsSecretName": {
                   "description": "CredentialsSecretName is the name of the secret used while accessing repository",
-                  "type": "string",
-                  "x-kubernetes-validations": [
-                    {
-                      "rule": "self.spec.upload.credentialsSecretName == oldSelf.spec.upload.credentialsSecretName",
-                      "message": "field spec.upload.credentialsSecretName is immutable"
-                    }
-                  ]
+                  "type": "string"
                 },
                 "repositoryURL": {
                   "description": "RepositoryURL is the URL path for file storage\nSame repositoryURL needs to be defined in `credentialsSecretName` if protocol is other than local.\nFormat: `\u003cprotocol\u003e:/\u003cpath\u003e`",
-                  "type": "string",
-                  "x-kubernetes-validations": [
-                    {
-                      "rule": "self.spec.upload.repositoryURL == oldSelf.spec.upload.repositoryURL",
-                      "message": "field spec.upload.repositoryURL is immutable"
-                    }
-                  ]
+                  "type": "string"
                 }
-              }
+              },
+              "x-kubernetes-validations": [
+                {
+                  "rule": "self.repositoryURL == oldSelf.repositoryURL",
+                  "message": "field 'repositoryURL' is immutable"
+                },
+                {
+                  "rule": "self.credentialsSecretName == oldSelf.credentialsSecretName",
+                  "message": "field 'credentialsSecretName' is immutable"
+                }
+              ]
             }
-          }
+          },
+          "x-kubernetes-validations": [
+            {
+              "rule": "self.policyName == oldSelf.policyName",
+              "message": "field 'policyName' is immutable"
+            }
+          ]
         }
       }
     }
