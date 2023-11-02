@@ -145,9 +145,9 @@ type Health interface {
 type Cache interface {
 	Reload(ctx context.Context, size int, clients Connections) (uint64, error)
 	// Deprecated: Use Apply instead.
-	// It can cause to Read/Write error when state is reloaded.
+	// It can cause Read/Write error when state is reloaded.
 	Data() (state.State, bool)
-	// Apply applies a function to the current state.
+	// Apply applies a function to the current state. Returns true if function was applied
 	Apply(f func(state.State)) bool
 	DataDB() (state.DB, bool)
 	CommitIndex() uint64
