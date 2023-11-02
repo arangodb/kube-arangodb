@@ -260,6 +260,10 @@ func (ac *actionContext) ShardsInSyncMap() (state.ShardsSyncStatus, bool) {
 	return ac.context.ShardsInSyncMap()
 }
 
+func (ac *actionContext) WithAgencyCache(action func(state.State)) bool {
+	return ac.context.WithAgencyCache(action)
+}
+
 func (ac *actionContext) GetAgencyCache() (state.State, bool) {
 	return ac.context.GetAgencyCache()
 }

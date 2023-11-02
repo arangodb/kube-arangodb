@@ -176,6 +176,10 @@ func (c *testContext) GenerateMemberEndpoint(group api.ServerGroup, member api.M
 	return pod2.GenerateMemberEndpoint(c.Inspector, c.ArangoDeployment, c.ArangoDeployment.Spec, group, member)
 }
 
+func (c *testContext) WithAgencyCache(action func(state.State)) bool {
+	return false
+}
+
 func (c *testContext) GetAgencyCache() (state.State, bool) {
 	return state.State{}, true
 }

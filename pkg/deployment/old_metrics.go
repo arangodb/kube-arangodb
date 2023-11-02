@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import (
 	"sync"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/generated/metric_descriptions"
 	"github.com/arangodb/kube-arangodb/pkg/metrics/collector"
@@ -76,8 +77,8 @@ func (i *inventory) CollectMetrics(in metrics.PushMetric) {
 
 			deployment.CollectMetrics(in)
 
-			if state := deployment.acs.CurrentClusterCache(); state != nil {
-				t := state.GetThrottles()
+			if cacheInspector := deployment.acs.CurrentClusterCache(); cacheInspector != nil {
+				t := cacheInspector.GetThrottles()
 
 				for _, c := range definitions.AllComponents() {
 					in.Push(i.operatorStateRefreshMetric.Gauge(float64(t.Get(c).Count()), deployment.GetNamespace(), deployment.GetName(), string(c)))
@@ -92,58 +93,59 @@ func (i *inventory) CollectMetrics(in metrics.PushMetric) {
 			}
 
 			if spec.Mode.Get().HasAgents() {
-				agency, agencyOk := deployment.GetAgencyCache()
-				if !agencyOk {
-					in.Push(i.deploymentAgencyStateMetric.Gauge(0, deployment.GetNamespace(), deployment.GetName()))
-					continue
-				}
-
-				in.Push(i.deploymentAgencyStateMetric.Gauge(1, deployment.GetNamespace(), deployment.GetName()))
-
 				if spec.Mode.Get() == api.DeploymentModeCluster {
-					for db, collections := range agency.Current.Collections {
-						dbName := db
-						if features.SensitiveInformationProtection().Enabled() {
-							dbName = "UNKNOWN"
+					applied := deployment.WithAgencyCache(func(st state.State) {
+						for db, collections := range st.Current.Collections {
+							dbName := db
+							if features.SensitiveInformationProtection().Enabled() {
+								dbName = "UNKNOWN"
 
-							if v, ok := agency.Plan.Databases[db]; ok && v.ID != "" {
-								dbName = v.ID
+								if v, ok := st.Plan.Databases[db]; ok && v.ID != "" {
+									dbName = v.ID
+								}
 							}
-						}
 
-						for collection, shards := range collections {
-							for shard, details := range shards {
-								for id, server := range details.Servers {
-									collectionName := "UNKNOWN"
-									if features.SensitiveInformationProtection().Enabled() {
-										collectionName = collection
-									} else {
-										if _, ok := agency.Plan.Collections[db]; ok {
-											if _, ok := agency.Plan.Collections[db][collection]; ok {
-												collectionName = agency.Plan.Collections[db][collection].GetName(collectionName)
+							for collection, shards := range collections {
+								for shard, details := range shards {
+									for id, server := range details.Servers {
+										collectionName := "UNKNOWN"
+										if features.SensitiveInformationProtection().Enabled() {
+											collectionName = collection
+										} else {
+											if _, ok := st.Plan.Collections[db]; ok {
+												if _, ok := st.Plan.Collections[db][collection]; ok {
+													collectionName = st.Plan.Collections[db][collection].GetName(collectionName)
+												}
 											}
 										}
-									}
 
-									m := []string{
-										deployment.GetNamespace(),
-										deployment.GetName(),
-										dbName,
-										collectionName,
-										shard,
-										string(server),
-									}
+										m := []string{
+											deployment.GetNamespace(),
+											deployment.GetName(),
+											dbName,
+											collectionName,
+											shard,
+											string(server),
+										}
 
-									if id == 0 {
-										in.Push(i.deploymentShardLeadersMetric.Gauge(1, m...))
+										if id == 0 {
+											in.Push(i.deploymentShardLeadersMetric.Gauge(1, m...))
+										}
+										in.Push(i.deploymentShardsMetric.Gauge(1, m...))
 									}
-									in.Push(i.deploymentShardsMetric.Gauge(1, m...))
 								}
 							}
 						}
+					})
+
+					if !applied {
+						in.Push(i.deploymentAgencyStateMetric.Gauge(0, deployment.GetNamespace(), deployment.GetName()))
+						continue
 					}
+
 				}
 			}
+			in.Push(i.deploymentAgencyStateMetric.Gauge(1, deployment.GetNamespace(), deployment.GetName()))
 		}
 	}
 }
