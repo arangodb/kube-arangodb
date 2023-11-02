@@ -28,6 +28,10 @@ import (
 
 // Interface provides access to all the informers in this group version.
 type Interface interface {
+	// ArangoMLBatchJobs returns a ArangoMLBatchJobInformer.
+	ArangoMLBatchJobs() ArangoMLBatchJobInformer
+	// ArangoMLCronJobs returns a ArangoMLCronJobInformer.
+	ArangoMLCronJobs() ArangoMLCronJobInformer
 	// ArangoMLExtensions returns a ArangoMLExtensionInformer.
 	ArangoMLExtensions() ArangoMLExtensionInformer
 	// ArangoMLStorages returns a ArangoMLStorageInformer.
@@ -43,6 +47,16 @@ type version struct {
 // New returns a new Interface.
 func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakListOptions internalinterfaces.TweakListOptionsFunc) Interface {
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
+}
+
+// ArangoMLBatchJobs returns a ArangoMLBatchJobInformer.
+func (v *version) ArangoMLBatchJobs() ArangoMLBatchJobInformer {
+	return &arangoMLBatchJobInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// ArangoMLCronJobs returns a ArangoMLCronJobInformer.
+func (v *version) ArangoMLCronJobs() ArangoMLCronJobInformer {
+	return &arangoMLCronJobInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // ArangoMLExtensions returns a ArangoMLExtensionInformer.

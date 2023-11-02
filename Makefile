@@ -792,7 +792,7 @@ CRDS:=apps-job \
       backups-backup backups-backuppolicy \
       database-clustersynchronization database-deployment database-member database-task \
       replication-deploymentreplication \
-      ml-storage ml-integration
+      ml-storage ml-extension ml-job-batch ml-job-cron
 
 .PHONY: sync-crds
 sync-crds:

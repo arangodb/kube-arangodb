@@ -22,6 +22,22 @@
 
 package v1alpha1
 
+// ArangoMLBatchJobListerExpansion allows custom methods to be added to
+// ArangoMLBatchJobLister.
+type ArangoMLBatchJobListerExpansion interface{}
+
+// ArangoMLBatchJobNamespaceListerExpansion allows custom methods to be added to
+// ArangoMLBatchJobNamespaceLister.
+type ArangoMLBatchJobNamespaceListerExpansion interface{}
+
+// ArangoMLCronJobListerExpansion allows custom methods to be added to
+// ArangoMLCronJobLister.
+type ArangoMLCronJobListerExpansion interface{}
+
+// ArangoMLCronJobNamespaceListerExpansion allows custom methods to be added to
+// ArangoMLCronJobNamespaceLister.
+type ArangoMLCronJobNamespaceListerExpansion interface{}
+
 // ArangoMLExtensionListerExpansion allows custom methods to be added to
 // ArangoMLExtensionLister.
 type ArangoMLExtensionListerExpansion interface{}

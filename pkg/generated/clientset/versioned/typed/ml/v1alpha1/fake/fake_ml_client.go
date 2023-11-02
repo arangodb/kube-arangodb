@@ -32,6 +32,14 @@ type FakeMlV1alpha1 struct {
 	*testing.Fake
 }
 
+func (c *FakeMlV1alpha1) ArangoMLBatchJobs(namespace string) v1alpha1.ArangoMLBatchJobInterface {
+	return &FakeArangoMLBatchJobs{c, namespace}
+}
+
+func (c *FakeMlV1alpha1) ArangoMLCronJobs(namespace string) v1alpha1.ArangoMLCronJobInterface {
+	return &FakeArangoMLCronJobs{c, namespace}
+}
+
 func (c *FakeMlV1alpha1) ArangoMLExtensions(namespace string) v1alpha1.ArangoMLExtensionInterface {
 	return &FakeArangoMLExtensions{c, namespace}
 }

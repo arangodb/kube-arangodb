@@ -32,6 +32,8 @@ import (
 
 type MlV1alpha1Interface interface {
 	RESTClient() rest.Interface
+	ArangoMLBatchJobsGetter
+	ArangoMLCronJobsGetter
 	ArangoMLExtensionsGetter
 	ArangoMLStoragesGetter
 }
@@ -39,6 +41,14 @@ type MlV1alpha1Interface interface {
 // MlV1alpha1Client is used to interact with features provided by the ml.arangodb.com group.
 type MlV1alpha1Client struct {
 	restClient rest.Interface
+}
+
+func (c *MlV1alpha1Client) ArangoMLBatchJobs(namespace string) ArangoMLBatchJobInterface {
+	return newArangoMLBatchJobs(c, namespace)
+}
+
+func (c *MlV1alpha1Client) ArangoMLCronJobs(namespace string) ArangoMLCronJobInterface {
+	return newArangoMLCronJobs(c, namespace)
 }
 
 func (c *MlV1alpha1Client) ArangoMLExtensions(namespace string) ArangoMLExtensionInterface {

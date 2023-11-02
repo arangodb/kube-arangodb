@@ -49,6 +49,8 @@ func Test_CRD(t *testing.T) {
 	ensureCRDCompliance(t, deployment.ArangoTaskCRDName, DatabaseTaskDefinition())
 	ensureCRDCompliance(t, replication.ArangoDeploymentReplicationCRDName, ReplicationDeploymentReplicationDefinition())
 	ensureCRDCompliance(t, storage.ArangoLocalStorageCRDName, StorageLocalStorageDefinition())
-	ensureCRDCompliance(t, ml.ArangoMLIntegrationCRDName, MLIntegrationDefinition())
+	ensureCRDCompliance(t, ml.ArangoMLExtensionCRDName, MLExtensionDefinition())
 	ensureCRDCompliance(t, ml.ArangoMLStorageCRDName, MLStorageDefinition())
+	ensureCRDCompliance(t, ml.ArangoMLCronJobCRDName, MLCronJobDefinition())
+	ensureCRDCompliance(t, ml.ArangoMLBatchJobCRDName, MLBatchJobDefinition())
 }

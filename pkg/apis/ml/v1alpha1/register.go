@@ -50,7 +50,11 @@ func addKnownTypes(s *runtime.Scheme) error {
 		&ArangoMLStorage{},
 		&ArangoMLStorageList{},
 		&ArangoMLExtension{},
-		&ArangoMLExtensionList{})
+		&ArangoMLExtensionList{},
+		&ArangoMLBatchJob{},
+		&ArangoMLBatchJobList{},
+		&ArangoMLCronJob{},
+		&ArangoMLCronJobList{})
 	meta.AddToGroupVersion(s, SchemeGroupVersion)
 	return nil
 }

@@ -30,27 +30,27 @@ import (
 )
 
 const (
-	MLIntegrationVersion = driver.Version("1.0.0")
+	MLBatchJobVersion = driver.Version("1.0.0")
 )
 
 func init() {
-	if err := yaml.Unmarshal(mlIntegration, &mlIntegrationCRD); err != nil {
+	if err := yaml.Unmarshal(mlBatchJob, &mlBatchJobCRD); err != nil {
 		panic(err)
 	}
 }
 
-func MLIntegration() *apiextensions.CustomResourceDefinition {
-	return mlIntegrationCRD.DeepCopy()
+func MLBatchJob() *apiextensions.CustomResourceDefinition {
+	return mlBatchJobCRD.DeepCopy()
 }
 
-func MLIntegrationDefinition() Definition {
+func MLBatchJobDefinition() Definition {
 	return Definition{
-		Version: MLIntegrationVersion,
-		CRD:     mlIntegrationCRD.DeepCopy(),
+		Version: MLBatchJobVersion,
+		CRD:     mlBatchJobCRD.DeepCopy(),
 	}
 }
 
-var mlIntegrationCRD apiextensions.CustomResourceDefinition
+var mlBatchJobCRD apiextensions.CustomResourceDefinition
 
-//go:embed ml-integration.yaml
-var mlIntegration []byte
+//go:embed ml-job-batch.yaml
+var mlBatchJob []byte

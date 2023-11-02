@@ -25,9 +25,17 @@ const (
 	ArangoMLStorageResourceKind   = "ArangoMLStorage"
 	ArangoMLStorageResourcePlural = "arangomlstorages"
 
-	ArangoMLIntegrationCRDName        = ArangoMLIntegrationResourcePlural + "." + ArangoMLGroupName
-	ArangoMLIntegrationResourceKind   = "ArangoMLIntegration"
-	ArangoMLIntegrationResourcePlural = "arangomlintegrations"
+	ArangoMLExtensionCRDName        = ArangoMLExtensionResourcePlural + "." + ArangoMLGroupName
+	ArangoMLExtensionResourceKind   = "ArangoMLExtension"
+	ArangoMLExtensionResourcePlural = "arangomlextensions"
+
+	ArangoMLBatchJobCRDName        = ArangoMLBatchJobResourcePlural + "." + ArangoMLGroupName
+	ArangoMLBatchJobResourceKind   = "ArangoMLBatchJob"
+	ArangoMLBatchJobResourcePlural = "arangomlbatchjobs"
+
+	ArangoMLCronJobCRDName        = ArangoMLCronJobResourcePlural + "." + ArangoMLGroupName
+	ArangoMLCronJobResourceKind   = "ArangoMLCronJob"
+	ArangoMLCronJobResourcePlural = "arangomlcronjobs"
 
 	ArangoMLGroupName = "ml.arangodb.com"
 )
