@@ -159,6 +159,11 @@ func (d *Deployment) GetMembersState() memberState.StateInspector {
 	return d.memberState
 }
 
+func (d *Deployment) WithAgencyCache(action func(state.State)) bool {
+	return d.agencyCache.Apply(action)
+}
+
+// Deprecated: Use WithAgencyCache instead
 func (d *Deployment) GetAgencyCache() (state.State, bool) {
 	return d.agencyCache.Data()
 }

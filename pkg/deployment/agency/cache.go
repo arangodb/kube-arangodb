@@ -144,7 +144,11 @@ type Health interface {
 
 type Cache interface {
 	Reload(ctx context.Context, size int, clients Connections) (uint64, error)
+	// Deprecated: Use Apply instead.
+	// It can cause to Read/Write error when state is reloaded.
 	Data() (state.State, bool)
+	// Apply applies a function to the current state.
+	Apply(f func(state.State)) bool
 	DataDB() (state.DB, bool)
 	CommitIndex() uint64
 	// Health returns true when healthy object is available.
@@ -202,6 +206,10 @@ func (c cacheSingle) Reload(_ context.Context, _ int, _ Connections) (uint64, er
 	return 0, nil
 }
 
+func (c cacheSingle) Apply(f func(state.State)) bool {
+	return false
+}
+
 func (c cacheSingle) Data() (state.State, bool) {
 	return state.State{}, true
 }
@@ -230,6 +238,19 @@ func (c *cache) CommitIndex() uint64 {
 
 	_, index, _ := c.loader.State()
 	return index
+}
+
+func (c *cache) Apply(f func(state.State)) bool {
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+
+	data, _, ok := c.loader.State()
+	if !ok {
+		return false
+	}
+
+	f(data.Arango)
+	return true
 }
 
 func (c *cache) Data() (state.State, bool) {

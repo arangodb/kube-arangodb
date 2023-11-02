@@ -96,6 +96,9 @@ type DeploymentImageManager interface {
 }
 
 type ArangoAgencyGet interface {
+	// WithAgencyCache executes the given action with the agency cache using a Read lock.
+	WithAgencyCache(action func(state.State)) bool
+	// Deprecated: Use WithAgencyCache instead
 	GetAgencyCache() (state.State, bool)
 	GetAgencyArangoDBCache() (state.DB, bool)
 	GetAgencyHealth() (agencyCache.Health, bool)
