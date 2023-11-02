@@ -29,6 +29,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	openapi "k8s.io/kube-openapi/pkg/common"
 )
 
 type schemaBuilder struct {
@@ -45,8 +46,51 @@ func newSchemaBuilder(root string, fields map[string]*ast.Field, fs *token.FileS
 	}
 }
 
+func (b *schemaBuilder) tryGetKubeOpenAPIDefinitions(t *testing.T, obj reflect.Type) *apiextensions.JSONSchemaProps {
+	if o, ok := reflect.New(obj).Interface().(openapi.OpenAPIV3DefinitionGetter); ok {
+		return b.openAPIDefToSchemaPros(t, o.OpenAPIV3Definition())
+	}
+	if o, ok := reflect.New(obj).Interface().(openapi.OpenAPIDefinitionGetter); ok {
+		return b.openAPIDefToSchemaPros(t, o.OpenAPIDefinition())
+	}
+
+	type openAPISchemaTypeGetter interface {
+		OpenAPISchemaType() []string
+	}
+	type openAPISchemaFormatGetter interface {
+		OpenAPISchemaFormat() string
+	}
+	var typ, frmt string
+	if o, ok := reflect.New(obj).Interface().(openAPISchemaTypeGetter); ok {
+		strs := o.OpenAPISchemaType()
+		require.Len(t, strs, 1)
+		typ = strs[0]
+	}
+	if o, ok := reflect.New(obj).Interface().(openAPISchemaFormatGetter); ok {
+		frmt = o.OpenAPISchemaFormat()
+	}
+	if typ != "" || frmt != "" {
+		return &apiextensions.JSONSchemaProps{
+			Type:   typ,
+			Format: frmt,
+		}
+	}
+	return nil
+}
+
+func (b *schemaBuilder) openAPIDefToSchemaPros(t *testing.T, _ *openapi.OpenAPIDefinition) *apiextensions.JSONSchemaProps {
+	require.Fail(t, "openAPIDefToSchemaPros is not implemented because there were no calls to this function. Add the impl if needed.")
+	return nil
+}
+
 func (b *schemaBuilder) TypeToSchema(t *testing.T, obj reflect.Type, path string) *apiextensions.JSONSchemaProps {
-	var schema *apiextensions.JSONSchemaProps
+	// first check if type already implements a method to get OpenAPI schema:
+	schema := b.tryGetKubeOpenAPIDefinitions(t, obj)
+	if schema != nil {
+		return schema
+	}
+
+	// fallback to our impl:
 	t.Run(obj.Name(), func(t *testing.T) {
 		switch obj.Kind() {
 		case reflect.Pointer:
@@ -128,6 +172,8 @@ func (b *schemaBuilder) StructToSchema(t *testing.T, structObj reflect.Type, pat
 		if !ok {
 			if f.Anonymous {
 				tag = ",inline"
+			} else {
+				require.Failf(t, "field %s.%s has no valid json tag: can't build schema", path, f.Name)
 			}
 		}
 

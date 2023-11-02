@@ -34,23 +34,13 @@
                     "limits": {
                       "type": "object",
                       "additionalProperties": {
-                        "type": "object",
-                        "properties": {
-                          "": {
-                            "type": "string"
-                          }
-                        }
+                        "type": "string"
                       }
                     },
                     "requests": {
                       "type": "object",
                       "additionalProperties": {
-                        "type": "object",
-                        "properties": {
-                          "": {
-                            "type": "string"
-                          }
-                        }
+                        "type": "string"
                       }
                     }
                   }
@@ -80,24 +70,16 @@
                           }
                         },
                         "creationTimestamp": {
-                          "type": "object",
-                          "properties": {
-                            "": {
-                              "type": "object"
-                            }
-                          }
+                          "type": "string",
+                          "format": "date-time"
                         },
                         "deletionGracePeriodSeconds": {
                           "type": "integer",
                           "format": "int64"
                         },
                         "deletionTimestamp": {
-                          "type": "object",
-                          "properties": {
-                            "": {
-                              "type": "object"
-                            }
-                          }
+                          "type": "string",
+                          "format": "date-time"
                         },
                         "finalizers": {
                           "type": "array",
@@ -142,12 +124,8 @@
                                 "type": "string"
                               },
                               "time": {
-                                "type": "object",
-                                "properties": {
-                                  "": {
-                                    "type": "object"
-                                  }
-                                }
+                                "type": "string",
+                                "format": "date-time"
                               }
                             }
                           }
@@ -238,23 +216,13 @@
                             "limits": {
                               "type": "object",
                               "additionalProperties": {
-                                "type": "object",
-                                "properties": {
-                                  "": {
-                                    "type": "string"
-                                  }
-                                }
+                                "type": "string"
                               }
                             },
                             "requests": {
                               "type": "object",
                               "additionalProperties": {
-                                "type": "object",
-                                "properties": {
-                                  "": {
-                                    "type": "string"
-                                  }
-                                }
+                                "type": "string"
                               }
                             }
                           }
@@ -313,23 +281,13 @@
                         "allocatedResources": {
                           "type": "object",
                           "additionalProperties": {
-                            "type": "object",
-                            "properties": {
-                              "": {
-                                "type": "string"
-                              }
-                            }
+                            "type": "string"
                           }
                         },
                         "capacity": {
                           "type": "object",
                           "additionalProperties": {
-                            "type": "object",
-                            "properties": {
-                              "": {
-                                "type": "string"
-                              }
-                            }
+                            "type": "string"
                           }
                         },
                         "conditions": {
@@ -338,20 +296,12 @@
                             "type": "object",
                             "properties": {
                               "lastProbeTime": {
-                                "type": "object",
-                                "properties": {
-                                  "": {
-                                    "type": "object"
-                                  }
-                                }
+                                "type": "string",
+                                "format": "date-time"
                               },
                               "lastTransitionTime": {
-                                "type": "object",
-                                "properties": {
-                                  "": {
-                                    "type": "object"
-                                  }
-                                }
+                                "type": "string",
+                                "format": "date-time"
                               },
                               "message": {
                                 "type": "string"
@@ -406,24 +356,16 @@
                           }
                         },
                         "creationTimestamp": {
-                          "type": "object",
-                          "properties": {
-                            "": {
-                              "type": "object"
-                            }
-                          }
+                          "type": "string",
+                          "format": "date-time"
                         },
                         "deletionGracePeriodSeconds": {
                           "type": "integer",
                           "format": "int64"
                         },
                         "deletionTimestamp": {
-                          "type": "object",
-                          "properties": {
-                            "": {
-                              "type": "object"
-                            }
-                          }
+                          "type": "string",
+                          "format": "date-time"
                         },
                         "finalizers": {
                           "type": "array",
@@ -468,12 +410,8 @@
                                 "type": "string"
                               },
                               "time": {
-                                "type": "object",
-                                "properties": {
-                                  "": {
-                                    "type": "object"
-                                  }
-                                }
+                                "type": "string",
+                                "format": "date-time"
                               }
                             }
                           }
@@ -1063,12 +1001,7 @@
                                               "type": "string"
                                             },
                                             "divisor": {
-                                              "type": "object",
-                                              "properties": {
-                                                "": {
-                                                  "type": "string"
-                                                }
-                                              }
+                                              "type": "string"
                                             },
                                             "resource": {
                                               "type": "string"
@@ -1189,12 +1122,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           },
                                           "scheme": {
                                             "type": "string"
@@ -1208,12 +1137,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           }
                                         }
                                       }
@@ -1257,12 +1182,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           },
                                           "scheme": {
                                             "type": "string"
@@ -1276,12 +1197,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           }
                                         }
                                       }
@@ -1342,12 +1259,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           },
                                           "scheme": {
                                             "type": "string"
@@ -1361,12 +1274,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           }
                                         }
                                       }
@@ -1479,12 +1388,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           },
                                           "scheme": {
                                             "type": "string"
@@ -1498,12 +1403,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           }
                                         }
                                       }
@@ -1541,23 +1442,13 @@
                                   "limits": {
                                     "type": "object",
                                     "additionalProperties": {
-                                      "type": "object",
-                                      "properties": {
-                                        "": {
-                                          "type": "string"
-                                        }
-                                      }
+                                      "type": "string"
                                     }
                                   },
                                   "requests": {
                                     "type": "object",
                                     "additionalProperties": {
-                                      "type": "object",
-                                      "properties": {
-                                        "": {
-                                          "type": "string"
-                                        }
-                                      }
+                                      "type": "string"
                                     }
                                   }
                                 }
@@ -1705,12 +1596,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           },
                                           "scheme": {
                                             "type": "string"
@@ -1724,12 +1611,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           }
                                         }
                                       }
@@ -1930,12 +1813,7 @@
                                                   "type": "string"
                                                 },
                                                 "divisor": {
-                                                  "type": "object",
-                                                  "properties": {
-                                                    "": {
-                                                      "type": "string"
-                                                    }
-                                                  }
+                                                  "type": "string"
                                                 },
                                                 "resource": {
                                                   "type": "string"
@@ -2056,12 +1934,8 @@
                                                 "type": "string"
                                               },
                                               "port": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "": {
-                                                    "type": "string"
-                                                  }
-                                                }
+                                                "type": "string",
+                                                "format": "int-or-string"
                                               },
                                               "scheme": {
                                                 "type": "string"
@@ -2075,12 +1949,8 @@
                                                 "type": "string"
                                               },
                                               "port": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "": {
-                                                    "type": "string"
-                                                  }
-                                                }
+                                                "type": "string",
+                                                "format": "int-or-string"
                                               }
                                             }
                                           }
@@ -2124,12 +1994,8 @@
                                                 "type": "string"
                                               },
                                               "port": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "": {
-                                                    "type": "string"
-                                                  }
-                                                }
+                                                "type": "string",
+                                                "format": "int-or-string"
                                               },
                                               "scheme": {
                                                 "type": "string"
@@ -2143,12 +2009,8 @@
                                                 "type": "string"
                                               },
                                               "port": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "": {
-                                                    "type": "string"
-                                                  }
-                                                }
+                                                "type": "string",
+                                                "format": "int-or-string"
                                               }
                                             }
                                           }
@@ -2209,12 +2071,8 @@
                                                 "type": "string"
                                               },
                                               "port": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "": {
-                                                    "type": "string"
-                                                  }
-                                                }
+                                                "type": "string",
+                                                "format": "int-or-string"
                                               },
                                               "scheme": {
                                                 "type": "string"
@@ -2228,12 +2086,8 @@
                                                 "type": "string"
                                               },
                                               "port": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "": {
-                                                    "type": "string"
-                                                  }
-                                                }
+                                                "type": "string",
+                                                "format": "int-or-string"
                                               }
                                             }
                                           }
@@ -2346,12 +2200,8 @@
                                                 "type": "string"
                                               },
                                               "port": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "": {
-                                                    "type": "string"
-                                                  }
-                                                }
+                                                "type": "string",
+                                                "format": "int-or-string"
                                               },
                                               "scheme": {
                                                 "type": "string"
@@ -2365,12 +2215,8 @@
                                                 "type": "string"
                                               },
                                               "port": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "": {
-                                                    "type": "string"
-                                                  }
-                                                }
+                                                "type": "string",
+                                                "format": "int-or-string"
                                               }
                                             }
                                           }
@@ -2408,23 +2254,13 @@
                                       "limits": {
                                         "type": "object",
                                         "additionalProperties": {
-                                          "type": "object",
-                                          "properties": {
-                                            "": {
-                                              "type": "string"
-                                            }
-                                          }
+                                          "type": "string"
                                         }
                                       },
                                       "requests": {
                                         "type": "object",
                                         "additionalProperties": {
-                                          "type": "object",
-                                          "properties": {
-                                            "": {
-                                              "type": "string"
-                                            }
-                                          }
+                                          "type": "string"
                                         }
                                       }
                                     }
@@ -2572,12 +2408,8 @@
                                                 "type": "string"
                                               },
                                               "port": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "": {
-                                                    "type": "string"
-                                                  }
-                                                }
+                                                "type": "string",
+                                                "format": "int-or-string"
                                               },
                                               "scheme": {
                                                 "type": "string"
@@ -2591,12 +2423,8 @@
                                                 "type": "string"
                                               },
                                               "port": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "": {
-                                                    "type": "string"
-                                                  }
-                                                }
+                                                "type": "string",
+                                                "format": "int-or-string"
                                               }
                                             }
                                           }
@@ -2805,12 +2633,7 @@
                                               "type": "string"
                                             },
                                             "divisor": {
-                                              "type": "object",
-                                              "properties": {
-                                                "": {
-                                                  "type": "string"
-                                                }
-                                              }
+                                              "type": "string"
                                             },
                                             "resource": {
                                               "type": "string"
@@ -2931,12 +2754,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           },
                                           "scheme": {
                                             "type": "string"
@@ -2950,12 +2769,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           }
                                         }
                                       }
@@ -2999,12 +2814,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           },
                                           "scheme": {
                                             "type": "string"
@@ -3018,12 +2829,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           }
                                         }
                                       }
@@ -3084,12 +2891,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           },
                                           "scheme": {
                                             "type": "string"
@@ -3103,12 +2906,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           }
                                         }
                                       }
@@ -3221,12 +3020,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           },
                                           "scheme": {
                                             "type": "string"
@@ -3240,12 +3035,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           }
                                         }
                                       }
@@ -3283,23 +3074,13 @@
                                   "limits": {
                                     "type": "object",
                                     "additionalProperties": {
-                                      "type": "object",
-                                      "properties": {
-                                        "": {
-                                          "type": "string"
-                                        }
-                                      }
+                                      "type": "string"
                                     }
                                   },
                                   "requests": {
                                     "type": "object",
                                     "additionalProperties": {
-                                      "type": "object",
-                                      "properties": {
-                                        "": {
-                                          "type": "string"
-                                        }
-                                      }
+                                      "type": "string"
                                     }
                                   }
                                 }
@@ -3447,12 +3228,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           },
                                           "scheme": {
                                             "type": "string"
@@ -3466,12 +3243,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           }
                                         }
                                       }
@@ -3584,12 +3357,7 @@
                         "overhead": {
                           "type": "object",
                           "additionalProperties": {
-                            "type": "object",
-                            "properties": {
-                              "": {
-                                "type": "string"
-                              }
-                            }
+                            "type": "string"
                           }
                         },
                         "preemptionPolicy": {
@@ -4038,12 +3806,7 @@
                                                   "type": "string"
                                                 },
                                                 "divisor": {
-                                                  "type": "object",
-                                                  "properties": {
-                                                    "": {
-                                                      "type": "string"
-                                                    }
-                                                  }
+                                                  "type": "string"
                                                 },
                                                 "resource": {
                                                   "type": "string"
@@ -4062,12 +3825,7 @@
                                         "type": "string"
                                       },
                                       "sizeLimit": {
-                                        "type": "object",
-                                        "properties": {
-                                          "": {
-                                            "type": "string"
-                                          }
-                                        }
+                                        "type": "string"
                                       }
                                     }
                                   },
@@ -4087,24 +3845,16 @@
                                                 }
                                               },
                                               "creationTimestamp": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "": {
-                                                    "type": "object"
-                                                  }
-                                                }
+                                                "type": "string",
+                                                "format": "date-time"
                                               },
                                               "deletionGracePeriodSeconds": {
                                                 "type": "integer",
                                                 "format": "int64"
                                               },
                                               "deletionTimestamp": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "": {
-                                                    "type": "object"
-                                                  }
-                                                }
+                                                "type": "string",
+                                                "format": "date-time"
                                               },
                                               "finalizers": {
                                                 "type": "array",
@@ -4149,12 +3899,8 @@
                                                       "type": "string"
                                                     },
                                                     "time": {
-                                                      "type": "object",
-                                                      "properties": {
-                                                        "": {
-                                                          "type": "object"
-                                                        }
-                                                      }
+                                                      "type": "string",
+                                                      "format": "date-time"
                                                     }
                                                   }
                                                 }
@@ -4245,23 +3991,13 @@
                                                   "limits": {
                                                     "type": "object",
                                                     "additionalProperties": {
-                                                      "type": "object",
-                                                      "properties": {
-                                                        "": {
-                                                          "type": "string"
-                                                        }
-                                                      }
+                                                      "type": "string"
                                                     }
                                                   },
                                                   "requests": {
                                                     "type": "object",
                                                     "additionalProperties": {
-                                                      "type": "object",
-                                                      "properties": {
-                                                        "": {
-                                                          "type": "string"
-                                                        }
-                                                      }
+                                                      "type": "string"
                                                     }
                                                   }
                                                 }
@@ -4611,12 +4347,7 @@
                                                             "type": "string"
                                                           },
                                                           "divisor": {
-                                                            "type": "object",
-                                                            "properties": {
-                                                              "": {
-                                                                "type": "string"
-                                                              }
-                                                            }
+                                                            "type": "string"
                                                           },
                                                           "resource": {
                                                             "type": "string"
@@ -4915,23 +4646,13 @@
                     "limits": {
                       "type": "object",
                       "additionalProperties": {
-                        "type": "object",
-                        "properties": {
-                          "": {
-                            "type": "string"
-                          }
-                        }
+                        "type": "string"
                       }
                     },
                     "requests": {
                       "type": "object",
                       "additionalProperties": {
-                        "type": "object",
-                        "properties": {
-                          "": {
-                            "type": "string"
-                          }
-                        }
+                        "type": "string"
                       }
                     }
                   }
@@ -4961,24 +4682,16 @@
                           }
                         },
                         "creationTimestamp": {
-                          "type": "object",
-                          "properties": {
-                            "": {
-                              "type": "object"
-                            }
-                          }
+                          "type": "string",
+                          "format": "date-time"
                         },
                         "deletionGracePeriodSeconds": {
                           "type": "integer",
                           "format": "int64"
                         },
                         "deletionTimestamp": {
-                          "type": "object",
-                          "properties": {
-                            "": {
-                              "type": "object"
-                            }
-                          }
+                          "type": "string",
+                          "format": "date-time"
                         },
                         "finalizers": {
                           "type": "array",
@@ -5023,12 +4736,8 @@
                                 "type": "string"
                               },
                               "time": {
-                                "type": "object",
-                                "properties": {
-                                  "": {
-                                    "type": "object"
-                                  }
-                                }
+                                "type": "string",
+                                "format": "date-time"
                               }
                             }
                           }
@@ -5119,23 +4828,13 @@
                             "limits": {
                               "type": "object",
                               "additionalProperties": {
-                                "type": "object",
-                                "properties": {
-                                  "": {
-                                    "type": "string"
-                                  }
-                                }
+                                "type": "string"
                               }
                             },
                             "requests": {
                               "type": "object",
                               "additionalProperties": {
-                                "type": "object",
-                                "properties": {
-                                  "": {
-                                    "type": "string"
-                                  }
-                                }
+                                "type": "string"
                               }
                             }
                           }
@@ -5194,23 +4893,13 @@
                         "allocatedResources": {
                           "type": "object",
                           "additionalProperties": {
-                            "type": "object",
-                            "properties": {
-                              "": {
-                                "type": "string"
-                              }
-                            }
+                            "type": "string"
                           }
                         },
                         "capacity": {
                           "type": "object",
                           "additionalProperties": {
-                            "type": "object",
-                            "properties": {
-                              "": {
-                                "type": "string"
-                              }
-                            }
+                            "type": "string"
                           }
                         },
                         "conditions": {
@@ -5219,20 +4908,12 @@
                             "type": "object",
                             "properties": {
                               "lastProbeTime": {
-                                "type": "object",
-                                "properties": {
-                                  "": {
-                                    "type": "object"
-                                  }
-                                }
+                                "type": "string",
+                                "format": "date-time"
                               },
                               "lastTransitionTime": {
-                                "type": "object",
-                                "properties": {
-                                  "": {
-                                    "type": "object"
-                                  }
-                                }
+                                "type": "string",
+                                "format": "date-time"
                               },
                               "message": {
                                 "type": "string"
@@ -5287,24 +4968,16 @@
                           }
                         },
                         "creationTimestamp": {
-                          "type": "object",
-                          "properties": {
-                            "": {
-                              "type": "object"
-                            }
-                          }
+                          "type": "string",
+                          "format": "date-time"
                         },
                         "deletionGracePeriodSeconds": {
                           "type": "integer",
                           "format": "int64"
                         },
                         "deletionTimestamp": {
-                          "type": "object",
-                          "properties": {
-                            "": {
-                              "type": "object"
-                            }
-                          }
+                          "type": "string",
+                          "format": "date-time"
                         },
                         "finalizers": {
                           "type": "array",
@@ -5349,12 +5022,8 @@
                                 "type": "string"
                               },
                               "time": {
-                                "type": "object",
-                                "properties": {
-                                  "": {
-                                    "type": "object"
-                                  }
-                                }
+                                "type": "string",
+                                "format": "date-time"
                               }
                             }
                           }
@@ -5944,12 +5613,7 @@
                                               "type": "string"
                                             },
                                             "divisor": {
-                                              "type": "object",
-                                              "properties": {
-                                                "": {
-                                                  "type": "string"
-                                                }
-                                              }
+                                              "type": "string"
                                             },
                                             "resource": {
                                               "type": "string"
@@ -6070,12 +5734,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           },
                                           "scheme": {
                                             "type": "string"
@@ -6089,12 +5749,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           }
                                         }
                                       }
@@ -6138,12 +5794,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           },
                                           "scheme": {
                                             "type": "string"
@@ -6157,12 +5809,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           }
                                         }
                                       }
@@ -6223,12 +5871,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           },
                                           "scheme": {
                                             "type": "string"
@@ -6242,12 +5886,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           }
                                         }
                                       }
@@ -6360,12 +6000,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           },
                                           "scheme": {
                                             "type": "string"
@@ -6379,12 +6015,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           }
                                         }
                                       }
@@ -6422,23 +6054,13 @@
                                   "limits": {
                                     "type": "object",
                                     "additionalProperties": {
-                                      "type": "object",
-                                      "properties": {
-                                        "": {
-                                          "type": "string"
-                                        }
-                                      }
+                                      "type": "string"
                                     }
                                   },
                                   "requests": {
                                     "type": "object",
                                     "additionalProperties": {
-                                      "type": "object",
-                                      "properties": {
-                                        "": {
-                                          "type": "string"
-                                        }
-                                      }
+                                      "type": "string"
                                     }
                                   }
                                 }
@@ -6586,12 +6208,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           },
                                           "scheme": {
                                             "type": "string"
@@ -6605,12 +6223,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           }
                                         }
                                       }
@@ -6811,12 +6425,7 @@
                                                   "type": "string"
                                                 },
                                                 "divisor": {
-                                                  "type": "object",
-                                                  "properties": {
-                                                    "": {
-                                                      "type": "string"
-                                                    }
-                                                  }
+                                                  "type": "string"
                                                 },
                                                 "resource": {
                                                   "type": "string"
@@ -6937,12 +6546,8 @@
                                                 "type": "string"
                                               },
                                               "port": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "": {
-                                                    "type": "string"
-                                                  }
-                                                }
+                                                "type": "string",
+                                                "format": "int-or-string"
                                               },
                                               "scheme": {
                                                 "type": "string"
@@ -6956,12 +6561,8 @@
                                                 "type": "string"
                                               },
                                               "port": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "": {
-                                                    "type": "string"
-                                                  }
-                                                }
+                                                "type": "string",
+                                                "format": "int-or-string"
                                               }
                                             }
                                           }
@@ -7005,12 +6606,8 @@
                                                 "type": "string"
                                               },
                                               "port": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "": {
-                                                    "type": "string"
-                                                  }
-                                                }
+                                                "type": "string",
+                                                "format": "int-or-string"
                                               },
                                               "scheme": {
                                                 "type": "string"
@@ -7024,12 +6621,8 @@
                                                 "type": "string"
                                               },
                                               "port": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "": {
-                                                    "type": "string"
-                                                  }
-                                                }
+                                                "type": "string",
+                                                "format": "int-or-string"
                                               }
                                             }
                                           }
@@ -7090,12 +6683,8 @@
                                                 "type": "string"
                                               },
                                               "port": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "": {
-                                                    "type": "string"
-                                                  }
-                                                }
+                                                "type": "string",
+                                                "format": "int-or-string"
                                               },
                                               "scheme": {
                                                 "type": "string"
@@ -7109,12 +6698,8 @@
                                                 "type": "string"
                                               },
                                               "port": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "": {
-                                                    "type": "string"
-                                                  }
-                                                }
+                                                "type": "string",
+                                                "format": "int-or-string"
                                               }
                                             }
                                           }
@@ -7227,12 +6812,8 @@
                                                 "type": "string"
                                               },
                                               "port": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "": {
-                                                    "type": "string"
-                                                  }
-                                                }
+                                                "type": "string",
+                                                "format": "int-or-string"
                                               },
                                               "scheme": {
                                                 "type": "string"
@@ -7246,12 +6827,8 @@
                                                 "type": "string"
                                               },
                                               "port": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "": {
-                                                    "type": "string"
-                                                  }
-                                                }
+                                                "type": "string",
+                                                "format": "int-or-string"
                                               }
                                             }
                                           }
@@ -7289,23 +6866,13 @@
                                       "limits": {
                                         "type": "object",
                                         "additionalProperties": {
-                                          "type": "object",
-                                          "properties": {
-                                            "": {
-                                              "type": "string"
-                                            }
-                                          }
+                                          "type": "string"
                                         }
                                       },
                                       "requests": {
                                         "type": "object",
                                         "additionalProperties": {
-                                          "type": "object",
-                                          "properties": {
-                                            "": {
-                                              "type": "string"
-                                            }
-                                          }
+                                          "type": "string"
                                         }
                                       }
                                     }
@@ -7453,12 +7020,8 @@
                                                 "type": "string"
                                               },
                                               "port": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "": {
-                                                    "type": "string"
-                                                  }
-                                                }
+                                                "type": "string",
+                                                "format": "int-or-string"
                                               },
                                               "scheme": {
                                                 "type": "string"
@@ -7472,12 +7035,8 @@
                                                 "type": "string"
                                               },
                                               "port": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "": {
-                                                    "type": "string"
-                                                  }
-                                                }
+                                                "type": "string",
+                                                "format": "int-or-string"
                                               }
                                             }
                                           }
@@ -7686,12 +7245,7 @@
                                               "type": "string"
                                             },
                                             "divisor": {
-                                              "type": "object",
-                                              "properties": {
-                                                "": {
-                                                  "type": "string"
-                                                }
-                                              }
+                                              "type": "string"
                                             },
                                             "resource": {
                                               "type": "string"
@@ -7812,12 +7366,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           },
                                           "scheme": {
                                             "type": "string"
@@ -7831,12 +7381,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           }
                                         }
                                       }
@@ -7880,12 +7426,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           },
                                           "scheme": {
                                             "type": "string"
@@ -7899,12 +7441,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           }
                                         }
                                       }
@@ -7965,12 +7503,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           },
                                           "scheme": {
                                             "type": "string"
@@ -7984,12 +7518,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           }
                                         }
                                       }
@@ -8102,12 +7632,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           },
                                           "scheme": {
                                             "type": "string"
@@ -8121,12 +7647,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           }
                                         }
                                       }
@@ -8164,23 +7686,13 @@
                                   "limits": {
                                     "type": "object",
                                     "additionalProperties": {
-                                      "type": "object",
-                                      "properties": {
-                                        "": {
-                                          "type": "string"
-                                        }
-                                      }
+                                      "type": "string"
                                     }
                                   },
                                   "requests": {
                                     "type": "object",
                                     "additionalProperties": {
-                                      "type": "object",
-                                      "properties": {
-                                        "": {
-                                          "type": "string"
-                                        }
-                                      }
+                                      "type": "string"
                                     }
                                   }
                                 }
@@ -8328,12 +7840,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           },
                                           "scheme": {
                                             "type": "string"
@@ -8347,12 +7855,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           }
                                         }
                                       }
@@ -8465,12 +7969,7 @@
                         "overhead": {
                           "type": "object",
                           "additionalProperties": {
-                            "type": "object",
-                            "properties": {
-                              "": {
-                                "type": "string"
-                              }
-                            }
+                            "type": "string"
                           }
                         },
                         "preemptionPolicy": {
@@ -8919,12 +8418,7 @@
                                                   "type": "string"
                                                 },
                                                 "divisor": {
-                                                  "type": "object",
-                                                  "properties": {
-                                                    "": {
-                                                      "type": "string"
-                                                    }
-                                                  }
+                                                  "type": "string"
                                                 },
                                                 "resource": {
                                                   "type": "string"
@@ -8943,12 +8437,7 @@
                                         "type": "string"
                                       },
                                       "sizeLimit": {
-                                        "type": "object",
-                                        "properties": {
-                                          "": {
-                                            "type": "string"
-                                          }
-                                        }
+                                        "type": "string"
                                       }
                                     }
                                   },
@@ -8968,24 +8457,16 @@
                                                 }
                                               },
                                               "creationTimestamp": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "": {
-                                                    "type": "object"
-                                                  }
-                                                }
+                                                "type": "string",
+                                                "format": "date-time"
                                               },
                                               "deletionGracePeriodSeconds": {
                                                 "type": "integer",
                                                 "format": "int64"
                                               },
                                               "deletionTimestamp": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "": {
-                                                    "type": "object"
-                                                  }
-                                                }
+                                                "type": "string",
+                                                "format": "date-time"
                                               },
                                               "finalizers": {
                                                 "type": "array",
@@ -9030,12 +8511,8 @@
                                                       "type": "string"
                                                     },
                                                     "time": {
-                                                      "type": "object",
-                                                      "properties": {
-                                                        "": {
-                                                          "type": "object"
-                                                        }
-                                                      }
+                                                      "type": "string",
+                                                      "format": "date-time"
                                                     }
                                                   }
                                                 }
@@ -9126,23 +8603,13 @@
                                                   "limits": {
                                                     "type": "object",
                                                     "additionalProperties": {
-                                                      "type": "object",
-                                                      "properties": {
-                                                        "": {
-                                                          "type": "string"
-                                                        }
-                                                      }
+                                                      "type": "string"
                                                     }
                                                   },
                                                   "requests": {
                                                     "type": "object",
                                                     "additionalProperties": {
-                                                      "type": "object",
-                                                      "properties": {
-                                                        "": {
-                                                          "type": "string"
-                                                        }
-                                                      }
+                                                      "type": "string"
                                                     }
                                                   }
                                                 }
@@ -9492,12 +8959,7 @@
                                                             "type": "string"
                                                           },
                                                           "divisor": {
-                                                            "type": "object",
-                                                            "properties": {
-                                                              "": {
-                                                                "type": "string"
-                                                              }
-                                                            }
+                                                            "type": "string"
                                                           },
                                                           "resource": {
                                                             "type": "string"
@@ -9796,23 +9258,13 @@
                     "limits": {
                       "type": "object",
                       "additionalProperties": {
-                        "type": "object",
-                        "properties": {
-                          "": {
-                            "type": "string"
-                          }
-                        }
+                        "type": "string"
                       }
                     },
                     "requests": {
                       "type": "object",
                       "additionalProperties": {
-                        "type": "object",
-                        "properties": {
-                          "": {
-                            "type": "string"
-                          }
-                        }
+                        "type": "string"
                       }
                     }
                   }
@@ -9842,24 +9294,16 @@
                           }
                         },
                         "creationTimestamp": {
-                          "type": "object",
-                          "properties": {
-                            "": {
-                              "type": "object"
-                            }
-                          }
+                          "type": "string",
+                          "format": "date-time"
                         },
                         "deletionGracePeriodSeconds": {
                           "type": "integer",
                           "format": "int64"
                         },
                         "deletionTimestamp": {
-                          "type": "object",
-                          "properties": {
-                            "": {
-                              "type": "object"
-                            }
-                          }
+                          "type": "string",
+                          "format": "date-time"
                         },
                         "finalizers": {
                           "type": "array",
@@ -9904,12 +9348,8 @@
                                 "type": "string"
                               },
                               "time": {
-                                "type": "object",
-                                "properties": {
-                                  "": {
-                                    "type": "object"
-                                  }
-                                }
+                                "type": "string",
+                                "format": "date-time"
                               }
                             }
                           }
@@ -10000,23 +9440,13 @@
                             "limits": {
                               "type": "object",
                               "additionalProperties": {
-                                "type": "object",
-                                "properties": {
-                                  "": {
-                                    "type": "string"
-                                  }
-                                }
+                                "type": "string"
                               }
                             },
                             "requests": {
                               "type": "object",
                               "additionalProperties": {
-                                "type": "object",
-                                "properties": {
-                                  "": {
-                                    "type": "string"
-                                  }
-                                }
+                                "type": "string"
                               }
                             }
                           }
@@ -10075,23 +9505,13 @@
                         "allocatedResources": {
                           "type": "object",
                           "additionalProperties": {
-                            "type": "object",
-                            "properties": {
-                              "": {
-                                "type": "string"
-                              }
-                            }
+                            "type": "string"
                           }
                         },
                         "capacity": {
                           "type": "object",
                           "additionalProperties": {
-                            "type": "object",
-                            "properties": {
-                              "": {
-                                "type": "string"
-                              }
-                            }
+                            "type": "string"
                           }
                         },
                         "conditions": {
@@ -10100,20 +9520,12 @@
                             "type": "object",
                             "properties": {
                               "lastProbeTime": {
-                                "type": "object",
-                                "properties": {
-                                  "": {
-                                    "type": "object"
-                                  }
-                                }
+                                "type": "string",
+                                "format": "date-time"
                               },
                               "lastTransitionTime": {
-                                "type": "object",
-                                "properties": {
-                                  "": {
-                                    "type": "object"
-                                  }
-                                }
+                                "type": "string",
+                                "format": "date-time"
                               },
                               "message": {
                                 "type": "string"
@@ -10168,24 +9580,16 @@
                           }
                         },
                         "creationTimestamp": {
-                          "type": "object",
-                          "properties": {
-                            "": {
-                              "type": "object"
-                            }
-                          }
+                          "type": "string",
+                          "format": "date-time"
                         },
                         "deletionGracePeriodSeconds": {
                           "type": "integer",
                           "format": "int64"
                         },
                         "deletionTimestamp": {
-                          "type": "object",
-                          "properties": {
-                            "": {
-                              "type": "object"
-                            }
-                          }
+                          "type": "string",
+                          "format": "date-time"
                         },
                         "finalizers": {
                           "type": "array",
@@ -10230,12 +9634,8 @@
                                 "type": "string"
                               },
                               "time": {
-                                "type": "object",
-                                "properties": {
-                                  "": {
-                                    "type": "object"
-                                  }
-                                }
+                                "type": "string",
+                                "format": "date-time"
                               }
                             }
                           }
@@ -10825,12 +10225,7 @@
                                               "type": "string"
                                             },
                                             "divisor": {
-                                              "type": "object",
-                                              "properties": {
-                                                "": {
-                                                  "type": "string"
-                                                }
-                                              }
+                                              "type": "string"
                                             },
                                             "resource": {
                                               "type": "string"
@@ -10951,12 +10346,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           },
                                           "scheme": {
                                             "type": "string"
@@ -10970,12 +10361,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           }
                                         }
                                       }
@@ -11019,12 +10406,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           },
                                           "scheme": {
                                             "type": "string"
@@ -11038,12 +10421,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           }
                                         }
                                       }
@@ -11104,12 +10483,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           },
                                           "scheme": {
                                             "type": "string"
@@ -11123,12 +10498,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           }
                                         }
                                       }
@@ -11241,12 +10612,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           },
                                           "scheme": {
                                             "type": "string"
@@ -11260,12 +10627,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           }
                                         }
                                       }
@@ -11303,23 +10666,13 @@
                                   "limits": {
                                     "type": "object",
                                     "additionalProperties": {
-                                      "type": "object",
-                                      "properties": {
-                                        "": {
-                                          "type": "string"
-                                        }
-                                      }
+                                      "type": "string"
                                     }
                                   },
                                   "requests": {
                                     "type": "object",
                                     "additionalProperties": {
-                                      "type": "object",
-                                      "properties": {
-                                        "": {
-                                          "type": "string"
-                                        }
-                                      }
+                                      "type": "string"
                                     }
                                   }
                                 }
@@ -11467,12 +10820,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           },
                                           "scheme": {
                                             "type": "string"
@@ -11486,12 +10835,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           }
                                         }
                                       }
@@ -11692,12 +11037,7 @@
                                                   "type": "string"
                                                 },
                                                 "divisor": {
-                                                  "type": "object",
-                                                  "properties": {
-                                                    "": {
-                                                      "type": "string"
-                                                    }
-                                                  }
+                                                  "type": "string"
                                                 },
                                                 "resource": {
                                                   "type": "string"
@@ -11818,12 +11158,8 @@
                                                 "type": "string"
                                               },
                                               "port": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "": {
-                                                    "type": "string"
-                                                  }
-                                                }
+                                                "type": "string",
+                                                "format": "int-or-string"
                                               },
                                               "scheme": {
                                                 "type": "string"
@@ -11837,12 +11173,8 @@
                                                 "type": "string"
                                               },
                                               "port": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "": {
-                                                    "type": "string"
-                                                  }
-                                                }
+                                                "type": "string",
+                                                "format": "int-or-string"
                                               }
                                             }
                                           }
@@ -11886,12 +11218,8 @@
                                                 "type": "string"
                                               },
                                               "port": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "": {
-                                                    "type": "string"
-                                                  }
-                                                }
+                                                "type": "string",
+                                                "format": "int-or-string"
                                               },
                                               "scheme": {
                                                 "type": "string"
@@ -11905,12 +11233,8 @@
                                                 "type": "string"
                                               },
                                               "port": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "": {
-                                                    "type": "string"
-                                                  }
-                                                }
+                                                "type": "string",
+                                                "format": "int-or-string"
                                               }
                                             }
                                           }
@@ -11971,12 +11295,8 @@
                                                 "type": "string"
                                               },
                                               "port": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "": {
-                                                    "type": "string"
-                                                  }
-                                                }
+                                                "type": "string",
+                                                "format": "int-or-string"
                                               },
                                               "scheme": {
                                                 "type": "string"
@@ -11990,12 +11310,8 @@
                                                 "type": "string"
                                               },
                                               "port": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "": {
-                                                    "type": "string"
-                                                  }
-                                                }
+                                                "type": "string",
+                                                "format": "int-or-string"
                                               }
                                             }
                                           }
@@ -12108,12 +11424,8 @@
                                                 "type": "string"
                                               },
                                               "port": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "": {
-                                                    "type": "string"
-                                                  }
-                                                }
+                                                "type": "string",
+                                                "format": "int-or-string"
                                               },
                                               "scheme": {
                                                 "type": "string"
@@ -12127,12 +11439,8 @@
                                                 "type": "string"
                                               },
                                               "port": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "": {
-                                                    "type": "string"
-                                                  }
-                                                }
+                                                "type": "string",
+                                                "format": "int-or-string"
                                               }
                                             }
                                           }
@@ -12170,23 +11478,13 @@
                                       "limits": {
                                         "type": "object",
                                         "additionalProperties": {
-                                          "type": "object",
-                                          "properties": {
-                                            "": {
-                                              "type": "string"
-                                            }
-                                          }
+                                          "type": "string"
                                         }
                                       },
                                       "requests": {
                                         "type": "object",
                                         "additionalProperties": {
-                                          "type": "object",
-                                          "properties": {
-                                            "": {
-                                              "type": "string"
-                                            }
-                                          }
+                                          "type": "string"
                                         }
                                       }
                                     }
@@ -12334,12 +11632,8 @@
                                                 "type": "string"
                                               },
                                               "port": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "": {
-                                                    "type": "string"
-                                                  }
-                                                }
+                                                "type": "string",
+                                                "format": "int-or-string"
                                               },
                                               "scheme": {
                                                 "type": "string"
@@ -12353,12 +11647,8 @@
                                                 "type": "string"
                                               },
                                               "port": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "": {
-                                                    "type": "string"
-                                                  }
-                                                }
+                                                "type": "string",
+                                                "format": "int-or-string"
                                               }
                                             }
                                           }
@@ -12567,12 +11857,7 @@
                                               "type": "string"
                                             },
                                             "divisor": {
-                                              "type": "object",
-                                              "properties": {
-                                                "": {
-                                                  "type": "string"
-                                                }
-                                              }
+                                              "type": "string"
                                             },
                                             "resource": {
                                               "type": "string"
@@ -12693,12 +11978,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           },
                                           "scheme": {
                                             "type": "string"
@@ -12712,12 +11993,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           }
                                         }
                                       }
@@ -12761,12 +12038,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           },
                                           "scheme": {
                                             "type": "string"
@@ -12780,12 +12053,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           }
                                         }
                                       }
@@ -12846,12 +12115,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           },
                                           "scheme": {
                                             "type": "string"
@@ -12865,12 +12130,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           }
                                         }
                                       }
@@ -12983,12 +12244,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           },
                                           "scheme": {
                                             "type": "string"
@@ -13002,12 +12259,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           }
                                         }
                                       }
@@ -13045,23 +12298,13 @@
                                   "limits": {
                                     "type": "object",
                                     "additionalProperties": {
-                                      "type": "object",
-                                      "properties": {
-                                        "": {
-                                          "type": "string"
-                                        }
-                                      }
+                                      "type": "string"
                                     }
                                   },
                                   "requests": {
                                     "type": "object",
                                     "additionalProperties": {
-                                      "type": "object",
-                                      "properties": {
-                                        "": {
-                                          "type": "string"
-                                        }
-                                      }
+                                      "type": "string"
                                     }
                                   }
                                 }
@@ -13209,12 +12452,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           },
                                           "scheme": {
                                             "type": "string"
@@ -13228,12 +12467,8 @@
                                             "type": "string"
                                           },
                                           "port": {
-                                            "type": "object",
-                                            "properties": {
-                                              "": {
-                                                "type": "string"
-                                              }
-                                            }
+                                            "type": "string",
+                                            "format": "int-or-string"
                                           }
                                         }
                                       }
@@ -13346,12 +12581,7 @@
                         "overhead": {
                           "type": "object",
                           "additionalProperties": {
-                            "type": "object",
-                            "properties": {
-                              "": {
-                                "type": "string"
-                              }
-                            }
+                            "type": "string"
                           }
                         },
                         "preemptionPolicy": {
@@ -13800,12 +13030,7 @@
                                                   "type": "string"
                                                 },
                                                 "divisor": {
-                                                  "type": "object",
-                                                  "properties": {
-                                                    "": {
-                                                      "type": "string"
-                                                    }
-                                                  }
+                                                  "type": "string"
                                                 },
                                                 "resource": {
                                                   "type": "string"
@@ -13824,12 +13049,7 @@
                                         "type": "string"
                                       },
                                       "sizeLimit": {
-                                        "type": "object",
-                                        "properties": {
-                                          "": {
-                                            "type": "string"
-                                          }
-                                        }
+                                        "type": "string"
                                       }
                                     }
                                   },
@@ -13849,24 +13069,16 @@
                                                 }
                                               },
                                               "creationTimestamp": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "": {
-                                                    "type": "object"
-                                                  }
-                                                }
+                                                "type": "string",
+                                                "format": "date-time"
                                               },
                                               "deletionGracePeriodSeconds": {
                                                 "type": "integer",
                                                 "format": "int64"
                                               },
                                               "deletionTimestamp": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "": {
-                                                    "type": "object"
-                                                  }
-                                                }
+                                                "type": "string",
+                                                "format": "date-time"
                                               },
                                               "finalizers": {
                                                 "type": "array",
@@ -13911,12 +13123,8 @@
                                                       "type": "string"
                                                     },
                                                     "time": {
-                                                      "type": "object",
-                                                      "properties": {
-                                                        "": {
-                                                          "type": "object"
-                                                        }
-                                                      }
+                                                      "type": "string",
+                                                      "format": "date-time"
                                                     }
                                                   }
                                                 }
@@ -14007,23 +13215,13 @@
                                                   "limits": {
                                                     "type": "object",
                                                     "additionalProperties": {
-                                                      "type": "object",
-                                                      "properties": {
-                                                        "": {
-                                                          "type": "string"
-                                                        }
-                                                      }
+                                                      "type": "string"
                                                     }
                                                   },
                                                   "requests": {
                                                     "type": "object",
                                                     "additionalProperties": {
-                                                      "type": "object",
-                                                      "properties": {
-                                                        "": {
-                                                          "type": "string"
-                                                        }
-                                                      }
+                                                      "type": "string"
                                                     }
                                                   }
                                                 }
@@ -14373,12 +13571,7 @@
                                                             "type": "string"
                                                           },
                                                           "divisor": {
-                                                            "type": "object",
-                                                            "properties": {
-                                                              "": {
-                                                                "type": "string"
-                                                              }
-                                                            }
+                                                            "type": "string"
                                                           },
                                                           "resource": {
                                                             "type": "string"

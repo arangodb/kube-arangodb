@@ -82,13 +82,7 @@
                 },
                 "lifetime": {
                   "description": "Lifetime is the time after which the backup will be deleted. Format: \"1.5h\" or \"2h45m\".",
-                  "type": "object",
-                  "properties": {
-                    "": {
-                      "type": "integer",
-                      "format": "int64"
-                    }
-                  }
+                  "type": "string"
                 },
                 "options": {
                   "type": "object",
@@ -227,13 +221,7 @@
                 },
                 "lifetime": {
                   "description": "Lifetime is the time after which the backup will be deleted. Format: \"1.5h\" or \"2h45m\".",
-                  "type": "object",
-                  "properties": {
-                    "": {
-                      "type": "integer",
-                      "format": "int64"
-                    }
-                  }
+                  "type": "string"
                 },
                 "options": {
                   "type": "object",
