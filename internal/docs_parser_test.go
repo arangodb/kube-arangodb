@@ -33,6 +33,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	openapi "k8s.io/kube-openapi/pkg/common"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
@@ -248,21 +249,8 @@ func extractNotTags(n *ast.Field) ([]string, bool) {
 
 // isSimpleType returns the OpenAPI-compatible type name, type format and boolean indicating if this is simple type or not
 func isSimpleType(obj reflect.Type) (string, string, bool) {
-	switch obj.Kind() {
-	case reflect.String:
-		return "string", "", true
-	case reflect.Bool:
-		return "boolean", "", true
-	case reflect.Int, reflect.Int32,
-		reflect.Uint, reflect.Uint8, reflect.Uint16:
-		return "integer", "int32", true
-	case reflect.Int64, reflect.Uint64:
-		return "integer", "int64", true
-	case reflect.Float32:
-		return "number", "float", true
-	}
-
-	return "", "", false
+	typ, frmt := openapi.OpenAPITypeFormat(obj.Kind().String())
+	return typ, frmt, typ != "" || frmt != ""
 }
 
 func extractTag(tag string) (string, bool) {
