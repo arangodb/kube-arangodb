@@ -84,14 +84,15 @@ func (b *schemaBuilder) openAPIDefToSchemaPros(t *testing.T, _ *openapi.OpenAPID
 }
 
 func (b *schemaBuilder) TypeToSchema(t *testing.T, obj reflect.Type, path string) *apiextensions.JSONSchemaProps {
-	// first check if type already implements a method to get OpenAPI schema:
-	schema := b.tryGetKubeOpenAPIDefinitions(t, obj)
-	if schema != nil {
-		return schema
-	}
-
-	// fallback to our impl:
+	var schema *apiextensions.JSONSchemaProps
 	t.Run(obj.Name(), func(t *testing.T) {
+		// first check if type already implements a method to get OpenAPI schema:
+		schema = b.tryGetKubeOpenAPIDefinitions(t, obj)
+		if schema != nil {
+			return
+		}
+
+		// fallback to our impl:
 		switch obj.Kind() {
 		case reflect.Pointer:
 			schema = b.TypeToSchema(t, obj.Elem(), path)
