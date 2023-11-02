@@ -77,8 +77,8 @@ func (i *inventory) CollectMetrics(in metrics.PushMetric) {
 
 			deployment.CollectMetrics(in)
 
-			if state := deployment.acs.CurrentClusterCache(); state != nil {
-				t := state.GetThrottles()
+			if cacheInspector := deployment.acs.CurrentClusterCache(); cacheInspector != nil {
+				t := cacheInspector.GetThrottles()
 
 				for _, c := range definitions.AllComponents() {
 					in.Push(i.operatorStateRefreshMetric.Gauge(float64(t.Get(c).Count()), deployment.GetNamespace(), deployment.GetName(), string(c)))
@@ -93,16 +93,14 @@ func (i *inventory) CollectMetrics(in metrics.PushMetric) {
 			}
 
 			if spec.Mode.Get().HasAgents() {
-				in.Push(i.deploymentAgencyStateMetric.Gauge(1, deployment.GetNamespace(), deployment.GetName()))
-
 				if spec.Mode.Get() == api.DeploymentModeCluster {
-					applied := deployment.WithAgencyCache(func(state state.State) {
-						for db, collections := range state.Current.Collections {
+					applied := deployment.WithAgencyCache(func(st state.State) {
+						for db, collections := range st.Current.Collections {
 							dbName := db
 							if features.SensitiveInformationProtection().Enabled() {
 								dbName = "UNKNOWN"
 
-								if v, ok := state.Plan.Databases[db]; ok && v.ID != "" {
+								if v, ok := st.Plan.Databases[db]; ok && v.ID != "" {
 									dbName = v.ID
 								}
 							}
@@ -114,9 +112,9 @@ func (i *inventory) CollectMetrics(in metrics.PushMetric) {
 										if features.SensitiveInformationProtection().Enabled() {
 											collectionName = collection
 										} else {
-											if _, ok := state.Plan.Collections[db]; ok {
-												if _, ok := state.Plan.Collections[db][collection]; ok {
-													collectionName = state.Plan.Collections[db][collection].GetName(collectionName)
+											if _, ok := st.Plan.Collections[db]; ok {
+												if _, ok := st.Plan.Collections[db][collection]; ok {
+													collectionName = st.Plan.Collections[db][collection].GetName(collectionName)
 												}
 											}
 										}
@@ -142,10 +140,12 @@ func (i *inventory) CollectMetrics(in metrics.PushMetric) {
 
 					if !applied {
 						in.Push(i.deploymentAgencyStateMetric.Gauge(0, deployment.GetNamespace(), deployment.GetName()))
+						continue
 					}
 
 				}
 			}
+			in.Push(i.deploymentAgencyStateMetric.Gauge(1, deployment.GetNamespace(), deployment.GetName()))
 		}
 	}
 }
