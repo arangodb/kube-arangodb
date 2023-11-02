@@ -193,10 +193,18 @@ func (b *schemaBuilder) StructToSchema(t *testing.T, structObj reflect.Type, pat
 		fullFieldName := fmt.Sprintf("%s.%s", structObj.String(), f.Name)
 		def := b.lookupDefinition(t, fullFieldName, p)
 		if def != nil {
-			def.ApplyToSchema(s, schema)
+			def.ApplyToSchema(s)
 		}
 
-		schema.Properties[n] = *s
+		if inline {
+			// merge into parent
+			for k, v := range s.Properties {
+				schema.Properties[k] = v
+			}
+		} else {
+			require.NotEmpty(t, n, fullFieldName)
+			schema.Properties[n] = *s
+		}
 	}
 	return schema
 }

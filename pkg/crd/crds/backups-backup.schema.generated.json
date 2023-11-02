@@ -39,52 +39,25 @@
                   "description": "Name of the ArangoDeployment Custom Resource within same namespace as ArangoBackup Custom Resource.",
                   "type": "string"
                 }
-              },
-              "x-kubernetes-validations": [
-                {
-                  "rule": "self.name == oldSelf.name",
-                  "message": "field 'name' is immutable"
-                }
-              ]
+              }
             },
             "download": {
               "description": "Download Backup download settings",
               "type": "object",
               "properties": {
-                "": {
-                  "type": "object",
-                  "properties": {
-                    "credentialsSecretName": {
-                      "description": "CredentialsSecretName is the name of the secret used while accessing repository",
-                      "type": "string"
-                    },
-                    "repositoryURL": {
-                      "description": "RepositoryURL is the URL path for file storage\nSame repositoryURL needs to be defined in `credentialsSecretName` if protocol is other than local.\nFormat: `\u003cprotocol\u003e:/\u003cpath\u003e`",
-                      "type": "string"
-                    }
-                  },
-                  "x-kubernetes-validations": [
-                    {
-                      "rule": "self.repositoryURL == oldSelf.repositoryURL",
-                      "message": "field 'repositoryURL' is immutable"
-                    },
-                    {
-                      "rule": "self.credentialsSecretName == oldSelf.credentialsSecretName",
-                      "message": "field 'credentialsSecretName' is immutable"
-                    }
-                  ]
+                "credentialsSecretName": {
+                  "description": "CredentialsSecretName is the name of the secret used while accessing repository",
+                  "type": "string"
                 },
                 "id": {
                   "description": "ID of the ArangoBackup to be downloaded",
                   "type": "string"
+                },
+                "repositoryURL": {
+                  "description": "RepositoryURL is the URL path for file storage\nSame repositoryURL needs to be defined in `credentialsSecretName` if protocol is other than local.\nFormat: `\u003cprotocol\u003e:/\u003cpath\u003e`",
+                  "type": "string"
                 }
-              },
-              "x-kubernetes-validations": [
-                {
-                  "rule": "self.id == oldSelf.id",
-                  "message": "field 'id' is immutable"
-                }
-              ]
+              }
             },
             "lifetime": {
               "description": "Lifetime is the time after which the backup will be deleted. Format: \"1.5h\" or \"2h45m\".",
@@ -103,17 +76,7 @@
                   "type": "number",
                   "format": "float"
                 }
-              },
-              "x-kubernetes-validations": [
-                {
-                  "rule": "self.timeout == oldSelf.timeout",
-                  "message": "field 'timeout' is immutable"
-                },
-                {
-                  "rule": "self.allowInconsistent == oldSelf.allowInconsistent",
-                  "message": "field 'allowInconsistent' is immutable"
-                }
-              ]
+              }
             },
             "policyName": {
               "description": "PolicyName name of the ArangoBackupPolicy which created this Custom Resource",
@@ -131,25 +94,9 @@
                   "description": "RepositoryURL is the URL path for file storage\nSame repositoryURL needs to be defined in `credentialsSecretName` if protocol is other than local.\nFormat: `\u003cprotocol\u003e:/\u003cpath\u003e`",
                   "type": "string"
                 }
-              },
-              "x-kubernetes-validations": [
-                {
-                  "rule": "self.repositoryURL == oldSelf.repositoryURL",
-                  "message": "field 'repositoryURL' is immutable"
-                },
-                {
-                  "rule": "self.credentialsSecretName == oldSelf.credentialsSecretName",
-                  "message": "field 'credentialsSecretName' is immutable"
-                }
-              ]
+              }
             }
-          },
-          "x-kubernetes-validations": [
-            {
-              "rule": "self.policyName == oldSelf.policyName",
-              "message": "field 'policyName' is immutable"
-            }
-          ]
+          }
         }
       }
     }
@@ -194,52 +141,25 @@
                   "description": "Name of the ArangoDeployment Custom Resource within same namespace as ArangoBackup Custom Resource.",
                   "type": "string"
                 }
-              },
-              "x-kubernetes-validations": [
-                {
-                  "rule": "self.name == oldSelf.name",
-                  "message": "field 'name' is immutable"
-                }
-              ]
+              }
             },
             "download": {
               "description": "Download Backup download settings",
               "type": "object",
               "properties": {
-                "": {
-                  "type": "object",
-                  "properties": {
-                    "credentialsSecretName": {
-                      "description": "CredentialsSecretName is the name of the secret used while accessing repository",
-                      "type": "string"
-                    },
-                    "repositoryURL": {
-                      "description": "RepositoryURL is the URL path for file storage\nSame repositoryURL needs to be defined in `credentialsSecretName` if protocol is other than local.\nFormat: `\u003cprotocol\u003e:/\u003cpath\u003e`",
-                      "type": "string"
-                    }
-                  },
-                  "x-kubernetes-validations": [
-                    {
-                      "rule": "self.repositoryURL == oldSelf.repositoryURL",
-                      "message": "field 'repositoryURL' is immutable"
-                    },
-                    {
-                      "rule": "self.credentialsSecretName == oldSelf.credentialsSecretName",
-                      "message": "field 'credentialsSecretName' is immutable"
-                    }
-                  ]
+                "credentialsSecretName": {
+                  "description": "CredentialsSecretName is the name of the secret used while accessing repository",
+                  "type": "string"
                 },
                 "id": {
                   "description": "ID of the ArangoBackup to be downloaded",
                   "type": "string"
+                },
+                "repositoryURL": {
+                  "description": "RepositoryURL is the URL path for file storage\nSame repositoryURL needs to be defined in `credentialsSecretName` if protocol is other than local.\nFormat: `\u003cprotocol\u003e:/\u003cpath\u003e`",
+                  "type": "string"
                 }
-              },
-              "x-kubernetes-validations": [
-                {
-                  "rule": "self.id == oldSelf.id",
-                  "message": "field 'id' is immutable"
-                }
-              ]
+              }
             },
             "lifetime": {
               "description": "Lifetime is the time after which the backup will be deleted. Format: \"1.5h\" or \"2h45m\".",
@@ -258,17 +178,7 @@
                   "type": "number",
                   "format": "float"
                 }
-              },
-              "x-kubernetes-validations": [
-                {
-                  "rule": "self.timeout == oldSelf.timeout",
-                  "message": "field 'timeout' is immutable"
-                },
-                {
-                  "rule": "self.allowInconsistent == oldSelf.allowInconsistent",
-                  "message": "field 'allowInconsistent' is immutable"
-                }
-              ]
+              }
             },
             "policyName": {
               "description": "PolicyName name of the ArangoBackupPolicy which created this Custom Resource",
@@ -286,25 +196,9 @@
                   "description": "RepositoryURL is the URL path for file storage\nSame repositoryURL needs to be defined in `credentialsSecretName` if protocol is other than local.\nFormat: `\u003cprotocol\u003e:/\u003cpath\u003e`",
                   "type": "string"
                 }
-              },
-              "x-kubernetes-validations": [
-                {
-                  "rule": "self.repositoryURL == oldSelf.repositoryURL",
-                  "message": "field 'repositoryURL' is immutable"
-                },
-                {
-                  "rule": "self.credentialsSecretName == oldSelf.credentialsSecretName",
-                  "message": "field 'credentialsSecretName' is immutable"
-                }
-              ]
+              }
             }
-          },
-          "x-kubernetes-validations": [
-            {
-              "rule": "self.policyName == oldSelf.policyName",
-              "message": "field 'policyName' is immutable"
-            }
-          ]
+          }
         }
       }
     }

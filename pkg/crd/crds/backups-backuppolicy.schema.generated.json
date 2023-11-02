@@ -96,17 +96,7 @@
                       "type": "number",
                       "format": "float"
                     }
-                  },
-                  "x-kubernetes-validations": [
-                    {
-                      "rule": "self.timeout == oldSelf.timeout",
-                      "message": "field 'timeout' is immutable"
-                    },
-                    {
-                      "rule": "self.allowInconsistent == oldSelf.allowInconsistent",
-                      "message": "field 'allowInconsistent' is immutable"
-                    }
-                  ]
+                  }
                 },
                 "upload": {
                   "type": "object",
@@ -119,17 +109,7 @@
                       "description": "RepositoryURL is the URL path for file storage\nSame repositoryURL needs to be defined in `credentialsSecretName` if protocol is other than local.\nFormat: `\u003cprotocol\u003e:/\u003cpath\u003e`",
                       "type": "string"
                     }
-                  },
-                  "x-kubernetes-validations": [
-                    {
-                      "rule": "self.repositoryURL == oldSelf.repositoryURL",
-                      "message": "field 'repositoryURL' is immutable"
-                    },
-                    {
-                      "rule": "self.credentialsSecretName == oldSelf.credentialsSecretName",
-                      "message": "field 'credentialsSecretName' is immutable"
-                    }
-                  ]
+                  }
                 }
               }
             }
@@ -235,17 +215,7 @@
                       "type": "number",
                       "format": "float"
                     }
-                  },
-                  "x-kubernetes-validations": [
-                    {
-                      "rule": "self.timeout == oldSelf.timeout",
-                      "message": "field 'timeout' is immutable"
-                    },
-                    {
-                      "rule": "self.allowInconsistent == oldSelf.allowInconsistent",
-                      "message": "field 'allowInconsistent' is immutable"
-                    }
-                  ]
+                  }
                 },
                 "upload": {
                   "type": "object",
@@ -258,17 +228,7 @@
                       "description": "RepositoryURL is the URL path for file storage\nSame repositoryURL needs to be defined in `credentialsSecretName` if protocol is other than local.\nFormat: `\u003cprotocol\u003e:/\u003cpath\u003e`",
                       "type": "string"
                     }
-                  },
-                  "x-kubernetes-validations": [
-                    {
-                      "rule": "self.repositoryURL == oldSelf.repositoryURL",
-                      "message": "field 'repositoryURL' is immutable"
-                    },
-                    {
-                      "rule": "self.credentialsSecretName == oldSelf.credentialsSecretName",
-                      "message": "field 'credentialsSecretName' is immutable"
-                    }
-                  ]
+                  }
                 }
               }
             }
