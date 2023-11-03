@@ -18,36 +18,18 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package assertion
+package license
 
 import (
-	"fmt"
+	"context"
 )
 
-type Key string
-
-const (
-	KeyUnknown               Key = ""
-	DeprecatedActionKey      Key = "DeprecatedAction"
-	CommunityLicenseCheckKey Key = "CommunityLicenseCheck"
-)
-
-func (k Key) Assert(condition bool, msg string, args ...interface{}) {
-	assert(2, condition, k, msg, args...)
+func NewConstantLoader(license string) Loader {
+	return loaderConstant(license)
 }
 
-func Assert(condition bool, key Key, msg string, args ...interface{}) {
-	assert(2, condition, key, msg, args...)
-}
+type loaderConstant string
 
-func assert(skip int, condition bool, key Key, msg string, args ...interface{}) {
-	if !condition {
-		return
-	}
-
-	metricsObject.incKeyMetric(key)
-
-	frames := frames(skip)
-
-	_assert(frames, fmt.Sprintf(msg, args...))
+func (l loaderConstant) Refresh(ctx context.Context) (string, bool, error) {
+	return string(l), false, nil
 }
