@@ -28,7 +28,6 @@ import (
 func planBuilderScaleDownFilter(context PlanBuilderContext, status api.DeploymentStatus, group api.ServerGroup, in api.MemberStatusList) (api.MemberStatus, error) {
 	return NewScaleFilter(context, status, group, in).
 		Filter(planBuilderScaleDownSelectMarkedToRemove).
-		Filter(planBuilderScaleDownSelectScaleDownCandidateCondition).
 		Filter(planBuilderScaleDownSelectCleanedOutCondition).
 		Filter(planBuilderScaleDownCleanedServers).
 		Filter(planBuilderScaleDownToBeCleanedServers).
@@ -100,18 +99,6 @@ func planBuilderScaleDownSelectCleanedOutCondition(context PlanBuilderContext, s
 
 	for _, el := range in {
 		if el.Conditions.IsTrue(api.ConditionTypeCleanedOut) {
-			r = append(r, el)
-		}
-	}
-
-	return r, len(r) > 0, nil
-}
-
-func planBuilderScaleDownSelectScaleDownCandidateCondition(context PlanBuilderContext, status api.DeploymentStatus, group api.ServerGroup, in api.MemberStatusList) (api.MemberStatusList, bool, error) {
-	r := make(api.MemberStatusList, 0, len(in))
-
-	for _, el := range in {
-		if el.Conditions.IsTrue(api.ConditionTypeScaleDownCandidate) {
 			r = append(r, el)
 		}
 	}

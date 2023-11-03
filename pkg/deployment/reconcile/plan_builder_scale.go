@@ -23,7 +23,6 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
@@ -165,48 +164,4 @@ func (r *Reconciler) createReplaceMemberPlan(ctx context.Context, apiObject k8su
 
 func filterScaleUP(a api.Action) bool {
 	return a.Type == api.ActionTypeAddMember
-}
-
-func (r *Reconciler) scaleDownCandidate(ctx context.Context, apiObject k8sutil.APIObject,
-	spec api.DeploymentSpec, status api.DeploymentStatus,
-	context PlanBuilderContext) api.Plan {
-	var plan api.Plan
-
-	for _, m := range status.Members.AsList() {
-		cache, ok := context.ACS().ClusterCache(m.Member.ClusterID)
-		if !ok {
-			continue
-		}
-
-		annotationExists := false
-
-		am, ok := cache.ArangoMember().V1().GetSimple(m.Member.ArangoMemberName(context.GetName(), m.Group))
-		if !ok {
-			continue
-		}
-
-		//nolint:staticcheck
-		if _, ok := am.Annotations[deployment.ArangoDeploymentPodScaleDownCandidateAnnotation]; ok {
-			annotationExists = true
-		}
-
-		if pod, ok := cache.Pod().V1().GetSimple(m.Member.Pod.GetName()); ok {
-			//nolint:staticcheck
-			if _, ok := pod.Annotations[deployment.ArangoDeploymentPodScaleDownCandidateAnnotation]; ok {
-				annotationExists = true
-			}
-		}
-
-		conditionExists := m.Member.Conditions.IsTrue(api.ConditionTypeScaleDownCandidate)
-
-		if annotationExists != conditionExists {
-			if annotationExists {
-				plan = append(plan, shared.UpdateMemberConditionActionV2("Marked as ScaleDownCandidate", api.ConditionTypeScaleDownCandidate, m.Group, m.Member.ID, true, "Marked as ScaleDownCandidate", "", ""))
-			} else {
-				plan = append(plan, shared.RemoveMemberConditionActionV2("Unmarked as ScaleDownCandidate", api.ConditionTypeScaleDownCandidate, m.Group, m.Member.ID))
-			}
-		}
-	}
-
-	return plan
 }

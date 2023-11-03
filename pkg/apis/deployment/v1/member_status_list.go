@@ -139,8 +139,9 @@ func (l *MemberStatusList) removeByID(id string) error {
 type MemberToRemoveSelector func(m MemberStatusList) (string, error)
 
 // SelectMemberToRemove selects a member from the given list that should
-// be removed in a scale down action.
+// be removed in a ScaleDown action.
 // Returns an error if the list is empty.
+// Deprecated: will be removed in 1.3.0 since ScaleDown annotation is already removed
 func (l MemberStatusList) SelectMemberToRemove(selectors ...MemberToRemoveSelector) (MemberStatus, error) {
 	if len(l) > 0 {
 		// Try to find member with phase to be removed

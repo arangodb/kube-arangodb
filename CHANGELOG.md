@@ -15,6 +15,7 @@
 - (Feature) Add ArangoMember Message and extend ArangoMember CRD
 - (Documentation) Use OpenAPI-compatible type names in docs
 - (Improvement) Use agency cache lock in metrics exporter
+- (Maintenance) Remove `scale_down_candidate` annotation
 
 ## [1.2.34](https://github.com/arangodb/kube-arangodb/tree/1.2.34) (2023-10-16)
 - (Bugfix) Fix make manifests-crd-file command
