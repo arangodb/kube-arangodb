@@ -28,7 +28,4 @@ const (
 	ArangoDeploymentPodReplaceAnnotation     = ArangoDeploymentAnnotationPrefix + "/replace"
 	ArangoDeploymentPodDeleteNow             = ArangoDeploymentAnnotationPrefix + "/delete_now"
 	ArangoDeploymentPlanCleanAnnotation      = "plan." + ArangoDeploymentAnnotationPrefix + "/clean"
-
-	// Deprecated: use ArangoMemberSpec.DeletionPriority instead
-	ArangoDeploymentPodScaleDownCandidateAnnotation = ArangoDeploymentAnnotationPrefix + "/scale_down_candidate"
 )
