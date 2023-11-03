@@ -180,9 +180,9 @@ MaxCount specifies a maximum for the count of servers. If set, a specification i
 
 ### .spec.agents.memoryReservation: integer
 
-MemoryReservation determines system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.
-If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by specified value in percents.
-Accepted Range <0, 50>. If value is outside accepted range, it is adjusted to the closest value.
+MemoryReservation determines the system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.
+If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a specified value in percent.
+Accepted Range <0, 50>. If the value is outside the accepted range, it is adjusted to the closest value.
 
 Links:
 * [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
@@ -1024,9 +1024,9 @@ MaxCount specifies a maximum for the count of servers. If set, a specification i
 
 ### .spec.coordinators.memoryReservation: integer
 
-MemoryReservation determines system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.
-If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by specified value in percents.
-Accepted Range <0, 50>. If value is outside accepted range, it is adjusted to the closest value.
+MemoryReservation determines the system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.
+If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a specified value in percent.
+Accepted Range <0, 50>. If the value is outside the accepted range, it is adjusted to the closest value.
 
 Links:
 * [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
@@ -1756,9 +1756,9 @@ MaxCount specifies a maximum for the count of servers. If set, a specification i
 
 ### .spec.dbservers.memoryReservation: integer
 
-MemoryReservation determines system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.
-If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by specified value in percents.
-Accepted Range <0, 50>. If value is outside accepted range, it is adjusted to the closest value.
+MemoryReservation determines the system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.
+If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a specified value in percent.
+Accepted Range <0, 50>. If the value is outside the accepted range, it is adjusted to the closest value.
 
 Links:
 * [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
@@ -2972,9 +2972,9 @@ MaxCount specifies a maximum for the count of servers. If set, a specification i
 
 ### .spec.single.memoryReservation: integer
 
-MemoryReservation determines system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.
-If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by specified value in percents.
-Accepted Range <0, 50>. If value is outside accepted range, it is adjusted to the closest value.
+MemoryReservation determines the system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.
+If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a specified value in percent.
+Accepted Range <0, 50>. If the value is outside the accepted range, it is adjusted to the closest value.
 
 Links:
 * [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
@@ -3869,9 +3869,9 @@ MaxCount specifies a maximum for the count of servers. If set, a specification i
 
 ### .spec.syncmasters.memoryReservation: integer
 
-MemoryReservation determines system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.
-If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by specified value in percents.
-Accepted Range <0, 50>. If value is outside accepted range, it is adjusted to the closest value.
+MemoryReservation determines the system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.
+If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a specified value in percent.
+Accepted Range <0, 50>. If the value is outside the accepted range, it is adjusted to the closest value.
 
 Links:
 * [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
@@ -4595,9 +4595,9 @@ MaxCount specifies a maximum for the count of servers. If set, a specification i
 
 ### .spec.syncworkers.memoryReservation: integer
 
-MemoryReservation determines system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.
-If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by specified value in percents.
-Accepted Range <0, 50>. If value is outside accepted range, it is adjusted to the closest value.
+MemoryReservation determines the system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.
+If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a specified value in percent.
+Accepted Range <0, 50>. If the value is outside the accepted range, it is adjusted to the closest value.
 
 Links:
 * [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
