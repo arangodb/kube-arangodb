@@ -99,9 +99,9 @@ type ServerGroupSpec struct {
 	// +doc/default: true
 	// +doc/link: Docs of the ArangoDB Envs|https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/
 	OverrideDetectedTotalMemory *bool `json:"overrideDetectedTotalMemory,omitempty"`
-	// MemoryReservation determines system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.
-	// If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by specified value in percents.
-	// Accepted Range <0, 50>. If value is outside accepted range, it is adjusted to the closest value.
+	// MemoryReservation determines the system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.
+	// If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a specified value in percent.
+	// Accepted Range <0, 50>. If the value is outside the accepted range, it is adjusted to the closest value.
 	// +doc/default: 0
 	// +doc/link: Docs of the ArangoDB Envs|https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/
 	MemoryReservation *int64 `json:"memoryReservation,omitempty"`
@@ -796,11 +796,23 @@ func (s *ServerGroupSpec) GetExporterPort() uint16 {
 func (s *ServerGroupSpec) GetMemoryReservation() int64 {
 	if s != nil {
 		if v := s.MemoryReservation; v != nil {
-			if q := *v; q >= 0 && q <= 50 {
+			if q := *v; q < 0 {
+				return 0
+			} else if q > 50 {
+				return 50
+			} else {
 				return q
 			}
 		}
 	}
 
 	return 0
+}
+
+func (s *ServerGroupSpec) CalculateMemoryReservation(memory int64) int64 {
+	if r := s.GetMemoryReservation(); r > 0 {
+		return int64((float64(memory)) * (float64(100-r) / 100))
+	}
+
+	return memory
 }
