@@ -77,7 +77,7 @@ const (
 	// ConditionTypeMarkedToRemove indicates that the member is marked to be removed.
 	ConditionTypeMarkedToRemove ConditionType = "MarkedToRemove"
 	// ConditionTypeScaleDownCandidate indicates that the member will be picked in ScaleDown operation (Currently not used).
-	// @deprecated will be removed in 1.3.0
+	// Deprecated: will be removed in 1.3.0
 	ConditionTypeScaleDownCandidate ConditionType = "ScaleDownCandidate"
 	// ConditionTypeUpgradeFailed indicates that upgrade failed
 	ConditionTypeUpgradeFailed ConditionType = "UpgradeFailed"
