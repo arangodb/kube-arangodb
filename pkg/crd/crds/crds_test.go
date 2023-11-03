@@ -44,13 +44,12 @@ func ensureCRDCompliance(t *testing.T, name string, crdDef *apiextensions.Custom
 		t.Run(ver.Name, func(t *testing.T) {
 			require.NotNil(t, ver.Schema)
 			require.Equal(t, "object", ver.Schema.OpenAPIV3Schema.Type)
+			require.True(t, *ver.Schema.OpenAPIV3Schema.XPreserveUnknownFields)
 			if schemaExpected {
 				require.NotEmpty(t, ver.Schema.OpenAPIV3Schema.Properties)
-				require.Nil(t, ver.Schema.OpenAPIV3Schema.XPreserveUnknownFields)
 			} else {
 				require.Empty(t, ver.Schema.OpenAPIV3Schema.Properties)
 				require.NotNil(t, ver.Schema.OpenAPIV3Schema.XPreserveUnknownFields)
-				require.True(t, *ver.Schema.OpenAPIV3Schema.XPreserveUnknownFields)
 			}
 		})
 	}
