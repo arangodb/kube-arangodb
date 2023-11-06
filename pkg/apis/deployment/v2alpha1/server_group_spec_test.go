@@ -130,3 +130,34 @@ func TestServerGroupSpecValidateArgs(t *testing.T) {
 	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](1), Args: []string{"--master.endpoint=http://something"}}.WithDefaults(ServerGroupSyncMasters, true, DeploymentModeCluster).Validate(ServerGroupSyncMasters, true, DeploymentModeCluster, EnvironmentDevelopment))
 	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](1), Args: []string{"--mq.type=strange"}}.WithDefaults(ServerGroupSyncMasters, true, DeploymentModeCluster).Validate(ServerGroupSyncMasters, true, DeploymentModeCluster, EnvironmentDevelopment))
 }
+
+func TestServerGroupSpecMemoryReservation(t *testing.T) {
+	// If group is nil
+	assert.EqualValues(t, 1024, (*ServerGroupSpec)(nil).CalculateMemoryReservation(1024))
+
+	// If reservation is nil
+	assert.EqualValues(t, 1024, (&ServerGroupSpec{}).CalculateMemoryReservation(1024))
+
+	// If reservation is 0
+	assert.EqualValues(t, 1024, (&ServerGroupSpec{MemoryReservation: util.NewType[int64](0)}).CalculateMemoryReservation(1024))
+
+	// If reservation is -1
+	assert.EqualValues(t, 1024, (&ServerGroupSpec{MemoryReservation: util.NewType[int64](-1)}).CalculateMemoryReservation(1024))
+
+	// If reservation is 10
+	assert.EqualValues(t, 921, (&ServerGroupSpec{MemoryReservation: util.NewType[int64](10)}).CalculateMemoryReservation(1024))
+
+	// If reservation is 25
+	assert.EqualValues(t, 768, (&ServerGroupSpec{MemoryReservation: util.NewType[int64](25)}).CalculateMemoryReservation(1024))
+
+	// If reservation is 50
+	assert.EqualValues(t, 512, (&ServerGroupSpec{MemoryReservation: util.NewType[int64](50)}).CalculateMemoryReservation(1024))
+
+	// If reservation is 51
+	assert.EqualValues(t, 512, (&ServerGroupSpec{MemoryReservation: util.NewType[int64](51)}).CalculateMemoryReservation(1024))
+
+	// If reservation is int max
+	assert.EqualValues(t, 576460752303423488, (&ServerGroupSpec{MemoryReservation: util.NewType[int64](50)}).CalculateMemoryReservation(0xFFFFFFFFFFFFFFF))
+	assert.EqualValues(t, 864691128455135232, (&ServerGroupSpec{MemoryReservation: util.NewType[int64](25)}).CalculateMemoryReservation(0xFFFFFFFFFFFFFFF))
+	assert.EqualValues(t, 1037629354146162304, (&ServerGroupSpec{MemoryReservation: util.NewType[int64](10)}).CalculateMemoryReservation(0xFFFFFFFFFFFFFFF))
+}
