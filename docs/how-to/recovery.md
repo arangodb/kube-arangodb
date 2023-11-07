@@ -75,6 +75,7 @@ EOF
 ## Create PV and PVC
 
 1. We need to create ArangoLocalStorage first:
+
     ```yaml
     cat <<EOF | kubectl apply -f -
     apiVersion: "storage.arangodb.com/v1alpha"
@@ -89,9 +90,13 @@ EOF
       - /mnt/data
     EOF
     ```
-2. Now create PV and PVC for every directory listed above
-   - Agents - here is an example for `AGNT-pntg5yc8`(`f9rs2htwc9e0bzme` directory)
+
+3. Now create PV and PVC for every directory listed above
+
+   - **Agents** - here is an example for `AGNT-pntg5yc8`(`f9rs2htwc9e0bzme` directory)
+   
      - PV
+
         ```yaml
         cat <<EOF | kubectl apply -f -
         apiVersion: "v1"
@@ -121,7 +126,9 @@ EOF
                   - minikube
         EOF
         ```
+
      - PVC
+
          ```yaml
          cat <<EOF | kubectl apply -f -
          apiVersion: v1
@@ -143,8 +150,11 @@ EOF
            volumeName: agent-pntg5yc8-f9rs2htwc9e0bzme
          EOF
          ```
-   - DbServers - here is an example for `PRMR-9xztmg4t` (`vka6ic19qcl1y3ec` directory)
+
+   - **DbServers** - here is an example for `PRMR-9xztmg4t` (`vka6ic19qcl1y3ec` directory)
+
      - PV
+
         ```yaml
         cat <<EOF | kubectl apply -f -
         apiVersion: "v1"
@@ -174,7 +184,9 @@ EOF
                   - minikube
         EOF
         ```
+
      - PVC
+
          ```yaml
          cat <<EOF | kubectl apply -f -
          apiVersion: v1
