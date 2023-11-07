@@ -1,4 +1,4 @@
-# Architecture change
+# How to change architecture / enable ARM support
 
 Currently `AMD64` is a default architecture in the operator
 To enable `ARM64` support in operator add following config in kube-arangodb chart:

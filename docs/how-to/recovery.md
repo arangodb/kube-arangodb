@@ -1,4 +1,4 @@
-# Manual Recovery
+# How to recover a destroyed deployment 
 
 ## Overview
 Let's consider a situation where we had a ArangoDeployment in Cluster mode (3 DbServers, 3 Coordinators, 3 Agents)
