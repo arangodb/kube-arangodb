@@ -6,25 +6,25 @@
 
 AllowConcurrent if false, ArangoBackup will not be created when previous Backups are not finished
 
-Default Value: true
+Default Value: `true`
 
-[Code Reference](/pkg/apis/backup/v1/backup_policy_spec.go#L35)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_policy_spec.go#L35)
 
 ### .spec.maxBackups: integer
 
 MaxBackups defines how many backups should be kept in history (per deployment). Oldest healthy Backups will be deleted.
 If not specified or 0 then no limit is applied
 
-Default Value: 0
+Default Value: `0`
 
-[Code Reference](/pkg/apis/backup/v1/backup_policy_spec.go#L43)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_policy_spec.go#L43)
 
 ### .spec.schedule: string
 
 Schedule is cron-compatible specification of backup schedule
 Parsed by https://godoc.org/github.com/robfig/cron
 
-[Code Reference](/pkg/apis/backup/v1/backup_policy_spec.go#L32)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_policy_spec.go#L32)
 
 ### .spec.selector: meta.LabelSelector
 
@@ -33,58 +33,58 @@ DeploymentSelector Selector definition for selecting matching ArangoBackup Custo
 Links:
 * [Kubernetes Documentation](https://godoc.org/k8s.io/apimachinery/pkg/apis/meta/v1#LabelSelector)
 
-[Code Reference](/pkg/apis/backup/v1/backup_policy_spec.go#L39)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_policy_spec.go#L39)
 
 ### .spec.template.backoff.iterations: integer
 
 Iterations defines number of iterations before reaching MaxDelay. Default to 5
 
-[Code Reference](/pkg/apis/backup/v1/backup_spec_backoff.go#L31)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_spec_backoff.go#L31)
 
 ### .spec.template.backoff.max_delay: integer
 
 MaxDelay defines maximum delay in seconds. Default to 600
 
-[Code Reference](/pkg/apis/backup/v1/backup_spec_backoff.go#L29)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_spec_backoff.go#L29)
 
 ### .spec.template.backoff.max_iterations: integer
 
 MaxIterations defines maximum number of iterations after backoff will be disabled. Default to nil (no limit)
 
-[Code Reference](/pkg/apis/backup/v1/backup_spec_backoff.go#L33)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_spec_backoff.go#L33)
 
 ### .spec.template.backoff.min_delay: integer
 
 MinDelay defines minimum delay in seconds. Default to 30
 
-[Code Reference](/pkg/apis/backup/v1/backup_spec_backoff.go#L27)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_spec_backoff.go#L27)
 
 ### .spec.template.lifetime: integer
 
 Lifetime is the time after which the backup will be deleted. Format: "1.5h" or "2h45m".
 
-[Code Reference](/pkg/apis/backup/v1/backup_policy_spec.go#L61)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_policy_spec.go#L61)
 
 ### .spec.template.options.allowInconsistent: boolean
 
 AllowInconsistent flag for Backup creation request.
 If this value is set to true, backup is taken even if we are not able to acquire lock.
 
-Default Value: false
+Default Value: `false`
 
 This field is **immutable**: can't be changed after backup creation
 
-[Code Reference](/pkg/apis/backup/v1/backup_spec.go#L66)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_spec.go#L66)
 
 ### .spec.template.options.timeout: number
 
 Timeout for Backup creation request in seconds.
 
-Default Value: 30
+Default Value: `30`
 
 This field is **immutable**: can't be changed after backup creation
 
-[Code Reference](/pkg/apis/backup/v1/backup_spec.go#L61)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_spec.go#L61)
 
 ### .spec.template.upload.credentialsSecretName: string
 
@@ -95,7 +95,7 @@ Links:
 
 This field is **immutable**: can't be changed after backup creation
 
-[Code Reference](/pkg/apis/backup/v1/backup_spec.go#L81)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_spec.go#L81)
 
 ### .spec.template.upload.repositoryURL: string
 
@@ -114,7 +114,7 @@ azure://test
 
 This field is **immutable**: can't be changed after backup creation
 
-[Code Reference](/pkg/apis/backup/v1/backup_spec.go#L77)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_spec.go#L77)
 
 ## Status
 
@@ -122,11 +122,11 @@ This field is **immutable**: can't be changed after backup creation
 
 Message from the operator in case of failures - schedule not valid, ArangoBackupPolicy not valid
 
-[Code Reference](/pkg/apis/backup/v1/backup_policy_status.go#L33)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_policy_status.go#L33)
 
 ### .status.scheduled: meta.Time
 
 Scheduled Next scheduled time in UTC
 
-[Code Reference](/pkg/apis/backup/v1/backup_policy_status.go#L31)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_policy_status.go#L31)
 
