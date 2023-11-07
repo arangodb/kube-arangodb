@@ -2,7 +2,8 @@
 
 ## List of the Operator metrics
 
-<!-- START(metricsTable) -->
+[START_INJECT]: # (metricsTable)
+
 |                                                                 Name                                                                  |     Namespace     |       Group       |  Type   | Description                                                                           |
 |:-------------------------------------------------------------------------------------------------------------------------------------:|:-----------------:|:-----------------:|:-------:|:--------------------------------------------------------------------------------------|
 |                                [arangodb_operator_agency_errors](./arangodb_operator_agency_errors.md)                                | arangodb_operator |      agency       | Counter | Current count of agency cache fetch errors                                            |
@@ -35,4 +36,4 @@
 | [arangodb_operator_resources_arangodeploymentreplication_active](./arangodb_operator_resources_arangodeploymentreplication_active.md) | arangodb_operator |     resources     |  Gauge  | Defines if ArangoDeploymentReplication is configured and running                      |
 | [arangodb_operator_resources_arangodeploymentreplication_failed](./arangodb_operator_resources_arangodeploymentreplication_failed.md) | arangodb_operator |     resources     |  Gauge  | Defines if ArangoDeploymentReplication is in Failed phase                             |
 
-<!-- END(metricsTable) -->
+[END_INJECT]: # (metricsTable)

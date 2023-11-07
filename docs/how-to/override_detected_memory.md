@@ -1,4 +1,4 @@
-# Resource Management
+# Override detected total memory
 
 ## overrideDetectedTotalMemory
 
