@@ -1,10 +1,15 @@
-# Metrics
+# Metrics collection
 
 Operator provides metrics of its operations in a format supported by [Prometheus](https://prometheus.io/).
 
 The metrics are exposed through HTTPS on port `8528` under path `/metrics`.
 
-For a full list of available metrics, see [here](./../generated/metrics/README.md).
+For a full list of available metrics, see [here](generated/metrics/README.md).
+
+Check out examples directory [examples/metrics](https://github.com/arangodb/kube-arangodb/tree/master/examples/metrics)
+for `Services` and `ServiceMonitors` definitions you can use to integrate
+with Prometheus through the [Prometheus-Operator by CoreOS](https://github.com/coreos/prometheus-operator).
+
 
 #### Contents
 - [Integration with standard Prometheus installation (no TLS)](#Integration-with-standard-Prometheus-installation-no-TLS)
@@ -96,10 +101,9 @@ spec:
 You also can see the example of Grafana dashboard at `examples/metrics` folder of this repo.
 
 
-
 ## ArangoDB metrics
 
-The operator can run sidecar containers for ArangoDB deployments of type `Cluster` which expose metrics in Prometheus format.
+The operator can run [sidecar containers](./design/exporter.md) for ArangoDB deployments of type `Cluster` which expose metrics in Prometheus format.
 Edit your `ArangoDeployment` resource, setting `spec.metrics.enabled` to true to enable ArangoDB metrics:
 ```yaml
 spec:
@@ -144,4 +148,5 @@ spec:
     prometheus.io/scrape_interval: '5s'
 ```
 
-See the [list of exposed ArangoDB metrics](https://www.arangodb.com/docs/stable/http/administration-and-monitoring-metrics.html#list-of-exposed-metrics)
+See the [Metrics HTTP API documentation](https://docs.arangodb.com/stable/develop/http/monitoring/#metrics)
+for the metrics exposed by ArangoDB deployments.

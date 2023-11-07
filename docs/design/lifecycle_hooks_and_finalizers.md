@@ -1,7 +1,7 @@
 # Lifecycle hooks & Finalizers
 
 The ArangoDB operator expects full control of the `Pods` and `PersistentVolumeClaims` it creates.
-Therefore it takes measures to prevent the removal of those resources
+Therefore, it takes measures to prevent the removal of those resources
 until it is safe to do so.
 
 To achieve this, the server containers in the `Pods` have
@@ -27,11 +27,17 @@ is shared between the init-container and the server container.
 
 ## Finalizers
 
-The ArangoDB operators adds the following finalizers to `Pods`.
-
+The ArangoDB operators adds the following finalizers to `Pods`:
 - `dbserver.database.arangodb.com/drain`: Added to DBServers, removed only when the dbserver can be restarted or is completely drained
 - `agent.database.arangodb.com/agency-serving`: Added to Agents, removed only when enough agents are left to keep the agency serving
+- `pod.database.arangodb.com/delay`: Delays pod termination
+- `database.arangodb.com/graceful-shutdown`: Added to All members, indicating the need for graceful shutdown
 
-The ArangoDB operators adds the following finalizers to `PersistentVolumeClaims`.
+The ArangoDB operators adds the following finalizers to `PersistentVolumeClaims`:
+- `pvc.database.arangodb.com/member-exists`: Removed only when its member no longer exists or can be safely rebuild
 
-- `pvc.database.arangodb.com/member-exists`: removed only when its member exists no longer exists or can be safely rebuild
+The ArangoDB operators adds the following finalizers to `ArangoDeployment`:
+- `database.arangodb.com/remove-child-finalizers`: Clean-ups finalizers from all children resources
+
+The ArangoDB operators adds the following finalizers to `ArangoDeploymentReplication`:
+- `replication.database.arangodb.com/stop-sync`: Stops deployment-to-deployment replication

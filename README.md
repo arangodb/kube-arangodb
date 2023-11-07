@@ -6,13 +6,13 @@ ArangoDB Kubernetes Operator helps to run ArangoDB deployments
 on Kubernetes clusters.
 
 To get started, follow the Installation instructions below and/or
-read the [tutorial](https://www.arangodb.com/docs/stable/deployment-kubernetes-usage.html).
+read the [tutorial](docs/using-the-operator.md).  
 
 ## State
 
 The ArangoDB Kubernetes Operator is Production ready.
 
-[Documentation](https://www.arangodb.com/docs/stable/deployment-kubernetes.html)
+[Documentation](docs/README.md)
 
 ### Limits
 
@@ -31,7 +31,7 @@ state for individual new features, since we expect that new
 features will first be released with an "alpha" or "beta" readiness
 state and over time move to full "production readiness".
 
-Operator will supports versions supported on providers and maintained by Kubernetes.
+Operator will support Kubernetes versions supported on providers and maintained by Kubernetes.
 Once version is not supported anymore it will go into "Deprecating" state and will be marked as deprecated on Minor release.
 
 Kubernetes versions starting from 1.18 are supported and tested, charts and manifests can use API Versions which are not present in older versions.
@@ -39,7 +39,8 @@ Kubernetes versions starting from 1.18 are supported and tested, charts and mani
 The following table has the general readiness state, the table below
 covers individual newer features separately.
 
-<!-- START(kubernetesVersionsTable) -->
+[START_INJECT]: # (kubernetesVersionsTable)
+
 | Platform            | Kubernetes Version | ArangoDB Version | State      | Remarks                                   | Provider Remarks                   |
 |:--------------------|:-------------------|:-----------------|:-----------|:------------------------------------------|:-----------------------------------|
 | Google GKE          | 1.21-1.26          | >= 3.6.0         | Production | Don't use micro nodes                     |                                    |
@@ -54,225 +55,175 @@ covers individual newer features separately.
 | Minikube            | 1.21-1.27          | >= 3.6.0         | Devel Only |                                           |                                    |
 | Other               | 1.21-1.27          | >= 3.6.0         | Devel Only |                                           |                                    |
 
-<!-- END(kubernetesVersionsTable) -->
+[END_INJECT]: # (kubernetesVersionsTable)
 
 #### Operator Features
 
-<!-- START(featuresCommunityTable) -->
-| Feature                                                                              | Operator Version | Introduced | ArangoDB Version | ArangoDB Edition      | State        | Enabled | Flag                                                  | Remarks                                                                            |
-|:-------------------------------------------------------------------------------------|:-----------------|:-----------|:-----------------|:----------------------|:-------------|:--------|:------------------------------------------------------|:-----------------------------------------------------------------------------------|
-| Enforced ResignLeadership                                                            | 1.2.34           | 1.2.34     | >= 3.8.0         | Community, Enterprise | Production   | True    | --deployment.feature.enforced-resign-leadership       | Enforce ResignLeadership and ensure that Leaders are moved from restarted DBServer |
-| Copy resources spec to init containers                                               | 1.2.33           | 1.2.33     | >= 3.8.0         | Community, Enterprise | Production   | True    | --deployment.feature.init-containers-copy-resources   | Copy resources spec to built-in init containers if they are not specified          |
-| [Rebalancer V2](docs/design/features/rebalancer_v2.md)                               | 1.2.31           | 1.2.31     | >= 3.10.0        | Community, Enterprise | Alpha        | False   | --deployment.feature.rebalancer-v2                    | N/A                                                                                |
-| [Secured containers](docs/design/features/secured_containers.md)                     | 1.2.31           | 1.2.31     | >= 3.8.0         | Community, Enterprise | Alpha        | False   | --deployment.feature.secured-containers               | If set to True Operator will run containers in secure mode                         |
-| Version Check V2                                                                     | 1.2.31           | 1.2.31     | >= 3.8.0         | Community, Enterprise | Alpha        | False   | --deployment.feature.upgrade-version-check-V2         | N/A                                                                                |
-| [Operator Ephemeral Volumes](docs/design/features/ephemeral_volumes.md)              | 1.2.31           | 1.2.2      | >= 3.8.0         | Community, Enterprise | Beta         | False   | --deployment.feature.ephemeral-volumes                | N/A                                                                                |
-| [Force Rebuild Out Synced Shards](docs/design/features/rebuild_out_synced_shards.md) | 1.2.27           | 1.2.27     | >= 3.8.0         | Community, Enterprise | Production   | False   | --deployment.feature.force-rebuild-out-synced-shards  | It should be used only if user is aware of the risks.                              |
-| [Spec Default Restore](docs/design/features/deployment_spec_defaults.md)             | 1.2.25           | 1.2.21     | >= 3.8.0         | Community, Enterprise | Beta         | True    | --deployment.feature.deployment-spec-defaults-restore | If set to False Operator will not change ArangoDeployment Spec                     |
-| Version Check                                                                        | 1.2.23           | 1.1.4      | >= 3.8.0         | Community, Enterprise | Production   | True    | --deployment.feature.upgrade-version-check            | N/A                                                                                |
-| [Failover Leader service](docs/design/features/failover_leader_service.md)           | 1.2.13           | 1.2.13     | >= 3.8.0         | Community, Enterprise | Production   | False   | --deployment.feature.failover-leadership              | N/A                                                                                |
-| Graceful Restart                                                                     | 1.2.5            | 1.0.7      | >= 3.8.0         | Community, Enterprise | Production   | True    | ---deployment.feature.graceful-shutdown               | N/A                                                                                |
-| Optional Graceful Restart                                                            | 1.2.0            | 1.2.5      | >= 3.8.0         | Community, Enterprise | Production   | False   | --deployment.feature.optional-graceful-shutdown       | N/A                                                                                |
-| Operator Internal Metrics Exporter                                                   | 1.2.0            | 1.2.0      | >= 3.8.0         | Community, Enterprise | Production   | True    | --deployment.feature.metrics-exporter                 | N/A                                                                                |
-| Operator Maintenance Management Support                                              | 1.2.0            | 1.0.7      | >= 3.8.0         | Community, Enterprise | Production   | True    | --deployment.feature.maintenance                      | N/A                                                                                |
-| Encryption Key Rotation Support                                                      | 1.2.0            | 1.0.3      | >= 3.8.0         | Enterprise            | NotSupported | False   | --deployment.feature.encryption-rotation              | N/A                                                                                |
-| TLS Runtime Rotation Support                                                         | 1.1.0            | 1.0.4      | >= 3.8.0         | Enterprise            | Production   | True    | --deployment.feature.tls-rotation                     | N/A                                                                                |
-| JWT Rotation Support                                                                 | 1.1.0            | 1.0.3      | >= 3.8.0         | Enterprise            | Production   | True    | --deployment.feature.jwt-rotation                     | N/A                                                                                |
-| Operator Single Mode                                                                 | 1.0.4            | 1.0.4      | >= 3.8.0         | Community, Enterprise | Production   | False   | --mode.single                                         | Only 1 instance of Operator allowed in namespace when feature is enabled           |
-| TLS SNI Support                                                                      | 1.0.3            | 1.0.3      | >= 3.8.0         | Enterprise            | Production   | True    | --deployment.feature.tls-sni                          | N/A                                                                                |
-| Disabling of liveness probes                                                         | 0.3.11           | 0.3.10     | >= 3.8.0         | Community, Enterprise | Production   | True    | N/A                                                   | N/A                                                                                |
-| Pod Disruption Budgets                                                               | 0.3.11           | 0.3.10     | >= 3.8.0         | Community, Enterprise | Production   | True    | N/A                                                   | N/A                                                                                |
-| Prometheus Metrics Exporter                                                          | 0.3.11           | 0.3.10     | >= 3.8.0         | Community, Enterprise | Production   | True    | N/A                                                   | Prometheus required                                                                |
-| Sidecar Containers                                                                   | 0.3.11           | 0.3.10     | >= 3.8.0         | Community, Enterprise | Production   | True    | N/A                                                   | N/A                                                                                |
-| Volume Claim Templates                                                               | 0.3.11           | 0.3.10     | >= 3.8.0         | Community, Enterprise | Production   | True    | N/A                                                   | N/A                                                                                |
-| Volume Resizing                                                                      | 0.3.11           | 0.3.10     | >= 3.8.0         | Community, Enterprise | Production   | True    | N/A                                                   | N/A                                                                                |
+[START_INJECT]: # (featuresCommunityTable)
 
-<!-- END(featuresCommunityTable) -->
+| Feature                                                                       | Operator Version | Introduced | ArangoDB Version | ArangoDB Edition      | State        | Enabled | Flag                                                  | Remarks                                                                            |
+|:------------------------------------------------------------------------------|:-----------------|:-----------|:-----------------|:----------------------|:-------------|:--------|:------------------------------------------------------|:-----------------------------------------------------------------------------------|
+| Enforced ResignLeadership                                                     | 1.2.34           | 1.2.34     | >= 3.8.0         | Community, Enterprise | Production   | True    | --deployment.feature.enforced-resign-leadership       | Enforce ResignLeadership and ensure that Leaders are moved from restarted DBServer |
+| Copy resources spec to init containers                                        | 1.2.33           | 1.2.33     | >= 3.8.0         | Community, Enterprise | Production   | True    | --deployment.feature.init-containers-copy-resources   | Copy resources spec to built-in init containers if they are not specified          |
+| [Rebalancer V2](docs/features/rebalancer_v2.md)                               | 1.2.31           | 1.2.31     | >= 3.10.0        | Community, Enterprise | Alpha        | False   | --deployment.feature.rebalancer-v2                    | N/A                                                                                |
+| [Secured containers](docs/features/secured_containers.md)                     | 1.2.31           | 1.2.31     | >= 3.8.0         | Community, Enterprise | Alpha        | False   | --deployment.feature.secured-containers               | If set to True Operator will run containers in secure mode                         |
+| Version Check V2                                                              | 1.2.31           | 1.2.31     | >= 3.8.0         | Community, Enterprise | Alpha        | False   | --deployment.feature.upgrade-version-check-V2         | N/A                                                                                |
+| [Operator Ephemeral Volumes](docs/features/ephemeral_volumes.md)              | 1.2.31           | 1.2.2      | >= 3.8.0         | Community, Enterprise | Beta         | False   | --deployment.feature.ephemeral-volumes                | N/A                                                                                |
+| [Force Rebuild Out Synced Shards](docs/features/rebuild_out_synced_shards.md) | 1.2.27           | 1.2.27     | >= 3.8.0         | Community, Enterprise | Production   | False   | --deployment.feature.force-rebuild-out-synced-shards  | It should be used only if user is aware of the risks.                              |
+| [Spec Default Restore](docs/features/deployment_spec_defaults.md)             | 1.2.25           | 1.2.21     | >= 3.8.0         | Community, Enterprise | Beta         | True    | --deployment.feature.deployment-spec-defaults-restore | If set to False Operator will not change ArangoDeployment Spec                     |
+| Version Check                                                                 | 1.2.23           | 1.1.4      | >= 3.8.0         | Community, Enterprise | Production   | True    | --deployment.feature.upgrade-version-check            | N/A                                                                                |
+| [Failover Leader service](docs/features/failover_leader_service.md)           | 1.2.13           | 1.2.13     | >= 3.8.0         | Community, Enterprise | Production   | False   | --deployment.feature.failover-leadership              | N/A                                                                                |
+| Graceful Restart                                                              | 1.2.5            | 1.0.7      | >= 3.8.0         | Community, Enterprise | Production   | True    | ---deployment.feature.graceful-shutdown               | N/A                                                                                |
+| Optional Graceful Restart                                                     | 1.2.0            | 1.2.5      | >= 3.8.0         | Community, Enterprise | Production   | False   | --deployment.feature.optional-graceful-shutdown       | N/A                                                                                |
+| Operator Internal Metrics Exporter                                            | 1.2.0            | 1.2.0      | >= 3.8.0         | Community, Enterprise | Production   | True    | --deployment.feature.metrics-exporter                 | N/A                                                                                |
+| Operator Maintenance Management Support                                       | 1.2.0            | 1.0.7      | >= 3.8.0         | Community, Enterprise | Production   | True    | --deployment.feature.maintenance                      | N/A                                                                                |
+| Encryption Key Rotation Support                                               | 1.2.0            | 1.0.3      | >= 3.8.0         | Enterprise            | NotSupported | False   | --deployment.feature.encryption-rotation              | N/A                                                                                |
+| TLS Runtime Rotation Support                                                  | 1.1.0            | 1.0.4      | >= 3.8.0         | Enterprise            | Production   | True    | --deployment.feature.tls-rotation                     | N/A                                                                                |
+| JWT Rotation Support                                                          | 1.1.0            | 1.0.3      | >= 3.8.0         | Enterprise            | Production   | True    | --deployment.feature.jwt-rotation                     | N/A                                                                                |
+| Operator Single Mode                                                          | 1.0.4            | 1.0.4      | >= 3.8.0         | Community, Enterprise | Production   | False   | --mode.single                                         | Only 1 instance of Operator allowed in namespace when feature is enabled           |
+| TLS SNI Support                                                               | 1.0.3            | 1.0.3      | >= 3.8.0         | Enterprise            | Production   | True    | --deployment.feature.tls-sni                          | N/A                                                                                |
+| Disabling of liveness probes                                                  | 0.3.11           | 0.3.10     | >= 3.8.0         | Community, Enterprise | Production   | True    | N/A                                                   | N/A                                                                                |
+| Pod Disruption Budgets                                                        | 0.3.11           | 0.3.10     | >= 3.8.0         | Community, Enterprise | Production   | True    | N/A                                                   | N/A                                                                                |
+| Prometheus Metrics Exporter                                                   | 0.3.11           | 0.3.10     | >= 3.8.0         | Community, Enterprise | Production   | True    | N/A                                                   | Prometheus required                                                                |
+| Sidecar Containers                                                            | 0.3.11           | 0.3.10     | >= 3.8.0         | Community, Enterprise | Production   | True    | N/A                                                   | N/A                                                                                |
+| Volume Claim Templates                                                        | 0.3.11           | 0.3.10     | >= 3.8.0         | Community, Enterprise | Production   | True    | N/A                                                   | N/A                                                                                |
+| Volume Resizing                                                               | 0.3.11           | 0.3.10     | >= 3.8.0         | Community, Enterprise | Production   | True    | N/A                                                   | N/A                                                                                |
+
+[END_INJECT]: # (featuresCommunityTable)
 
 #### Operator Enterprise Only Features
 
 To upgrade to the Enterprise Edition, you need to get in touch with the ArangoDB team. [Contact us](https://www.arangodb.com/contact/) for more details.
 
-<!-- START(featuresEnterpriseTable) -->
+[START_INJECT]: # (featuresEnterpriseTable)
+
 | Feature                                                | Operator Version | Introduced | ArangoDB Version | ArangoDB Edition | State      | Enabled | Flag | Remarks                                                                     |
 |:-------------------------------------------------------|:-----------------|:-----------|:-----------------|:-----------------|:-----------|:--------|:-----|:----------------------------------------------------------------------------|
 | AgencyCache                                            | 1.2.30           | 1.2.30     | >= 3.8.0         | Enterprise       | Production | True    | N/A  | Enable Agency Cache mechanism in the Operator (Increase limit of the nodes) |
 | Member Maintenance Support                             | 1.2.25           | 1.2.16     | >= 3.8.0         | Enterprise       | Production | True    | N/A  | Enable Member Maintenance during planned restarts                           |
-| [Rebalancer](docs/design/features/rebalancer.md)       | 1.2.15           | 1.2.5      | >= 3.8.0         | Enterprise       | Production | True    | N/A  | N/A                                                                         |
+| [Rebalancer](docs/features/rebalancer.md)              | 1.2.15           | 1.2.5      | >= 3.8.0         | Enterprise       | Production | True    | N/A  | N/A                                                                         |
 | [TopologyAwareness](docs/design/topology_awareness.md) | 1.2.4            | 1.2.4      | >= 3.8.0         | Enterprise       | Production | True    | N/A  | N/A                                                                         |
 
-<!-- END(featuresEnterpriseTable) -->
+[END_INJECT]: # (featuresEnterpriseTable)
 
-## Operator Community Edition (CE)
+## Installation and Usage
 
-Image: `arangodb/kube-arangodb:1.2.34`
+Docker images:
+- Community Edition: `arangodb/kube-arangodb:1.2.35`
+- Enterprise Edition: `arangodb/kube-arangodb-enterprise:1.2.35`
 
-### Installation of latest CE release using Kubectl
-
-```bash
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.34/manifests/arango-crd.yaml
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.34/manifests/arango-deployment.yaml
-# To use `ArangoLocalStorage`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.34/manifests/arango-storage.yaml
-# To use `ArangoDeploymentReplication`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.34/manifests/arango-deployment-replication.yaml
-```
+### Installation of latest release using Kubectl
 
 This procedure can also be used for upgrades and will not harm any
 running ArangoDB deployments.
 
-### Installation of latest CE release using kustomize
+##### Community Edition
+```bash
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.35/manifests/arango-crd.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.35/manifests/arango-deployment.yaml
+# To use `ArangoLocalStorage`, also run
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.35/manifests/arango-storage.yaml
+# To use `ArangoDeploymentReplication`, also run
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.35/manifests/arango-deployment-replication.yaml
+```
+
+##### Enterprise Edition
+```bash
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.35/manifests/enterprise-crd.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.35/manifests/enterprise-deployment.yaml
+# To use `ArangoLocalStorage`, also run
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.35/manifests/enterprise-storage.yaml
+# To use `ArangoDeploymentReplication`, also run
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.35/manifests/enterprise-deployment-replication.yaml
+```
+
+### Installation of latest release using kustomize
 
 Installation using [kustomize](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/) looks like installation from yaml files,
 but user is allowed to modify namespace or resource names without yaml modifications.
 
-IT is recommended to use kustomization instead of handcrafting namespace in yaml files - kustomization will replace not only resource namespaces,
+It is recommended to use kustomization instead of handcrafting namespace in yaml files - kustomization will replace not only resource namespaces,
 but also namespace references in resources like ClusterRoleBinding.
 
-Example kustomization file:
+See `manifests/kustomize` directory for available combinations of installed features.
+
+##### Community Edition example
 ```
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-
 namespace: my-custom-namespace
-
-bases:
-  - https://github.com/arangodb/kube-arangodb/manifests/kustomize/deployment/?ref=1.0.3
+resources:
+  - https://github.com/arangodb/kube-arangodb/manifests/kustomize/crd?ref=1.2.34
+  - https://github.com/arangodb/kube-arangodb/manifests/kustomize/deployment?ref=1.2.34
 ```
 
-### Installation of latest CE release using Helm
+##### Enterprise Edition example
+```
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: my-custom-namespace
+resources:
+  - https://github.com/arangodb/kube-arangodb/manifests/kustomize-enterprise/crd?ref=1.2.34
+  - https://github.com/arangodb/kube-arangodb/manifests/kustomize-enterprise/deployment?ref=1.2.34
+```
 
-Only use this procedure for a new install of the operator. See below for
-upgrades.
+### Installation of latest release using Helm
 
+Only use this procedure for clean installation of the operator. For upgrades see next section
+
+##### Community Edition
 ```bash
-# The following will install the operator for `ArangoDeployment` &
-# `ArangoDeploymentReplication` resources.
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.34/kube-arangodb-1.2.34.tgz
+# The following will install the operator and basic CRDs resources.
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.35/kube-arangodb-1.2.35.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.34/kube-arangodb-1.2.34.tgz --set "operator.features.storage=true"
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.35/kube-arangodb-1.2.35.tgz --set "operator.features.storage=true"
+```
+
+##### Enterprise Edition
+```bash
+# The following will install the operator and basic CRDs resources.
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.35/kube-arangodb-1.2.35.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.35"
+# To use `ArangoLocalStorage`, set field `operator.features.storage` to true
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.35/kube-arangodb-1.2.35.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.35" --set "operator.features.storage=true"
 ```
 
 ### Upgrading the operator using Helm
 
 To upgrade the operator to the latest version with Helm, you have to
-delete the previous deployment and then install the latest. **HOWEVER**:
-You *must not delete* the deployment of the custom resource definitions
-(CRDs), or your ArangoDB deployments will be deleted!
+delete the previous operator deployment and then install the latest. **HOWEVER**:
+You *must not delete* the custom resource definitions (CRDs),
+or your ArangoDB deployments will be deleted!
 
 Therefore, you have to use `helm list` to find the deployments for the
-operator (`kube-arangodb`) and of the storage operator
-(`kube-arangodb-storage`) and use `helm delete` to delete them using the
-automatically generated deployment names. Here is an example of a `helm
-list` output:
+operator (`kube-arangodb`) and use `helm delete` to delete them using the
+automatically generated deployment names. Here is an example of a `helm list` output:
 
 ```
-% helm list
-NAME            	REVISION	UPDATED                 	STATUS  	CHART                               	APP VERSION	NAMESPACE
-vetoed-ladybird 	1       	Mon Apr  8 11:36:58 2019	DEPLOYED	kube-arangodb-0.3.10-preview        	           	default  
+NAME                      	NAMESPACE	REVISION	UPDATED                                 	STATUS  	CHART               	APP VERSION
+kube-arangodb-1-1696919877	default  	1       	2023-10-10 08:37:57.884783199 +0200 CEST	deployed	kube-arangodb-1.2.31	
 ```
 
 So here, you would have to do
-
 ```bash
-helm delete vetoed-ladybird
+helm delete kube-arangodb-1-1696919877
 ```
 
-but **not delete `steely-mule`**. Then you could install the new version
-with `helm install` as normal:
+Then you can install the new version with `helm install` as normal:
 
+##### Community Edition
 ```bash
-# The following will install the operator for `ArangoDeployment` &
-# `ArangoDeploymentReplication` resources.
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.34/kube-arangodb-1.2.34.tgz
+# The following will install the operator and basic CRDs resources.
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.35/kube-arangodb-1.2.35.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.34/kube-arangodb-1.2.34.tgz --set "operator.features.storage=true"
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.35/kube-arangodb-1.2.35.tgz --set "operator.features.storage=true"
 ```
 
-## Operator Enterprise Edition (EE)
-
-Image: `arangodb/kube-arangodb-enterprise:1.2.34`
-
-### Installation of latest EE release using Kubectl
-
+##### Enterprise Edition
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.34/manifests/enterprise-crd.yaml
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.34/manifests/enterprise-deployment.yaml
-# To use `ArangoLocalStorage`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.34/manifests/enterprise-storage.yaml
-# To use `ArangoDeploymentReplication`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.34/manifests/enterprise-deployment-replication.yaml
-```
-
-This procedure can also be used for upgrades and will not harm any
-running ArangoDB deployments.
-
-### Installation of latest EE release using kustomize
-
-Installation using [kustomize](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/) looks like installation from yaml files,
-but user is allowed to modify namespace or resource names without yaml modifications.
-
-IT is recommended to use kustomization instead of handcrafting namespace in yaml files - kustomization will replace not only resource namespaces,
-but also namespace references in resources like ClusterRoleBinding.
-
-Example kustomization file:
-```
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-
-namespace: my-custom-namespace
-
-bases:
-  - https://github.com/arangodb/kube-arangodb/manifests/kustomize-enterprise/deployment/?ref=1.0.3
-```
-
-### Installation of latest EE release using Helm
-
-Only use this procedure for a new install of the operator. See below for
-upgrades.
-
-```bash
-# The following will install the operator for `ArangoDeployment` &
-# `ArangoDeploymentReplication` resources.
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.34/kube-arangodb-1.2.34.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.34"
+# The following will install the operator and basic CRDs resources.
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.35/kube-arangodb-1.2.35.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.35"
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.34/kube-arangodb-1.2.34.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.34" --set "operator.features.storage=true"
-```
-
-### Upgrading the operator using Helm
-
-To upgrade the operator to the latest version with Helm, you have to
-delete the previous deployment and then install the latest. **HOWEVER**:
-You *must not delete* the deployment of the custom resource definitions
-(CRDs), or your ArangoDB deployments will be deleted!
-
-Therefore, you have to use `helm list` to find the deployments for the
-operator (`kube-arangodb`) and of the storage operator
-(`kube-arangodb-storage`) and use `helm delete` to delete them using the
-automatically generated deployment names. Here is an example of a `helm
-list` output:
-
-```
-% helm list
-NAME            	REVISION	UPDATED                 	STATUS  	CHART                               	APP VERSION	NAMESPACE
-vetoed-ladybird 	1       	Mon Apr  8 11:36:58 2019	DEPLOYED	kube-arangodb-0.3.10-preview        	           	default  
-```
-
-So here, you would have to do
-
-```bash
-helm delete vetoed-ladybird
-```
-
-but **not delete `steely-mule`**. Then you could install the new version
-with `helm install` as normal:
-
-```bash
-# The following will install the operator for `ArangoDeployment` &
-# `ArangoDeploymentReplication` resources.
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.34/kube-arangodb-1.2.34.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.34"
-# To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.34/kube-arangodb-1.2.34.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.34" --set "operator.features.storage=true"
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.35/kube-arangodb-1.2.35.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.35" --set "operator.features.storage=true"
 ```
 
 ## Building
