@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.2.35](https://github.com/arangodb/kube-arangodb/tree/1.2.35) (2023-11-06)
 - (Maintenance) Update go-driver to v1.6.0, update IsNotFound() checks
 - (Improvement) Print assigned node name to log and condition message when pod is scheduled
 - (Maintenance) Remove obsolete docs, restructure for better UX, generate index files
