@@ -5,6 +5,11 @@ orbs:
 
 setup: true
 
+parameters:
+  manifests-verify:
+    type: boolean
+    default: false
+
 workflows:
   always-run:
     jobs:
