@@ -59,7 +59,6 @@ func containersCompare(ds api.DeploymentSpec, g api.ServerGroup, spec, status *c
 						mode = mode.And(InPlaceRotation)
 					}
 
-					//g := podContainerFuncGenerator(ds, g, ac, bc)
 					g := genericFuncGenerator(ds, g, ac, bc)
 
 					if m, p, err := compareGeneric(builder, g(compareServerContainerVolumeMounts), g(compareServerContainerProbes), g(compareServerContainerEnvs)); err != nil {
@@ -98,7 +97,6 @@ func containersCompare(ds api.DeploymentSpec, g api.ServerGroup, spec, status *c
 						mode = mode.And(InPlaceRotation)
 					}
 
-					//g := podContainerFuncGenerator(ds, g, ac, bc)
 					g := genericFuncGenerator(ds, g, ac, bc)
 
 					if m, p, err := compareGeneric(builder, g(compareAnyContainerVolumeMounts), g(compareAnyContainerEnvs)); err != nil {
