@@ -1,4 +1,4 @@
-# Collecting debug data
+# How to collect debug data
 
 ## Agency dump
 

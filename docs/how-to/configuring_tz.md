@@ -1,4 +1,4 @@
-# Configuring timezone
+# How to configure timezone
 
 To set timezone for cluster components, mount the required timezone into container
 by adjusting `spec.<group>` of ArangoDeployment resource:

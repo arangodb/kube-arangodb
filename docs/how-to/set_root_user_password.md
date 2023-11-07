@@ -1,4 +1,4 @@
-# Set root user password
+# How to set root user password
 
 1) Create a kubernetes [Secret](https://kubernetes.io/docs/tasks/configmap-secret/managing-secret-using-kubectl/) with root password:
 ```bash

@@ -1,7 +1,7 @@
-# Manual Recovery
+# How to recover a destroyed deployment 
 
 ## Overview
-Let's consider a situation where we had a ArangoDeployment in Cluster mode (3 DbServers, 3 Coordinators, 3 Agents)
+Let's consider a situation where we had an ArangoDeployment in Cluster mode (3 DbServers, 3 Coordinators, 3 Agents)
 with Local storage attached (only one K8s Node in the K8s cluster).
 
 Due to some reason the ArangoDeployment was deleted (e.g. ETCD storage has been wiped out) and we want to recover it.
@@ -75,6 +75,7 @@ EOF
 ## Create PV and PVC
 
 1. We need to create ArangoLocalStorage first:
+
     ```yaml
     cat <<EOF | kubectl apply -f -
     apiVersion: "storage.arangodb.com/v1alpha"
@@ -89,113 +90,124 @@ EOF
       - /mnt/data
     EOF
     ```
-2. Now create PV and PVC for every directory listed above
-   - Agents - here is an example for `AGNT-pntg5yc8`(`f9rs2htwc9e0bzme` directory)
-     - PV
-        ```yaml
-        cat <<EOF | kubectl apply -f -
-        apiVersion: "v1"
-        kind: PersistentVolume
-        metadata:
-          labels:
-            arango_deployment: cluster
-            role: agent
-          name: agent-pntg5yc8-f9rs2htwc9e0bzme
-        spec:
-          accessModes:
-          - ReadWriteOnce
-          capacity:
-            storage: 1Gi
-          local:
-            path: /mnt/data/f9rs2htwc9e0bzme
-          persistentVolumeReclaimPolicy: Retain
-          storageClassName: my-local-ssd
-          volumeMode: Filesystem
-          nodeAffinity:
-            required:
-              nodeSelectorTerms:
-              - matchExpressions:
-                - key: kubernetes.io/hostname
-                  operator: In
-                  values:
-                  - minikube
-        EOF
-        ```
-     - PVC
-         ```yaml
-         cat <<EOF | kubectl apply -f -
-         apiVersion: v1
-         kind: PersistentVolumeClaim
-         metadata:
-           labels:
-             app: arangodb
-             arango_deployment: cluster
-             role: agent
-           name: agent-pntg5yc8
-         spec:
-           accessModes:
-           - ReadWriteOnce
-           resources:
-             requests:
+
+3. Now create PV and PVC for every directory listed above
+
+    - **Agents** - here is an example for `AGNT-pntg5yc8`(`f9rs2htwc9e0bzme` directory)
+
+        - PV
+
+           ```yaml
+           cat <<EOF | kubectl apply -f -
+           apiVersion: "v1"
+           kind: PersistentVolume
+           metadata:
+             labels:
+               arango_deployment: cluster
+               role: agent
+             name: agent-pntg5yc8-f9rs2htwc9e0bzme
+           spec:
+             accessModes:
+             - ReadWriteOnce
+             capacity:
                storage: 1Gi
-           storageClassName: my-local-ssd
-           volumeMode: Filesystem
-           volumeName: agent-pntg5yc8-f9rs2htwc9e0bzme
-         EOF
-         ```
-   - DbServers - here is an example for `PRMR-9xztmg4t` (`vka6ic19qcl1y3ec` directory)
-     - PV
-        ```yaml
-        cat <<EOF | kubectl apply -f -
-        apiVersion: "v1"
-        kind: PersistentVolume
-        metadata:
-          labels:
-            arango_deployment: cluster
-            role: dbserver
-          name: dbserver-9xztmg4t-vka6ic19qcl1y3ec
-        spec:
-          accessModes:
-          - ReadWriteOnce
-          capacity:
-            storage: 1Gi
-          local:
-            path: /mnt/data/vka6ic19qcl1y3ec
-          persistentVolumeReclaimPolicy: Retain
-          storageClassName: my-local-ssd
-          volumeMode: Filesystem
-          nodeAffinity:
-            required:
-              nodeSelectorTerms:
-              - matchExpressions:
-                - key: kubernetes.io/hostname
-                  operator: In
-                  values:
-                  - minikube
-        EOF
-        ```
-     - PVC
-         ```yaml
-         cat <<EOF | kubectl apply -f -
-         apiVersion: v1
-         kind: PersistentVolumeClaim
-         metadata:
-           labels:
-             app: arangodb
-             arango_deployment: cluster
-             role: dbserver
-           name: dbserver-9xztmg4t
-         spec:
-           accessModes:
-           - ReadWriteOnce
-           resources:
-             requests:
+             local:
+               path: /mnt/data/f9rs2htwc9e0bzme
+             persistentVolumeReclaimPolicy: Retain
+             storageClassName: my-local-ssd
+             volumeMode: Filesystem
+             nodeAffinity:
+               required:
+                 nodeSelectorTerms:
+                 - matchExpressions:
+                   - key: kubernetes.io/hostname
+                     operator: In
+                     values:
+                     - minikube
+           EOF
+           ```
+
+        - PVC
+
+            ```yaml
+            cat <<EOF | kubectl apply -f -
+            apiVersion: v1
+            kind: PersistentVolumeClaim
+            metadata:
+              labels:
+                app: arangodb
+                arango_deployment: cluster
+                role: agent
+              name: agent-pntg5yc8
+            spec:
+              accessModes:
+              - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 1Gi
+              storageClassName: my-local-ssd
+              volumeMode: Filesystem
+              volumeName: agent-pntg5yc8-f9rs2htwc9e0bzme
+            EOF
+            ```
+
+    - **DbServers** - here is an example for `PRMR-9xztmg4t` (`vka6ic19qcl1y3ec` directory)
+
+        - PV
+
+           ```yaml
+           cat <<EOF | kubectl apply -f -
+           apiVersion: "v1"
+           kind: PersistentVolume
+           metadata:
+             labels:
+               arango_deployment: cluster
+               role: dbserver
+             name: dbserver-9xztmg4t-vka6ic19qcl1y3ec
+           spec:
+             accessModes:
+             - ReadWriteOnce
+             capacity:
                storage: 1Gi
-           storageClassName: my-local-ssd
-           volumeMode: Filesystem
-           volumeName: dbserver-9xztmg4t-vka6ic19qcl1y3ec
-         EOF
-         ```
+             local:
+               path: /mnt/data/vka6ic19qcl1y3ec
+             persistentVolumeReclaimPolicy: Retain
+             storageClassName: my-local-ssd
+             volumeMode: Filesystem
+             nodeAffinity:
+               required:
+                 nodeSelectorTerms:
+                 - matchExpressions:
+                   - key: kubernetes.io/hostname
+                     operator: In
+                     values:
+                     - minikube
+           EOF
+           ```
+
+        - PVC
+
+            ```yaml
+            cat <<EOF | kubectl apply -f -
+            apiVersion: v1
+            kind: PersistentVolumeClaim
+            metadata:
+              labels:
+                app: arangodb
+                arango_deployment: cluster
+                role: dbserver
+              name: dbserver-9xztmg4t
+            spec:
+              accessModes:
+              - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 1Gi
+              storageClassName: my-local-ssd
+              volumeMode: Filesystem
+              volumeName: dbserver-9xztmg4t-vka6ic19qcl1y3ec
+            EOF
+            ```
 
 ### Create ArangoDeployment with previously created PVC
 
@@ -264,7 +276,7 @@ status:
         persistentVolumeClaim:
           name: cluster-dbserver-31akmzrp
         persistentVolumeClaimName: cluster-dbserver-31akmzrp
-EOF
+  EOF
 ```
 
 That's it! Now you can use ArangoDB with restored data.
