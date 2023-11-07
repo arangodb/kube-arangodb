@@ -6,25 +6,25 @@
 
 Iterations defines number of iterations before reaching MaxDelay. Default to 5
 
-[Code Reference](/pkg/apis/backup/v1/backup_spec_backoff.go#L31)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_spec_backoff.go#L31)
 
 ### .spec.backoff.max_delay: integer
 
 MaxDelay defines maximum delay in seconds. Default to 600
 
-[Code Reference](/pkg/apis/backup/v1/backup_spec_backoff.go#L29)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_spec_backoff.go#L29)
 
 ### .spec.backoff.max_iterations: integer
 
 MaxIterations defines maximum number of iterations after backoff will be disabled. Default to nil (no limit)
 
-[Code Reference](/pkg/apis/backup/v1/backup_spec_backoff.go#L33)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_spec_backoff.go#L33)
 
 ### .spec.backoff.min_delay: integer
 
 MinDelay defines minimum delay in seconds. Default to 30
 
-[Code Reference](/pkg/apis/backup/v1/backup_spec_backoff.go#L27)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_spec_backoff.go#L27)
 
 ### .spec.deployment.name: string
 
@@ -32,7 +32,7 @@ Name of the ArangoDeployment Custom Resource within same namespace as ArangoBack
 
 This field is **immutable**: can't be changed after backup creation
 
-[Code Reference](/pkg/apis/backup/v1/backup_spec.go#L54)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_spec.go#L54)
 
 ### .spec.download.credentialsSecretName: string
 
@@ -43,7 +43,7 @@ Links:
 
 This field is **immutable**: can't be changed after backup creation
 
-[Code Reference](/pkg/apis/backup/v1/backup_spec.go#L81)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_spec.go#L81)
 
 ### .spec.download.id: string
 
@@ -51,7 +51,7 @@ ID of the ArangoBackup to be downloaded
 
 This field is **immutable**: can't be changed after backup creation
 
-[Code Reference](/pkg/apis/backup/v1/backup_spec.go#L89)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_spec.go#L89)
 
 ### .spec.download.repositoryURL: string
 
@@ -70,34 +70,34 @@ azure://test
 
 This field is **immutable**: can't be changed after backup creation
 
-[Code Reference](/pkg/apis/backup/v1/backup_spec.go#L77)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_spec.go#L77)
 
 ### .spec.lifetime: integer
 
 Lifetime is the time after which the backup will be deleted. Format: "1.5h" or "2h45m".
 
-[Code Reference](/pkg/apis/backup/v1/backup_spec.go#L47)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_spec.go#L47)
 
 ### .spec.options.allowInconsistent: boolean
 
 AllowInconsistent flag for Backup creation request.
 If this value is set to true, backup is taken even if we are not able to acquire lock.
 
-Default Value: false
+Default Value: `false`
 
 This field is **immutable**: can't be changed after backup creation
 
-[Code Reference](/pkg/apis/backup/v1/backup_spec.go#L66)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_spec.go#L66)
 
 ### .spec.options.timeout: number
 
 Timeout for Backup creation request in seconds.
 
-Default Value: 30
+Default Value: `30`
 
 This field is **immutable**: can't be changed after backup creation
 
-[Code Reference](/pkg/apis/backup/v1/backup_spec.go#L61)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_spec.go#L61)
 
 ### .spec.policyName: string
 
@@ -105,7 +105,7 @@ PolicyName name of the ArangoBackupPolicy which created this Custom Resource
 
 This field is **immutable**: can't be changed after backup creation
 
-[Code Reference](/pkg/apis/backup/v1/backup_spec.go#L42)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_spec.go#L42)
 
 ### .spec.upload.credentialsSecretName: string
 
@@ -116,7 +116,7 @@ Links:
 
 This field is **immutable**: can't be changed after backup creation
 
-[Code Reference](/pkg/apis/backup/v1/backup_spec.go#L81)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_spec.go#L81)
 
 ### .spec.upload.repositoryURL: string
 
@@ -135,7 +135,7 @@ azure://test
 
 This field is **immutable**: can't be changed after backup creation
 
-[Code Reference](/pkg/apis/backup/v1/backup_spec.go#L77)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_spec.go#L77)
 
 ## Status
 
@@ -143,67 +143,67 @@ This field is **immutable**: can't be changed after backup creation
 
 Available Determines if we can restore from ArangoBackup
 
-[Code Reference](/pkg/apis/backup/v1/backup_status.go#L36)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_status.go#L36)
 
 ### .status.backoff.iterations: integer
 
-[Code Reference](/pkg/apis/backup/v1/backup_status_backoff.go#L30)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_status_backoff.go#L30)
 
 ### .status.backup.downloaded: boolean
 
 Downloaded Determines if ArangoBackup has been downloaded.
 
-[Code Reference](/pkg/apis/backup/v1/backup_status.go#L66)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_status.go#L66)
 
 ### .status.backup.id: string
 
-[Code Reference](/pkg/apis/backup/v1/backup_status.go#L56)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_status.go#L56)
 
 ### .status.backup.imported: boolean
 
-[Code Reference](/pkg/apis/backup/v1/backup_status.go#L67)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_status.go#L67)
 
 ### .status.backup.keys: array
 
-[Code Reference](/pkg/apis/backup/v1/backup_status.go#L70)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_status.go#L70)
 
 ### .status.backup.numberOfDBServers: integer
 
 NumberOfDBServers Cluster size of the Backup in ArangoDB
 
-[Code Reference](/pkg/apis/backup/v1/backup_status.go#L62)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_status.go#L62)
 
 ### .status.backup.potentiallyInconsistent: boolean
 
-[Code Reference](/pkg/apis/backup/v1/backup_status.go#L58)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_status.go#L58)
 
 ### .status.backup.sizeInBytes: integer
 
 SizeInBytes Size of the Backup in ArangoDB.
 
-[Code Reference](/pkg/apis/backup/v1/backup_status.go#L60)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_status.go#L60)
 
 ### .status.backup.uploaded: boolean
 
 Uploaded Determines if ArangoBackup has been uploaded
 
-[Code Reference](/pkg/apis/backup/v1/backup_status.go#L64)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_status.go#L64)
 
 ### .status.backup.version: string
 
-[Code Reference](/pkg/apis/backup/v1/backup_status.go#L57)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_status.go#L57)
 
 ### .status.message: string
 
 Message for the state this object is in.
 
-[Code Reference](/pkg/apis/backup/v1/backup_state.go#L86)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_state.go#L86)
 
 ### .status.progress.jobID: string
 
 JobID ArangoDB job ID for uploading or downloading
 
-[Code Reference](/pkg/apis/backup/v1/backup_state.go#L109)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_state.go#L109)
 
 ### .status.progress.progress: string
 
@@ -214,7 +214,7 @@ Example:
 90%
 ```
 
-[Code Reference](/pkg/apis/backup/v1/backup_state.go#L112)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_state.go#L112)
 
 ### .status.state: string
 
@@ -235,5 +235,5 @@ Possible Values:
 * Failed - state for failure
 * Unavailable - state when Backup is not available on the ArangoDB. It can happen in case of upgrades, node restarts etc.
 
-[Code Reference](/pkg/apis/backup/v1/backup_state.go#L80)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_state.go#L80)
 

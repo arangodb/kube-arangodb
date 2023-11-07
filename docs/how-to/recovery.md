@@ -1,7 +1,7 @@
 # How to recover a destroyed deployment 
 
 ## Overview
-Let's consider a situation where we had a ArangoDeployment in Cluster mode (3 DbServers, 3 Coordinators, 3 Agents)
+Let's consider a situation where we had an ArangoDeployment in Cluster mode (3 DbServers, 3 Coordinators, 3 Agents)
 with Local storage attached (only one K8s Node in the K8s cluster).
 
 Due to some reason the ArangoDeployment was deleted (e.g. ETCD storage has been wiped out) and we want to recover it.
