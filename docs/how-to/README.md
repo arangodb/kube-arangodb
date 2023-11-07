@@ -10,4 +10,4 @@
 - [Enable maintenance mode](maintenance.md)
 - [Override detected total memory](override_detected_memory.md)
 - [Manually recover cluster if you still have volumes with data](recovery.md)
-- [How to rotate Pod](rotate-pod.md)
+- [Rotate Pod](rotate-pod.md)

@@ -8,23 +8,23 @@ DeletionPriority define Deletion Priority.
 Higher value means higher priority. Default is 0.
 Example: set 1 for Coordinator which should be deleted first and scale down coordinators by one.
 
-[Code Reference](/pkg/apis/deployment/v1/arango_member_spec.go#L47)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/arango_member_spec.go#L47)
 
 ### .spec.deploymentUID: string
 
 DeploymentUID define Deployment UID.
 
-[Code Reference](/pkg/apis/deployment/v1/arango_member_spec.go#L36)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/arango_member_spec.go#L36)
 
 ### .spec.group: integer
 
 Group define Member Groups.
 
-[Code Reference](/pkg/apis/deployment/v1/arango_member_spec.go#L31)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/arango_member_spec.go#L31)
 
 ### .spec.id: string
 
-[Code Reference](/pkg/apis/deployment/v1/arango_member_spec.go#L33)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/arango_member_spec.go#L33)
 
 ### .spec.overrides.resources: core.ResourceRequirements
 
@@ -33,7 +33,7 @@ Resources holds resource requests & limits. Overrides template provided on the g
 Links:
 * [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/arango_member_spec_overrides.go#L38)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/arango_member_spec_overrides.go#L38)
 
 ### .spec.overrides.volumeClaimTemplate: core.PersistentVolumeClaim
 
@@ -42,19 +42,19 @@ VolumeClaimTemplate specifies a template for volume claims. Overrides template p
 Links:
 * [Documentation of core.PersistentVolumeClaim](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaim-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/arango_member_spec_overrides.go#L33)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/arango_member_spec_overrides.go#L33)
 
 ### .spec.template.checksum: string
 
 Checksum keep the Pod Spec Checksum (with ignored fields).
 
-[Code Reference](/pkg/apis/deployment/v1/arango_member_pod_template.go#L60)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/arango_member_pod_template.go#L60)
 
 ### .spec.template.endpoint: string
 
 Deprecated: Endpoint is not saved into the template
 
-[Code Reference](/pkg/apis/deployment/v1/arango_member_pod_template.go#L63)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/arango_member_pod_template.go#L63)
 
 ### .spec.template.podSpec: core.PodTemplateSpec
 
@@ -63,11 +63,11 @@ PodSpec specifies the Pod Spec used for this Member.
 Links:
 * [Documentation of core.PodTemplateSpec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podtemplatespec-v1-core)
 
-[Code Reference](/pkg/apis/deployment/v1/arango_member_pod_template.go#L54)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/arango_member_pod_template.go#L54)
 
 ### .spec.template.podSpecChecksum: string
 
 PodSpecChecksum keep the Pod Spec Checksum (without ignored fields).
 
-[Code Reference](/pkg/apis/deployment/v1/arango_member_pod_template.go#L57)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/arango_member_pod_template.go#L57)
 

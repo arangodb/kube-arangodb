@@ -1,4 +1,4 @@
-# Additional configuration
+# How to pass additional params to operator
 
 It is possible to additionally fine-tune operator behavior by
 providing arguments via `operator.args` chart template value.

@@ -1,4 +1,4 @@
-# Logging configuration
+# How to configure logging
 
 ## Operator logging
 

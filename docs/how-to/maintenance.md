@@ -1,4 +1,4 @@
-# Maintenance mode
+# How to use maintenance mode
 
 ## ArangoDeployment maintenance
 
