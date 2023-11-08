@@ -21,44 +21,36 @@
 package crds
 
 import (
+	_ "embed"
+
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/arangodb/go-driver"
 )
 
-type Definition struct {
-	Version driver.Version
-	CRD     *apiextensions.CustomResourceDefinition
-}
+const (
+	MLStorageVersion = driver.Version("1.0.0")
+)
 
-func AllDefinitions() []Definition {
-	return []Definition{
-		// Deployment
-		DatabaseDeploymentDefinition(),
-		DatabaseMemberDefinition(),
-
-		// ACS
-		DatabaseClusterSynchronizationDefinition(),
-
-		// ArangoSync
-		ReplicationDeploymentReplicationDefinition(),
-
-		// Storage
-		StorageLocalStorageDefinition(),
-
-		// Apps
-		AppsJobDefinition(),
-		DatabaseTaskDefinition(),
-
-		// Backups
-		BackupsBackupDefinition(),
-		BackupsBackupPolicyDefinition(),
-
-		// ML
-		MLExtensionDefinition(),
-		MLStorageDefinition(),
-
-		MLCronJobDefinition(),
-		MLBatchJobDefinition(),
+func init() {
+	if err := yaml.Unmarshal(mlStorage, &mlStorageCRD); err != nil {
+		panic(err)
 	}
 }
+
+func MLStorage() *apiextensions.CustomResourceDefinition {
+	return mlStorageCRD.DeepCopy()
+}
+
+func MLStorageDefinition() Definition {
+	return Definition{
+		Version: MLStorageVersion,
+		CRD:     mlStorageCRD.DeepCopy(),
+	}
+}
+
+var mlStorageCRD apiextensions.CustomResourceDefinition
+
+//go:embed ml-storage.yaml
+var mlStorage []byte

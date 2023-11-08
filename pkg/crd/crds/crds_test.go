@@ -28,6 +28,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/apps"
 	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
+	"github.com/arangodb/kube-arangodb/pkg/apis/ml"
 	"github.com/arangodb/kube-arangodb/pkg/apis/replication"
 	"github.com/arangodb/kube-arangodb/pkg/apis/storage"
 )
@@ -48,4 +49,8 @@ func Test_CRD(t *testing.T) {
 	ensureCRDCompliance(t, deployment.ArangoTaskCRDName, DatabaseTaskDefinition())
 	ensureCRDCompliance(t, replication.ArangoDeploymentReplicationCRDName, ReplicationDeploymentReplicationDefinition())
 	ensureCRDCompliance(t, storage.ArangoLocalStorageCRDName, StorageLocalStorageDefinition())
+	ensureCRDCompliance(t, ml.ArangoMLExtensionCRDName, MLExtensionDefinition())
+	ensureCRDCompliance(t, ml.ArangoMLStorageCRDName, MLStorageDefinition())
+	ensureCRDCompliance(t, ml.ArangoMLCronJobCRDName, MLCronJobDefinition())
+	ensureCRDCompliance(t, ml.ArangoMLBatchJobCRDName, MLBatchJobDefinition())
 }

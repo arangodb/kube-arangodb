@@ -21,44 +21,36 @@
 package crds
 
 import (
+	_ "embed"
+
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/arangodb/go-driver"
 )
 
-type Definition struct {
-	Version driver.Version
-	CRD     *apiextensions.CustomResourceDefinition
-}
+const (
+	MLExtensionVersion = driver.Version("1.0.0")
+)
 
-func AllDefinitions() []Definition {
-	return []Definition{
-		// Deployment
-		DatabaseDeploymentDefinition(),
-		DatabaseMemberDefinition(),
-
-		// ACS
-		DatabaseClusterSynchronizationDefinition(),
-
-		// ArangoSync
-		ReplicationDeploymentReplicationDefinition(),
-
-		// Storage
-		StorageLocalStorageDefinition(),
-
-		// Apps
-		AppsJobDefinition(),
-		DatabaseTaskDefinition(),
-
-		// Backups
-		BackupsBackupDefinition(),
-		BackupsBackupPolicyDefinition(),
-
-		// ML
-		MLExtensionDefinition(),
-		MLStorageDefinition(),
-
-		MLCronJobDefinition(),
-		MLBatchJobDefinition(),
+func init() {
+	if err := yaml.Unmarshal(mlExtension, &mlExtensionCRD); err != nil {
+		panic(err)
 	}
 }
+
+func MLExtension() *apiextensions.CustomResourceDefinition {
+	return mlExtensionCRD.DeepCopy()
+}
+
+func MLExtensionDefinition() Definition {
+	return Definition{
+		Version: MLExtensionVersion,
+		CRD:     mlExtensionCRD.DeepCopy(),
+	}
+}
+
+var mlExtensionCRD apiextensions.CustomResourceDefinition
+
+//go:embed ml-extension.yaml
+var mlExtension []byte

@@ -38,6 +38,7 @@ import (
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
 	replicationApi "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	storageApi "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -143,6 +144,24 @@ func Test_GenerateAPIDocs(t *testing.T) {
 			"ArangoBackupPolicy.V1": {
 				"Spec":   backupApi.ArangoBackupPolicy{}.Spec,
 				"Status": backupApi.ArangoBackupPolicy{}.Status,
+			},
+		},
+		fmt.Sprintf("%s/pkg/apis/ml/v1alpha1", root): {
+			"ArangoMLExtension.V1Alpha1": {
+				"Spec":   mlApi.ArangoMLExtension{}.Spec,
+				"Status": mlApi.ArangoMLExtension{}.Status,
+			},
+			"ArangoMLStorage.V1Alpha1": {
+				"Spec":   mlApi.ArangoMLStorage{}.Spec,
+				"Status": mlApi.ArangoMLStorage{}.Status,
+			},
+			"ArangoMLCronJob.V1Alpha1": {
+				"Spec":   mlApi.ArangoMLCronJob{}.Spec,
+				"Status": mlApi.ArangoMLCronJob{}.Status,
+			},
+			"ArangoMLBatchJob.V1Alpha1": {
+				"Spec":   mlApi.ArangoMLBatchJob{}.Spec,
+				"Status": mlApi.ArangoMLBatchJob{}.Status,
 			},
 		},
 		fmt.Sprintf("%s/pkg/apis/replication/v1", root): {
