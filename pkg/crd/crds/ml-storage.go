@@ -36,8 +36,8 @@ func init() {
 	mustLoadCRD(mlStorage, mlStorageSchemaRaw, &mlStorageCRD, &mlStorageCRDWithSchema)
 }
 
-func MLStorage() *apiextensions.CustomResourceDefinition {
-	return mlStorageCRD.DeepCopy()
+func MLStorage(opts ...GetCRDOptions) *apiextensions.CustomResourceDefinition {
+	return getCRD(mlStorageCRD, mlStorageCRDWithSchema, opts...)
 }
 
 func MLStorageDefinition() Definition {

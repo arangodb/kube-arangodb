@@ -41,7 +41,7 @@ func ensureCRDCompliance(t *testing.T, name string, crdDef *apiextensions.Custom
 	require.NotNil(t, crdDef)
 	require.Equal(t, name, crdDef.GetName())
 	for _, ver := range crdDef.Spec.Versions {
-		t.Run(ver.Name, func(t *testing.T) {
+		t.Run(name+" "+ver.Name, func(t *testing.T) {
 			require.NotNil(t, ver.Schema)
 			require.Equal(t, "object", ver.Schema.OpenAPIV3Schema.Type)
 			require.True(t, *ver.Schema.OpenAPIV3Schema.XPreserveUnknownFields)
@@ -90,5 +90,39 @@ func Test_AllDefinitionsDefined(t *testing.T) {
 		require.NotEmpty(t, def.Version)
 		require.NotNil(t, def.CRD)
 		require.NotNil(t, def.CRDWithSchema)
+	}
+}
+
+func Test_CRDGetters(t *testing.T) {
+	// getters are exposed for the usage by customers
+	getters := []func(opts ...GetCRDOptions) *apiextensions.CustomResourceDefinition{
+		AppsJob,
+		BackupsBackup,
+		BackupsBackupPolicyPolicy,
+		DatabaseClusterSynchronization,
+		DatabaseDeployment,
+		DatabaseMember,
+		DatabaseTask,
+		MLExtension,
+		MLBatchJob,
+		MLCronJob,
+		MLStorage,
+		ReplicationDeploymentReplication,
+		StorageLocalStorage,
+	}
+	require.Equal(t, len(AllDefinitions()), len(getters))
+
+	for _, g := range getters {
+		t.Run("no-schema", func(t *testing.T) {
+			crd := g()
+			require.NotNil(t, crd)
+			ensureCRDCompliance(t, crd.Spec.Names.Plural+"."+crd.Spec.Group, crd, false)
+		})
+
+		t.Run("with-schema", func(t *testing.T) {
+			crdWithSchema := g(WithSchema())
+			require.NotNil(t, crdWithSchema)
+			ensureCRDCompliance(t, crdWithSchema.Spec.Names.Plural+"."+crdWithSchema.Spec.Group+"", crdWithSchema, true)
+		})
 	}
 }

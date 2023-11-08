@@ -36,8 +36,8 @@ func init() {
 	mustLoadCRD(backupsBackup, backupsBackupSchemaRaw, &backupsBackupCRD, &backupsBackupCRDWithSchema)
 }
 
-func BackupsBackup() *apiextensions.CustomResourceDefinition {
-	return backupsBackupCRD.DeepCopy()
+func BackupsBackup(opts ...GetCRDOptions) *apiextensions.CustomResourceDefinition {
+	return getCRD(backupsBackupCRD, backupsBackupCRDWithSchema, opts...)
 }
 
 func BackupsBackupDefinition() Definition {

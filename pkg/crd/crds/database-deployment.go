@@ -36,8 +36,8 @@ func init() {
 	mustLoadCRD(databaseDeployment, databaseDeploymentSchemaRaw, &databaseDeploymentCRD, &databaseDeploymentCRDWithSchema)
 }
 
-func DatabaseDeployment() *apiextensions.CustomResourceDefinition {
-	return databaseDeploymentCRD.DeepCopy()
+func DatabaseDeployment(opts ...GetCRDOptions) *apiextensions.CustomResourceDefinition {
+	return getCRD(databaseDeploymentCRD, databaseDeploymentCRDWithSchema, opts...)
 }
 
 func DatabaseDeploymentDefinition() Definition {

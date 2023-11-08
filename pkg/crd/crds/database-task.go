@@ -36,8 +36,8 @@ func init() {
 	mustLoadCRD(databaseTask, databaseTaskSchemaRaw, &databaseTaskCRD, &databaseTaskCRDWithSchema)
 }
 
-func DatabaseTask() *apiextensions.CustomResourceDefinition {
-	return databaseTaskCRD.DeepCopy()
+func DatabaseTask(opts ...GetCRDOptions) *apiextensions.CustomResourceDefinition {
+	return getCRD(databaseTaskCRD, databaseTaskCRDWithSchema, opts...)
 }
 
 func DatabaseTaskDefinition() Definition {

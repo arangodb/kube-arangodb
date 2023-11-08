@@ -36,8 +36,8 @@ func init() {
 	mustLoadCRD(backupsBackupPolicy, backupsBackupPolicySchemaRaw, &backupsBackupPolicyCRD, &backupsBackupPolicyCRDWithSchema)
 }
 
-func BackupsBackupPolicyPolicy() *apiextensions.CustomResourceDefinition {
-	return backupsBackupPolicyCRD.DeepCopy()
+func BackupsBackupPolicyPolicy(opts ...GetCRDOptions) *apiextensions.CustomResourceDefinition {
+	return getCRD(backupsBackupPolicyCRD, backupsBackupPolicyCRDWithSchema, opts...)
 }
 
 func BackupsBackupPolicyDefinition() Definition {
