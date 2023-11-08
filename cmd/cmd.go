@@ -371,7 +371,7 @@ func executeMain(cmd *cobra.Command, args []string) {
 			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 			defer cancel()
 
-			crdValidation, err := parseCRDValidationSchemaArgs(crdInstallOptions.validationSchema)
+			crdValidation, err := parseCRDValidationSchemaArgs(crdOptions.validationSchema)
 			if err != nil {
 				logger.Fatal("Invalid --crd.validation-schema args: %s", err)
 			}
