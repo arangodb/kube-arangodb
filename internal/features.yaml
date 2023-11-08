@@ -227,3 +227,10 @@ features:
     releases:
       - operatorVersion: 1.2.34
         state: Production
+  - name: Create backups asynchronously
+    enabled: false
+    remarks: Create backups asynchronously to avoid blocking the operator and reaching the timeout
+    flag: --deployment.feature.async-backup-creation
+    releases:
+      - operatorVersion: 1.2.35
+        state: Production

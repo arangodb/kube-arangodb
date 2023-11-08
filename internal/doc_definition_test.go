@@ -21,12 +21,8 @@
 package internal
 
 import (
-	"bytes"
-	"fmt"
+	"sort"
 	"strings"
-	"testing"
-
-	"github.com/stretchr/testify/require"
 )
 
 type DocDefinitions []DocDefinition
@@ -52,80 +48,12 @@ type DocDefinition struct {
 	Example []string
 }
 
-func (d DocDefinitions) RenderMarkdown(t *testing.T) []byte {
-	out := bytes.NewBuffer(nil)
-
-	for _, el := range d {
-
-		write(t, out, "### %s: %s\n\n", el.Path, el.Type)
-
-		if d := el.Important; d != nil {
-			write(t, out, "**Important**: %s\n\n", *d)
+func (d DocDefinitions) Sort() {
+	sort.Slice(d, func(i, j int) bool {
+		a, b := strings.ToLower(d[i].Path), strings.ToLower(d[j].Path)
+		if a == b {
+			return d[i].Path < d[j].Path
 		}
-
-		if len(el.Docs) > 0 {
-			for _, doc := range el.Docs {
-				write(t, out, "%s\n", doc)
-			}
-			write(t, out, "\n")
-		}
-
-		if len(el.Links) > 0 {
-			write(t, out, "Links:\n")
-
-			for _, link := range el.Links {
-				z := strings.Split(link, "|")
-				if len(z) == 1 {
-					write(t, out, "* [Documentation](%s)\n", z[0])
-				} else if len(z) == 2 {
-					write(t, out, "* [%s](%s)\n", z[0], z[1])
-				} else {
-					require.Fail(t, "Invalid link format")
-				}
-			}
-
-			write(t, out, "\n")
-		}
-
-		if len(el.Example) > 0 {
-			write(t, out, "Example:\n")
-			write(t, out, "```yaml\n")
-			for _, example := range el.Example {
-				write(t, out, "%s\n", example)
-			}
-			write(t, out, "```\n\n")
-		}
-
-		if len(el.Enum) > 0 {
-			write(t, out, "Possible Values: \n")
-			for id, enum := range el.Enum {
-				z := strings.Split(enum, "|")
-
-				if id == 0 {
-					z[0] = fmt.Sprintf("%s (default)", z[0])
-				}
-
-				if len(z) == 1 {
-					write(t, out, "* %s\n", z[0])
-				} else if len(z) == 2 {
-					write(t, out, "* %s - %s\n", z[0], z[1])
-				} else {
-					require.Fail(t, "Invalid enum format")
-				}
-			}
-			write(t, out, "\n")
-		} else {
-			if d := el.Default; d != nil {
-				write(t, out, "Default Value: %s\n\n", *d)
-			}
-		}
-
-		if d := el.Immutable; d != nil {
-			write(t, out, "This field is **immutable**: %s\n\n", *d)
-		}
-
-		write(t, out, "[Code Reference](/%s#L%d)\n\n", el.File, el.Line)
-	}
-
-	return out.Bytes()
+		return a < b
+	})
 }
