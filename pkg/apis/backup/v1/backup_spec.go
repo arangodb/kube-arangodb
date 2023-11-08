@@ -55,7 +55,7 @@ type ArangoBackupSpecDeployment struct {
 }
 
 type ArangoBackupSpecOptions struct {
-	// Timeout for Backup creation request in seconds.
+	// Timeout for Backup creation request in seconds. Works only when AsyncBackupCreation feature is set to false.
 	// +doc/immutable: can't be changed after backup creation
 	// +doc/default: 30
 	Timeout *float32 `json:"timeout,omitempty"`

@@ -78,7 +78,7 @@ This field is **immutable**: can't be changed after backup creation
 
 ### .spec.template.options.timeout: number
 
-Timeout for Backup creation request in seconds.
+Timeout for Backup creation request in seconds. Works only when AsyncBackupCreation feature is set to false.
 
 Default Value: `30`
 

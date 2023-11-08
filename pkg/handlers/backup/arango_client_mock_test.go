@@ -21,12 +21,14 @@
 package backup
 
 import (
+	"strconv"
 	"sync"
 	"time"
 
 	"k8s.io/apimachinery/pkg/util/uuid"
 
 	"github.com/arangodb/go-driver"
+	"github.com/arangodb/go-driver/util/connection/wrappers/async"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -70,6 +72,7 @@ type mockArangoClientBackupState struct {
 
 	backups    map[driver.BackupID]driver.BackupMeta
 	progresses map[driver.BackupTransferJobID]ArangoBackupProgress
+	createDone bool
 
 	errors mockErrorsArangoClientBackup
 }
@@ -225,6 +228,21 @@ func (m *mockArangoClientBackup) Create() (ArangoBackupCreateResponse, error) {
 		BackupMeta:              meta,
 		PotentiallyInconsistent: meta.PotentiallyInconsistent,
 	}, nil
+}
+
+func (m *mockArangoClientBackup) CreateAsync(jobID string) (ArangoBackupCreateResponse, error) {
+	if m.state.errors.createError != nil {
+		return ArangoBackupCreateResponse{}, m.state.errors.createError
+	}
+
+	if m.state.createDone {
+		return m.Create()
+	}
+
+	if jobID == "" {
+		return ArangoBackupCreateResponse{}, async.NewErrorAsyncJobInProgress(strconv.Itoa(util.Rand().Int()))
+	}
+	return ArangoBackupCreateResponse{}, async.NewErrorAsyncJobInProgress(jobID)
 }
 
 func (m *mockArangoClientBackup) getIDs() []string {

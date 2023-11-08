@@ -42,13 +42,13 @@ func Test_GenerateFeaturesIndex(t *testing.T) {
 
 	const basePath = "docs/features"
 	write(t, out, "## List of Community Edition features\n")
-	section, err := GenerateReadmeFeatures(root, basePath, true)
+	section, err := GenerateReadmeFeatures(root, basePath, false)
 	require.NoError(t, err)
 	write(t, out, section)
 	write(t, out, "\n")
 
 	write(t, out, "## List of Enterprise Edition features\n")
-	section, err = GenerateReadmeFeatures(root, basePath, false)
+	section, err = GenerateReadmeFeatures(root, basePath, true)
 	require.NoError(t, err)
 	write(t, out, section)
 	write(t, out, "\n")

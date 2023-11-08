@@ -284,7 +284,7 @@ func createClient(endpoints []string, certCA *x509.CertPool, auth connection.Aut
 	conf := connection.HttpConfiguration{
 		Authentication: auth,
 		ContentType:    contentType,
-		Endpoint:       connection.NewEndpoints(endpoints...),
+		Endpoint:       connection.NewRoundRobinEndpoints(endpoints),
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
 				RootCAs: certCA,

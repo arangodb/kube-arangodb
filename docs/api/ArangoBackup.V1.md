@@ -91,7 +91,7 @@ This field is **immutable**: can't be changed after backup creation
 
 ### .spec.options.timeout: number
 
-Timeout for Backup creation request in seconds.
+Timeout for Backup creation request in seconds. Works only when AsyncBackupCreation feature is set to false.
 
 Default Value: `30`
 
@@ -197,13 +197,13 @@ Uploaded Determines if ArangoBackup has been uploaded
 
 Message for the state this object is in.
 
-[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_state.go#L86)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_state.go#L88)
 
 ### .status.progress.jobID: string
 
 JobID ArangoDB job ID for uploading or downloading
 
-[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_state.go#L109)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_state.go#L111)
 
 ### .status.progress.progress: string
 
@@ -214,7 +214,7 @@ Example:
 90%
 ```
 
-[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_state.go#L112)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_state.go#L114)
 
 ### .status.state: string
 
@@ -235,5 +235,5 @@ Possible Values:
 * Failed - state for failure
 * Unavailable - state when Backup is not available on the ArangoDB. It can happen in case of upgrades, node restarts etc.
 
-[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_state.go#L80)
+[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/backup/v1/backup_state.go#L82)
 

@@ -25,8 +25,8 @@ require (
 	github.com/arangodb-helper/go-certificates v0.0.0-20180821055445-9fca24fc2680
 	github.com/arangodb-helper/go-helper v0.4.2
 	github.com/arangodb/arangosync-client v0.9.0
-	github.com/arangodb/go-driver v1.6.0
-	github.com/arangodb/go-driver/v2 v2.0.0-20230616090327-3b9171814ae4
+	github.com/arangodb/go-driver v1.6.1
+	github.com/arangodb/go-driver/v2 v2.0.3
 	github.com/arangodb/go-upgrade-rules v0.0.0-20180809110947-031b4774ff21
 	//github.com/arangodb/rebalancer v0.1.1
 	//github.com/arangodb/go-agency-helper v0.3.0
@@ -130,4 +130,6 @@ require (
 	k8s.io/utils v0.0.0-20220728103510-ee6ede2d64ed // indirect
 	sigs.k8s.io/json v0.0.0-20220713155537-f223a00ba0e2 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
+	github.com/dchest/siphash v1.2.2 // indirect
+	github.com/kkdai/maglev v0.2.0 // indirect
 )

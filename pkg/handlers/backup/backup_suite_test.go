@@ -75,9 +75,9 @@ func newObjectSet(state state.State) (*backupApi.ArangoBackup, *database.ArangoD
 	namespace := string(uuid.NewUUID())
 
 	obj := newArangoBackup(name, namespace, name, state)
-	deployment := newArangoDeployment(namespace, name)
+	arangoDeployment := newArangoDeployment(namespace, name)
 
-	return obj, deployment
+	return obj, arangoDeployment
 }
 
 func newItem(o operation.Operation, namespace, name string) operation.Item {
