@@ -18,36 +18,19 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package assertion
+package license
 
-import (
-	"fmt"
-)
+import "github.com/arangodb/kube-arangodb/pkg/util/assertion"
 
-type Key string
-
-const (
-	KeyUnknown               Key = ""
-	DeprecatedActionKey      Key = "DeprecatedAction"
-	CommunityLicenseCheckKey Key = "CommunityLicenseCheck"
-)
-
-func (k Key) Assert(condition bool, msg string, args ...interface{}) {
-	assert(2, condition, k, msg, args...)
+func checkLicense(license string) License {
+	return emptyLicense{}
 }
 
-func Assert(condition bool, key Key, msg string, args ...interface{}) {
-	assert(2, condition, key, msg, args...)
+type emptyLicense struct {
 }
 
-func assert(skip int, condition bool, key Key, msg string, args ...interface{}) {
-	if !condition {
-		return
-	}
-
-	metricsObject.incKeyMetric(key)
-
-	frames := frames(skip)
-
-	_assert(frames, fmt.Sprintf(msg, args...))
+// Validate for the community returns that license is always missing, as it should be not used
+func (e emptyLicense) Validate(feature Feature, subFeatures ...Feature) Status {
+	assertion.Assert(true, assertion.CommunityLicenseCheckKey, "Feature %s has been validated in the community version", feature)
+	return StatusMissing
 }
