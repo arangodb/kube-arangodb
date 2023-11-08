@@ -1,4 +1,4 @@
-# Override detected total memory
+# How to override detected total memory
 
 ## overrideDetectedTotalMemory
 

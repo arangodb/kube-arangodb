@@ -28,10 +28,12 @@ import (
 	"io"
 	"os"
 	"path"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
 
+	"github.com/coreos/go-semver/semver"
 	"github.com/stretchr/testify/require"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
@@ -41,7 +43,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-func (d DocDefinitions) RenderMarkdown(t *testing.T) []byte {
+func (d DocDefinitions) RenderMarkdown(t *testing.T, repositoryPath string) []byte {
 	out := bytes.NewBuffer(nil)
 
 	for _, el := range d {
@@ -105,7 +107,7 @@ func (d DocDefinitions) RenderMarkdown(t *testing.T) []byte {
 			write(t, out, "\n")
 		} else {
 			if d := el.Default; d != nil {
-				write(t, out, "Default Value: %s\n\n", *d)
+				write(t, out, "Default Value: `%s`\n\n", *d)
 			}
 		}
 
@@ -113,7 +115,7 @@ func (d DocDefinitions) RenderMarkdown(t *testing.T) []byte {
 			write(t, out, "This field is **immutable**: %s\n\n", *d)
 		}
 
-		write(t, out, "[Code Reference](/%s#L%d)\n\n", el.File, el.Line)
+		write(t, out, "[Code Reference](%s/%s#L%d)\n\n", repositoryPath, el.File, el.Line)
 	}
 
 	return out.Bytes()
@@ -163,11 +165,23 @@ func Test_GenerateAPIDocs(t *testing.T) {
 	generateIndex(t, resultPaths)
 }
 
+func prepareGitHubTreePath(t *testing.T, root string) string {
+	vStr, err := os.ReadFile(filepath.Join(root, "VERSION"))
+	require.NoError(t, err, "failed to read VERSION file")
+	opVersion, err := semver.NewVersion(string(vStr))
+	require.NoError(t, err)
+
+	ref := fmt.Sprintf("%d.%d.%d", opVersion.Major, opVersion.Minor, opVersion.Patch)
+	return fmt.Sprintf("https://github.com/arangodb/kube-arangodb/blob/%s", ref)
+}
+
 func generateDocs(t *testing.T, objects map[string]map[string]interface{}, fields map[string]*ast.Field, fs *token.FileSet) map[string]string {
 	root := os.Getenv("ROOT")
 	require.NotEmpty(t, root)
 
 	outPaths := make(map[string]string)
+
+	repositoryPath := prepareGitHubTreePath(t, root)
 
 	for objectName, sections := range objects {
 		t.Run(objectName, func(t *testing.T) {
@@ -180,7 +194,7 @@ func generateDocs(t *testing.T, objects map[string]map[string]interface{}, field
 					defs := parseDocDefinitions(t, sectionParsed, fs)
 					defs.Sort()
 
-					renderSections[section] = defs.RenderMarkdown(t)
+					renderSections[section] = defs.RenderMarkdown(t, repositoryPath)
 				})
 			}
 
