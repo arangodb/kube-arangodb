@@ -36,6 +36,10 @@ func init() {
 	mustLoadCRD(appsJobs, appsJobsSchemaRaw, &appsJobsCRD, &appsJobsCRDWithSchema)
 }
 
+func AppsJob() *apiextensions.CustomResourceDefinition {
+	return appsJobsCRD.DeepCopy()
+}
+
 func AppsJobDefinition() Definition {
 	return Definition{
 		Version:       AppsJobVersion,

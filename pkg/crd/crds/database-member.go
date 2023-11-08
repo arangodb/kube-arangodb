@@ -36,6 +36,10 @@ func init() {
 	mustLoadCRD(databaseMember, databaseMemberSchemaRaw, &databaseMemberCRD, &databaseMemberCRDWithSchema)
 }
 
+func DatabaseMember() *apiextensions.CustomResourceDefinition {
+	return databaseMemberCRD.DeepCopy()
+}
+
 func DatabaseMemberDefinition() Definition {
 	return Definition{
 		Version:       DatabaseMemberVersion,

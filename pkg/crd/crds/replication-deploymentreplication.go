@@ -36,6 +36,10 @@ func init() {
 	mustLoadCRD(replicationDeploymentReplication, replicationDeploymentReplicationSchemaRaw, &replicationDeploymentReplicationCRD, &replicationDeploymentReplicationCRDWithSchema)
 }
 
+func ReplicationDeploymentReplication() *apiextensions.CustomResourceDefinition {
+	return replicationDeploymentReplicationCRD.DeepCopy()
+}
+
 func ReplicationDeploymentReplicationDefinition() Definition {
 	return Definition{
 		Version:       ReplicationDeploymentReplicationVersion,

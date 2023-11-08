@@ -36,7 +36,6 @@ func init() {
 	mustLoadCRD(mlCronJob, mlCronJobSchemaRaw, &mlCronJobCRD, &mlCronJobCRDWithSchema)
 }
 
-// TODO: add flag and tests
 func MLCronJob() *apiextensions.CustomResourceDefinition {
 	return mlCronJobCRD.DeepCopy()
 }

@@ -36,6 +36,10 @@ func init() {
 	mustLoadCRD(storageLocalStorage, storageLocalStorageSchemaRaw, &storageLocalStorageCRD, &storageLocalStorageCRDWithSchema)
 }
 
+func StorageLocalStorage() *apiextensions.CustomResourceDefinition {
+	return storageLocalStorageCRD.DeepCopy()
+}
+
 func StorageLocalStorageDefinition() Definition {
 	return Definition{
 		Version:       StorageLocalStorageVersion,
