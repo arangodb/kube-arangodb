@@ -27,6 +27,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/topology"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	compare2 "github.com/arangodb/kube-arangodb/pkg/util/compare"
 )
 
 func Test_ArangoD_SchedulerName(t *testing.T) {
@@ -41,7 +42,7 @@ func Test_ArangoD_SchedulerName(t *testing.T) {
 			}),
 
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: SilentRotation,
+				expectedMode: compare2.SilentRotation,
 			},
 		},
 		{
@@ -54,7 +55,7 @@ func Test_ArangoD_SchedulerName(t *testing.T) {
 			}),
 
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: SilentRotation,
+				expectedMode: compare2.SilentRotation,
 			},
 		},
 		{
@@ -67,7 +68,7 @@ func Test_ArangoD_SchedulerName(t *testing.T) {
 			}),
 
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: SkippedRotation,
+				expectedMode: compare2.SkippedRotation,
 			},
 		},
 	}
@@ -87,7 +88,7 @@ func Test_ArangoD_TerminationGracePeriodSeconds(t *testing.T) {
 			}),
 
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: SilentRotation,
+				expectedMode: compare2.SilentRotation,
 			},
 		},
 		{
@@ -100,7 +101,7 @@ func Test_ArangoD_TerminationGracePeriodSeconds(t *testing.T) {
 			}),
 
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: SilentRotation,
+				expectedMode: compare2.SilentRotation,
 			},
 		},
 		{
@@ -113,7 +114,7 @@ func Test_ArangoD_TerminationGracePeriodSeconds(t *testing.T) {
 			}),
 
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: SilentRotation,
+				expectedMode: compare2.SilentRotation,
 			},
 		},
 	}
@@ -150,7 +151,7 @@ func Test_ArangoD_Affinity(t *testing.T) {
 			}),
 
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: SilentRotation,
+				expectedMode: compare2.SilentRotation,
 			},
 		},
 		{
@@ -180,7 +181,7 @@ func Test_ArangoD_Affinity(t *testing.T) {
 			}),
 
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: SilentRotation,
+				expectedMode: compare2.SilentRotation,
 			},
 		},
 		{
@@ -229,7 +230,7 @@ func Test_ArangoD_Affinity(t *testing.T) {
 			}),
 
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: SilentRotation,
+				expectedMode: compare2.SilentRotation,
 			},
 		},
 		{
@@ -278,7 +279,7 @@ func Test_ArangoD_Affinity(t *testing.T) {
 			}),
 
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: SilentRotation,
+				expectedMode: compare2.SilentRotation,
 			},
 		},
 		{
@@ -327,7 +328,7 @@ func Test_ArangoD_Affinity(t *testing.T) {
 			}),
 
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: SilentRotation,
+				expectedMode: compare2.SilentRotation,
 			},
 		},
 	}
@@ -351,7 +352,7 @@ func Test_ArangoD_Labels(t *testing.T) {
 			}),
 
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: SkippedRotation,
+				expectedMode: compare2.SkippedRotation,
 			},
 		},
 		{
@@ -368,7 +369,7 @@ func Test_ArangoD_Labels(t *testing.T) {
 			}),
 
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: SkippedRotation,
+				expectedMode: compare2.SkippedRotation,
 			},
 		},
 		{
@@ -387,7 +388,7 @@ func Test_ArangoD_Labels(t *testing.T) {
 			}),
 
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: SkippedRotation,
+				expectedMode: compare2.SkippedRotation,
 			},
 		},
 	}
@@ -414,7 +415,7 @@ func Test_ArangoD_Envs_Zone(t *testing.T) {
 			})),
 
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: SilentRotation,
+				expectedMode: compare2.SilentRotation,
 			},
 		},
 		{
@@ -434,7 +435,7 @@ func Test_ArangoD_Envs_Zone(t *testing.T) {
 			})),
 
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: SilentRotation,
+				expectedMode: compare2.SilentRotation,
 			},
 		},
 		{
@@ -459,7 +460,7 @@ func Test_ArangoD_Envs_Zone(t *testing.T) {
 			})),
 
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: SilentRotation,
+				expectedMode: compare2.SilentRotation,
 			},
 		},
 		{
@@ -488,7 +489,7 @@ func Test_ArangoD_Envs_Zone(t *testing.T) {
 			})),
 
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: GracefulRotation,
+				expectedMode: compare2.GracefulRotation,
 			},
 		},
 	}

@@ -30,6 +30,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
+	"github.com/arangodb/kube-arangodb/pkg/util/compare"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -231,7 +232,7 @@ func (r *Reconciler) updateMemberRotationConditions(apiObject k8sutil.APIObject,
 		return nil, err
 	} else {
 		switch m {
-		case rotation.EnforcedRotation:
+		case compare.EnforcedRotation:
 			if reason != "" {
 				r.log.Bool("enforced", true).Info(reason)
 			} else {
@@ -239,7 +240,7 @@ func (r *Reconciler) updateMemberRotationConditions(apiObject k8sutil.APIObject,
 			}
 			// We need to do enforced rotation
 			return restartMemberConditionAction(group, member.ID, reason), nil
-		case rotation.InPlaceRotation:
+		case compare.InPlaceRotation:
 			if member.Conditions.IsTrue(api.ConditionTypeUpdateFailed) {
 				if !(member.Conditions.IsTrue(api.ConditionTypePendingRestart) || member.Conditions.IsTrue(api.ConditionTypeRestart)) {
 					return api.Plan{pendingRestartMemberConditionAction(group, member.ID, reason)}, nil
@@ -249,11 +250,11 @@ func (r *Reconciler) updateMemberRotationConditions(apiObject k8sutil.APIObject,
 				return nil, nil
 			}
 			return api.Plan{shared.UpdateMemberConditionActionV2(reason, api.ConditionTypePendingUpdate, group, member.ID, true, reason, "", "")}, nil
-		case rotation.SilentRotation:
+		case compare.SilentRotation:
 			// Propagate changes without restart, but apply plan if required
 			plan = append(plan, actions.NewAction(api.ActionTypeArangoMemberUpdatePodStatus, group, member, "Propagating status of pod").AddParam(ActionTypeArangoMemberUpdatePodStatusChecksum, checksum))
 			return plan, nil
-		case rotation.GracefulRotation:
+		case compare.GracefulRotation:
 			if reason != "" {
 				r.log.Bool("enforced", false).Info(reason)
 			} else {

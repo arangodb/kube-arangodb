@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,18 +28,19 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/topology"
+	"github.com/arangodb/kube-arangodb/pkg/util/compare"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 )
 
-func compareServerContainerEnvs(ds api.DeploymentSpec, g api.ServerGroup, spec, status *core.Container) comparePodContainerFunc {
-	return func(builder api.ActionBuilder) (mode Mode, plan api.Plan, err error) {
+func compareServerContainerEnvs(ds api.DeploymentSpec, g api.ServerGroup, spec, status *core.Container) compare.Func {
+	return func(builder api.ActionBuilder) (mode compare.Mode, plan api.Plan, err error) {
 		specV := mapEnvs(spec)
 		statusV := mapEnvs(status)
 
 		diff := getEnvDiffFromPods(specV, statusV)
 
 		if len(diff) == 0 {
-			return SkippedRotation, nil, nil
+			return compare.SkippedRotation, nil, nil
 		}
 
 		for k := range diff {
@@ -53,24 +54,24 @@ func compareServerContainerEnvs(ds api.DeploymentSpec, g api.ServerGroup, spec, 
 				// Lifecycle envs can change without restart
 				continue
 			default:
-				return GracefulRotation, nil, nil
+				return compare.GracefulRotation, nil, nil
 			}
 		}
 
 		status.Env = spec.Env
-		return SilentRotation, nil, nil
+		return compare.SilentRotation, nil, nil
 	}
 }
 
-func compareAnyContainerEnvs(ds api.DeploymentSpec, g api.ServerGroup, spec, status *core.Container) comparePodContainerFunc {
-	return func(builder api.ActionBuilder) (mode Mode, plan api.Plan, err error) {
+func compareAnyContainerEnvs(ds api.DeploymentSpec, g api.ServerGroup, spec, status *core.Container) compare.Func {
+	return func(builder api.ActionBuilder) (mode compare.Mode, plan api.Plan, err error) {
 		specV := mapEnvs(spec)
 		statusV := mapEnvs(status)
 
 		diff := getEnvDiffFromPods(specV, statusV)
 
 		if len(diff) == 0 {
-			return SkippedRotation, nil, nil
+			return compare.SkippedRotation, nil, nil
 		}
 
 		for k := range diff {
@@ -79,12 +80,12 @@ func compareAnyContainerEnvs(ds api.DeploymentSpec, g api.ServerGroup, spec, sta
 				// Lifecycle envs can change without restart
 				continue
 			default:
-				return GracefulRotation, nil, nil
+				return compare.GracefulRotation, nil, nil
 			}
 		}
 
 		status.Env = spec.Env
-		return SilentRotation, nil, nil
+		return compare.SilentRotation, nil, nil
 	}
 }
 

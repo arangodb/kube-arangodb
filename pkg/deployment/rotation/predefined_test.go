@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
+	"github.com/arangodb/kube-arangodb/pkg/util/compare"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -43,7 +44,7 @@ var podLifecycleChange000Spec []byte
 //go:embed testdata/pod_lifecycle_change.000.status.json
 var podLifecycleChange000Status []byte
 
-func runPredefinedTests(t *testing.T, spec, status []byte) (mode Mode, plan api.Plan, err error) {
+func runPredefinedTests(t *testing.T, spec, status []byte) (mode compare.Mode, plan api.Plan, err error) {
 	var specO, statusO core.PodTemplateSpec
 
 	require.NoError(t, json.Unmarshal(spec, &specO))
@@ -63,7 +64,7 @@ func runPredefinedTests(t *testing.T, spec, status []byte) (mode Mode, plan api.
 	statusT, err := api.GetArangoMemberPodTemplate(&statusO, statusC)
 	require.NoError(t, err)
 
-	return compare(obj, member, api.ServerGroupUnknown, specT, statusT)
+	return compareFunc(obj, member, api.ServerGroupUnknown, specT, statusT)
 }
 
 func Test_PredefinedTests(t *testing.T) {
@@ -71,6 +72,6 @@ func Test_PredefinedTests(t *testing.T) {
 		mode, plan, err := runPredefinedTests(t, podLifecycleChange000Spec, podLifecycleChange000Status)
 		require.NoError(t, err)
 		require.Empty(t, plan)
-		require.Equal(t, SilentRotation, mode)
+		require.Equal(t, compare.SilentRotation, mode)
 	})
 }

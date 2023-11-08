@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,21 +27,22 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util/compare"
 )
 
 type volumeDiff struct {
 	a, b *core.Volume
 }
 
-func comparePodVolumes(ds api.DeploymentSpec, g api.ServerGroup, spec, status *core.PodSpec) comparePodFunc {
-	return func(builder api.ActionBuilder) (mode Mode, plan api.Plan, err error) {
-		specV := mapVolumes(spec)
-		statusV := mapVolumes(status)
+func comparePodVolumes(ds api.DeploymentSpec, g api.ServerGroup, spec, status *core.PodTemplateSpec) compare.Func {
+	return func(builder api.ActionBuilder) (mode compare.Mode, plan api.Plan, err error) {
+		specV := mapVolumes(spec.Spec)
+		statusV := mapVolumes(status.Spec)
 
 		diff := getVolumesDiffFromPods(specV, statusV)
 
 		if len(diff) == 0 {
-			return SkippedRotation, nil, nil
+			return compare.SkippedRotation, nil, nil
 		}
 
 		for k, v := range diff {
@@ -50,20 +51,20 @@ func comparePodVolumes(ds api.DeploymentSpec, g api.ServerGroup, spec, status *c
 				// We are fine, should be just replaced
 				if v.a == nil {
 					// we remove volume
-					return GracefulRotation, nil, nil
+					return compare.GracefulRotation, nil, nil
 				}
 
 				if ds.Mode.Get().ServingGroup() == g {
 					// Always enforce on serving group
-					return GracefulRotation, nil, nil
+					return compare.GracefulRotation, nil, nil
 				}
 			default:
-				return GracefulRotation, nil, nil
+				return compare.GracefulRotation, nil, nil
 			}
 		}
 
-		status.Volumes = spec.Volumes
-		return SilentRotation, nil, nil
+		status.Spec.Volumes = spec.Spec.Volumes
+		return compare.SilentRotation, nil, nil
 	}
 }
 
@@ -97,7 +98,7 @@ func getVolumesDiffFromPods(a, b map[string]*core.Volume) map[string]volumeDiff 
 	return d
 }
 
-func mapVolumes(a *core.PodSpec) map[string]*core.Volume {
+func mapVolumes(a core.PodSpec) map[string]*core.Volume {
 	n := make(map[string]*core.Volume, len(a.Volumes))
 
 	for id := range a.Volumes {
