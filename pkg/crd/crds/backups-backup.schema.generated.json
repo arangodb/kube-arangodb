@@ -72,7 +72,7 @@
                   "type": "boolean"
                 },
                 "timeout": {
-                  "description": "Timeout for Backup creation request in seconds.",
+                  "description": "Timeout for Backup creation request in seconds. Works only when AsyncBackupCreation feature is set to false.",
                   "type": "number",
                   "format": "float"
                 }
@@ -175,7 +175,7 @@
                   "type": "boolean"
                 },
                 "timeout": {
-                  "description": "Timeout for Backup creation request in seconds.",
+                  "description": "Timeout for Backup creation request in seconds. Works only when AsyncBackupCreation feature is set to false.",
                   "type": "number",
                   "format": "float"
                 }

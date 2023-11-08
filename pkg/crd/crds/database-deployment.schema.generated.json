@@ -1241,7 +1241,7 @@
                   "format": "int32"
                 },
                 "memoryReservation": {
-                  "description": "MemoryReservation determines system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.\nIf this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by specified value in percents.\nAccepted Range \u003c0, 50\u003e. If value is outside accepted range, it is adjusted to the closest value.",
+                  "description": "MemoryReservation determines the system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.\nIf this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a specified value in percent.\nAccepted Range \u003c0, 50\u003e. If the value is outside the accepted range, it is adjusted to the closest value.",
                   "type": "integer",
                   "format": "int64"
                 },
@@ -4201,7 +4201,7 @@
                   "format": "int32"
                 },
                 "memoryReservation": {
-                  "description": "MemoryReservation determines system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.\nIf this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by specified value in percents.\nAccepted Range \u003c0, 50\u003e. If value is outside accepted range, it is adjusted to the closest value.",
+                  "description": "MemoryReservation determines the system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.\nIf this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a specified value in percent.\nAccepted Range \u003c0, 50\u003e. If the value is outside the accepted range, it is adjusted to the closest value.",
                   "type": "integer",
                   "format": "int64"
                 },
@@ -7083,7 +7083,7 @@
                   "format": "int32"
                 },
                 "memoryReservation": {
-                  "description": "MemoryReservation determines system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.\nIf this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by specified value in percents.\nAccepted Range \u003c0, 50\u003e. If value is outside accepted range, it is adjusted to the closest value.",
+                  "description": "MemoryReservation determines the system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.\nIf this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a specified value in percent.\nAccepted Range \u003c0, 50\u003e. If the value is outside the accepted range, it is adjusted to the closest value.",
                   "type": "integer",
                   "format": "int64"
                 },
@@ -10882,7 +10882,7 @@
                   "format": "int32"
                 },
                 "memoryReservation": {
-                  "description": "MemoryReservation determines system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.\nIf this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by specified value in percents.\nAccepted Range \u003c0, 50\u003e. If value is outside accepted range, it is adjusted to the closest value.",
+                  "description": "MemoryReservation determines the system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.\nIf this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a specified value in percent.\nAccepted Range \u003c0, 50\u003e. If the value is outside the accepted range, it is adjusted to the closest value.",
                   "type": "integer",
                   "format": "int64"
                 },
@@ -13890,7 +13890,7 @@
                   "format": "int32"
                 },
                 "memoryReservation": {
-                  "description": "MemoryReservation determines system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.\nIf this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by specified value in percents.\nAccepted Range \u003c0, 50\u003e. If value is outside accepted range, it is adjusted to the closest value.",
+                  "description": "MemoryReservation determines the system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.\nIf this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a specified value in percent.\nAccepted Range \u003c0, 50\u003e. If the value is outside the accepted range, it is adjusted to the closest value.",
                   "type": "integer",
                   "format": "int64"
                 },
@@ -16762,7 +16762,7 @@
                   "format": "int32"
                 },
                 "memoryReservation": {
-                  "description": "MemoryReservation determines system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.\nIf this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by specified value in percents.\nAccepted Range \u003c0, 50\u003e. If value is outside accepted range, it is adjusted to the closest value.",
+                  "description": "MemoryReservation determines the system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.\nIf this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a specified value in percent.\nAccepted Range \u003c0, 50\u003e. If the value is outside the accepted range, it is adjusted to the closest value.",
                   "type": "integer",
                   "format": "int64"
                 },
@@ -19740,7 +19740,7 @@
                   "format": "int32"
                 },
                 "memoryReservation": {
-                  "description": "MemoryReservation determines system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.\nIf this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by specified value in percents.\nAccepted Range \u003c0, 50\u003e. If value is outside accepted range, it is adjusted to the closest value.",
+                  "description": "MemoryReservation determines the system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.\nIf this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a specified value in percent.\nAccepted Range \u003c0, 50\u003e. If the value is outside the accepted range, it is adjusted to the closest value.",
                   "type": "integer",
                   "format": "int64"
                 },
@@ -22700,7 +22700,7 @@
                   "format": "int32"
                 },
                 "memoryReservation": {
-                  "description": "MemoryReservation determines system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.\nIf this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by specified value in percents.\nAccepted Range \u003c0, 50\u003e. If value is outside accepted range, it is adjusted to the closest value.",
+                  "description": "MemoryReservation determines the system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.\nIf this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a specified value in percent.\nAccepted Range \u003c0, 50\u003e. If the value is outside the accepted range, it is adjusted to the closest value.",
                   "type": "integer",
                   "format": "int64"
                 },
@@ -25582,7 +25582,7 @@
                   "format": "int32"
                 },
                 "memoryReservation": {
-                  "description": "MemoryReservation determines system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.\nIf this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by specified value in percents.\nAccepted Range \u003c0, 50\u003e. If value is outside accepted range, it is adjusted to the closest value.",
+                  "description": "MemoryReservation determines the system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.\nIf this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a specified value in percent.\nAccepted Range \u003c0, 50\u003e. If the value is outside the accepted range, it is adjusted to the closest value.",
                   "type": "integer",
                   "format": "int64"
                 },
@@ -29381,7 +29381,7 @@
                   "format": "int32"
                 },
                 "memoryReservation": {
-                  "description": "MemoryReservation determines system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.\nIf this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by specified value in percents.\nAccepted Range \u003c0, 50\u003e. If value is outside accepted range, it is adjusted to the closest value.",
+                  "description": "MemoryReservation determines the system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.\nIf this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a specified value in percent.\nAccepted Range \u003c0, 50\u003e. If the value is outside the accepted range, it is adjusted to the closest value.",
                   "type": "integer",
                   "format": "int64"
                 },
@@ -32389,7 +32389,7 @@
                   "format": "int32"
                 },
                 "memoryReservation": {
-                  "description": "MemoryReservation determines system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.\nIf this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by specified value in percents.\nAccepted Range \u003c0, 50\u003e. If value is outside accepted range, it is adjusted to the closest value.",
+                  "description": "MemoryReservation determines the system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.\nIf this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a specified value in percent.\nAccepted Range \u003c0, 50\u003e. If the value is outside the accepted range, it is adjusted to the closest value.",
                   "type": "integer",
                   "format": "int64"
                 },
@@ -35261,7 +35261,7 @@
                   "format": "int32"
                 },
                 "memoryReservation": {
-                  "description": "MemoryReservation determines system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.\nIf this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by specified value in percents.\nAccepted Range \u003c0, 50\u003e. If value is outside accepted range, it is adjusted to the closest value.",
+                  "description": "MemoryReservation determines the system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.\nIf this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a specified value in percent.\nAccepted Range \u003c0, 50\u003e. If the value is outside the accepted range, it is adjusted to the closest value.",
                   "type": "integer",
                   "format": "int64"
                 },
@@ -38239,7 +38239,7 @@
                   "format": "int32"
                 },
                 "memoryReservation": {
-                  "description": "MemoryReservation determines system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.\nIf this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by specified value in percents.\nAccepted Range \u003c0, 50\u003e. If value is outside accepted range, it is adjusted to the closest value.",
+                  "description": "MemoryReservation determines the system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.\nIf this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a specified value in percent.\nAccepted Range \u003c0, 50\u003e. If the value is outside the accepted range, it is adjusted to the closest value.",
                   "type": "integer",
                   "format": "int64"
                 },
@@ -41199,7 +41199,7 @@
                   "format": "int32"
                 },
                 "memoryReservation": {
-                  "description": "MemoryReservation determines system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.\nIf this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by specified value in percents.\nAccepted Range \u003c0, 50\u003e. If value is outside accepted range, it is adjusted to the closest value.",
+                  "description": "MemoryReservation determines the system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.\nIf this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a specified value in percent.\nAccepted Range \u003c0, 50\u003e. If the value is outside the accepted range, it is adjusted to the closest value.",
                   "type": "integer",
                   "format": "int64"
                 },
@@ -44081,7 +44081,7 @@
                   "format": "int32"
                 },
                 "memoryReservation": {
-                  "description": "MemoryReservation determines system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.\nIf this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by specified value in percents.\nAccepted Range \u003c0, 50\u003e. If value is outside accepted range, it is adjusted to the closest value.",
+                  "description": "MemoryReservation determines the system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.\nIf this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a specified value in percent.\nAccepted Range \u003c0, 50\u003e. If the value is outside the accepted range, it is adjusted to the closest value.",
                   "type": "integer",
                   "format": "int64"
                 },
@@ -47880,7 +47880,7 @@
                   "format": "int32"
                 },
                 "memoryReservation": {
-                  "description": "MemoryReservation determines system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.\nIf this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by specified value in percents.\nAccepted Range \u003c0, 50\u003e. If value is outside accepted range, it is adjusted to the closest value.",
+                  "description": "MemoryReservation determines the system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.\nIf this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a specified value in percent.\nAccepted Range \u003c0, 50\u003e. If the value is outside the accepted range, it is adjusted to the closest value.",
                   "type": "integer",
                   "format": "int64"
                 },
@@ -50888,7 +50888,7 @@
                   "format": "int32"
                 },
                 "memoryReservation": {
-                  "description": "MemoryReservation determines system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.\nIf this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by specified value in percents.\nAccepted Range \u003c0, 50\u003e. If value is outside accepted range, it is adjusted to the closest value.",
+                  "description": "MemoryReservation determines the system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.\nIf this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a specified value in percent.\nAccepted Range \u003c0, 50\u003e. If the value is outside the accepted range, it is adjusted to the closest value.",
                   "type": "integer",
                   "format": "int64"
                 },
@@ -53760,7 +53760,7 @@
                   "format": "int32"
                 },
                 "memoryReservation": {
-                  "description": "MemoryReservation determines system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.\nIf this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by specified value in percents.\nAccepted Range \u003c0, 50\u003e. If value is outside accepted range, it is adjusted to the closest value.",
+                  "description": "MemoryReservation determines the system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.\nIf this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a specified value in percent.\nAccepted Range \u003c0, 50\u003e. If the value is outside the accepted range, it is adjusted to the closest value.",
                   "type": "integer",
                   "format": "int64"
                 },
