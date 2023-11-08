@@ -27,6 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/arangodb/go-driver"
+
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
