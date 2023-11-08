@@ -30,6 +30,7 @@ import (
 	backupv1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/backup/v1"
 	databasev1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/deployment/v1"
 	databasev2alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/deployment/v2alpha1"
+	mlv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/ml/v1alpha1"
 	replicationv1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/replication/v1"
 	replicationv2alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/replication/v2alpha1"
 	storagev1alpha "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/storage/v1alpha"
@@ -44,6 +45,7 @@ type Interface interface {
 	BackupV1() backupv1.BackupV1Interface
 	DatabaseV1() databasev1.DatabaseV1Interface
 	DatabaseV2alpha1() databasev2alpha1.DatabaseV2alpha1Interface
+	MlV1alpha1() mlv1alpha1.MlV1alpha1Interface
 	ReplicationV1() replicationv1.ReplicationV1Interface
 	ReplicationV2alpha1() replicationv2alpha1.ReplicationV2alpha1Interface
 	StorageV1alpha() storagev1alpha.StorageV1alphaInterface
@@ -57,6 +59,7 @@ type Clientset struct {
 	backupV1            *backupv1.BackupV1Client
 	databaseV1          *databasev1.DatabaseV1Client
 	databaseV2alpha1    *databasev2alpha1.DatabaseV2alpha1Client
+	mlV1alpha1          *mlv1alpha1.MlV1alpha1Client
 	replicationV1       *replicationv1.ReplicationV1Client
 	replicationV2alpha1 *replicationv2alpha1.ReplicationV2alpha1Client
 	storageV1alpha      *storagev1alpha.StorageV1alphaClient
@@ -80,6 +83,11 @@ func (c *Clientset) DatabaseV1() databasev1.DatabaseV1Interface {
 // DatabaseV2alpha1 retrieves the DatabaseV2alpha1Client
 func (c *Clientset) DatabaseV2alpha1() databasev2alpha1.DatabaseV2alpha1Interface {
 	return c.databaseV2alpha1
+}
+
+// MlV1alpha1 retrieves the MlV1alpha1Client
+func (c *Clientset) MlV1alpha1() mlv1alpha1.MlV1alpha1Interface {
+	return c.mlV1alpha1
 }
 
 // ReplicationV1 retrieves the ReplicationV1Client
@@ -157,6 +165,10 @@ func NewForConfigAndClient(c *rest.Config, httpClient *http.Client) (*Clientset,
 	if err != nil {
 		return nil, err
 	}
+	cs.mlV1alpha1, err = mlv1alpha1.NewForConfigAndClient(&configShallowCopy, httpClient)
+	if err != nil {
+		return nil, err
+	}
 	cs.replicationV1, err = replicationv1.NewForConfigAndClient(&configShallowCopy, httpClient)
 	if err != nil {
 		return nil, err
@@ -194,6 +206,7 @@ func New(c rest.Interface) *Clientset {
 	cs.backupV1 = backupv1.New(c)
 	cs.databaseV1 = databasev1.New(c)
 	cs.databaseV2alpha1 = databasev2alpha1.New(c)
+	cs.mlV1alpha1 = mlv1alpha1.New(c)
 	cs.replicationV1 = replicationv1.New(c)
 	cs.replicationV2alpha1 = replicationv2alpha1.New(c)
 	cs.storageV1alpha = storagev1alpha.New(c)

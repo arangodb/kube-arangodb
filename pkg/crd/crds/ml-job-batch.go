@@ -21,44 +21,36 @@
 package crds
 
 import (
+	_ "embed"
+
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/arangodb/go-driver"
 )
 
-type Definition struct {
-	Version driver.Version
-	CRD     *apiextensions.CustomResourceDefinition
-}
+const (
+	MLBatchJobVersion = driver.Version("1.0.0")
+)
 
-func AllDefinitions() []Definition {
-	return []Definition{
-		// Deployment
-		DatabaseDeploymentDefinition(),
-		DatabaseMemberDefinition(),
-
-		// ACS
-		DatabaseClusterSynchronizationDefinition(),
-
-		// ArangoSync
-		ReplicationDeploymentReplicationDefinition(),
-
-		// Storage
-		StorageLocalStorageDefinition(),
-
-		// Apps
-		AppsJobDefinition(),
-		DatabaseTaskDefinition(),
-
-		// Backups
-		BackupsBackupDefinition(),
-		BackupsBackupPolicyDefinition(),
-
-		// ML
-		MLExtensionDefinition(),
-		MLStorageDefinition(),
-
-		MLCronJobDefinition(),
-		MLBatchJobDefinition(),
+func init() {
+	if err := yaml.Unmarshal(mlBatchJob, &mlBatchJobCRD); err != nil {
+		panic(err)
 	}
 }
+
+func MLBatchJob() *apiextensions.CustomResourceDefinition {
+	return mlBatchJobCRD.DeepCopy()
+}
+
+func MLBatchJobDefinition() Definition {
+	return Definition{
+		Version: MLBatchJobVersion,
+		CRD:     mlBatchJobCRD.DeepCopy(),
+	}
+}
+
+var mlBatchJobCRD apiextensions.CustomResourceDefinition
+
+//go:embed ml-job-batch.yaml
+var mlBatchJob []byte
