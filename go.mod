@@ -28,8 +28,8 @@ require (
 	github.com/arangodb/go-driver v1.6.1
 	github.com/arangodb/go-driver/v2 v2.0.3
 	github.com/arangodb/go-upgrade-rules v0.0.0-20180809110947-031b4774ff21
-	//github.com/arangodb/rebalancer v0.1.1
-	//github.com/arangodb/go-agency-helper v0.3.0
+	github.com/arangodb/rebalancer v0.1.1
+	github.com/arangodb/go-agency-helper v0.3.0
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/coreos/go-semver v0.3.1
 	github.com/dchest/uniuri v0.0.0-20160212164326-8902c56451e9
@@ -69,7 +69,6 @@ require (
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/arangodb/go-agency-helper v0.4.0 // indirect
 	github.com/arangodb/go-velocypack v0.0.0-20200318135517-5af53c29c67e // indirect
-	// github.com/arangodb/rebalancer v0.1.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bytedance/sonic v1.9.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
