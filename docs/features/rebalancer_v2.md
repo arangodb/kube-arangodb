@@ -2,9 +2,9 @@
 
 ## Overview
 
-ArangoDB as of 3.10.0 provide Cluster Rebalancer functionality via [api](https://www.arangodb.com/docs/stable/http/cluster.html#rebalance).
+ArangoDB as of 3.10.0 provides Cluster Rebalancer functionality via [api](https://www.arangodb.com/docs/stable/http/cluster.html#rebalance).
 
-Operator will use above functionality to check shard movement plan and enforce it on the Cluster.
+Operator will use the above functionality to check shard movement plan and enforce it on the Cluster.
 
 
 ## How to use

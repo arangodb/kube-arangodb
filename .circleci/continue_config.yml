@@ -74,6 +74,14 @@ jobs:
               exit 0
             fi
              make vulncheck
+      - run:
+          name: verify-generated docs
+          command: |
+            if [ -z "$CIRCLE_PULL_REQUEST" ]; then
+              echo "This is not a pull request. Skipping..."
+              exit 0
+            fi
+             make verify-generated
     environment:
       GO111MODULES: off
 

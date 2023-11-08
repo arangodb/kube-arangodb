@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,9 +30,10 @@ import (
 
 	typedCore "k8s.io/client-go/kubernetes/typed/core/v1"
 
-	driver "github.com/arangodb/go-driver"
+	"github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/http"
 	"github.com/arangodb/go-driver/jwt"
+	"github.com/arangodb/go-driver/util/connection/wrappers/async"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
@@ -114,10 +115,10 @@ var (
 )
 
 // CreateArangodClient creates a go-driver client for a specific member in the given group.
-func CreateArangodClient(ctx context.Context, cli typedCore.CoreV1Interface, apiObject *api.ArangoDeployment, group api.ServerGroup, id string) (driver.Client, error) {
+func CreateArangodClient(ctx context.Context, cli typedCore.CoreV1Interface, apiObject *api.ArangoDeployment, group api.ServerGroup, id string, asyncSupport bool) (driver.Client, error) {
 	// Create connection
 	dnsName := k8sutil.CreatePodDNSNameWithDomain(apiObject, apiObject.GetAcceptedSpec().ClusterDomain, group.AsRole(), id)
-	c, err := createArangodClientForDNSName(ctx, cli, apiObject, dnsName, false)
+	c, err := createArangodClientForDNSName(ctx, cli, apiObject, dnsName, false, asyncSupport)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -125,10 +126,10 @@ func CreateArangodClient(ctx context.Context, cli typedCore.CoreV1Interface, api
 }
 
 // CreateArangodDatabaseClient creates a go-driver client for accessing the entire cluster (or single server).
-func CreateArangodDatabaseClient(ctx context.Context, cli typedCore.CoreV1Interface, apiObject *api.ArangoDeployment, shortTimeout bool) (driver.Client, error) {
+func CreateArangodDatabaseClient(ctx context.Context, cli typedCore.CoreV1Interface, apiObject *api.ArangoDeployment, shortTimeout bool, asyncSupport bool) (driver.Client, error) {
 	// Create connection
 	dnsName := k8sutil.CreateDatabaseClientServiceDNSNameWithDomain(apiObject, apiObject.GetAcceptedSpec().ClusterDomain)
-	c, err := createArangodClientForDNSName(ctx, cli, apiObject, dnsName, shortTimeout)
+	c, err := createArangodClientForDNSName(ctx, cli, apiObject, dnsName, shortTimeout, asyncSupport)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -137,9 +138,9 @@ func CreateArangodDatabaseClient(ctx context.Context, cli typedCore.CoreV1Interf
 
 // CreateArangodImageIDClient creates a go-driver client for an ArangoDB instance
 // running in an Image-ID pod.
-func CreateArangodImageIDClient(ctx context.Context, deployment k8sutil.APIObject, ip string) (driver.Client, error) {
+func CreateArangodImageIDClient(ctx context.Context, deployment k8sutil.APIObject, ip string, asyncSupport bool) (driver.Client, error) {
 	// Create connection
-	c, err := createArangodClientForDNSName(ctx, nil, nil, ip, false)
+	c, err := createArangodClientForDNSName(ctx, nil, nil, ip, false, asyncSupport)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -147,12 +148,17 @@ func CreateArangodImageIDClient(ctx context.Context, deployment k8sutil.APIObjec
 }
 
 // CreateArangodClientForDNSName creates a go-driver client for a given DNS name.
-func createArangodClientForDNSName(ctx context.Context, cli typedCore.CoreV1Interface, apiObject *api.ArangoDeployment, dnsName string, shortTimeout bool) (driver.Client, error) {
+func createArangodClientForDNSName(ctx context.Context, cli typedCore.CoreV1Interface, apiObject *api.ArangoDeployment, dnsName string, shortTimeout bool, asyncSupport bool) (driver.Client, error) {
 	connConfig := createArangodHTTPConfigForDNSNames(apiObject, []string{dnsName}, shortTimeout)
 	// TODO deal with TLS with proper CA checking
 	conn, err := http.NewConnection(connConfig)
 	if err != nil {
 		return nil, errors.WithStack(err)
+	}
+
+	if asyncSupport {
+		// Wrap connection with async wrapper
+		conn = async.NewConnectionAsyncWrapper(conn)
 	}
 
 	// Create client

@@ -117,7 +117,7 @@ func (a actionBackupRestore) restoreAsync(ctx context.Context, backup *backupApi
 			a.actionCtx.Add(actionBackupRestoreLocalJobID, id, true)
 			a.actionCtx.Add(actionBackupRestoreLocalBackupName, backup.GetName(), true)
 
-			// Async request has been send
+			// Async request has been sent
 			return false, nil
 		} else {
 			return false, errors.Wrapf(err, "Unknown restore error")

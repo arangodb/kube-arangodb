@@ -22,6 +22,7 @@ package backup
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -44,7 +45,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	adbErrors "github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 var logger = logging.Global().RegisterAndGetLogger("backup-operator", logging.Info)
@@ -226,7 +227,7 @@ func (h *handler) getDeploymentMutex(namespace, deployment string) *sync.Mutex {
 }
 
 func (h *handler) Handle(item operation.Item) error {
-	// Get Backup object. It also cover NotFound case
+	// Get Backup object. It also covers NotFound case
 	b, err := h.client.BackupV1().ArangoBackups(item.Namespace).Get(context.Background(), item.Name, meta.GetOptions{})
 	if err != nil {
 		if apiErrors.IsNotFound(err) {
@@ -261,7 +262,7 @@ func (h *handler) Handle(item operation.Item) error {
 		return nil
 	}
 
-	// Create lock per namespace to ensure that we are not using 2 goroutines in same time
+	// Create lock per namespace to ensure that we are not using two goroutines in same time
 	lock := h.getDeploymentMutex(b.Namespace, b.Spec.Deployment.Name)
 	lock.Lock()
 	defer lock.Unlock()
@@ -298,7 +299,8 @@ func (h *handler) Handle(item operation.Item) error {
 
 		cError := switchError(err)
 
-		if _, ok := cError.(temporaryError); ok {
+		var temporaryError temporaryError
+		if errors.As(cError, &temporaryError) {
 			return cError
 		}
 
@@ -368,7 +370,7 @@ func (h *handler) processArangoBackup(backup *backupApi.ArangoBackup) (*backupAp
 		return f(h, backup)
 	}
 
-	return nil, errors.Newf("state %s is not supported", backup.Status.State)
+	return nil, adbErrors.Newf("state %s is not supported", backup.Status.State)
 }
 
 func (h *handler) CanBeHandled(item operation.Item) bool {

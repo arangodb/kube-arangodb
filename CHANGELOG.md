@@ -3,6 +3,7 @@
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Documentation) Improvements and fixes for rendered documentation (GH pages)
 - (Feature) License Manager
+- (Improvement) Use Async mode for backup creation
 - (Bugfix) Proper handling of --agency.retries argument
 
 ## [1.2.35](https://github.com/arangodb/kube-arangodb/tree/1.2.35) (2023-11-06)

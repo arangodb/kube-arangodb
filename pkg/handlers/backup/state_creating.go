@@ -25,10 +25,9 @@ import (
 	"github.com/arangodb/go-driver/util/connection/wrappers/async"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 )
 
-func stateCreateHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.ArangoBackupStatus, error) {
+func stateCreatingHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.ArangoBackupStatus, error) {
 	deployment, err := h.getArangoDeploymentObject(backup)
 	if err != nil {
 		return nil, err
@@ -39,18 +38,23 @@ func stateCreateHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.
 		return nil, newTemporaryError(err)
 	}
 
-	if features.AsyncBackupCreation().Enabled() {
-		return asyncBackup(client, backup)
-	} else {
-		return syncBackup(client, backup)
+	if backup.Status.Progress == nil {
+		return nil, newFatalErrorf("missing field .status.progress")
 	}
-}
 
-func syncBackup(client ArangoBackupClient, backup *backupApi.ArangoBackup) (*backupApi.ArangoBackupStatus, error) {
-	response, err := client.Create()
+	response, err := client.CreateAsync(backup.Status.Progress.JobID)
 	if err != nil {
+		_, isAsyncId := async.IsAsyncJobInProgress(err)
+		if isAsyncId {
+			return wrapUpdateStatus(backup,
+				updateStatusState(backupApi.ArangoBackupStateCreating, ""),
+				updateStatusAvailable(false),
+				updateStatusJob(backup.Status.Progress.JobID, "50%"),
+			)
+		}
+
 		return wrapUpdateStatus(backup,
-			updateStatusState(backupApi.ArangoBackupStateCreateError, "Create failed with error: %s", err.Error()),
+			updateStatusState(backupApi.ArangoBackupStateCreateError, "Create backup failed with error: %s", err),
 			cleanStatusJob(),
 			updateStatusAvailable(false),
 			addBackOff(backup.Spec),
@@ -71,37 +75,9 @@ func syncBackup(client ArangoBackupClient, backup *backupApi.ArangoBackup) (*bac
 
 	return wrapUpdateStatus(backup,
 		updateStatusState(backupApi.ArangoBackupStateReady, ""),
+		cleanStatusJob(),
 		updateStatusAvailable(true),
 		updateStatusBackup(backupMeta),
 		cleanBackOff(),
-	)
-}
-
-func asyncBackup(client ArangoBackupClient, backup *backupApi.ArangoBackup) (*backupApi.ArangoBackupStatus, error) {
-	_, err := client.CreateAsync("")
-
-	if err == nil {
-		return wrapUpdateStatus(backup,
-			updateStatusState(backupApi.ArangoBackupStateCreateError, "Start Async backup failed - no jobID response"),
-			cleanStatusJob(),
-			updateStatusAvailable(false),
-			addBackOff(backup.Spec),
-		)
-	}
-
-	jobID, isAsyncId := async.IsAsyncJobInProgress(err)
-	if !isAsyncId {
-		return wrapUpdateStatus(backup,
-			updateStatusState(backupApi.ArangoBackupStateCreateError, "Create backup failed with error: %s", err.Error()),
-			cleanStatusJob(),
-			updateStatusAvailable(false),
-			addBackOff(backup.Spec),
-		)
-	}
-
-	return wrapUpdateStatus(backup,
-		updateStatusState(backupApi.ArangoBackupStateCreating, ""),
-		updateStatusJob(jobID, "0%"),
-		updateStatusAvailable(false),
 	)
 }
