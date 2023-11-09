@@ -21,6 +21,8 @@
 package compare
 
 import (
+	"reflect"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 )
@@ -86,7 +88,7 @@ func P2[T interface{}, P1, P2 interface{}](
 			}
 		}
 
-		line.Info("Pod needs rotation - templates does not match")
+		line.Info("Resource %s needs rotation - templates does not match", reflect.TypeOf(currentSpec).String())
 
 		return GracefulRotation, nil, nil
 	}
