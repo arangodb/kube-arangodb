@@ -5,7 +5,7 @@ providing arguments via `operator.args` chart template value.
 
 The full list of available arguments can be retrieved using
 ```
-export OPERATOR_IMAGE=arangodb/kube-arangodb:1.2.9
+export OPERATOR_IMAGE=arangodb/kube-arangodb:$VER
 kubectl run arango-operator-help --image=$OPERATOR_IMAGE -i --rm --restart=Never -- --help
 ```
 
