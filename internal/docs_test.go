@@ -47,9 +47,13 @@ import (
 func (d DocDefinitions) RenderMarkdown(t *testing.T, repositoryPath string) []byte {
 	out := bytes.NewBuffer(nil)
 
-	for _, el := range d {
+	for i, el := range d {
+		if i != 0 {
+			write(t, out, "***\n\n")
+		}
 
-		write(t, out, "### %s: %s\n\n", el.Path, el.Type)
+		write(t, out, "### %s\n\n", el.Path)
+		write(t, out, "Type: `%s` <sup>[\\[ref\\]](%s/%s#L%d)</sup>\n\n", el.Type, repositoryPath, el.File, el.Line)
 
 		if d := el.Important; d != nil {
 			write(t, out, "**Important**: %s\n\n", *d)
@@ -115,8 +119,6 @@ func (d DocDefinitions) RenderMarkdown(t *testing.T, repositoryPath string) []by
 		if d := el.Immutable; d != nil {
 			write(t, out, "This field is **immutable**: %s\n\n", *d)
 		}
-
-		write(t, out, "[Code Reference](%s/%s#L%d)\n\n", repositoryPath, el.File, el.Line)
 	}
 
 	return out.Bytes()
