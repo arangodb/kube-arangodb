@@ -25,5 +25,7 @@ import (
 )
 
 func init() {
-	registerCRDWithPanic(crds.BackupsBackupPolicyDefinition())
+	registerCRDWithPanic(func(opts *crds.CRDOptions) crds.Definition {
+		return crds.BackupsBackupPolicyDefinition()
+	})
 }

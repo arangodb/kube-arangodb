@@ -23,45 +23,37 @@ package crd
 import (
 	"sync"
 
-	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-
-	"github.com/arangodb/go-driver"
-
 	"github.com/arangodb/kube-arangodb/pkg/crd/crds"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 const Version = "arangodb.com/version"
 
+type Fetcher func(opts *crds.CRDOptions) crds.Definition
+
 var (
-	registeredCRDs = map[string]crd{}
+	registeredCRDs = map[string]Fetcher{}
 
 	crdsLock sync.Mutex
 )
 
-type crd struct {
-	version driver.Version
-	spec    apiextensions.CustomResourceDefinitionSpec
-}
-
-func registerCRDWithPanic(c crds.Definition) {
-	if err := registerCRD(c.CRD.GetName(), crd{
-		version: c.Version,
-		spec:    c.CRD.Spec,
-	}); err != nil {
+func registerCRDWithPanic(fetcher Fetcher) {
+	if err := registerCRD(fetcher); err != nil {
 		panic(err)
 	}
 }
 
-func registerCRD(name string, crd crd) error {
+func registerCRD(fetcher Fetcher) error {
 	crdsLock.Lock()
 	defer crdsLock.Unlock()
 
-	if _, ok := registeredCRDs[name]; ok {
-		return errors.Newf("CRD %s already exists", name)
+	crd := fetcher(nil)
+
+	if _, ok := registeredCRDs[crd.CRD.GetName()]; ok {
+		return errors.Newf("CRD %s already exists", crd.CRD.GetName())
 	}
 
-	registeredCRDs[name] = crd
+	registeredCRDs[crd.CRD.GetName()] = fetcher
 
 	return nil
 }

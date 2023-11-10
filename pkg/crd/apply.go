@@ -23,6 +23,7 @@ package crd
 import (
 	"context"
 	"fmt"
+	"github.com/arangodb/kube-arangodb/pkg/crd/crds"
 
 	authorization "k8s.io/api/authorization/v1"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -37,11 +38,25 @@ import (
 
 var logger = logging.Global().RegisterAndGetLogger("crd", logging.Info)
 
+type EnsureCRDOptions map[string]crds.CRDOptions
+
 func EnsureCRD(ctx context.Context, client kclient.Client, ignoreErrors bool) error {
+	return EnsureCRDWithOptions(ctx, client, nil, ignoreErrors)
+}
+
+func EnsureCRDWithOptions(ctx context.Context, client kclient.Client, opts EnsureCRDOptions, ignoreErrors bool) error {
 	crdsLock.Lock()
 	defer crdsLock.Unlock()
 
-	for crd, spec := range registeredCRDs {
+	for crd, fetcher := range registeredCRDs {
+		var opt *crds.CRDOptions
+
+		if o, ok := opts[crd]; ok {
+			opt = &o
+		}
+
+		spec := fetcher(opt)
+
 		getAccess := verifyCRDAccess(ctx, client, crd, "get")
 		if !getAccess.Allowed {
 			logger.Str("crd", crd).Info("Get Operations is not allowed. Continue")
@@ -56,7 +71,7 @@ func EnsureCRD(ctx context.Context, client kclient.Client, ignoreErrors bool) er
 	return nil
 }
 
-func tryApplyCRD(ctx context.Context, client kclient.Client, crd string, spec crd) error {
+func tryApplyCRD(ctx context.Context, client kclient.Client, crd string, spec crds.Definition) error {
 	crdDefinitions := client.KubernetesExtensions().ApiextensionsV1().CustomResourceDefinitions()
 
 	c, err := crdDefinitions.Get(ctx, crd, meta.GetOptions{})
@@ -77,10 +92,10 @@ func tryApplyCRD(ctx context.Context, client kclient.Client, crd string, spec cr
 			ObjectMeta: meta.ObjectMeta{
 				Name: crd,
 				Labels: map[string]string{
-					Version: string(spec.version),
+					Version: string(spec.Version),
 				},
 			},
-			Spec: spec.spec,
+			Spec: spec.CRD.Spec,
 		}
 
 		if _, err := crdDefinitions.Create(ctx, c, meta.CreateOptions{}); err != nil {
@@ -104,15 +119,15 @@ func tryApplyCRD(ctx context.Context, client kclient.Client, crd string, spec cr
 
 	if v, ok := c.ObjectMeta.Labels[Version]; ok {
 		if v != "" {
-			if !isUpdateRequired(spec.version, driver.Version(v)) {
+			if !isUpdateRequired(spec.Version, driver.Version(v)) {
 				logger.Str("crd", crd).Info("CRD Update not required")
 				return nil
 			}
 		}
 	}
 
-	c.ObjectMeta.Labels[Version] = string(spec.version)
-	c.Spec = spec.spec
+	c.ObjectMeta.Labels[Version] = string(spec.Version)
+	c.Spec = spec.CRD.Spec
 
 	if _, err := crdDefinitions.Update(ctx, c, meta.UpdateOptions{}); err != nil {
 		logger.Err(err).Str("crd", crd).Warn("Create Operations is not allowed due to error")

@@ -62,11 +62,15 @@ func appsJobWithOptions(options *CRDOptions) *apiextensions.CustomResourceDefini
 	return extendCRDWithSchema(appsJobsCRD.DeepCopy(), options.Merge(DefaultAppsJobOptions()), appsJobsCRDSchema)
 }
 
-func AppsJobDefinition() Definition {
+func AppsJobDefinitionWithOptions(options *CRDOptions) Definition {
 	return Definition{
 		Version: AppsJobVersion,
-		CRD:     AppsJobWithOptions(nil),
+		CRD:     AppsJobWithOptions(options),
 	}
+}
+
+func AppsJobDefinition() Definition {
+	return AppsJobDefinitionWithOptions(nil)
 }
 
 var appsJobsCRDSchema CRDSchemas

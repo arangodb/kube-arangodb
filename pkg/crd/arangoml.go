@@ -25,8 +25,16 @@ import (
 )
 
 func init() {
-	registerCRDWithPanic(crds.MLStorageDefinition())
-	registerCRDWithPanic(crds.MLExtensionDefinition())
-	registerCRDWithPanic(crds.MLCronJobDefinition())
-	registerCRDWithPanic(crds.MLBatchJobDefinition())
+	registerCRDWithPanic(func(opts *crds.CRDOptions) crds.Definition {
+		return crds.MLStorageDefinition()
+	})
+	registerCRDWithPanic(func(opts *crds.CRDOptions) crds.Definition {
+		return crds.MLExtensionDefinition()
+	})
+	registerCRDWithPanic(func(opts *crds.CRDOptions) crds.Definition {
+		return crds.MLCronJobDefinition()
+	})
+	registerCRDWithPanic(func(opts *crds.CRDOptions) crds.Definition {
+		return crds.MLBatchJobDefinition()
+	})
 }

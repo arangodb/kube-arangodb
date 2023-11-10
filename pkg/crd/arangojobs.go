@@ -25,5 +25,5 @@ import (
 )
 
 func init() {
-	registerCRDWithPanic(crds.AppsJobDefinition())
+	registerCRDWithPanic(crds.AppsJobDefinitionWithOptions)
 }
