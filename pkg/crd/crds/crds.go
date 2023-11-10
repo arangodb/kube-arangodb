@@ -27,8 +27,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/arangodb/go-driver"
-
-	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 type Definition struct {
@@ -90,22 +88,22 @@ func mustLoadCRD(crdRaw, crdSchemasRaw []byte, crd, crdWithSchema *apiextensions
 	}
 }
 
-type GetCRDOptions struct {
-	WithSchema *bool
+type CRDOptions struct {
+	WithSchema bool
 }
 
-func WithSchema() GetCRDOptions {
-	return GetCRDOptions{
-		WithSchema: util.NewType(true),
+func WithSchema() func(*CRDOptions) {
+	return func(o *CRDOptions) {
+		o.WithSchema = true
 	}
 }
 
-func getCRD(crd, crdWithSchema apiextensions.CustomResourceDefinition, opts ...GetCRDOptions) *apiextensions.CustomResourceDefinition {
-	var o GetCRDOptions
-	if len(opts) > 0 {
-		o = opts[0]
+func getCRD(crd, crdWithSchema apiextensions.CustomResourceDefinition, opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
+	o := &CRDOptions{}
+	for _, fn := range opts {
+		fn(o)
 	}
-	if o.WithSchema != nil && *o.WithSchema {
+	if o.WithSchema {
 		return crdWithSchema.DeepCopy()
 	}
 	return crd.DeepCopy()

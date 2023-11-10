@@ -36,7 +36,7 @@ func init() {
 	mustLoadCRD(databaseMember, databaseMemberSchemaRaw, &databaseMemberCRD, &databaseMemberCRDWithSchema)
 }
 
-func DatabaseMember(opts ...GetCRDOptions) *apiextensions.CustomResourceDefinition {
+func DatabaseMember(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
 	return getCRD(databaseMemberCRD, databaseMemberCRDWithSchema, opts...)
 }
 

@@ -36,7 +36,7 @@ func init() {
 	mustLoadCRD(databaseClusterSynchronization, databaseClusterSynchronizationSchemaRaw, &databaseClusterSynchronizationCRD, &databaseClusterSynchronizationCRDWithSchema)
 }
 
-func DatabaseClusterSynchronization(opts ...GetCRDOptions) *apiextensions.CustomResourceDefinition {
+func DatabaseClusterSynchronization(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
 	return getCRD(databaseClusterSynchronizationCRD, databaseClusterSynchronizationCRDWithSchema, opts...)
 }
 

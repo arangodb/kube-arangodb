@@ -40,7 +40,7 @@ func init() {
 	mustLoadCRD(mlBatchJob, mlBatchJobSchemaRow, &mlBatchJobCRD, &mlBatchJobCRDWithSchema)
 }
 
-func MLBatchJob(opts ...GetCRDOptions) *apiextensions.CustomResourceDefinition {
+func MLBatchJob(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
 	return getCRD(mlBatchJobCRD, mlBatchJobCRDWithSchema, opts...)
 }
 

@@ -36,7 +36,7 @@ func init() {
 	mustLoadCRD(replicationDeploymentReplication, replicationDeploymentReplicationSchemaRaw, &replicationDeploymentReplicationCRD, &replicationDeploymentReplicationCRDWithSchema)
 }
 
-func ReplicationDeploymentReplication(opts ...GetCRDOptions) *apiextensions.CustomResourceDefinition {
+func ReplicationDeploymentReplication(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
 	return getCRD(replicationDeploymentReplicationCRD, replicationDeploymentReplicationCRDWithSchema, opts...)
 }
 

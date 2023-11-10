@@ -36,7 +36,7 @@ func init() {
 	mustLoadCRD(mlExtension, mlExtensionSchemaRaw, &mlExtensionCRD, &mlExtensionCRDWithSchema)
 }
 
-func MLExtension(opts ...GetCRDOptions) *apiextensions.CustomResourceDefinition {
+func MLExtension(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
 	return getCRD(mlExtensionCRD, mlExtensionCRDWithSchema, opts...)
 }
 

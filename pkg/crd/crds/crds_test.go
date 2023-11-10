@@ -95,7 +95,7 @@ func Test_AllDefinitionsDefined(t *testing.T) {
 
 func Test_CRDGetters(t *testing.T) {
 	// getters are exposed for the usage by customers
-	getters := []func(opts ...GetCRDOptions) *apiextensions.CustomResourceDefinition{
+	getters := []func(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition{
 		AppsJob,
 		BackupsBackup,
 		BackupsBackupPolicyPolicy,

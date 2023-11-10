@@ -36,7 +36,7 @@ func init() {
 	mustLoadCRD(mlCronJob, mlCronJobSchemaRaw, &mlCronJobCRD, &mlCronJobCRDWithSchema)
 }
 
-func MLCronJob(opts ...GetCRDOptions) *apiextensions.CustomResourceDefinition {
+func MLCronJob(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
 	return getCRD(mlCronJobCRD, mlCronJobCRDWithSchema, opts...)
 }
 

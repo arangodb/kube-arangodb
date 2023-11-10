@@ -36,7 +36,7 @@ func init() {
 	mustLoadCRD(appsJobs, appsJobsSchemaRaw, &appsJobsCRD, &appsJobsCRDWithSchema)
 }
 
-func AppsJob(opts ...GetCRDOptions) *apiextensions.CustomResourceDefinition {
+func AppsJob(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
 	return getCRD(appsJobsCRD, appsJobsCRDWithSchema, opts...)
 }
 
