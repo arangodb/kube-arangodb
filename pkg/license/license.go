@@ -20,6 +20,10 @@
 
 package license
 
+import (
+	"context"
+)
+
 type Status int
 
 const (
@@ -79,4 +83,6 @@ type License interface {
 	// -- for each subFeature defined in subFeatures:
 	// --- checks if subFeature or '*' is in the list of License Feature enabled SubFeatures
 	Validate(feature Feature, subFeatures ...Feature) Status
+
+	Refresh(ctx context.Context) error
 }
