@@ -54,5 +54,5 @@ var databaseDeploymentCRDWithSchema apiextensions.CustomResourceDefinition
 //go:embed database-deployment.yaml
 var databaseDeployment []byte
 
-//go:embed database-deployment.schema.generated.json
+//go:embed database-deployment.schema.generated.yaml
 var databaseDeploymentSchemaRaw []byte

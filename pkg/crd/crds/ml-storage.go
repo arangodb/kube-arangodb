@@ -54,5 +54,5 @@ var mlStorageCRDWithSchema apiextensions.CustomResourceDefinition
 //go:embed ml-storage.yaml
 var mlStorage []byte
 
-//go:embed ml-storage.schema.generated.json
+//go:embed ml-storage.schema.generated.yaml
 var mlStorageSchemaRaw []byte

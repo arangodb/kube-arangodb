@@ -54,5 +54,5 @@ var databaseTaskCRDWithSchema apiextensions.CustomResourceDefinition
 //go:embed database-task.yaml
 var databaseTask []byte
 
-//go:embed database-task.schema.generated.json
+//go:embed database-task.schema.generated.yaml
 var databaseTaskSchemaRaw []byte

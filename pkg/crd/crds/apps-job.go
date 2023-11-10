@@ -54,5 +54,5 @@ var appsJobsCRDWithSchema apiextensions.CustomResourceDefinition
 //go:embed apps-job.yaml
 var appsJobs []byte
 
-//go:embed apps-job.schema.generated.json
+//go:embed apps-job.schema.generated.yaml
 var appsJobsSchemaRaw []byte

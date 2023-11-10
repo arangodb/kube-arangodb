@@ -21,7 +21,6 @@
 package internal
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"path"
@@ -31,6 +30,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	"sigs.k8s.io/yaml"
 
 	appsv1 "github.com/arangodb/kube-arangodb/pkg/apis/apps/v1"
 	backupv1 "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
@@ -224,17 +224,11 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 			}
 		}
 
-		outPath := path.Join(root, "pkg/crd/crds", fmt.Sprintf("%s.schema.generated.json", filePrefix))
-		out, err := os.OpenFile(outPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+		yamlRaw, err := yaml.Marshal(validationPerVersion)
 		require.NoError(t, err)
 
-		defer func() {
-			require.NoError(t, out.Close())
-		}()
-
-		enc := json.NewEncoder(out)
-		enc.SetIndent("", "  ")
-		err = enc.Encode(validationPerVersion)
+		outPath := path.Join(root, "pkg/crd/crds", fmt.Sprintf("%s.schema.generated.yaml", filePrefix))
+		err = os.WriteFile(outPath, yamlRaw, 0644)
 		require.NoError(t, err)
 	}
 }

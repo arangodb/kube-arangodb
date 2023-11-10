@@ -54,5 +54,5 @@ var replicationDeploymentReplicationCRDWithSchema apiextensions.CustomResourceDe
 //go:embed replication-deploymentreplication.yaml
 var replicationDeploymentReplication []byte
 
-//go:embed replication-deploymentreplication.schema.generated.json
+//go:embed replication-deploymentreplication.schema.generated.yaml
 var replicationDeploymentReplicationSchemaRaw []byte

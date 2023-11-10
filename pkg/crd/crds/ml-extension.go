@@ -54,5 +54,5 @@ var mlExtensionCRDWithSchema apiextensions.CustomResourceDefinition
 //go:embed ml-extension.yaml
 var mlExtension []byte
 
-//go:embed ml-extension.schema.generated.json
+//go:embed ml-extension.schema.generated.yaml
 var mlExtensionSchemaRaw []byte

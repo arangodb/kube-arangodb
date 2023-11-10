@@ -58,5 +58,5 @@ var mlBatchJobCRDWithSchema apiextensions.CustomResourceDefinition
 //go:embed ml-job-batch.yaml
 var mlBatchJob []byte
 
-//go:embed ml-job-batch.schema.generated.json
+//go:embed ml-job-batch.schema.generated.yaml
 var mlBatchJobSchemaRow []byte

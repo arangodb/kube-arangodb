@@ -54,5 +54,5 @@ var storageLocalStorageCRDWithSchema apiextensions.CustomResourceDefinition
 //go:embed storage-localstorage.yaml
 var storageLocalStorage []byte
 
-//go:embed storage-localstorage.schema.generated.json
+//go:embed storage-localstorage.schema.generated.yaml
 var storageLocalStorageSchemaRaw []byte

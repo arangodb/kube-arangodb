@@ -54,5 +54,5 @@ var databaseMemberCRDWithSchema apiextensions.CustomResourceDefinition
 //go:embed database-member.yaml
 var databaseMember []byte
 
-//go:embed database-member.schema.generated.json
+//go:embed database-member.schema.generated.yaml
 var databaseMemberSchemaRaw []byte

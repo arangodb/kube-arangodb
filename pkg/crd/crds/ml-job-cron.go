@@ -54,5 +54,5 @@ var mlCronJobCRDWithSchema apiextensions.CustomResourceDefinition
 //go:embed ml-job-cron.yaml
 var mlCronJob []byte
 
-//go:embed ml-job-cron.schema.generated.json
+//go:embed ml-job-cron.schema.generated.yaml
 var mlCronJobSchemaRaw []byte

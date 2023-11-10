@@ -54,5 +54,5 @@ var backupsBackupPolicyCRDWithSchema apiextensions.CustomResourceDefinition
 //go:embed backups-backuppolicy.yaml
 var backupsBackupPolicy []byte
 
-//go:embed backups-backuppolicy.schema.generated.json
+//go:embed backups-backuppolicy.schema.generated.yaml
 var backupsBackupPolicySchemaRaw []byte

@@ -54,5 +54,5 @@ var databaseClusterSynchronizationCRDWithSchema apiextensions.CustomResourceDefi
 //go:embed database-clustersynchronization.yaml
 var databaseClusterSynchronization []byte
 
-//go:embed database-clustersynchronization.schema.generated.json
+//go:embed database-clustersynchronization.schema.generated.yaml
 var databaseClusterSynchronizationSchemaRaw []byte
