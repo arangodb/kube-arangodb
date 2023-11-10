@@ -28,10 +28,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/arangodb/kube-arangodb/pkg/crd"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
@@ -70,10 +70,15 @@ func init() {
 func parseCRDValidationSchemaArgs(args []string) (map[string]bool, error) {
 	availableCRDs := crd.ListAvailableNames()
 	result := make(map[string]bool)
+	var err error
 	for _, arg := range args {
 		parts := strings.Split(arg, "=")
-		if len(parts) != 2 {
-			return nil, fmt.Errorf("arg value '%s' can't be parsed", arg)
+		enabled := true
+		if len(parts) == 2 {
+			enabled, err = strconv.ParseBool(parts[1])
+			if err != nil {
+				return nil, errors.Wrapf(err, "not a bool value: %s", parts[1])
+			}
 		}
 
 		n := parts[0]
@@ -81,10 +86,6 @@ func parseCRDValidationSchemaArgs(args []string) (map[string]bool, error) {
 			return nil, fmt.Errorf("unknown CRD %s", n)
 		}
 
-		enabled, err := strconv.ParseBool(parts[1])
-		if err != nil {
-			return nil, errors.Wrapf(err, "not a bool value: %s", parts[1])
-		}
 		result[n] = enabled
 	}
 	return result, nil
