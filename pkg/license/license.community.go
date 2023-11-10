@@ -22,6 +22,7 @@ package license
 
 import (
 	"context"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/assertion"
 )
 
