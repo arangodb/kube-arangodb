@@ -22,6 +22,7 @@ package crds
 
 import (
 	_ "embed"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
@@ -37,18 +38,41 @@ func init() {
 	if err := yaml.Unmarshal(appsJobs, &appsJobsCRD); err != nil {
 		panic(err)
 	}
+
+	if err := yaml.Unmarshal(appsJobsSchema, &appsJobsCRDSchema); err != nil {
+		panic(err)
+	}
+}
+
+func DefaultAppsJobOptions() CRDOptions {
+	return CRDOptions{
+		WithSchema: util.NewType(false),
+	}
 }
 
 func AppsJob() *apiextensions.CustomResourceDefinition {
-	return appsJobsCRD.DeepCopy()
+	return AppsJobWithOptions(nil)
+}
+
+func AppsJobWithOptions(options *CRDOptions) *apiextensions.CustomResourceDefinition {
+	return appsJobWithOptions(options)
+}
+
+func appsJobWithOptions(options *CRDOptions) *apiextensions.CustomResourceDefinition {
+	return extendCRDWithSchema(appsJobsCRD.DeepCopy(), options.Merge(DefaultAppsJobOptions()), appsJobsCRDSchema)
 }
 
 func AppsJobDefinition() Definition {
 	return Definition{
 		Version: AppsJobVersion,
-		CRD:     appsJobsCRD.DeepCopy(),
+		CRD:     AppsJobWithOptions(nil),
 	}
 }
+
+var appsJobsCRDSchema CRDSchemas
+
+//go:embed apps-job.schema.yaml
+var appsJobsSchema []byte
 
 var appsJobsCRD apiextensions.CustomResourceDefinition
 

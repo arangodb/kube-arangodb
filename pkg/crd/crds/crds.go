@@ -21,6 +21,7 @@
 package crds
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 
 	"github.com/arangodb/go-driver"
@@ -61,4 +62,54 @@ func AllDefinitions() []Definition {
 		MLCronJobDefinition(),
 		MLBatchJobDefinition(),
 	}
+}
+
+type CRDSchemas map[string]apiextensions.CustomResourceValidation
+
+type CRDOptions struct {
+	WithSchema *bool
+}
+
+func (c *CRDOptions) GetWithSchema() bool {
+	if c == nil {
+		return false
+	}
+
+	if c.WithSchema == nil {
+		return false
+	}
+
+	return *c.WithSchema
+}
+
+func (c *CRDOptions) Merge(in CRDOptions) CRDOptions {
+	if c == nil {
+		return in
+	}
+
+	if c.WithSchema == nil {
+		c.WithSchema = in.WithSchema
+	}
+
+	return *c
+}
+
+func extendCRDWithSchema(crd *apiextensions.CustomResourceDefinition, opts CRDOptions, schemas CRDSchemas) *apiextensions.CustomResourceDefinition {
+	// We are already working on the copy
+	for v := range crd.Spec.Versions {
+		if schema, ok := schemas[crd.Spec.Versions[v].Name]; opts.GetWithSchema() && ok {
+			// We have found schema, lets merge it!
+			crd.Spec.Versions[v].Schema = schema.DeepCopy()
+		} else {
+			// Lets put default schema
+			crd.Spec.Versions[v].Schema = &apiextensions.CustomResourceValidation{
+				OpenAPIV3Schema: &apiextensions.JSONSchemaProps{
+					Type:                   "object",
+					XPreserveUnknownFields: util.NewType(true),
+				},
+			}
+		}
+	}
+
+	return crd
 }
