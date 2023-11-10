@@ -32,6 +32,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/arangodb/kube-arangodb/pkg/crd"
+	"github.com/arangodb/kube-arangodb/pkg/crd/crds"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
@@ -67,32 +68,33 @@ func init() {
 	cmdCRD.AddCommand(cmdCRDInstall)
 }
 
-func parseCRDValidationSchemaArgs(args []string) (map[string]bool, error) {
-	availableCRDs := crd.ListAvailableNames()
-	result := make(map[string]bool)
+func prepareCRDOptions(schemaEnabledArgs []string) (map[string]crds.CRDOptions, error) {
+	defaultOptions := crd.GetDefaultCRDOptions()
+	result := make(map[string]crds.CRDOptions)
 	var err error
-	for _, arg := range args {
+	for _, arg := range schemaEnabledArgs {
 		parts := strings.Split(arg, "=")
-		enabled := true
+
+		crdName := parts[0]
+		opts, ok := defaultOptions[crdName]
+		if !ok {
+			return nil, fmt.Errorf("unknown CRD %s", crdName)
+		}
+
 		if len(parts) == 2 {
-			enabled, err = strconv.ParseBool(parts[1])
+			opts.WithSchema, err = strconv.ParseBool(parts[1])
 			if err != nil {
 				return nil, errors.Wrapf(err, "not a bool value: %s", parts[1])
 			}
 		}
 
-		n := parts[0]
-		if availableCRDs.IndexOf(n) < 0 {
-			return nil, fmt.Errorf("unknown CRD %s", n)
-		}
-
-		result[n] = enabled
+		result[crdName] = opts
 	}
 	return result, nil
 }
 
 func cmdCRDInstallRun(cmd *cobra.Command, args []string) {
-	crdValidation, err := parseCRDValidationSchemaArgs(crdInstallOptions.validationSchema)
+	crdOpts, err := prepareCRDOptions(crdInstallOptions.validationSchema)
 	if err != nil {
 		logger.Fatal("Invalid --crd.validation-schema args: %s", err)
 		return
@@ -107,7 +109,7 @@ func cmdCRDInstallRun(cmd *cobra.Command, args []string) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	err = crd.EnsureCRD(ctx, client, false, crdValidation)
+	err = crd.EnsureCRDWithOptions(ctx, client, crdOpts, false)
 	if err != nil {
 		os.Exit(1)
 	}

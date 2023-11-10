@@ -31,30 +31,36 @@ import (
 
 	"github.com/arangodb/go-driver"
 
+	"github.com/arangodb/kube-arangodb/pkg/crd/crds"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
-	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
 var logger = logging.Global().RegisterAndGetLogger("crd", logging.Info)
 
-func ListAvailableNames() util.List[string] {
-	return util.SortKeys(registeredCRDs)
+// Deprecated: use EnsureCRDWithOptions instead
+func EnsureCRD(ctx context.Context, client kclient.Client, ignoreErrors bool) error {
+	return EnsureCRDWithOptions(ctx, client, nil, ignoreErrors)
 }
 
-func EnsureCRD(ctx context.Context, client kclient.Client, ignoreErrors bool, validation map[string]bool) error {
+func EnsureCRDWithOptions(ctx context.Context, client kclient.Client, ensureOpts map[string]crds.CRDOptions, ignoreErrors bool) error {
 	crdsLock.Lock()
 	defer crdsLock.Unlock()
 
-	for crdName, crdSpec := range registeredCRDs {
+	for crdName, crdReg := range registeredCRDs {
 		getAccess := verifyCRDAccess(ctx, client, crdName, "get")
 		if !getAccess.Allowed {
 			logger.Str("crd", crdName).Info("Get Operations is not allowed. Continue")
 			continue
 		}
 
-		withValidation := validation[crdName]
-		err := tryApplyCRD(ctx, client, crdName, crdSpec, withValidation)
+		var opt *crds.CRDOptions
+		if o, ok := ensureOpts[crdName]; ok {
+			opt = &o
+		}
+		def := crdReg.getter(opt)
+
+		err := tryApplyCRD(ctx, client, def)
 		if !ignoreErrors && err != nil {
 			return err
 		}
@@ -62,13 +68,10 @@ func EnsureCRD(ctx context.Context, client kclient.Client, ignoreErrors bool, va
 	return nil
 }
 
-func tryApplyCRD(ctx context.Context, client kclient.Client, crdName string, crdSpec crd, withValidation bool) error {
+func tryApplyCRD(ctx context.Context, client kclient.Client, def crds.Definition) error {
 	crdDefinitions := client.KubernetesExtensions().ApiextensionsV1().CustomResourceDefinitions()
 
-	spec := crdSpec.spec
-	if withValidation {
-		spec = crdSpec.specWithValidation
-	}
+	crdName := def.CRD.Name
 
 	c, err := crdDefinitions.Get(ctx, crdName, meta.GetOptions{})
 	if err != nil {
@@ -88,10 +91,10 @@ func tryApplyCRD(ctx context.Context, client kclient.Client, crdName string, crd
 			ObjectMeta: meta.ObjectMeta{
 				Name: crdName,
 				Labels: map[string]string{
-					Version: string(crdSpec.version),
+					Version: string(def.Version),
 				},
 			},
-			Spec: spec,
+			Spec: def.CRD.Spec,
 		}
 
 		if _, err := crdDefinitions.Create(ctx, c, meta.CreateOptions{}); err != nil {
@@ -115,15 +118,15 @@ func tryApplyCRD(ctx context.Context, client kclient.Client, crdName string, crd
 
 	if v, ok := c.ObjectMeta.Labels[Version]; ok {
 		if v != "" {
-			if !isUpdateRequired(crdSpec.version, driver.Version(v)) {
+			if !isUpdateRequired(def.Version, driver.Version(v)) {
 				logger.Str("crd", crdName).Info("CRD Update not required")
 				return nil
 			}
 		}
 	}
 
-	c.ObjectMeta.Labels[Version] = string(crdSpec.version)
-	c.Spec = spec
+	c.ObjectMeta.Labels[Version] = string(def.Version)
+	c.Spec = def.CRD.Spec
 
 	if _, err := crdDefinitions.Update(ctx, c, meta.UpdateOptions{}); err != nil {
 		logger.Err(err).Str("crd", crdName).Warn("Create Operations is not allowed due to error")

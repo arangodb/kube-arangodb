@@ -33,23 +33,32 @@ const (
 )
 
 func init() {
-	mustLoadCRD(databaseMember, databaseMemberSchemaRaw, &databaseMemberCRD, &databaseMemberCRDWithSchema)
+	mustLoadCRD(databaseMember, databaseMemberSchemaRaw, &databaseMemberCRD, &databaseMemberCRDSchemas)
 }
 
-func DatabaseMember(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
-	return getCRD(databaseMemberCRD, databaseMemberCRDWithSchema, opts...)
+// Deprecated: use DatabaseMemberWithOptions instead
+func DatabaseMember() *apiextensions.CustomResourceDefinition {
+	return DatabaseMemberWithOptions()
 }
 
+func DatabaseMemberWithOptions(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
+	return getCRD(databaseMemberCRD, databaseMemberCRDSchemas, opts...)
+}
+
+// Deprecated: use DatabaseMemberDefinitionWithOptions instead
 func DatabaseMemberDefinition() Definition {
+	return DatabaseMemberDefinitionWithOptions()
+}
+
+func DatabaseMemberDefinitionWithOptions(opts ...func(*CRDOptions)) Definition {
 	return Definition{
-		Version:       DatabaseMemberVersion,
-		CRD:           databaseMemberCRD.DeepCopy(),
-		CRDWithSchema: databaseMemberCRDWithSchema.DeepCopy(),
+		Version: DatabaseMemberVersion,
+		CRD:     DatabaseMemberWithOptions(opts...),
 	}
 }
 
 var databaseMemberCRD apiextensions.CustomResourceDefinition
-var databaseMemberCRDWithSchema apiextensions.CustomResourceDefinition
+var databaseMemberCRDSchemas crdSchemas
 
 //go:embed database-member.yaml
 var databaseMember []byte

@@ -25,8 +25,18 @@ import (
 )
 
 func init() {
-	registerCRDWithPanic(crds.MLStorageDefinition())
-	registerCRDWithPanic(crds.MLExtensionDefinition())
-	registerCRDWithPanic(crds.MLCronJobDefinition())
-	registerCRDWithPanic(crds.MLBatchJobDefinition())
+	defs := []func(...func(options *crds.CRDOptions)) crds.Definition{
+		crds.MLExtensionDefinitionWithOptions,
+		crds.MLStorageDefinitionWithOptions,
+		crds.MLCronJobDefinitionWithOptions,
+		crds.MLBatchJobDefinitionWithOptions,
+	}
+	for _, getDef := range defs {
+		defFn := getDef // bring into scope
+		registerCRDWithPanic(func(opts *crds.CRDOptions) crds.Definition {
+			return defFn()
+		}, &crds.CRDOptions{
+			WithSchema: true,
+		})
+	}
 }

@@ -33,23 +33,32 @@ const (
 )
 
 func init() {
-	mustLoadCRD(replicationDeploymentReplication, replicationDeploymentReplicationSchemaRaw, &replicationDeploymentReplicationCRD, &replicationDeploymentReplicationCRDWithSchema)
+	mustLoadCRD(replicationDeploymentReplication, replicationDeploymentReplicationSchemaRaw, &replicationDeploymentReplicationCRD, &replicationDeploymentReplicationCRDSchemas)
 }
 
-func ReplicationDeploymentReplication(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
-	return getCRD(replicationDeploymentReplicationCRD, replicationDeploymentReplicationCRDWithSchema, opts...)
+// Deprecated: use ReplicationDeploymentReplicationWithOptions instead
+func ReplicationDeploymentReplication() *apiextensions.CustomResourceDefinition {
+	return ReplicationDeploymentReplicationWithOptions()
 }
 
+func ReplicationDeploymentReplicationWithOptions(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
+	return getCRD(replicationDeploymentReplicationCRD, replicationDeploymentReplicationCRDSchemas, opts...)
+}
+
+// Deprecated: use ReplicationDeploymentReplicationDefinitionWithOptions instead
 func ReplicationDeploymentReplicationDefinition() Definition {
+	return ReplicationDeploymentReplicationDefinitionWithOptions()
+}
+
+func ReplicationDeploymentReplicationDefinitionWithOptions(opts ...func(*CRDOptions)) Definition {
 	return Definition{
-		Version:       ReplicationDeploymentReplicationVersion,
-		CRD:           replicationDeploymentReplicationCRD.DeepCopy(),
-		CRDWithSchema: replicationDeploymentReplicationCRDWithSchema.DeepCopy(),
+		Version: ReplicationDeploymentReplicationVersion,
+		CRD:     ReplicationDeploymentReplicationWithOptions(opts...),
 	}
 }
 
 var replicationDeploymentReplicationCRD apiextensions.CustomResourceDefinition
-var replicationDeploymentReplicationCRDWithSchema apiextensions.CustomResourceDefinition
+var replicationDeploymentReplicationCRDSchemas crdSchemas
 
 //go:embed replication-deploymentreplication.yaml
 var replicationDeploymentReplication []byte

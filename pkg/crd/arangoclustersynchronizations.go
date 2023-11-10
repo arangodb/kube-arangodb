@@ -25,5 +25,7 @@ import (
 )
 
 func init() {
-	registerCRDWithPanic(crds.DatabaseClusterSynchronizationDefinition())
+	registerCRDWithPanic(func(opts *crds.CRDOptions) crds.Definition {
+		return crds.DatabaseClusterSynchronizationDefinitionWithOptions()
+	}, nil)
 }

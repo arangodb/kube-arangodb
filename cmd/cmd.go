@@ -371,12 +371,12 @@ func executeMain(cmd *cobra.Command, args []string) {
 			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 			defer cancel()
 
-			crdValidation, err := parseCRDValidationSchemaArgs(crdOptions.validationSchema)
+			crdOpts, err := prepareCRDOptions(crdOptions.validationSchema)
 			if err != nil {
 				logger.Fatal("Invalid --crd.validation-schema args: %s", err)
 			}
 
-			_ = crd.EnsureCRD(ctx, client, true, crdValidation)
+			_ = crd.EnsureCRDWithOptions(ctx, client, crdOpts, true)
 		}
 
 		secrets := client.Kubernetes().CoreV1().Secrets(namespace)

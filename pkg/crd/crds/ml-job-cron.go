@@ -33,23 +33,22 @@ const (
 )
 
 func init() {
-	mustLoadCRD(mlCronJob, mlCronJobSchemaRaw, &mlCronJobCRD, &mlCronJobCRDWithSchema)
+	mustLoadCRD(mlCronJob, mlCronJobSchemaRaw, &mlCronJobCRD, &mlCronJobCRDSchemas)
 }
 
-func MLCronJob(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
-	return getCRD(mlCronJobCRD, mlCronJobCRDWithSchema, opts...)
+func MLCronJobWithOptions(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
+	return getCRD(mlCronJobCRD, mlCronJobCRDSchemas, opts...)
 }
 
-func MLCronJobDefinition() Definition {
+func MLCronJobDefinitionWithOptions(opts ...func(*CRDOptions)) Definition {
 	return Definition{
-		Version:       MLCronJobVersion,
-		CRD:           mlCronJobCRD.DeepCopy(),
-		CRDWithSchema: mlCronJobCRDWithSchema.DeepCopy(),
+		Version: MLCronJobVersion,
+		CRD:     MLCronJobWithOptions(opts...),
 	}
 }
 
 var mlCronJobCRD apiextensions.CustomResourceDefinition
-var mlCronJobCRDWithSchema apiextensions.CustomResourceDefinition
+var mlCronJobCRDSchemas crdSchemas
 
 //go:embed ml-job-cron.yaml
 var mlCronJob []byte

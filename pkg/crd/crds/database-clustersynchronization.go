@@ -33,23 +33,32 @@ const (
 )
 
 func init() {
-	mustLoadCRD(databaseClusterSynchronization, databaseClusterSynchronizationSchemaRaw, &databaseClusterSynchronizationCRD, &databaseClusterSynchronizationCRDWithSchema)
+	mustLoadCRD(databaseClusterSynchronization, databaseClusterSynchronizationSchemaRaw, &databaseClusterSynchronizationCRD, &databaseClusterSynchronizationCRDSchemas)
 }
 
-func DatabaseClusterSynchronization(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
-	return getCRD(databaseClusterSynchronizationCRD, databaseClusterSynchronizationCRDWithSchema, opts...)
+// Deprecated: use DatabaseClusterSynchronizationWithOptions instead
+func DatabaseClusterSynchronization() *apiextensions.CustomResourceDefinition {
+	return DatabaseClusterSynchronizationWithOptions()
 }
 
+func DatabaseClusterSynchronizationWithOptions(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
+	return getCRD(databaseClusterSynchronizationCRD, databaseClusterSynchronizationCRDSchemas, opts...)
+}
+
+// Deprecated: use DatabaseClusterSynchronizationDefinitionWithOptions instead
 func DatabaseClusterSynchronizationDefinition() Definition {
+	return DatabaseClusterSynchronizationDefinitionWithOptions()
+}
+
+func DatabaseClusterSynchronizationDefinitionWithOptions(opts ...func(*CRDOptions)) Definition {
 	return Definition{
-		Version:       DatabaseClusterSynchronizationVersion,
-		CRD:           databaseClusterSynchronizationCRD.DeepCopy(),
-		CRDWithSchema: databaseClusterSynchronizationCRDWithSchema.DeepCopy(),
+		Version: DatabaseClusterSynchronizationVersion,
+		CRD:     DatabaseClusterSynchronizationWithOptions(opts...),
 	}
 }
 
 var databaseClusterSynchronizationCRD apiextensions.CustomResourceDefinition
-var databaseClusterSynchronizationCRDWithSchema apiextensions.CustomResourceDefinition
+var databaseClusterSynchronizationCRDSchemas crdSchemas
 
 //go:embed database-clustersynchronization.yaml
 var databaseClusterSynchronization []byte

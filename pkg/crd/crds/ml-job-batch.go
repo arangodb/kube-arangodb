@@ -37,23 +37,22 @@ func init() {
 	if err := yaml.Unmarshal(mlBatchJob, &mlBatchJobCRD); err != nil {
 		panic(err)
 	}
-	mustLoadCRD(mlBatchJob, mlBatchJobSchemaRow, &mlBatchJobCRD, &mlBatchJobCRDWithSchema)
+	mustLoadCRD(mlBatchJob, mlBatchJobSchemaRow, &mlBatchJobCRD, &mlBatchJobCRDSchemas)
 }
 
-func MLBatchJob(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
-	return getCRD(mlBatchJobCRD, mlBatchJobCRDWithSchema, opts...)
+func MLBatchJobWithOptions(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
+	return getCRD(mlBatchJobCRD, mlBatchJobCRDSchemas, opts...)
 }
 
-func MLBatchJobDefinition() Definition {
+func MLBatchJobDefinitionWithOptions(opts ...func(*CRDOptions)) Definition {
 	return Definition{
-		Version:       MLBatchJobVersion,
-		CRD:           mlBatchJobCRD.DeepCopy(),
-		CRDWithSchema: mlBatchJobCRDWithSchema.DeepCopy(),
+		Version: MLBatchJobVersion,
+		CRD:     MLBatchJobWithOptions(opts...),
 	}
 }
 
 var mlBatchJobCRD apiextensions.CustomResourceDefinition
-var mlBatchJobCRDWithSchema apiextensions.CustomResourceDefinition
+var mlBatchJobCRDSchemas crdSchemas
 
 //go:embed ml-job-batch.yaml
 var mlBatchJob []byte

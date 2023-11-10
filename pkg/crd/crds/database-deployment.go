@@ -33,23 +33,32 @@ const (
 )
 
 func init() {
-	mustLoadCRD(databaseDeployment, databaseDeploymentSchemaRaw, &databaseDeploymentCRD, &databaseDeploymentCRDWithSchema)
+	mustLoadCRD(databaseDeployment, databaseDeploymentSchemaRaw, &databaseDeploymentCRD, &databaseDeploymentCRDSchemas)
 }
 
-func DatabaseDeployment(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
-	return getCRD(databaseDeploymentCRD, databaseDeploymentCRDWithSchema, opts...)
+// Deprecated: use DatabaseDeploymentWithOptions instead
+func DatabaseDeployment() *apiextensions.CustomResourceDefinition {
+	return DatabaseDeploymentWithOptions()
 }
 
+func DatabaseDeploymentWithOptions(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
+	return getCRD(databaseDeploymentCRD, databaseDeploymentCRDSchemas, opts...)
+}
+
+// Deprecated: use DatabaseDeploymentDefinitionWithOptions instead
 func DatabaseDeploymentDefinition() Definition {
+	return DatabaseDeploymentDefinitionWithOptions()
+}
+
+func DatabaseDeploymentDefinitionWithOptions(opts ...func(*CRDOptions)) Definition {
 	return Definition{
-		Version:       DatabaseDeploymentVersion,
-		CRD:           databaseDeploymentCRD.DeepCopy(),
-		CRDWithSchema: databaseDeploymentCRDWithSchema.DeepCopy(),
+		Version: DatabaseDeploymentVersion,
+		CRD:     DatabaseDeploymentWithOptions(opts...),
 	}
 }
 
 var databaseDeploymentCRD apiextensions.CustomResourceDefinition
-var databaseDeploymentCRDWithSchema apiextensions.CustomResourceDefinition
+var databaseDeploymentCRDSchemas crdSchemas
 
 //go:embed database-deployment.yaml
 var databaseDeployment []byte

@@ -33,23 +33,32 @@ const (
 )
 
 func init() {
-	mustLoadCRD(storageLocalStorage, storageLocalStorageSchemaRaw, &storageLocalStorageCRD, &storageLocalStorageCRDWithSchema)
+	mustLoadCRD(storageLocalStorage, storageLocalStorageSchemaRaw, &storageLocalStorageCRD, &storageLocalStorageCRDSchemas)
 }
 
-func StorageLocalStorage(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
-	return getCRD(storageLocalStorageCRD, storageLocalStorageCRDWithSchema, opts...)
+// Deprecated: use StorageLocalStorageWithOptions instead
+func StorageLocalStorage() *apiextensions.CustomResourceDefinition {
+	return StorageLocalStorageWithOptions()
 }
 
+func StorageLocalStorageWithOptions(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
+	return getCRD(storageLocalStorageCRD, storageLocalStorageCRDSchemas, opts...)
+}
+
+// Deprecated: use StorageLocalStorageDefinitionWithOptions instead
 func StorageLocalStorageDefinition() Definition {
+	return StorageLocalStorageDefinitionWithOptions()
+}
+
+func StorageLocalStorageDefinitionWithOptions(opts ...func(*CRDOptions)) Definition {
 	return Definition{
-		Version:       StorageLocalStorageVersion,
-		CRD:           storageLocalStorageCRD.DeepCopy(),
-		CRDWithSchema: storageLocalStorageCRDWithSchema.DeepCopy(),
+		Version: StorageLocalStorageVersion,
+		CRD:     StorageLocalStorageWithOptions(opts...),
 	}
 }
 
 var storageLocalStorageCRD apiextensions.CustomResourceDefinition
-var storageLocalStorageCRDWithSchema apiextensions.CustomResourceDefinition
+var storageLocalStorageCRDSchemas crdSchemas
 
 //go:embed storage-localstorage.yaml
 var storageLocalStorage []byte

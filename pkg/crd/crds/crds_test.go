@@ -40,16 +40,16 @@ func ensureCRDCompliance(t *testing.T, name string, crdDef *apiextensions.Custom
 
 	require.NotNil(t, crdDef)
 	require.Equal(t, name, crdDef.GetName())
-	for _, ver := range crdDef.Spec.Versions {
-		t.Run(name+" "+ver.Name, func(t *testing.T) {
-			require.NotNil(t, ver.Schema)
-			require.Equal(t, "object", ver.Schema.OpenAPIV3Schema.Type)
-			require.True(t, *ver.Schema.OpenAPIV3Schema.XPreserveUnknownFields)
+	for _, version := range crdDef.Spec.Versions {
+		t.Run(name+" "+version.Name, func(t *testing.T) {
+			require.NotNil(t, version.Schema)
+			require.Equal(t, "object", version.Schema.OpenAPIV3Schema.Type)
+			require.NotNil(t, version.Schema.OpenAPIV3Schema.XPreserveUnknownFields)
+			require.True(t, *version.Schema.OpenAPIV3Schema.XPreserveUnknownFields)
 			if schemaExpected {
-				require.NotEmpty(t, ver.Schema.OpenAPIV3Schema.Properties)
+				require.NotEmpty(t, version.Schema.OpenAPIV3Schema.Properties)
 			} else {
-				require.Empty(t, ver.Schema.OpenAPIV3Schema.Properties)
-				require.NotNil(t, ver.Schema.OpenAPIV3Schema.XPreserveUnknownFields)
+				require.Empty(t, version.Schema.OpenAPIV3Schema.Properties)
 			}
 		})
 	}
@@ -57,30 +57,30 @@ func ensureCRDCompliance(t *testing.T, name string, crdDef *apiextensions.Custom
 
 func Test_CRD(t *testing.T) {
 	testCases := []struct {
-		name string
-		def  Definition
+		name   string
+		getter func(opts ...func(options *CRDOptions)) Definition
 	}{
-		{apps.ArangoJobCRDName, AppsJobDefinition()},
-		{backup.ArangoBackupCRDName, BackupsBackupDefinition()},
-		{backup.ArangoBackupPolicyCRDName, BackupsBackupPolicyDefinition()},
-		{deployment.ArangoClusterSynchronizationCRDName, DatabaseClusterSynchronizationDefinition()},
-		{deployment.ArangoDeploymentCRDName, DatabaseDeploymentDefinition()},
-		{deployment.ArangoMemberCRDName, DatabaseMemberDefinition()},
-		{deployment.ArangoTaskCRDName, DatabaseTaskDefinition()},
-		{replication.ArangoDeploymentReplicationCRDName, ReplicationDeploymentReplicationDefinition()},
-		{storage.ArangoLocalStorageCRDName, StorageLocalStorageDefinition()},
-		{ml.ArangoMLExtensionCRDName, MLExtensionDefinition()},
-		{ml.ArangoMLStorageCRDName, MLStorageDefinition()},
-		{ml.ArangoMLCronJobCRDName, MLCronJobDefinition()},
-		{ml.ArangoMLBatchJobCRDName, MLBatchJobDefinition()},
+		{apps.ArangoJobCRDName, AppsJobDefinitionWithOptions},
+		{backup.ArangoBackupCRDName, BackupsBackupDefinitionWithOptions},
+		{backup.ArangoBackupPolicyCRDName, BackupsBackupPolicyDefinitionWithOptions},
+		{deployment.ArangoClusterSynchronizationCRDName, DatabaseClusterSynchronizationDefinitionWithOptions},
+		{deployment.ArangoDeploymentCRDName, DatabaseDeploymentDefinitionWithOptions},
+		{deployment.ArangoMemberCRDName, DatabaseMemberDefinitionWithOptions},
+		{deployment.ArangoTaskCRDName, DatabaseTaskDefinitionWithOptions},
+		{replication.ArangoDeploymentReplicationCRDName, ReplicationDeploymentReplicationDefinitionWithOptions},
+		{storage.ArangoLocalStorageCRDName, StorageLocalStorageDefinitionWithOptions},
+		{ml.ArangoMLExtensionCRDName, MLExtensionDefinitionWithOptions},
+		{ml.ArangoMLStorageCRDName, MLStorageDefinitionWithOptions},
+		{ml.ArangoMLCronJobCRDName, MLCronJobDefinitionWithOptions},
+		{ml.ArangoMLBatchJobCRDName, MLBatchJobDefinitionWithOptions},
 	}
 
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("%s-no-schema", tc.name), func(t *testing.T) {
-			ensureCRDCompliance(t, tc.name, tc.def.CRD, false)
+			ensureCRDCompliance(t, tc.name, tc.getter().CRD, false)
 		})
 		t.Run(fmt.Sprintf("%s-with-schema", tc.name), func(t *testing.T) {
-			ensureCRDCompliance(t, tc.name, tc.def.CRDWithSchema, true)
+			ensureCRDCompliance(t, tc.name, tc.getter(WithSchema()).CRD, true)
 		})
 	}
 }
@@ -89,26 +89,25 @@ func Test_AllDefinitionsDefined(t *testing.T) {
 	for _, def := range AllDefinitions() {
 		require.NotEmpty(t, def.Version)
 		require.NotNil(t, def.CRD)
-		require.NotNil(t, def.CRDWithSchema)
 	}
 }
 
 func Test_CRDGetters(t *testing.T) {
 	// getters are exposed for the usage by customers
 	getters := []func(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition{
-		AppsJob,
-		BackupsBackup,
-		BackupsBackupPolicyPolicy,
-		DatabaseClusterSynchronization,
-		DatabaseDeployment,
-		DatabaseMember,
-		DatabaseTask,
-		MLExtension,
-		MLBatchJob,
-		MLCronJob,
-		MLStorage,
-		ReplicationDeploymentReplication,
-		StorageLocalStorage,
+		AppsJobWithOptions,
+		BackupsBackupWithOptions,
+		BackupsBackupPolicyPolicyWithOptions,
+		DatabaseClusterSynchronizationWithOptions,
+		DatabaseDeploymentWithOptions,
+		DatabaseMemberWithOptions,
+		DatabaseTaskWithOptions,
+		MLExtensionWithOptions,
+		MLBatchJobWithOptions,
+		MLCronJobWithOptions,
+		MLStorageWithOptions,
+		ReplicationDeploymentReplicationWithOptions,
+		StorageLocalStorageWithOptions,
 	}
 	require.Equal(t, len(AllDefinitions()), len(getters))
 

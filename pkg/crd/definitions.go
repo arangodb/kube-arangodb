@@ -23,47 +23,54 @@ package crd
 import (
 	"sync"
 
-	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-
-	"github.com/arangodb/go-driver"
-
 	"github.com/arangodb/kube-arangodb/pkg/crd/crds"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 const Version = "arangodb.com/version"
 
+type crdDefinitionGetter func(opts *crds.CRDOptions) crds.Definition
+
+type crdRegistration struct {
+	getter      crdDefinitionGetter
+	defaultOpts crds.CRDOptions
+}
+
 var (
-	registeredCRDs = map[string]crd{}
+	registeredCRDs = map[string]crdRegistration{}
 
 	crdsLock sync.Mutex
 )
 
-type crd struct {
-	version            driver.Version
-	spec               apiextensions.CustomResourceDefinitionSpec
-	specWithValidation apiextensions.CustomResourceDefinitionSpec
-}
-
-func registerCRDWithPanic(c crds.Definition) {
-	if err := registerCRD(c.CRD.GetName(), crd{
-		version:            c.Version,
-		spec:               c.CRD.Spec,
-		specWithValidation: c.CRDWithSchema.Spec,
-	}); err != nil {
+func registerCRDWithPanic(getter crdDefinitionGetter, defaultOpts *crds.CRDOptions) {
+	if defaultOpts == nil {
+		defaultOpts = &crds.CRDOptions{}
+	}
+	if err := registerCRD(getter, *defaultOpts); err != nil {
 		panic(err)
 	}
 }
 
-func registerCRD(name string, crd crd) error {
+func registerCRD(getter crdDefinitionGetter, defaultOpts crds.CRDOptions) error {
 	crdsLock.Lock()
 	defer crdsLock.Unlock()
 
-	if _, ok := registeredCRDs[name]; ok {
-		return errors.Newf("CRD %s already exists", name)
+	def := getter(nil)
+	if _, ok := registeredCRDs[def.CRD.GetName()]; ok {
+		return errors.Newf("CRD %s already exists", def.CRD.GetName())
+	}
+	registeredCRDs[def.CRD.GetName()] = crdRegistration{
+		getter:      getter,
+		defaultOpts: defaultOpts,
 	}
 
-	registeredCRDs[name] = crd
-
 	return nil
+}
+
+func GetDefaultCRDOptions() map[string]crds.CRDOptions {
+	ret := make(map[string]crds.CRDOptions)
+	for n, s := range registeredCRDs {
+		ret[n] = s.defaultOpts
+	}
+	return ret
 }

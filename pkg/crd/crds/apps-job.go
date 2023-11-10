@@ -33,23 +33,32 @@ const (
 )
 
 func init() {
-	mustLoadCRD(appsJobs, appsJobsSchemaRaw, &appsJobsCRD, &appsJobsCRDWithSchema)
+	mustLoadCRD(appsJobs, appsJobsSchemaRaw, &appsJobsCRD, &appsJobsCRDSchemas)
 }
 
-func AppsJob(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
-	return getCRD(appsJobsCRD, appsJobsCRDWithSchema, opts...)
+// Deprecated: use AppsJobWithOptions instead
+func AppsJob() *apiextensions.CustomResourceDefinition {
+	return AppsJobWithOptions()
 }
 
+func AppsJobWithOptions(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
+	return getCRD(appsJobsCRD, appsJobsCRDSchemas, opts...)
+}
+
+// Deprecated: use AppsJobDefinitionWithOptions instead
 func AppsJobDefinition() Definition {
+	return AppsJobDefinitionWithOptions()
+}
+
+func AppsJobDefinitionWithOptions(opts ...func(*CRDOptions)) Definition {
 	return Definition{
-		Version:       AppsJobVersion,
-		CRD:           appsJobsCRD.DeepCopy(),
-		CRDWithSchema: appsJobsCRDWithSchema.DeepCopy(),
+		Version: AppsJobVersion,
+		CRD:     AppsJobWithOptions(opts...),
 	}
 }
 
 var appsJobsCRD apiextensions.CustomResourceDefinition
-var appsJobsCRDWithSchema apiextensions.CustomResourceDefinition
+var appsJobsCRDSchemas crdSchemas
 
 //go:embed apps-job.yaml
 var appsJobs []byte

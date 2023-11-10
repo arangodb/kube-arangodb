@@ -33,23 +33,32 @@ const (
 )
 
 func init() {
-	mustLoadCRD(backupsBackup, backupsBackupSchemaRaw, &backupsBackupCRD, &backupsBackupCRDWithSchema)
+	mustLoadCRD(backupsBackup, backupsBackupSchemaRaw, &backupsBackupCRD, &backupsBackupCRDSchemas)
 }
 
-func BackupsBackup(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
-	return getCRD(backupsBackupCRD, backupsBackupCRDWithSchema, opts...)
+// Deprecated: use BackupsBackupWithOptions instead
+func BackupsBackup() *apiextensions.CustomResourceDefinition {
+	return BackupsBackupWithOptions()
 }
 
+func BackupsBackupWithOptions(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
+	return getCRD(backupsBackupCRD, backupsBackupCRDSchemas, opts...)
+}
+
+// Deprecated: use BackupsBackupDefinitionWithOptions instead
 func BackupsBackupDefinition() Definition {
+	return BackupsBackupDefinitionWithOptions()
+}
+
+func BackupsBackupDefinitionWithOptions(opts ...func(*CRDOptions)) Definition {
 	return Definition{
-		Version:       BackupsBackupVersion,
-		CRD:           backupsBackupCRD.DeepCopy(),
-		CRDWithSchema: backupsBackupCRDWithSchema.DeepCopy(),
+		Version: BackupsBackupVersion,
+		CRD:     BackupsBackupWithOptions(opts...),
 	}
 }
 
 var backupsBackupCRD apiextensions.CustomResourceDefinition
-var backupsBackupCRDWithSchema apiextensions.CustomResourceDefinition
+var backupsBackupCRDSchemas crdSchemas
 
 //go:embed backups-backup.yaml
 var backupsBackup []byte

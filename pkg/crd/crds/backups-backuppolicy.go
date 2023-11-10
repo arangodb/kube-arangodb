@@ -33,23 +33,32 @@ const (
 )
 
 func init() {
-	mustLoadCRD(backupsBackupPolicy, backupsBackupPolicySchemaRaw, &backupsBackupPolicyCRD, &backupsBackupPolicyCRDWithSchema)
+	mustLoadCRD(backupsBackupPolicy, backupsBackupPolicySchemaRaw, &backupsBackupPolicyCRD, &backupsBackupPolicyCRDSchemas)
 }
 
-func BackupsBackupPolicyPolicy(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
-	return getCRD(backupsBackupPolicyCRD, backupsBackupPolicyCRDWithSchema, opts...)
+// Deprecated: use BackupsBackupPolicyPolicyWithOptions instead
+func BackupsBackupPolicyPolicy() *apiextensions.CustomResourceDefinition {
+	return BackupsBackupPolicyPolicyWithOptions()
 }
 
+func BackupsBackupPolicyPolicyWithOptions(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
+	return getCRD(backupsBackupPolicyCRD, backupsBackupPolicyCRDSchemas, opts...)
+}
+
+// Deprecated: use func BackupsBackupPolicyDefinitionWithOptions instead
 func BackupsBackupPolicyDefinition() Definition {
+	return BackupsBackupPolicyDefinitionWithOptions()
+}
+
+func BackupsBackupPolicyDefinitionWithOptions(opts ...func(*CRDOptions)) Definition {
 	return Definition{
-		Version:       BackupsBackupPolicyPolicyVersion,
-		CRD:           backupsBackupPolicyCRD.DeepCopy(),
-		CRDWithSchema: backupsBackupPolicyCRDWithSchema.DeepCopy(),
+		Version: BackupsBackupPolicyPolicyVersion,
+		CRD:     BackupsBackupPolicyPolicyWithOptions(opts...),
 	}
 }
 
 var backupsBackupPolicyCRD apiextensions.CustomResourceDefinition
-var backupsBackupPolicyCRDWithSchema apiextensions.CustomResourceDefinition
+var backupsBackupPolicyCRDSchemas crdSchemas
 
 //go:embed backups-backuppolicy.yaml
 var backupsBackupPolicy []byte

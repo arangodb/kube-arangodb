@@ -33,23 +33,22 @@ const (
 )
 
 func init() {
-	mustLoadCRD(mlStorage, mlStorageSchemaRaw, &mlStorageCRD, &mlStorageCRDWithSchema)
+	mustLoadCRD(mlStorage, mlStorageSchemaRaw, &mlStorageCRD, &mlStorageCRDSchemas)
 }
 
-func MLStorage(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
-	return getCRD(mlStorageCRD, mlStorageCRDWithSchema, opts...)
+func MLStorageWithOptions(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
+	return getCRD(mlStorageCRD, mlStorageCRDSchemas, opts...)
 }
 
-func MLStorageDefinition() Definition {
+func MLStorageDefinitionWithOptions(opts ...func(*CRDOptions)) Definition {
 	return Definition{
-		Version:       MLStorageVersion,
-		CRD:           mlStorageCRD.DeepCopy(),
-		CRDWithSchema: mlStorageCRDWithSchema.DeepCopy(),
+		Version: MLStorageVersion,
+		CRD:     MLStorageWithOptions(opts...),
 	}
 }
 
 var mlStorageCRD apiextensions.CustomResourceDefinition
-var mlStorageCRDWithSchema apiextensions.CustomResourceDefinition
+var mlStorageCRDSchemas crdSchemas
 
 //go:embed ml-storage.yaml
 var mlStorage []byte

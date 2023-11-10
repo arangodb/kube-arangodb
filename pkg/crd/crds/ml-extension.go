@@ -33,23 +33,22 @@ const (
 )
 
 func init() {
-	mustLoadCRD(mlExtension, mlExtensionSchemaRaw, &mlExtensionCRD, &mlExtensionCRDWithSchema)
+	mustLoadCRD(mlExtension, mlExtensionSchemaRaw, &mlExtensionCRD, &mlExtensionCRDSchemas)
 }
 
-func MLExtension(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
-	return getCRD(mlExtensionCRD, mlExtensionCRDWithSchema, opts...)
+func MLExtensionWithOptions(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
+	return getCRD(mlExtensionCRD, mlExtensionCRDSchemas, opts...)
 }
 
-func MLExtensionDefinition() Definition {
+func MLExtensionDefinitionWithOptions(opts ...func(*CRDOptions)) Definition {
 	return Definition{
-		Version:       MLExtensionVersion,
-		CRD:           mlExtensionCRD.DeepCopy(),
-		CRDWithSchema: mlExtensionCRDWithSchema.DeepCopy(),
+		Version: MLExtensionVersion,
+		CRD:     MLExtensionWithOptions(opts...),
 	}
 }
 
 var mlExtensionCRD apiextensions.CustomResourceDefinition
-var mlExtensionCRDWithSchema apiextensions.CustomResourceDefinition
+var mlExtensionCRDSchemas crdSchemas
 
 //go:embed ml-extension.yaml
 var mlExtension []byte
