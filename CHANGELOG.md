@@ -5,7 +5,10 @@
 - (Feature) License Manager
 - (Improvement) Use Async mode for backup creation
 - (Feature) (ML) CRD
-- (Feature) Add validation rules for CRDs
+- (Bugfix) Proper handling of --agency.retries argument
+- (Documentation) Do not use field type name for field URL hash
+- (Maintenance) Bump Go to 1.20.11
+- (Feature) Add support for CRD schema validation
 
 ## [1.2.35](https://github.com/arangodb/kube-arangodb/tree/1.2.35) (2023-11-06)
 - (Maintenance) Update go-driver to v1.6.0, update IsNotFound() checks

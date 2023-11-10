@@ -79,7 +79,7 @@ func (i *retryLoader[T]) Refresh(ctx context.Context, discovery agencyCache.Lead
 	i.lock.Lock()
 	defer i.lock.Unlock()
 
-	for z := 0; z < i.retries-1; z++ {
+	for z := 0; z < i.retries; z++ {
 		if err := i.parent.Refresh(ctx, discovery); err != nil {
 			logger.Err(err).Debug("Unable to refresh agency while retrying")
 			continue

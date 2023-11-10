@@ -2,21 +2,27 @@
 
 ## Spec
 
-### .spec.cancellation.ensureInSync: boolean
+### .spec.cancellation.ensureInSync
+
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/replication/v1/replication_spec.go#L38)</sup>
 
 EnsureInSync if it is true then during cancellation process data consistency is required.
 Default value is true.
 
-[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/replication/v1/replication_spec.go#L38)
+***
 
-### .spec.cancellation.sourceReadOnly: boolean
+### .spec.cancellation.sourceReadOnly
+
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/replication/v1/replication_spec.go#L41)</sup>
 
 SourceReadOnly if it true then after cancellation source data center should be in read-only mode.
 Default value is false.
 
-[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/replication/v1/replication_spec.go#L41)
+***
 
-### .spec.destination.auth.keyfileSecretName: string
+### .spec.destination.auth.keyfileSecretName
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/replication/v1/endpoint_authentication_spec.go#L37)</sup>
 
 KeyfileSecretName holds the name of a Secret containing a client authentication
 certificate formatted at keyfile in a `tls.keyfile` field.
@@ -24,25 +30,31 @@ If `userSecretName` has not been set,
 the client authentication certificate found in the secret with this name is also used to configure
 the synchronization and fetch the synchronization status.
 
-[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/replication/v1/endpoint_authentication_spec.go#L37)
+***
 
-### .spec.destination.auth.userSecretName: string
+### .spec.destination.auth.userSecretName
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/replication/v1/endpoint_authentication_spec.go#L42)</sup>
 
 UserSecretName holds the name of a Secret containing a `username` & `password`
 field used for basic authentication.
 The user identified by the username must have write access in the `_system` database
 of the ArangoDB cluster at the endpoint.
 
-[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/replication/v1/endpoint_authentication_spec.go#L42)
+***
 
-### .spec.destination.deploymentName: string
+### .spec.destination.deploymentName
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/replication/v1/endpoint_spec.go#L36)</sup>
 
 DeploymentName holds the name of an ArangoDeployment resource.
 If set, this provides default values for masterEndpoint, auth & tls.
 
-[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/replication/v1/endpoint_spec.go#L36)
+***
 
-### .spec.destination.masterEndpoint: array
+### .spec.destination.masterEndpoint
+
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/replication/v1/endpoint_spec.go#L42)</sup>
 
 MasterEndpoint holds a list of URLs used to reach the syncmaster(s)
 Use this setting if the source cluster is not running inside a Kubernetes cluster
@@ -51,16 +63,20 @@ Specifying this setting and `deploymentName` at the same time is not allowed.
 
 Default Value: `[]`
 
-[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/replication/v1/endpoint_spec.go#L42)
+***
 
-### .spec.destination.tls.caSecretName: string
+### .spec.destination.tls.caSecretName
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/replication/v1/endpoint_tls_spec.go#L34)</sup>
 
 CASecretName holds the name of a Secret containing a ca.crt public key for TLS validation.
 This setting is required, unless `deploymentName` has been set.
 
-[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/replication/v1/endpoint_tls_spec.go#L34)
+***
 
-### .spec.source.auth.keyfileSecretName: string
+### .spec.source.auth.keyfileSecretName
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/replication/v1/endpoint_authentication_spec.go#L37)</sup>
 
 KeyfileSecretName holds the name of a Secret containing a client authentication
 certificate formatted at keyfile in a `tls.keyfile` field.
@@ -68,25 +84,31 @@ If `userSecretName` has not been set,
 the client authentication certificate found in the secret with this name is also used to configure
 the synchronization and fetch the synchronization status.
 
-[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/replication/v1/endpoint_authentication_spec.go#L37)
+***
 
-### .spec.source.auth.userSecretName: string
+### .spec.source.auth.userSecretName
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/replication/v1/endpoint_authentication_spec.go#L42)</sup>
 
 UserSecretName holds the name of a Secret containing a `username` & `password`
 field used for basic authentication.
 The user identified by the username must have write access in the `_system` database
 of the ArangoDB cluster at the endpoint.
 
-[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/replication/v1/endpoint_authentication_spec.go#L42)
+***
 
-### .spec.source.deploymentName: string
+### .spec.source.deploymentName
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/replication/v1/endpoint_spec.go#L36)</sup>
 
 DeploymentName holds the name of an ArangoDeployment resource.
 If set, this provides default values for masterEndpoint, auth & tls.
 
-[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/replication/v1/endpoint_spec.go#L36)
+***
 
-### .spec.source.masterEndpoint: array
+### .spec.source.masterEndpoint
+
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/replication/v1/endpoint_spec.go#L42)</sup>
 
 MasterEndpoint holds a list of URLs used to reach the syncmaster(s)
 Use this setting if the source cluster is not running inside a Kubernetes cluster
@@ -95,12 +117,12 @@ Specifying this setting and `deploymentName` at the same time is not allowed.
 
 Default Value: `[]`
 
-[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/replication/v1/endpoint_spec.go#L42)
+***
 
-### .spec.source.tls.caSecretName: string
+### .spec.source.tls.caSecretName
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/replication/v1/endpoint_tls_spec.go#L34)</sup>
 
 CASecretName holds the name of a Secret containing a ca.crt public key for TLS validation.
 This setting is required, unless `deploymentName` has been set.
-
-[Code Reference](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/replication/v1/endpoint_tls_spec.go#L34)
 
