@@ -1,0 +1,206 @@
+v1:
+  openAPIV3Schema:
+    properties:
+      spec:
+        properties:
+          allowConcurrent:
+            description: AllowConcurrent if false, ArangoBackup will not be created
+              when previous Backups are not finished
+            type: boolean
+          maxBackups:
+            description: |-
+              MaxBackups defines how many backups should be kept in history (per deployment). Oldest healthy Backups will be deleted.
+              If not specified or 0 then no limit is applied
+            format: int32
+            type: integer
+          schedule:
+            description: |-
+              Schedule is cron-compatible specification of backup schedule
+              Parsed by https://godoc.org/github.com/robfig/cron
+            type: string
+          selector:
+            description: DeploymentSelector Selector definition for selecting matching
+              ArangoBackup Custom Resources.
+            properties:
+              matchExpressions:
+                items:
+                  properties:
+                    key:
+                      type: string
+                    operator:
+                      type: string
+                    values:
+                      items:
+                        type: string
+                      type: array
+                  type: object
+                type: array
+              matchLabels:
+                additionalProperties:
+                  type: string
+                type: object
+            type: object
+          template:
+            description: ArangoBackupTemplate specifies additional options for newly
+              created ArangoBackup
+            properties:
+              backoff:
+                properties:
+                  iterations:
+                    description: Iterations defines number of iterations before reaching
+                      MaxDelay. Default to 5
+                    format: int32
+                    type: integer
+                  max_delay:
+                    description: MaxDelay defines maximum delay in seconds. Default
+                      to 600
+                    format: int32
+                    type: integer
+                  max_iterations:
+                    description: MaxIterations defines maximum number of iterations
+                      after backoff will be disabled. Default to nil (no limit)
+                    format: int32
+                    type: integer
+                  min_delay:
+                    description: MinDelay defines minimum delay in seconds. Default
+                      to 30
+                    format: int32
+                    type: integer
+                type: object
+              lifetime:
+                description: 'Lifetime is the time after which the backup will be
+                  deleted. Format: "1.5h" or "2h45m".'
+                type: string
+              options:
+                properties:
+                  allowInconsistent:
+                    description: |-
+                      AllowInconsistent flag for Backup creation request.
+                      If this value is set to true, backup is taken even if we are not able to acquire lock.
+                    type: boolean
+                  timeout:
+                    description: Timeout for Backup creation request in seconds. Works
+                      only when AsyncBackupCreation feature is set to false.
+                    format: float
+                    type: number
+                type: object
+              upload:
+                properties:
+                  credentialsSecretName:
+                    description: CredentialsSecretName is the name of the secret used
+                      while accessing repository
+                    type: string
+                  repositoryURL:
+                    description: |-
+                      RepositoryURL is the URL path for file storage
+                      Same repositoryURL needs to be defined in `credentialsSecretName` if protocol is other than local.
+                      Format: `<protocol>:/<path>`
+                    type: string
+                type: object
+            type: object
+        type: object
+    type: object
+    x-kubernetes-preserve-unknown-fields: true
+v1alpha:
+  openAPIV3Schema:
+    properties:
+      spec:
+        properties:
+          allowConcurrent:
+            description: AllowConcurrent if false, ArangoBackup will not be created
+              when previous Backups are not finished
+            type: boolean
+          maxBackups:
+            description: |-
+              MaxBackups defines how many backups should be kept in history (per deployment). Oldest healthy Backups will be deleted.
+              If not specified or 0 then no limit is applied
+            format: int32
+            type: integer
+          schedule:
+            description: |-
+              Schedule is cron-compatible specification of backup schedule
+              Parsed by https://godoc.org/github.com/robfig/cron
+            type: string
+          selector:
+            description: DeploymentSelector Selector definition for selecting matching
+              ArangoBackup Custom Resources.
+            properties:
+              matchExpressions:
+                items:
+                  properties:
+                    key:
+                      type: string
+                    operator:
+                      type: string
+                    values:
+                      items:
+                        type: string
+                      type: array
+                  type: object
+                type: array
+              matchLabels:
+                additionalProperties:
+                  type: string
+                type: object
+            type: object
+          template:
+            description: ArangoBackupTemplate specifies additional options for newly
+              created ArangoBackup
+            properties:
+              backoff:
+                properties:
+                  iterations:
+                    description: Iterations defines number of iterations before reaching
+                      MaxDelay. Default to 5
+                    format: int32
+                    type: integer
+                  max_delay:
+                    description: MaxDelay defines maximum delay in seconds. Default
+                      to 600
+                    format: int32
+                    type: integer
+                  max_iterations:
+                    description: MaxIterations defines maximum number of iterations
+                      after backoff will be disabled. Default to nil (no limit)
+                    format: int32
+                    type: integer
+                  min_delay:
+                    description: MinDelay defines minimum delay in seconds. Default
+                      to 30
+                    format: int32
+                    type: integer
+                type: object
+              lifetime:
+                description: 'Lifetime is the time after which the backup will be
+                  deleted. Format: "1.5h" or "2h45m".'
+                type: string
+              options:
+                properties:
+                  allowInconsistent:
+                    description: |-
+                      AllowInconsistent flag for Backup creation request.
+                      If this value is set to true, backup is taken even if we are not able to acquire lock.
+                    type: boolean
+                  timeout:
+                    description: Timeout for Backup creation request in seconds. Works
+                      only when AsyncBackupCreation feature is set to false.
+                    format: float
+                    type: number
+                type: object
+              upload:
+                properties:
+                  credentialsSecretName:
+                    description: CredentialsSecretName is the name of the secret used
+                      while accessing repository
+                    type: string
+                  repositoryURL:
+                    description: |-
+                      RepositoryURL is the URL path for file storage
+                      Same repositoryURL needs to be defined in `credentialsSecretName` if protocol is other than local.
+                      Format: `<protocol>:/<path>`
+                    type: string
+                type: object
+            type: object
+        type: object
+    type: object
+    x-kubernetes-preserve-unknown-fields: true
