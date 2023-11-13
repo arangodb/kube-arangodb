@@ -17,8 +17,8 @@ There are different options how CustomResourceDefinitions can be created.
 - Install CRDs using kustomize `all` or `crd` manifests.
 
 **Recommended:**
-Use `kube-arangodb` Helm chart. Chart itself does not contain CRDs.
-Instead, operator will try to create the required CRDs on the first start.
+Use `kube-arangodb` Helm chart.
+If you've chosen not to install CRDs automatically (`--skip-crds`), the operator will try to install CRDs automatically.
 Make sure that ServiceAccount for operator has permissions to `create` CustomResourceDefinitions.
 
 To disable the automatic creation of CRDs, set `enableCRDManagement=false` template parameter, e.g.:

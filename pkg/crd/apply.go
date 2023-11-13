@@ -129,7 +129,7 @@ func tryApplyCRD(ctx context.Context, client kclient.Client, def crds.Definition
 	c.Spec = def.CRD.Spec
 
 	if _, err := crdDefinitions.Update(ctx, c, meta.UpdateOptions{}); err != nil {
-		logger.Err(err).Str("crd", crdName).Warn("Create Operations is not allowed due to error")
+		logger.Err(err).Str("crd", crdName).Warn("Failed to update CRD definition")
 		return err
 	}
 	logger.Str("crd", crdName).Info("CRD Updated")
