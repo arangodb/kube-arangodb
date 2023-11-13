@@ -27,6 +27,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 )
 
+// P2 runs compare of the provided templates with 2 generic parameters
 func P2[T interface{}, P1, P2 interface{}](
 	log logging.Logger,
 	p1 P1, p2 P2,
