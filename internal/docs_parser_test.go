@@ -26,72 +26,65 @@ import (
 	"go/parser"
 	"go/token"
 	"io/fs"
-	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	openapi "k8s.io/kube-openapi/pkg/common"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-func parseDocDefinitions(t *testing.T, res map[typeInfo]*ast.Field, fs *token.FileSet) DocDefinitions {
-	root := os.Getenv("ROOT")
-	require.NotEmpty(t, root)
-
-	defs := make(DocDefinitions, 0, len(res))
-
-	for info, field := range res {
-		def := DocDefinition{
-			Path: info.path,
-			Type: info.typ,
-		}
-
-		require.NotNil(t, field)
-
-		if links, ok := extract(field, "link"); ok {
-			def.Links = links
-		}
-
-		if d, ok := extract(field, "default"); ok {
-			def.Default = util.NewType[string](d[0])
-		}
-
-		if example, ok := extract(field, "example"); ok {
-			def.Example = example
-		}
-
-		if enum, ok := extract(field, "enum"); ok {
-			def.Enum = enum
-		}
-
-		if immutable, ok := extract(field, "immutable"); ok {
-			def.Immutable = util.NewType[string](immutable[0])
-		}
-
-		if important, ok := extract(field, "important"); ok {
-			def.Important = util.NewType[string](important[0])
-		}
-
-		if docs, ok := extractNotTags(field); !ok {
-			println(def.Path, " is missing documentation!")
-		} else {
-			def.Docs = docs
-		}
-
-		file := fs.File(field.Pos())
-
-		filePath, err := filepath.Rel(root, file.Name())
-		require.NoError(t, err)
-
-		def.File = filePath
-		def.Line = file.Line(field.Pos())
-
-		defs = append(defs, def)
+func parseDocDefinition(t *testing.T, root, path, typ string, field *ast.Field, fs *token.FileSet) DocDefinition {
+	def := DocDefinition{
+		Path: path,
+		Type: typ,
 	}
-	return defs
+
+	require.NotNil(t, field)
+
+	if links, ok := extract(field, "link"); ok {
+		def.Links = links
+	}
+
+	if d, ok := extract(field, "default"); ok {
+		def.Default = util.NewType[string](d[0])
+	}
+
+	if example, ok := extract(field, "example"); ok {
+		def.Example = example
+	}
+
+	if enum, ok := extract(field, "enum"); ok {
+		def.Enum = enum
+	}
+
+	if immutable, ok := extract(field, "immutable"); ok {
+		def.Immutable = util.NewType[string](immutable[0])
+	}
+
+	if important, ok := extract(field, "important"); ok {
+		def.Important = util.NewType[string](important[0])
+	}
+
+	if docs, ok := extractNotTags(field); !ok {
+		println(def.Path, " is missing documentation!")
+	} else {
+		def.Docs = docs
+	}
+
+	file := fs.File(field.Pos())
+
+	filePath, err := filepath.Rel(root, file.Name())
+	require.NoError(t, err)
+
+	def.File = filePath
+	def.Line = file.Line(field.Pos())
+
+	return def
 }
 
 type typeInfo struct {
@@ -111,7 +104,7 @@ func iterateOverObject(t *testing.T, fields map[string]*ast.Field, name string, 
 }
 
 func iterateOverObjectDirect(t *testing.T, fields map[string]*ast.Field, name string, object reflect.Type, path string) map[typeInfo]*ast.Field {
-	if n, simple := isSimpleType(object); simple {
+	if n, _, simple := isSimpleType(object); simple {
 		return map[typeInfo]*ast.Field{
 			typeInfo{
 				path: fmt.Sprintf("%s.%s", path, name),
@@ -124,7 +117,7 @@ func iterateOverObjectDirect(t *testing.T, fields map[string]*ast.Field, name st
 
 	switch object.Kind() {
 	case reflect.Array, reflect.Slice:
-		if _, simple := isSimpleType(object.Elem()); simple {
+		if _, _, simple := isSimpleType(object.Elem()); simple {
 			return map[typeInfo]*ast.Field{
 				typeInfo{
 					path: fmt.Sprintf("%s.%s", path, name),
@@ -137,7 +130,7 @@ func iterateOverObjectDirect(t *testing.T, fields map[string]*ast.Field, name st
 			r[k] = v
 		}
 	case reflect.Map:
-		if _, simple := isSimpleType(object.Elem()); simple {
+		if _, _, simple := isSimpleType(object.Elem()); simple {
 			return map[typeInfo]*ast.Field{
 				typeInfo{
 					path: fmt.Sprintf("%s.%s", path, name),
@@ -254,22 +247,10 @@ func extractNotTags(n *ast.Field) ([]string, bool) {
 	return ret, len(ret) > 0
 }
 
-// isSimpleType returns the OpenAPI-compatible type name and boolean indicating if this is simple type or not
-func isSimpleType(obj reflect.Type) (string, bool) {
-	switch obj.Kind() {
-	case reflect.String:
-		return "string", true
-	case reflect.Bool:
-		return "boolean", true
-	case reflect.Int, reflect.Int32,
-		reflect.Uint, reflect.Uint8, reflect.Uint16:
-		return "integer", true
-	case reflect.Int64, reflect.Uint64:
-		return "integer", true
-	case reflect.Float32:
-		return "number", true
-	}
-	return "", false
+// isSimpleType returns the OpenAPI-compatible type name, type format and boolean indicating if this is simple type or not
+func isSimpleType(obj reflect.Type) (string, string, bool) {
+	typ, frmt := openapi.OpenAPITypeFormat(obj.Kind().String())
+	return typ, frmt, typ != "" || frmt != ""
 }
 
 func extractTag(tag string) (string, bool) {
@@ -286,9 +267,24 @@ func extractTag(tag string) (string, bool) {
 	return parts[0], false
 }
 
+type parsedSource struct {
+	fields map[string]*ast.Field
+	fs     *token.FileSet
+}
+
+var parsedSourcesCache = make(map[string]parsedSource)
+var parsedSourcesCacheLock sync.Mutex
+
 // parseSourceFiles returns map of <path to field in structure> -> AST for structure Field and the token inspector for all files in package
-func parseSourceFiles(t *testing.T, paths ...string) (map[string]*ast.Field, *token.FileSet) {
-	d, fs := parseMultipleDirs(t, parser.ParseComments, paths...)
+func parseSourceFiles(t *testing.T, path string) (map[string]*ast.Field, *token.FileSet) {
+	parsedSourcesCacheLock.Lock()
+	defer parsedSourcesCacheLock.Unlock()
+
+	if ret, ok := parsedSourcesCache[path]; ok {
+		return ret.fields, ret.fs
+	}
+
+	d, fs := parseMultipleDirs(t, parser.ParseComments, path)
 
 	r := map[string]*ast.Field{}
 
@@ -327,6 +323,7 @@ func parseSourceFiles(t *testing.T, paths ...string) (map[string]*ast.Field, *to
 		})
 	}
 
+	parsedSourcesCache[path] = parsedSource{fields: r, fs: fs}
 	return r, fs
 }
 

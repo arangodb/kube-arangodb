@@ -212,7 +212,10 @@ func generateDocs(t *testing.T, objects map[string]map[string]interface{}, field
 
 					sectionParsed := iterateOverObject(t, fields, strings.ToLower(section), reflect.TypeOf(fieldInstance), "")
 
-					defs := parseDocDefinitions(t, sectionParsed, fs)
+					defs := make(DocDefinitions, 0, len(sectionParsed))
+					for k, f := range sectionParsed {
+						defs = append(defs, parseDocDefinition(t, root, k.path, k.typ, f, fs))
+					}
 					defs.Sort()
 
 					renderSections[section] = defs.RenderMarkdown(t, repositoryPath)
