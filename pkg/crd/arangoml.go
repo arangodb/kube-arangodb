@@ -34,7 +34,7 @@ func init() {
 	for _, getDef := range defs {
 		defFn := getDef // bring into scope
 		registerCRDWithPanic(func(opts *crds.CRDOptions) crds.Definition {
-			return defFn()
+			return defFn(opts.AsFunc())
 		}, &crds.CRDOptions{
 			WithSchema: true,
 		})

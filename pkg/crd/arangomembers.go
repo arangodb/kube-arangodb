@@ -26,6 +26,6 @@ import (
 
 func init() {
 	registerCRDWithPanic(func(opts *crds.CRDOptions) crds.Definition {
-		return crds.DatabaseMemberDefinitionWithOptions()
+		return crds.DatabaseMemberDefinitionWithOptions(opts.AsFunc())
 	}, nil)
 }

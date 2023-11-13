@@ -81,6 +81,16 @@ type CRDOptions struct {
 	WithSchema bool
 }
 
+func (o *CRDOptions) AsFunc() func(*CRDOptions) {
+	return func(opts *CRDOptions) {
+		if o == nil || opts == nil {
+			opts = &CRDOptions{}
+		} else {
+			opts.WithSchema = o.WithSchema
+		}
+	}
+}
+
 func WithSchema() func(*CRDOptions) {
 	return func(o *CRDOptions) {
 		o.WithSchema = true
