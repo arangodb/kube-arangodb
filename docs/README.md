@@ -8,7 +8,7 @@
 - [Operator Metrics & Alerts](generated/metrics/README.md)
 - [Operator Actions](generated/actions.md)
 - [Authentication](authentication.md)
-- Custom resources overview:
+- [Custom resources overview](crds.md):
   - [ArangoDeployment](deployment-resource-reference.md)
   - [ArangoDeploymentReplication](deployment-replication-resource-reference.md)
   - [ArangoLocalStorage](storage-resource.md)

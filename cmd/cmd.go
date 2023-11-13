@@ -137,7 +137,8 @@ var (
 		timeout time.Duration
 	}
 	crdOptions struct {
-		install bool
+		install          bool
+		validationSchema []string
 	}
 	operatorKubernetesOptions struct {
 		maxBatchSize int64
@@ -227,6 +228,7 @@ func init() {
 	f.Float32Var(&operatorKubernetesOptions.qps, "kubernetes.qps", kclient.DefaultQPS, "Number of queries per second for k8s API")
 	f.IntVar(&operatorKubernetesOptions.burst, "kubernetes.burst", kclient.DefaultBurst, "Burst for the k8s API")
 	f.BoolVar(&crdOptions.install, "crd.install", true, "Install missing CRD if access is possible")
+	f.StringArrayVar(&crdOptions.validationSchema, "crd.validation-schema", defaultValidationSchemaEnabled, "Overrides default set of CRDs which should have validation schema enabled <crd-name>=<true/false>.")
 	f.IntVar(&operatorBackup.concurrentUploads, "backup-concurrent-uploads", globals.DefaultBackupConcurrentUploads, "Number of concurrent uploads per deployment")
 	f.Uint64Var(&memoryLimit.hardLimit, "memory-limit", 0, "Define memory limit for hard shutdown and the dump of goroutines. Used for testing")
 	f.StringArrayVar(&metricsOptions.excludedMetricPrefixes, "metrics.excluded-prefixes", nil, "List of the excluded metrics prefixes")
@@ -369,7 +371,12 @@ func executeMain(cmd *cobra.Command, args []string) {
 			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 			defer cancel()
 
-			_ = crd.EnsureCRD(ctx, client, true)
+			crdOpts, err := prepareCRDOptions(crdOptions.validationSchema)
+			if err != nil {
+				logger.Fatal("Invalid --crd.validation-schema args: %s", err)
+			}
+
+			_ = crd.EnsureCRDWithOptions(ctx, client, crdOpts, true)
 		}
 
 		secrets := client.Kubernetes().CoreV1().Secrets(namespace)

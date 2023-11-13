@@ -24,7 +24,6 @@ import (
 	_ "embed"
 
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/arangodb/go-driver"
 )
@@ -34,23 +33,35 @@ const (
 )
 
 func init() {
-	if err := yaml.Unmarshal(databaseDeployment, &databaseDeploymentCRD); err != nil {
-		panic(err)
-	}
+	mustLoadCRD(databaseDeployment, databaseDeploymentSchemaRaw, &databaseDeploymentCRD, &databaseDeploymentCRDSchemas)
 }
 
+// Deprecated: use DatabaseDeploymentWithOptions instead
 func DatabaseDeployment() *apiextensions.CustomResourceDefinition {
-	return databaseDeploymentCRD.DeepCopy()
+	return DatabaseDeploymentWithOptions()
 }
 
+func DatabaseDeploymentWithOptions(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
+	return getCRD(databaseDeploymentCRD, databaseDeploymentCRDSchemas, opts...)
+}
+
+// Deprecated: use DatabaseDeploymentDefinitionWithOptions instead
 func DatabaseDeploymentDefinition() Definition {
+	return DatabaseDeploymentDefinitionWithOptions()
+}
+
+func DatabaseDeploymentDefinitionWithOptions(opts ...func(*CRDOptions)) Definition {
 	return Definition{
 		Version: DatabaseDeploymentVersion,
-		CRD:     databaseDeploymentCRD.DeepCopy(),
+		CRD:     DatabaseDeploymentWithOptions(opts...),
 	}
 }
 
 var databaseDeploymentCRD apiextensions.CustomResourceDefinition
+var databaseDeploymentCRDSchemas crdSchemas
 
 //go:embed database-deployment.yaml
 var databaseDeployment []byte
+
+//go:embed database-deployment.schema.generated.yaml
+var databaseDeploymentSchemaRaw []byte

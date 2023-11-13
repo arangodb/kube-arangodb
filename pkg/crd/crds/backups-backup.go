@@ -24,7 +24,6 @@ import (
 	_ "embed"
 
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/arangodb/go-driver"
 )
@@ -34,23 +33,35 @@ const (
 )
 
 func init() {
-	if err := yaml.Unmarshal(backupsBackup, &backupsBackupCRD); err != nil {
-		panic(err)
-	}
+	mustLoadCRD(backupsBackup, backupsBackupSchemaRaw, &backupsBackupCRD, &backupsBackupCRDSchemas)
 }
 
+// Deprecated: use BackupsBackupWithOptions instead
 func BackupsBackup() *apiextensions.CustomResourceDefinition {
-	return backupsBackupCRD.DeepCopy()
+	return BackupsBackupWithOptions()
 }
 
+func BackupsBackupWithOptions(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
+	return getCRD(backupsBackupCRD, backupsBackupCRDSchemas, opts...)
+}
+
+// Deprecated: use BackupsBackupDefinitionWithOptions instead
 func BackupsBackupDefinition() Definition {
+	return BackupsBackupDefinitionWithOptions()
+}
+
+func BackupsBackupDefinitionWithOptions(opts ...func(*CRDOptions)) Definition {
 	return Definition{
 		Version: BackupsBackupVersion,
-		CRD:     backupsBackupCRD.DeepCopy(),
+		CRD:     BackupsBackupWithOptions(opts...),
 	}
 }
 
 var backupsBackupCRD apiextensions.CustomResourceDefinition
+var backupsBackupCRDSchemas crdSchemas
 
 //go:embed backups-backup.yaml
 var backupsBackup []byte
+
+//go:embed backups-backup.schema.generated.yaml
+var backupsBackupSchemaRaw []byte
