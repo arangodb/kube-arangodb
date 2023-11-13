@@ -4,15 +4,11 @@ Kubernetes ArangoDB Operator.
 
 # Chart Details
 
-Chart will install fully operational ArangoDB Kubernetes Operator. CRD are moved to different Helm package.
-
-# Prerequisites
-
-To be able to work with Operator, Custom Resource Definitions needs to be installed. More details can be found in `kube-arangodb-crd` chart.
+Chart will install fully operational ArangoDB Kubernetes Operator.
 
 # Resources Required
 
-In default installation deployment with 2 pods will be created. Each default pod require 256MB of ram and 250m of CPU.
+In default installation deployment with 1 pod will be created. The operator pod require 256MB of ram and 250m of CPU.
 
 # Installing the Chart
 
@@ -149,7 +145,7 @@ Default: `1000`
 
 Replication count for Operator deployment.
 
-Default: `2`
+Default: `1`
 
 ### `operator.updateStrategy`
 
