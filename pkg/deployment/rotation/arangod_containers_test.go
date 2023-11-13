@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
+	"github.com/arangodb/kube-arangodb/pkg/util/compare"
 )
 
 func Test_ArangoDContainers_SidecarImages(t *testing.T) {
@@ -39,7 +40,7 @@ func Test_ArangoDContainers_SidecarImages(t *testing.T) {
 			status: buildPodSpec(addContainer(shared.ServerContainerName), addSidecarWithImage("sidecar", "local:2.0")),
 
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: InPlaceRotation,
+				expectedMode: compare.InPlaceRotation,
 				expectedPlan: api.Plan{
 					actions.NewClusterAction(api.ActionTypeRuntimeContainerImageUpdate),
 				},
@@ -51,7 +52,7 @@ func Test_ArangoDContainers_SidecarImages(t *testing.T) {
 			status: buildPodSpec(addSidecarWithImage("sidecar1", "local:1.0"), addSidecarWithImage("sidecar", "local:2.0")),
 
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: InPlaceRotation,
+				expectedMode: compare.InPlaceRotation,
 				expectedPlan: api.Plan{
 					actions.NewClusterAction(api.ActionTypeRuntimeContainerImageUpdate),
 				},
@@ -75,7 +76,7 @@ func Test_InitContainers(t *testing.T) {
 				})),
 
 				TestCaseOverride: TestCaseOverride{
-					expectedMode: SkippedRotation,
+					expectedMode: compare.SkippedRotation,
 				},
 
 				groupSpec: buildGroupSpec(func(depl *api.ServerGroupSpec) {
@@ -94,7 +95,7 @@ func Test_InitContainers(t *testing.T) {
 				})),
 
 				TestCaseOverride: TestCaseOverride{
-					expectedMode: SilentRotation,
+					expectedMode: compare.SilentRotation,
 				},
 
 				groupSpec: buildGroupSpec(func(depl *api.ServerGroupSpec) {
@@ -120,7 +121,7 @@ func Test_InitContainers(t *testing.T) {
 				})),
 
 				TestCaseOverride: TestCaseOverride{
-					expectedMode: GracefulRotation,
+					expectedMode: compare.GracefulRotation,
 				},
 
 				groupSpec: buildGroupSpec(func(depl *api.ServerGroupSpec) {
@@ -143,7 +144,7 @@ func Test_InitContainers(t *testing.T) {
 				})),
 
 				TestCaseOverride: TestCaseOverride{
-					expectedMode: SilentRotation,
+					expectedMode: compare.SilentRotation,
 				},
 
 				groupSpec: buildGroupSpec(func(depl *api.ServerGroupSpec) {
@@ -164,7 +165,7 @@ func Test_InitContainers(t *testing.T) {
 				})),
 
 				TestCaseOverride: TestCaseOverride{
-					expectedMode: SilentRotation,
+					expectedMode: compare.SilentRotation,
 				},
 
 				groupSpec: buildGroupSpec(func(depl *api.ServerGroupSpec) {
@@ -189,7 +190,7 @@ func Test_InitContainers(t *testing.T) {
 				})),
 
 				TestCaseOverride: TestCaseOverride{
-					expectedMode: SilentRotation,
+					expectedMode: compare.SilentRotation,
 				},
 
 				groupSpec: buildGroupSpec(func(depl *api.ServerGroupSpec) {
@@ -214,7 +215,7 @@ func Test_InitContainers(t *testing.T) {
 				})),
 
 				TestCaseOverride: TestCaseOverride{
-					expectedMode: GracefulRotation,
+					expectedMode: compare.GracefulRotation,
 				},
 
 				groupSpec: buildGroupSpec(func(depl *api.ServerGroupSpec) {
@@ -229,11 +230,11 @@ func Test_InitContainers(t *testing.T) {
 	})
 }
 
-func logLevelTestCaseGen(name string, mode Mode, spec, status []string) TestCase {
+func logLevelTestCaseGen(name string, mode compare.Mode, spec, status []string) TestCase {
 	var c TestCase
 	c.name = name
 	c.expectedMode = mode
-	if c.expectedMode == InPlaceRotation {
+	if c.expectedMode == compare.InPlaceRotation {
 		c.expectedPlan = api.Plan{
 			actions.NewClusterAction(api.ActionTypeRuntimeContainerArgsLogLevelUpdate),
 		}
@@ -247,27 +248,27 @@ func logLevelTestCaseGen(name string, mode Mode, spec, status []string) TestCase
 func Test_Container_LogArgs(t *testing.T) {
 	testCases := []TestCase{
 		logLevelTestCaseGen("Only log level arguments of the ArangoDB server have been changed",
-			InPlaceRotation,
+			compare.InPlaceRotation,
 			[]string{"--log.level=INFO", "--log.level=requests=error"},
 			[]string{"--log.level=INFO"}),
 		logLevelTestCaseGen("ArangoDB server arguments have not been changed",
-			SkippedRotation,
+			compare.SkippedRotation,
 			[]string{"--log.level=INFO"},
 			[]string{"--log.level=INFO"}),
 		logLevelTestCaseGen("Multi ArangoDB server arguments have not been changed",
-			SkippedRotation,
+			compare.SkippedRotation,
 			[]string{"--log.level=INFO", "--log.level=requests=debug"},
 			[]string{"--log.level=INFO", "--log.level=requests=debug"}),
 		logLevelTestCaseGen("Not only log argument changed",
-			GracefulRotation,
+			compare.GracefulRotation,
 			[]string{"--log.level=INFO", "--server.endpoint=localhost"},
 			[]string{"--log.level=INFO"}),
 		logLevelTestCaseGen("Change of order with existing arg & switch to DEBUG",
-			InPlaceRotation,
+			compare.InPlaceRotation,
 			[]string{"--log.level=DEBUG", "--foo"},
 			[]string{"--foo", "--log.level=INFO"}),
 		logLevelTestCaseGen("Removal of arg",
-			InPlaceRotation,
+			compare.InPlaceRotation,
 			[]string{"--foo", "--log.level=INFO"},
 			[]string{"--foo"}),
 	}
@@ -283,7 +284,7 @@ func Test_Container_Args(t *testing.T) {
 				[]string{"--log.level=INFO", "--log.level=requests=error"})),
 			status: buildPodSpec(addContainerWithCommand("sidecar", []string{"--log.level=INFO"})),
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: GracefulRotation,
+				expectedMode: compare.GracefulRotation,
 			},
 		},
 	}
@@ -314,7 +315,7 @@ func Test_Container_Ports(t *testing.T) {
 				}
 			})),
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: SilentRotation,
+				expectedMode: compare.SilentRotation,
 			},
 		},
 		{
@@ -338,7 +339,7 @@ func Test_Container_Ports(t *testing.T) {
 				}
 			})),
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: GracefulRotation,
+				expectedMode: compare.GracefulRotation,
 			},
 		},
 	}
