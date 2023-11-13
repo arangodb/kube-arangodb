@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -59,14 +59,14 @@ func GetLicenseFromSecret(secret secret.Inspector, name string) (LicenseSecret, 
 
 	if v1, ok1 := s.Data[constants.SecretKeyV2License]; ok1 {
 		// some customers put the raw JSON-encoded value, but operator and DB servers expect the base64-encoded value
-		if isJSONBytes(v1) {
+		if IsJSON(v1) {
 			l.V2 = License(base64.StdEncoding.EncodeToString(v1))
 		} else {
 			l.V2 = License(v1)
 		}
 	} else if v2, ok2 := s.Data[constants.SecretKeyV2Token]; ok2 {
 		// some customers put the raw JSON-encoded value, but operator and DB servers expect the base64-encoded value
-		if isJSONBytes(v2) {
+		if IsJSON(v2) {
 			l.V2 = License(base64.StdEncoding.EncodeToString(v2))
 		} else {
 			l.V2 = License(v2)
@@ -79,7 +79,7 @@ func GetLicenseFromSecret(secret secret.Inspector, name string) (LicenseSecret, 
 	return l, nil
 }
 
-func isJSONBytes(s []byte) bool {
+func IsJSON(s []byte) bool {
 	var js json.RawMessage
 	return json.Unmarshal(s, &js) == nil
 }

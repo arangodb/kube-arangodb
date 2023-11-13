@@ -20,13 +20,21 @@
 
 package license
 
-import "github.com/arangodb/kube-arangodb/pkg/util/assertion"
+import (
+	"context"
 
-func checkLicense(license string) License {
+	"github.com/arangodb/kube-arangodb/pkg/util/assertion"
+)
+
+func NewLicense(loader Loader) License {
 	return emptyLicense{}
 }
 
 type emptyLicense struct {
+}
+
+func (e emptyLicense) Refresh(ctx context.Context) error {
+	return nil
 }
 
 // Validate for the community returns that license is always missing, as it should be not used
