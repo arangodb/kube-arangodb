@@ -40,10 +40,21 @@ var logger = logging.Global().RegisterAndGetLogger("crd", logging.Info)
 
 // Deprecated: use EnsureCRDWithOptions instead
 func EnsureCRD(ctx context.Context, client kclient.Client, ignoreErrors bool) error {
-	return EnsureCRDWithOptions(ctx, client, nil, ignoreErrors)
+	return EnsureCRDWithOptions(ctx, client, EnsureCRDOptions{
+		IgnoreErrors: ignoreErrors,
+	})
 }
 
-func EnsureCRDWithOptions(ctx context.Context, client kclient.Client, ensureOpts map[string]crds.CRDOptions, ignoreErrors bool) error {
+type EnsureCRDOptions struct {
+	// IgnoreErrors do not return errors if could not apply CRD
+	IgnoreErrors bool
+	// ForceUpdate if true, CRD will be updated even if definitions versions are the same
+	ForceUpdate bool
+	// CRDOptions defines options per each CRD
+	CRDOptions map[string]crds.CRDOptions
+}
+
+func EnsureCRDWithOptions(ctx context.Context, client kclient.Client, opts EnsureCRDOptions) error {
 	crdsLock.Lock()
 	defer crdsLock.Unlock()
 
@@ -55,20 +66,20 @@ func EnsureCRDWithOptions(ctx context.Context, client kclient.Client, ensureOpts
 		}
 
 		var opt *crds.CRDOptions
-		if o, ok := ensureOpts[crdName]; ok {
+		if o, ok := opts.CRDOptions[crdName]; ok {
 			opt = &o
 		}
 		def := crdReg.getter(opt)
 
-		err := tryApplyCRD(ctx, client, def)
-		if !ignoreErrors && err != nil {
+		err := tryApplyCRD(ctx, client, def, opts.ForceUpdate)
+		if !opts.IgnoreErrors && err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func tryApplyCRD(ctx context.Context, client kclient.Client, def crds.Definition) error {
+func tryApplyCRD(ctx context.Context, client kclient.Client, def crds.Definition, forceUpdate bool) error {
 	crdDefinitions := client.KubernetesExtensions().ApiextensionsV1().CustomResourceDefinitions()
 
 	crdName := def.CRD.Name
@@ -116,12 +127,10 @@ func tryApplyCRD(ctx context.Context, client kclient.Client, def crds.Definition
 		c.ObjectMeta.Labels = map[string]string{}
 	}
 
-	if v, ok := c.ObjectMeta.Labels[Version]; ok {
-		if v != "" {
-			if !isUpdateRequired(def.Version, driver.Version(v)) {
-				logger.Str("crd", crdName).Info("CRD Update not required")
-				return nil
-			}
+	if v, ok := c.ObjectMeta.Labels[Version]; ok && v != "" {
+		if !forceUpdate && !isUpdateRequired(def.Version, driver.Version(v)) {
+			logger.Str("crd", crdName).Info("CRD Update not required")
+			return nil
 		}
 	}
 

@@ -109,7 +109,7 @@ func cmdCRDInstallRun(cmd *cobra.Command, args []string) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	err = crd.EnsureCRDWithOptions(ctx, client, crdOpts, false)
+	err = crd.EnsureCRDWithOptions(ctx, client, crd.EnsureCRDOptions{IgnoreErrors: false, CRDOptions: crdOpts})
 	if err != nil {
 		os.Exit(1)
 	}

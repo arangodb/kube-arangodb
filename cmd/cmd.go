@@ -376,7 +376,7 @@ func executeMain(cmd *cobra.Command, args []string) {
 				logger.Fatal("Invalid --crd.validation-schema args: %s", err)
 			}
 
-			_ = crd.EnsureCRDWithOptions(ctx, client, crdOpts, true)
+			_ = crd.EnsureCRDWithOptions(ctx, client, crd.EnsureCRDOptions{IgnoreErrors: true, CRDOptions: crdOpts})
 		}
 
 		secrets := client.Kubernetes().CoreV1().Secrets(namespace)

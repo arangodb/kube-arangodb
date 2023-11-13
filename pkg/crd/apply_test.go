@@ -88,7 +88,7 @@ func runApply(t *testing.T, crdOpts map[string]crds.CRDOptions) {
 			c := kclient.NewFakeClient()
 
 			t.Run("Ensure", func(t *testing.T) {
-				require.NoError(t, EnsureCRDWithOptions(context.Background(), c, crdOpts, false))
+				require.NoError(t, EnsureCRDWithOptions(context.Background(), c, EnsureCRDOptions{IgnoreErrors: false, CRDOptions: crdOpts}))
 
 				for k, v := range dropLogMessages(t, s) {
 					t.Run(k, func(t *testing.T) {
@@ -114,7 +114,7 @@ func runApply(t *testing.T, crdOpts map[string]crds.CRDOptions) {
 			})
 
 			t.Run("Ensure", func(t *testing.T) {
-				require.NoError(t, EnsureCRDWithOptions(context.Background(), c, crdOpts, false))
+				require.NoError(t, EnsureCRDWithOptions(context.Background(), c, EnsureCRDOptions{IgnoreErrors: false, CRDOptions: crdOpts}))
 
 				for k, v := range dropLogMessages(t, s) {
 					t.Run(k, func(t *testing.T) {
@@ -142,7 +142,7 @@ func runApply(t *testing.T, crdOpts map[string]crds.CRDOptions) {
 			})
 
 			t.Run("Ensure", func(t *testing.T) {
-				require.NoError(t, EnsureCRDWithOptions(context.Background(), c, crdOpts, false))
+				require.NoError(t, EnsureCRDWithOptions(context.Background(), c, EnsureCRDOptions{IgnoreErrors: false, CRDOptions: crdOpts}))
 
 				for k, v := range dropLogMessages(t, s) {
 					t.Run(k, func(t *testing.T) {
