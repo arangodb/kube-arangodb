@@ -75,13 +75,17 @@ jobs:
             fi
              make vulncheck
       - run:
-          name: verify-generated docs
+          name: Check that everything what should be generated is commited
           command: |
             if [ -z "$CIRCLE_PULL_REQUEST" ]; then
               echo "This is not a pull request. Skipping..."
               exit 0
             fi
-             make verify-generated
+            make verify-generated synchronize-v2alpha1-with-v1 generate-internal fmt
+            if [ ! -z $(git status --porcelain) ]; then
+              echo "There are uncommited changes:"
+              git status
+            fi
     environment:
       GO111MODULES: off
 
