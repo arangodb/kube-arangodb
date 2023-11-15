@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util/compare"
 )
 
 func Test_ArangoD_Volumes(t *testing.T) {
@@ -39,7 +40,7 @@ func Test_ArangoD_Volumes(t *testing.T) {
 			deploymentSpec: buildDeployment(),
 
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: SkippedRotation,
+				expectedMode: compare.SkippedRotation,
 			},
 		},
 		{
@@ -48,7 +49,7 @@ func Test_ArangoD_Volumes(t *testing.T) {
 			status: buildPodSpec(addVolume("data", addVolumeConfigMapSource(&core.ConfigMapVolumeSource{}))),
 
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: SkippedRotation,
+				expectedMode: compare.SkippedRotation,
 			},
 		},
 		{
@@ -61,7 +62,7 @@ func Test_ArangoD_Volumes(t *testing.T) {
 			}))),
 
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: GracefulRotation,
+				expectedMode: compare.GracefulRotation,
 			},
 		},
 		{
@@ -70,7 +71,7 @@ func Test_ArangoD_Volumes(t *testing.T) {
 			status: buildPodSpec(),
 
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: GracefulRotation,
+				expectedMode: compare.GracefulRotation,
 			},
 		},
 		{
@@ -83,7 +84,7 @@ func Test_ArangoD_Volumes(t *testing.T) {
 			}))),
 
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: GracefulRotation,
+				expectedMode: compare.GracefulRotation,
 			},
 		},
 		{
@@ -98,23 +99,23 @@ func Test_ArangoD_Volumes(t *testing.T) {
 			overrides: map[api.DeploymentMode]map[api.ServerGroup]TestCaseOverride{
 				api.DeploymentModeSingle: {
 					api.ServerGroupSingle: {
-						expectedMode: GracefulRotation,
+						expectedMode: compare.GracefulRotation,
 					},
 				},
 				api.DeploymentModeActiveFailover: {
 					api.ServerGroupSingle: {
-						expectedMode: GracefulRotation,
+						expectedMode: compare.GracefulRotation,
 					},
 				},
 				api.DeploymentModeCluster: {
 					api.ServerGroupCoordinators: {
-						expectedMode: GracefulRotation,
+						expectedMode: compare.GracefulRotation,
 					},
 				},
 			},
 
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: SilentRotation,
+				expectedMode: compare.SilentRotation,
 			},
 		},
 		{
@@ -125,23 +126,23 @@ func Test_ArangoD_Volumes(t *testing.T) {
 			overrides: map[api.DeploymentMode]map[api.ServerGroup]TestCaseOverride{
 				api.DeploymentModeSingle: {
 					api.ServerGroupSingle: {
-						expectedMode: GracefulRotation,
+						expectedMode: compare.GracefulRotation,
 					},
 				},
 				api.DeploymentModeActiveFailover: {
 					api.ServerGroupSingle: {
-						expectedMode: GracefulRotation,
+						expectedMode: compare.GracefulRotation,
 					},
 				},
 				api.DeploymentModeCluster: {
 					api.ServerGroupCoordinators: {
-						expectedMode: GracefulRotation,
+						expectedMode: compare.GracefulRotation,
 					},
 				},
 			},
 
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: SilentRotation,
+				expectedMode: compare.SilentRotation,
 			},
 		},
 		{
@@ -154,7 +155,7 @@ func Test_ArangoD_Volumes(t *testing.T) {
 			}))),
 
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: GracefulRotation,
+				expectedMode: compare.GracefulRotation,
 			},
 		},
 	}
@@ -170,7 +171,7 @@ func Test_ArangoD_VolumeMounts(t *testing.T) {
 			status: buildPodSpec(addContainer("server")),
 
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: SkippedRotation,
+				expectedMode: compare.SkippedRotation,
 			},
 		},
 		{
@@ -183,7 +184,7 @@ func Test_ArangoD_VolumeMounts(t *testing.T) {
 			}))),
 
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: SkippedRotation,
+				expectedMode: compare.SkippedRotation,
 			},
 		},
 		{
@@ -192,7 +193,7 @@ func Test_ArangoD_VolumeMounts(t *testing.T) {
 			status: buildPodSpec(addContainer("server", addVolumeMount("mount2"))),
 
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: GracefulRotation,
+				expectedMode: compare.GracefulRotation,
 			},
 		},
 		{
@@ -201,7 +202,7 @@ func Test_ArangoD_VolumeMounts(t *testing.T) {
 			status: buildPodSpec(addContainer("server")),
 
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: GracefulRotation,
+				expectedMode: compare.GracefulRotation,
 			},
 		},
 		{
@@ -210,7 +211,7 @@ func Test_ArangoD_VolumeMounts(t *testing.T) {
 			status: buildPodSpec(addContainer("server", addVolumeMount("mount"))),
 
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: GracefulRotation,
+				expectedMode: compare.GracefulRotation,
 			},
 		},
 		{
@@ -219,7 +220,7 @@ func Test_ArangoD_VolumeMounts(t *testing.T) {
 			status: buildPodSpec(addContainer("server", addVolumeMount("mount"))),
 
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: GracefulRotation,
+				expectedMode: compare.GracefulRotation,
 			},
 		},
 		{
@@ -228,7 +229,7 @@ func Test_ArangoD_VolumeMounts(t *testing.T) {
 			status: buildPodSpec(addContainer("server", addVolumeMount(shared.ArangoDTimezoneVolumeName))),
 
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: GracefulRotation,
+				expectedMode: compare.GracefulRotation,
 			},
 		},
 		{
@@ -239,23 +240,23 @@ func Test_ArangoD_VolumeMounts(t *testing.T) {
 			overrides: map[api.DeploymentMode]map[api.ServerGroup]TestCaseOverride{
 				api.DeploymentModeSingle: {
 					api.ServerGroupSingle: {
-						expectedMode: GracefulRotation,
+						expectedMode: compare.GracefulRotation,
 					},
 				},
 				api.DeploymentModeActiveFailover: {
 					api.ServerGroupSingle: {
-						expectedMode: GracefulRotation,
+						expectedMode: compare.GracefulRotation,
 					},
 				},
 				api.DeploymentModeCluster: {
 					api.ServerGroupCoordinators: {
-						expectedMode: GracefulRotation,
+						expectedMode: compare.GracefulRotation,
 					},
 				},
 			},
 
 			TestCaseOverride: TestCaseOverride{
-				expectedMode: SilentRotation,
+				expectedMode: compare.SilentRotation,
 			},
 		},
 	}

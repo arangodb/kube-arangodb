@@ -63,13 +63,6 @@ type ArangoMemberPodTemplate struct {
 	Endpoint *string `json:"endpoint,omitempty"`
 }
 
-func (a *ArangoMemberPodTemplate) GetChecksum() string {
-	if a == nil {
-		return ""
-	}
-	return a.Checksum
-}
-
 func (a *ArangoMemberPodTemplate) Equals(b *ArangoMemberPodTemplate) bool {
 	if a == nil && b == nil {
 		return true
@@ -99,4 +92,46 @@ func (a *ArangoMemberPodTemplate) EqualPodSpecChecksum(checksum string) bool {
 		return false
 	}
 	return checksum == a.PodSpecChecksum
+}
+
+func (a *ArangoMemberPodTemplate) GetTemplate() *core.PodTemplateSpec {
+	if a == nil {
+		return nil
+	}
+	return a.PodSpec.DeepCopy()
+}
+
+func (a *ArangoMemberPodTemplate) SetTemplate(t *core.PodTemplateSpec) {
+	if a == nil {
+		return
+	}
+	a.PodSpec = t.DeepCopy()
+}
+
+func (a *ArangoMemberPodTemplate) GetTemplateChecksum() string {
+	if a == nil {
+		return ""
+	}
+	return a.PodSpecChecksum
+}
+
+func (a *ArangoMemberPodTemplate) SetTemplateChecksum(s string) {
+	if a == nil {
+		return
+	}
+	a.PodSpecChecksum = s
+}
+
+func (a *ArangoMemberPodTemplate) SetChecksum(s string) {
+	if a == nil {
+		return
+	}
+	a.Checksum = s
+}
+
+func (a *ArangoMemberPodTemplate) GetChecksum() string {
+	if a == nil {
+		return ""
+	}
+	return a.Checksum
 }

@@ -18,19 +18,14 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package license
+package compare
 
-import (
-	"context"
-)
+type GenP2[T, P1, P2 interface{}] func(p1 P1, p2 P2, spec, status *T) Func
 
-func NewDisabledLoader() Loader {
-	return loaderDisabled{}
-}
+type FuncGenP2[T, P1, P2 interface{}] func(in GenP2[T, P1, P2]) Func
 
-type loaderDisabled struct {
-}
-
-func (l loaderDisabled) Refresh(ctx context.Context) (string, bool, error) {
-	return "", false, nil
+func NewFuncGenP2[T, P1, P2 interface{}](p1 P1, p2 P2, spec, status *T) FuncGenP2[T, P1, P2] {
+	return func(in GenP2[T, P1, P2]) Func {
+		return in(p1, p2, spec, status)
+	}
 }

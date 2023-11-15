@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,13 +25,14 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/compare"
 )
 
-func compareServerContainerProbes(ds api.DeploymentSpec, g api.ServerGroup, spec, status *core.Container) comparePodContainerFunc {
-	return func(builder api.ActionBuilder) (mode Mode, plan api.Plan, err error) {
+func compareServerContainerProbes(ds api.DeploymentSpec, g api.ServerGroup, spec, status *core.Container) compare.Func {
+	return func(builder api.ActionBuilder) (mode compare.Mode, plan api.Plan, err error) {
 		if !areProbesEqual(spec.StartupProbe, status.StartupProbe) {
 			status.StartupProbe = spec.StartupProbe
-			mode = mode.And(SilentRotation)
+			mode = mode.And(compare.SilentRotation)
 		}
 
 		if !areProbesEqual(spec.ReadinessProbe, status.ReadinessProbe) {
@@ -42,7 +43,7 @@ func compareServerContainerProbes(ds api.DeploymentSpec, g api.ServerGroup, spec
 
 				if equality.Semantic.DeepDerivative(spec.ReadinessProbe, q) {
 					status.ReadinessProbe = spec.ReadinessProbe
-					mode = mode.And(SilentRotation)
+					mode = mode.And(compare.SilentRotation)
 				}
 			}
 		}
@@ -55,7 +56,7 @@ func compareServerContainerProbes(ds api.DeploymentSpec, g api.ServerGroup, spec
 
 				if equality.Semantic.DeepDerivative(spec.LivenessProbe, q) {
 					status.LivenessProbe = spec.LivenessProbe
-					mode = mode.And(SilentRotation)
+					mode = mode.And(compare.SilentRotation)
 				}
 			}
 		}

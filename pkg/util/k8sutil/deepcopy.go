@@ -18,18 +18,8 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package license
+package k8sutil
 
-import (
-	"context"
-)
-
-func NewConstantLoader(license string) Loader {
-	return loaderConstant(license)
-}
-
-type loaderConstant string
-
-func (l loaderConstant) Refresh(ctx context.Context) (string, bool, error) {
-	return string(l), false, nil
+type DeepCopy[T interface{}] interface {
+	DeepCopy() T
 }

@@ -52,7 +52,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
-	"github.com/arangodb/kube-arangodb/pkg/license"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/metrics/collector"
 	"github.com/arangodb/kube-arangodb/pkg/operator"
@@ -173,8 +172,6 @@ var (
 	backupProbe                probe.ReadyProbe
 	appsProbe                  probe.ReadyProbe
 	k2KClusterSyncProbe        probe.ReadyProbe
-
-	licenseConfig license.Config
 )
 
 func init() {
@@ -239,9 +236,6 @@ func init() {
 		panic(err.Error())
 	}
 	if err := reconcile.ActionsConfigGlobal.Init(&cmdMain); err != nil {
-		panic(err.Error())
-	}
-	if err := licenseConfig.Init(&cmdMain); err != nil {
 		panic(err.Error())
 	}
 }
@@ -315,10 +309,6 @@ func executeMain(cmd *cobra.Command, args []string) {
 		logging.Global().RegisterWrappers(func(in *zerolog.Event) *zerolog.Event {
 			return in.Str("operator-id", operatorID)
 		})
-	}
-
-	if err := licenseConfig.Enable(); err != nil {
-		logger.Err(err).Fatal("Failed to License checker process")
 	}
 
 	logger.Info("nice to meet you")

@@ -36,6 +36,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/compare"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -213,7 +214,7 @@ func (r *Reconciler) createUpdatePlanInternal(apiObject k8sutil.APIObject, spec 
 		if mode, p, checksum, reason, err := rotation.IsRotationRequired(context.ACS(), spec, m.Member, m.Group, p, arangoMember.Spec.Template, arangoMember.Status.Template); err != nil {
 			r.planLogger.Err(err).Str("member", m.Member.ID).Error("Error while generating update plan")
 			continue
-		} else if mode != rotation.InPlaceRotation {
+		} else if mode != compare.InPlaceRotation {
 			return api.Plan{
 				shared.RemoveMemberConditionActionV2(reason, api.ConditionTypePendingUpdate, m.Group, m.Member.ID),
 				shared.UpdateMemberConditionActionV2(reason, api.ConditionTypeUpdating, m.Group, m.Member.ID, true, reason, "", ""),
