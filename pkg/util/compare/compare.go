@@ -27,7 +27,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 )
 
-// P0 runs compare of the provided templates without
+// P0 runs compare of the provided templates without generic parameters
 func P0[T interface{}](
 	log logging.Logger,
 	actionBuilder api.ActionBuilder,
