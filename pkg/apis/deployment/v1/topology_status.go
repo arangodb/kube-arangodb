@@ -27,6 +27,20 @@ import (
 	"k8s.io/apimachinery/pkg/util/uuid"
 )
 
+type TopologyZoneFilter func(g ServerGroup, id string) bool
+
+func TopologyZoneFilterMerge(functions ...TopologyZoneFilter) TopologyZoneFilter {
+	return func(g ServerGroup, id string) bool {
+		for _, f := range functions {
+			if !f(g, id) {
+				return false
+			}
+		}
+
+		return true
+	}
+}
+
 type TopologyStatus struct {
 	ID types.UID `json:"id"`
 
@@ -53,25 +67,42 @@ func (t *TopologyStatus) Equal(b *TopologyStatus) bool {
 }
 
 func (t *TopologyStatus) GetLeastUsedZone(group ServerGroup) int {
+	return t.GetLeastUsedZoneWithFilter(group)
+}
+
+func (t *TopologyStatus) GetLeastUsedZoneWithFilter(group ServerGroup, filters ...TopologyZoneFilter) int {
 	if t == nil {
 		return -1
 	}
 
-	r, m := -1, math.MaxInt64
+	// If no zones are found
+	if len(t.Zones) == 0 {
+		return -1
+	}
 
-	for i, z := range t.Zones {
-		if n, ok := z.Members[group.AsRoleAbbreviated()]; ok {
-			if v := len(n); v < m {
-				r, m = i, v
+	counts := make([]int, len(t.Zones))
+
+	for id, zone := range t.Zones {
+		c := 0
+
+		for _, member := range zone.Members[group.AsRoleAbbreviated()] {
+			if TopologyZoneFilterMerge(filters...)(group, member) {
+				c++
 			}
-		} else {
-			if v := 0; v < m {
-				r, m = i, v
-			}
+		}
+
+		counts[id] = c
+	}
+
+	max := 0
+
+	for id := 1; id < len(counts); id++ {
+		if counts[id] < counts[max] {
+			max = id
 		}
 	}
 
-	return r
+	return max
 }
 
 func (t *TopologyStatus) RegisterTopologyLabel(zone int, label string) bool {
