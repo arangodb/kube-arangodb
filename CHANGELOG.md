@@ -11,6 +11,7 @@
 - (Feature) License ArangoDeployment Fetcher
 - (Feature) K8S Resources Compare Generic
 - (Feature) Add support for CRD validation schemas
+- (Feature) Add P0 Compare Func
 
 ## [1.2.35](https://github.com/arangodb/kube-arangodb/tree/1.2.35) (2023-11-06)
 - (Maintenance) Update go-driver to v1.6.0, update IsNotFound() checks
