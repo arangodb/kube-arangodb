@@ -24,7 +24,6 @@ import (
 	_ "embed"
 
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/arangodb/go-driver"
 )
@@ -34,23 +33,35 @@ const (
 )
 
 func init() {
-	if err := yaml.Unmarshal(replicationDeploymentReplication, &replicationDeploymentReplicationCRD); err != nil {
-		panic(err)
-	}
+	mustLoadCRD(replicationDeploymentReplication, replicationDeploymentReplicationSchemaRaw, &replicationDeploymentReplicationCRD, &replicationDeploymentReplicationCRDSchemas)
 }
 
+// Deprecated: use ReplicationDeploymentReplicationWithOptions instead
 func ReplicationDeploymentReplication() *apiextensions.CustomResourceDefinition {
-	return replicationDeploymentReplicationCRD.DeepCopy()
+	return ReplicationDeploymentReplicationWithOptions()
 }
 
+func ReplicationDeploymentReplicationWithOptions(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
+	return getCRD(replicationDeploymentReplicationCRD, replicationDeploymentReplicationCRDSchemas, opts...)
+}
+
+// Deprecated: use ReplicationDeploymentReplicationDefinitionWithOptions instead
 func ReplicationDeploymentReplicationDefinition() Definition {
+	return ReplicationDeploymentReplicationDefinitionWithOptions()
+}
+
+func ReplicationDeploymentReplicationDefinitionWithOptions(opts ...func(*CRDOptions)) Definition {
 	return Definition{
 		Version: ReplicationDeploymentReplicationVersion,
-		CRD:     replicationDeploymentReplicationCRD.DeepCopy(),
+		CRD:     ReplicationDeploymentReplicationWithOptions(opts...),
 	}
 }
 
 var replicationDeploymentReplicationCRD apiextensions.CustomResourceDefinition
+var replicationDeploymentReplicationCRDSchemas crdSchemas
 
 //go:embed replication-deploymentreplication.yaml
 var replicationDeploymentReplication []byte
+
+//go:embed replication-deploymentreplication.schema.generated.yaml
+var replicationDeploymentReplicationSchemaRaw []byte

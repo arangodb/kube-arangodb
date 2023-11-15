@@ -25,5 +25,7 @@ import (
 )
 
 func init() {
-	registerCRDWithPanic(crds.DatabaseTaskDefinition())
+	registerCRDWithPanic(func(opts *crds.CRDOptions) crds.Definition {
+		return crds.DatabaseTaskDefinitionWithOptions(opts.AsFunc())
+	}, nil)
 }

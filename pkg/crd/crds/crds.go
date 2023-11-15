@@ -21,7 +21,10 @@
 package crds
 
 import (
+	"fmt"
+
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/arangodb/go-driver"
 )
@@ -34,31 +37,82 @@ type Definition struct {
 func AllDefinitions() []Definition {
 	return []Definition{
 		// Deployment
-		DatabaseDeploymentDefinition(),
-		DatabaseMemberDefinition(),
+		DatabaseDeploymentDefinitionWithOptions(),
+		DatabaseMemberDefinitionWithOptions(),
 
 		// ACS
-		DatabaseClusterSynchronizationDefinition(),
+		DatabaseClusterSynchronizationDefinitionWithOptions(),
 
 		// ArangoSync
-		ReplicationDeploymentReplicationDefinition(),
+		ReplicationDeploymentReplicationDefinitionWithOptions(),
 
 		// Storage
-		StorageLocalStorageDefinition(),
+		StorageLocalStorageDefinitionWithOptions(),
 
 		// Apps
-		AppsJobDefinition(),
-		DatabaseTaskDefinition(),
+		AppsJobDefinitionWithOptions(),
+		DatabaseTaskDefinitionWithOptions(),
 
 		// Backups
-		BackupsBackupDefinition(),
-		BackupsBackupPolicyDefinition(),
+		BackupsBackupDefinitionWithOptions(),
+		BackupsBackupPolicyDefinitionWithOptions(),
 
 		// ML
-		MLExtensionDefinition(),
-		MLStorageDefinition(),
-
-		MLCronJobDefinition(),
-		MLBatchJobDefinition(),
+		MLExtensionDefinitionWithOptions(),
+		MLStorageDefinitionWithOptions(),
+		MLCronJobDefinitionWithOptions(),
+		MLBatchJobDefinitionWithOptions(),
 	}
+}
+
+func mustLoadCRD(crdRaw, crdSchemasRaw []byte, crd *apiextensions.CustomResourceDefinition, schemas *crdSchemas) {
+	if err := yaml.Unmarshal(crdRaw, crd); err != nil {
+		panic(err)
+	}
+
+	if err := yaml.Unmarshal(crdSchemasRaw, schemas); err != nil {
+		panic(err)
+	}
+}
+
+type crdSchemas map[string]apiextensions.CustomResourceValidation
+
+type CRDOptions struct {
+	WithSchema bool
+}
+
+func (o *CRDOptions) AsFunc() func(*CRDOptions) {
+	return func(opts *CRDOptions) {
+		if o == nil || opts == nil {
+			opts = &CRDOptions{}
+		} else {
+			opts.WithSchema = o.WithSchema
+		}
+	}
+}
+
+func WithSchema() func(*CRDOptions) {
+	return func(o *CRDOptions) {
+		o.WithSchema = true
+	}
+}
+
+func getCRD(crd apiextensions.CustomResourceDefinition, schemas crdSchemas, opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
+	o := &CRDOptions{}
+	for _, fn := range opts {
+		fn(o)
+	}
+	if o.WithSchema {
+		crdWithSchema := crd.DeepCopy()
+		for i, v := range crdWithSchema.Spec.Versions {
+			schema, ok := schemas[v.Name]
+			if !ok {
+				panic(fmt.Sprintf("Validation schema is not defined for version %s of %s", v.Name, crd.Name))
+			}
+			crdWithSchema.Spec.Versions[i].Schema = schema.DeepCopy()
+		}
+
+		return crdWithSchema
+	}
+	return crd.DeepCopy()
 }
