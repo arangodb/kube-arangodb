@@ -996,7 +996,7 @@ v1:
                   ReadinessProbeDisabled:
                     description: |-
                       OldReadinessProbeDisabled if true readinessProbes are disabled
-                      Deprecated: This field is deprecated, keept only for backward compatibility.
+                      Deprecated: This field is deprecated, kept only for backward compatibility.
                     type: boolean
                   livenessProbeDisabled:
                     description: LivenessProbeDisabled if set to true, the operator
@@ -3149,7 +3149,7 @@ v1:
                   ReadinessProbeDisabled:
                     description: |-
                       OldReadinessProbeDisabled if true readinessProbes are disabled
-                      Deprecated: This field is deprecated, keept only for backward compatibility.
+                      Deprecated: This field is deprecated, kept only for backward compatibility.
                     type: boolean
                   livenessProbeDisabled:
                     description: LivenessProbeDisabled if set to true, the operator
@@ -5214,7 +5214,7 @@ v1:
                   ReadinessProbeDisabled:
                     description: |-
                       OldReadinessProbeDisabled if true readinessProbes are disabled
-                      Deprecated: This field is deprecated, keept only for backward compatibility.
+                      Deprecated: This field is deprecated, kept only for backward compatibility.
                     type: boolean
                   livenessProbeDisabled:
                     description: LivenessProbeDisabled if set to true, the operator
@@ -7991,7 +7991,7 @@ v1:
                   ReadinessProbeDisabled:
                     description: |-
                       OldReadinessProbeDisabled if true readinessProbes are disabled
-                      Deprecated: This field is deprecated, keept only for backward compatibility.
+                      Deprecated: This field is deprecated, kept only for backward compatibility.
                     type: boolean
                   livenessProbeDisabled:
                     description: LivenessProbeDisabled if set to true, the operator
@@ -10202,7 +10202,7 @@ v1:
                   ReadinessProbeDisabled:
                     description: |-
                       OldReadinessProbeDisabled if true readinessProbes are disabled
-                      Deprecated: This field is deprecated, keept only for backward compatibility.
+                      Deprecated: This field is deprecated, kept only for backward compatibility.
                     type: boolean
                   livenessProbeDisabled:
                     description: LivenessProbeDisabled if set to true, the operator
@@ -12258,7 +12258,7 @@ v1:
                   ReadinessProbeDisabled:
                     description: |-
                       OldReadinessProbeDisabled if true readinessProbes are disabled
-                      Deprecated: This field is deprecated, keept only for backward compatibility.
+                      Deprecated: This field is deprecated, kept only for backward compatibility.
                     type: boolean
                   livenessProbeDisabled:
                     description: LivenessProbeDisabled if set to true, the operator
@@ -14412,7 +14412,7 @@ v1alpha:
                   ReadinessProbeDisabled:
                     description: |-
                       OldReadinessProbeDisabled if true readinessProbes are disabled
-                      Deprecated: This field is deprecated, keept only for backward compatibility.
+                      Deprecated: This field is deprecated, kept only for backward compatibility.
                     type: boolean
                   livenessProbeDisabled:
                     description: LivenessProbeDisabled if set to true, the operator
@@ -16565,7 +16565,7 @@ v1alpha:
                   ReadinessProbeDisabled:
                     description: |-
                       OldReadinessProbeDisabled if true readinessProbes are disabled
-                      Deprecated: This field is deprecated, keept only for backward compatibility.
+                      Deprecated: This field is deprecated, kept only for backward compatibility.
                     type: boolean
                   livenessProbeDisabled:
                     description: LivenessProbeDisabled if set to true, the operator
@@ -18630,7 +18630,7 @@ v1alpha:
                   ReadinessProbeDisabled:
                     description: |-
                       OldReadinessProbeDisabled if true readinessProbes are disabled
-                      Deprecated: This field is deprecated, keept only for backward compatibility.
+                      Deprecated: This field is deprecated, kept only for backward compatibility.
                     type: boolean
                   livenessProbeDisabled:
                     description: LivenessProbeDisabled if set to true, the operator
@@ -21407,7 +21407,7 @@ v1alpha:
                   ReadinessProbeDisabled:
                     description: |-
                       OldReadinessProbeDisabled if true readinessProbes are disabled
-                      Deprecated: This field is deprecated, keept only for backward compatibility.
+                      Deprecated: This field is deprecated, kept only for backward compatibility.
                     type: boolean
                   livenessProbeDisabled:
                     description: LivenessProbeDisabled if set to true, the operator
@@ -23618,7 +23618,7 @@ v1alpha:
                   ReadinessProbeDisabled:
                     description: |-
                       OldReadinessProbeDisabled if true readinessProbes are disabled
-                      Deprecated: This field is deprecated, keept only for backward compatibility.
+                      Deprecated: This field is deprecated, kept only for backward compatibility.
                     type: boolean
                   livenessProbeDisabled:
                     description: LivenessProbeDisabled if set to true, the operator
@@ -25674,7 +25674,7 @@ v1alpha:
                   ReadinessProbeDisabled:
                     description: |-
                       OldReadinessProbeDisabled if true readinessProbes are disabled
-                      Deprecated: This field is deprecated, keept only for backward compatibility.
+                      Deprecated: This field is deprecated, kept only for backward compatibility.
                     type: boolean
                   livenessProbeDisabled:
                     description: LivenessProbeDisabled if set to true, the operator
@@ -27828,7 +27828,7 @@ v2alpha1:
                   ReadinessProbeDisabled:
                     description: |-
                       OldReadinessProbeDisabled if true readinessProbes are disabled
-                      Deprecated: This field is deprecated, keept only for backward compatibility.
+                      Deprecated: This field is deprecated, kept only for backward compatibility.
                     type: boolean
                   livenessProbeDisabled:
                     description: LivenessProbeDisabled if set to true, the operator
@@ -29981,7 +29981,7 @@ v2alpha1:
                   ReadinessProbeDisabled:
                     description: |-
                       OldReadinessProbeDisabled if true readinessProbes are disabled
-                      Deprecated: This field is deprecated, keept only for backward compatibility.
+                      Deprecated: This field is deprecated, kept only for backward compatibility.
                     type: boolean
                   livenessProbeDisabled:
                     description: LivenessProbeDisabled if set to true, the operator
@@ -32046,7 +32046,7 @@ v2alpha1:
                   ReadinessProbeDisabled:
                     description: |-
                       OldReadinessProbeDisabled if true readinessProbes are disabled
-                      Deprecated: This field is deprecated, keept only for backward compatibility.
+                      Deprecated: This field is deprecated, kept only for backward compatibility.
                     type: boolean
                   livenessProbeDisabled:
                     description: LivenessProbeDisabled if set to true, the operator
@@ -34823,7 +34823,7 @@ v2alpha1:
                   ReadinessProbeDisabled:
                     description: |-
                       OldReadinessProbeDisabled if true readinessProbes are disabled
-                      Deprecated: This field is deprecated, keept only for backward compatibility.
+                      Deprecated: This field is deprecated, kept only for backward compatibility.
                     type: boolean
                   livenessProbeDisabled:
                     description: LivenessProbeDisabled if set to true, the operator
@@ -37034,7 +37034,7 @@ v2alpha1:
                   ReadinessProbeDisabled:
                     description: |-
                       OldReadinessProbeDisabled if true readinessProbes are disabled
-                      Deprecated: This field is deprecated, keept only for backward compatibility.
+                      Deprecated: This field is deprecated, kept only for backward compatibility.
                     type: boolean
                   livenessProbeDisabled:
                     description: LivenessProbeDisabled if set to true, the operator
@@ -39090,7 +39090,7 @@ v2alpha1:
                   ReadinessProbeDisabled:
                     description: |-
                       OldReadinessProbeDisabled if true readinessProbes are disabled
-                      Deprecated: This field is deprecated, keept only for backward compatibility.
+                      Deprecated: This field is deprecated, kept only for backward compatibility.
                     type: boolean
                   livenessProbeDisabled:
                     description: LivenessProbeDisabled if set to true, the operator
