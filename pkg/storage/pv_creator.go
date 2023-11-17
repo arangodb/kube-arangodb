@@ -130,7 +130,7 @@ func (ls *LocalStorage) createPVs(ctx context.Context, apiObject *api.ArangoLoca
 				continue
 			}
 
-			nodeList = nodeList.FilterSchedulable().FilterPodsTaints(podList)
+			nodeList = nodeList.FilterSchedulable().FilterPodsTaints(podList).SortBySchedulablePodsTaints(podList)
 
 			allowedClients = allowedClients.Filter(func(node string, client provisioner.API) bool {
 				for _, n := range nodeList {
