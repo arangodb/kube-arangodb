@@ -68,6 +68,7 @@ type Dependencies struct {
 	Storage               OperatorDependency
 	Backup                OperatorDependency
 	Apps                  OperatorDependency
+	ML                    OperatorDependency
 	ClusterSync           OperatorDependency
 	Operators             Operators
 	Secrets               typedCore.SecretInterface
@@ -175,6 +176,18 @@ func NewServer(cli typedCore.CoreV1Interface, cfg Config, deps Dependencies) (*S
 	if deps.Storage.Enabled {
 		r.GET("/ready/storage", gin.WrapF(deps.Storage.Probe.ReadyHandler))
 		readyProbes = append(readyProbes, deps.Storage.Probe)
+	}
+	if deps.Backup.Enabled {
+		r.GET("/ready/backup", gin.WrapF(deps.Backup.Probe.ReadyHandler))
+		readyProbes = append(readyProbes, deps.Backup.Probe)
+	}
+	if deps.Apps.Enabled {
+		r.GET("/ready/apps", gin.WrapF(deps.Apps.Probe.ReadyHandler))
+		readyProbes = append(readyProbes, deps.Apps.Probe)
+	}
+	if deps.ML.Enabled {
+		r.GET("/ready/ml", gin.WrapF(deps.ML.Probe.ReadyHandler))
+		readyProbes = append(readyProbes, deps.ML.Probe)
 	}
 	r.GET("/ready", gin.WrapF(ready(readyProbes...)))
 	r.GET("/metrics", gin.WrapF(metrics.Handler()))

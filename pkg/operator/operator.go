@@ -69,6 +69,7 @@ type operatorV2type string
 
 const (
 	backupOperator operatorV2type = "backup"
+	mlOperator     operatorV2type = "ml"
 	appsOperator   operatorV2type = "apps"
 )
 
@@ -98,6 +99,7 @@ type Config struct {
 	EnableDeployment            bool
 	EnableDeploymentReplication bool
 	EnableStorage               bool
+	EnableML                    bool
 	EnableBackup                bool
 	EnableApps                  bool
 	EnableK2KClusterSync        bool
@@ -118,6 +120,7 @@ type Dependencies struct {
 	DeploymentReplicationProbe *probe.ReadyProbe
 	StorageProbe               *probe.ReadyProbe
 	BackupProbe                *probe.ReadyProbe
+	MlProbe                    *probe.ReadyProbe
 	AppsProbe                  *probe.ReadyProbe
 	K2KClusterSyncProbe        *probe.ReadyProbe
 }
@@ -170,6 +173,13 @@ func (o *Operator) Run() {
 			go o.runLeaderElection("arango-apps-operator", constants.AppsLabelRole, o.onStartApps, o.Dependencies.AppsProbe)
 		} else {
 			go o.runWithoutLeaderElection("arango-apps-operator", constants.AppsLabelRole, o.onStartApps, o.Dependencies.AppsProbe)
+		}
+	}
+	if o.Config.EnableML {
+		if !o.Config.SingleMode {
+			go o.runLeaderElection("arango-ml-operator", constants.MLLabelRole, o.onStartML, o.Dependencies.MlProbe)
+		} else {
+			go o.runWithoutLeaderElection("arango-ml-operator", constants.MLLabelRole, o.onStartML, o.Dependencies.MlProbe)
 		}
 	}
 	if o.Config.EnableK2KClusterSync {
@@ -272,35 +282,14 @@ func (o *Operator) onStartOperatorV2(operatorType operatorV2type, stop <-chan st
 
 	switch operatorType {
 	case appsOperator:
-		checkFn := func() error {
-			_, err := o.Client.Arango().AppsV1().ArangoJobs(o.Namespace).List(context.Background(), meta.ListOptions{})
-			return err
-		}
-		o.waitForCRD(apps.ArangoJobCRDName, checkFn)
-
-		if err = job.RegisterInformer(operator, eventRecorder, arangoClientSet, kubeClientSet, arangoInformer); err != nil {
-			panic(err)
-		}
+		o.onStartOperatorV2Apps(operator, eventRecorder, arangoClientSet, kubeClientSet, arangoInformer)
+		o.Dependencies.AppsProbe.SetReady()
 	case backupOperator:
-		checkFn := func() error {
-			_, err := o.Client.Arango().BackupV1().ArangoBackups(o.Namespace).List(context.Background(), meta.ListOptions{})
-			return err
-		}
-		o.waitForCRD(backupdef.ArangoBackupCRDName, checkFn)
-
-		if err = backup.RegisterInformer(operator, eventRecorder, arangoClientSet, kubeClientSet, arangoInformer); err != nil {
-			panic(err)
-		}
-
-		checkFn = func() error {
-			_, err := o.Client.Arango().BackupV1().ArangoBackupPolicies(o.Namespace).List(context.Background(), meta.ListOptions{})
-			return err
-		}
-		o.waitForCRD(backupdef.ArangoBackupPolicyCRDName, checkFn)
-
-		if err = policy.RegisterInformer(operator, eventRecorder, arangoClientSet, kubeClientSet, arangoInformer); err != nil {
-			panic(err)
-		}
+		o.onStartOperatorV2Backup(operator, eventRecorder, arangoClientSet, kubeClientSet, arangoInformer)
+		o.Dependencies.BackupProbe.SetReady()
+	case mlOperator:
+		o.onStartOperatorV2ML(operator, eventRecorder, arangoClientSet, kubeClientSet, arangoInformer)
+		o.Dependencies.MlProbe.SetReady()
 	}
 
 	if err = operator.RegisterStarter(arangoInformer); err != nil {
@@ -310,9 +299,43 @@ func (o *Operator) onStartOperatorV2(operatorType operatorV2type, stop <-chan st
 	prometheus.MustRegister(operator)
 
 	operator.Start(8, stop)
-	o.Dependencies.BackupProbe.SetReady()
+	o.Dependencies.MlProbe.SetReady()
 
 	<-stop
+}
+
+func (o *Operator) onStartOperatorV2Apps(operator operatorV2.Operator, recorder event.Recorder, client arangoClientSet.Interface, kubeClient kubernetes.Interface, informer arangoInformer.SharedInformerFactory) {
+	checkFn := func() error {
+		_, err := o.Client.Arango().AppsV1().ArangoJobs(o.Namespace).List(context.Background(), meta.ListOptions{})
+		return err
+	}
+	o.waitForCRD(apps.ArangoJobCRDName, checkFn)
+
+	if err := job.RegisterInformer(operator, recorder, client, kubeClient, informer); err != nil {
+		panic(err)
+	}
+}
+
+func (o *Operator) onStartOperatorV2Backup(operator operatorV2.Operator, recorder event.Recorder, client arangoClientSet.Interface, kubeClient kubernetes.Interface, informer arangoInformer.SharedInformerFactory) {
+	checkFn := func() error {
+		_, err := o.Client.Arango().BackupV1().ArangoBackups(o.Namespace).List(context.Background(), meta.ListOptions{})
+		return err
+	}
+	o.waitForCRD(backupdef.ArangoBackupCRDName, checkFn)
+
+	if err := backup.RegisterInformer(operator, recorder, client, kubeClient, informer); err != nil {
+		panic(err)
+	}
+
+	checkFn = func() error {
+		_, err := o.Client.Arango().BackupV1().ArangoBackupPolicies(o.Namespace).List(context.Background(), meta.ListOptions{})
+		return err
+	}
+	o.waitForCRD(backupdef.ArangoBackupPolicyCRDName, checkFn)
+
+	if err := policy.RegisterInformer(operator, recorder, client, kubeClient, informer); err != nil {
+		panic(err)
+	}
 }
 
 func (o *Operator) WrapLogger(in *zerolog.Event) *zerolog.Event {
