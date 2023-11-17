@@ -438,7 +438,7 @@ Default Value: `2`
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_spec.go#L252)</sup>
 
 OldReadinessProbeDisabled if true readinessProbes are disabled
-Deprecated: This field is deprecated, keept only for backward compatibility.
+Deprecated: This field is deprecated, kept only for backward compatibility.
 
 ***
 
@@ -1486,7 +1486,7 @@ Default Value: `2`
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_spec.go#L252)</sup>
 
 OldReadinessProbeDisabled if true readinessProbes are disabled
-Deprecated: This field is deprecated, keept only for backward compatibility.
+Deprecated: This field is deprecated, kept only for backward compatibility.
 
 ***
 
@@ -2400,7 +2400,7 @@ Default Value: `2`
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_spec.go#L252)</sup>
 
 OldReadinessProbeDisabled if true readinessProbes are disabled
-Deprecated: This field is deprecated, keept only for backward compatibility.
+Deprecated: This field is deprecated, kept only for backward compatibility.
 
 ***
 
@@ -3918,7 +3918,7 @@ Default Value: `2`
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_spec.go#L252)</sup>
 
 OldReadinessProbeDisabled if true readinessProbes are disabled
-Deprecated: This field is deprecated, keept only for backward compatibility.
+Deprecated: This field is deprecated, kept only for backward compatibility.
 
 ***
 
@@ -5033,7 +5033,7 @@ Default Value: `2`
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_spec.go#L252)</sup>
 
 OldReadinessProbeDisabled if true readinessProbes are disabled
-Deprecated: This field is deprecated, keept only for backward compatibility.
+Deprecated: This field is deprecated, kept only for backward compatibility.
 
 ***
 
@@ -5939,7 +5939,7 @@ Default Value: `2`
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_spec.go#L252)</sup>
 
 OldReadinessProbeDisabled if true readinessProbes are disabled
-Deprecated: This field is deprecated, keept only for backward compatibility.
+Deprecated: This field is deprecated, kept only for backward compatibility.
 
 ***
 

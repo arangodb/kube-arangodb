@@ -11,6 +11,8 @@
 - (Feature) License ArangoDeployment Fetcher
 - (Feature) K8S Resources Compare Generic
 - (Feature) Add support for CRD validation schemas
+- (Bugfix) Fix Replaced Member Zone during Replace operation
+- (Feature) (ML) Handlers
 - (Feature) Add P0 Compare Func
 
 ## [1.2.35](https://github.com/arangodb/kube-arangodb/tree/1.2.35) (2023-11-06)
