@@ -22,6 +22,7 @@ package resources
 
 import (
 	"context"
+	"sort"
 
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -45,21 +46,41 @@ func (p Nodes) Filter(f func(node *core.Node) bool) Nodes {
 	return r
 }
 
+func (p Nodes) Copy() Nodes {
+	c := make(Nodes, len(p))
+	copy(c, p)
+	return c
+}
+
+func (p Nodes) Sort(f func(a, b *core.Node) bool) Nodes {
+	z := p.Copy()
+	sort.Slice(z, func(i, j int) bool {
+		return f(z[i], z[j])
+	})
+	return z
+}
+
+func (p Nodes) SortBySchedulablePodsTaints(pods Pods) Nodes {
+	return p.Sort(func(a, b *core.Node) bool {
+		return utils.IsNodeSchedulableForPods(a, pods...) > utils.IsNodeSchedulableForPods(b, pods...)
+	})
+}
+
+func (p Nodes) SortBySchedulablePodTaints(pod *core.Pod) Nodes {
+	return p.Sort(func(a, b *core.Node) bool {
+		return utils.IsNodeSchedulableForPod(a, pod) > utils.IsNodeSchedulableForPod(b, pod)
+	})
+}
+
 func (p Nodes) FilterPodsTaints(pods Pods) Nodes {
 	return p.Filter(func(node *core.Node) bool {
-		for _, pod := range pods {
-			if utils.IsNodeSchedulableForPod(node, pod) {
-				return true
-			}
-		}
-
-		return false
+		return utils.IsNodeSchedulableForPods(node, pods...).Schedulable()
 	})
 }
 
 func (p Nodes) FilterTaints(pod *core.Pod) Nodes {
 	return p.Filter(func(node *core.Node) bool {
-		return utils.IsNodeSchedulableForPod(node, pod)
+		return utils.IsNodeSchedulableForPod(node, pod).Schedulable()
 	})
 }
 

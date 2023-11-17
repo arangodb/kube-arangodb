@@ -227,9 +227,9 @@ func Test_Taints(t *testing.T) {
 			schedulable := AreTaintsTolerated(c.tolerations, c.taints)
 
 			if c.schedulable {
-				require.True(t, schedulable)
+				require.True(t, schedulable.Schedulable())
 			} else {
-				require.False(t, schedulable)
+				require.False(t, schedulable.Schedulable())
 			}
 		})
 	}

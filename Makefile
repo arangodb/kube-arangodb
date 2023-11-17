@@ -649,7 +649,7 @@ run-unit-tests: $(SOURCES)
 		$(REPOPATH)/pkg/apis/replication/... \
 		$(REPOPATH)/pkg/apis/storage/... \
 		$(REPOPATH)/pkg/deployment/... \
-		$(REPOPATH)/pkg/storage \
+		$(REPOPATH)/pkg/storage/... \
 	    $(REPOPATH)/pkg/crd/... \
 		$(REPOPATH)/pkg/util/... \
 		$(REPOPATH)/cmd/... \
