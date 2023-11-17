@@ -20,6 +20,16 @@
 
 package compare
 
+type GenP0[T interface{}] func(spec, status *T) Func
+
+type FuncGenP0[T interface{}] func(in GenP0[T]) Func
+
+func NewFuncGenP0[T interface{}](spec, status *T) FuncGenP0[T] {
+	return func(in GenP0[T]) Func {
+		return in(spec, status)
+	}
+}
+
 type GenP2[T, P1, P2 interface{}] func(p1 P1, p2 P2, spec, status *T) Func
 
 type FuncGenP2[T, P1, P2 interface{}] func(in GenP2[T, P1, P2]) Func
