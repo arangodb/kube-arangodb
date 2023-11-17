@@ -12,6 +12,7 @@
 - (Feature) K8S Resources Compare Generic
 - (Feature) Add support for CRD validation schemas
 - (Bugfix) Fix Replaced Member Zone during Replace operation
+- (Feature) (ML) Handlers
 
 ## [1.2.35](https://github.com/arangodb/kube-arangodb/tree/1.2.35) (2023-11-06)
 - (Maintenance) Update go-driver to v1.6.0, update IsNotFound() checks

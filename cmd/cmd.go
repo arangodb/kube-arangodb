@@ -119,7 +119,7 @@ var (
 		enableStorage               bool // Run local-storage operator
 		enableBackup                bool // Run backup operator
 		enableApps                  bool // Run apps operator
-		enableMl                    bool // Run ml operator
+		enableML                    bool // Run ml operator
 		versionOnly                 bool // Run only version endpoint, explicitly disabled with other
 		enableK2KClusterSync        bool // Run k2kClusterSync operator
 
@@ -198,7 +198,7 @@ func init() {
 	f.BoolVar(&operatorOptions.enableStorage, "operator.storage", false, "Enable to run the ArangoLocalStorage operator")
 	f.BoolVar(&operatorOptions.enableBackup, "operator.backup", false, "Enable to run the ArangoBackup operator")
 	f.BoolVar(&operatorOptions.enableApps, "operator.apps", false, "Enable to run the ArangoApps operator")
-	f.BoolVar(&operatorOptions.enableMl, "operator.ml", false, "Enable to run the ArangoML operator")
+	f.BoolVar(&operatorOptions.enableML, "operator.ml", false, "Enable to run the ArangoML operator")
 	f.BoolVar(&operatorOptions.enableK2KClusterSync, "operator.k2k-cluster-sync", false, "Enable to run the ListSimple operator")
 	f.MarkDeprecated("operator.k2k-cluster-sync", "Enabled within deployment operator")
 	f.BoolVar(&operatorOptions.versionOnly, "operator.version", false, "Enable only version endpoint in Operator")
@@ -323,7 +323,7 @@ func executeMain(cmd *cobra.Command, args []string) {
 
 	// Check operating mode
 	if !operatorOptions.enableDeployment && !operatorOptions.enableDeploymentReplication && !operatorOptions.enableStorage &&
-		!operatorOptions.enableBackup && !operatorOptions.enableApps && !operatorOptions.enableK2KClusterSync && !operatorOptions.enableMl {
+		!operatorOptions.enableBackup && !operatorOptions.enableApps && !operatorOptions.enableK2KClusterSync && !operatorOptions.enableML {
 		if !operatorOptions.versionOnly {
 			if version.GetVersionV1().IsEnterprise() {
 				logger.Err(err).Fatal("Turn on --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync, --operator.ml or any combination of these")
@@ -334,7 +334,7 @@ func executeMain(cmd *cobra.Command, args []string) {
 	} else if operatorOptions.versionOnly {
 		logger.Err(err).Fatal("Options --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync, --operator.ml cannot be enabled together with --operator.version")
 	} else if !version.GetVersionV1().IsEnterprise() {
-		if operatorOptions.enableMl {
+		if operatorOptions.enableML {
 			logger.Err(err).Fatal("Options --operator.ml can be enabled only on the Enterprise Operator")
 		}
 	}
@@ -540,7 +540,7 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		EnableStorage:               operatorOptions.enableStorage,
 		EnableBackup:                operatorOptions.enableBackup,
 		EnableApps:                  operatorOptions.enableApps,
-		EnableML:                    operatorOptions.enableMl,
+		EnableML:                    operatorOptions.enableML,
 		EnableK2KClusterSync:        operatorOptions.enableK2KClusterSync,
 		AllowChaos:                  chaosOptions.allowed,
 		ScalingIntegrationEnabled:   operatorOptions.scalingIntegrationEnabled,
