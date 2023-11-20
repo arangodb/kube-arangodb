@@ -29,7 +29,8 @@ var version310 = &feature{
 	description:        "Enable support for 3.10 features",
 	version:            "3.10.0",
 	enterpriseRequired: false,
-	enabledByDefault:   false,
+	enabledByDefault:   true,
+	hidden:             true,
 }
 
 func Version310() Feature {

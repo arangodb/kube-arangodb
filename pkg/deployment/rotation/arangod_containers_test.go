@@ -276,6 +276,33 @@ func Test_Container_LogArgs(t *testing.T) {
 	runTestCases(t)(testCases...)
 }
 
+func Test_Server_Ignored_Args(t *testing.T) {
+	testCases := []TestCase{
+		logLevelTestCaseGen("Arg --server.early-connections has been added",
+			compare.SilentRotation,
+			[]string{},
+			[]string{"--server.early-connections"}),
+		logLevelTestCaseGen("Arg --server.early-connections has been removed",
+			compare.SilentRotation,
+			[]string{"--server.early-connections"},
+			[]string{}),
+		logLevelTestCaseGen("Arg --server.early-connections has been changed",
+			compare.SilentRotation,
+			[]string{"--server.early-connections"},
+			[]string{"--server.early-connections=false"}),
+		logLevelTestCaseGen("Arg --server.early-connections has been changed with order",
+			compare.SilentRotation,
+			[]string{"--server.early-connections", "--debug"},
+			[]string{"--debug", "--server.early-connections=false"}),
+		logLevelTestCaseGen("Arg --server.early-connections has been not changed, but other arg diff",
+			compare.GracefulRotation,
+			[]string{"--server.early-connections", "--debug2"},
+			[]string{"--debug", "--server.early-connections"}),
+	}
+
+	runTestCases(t)(testCases...)
+}
+
 func Test_Container_Args(t *testing.T) {
 	testCases := []TestCase{
 		{
