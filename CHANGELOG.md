@@ -17,6 +17,7 @@
 - (Bugfix) Handle optional taints for Storage Operator
 - (Bugfix) Fix Early Connections for 3.10+
 - (Maintenance) yamlfmt as CI Step
+- (Maintenance) Expose Context in OperatorV2 Item Handler 
 
 ## [1.2.35](https://github.com/arangodb/kube-arangodb/tree/1.2.35) (2023-11-06)
 - (Maintenance) Update go-driver to v1.6.0, update IsNotFound() checks
