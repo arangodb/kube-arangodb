@@ -51,7 +51,15 @@ func containersCompare(ds api.DeploymentSpec, g api.ServerGroup, spec, status *c
 				}
 
 				if specContainer.Name == api.ServerGroupReservedContainerNameServer {
-					if isOnlyLogLevelChanged(specContainer.Command, statusContainer.Command) {
+					// Lets check if server contains new args
+
+					specCommand := cleanServerContainerArgs(specContainer.Command)
+					statusCommand := cleanServerContainerArgs(statusContainer.Command)
+
+					if areArgsEqual(specCommand, statusCommand) {
+						statusContainer.Command = specContainer.Command
+						mode = mode.And(compare.SilentRotation)
+					} else if isOnlyLogLevelChanged(specCommand, statusCommand) {
 						plan = append(plan, builder.NewAction(api.ActionTypeRuntimeContainerArgsLogLevelUpdate).
 							AddParam(ContainerName, specContainer.Name))
 
@@ -116,6 +124,35 @@ func containersCompare(ds api.DeploymentSpec, g api.ServerGroup, spec, status *c
 			}
 		})(ds, g, specContainers, statusContainers)
 	})(ds, g, spec, status)
+}
+
+func areArgsEqual(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	for id := range a {
+		if a[id] != b[id] {
+			return false
+		}
+	}
+
+	return true
+}
+
+func cleanServerContainerArgs(args []string) []string {
+	ret := make([]string, 0, len(args))
+
+	for _, arg := range args {
+		// Remove --server.early-connections from args (to calculate)
+		if arg == "--server.early-connections" || strings.HasPrefix(arg, "--server.early-connections=") {
+			continue
+		}
+
+		ret = append(ret, arg)
+	}
+
+	return ret
 }
 
 func initContainersCompare(deploymentSpec api.DeploymentSpec, group api.ServerGroup, spec, status *core.PodTemplateSpec) compare.Func {
