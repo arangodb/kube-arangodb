@@ -4,28 +4,24 @@ v1alpha:
       spec:
         properties:
           localPath:
-            description: LocalPath setting specifies one or more local directories
-              (on the nodes) used to create persistent volumes in.
+            description: LocalPath setting specifies one or more local directories (on the nodes) used to create persistent volumes in.
             items:
               type: string
             type: array
           nodeSelector:
             additionalProperties:
               type: string
-            description: NodeSelector setting specifies which nodes the operator will
-              provision persistent volumes on.
+            description: NodeSelector setting specifies which nodes the operator will provision persistent volumes on.
             type: object
           podCustomization:
             properties:
               priority:
-                description: Priority if defined, sets the priority for pods of storage
-                  provisioner
+                description: Priority if defined, sets the priority for pods of storage provisioner
                 format: int32
                 type: integer
             type: object
           privileged:
-            description: Privileged if set, passes Privileged flag to SecurityContext
-              for pods of storage provisioner
+            description: Privileged if set, passes Privileged flag to SecurityContext for pods of storage provisioner
             type: boolean
           storageClass:
             properties:
@@ -42,13 +38,11 @@ v1alpha:
                   If a `StorageClass` with given name does not yet exist, it will be created.
                 type: string
               reclaimPolicy:
-                description: ReclaimPolicy defines what happens to a persistent volume
-                  when released from its claim.
+                description: ReclaimPolicy defines what happens to a persistent volume when released from its claim.
                 type: string
             type: object
           tolerations:
-            description: Tolerations specifies the tolerations added to pods of storage
-              provisioner
+            description: Tolerations specifies the tolerations added to pods of storage provisioner
             items:
               properties:
                 effect:

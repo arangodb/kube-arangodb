@@ -275,8 +275,12 @@ fmt:
 .PHONY: yamlfmt
 yamlfmt:
 	@echo ">> Ensuring style of yaml files"
-	@$(foreach YAML,$(YAMLS),echo "yamlfmt $(YAML):" && $(GOPATH)/bin/yamlfmt -w $(YAML) || exit 1; )
-	@$(foreach YAML,$(YAMLS),echo "yamlfmt $(YAML):" && $(GOPATH)/bin/yamlfmt -w $(YAML) || exit 1; )
+	@$(GOPATH)/bin/yamlfmt -quiet $(YAMLS)
+
+.PHONY: yamlfmt-verify
+yamlfmt-verify:
+	@echo ">> Verifying style of yaml files"
+	@$(GOPATH)/bin/yamlfmt -lint -quiet $(YAMLS)
 
 .PHONY: license
 license:
@@ -691,14 +695,14 @@ tools-min: update-vendor
 	@echo ">> Fetching license check"
 	@GOBIN=$(GOPATH)/bin go install github.com/google/addlicense@6d92264d717064f28b32464f0f9693a5b4ef0239
 	@echo ">> Fetching yamlfmt"
-	@GOBIN=$(GOPATH)/bin go install github.com/UltiRequiem/yamlfmt@v1.3.0
+	@GOBIN=$(GOPATH)/bin go install github.com/google/yamlfmt/cmd/yamlfmt@v0.10.0
 
 .PHONY: tools
 tools: tools-min
 	@echo ">> Fetching gci"
 	@GOBIN=$(GOPATH)/bin go install github.com/daixiang0/gci@v0.3.0
 	@echo ">> Fetching yamlfmt"
-	@GOBIN=$(GOPATH)/bin go install github.com/UltiRequiem/yamlfmt@v1.3.0
+	@GOBIN=$(GOPATH)/bin go install github.com/google/yamlfmt/cmd/yamlfmt@v0.10.0
 	@echo ">> Downloading protobuf compiler..."
 	@curl -L ${PROTOC_URL} -o $(GOPATH)/protoc.zip
 	@echo ">> Unzipping protobuf compiler..."

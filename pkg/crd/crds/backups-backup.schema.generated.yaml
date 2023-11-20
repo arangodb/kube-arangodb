@@ -6,23 +6,19 @@ v1:
           backoff:
             properties:
               iterations:
-                description: Iterations defines number of iterations before reaching
-                  MaxDelay. Default to 5
+                description: Iterations defines number of iterations before reaching MaxDelay. Default to 5
                 format: int32
                 type: integer
               max_delay:
-                description: MaxDelay defines maximum delay in seconds. Default to
-                  600
+                description: MaxDelay defines maximum delay in seconds. Default to 600
                 format: int32
                 type: integer
               max_iterations:
-                description: MaxIterations defines maximum number of iterations after
-                  backoff will be disabled. Default to nil (no limit)
+                description: MaxIterations defines maximum number of iterations after backoff will be disabled. Default to nil (no limit)
                 format: int32
                 type: integer
               min_delay:
-                description: MinDelay defines minimum delay in seconds. Default to
-                  30
+                description: MinDelay defines minimum delay in seconds. Default to 30
                 format: int32
                 type: integer
             type: object
@@ -30,16 +26,14 @@ v1:
             description: Deployment describes the deployment which should have a backup
             properties:
               name:
-                description: Name of the ArangoDeployment Custom Resource within same
-                  namespace as ArangoBackup Custom Resource.
+                description: Name of the ArangoDeployment Custom Resource within same namespace as ArangoBackup Custom Resource.
                 type: string
             type: object
           download:
             description: Download Backup download settings
             properties:
               credentialsSecretName:
-                description: CredentialsSecretName is the name of the secret used
-                  while accessing repository
+                description: CredentialsSecretName is the name of the secret used while accessing repository
                 type: string
               id:
                 description: ID of the ArangoBackup to be downloaded
@@ -52,8 +46,7 @@ v1:
                 type: string
             type: object
           lifetime:
-            description: 'Lifetime is the time after which the backup will be deleted.
-              Format: "1.5h" or "2h45m".'
+            description: 'Lifetime is the time after which the backup will be deleted. Format: "1.5h" or "2h45m".'
             type: string
           options:
             description: Options specifies backup options
@@ -64,14 +57,12 @@ v1:
                   If this value is set to true, backup is taken even if we are not able to acquire lock.
                 type: boolean
               timeout:
-                description: Timeout for Backup creation request in seconds. Works
-                  only when AsyncBackupCreation feature is set to false.
+                description: Timeout for Backup creation request in seconds. Works only when AsyncBackupCreation feature is set to false.
                 format: float
                 type: number
             type: object
           policyName:
-            description: PolicyName name of the ArangoBackupPolicy which created this
-              Custom Resource
+            description: PolicyName name of the ArangoBackupPolicy which created this Custom Resource
             type: string
           upload:
             description: |-
@@ -79,8 +70,7 @@ v1:
               This field can be removed and created again with different values. This operation will trigger upload again.
             properties:
               credentialsSecretName:
-                description: CredentialsSecretName is the name of the secret used
-                  while accessing repository
+                description: CredentialsSecretName is the name of the secret used while accessing repository
                 type: string
               repositoryURL:
                 description: |-
@@ -100,23 +90,19 @@ v1alpha:
           backoff:
             properties:
               iterations:
-                description: Iterations defines number of iterations before reaching
-                  MaxDelay. Default to 5
+                description: Iterations defines number of iterations before reaching MaxDelay. Default to 5
                 format: int32
                 type: integer
               max_delay:
-                description: MaxDelay defines maximum delay in seconds. Default to
-                  600
+                description: MaxDelay defines maximum delay in seconds. Default to 600
                 format: int32
                 type: integer
               max_iterations:
-                description: MaxIterations defines maximum number of iterations after
-                  backoff will be disabled. Default to nil (no limit)
+                description: MaxIterations defines maximum number of iterations after backoff will be disabled. Default to nil (no limit)
                 format: int32
                 type: integer
               min_delay:
-                description: MinDelay defines minimum delay in seconds. Default to
-                  30
+                description: MinDelay defines minimum delay in seconds. Default to 30
                 format: int32
                 type: integer
             type: object
@@ -124,16 +110,14 @@ v1alpha:
             description: Deployment describes the deployment which should have a backup
             properties:
               name:
-                description: Name of the ArangoDeployment Custom Resource within same
-                  namespace as ArangoBackup Custom Resource.
+                description: Name of the ArangoDeployment Custom Resource within same namespace as ArangoBackup Custom Resource.
                 type: string
             type: object
           download:
             description: Download Backup download settings
             properties:
               credentialsSecretName:
-                description: CredentialsSecretName is the name of the secret used
-                  while accessing repository
+                description: CredentialsSecretName is the name of the secret used while accessing repository
                 type: string
               id:
                 description: ID of the ArangoBackup to be downloaded
@@ -146,8 +130,7 @@ v1alpha:
                 type: string
             type: object
           lifetime:
-            description: 'Lifetime is the time after which the backup will be deleted.
-              Format: "1.5h" or "2h45m".'
+            description: 'Lifetime is the time after which the backup will be deleted. Format: "1.5h" or "2h45m".'
             type: string
           options:
             description: Options specifies backup options
@@ -158,14 +141,12 @@ v1alpha:
                   If this value is set to true, backup is taken even if we are not able to acquire lock.
                 type: boolean
               timeout:
-                description: Timeout for Backup creation request in seconds. Works
-                  only when AsyncBackupCreation feature is set to false.
+                description: Timeout for Backup creation request in seconds. Works only when AsyncBackupCreation feature is set to false.
                 format: float
                 type: number
             type: object
           policyName:
-            description: PolicyName name of the ArangoBackupPolicy which created this
-              Custom Resource
+            description: PolicyName name of the ArangoBackupPolicy which created this Custom Resource
             type: string
           upload:
             description: |-
@@ -173,8 +154,7 @@ v1alpha:
               This field can be removed and created again with different values. This operation will trigger upload again.
             properties:
               credentialsSecretName:
-                description: CredentialsSecretName is the name of the secret used
-                  while accessing repository
+                description: CredentialsSecretName is the name of the secret used while accessing repository
                 type: string
               repositoryURL:
                 description: |-
