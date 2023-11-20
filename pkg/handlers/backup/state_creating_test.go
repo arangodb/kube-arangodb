@@ -21,6 +21,7 @@
 package backup
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -52,7 +53,7 @@ func Test_State_Creating_Success(t *testing.T) {
 	createArangoBackup(t, handler, obj)
 
 	t.Run("Create in progress, then done", func(t *testing.T) {
-		require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+		require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
@@ -64,7 +65,7 @@ func Test_State_Creating_Success(t *testing.T) {
 		require.Equal(t, obj.Status.Progress.JobID, newObj.Status.Progress.JobID)
 
 		mock.state.createDone = true
-		require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+		require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
 
 		// Assert
 		newObj = refreshArangoBackup(t, handler, obj)
@@ -101,14 +102,14 @@ func Test_State_Creating_Failed(t *testing.T) {
 	createArangoBackup(t, handler, obj)
 
 	t.Run("Create Backup returns error", func(t *testing.T) {
-		require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+		require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
 
 		// Create error state should be set
 		newObj := refreshArangoBackup(t, handler, obj)
 		checkBackup(t, newObj, backupApi.ArangoBackupStateCreateError, false)
 		require.Nil(t, newObj.Status.Progress)
 
-		require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+		require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
 
 		// No retry - state should change to failed
 		newObj = refreshArangoBackup(t, handler, obj)

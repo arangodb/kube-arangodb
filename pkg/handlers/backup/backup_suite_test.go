@@ -191,7 +191,7 @@ func wrapperUndefinedDeployment(t *testing.T, state state.State) {
 
 		// Act
 		createArangoBackup(t, handler, obj)
-		require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+		require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
@@ -208,7 +208,7 @@ func wrapperUndefinedDeployment(t *testing.T, state state.State) {
 
 		// Act
 		createArangoBackup(t, handler, obj)
-		require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+		require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
@@ -231,7 +231,7 @@ func wrapperConnectionIssues(t *testing.T, state state.State) {
 		// Act
 		createArangoBackup(t, handler, obj)
 		createArangoDeployment(t, handler, deployment)
-		err := handler.Handle(newItemFromBackup(operation.Update, obj))
+		err := handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj))
 
 		// Assert
 		require.Error(t, err)
@@ -253,7 +253,7 @@ func wrapperProgressMissing(t *testing.T, state state.State) {
 		// Act
 		createArangoBackup(t, handler, obj)
 		createArangoDeployment(t, handler, deployment)
-		require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+		require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)

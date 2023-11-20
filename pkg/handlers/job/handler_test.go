@@ -21,6 +21,7 @@
 package job
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -44,7 +45,7 @@ func Test_ObjectNotFound(t *testing.T) {
 	// Act
 	for operation, shouldFail := range actions {
 		t.Run(string(operation), func(t *testing.T) {
-			err := handler.Handle(i)
+			err := handler.Handle(context.Background(), i)
 
 			// Assert
 			if shouldFail {

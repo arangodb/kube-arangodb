@@ -20,13 +20,16 @@
 
 package operator
 
-import "github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
+import (
+	"context"
+	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
+)
 
 // Handler define interface for operator actions
 type Handler interface {
 	Name() string
 
-	Handle(item operation.Item) error
+	Handle(ctx context.Context, item operation.Item) error
 
 	CanBeHandled(item operation.Item) bool
 }

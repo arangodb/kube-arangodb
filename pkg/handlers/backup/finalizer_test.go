@@ -21,6 +21,7 @@
 package backup
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -45,7 +46,7 @@ func Test_Finalizer_PassThru(t *testing.T) {
 	//createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Delete, obj)))
+	require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Delete, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -79,7 +80,7 @@ func Test_Finalizer_RemoveObject(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Delete, obj)))
+	require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Delete, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -117,7 +118,7 @@ func Test_Finalizer_RemoveObject_WithoutFinalizer(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Delete, obj)))
+	require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Delete, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -157,7 +158,7 @@ func Test_Finalizer_RemoveObject_UnknownFinalizer(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Delete, obj)))
+	require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Delete, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -198,7 +199,7 @@ func Test_Finalizer_RemoveObject_MixedFinalizers(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Delete, obj)))
+	require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Delete, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -224,7 +225,7 @@ func Test_Finalizer_AddDefault(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -247,7 +248,7 @@ func Test_Finalizer_AppendDefault(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)

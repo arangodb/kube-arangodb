@@ -21,6 +21,7 @@
 package job
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -44,7 +45,7 @@ func Test_Job_Create(t *testing.T) {
 	// Act
 	createArangoJob(t, handler, job)
 	createArangoDeployment(t, handler, database)
-	require.NoError(t, handler.Handle(newItemFromJob(operation.Add, job)))
+	require.NoError(t, handler.Handle(context.Background(), newItemFromJob(operation.Add, job)))
 
 	// Assert
 	newJob := refreshArangoJob(t, handler, job)
@@ -67,7 +68,7 @@ func Test_Job_Update(t *testing.T) {
 	// Act
 	createArangoJob(t, handler, job)
 	createK8sJob(t, handler, k8sJob)
-	require.NoError(t, handler.Handle(newItemFromJob(operation.Update, job)))
+	require.NoError(t, handler.Handle(context.Background(), newItemFromJob(operation.Update, job)))
 
 	// Assert
 	newJob := refreshArangoJob(t, handler, job)
@@ -88,7 +89,7 @@ func Test_Job_Create_Error_If_Deployment_Not_Exist(t *testing.T) {
 
 	// Act
 	createArangoJob(t, handler, job)
-	require.NoError(t, handler.Handle(newItemFromJob(operation.Update, job)))
+	require.NoError(t, handler.Handle(context.Background(), newItemFromJob(operation.Update, job)))
 
 	// Assert
 	newJob := refreshArangoJob(t, handler, job)

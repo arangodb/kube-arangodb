@@ -21,8 +21,10 @@
 package operator
 
 import (
+	"context"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 
 func (o *operator) worker() {
@@ -122,9 +124,16 @@ func (o *operator) processObject(obj interface{}) error {
 func (o *operator) processItem(item operation.Item) error {
 	for _, handler := range o.handlers {
 		if handler.CanBeHandled(item) {
-			return handler.Handle(item)
+			return o.processItemWithCTX(item, handler)
 		}
 	}
 
 	return nil
+}
+
+func (o *operator) processItemWithCTX(item operation.Item, handler Handler) error {
+	ctx, c := globals.GetGlobals().Timeouts().Reconciliation().WithTimeout(context.Background())
+	defer c()
+
+	return handler.Handle(ctx, item)
 }

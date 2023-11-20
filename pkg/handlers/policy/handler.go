@@ -64,7 +64,7 @@ func (*handler) Name() string {
 	return backup.ArangoBackupPolicyResourceKind
 }
 
-func (h *handler) Handle(item operation.Item) error {
+func (h *handler) Handle(_ context.Context, item operation.Item) error {
 	// Do not act on delete event, finalizers are used
 	if item.Operation == operation.Delete {
 		return nil
