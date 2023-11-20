@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 package backup
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -37,7 +38,7 @@ func Test_State_None_Success(t *testing.T) {
 
 	// Act
 	createArangoBackup(t, handler, obj)
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)

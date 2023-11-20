@@ -21,6 +21,7 @@
 package operator
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -55,7 +56,7 @@ func (m *mockHandler) Name() string {
 	return m.name
 }
 
-func (m *mockHandler) Handle(item operation.Item) error {
+func (m *mockHandler) Handle(_ context.Context, item operation.Item) error {
 	return m.wrapperHandle(item)
 }
 

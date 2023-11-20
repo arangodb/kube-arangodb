@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 package backup
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"testing"
@@ -48,7 +49,7 @@ func Test_State_Pending_CheckNamespaceIsolation(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -69,7 +70,7 @@ func Test_State_Pending_OneBackupObject(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -88,7 +89,7 @@ func Test_State_Pending_WithUploadRunning(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj, uploading)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -107,7 +108,7 @@ func Test_State_Pending_WithScheduled(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj, uploading)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -128,7 +129,7 @@ func Test_State_Pending_MultipleBackupObjectWithLimitation(t *testing.T) {
 	createArangoBackup(t, handler, obj, obj2)
 
 	t.Run("First backup object", func(t *testing.T) {
-		require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+		require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
@@ -136,7 +137,7 @@ func Test_State_Pending_MultipleBackupObjectWithLimitation(t *testing.T) {
 	})
 
 	t.Run("Second backup object", func(t *testing.T) {
-		require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj2)))
+		require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj2)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj2)
@@ -167,7 +168,7 @@ func Test_State_Pending_KeepPendingWithForcedRunning(t *testing.T) {
 	for _, backup := range objects {
 		go func(b *backupApi.ArangoBackup) {
 			defer w.Done()
-			require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, b)))
+			require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, b)))
 		}(backup)
 	}
 

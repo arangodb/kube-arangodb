@@ -226,7 +226,7 @@ func (h *handler) getDeploymentMutex(namespace, deployment string) *sync.Mutex {
 	return h.locks[name]
 }
 
-func (h *handler) Handle(item operation.Item) error {
+func (h *handler) Handle(_ context.Context, item operation.Item) error {
 	// Get Backup object. It also covers NotFound case
 	b, err := h.client.BackupV1().ArangoBackups(item.Namespace).Get(context.Background(), item.Name, meta.GetOptions{})
 	if err != nil {

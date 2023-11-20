@@ -21,6 +21,7 @@
 package backup
 
 import (
+	"context"
 	"sync"
 	"testing"
 	"time"
@@ -60,7 +61,7 @@ func Test_State_Ready_Success(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -88,7 +89,7 @@ func Test_State_Ready_With_Lifetime(t *testing.T) {
 	createArangoBackup(t, handler, obj)
 
 	t.Run("First iteration", func(t *testing.T) {
-		require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+		require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
@@ -98,7 +99,7 @@ func Test_State_Ready_With_Lifetime(t *testing.T) {
 
 	t.Run("Second iteration once Lifetime is expired", func(t *testing.T) {
 		time.Sleep(10 * time.Second)
-		require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+		require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
@@ -129,7 +130,7 @@ func Test_State_Ready_Unavailable(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -159,7 +160,7 @@ func Test_State_Ready_ServerDown(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -186,7 +187,7 @@ func Test_State_Ready_Success_Update(t *testing.T) {
 	createArangoBackup(t, handler, obj)
 
 	t.Run("First iteration", func(t *testing.T) {
-		require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+		require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
@@ -198,7 +199,7 @@ func Test_State_Ready_Success_Update(t *testing.T) {
 		backupMeta.SizeInBytes = 123
 		mock.state.backups[backupMeta.ID] = backupMeta
 
-		require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+		require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
@@ -208,7 +209,7 @@ func Test_State_Ready_Success_Update(t *testing.T) {
 	})
 
 	t.Run("Do nothing", func(t *testing.T) {
-		require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+		require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
@@ -232,7 +233,7 @@ func Test_State_Ready_TemporaryGetFailed(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -254,7 +255,7 @@ func Test_State_Ready_FatalGetFailed(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -278,7 +279,7 @@ func Test_State_Ready_MissingBackup(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -306,7 +307,7 @@ func Test_State_Ready_Upload(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -340,7 +341,7 @@ func Test_State_Ready_DownloadDoNothing(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -374,7 +375,7 @@ func Test_State_Ready_DoUploadDownloadedBackup(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -406,7 +407,7 @@ func Test_State_Ready_DoNotReUploadBackup(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -436,7 +437,7 @@ func Test_State_Ready_RemoveUploadedFlag(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -481,7 +482,7 @@ func Test_State_Ready_KeepPendingWithForcedRunning(t *testing.T) {
 	for _, backup := range objects {
 		go func(b *backupApi.ArangoBackup) {
 			defer w.Done()
-			require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, b)))
+			require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, b)))
 		}(backup)
 	}
 
@@ -545,7 +546,7 @@ func Test_State_Ready_KeepPendingWithForcedRunningSameId(t *testing.T) {
 	for _, backup := range objects {
 		go func(b *backupApi.ArangoBackup) {
 			defer w.Done()
-			require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, b)))
+			require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, b)))
 		}(backup)
 	}
 
@@ -614,7 +615,7 @@ func Test_State_Ready_Concurrent_Queued(t *testing.T) {
 	createArangoBackup(t, handler, objects...)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -664,7 +665,7 @@ func Test_State_Ready_Concurrent_Started(t *testing.T) {
 	createArangoBackup(t, handler, objects...)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
