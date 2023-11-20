@@ -20,8 +20,7 @@ v1:
           destination:
             properties:
               auth:
-                description: Authentication holds settings needed to authentication
-                  at the syncmaster.
+                description: Authentication holds settings needed to authentication at the syncmaster.
                 properties:
                   keyfileSecretName:
                     description: |-
@@ -54,8 +53,7 @@ v1:
                   type: string
                 type: array
               tls:
-                description: TLS holds settings needed to verify the TLS connection
-                  to the syncmaster.
+                description: TLS holds settings needed to verify the TLS connection to the syncmaster.
                 properties:
                   caSecretName:
                     description: |-
@@ -67,8 +65,7 @@ v1:
           source:
             properties:
               auth:
-                description: Authentication holds settings needed to authentication
-                  at the syncmaster.
+                description: Authentication holds settings needed to authentication at the syncmaster.
                 properties:
                   keyfileSecretName:
                     description: |-
@@ -101,8 +98,7 @@ v1:
                   type: string
                 type: array
               tls:
-                description: TLS holds settings needed to verify the TLS connection
-                  to the syncmaster.
+                description: TLS holds settings needed to verify the TLS connection to the syncmaster.
                 properties:
                   caSecretName:
                     description: |-
@@ -136,8 +132,7 @@ v1alpha:
           destination:
             properties:
               auth:
-                description: Authentication holds settings needed to authentication
-                  at the syncmaster.
+                description: Authentication holds settings needed to authentication at the syncmaster.
                 properties:
                   keyfileSecretName:
                     description: |-
@@ -170,8 +165,7 @@ v1alpha:
                   type: string
                 type: array
               tls:
-                description: TLS holds settings needed to verify the TLS connection
-                  to the syncmaster.
+                description: TLS holds settings needed to verify the TLS connection to the syncmaster.
                 properties:
                   caSecretName:
                     description: |-
@@ -183,8 +177,7 @@ v1alpha:
           source:
             properties:
               auth:
-                description: Authentication holds settings needed to authentication
-                  at the syncmaster.
+                description: Authentication holds settings needed to authentication at the syncmaster.
                 properties:
                   keyfileSecretName:
                     description: |-
@@ -217,8 +210,7 @@ v1alpha:
                   type: string
                 type: array
               tls:
-                description: TLS holds settings needed to verify the TLS connection
-                  to the syncmaster.
+                description: TLS holds settings needed to verify the TLS connection to the syncmaster.
                 properties:
                   caSecretName:
                     description: |-
@@ -252,8 +244,7 @@ v2alpha1:
           destination:
             properties:
               auth:
-                description: Authentication holds settings needed to authentication
-                  at the syncmaster.
+                description: Authentication holds settings needed to authentication at the syncmaster.
                 properties:
                   keyfileSecretName:
                     description: |-
@@ -274,26 +265,22 @@ v2alpha1:
                   If set this provides default values for masterEndpoint, auth & tls.
                 type: string
               masterEndpoint:
-                description: MasterEndpoint holds a list of URLs used to reach the
-                  syncmaster(s).
+                description: MasterEndpoint holds a list of URLs used to reach the syncmaster(s).
                 items:
                   type: string
                 type: array
               tls:
-                description: TLS holds settings needed to verify the TLS connection
-                  to the syncmaster.
+                description: TLS holds settings needed to verify the TLS connection to the syncmaster.
                 properties:
                   caSecretName:
-                    description: CASecretName holds the name of a Secret containing
-                      a ca.crt public key for TLS validation.
+                    description: CASecretName holds the name of a Secret containing a ca.crt public key for TLS validation.
                     type: string
                 type: object
             type: object
           source:
             properties:
               auth:
-                description: Authentication holds settings needed to authentication
-                  at the syncmaster.
+                description: Authentication holds settings needed to authentication at the syncmaster.
                 properties:
                   keyfileSecretName:
                     description: |-
@@ -314,18 +301,15 @@ v2alpha1:
                   If set this provides default values for masterEndpoint, auth & tls.
                 type: string
               masterEndpoint:
-                description: MasterEndpoint holds a list of URLs used to reach the
-                  syncmaster(s).
+                description: MasterEndpoint holds a list of URLs used to reach the syncmaster(s).
                 items:
                   type: string
                 type: array
               tls:
-                description: TLS holds settings needed to verify the TLS connection
-                  to the syncmaster.
+                description: TLS holds settings needed to verify the TLS connection to the syncmaster.
                 properties:
                   caSecretName:
-                    description: CASecretName holds the name of a Secret containing
-                      a ca.crt public key for TLS validation.
+                    description: CASecretName holds the name of a Secret containing a ca.crt public key for TLS validation.
                     type: string
                 type: object
             type: object

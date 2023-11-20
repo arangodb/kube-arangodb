@@ -23,8 +23,7 @@ v1:
             description: Overrides define Member Overrides (Override values from ServerGroup).
             properties:
               resources:
-                description: Resources holds resource requests & limits. Overrides
-                  template provided on the group level.
+                description: Resources holds resource requests & limits. Overrides template provided on the group level.
                 properties:
                   limits:
                     additionalProperties:
@@ -36,8 +35,7 @@ v1:
                     type: object
                 type: object
               volumeClaimTemplate:
-                description: VolumeClaimTemplate specifies a template for volume claims.
-                  Overrides template provided on the group level.
+                description: VolumeClaimTemplate specifies a template for volume claims. Overrides template provided on the group level.
                 properties:
                   apiVersion:
                     type: string
@@ -222,8 +220,7 @@ v1:
                 type: object
             type: object
           template:
-            description: Template keeps template which is gonna be applied on the
-              Pod.
+            description: Template keeps template which is gonna be applied on the Pod.
             properties:
               checksum:
                 description: Checksum keep the Pod Spec Checksum (with ignored fields).
@@ -2945,8 +2942,7 @@ v1:
                     type: object
                 type: object
               podSpecChecksum:
-                description: PodSpecChecksum keep the Pod Spec Checksum (without ignored
-                  fields).
+                description: PodSpecChecksum keep the Pod Spec Checksum (without ignored fields).
                 type: string
             type: object
         type: object
@@ -2977,8 +2973,7 @@ v1alpha:
             description: Overrides define Member Overrides (Override values from ServerGroup).
             properties:
               resources:
-                description: Resources holds resource requests & limits. Overrides
-                  template provided on the group level.
+                description: Resources holds resource requests & limits. Overrides template provided on the group level.
                 properties:
                   limits:
                     additionalProperties:
@@ -2990,8 +2985,7 @@ v1alpha:
                     type: object
                 type: object
               volumeClaimTemplate:
-                description: VolumeClaimTemplate specifies a template for volume claims.
-                  Overrides template provided on the group level.
+                description: VolumeClaimTemplate specifies a template for volume claims. Overrides template provided on the group level.
                 properties:
                   apiVersion:
                     type: string
@@ -3176,8 +3170,7 @@ v1alpha:
                 type: object
             type: object
           template:
-            description: Template keeps template which is gonna be applied on the
-              Pod.
+            description: Template keeps template which is gonna be applied on the Pod.
             properties:
               checksum:
                 description: Checksum keep the Pod Spec Checksum (with ignored fields).
@@ -5899,8 +5892,7 @@ v1alpha:
                     type: object
                 type: object
               podSpecChecksum:
-                description: PodSpecChecksum keep the Pod Spec Checksum (without ignored
-                  fields).
+                description: PodSpecChecksum keep the Pod Spec Checksum (without ignored fields).
                 type: string
             type: object
         type: object
@@ -5931,8 +5923,7 @@ v2alpha1:
             description: Overrides define Member Overrides (Override values from ServerGroup).
             properties:
               resources:
-                description: Resources holds resource requests & limits. Overrides
-                  template provided on the group level.
+                description: Resources holds resource requests & limits. Overrides template provided on the group level.
                 properties:
                   limits:
                     additionalProperties:
@@ -5944,8 +5935,7 @@ v2alpha1:
                     type: object
                 type: object
               volumeClaimTemplate:
-                description: VolumeClaimTemplate specifies a template for volume claims.
-                  Overrides template provided on the group level.
+                description: VolumeClaimTemplate specifies a template for volume claims. Overrides template provided on the group level.
                 properties:
                   apiVersion:
                     type: string
@@ -6130,8 +6120,7 @@ v2alpha1:
                 type: object
             type: object
           template:
-            description: Template keeps template which is gonna be applied on the
-              Pod.
+            description: Template keeps template which is gonna be applied on the Pod.
             properties:
               checksum:
                 description: Checksum keep the Pod Spec Checksum (with ignored fields).
@@ -8853,8 +8842,7 @@ v2alpha1:
                     type: object
                 type: object
               podSpecChecksum:
-                description: PodSpecChecksum keep the Pod Spec Checksum (without ignored
-                  fields).
+                description: PodSpecChecksum keep the Pod Spec Checksum (without ignored fields).
                 type: string
             type: object
         type: object

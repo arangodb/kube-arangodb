@@ -49,31 +49,32 @@ jobs:
             fi
              make license-verify license-range-verify
       - run: make fmt-verify
-#      - run: make linter
-#      - run:
-#          name: Unit tests
-#          command: |
-#            if [ -z "$CIRCLE_PULL_REQUEST" ]; then
-#              echo "This is not a pull request. Skipping..."
-#              exit 0
-#            fi
-#             make run-unit-tests
-#      - run:
-#          name: make bin
-#          command: |
-#            if [ -z "$CIRCLE_PULL_REQUEST" ]; then
-#              echo "This is not a pull request. Skipping..."
-#              exit 0
-#            fi
-#             make bin
-#      - run:
-#          name: vulncheck
-#          command: |
-#            if [ -z "$CIRCLE_PULL_REQUEST" ]; then
-#              echo "This is not a pull request. Skipping..."
-#              exit 0
-#            fi
-#             make vulncheck
+      - run: make yamlfmt-verify
+      - run: make linter
+      - run:
+          name: Unit tests
+          command: |
+            if [ -z "$CIRCLE_PULL_REQUEST" ]; then
+              echo "This is not a pull request. Skipping..."
+              exit 0
+            fi
+             make run-unit-tests
+      - run:
+          name: make bin
+          command: |
+            if [ -z "$CIRCLE_PULL_REQUEST" ]; then
+              echo "This is not a pull request. Skipping..."
+              exit 0
+            fi
+             make bin
+      - run:
+          name: vulncheck
+          command: |
+            if [ -z "$CIRCLE_PULL_REQUEST" ]; then
+              echo "This is not a pull request. Skipping..."
+              exit 0
+            fi
+             make vulncheck
       - run:
           name: Check that everything what should be generated is commited
           command: |
@@ -81,7 +82,7 @@ jobs:
               echo "This is not a pull request. Skipping..."
               exit 0
             fi
-            make verify-generated synchronize-v2alpha1-with-v1 generate-internal fmt
+            make verify-generated synchronize-v2alpha1-with-v1 generate-internal fmt yamlfmt
             if [ ! -z "$(git status --porcelain)" ]; then
               echo "There are uncommited changes!"
               git status
