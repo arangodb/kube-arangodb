@@ -258,6 +258,10 @@ func areProbesEqual(a, b *core.Probe) bool {
 }
 
 func isManagedProbe(a, b *core.Probe) bool {
+	if a == nil || b == nil {
+		return false
+	}
+
 	if a.Exec == nil || b.Exec == nil {
 		return false
 	}

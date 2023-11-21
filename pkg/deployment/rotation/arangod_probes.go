@@ -50,6 +50,11 @@ func compareServerContainerProbes(ds api.DeploymentSpec, g api.ServerGroup, spec
 
 		if !areProbesEqual(spec.LivenessProbe, status.LivenessProbe) {
 			if isManagedProbe(spec.LivenessProbe, status.LivenessProbe) {
+				if spec.LivenessProbe.FailureThreshold != status.LivenessProbe.FailureThreshold {
+					status.LivenessProbe.FailureThreshold = spec.LivenessProbe.FailureThreshold
+					mode = mode.And(compare.SilentRotation)
+				}
+
 				q := status.LivenessProbe.DeepCopy()
 
 				q.Exec = spec.LivenessProbe.Exec.DeepCopy()
