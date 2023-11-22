@@ -39,7 +39,6 @@ import (
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
-	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
@@ -51,9 +50,6 @@ import (
 var logger = logging.Global().RegisterAndGetLogger("backup-operator", logging.Info)
 
 const (
-	retryCount = 25
-	retryDelay = time.Second
-
 	// StateChange name of the event send when state changed
 	StateChange = "StateChange"
 
@@ -181,9 +177,7 @@ func (h *handler) refreshDeploymentBackup(deployment *database.ArangoDeployment,
 		updateStatusBackup(backupMeta),
 		updateStatusBackupImported(util.NewType[bool](true)))
 
-	backup.Status = *status
-
-	err = h.updateBackupStatus(backup)
+	_, err = operator.WithArangoBackupUpdateStatusInterfaceRetry(context.Background(), h.client.BackupV1().ArangoBackups(backup.GetNamespace()), backup, *status, meta.UpdateOptions{})
 	if err != nil {
 		return err
 	}
@@ -193,20 +187,6 @@ func (h *handler) refreshDeploymentBackup(deployment *database.ArangoDeployment,
 
 func (h *handler) Name() string {
 	return backup.ArangoBackupResourceKind
-}
-
-func (h *handler) updateBackupStatus(b *backupApi.ArangoBackup) error {
-	return utils.Retry(retryCount, retryDelay, func() error {
-		backup, err := h.client.BackupV1().ArangoBackups(b.Namespace).Get(context.Background(), b.Name, meta.GetOptions{})
-		if err != nil {
-			return err
-		}
-
-		backup.Status = b.Status
-
-		_, err = h.client.BackupV1().ArangoBackups(b.Namespace).UpdateStatus(context.Background(), backup, meta.UpdateOptions{})
-		return err
-	})
 }
 
 func (h *handler) getDeploymentMutex(namespace, deployment string) *sync.Mutex {
@@ -346,15 +326,13 @@ func (h *handler) Handle(_ context.Context, item operation.Item) error {
 		}
 	}
 
-	b.Status = *status
-
 	logger.Debug("Updating %s %s/%s",
 		item.Kind,
 		item.Namespace,
 		item.Name)
 
 	// Update status on object
-	if err := h.updateBackupStatus(b); err != nil {
+	if _, err := operator.WithArangoBackupUpdateStatusInterfaceRetry(context.Background(), h.client.BackupV1().ArangoBackups(b.GetNamespace()), b, *status, meta.UpdateOptions{}); err != nil {
 		return err
 	}
 

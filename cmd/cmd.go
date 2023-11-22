@@ -160,6 +160,10 @@ var (
 		backupArangoD       time.Duration
 		backupUploadArangoD time.Duration
 	}
+	operatorReconciliationRetry struct {
+		delay time.Duration
+		count int
+	}
 	chaosOptions struct {
 		allowed bool
 	}
@@ -222,6 +226,8 @@ func init() {
 	f.DurationVar(&operatorTimeouts.backupUploadArangoD, "timeout.backup-upload", globals.BackupUploadArangoClientTimeout, "The request timeout to the ArangoDB during uploading files")
 	f.DurationVar(&shutdownOptions.delay, "shutdown.delay", defaultShutdownDelay, "The delay before running shutdown handlers")
 	f.DurationVar(&shutdownOptions.timeout, "shutdown.timeout", defaultShutdownTimeout, "Timeout for shutdown handlers")
+	f.DurationVar(&operatorReconciliationRetry.delay, "operator.reconciliation.retry.delay", globals.DefaultOperatorUpdateRetryDelay, "Delay between Object Update operations in the Reconciliation loop")
+	f.IntVar(&operatorReconciliationRetry.count, "operator.reconciliation.retry.count", globals.DefaultOperatorUpdateRetryCount, "Count of retries during Object Update operations in the Reconciliation loop")
 	f.BoolVar(&operatorOptions.scalingIntegrationEnabled, "internal.scaling-integration", false, "Enable Scaling Integration")
 	f.DurationVar(&operatorOptions.reconciliationDelay, "reconciliation.delay", 0, "Delay between reconciliation loops (<= 0 -> Disabled)")
 	f.Int64Var(&operatorKubernetesOptions.maxBatchSize, "kubernetes.max-batch-size", globals.DefaultKubernetesRequestBatchSize, "Size of batch during objects read")
@@ -280,6 +286,9 @@ func executeMain(cmd *cobra.Command, args []string) {
 	globals.GetGlobalTimeouts().ShardRebuildRetry().Set(operatorTimeouts.shardRebuildRetry)
 	globals.GetGlobalTimeouts().BackupArangoClientTimeout().Set(operatorTimeouts.backupArangoD)
 	globals.GetGlobalTimeouts().BackupArangoClientUploadTimeout().Set(operatorTimeouts.backupUploadArangoD)
+
+	globals.GetGlobals().Retry().OperatorUpdateRetryDelay().Set(operatorReconciliationRetry.delay)
+	globals.GetGlobals().Retry().OperatorUpdateRetryCount().Set(operatorReconciliationRetry.count)
 
 	globals.GetGlobals().Kubernetes().RequestBatchSize().Set(operatorKubernetesOptions.maxBatchSize)
 	globals.GetGlobals().Backup().ConcurrentUploads().Set(operatorBackup.concurrentUploads)

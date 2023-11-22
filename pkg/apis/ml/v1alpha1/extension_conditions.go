@@ -22,7 +22,6 @@ package v1alpha1
 
 import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 
-type ArangoMLExtensionStatus struct {
-	// Conditions specific to the entire extension
-	Conditions api.ConditionList `json:"conditions,omitempty"`
-}
+const (
+	ExtensionDeploymentFoundCondition api.ConditionType = "DeploymentFound"
+)

@@ -18,11 +18,32 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+package operator
 
-import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+import "fmt"
 
-type ArangoMLExtensionStatus struct {
-	// Conditions specific to the entire extension
-	Conditions api.ConditionList `json:"conditions,omitempty"`
+func Stop(msg string, args ...interface{}) error {
+	return stop{
+		message: fmt.Sprintf(msg, args...),
+	}
+}
+
+type stop struct {
+	message string
+}
+
+func (r stop) Error() string {
+	return r.message
+}
+
+func IsStop(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	if _, ok := err.(stop); ok {
+		return true
+	}
+
+	return false
 }
