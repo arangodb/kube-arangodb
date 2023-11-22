@@ -17,29 +17,19 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 
-//go:build !enterprise
-
 package license
 
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/assertion"
+	"github.com/stretchr/testify/mock"
 )
 
-func NewLicense(loader Loader) License {
-	return emptyLicense{}
+type MockLoader struct {
+	mock.Mock
 }
 
-type emptyLicense struct {
-}
-
-func (e emptyLicense) Refresh(ctx context.Context) error {
-	return nil
-}
-
-// Validate for the community returns that license is always missing, as it should be not used
-func (e emptyLicense) Validate(feature Feature, subFeatures ...Feature) Status {
-	assertion.Assert(true, assertion.CommunityLicenseCheckKey, "Feature %s has been validated in the community version", feature)
-	return StatusMissing
+func (m *MockLoader) Refresh(ctx context.Context) (string, bool, error) {
+	args := m.Called(ctx)
+	return args.String(0), args.Bool(1), args.Error(2)
 }

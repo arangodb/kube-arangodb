@@ -55,7 +55,7 @@ const (
 	// NotLicensed
 	StatusFeatureExpired
 
-	// StatusValid define state when  Operator should continue execution
+	// StatusValid define state when Operator should continue execution
 	// Licensed
 	StatusValid
 )
@@ -69,6 +69,29 @@ func (s Status) Validate(feature Feature, subFeatures ...Feature) Status {
 }
 
 type Feature string
+
+const (
+	// FeatureAll define feature name for all features
+	FeatureAll Feature = "*"
+
+	// FeatureArangoDB define feature name for ArangoDB
+	FeatureArangoDB Feature = "ArangoDB"
+
+	// FeatureArangoSearch define feature name for ArangoSearch
+	FeatureArangoSearch Feature = "ArangoSearch"
+
+	// FeatureArangoML define feature name for ArangoML
+	FeatureArangoML Feature = "ArangoML"
+)
+
+func (f Feature) IsContained(features []Feature) bool {
+	for _, v := range features {
+		if v == f {
+			return true
+		}
+	}
+	return false
+}
 
 type License interface {
 	// Validate validates the license scope. In case of:
@@ -84,5 +107,6 @@ type License interface {
 	// --- checks if subFeature or '*' is in the list of License Feature enabled SubFeatures
 	Validate(feature Feature, subFeatures ...Feature) Status
 
+	// Refresh refreshes the license from the source (Secret) and verifies the signature
 	Refresh(ctx context.Context) error
 }

@@ -32,7 +32,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
-func NewArengoDeploymentLicenseLoader(factory kclient.Factory, namespace, name string) Loader {
+func NewArangoDeploymentLicenseLoader(factory kclient.Factory, namespace, name string) Loader {
 	return arangoDeploymentLicenseLoader{
 		factory:   factory,
 		namespace: namespace,
