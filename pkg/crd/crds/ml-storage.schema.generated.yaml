@@ -2,6 +2,47 @@ v1alpha1:
   openAPIV3Schema:
     properties:
       spec:
+        properties:
+          listenPort:
+            description: ListenPort defines on which port the sidecar container will be listening for connections
+            format: int32
+            type: integer
+          resources:
+            description: Resources holds resource requests & limits for container running the S3 proxy
+            properties:
+              limits:
+                additionalProperties:
+                  type: string
+                type: object
+              requests:
+                additionalProperties:
+                  type: string
+                type: object
+            type: object
+          s3:
+            properties:
+              bucketName:
+                description: |-
+                  BucketName specifies the name of the bucket
+                  Required
+                type: string
+              credentialsSecret:
+                description: |-
+                  CredentialsSecretName specifies the name of the secret containing AccessKey and SecretKey for S3 API authorization
+                  Required
+                type: string
+              disableSSL:
+                description: DisableSSL if set to true, no certificate checks will be performed for Endpoint
+                type: boolean
+              endpoint:
+                description: |-
+                  Endpoint specifies the S3 API-compatible endpoint which implements storage
+                  Required
+                type: string
+              region:
+                description: Region defines the availability zone name. If empty, defaults to 'us-east-1'
+                type: string
+            type: object
         type: object
     type: object
     x-kubernetes-preserve-unknown-fields: true

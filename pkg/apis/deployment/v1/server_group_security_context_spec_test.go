@@ -29,6 +29,7 @@ import (
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
@@ -46,7 +47,7 @@ func TestServerGroupSpecSecurityContext_NewPodSecurityContext(t *testing.T) {
 			sc:      nil,
 			secured: true,
 			want: &core.PodSecurityContext{
-				FSGroup: util.NewType[int64](defaultFSGroup),
+				FSGroup: util.NewType[int64](shared.DefaultFSGroup),
 			},
 		},
 		"user secured pod security takes precedence": {
@@ -64,7 +65,7 @@ func TestServerGroupSpecSecurityContext_NewPodSecurityContext(t *testing.T) {
 			},
 			secured: true,
 			want: &core.PodSecurityContext{
-				FSGroup:            util.NewType[int64](defaultFSGroup),
+				FSGroup:            util.NewType[int64](shared.DefaultFSGroup),
 				SupplementalGroups: []int64{1},
 			},
 		},
@@ -168,9 +169,9 @@ func TestServerGroupSpecSecurityContext_NewSecurityContext(t *testing.T) {
 					Drop: []core.Capability{"ALL"},
 				},
 				ReadOnlyRootFilesystem: util.NewType(true),
-				RunAsGroup:             util.NewType[int64](defaultRunAsGroup),
+				RunAsGroup:             util.NewType[int64](shared.DefaultRunAsGroup),
 				RunAsNonRoot:           util.NewType(true),
-				RunAsUser:              util.NewType[int64](defaultRunAsUser),
+				RunAsUser:              util.NewType[int64](shared.DefaultRunAsUser),
 			},
 		},
 		"user unsecured context security": {
@@ -195,7 +196,7 @@ func TestServerGroupSpecSecurityContext_NewSecurityContext(t *testing.T) {
 					Drop: []core.Capability{"ALL"},
 				},
 				ReadOnlyRootFilesystem: util.NewType(true),
-				RunAsGroup:             util.NewType[int64](defaultRunAsGroup),
+				RunAsGroup:             util.NewType[int64](shared.DefaultRunAsGroup),
 				RunAsNonRoot:           util.NewType(true),
 				RunAsUser:              util.NewType[int64](3001),
 			},
@@ -219,7 +220,7 @@ func TestServerGroupSpecSecurityContext_NewSecurityContext(t *testing.T) {
 				},
 				Privileged:             util.NewType(false),
 				ReadOnlyRootFilesystem: util.NewType(true),
-				RunAsGroup:             util.NewType[int64](defaultRunAsGroup),
+				RunAsGroup:             util.NewType[int64](shared.DefaultRunAsGroup),
 				RunAsNonRoot:           util.NewType(false),
 				RunAsUser:              util.NewType[int64](3001),
 			},
