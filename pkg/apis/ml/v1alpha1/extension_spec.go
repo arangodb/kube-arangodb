@@ -20,5 +20,11 @@
 
 package v1alpha1
 
+import "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+
 type ArangoMLExtensionSpec struct {
+}
+
+func (a *ArangoMLExtensionSpec) Validate() error {
+	return shared.WithErrors(shared.PrefixResourceErrors("spec"))
 }

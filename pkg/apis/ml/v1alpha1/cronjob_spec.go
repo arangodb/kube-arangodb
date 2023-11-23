@@ -20,5 +20,11 @@
 
 package v1alpha1
 
+import "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+
 type ArangoMLCronJobSpec struct {
+}
+
+func (a *ArangoMLCronJobSpec) Validate() error {
+	return shared.WithErrors(shared.PrefixResourceErrors("spec"))
 }

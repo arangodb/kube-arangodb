@@ -20,5 +20,10 @@
 
 package v1alpha1
 
+import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+
 type ArangoMLBatchJobStatus struct {
+	// Conditions specific to the entire batch job
+	// +doc/type: api.Conditions
+	Conditions api.ConditionList `json:"conditions,omitempty"`
 }

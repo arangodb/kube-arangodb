@@ -36,3 +36,15 @@ func WithArangoBackupUpdateStatusInterfaceRetry(ctx context.Context, client Upda
 func WithArangoExtensionUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[mlApi.ArangoMLExtensionStatus, *mlApi.ArangoMLExtension], obj *mlApi.ArangoMLExtension, status mlApi.ArangoMLExtensionStatus, opts meta.UpdateOptions) (*mlApi.ArangoMLExtension, error) {
 	return WithUpdateStatusInterfaceRetry[mlApi.ArangoMLExtensionStatus, *mlApi.ArangoMLExtension](ctx, client, obj, status, opts)
 }
+
+func WithArangoCronJobUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[mlApi.ArangoMLCronJobStatus, *mlApi.ArangoMLCronJob], obj *mlApi.ArangoMLCronJob, status mlApi.ArangoMLCronJobStatus, opts meta.UpdateOptions) (*mlApi.ArangoMLCronJob, error) {
+	return WithUpdateStatusInterfaceRetry[mlApi.ArangoMLCronJobStatus, *mlApi.ArangoMLCronJob](ctx, client, obj, status, opts)
+}
+
+func WithArangoBatchJobUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[mlApi.ArangoMLBatchJobStatus, *mlApi.ArangoMLBatchJob], obj *mlApi.ArangoMLBatchJob, status mlApi.ArangoMLBatchJobStatus, opts meta.UpdateOptions) (*mlApi.ArangoMLBatchJob, error) {
+	return WithUpdateStatusInterfaceRetry[mlApi.ArangoMLBatchJobStatus, *mlApi.ArangoMLBatchJob](ctx, client, obj, status, opts)
+}
+
+func WithArangoStorageUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[mlApi.ArangoMLStorageStatus, *mlApi.ArangoMLStorage], obj *mlApi.ArangoMLStorage, status mlApi.ArangoMLStorageStatus, opts meta.UpdateOptions) (*mlApi.ArangoMLStorage, error) {
+	return WithUpdateStatusInterfaceRetry[mlApi.ArangoMLStorageStatus, *mlApi.ArangoMLStorage](ctx, client, obj, status, opts)
+}
