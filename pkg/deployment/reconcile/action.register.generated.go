@@ -78,21 +78,6 @@ var (
 	_ Action        = &actionEnableMemberMaintenance{}
 	_ actionFactory = newEnableMemberMaintenanceAction
 
-	_ Action        = &actionEncryptionKeyAdd{}
-	_ actionFactory = newEncryptionKeyAddAction
-
-	_ Action        = &actionEncryptionKeyPropagated{}
-	_ actionFactory = newEncryptionKeyPropagatedAction
-
-	_ Action        = &actionEncryptionKeyRefresh{}
-	_ actionFactory = newEncryptionKeyRefreshAction
-
-	_ Action        = &actionEncryptionKeyRemove{}
-	_ actionFactory = newEncryptionKeyRemoveAction
-
-	_ Action        = &actionEncryptionKeyStatusUpdate{}
-	_ actionFactory = newEncryptionKeyStatusUpdateAction
-
 	_ Action        = &actionEnforceResignLeadership{}
 	_ actionFactory = newEnforceResignLeadershipAction
 
@@ -535,12 +520,11 @@ func init() {
 	// EncryptionKeyAdd
 	{
 		// Get Action type
+		// nolint:staticcheck
 		action := api.ActionTypeEncryptionKeyAdd
 
-		// Get Action defition
-		function := newEncryptionKeyAddAction
-
-		// Wrap action main function
+		// Get Empty (Deprecated) Action Definition
+		function := newDeprecatedAction
 
 		// Register action
 		registerAction(action, function)
@@ -549,12 +533,11 @@ func init() {
 	// EncryptionKeyPropagated
 	{
 		// Get Action type
+		// nolint:staticcheck
 		action := api.ActionTypeEncryptionKeyPropagated
 
-		// Get Action defition
-		function := newEncryptionKeyPropagatedAction
-
-		// Wrap action main function
+		// Get Empty (Deprecated) Action Definition
+		function := newDeprecatedAction
 
 		// Register action
 		registerAction(action, function)
@@ -563,12 +546,11 @@ func init() {
 	// EncryptionKeyRefresh
 	{
 		// Get Action type
+		// nolint:staticcheck
 		action := api.ActionTypeEncryptionKeyRefresh
 
-		// Get Action defition
-		function := newEncryptionKeyRefreshAction
-
-		// Wrap action main function
+		// Get Empty (Deprecated) Action Definition
+		function := newDeprecatedAction
 
 		// Register action
 		registerAction(action, function)
@@ -577,12 +559,11 @@ func init() {
 	// EncryptionKeyRemove
 	{
 		// Get Action type
+		// nolint:staticcheck
 		action := api.ActionTypeEncryptionKeyRemove
 
-		// Get Action defition
-		function := newEncryptionKeyRemoveAction
-
-		// Wrap action main function
+		// Get Empty (Deprecated) Action Definition
+		function := newDeprecatedAction
 
 		// Register action
 		registerAction(action, function)
@@ -591,12 +572,11 @@ func init() {
 	// EncryptionKeyStatusUpdate
 	{
 		// Get Action type
+		// nolint:staticcheck
 		action := api.ActionTypeEncryptionKeyStatusUpdate
 
-		// Get Action defition
-		function := newEncryptionKeyStatusUpdateAction
-
-		// Wrap action main function
+		// Get Empty (Deprecated) Action Definition
+		function := newDeprecatedAction
 
 		// Register action
 		registerAction(action, function)

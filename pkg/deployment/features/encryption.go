@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ func init() {
 
 var encryptionRotation = &feature{
 	name:               "encryption-rotation",
-	description:        "Encryption Key rotation in runtime",
+	description:        "Encryption Key rotation in runtime. This is deprecated and will be disabled in future versions.",
 	version:            "3.7.0",
 	enterpriseRequired: true,
 	enabledByDefault:   false,

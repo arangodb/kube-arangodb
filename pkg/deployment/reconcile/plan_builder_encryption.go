@@ -71,12 +71,14 @@ func (r *Reconciler) createEncryptionKeyStatusPropagatedFieldUpdate(ctx context.
 		return nil
 	}
 
+	//nolint:staticcheck // SA1019 ignore this!
 	if len(plan) == 1 && plan[0].Type == api.ActionTypeEncryptionKeyPropagated {
 		return plan
 	}
 
 	if status.Hashes.Encryption.Propagated {
 		plan = append(api.Plan{
+			//nolint:staticcheck // SA1019 ignore this!
 			actions.NewClusterAction(api.ActionTypeEncryptionKeyPropagated, "Change propagated flag to false").AddParam(propagated, conditionFalse),
 		}, plan...)
 	}
@@ -119,6 +121,7 @@ func (r *Reconciler) createEncryptionKey(ctx context.Context, apiObject k8sutil.
 	if status.Hashes.Encryption.Propagated {
 		_, ok := keyfolder.Data[name]
 		if !ok {
+			//nolint:staticcheck // SA1019 ignore this!
 			return api.Plan{actions.NewClusterAction(api.ActionTypeEncryptionKeyAdd)}
 		}
 	}
@@ -130,6 +133,7 @@ func (r *Reconciler) createEncryptionKey(ctx context.Context, apiObject k8sutil.
 
 	if !failed && !status.Hashes.Encryption.Propagated {
 		return api.Plan{
+			//nolint:staticcheck // SA1019 ignore this!
 			actions.NewClusterAction(api.ActionTypeEncryptionKeyPropagated, "Change propagated flag to true").AddParam(propagated, conditionTrue),
 		}
 	}
@@ -145,6 +149,7 @@ func (r *Reconciler) createEncryptionKeyStatusUpdate(ctx context.Context, apiObj
 	}
 
 	if r.createEncryptionKeyStatusUpdateRequired(spec, status, context) {
+		//nolint:staticcheck // SA1019 ignore this!
 		return api.Plan{actions.NewClusterAction(api.ActionTypeEncryptionKeyStatusUpdate)}
 	}
 
@@ -213,6 +218,7 @@ func (r *Reconciler) createEncryptionKeyCleanPlan(ctx context.Context, apiObject
 
 	for key := range keyfolder.Data {
 		if key != name {
+			//nolint:staticcheck // SA1019 ignore this!
 			plan = append(plan, actions.NewClusterAction(api.ActionTypeEncryptionKeyRemove).AddParam("key", key))
 		}
 	}
@@ -236,6 +242,7 @@ func (r *Reconciler) areEncryptionKeysUpToDate(ctx context.Context, spec api.Dep
 				failed = true
 				continue
 			} else if updateRequired {
+				//nolint:staticcheck // SA1019 ignore this!
 				plan = append(plan, actions.NewAction(api.ActionTypeEncryptionKeyRefresh, group, shared.WithPredefinedMember(m.ID)))
 				continue
 			}

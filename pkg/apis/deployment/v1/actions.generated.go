@@ -342,18 +342,28 @@ const (
 	ActionTypeEnableMemberMaintenance ActionType = "EnableMemberMaintenance"
 
 	// ActionTypeEncryptionKeyAdd in scopes Normal. Add the encryption key to the pool
+	//
+	// Deprecated: action is not used anymore
 	ActionTypeEncryptionKeyAdd ActionType = "EncryptionKeyAdd"
 
 	// ActionTypeEncryptionKeyPropagated in scopes Normal. Update condition of encryption propagation
+	//
+	// Deprecated: action is not used anymore
 	ActionTypeEncryptionKeyPropagated ActionType = "EncryptionKeyPropagated"
 
 	// ActionTypeEncryptionKeyRefresh in scopes Normal. Refresh the encryption keys on member
+	//
+	// Deprecated: action is not used anymore
 	ActionTypeEncryptionKeyRefresh ActionType = "EncryptionKeyRefresh"
 
 	// ActionTypeEncryptionKeyRemove in scopes Normal. Remove the encryption key to the pool
+	//
+	// Deprecated: action is not used anymore
 	ActionTypeEncryptionKeyRemove ActionType = "EncryptionKeyRemove"
 
 	// ActionTypeEncryptionKeyStatusUpdate in scopes Normal. Update status of encryption propagation
+	//
+	// Deprecated: action is not used anymore
 	ActionTypeEncryptionKeyStatusUpdate ActionType = "EncryptionKeyStatusUpdate"
 
 	// ActionTypeEnforceResignLeadership in scopes Normal. Run the ResignLeadership job on DBServer and checks data compatibility after

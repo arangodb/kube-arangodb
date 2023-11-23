@@ -132,18 +132,23 @@ actions:
   EncryptionKeyAdd:
     enterprise: true
     description: Add the encryption key to the pool
+    deprecated: "action is not used anymore"
   EncryptionKeyRemove:
     enterprise: true
     description: Remove the encryption key to the pool
+    deprecated: "action is not used anymore"
   EncryptionKeyRefresh:
     enterprise: true
     description: Refresh the encryption keys on member
+    deprecated: "action is not used anymore"
   EncryptionKeyStatusUpdate:
     enterprise: true
     description: Update status of encryption propagation
+    deprecated: "action is not used anymore"
   EncryptionKeyPropagated:
     enterprise: true
     description: Update condition of encryption propagation
+    deprecated: "action is not used anymore"
   JWTStatusUpdate:
     enterprise: true
     description: Update status of JWT propagation
