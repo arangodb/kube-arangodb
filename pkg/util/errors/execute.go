@@ -18,12 +18,16 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+package errors
 
-import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+type WithErrorArrayP2[IN, P1, P2 any] func(p1 P1, p2 P2, in IN) error
 
-type ArangoMLExtensionStatus struct {
-	// Conditions specific to the entire extension
-	// +doc/type: api.Conditions
-	Conditions api.ConditionList `json:"conditions,omitempty"`
+func ExecuteWithErrorArrayP2[IN, P1, P2 any](caller WithErrorArrayP2[IN, P1, P2], p1 P1, p2 P2, elements ...IN) error {
+	errors := make([]error, len(elements))
+
+	for id := range elements {
+		errors[id] = caller(p1, p2, elements[id])
+	}
+
+	return Errors(errors...)
 }

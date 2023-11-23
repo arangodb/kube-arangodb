@@ -64,13 +64,7 @@ func deployments(logger zerolog.Logger, files chan<- shared.File) error {
 		return err
 	}
 
-	errDeployments := make([]error, len(deploymentList))
-
-	for id := range deploymentList {
-		errDeployments[id] = deployment(k, deploymentList[id], files)
-	}
-
-	if err := errors.Errors(errDeployments...); err != nil {
+	if err := errors.ExecuteWithErrorArrayP2(deployment, k, files, deploymentList...); err != nil {
 		logger.Err(err).Msgf("Error while collecting arango deployments")
 		return err
 	}
@@ -78,7 +72,7 @@ func deployments(logger zerolog.Logger, files chan<- shared.File) error {
 	return nil
 }
 
-func deployment(client kclient.Client, depl *api.ArangoDeployment, files chan<- shared.File) error {
+func deployment(client kclient.Client, files chan<- shared.File, depl *api.ArangoDeployment) error {
 	files <- shared.NewYAMLFile(fmt.Sprintf("kubernetes/arango/deployments/%s.yaml", depl.GetName()), func() ([]interface{}, error) {
 		return []interface{}{depl}, nil
 	})

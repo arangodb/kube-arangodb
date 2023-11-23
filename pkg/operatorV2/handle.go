@@ -22,38 +22,110 @@ package operator
 
 import "context"
 
-type HandleP0Func func(tx context.Context) error
+type HandleP0Func func(ctx context.Context) (bool, error)
 
-type HandleP1Func[P1 interface{}] func(tx context.Context, p1 P1) error
+type HandleP1Func[P1 interface{}] func(ctx context.Context, p1 P1) (bool, error)
 
-type HandleP2Func[P1, P2 interface{}] func(tx context.Context, p1 P1, p2 P2) error
+type HandleP2Func[P1, P2 interface{}] func(ctx context.Context, p1 P1, p2 P2) (bool, error)
 
-func HandleP0(ctx context.Context, handler ...HandleP0Func) error {
+type HandleP3Func[P1, P2, P3 interface{}] func(ctx context.Context, p1 P1, p2 P2, p3 P3) (bool, error)
+
+type HandleP4Func[P1, P2, P3, P4 interface{}] func(ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4) (bool, error)
+
+type HandleP9Func[P1, P2, P3, P4, P5, P6, P7, P8, P9 interface{}] func(ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, p6 P6, p7 P7, p8 P8, p9 P9) (bool, error)
+
+func HandleP0(ctx context.Context, handler ...HandleP0Func) (bool, error) {
+	isChanged := false
 	for _, h := range handler {
-		if err := h(ctx); err != nil {
-			return err
+		changed, err := h(ctx)
+		if changed {
+			isChanged = true
+		}
+
+		if err != nil {
+			return isChanged, err
 		}
 	}
 
-	return nil
+	return isChanged, nil
 }
 
-func HandleP1[P1 interface{}](ctx context.Context, p1 P1, handler ...HandleP1Func[P1]) error {
+func HandleP1[P1 interface{}](ctx context.Context, p1 P1, handler ...HandleP1Func[P1]) (bool, error) {
+	isChanged := false
 	for _, h := range handler {
-		if err := h(ctx, p1); err != nil {
-			return err
+		changed, err := h(ctx, p1)
+		if changed {
+			isChanged = true
+		}
+
+		if err != nil {
+			return isChanged, err
 		}
 	}
 
-	return nil
+	return isChanged, nil
 }
 
-func HandleP2[P1, P2 interface{}](ctx context.Context, p1 P1, p2 P2, handler ...HandleP2Func[P1, P2]) error {
+func HandleP2[P1, P2 interface{}](ctx context.Context, p1 P1, p2 P2, handler ...HandleP2Func[P1, P2]) (bool, error) {
+	isChanged := false
 	for _, h := range handler {
-		if err := h(ctx, p1, p2); err != nil {
-			return err
+		changed, err := h(ctx, p1, p2)
+		if changed {
+			isChanged = true
+		}
+
+		if err != nil {
+			return isChanged, err
 		}
 	}
 
-	return nil
+	return isChanged, nil
+}
+
+func HandleP3[P1, P2, P3 interface{}](ctx context.Context, p1 P1, p2 P2, p3 P3, handler ...HandleP3Func[P1, P2, P3]) (bool, error) {
+	isChanged := false
+	for _, h := range handler {
+		changed, err := h(ctx, p1, p2, p3)
+		if changed {
+			isChanged = true
+		}
+
+		if err != nil {
+			return isChanged, err
+		}
+	}
+
+	return isChanged, nil
+}
+
+func HandleP4[P1, P2, P3, P4 interface{}](ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, handler ...HandleP4Func[P1, P2, P3, P4]) (bool, error) {
+	isChanged := false
+	for _, h := range handler {
+		changed, err := h(ctx, p1, p2, p3, p4)
+		if changed {
+			isChanged = true
+		}
+
+		if err != nil {
+			return isChanged, err
+		}
+	}
+
+	return isChanged, nil
+}
+
+func HandleP9[P1, P2, P3, P4, P5, P6, P7, P8, P9 interface{}](ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, p6 P6, p7 P7, p8 P8, p9 P9, handler ...HandleP9Func[P1, P2, P3, P4, P5, P6, P7, P8, P9]) (bool, error) {
+	isChanged := false
+	for _, h := range handler {
+		changed, err := h(ctx, p1, p2, p3, p4, p5, p6, p7, p8, p9)
+		if changed {
+			isChanged = true
+		}
+
+		if err != nil {
+			return isChanged, err
+		}
+	}
+
+	return isChanged, nil
 }

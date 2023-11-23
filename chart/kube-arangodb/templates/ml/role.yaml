@@ -26,5 +26,13 @@ rules:
         - "arangomlstorages/status"
       verbs:
         - "*"
+    - apiGroups:
+        - "database.arangodb.com"
+      resources:
+        - "arangodeployments"
+      verbs:
+        - "get"
+        - "list"
+        - "watch"
 {{- end }}
 {{- end }}

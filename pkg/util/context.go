@@ -18,12 +18,22 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+package util
 
-import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+import (
+	"context"
+	"time"
 
-type ArangoMLExtensionStatus struct {
-	// Conditions specific to the entire extension
-	// +doc/type: api.Conditions
-	Conditions api.ConditionList `json:"conditions,omitempty"`
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+)
+
+func WithKubernetesContextTimeoutP2A2[P1, P2, A1, A2 interface{}](ctx context.Context, f func(context.Context, A1, A2) (P1, P2), a1 A1, a2 A2) (P1, P2) {
+	return WithContextTimeoutP2A2(ctx, globals.GetGlobals().Timeouts().Kubernetes().Get(), f, a1, a2)
+}
+
+func WithContextTimeoutP2A2[P1, P2, A1, A2 interface{}](ctx context.Context, timeout time.Duration, f func(context.Context, A1, A2) (P1, P2), a1 A1, a2 A2) (P1, P2) {
+	nCtx, c := context.WithTimeout(ctx, timeout)
+	defer c()
+
+	return f(nCtx, a1, a2)
 }

@@ -45,3 +45,11 @@ type ArangoMLExtension struct {
 	Spec   ArangoMLExtensionSpec   `json:"spec"`
 	Status ArangoMLExtensionStatus `json:"status"`
 }
+
+func (a *ArangoMLExtension) GetStatus() ArangoMLExtensionStatus {
+	return a.Status
+}
+
+func (a *ArangoMLExtension) SetStatus(status ArangoMLExtensionStatus) {
+	a.Status = status
+}
