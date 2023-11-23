@@ -27,14 +27,16 @@ import (
 	"github.com/stretchr/testify/require"
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
+	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 )
 
 func Test_ObjectNotFound(t *testing.T) {
 	// Arrange
 	handler := newFakeHandler()
 
-	i := newItem(operation.Add, "test", "test")
+	i := tests.NewItem(t, operation.Add, tests.NewMetaObject[*backupApi.ArangoBackup](t, "none", "none"))
 
 	actions := map[operation.Operation]bool{
 		operation.Add:    false,

@@ -28,17 +28,18 @@ import (
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
+	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 )
 
 func Test_State_None_Success(t *testing.T) {
 	// Arrange
 	handler, _ := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, _ := newObjectSet(backupApi.ArangoBackupStateNone)
+	obj, _ := newObjectSet(t, backupApi.ArangoBackupStateNone)
 
 	// Act
 	createArangoBackup(t, handler, obj)
-	require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
