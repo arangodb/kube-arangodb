@@ -24,5 +24,6 @@ import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 
 type ArangoMLExtensionStatus struct {
 	// Conditions specific to the entire extension
+	// +doc/type: api.Conditions
 	Conditions api.ConditionList `json:"conditions,omitempty"`
 }
