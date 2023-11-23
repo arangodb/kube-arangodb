@@ -26,7 +26,7 @@ func init() {
 
 var encryptionRotation = &feature{
 	name:               "encryption-rotation",
-	description:        "Encryption Key rotation in runtime",
+	description:        "Encryption Key rotation in runtime. This is deprecated and will be disabled in future versions.",
 	enterpriseRequired: true,
 	enabledByDefault:   false,
 	hidden:             true,

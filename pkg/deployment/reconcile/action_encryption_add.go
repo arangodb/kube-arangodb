@@ -18,6 +18,8 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
+// nolint
+// Ignore all linter warnings in this file - this file is deprecated and will be removed in 1.3.0
 package reconcile
 
 import (

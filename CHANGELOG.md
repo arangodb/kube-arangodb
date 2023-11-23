@@ -39,6 +39,7 @@
 - (Maintenance) Bump Kubernetes dependency to 1.31.2
 - (Documentation) Remove Interactive args for the DebugPackage command
 - (Maintenance) PropagationMode Enum docs
+- (Maintenance) Deprecate EncryptionKeyRotation feature and its related Actions
 
 ## [1.2.43](https://github.com/arangodb/kube-arangodb/tree/1.2.43) (2024-10-14)
 - (Feature) ArangoRoute CRD

@@ -227,51 +227,66 @@ func Test_Actions(t *testing.T) {
 	})
 
 	t.Run("EncryptionKeyAdd", func(t *testing.T) {
+		// nolint:staticcheck
 		ActionsExistence(t, api.ActionTypeEncryptionKeyAdd)
 		t.Run("Internal", func(t *testing.T) {
+			// nolint:staticcheck
 			require.False(t, api.ActionTypeEncryptionKeyAdd.Internal())
 		})
 		t.Run("Optional", func(t *testing.T) {
+			// nolint:staticcheck
 			require.False(t, api.ActionTypeEncryptionKeyAdd.Optional())
 		})
 	})
 
 	t.Run("EncryptionKeyPropagated", func(t *testing.T) {
+		// nolint:staticcheck
 		ActionsExistence(t, api.ActionTypeEncryptionKeyPropagated)
 		t.Run("Internal", func(t *testing.T) {
+			// nolint:staticcheck
 			require.False(t, api.ActionTypeEncryptionKeyPropagated.Internal())
 		})
 		t.Run("Optional", func(t *testing.T) {
+			// nolint:staticcheck
 			require.False(t, api.ActionTypeEncryptionKeyPropagated.Optional())
 		})
 	})
 
 	t.Run("EncryptionKeyRefresh", func(t *testing.T) {
+		// nolint:staticcheck
 		ActionsExistence(t, api.ActionTypeEncryptionKeyRefresh)
 		t.Run("Internal", func(t *testing.T) {
+			// nolint:staticcheck
 			require.False(t, api.ActionTypeEncryptionKeyRefresh.Internal())
 		})
 		t.Run("Optional", func(t *testing.T) {
+			// nolint:staticcheck
 			require.False(t, api.ActionTypeEncryptionKeyRefresh.Optional())
 		})
 	})
 
 	t.Run("EncryptionKeyRemove", func(t *testing.T) {
+		// nolint:staticcheck
 		ActionsExistence(t, api.ActionTypeEncryptionKeyRemove)
 		t.Run("Internal", func(t *testing.T) {
+			// nolint:staticcheck
 			require.False(t, api.ActionTypeEncryptionKeyRemove.Internal())
 		})
 		t.Run("Optional", func(t *testing.T) {
+			// nolint:staticcheck
 			require.False(t, api.ActionTypeEncryptionKeyRemove.Optional())
 		})
 	})
 
 	t.Run("EncryptionKeyStatusUpdate", func(t *testing.T) {
+		// nolint:staticcheck
 		ActionsExistence(t, api.ActionTypeEncryptionKeyStatusUpdate)
 		t.Run("Internal", func(t *testing.T) {
+			// nolint:staticcheck
 			require.False(t, api.ActionTypeEncryptionKeyStatusUpdate.Internal())
 		})
 		t.Run("Optional", func(t *testing.T) {
+			// nolint:staticcheck
 			require.False(t, api.ActionTypeEncryptionKeyStatusUpdate.Optional())
 		})
 	})
