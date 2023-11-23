@@ -65,6 +65,11 @@ const (
 	ExporterJWTVolumeMountDir       = "/secrets/exporter/jwt"
 	MasterJWTSecretVolumeMountDir   = "/secrets/master/jwt"
 
+	// Security constants
+	DefaultRunAsUser  = 1000
+	DefaultRunAsGroup = 2000
+	DefaultFSGroup    = 3000
+
 	ServerPortName   = "server"
 	ExporterPortName = "exporter"
 )
