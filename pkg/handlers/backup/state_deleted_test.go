@@ -28,19 +28,20 @@ import (
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
+	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 )
 
 func Test_State_Deleted(t *testing.T) {
 	// Arrange
 	handler, _ := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(backupApi.ArangoBackupStateDeleted)
+	obj, deployment := newObjectSet(t, backupApi.ArangoBackupStateDeleted)
 
 	// Act
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -52,7 +53,7 @@ func Test_State_Deleted_Recover(t *testing.T) {
 	// Arrange
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(backupApi.ArangoBackupStateDeleted)
+	obj, deployment := newObjectSet(t, backupApi.ArangoBackupStateDeleted)
 
 	createResponse, err := mock.Create()
 	require.NoError(t, err)
@@ -66,7 +67,7 @@ func Test_State_Deleted_Recover(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)

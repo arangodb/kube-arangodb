@@ -31,6 +31,7 @@ import (
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
+	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 )
 
 func Test_State_Uploading_Common(t *testing.T) {
@@ -43,7 +44,7 @@ func Test_State_Uploading_Success(t *testing.T) {
 	// Arrange
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(backupApi.ArangoBackupStateUploading)
+	obj, deployment := newObjectSet(t, backupApi.ArangoBackupStateUploading)
 
 	createResponse, err := mock.Create()
 	require.NoError(t, err)
@@ -69,7 +70,7 @@ func Test_State_Uploading_Success(t *testing.T) {
 	createArangoBackup(t, handler, obj)
 
 	t.Run("Restore percent", func(t *testing.T) {
-		require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
+		require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
@@ -84,7 +85,7 @@ func Test_State_Uploading_Success(t *testing.T) {
 			Progress: p,
 		}
 
-		require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
+		require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
@@ -98,7 +99,7 @@ func Test_State_Uploading_Success(t *testing.T) {
 			Completed: true,
 		}
 
-		require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
+		require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
@@ -114,7 +115,7 @@ func Test_State_Uploading_FailedUpload(t *testing.T) {
 	// Arrange
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(backupApi.ArangoBackupStateUploading)
+	obj, deployment := newObjectSet(t, backupApi.ArangoBackupStateUploading)
 
 	createResponse, err := mock.Create()
 	require.NoError(t, err)
@@ -141,7 +142,7 @@ func Test_State_Uploading_FailedUpload(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -157,7 +158,7 @@ func Test_StateUploading_FailedProgress(t *testing.T) {
 		progressError: error,
 	})
 
-	obj, deployment := newObjectSet(backupApi.ArangoBackupStateUploading)
+	obj, deployment := newObjectSet(t, backupApi.ArangoBackupStateUploading)
 
 	createResponse, err := mock.Create()
 	require.NoError(t, err)
@@ -182,7 +183,7 @@ func Test_StateUploading_FailedProgress(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.EqualError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)), error.Error())
+	require.EqualError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)), error.Error())
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -196,7 +197,7 @@ func Test_State_Uploading_TemporaryFailedProgress(t *testing.T) {
 		progressError: error,
 	})
 
-	obj, deployment := newObjectSet(backupApi.ArangoBackupStateUploading)
+	obj, deployment := newObjectSet(t, backupApi.ArangoBackupStateUploading)
 
 	createResponse, err := mock.Create()
 	require.NoError(t, err)
@@ -221,7 +222,7 @@ func Test_State_Uploading_TemporaryFailedProgress(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.EqualError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)), error.Error())
+	require.EqualError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)), error.Error())
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -237,7 +238,7 @@ func Test_State_Uploading_NotFoundProgress(t *testing.T) {
 		progressError: error,
 	})
 
-	obj, deployment := newObjectSet(backupApi.ArangoBackupStateUploading)
+	obj, deployment := newObjectSet(t, backupApi.ArangoBackupStateUploading)
 
 	createResponse, err := mock.Create()
 	require.NoError(t, err)
@@ -262,7 +263,7 @@ func Test_State_Uploading_NotFoundProgress(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -275,7 +276,7 @@ func Test_StateUploading_Abort_Success(t *testing.T) {
 	// Arrange
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(backupApi.ArangoBackupStateUploading)
+	obj, deployment := newObjectSet(t, backupApi.ArangoBackupStateUploading)
 
 	createResponse, err := mock.Create()
 	require.NoError(t, err)
@@ -296,7 +297,7 @@ func Test_StateUploading_Abort_Success(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -309,7 +310,7 @@ func Test_StateUploading_Abort_Fail(t *testing.T) {
 		abortError: newTemporaryErrorf("error"),
 	})
 
-	obj, deployment := newObjectSet(backupApi.ArangoBackupStateUploading)
+	obj, deployment := newObjectSet(t, backupApi.ArangoBackupStateUploading)
 
 	createResponse, err := mock.Create()
 	require.NoError(t, err)
@@ -330,7 +331,7 @@ func Test_StateUploading_Abort_Fail(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(context.Background(), newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
