@@ -19,6 +19,7 @@
 - (Maintenance) yamlfmt as CI Step
 - (Maintenance) Expose Context in OperatorV2 Item Handler 
 - (Feature) Improve K8S Mock for UT
+- (Feature) (ML) Introduce basic Conditions
 
 ## [1.2.35](https://github.com/arangodb/kube-arangodb/tree/1.2.35) (2023-11-06)
 - (Maintenance) Update go-driver to v1.6.0, update IsNotFound() checks

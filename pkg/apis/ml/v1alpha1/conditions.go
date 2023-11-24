@@ -20,11 +20,8 @@
 
 package v1alpha1
 
-import "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 
-type ArangoMLBatchJobSpec struct {
-}
-
-func (a *ArangoMLBatchJobSpec) Validate() error {
-	return shared.WithErrors(shared.PrefixResourceErrors("spec"))
-}
+const (
+	SpecValidCondition api.ConditionType = "SpecValid"
+)

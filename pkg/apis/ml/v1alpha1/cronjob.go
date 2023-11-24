@@ -45,3 +45,11 @@ type ArangoMLCronJob struct {
 	Spec   ArangoMLCronJobSpec   `json:"spec"`
 	Status ArangoMLCronJobStatus `json:"status"`
 }
+
+func (a *ArangoMLCronJob) GetStatus() ArangoMLCronJobStatus {
+	return a.Status
+}
+
+func (a *ArangoMLCronJob) SetStatus(status ArangoMLCronJobStatus) {
+	a.Status = status
+}

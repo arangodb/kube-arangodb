@@ -45,3 +45,11 @@ type ArangoMLStorage struct {
 	Spec   ArangoMLStorageSpec   `json:"spec"`
 	Status ArangoMLStorageStatus `json:"status"`
 }
+
+func (a *ArangoMLStorage) GetStatus() ArangoMLStorageStatus {
+	return a.Status
+}
+
+func (a *ArangoMLStorage) SetStatus(status ArangoMLStorageStatus) {
+	a.Status = status
+}

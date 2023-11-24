@@ -45,3 +45,11 @@ type ArangoMLBatchJob struct {
 	Spec   ArangoMLBatchJobSpec   `json:"spec"`
 	Status ArangoMLBatchJobStatus `json:"status"`
 }
+
+func (a *ArangoMLBatchJob) GetStatus() ArangoMLBatchJobStatus {
+	return a.Status
+}
+
+func (a *ArangoMLBatchJob) SetStatus(status ArangoMLBatchJobStatus) {
+	a.Status = status
+}
