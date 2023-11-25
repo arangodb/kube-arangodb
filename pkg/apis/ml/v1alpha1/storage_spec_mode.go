@@ -22,29 +22,16 @@ package v1alpha1
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-type ArangoMLStorageSpec struct {
-	Mode    *ArangoMLStorageSpecMode    `json:"mode,omitempty"`
-	Backend *ArangoMLStorageSpecBackend `json:"backend,omitempty"`
+type ArangoMLStorageSpecMode struct {
+	Sidecar *ArangoMLStorageSpecModeSidecar `json:"sidecar,omitempty"`
 }
 
-func (s *ArangoMLStorageSpec) Validate() error {
+func (s *ArangoMLStorageSpecMode) Validate() error {
 	if s == nil {
-		s = &ArangoMLStorageSpec{}
+		return errors.Newf("Mode is not defined")
 	}
-
-	if err := shared.WithErrors(
-		shared.PrefixResourceError("backend", s.Backend.Validate()),
-	); err != nil {
-		return err
-	}
-
-	if err := shared.WithErrors(shared.PrefixResourceErrors("spec",
-		shared.PrefixResourceError("mode", s.Mode.Validate()),
-	)); err != nil {
-		return err
-	}
-
-	return nil
+	return shared.WithErrors(shared.PrefixResourceError("sidecar", s.Sidecar.Validate()))
 }

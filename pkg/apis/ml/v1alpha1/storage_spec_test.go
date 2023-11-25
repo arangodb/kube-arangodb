@@ -25,23 +25,45 @@ import (
 
 	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 func Test_ArangoMLStorageSpec(t *testing.T) {
-	s := ArangoMLStorageSpec{
-		ListenPort: nil,
-		Resources:  core.ResourceRequirements{},
-		S3:         nil,
-	}
-	s.SetDefaults()
+	s := ArangoMLStorageSpec{}
 	require.Error(t, s.Validate())
 
-	s.S3 = &ArangoMLStorageS3Spec{
-		Endpoint:              "some-endpoint",
-		DisableSSL:            false,
-		Region:                "",
-		BucketName:            "test-bucket",
-		CredentialsSecretName: "some-secret",
+	s.Mode = &ArangoMLStorageSpecMode{}
+	s.Backend = &ArangoMLStorageSpecBackend{}
+	require.Error(t, s.Validate())
+
+	s.Mode.Sidecar = &ArangoMLStorageSpecModeSidecar{}
+	s.Backend.S3 = &ArangoMLStorageSpecBackendS3{
+		Endpoint:              util.NewType("http://test.s3.example.com"),
+		BucketName:            util.NewType("bucket"),
+		CredentialsSecretName: util.NewType("a-secret"),
 	}
 	require.NoError(t, s.Validate())
+
+	t.Run("default requests and limits assigned", func(t *testing.T) {
+		assignedRequirements := core.ResourceRequirements{
+			Requests: core.ResourceList{
+				core.ResourceCPU:    resource.MustParse("200m"),
+				core.ResourceMemory: resource.MustParse("200Mi"),
+			},
+		}
+		s.Mode.Sidecar.Resources = &assignedRequirements
+
+		expectedRequirements := core.ResourceRequirements{
+			Requests: assignedRequirements.Requests,
+			Limits: core.ResourceList{
+				core.ResourceCPU:    resource.MustParse("200m"),
+				core.ResourceMemory: resource.MustParse("200Mi"),
+			},
+		}
+
+		actualRequirements := s.Mode.Sidecar.GetResources()
+		require.Equal(t, expectedRequirements, actualRequirements)
+	})
 }

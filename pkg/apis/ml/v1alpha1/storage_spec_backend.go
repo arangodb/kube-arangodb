@@ -22,29 +22,21 @@ package v1alpha1
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-type ArangoMLStorageSpec struct {
-	Mode    *ArangoMLStorageSpecMode    `json:"mode,omitempty"`
-	Backend *ArangoMLStorageSpecBackend `json:"backend,omitempty"`
+type ArangoMLStorageSpecBackend struct {
+	S3 *ArangoMLStorageSpecBackendS3 `json:"s3,omitempty"`
 }
 
-func (s *ArangoMLStorageSpec) Validate() error {
+func (s *ArangoMLStorageSpecBackend) Validate() error {
 	if s == nil {
-		s = &ArangoMLStorageSpec{}
+		return errors.Newf("Backend is not specified")
 	}
 
-	if err := shared.WithErrors(
-		shared.PrefixResourceError("backend", s.Backend.Validate()),
-	); err != nil {
-		return err
+	if s.S3 == nil {
+		return errors.Newf("At least one backend needs to be defined")
 	}
 
-	if err := shared.WithErrors(shared.PrefixResourceErrors("spec",
-		shared.PrefixResourceError("mode", s.Mode.Validate()),
-	)); err != nil {
-		return err
-	}
-
-	return nil
+	return shared.WithErrors(shared.PrefixResourceError("s3", s.S3.Validate()))
 }
