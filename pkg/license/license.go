@@ -84,7 +84,7 @@ const (
 	FeatureArangoML Feature = "ArangoML"
 )
 
-func (f Feature) IsContained(features []Feature) bool {
+func (f Feature) In(features []Feature) bool {
 	for _, v := range features {
 		if v == f {
 			return true
