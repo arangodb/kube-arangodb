@@ -27,6 +27,7 @@ import (
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
@@ -49,9 +50,12 @@ func Test_ArangoMLStorageSpec(t *testing.T) {
 
 	require.Error(t, s.Backend.S3.Validate())
 	s.Backend.S3 = &ArangoMLStorageSpecBackendS3{
-		Endpoint:              util.NewType("http://test.s3.example.com"),
-		BucketName:            util.NewType("bucket"),
-		CredentialsSecretName: util.NewType("a-secret"),
+		Endpoint:   util.NewType("http://test.s3.example.com"),
+		BucketName: util.NewType("bucket"),
+		CredentialsSecret: &sharedApi.Object{
+			Name:      "a-secret",
+			Namespace: nil,
+		},
 	}
 	require.NoError(t, s.Validate())
 

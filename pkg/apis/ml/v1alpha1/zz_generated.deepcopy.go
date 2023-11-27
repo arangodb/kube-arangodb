@@ -27,6 +27,7 @@ package v1alpha1
 
 import (
 	v1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	sharedv1 "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	corev1 "k8s.io/api/core/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
@@ -452,20 +453,20 @@ func (in *ArangoMLStorageSpecBackendS3) DeepCopyInto(out *ArangoMLStorageSpecBac
 		*out = new(string)
 		**out = **in
 	}
-	if in.CredentialsSecretName != nil {
-		in, out := &in.CredentialsSecretName, &out.CredentialsSecretName
-		*out = new(string)
-		**out = **in
+	if in.CredentialsSecret != nil {
+		in, out := &in.CredentialsSecret, &out.CredentialsSecret
+		*out = new(sharedv1.Object)
+		(*in).DeepCopyInto(*out)
 	}
 	if in.AllowInsecure != nil {
 		in, out := &in.AllowInsecure, &out.AllowInsecure
 		*out = new(bool)
 		**out = **in
 	}
-	if in.CASecretName != nil {
-		in, out := &in.CASecretName, &out.CASecretName
-		*out = new(string)
-		**out = **in
+	if in.CASecret != nil {
+		in, out := &in.CASecret, &out.CASecret
+		*out = new(sharedv1.Object)
+		(*in).DeepCopyInto(*out)
 	}
 	if in.Region != nil {
 		in, out := &in.Region, &out.Region

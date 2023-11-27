@@ -24,6 +24,7 @@ import (
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -50,7 +51,7 @@ func (s *ArangoMLStorageSpecModeSidecar) Validate() error {
 		s = &ArangoMLStorageSpecModeSidecar{}
 	}
 	if s.GetListenPort() < 1 {
-		return errors.Newf("invalid listenPort value: must be positive")
+		return shared.PrefixResourceErrors("database", errors.Newf("must be positive"))
 	}
 	return nil
 }

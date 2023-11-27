@@ -17,25 +17,35 @@ v1alpha1:
                       BucketName specifies the name of the bucket
                       Required
                     type: string
-                  caSecretName:
+                  caSecret:
                     description: |-
-                      CASecretName if not empty, the given secret will be used to check the authenticity of Endpoint
-                      The specified `Secret`, must contain the following data fields:
+                      CASecret if not empty, the given Kubernetes Secret will be used to check the authenticity of Endpoint
+                      The specified Secret, must contain the following data fields:
                       - `ca.crt` PEM encoded public key of the CA certificate
                       - `ca.key` PEM encoded private key of the CA certificate
-                    type: string
-                  credentialsSecretName:
+                    properties:
+                      name:
+                        type: string
+                      namespace:
+                        type: string
+                    type: object
+                  credentialsSecret:
                     description: |-
-                      CredentialsSecretName specifies the name of the secret containing AccessKey and SecretKey for S3 API authorization
+                      CredentialsSecret specifies the Kubernetes Secret containing AccessKey and SecretKey for S3 API authorization
                       Required
-                    type: string
+                    properties:
+                      name:
+                        type: string
+                      namespace:
+                        type: string
+                    type: object
                   endpoint:
                     description: |-
                       Endpoint specifies the S3 API-compatible endpoint which implements storage
                       Required
                     type: string
                   region:
-                    description: Region defines the availability zone name. If empty, defaults to 'us-east-1'
+                    description: Region defines the availability zone name.
                     type: string
                 type: object
             type: object

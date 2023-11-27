@@ -24,6 +24,7 @@ import (
 	"net/url"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -34,19 +35,19 @@ type ArangoMLStorageSpecBackendS3 struct {
 	// BucketName specifies the name of the bucket
 	// Required
 	BucketName *string `json:"bucketName"`
-	// CredentialsSecretName specifies the name of the secret containing AccessKey and SecretKey for S3 API authorization
+	// CredentialsSecret specifies the Kubernetes Secret containing AccessKey and SecretKey for S3 API authorization
 	// Required
-	CredentialsSecretName *string `json:"credentialsSecretName"`
+	CredentialsSecret *sharedApi.Object `json:"credentialsSecret"`
 	// AllowInsecure if set to true, the Endpoint certificates won't be checked
 	// +doc/default: false
 	AllowInsecure *bool `json:"allowInsecure,omitempty"`
-	// CASecretName if not empty, the given secret will be used to check the authenticity of Endpoint
-	// The specified `Secret`, must contain the following data fields:
+	// CASecret if not empty, the given Kubernetes Secret will be used to check the authenticity of Endpoint
+	// The specified Secret, must contain the following data fields:
 	// - `ca.crt` PEM encoded public key of the CA certificate
 	// - `ca.key` PEM encoded private key of the CA certificate
-	// +doc/default: ""
-	CASecretName *string `json:"caSecretName,omitempty"`
-	// Region defines the availability zone name. If empty, defaults to 'us-east-1'
+	// +doc/default: nil
+	CASecret *sharedApi.Object `json:"caSecret,omitempty"`
+	// Region defines the availability zone name.
 	// +doc/default: ""
 	Region *string `json:"region,omitempty"`
 }
@@ -59,20 +60,23 @@ func (s *ArangoMLStorageSpecBackendS3) Validate() error {
 	var errs []error
 
 	if s.GetBucketName() == "" {
-		errs = append(errs, errors.New("bucketName must be not empty"))
+		errs = append(errs, shared.PrefixResourceErrors("bucketName", errors.New("must be not empty")))
 	}
 
 	if s.GetEndpoint() == "" {
-		errs = append(errs, errors.New("endpoint must be not empty"))
+		errs = append(errs, shared.PrefixResourceErrors("endpoint", errors.New("must be not empty")))
 	}
 
 	if _, err := url.Parse(s.GetEndpoint()); err != nil {
-		errs = append(errs, errors.Newf("invalid endpoint URL was provided: %s", err.Error()))
+		errs = append(errs, shared.PrefixResourceErrors("endpoint", errors.Newf("invalid URL: %s", err.Error())))
 	}
 
-	if s.GetCredentialsSecretName() == "" {
-		errs = append(errs, errors.New("credentialsSecretName must be not empty"))
+	errs = append(errs, shared.PrefixResourceErrors("credentialsSecret", s.GetCredentialsSecret().Validate()))
+
+	if caSecret := s.GetCASecret(); !caSecret.IsEmpty() {
+		errs = append(errs, shared.PrefixResourceErrors("caSecret", caSecret.Validate()))
 	}
+
 	return shared.WithErrors(errs...)
 }
 
@@ -90,11 +94,11 @@ func (s *ArangoMLStorageSpecBackendS3) GetBucketName() string {
 	return *s.BucketName
 }
 
-func (s *ArangoMLStorageSpecBackendS3) GetCredentialsSecretName() string {
-	if s == nil || s.CredentialsSecretName == nil {
-		return ""
+func (s *ArangoMLStorageSpecBackendS3) GetCredentialsSecret() *sharedApi.Object {
+	if s == nil || s.CredentialsSecret == nil {
+		return &sharedApi.Object{}
 	}
-	return *s.CredentialsSecretName
+	return s.CredentialsSecret
 }
 
 func (s *ArangoMLStorageSpecBackendS3) GetAllowInsecure() bool {
@@ -104,11 +108,11 @@ func (s *ArangoMLStorageSpecBackendS3) GetAllowInsecure() bool {
 	return *s.AllowInsecure
 }
 
-func (s *ArangoMLStorageSpecBackendS3) GetCASecretName() string {
-	if s == nil || s.CASecretName == nil {
-		return ""
+func (s *ArangoMLStorageSpecBackendS3) GetCASecret() *sharedApi.Object {
+	if s == nil || s.CASecret == nil {
+		return &sharedApi.Object{}
 	}
-	return *s.CASecretName
+	return s.CASecret
 }
 
 func (s *ArangoMLStorageSpecBackendS3) GetRegion() string {
