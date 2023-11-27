@@ -24,7 +24,6 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 type Object struct {
@@ -64,11 +63,9 @@ func (o *Object) Validate() error {
 	}
 
 	var errs []error
-	if o.Name == "" {
-		errs = append(errs, shared.PrefixResourceErrors("name", errors.New("must be not empty")))
-	}
-	if o.Namespace != nil && *o.Namespace == "" {
-		errs = append(errs, shared.PrefixResourceErrors("namespace", errors.New("must be nil or non-empty string")))
+	errs = append(errs, shared.PrefixResourceErrors("name", AsKubernetesResourceName(&o.Name).Validate()))
+	if o.Namespace != nil {
+		errs = append(errs, shared.PrefixResourceErrors("namespace", AsKubernetesResourceName(o.Namespace).Validate()))
 	}
 
 	return shared.WithErrors(errs...)
