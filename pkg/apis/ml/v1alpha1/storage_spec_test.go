@@ -33,12 +33,21 @@ import (
 func Test_ArangoMLStorageSpec(t *testing.T) {
 	s := ArangoMLStorageSpec{}
 	require.Error(t, s.Validate())
+	require.NotNil(t, s.GetMode())
+	require.NotNil(t, s.GetBackend())
 
+	require.NotNil(t, s.Mode.GetSidecar())
 	s.Mode = &ArangoMLStorageSpecMode{}
+
+	require.NotNil(t, s.Backend.GetS3())
 	s.Backend = &ArangoMLStorageSpecBackend{}
 	require.Error(t, s.Validate())
 
+	require.NotNil(t, s.Mode.Sidecar.GetListenPort())
+	require.NotNil(t, s.Mode.Sidecar.GetResources())
 	s.Mode.Sidecar = &ArangoMLStorageSpecModeSidecar{}
+
+	require.Error(t, s.Backend.S3.Validate())
 	s.Backend.S3 = &ArangoMLStorageSpecBackendS3{
 		Endpoint:              util.NewType("http://test.s3.example.com"),
 		BucketName:            util.NewType("bucket"),

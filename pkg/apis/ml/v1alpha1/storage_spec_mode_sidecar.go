@@ -27,6 +27,13 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
+var (
+	defaultRequestsCPU    = resource.MustParse("100m")
+	defaultRequestsMemory = resource.MustParse("100Mi")
+	defaultLimitsCPU      = resource.MustParse("200m")
+	defaultLimitsMemory   = resource.MustParse("200Mi")
+)
+
 type ArangoMLStorageSpecModeSidecar struct {
 	// ListenPort defines on which port the sidecar container will be listening for connections
 	// +doc/default: 9201
@@ -49,7 +56,7 @@ func (s *ArangoMLStorageSpecModeSidecar) Validate() error {
 }
 
 func (s *ArangoMLStorageSpecModeSidecar) GetListenPort() uint16 {
-	if s.ListenPort == nil {
+	if s == nil || s.ListenPort == nil {
 		return 9201
 	}
 	return *s.ListenPort
@@ -57,19 +64,19 @@ func (s *ArangoMLStorageSpecModeSidecar) GetListenPort() uint16 {
 
 func (s *ArangoMLStorageSpecModeSidecar) GetResources() core.ResourceRequirements {
 	var resources core.ResourceRequirements
-	if s.Resources != nil {
+	if s != nil && s.Resources != nil {
 		resources = *s.Resources
 	}
 
 	if len(resources.Requests) == 0 {
 		resources.Requests = make(core.ResourceList)
-		resources.Requests[core.ResourceCPU] = resource.MustParse("100m")
-		resources.Requests[core.ResourceMemory] = resource.MustParse("100Mi")
+		resources.Requests[core.ResourceCPU] = defaultRequestsCPU
+		resources.Requests[core.ResourceMemory] = defaultRequestsMemory
 	}
 	if len(resources.Limits) == 0 {
 		resources.Limits = make(core.ResourceList)
-		resources.Limits[core.ResourceCPU] = resource.MustParse("200m")
-		resources.Limits[core.ResourceMemory] = resource.MustParse("200Mi")
+		resources.Limits[core.ResourceCPU] = defaultLimitsCPU
+		resources.Limits[core.ResourceMemory] = defaultLimitsMemory
 	}
 	return resources
 }

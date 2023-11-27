@@ -23,6 +23,7 @@ package v1alpha1
 import (
 	"net/url"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -55,61 +56,63 @@ func (s *ArangoMLStorageSpecBackendS3) Validate() error {
 		s = &ArangoMLStorageSpecBackendS3{}
 	}
 
+	var errs []error
+
 	if s.GetBucketName() == "" {
-		return errors.New("bucketName must be not empty")
+		errs = append(errs, errors.New("bucketName must be not empty"))
 	}
 
 	if s.GetEndpoint() == "" {
-		return errors.New("endpoint must be not empty")
+		errs = append(errs, errors.New("endpoint must be not empty"))
 	}
 
 	if _, err := url.Parse(s.GetEndpoint()); err != nil {
-		return errors.Newf("invalid endpoint URL was provided: %s", err.Error())
+		errs = append(errs, errors.Newf("invalid endpoint URL was provided: %s", err.Error()))
 	}
 
 	if s.GetCredentialsSecretName() == "" {
-		return errors.New("credentialsSecretName must be not empty")
+		errs = append(errs, errors.New("credentialsSecretName must be not empty"))
 	}
-	return nil
+	return shared.WithErrors(errs...)
 }
 
 func (s *ArangoMLStorageSpecBackendS3) GetEndpoint() string {
-	if s.Endpoint == nil {
+	if s == nil || s.Endpoint == nil {
 		return ""
 	}
 	return *s.Endpoint
 }
 
 func (s *ArangoMLStorageSpecBackendS3) GetBucketName() string {
-	if s.BucketName == nil {
+	if s == nil || s.BucketName == nil {
 		return ""
 	}
 	return *s.BucketName
 }
 
 func (s *ArangoMLStorageSpecBackendS3) GetCredentialsSecretName() string {
-	if s.CredentialsSecretName == nil {
+	if s == nil || s.CredentialsSecretName == nil {
 		return ""
 	}
 	return *s.CredentialsSecretName
 }
 
 func (s *ArangoMLStorageSpecBackendS3) GetAllowInsecure() bool {
-	if s.AllowInsecure == nil {
+	if s == nil || s.AllowInsecure == nil {
 		return false
 	}
 	return *s.AllowInsecure
 }
 
 func (s *ArangoMLStorageSpecBackendS3) GetCASecretName() string {
-	if s.CASecretName == nil {
+	if s == nil || s.CASecretName == nil {
 		return ""
 	}
 	return *s.CASecretName
 }
 
 func (s *ArangoMLStorageSpecBackendS3) GetRegion() string {
-	if s.Region == nil {
+	if s == nil || s.Region == nil {
 		return ""
 	}
 	return *s.Region

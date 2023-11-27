@@ -26,7 +26,15 @@ import (
 )
 
 type ArangoMLStorageSpecBackend struct {
+	// S3 backend implements storage as a proxy to the provided S3 API endpoint
 	S3 *ArangoMLStorageSpecBackendS3 `json:"s3,omitempty"`
+}
+
+func (s *ArangoMLStorageSpecBackend) GetS3() *ArangoMLStorageSpecBackendS3 {
+	if s == nil || s.S3 == nil {
+		return &ArangoMLStorageSpecBackendS3{}
+	}
+	return s.S3
 }
 
 func (s *ArangoMLStorageSpecBackend) Validate() error {

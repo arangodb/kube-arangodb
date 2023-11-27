@@ -25,8 +25,24 @@ import (
 )
 
 type ArangoMLStorageSpec struct {
-	Mode    *ArangoMLStorageSpecMode    `json:"mode,omitempty"`
+	// Mode defines how storage implementation should be deployed
+	Mode *ArangoMLStorageSpecMode `json:"mode,omitempty"`
+	// Backed defines how storage is implemented
 	Backend *ArangoMLStorageSpecBackend `json:"backend,omitempty"`
+}
+
+func (s *ArangoMLStorageSpec) GetMode() *ArangoMLStorageSpecMode {
+	if s == nil || s.Mode == nil {
+		return &ArangoMLStorageSpecMode{}
+	}
+	return s.Mode
+}
+
+func (s *ArangoMLStorageSpec) GetBackend() *ArangoMLStorageSpecBackend {
+	if s == nil || s.Backend == nil {
+		return &ArangoMLStorageSpecBackend{}
+	}
+	return s.Backend
 }
 
 func (s *ArangoMLStorageSpec) Validate() error {
@@ -34,13 +50,8 @@ func (s *ArangoMLStorageSpec) Validate() error {
 		s = &ArangoMLStorageSpec{}
 	}
 
-	if err := shared.WithErrors(
-		shared.PrefixResourceError("backend", s.Backend.Validate()),
-	); err != nil {
-		return err
-	}
-
 	if err := shared.WithErrors(shared.PrefixResourceErrors("spec",
+		shared.PrefixResourceError("backend", s.Backend.Validate()),
 		shared.PrefixResourceError("mode", s.Mode.Validate()),
 	)); err != nil {
 		return err

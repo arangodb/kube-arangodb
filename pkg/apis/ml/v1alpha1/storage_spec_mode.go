@@ -26,7 +26,15 @@ import (
 )
 
 type ArangoMLStorageSpecMode struct {
+	// Sidecar mode runs the storage implementation as a sidecar
 	Sidecar *ArangoMLStorageSpecModeSidecar `json:"sidecar,omitempty"`
+}
+
+func (s *ArangoMLStorageSpecMode) GetSidecar() *ArangoMLStorageSpecModeSidecar {
+	if s == nil || s.Sidecar == nil {
+		return &ArangoMLStorageSpecModeSidecar{}
+	}
+	return s.Sidecar
 }
 
 func (s *ArangoMLStorageSpecMode) Validate() error {
