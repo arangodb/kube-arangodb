@@ -22,6 +22,8 @@ package v1alpha1
 
 import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/apis/ml"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -44,6 +46,18 @@ type ArangoMLCronJob struct {
 
 	Spec   ArangoMLCronJobSpec   `json:"spec"`
 	Status ArangoMLCronJobStatus `json:"status"`
+}
+
+// AsOwner creates an OwnerReference for the given CronJob
+func (d *ArangoMLCronJob) AsOwner() meta.OwnerReference {
+	trueVar := true
+	return meta.OwnerReference{
+		APIVersion: SchemeGroupVersion.String(),
+		Kind:       ml.ArangoMLCronJobResourceKind,
+		Name:       d.Name,
+		UID:        d.UID,
+		Controller: &trueVar,
+	}
 }
 
 func (a *ArangoMLCronJob) GetStatus() ArangoMLCronJobStatus {

@@ -27,6 +27,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/client-go/kubernetes"
@@ -38,8 +39,30 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/ml"
 	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
+
+func Handle(handler operator.Handler, item operation.Item) error {
+	return HandleWithMax(handler, item, 128)
+}
+
+func HandleWithMax(handler operator.Handler, item operation.Item, max int) error {
+	for i := 0; i < max; i++ {
+		if err := handler.Handle(context.Background(), item); err != nil {
+			if operator.IsReconcile(err) {
+				continue
+			}
+
+			return err
+		}
+
+		return nil
+	}
+
+	return errors.Newf("Max retries reached")
+}
 
 type KubernetesObject interface {
 	meta.Object
@@ -49,6 +72,12 @@ type KubernetesObject interface {
 func CreateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSet.Interface, objects ...interface{}) func(t *testing.T) {
 	for _, object := range objects {
 		switch v := object.(type) {
+		case **core.Secret:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := k8s.CoreV1().Secrets(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
+			require.NoError(t, err)
 		case **api.ArangoDeployment:
 			require.NotNil(t, v)
 
@@ -86,6 +115,15 @@ func CreateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 func RefreshObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSet.Interface, objects ...interface{}) {
 	for _, object := range objects {
 		switch v := object.(type) {
+		case **core.Secret:
+			require.NotNil(t, v)
+
+			vl := *v
+
+			vn, err := k8s.CoreV1().Secrets(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
+			require.NoError(t, err)
+
+			*v = vn
 		case **api.ArangoDeployment:
 			require.NotNil(t, v)
 
@@ -132,6 +170,12 @@ type MetaObjectMod[T meta.Object] func(t *testing.T, obj T)
 
 func SetMetaBasedOnType(t *testing.T, object meta.Object) {
 	switch v := object.(type) {
+	case *core.Secret:
+		v.Kind = "Secret"
+		v.APIVersion = "v1"
+		v.SetSelfLink(fmt.Sprintf("/api/v1/secrets/%s/%s",
+			object.GetNamespace(),
+			object.GetName()))
 	case *api.ArangoDeployment:
 		v.Kind = deployment.ArangoDeploymentResourceKind
 		v.APIVersion = api.SchemeGroupVersion.String()
@@ -200,6 +244,10 @@ func NewItem(t *testing.T, o operation.Operation, object meta.Object) operation.
 	}
 
 	switch v := object.(type) {
+	case *core.Secret:
+		item.Group = ""
+		item.Version = "v1"
+		item.Kind = "Secret"
 	case *api.ArangoDeployment:
 		item.Group = deployment.ArangoDeploymentGroupName
 		item.Version = api.ArangoDeploymentVersion

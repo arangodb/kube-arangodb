@@ -18,15 +18,32 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+package operator
 
-import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+import "fmt"
 
-type ArangoMLExtensionStatus struct {
-	// Conditions specific to the entire extension
-	// +doc/type: api.Conditions
-	Conditions api.ConditionList `json:"conditions,omitempty"`
+func Reconcile(msg string, args ...interface{}) error {
+	return reconcile{
+		message: fmt.Sprintf(msg, args...),
+	}
+}
 
-	// MetadataService keeps the MetadataService configuration
-	MetadataService *ArangoMLExtensionStatusMetadataService `json:"metadataService,omitempty"`
+type reconcile struct {
+	message string
+}
+
+func (r reconcile) Error() string {
+	return r.message
+}
+
+func IsReconcile(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	if _, ok := err.(reconcile); ok {
+		return true
+	}
+
+	return false
 }

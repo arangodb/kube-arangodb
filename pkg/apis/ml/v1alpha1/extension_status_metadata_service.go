@@ -20,13 +20,18 @@
 
 package v1alpha1
 
-import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+type ArangoMLExtensionStatusMetadataService struct {
+	// Local define the Local ArangoDeployment Metadata Service configuration
+	Local *ArangoMLExtensionStatusMetadataServiceLocal `json:"local,omitempty"`
 
-type ArangoMLExtensionStatus struct {
-	// Conditions specific to the entire extension
-	// +doc/type: api.Conditions
-	Conditions api.ConditionList `json:"conditions,omitempty"`
+	// Secret define the Secret specification to store all the details
+	Secret *Object `json:"secret,omitempty"`
+}
 
-	// MetadataService keeps the MetadataService configuration
-	MetadataService *ArangoMLExtensionStatusMetadataService `json:"metadataService,omitempty"`
+type ArangoMLExtensionStatusMetadataServiceLocal struct {
+	// ArangoPipeDatabase define Database name to be used as MetadataService Backend
+	ArangoPipeDatabase string `json:"arangoPipe"`
+
+	// ArangoMLFeatureStoreDatabase define Database name to be used as MetadataService Backend
+	ArangoMLFeatureStoreDatabase string `json:"arangoMLFeatureStore,omitempty"`
 }

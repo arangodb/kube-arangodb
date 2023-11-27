@@ -25,30 +25,38 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
+	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
 func NewMetaObjectRun[T meta.Object](t *testing.T) {
 	var obj T
 	t.Run(reflect.TypeOf(obj).String(), func(t *testing.T) {
-		c := kclient.NewFakeClient()
+		t.Run("Item", func(t *testing.T) {
+			NewItem(t, operation.Update, NewMetaObject[T](t, "test", "test"))
+		})
+		t.Run("K8S", func(t *testing.T) {
+			c := kclient.NewFakeClient()
 
-		obj := NewMetaObject[T](t, "test", "test")
+			obj := NewMetaObject[T](t, "test", "test")
 
-		require.NotNil(t, obj)
+			require.NotNil(t, obj)
 
-		refresh := CreateObjects(t, c.Kubernetes(), c.Arango(), &obj)
+			refresh := CreateObjects(t, c.Kubernetes(), c.Arango(), &obj)
 
-		refresh(t)
+			refresh(t)
+		})
 	})
 }
 
 func Test_NewMetaObject(t *testing.T) {
+	NewMetaObjectRun[*core.Secret](t)
 	NewMetaObjectRun[*api.ArangoDeployment](t)
 	NewMetaObjectRun[*api.ArangoClusterSynchronization](t)
 	NewMetaObjectRun[*backupApi.ArangoBackup](t)
