@@ -4,8 +4,10 @@ v1alpha1:
       spec:
         properties:
           backend:
+            description: Backend defines how storage is implemented
             properties:
               s3:
+                description: S3 backend implements storage as a proxy to the provided S3 API endpoint
                 properties:
                   allowInsecure:
                     description: AllowInsecure if set to true, the Endpoint certificates won't be checked
@@ -38,8 +40,10 @@ v1alpha1:
                 type: object
             type: object
           mode:
+            description: Mode defines how storage implementation should be deployed
             properties:
               sidecar:
+                description: Sidecar mode runs the storage implementation as a sidecar
                 properties:
                   listenPort:
                     description: ListenPort defines on which port the sidecar container will be listening for connections

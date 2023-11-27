@@ -4,7 +4,7 @@
 
 ### .spec.backend.s3.allowInsecure
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/storage_spec_backend_s3.go#L41)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/storage_spec_backend_s3.go#L42)</sup>
 
 AllowInsecure if set to true, the Endpoint certificates won't be checked
 
@@ -14,7 +14,7 @@ Default Value: `false`
 
 ### .spec.backend.s3.bucketName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/storage_spec_backend_s3.go#L35)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/storage_spec_backend_s3.go#L36)</sup>
 
 BucketName specifies the name of the bucket
 Required
@@ -23,7 +23,7 @@ Required
 
 ### .spec.backend.s3.caSecretName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/storage_spec_backend_s3.go#L47)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/storage_spec_backend_s3.go#L48)</sup>
 
 CASecretName if not empty, the given secret will be used to check the authenticity of Endpoint
 The specified `Secret`, must contain the following data fields:
@@ -36,7 +36,7 @@ Default Value: `""`
 
 ### .spec.backend.s3.credentialsSecretName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/storage_spec_backend_s3.go#L38)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/storage_spec_backend_s3.go#L39)</sup>
 
 CredentialsSecretName specifies the name of the secret containing AccessKey and SecretKey for S3 API authorization
 Required
@@ -45,7 +45,7 @@ Required
 
 ### .spec.backend.s3.endpoint
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/storage_spec_backend_s3.go#L32)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/storage_spec_backend_s3.go#L33)</sup>
 
 Endpoint specifies the S3 API-compatible endpoint which implements storage
 Required
@@ -54,7 +54,7 @@ Required
 
 ### .spec.backend.s3.region
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/storage_spec_backend_s3.go#L50)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/storage_spec_backend_s3.go#L51)</sup>
 
 Region defines the availability zone name. If empty, defaults to 'us-east-1'
 
@@ -64,7 +64,7 @@ Default Value: `""`
 
 ### .spec.mode.sidecar.listenPort
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/storage_spec_mode_sidecar.go#L33)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/storage_spec_mode_sidecar.go#L40)</sup>
 
 ListenPort defines on which port the sidecar container will be listening for connections
 
@@ -74,7 +74,7 @@ Default Value: `9201`
 
 ### .spec.mode.sidecar.resources
 
-Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/storage_spec_mode_sidecar.go#L38)</sup>
+Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/storage_spec_mode_sidecar.go#L45)</sup>
 
 Resources holds resource requests & limits for container running the S3 proxy
 

@@ -27,7 +27,7 @@ import (
 type ArangoMLStorageSpec struct {
 	// Mode defines how storage implementation should be deployed
 	Mode *ArangoMLStorageSpecMode `json:"mode,omitempty"`
-	// Backed defines how storage is implemented
+	// Backend defines how storage is implemented
 	Backend *ArangoMLStorageSpecBackend `json:"backend,omitempty"`
 }
 
