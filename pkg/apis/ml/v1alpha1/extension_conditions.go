@@ -23,7 +23,7 @@ package v1alpha1
 import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 
 const (
-	ExtensionDeploymentFoundCondition api.ConditionType = "DeploymentFound"
-
+	ExtensionDeploymentFoundCondition      api.ConditionType = "DeploymentFound"
 	ExtensionMetadataServiceValidCondition api.ConditionType = "MetadataServiceValid"
+	LicenseValidCondition                  api.ConditionType = "LicenseValid"
 )
