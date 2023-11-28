@@ -38,17 +38,6 @@ var (
 	DefaultImage = "arangodb/arangodb:latest"
 )
 
-// validatePullPolicy the image pull policy.
-// Return errors when validation fails, nil on success.
-func validatePullPolicy(v core.PullPolicy) error {
-	switch v {
-	case "", core.PullAlways, core.PullNever, core.PullIfNotPresent:
-		return nil
-	default:
-		return errors.WithStack(errors.Wrapf(ValidationError, "Unknown pull policy: '%s'", string(v)))
-	}
-}
-
 // DeploymentSpec contains the spec part of a ArangoDeployment resource.
 type DeploymentSpec struct {
 
@@ -509,11 +498,13 @@ func (s *DeploymentSpec) Validate() error {
 	if err := s.GetStorageEngine().Validate(); err != nil {
 		return errors.WithStack(errors.Wrap(err, "spec.storageEngine"))
 	}
-	if err := validatePullPolicy(s.GetImagePullPolicy()); err != nil {
-		return errors.WithStack(errors.Wrap(err, "spec.imagePullPolicy"))
-	}
-	if s.GetImage() == "" {
-		return errors.WithStack(errors.Wrapf(ValidationError, "spec.image must be set"))
+	if s != nil {
+		if err := shared.ValidateOptional(s.ImagePullPolicy, shared.ValidatePullPolicy); err != nil {
+			return errors.WithStack(errors.Wrap(err, "spec.imagePullPolicy"))
+		}
+		if err := shared.ValidateOptional(s.Image, shared.ValidateImage); err != nil {
+			return errors.WithStack(errors.Wrapf(err, "spec.image must be set"))
+		}
 	}
 	if err := s.ExternalAccess.Validate(); err != nil {
 		return errors.WithStack(errors.Wrap(err, "spec.externalAccess"))

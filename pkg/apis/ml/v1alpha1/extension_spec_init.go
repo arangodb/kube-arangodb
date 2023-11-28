@@ -20,12 +20,26 @@
 
 package v1alpha1
 
-import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-
-const (
-	ExtensionStorageFoundCondition         api.ConditionType = "StorageFound"
-	ExtensionDeploymentFoundCondition      api.ConditionType = "DeploymentFound"
-	ExtensionBootstrapCompletedCondition   api.ConditionType = "BootstrapCompleted"
-	ExtensionMetadataServiceValidCondition api.ConditionType = "MetadataServiceValid"
-	LicenseValidCondition                  api.ConditionType = "LicenseValid"
+import (
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 )
+
+type ArangoMLExtensionSpecInit struct {
+	// Image define default image used for the init job
+	*sharedApi.Image `json:",inline"`
+}
+
+func (a *ArangoMLExtensionSpecInit) GetImage() *sharedApi.Image {
+	if a == nil || a.Image == nil {
+		return nil
+	}
+
+	return a.Image
+}
+
+func (a *ArangoMLExtensionSpecInit) Validate() error {
+	return shared.WithErrors(
+		a.GetImage().Validate(),
+	)
+}

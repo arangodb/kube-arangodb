@@ -86,6 +86,12 @@ func CreateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			vl := *v
 			_, err := k8s.CoreV1().Secrets(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
 			require.NoError(t, err)
+		case **core.Pod:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := k8s.CoreV1().Pods(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
+			require.NoError(t, err)
 		case **api.ArangoDeployment:
 			require.NotNil(t, v)
 
@@ -134,6 +140,12 @@ func UpdateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 
 			vl := *v
 			_, err := k8s.BatchV1().Jobs(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **core.Pod:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := k8s.CoreV1().Pods(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
 			require.NoError(t, err)
 		case **core.Secret:
 			require.NotNil(t, v)
@@ -190,6 +202,21 @@ func RefreshObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientS
 			vl := *v
 
 			vn, err := k8s.BatchV1().Jobs(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
+			if err != nil {
+				if kerrors.IsNotFound(err) {
+					*v = nil
+				} else {
+					require.NoError(t, err)
+				}
+			} else {
+				*v = vn
+			}
+		case **core.Pod:
+			require.NotNil(t, v)
+
+			vl := *v
+
+			vn, err := k8s.CoreV1().Pods(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
 			if err != nil {
 				if kerrors.IsNotFound(err) {
 					*v = nil
@@ -305,6 +332,12 @@ func SetMetaBasedOnType(t *testing.T, object meta.Object) {
 		v.SetSelfLink(fmt.Sprintf("/api/batch/v1/jobs/%s/%s",
 			object.GetNamespace(),
 			object.GetName()))
+	case *core.Pod:
+		v.Kind = "Pod"
+		v.APIVersion = "v1"
+		v.SetSelfLink(fmt.Sprintf("/api/v1/Pods/%s/%s",
+			object.GetNamespace(),
+			object.GetName()))
 	case *core.Secret:
 		v.Kind = "Secret"
 		v.APIVersion = "v1"
@@ -391,6 +424,10 @@ func NewItem(t *testing.T, o operation.Operation, object meta.Object) operation.
 		item.Group = "batch"
 		item.Version = "v1"
 		item.Kind = "Job"
+	case *core.Pod:
+		item.Group = ""
+		item.Version = "v1"
+		item.Kind = "Pod"
 	case *core.Secret:
 		item.Group = ""
 		item.Version = "v1"
