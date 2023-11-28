@@ -21,8 +21,11 @@
 package operator
 
 import (
+	"context"
+
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 
 func (o *operator) worker() {
@@ -104,7 +107,12 @@ func (o *operator) processObject(obj interface{}) error {
 
 	if err = o.processItem(item); err != nil {
 		o.workqueue.AddRateLimited(key)
-		return errors.Newf("error syncing '%s': %s, re-queuing", key, err.Error())
+
+		if !IsReconcile(err) {
+			return errors.Newf("error syncing '%s': %s, re-queuing", key, err.Error())
+		}
+
+		return nil
 	}
 
 	loggerWorker.Trace("Processed Item Action: %s, Type: %s/%s/%s, Namespace: %s, Name: %s",
@@ -122,9 +130,16 @@ func (o *operator) processObject(obj interface{}) error {
 func (o *operator) processItem(item operation.Item) error {
 	for _, handler := range o.handlers {
 		if handler.CanBeHandled(item) {
-			return handler.Handle(item)
+			return o.processItemWithCTX(item, handler)
 		}
 	}
 
 	return nil
+}
+
+func (o *operator) processItemWithCTX(item operation.Item, handler Handler) error {
+	ctx, c := globals.GetGlobals().Timeouts().Reconciliation().WithTimeout(context.Background())
+	defer c()
+
+	return handler.Handle(ctx, item)
 }

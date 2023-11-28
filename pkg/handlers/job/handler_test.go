@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 package job
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -44,7 +45,7 @@ func Test_ObjectNotFound(t *testing.T) {
 	// Act
 	for operation, shouldFail := range actions {
 		t.Run(string(operation), func(t *testing.T) {
-			err := handler.Handle(i)
+			err := handler.Handle(context.Background(), i)
 
 			// Assert
 			if shouldFail {

@@ -438,7 +438,7 @@ Default Value: `2`
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_spec.go#L252)</sup>
 
 OldReadinessProbeDisabled if true readinessProbes are disabled
-Deprecated: This field is deprecated, keept only for backward compatibility.
+Deprecated: This field is deprecated, kept only for backward compatibility.
 
 ***
 
@@ -603,7 +603,7 @@ SchedulerName define scheduler name used for group
 
 ### .spec.agents.securityContext.addCapabilities
 
-Type: `[]core.Capability` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L46)</sup>
+Type: `[]core.Capability` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L41)</sup>
 
 AddCapabilities add new capabilities to containers
 
@@ -611,7 +611,7 @@ AddCapabilities add new capabilities to containers
 
 ### .spec.agents.securityContext.allowPrivilegeEscalation
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L49)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L44)</sup>
 
 AllowPrivilegeEscalation Controls whether a process can gain more privileges than its parent process.
 
@@ -619,7 +619,7 @@ AllowPrivilegeEscalation Controls whether a process can gain more privileges tha
 
 ### .spec.agents.securityContext.dropAllCapabilities
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L43)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L38)</sup>
 
 DropAllCapabilities specifies if capabilities should be dropped for this pod containers
 Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
@@ -628,7 +628,7 @@ Deprecated: This field is added for backward compatibility. Will be removed in 1
 
 ### .spec.agents.securityContext.fsGroup
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L66)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L61)</sup>
 
 FSGroup is a special supplemental group that applies to all containers in a pod.
 
@@ -636,7 +636,7 @@ FSGroup is a special supplemental group that applies to all containers in a pod.
 
 ### .spec.agents.securityContext.privileged
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L52)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L47)</sup>
 
 Privileged If true, runs container in privileged mode. Processes in privileged containers are
 essentially equivalent to root on the host.
@@ -645,7 +645,7 @@ essentially equivalent to root on the host.
 
 ### .spec.agents.securityContext.readOnlyRootFilesystem
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L54)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L49)</sup>
 
 ReadOnlyRootFilesystem if true, mounts the container's root filesystem as read-only.
 
@@ -653,7 +653,7 @@ ReadOnlyRootFilesystem if true, mounts the container's root filesystem as read-o
 
 ### .spec.agents.securityContext.runAsGroup
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L60)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L55)</sup>
 
 RunAsGroup is the GID to run the entrypoint of the container process.
 
@@ -661,7 +661,7 @@ RunAsGroup is the GID to run the entrypoint of the container process.
 
 ### .spec.agents.securityContext.runAsNonRoot
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L56)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L51)</sup>
 
 RunAsNonRoot if true, indicates that the container must run as a non-root user.
 
@@ -669,7 +669,7 @@ RunAsNonRoot if true, indicates that the container must run as a non-root user.
 
 ### .spec.agents.securityContext.runAsUser
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L58)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L53)</sup>
 
 RunAsUser is the UID to run the entrypoint of the container process.
 
@@ -677,7 +677,7 @@ RunAsUser is the UID to run the entrypoint of the container process.
 
 ### .spec.agents.securityContext.seccompProfile
 
-Type: `core.SeccompProfile` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L82)</sup>
+Type: `core.SeccompProfile` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L77)</sup>
 
 SeccompProfile defines a pod/container's seccomp profile settings. Only one profile source may be set.
 
@@ -688,7 +688,7 @@ Links:
 
 ### .spec.agents.securityContext.seLinuxOptions
 
-Type: `core.SELinuxOptions` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L87)</sup>
+Type: `core.SELinuxOptions` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L82)</sup>
 
 SELinuxOptions are the labels to be applied to the container
 
@@ -699,7 +699,7 @@ Links:
 
 ### .spec.agents.securityContext.supplementalGroups
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L64)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L59)</sup>
 
 SupplementalGroups is a list of groups applied to the first process run in each container, in addition to the container's primary GID,
 the fsGroup (if specified), and group memberships defined in the container image for the uid of the container process.
@@ -708,7 +708,7 @@ the fsGroup (if specified), and group memberships defined in the container image
 
 ### .spec.agents.securityContext.sysctls
 
-Type: `map[string]intstr.IntOrString` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L77)</sup>
+Type: `map[string]intstr.IntOrString` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L72)</sup>
 
 Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
 sysctls (by the container runtime) might fail to launch.
@@ -1486,7 +1486,7 @@ Default Value: `2`
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_spec.go#L252)</sup>
 
 OldReadinessProbeDisabled if true readinessProbes are disabled
-Deprecated: This field is deprecated, keept only for backward compatibility.
+Deprecated: This field is deprecated, kept only for backward compatibility.
 
 ***
 
@@ -1651,7 +1651,7 @@ SchedulerName define scheduler name used for group
 
 ### .spec.coordinators.securityContext.addCapabilities
 
-Type: `[]core.Capability` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L46)</sup>
+Type: `[]core.Capability` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L41)</sup>
 
 AddCapabilities add new capabilities to containers
 
@@ -1659,7 +1659,7 @@ AddCapabilities add new capabilities to containers
 
 ### .spec.coordinators.securityContext.allowPrivilegeEscalation
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L49)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L44)</sup>
 
 AllowPrivilegeEscalation Controls whether a process can gain more privileges than its parent process.
 
@@ -1667,7 +1667,7 @@ AllowPrivilegeEscalation Controls whether a process can gain more privileges tha
 
 ### .spec.coordinators.securityContext.dropAllCapabilities
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L43)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L38)</sup>
 
 DropAllCapabilities specifies if capabilities should be dropped for this pod containers
 Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
@@ -1676,7 +1676,7 @@ Deprecated: This field is added for backward compatibility. Will be removed in 1
 
 ### .spec.coordinators.securityContext.fsGroup
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L66)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L61)</sup>
 
 FSGroup is a special supplemental group that applies to all containers in a pod.
 
@@ -1684,7 +1684,7 @@ FSGroup is a special supplemental group that applies to all containers in a pod.
 
 ### .spec.coordinators.securityContext.privileged
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L52)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L47)</sup>
 
 Privileged If true, runs container in privileged mode. Processes in privileged containers are
 essentially equivalent to root on the host.
@@ -1693,7 +1693,7 @@ essentially equivalent to root on the host.
 
 ### .spec.coordinators.securityContext.readOnlyRootFilesystem
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L54)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L49)</sup>
 
 ReadOnlyRootFilesystem if true, mounts the container's root filesystem as read-only.
 
@@ -1701,7 +1701,7 @@ ReadOnlyRootFilesystem if true, mounts the container's root filesystem as read-o
 
 ### .spec.coordinators.securityContext.runAsGroup
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L60)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L55)</sup>
 
 RunAsGroup is the GID to run the entrypoint of the container process.
 
@@ -1709,7 +1709,7 @@ RunAsGroup is the GID to run the entrypoint of the container process.
 
 ### .spec.coordinators.securityContext.runAsNonRoot
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L56)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L51)</sup>
 
 RunAsNonRoot if true, indicates that the container must run as a non-root user.
 
@@ -1717,7 +1717,7 @@ RunAsNonRoot if true, indicates that the container must run as a non-root user.
 
 ### .spec.coordinators.securityContext.runAsUser
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L58)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L53)</sup>
 
 RunAsUser is the UID to run the entrypoint of the container process.
 
@@ -1725,7 +1725,7 @@ RunAsUser is the UID to run the entrypoint of the container process.
 
 ### .spec.coordinators.securityContext.seccompProfile
 
-Type: `core.SeccompProfile` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L82)</sup>
+Type: `core.SeccompProfile` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L77)</sup>
 
 SeccompProfile defines a pod/container's seccomp profile settings. Only one profile source may be set.
 
@@ -1736,7 +1736,7 @@ Links:
 
 ### .spec.coordinators.securityContext.seLinuxOptions
 
-Type: `core.SELinuxOptions` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L87)</sup>
+Type: `core.SELinuxOptions` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L82)</sup>
 
 SELinuxOptions are the labels to be applied to the container
 
@@ -1747,7 +1747,7 @@ Links:
 
 ### .spec.coordinators.securityContext.supplementalGroups
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L64)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L59)</sup>
 
 SupplementalGroups is a list of groups applied to the first process run in each container, in addition to the container's primary GID,
 the fsGroup (if specified), and group memberships defined in the container image for the uid of the container process.
@@ -1756,7 +1756,7 @@ the fsGroup (if specified), and group memberships defined in the container image
 
 ### .spec.coordinators.securityContext.sysctls
 
-Type: `map[string]intstr.IntOrString` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L77)</sup>
+Type: `map[string]intstr.IntOrString` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L72)</sup>
 
 Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
 sysctls (by the container runtime) might fail to launch.
@@ -2400,7 +2400,7 @@ Default Value: `2`
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_spec.go#L252)</sup>
 
 OldReadinessProbeDisabled if true readinessProbes are disabled
-Deprecated: This field is deprecated, keept only for backward compatibility.
+Deprecated: This field is deprecated, kept only for backward compatibility.
 
 ***
 
@@ -2565,7 +2565,7 @@ SchedulerName define scheduler name used for group
 
 ### .spec.dbservers.securityContext.addCapabilities
 
-Type: `[]core.Capability` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L46)</sup>
+Type: `[]core.Capability` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L41)</sup>
 
 AddCapabilities add new capabilities to containers
 
@@ -2573,7 +2573,7 @@ AddCapabilities add new capabilities to containers
 
 ### .spec.dbservers.securityContext.allowPrivilegeEscalation
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L49)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L44)</sup>
 
 AllowPrivilegeEscalation Controls whether a process can gain more privileges than its parent process.
 
@@ -2581,7 +2581,7 @@ AllowPrivilegeEscalation Controls whether a process can gain more privileges tha
 
 ### .spec.dbservers.securityContext.dropAllCapabilities
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L43)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L38)</sup>
 
 DropAllCapabilities specifies if capabilities should be dropped for this pod containers
 Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
@@ -2590,7 +2590,7 @@ Deprecated: This field is added for backward compatibility. Will be removed in 1
 
 ### .spec.dbservers.securityContext.fsGroup
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L66)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L61)</sup>
 
 FSGroup is a special supplemental group that applies to all containers in a pod.
 
@@ -2598,7 +2598,7 @@ FSGroup is a special supplemental group that applies to all containers in a pod.
 
 ### .spec.dbservers.securityContext.privileged
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L52)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L47)</sup>
 
 Privileged If true, runs container in privileged mode. Processes in privileged containers are
 essentially equivalent to root on the host.
@@ -2607,7 +2607,7 @@ essentially equivalent to root on the host.
 
 ### .spec.dbservers.securityContext.readOnlyRootFilesystem
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L54)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L49)</sup>
 
 ReadOnlyRootFilesystem if true, mounts the container's root filesystem as read-only.
 
@@ -2615,7 +2615,7 @@ ReadOnlyRootFilesystem if true, mounts the container's root filesystem as read-o
 
 ### .spec.dbservers.securityContext.runAsGroup
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L60)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L55)</sup>
 
 RunAsGroup is the GID to run the entrypoint of the container process.
 
@@ -2623,7 +2623,7 @@ RunAsGroup is the GID to run the entrypoint of the container process.
 
 ### .spec.dbservers.securityContext.runAsNonRoot
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L56)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L51)</sup>
 
 RunAsNonRoot if true, indicates that the container must run as a non-root user.
 
@@ -2631,7 +2631,7 @@ RunAsNonRoot if true, indicates that the container must run as a non-root user.
 
 ### .spec.dbservers.securityContext.runAsUser
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L58)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L53)</sup>
 
 RunAsUser is the UID to run the entrypoint of the container process.
 
@@ -2639,7 +2639,7 @@ RunAsUser is the UID to run the entrypoint of the container process.
 
 ### .spec.dbservers.securityContext.seccompProfile
 
-Type: `core.SeccompProfile` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L82)</sup>
+Type: `core.SeccompProfile` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L77)</sup>
 
 SeccompProfile defines a pod/container's seccomp profile settings. Only one profile source may be set.
 
@@ -2650,7 +2650,7 @@ Links:
 
 ### .spec.dbservers.securityContext.seLinuxOptions
 
-Type: `core.SELinuxOptions` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L87)</sup>
+Type: `core.SELinuxOptions` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L82)</sup>
 
 SELinuxOptions are the labels to be applied to the container
 
@@ -2661,7 +2661,7 @@ Links:
 
 ### .spec.dbservers.securityContext.supplementalGroups
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L64)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L59)</sup>
 
 SupplementalGroups is a list of groups applied to the first process run in each container, in addition to the container's primary GID,
 the fsGroup (if specified), and group memberships defined in the container image for the uid of the container process.
@@ -2670,7 +2670,7 @@ the fsGroup (if specified), and group memberships defined in the container image
 
 ### .spec.dbservers.securityContext.sysctls
 
-Type: `map[string]intstr.IntOrString` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L77)</sup>
+Type: `map[string]intstr.IntOrString` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L72)</sup>
 
 Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
 sysctls (by the container runtime) might fail to launch.
@@ -3049,7 +3049,7 @@ Links:
 
 ### .spec.id.securityContext.addCapabilities
 
-Type: `[]core.Capability` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L46)</sup>
+Type: `[]core.Capability` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L41)</sup>
 
 AddCapabilities add new capabilities to containers
 
@@ -3057,7 +3057,7 @@ AddCapabilities add new capabilities to containers
 
 ### .spec.id.securityContext.allowPrivilegeEscalation
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L49)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L44)</sup>
 
 AllowPrivilegeEscalation Controls whether a process can gain more privileges than its parent process.
 
@@ -3065,7 +3065,7 @@ AllowPrivilegeEscalation Controls whether a process can gain more privileges tha
 
 ### .spec.id.securityContext.dropAllCapabilities
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L43)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L38)</sup>
 
 DropAllCapabilities specifies if capabilities should be dropped for this pod containers
 Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
@@ -3074,7 +3074,7 @@ Deprecated: This field is added for backward compatibility. Will be removed in 1
 
 ### .spec.id.securityContext.fsGroup
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L66)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L61)</sup>
 
 FSGroup is a special supplemental group that applies to all containers in a pod.
 
@@ -3082,7 +3082,7 @@ FSGroup is a special supplemental group that applies to all containers in a pod.
 
 ### .spec.id.securityContext.privileged
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L52)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L47)</sup>
 
 Privileged If true, runs container in privileged mode. Processes in privileged containers are
 essentially equivalent to root on the host.
@@ -3091,7 +3091,7 @@ essentially equivalent to root on the host.
 
 ### .spec.id.securityContext.readOnlyRootFilesystem
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L54)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L49)</sup>
 
 ReadOnlyRootFilesystem if true, mounts the container's root filesystem as read-only.
 
@@ -3099,7 +3099,7 @@ ReadOnlyRootFilesystem if true, mounts the container's root filesystem as read-o
 
 ### .spec.id.securityContext.runAsGroup
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L60)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L55)</sup>
 
 RunAsGroup is the GID to run the entrypoint of the container process.
 
@@ -3107,7 +3107,7 @@ RunAsGroup is the GID to run the entrypoint of the container process.
 
 ### .spec.id.securityContext.runAsNonRoot
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L56)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L51)</sup>
 
 RunAsNonRoot if true, indicates that the container must run as a non-root user.
 
@@ -3115,7 +3115,7 @@ RunAsNonRoot if true, indicates that the container must run as a non-root user.
 
 ### .spec.id.securityContext.runAsUser
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L58)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L53)</sup>
 
 RunAsUser is the UID to run the entrypoint of the container process.
 
@@ -3123,7 +3123,7 @@ RunAsUser is the UID to run the entrypoint of the container process.
 
 ### .spec.id.securityContext.seccompProfile
 
-Type: `core.SeccompProfile` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L82)</sup>
+Type: `core.SeccompProfile` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L77)</sup>
 
 SeccompProfile defines a pod/container's seccomp profile settings. Only one profile source may be set.
 
@@ -3134,7 +3134,7 @@ Links:
 
 ### .spec.id.securityContext.seLinuxOptions
 
-Type: `core.SELinuxOptions` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L87)</sup>
+Type: `core.SELinuxOptions` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L82)</sup>
 
 SELinuxOptions are the labels to be applied to the container
 
@@ -3145,7 +3145,7 @@ Links:
 
 ### .spec.id.securityContext.supplementalGroups
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L64)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L59)</sup>
 
 SupplementalGroups is a list of groups applied to the first process run in each container, in addition to the container's primary GID,
 the fsGroup (if specified), and group memberships defined in the container image for the uid of the container process.
@@ -3154,7 +3154,7 @@ the fsGroup (if specified), and group memberships defined in the container image
 
 ### .spec.id.securityContext.sysctls
 
-Type: `map[string]intstr.IntOrString` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L77)</sup>
+Type: `map[string]intstr.IntOrString` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L72)</sup>
 
 Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
 sysctls (by the container runtime) might fail to launch.
@@ -3918,7 +3918,7 @@ Default Value: `2`
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_spec.go#L252)</sup>
 
 OldReadinessProbeDisabled if true readinessProbes are disabled
-Deprecated: This field is deprecated, keept only for backward compatibility.
+Deprecated: This field is deprecated, kept only for backward compatibility.
 
 ***
 
@@ -4083,7 +4083,7 @@ SchedulerName define scheduler name used for group
 
 ### .spec.single.securityContext.addCapabilities
 
-Type: `[]core.Capability` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L46)</sup>
+Type: `[]core.Capability` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L41)</sup>
 
 AddCapabilities add new capabilities to containers
 
@@ -4091,7 +4091,7 @@ AddCapabilities add new capabilities to containers
 
 ### .spec.single.securityContext.allowPrivilegeEscalation
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L49)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L44)</sup>
 
 AllowPrivilegeEscalation Controls whether a process can gain more privileges than its parent process.
 
@@ -4099,7 +4099,7 @@ AllowPrivilegeEscalation Controls whether a process can gain more privileges tha
 
 ### .spec.single.securityContext.dropAllCapabilities
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L43)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L38)</sup>
 
 DropAllCapabilities specifies if capabilities should be dropped for this pod containers
 Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
@@ -4108,7 +4108,7 @@ Deprecated: This field is added for backward compatibility. Will be removed in 1
 
 ### .spec.single.securityContext.fsGroup
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L66)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L61)</sup>
 
 FSGroup is a special supplemental group that applies to all containers in a pod.
 
@@ -4116,7 +4116,7 @@ FSGroup is a special supplemental group that applies to all containers in a pod.
 
 ### .spec.single.securityContext.privileged
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L52)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L47)</sup>
 
 Privileged If true, runs container in privileged mode. Processes in privileged containers are
 essentially equivalent to root on the host.
@@ -4125,7 +4125,7 @@ essentially equivalent to root on the host.
 
 ### .spec.single.securityContext.readOnlyRootFilesystem
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L54)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L49)</sup>
 
 ReadOnlyRootFilesystem if true, mounts the container's root filesystem as read-only.
 
@@ -4133,7 +4133,7 @@ ReadOnlyRootFilesystem if true, mounts the container's root filesystem as read-o
 
 ### .spec.single.securityContext.runAsGroup
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L60)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L55)</sup>
 
 RunAsGroup is the GID to run the entrypoint of the container process.
 
@@ -4141,7 +4141,7 @@ RunAsGroup is the GID to run the entrypoint of the container process.
 
 ### .spec.single.securityContext.runAsNonRoot
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L56)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L51)</sup>
 
 RunAsNonRoot if true, indicates that the container must run as a non-root user.
 
@@ -4149,7 +4149,7 @@ RunAsNonRoot if true, indicates that the container must run as a non-root user.
 
 ### .spec.single.securityContext.runAsUser
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L58)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L53)</sup>
 
 RunAsUser is the UID to run the entrypoint of the container process.
 
@@ -4157,7 +4157,7 @@ RunAsUser is the UID to run the entrypoint of the container process.
 
 ### .spec.single.securityContext.seccompProfile
 
-Type: `core.SeccompProfile` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L82)</sup>
+Type: `core.SeccompProfile` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L77)</sup>
 
 SeccompProfile defines a pod/container's seccomp profile settings. Only one profile source may be set.
 
@@ -4168,7 +4168,7 @@ Links:
 
 ### .spec.single.securityContext.seLinuxOptions
 
-Type: `core.SELinuxOptions` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L87)</sup>
+Type: `core.SELinuxOptions` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L82)</sup>
 
 SELinuxOptions are the labels to be applied to the container
 
@@ -4179,7 +4179,7 @@ Links:
 
 ### .spec.single.securityContext.supplementalGroups
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L64)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L59)</sup>
 
 SupplementalGroups is a list of groups applied to the first process run in each container, in addition to the container's primary GID,
 the fsGroup (if specified), and group memberships defined in the container image for the uid of the container process.
@@ -4188,7 +4188,7 @@ the fsGroup (if specified), and group memberships defined in the container image
 
 ### .spec.single.securityContext.sysctls
 
-Type: `map[string]intstr.IntOrString` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L77)</sup>
+Type: `map[string]intstr.IntOrString` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L72)</sup>
 
 Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
 sysctls (by the container runtime) might fail to launch.
@@ -5033,7 +5033,7 @@ Default Value: `2`
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_spec.go#L252)</sup>
 
 OldReadinessProbeDisabled if true readinessProbes are disabled
-Deprecated: This field is deprecated, keept only for backward compatibility.
+Deprecated: This field is deprecated, kept only for backward compatibility.
 
 ***
 
@@ -5198,7 +5198,7 @@ SchedulerName define scheduler name used for group
 
 ### .spec.syncmasters.securityContext.addCapabilities
 
-Type: `[]core.Capability` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L46)</sup>
+Type: `[]core.Capability` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L41)</sup>
 
 AddCapabilities add new capabilities to containers
 
@@ -5206,7 +5206,7 @@ AddCapabilities add new capabilities to containers
 
 ### .spec.syncmasters.securityContext.allowPrivilegeEscalation
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L49)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L44)</sup>
 
 AllowPrivilegeEscalation Controls whether a process can gain more privileges than its parent process.
 
@@ -5214,7 +5214,7 @@ AllowPrivilegeEscalation Controls whether a process can gain more privileges tha
 
 ### .spec.syncmasters.securityContext.dropAllCapabilities
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L43)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L38)</sup>
 
 DropAllCapabilities specifies if capabilities should be dropped for this pod containers
 Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
@@ -5223,7 +5223,7 @@ Deprecated: This field is added for backward compatibility. Will be removed in 1
 
 ### .spec.syncmasters.securityContext.fsGroup
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L66)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L61)</sup>
 
 FSGroup is a special supplemental group that applies to all containers in a pod.
 
@@ -5231,7 +5231,7 @@ FSGroup is a special supplemental group that applies to all containers in a pod.
 
 ### .spec.syncmasters.securityContext.privileged
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L52)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L47)</sup>
 
 Privileged If true, runs container in privileged mode. Processes in privileged containers are
 essentially equivalent to root on the host.
@@ -5240,7 +5240,7 @@ essentially equivalent to root on the host.
 
 ### .spec.syncmasters.securityContext.readOnlyRootFilesystem
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L54)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L49)</sup>
 
 ReadOnlyRootFilesystem if true, mounts the container's root filesystem as read-only.
 
@@ -5248,7 +5248,7 @@ ReadOnlyRootFilesystem if true, mounts the container's root filesystem as read-o
 
 ### .spec.syncmasters.securityContext.runAsGroup
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L60)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L55)</sup>
 
 RunAsGroup is the GID to run the entrypoint of the container process.
 
@@ -5256,7 +5256,7 @@ RunAsGroup is the GID to run the entrypoint of the container process.
 
 ### .spec.syncmasters.securityContext.runAsNonRoot
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L56)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L51)</sup>
 
 RunAsNonRoot if true, indicates that the container must run as a non-root user.
 
@@ -5264,7 +5264,7 @@ RunAsNonRoot if true, indicates that the container must run as a non-root user.
 
 ### .spec.syncmasters.securityContext.runAsUser
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L58)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L53)</sup>
 
 RunAsUser is the UID to run the entrypoint of the container process.
 
@@ -5272,7 +5272,7 @@ RunAsUser is the UID to run the entrypoint of the container process.
 
 ### .spec.syncmasters.securityContext.seccompProfile
 
-Type: `core.SeccompProfile` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L82)</sup>
+Type: `core.SeccompProfile` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L77)</sup>
 
 SeccompProfile defines a pod/container's seccomp profile settings. Only one profile source may be set.
 
@@ -5283,7 +5283,7 @@ Links:
 
 ### .spec.syncmasters.securityContext.seLinuxOptions
 
-Type: `core.SELinuxOptions` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L87)</sup>
+Type: `core.SELinuxOptions` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L82)</sup>
 
 SELinuxOptions are the labels to be applied to the container
 
@@ -5294,7 +5294,7 @@ Links:
 
 ### .spec.syncmasters.securityContext.supplementalGroups
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L64)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L59)</sup>
 
 SupplementalGroups is a list of groups applied to the first process run in each container, in addition to the container's primary GID,
 the fsGroup (if specified), and group memberships defined in the container image for the uid of the container process.
@@ -5303,7 +5303,7 @@ the fsGroup (if specified), and group memberships defined in the container image
 
 ### .spec.syncmasters.securityContext.sysctls
 
-Type: `map[string]intstr.IntOrString` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L77)</sup>
+Type: `map[string]intstr.IntOrString` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L72)</sup>
 
 Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
 sysctls (by the container runtime) might fail to launch.
@@ -5939,7 +5939,7 @@ Default Value: `2`
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_spec.go#L252)</sup>
 
 OldReadinessProbeDisabled if true readinessProbes are disabled
-Deprecated: This field is deprecated, keept only for backward compatibility.
+Deprecated: This field is deprecated, kept only for backward compatibility.
 
 ***
 
@@ -6104,7 +6104,7 @@ SchedulerName define scheduler name used for group
 
 ### .spec.syncworkers.securityContext.addCapabilities
 
-Type: `[]core.Capability` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L46)</sup>
+Type: `[]core.Capability` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L41)</sup>
 
 AddCapabilities add new capabilities to containers
 
@@ -6112,7 +6112,7 @@ AddCapabilities add new capabilities to containers
 
 ### .spec.syncworkers.securityContext.allowPrivilegeEscalation
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L49)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L44)</sup>
 
 AllowPrivilegeEscalation Controls whether a process can gain more privileges than its parent process.
 
@@ -6120,7 +6120,7 @@ AllowPrivilegeEscalation Controls whether a process can gain more privileges tha
 
 ### .spec.syncworkers.securityContext.dropAllCapabilities
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L43)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L38)</sup>
 
 DropAllCapabilities specifies if capabilities should be dropped for this pod containers
 Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
@@ -6129,7 +6129,7 @@ Deprecated: This field is added for backward compatibility. Will be removed in 1
 
 ### .spec.syncworkers.securityContext.fsGroup
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L66)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L61)</sup>
 
 FSGroup is a special supplemental group that applies to all containers in a pod.
 
@@ -6137,7 +6137,7 @@ FSGroup is a special supplemental group that applies to all containers in a pod.
 
 ### .spec.syncworkers.securityContext.privileged
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L52)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L47)</sup>
 
 Privileged If true, runs container in privileged mode. Processes in privileged containers are
 essentially equivalent to root on the host.
@@ -6146,7 +6146,7 @@ essentially equivalent to root on the host.
 
 ### .spec.syncworkers.securityContext.readOnlyRootFilesystem
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L54)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L49)</sup>
 
 ReadOnlyRootFilesystem if true, mounts the container's root filesystem as read-only.
 
@@ -6154,7 +6154,7 @@ ReadOnlyRootFilesystem if true, mounts the container's root filesystem as read-o
 
 ### .spec.syncworkers.securityContext.runAsGroup
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L60)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L55)</sup>
 
 RunAsGroup is the GID to run the entrypoint of the container process.
 
@@ -6162,7 +6162,7 @@ RunAsGroup is the GID to run the entrypoint of the container process.
 
 ### .spec.syncworkers.securityContext.runAsNonRoot
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L56)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L51)</sup>
 
 RunAsNonRoot if true, indicates that the container must run as a non-root user.
 
@@ -6170,7 +6170,7 @@ RunAsNonRoot if true, indicates that the container must run as a non-root user.
 
 ### .spec.syncworkers.securityContext.runAsUser
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L58)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L53)</sup>
 
 RunAsUser is the UID to run the entrypoint of the container process.
 
@@ -6178,7 +6178,7 @@ RunAsUser is the UID to run the entrypoint of the container process.
 
 ### .spec.syncworkers.securityContext.seccompProfile
 
-Type: `core.SeccompProfile` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L82)</sup>
+Type: `core.SeccompProfile` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L77)</sup>
 
 SeccompProfile defines a pod/container's seccomp profile settings. Only one profile source may be set.
 
@@ -6189,7 +6189,7 @@ Links:
 
 ### .spec.syncworkers.securityContext.seLinuxOptions
 
-Type: `core.SELinuxOptions` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L87)</sup>
+Type: `core.SELinuxOptions` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L82)</sup>
 
 SELinuxOptions are the labels to be applied to the container
 
@@ -6200,7 +6200,7 @@ Links:
 
 ### .spec.syncworkers.securityContext.supplementalGroups
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L64)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L59)</sup>
 
 SupplementalGroups is a list of groups applied to the first process run in each container, in addition to the container's primary GID,
 the fsGroup (if specified), and group memberships defined in the container image for the uid of the container process.
@@ -6209,7 +6209,7 @@ the fsGroup (if specified), and group memberships defined in the container image
 
 ### .spec.syncworkers.securityContext.sysctls
 
-Type: `map[string]intstr.IntOrString` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L77)</sup>
+Type: `map[string]intstr.IntOrString` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_group_security_context_spec.go#L72)</sup>
 
 Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
 sysctls (by the container runtime) might fail to launch.

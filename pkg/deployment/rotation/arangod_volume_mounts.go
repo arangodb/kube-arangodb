@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,17 +27,18 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util/compare"
 )
 
-func compareServerContainerVolumeMounts(ds api.DeploymentSpec, g api.ServerGroup, spec, status *core.Container) comparePodContainerFunc {
-	return func(builder api.ActionBuilder) (mode Mode, plan api.Plan, err error) {
+func compareServerContainerVolumeMounts(ds api.DeploymentSpec, g api.ServerGroup, spec, status *core.Container) compare.Func {
+	return func(builder api.ActionBuilder) (mode compare.Mode, plan api.Plan, err error) {
 		specV := mapVolumeMounts(spec)
 		statusV := mapVolumeMounts(status)
 
 		diff := getVolumeMountsDiffFromPods(specV, statusV)
 
 		if len(diff) == 0 {
-			return SkippedRotation, nil, nil
+			return compare.SkippedRotation, nil, nil
 		}
 
 		for k, v := range diff {
@@ -46,34 +47,34 @@ func compareServerContainerVolumeMounts(ds api.DeploymentSpec, g api.ServerGroup
 				// We are fine, should be just replaced
 				if v.a == nil {
 					// we remove volume
-					return GracefulRotation, nil, nil
+					return compare.GracefulRotation, nil, nil
 				}
 
 				if ds.Mode.Get().ServingGroup() == g {
 					// Always enforce on serving group
-					return GracefulRotation, nil, nil
+					return compare.GracefulRotation, nil, nil
 				}
 			case shared.LifecycleVolumeName:
 				// Do nothing
 			default:
-				return GracefulRotation, nil, nil
+				return compare.GracefulRotation, nil, nil
 			}
 		}
 
 		status.VolumeMounts = spec.VolumeMounts
-		return SilentRotation, nil, nil
+		return compare.SilentRotation, nil, nil
 	}
 }
 
-func compareAnyContainerVolumeMounts(ds api.DeploymentSpec, g api.ServerGroup, spec, status *core.Container) comparePodContainerFunc {
-	return func(builder api.ActionBuilder) (mode Mode, plan api.Plan, err error) {
+func compareAnyContainerVolumeMounts(ds api.DeploymentSpec, g api.ServerGroup, spec, status *core.Container) compare.Func {
+	return func(builder api.ActionBuilder) (mode compare.Mode, plan api.Plan, err error) {
 		specV := mapVolumeMounts(spec)
 		statusV := mapVolumeMounts(status)
 
 		diff := getVolumeMountsDiffFromPods(specV, statusV)
 
 		if len(diff) == 0 {
-			return SkippedRotation, nil, nil
+			return compare.SkippedRotation, nil, nil
 		}
 
 		for k := range diff {
@@ -81,12 +82,12 @@ func compareAnyContainerVolumeMounts(ds api.DeploymentSpec, g api.ServerGroup, s
 			case shared.LifecycleVolumeName:
 				// Do nothing
 			default:
-				return GracefulRotation, nil, nil
+				return compare.GracefulRotation, nil, nil
 			}
 		}
 
 		status.VolumeMounts = spec.VolumeMounts
-		return SilentRotation, nil, nil
+		return compare.SilentRotation, nil, nil
 	}
 }
 

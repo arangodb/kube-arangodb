@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -57,6 +57,7 @@ const (
 	AnnotationEnforceAntiAffinity = "database.arangodb.com/enforce-anti-affinity" // Key of annotation added to PVC. Value is a boolean "true" or "false"
 
 	BackupLabelRole      = "backup/role"
+	MLLabelRole          = "ml/role"
 	AppsLabelRole        = "apps/role"
 	ClusterSyncLabelRole = "clustersync/role"
 	LabelRole            = "role"

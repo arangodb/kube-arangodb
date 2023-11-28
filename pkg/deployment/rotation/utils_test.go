@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,10 +28,11 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
+	compare2 "github.com/arangodb/kube-arangodb/pkg/util/compare"
 )
 
 type TestCaseOverride struct {
-	expectedMode Mode
+	expectedMode compare2.Mode
 	expectedPlan api.Plan
 	expectedErr  string
 }
@@ -98,7 +99,7 @@ func runTestCasesForModeAndGroup(t *testing.T, m api.DeploymentMode, g api.Serve
 		pspec := newTemplateFromSpec(t, tc.spec, g, *ds)
 		pstatus := newTemplateFromSpec(t, tc.status, g, *ds)
 
-		mode, plan, err := compare(*ds, api.MemberStatus{ID: "id"}, g, pspec, pstatus)
+		mode, plan, err := compareFunc(*ds, api.MemberStatus{ID: "id"}, g, pspec, pstatus)
 
 		q := tc.TestCaseOverride
 
@@ -113,7 +114,7 @@ func runTestCasesForModeAndGroup(t *testing.T, m api.DeploymentMode, g api.Serve
 			require.Equal(t, q.expectedMode, mode)
 
 			switch mode {
-			case InPlaceRotation:
+			case compare2.InPlaceRotation:
 				require.Len(t, plan, len(q.expectedPlan))
 
 				for i := range plan {

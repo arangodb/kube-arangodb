@@ -61,3 +61,11 @@ type ArangoBackup struct {
 	Spec   ArangoBackupSpec   `json:"spec"`
 	Status ArangoBackupStatus `json:"status"`
 }
+
+func (a *ArangoBackup) GetStatus() ArangoBackupStatus {
+	return a.Status
+}
+
+func (a *ArangoBackup) SetStatus(status ArangoBackupStatus) {
+	a.Status = status
+}

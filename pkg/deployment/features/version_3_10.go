@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,7 +29,8 @@ var version310 = &feature{
 	description:        "Enable support for 3.10 features",
 	version:            "3.10.0",
 	enterpriseRequired: false,
-	enabledByDefault:   false,
+	enabledByDefault:   true,
+	hidden:             true,
 }
 
 func Version310() Feature {

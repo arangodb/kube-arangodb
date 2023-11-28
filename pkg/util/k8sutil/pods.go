@@ -513,7 +513,7 @@ func operatorInitContainer(name, operatorImage string, command []string, securit
 		Resources: core.ResourceRequirements{
 			Requests: core.ResourceList{
 				core.ResourceCPU:    resource.MustParse("100m"),
-				core.ResourceMemory: resource.MustParse("10Mi"),
+				core.ResourceMemory: resource.MustParse("50Mi"),
 			},
 			Limits: core.ResourceList{
 				core.ResourceCPU:    resource.MustParse("100m"),

@@ -111,6 +111,9 @@ spec:
 {{ if .Values.operator.features.apps }}
                     - --operator.apps
 {{- end }}
+{{ if .Values.operator.features.ml }}
+                    - --operator.ml
+{{- end }}
 {{ if .Values.operator.features.k8sToK8sClusterSync }}
                     - --operator.k2k-cluster-sync
 {{- end }}

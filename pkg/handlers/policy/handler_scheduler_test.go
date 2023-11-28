@@ -51,7 +51,7 @@ func Test_Scheduler_Schedule(t *testing.T) {
 	createArangoBackupPolicy(t, handler, policy)
 	createArangoDeployment(t, handler, database)
 
-	require.NoError(t, handler.Handle(newItemFromBackupPolicy(operation.Update, policy)))
+	require.NoError(t, handler.Handle(context.Background(), newItemFromBackupPolicy(operation.Update, policy)))
 
 	// Assert
 	newPolicy := refreshArangoBackupPolicy(t, handler, policy)
@@ -77,7 +77,7 @@ func Test_Scheduler_InvalidSchedule(t *testing.T) {
 	createArangoBackupPolicy(t, handler, policy)
 	createArangoDeployment(t, handler, database)
 
-	require.NoError(t, handler.Handle(newItemFromBackupPolicy(operation.Update, policy)))
+	require.NoError(t, handler.Handle(context.Background(), newItemFromBackupPolicy(operation.Update, policy)))
 
 	// Assert
 	newPolicy := refreshArangoBackupPolicy(t, handler, policy)
@@ -108,7 +108,7 @@ func Test_Scheduler_Valid_OneObject_SelectAll(t *testing.T) {
 	createArangoBackupPolicy(t, handler, policy)
 	createArangoDeployment(t, handler, database)
 
-	require.NoError(t, handler.Handle(newItemFromBackupPolicy(operation.Update, policy)))
+	require.NoError(t, handler.Handle(context.Background(), newItemFromBackupPolicy(operation.Update, policy)))
 
 	// Assert
 	newPolicy := refreshArangoBackupPolicy(t, handler, policy)
@@ -147,7 +147,7 @@ func Test_Scheduler_Valid_OneObject_Selector(t *testing.T) {
 	createArangoBackupPolicy(t, handler, policy)
 	createArangoDeployment(t, handler, database, database2)
 
-	require.NoError(t, handler.Handle(newItemFromBackupPolicy(operation.Update, policy)))
+	require.NoError(t, handler.Handle(context.Background(), newItemFromBackupPolicy(operation.Update, policy)))
 
 	// Assert
 	newPolicy := refreshArangoBackupPolicy(t, handler, policy)
@@ -187,7 +187,7 @@ func Test_Scheduler_Valid_MultipleObject_Selector(t *testing.T) {
 	createArangoBackupPolicy(t, handler, policy)
 	createArangoDeployment(t, handler, database, database2)
 
-	require.NoError(t, handler.Handle(newItemFromBackupPolicy(operation.Update, policy)))
+	require.NoError(t, handler.Handle(context.Background(), newItemFromBackupPolicy(operation.Update, policy)))
 
 	// Assert
 	newPolicy := refreshArangoBackupPolicy(t, handler, policy)
@@ -224,7 +224,7 @@ func Test_Reschedule(t *testing.T) {
 	createArangoBackupPolicy(t, handler, policy)
 
 	t.Run("First schedule", func(t *testing.T) {
-		require.NoError(t, handler.Handle(newItemFromBackupPolicy(operation.Update, policy)))
+		require.NoError(t, handler.Handle(context.Background(), newItemFromBackupPolicy(operation.Update, policy)))
 
 		// Assert
 		newPolicy := refreshArangoBackupPolicy(t, handler, policy)
@@ -234,7 +234,7 @@ func Test_Reschedule(t *testing.T) {
 	})
 
 	t.Run("First schedule - second iteration", func(t *testing.T) {
-		require.NoError(t, handler.Handle(newItemFromBackupPolicy(operation.Update, policy)))
+		require.NoError(t, handler.Handle(context.Background(), newItemFromBackupPolicy(operation.Update, policy)))
 
 		// Assert
 		newPolicy := refreshArangoBackupPolicy(t, handler, policy)
@@ -248,7 +248,7 @@ func Test_Reschedule(t *testing.T) {
 		policy.Spec.Schedule = "3 3 * * *"
 		updateArangoBackupPolicy(t, handler, policy)
 
-		require.NoError(t, handler.Handle(newItemFromBackupPolicy(operation.Update, policy)))
+		require.NoError(t, handler.Handle(context.Background(), newItemFromBackupPolicy(operation.Update, policy)))
 
 		// Assert
 		newPolicy := refreshArangoBackupPolicy(t, handler, policy)
@@ -285,7 +285,7 @@ func Test_Validate(t *testing.T) {
 			// Act
 			createArangoBackupPolicy(t, handler, policy)
 
-			require.NoError(t, handler.Handle(newItemFromBackupPolicy(operation.Update, policy)))
+			require.NoError(t, handler.Handle(context.Background(), newItemFromBackupPolicy(operation.Update, policy)))
 
 			// Assert
 			newPolicy := refreshArangoBackupPolicy(t, handler, policy)
@@ -317,7 +317,7 @@ func Test_Concurrent(t *testing.T) {
 		createArangoDeployment(t, handler, database)
 
 		// "create" first backup
-		require.NoError(t, handler.Handle(newItemFromBackupPolicy(operation.Update, policy)))
+		require.NoError(t, handler.Handle(context.Background(), newItemFromBackupPolicy(operation.Update, policy)))
 		backups := listArangoBackups(t, handler, namespace)
 		require.Len(t, backups, 1)
 
@@ -327,7 +327,7 @@ func Test_Concurrent(t *testing.T) {
 			Time: time.Now().Add(-1 * time.Hour),
 		}
 		updateArangoBackupPolicy(t, handler, policy)
-		require.NoError(t, handler.Handle(newItemFromBackupPolicy(operation.Update, policy)))
+		require.NoError(t, handler.Handle(context.Background(), newItemFromBackupPolicy(operation.Update, policy)))
 		backups = listArangoBackups(t, handler, namespace)
 		require.Len(t, backups, util.BoolSwitch(policy.Spec.GetAllowConcurrent(), 2, 1))
 
@@ -346,7 +346,7 @@ func Test_Concurrent(t *testing.T) {
 			Time: time.Now().Add(-1 * time.Hour),
 		}
 		updateArangoBackupPolicy(t, handler, policy)
-		require.NoError(t, handler.Handle(newItemFromBackupPolicy(operation.Update, policy)))
+		require.NoError(t, handler.Handle(context.Background(), newItemFromBackupPolicy(operation.Update, policy)))
 		backups = listArangoBackups(t, handler, namespace)
 		require.Len(t, backups, util.BoolSwitch(policy.Spec.GetAllowConcurrent(), 3, 2))
 	}

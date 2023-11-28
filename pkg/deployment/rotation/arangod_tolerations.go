@@ -26,15 +26,16 @@ import (
 	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/compare"
 )
 
-func comparePodTolerations(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *core.PodSpec) comparePodFunc {
-	return func(builder api.ActionBuilder) (mode Mode, plan api.Plan, err error) {
-		if !reflect.DeepEqual(spec.Tolerations, status.Tolerations) {
+func comparePodTolerations(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *core.PodTemplateSpec) compare.Func {
+	return func(builder api.ActionBuilder) (mode compare.Mode, plan api.Plan, err error) {
+		if !reflect.DeepEqual(spec.Spec.Tolerations, status.Spec.Tolerations) {
 			plan = append(plan, builder.NewAction(api.ActionTypeRuntimeContainerSyncTolerations))
 
-			status.Tolerations = spec.Tolerations
-			mode = mode.And(InPlaceRotation)
+			status.Spec.Tolerations = spec.Spec.Tolerations
+			mode = mode.And(compare.InPlaceRotation)
 
 			return
 		}

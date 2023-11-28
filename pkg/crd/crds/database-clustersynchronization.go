@@ -24,7 +24,6 @@ import (
 	_ "embed"
 
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/arangodb/go-driver"
 )
@@ -34,23 +33,35 @@ const (
 )
 
 func init() {
-	if err := yaml.Unmarshal(databaseClusterSynchronization, &databaseClusterSynchronizationCRD); err != nil {
-		panic(err)
-	}
+	mustLoadCRD(databaseClusterSynchronization, databaseClusterSynchronizationSchemaRaw, &databaseClusterSynchronizationCRD, &databaseClusterSynchronizationCRDSchemas)
 }
 
+// Deprecated: use DatabaseClusterSynchronizationWithOptions instead
 func DatabaseClusterSynchronization() *apiextensions.CustomResourceDefinition {
-	return databaseClusterSynchronizationCRD.DeepCopy()
+	return DatabaseClusterSynchronizationWithOptions()
 }
 
+func DatabaseClusterSynchronizationWithOptions(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
+	return getCRD(databaseClusterSynchronizationCRD, databaseClusterSynchronizationCRDSchemas, opts...)
+}
+
+// Deprecated: use DatabaseClusterSynchronizationDefinitionWithOptions instead
 func DatabaseClusterSynchronizationDefinition() Definition {
+	return DatabaseClusterSynchronizationDefinitionWithOptions()
+}
+
+func DatabaseClusterSynchronizationDefinitionWithOptions(opts ...func(*CRDOptions)) Definition {
 	return Definition{
 		Version: DatabaseClusterSynchronizationVersion,
-		CRD:     databaseClusterSynchronizationCRD.DeepCopy(),
+		CRD:     DatabaseClusterSynchronizationWithOptions(opts...),
 	}
 }
 
 var databaseClusterSynchronizationCRD apiextensions.CustomResourceDefinition
+var databaseClusterSynchronizationCRDSchemas crdSchemas
 
 //go:embed database-clustersynchronization.yaml
 var databaseClusterSynchronization []byte
+
+//go:embed database-clustersynchronization.schema.generated.yaml
+var databaseClusterSynchronizationSchemaRaw []byte

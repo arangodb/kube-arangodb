@@ -1,0 +1,38 @@
+{{ if .Values.rbac.enabled -}}
+{{ if .Values.operator.features.ml -}}
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+    name: {{ template "kube-arangodb.rbac" . }}-ml
+    namespace: {{ .Release.Namespace }}
+    labels:
+        app.kubernetes.io/name: {{ template "kube-arangodb.name" . }}
+        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+        app.kubernetes.io/managed-by: {{ .Release.Service }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        release: {{ .Release.Name }}
+rules:
+    - apiGroups:
+        - "ml.arangodb.com"
+      resources:
+        - "arangomlextensions"
+        - "arangomlextensions/status"
+        - "arangomlbatchjobs"
+        - "arangomlbatchjobs/status"
+        - "arangomlcronjobs"
+        - "arangomlcronjobs/status"
+        - "arangomlstorages"
+        - "arangomlstorages/status"
+      verbs:
+        - "*"
+    - apiGroups:
+        - "database.arangodb.com"
+      resources:
+        - "arangodeployments"
+      verbs:
+        - "get"
+        - "list"
+        - "watch"
+{{- end }}
+{{- end }}

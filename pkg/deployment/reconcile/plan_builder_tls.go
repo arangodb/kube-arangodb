@@ -39,6 +39,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/crypto"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	memberTls "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
@@ -161,7 +162,7 @@ func (r *Reconciler) createCAAppendPlan(ctx context.Context, apiObject k8sutil.A
 		return nil
 	}
 
-	ca, _, err := resources.GetKeyCertFromSecret(caSecret, resources.CACertName, resources.CAKeyName)
+	ca, _, err := k8sutil.GetKeyCertFromSecret(caSecret, resources.CACertName, resources.CAKeyName)
 	if err != nil {
 		r.planLogger.Err(err).Str("secret", spec.TLS.GetCASecretName()).Warn("CA Secret does not contains Cert")
 		return nil
@@ -213,7 +214,7 @@ func (r *Reconciler) createCARenewalPlan(ctx context.Context, apiObject k8sutil.
 		return nil
 	}
 
-	cas, _, err := resources.GetKeyCertFromSecret(caSecret, resources.CACertName, resources.CAKeyName)
+	cas, _, err := k8sutil.GetKeyCertFromSecret(caSecret, resources.CACertName, resources.CAKeyName)
 	if err != nil {
 		r.planLogger.Err(err).Str("secret", spec.TLS.GetCASecretName()).Warn("CA Secret does not contains Cert")
 		return nil
@@ -243,7 +244,7 @@ func (r *Reconciler) createCACleanPlan(ctx context.Context, apiObject k8sutil.AP
 		return nil
 	}
 
-	ca, _, err := resources.GetKeyCertFromSecret(caSecret, resources.CACertName, resources.CAKeyName)
+	ca, _, err := k8sutil.GetKeyCertFromSecret(caSecret, resources.CACertName, resources.CAKeyName)
 	if err != nil {
 		r.planLogger.Err(err).Str("secret", spec.TLS.GetCASecretName()).Warn("CA Secret does not contains Cert")
 		return nil
@@ -416,7 +417,7 @@ func createKeyfileRenewalPlanMode(
 	return mode
 }
 
-func checkServerValidCertRequest(ctx context.Context, context PlanBuilderContext, apiObject k8sutil.APIObject, group api.ServerGroup, member api.MemberStatus, ca resources.Certificates) (*tls.ConnectionState, error) {
+func checkServerValidCertRequest(ctx context.Context, context PlanBuilderContext, apiObject k8sutil.APIObject, group api.ServerGroup, member api.MemberStatus, ca crypto.Certificates) (*tls.ConnectionState, error) {
 	endpoint := fmt.Sprintf("https://%s:%d", k8sutil.CreatePodDNSNameWithDomain(apiObject, context.GetSpec().ClusterDomain, group.AsRole(), member.ID), shared.ArangoPort)
 	if group == api.ServerGroupSyncMasters {
 		endpoint = fmt.Sprintf("https://%s:%d%s", k8sutil.CreatePodDNSNameWithDomain(apiObject, context.GetSpec().ClusterDomain, group.AsRole(), member.ID), shared.ArangoSyncMasterPort, shared.ArangoSyncStatusEndpoint)
@@ -477,7 +478,7 @@ func (r *Reconciler) keyfileRenewalRequired(ctx context.Context, apiObject k8sut
 		return false, false
 	}
 
-	ca, _, err := resources.GetKeyCertFromSecret(caSecret, resources.CACertName, resources.CAKeyName)
+	ca, _, err := k8sutil.GetKeyCertFromSecret(caSecret, resources.CACertName, resources.CAKeyName)
 	if err != nil {
 		r.planLogger.Err(err).Str("secret", tlsSpec.GetCASecretName()).Warn("CA Secret does not contains Cert")
 		return false, false

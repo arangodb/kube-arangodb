@@ -20,5 +20,24 @@
 
 package v1alpha1
 
+import "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+
 type ArangoMLExtensionSpec struct {
+	// MetadataService keeps the MetadataService configuration
+	// +doc/immutable: This setting cannot be changed after the MetadataService has been created.
+	MetadataService *ArangoMLExtensionSpecMetadataService `json:"metadataService,omitempty"`
+}
+
+func (a *ArangoMLExtensionSpec) GetMetadataService() *ArangoMLExtensionSpecMetadataService {
+	if a == nil || a.MetadataService == nil {
+		return nil
+	}
+
+	return a.MetadataService
+}
+
+func (a *ArangoMLExtensionSpec) Validate() error {
+	return shared.WithErrors(shared.PrefixResourceErrors("spec",
+		shared.PrefixResourceErrors("metadataService", a.GetMetadataService().Validate()),
+	))
 }

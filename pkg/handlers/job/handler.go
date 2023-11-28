@@ -61,7 +61,7 @@ func (*handler) Name() string {
 	return apps.ArangoJobResourceKind
 }
 
-func (h *handler) Handle(item operation.Item) error {
+func (h *handler) Handle(_ context.Context, item operation.Item) error {
 	// Do not act on delete event
 	if item.Operation == operation.Delete {
 		return nil

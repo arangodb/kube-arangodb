@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 package backup
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -30,6 +31,7 @@ import (
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
+	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 )
 
 func Test_State_Downloading_Common(t *testing.T) {
@@ -41,7 +43,7 @@ func Test_State_Downloading_Success(t *testing.T) {
 	// Arrange
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(backupApi.ArangoBackupStateDownloading)
+	obj, deployment := newObjectSet(t, backupApi.ArangoBackupStateDownloading)
 
 	createResponse, err := mock.Create()
 	require.NoError(t, err)
@@ -70,7 +72,7 @@ func Test_State_Downloading_Success(t *testing.T) {
 	createArangoBackup(t, handler, obj)
 
 	t.Run("Restore percent", func(t *testing.T) {
-		require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+		require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
@@ -86,7 +88,7 @@ func Test_State_Downloading_Success(t *testing.T) {
 			Progress: p,
 		}
 
-		require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+		require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
@@ -101,7 +103,7 @@ func Test_State_Downloading_Success(t *testing.T) {
 			Completed: true,
 		}
 
-		require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+		require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
@@ -118,7 +120,7 @@ func Test_State_Downloading_FailedDownload(t *testing.T) {
 	// Arrange
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(backupApi.ArangoBackupStateDownloading)
+	obj, deployment := newObjectSet(t, backupApi.ArangoBackupStateDownloading)
 
 	createResponse, err := mock.Create()
 	require.NoError(t, err)
@@ -152,7 +154,7 @@ func Test_State_Downloading_FailedDownload(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -168,7 +170,7 @@ func Test_State_Downloading_FailedProgress(t *testing.T) {
 		progressError: error,
 	})
 
-	obj, deployment := newObjectSet(backupApi.ArangoBackupStateDownloading)
+	obj, deployment := newObjectSet(t, backupApi.ArangoBackupStateDownloading)
 
 	createResponse, err := mock.Create()
 	require.NoError(t, err)
@@ -196,7 +198,7 @@ func Test_State_Downloading_FailedProgress(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.EqualError(t, handler.Handle(newItemFromBackup(operation.Update, obj)), error.Error())
+	require.EqualError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)), error.Error())
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -210,7 +212,7 @@ func Test_State_Downloading_TemporaryFailedProgress(t *testing.T) {
 		progressError: error,
 	})
 
-	obj, deployment := newObjectSet(backupApi.ArangoBackupStateDownloading)
+	obj, deployment := newObjectSet(t, backupApi.ArangoBackupStateDownloading)
 
 	createResponse, err := mock.Create()
 	require.NoError(t, err)
@@ -238,7 +240,7 @@ func Test_State_Downloading_TemporaryFailedProgress(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.EqualError(t, handler.Handle(newItemFromBackup(operation.Update, obj)), error.Error())
+	require.EqualError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)), error.Error())
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -254,7 +256,7 @@ func Test_State_Downloading_NotFoundProgress(t *testing.T) {
 		progressError: error,
 	})
 
-	obj, deployment := newObjectSet(backupApi.ArangoBackupStateDownloading)
+	obj, deployment := newObjectSet(t, backupApi.ArangoBackupStateDownloading)
 
 	createResponse, err := mock.Create()
 	require.NoError(t, err)
@@ -282,7 +284,7 @@ func Test_State_Downloading_NotFoundProgress(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)

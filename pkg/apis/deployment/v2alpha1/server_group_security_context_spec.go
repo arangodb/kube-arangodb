@@ -26,13 +26,8 @@ import (
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-)
-
-const (
-	defaultRunAsUser  = 1000
-	defaultRunAsGroup = 2000
-	defaultFSGroup    = 3000
 )
 
 // ServerGroupSpecSecurityContext contains specification for pod security context
@@ -147,7 +142,7 @@ func (s *ServerGroupSpecSecurityContext) NewPodSecurityContext(secured bool) *co
 		}
 
 		if psc.FSGroup == nil {
-			psc.FSGroup = util.NewType[int64](defaultFSGroup)
+			psc.FSGroup = util.NewType[int64](shared.DefaultFSGroup)
 		}
 	}
 
@@ -186,10 +181,10 @@ func (s *ServerGroupSpecSecurityContext) NewSecurityContext(secured ...bool) *co
 
 	if len(secured) > 0 && secured[0] {
 		if r.RunAsUser == nil {
-			r.RunAsUser = util.NewType[int64](defaultRunAsUser)
+			r.RunAsUser = util.NewType[int64](shared.DefaultRunAsUser)
 		}
 		if r.RunAsGroup == nil {
-			r.RunAsGroup = util.NewType[int64](defaultRunAsGroup)
+			r.RunAsGroup = util.NewType[int64](shared.DefaultRunAsGroup)
 		}
 		if r.RunAsNonRoot == nil {
 			r.RunAsNonRoot = util.NewType[bool](true)

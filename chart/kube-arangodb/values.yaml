@@ -32,6 +32,7 @@ operator:
     backup: false
     apps: false
     k8sToK8sClusterSync: false
+    ml: false
   tolerations: []
 rbac:
   enabled: true

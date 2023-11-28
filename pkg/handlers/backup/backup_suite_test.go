@@ -41,6 +41,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 )
 
 const (
@@ -70,31 +71,14 @@ func newErrorsFakeHandler(errors mockErrorsArangoClientBackup) (*handler, *mockA
 	}
 }
 
-func newObjectSet(state state.State) (*backupApi.ArangoBackup, *database.ArangoDeployment) {
+func newObjectSet(t *testing.T, state state.State) (*backupApi.ArangoBackup, *database.ArangoDeployment) {
 	name := string(uuid.NewUUID())
 	namespace := string(uuid.NewUUID())
 
 	obj := newArangoBackup(name, namespace, name, state)
-	arangoDeployment := newArangoDeployment(namespace, name)
+	arangoDeployment := tests.NewMetaObject[*database.ArangoDeployment](t, namespace, name)
 
 	return obj, arangoDeployment
-}
-
-func newItem(o operation.Operation, namespace, name string) operation.Item {
-	return operation.Item{
-		Group:   backupApi.SchemeGroupVersion.Group,
-		Version: backupApi.SchemeGroupVersion.Version,
-		Kind:    backup.ArangoBackupResourceKind,
-
-		Operation: o,
-
-		Namespace: namespace,
-		Name:      name,
-	}
-}
-
-func newItemFromBackup(operation operation.Operation, backup *backupApi.ArangoBackup) operation.Item {
-	return newItem(operation, backup.Namespace, backup.Name)
 }
 
 func newArangoBackup(objectRef, namespace, name string, state state.State) *backupApi.ArangoBackup {
@@ -140,25 +124,6 @@ func refreshArangoBackup(t *testing.T, h *handler, backup *backupApi.ArangoBacku
 	return obj
 }
 
-func newArangoDeployment(namespace, name string) *database.ArangoDeployment {
-	return &database.ArangoDeployment{
-		TypeMeta: meta.TypeMeta{
-			APIVersion: backupApi.SchemeGroupVersion.String(),
-			Kind:       deployment.ArangoDeploymentResourceKind,
-		},
-		ObjectMeta: meta.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-			SelfLink: fmt.Sprintf("/api/%s/%s/%s/%s",
-				backupApi.SchemeGroupVersion.String(),
-				deployment.ArangoDeploymentResourcePlural,
-				namespace,
-				name),
-			UID: uuid.NewUUID(),
-		},
-	}
-}
-
 func createArangoDeployment(t *testing.T, h *handler, deployments ...*database.ArangoDeployment) {
 	for _, deployment := range deployments {
 		_, err := h.client.DatabaseV1().ArangoDeployments(deployment.Namespace).Create(context.Background(), deployment, meta.CreateOptions{})
@@ -186,12 +151,12 @@ func wrapperUndefinedDeployment(t *testing.T, state state.State) {
 		// Arrange
 		handler := newFakeHandler()
 
-		obj, _ := newObjectSet(state)
+		obj, _ := newObjectSet(t, state)
 		obj.Spec.Deployment.Name = ""
 
 		// Act
 		createArangoBackup(t, handler, obj)
-		require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+		require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
@@ -204,11 +169,11 @@ func wrapperUndefinedDeployment(t *testing.T, state state.State) {
 		// Arrange
 		handler := newFakeHandler()
 
-		obj, _ := newObjectSet(state)
+		obj, _ := newObjectSet(t, state)
 
 		// Act
 		createArangoBackup(t, handler, obj)
-		require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+		require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
@@ -226,12 +191,12 @@ func wrapperConnectionIssues(t *testing.T, state state.State) {
 		f := newMockArangoClientBackupErrorFactory(errors.Newf(errorString))
 		handler.arangoClientFactory = f
 
-		obj, deployment := newObjectSet(state)
+		obj, deployment := newObjectSet(t, state)
 
 		// Act
 		createArangoBackup(t, handler, obj)
 		createArangoDeployment(t, handler, deployment)
-		err := handler.Handle(newItemFromBackup(operation.Update, obj))
+		err := handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj))
 
 		// Assert
 		require.Error(t, err)
@@ -248,12 +213,12 @@ func wrapperProgressMissing(t *testing.T, state state.State) {
 		// Arrange
 		handler, _ := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-		obj, deployment := newObjectSet(state)
+		obj, deployment := newObjectSet(t, state)
 
 		// Act
 		createArangoBackup(t, handler, obj)
 		createArangoDeployment(t, handler, deployment)
-		require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+		require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)

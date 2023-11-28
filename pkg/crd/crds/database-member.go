@@ -24,7 +24,6 @@ import (
 	_ "embed"
 
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/arangodb/go-driver"
 )
@@ -34,23 +33,35 @@ const (
 )
 
 func init() {
-	if err := yaml.Unmarshal(databaseMember, &databaseMemberCRD); err != nil {
-		panic(err)
-	}
+	mustLoadCRD(databaseMember, databaseMemberSchemaRaw, &databaseMemberCRD, &databaseMemberCRDSchemas)
 }
 
+// Deprecated: use DatabaseMemberWithOptions instead
 func DatabaseMember() *apiextensions.CustomResourceDefinition {
-	return databaseMemberCRD.DeepCopy()
+	return DatabaseMemberWithOptions()
 }
 
+func DatabaseMemberWithOptions(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
+	return getCRD(databaseMemberCRD, databaseMemberCRDSchemas, opts...)
+}
+
+// Deprecated: use DatabaseMemberDefinitionWithOptions instead
 func DatabaseMemberDefinition() Definition {
+	return DatabaseMemberDefinitionWithOptions()
+}
+
+func DatabaseMemberDefinitionWithOptions(opts ...func(*CRDOptions)) Definition {
 	return Definition{
 		Version: DatabaseMemberVersion,
-		CRD:     databaseMemberCRD.DeepCopy(),
+		CRD:     DatabaseMemberWithOptions(opts...),
 	}
 }
 
 var databaseMemberCRD apiextensions.CustomResourceDefinition
+var databaseMemberCRDSchemas crdSchemas
 
 //go:embed database-member.yaml
 var databaseMember []byte
+
+//go:embed database-member.schema.generated.yaml
+var databaseMemberSchemaRaw []byte

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,19 +21,21 @@
 package backup
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
+	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 )
 
 func Test_Flow_SuccessHappyPath(t *testing.T) {
 	// Arrange
 	handler, _ := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(backupApi.ArangoBackupStateNone)
+	obj, deployment := newObjectSet(t, backupApi.ArangoBackupStateNone)
 
 	// Act
 	createArangoDeployment(t, handler, deployment)
@@ -41,7 +43,7 @@ func Test_Flow_SuccessHappyPath(t *testing.T) {
 
 	t.Run("Change from None to Pending", func(t *testing.T) {
 		// Act
-		require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+		require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
@@ -50,7 +52,7 @@ func Test_Flow_SuccessHappyPath(t *testing.T) {
 
 	t.Run("Change from Pending to Scheduled", func(t *testing.T) {
 		// Act
-		require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+		require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
@@ -59,7 +61,7 @@ func Test_Flow_SuccessHappyPath(t *testing.T) {
 
 	t.Run("Change from Scheduled to Create", func(t *testing.T) {
 		// Act
-		require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+		require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
@@ -68,7 +70,7 @@ func Test_Flow_SuccessHappyPath(t *testing.T) {
 
 	t.Run("Change from Create to Ready", func(t *testing.T) {
 		// Act
-		require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+		require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
@@ -77,7 +79,7 @@ func Test_Flow_SuccessHappyPath(t *testing.T) {
 
 	t.Run("Ensure Ready State Keeps", func(t *testing.T) {
 		// Act
-		require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+		require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)

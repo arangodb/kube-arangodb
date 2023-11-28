@@ -506,8 +506,9 @@ func (d *Deployment) refreshMaintenanceTTL(ctx context.Context) {
 
 	condition, ok := status.Conditions.Get(api.ConditionTypeMaintenance)
 	maintenance := agencyState.Supervision.Maintenance
+	hotBackup := agencyState.Target.HotBackup.Create.Exists()
 
-	if !ok || !condition.IsTrue() {
+	if !ok || !condition.IsTrue() || hotBackup {
 		return
 	}
 

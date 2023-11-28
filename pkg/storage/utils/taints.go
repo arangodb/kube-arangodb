@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,21 +26,61 @@ import (
 	core "k8s.io/api/core/v1"
 )
 
-func IsNodeSchedulableForPod(node *core.Node, pod *core.Pod) bool {
-	return AreTaintsTolerated(pod.Spec.Tolerations, node.Spec.Taints)
+type ScheduleOption int
+
+const (
+	ScheduleBlocked ScheduleOption = iota
+	ScheduleOptional
+	ScheduleAllowed
+)
+
+func (s ScheduleOption) Schedulable() bool {
+	switch s {
+	case ScheduleOptional, ScheduleAllowed:
+		return true
+	default:
+		return false
+	}
 }
 
-func AreTaintsTolerated(tolerations []core.Toleration, taints []core.Taint) bool {
-	for _, taint := range taints {
-		if !IsTaintTolerated(tolerations, taint) {
-			return false
+func IsNodeSchedulableForPods(node *core.Node, pods ...*core.Pod) ScheduleOption {
+	schedule := ScheduleAllowed
+
+	for _, pod := range pods {
+		if taintSchedule := IsNodeSchedulableForPod(node, pod); taintSchedule == ScheduleBlocked {
+			return ScheduleBlocked
+		} else if taintSchedule == ScheduleOptional {
+			schedule = ScheduleOptional
 		}
 	}
 
-	return true
+	return schedule
 }
 
-func IsTaintTolerated(tolerations []core.Toleration, taint core.Taint) bool {
+func IsNodeSchedulableForPod(node *core.Node, pod *core.Pod) ScheduleOption {
+	return AreTaintsTolerated(pod.Spec.Tolerations, node.Spec.Taints)
+}
+
+func AreTaintsTolerated(tolerations []core.Toleration, taints []core.Taint) ScheduleOption {
+	schedule := ScheduleAllowed
+
+	for _, taint := range taints {
+		if taintSchedule := IsTaintTolerated(tolerations, taint); taintSchedule == ScheduleBlocked {
+			return ScheduleBlocked
+		} else if taintSchedule == ScheduleOptional {
+			schedule = ScheduleOptional
+		}
+	}
+
+	return schedule
+}
+
+func IsTaintTolerated(tolerations []core.Toleration, taint core.Taint) ScheduleOption {
+	if taint.Effect == core.TaintEffectPreferNoSchedule {
+		// Taint is Soft one, schedule allowed
+		return ScheduleOptional
+	}
+
 	for _, toleration := range tolerations {
 		if toleration.Effect != "" && toleration.Effect != taint.Effect {
 			// Not same effect
@@ -80,8 +120,8 @@ func IsTaintTolerated(tolerations []core.Toleration, taint core.Taint) bool {
 			}
 		}
 
-		return true
+		return ScheduleAllowed
 	}
 
-	return false
+	return ScheduleBlocked
 }

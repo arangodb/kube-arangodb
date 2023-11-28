@@ -9,6 +9,19 @@
 - (Documentation) Do not use field type name for field URL hash
 - (Maintenance) Bump Go to 1.20.11
 - (Feature) License ArangoDeployment Fetcher
+- (Feature) K8S Resources Compare Generic
+- (Feature) Add support for CRD validation schemas
+- (Bugfix) Fix Replaced Member Zone during Replace operation
+- (Feature) (ML) Handlers
+- (Feature) Add P0 Compare Func
+- (Bugfix) Handle optional taints for Storage Operator
+- (Bugfix) Fix Early Connections for 3.10+
+- (Maintenance) yamlfmt as CI Step
+- (Maintenance) Expose Context in OperatorV2 Item Handler 
+- (Feature) Improve K8S Mock for UT
+- (Feature) (ML) Introduce basic Conditions
+- (Improvement) Raise memory requests for init containers to 50mi
+- (Feature) (ML) Metadata Service Implementation
 
 ## [1.2.35](https://github.com/arangodb/kube-arangodb/tree/1.2.35) (2023-11-06)
 - (Maintenance) Update go-driver to v1.6.0, update IsNotFound() checks

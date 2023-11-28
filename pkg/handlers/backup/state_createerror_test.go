@@ -21,6 +21,7 @@
 package backup
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -30,13 +31,14 @@ import (
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 )
 
 func Test_State_CreateError_Retry_WhenBackoffEnabled(t *testing.T) {
 	// Arrange
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(backupApi.ArangoBackupStateCreateError)
+	obj, deployment := newObjectSet(t, backupApi.ArangoBackupStateCreateError)
 
 	backupMeta, err := mock.Create()
 	require.NoError(t, err)
@@ -57,7 +59,7 @@ func Test_State_CreateError_Retry_WhenBackoffEnabled(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -71,7 +73,7 @@ func Test_State_CreateError_Retry_WhenBackoffDisabled_C1(t *testing.T) {
 	// Arrange
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(backupApi.ArangoBackupStateCreateError)
+	obj, deployment := newObjectSet(t, backupApi.ArangoBackupStateCreateError)
 
 	backupMeta, err := mock.Create()
 	require.NoError(t, err)
@@ -90,7 +92,7 @@ func Test_State_CreateError_Retry_WhenBackoffDisabled_C1(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -102,7 +104,7 @@ func Test_State_CreateError_Retry_WhenBackoffDisabled_C2(t *testing.T) {
 	// Arrange
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(backupApi.ArangoBackupStateCreateError)
+	obj, deployment := newObjectSet(t, backupApi.ArangoBackupStateCreateError)
 
 	backupMeta, err := mock.Create()
 	require.NoError(t, err)
@@ -119,7 +121,7 @@ func Test_State_CreateError_Retry_WhenBackoffDisabled_C2(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -131,7 +133,7 @@ func Test_State_CreateError_Transfer_To_Failed(t *testing.T) {
 	// Arrange
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(backupApi.ArangoBackupStateCreateError)
+	obj, deployment := newObjectSet(t, backupApi.ArangoBackupStateCreateError)
 
 	backupMeta, err := mock.Create()
 	require.NoError(t, err)
@@ -156,7 +158,7 @@ func Test_State_CreateError_Transfer_To_Failed(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)

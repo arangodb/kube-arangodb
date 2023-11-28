@@ -21,6 +21,7 @@
 package backup
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -30,13 +31,14 @@ import (
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 )
 
 func Test_State_UploadError_Reschedule(t *testing.T) {
 	// Arrange
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(backupApi.ArangoBackupStateUploadError)
+	obj, deployment := newObjectSet(t, backupApi.ArangoBackupStateUploadError)
 
 	obj.Spec.Upload = &backupApi.ArangoBackupSpecOperation{
 		RepositoryURL: "S3 URL",
@@ -58,7 +60,7 @@ func Test_State_UploadError_Reschedule(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -73,7 +75,7 @@ func Test_State_UploadError_Reschedule(t *testing.T) {
 func Test_State_UploadError_Wait(t *testing.T) {
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(backupApi.ArangoBackupStateUploadError)
+	obj, deployment := newObjectSet(t, backupApi.ArangoBackupStateUploadError)
 
 	obj.Spec.Upload = &backupApi.ArangoBackupSpecOperation{
 		RepositoryURL: "S3 URL",
@@ -98,7 +100,7 @@ func Test_State_UploadError_Wait(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -113,7 +115,7 @@ func Test_State_UploadError_Wait(t *testing.T) {
 func Test_State_UploadError_BackToReady(t *testing.T) {
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(backupApi.ArangoBackupStateUploadError)
+	obj, deployment := newObjectSet(t, backupApi.ArangoBackupStateUploadError)
 
 	backupMeta, err := mock.Create()
 	require.NoError(t, err)
@@ -131,7 +133,7 @@ func Test_State_UploadError_BackToReady(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)

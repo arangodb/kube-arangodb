@@ -42,6 +42,7 @@ var rootFactories = []shared.Factory{
 	kubernetes.Services(),
 	kubernetes.Deployments(),
 	kubernetes.AgencyDump(),
+	kubernetes.ML(),
 }
 
 func InitCommand(cmd *cobra.Command) {

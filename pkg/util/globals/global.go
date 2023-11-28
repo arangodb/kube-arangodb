@@ -41,6 +41,11 @@ const (
 	DefaultKubernetesRequestBatchSize = 256
 
 	DefaultBackupConcurrentUploads = 4
+
+	// Retry
+
+	DefaultOperatorUpdateRetryCount = 25
+	DefaultOperatorUpdateRetryDelay = time.Second
 )
 
 var globalObj = &globals{
@@ -61,6 +66,10 @@ var globalObj = &globals{
 	backup: &globalBackup{
 		concurrentUploads: NewInt(DefaultBackupConcurrentUploads),
 	},
+	retry: &globalRetry{
+		operatorUpdateRetryCount: NewInt(DefaultOperatorUpdateRetryCount),
+		operatorUpdateRetryDelay: NewTimeout(DefaultOperatorUpdateRetryDelay),
+	},
 }
 
 func GetGlobals() Globals {
@@ -75,12 +84,18 @@ type Globals interface {
 	Timeouts() GlobalTimeouts
 	Kubernetes() GlobalKubernetes
 	Backup() GlobalBackup
+	Retry() GlobalRetry
 }
 
 type globals struct {
 	timeouts   *globalTimeouts
 	kubernetes *globalKubernetes
 	backup     *globalBackup
+	retry      *globalRetry
+}
+
+func (g globals) Retry() GlobalRetry {
+	return g.retry
 }
 
 func (g globals) Backup() GlobalBackup {
@@ -173,4 +188,22 @@ func (g *globalTimeouts) BackupArangoClientTimeout() Timeout {
 
 func (g *globalTimeouts) BackupArangoClientUploadTimeout() Timeout {
 	return g.backupArangoClientUploadTimeout
+}
+
+type GlobalRetry interface {
+	OperatorUpdateRetryCount() Int
+	OperatorUpdateRetryDelay() Timeout
+}
+
+type globalRetry struct {
+	operatorUpdateRetryCount Int
+	operatorUpdateRetryDelay Timeout
+}
+
+func (g *globalRetry) OperatorUpdateRetryCount() Int {
+	return g.operatorUpdateRetryCount
+}
+
+func (g *globalRetry) OperatorUpdateRetryDelay() Timeout {
+	return g.operatorUpdateRetryDelay
 }

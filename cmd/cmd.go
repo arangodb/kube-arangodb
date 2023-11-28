@@ -119,6 +119,7 @@ var (
 		enableStorage               bool // Run local-storage operator
 		enableBackup                bool // Run backup operator
 		enableApps                  bool // Run apps operator
+		enableML                    bool // Run ml operator
 		versionOnly                 bool // Run only version endpoint, explicitly disabled with other
 		enableK2KClusterSync        bool // Run k2kClusterSync operator
 
@@ -136,7 +137,8 @@ var (
 		timeout time.Duration
 	}
 	crdOptions struct {
-		install bool
+		install          bool
+		validationSchema []string
 	}
 	operatorKubernetesOptions struct {
 		maxBatchSize int64
@@ -158,6 +160,10 @@ var (
 		backupArangoD       time.Duration
 		backupUploadArangoD time.Duration
 	}
+	operatorReconciliationRetry struct {
+		delay time.Duration
+		count int
+	}
 	chaosOptions struct {
 		allowed bool
 	}
@@ -170,6 +176,7 @@ var (
 	storageProbe               probe.ReadyProbe
 	backupProbe                probe.ReadyProbe
 	appsProbe                  probe.ReadyProbe
+	mlProbe                    probe.ReadyProbe
 	k2KClusterSyncProbe        probe.ReadyProbe
 )
 
@@ -195,6 +202,7 @@ func init() {
 	f.BoolVar(&operatorOptions.enableStorage, "operator.storage", false, "Enable to run the ArangoLocalStorage operator")
 	f.BoolVar(&operatorOptions.enableBackup, "operator.backup", false, "Enable to run the ArangoBackup operator")
 	f.BoolVar(&operatorOptions.enableApps, "operator.apps", false, "Enable to run the ArangoApps operator")
+	f.BoolVar(&operatorOptions.enableML, "operator.ml", false, "Enable to run the ArangoML operator")
 	f.BoolVar(&operatorOptions.enableK2KClusterSync, "operator.k2k-cluster-sync", false, "Enable to run the ListSimple operator")
 	f.MarkDeprecated("operator.k2k-cluster-sync", "Enabled within deployment operator")
 	f.BoolVar(&operatorOptions.versionOnly, "operator.version", false, "Enable only version endpoint in Operator")
@@ -218,12 +226,15 @@ func init() {
 	f.DurationVar(&operatorTimeouts.backupUploadArangoD, "timeout.backup-upload", globals.BackupUploadArangoClientTimeout, "The request timeout to the ArangoDB during uploading files")
 	f.DurationVar(&shutdownOptions.delay, "shutdown.delay", defaultShutdownDelay, "The delay before running shutdown handlers")
 	f.DurationVar(&shutdownOptions.timeout, "shutdown.timeout", defaultShutdownTimeout, "Timeout for shutdown handlers")
+	f.DurationVar(&operatorReconciliationRetry.delay, "operator.reconciliation.retry.delay", globals.DefaultOperatorUpdateRetryDelay, "Delay between Object Update operations in the Reconciliation loop")
+	f.IntVar(&operatorReconciliationRetry.count, "operator.reconciliation.retry.count", globals.DefaultOperatorUpdateRetryCount, "Count of retries during Object Update operations in the Reconciliation loop")
 	f.BoolVar(&operatorOptions.scalingIntegrationEnabled, "internal.scaling-integration", false, "Enable Scaling Integration")
 	f.DurationVar(&operatorOptions.reconciliationDelay, "reconciliation.delay", 0, "Delay between reconciliation loops (<= 0 -> Disabled)")
 	f.Int64Var(&operatorKubernetesOptions.maxBatchSize, "kubernetes.max-batch-size", globals.DefaultKubernetesRequestBatchSize, "Size of batch during objects read")
 	f.Float32Var(&operatorKubernetesOptions.qps, "kubernetes.qps", kclient.DefaultQPS, "Number of queries per second for k8s API")
 	f.IntVar(&operatorKubernetesOptions.burst, "kubernetes.burst", kclient.DefaultBurst, "Burst for the k8s API")
 	f.BoolVar(&crdOptions.install, "crd.install", true, "Install missing CRD if access is possible")
+	f.StringArrayVar(&crdOptions.validationSchema, "crd.validation-schema", defaultValidationSchemaEnabled, "Overrides default set of CRDs which should have validation schema enabled <crd-name>=<true/false>.")
 	f.IntVar(&operatorBackup.concurrentUploads, "backup-concurrent-uploads", globals.DefaultBackupConcurrentUploads, "Number of concurrent uploads per deployment")
 	f.Uint64Var(&memoryLimit.hardLimit, "memory-limit", 0, "Define memory limit for hard shutdown and the dump of goroutines. Used for testing")
 	f.StringArrayVar(&metricsOptions.excludedMetricPrefixes, "metrics.excluded-prefixes", nil, "List of the excluded metrics prefixes")
@@ -276,6 +287,9 @@ func executeMain(cmd *cobra.Command, args []string) {
 	globals.GetGlobalTimeouts().BackupArangoClientTimeout().Set(operatorTimeouts.backupArangoD)
 	globals.GetGlobalTimeouts().BackupArangoClientUploadTimeout().Set(operatorTimeouts.backupUploadArangoD)
 
+	globals.GetGlobals().Retry().OperatorUpdateRetryDelay().Set(operatorReconciliationRetry.delay)
+	globals.GetGlobals().Retry().OperatorUpdateRetryCount().Set(operatorReconciliationRetry.count)
+
 	globals.GetGlobals().Kubernetes().RequestBatchSize().Set(operatorKubernetesOptions.maxBatchSize)
 	globals.GetGlobals().Backup().ConcurrentUploads().Set(operatorBackup.concurrentUploads)
 
@@ -318,12 +332,20 @@ func executeMain(cmd *cobra.Command, args []string) {
 
 	// Check operating mode
 	if !operatorOptions.enableDeployment && !operatorOptions.enableDeploymentReplication && !operatorOptions.enableStorage &&
-		!operatorOptions.enableBackup && !operatorOptions.enableApps && !operatorOptions.enableK2KClusterSync {
+		!operatorOptions.enableBackup && !operatorOptions.enableApps && !operatorOptions.enableK2KClusterSync && !operatorOptions.enableML {
 		if !operatorOptions.versionOnly {
-			logger.Err(err).Fatal("Turn on --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync or any combination of these")
+			if version.GetVersionV1().IsEnterprise() {
+				logger.Err(err).Fatal("Turn on --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync, --operator.ml or any combination of these")
+			} else {
+				logger.Err(err).Fatal("Turn on --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync or any combination of these")
+			}
 		}
 	} else if operatorOptions.versionOnly {
-		logger.Err(err).Fatal("Options --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync cannot be enabled together with --operator.version")
+		logger.Err(err).Fatal("Options --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync, --operator.ml cannot be enabled together with --operator.version")
+	} else if !version.GetVersionV1().IsEnterprise() {
+		if operatorOptions.enableML {
+			logger.Err(err).Fatal("Options --operator.ml can be enabled only on the Enterprise Operator")
+		}
 	}
 
 	// Log version
@@ -359,7 +381,12 @@ func executeMain(cmd *cobra.Command, args []string) {
 			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 			defer cancel()
 
-			_ = crd.EnsureCRD(ctx, client, true)
+			crdOpts, err := prepareCRDOptions(crdOptions.validationSchema)
+			if err != nil {
+				logger.Fatal("Invalid --crd.validation-schema args: %s", err)
+			}
+
+			_ = crd.EnsureCRDWithOptions(ctx, client, crd.EnsureCRDOptions{IgnoreErrors: true, CRDOptions: crdOpts})
 		}
 
 		secrets := client.Kubernetes().CoreV1().Secrets(namespace)
@@ -440,6 +467,10 @@ func executeMain(cmd *cobra.Command, args []string) {
 				Enabled: cfg.EnableApps,
 				Probe:   &appsProbe,
 			},
+			ML: server.OperatorDependency{
+				Enabled: cfg.EnableML,
+				Probe:   &mlProbe,
+			},
 			ClusterSync: server.OperatorDependency{
 				Enabled: cfg.EnableK2KClusterSync,
 				Probe:   &k2KClusterSyncProbe,
@@ -518,6 +549,7 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		EnableStorage:               operatorOptions.enableStorage,
 		EnableBackup:                operatorOptions.enableBackup,
 		EnableApps:                  operatorOptions.enableApps,
+		EnableML:                    operatorOptions.enableML,
 		EnableK2KClusterSync:        operatorOptions.enableK2KClusterSync,
 		AllowChaos:                  chaosOptions.allowed,
 		ScalingIntegrationEnabled:   operatorOptions.scalingIntegrationEnabled,
@@ -536,6 +568,7 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		StorageProbe:               &storageProbe,
 		BackupProbe:                &backupProbe,
 		AppsProbe:                  &appsProbe,
+		MlProbe:                    &mlProbe,
 		K2KClusterSyncProbe:        &k2KClusterSyncProbe,
 	}
 

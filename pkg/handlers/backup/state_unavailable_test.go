@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 package backup
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -29,6 +30,7 @@ import (
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
+	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 )
 
 func Test_State_Unavailable_Common(t *testing.T) {
@@ -40,7 +42,7 @@ func Test_State_Unavailable_Success(t *testing.T) {
 	// Arrange
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(backupApi.ArangoBackupStateUnavailable)
+	obj, deployment := newObjectSet(t, backupApi.ArangoBackupStateUnavailable)
 
 	createResponse, err := mock.Create()
 	require.NoError(t, err)
@@ -54,7 +56,7 @@ func Test_State_Unavailable_Success(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -66,7 +68,7 @@ func Test_State_Unavailable_Keep(t *testing.T) {
 	// Arrange
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(backupApi.ArangoBackupStateUnavailable)
+	obj, deployment := newObjectSet(t, backupApi.ArangoBackupStateUnavailable)
 
 	createResponse, err := mock.Create()
 	require.NoError(t, err)
@@ -84,7 +86,7 @@ func Test_State_Unavailable_Keep(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -96,7 +98,7 @@ func Test_State_Unavailable_Update(t *testing.T) {
 	// Arrange
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(backupApi.ArangoBackupStateUnavailable)
+	obj, deployment := newObjectSet(t, backupApi.ArangoBackupStateUnavailable)
 
 	createResponse, err := mock.Create()
 	require.NoError(t, err)
@@ -115,7 +117,7 @@ func Test_State_Unavailable_Update(t *testing.T) {
 	createArangoBackup(t, handler, obj)
 
 	t.Run("First iteration", func(t *testing.T) {
-		require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+		require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
@@ -127,7 +129,7 @@ func Test_State_Unavailable_Update(t *testing.T) {
 		backupMeta.SizeInBytes = 123
 		mock.state.backups[backupMeta.ID] = backupMeta
 
-		require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+		require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
@@ -137,7 +139,7 @@ func Test_State_Unavailable_Update(t *testing.T) {
 	})
 
 	t.Run("Do nothing", func(t *testing.T) {
-		require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+		require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
@@ -153,7 +155,7 @@ func Test_State_Unavailable_TemporaryGetFailed(t *testing.T) {
 		getError: error,
 	})
 
-	obj, deployment := newObjectSet(backupApi.ArangoBackupStateUnavailable)
+	obj, deployment := newObjectSet(t, backupApi.ArangoBackupStateUnavailable)
 
 	obj.Status.Backup = &backupApi.ArangoBackupDetails{}
 
@@ -161,7 +163,7 @@ func Test_State_Unavailable_TemporaryGetFailed(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -175,7 +177,7 @@ func Test_State_Unavailable_FatalGetFailed(t *testing.T) {
 		getError: error,
 	})
 
-	obj, deployment := newObjectSet(backupApi.ArangoBackupStateUnavailable)
+	obj, deployment := newObjectSet(t, backupApi.ArangoBackupStateUnavailable)
 
 	obj.Status.Backup = &backupApi.ArangoBackupDetails{}
 
@@ -183,7 +185,7 @@ func Test_State_Unavailable_FatalGetFailed(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -199,7 +201,7 @@ func Test_State_Unavailable_MissingBackup(t *testing.T) {
 		getError: error,
 	})
 
-	obj, deployment := newObjectSet(backupApi.ArangoBackupStateUnavailable)
+	obj, deployment := newObjectSet(t, backupApi.ArangoBackupStateUnavailable)
 
 	obj.Status.Backup = &backupApi.ArangoBackupDetails{}
 
@@ -207,7 +209,7 @@ func Test_State_Unavailable_MissingBackup(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+	require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
