@@ -21,47 +21,41 @@
 package v1alpha1
 
 import (
-	"github.com/pkg/errors"
-	core "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 )
 
 type ArangoMLStorageSpec struct {
-	// ListenPort defines on which port the sidecar container will be listening for connections
-	// +doc/default: 9201
-	ListenPort *uint16 `json:"listenPort,omitempty"`
+	// Mode defines how storage implementation should be deployed
+	Mode *ArangoMLStorageSpecMode `json:"mode,omitempty"`
+	// Backend defines how storage is implemented
+	Backend *ArangoMLStorageSpecBackend `json:"backend,omitempty"`
+}
 
-	// Resources holds resource requests & limits for container running the S3 proxy
-	// +doc/type: core.ResourceRequirements
-	// +doc/link: Documentation of core.ResourceRequirements|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core
-	Resources core.ResourceRequirements `json:"resources,omitempty"`
+func (s *ArangoMLStorageSpec) GetMode() *ArangoMLStorageSpecMode {
+	if s == nil || s.Mode == nil {
+		return &ArangoMLStorageSpecMode{}
+	}
+	return s.Mode
+}
 
-	S3 *ArangoMLStorageS3Spec `json:"s3,omitempty"`
+func (s *ArangoMLStorageSpec) GetBackend() *ArangoMLStorageSpecBackend {
+	if s == nil || s.Backend == nil {
+		return &ArangoMLStorageSpecBackend{}
+	}
+	return s.Backend
 }
 
 func (s *ArangoMLStorageSpec) Validate() error {
-	if s.S3 == nil {
-		return errors.New("Currently only s3 storage type is supported")
-	}
-
-	return s.S3.Validate()
-}
-
-// SetDefaults fills in missing defaults
-func (s *ArangoMLStorageSpec) SetDefaults() {
 	if s == nil {
-		return
+		s = &ArangoMLStorageSpec{}
 	}
 
-	resources := s.Resources
-	if len(resources.Requests) == 0 {
-		resources.Requests = make(core.ResourceList)
-		resources.Requests[core.ResourceCPU] = resource.MustParse("100m")
-		resources.Requests[core.ResourceMemory] = resource.MustParse("100m")
+	if err := shared.WithErrors(shared.PrefixResourceErrors("spec",
+		shared.PrefixResourceError("backend", s.Backend.Validate()),
+		shared.PrefixResourceError("mode", s.Mode.Validate()),
+	)); err != nil {
+		return err
 	}
-	if len(resources.Limits) == 0 {
-		resources.Limits = make(core.ResourceList)
-		resources.Limits[core.ResourceCPU] = resource.MustParse("250m")
-		resources.Limits[core.ResourceMemory] = resource.MustParse("250m")
-	}
+
+	return nil
 }

@@ -25,23 +25,58 @@ import (
 
 	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
+
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 func Test_ArangoMLStorageSpec(t *testing.T) {
-	s := ArangoMLStorageSpec{
-		ListenPort: nil,
-		Resources:  core.ResourceRequirements{},
-		S3:         nil,
-	}
-	s.SetDefaults()
+	s := ArangoMLStorageSpec{}
+	require.Error(t, s.Validate())
+	require.NotNil(t, s.GetMode())
+	require.NotNil(t, s.GetBackend())
+
+	require.NotNil(t, s.Mode.GetSidecar())
+	s.Mode = &ArangoMLStorageSpecMode{}
+
+	require.NotNil(t, s.Backend.GetS3())
+	s.Backend = &ArangoMLStorageSpecBackend{}
 	require.Error(t, s.Validate())
 
-	s.S3 = &ArangoMLStorageS3Spec{
-		Endpoint:              "some-endpoint",
-		DisableSSL:            false,
-		Region:                "",
-		BucketName:            "test-bucket",
-		CredentialsSecretName: "some-secret",
+	require.NotNil(t, s.Mode.Sidecar.GetListenPort())
+	require.NotNil(t, s.Mode.Sidecar.GetResources())
+	s.Mode.Sidecar = &ArangoMLStorageSpecModeSidecar{}
+
+	require.Error(t, s.Backend.S3.Validate())
+	s.Backend.S3 = &ArangoMLStorageSpecBackendS3{
+		Endpoint:   util.NewType("http://test.s3.example.com"),
+		BucketName: util.NewType("bucket"),
+		CredentialsSecret: &sharedApi.Object{
+			Name:      "a-secret",
+			Namespace: nil,
+		},
 	}
 	require.NoError(t, s.Validate())
+
+	t.Run("default requests and limits assigned", func(t *testing.T) {
+		assignedRequirements := core.ResourceRequirements{
+			Requests: core.ResourceList{
+				core.ResourceCPU:    resource.MustParse("200m"),
+				core.ResourceMemory: resource.MustParse("200Mi"),
+			},
+		}
+		s.Mode.Sidecar.Resources = &assignedRequirements
+
+		expectedRequirements := core.ResourceRequirements{
+			Requests: assignedRequirements.Requests,
+			Limits: core.ResourceList{
+				core.ResourceCPU:    resource.MustParse("200m"),
+				core.ResourceMemory: resource.MustParse("200Mi"),
+			},
+		}
+
+		actualRequirements := s.Mode.Sidecar.GetResources()
+		require.Equal(t, expectedRequirements, actualRequirements)
+	})
 }
