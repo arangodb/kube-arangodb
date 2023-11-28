@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,10 @@ import (
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/arangodb-helper/go-certificates"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/crypto"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	secretv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
@@ -147,6 +150,25 @@ func GetCAFromSecret(s *core.Secret, ownerRef *meta.OwnerReference) (string, str
 		return "", "", isOwned, errors.WithStack(errors.Newf("No '%s' found in secret '%s'", constants.SecretCAKey, s.GetName()))
 	}
 	return string(cert), string(priv), isOwned, nil
+}
+
+func GetKeyCertFromSecret(secret *core.Secret, certName, keyName string) (crypto.Certificates, interface{}, error) {
+	ca, exists := secret.Data[certName]
+	if !exists {
+		return nil, nil, errors.Newf("Key %s missing in secret", certName)
+	}
+
+	key, exists := secret.Data[keyName]
+	if !exists {
+		return nil, nil, errors.Newf("Key %s missing in secret", keyName)
+	}
+
+	cert, keys, err := certificates.LoadFromPEM(string(ca), string(key))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return cert, keys, nil
 }
 
 // CreateCASecret creates a secret used to store a PEM encoded CA certificate & private key.
