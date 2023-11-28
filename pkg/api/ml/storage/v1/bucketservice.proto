@@ -1,0 +1,125 @@
+//
+// DISCLAIMER
+//
+// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Copyright holder is ArangoDB GmbH, Cologne, Germany
+//
+
+syntax = "proto3";
+
+package arangodb.operator.ml.storage.v1;
+
+option go_package = "github.com/arangodb/kube-arangodb/pkg/api/ml/storage/v1";
+
+import "pkg/api/common/v1/common.proto";
+import "google/protobuf/timestamp.proto";
+
+// BucketService is the API used to manage buckets.
+service BucketService {
+  // Get the current API version of this service.
+  rpc GetAPIVersion(common.v1.Empty) returns (common.v1.Version);
+
+  // BucketExists checks if the specified bucket exists
+  rpc BucketExists(BucketRequest) returns (common.v1.YesOrNo);
+  // CreateBucket creates a bucket
+  rpc CreateBucket(BucketRequest) returns (common.v1.Empty);
+  // DeleteBucket deletes a bucket
+  // Notice that this deletes all data contained in the bucket as well
+  rpc DeleteBucket(BucketRequest) returns (common.v1.Empty);
+
+
+  // GetRepositoryURL get the URL needed to store/delete objects in a bucket
+  rpc GetRepositoryURL(PathRequest) returns (RepositoryURL);
+  // DeletePath deletes the specified path (recursively) from the provided bucket
+  rpc DeletePath(PathRequest) returns (common.v1.Empty);
+  // GetPathSize provides the size in bytes for the specified path from the provided bucket
+  rpc GetPathSize(PathRequest) returns (PathSize);
+
+  // ReadObject opens an object in the bucket and streams the existing data from the object into the client
+  rpc ReadObject(PathRequest) returns (stream ReadObjectChunk);
+  // WriteObject creates or opens an object in the bucket and allows the client to stream (additional) data into the object
+  rpc WriteObject(stream WriteObjectChunk) returns (stream WriteObjectControl);
+  // GetObjectInfo provides information for the specified object from the provided bucket
+  // A Not-Found error is returned if the object cannot be found
+  rpc GetObjectInfo(PathRequest) returns (ObjectInfo);
+}
+
+// Request params for Bucket related calls
+message BucketRequest {
+  // Key-value pairs stored at the providers (as labels/tags) during CreateBucket
+  repeated common.v1.KeyValuePair tags = 10;
+}
+
+// Request params for Path related requests
+message PathRequest {
+  // The path (Specify as "." to indicate the root folder)
+  string path = 3;
+}
+
+// Response from GetRepositoryURL request
+message RepositoryURL {
+  // The URL
+  string url = 1;
+  // The URL without provider information
+  string bucket_path = 2;
+}
+
+// Response from GetPathSize request
+message PathSize {
+  // The size in bytes
+  uint64 size_in_bytes = 1;
+  // Number of files
+  uint32 number_of_files = 2;
+  // Number of folders
+  uint32 number_of_folders = 3;
+}
+
+// Response from GetObjectInfo request
+message ObjectInfo {
+  // Indicates if the object is locked
+  bool is_locked = 1;
+  // Indicates the size of the object in bytes
+  uint64 size_in_bytes = 2;
+  // The timestamp this object has last been modified
+  google.protobuf.Timestamp last_updated_at = 3;
+}
+
+// Output message for ReadObject.
+message ReadObjectChunk {
+  // Raw output
+  bytes chunk = 1;
+}
+
+// Input message for WriteObject
+message WriteObjectChunk {
+  // Base request params for Path related requests.
+  // This field cannot change during the stream.
+  PathRequest path = 1;
+  // Raw input
+  bytes chunk = 2;
+  // If set, the caller wants to send a next message with more input data.
+  // If not set, no more control message will be sent.
+  bool has_more = 3;
+}
+
+// Output message for WriteObject
+message WriteObjectControl {
+  // If set, the next chunk of input is allowed.
+  // If unset, the caller is expected to terminate the call.
+  bool allow_more_output = 1;
+  // Maximum number of bytes the caller is allowed to send in the next input chunk.
+  int32 max_chunk_bytes = 2;
+}

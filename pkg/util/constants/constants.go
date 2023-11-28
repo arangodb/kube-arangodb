@@ -44,6 +44,9 @@ const (
 	SecretUsername = "username" // Key in Secret.data used to store a username used for basic authentication
 	SecretPassword = "password" // Key in Secret.data used to store a password used for basic authentication
 
+	SecretCredentialsAccessKey = "accessKey" // Key in Secret used to store an S3 API access key
+	SecretCredentialsSecretKey = "secretKey" // Key in Secret used to store an S3 API secret key
+
 	SecretAccessPackageYaml = "accessPackage.yaml" // Key in Secret.data used to store a YAML encoded access package
 
 	FinalizerDeplRemoveChildFinalizers = "database.arangodb.com/remove-child-finalizers" // Finalizer added to ArangoDeployment, indicating the need to remove finalizers from all children
