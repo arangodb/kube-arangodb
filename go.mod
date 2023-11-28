@@ -35,6 +35,7 @@ require (
 	github.com/dchest/uniuri v0.0.0-20160212164326-8902c56451e9
 	github.com/gin-gonic/gin v1.9.1
 	github.com/golang-jwt/jwt v3.2.2+incompatible
+	github.com/google/uuid v1.3.0
 	github.com/jessevdk/go-assets v0.0.0-20160921144138-4f4301a06e15
 	github.com/josephburnett/jd v1.6.1
 	github.com/julienschmidt/httprouter v1.3.0
@@ -62,15 +63,8 @@ require (
 	k8s.io/apimachinery v0.25.13
 	k8s.io/client-go v0.25.13
 	k8s.io/kube-openapi v0.0.0-20220803162953-67bda5d908f1
-	sigs.k8s.io/yaml v1.2.0
-)
-
-require (
-	github.com/arangodb/go-agency-helper v0.4.0
-	github.com/arangodb/rebalancer v0.1.1
-	github.com/aws/aws-sdk-go v1.48.6
-	github.com/google/uuid v1.3.0
 	k8s.io/utils v0.0.0-20220728103510-ee6ede2d64ed
+	sigs.k8s.io/yaml v1.2.0
 )
 
 require (
@@ -104,7 +98,6 @@ require (
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/imdario/mergo v0.3.6 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
-	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kkdai/maglev v0.2.0 // indirect
