@@ -26,6 +26,7 @@ import (
 	"math"
 	"net"
 	"net/url"
+	"os"
 
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -288,15 +289,19 @@ func (m *MemberSyncPod) IsDeploymentMode() bool {
 }
 
 func (m *MemberSyncPod) GetInitContainers(cachedStatus interfaces.Inspector) ([]core.Container, error) {
-	var initContainers []core.Container
+	binaryPath, err := os.Executable()
+	if err != nil {
+		return nil, err
+	}
 
+	var initContainers []core.Container
 	if c := m.groupSpec.InitContainers.GetContainers(); len(c) > 0 {
 		initContainers = append(initContainers, c...)
 	}
 
 	{
 		sc := k8sutil.CreateSecurityContext(m.groupSpec.SecurityContext)
-		c, err := k8sutil.InitLifecycleContainer(m.resources.context.GetOperatorImage(), &m.spec.Lifecycle.Resources, sc)
+		c, err := k8sutil.InitLifecycleContainer(m.resources.context.GetOperatorImage(), binaryPath, &m.spec.Lifecycle.Resources, sc)
 		if err != nil {
 			return nil, err
 		}
