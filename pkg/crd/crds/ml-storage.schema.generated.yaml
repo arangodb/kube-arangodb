@@ -28,6 +28,8 @@ v1alpha1:
                         type: string
                       namespace:
                         type: string
+                      uid:
+                        type: string
                     type: object
                   credentialsSecret:
                     description: |-
@@ -37,6 +39,8 @@ v1alpha1:
                       name:
                         type: string
                       namespace:
+                        type: string
+                      uid:
                         type: string
                     type: object
                   endpoint:

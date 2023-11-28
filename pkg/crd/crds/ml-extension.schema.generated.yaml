@@ -2,6 +2,21 @@ v1alpha1:
   openAPIV3Schema:
     properties:
       spec:
+        properties:
+          metadataService:
+            description: MetadataService keeps the MetadataService configuration
+            properties:
+              local:
+                description: Local define to use Local ArangoDeployment as the Metadata Service
+                properties:
+                  arangoMLFeatureStore:
+                    description: ArangoMLFeatureStoreDatabase define Database name to be used as MetadataService Backend in ArangoMLFeatureStoreDatabase
+                    type: string
+                  arangoPipeDatabase:
+                    description: ArangoPipeDatabase define Database name to be used as MetadataService Backend in ArangoPipe
+                    type: string
+                type: object
+            type: object
         type: object
     type: object
     x-kubernetes-preserve-unknown-fields: true

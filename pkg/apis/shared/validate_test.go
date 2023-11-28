@@ -18,15 +18,16 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+package shared
 
-import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+import (
+	"testing"
 
-type ArangoMLExtensionStatus struct {
-	// Conditions specific to the entire extension
-	// +doc/type: api.Conditions
-	Conditions api.ConditionList `json:"conditions,omitempty"`
+	"github.com/stretchr/testify/require"
+	"k8s.io/apimachinery/pkg/util/uuid"
+)
 
-	// MetadataService keeps the MetadataService configuration
-	MetadataService *ArangoMLExtensionStatusMetadataService `json:"metadataService,omitempty"`
+func Test_ValidateUID(t *testing.T) {
+	require.Error(t, ValidateUID(""))
+	require.NoError(t, ValidateUID(uuid.NewUUID()))
 }
