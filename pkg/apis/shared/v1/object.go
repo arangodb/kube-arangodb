@@ -40,7 +40,7 @@ type Object struct {
 
 func (o *Object) IsEmpty() bool {
 	return o == nil ||
-		(o.Name == "" && o.Namespace != nil)
+		(o.Name == "" && o.Namespace == nil)
 }
 
 func (o *Object) GetName() string {
