@@ -456,7 +456,7 @@ func (m *MemberArangoDPod) GetInitContainers(cachedStatus interfaces.Inspector) 
 
 	{
 		sc := k8sutil.CreateSecurityContext(m.groupSpec.SecurityContext)
-		c, err := k8sutil.InitLifecycleContainer(m.resources.context.GetOperatorImage(), &m.spec.Lifecycle.Resources, sc)
+		c, err := k8sutil.InitLifecycleContainer(m.resources.context.GetOperatorImage(), executable, &m.spec.Lifecycle.Resources, sc)
 		if err != nil {
 			return nil, err
 		}

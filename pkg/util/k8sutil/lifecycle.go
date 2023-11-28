@@ -27,7 +27,6 @@ import (
 	core "k8s.io/api/core/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 const (
@@ -57,11 +56,7 @@ func LifecycleBinary() string {
 }
 
 // InitLifecycleContainer creates an init-container to copy the lifecycle binary to a shared volume.
-func InitLifecycleContainer(image string, resources *core.ResourceRequirements, securityContext *core.SecurityContext) (core.Container, error) {
-	binaryPath, err := os.Executable()
-	if err != nil {
-		return core.Container{}, errors.WithStack(err)
-	}
+func InitLifecycleContainer(image, binaryPath string, resources *core.ResourceRequirements, securityContext *core.SecurityContext) (core.Container, error) {
 	c := core.Container{
 		Name:    initLifecycleContainerName,
 		Image:   image,
