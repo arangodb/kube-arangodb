@@ -22,6 +22,7 @@ package v1
 
 import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 )
@@ -32,6 +33,9 @@ type Object struct {
 
 	// Namespace of the object. Should default to the namespace of the parent object
 	Namespace *string `json:"namespace,omitempty"`
+
+	// UID keeps the information about object UID
+	UID *types.UID `json:"uid,omitempty"`
 }
 
 func (o *Object) IsEmpty() bool {
@@ -57,6 +61,16 @@ func (o *Object) GetNamespace(obj meta.Object) string {
 	return obj.GetNamespace()
 }
 
+func (o *Object) GetUID() types.UID {
+	if o != nil {
+		if n := o.UID; n != nil {
+			return *n
+		}
+	}
+
+	return ""
+}
+
 func (o *Object) Validate() error {
 	if o == nil {
 		o = &Object{}
@@ -66,6 +80,9 @@ func (o *Object) Validate() error {
 	errs = append(errs, shared.PrefixResourceErrors("name", AsKubernetesResourceName(&o.Name).Validate()))
 	if o.Namespace != nil {
 		errs = append(errs, shared.PrefixResourceErrors("namespace", AsKubernetesResourceName(o.Namespace).Validate()))
+	}
+	if u := o.UID; u != nil {
+		errs = append(errs, shared.PrefixResourceErrors("uid", shared.ValidateUID(*u)))
 	}
 
 	return shared.WithErrors(errs...)

@@ -23,7 +23,10 @@ package shared
 import (
 	"regexp"
 
+	"k8s.io/apimachinery/pkg/types"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
 
 var (
@@ -52,5 +55,21 @@ func ValidateOptionalResourceName(name string) error {
 	if err := ValidateResourceName(name); err != nil {
 		return errors.WithStack(err)
 	}
+	return nil
+}
+
+// ValidateUID validates if it is valid Kubernetes UID
+func ValidateUID(uid types.UID) error {
+	v := strings.Split(string(uid), "-")
+
+	if len(v) != 0 &&
+		len(v[0]) != 6 &&
+		len(v[1]) != 4 &&
+		len(v[2]) != 4 &&
+		len(v[3]) != 4 &&
+		len(v[4]) != 6 {
+		return errors.Newf("Invalid UID: %s", uid)
+	}
+
 	return nil
 }

@@ -20,12 +20,14 @@
 
 package v1alpha1
 
+import shared "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+
 type ArangoMLExtensionStatusMetadataService struct {
 	// Local define the Local ArangoDeployment Metadata Service configuration
 	Local *ArangoMLExtensionStatusMetadataServiceLocal `json:"local,omitempty"`
 
 	// Secret define the Secret specification to store all the details
-	Secret *Object `json:"secret,omitempty"`
+	Secret *shared.Object `json:"secret,omitempty"`
 }
 
 type ArangoMLExtensionStatusMetadataServiceLocal struct {
