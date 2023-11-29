@@ -28,44 +28,32 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
-	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
-func NewArangoDeploymentLicenseLoader(client arangoClientSet.Interface, kubeClient kubernetes.Interface, namespace, name string) Loader {
+func NewArangoDeploymentLicenseLoader(client kubernetes.Interface, deployment *api.ArangoDeployment) Loader {
 	return arangoDeploymentLicenseLoader{
 		client:     client,
-		kubeClient: kubeClient,
-		namespace:  namespace,
-		name:       name,
+		deployment: deployment,
 	}
 }
 
 type arangoDeploymentLicenseLoader struct {
-	client     arangoClientSet.Interface
-	kubeClient kubernetes.Interface
+	client kubernetes.Interface
 
-	namespace, name string
+	deployment *api.ArangoDeployment
 }
 
 func (a arangoDeploymentLicenseLoader) Refresh(ctx context.Context) (string, bool, error) {
-	deployment, err := a.client.DatabaseV1().ArangoDeployments(a.namespace).Get(ctx, a.name, meta.GetOptions{})
-	if err != nil {
-		if errors.IsNotFound(err) {
-			return "", false, nil
-		}
-
-		return "", false, err
-	}
-
-	spec := deployment.GetAcceptedSpec()
+	spec := a.deployment.GetAcceptedSpec()
 
 	if !spec.License.HasSecretName() {
 		return "", false, nil
 	}
 
-	secret, err := a.kubeClient.CoreV1().Secrets(deployment.GetNamespace()).Get(ctx, spec.License.GetSecretName(), meta.GetOptions{})
+	secret, err := a.client.CoreV1().Secrets(a.deployment.GetNamespace()).Get(ctx, spec.License.GetSecretName(), meta.GetOptions{})
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return "", false, nil
