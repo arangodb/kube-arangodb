@@ -270,11 +270,6 @@ func extractTag(tag string) (string, bool) {
 	return parts[0], false
 }
 
-type parsedSource struct {
-	fields map[string]*ast.Field
-	fs     *token.FileSet
-}
-
 // parseSourceFiles returns map of <path to field in structure> -> AST for structure Field and the token inspector for all files in package
 func parseSourceFiles(t *testing.T, root string, fset *token.FileSet, path string) map[string]*ast.Field {
 	d := parseMultipleDirs(t, root, fset, parser.ParseComments, path)
