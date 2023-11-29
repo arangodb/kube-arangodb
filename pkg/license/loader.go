@@ -23,6 +23,7 @@ package license
 import "context"
 
 type Loader interface {
-	// Refresh reloads license in specified manner, returns license, found, error
+	// Refresh reloads license in a specified manner.
+	// It returns license (base64 encoded), found, error
 	Refresh(ctx context.Context) (string, bool, error)
 }

@@ -22,6 +22,7 @@
 - (Feature) (ML) Introduce basic Conditions
 - (Improvement) Raise memory requests for init containers to 50mi
 - (Feature) (ML) Metadata Service Implementation
+- (Feature) License Manager for ML Deployment
 - (Feature) (ML) Storage S3 sidecar implementation
 
 ## [1.2.35](https://github.com/arangodb/kube-arangodb/tree/1.2.35) (2023-11-06)

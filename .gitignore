@@ -7,10 +7,13 @@ vendor/
 .idea/
 deps/
 .vscode/
+
 **/*.enterprise.go
+**/*.enterprise_test.go
 **/enterprise/**
 enterprise.mk
 license-header.enterprise.txt
+
 local/
 kustomize_test/
 tools/codegen/boilerplate.go.txt
