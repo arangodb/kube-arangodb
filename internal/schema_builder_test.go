@@ -191,7 +191,7 @@ func (b *schemaBuilder) StructToSchema(t *testing.T, structObj reflect.Type, pat
 		s := b.TypeToSchema(t, f.Type, p)
 		require.NotNil(t, s, p)
 
-		fullFieldName := fmt.Sprintf("%s.%s", structObj.String(), f.Name)
+		fullFieldName := fmt.Sprintf("%s.%s.%s", structObj.PkgPath(), structObj.Name(), f.Name)
 		def := b.lookupDefinition(t, fullFieldName, p)
 		if def != nil {
 			def.ApplyToSchema(s)

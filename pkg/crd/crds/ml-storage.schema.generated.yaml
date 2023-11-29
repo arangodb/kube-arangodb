@@ -25,10 +25,13 @@ v1alpha1:
                       - `ca.key` PEM encoded private key of the CA certificate
                     properties:
                       name:
+                        description: Name of the object
                         type: string
                       namespace:
+                        description: Namespace of the object. Should default to the namespace of the parent object
                         type: string
                       uid:
+                        description: UID keeps the information about object UID
                         type: string
                     type: object
                   credentialsSecret:
@@ -37,10 +40,13 @@ v1alpha1:
                       Required
                     properties:
                       name:
+                        description: Name of the object
                         type: string
                       namespace:
+                        description: Namespace of the object. Should default to the namespace of the parent object
                         type: string
                       uid:
+                        description: UID keeps the information about object UID
                         type: string
                     type: object
                   endpoint:
