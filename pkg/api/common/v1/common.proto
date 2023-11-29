@@ -1,0 +1,51 @@
+//
+// DISCLAIMER
+//
+// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Copyright holder is ArangoDB GmbH, Cologne, Germany
+//
+
+syntax = "proto3";
+
+package arangodb.operator.common.v1;
+
+option go_package = "github.com/arangodb/kube-arangodb/pkg/api/common/v1";
+
+// Empty message
+message Empty {}
+
+// Response for single boolean.
+message YesOrNo {
+  bool result = 1;
+}
+
+// Semantic version number.
+message Version {
+  // Major version (increasing may break APIs)
+  int32 major = 1;
+  // Minor version (increased for new features)
+  int32 minor = 2;
+  // Patch version (increased for fixes)
+  int32 patch = 3;
+}
+
+// KeyValuePair specifies a key-value pair.
+message KeyValuePair {
+  // The key.
+  string key = 1;
+  // The value.
+  string value = 2;
+}
