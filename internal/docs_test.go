@@ -128,7 +128,9 @@ func Test_GenerateAPIDocs(t *testing.T) {
 	root := os.Getenv("ROOT")
 	require.NotEmpty(t, root)
 
-	sharedFields, sharedFilesSet := parseSourceFiles(t, fmt.Sprintf("%s/pkg/apis/shared/v1", root))
+	fset := token.NewFileSet()
+
+	sharedFields := parseSourceFiles(t, root, fset, fmt.Sprintf("%s/pkg/apis/shared/v1", root))
 
 	// package path -> result doc file name -> name of the top-level field to be described -> field instance for reflection
 	input := map[string]map[string]map[string]interface{}{
@@ -182,17 +184,14 @@ func Test_GenerateAPIDocs(t *testing.T) {
 
 	resultPaths := make(map[string]string)
 	for apiDir, docs := range input {
-		fields, fileSet := parseSourceFiles(t, apiDir)
+		fields := parseSourceFiles(t, root, fset, apiDir)
 
 		for n, f := range sharedFields {
+			require.NotContains(t, fields, n)
 			fields[n] = f
 		}
-		sharedFilesSet.Iterate(func(file *token.File) bool {
-			fileSet.AddFile(file.Name(), fileSet.Base()+file.Base(), file.Size())
-			return true
-		})
 
-		util.CopyMap(resultPaths, generateDocs(t, docs, fields, fileSet))
+		util.CopyMap(resultPaths, generateDocs(t, docs, fields, fset))
 	}
 	generateIndex(t, resultPaths)
 }

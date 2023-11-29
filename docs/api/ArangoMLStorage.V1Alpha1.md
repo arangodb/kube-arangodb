@@ -23,7 +23,7 @@ Required
 
 ### .spec.backend.s3.caSecret.name
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/batchjob_spec.go#L29)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/object.go#L32)</sup>
 
 Name of the object
 
@@ -31,7 +31,7 @@ Name of the object
 
 ### .spec.backend.s3.caSecret.namespace
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/batchjob_status.go#L5)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/object.go#L35)</sup>
 
 Namespace of the object. Should default to the namespace of the parent object
 
@@ -39,7 +39,7 @@ Namespace of the object. Should default to the namespace of the parent object
 
 ### .spec.backend.s3.caSecret.uid
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/batchjob_status.go#L7)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/object.go#L38)</sup>
 
 UID keeps the information about object UID
 
@@ -47,7 +47,7 @@ UID keeps the information about object UID
 
 ### .spec.backend.s3.credentialsSecret.name
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/batchjob_spec.go#L29)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/object.go#L32)</sup>
 
 Name of the object
 
@@ -55,7 +55,7 @@ Name of the object
 
 ### .spec.backend.s3.credentialsSecret.namespace
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/batchjob_status.go#L5)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/object.go#L35)</sup>
 
 Namespace of the object. Should default to the namespace of the parent object
 
@@ -63,7 +63,7 @@ Namespace of the object. Should default to the namespace of the parent object
 
 ### .spec.backend.s3.credentialsSecret.uid
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/batchjob_status.go#L7)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/object.go#L38)</sup>
 
 UID keeps the information about object UID
 
