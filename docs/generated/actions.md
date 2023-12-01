@@ -55,6 +55,7 @@
 |        RebalancerGenerateV2        |   yes    |  10m0s  |    no    | Community & Enterprise |                                           Generates the Rebalancer plan                                            |
 |       RebuildOutSyncedShards       |    no    | 24h0m0s |    no    | Community & Enterprise |                               Run Rebuild Out Synced Shards procedure for DBServers                                |
 |           RecreateMember           |    no    |  15m0s  |    no    | Community & Enterprise |                                       Recreate member with same ID and Data                                        |
+|            RefreshTLSCA            |    no    |  30m0s  |    no    |    Enterprise Only     |                                                Refresh internal CA                                                 |
 |    RefreshTLSKeyfileCertificate    |    no    |  30m0s  |    no    |    Enterprise Only     |                                       Recreate Server TLS Certificate secret                                       |
 |            RemoveMember            |    no    |  15m0s  |    no    | Community & Enterprise |                                     Removes member from the Cluster and Status                                     |
 |          RemoveMemberPVC           |    no    |  15m0s  |    no    | Community & Enterprise |                                 Removes member PVC and enforce recreate procedure                                  |
@@ -150,6 +151,7 @@ spec:
       RebalancerGenerateV2: 10m0s
       RebuildOutSyncedShards: 24h0m0s
       RecreateMember: 15m0s
+      RefreshTLSCA: 30m0s
       RefreshTLSKeyfileCertificate: 30m0s
       RemoveMember: 15m0s
       RemoveMemberPVC: 15m0s

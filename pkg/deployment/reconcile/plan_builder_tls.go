@@ -27,7 +27,10 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"sort"
 	"time"
+
+	core "k8s.io/api/core/v1"
 
 	"github.com/arangodb/go-driver"
 
@@ -48,6 +51,22 @@ import (
 )
 
 const CertificateRenewalMargin = 7 * 24 * time.Hour
+
+func buildInternalCA(secret *core.Secret) string {
+	// Let's check if ca.crt needs to be created
+	keys := make([]string, 0, len(secret.Data))
+	for k, v := range secret.Data {
+		if k == resources.CACertName {
+			continue
+		}
+
+		keys = append(keys, string(v))
+	}
+
+	sort.Strings(keys)
+
+	return strings.Join(keys, "\n")
+}
 
 func (r *Reconciler) createTLSStatusPropagatedFieldUpdate(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
@@ -192,6 +211,10 @@ func (r *Reconciler) createCAAppendPlan(ctx context.Context, apiObject k8sutil.A
 			AddParam(checksum, certSha)}
 	}
 
+	if string(trusted.Data[resources.CACertName]) != buildInternalCA(trusted) {
+		return api.Plan{actions.NewClusterAction(api.ActionTypeRefreshTLSCA, "Refresh CA")}
+	}
+
 	return nil
 }
 
@@ -270,6 +293,10 @@ func (r *Reconciler) createCACleanPlan(ctx context.Context, apiObject k8sutil.AP
 	certSha := util.SHA256(caData)
 
 	for sha := range trusted.Data {
+		if sha == resources.CACertName {
+			continue
+		}
+
 		if certSha != sha {
 			return api.Plan{actions.NewClusterAction(api.ActionTypeCleanTLSCACertificate, "Clean CA from truststore").
 				AddParam(checksum, sha)}

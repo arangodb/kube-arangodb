@@ -529,6 +529,16 @@ func Test_Actions(t *testing.T) {
 		})
 	})
 
+	t.Run("RefreshTLSCA", func(t *testing.T) {
+		ActionsExistence(t, api.ActionTypeRefreshTLSCA)
+		t.Run("Internal", func(t *testing.T) {
+			require.False(t, api.ActionTypeRefreshTLSCA.Internal())
+		})
+		t.Run("Optional", func(t *testing.T) {
+			require.False(t, api.ActionTypeRefreshTLSCA.Optional())
+		})
+	})
+
 	t.Run("RefreshTLSKeyfileCertificate", func(t *testing.T) {
 		ActionsExistence(t, api.ActionTypeRefreshTLSKeyfileCertificate)
 		t.Run("Internal", func(t *testing.T) {

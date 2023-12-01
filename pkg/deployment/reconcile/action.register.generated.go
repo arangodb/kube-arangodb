@@ -165,6 +165,9 @@ var (
 	_ Action        = &actionRecreateMember{}
 	_ actionFactory = newRecreateMemberAction
 
+	_ Action        = &actionRefreshTLSCA{}
+	_ actionFactory = newRefreshTLSCAAction
+
 	_ Action        = &actionRefreshTLSKeyfileCertificate{}
 	_ actionFactory = newRefreshTLSKeyfileCertificateAction
 
@@ -944,6 +947,20 @@ func init() {
 
 		// Get Action defition
 		function := newRecreateMemberAction
+
+		// Wrap action main function
+
+		// Register action
+		registerAction(action, function)
+	}
+
+	// RefreshTLSCA
+	{
+		// Get Action type
+		action := api.ActionTypeRefreshTLSCA
+
+		// Get Action defition
+		function := newRefreshTLSCAAction
 
 		// Wrap action main function
 
