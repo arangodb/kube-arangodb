@@ -20,6 +20,14 @@ ArangoPipeDatabase define Database name to be used as MetadataService Backend in
 
 Default Value: `arangopipe`
 
+***
+
+### .spec.storage
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec.go#L31)</sup>
+
+Storage specify the ArangoMLStorage used within Extension
+
 ## Status
 
 ### .status.conditions
