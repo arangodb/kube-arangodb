@@ -80,6 +80,10 @@ actions:
     enterprise: true
     description: Remove Certificate from CA TrustStore
     timeout: 30m
+  RefreshTLSCA:
+    enterprise: true
+    description: Refresh internal CA
+    timeout: 30m
   CleanTLSKeyfileCertificate:
     enterprise: true
     description: Remove old TLS certificate from server
