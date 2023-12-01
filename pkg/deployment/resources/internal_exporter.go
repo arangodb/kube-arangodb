@@ -25,11 +25,12 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/probes"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
 // ArangodbInternalExporterContainer creates metrics container based on internal exporter
 func ArangodbInternalExporterContainer(image string, args []string, livenessProbe *probes.HTTPProbeConfig,
-	resources core.ResourceRequirements, spec api.DeploymentSpec, groupSpec api.ServerGroupSpec) (core.Container, error) {
+	res core.ResourceRequirements, spec api.DeploymentSpec, groupSpec api.ServerGroupSpec) (core.Container, error) {
 
 	exePath := k8sutil.LifecycleBinary()
 
@@ -54,7 +55,7 @@ func ArangodbInternalExporterContainer(image string, args []string, livenessProb
 				Protocol:      core.ProtocolTCP,
 			},
 		},
-		Resources:       k8sutil.ExtractPodAcceptedResourceRequirement(resources),
+		Resources:       resources.ExtractPodAcceptedResourceRequirement(res),
 		SecurityContext: k8sutil.CreateSecurityContext(groupSpec.SecurityContext),
 		ImagePullPolicy: core.PullIfNotPresent,
 		VolumeMounts:    []core.VolumeMount{k8sutil.LifecycleVolumeMount()},

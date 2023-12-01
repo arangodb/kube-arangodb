@@ -25,7 +25,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
 // applyInitContainersResourceResources updates passed init containers to ensure that all resources are set (if such feature is enabled)
@@ -40,7 +40,7 @@ func applyInitContainersResourceResources(initContainers []core.Container, mainC
 			continue
 		}
 
-		k8sutil.ApplyContainerResourceRequirements(&initContainers[i], mainContainerResources)
+		resources.ApplyContainerResourceRequirements(&initContainers[i], mainContainerResources)
 	}
 	return initContainers
 }
