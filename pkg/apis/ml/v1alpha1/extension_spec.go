@@ -26,6 +26,9 @@ type ArangoMLExtensionSpec struct {
 	// MetadataService keeps the MetadataService configuration
 	// +doc/immutable: This setting cannot be changed after the MetadataService has been created.
 	MetadataService *ArangoMLExtensionSpecMetadataService `json:"metadataService,omitempty"`
+
+	// Storage specify the ArangoMLStorage used within Extension
+	Storage *string `json:"storage,omitempty"`
 }
 
 func (a *ArangoMLExtensionSpec) GetMetadataService() *ArangoMLExtensionSpecMetadataService {
@@ -36,8 +39,17 @@ func (a *ArangoMLExtensionSpec) GetMetadataService() *ArangoMLExtensionSpecMetad
 	return a.MetadataService
 }
 
+func (a *ArangoMLExtensionSpec) GetStorage() *string {
+	if a == nil || a.Storage == nil {
+		return nil
+	}
+
+	return a.Storage
+}
+
 func (a *ArangoMLExtensionSpec) Validate() error {
 	return shared.WithErrors(shared.PrefixResourceErrors("spec",
 		shared.PrefixResourceErrors("metadataService", a.GetMetadataService().Validate()),
+		shared.PrefixResourceErrors("storage", shared.ValidateRequired(a.GetStorage(), shared.ValidateResourceName)),
 	))
 }

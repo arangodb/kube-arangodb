@@ -73,3 +73,12 @@ func ValidateUID(uid types.UID) error {
 
 	return nil
 }
+
+// ValidateRequired validates if required resource is provided
+func ValidateRequired[T any](in *T, validator func(T) error) error {
+	if in == nil {
+		return errors.Newf("resource should be not nil")
+	}
+
+	return validator(*in)
+}
