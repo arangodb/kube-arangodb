@@ -18,7 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package k8sutil
+package resources
 
 import (
 	core "k8s.io/api/core/v1"

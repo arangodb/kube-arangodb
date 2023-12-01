@@ -27,6 +27,7 @@ import (
 	core "k8s.io/api/core/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	resources2 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
 const (
@@ -69,7 +70,7 @@ func InitLifecycleContainer(image, binaryPath string, resources *core.ResourceRe
 	}
 
 	if resources != nil {
-		c.Resources = ExtractPodAcceptedResourceRequirement(*resources)
+		c.Resources = resources2.ExtractPodAcceptedResourceRequirement(*resources)
 	}
 	return c, nil
 }

@@ -39,6 +39,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
 const (
@@ -284,7 +285,7 @@ func (a *ArangoDContainer) GetEnvs() ([]core.EnvVar, []core.EnvFromSource) {
 }
 
 func (a *ArangoDContainer) GetResourceRequirements() core.ResourceRequirements {
-	return k8sutil.ExtractPodAcceptedResourceRequirement(a.arangoMember.Spec.Overrides.GetResources(&a.groupSpec))
+	return resources.ExtractPodAcceptedResourceRequirement(a.arangoMember.Spec.Overrides.GetResources(&a.groupSpec))
 }
 
 func (a *ArangoDContainer) GetLifecycle() (*core.Lifecycle, error) {
@@ -516,7 +517,7 @@ func (m *MemberArangoDPod) GetInitContainers(cachedStatus interfaces.Inspector) 
 		}
 	}
 
-	return applyInitContainersResourceResources(initContainers, k8sutil.ExtractPodInitContainerAcceptedResourceRequirement(m.GetContainerCreator().GetResourceRequirements())), nil
+	return applyInitContainersResourceResources(initContainers, resources.ExtractPodInitContainerAcceptedResourceRequirement(m.GetContainerCreator().GetResourceRequirements())), nil
 }
 
 func (m *MemberArangoDPod) GetFinalizers() []string {

@@ -31,6 +31,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	persistentvolumeclaimv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
+	resources2 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
 // IsPersistentVolumeClaimMarkedForDeletion returns true if the pvc has been marked for deletion.
@@ -60,7 +61,7 @@ func IsPersistentVolumeClaimResizing(pvc *core.PersistentVolumeClaim) bool {
 
 // ExtractStorageResourceRequirement filters resource requirements for Pods.
 func ExtractStorageResourceRequirement(resources core.ResourceRequirements) core.ResourceRequirements {
-	filterStorage := NewPodResourceListFilter(core.ResourceStorage, "iops")
+	filterStorage := resources2.NewPodResourceListFilter(core.ResourceStorage, "iops")
 
 	return core.ResourceRequirements{
 		Limits:   filterStorage(resources.Limits),
