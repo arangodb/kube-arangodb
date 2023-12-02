@@ -301,6 +301,11 @@ func (in *ArangoMLExtensionSpec) DeepCopyInto(out *ArangoMLExtensionSpec) {
 		*out = new(ArangoMLExtensionSpecMetadataService)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.Storage != nil {
+		in, out := &in.Storage, &out.Storage
+		*out = new(string)
+		**out = **in
+	}
 	return
 }
 

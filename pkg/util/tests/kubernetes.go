@@ -27,6 +27,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	batch "k8s.io/api/batch/v1"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
@@ -42,6 +43,7 @@ import (
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
 func Handle(handler operator.Handler, item operation.Item) error {
@@ -72,6 +74,12 @@ type KubernetesObject interface {
 func CreateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSet.Interface, objects ...interface{}) func(t *testing.T) {
 	for _, object := range objects {
 		switch v := object.(type) {
+		case **batch.Job:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := k8s.BatchV1().Jobs(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
+			require.NoError(t, err)
 		case **core.Secret:
 			require.NotNil(t, v)
 
@@ -102,6 +110,67 @@ func CreateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			vl := *v
 			_, err := arango.MlV1alpha1().ArangoMLExtensions(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
 			require.NoError(t, err)
+		case **mlApi.ArangoMLStorage:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.MlV1alpha1().ArangoMLStorages(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
+			require.NoError(t, err)
+		default:
+			require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))
+		}
+	}
+
+	return func(t *testing.T) {
+		RefreshObjects(t, k8s, arango, objects...)
+	}
+}
+
+func UpdateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSet.Interface, objects ...interface{}) func(t *testing.T) {
+	for _, object := range objects {
+		switch v := object.(type) {
+		case **batch.Job:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := k8s.BatchV1().Jobs(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **core.Secret:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := k8s.CoreV1().Secrets(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **api.ArangoDeployment:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.DatabaseV1().ArangoDeployments(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **api.ArangoClusterSynchronization:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.DatabaseV1().ArangoClusterSynchronizations(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **backupApi.ArangoBackup:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.BackupV1().ArangoBackups(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **mlApi.ArangoMLExtension:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.MlV1alpha1().ArangoMLExtensions(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **mlApi.ArangoMLStorage:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.MlV1alpha1().ArangoMLStorages(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
 		default:
 			require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))
 		}
@@ -115,51 +184,111 @@ func CreateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 func RefreshObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSet.Interface, objects ...interface{}) {
 	for _, object := range objects {
 		switch v := object.(type) {
+		case **batch.Job:
+			require.NotNil(t, v)
+
+			vl := *v
+
+			vn, err := k8s.BatchV1().Jobs(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
+			if err != nil {
+				if kerrors.IsNotFound(err) {
+					*v = nil
+				} else {
+					require.NoError(t, err)
+				}
+			} else {
+				*v = vn
+			}
 		case **core.Secret:
 			require.NotNil(t, v)
 
 			vl := *v
 
 			vn, err := k8s.CoreV1().Secrets(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
-			require.NoError(t, err)
-
-			*v = vn
+			if err != nil {
+				if kerrors.IsNotFound(err) {
+					*v = nil
+				} else {
+					require.NoError(t, err)
+				}
+			} else {
+				*v = vn
+			}
 		case **api.ArangoDeployment:
 			require.NotNil(t, v)
 
 			vl := *v
 
 			vn, err := arango.DatabaseV1().ArangoDeployments(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
-			require.NoError(t, err)
-
-			*v = vn
+			if err != nil {
+				if kerrors.IsNotFound(err) {
+					*v = nil
+				} else {
+					require.NoError(t, err)
+				}
+			} else {
+				*v = vn
+			}
 		case **api.ArangoClusterSynchronization:
 			require.NotNil(t, v)
 
 			vl := *v
 
 			vn, err := arango.DatabaseV1().ArangoClusterSynchronizations(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
-			require.NoError(t, err)
-
-			*v = vn
+			if err != nil {
+				if kerrors.IsNotFound(err) {
+					*v = nil
+				} else {
+					require.NoError(t, err)
+				}
+			} else {
+				*v = vn
+			}
 		case **backupApi.ArangoBackup:
 			require.NotNil(t, v)
 
 			vl := *v
 
 			vn, err := arango.BackupV1().ArangoBackups(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
-			require.NoError(t, err)
-
-			*v = vn
+			if err != nil {
+				if kerrors.IsNotFound(err) {
+					*v = nil
+				} else {
+					require.NoError(t, err)
+				}
+			} else {
+				*v = vn
+			}
 		case **mlApi.ArangoMLExtension:
 			require.NotNil(t, v)
 
 			vl := *v
 
 			vn, err := arango.MlV1alpha1().ArangoMLExtensions(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
-			require.NoError(t, err)
+			if err != nil {
+				if kerrors.IsNotFound(err) {
+					*v = nil
+				} else {
+					require.NoError(t, err)
+				}
+			} else {
+				*v = vn
+			}
+		case **mlApi.ArangoMLStorage:
+			require.NotNil(t, v)
 
-			*v = vn
+			vl := *v
+
+			vn, err := arango.MlV1alpha1().ArangoMLStorages(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
+			if err != nil {
+				if kerrors.IsNotFound(err) {
+					*v = nil
+				} else {
+					require.NoError(t, err)
+				}
+			} else {
+				*v = vn
+			}
 		default:
 			require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))
 		}
@@ -170,6 +299,12 @@ type MetaObjectMod[T meta.Object] func(t *testing.T, obj T)
 
 func SetMetaBasedOnType(t *testing.T, object meta.Object) {
 	switch v := object.(type) {
+	case *batch.Job:
+		v.Kind = "Job"
+		v.APIVersion = "batch/v1"
+		v.SetSelfLink(fmt.Sprintf("/api/batch/v1/jobs/%s/%s",
+			object.GetNamespace(),
+			object.GetName()))
 	case *core.Secret:
 		v.Kind = "Secret"
 		v.APIVersion = "v1"
@@ -208,6 +343,14 @@ func SetMetaBasedOnType(t *testing.T, object meta.Object) {
 			ml.ArangoMLExtensionResourcePlural,
 			object.GetNamespace(),
 			object.GetName()))
+	case *mlApi.ArangoMLStorage:
+		v.Kind = ml.ArangoMLStorageResourceKind
+		v.APIVersion = mlApi.SchemeGroupVersion.String()
+		v.SetSelfLink(fmt.Sprintf("/api/%s/%s/%s/%s",
+			mlApi.SchemeGroupVersion.String(),
+			ml.ArangoMLStorageResourcePlural,
+			object.GetNamespace(),
+			object.GetName()))
 	default:
 		require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))
 	}
@@ -244,6 +387,10 @@ func NewItem(t *testing.T, o operation.Operation, object meta.Object) operation.
 	}
 
 	switch v := object.(type) {
+	case *batch.Job:
+		item.Group = "batch"
+		item.Version = "v1"
+		item.Kind = "Job"
 	case *core.Secret:
 		item.Group = ""
 		item.Version = "v1"
@@ -264,6 +411,10 @@ func NewItem(t *testing.T, o operation.Operation, object meta.Object) operation.
 		item.Group = ml.ArangoMLGroupName
 		item.Version = mlApi.ArangoMLVersion
 		item.Kind = ml.ArangoMLExtensionResourceKind
+	case *mlApi.ArangoMLStorage:
+		item.Group = ml.ArangoMLGroupName
+		item.Version = mlApi.ArangoMLVersion
+		item.Kind = ml.ArangoMLStorageResourceKind
 	default:
 		require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))
 	}

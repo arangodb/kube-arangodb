@@ -57,6 +57,8 @@ type HandleP3Func[P1, P2, P3 interface{}] func(ctx context.Context, p1 P1, p2 P2
 
 type HandleP4Func[P1, P2, P3, P4 interface{}] func(ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4) (bool, error)
 
+type HandleP5Func[P1, P2, P3, P4, P5 interface{}] func(ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5) (bool, error)
+
 type HandleP9Func[P1, P2, P3, P4, P5, P6, P7, P8, P9 interface{}] func(ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, p6 P6, p7 P7, p8 P8, p9 P9) (bool, error)
 
 func HandleP0(ctx context.Context, handler ...HandleP0Func) (bool, error) {
@@ -185,6 +187,36 @@ func HandleP4WithCondition[P1, P2, P3, P4 interface{}](ctx context.Context, cond
 	return WithCondition(conditions, condition, changed, err)
 }
 
+func HandleP5[P1, P2, P3, P4, P5 interface{}](ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, handler ...HandleP5Func[P1, P2, P3, P4, P5]) (bool, error) {
+	isChanged := false
+	for _, h := range handler {
+		changed, err := h(ctx, p1, p2, p3, p4, p5)
+		if changed {
+			isChanged = true
+		}
+
+		if err != nil {
+			return isChanged, err
+		}
+	}
+
+	return isChanged, nil
+}
+
+func HandleP5WithStop[P1, P2, P3, P4, P5 interface{}](ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, handler ...HandleP5Func[P1, P2, P3, P4, P5]) (bool, error) {
+	changed, err := HandleP5[P1, P2, P3, P4, P5](ctx, p1, p2, p3, p4, p5, handler...)
+	if IsStop(err) {
+		return changed, nil
+	}
+
+	return changed, err
+}
+
+func HandleP5WithCondition[P1, P2, P3, P4, P5 interface{}](ctx context.Context, conditions *api.ConditionList, condition api.ConditionType, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, handler ...HandleP5Func[P1, P2, P3, P4, P5]) (bool, error) {
+	changed, err := HandleP5[P1, P2, P3, P4, P5](ctx, p1, p2, p3, p4, p5, handler...)
+	return WithCondition(conditions, condition, changed, err)
+}
+
 func HandleP9[P1, P2, P3, P4, P5, P6, P7, P8, P9 interface{}](ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, p6 P6, p7 P7, p8 P8, p9 P9, handler ...HandleP9Func[P1, P2, P3, P4, P5, P6, P7, P8, P9]) (bool, error) {
 	isChanged := false
 	for _, h := range handler {
@@ -208,4 +240,9 @@ func HandleP9WithStop[P1, P2, P3, P4, P5, P6, P7, P8, P9 interface{}](ctx contex
 	}
 
 	return changed, err
+}
+
+func HandleP9WithCondition[P1, P2, P3, P4, P5, P6, P7, P8, P9 interface{}](ctx context.Context, conditions *api.ConditionList, condition api.ConditionType, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, p6 P6, p7 P7, p8 P8, p9 P9, handler ...HandleP9Func[P1, P2, P3, P4, P5, P6, P7, P8, P9]) (bool, error) {
+	changed, err := HandleP9[P1, P2, P3, P4, P5, P6, P7, P8, P9](ctx, p1, p2, p3, p4, p5, p6, p7, p8, p9, handler...)
+	return WithCondition(conditions, condition, changed, err)
 }

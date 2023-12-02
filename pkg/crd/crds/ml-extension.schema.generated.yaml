@@ -17,6 +17,9 @@ v1alpha1:
                     type: string
                 type: object
             type: object
+          storage:
+            description: Storage specify the ArangoMLStorage used within Extension
+            type: string
         type: object
     type: object
     x-kubernetes-preserve-unknown-fields: true
