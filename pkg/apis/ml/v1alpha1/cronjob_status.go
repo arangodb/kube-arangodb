@@ -20,10 +20,18 @@
 
 package v1alpha1
 
-import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+import (
+	batchApi "k8s.io/api/batch/v1beta1"
+
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+)
 
 type ArangoMLCronJobStatus struct {
 	// Conditions specific to the entire cron job
 	// +doc/type: api.Conditions
 	Conditions api.ConditionList `json:"conditions,omitempty"`
+
+	// +doc/type: v1beta1.CronJobSpec
+	// +doc/link: Kubernetes Documentation|https://godoc.org/k8s.io/api/batch/v1beta1#CronJobStatus
+	batchApi.CronJobStatus `json:",inline"`
 }
