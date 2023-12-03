@@ -144,7 +144,7 @@ func (r *Reconciler) createTLSStatusUpdateRequired(apiObject k8sutil.APIObject, 
 		return false
 	}
 
-	keyHashes := secretKeysToListWithPrefix(trusted)
+	keyHashes := tlsSecretKeysToListWithPrefix(trusted)
 
 	if len(keyHashes) == 0 {
 		return false
