@@ -21,7 +21,7 @@ package s3
 import (
 	"context"
 
-	pb "github.com/arangodb/kube-arangodb/pkg/api/ml/storage/v1"
+	pb "github.com/arangodb-managed/integration-apis/bucket-service/v1"
 )
 
 type Config struct {
