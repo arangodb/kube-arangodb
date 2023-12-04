@@ -108,6 +108,11 @@ func (fw *fileContentWatcher) Start(ctx context.Context) {
 					return
 				}
 
+				// File attributes were changed - skip it
+				if event.Op == fsnotify.Chmod {
+					continue
+				}
+
 				fw.log.Info("modified file: %s", event.Name)
 				fw.markAsChanged()
 
