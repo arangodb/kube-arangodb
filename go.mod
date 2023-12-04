@@ -24,7 +24,6 @@ replace (
 require (
 	github.com/arangodb-helper/go-certificates v0.0.0-20180821055445-9fca24fc2680
 	github.com/arangodb-helper/go-helper v0.4.2
-	github.com/arangodb-managed/integration-apis v0.1.1
 	github.com/arangodb/arangosync-client v0.9.0
 	github.com/arangodb/go-driver v1.6.1
 	github.com/arangodb/go-driver/v2 v2.0.3
@@ -71,7 +70,6 @@ require (
 require (
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
-	github.com/arangodb-managed/apis v0.85.0 // indirect
 	github.com/arangodb/go-velocypack v0.0.0-20200318135517-5af53c29c67e // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bytedance/sonic v1.9.1 // indirect
