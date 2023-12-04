@@ -27,7 +27,7 @@ import (
 )
 
 type ArangoMLCronJobSpec struct {
-	// +doc/type: v1beta1.CronJobSpec
+	// +doc/type: batch.CronJobSpec
 	// +doc/link: Kubernetes Documentation|https://godoc.org/k8s.io/api/batch/v1beta1#CronJobSpec
 	*batchApi.CronJobSpec `json:",inline"`
 }
