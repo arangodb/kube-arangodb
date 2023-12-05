@@ -25,7 +25,21 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
+
+func NewObject(object meta.Object) Object {
+	var n Object
+
+	n.Name = object.GetName()
+	n.UID = util.NewType(object.GetUID())
+
+	if ns := object.GetNamespace(); ns != "" {
+		n.Namespace = util.NewType(ns)
+	}
+
+	return n
+}
 
 type Object struct {
 	// Name of the object
@@ -69,6 +83,30 @@ func (o *Object) GetUID() types.UID {
 	}
 
 	return ""
+}
+
+func (o *Object) Equals(obj meta.Object) bool {
+	if o == nil {
+		return false
+	}
+
+	if o.Name != obj.GetName() {
+		return false
+	}
+
+	if n := o.Namespace; n != nil {
+		if *n != obj.GetNamespace() {
+			return false
+		}
+	}
+
+	if n := o.UID; n != nil {
+		if *n != obj.GetUID() {
+			return false
+		}
+	}
+
+	return true
 }
 
 func (o *Object) Validate() error {
