@@ -31,7 +31,7 @@ type ArangoMLCronJobStatus struct {
 	// +doc/type: api.Conditions
 	Conditions api.ConditionList `json:"conditions,omitempty"`
 
-	// +doc/type: v1beta1.CronJobSpec
+	// +doc/type: batch.CronJobStatus
 	// +doc/link: Kubernetes Documentation|https://godoc.org/k8s.io/api/batch/v1beta1#CronJobStatus
 	batchApi.CronJobStatus `json:",inline"`
 }
