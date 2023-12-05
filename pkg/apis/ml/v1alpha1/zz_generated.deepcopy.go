@@ -29,7 +29,6 @@ import (
 	v1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	sharedv1 "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	v1beta1 "k8s.io/api/batch/v1beta1"
-	corev1 "k8s.io/api/core/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
