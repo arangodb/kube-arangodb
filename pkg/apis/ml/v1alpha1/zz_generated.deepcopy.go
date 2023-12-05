@@ -28,7 +28,7 @@ package v1alpha1
 import (
 	v1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	sharedv1 "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
-	v1beta1 "k8s.io/api/batch/v1beta1"
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
@@ -199,7 +199,7 @@ func (in *ArangoMLCronJobSpec) DeepCopyInto(out *ArangoMLCronJobSpec) {
 	*out = *in
 	if in.CronJobSpec != nil {
 		in, out := &in.CronJobSpec, &out.CronJobSpec
-		*out = new(v1beta1.CronJobSpec)
+		*out = new(batchv1.CronJobSpec)
 		(*in).DeepCopyInto(*out)
 	}
 	return

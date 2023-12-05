@@ -21,7 +21,7 @@
 package v1alpha1
 
 import (
-	batchApi "k8s.io/api/batch/v1beta1"
+	batchApi "k8s.io/api/batch/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 )

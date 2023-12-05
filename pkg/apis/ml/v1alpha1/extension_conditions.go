@@ -29,4 +29,7 @@ const (
 	ExtensionMetadataServiceValidCondition api.ConditionType = "MetadataServiceValid"
 	ExtensionServiceAccountReadyCondition  api.ConditionType = "ServiceAccountReady"
 	LicenseValidCondition                  api.ConditionType = "LicenseValid"
+	CronJobCreatedCondition                api.ConditionType = "CronJobCreated"
+	CronJobActiveCondition                 api.ConditionType = "CronJobActive"
+	CronJobSucceedCondition                api.ConditionType = "CronJobSucceed"
 )
