@@ -189,7 +189,7 @@ func iterateOverObjectDirect(t *testing.T, fields map[string]*ast.Field, name st
 				if doc != nil {
 					if t, ok := extractType(doc); ok {
 						info := typeInfo{
-							path: fmt.Sprintf("%s.%s.%s [embedded]", path, name, f.Name),
+							path: fmt.Sprintf("%s.%s [embedded]", path, name),
 							typ:  t[0],
 						}
 						r[info] = doc
