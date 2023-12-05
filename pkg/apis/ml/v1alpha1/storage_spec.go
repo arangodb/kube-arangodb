@@ -25,10 +25,32 @@ import (
 )
 
 type ArangoMLStorageSpec struct {
+	// BucketName specifies the name of the bucket
+	// Required
+	BucketName *string `json:"bucketName,omitempty"`
+
+	// BucketPath specifies the path within the bucket
+	// +doc/default: /
+	BucketPath *string `json:"bucketPath,omitempty"`
+
 	// Mode defines how storage implementation should be deployed
 	Mode *ArangoMLStorageSpecMode `json:"mode,omitempty"`
 	// Backend defines how storage is implemented
 	Backend *ArangoMLStorageSpecBackend `json:"backend,omitempty"`
+}
+
+func (s *ArangoMLStorageSpec) GetBucketName() string {
+	if s == nil || s.BucketName == nil {
+		return ""
+	}
+	return *s.BucketName
+}
+
+func (s *ArangoMLStorageSpec) GetBucketPath() string {
+	if s == nil || s.BucketPath == nil {
+		return "/"
+	}
+	return *s.BucketPath
 }
 
 func (s *ArangoMLStorageSpec) GetMode() *ArangoMLStorageSpecMode {
@@ -53,6 +75,7 @@ func (s *ArangoMLStorageSpec) Validate() error {
 	if err := shared.WithErrors(shared.PrefixResourceErrors("spec",
 		shared.PrefixResourceError("backend", s.Backend.Validate()),
 		shared.PrefixResourceError("mode", s.Mode.Validate()),
+		shared.PrefixResourceError("bucket", shared.ValidateRequired(s.BucketName, shared.ValidateResourceName)),
 	)); err != nil {
 		return err
 	}

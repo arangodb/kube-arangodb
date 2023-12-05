@@ -21,8 +21,10 @@
 package shared
 
 import (
+	"fmt"
 	"regexp"
 
+	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -74,11 +76,61 @@ func ValidateUID(uid types.UID) error {
 	return nil
 }
 
-// ValidateRequired validates if required resource is provided
-func ValidateRequired[T any](in *T, validator func(T) error) error {
-	if in == nil {
-		return errors.Newf("resource should be not nil")
+// ValidatePullPolicy Validates core.PullPolicy
+func ValidatePullPolicy(in core.PullPolicy) error {
+	switch in {
+	case core.PullAlways, core.PullNever, core.PullIfNotPresent:
+		return nil
 	}
 
-	return validator(*in)
+	return errors.Newf("Unknown pull policy: '%s'", string(in))
+}
+
+// ValidateOptional Validates object if is not nil
+func ValidateOptional[T interface{}](in *T, validator func(T) error) error {
+	if in != nil {
+		return validator(*in)
+	}
+
+	return nil
+}
+
+// ValidateRequired Validates object and required not nil value
+func ValidateRequired[T interface{}](in *T, validator func(T) error) error {
+	if in != nil {
+		return validator(*in)
+	}
+
+	return errors.Newf("should be not nil")
+}
+
+// ValidateList validates all elements on the list
+func ValidateList[T interface{}](in []T, validator func(T) error) error {
+	errors := make([]error, len(in))
+
+	for id := range in {
+		errors[id] = PrefixResourceError(fmt.Sprintf("[%d]", id), validator(in[id]))
+	}
+
+	return WithErrors(errors...)
+}
+
+// ValidateImage Validates if provided image is valid
+func ValidateImage(image string) error {
+	if image == "" {
+		return errors.Newf("Image should be not empty")
+	}
+
+	return nil
+}
+
+// ValidateAnyNotNil Validates if any of the specified objects is not nil
+func ValidateAnyNotNil[T any](msg string, obj ...*T) error {
+	for _, o := range obj {
+		if o != nil {
+			return nil
+		}
+	}
+
+	return errors.Newf(msg)
 }

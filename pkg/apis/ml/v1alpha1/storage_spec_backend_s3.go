@@ -32,9 +32,6 @@ type ArangoMLStorageSpecBackendS3 struct {
 	// Endpoint specifies the S3 API-compatible endpoint which implements storage
 	// Required
 	Endpoint *string `json:"endpoint"`
-	// BucketName specifies the name of the bucket
-	// Required
-	BucketName *string `json:"bucketName"`
 	// CredentialsSecret specifies the Kubernetes Secret containing AccessKey and SecretKey for S3 API authorization
 	// Required
 	CredentialsSecret *sharedApi.Object `json:"credentialsSecret"`
@@ -59,10 +56,6 @@ func (s *ArangoMLStorageSpecBackendS3) Validate() error {
 
 	var errs []error
 
-	if s.GetBucketName() == "" {
-		errs = append(errs, shared.PrefixResourceErrors("bucketName", errors.New("must be not empty")))
-	}
-
 	if s.GetEndpoint() == "" {
 		errs = append(errs, shared.PrefixResourceErrors("endpoint", errors.New("must be not empty")))
 	}
@@ -85,13 +78,6 @@ func (s *ArangoMLStorageSpecBackendS3) GetEndpoint() string {
 		return ""
 	}
 	return *s.Endpoint
-}
-
-func (s *ArangoMLStorageSpecBackendS3) GetBucketName() string {
-	if s == nil || s.BucketName == nil {
-		return ""
-	}
-	return *s.BucketName
 }
 
 func (s *ArangoMLStorageSpecBackendS3) GetCredentialsSecret() *sharedApi.Object {

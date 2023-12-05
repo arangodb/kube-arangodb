@@ -32,7 +32,7 @@ type ArangoMLStorageSpecBackend struct {
 
 func (s *ArangoMLStorageSpecBackend) GetS3() *ArangoMLStorageSpecBackendS3 {
 	if s == nil || s.S3 == nil {
-		return &ArangoMLStorageSpecBackendS3{}
+		return nil
 	}
 	return s.S3
 }
