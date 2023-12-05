@@ -184,6 +184,20 @@ func iterateOverObjectDirect(t *testing.T, fields map[string]*ast.Field, name st
 				}
 			}
 
+			// inline and anonymous field (embedded)
+			if inline && n == "" {
+				if doc != nil {
+					if t, ok := extractType(doc); ok {
+						info := typeInfo{
+							path: fmt.Sprintf("%s.%s", path, name),
+							typ:  t[0],
+						}
+						r[info] = doc
+						continue
+					}
+				}
+			}
+
 			if inline {
 				for k, v := range iterateOverObjectDirect(t, fields, name, f.Type, path) {
 					if v == nil {
@@ -301,9 +315,32 @@ func parseSourceFiles(t *testing.T, root string, fset *token.FileSet, path strin
 				if nt != nil {
 					require.NotEmpty(t, nt.Name)
 
-					for _, name := range x.Names {
-						r[fmt.Sprintf("%s.%s.%s", k, nt.Name, name)] = x
+					if len(x.Names) > 0 {
+						for _, name := range x.Names {
+							r[fmt.Sprintf("%s.%s.%s", k, nt.Name, name)] = x
+						}
+					} else {
+						// If x.Names is empty, it's an anonymous field
+						if len(x.Names) == 0 {
+							// first check if it's a pointer to a struct
+							typeName, ok := x.Type.(*ast.StarExpr)
+							if ok {
+								ident, ok := typeName.X.(*ast.SelectorExpr)
+								if ok {
+									fieldName := ident.Sel.Name
+									r[fmt.Sprintf("%s.%s.%s", k, nt.Name, fieldName)] = x
+								}
+							} else {
+								// if it's not a pointer
+								ident, ok := x.Type.(*ast.SelectorExpr)
+								if ok {
+									fieldName := ident.Sel.Name
+									r[fmt.Sprintf("%s.%s.%s", k, nt.Name, fieldName)] = x
+								}
+							}
+						}
 					}
+
 				}
 			}
 
