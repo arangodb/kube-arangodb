@@ -64,12 +64,12 @@ func ValidateOptionalResourceName(name string) error {
 func ValidateUID(uid types.UID) error {
 	v := strings.Split(string(uid), "-")
 
-	if len(v) != 0 &&
-		len(v[0]) != 6 &&
-		len(v[1]) != 4 &&
-		len(v[2]) != 4 &&
-		len(v[3]) != 4 &&
-		len(v[4]) != 6 {
+	if len(v) != 5 ||
+		len(v[0]) != 8 ||
+		len(v[1]) != 4 ||
+		len(v[2]) != 4 ||
+		len(v[3]) != 4 ||
+		len(v[4]) != 12 {
 		return errors.Newf("Invalid UID: %s", uid)
 	}
 
