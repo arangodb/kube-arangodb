@@ -55,14 +55,14 @@ func (s *ArangoMLStorageSpec) GetBucketPath() string {
 
 func (s *ArangoMLStorageSpec) GetMode() *ArangoMLStorageSpecMode {
 	if s == nil || s.Mode == nil {
-		return &ArangoMLStorageSpecMode{}
+		return nil
 	}
 	return s.Mode
 }
 
 func (s *ArangoMLStorageSpec) GetBackend() *ArangoMLStorageSpecBackend {
 	if s == nil || s.Backend == nil {
-		return &ArangoMLStorageSpecBackend{}
+		return nil
 	}
 	return s.Backend
 }
