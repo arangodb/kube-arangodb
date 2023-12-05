@@ -34,5 +34,10 @@ rules:
         - "get"
         - "list"
         - "watch"
+    - apiGroups: [""]
+      resources:
+        - "secrets"
+        - "pods"
+      verbs: ["*"]
 {{- end }}
 {{- end }}

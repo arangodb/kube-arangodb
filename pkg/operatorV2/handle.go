@@ -59,6 +59,8 @@ type HandleP4Func[P1, P2, P3, P4 interface{}] func(ctx context.Context, p1 P1, p
 
 type HandleP5Func[P1, P2, P3, P4, P5 interface{}] func(ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5) (bool, error)
 
+type HandleP6Func[P1, P2, P3, P4, P5, P6 interface{}] func(ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, p6 P6) (bool, error)
+
 type HandleP9Func[P1, P2, P3, P4, P5, P6, P7, P8, P9 interface{}] func(ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, p6 P6, p7 P7, p8 P8, p9 P9) (bool, error)
 
 func HandleP0(ctx context.Context, handler ...HandleP0Func) (bool, error) {
@@ -214,6 +216,36 @@ func HandleP5WithStop[P1, P2, P3, P4, P5 interface{}](ctx context.Context, p1 P1
 
 func HandleP5WithCondition[P1, P2, P3, P4, P5 interface{}](ctx context.Context, conditions *api.ConditionList, condition api.ConditionType, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, handler ...HandleP5Func[P1, P2, P3, P4, P5]) (bool, error) {
 	changed, err := HandleP5[P1, P2, P3, P4, P5](ctx, p1, p2, p3, p4, p5, handler...)
+	return WithCondition(conditions, condition, changed, err)
+}
+
+func HandleP6[P1, P2, P3, P4, P5, P6 interface{}](ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, p6 P6, handler ...HandleP6Func[P1, P2, P3, P4, P5, P6]) (bool, error) {
+	isChanged := false
+	for _, h := range handler {
+		changed, err := h(ctx, p1, p2, p3, p4, p5, p6)
+		if changed {
+			isChanged = true
+		}
+
+		if err != nil {
+			return isChanged, err
+		}
+	}
+
+	return isChanged, nil
+}
+
+func HandleP6WithStop[P1, P2, P3, P4, P5, P6 interface{}](ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, p6 P6, handler ...HandleP6Func[P1, P2, P3, P4, P5, P6]) (bool, error) {
+	changed, err := HandleP6[P1, P2, P3, P4, P5, P6](ctx, p1, p2, p3, p4, p5, p6, handler...)
+	if IsStop(err) {
+		return changed, nil
+	}
+
+	return changed, err
+}
+
+func HandleP6WithCondition[P1, P2, P3, P4, P5, P6 interface{}](ctx context.Context, conditions *api.ConditionList, condition api.ConditionType, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, p6 P6, handler ...HandleP6Func[P1, P2, P3, P4, P5, P6]) (bool, error) {
+	changed, err := HandleP6[P1, P2, P3, P4, P5, P6](ctx, p1, p2, p3, p4, p5, p6, handler...)
 	return WithCondition(conditions, condition, changed, err)
 }
 

@@ -20,7 +20,10 @@
 
 package v1alpha1
 
-import "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+import (
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+)
 
 type ArangoMLExtensionSpec struct {
 	// MetadataService keeps the MetadataService configuration
@@ -28,7 +31,13 @@ type ArangoMLExtensionSpec struct {
 	MetadataService *ArangoMLExtensionSpecMetadataService `json:"metadataService,omitempty"`
 
 	// Storage specify the ArangoMLStorage used within Extension
-	Storage *string `json:"storage,omitempty"`
+	Storage *sharedApi.Object `json:"storage,omitempty"`
+
+	// Image define default image used for the extension
+	*sharedApi.Image `json:",inline"`
+
+	// ArangoMLExtensionSpecInit define Init job specification
+	Init *ArangoMLExtensionSpecInit `json:"init,omitempty"`
 }
 
 func (a *ArangoMLExtensionSpec) GetMetadataService() *ArangoMLExtensionSpecMetadataService {
@@ -39,7 +48,23 @@ func (a *ArangoMLExtensionSpec) GetMetadataService() *ArangoMLExtensionSpecMetad
 	return a.MetadataService
 }
 
-func (a *ArangoMLExtensionSpec) GetStorage() *string {
+func (a *ArangoMLExtensionSpec) GetImage() *sharedApi.Image {
+	if a == nil || a.Image == nil {
+		return nil
+	}
+
+	return a.Image
+}
+
+func (a *ArangoMLExtensionSpec) GetInit() *ArangoMLExtensionSpecInit {
+	if a == nil || a.Init == nil {
+		return nil
+	}
+
+	return a.Init
+}
+
+func (a *ArangoMLExtensionSpec) GetStorage() *sharedApi.Object {
 	if a == nil || a.Storage == nil {
 		return nil
 	}
@@ -48,8 +73,16 @@ func (a *ArangoMLExtensionSpec) GetStorage() *string {
 }
 
 func (a *ArangoMLExtensionSpec) Validate() error {
+	if a == nil {
+		a = &ArangoMLExtensionSpec{}
+	}
+
 	return shared.WithErrors(shared.PrefixResourceErrors("spec",
 		shared.PrefixResourceErrors("metadataService", a.GetMetadataService().Validate()),
-		shared.PrefixResourceErrors("storage", shared.ValidateRequired(a.GetStorage(), shared.ValidateResourceName)),
+		shared.PrefixResourceErrors("storage", shared.ValidateRequired(a.GetStorage(), func(obj sharedApi.Object) error { return obj.Validate() })),
+		a.GetImage().Validate(),
+		shared.PrefixResourceErrors("init", a.GetInit().Validate()),
+		shared.PrefixResourceErrors("storage", shared.ValidateRequired(a.Storage, func(obj sharedApi.Object) error { return obj.Validate() })),
+		shared.ValidateAnyNotNil(".image or .init.image needs to be specified", a.GetImage(), a.GetInit().GetImage()),
 	))
 }

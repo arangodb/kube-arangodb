@@ -60,6 +60,7 @@ func NewMetaObjectRun[T meta.Object](t *testing.T) {
 
 func Test_NewMetaObject(t *testing.T) {
 	NewMetaObjectRun[*batch.Job](t)
+	NewMetaObjectRun[*core.Pod](t)
 	NewMetaObjectRun[*core.Secret](t)
 	NewMetaObjectRun[*api.ArangoDeployment](t)
 	NewMetaObjectRun[*api.ArangoClusterSynchronization](t)

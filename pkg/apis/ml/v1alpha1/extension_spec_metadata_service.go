@@ -28,7 +28,7 @@ import (
 
 const (
 	ArangoMLExtensionSpecMetadataServiceLocalDefaultArangoPipeDatabase           = "arangopipe"
-	ArangoMLExtensionSpecMetadataServiceLocalDefaultArangoMLFeatureStoreDatabase = "arangomlfeaturestore"
+	ArangoMLExtensionSpecMetadataServiceLocalDefaultArangoMLFeatureStoreDatabase = "arangoml_feature_store"
 )
 
 type ArangoMLExtensionSpecMetadataService struct {

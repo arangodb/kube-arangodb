@@ -3,6 +3,24 @@ v1alpha1:
     properties:
       spec:
         properties:
+          image:
+            description: Image define image details
+            type: string
+          init:
+            description: ArangoMLExtensionSpecInit define Init job specification
+            properties:
+              image:
+                description: Image define image details
+                type: string
+              pullPolicy:
+                description: PullPolicy define Image pull policy
+                type: string
+              pullSecrets:
+                description: PullSecrets define Secrets used to pull Image from registry
+                items:
+                  type: string
+                type: array
+            type: object
           metadataService:
             description: MetadataService keeps the MetadataService configuration
             properties:
@@ -17,9 +35,27 @@ v1alpha1:
                     type: string
                 type: object
             type: object
+          pullPolicy:
+            description: PullPolicy define Image pull policy
+            type: string
+          pullSecrets:
+            description: PullSecrets define Secrets used to pull Image from registry
+            items:
+              type: string
+            type: array
           storage:
             description: Storage specify the ArangoMLStorage used within Extension
-            type: string
+            properties:
+              name:
+                description: Name of the object
+                type: string
+              namespace:
+                description: Namespace of the object. Should default to the namespace of the parent object
+                type: string
+              uid:
+                description: UID keeps the information about object UID
+                type: string
+            type: object
         type: object
     type: object
     x-kubernetes-preserve-unknown-fields: true
