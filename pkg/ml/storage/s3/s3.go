@@ -18,12 +18,6 @@
 
 package s3
 
-import (
-	"context"
-
-	pb "github.com/arangodb/kube-arangodb/pkg/api/ml/storage/v1"
-)
-
 type Config struct {
 	Endpoint      string
 	AllowInsecure bool
@@ -34,10 +28,4 @@ type Config struct {
 	BucketName    string
 	AccessKeyFile string // path to file containing S3 AccessKey
 	SecretKeyFile string // path to file containing S3 SecretKey
-}
-
-type ShutdownableBucketServiceServer interface {
-	pb.BucketServiceServer
-
-	Shutdown(cancelFunc context.CancelFunc)
 }
