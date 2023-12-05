@@ -24,11 +24,11 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/google/uuid"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
 
 var (
@@ -62,18 +62,8 @@ func ValidateOptionalResourceName(name string) error {
 
 // ValidateUID validates if it is valid Kubernetes UID
 func ValidateUID(uid types.UID) error {
-	v := strings.Split(string(uid), "-")
-
-	if len(v) != 5 ||
-		len(v[0]) != 8 ||
-		len(v[1]) != 4 ||
-		len(v[2]) != 4 ||
-		len(v[3]) != 4 ||
-		len(v[4]) != 12 {
-		return errors.Newf("Invalid UID: %s", uid)
-	}
-
-	return nil
+	_, err := uuid.Parse(string(uid))
+	return err
 }
 
 // ValidatePullPolicy Validates core.PullPolicy
