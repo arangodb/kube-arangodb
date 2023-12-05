@@ -21,18 +21,9 @@
 package v1alpha1
 
 import (
-	core "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
-
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-)
-
-var (
-	defaultRequestsCPU    = resource.MustParse("100m")
-	defaultRequestsMemory = resource.MustParse("100Mi")
-	defaultLimitsCPU      = resource.MustParse("200m")
-	defaultLimitsMemory   = resource.MustParse("200Mi")
 )
 
 type ArangoMLStorageSpecModeSidecar struct {
@@ -40,20 +31,43 @@ type ArangoMLStorageSpecModeSidecar struct {
 	// +doc/default: 9201
 	ListenPort *uint16 `json:"listenPort,omitempty"`
 
+	// Image define default image used for the extension
+	*sharedApi.Image `json:",inline"`
+
 	// Resources holds resource requests & limits for container running the S3 proxy
-	// +doc/type: core.ResourceRequirements
-	// +doc/link: Documentation of core.ResourceRequirements|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core
-	Resources *core.ResourceRequirements `json:"resources,omitempty"`
+	*sharedApi.Resources `json:",inline"`
+}
+
+func (s *ArangoMLStorageSpecModeSidecar) GetImage() *sharedApi.Image {
+	if s == nil || s.Image == nil {
+		return nil
+	}
+
+	return s.Image
+}
+
+func (s *ArangoMLStorageSpecModeSidecar) GetResources() *sharedApi.Resources {
+	if s == nil || s.Resources == nil {
+		return nil
+	}
+
+	return s.Resources
 }
 
 func (s *ArangoMLStorageSpecModeSidecar) Validate() error {
 	if s == nil {
 		s = &ArangoMLStorageSpecModeSidecar{}
 	}
+
+	var err []error
+
 	if s.GetListenPort() < 1 {
-		return shared.PrefixResourceErrors("database", errors.Newf("must be positive"))
+		err = append(err, shared.PrefixResourceErrors("database", errors.Newf("must be positive")))
 	}
-	return nil
+
+	err = append(err, s.GetResources().Validate())
+
+	return shared.WithErrors(err...)
 }
 
 func (s *ArangoMLStorageSpecModeSidecar) GetListenPort() uint16 {
@@ -61,23 +75,4 @@ func (s *ArangoMLStorageSpecModeSidecar) GetListenPort() uint16 {
 		return 9201
 	}
 	return *s.ListenPort
-}
-
-func (s *ArangoMLStorageSpecModeSidecar) GetResources() core.ResourceRequirements {
-	var resources core.ResourceRequirements
-	if s != nil && s.Resources != nil {
-		resources = *s.Resources
-	}
-
-	if len(resources.Requests) == 0 {
-		resources.Requests = make(core.ResourceList)
-		resources.Requests[core.ResourceCPU] = defaultRequestsCPU
-		resources.Requests[core.ResourceMemory] = defaultRequestsMemory
-	}
-	if len(resources.Limits) == 0 {
-		resources.Limits = make(core.ResourceList)
-		resources.Limits[core.ResourceCPU] = defaultLimitsCPU
-		resources.Limits[core.ResourceMemory] = defaultLimitsMemory
-	}
-	return resources
 }

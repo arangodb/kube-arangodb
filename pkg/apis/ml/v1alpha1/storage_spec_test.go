@@ -50,13 +50,13 @@ func Test_ArangoMLStorageSpec(t *testing.T) {
 
 	require.Error(t, s.Backend.S3.Validate())
 	s.Backend.S3 = &ArangoMLStorageSpecBackendS3{
-		Endpoint:   util.NewType("http://test.s3.example.com"),
-		BucketName: util.NewType("bucket"),
+		Endpoint: util.NewType("http://test.s3.example.com"),
 		CredentialsSecret: &sharedApi.Object{
 			Name:      "a-secret",
 			Namespace: nil,
 		},
 	}
+	s.BucketName = util.NewType("bucket")
 	require.NoError(t, s.Validate())
 
 	t.Run("default requests and limits assigned", func(t *testing.T) {
@@ -66,7 +66,7 @@ func Test_ArangoMLStorageSpec(t *testing.T) {
 				core.ResourceMemory: resource.MustParse("200Mi"),
 			},
 		}
-		s.Mode.Sidecar.Resources = &assignedRequirements
+		s.Mode.Sidecar.Resources = &sharedApi.Resources{Resources: &assignedRequirements}
 
 		expectedRequirements := core.ResourceRequirements{
 			Requests: assignedRequirements.Requests,
@@ -76,7 +76,16 @@ func Test_ArangoMLStorageSpec(t *testing.T) {
 			},
 		}
 
-		actualRequirements := s.Mode.Sidecar.GetResources()
+		actualRequirements := s.Mode.Sidecar.GetResources().With(core.ResourceRequirements{
+			Limits: core.ResourceList{
+				core.ResourceCPU:    resource.MustParse("100m"),
+				core.ResourceMemory: resource.MustParse("128Mi"),
+			},
+			Requests: core.ResourceList{
+				core.ResourceCPU:    resource.MustParse("200m"),
+				core.ResourceMemory: resource.MustParse("256Mi"),
+			},
+		})
 		require.Equal(t, expectedRequirements, actualRequirements)
 	})
 }

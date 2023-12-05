@@ -33,6 +33,16 @@ func ApplyContainerResourceRequirements(container *core.Container, resources cor
 	container.Resources.Requests = ApplyContainerResourceList(container.Resources.Requests, resources.Requests)
 }
 
+// ApplyContainerResource adds non-existing resources from `from` to `to` ResourceList
+func ApplyContainerResource(to core.ResourceRequirements, from core.ResourceRequirements) core.ResourceRequirements {
+	var r core.ResourceRequirements
+
+	r.Limits = ApplyContainerResourceList(to.Limits, from.Limits)
+	r.Requests = ApplyContainerResourceList(to.Requests, from.Requests)
+
+	return r
+}
+
 // ApplyContainerResourceList adds non-existing resources from `from` to `to` ResourceList
 func ApplyContainerResourceList(to core.ResourceList, from core.ResourceList) core.ResourceList {
 	if len(from) == 0 {

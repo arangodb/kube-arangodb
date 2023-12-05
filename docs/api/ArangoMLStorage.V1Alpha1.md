@@ -4,20 +4,11 @@
 
 ### .spec.backend.s3.allowInsecure
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/storage_spec_backend_s3.go#L43)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/storage_spec_backend_s3.go#L40)</sup>
 
 AllowInsecure if set to true, the Endpoint certificates won't be checked
 
 Default Value: `false`
-
-***
-
-### .spec.backend.s3.bucketName
-
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/storage_spec_backend_s3.go#L37)</sup>
-
-BucketName specifies the name of the bucket
-Required
 
 ***
 
@@ -80,7 +71,7 @@ Required
 
 ### .spec.backend.s3.region
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/storage_spec_backend_s3.go#L52)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/storage_spec_backend_s3.go#L49)</sup>
 
 Region defines the availability zone name.
 
@@ -88,9 +79,36 @@ Default Value: `""`
 
 ***
 
+### .spec.bucketName
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/storage_spec.go#L30)</sup>
+
+BucketName specifies the name of the bucket
+Required
+
+***
+
+### .spec.bucketPath
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/storage_spec.go#L34)</sup>
+
+BucketPath specifies the path within the bucket
+
+Default Value: `/`
+
+***
+
+### .spec.mode.sidecar.image
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/image.go#L31)</sup>
+
+Image define image details
+
+***
+
 ### .spec.mode.sidecar.listenPort
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/storage_spec_mode_sidecar.go#L41)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/storage_spec_mode_sidecar.go#L32)</sup>
 
 ListenPort defines on which port the sidecar container will be listening for connections
 
@@ -98,11 +116,29 @@ Default Value: `9201`
 
 ***
 
+### .spec.mode.sidecar.pullPolicy
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/image.go#L35)</sup>
+
+PullPolicy define Image pull policy
+
+Default Value: `IfNotPresent`
+
+***
+
+### .spec.mode.sidecar.pullSecrets
+
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/image.go#L38)</sup>
+
+PullSecrets define Secrets used to pull Image from registry
+
+***
+
 ### .spec.mode.sidecar.resources
 
-Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/storage_spec_mode_sidecar.go#L46)</sup>
+Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/resources.go#L33)</sup>
 
-Resources holds resource requests & limits for container running the S3 proxy
+Resources holds resource requests & limits for container
 
 Links:
 * [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core)
