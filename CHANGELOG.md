@@ -27,6 +27,7 @@
 - (Feature) TLS CA Secret Key
 - (Refactoring) Extract Resource Helpers
 - (Feature) (ML) Extension Storage Condition
+- (Improvement) (ML) Switch to fsnotify for file watching for MacOS support
 
 ## [1.2.35](https://github.com/arangodb/kube-arangodb/tree/1.2.35) (2023-11-06)
 - (Maintenance) Update go-driver to v1.6.0, update IsNotFound() checks

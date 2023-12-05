@@ -26,14 +26,9 @@ import (
 	"os"
 	"sync"
 
-	"k8s.io/utils/inotify"
+	"github.com/fsnotify/fsnotify"
 
 	"github.com/arangodb/kube-arangodb/pkg/logging"
-)
-
-const (
-	inotifyEventsModification = inotify.InCreate | inotify.InDelete | inotify.InDeleteSelf |
-		inotify.InCloseWrite | inotify.InMove | inotify.InMove | inotify.InMoveSelf | inotify.InUnmount
 )
 
 type FileContentWatcher interface {
@@ -48,7 +43,7 @@ type FileContentWatcher interface {
 type fileContentWatcher struct {
 	isRunning bool
 	p         string
-	w         *inotify.Watcher
+	w         *fsnotify.Watcher
 	log       logging.Logger
 
 	changed bool
@@ -59,11 +54,11 @@ type fileContentWatcher struct {
 // Returns error if filePath is a directory.
 // Caller must Close() the watcher once work finished.
 func NewFileContentWatcher(filePath string, log logging.Logger) (FileContentWatcher, error) {
-	watcher, err := inotify.NewWatcher()
+	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		return nil, fmt.Errorf("unable to setup inotify: %s", err)
+		return nil, fmt.Errorf("unable to setup fsnotify: %s", err)
 	}
-	err = watcher.AddWatch(filePath, inotifyEventsModification)
+	err = watcher.Add(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("unable to AddWatch: %s", err)
 	}
@@ -98,25 +93,37 @@ func (fw *fileContentWatcher) Start(ctx context.Context) {
 			case <-ctx.Done():
 				err := fw.w.Close()
 				if err != nil {
-					fw.log.Err(err).Info("error while closing inotify watcher")
+					fw.log.Err(err).Info("error while closing fsnotify watcher")
+				} else {
+					fw.log.Info("fsnotify watcher closed")
 				}
 				return
-			case err := <-fw.w.Error:
+			case err, ok := <-fw.w.Errors:
+				if !ok {
+					return
+				}
 				fw.log.Err(err).Debug("error while watching for file content")
-			case e := <-fw.w.Event:
-				fw.log.Info("changed: %s", e.String())
+			case event, ok := <-fw.w.Events:
+				if !ok {
+					return
+				}
+
+				// File attributes were changed - skip it
+				if event.Op == fsnotify.Chmod {
+					continue
+				}
+
+				fw.log.Info("modified file: %s", event.Name)
 				fw.markAsChanged()
 
-				if e.Mask&inotify.InIgnored == 0 {
-					// IN_IGNORED can happen if file is deleted
-					// restart watch:
-					err := fw.w.RemoveWatch(fw.p)
-					if err != nil {
-						fw.log.Err(err).Warn("RemoveWatch failed")
+				if event.Op == fsnotify.Remove {
+					// restart watch on removed file
+					if err := fw.w.Remove(fw.p); err != nil {
+						fw.log.Err(err).Error("unable to remove watch")
 					}
-					err = fw.w.AddWatch(fw.p, inotifyEventsModification)
-					if err != nil {
-						fw.log.Err(err).Error("Could not start watch again after getting IN_IGNORED")
+
+					if err := fw.w.Add(fw.p); err != nil {
+						fw.log.Err(err).Error("could not start watch again")
 					}
 				}
 			}
