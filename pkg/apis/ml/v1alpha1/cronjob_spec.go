@@ -20,9 +20,16 @@
 
 package v1alpha1
 
-import "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+import (
+	batchApi "k8s.io/api/batch/v1beta1"
+
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+)
 
 type ArangoMLCronJobSpec struct {
+	// +doc/type: batch.CronJobSpec
+	// +doc/link: Kubernetes Documentation|https://godoc.org/k8s.io/api/batch/v1beta1#CronJobSpec
+	*batchApi.CronJobSpec `json:",inline"`
 }
 
 func (a *ArangoMLCronJobSpec) Validate() error {
