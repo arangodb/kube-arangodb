@@ -124,3 +124,15 @@ func ValidateAnyNotNil[T any](msg string, obj ...*T) error {
 
 	return errors.Newf(msg)
 }
+
+// ValidateServiceType checks that service type is supported
+func ValidateServiceType(st core.ServiceType) error {
+	switch st {
+	case core.ServiceTypeClusterIP,
+		core.ServiceTypeNodePort,
+		core.ServiceTypeLoadBalancer,
+		core.ServiceTypeExternalName:
+		return nil
+	}
+	return errors.Newf("Unsupported service type %s", st)
+}
