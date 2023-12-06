@@ -3,6 +3,107 @@ v1alpha1:
     properties:
       spec:
         properties:
+          deployment:
+            description: Deployment specifies how the ML extension will be deployed into cluster
+            properties:
+              prediction:
+                description: Prediction defines how Prediction workload will be deployed
+                properties:
+                  image:
+                    description: Image define image details
+                    type: string
+                  port:
+                    description: Port defines on which port the container will be listening for connections
+                    format: int32
+                    type: integer
+                  pullPolicy:
+                    description: PullPolicy define Image pull policy
+                    type: string
+                  pullSecrets:
+                    description: PullSecrets define Secrets used to pull Image from registry
+                    items:
+                      type: string
+                    type: array
+                  resources:
+                    description: Resources holds resource requests & limits for container
+                    properties:
+                      limits:
+                        additionalProperties:
+                          type: string
+                        type: object
+                      requests:
+                        additionalProperties:
+                          type: string
+                        type: object
+                    type: object
+                type: object
+              project:
+                description: Project defines how Project workload will be deployed
+                properties:
+                  image:
+                    description: Image define image details
+                    type: string
+                  port:
+                    description: Port defines on which port the container will be listening for connections
+                    format: int32
+                    type: integer
+                  pullPolicy:
+                    description: PullPolicy define Image pull policy
+                    type: string
+                  pullSecrets:
+                    description: PullSecrets define Secrets used to pull Image from registry
+                    items:
+                      type: string
+                    type: array
+                  resources:
+                    description: Resources holds resource requests & limits for container
+                    properties:
+                      limits:
+                        additionalProperties:
+                          type: string
+                        type: object
+                      requests:
+                        additionalProperties:
+                          type: string
+                        type: object
+                    type: object
+                type: object
+              replicas:
+                description: Replicas defines the number of replicas running specified components. No replicas created if no components are defined.
+                format: int32
+                type: integer
+              training:
+                description: Training defines how Training workload will be deployed
+                properties:
+                  image:
+                    description: Image define image details
+                    type: string
+                  port:
+                    description: Port defines on which port the container will be listening for connections
+                    format: int32
+                    type: integer
+                  pullPolicy:
+                    description: PullPolicy define Image pull policy
+                    type: string
+                  pullSecrets:
+                    description: PullSecrets define Secrets used to pull Image from registry
+                    items:
+                      type: string
+                    type: array
+                  resources:
+                    description: Resources holds resource requests & limits for container
+                    properties:
+                      limits:
+                        additionalProperties:
+                          type: string
+                        type: object
+                      requests:
+                        additionalProperties:
+                          type: string
+                        type: object
+                    type: object
+                type: object
+            type: object
           image:
             description: Image define image details
             type: string
@@ -44,7 +145,7 @@ v1alpha1:
               type: string
             type: array
           storage:
-            description: Storage specify the ArangoMLStorage used within Extension
+            description: Storage specifies the ArangoMLStorage used within Extension
             properties:
               name:
                 description: Name of the object

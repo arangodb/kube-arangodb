@@ -39,6 +39,9 @@ func (a *ArangoMLExtensionSpecInit) GetImage() *sharedApi.Image {
 }
 
 func (a *ArangoMLExtensionSpecInit) Validate() error {
+	if a == nil {
+		return nil
+	}
 	return shared.WithErrors(
 		a.GetImage().Validate(),
 	)

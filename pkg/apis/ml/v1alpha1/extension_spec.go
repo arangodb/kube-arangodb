@@ -30,14 +30,17 @@ type ArangoMLExtensionSpec struct {
 	// +doc/immutable: This setting cannot be changed after the MetadataService has been created.
 	MetadataService *ArangoMLExtensionSpecMetadataService `json:"metadataService,omitempty"`
 
-	// Storage specify the ArangoMLStorage used within Extension
+	// Storage specifies the ArangoMLStorage used within Extension
 	Storage *sharedApi.Object `json:"storage,omitempty"`
 
-	// Image define default image used for the extension
+	// Image defines default image used for the extension
 	*sharedApi.Image `json:",inline"`
 
 	// ArangoMLExtensionSpecInit define Init job specification
 	Init *ArangoMLExtensionSpecInit `json:"init,omitempty"`
+
+	// Deployment specifies how the ML extension will be deployed into cluster
+	Deployment *ArangoMLExtensionSpecDeployment `json:"deployment,omitempty"`
 }
 
 func (a *ArangoMLExtensionSpec) GetMetadataService() *ArangoMLExtensionSpecMetadataService {
@@ -72,6 +75,13 @@ func (a *ArangoMLExtensionSpec) GetStorage() *sharedApi.Object {
 	return a.Storage
 }
 
+func (s *ArangoMLExtensionSpec) GetDeployment() *ArangoMLExtensionSpecDeployment {
+	if s == nil || s.Deployment == nil {
+		return nil
+	}
+	return s.Deployment
+}
+
 func (a *ArangoMLExtensionSpec) Validate() error {
 	if a == nil {
 		a = &ArangoMLExtensionSpec{}
@@ -82,7 +92,7 @@ func (a *ArangoMLExtensionSpec) Validate() error {
 		shared.PrefixResourceErrors("storage", shared.ValidateRequired(a.GetStorage(), func(obj sharedApi.Object) error { return obj.Validate() })),
 		a.GetImage().Validate(),
 		shared.PrefixResourceErrors("init", a.GetInit().Validate()),
-		shared.PrefixResourceErrors("storage", shared.ValidateRequired(a.Storage, func(obj sharedApi.Object) error { return obj.Validate() })),
 		shared.ValidateAnyNotNil(".image or .init.image needs to be specified", a.GetImage(), a.GetInit().GetImage()),
+		shared.PrefixResourceErrors("deployment", a.GetDeployment().Validate()),
 	))
 }

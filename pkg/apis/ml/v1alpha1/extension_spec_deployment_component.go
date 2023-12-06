@@ -26,19 +26,26 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-type ArangoMLStorageSpecModeSidecar struct {
-	// ListenPort defines on which port the sidecar container will be listening for connections
-	// +doc/default: 9201
-	ListenPort *uint16 `json:"listenPort,omitempty"`
+type ArangoMLExtensionSpecDeploymentComponent struct {
+	// Port defines on which port the container will be listening for connections
+	Port *int32 `json:"port,omitempty"`
 
-	// Image define default image used for the extension
+	// Image defines image used for the component
 	*sharedApi.Image `json:",inline"`
 
-	// Resources holds resource requests & limits for sidecar container
+	// Resources holds resource requests & limits for container
+	// If not specified, default values will be used
 	*sharedApi.Resources `json:",inline"`
 }
 
-func (s *ArangoMLStorageSpecModeSidecar) GetImage() *sharedApi.Image {
+func (s *ArangoMLExtensionSpecDeploymentComponent) GetPort() int32 {
+	if s == nil || s.Port == nil {
+		return 0
+	}
+	return *s.Port
+}
+
+func (s *ArangoMLExtensionSpecDeploymentComponent) GetImage() *sharedApi.Image {
 	if s == nil || s.Image == nil {
 		return nil
 	}
@@ -46,7 +53,7 @@ func (s *ArangoMLStorageSpecModeSidecar) GetImage() *sharedApi.Image {
 	return s.Image
 }
 
-func (s *ArangoMLStorageSpecModeSidecar) GetResources() *sharedApi.Resources {
+func (s *ArangoMLExtensionSpecDeploymentComponent) GetResources() *sharedApi.Resources {
 	if s == nil || s.Resources == nil {
 		return nil
 	}
@@ -54,25 +61,21 @@ func (s *ArangoMLStorageSpecModeSidecar) GetResources() *sharedApi.Resources {
 	return s.Resources
 }
 
-func (s *ArangoMLStorageSpecModeSidecar) Validate() error {
+func (s *ArangoMLExtensionSpecDeploymentComponent) Validate() error {
 	if s == nil {
-		s = &ArangoMLStorageSpecModeSidecar{}
+		return nil
 	}
 
 	var err []error
 
-	if s.GetListenPort() < 1 {
+	if s.GetPort() < 1 {
 		err = append(err, shared.PrefixResourceErrors("listenPort", errors.Newf("must be positive")))
 	}
 
-	err = append(err, s.GetResources().Validate())
+	err = append(err,
+		shared.PrefixResourceErrors("resources", s.GetResources().Validate()),
+		shared.PrefixResourceErrors("image", shared.ValidateRequired(s.GetImage(), func(obj sharedApi.Image) error { return obj.Validate() })),
+	)
 
 	return shared.WithErrors(err...)
-}
-
-func (s *ArangoMLStorageSpecModeSidecar) GetListenPort() uint16 {
-	if s == nil || s.ListenPort == nil {
-		return 9201
-	}
-	return *s.ListenPort
 }

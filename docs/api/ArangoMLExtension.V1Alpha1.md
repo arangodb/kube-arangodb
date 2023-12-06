@@ -2,6 +2,151 @@
 
 ## Spec
 
+### .spec.deployment.prediction.image
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/image.go#L31)</sup>
+
+Image define image details
+
+***
+
+### .spec.deployment.prediction.port
+
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec_deployment_component.go#L31)</sup>
+
+Port defines on which port the container will be listening for connections
+
+***
+
+### .spec.deployment.prediction.pullPolicy
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/image.go#L35)</sup>
+
+PullPolicy define Image pull policy
+
+Default Value: `IfNotPresent`
+
+***
+
+### .spec.deployment.prediction.pullSecrets
+
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/image.go#L38)</sup>
+
+PullSecrets define Secrets used to pull Image from registry
+
+***
+
+### .spec.deployment.prediction.resources
+
+Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/resources.go#L33)</sup>
+
+Resources holds resource requests & limits for container
+
+Links:
+* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core)
+
+***
+
+### .spec.deployment.project.image
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/image.go#L31)</sup>
+
+Image define image details
+
+***
+
+### .spec.deployment.project.port
+
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec_deployment_component.go#L31)</sup>
+
+Port defines on which port the container will be listening for connections
+
+***
+
+### .spec.deployment.project.pullPolicy
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/image.go#L35)</sup>
+
+PullPolicy define Image pull policy
+
+Default Value: `IfNotPresent`
+
+***
+
+### .spec.deployment.project.pullSecrets
+
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/image.go#L38)</sup>
+
+PullSecrets define Secrets used to pull Image from registry
+
+***
+
+### .spec.deployment.project.resources
+
+Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/resources.go#L33)</sup>
+
+Resources holds resource requests & limits for container
+
+Links:
+* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core)
+
+***
+
+### .spec.deployment.replicas
+
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec_deployment.go#L32)</sup>
+
+Replicas defines the number of replicas running specified components. No replicas created if no components are defined.
+
+Default Value: `1`
+
+***
+
+### .spec.deployment.training.image
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/image.go#L31)</sup>
+
+Image define image details
+
+***
+
+### .spec.deployment.training.port
+
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec_deployment_component.go#L31)</sup>
+
+Port defines on which port the container will be listening for connections
+
+***
+
+### .spec.deployment.training.pullPolicy
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/image.go#L35)</sup>
+
+PullPolicy define Image pull policy
+
+Default Value: `IfNotPresent`
+
+***
+
+### .spec.deployment.training.pullSecrets
+
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/image.go#L38)</sup>
+
+PullSecrets define Secrets used to pull Image from registry
+
+***
+
+### .spec.deployment.training.resources
+
+Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/resources.go#L33)</sup>
+
+Resources holds resource requests & limits for container
+
+Links:
+* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core)
+
+***
+
 ### .spec.image
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/image.go#L31)</sup>
