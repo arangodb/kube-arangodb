@@ -24,6 +24,7 @@ import (
 	batchApi "k8s.io/api/batch/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 type ArangoMLCronJobSpec struct {
@@ -33,5 +34,14 @@ type ArangoMLCronJobSpec struct {
 }
 
 func (a *ArangoMLCronJobSpec) Validate() error {
-	return shared.WithErrors(shared.PrefixResourceErrors("spec"))
+	if a == nil {
+		return errors.Newf("Spec is not defined")
+	}
+
+	var err []error
+	if a.CronJobSpec == nil {
+		err = append(err, shared.PrefixResourceErrors("spec", errors.Newf("CronJobSpec is not defined")))
+	}
+
+	return shared.WithErrors(err...)
 }
