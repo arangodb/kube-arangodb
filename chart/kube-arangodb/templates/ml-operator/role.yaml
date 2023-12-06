@@ -52,9 +52,5 @@ rules:
         - "secrets"
         - "serviceaccounts"
       verbs: ["*"]
-    - apiGroups: ["batch"]
-      resources:
-        - "cronjobs"
-      verbs: ["*"]
 {{- end }}
 {{- end }}
