@@ -21,8 +21,6 @@
 package v1alpha1
 
 import (
-	core "k8s.io/api/core/v1"
-
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -31,11 +29,6 @@ import (
 type ArangoMLExtensionSpecDeploymentComponent struct {
 	// Port defines on which port the container will be listening for connections
 	Port *int32 `json:"port,omitempty"`
-
-	// ServiceType determines how the Service is exposed
-	// +doc/default: ClusterIP
-	// +doc/link: Kubernetes Documentation|https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
-	ServiceType *core.ServiceType `json:"serviceType,omitempty"`
 
 	// Image defines image used for the component
 	*sharedApi.Image `json:",inline"`
@@ -68,14 +61,6 @@ func (s *ArangoMLExtensionSpecDeploymentComponent) GetResources() *sharedApi.Res
 	return s.Resources
 }
 
-func (s *ArangoMLExtensionSpecDeploymentComponent) GetServiceType() core.ServiceType {
-	if s == nil || s.ServiceType == nil {
-		return core.ServiceTypeClusterIP
-	}
-
-	return *s.ServiceType
-}
-
 func (s *ArangoMLExtensionSpecDeploymentComponent) Validate() error {
 	if s == nil {
 		return nil
@@ -90,7 +75,6 @@ func (s *ArangoMLExtensionSpecDeploymentComponent) Validate() error {
 	err = append(err,
 		shared.PrefixResourceErrors("resources", s.GetResources().Validate()),
 		shared.PrefixResourceErrors("image", shared.ValidateRequired(s.GetImage(), func(obj sharedApi.Image) error { return obj.Validate() })),
-		shared.PrefixResourceErrors("image", shared.ValidateServiceType(s.GetServiceType())),
 	)
 
 	return shared.WithErrors(err...)

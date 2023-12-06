@@ -21,6 +21,8 @@
 package v1alpha1
 
 import (
+	core "k8s.io/api/core/v1"
+
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -30,6 +32,11 @@ type ArangoMLExtensionSpecDeployment struct {
 	// Replicas defines the number of replicas running specified components. No replicas created if no components are defined.
 	// +doc/default: 1
 	Replicas *int32 `json:"replicas,omitempty"`
+
+	// ServiceType determines how the Service is exposed
+	// +doc/default: ClusterIP
+	// +doc/link: Kubernetes Documentation|https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
+	ServiceType *core.ServiceType `json:"serviceType,omitempty"`
 
 	// Prediction defines how Prediction workload will be deployed
 	Prediction *ArangoMLExtensionSpecDeploymentComponent `json:"prediction,omitempty"`
@@ -44,6 +51,14 @@ func (s *ArangoMLExtensionSpecDeployment) GetReplicas() int32 {
 		return 1
 	}
 	return *s.Replicas
+}
+
+func (s *ArangoMLExtensionSpecDeployment) GetServiceType() core.ServiceType {
+	if s == nil || s.ServiceType == nil {
+		return core.ServiceTypeClusterIP
+	}
+
+	return *s.ServiceType
 }
 
 func (s *ArangoMLExtensionSpecDeployment) GetPrediction() *ArangoMLExtensionSpecDeploymentComponent {
@@ -96,7 +111,9 @@ func (s *ArangoMLExtensionSpecDeployment) Validate() error {
 		return nil
 	}
 
-	var errs []error
+	errs := []error{
+		shared.PrefixResourceErrors("serviceType", shared.ValidateServiceType(s.GetServiceType())),
+	}
 
 	if s.GetReplicas() < 0 || s.GetReplicas() > 10 {
 		errs = append(errs, shared.PrefixResourceErrors("replicas", errors.Newf("out of range [0, 10]")))
