@@ -34,7 +34,7 @@ type ArangoMLCronJobStatus struct {
 
 	// +doc/type: batch.CronJobStatus
 	// +doc/link: Kubernetes Documentation|https://godoc.org/k8s.io/api/batch/v1beta1#CronJobStatus
-	batch.CronJobStatus `json:",inline"`
+	*batch.CronJobStatus `json:",inline"`
 }
 
 func (a *ArangoMLCronJobStatus) Validate() error {

@@ -225,7 +225,11 @@ func (in *ArangoMLCronJobStatus) DeepCopyInto(out *ArangoMLCronJobStatus) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
-	in.CronJobStatus.DeepCopyInto(&out.CronJobStatus)
+	if in.CronJobStatus != nil {
+		in, out := &in.CronJobStatus, &out.CronJobStatus
+		*out = new(batchv1.CronJobStatus)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 
