@@ -104,14 +104,18 @@ Default Value: `1`
 
 ### .spec.deployment.serviceType
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec_deployment.go#L39)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec_deployment.go#L43)</sup>
 
 ServiceType determines how the Service is exposed
 
 Links:
 * [Kubernetes Documentation](https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types)
 
-Default Value: `ClusterIP`
+Possible Values: 
+* ClusterIP (default) - service will only be accessible inside the cluster, via the cluster IP
+* NodePort - service will be exposed on one port of every node, in addition to 'ClusterIP' type
+* LoadBalancer - service will be exposed via an external load balancer (if the cloud provider supports it), in addition to 'NodePort' type
+* ExternalName - service consists of only a reference to an external name that kubedns or equivalent will return as a CNAME record, with no exposing or proxying of any pods involved
 
 ***
 

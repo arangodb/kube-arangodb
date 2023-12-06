@@ -74,6 +74,11 @@ v1alpha1:
                 type: integer
               serviceType:
                 description: ServiceType determines how the Service is exposed
+                enum:
+                  - ClusterIP
+                  - NodePort
+                  - LoadBalancer
+                  - ExternalName
                 type: string
               training:
                 description: Training defines how Training workload will be deployed
