@@ -18,15 +18,23 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+package v1
 
-import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+type ServiceAccount struct {
+	// Object keeps the reference to the ServiceAccount
+	*Object `json:",inline"`
 
-const (
-	ExtensionStorageFoundCondition         api.ConditionType = "StorageFound"
-	ExtensionDeploymentFoundCondition      api.ConditionType = "DeploymentFound"
-	ExtensionBootstrapCompletedCondition   api.ConditionType = "BootstrapCompleted"
-	ExtensionMetadataServiceValidCondition api.ConditionType = "MetadataServiceValid"
-	ExtensionServiceAccountReadyCondition  api.ConditionType = "ServiceAccountReady"
-	LicenseValidCondition                  api.ConditionType = "LicenseValid"
-)
+	// Namespaced keeps the reference to core.Role objects
+	Namespaced *ServiceAccountRole `json:"namespaced,omitempty"`
+
+	// Cluster keeps the reference to core.ClusterRole objects
+	Cluster *ServiceAccountRole `json:"cluster,omitempty"`
+}
+
+type ServiceAccountRole struct {
+	// Role keeps the reference to the Kubernetes Role
+	Role *Object `json:"role,omitempty"`
+
+	// Binding keeps the reference to the Kubernetes Binding
+	Binding *Object `json:"binding,omitempty"`
+}

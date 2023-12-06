@@ -418,6 +418,11 @@ func (in *ArangoMLExtensionStatus) DeepCopyInto(out *ArangoMLExtensionStatus) {
 		*out = new(ArangoMLExtensionStatusMetadataService)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.ServiceAccount != nil {
+		in, out := &in.ServiceAccount, &out.ServiceAccount
+		*out = new(sharedv1.ServiceAccount)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 

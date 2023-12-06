@@ -29,6 +29,7 @@ import (
 	"github.com/stretchr/testify/require"
 	batch "k8s.io/api/batch/v1"
 	core "k8s.io/api/core/v1"
+	rbac "k8s.io/api/rbac/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/client-go/kubernetes"
@@ -45,6 +46,27 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
+
+type handleFunc struct {
+	in func(ctx context.Context) (bool, error)
+}
+
+func (h handleFunc) Name() string {
+	return "mock"
+}
+
+func (h handleFunc) Handle(ctx context.Context, item operation.Item) error {
+	_, err := h.in(ctx)
+	return err
+}
+
+func (h handleFunc) CanBeHandled(item operation.Item) bool {
+	return true
+}
+
+func HandleFunc(in func(ctx context.Context) (bool, error)) error {
+	return Handle(handleFunc{in: in}, operation.Item{})
+}
 
 func Handle(handler operator.Handler, item operation.Item) error {
 	return HandleWithMax(handler, item, 128)
@@ -80,17 +102,23 @@ func CreateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			vl := *v
 			_, err := k8s.BatchV1().Jobs(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
 			require.NoError(t, err)
+		case **core.Pod:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := k8s.CoreV1().Pods(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
+			require.NoError(t, err)
 		case **core.Secret:
 			require.NotNil(t, v)
 
 			vl := *v
 			_, err := k8s.CoreV1().Secrets(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
 			require.NoError(t, err)
-		case **core.Pod:
+		case **core.ServiceAccount:
 			require.NotNil(t, v)
 
 			vl := *v
-			_, err := k8s.CoreV1().Pods(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
+			_, err := k8s.CoreV1().ServiceAccounts(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
 			require.NoError(t, err)
 		case **api.ArangoDeployment:
 			require.NotNil(t, v)
@@ -121,6 +149,30 @@ func CreateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 
 			vl := *v
 			_, err := arango.MlV1alpha1().ArangoMLStorages(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
+			require.NoError(t, err)
+		case **rbac.ClusterRole:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := k8s.RbacV1().ClusterRoles().Create(context.Background(), vl, meta.CreateOptions{})
+			require.NoError(t, err)
+		case **rbac.ClusterRoleBinding:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := k8s.RbacV1().ClusterRoleBindings().Create(context.Background(), vl, meta.CreateOptions{})
+			require.NoError(t, err)
+		case **rbac.Role:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := k8s.RbacV1().Roles(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
+			require.NoError(t, err)
+		case **rbac.RoleBinding:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := k8s.RbacV1().RoleBindings(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
 			require.NoError(t, err)
 		default:
 			require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))
@@ -153,6 +205,12 @@ func UpdateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			vl := *v
 			_, err := k8s.CoreV1().Secrets(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
 			require.NoError(t, err)
+		case **core.ServiceAccount:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := k8s.CoreV1().ServiceAccounts(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
 		case **api.ArangoDeployment:
 			require.NotNil(t, v)
 
@@ -182,6 +240,30 @@ func UpdateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 
 			vl := *v
 			_, err := arango.MlV1alpha1().ArangoMLStorages(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **rbac.ClusterRole:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := k8s.RbacV1().ClusterRoles().Update(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **rbac.ClusterRoleBinding:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := k8s.RbacV1().ClusterRoleBindings().Update(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **rbac.Role:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := k8s.RbacV1().Roles(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **rbac.RoleBinding:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := k8s.RbacV1().RoleBindings(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
 			require.NoError(t, err)
 		default:
 			require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))
@@ -232,6 +314,21 @@ func RefreshObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientS
 			vl := *v
 
 			vn, err := k8s.CoreV1().Secrets(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
+			if err != nil {
+				if kerrors.IsNotFound(err) {
+					*v = nil
+				} else {
+					require.NoError(t, err)
+				}
+			} else {
+				*v = vn
+			}
+		case **core.ServiceAccount:
+			require.NotNil(t, v)
+
+			vl := *v
+
+			vn, err := k8s.CoreV1().ServiceAccounts(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
 			if err != nil {
 				if kerrors.IsNotFound(err) {
 					*v = nil
@@ -316,6 +413,66 @@ func RefreshObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientS
 			} else {
 				*v = vn
 			}
+		case **rbac.ClusterRole:
+			require.NotNil(t, v)
+
+			vl := *v
+
+			vn, err := k8s.RbacV1().ClusterRoles().Get(context.Background(), vl.GetName(), meta.GetOptions{})
+			if err != nil {
+				if kerrors.IsNotFound(err) {
+					*v = nil
+				} else {
+					require.NoError(t, err)
+				}
+			} else {
+				*v = vn
+			}
+		case **rbac.ClusterRoleBinding:
+			require.NotNil(t, v)
+
+			vl := *v
+
+			vn, err := k8s.RbacV1().ClusterRoleBindings().Get(context.Background(), vl.GetName(), meta.GetOptions{})
+			if err != nil {
+				if kerrors.IsNotFound(err) {
+					*v = nil
+				} else {
+					require.NoError(t, err)
+				}
+			} else {
+				*v = vn
+			}
+		case **rbac.Role:
+			require.NotNil(t, v)
+
+			vl := *v
+
+			vn, err := k8s.RbacV1().Roles(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
+			if err != nil {
+				if kerrors.IsNotFound(err) {
+					*v = nil
+				} else {
+					require.NoError(t, err)
+				}
+			} else {
+				*v = vn
+			}
+		case **rbac.RoleBinding:
+			require.NotNil(t, v)
+
+			vl := *v
+
+			vn, err := k8s.RbacV1().RoleBindings(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
+			if err != nil {
+				if kerrors.IsNotFound(err) {
+					*v = nil
+				} else {
+					require.NoError(t, err)
+				}
+			} else {
+				*v = vn
+			}
 		default:
 			require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))
 		}
@@ -342,6 +499,12 @@ func SetMetaBasedOnType(t *testing.T, object meta.Object) {
 		v.Kind = "Secret"
 		v.APIVersion = "v1"
 		v.SetSelfLink(fmt.Sprintf("/api/v1/secrets/%s/%s",
+			object.GetNamespace(),
+			object.GetName()))
+	case *core.ServiceAccount:
+		v.Kind = "ServiceAccount"
+		v.APIVersion = "v1"
+		v.SetSelfLink(fmt.Sprintf("/api/v1/serviceaccounts/%s/%s",
 			object.GetNamespace(),
 			object.GetName()))
 	case *api.ArangoDeployment:
@@ -384,6 +547,30 @@ func SetMetaBasedOnType(t *testing.T, object meta.Object) {
 			ml.ArangoMLStorageResourcePlural,
 			object.GetNamespace(),
 			object.GetName()))
+	case *rbac.ClusterRole:
+		v.Kind = "ClusterRole"
+		v.APIVersion = "rbac.authorization.k8s.io/v1"
+		v.SetSelfLink(fmt.Sprintf("/api/rbac.authorization.k8s.io/v1/clusterroles/%s/%s",
+			object.GetNamespace(),
+			object.GetName()))
+	case *rbac.ClusterRoleBinding:
+		v.Kind = "ClusterRoleBinding"
+		v.APIVersion = "rbac.authorization.k8s.io/v1"
+		v.SetSelfLink(fmt.Sprintf("/api/rbac.authorization.k8s.io/v1/clusterrolebingings/%s/%s",
+			object.GetNamespace(),
+			object.GetName()))
+	case *rbac.Role:
+		v.Kind = "Role"
+		v.APIVersion = "rbac.authorization.k8s.io/v1"
+		v.SetSelfLink(fmt.Sprintf("/api/rbac.authorization.k8s.io/v1/roles/%s/%s",
+			object.GetNamespace(),
+			object.GetName()))
+	case *rbac.RoleBinding:
+		v.Kind = "RoleBinding"
+		v.APIVersion = "rbac.authorization.k8s.io/v1"
+		v.SetSelfLink(fmt.Sprintf("/api/rbac.authorization.k8s.io/v1/rolebingings/%s/%s",
+			object.GetNamespace(),
+			object.GetName()))
 	default:
 		require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))
 	}
@@ -398,7 +585,9 @@ func NewMetaObject[T meta.Object](t *testing.T, namespace, name string, mods ...
 		reflect.ValueOf(&obj).Elem().Set(newObj)
 	}
 
-	obj.SetNamespace(namespace)
+	if IsNamespaced(obj) {
+		obj.SetNamespace(namespace)
+	}
 	obj.SetName(name)
 	obj.SetUID(uuid.NewUUID())
 
@@ -409,6 +598,15 @@ func NewMetaObject[T meta.Object](t *testing.T, namespace, name string, mods ...
 	}
 
 	return obj
+}
+
+func IsNamespaced(in meta.Object) bool {
+	switch in.(type) {
+	case *rbac.ClusterRole, *rbac.ClusterRoleBinding:
+		return false
+	default:
+		return true
+	}
 }
 
 func NewItem(t *testing.T, o operation.Operation, object meta.Object) operation.Item {
@@ -432,6 +630,10 @@ func NewItem(t *testing.T, o operation.Operation, object meta.Object) operation.
 		item.Group = ""
 		item.Version = "v1"
 		item.Kind = "Secret"
+	case *core.ServiceAccount:
+		item.Group = ""
+		item.Version = "v1"
+		item.Kind = "ServiceAccount"
 	case *api.ArangoDeployment:
 		item.Group = deployment.ArangoDeploymentGroupName
 		item.Version = api.ArangoDeploymentVersion
@@ -452,6 +654,22 @@ func NewItem(t *testing.T, o operation.Operation, object meta.Object) operation.
 		item.Group = ml.ArangoMLGroupName
 		item.Version = mlApi.ArangoMLVersion
 		item.Kind = ml.ArangoMLStorageResourceKind
+	case *rbac.ClusterRole:
+		item.Group = "rbac.authorization.k8s.io"
+		item.Version = "v1"
+		item.Kind = "ClusterRole"
+	case *rbac.ClusterRoleBinding:
+		item.Group = "rbac.authorization.k8s.io"
+		item.Version = "v1"
+		item.Kind = "ClusterRoleBinding"
+	case *rbac.Role:
+		item.Group = "rbac.authorization.k8s.io"
+		item.Version = "v1"
+		item.Kind = "Role"
+	case *rbac.RoleBinding:
+		item.Group = "rbac.authorization.k8s.io"
+		item.Version = "v1"
+		item.Kind = "RoleBinding"
 	default:
 		require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))
 	}

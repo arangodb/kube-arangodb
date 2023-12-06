@@ -27,6 +27,7 @@ import (
 	"github.com/stretchr/testify/require"
 	batch "k8s.io/api/batch/v1"
 	core "k8s.io/api/core/v1"
+	rbac "k8s.io/api/rbac/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
@@ -62,6 +63,11 @@ func Test_NewMetaObject(t *testing.T) {
 	NewMetaObjectRun[*batch.Job](t)
 	NewMetaObjectRun[*core.Pod](t)
 	NewMetaObjectRun[*core.Secret](t)
+	NewMetaObjectRun[*core.ServiceAccount](t)
+	NewMetaObjectRun[*rbac.Role](t)
+	NewMetaObjectRun[*rbac.RoleBinding](t)
+	NewMetaObjectRun[*rbac.ClusterRole](t)
+	NewMetaObjectRun[*rbac.ClusterRoleBinding](t)
 	NewMetaObjectRun[*api.ArangoDeployment](t)
 	NewMetaObjectRun[*api.ArangoClusterSynchronization](t)
 	NewMetaObjectRun[*backupApi.ArangoBackup](t)

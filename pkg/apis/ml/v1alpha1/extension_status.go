@@ -20,7 +20,10 @@
 
 package v1alpha1
 
-import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+import (
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+)
 
 type ArangoMLExtensionStatus struct {
 	// Conditions specific to the entire extension
@@ -29,4 +32,7 @@ type ArangoMLExtensionStatus struct {
 
 	// MetadataService keeps the MetadataService configuration
 	MetadataService *ArangoMLExtensionStatusMetadataService `json:"metadataService,omitempty"`
+
+	// ServiceAccount keeps the information about ServiceAccount
+	ServiceAccount *shared.ServiceAccount `json:"serviceAccount,omitempty"`
 }
