@@ -105,7 +105,7 @@ func EnsureServiceAccount(ctx context.Context, client kubernetes.Interface, owne
 				}
 
 				obj.Namespaced.Binding = nil
-				return true, operator.Reconcile("Removing RB")
+				return true, operator.Reconcile("Removing RoleBinding")
 			}
 
 			if obj.Namespaced.Role != nil {
@@ -119,7 +119,7 @@ func EnsureServiceAccount(ctx context.Context, client kubernetes.Interface, owne
 				}
 
 				obj.Namespaced.Role = nil
-				return true, operator.Reconcile("Removing R")
+				return true, operator.Reconcile("Removing Role")
 			}
 
 			obj.Namespaced = nil
@@ -143,7 +143,7 @@ func EnsureServiceAccount(ctx context.Context, client kubernetes.Interface, owne
 					obj.Namespaced = &sharedApi.ServiceAccountRole{}
 				}
 				obj.Namespaced.Role = util.NewType(sharedApi.NewObject(r))
-				return true, operator.Reconcile("Created R")
+				return true, operator.Reconcile("Created Role")
 			}
 		}
 
@@ -175,7 +175,7 @@ func EnsureServiceAccount(ctx context.Context, client kubernetes.Interface, owne
 					obj.Namespaced = &sharedApi.ServiceAccountRole{}
 				}
 				obj.Namespaced.Binding = util.NewType(sharedApi.NewObject(r))
-				return true, operator.Reconcile("Created RB")
+				return true, operator.Reconcile("Created RoleBinding")
 			}
 		}
 
@@ -186,7 +186,7 @@ func EnsureServiceAccount(ctx context.Context, client kubernetes.Interface, owne
 			}
 
 			obj.Namespaced.Role = nil
-			return true, operator.Reconcile("Missing R")
+			return true, operator.Reconcile("Missing Role")
 		} else {
 			if !obj.Namespaced.Role.Equals(r) {
 				if err := util.WithKubernetesContextTimeoutP1A2(ctx, client.RbacV1().Roles(namespace).Delete, obj.Namespaced.Role.GetName(), meta.DeleteOptions{
@@ -198,7 +198,7 @@ func EnsureServiceAccount(ctx context.Context, client kubernetes.Interface, owne
 				}
 
 				obj.Namespaced.Role = nil
-				return true, operator.Reconcile("Recreate R")
+				return true, operator.Reconcile("Recreate Role")
 			}
 
 			if !equality.Semantic.DeepEqual(r.Rules, role) {
@@ -209,7 +209,7 @@ func EnsureServiceAccount(ctx context.Context, client kubernetes.Interface, owne
 					}
 				}
 
-				return false, operator.Reconcile("Refresh R")
+				return false, operator.Reconcile("Refresh Role")
 			}
 		}
 
@@ -219,7 +219,7 @@ func EnsureServiceAccount(ctx context.Context, client kubernetes.Interface, owne
 			}
 
 			obj.Namespaced.Role = nil
-			return true, operator.Reconcile("Missing RB")
+			return true, operator.Reconcile("Missing RoleBinding")
 		} else {
 			if !obj.Namespaced.Binding.Equals(r) {
 				if err := util.WithKubernetesContextTimeoutP1A2(ctx, client.RbacV1().RoleBindings(namespace).Delete, obj.Namespaced.Binding.GetName(), meta.DeleteOptions{
@@ -231,7 +231,7 @@ func EnsureServiceAccount(ctx context.Context, client kubernetes.Interface, owne
 				}
 
 				obj.Namespaced.Role = nil
-				return true, operator.Reconcile("Recreate RB")
+				return true, operator.Reconcile("Recreate RoleBinding")
 			}
 		}
 	}
@@ -252,7 +252,7 @@ func EnsureServiceAccount(ctx context.Context, client kubernetes.Interface, owne
 				}
 
 				obj.Cluster.Binding = nil
-				return true, operator.Reconcile("Removing CRB")
+				return true, operator.Reconcile("Removing ClusterRoleBinding")
 			}
 
 			if obj.Cluster.Role != nil {
@@ -266,7 +266,7 @@ func EnsureServiceAccount(ctx context.Context, client kubernetes.Interface, owne
 				}
 
 				obj.Cluster.Role = nil
-				return true, operator.Reconcile("Removing CR")
+				return true, operator.Reconcile("Removing ClusterRole")
 			}
 
 			obj.Cluster = nil
@@ -289,7 +289,7 @@ func EnsureServiceAccount(ctx context.Context, client kubernetes.Interface, owne
 					obj.Cluster = &sharedApi.ServiceAccountRole{}
 				}
 				obj.Cluster.Role = util.NewType(sharedApi.NewObject(r))
-				return true, operator.Reconcile("Created CR")
+				return true, operator.Reconcile("Created ClusterRole")
 			}
 		}
 
@@ -320,7 +320,7 @@ func EnsureServiceAccount(ctx context.Context, client kubernetes.Interface, owne
 					obj.Cluster = &sharedApi.ServiceAccountRole{}
 				}
 				obj.Cluster.Binding = util.NewType(sharedApi.NewObject(r))
-				return true, operator.Reconcile("Created CRB")
+				return true, operator.Reconcile("Created ClusterRoleBinding")
 			}
 		}
 
@@ -331,7 +331,7 @@ func EnsureServiceAccount(ctx context.Context, client kubernetes.Interface, owne
 			}
 
 			obj.Cluster.Role = nil
-			return true, operator.Reconcile("Missing CR")
+			return true, operator.Reconcile("Missing ClusterRole")
 		} else {
 			if !obj.Cluster.Role.Equals(r) {
 				if err := util.WithKubernetesContextTimeoutP1A2(ctx, client.RbacV1().ClusterRoles().Delete, obj.Cluster.Role.GetName(), meta.DeleteOptions{
@@ -343,7 +343,7 @@ func EnsureServiceAccount(ctx context.Context, client kubernetes.Interface, owne
 				}
 
 				obj.Cluster.Role = nil
-				return true, operator.Reconcile("Recreate CR")
+				return true, operator.Reconcile("Recreate ClusterRole")
 			}
 
 			if !equality.Semantic.DeepEqual(r.Rules, clusterRole) {
@@ -354,7 +354,7 @@ func EnsureServiceAccount(ctx context.Context, client kubernetes.Interface, owne
 					}
 				}
 
-				return false, operator.Reconcile("Refresh CR")
+				return false, operator.Reconcile("Refresh ClusterRole")
 			}
 		}
 
@@ -364,7 +364,7 @@ func EnsureServiceAccount(ctx context.Context, client kubernetes.Interface, owne
 			}
 
 			obj.Cluster.Role = nil
-			return true, operator.Reconcile("Missing CRB")
+			return true, operator.Reconcile("Missing ClusterRoleBinding")
 		} else {
 			if !obj.Cluster.Binding.Equals(r) {
 				if err := util.WithKubernetesContextTimeoutP1A2(ctx, client.RbacV1().ClusterRoleBindings().Delete, obj.Cluster.Binding.GetName(), meta.DeleteOptions{
@@ -376,7 +376,7 @@ func EnsureServiceAccount(ctx context.Context, client kubernetes.Interface, owne
 				}
 
 				obj.Cluster.Role = nil
-				return true, operator.Reconcile("Recreate CRB")
+				return true, operator.Reconcile("Recreate ClusterRoleBinding")
 			}
 		}
 	}
