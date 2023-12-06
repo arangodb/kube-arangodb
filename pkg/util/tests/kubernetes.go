@@ -29,6 +29,7 @@ import (
 	"github.com/stretchr/testify/require"
 	batch "k8s.io/api/batch/v1"
 	core "k8s.io/api/core/v1"
+	rbac "k8s.io/api/rbac/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/client-go/kubernetes"

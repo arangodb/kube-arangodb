@@ -21,7 +21,7 @@
 package v1alpha1
 
 import (
-	batchApi "k8s.io/api/batch/v1"
+	batch "k8s.io/api/batch/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
@@ -34,7 +34,7 @@ type ArangoMLCronJobStatus struct {
 
 	// +doc/type: batch.CronJobStatus
 	// +doc/link: Kubernetes Documentation|https://godoc.org/k8s.io/api/batch/v1beta1#CronJobStatus
-	batchApi.CronJobStatus `json:",inline"`
+	batch.CronJobStatus `json:",inline"`
 }
 
 func (a *ArangoMLCronJobStatus) Validate() error {
