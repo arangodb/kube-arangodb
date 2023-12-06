@@ -12,7 +12,7 @@ Image define image details
 
 ### .spec.deployment.prediction.port
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec_deployment_component.go#L31)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec_deployment_component.go#L33)</sup>
 
 Port defines on which port the container will be listening for connections
 
@@ -47,6 +47,19 @@ Links:
 
 ***
 
+### .spec.deployment.prediction.serviceType
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec_deployment_component.go#L38)</sup>
+
+ServiceType determines how the Service is exposed
+
+Links:
+* [Kubernetes Documentation](https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types)
+
+Default Value: `ClusterIP`
+
+***
+
 ### .spec.deployment.project.image
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/image.go#L31)</sup>
@@ -57,7 +70,7 @@ Image define image details
 
 ### .spec.deployment.project.port
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec_deployment_component.go#L31)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec_deployment_component.go#L33)</sup>
 
 Port defines on which port the container will be listening for connections
 
@@ -92,6 +105,19 @@ Links:
 
 ***
 
+### .spec.deployment.project.serviceType
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec_deployment_component.go#L38)</sup>
+
+ServiceType determines how the Service is exposed
+
+Links:
+* [Kubernetes Documentation](https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types)
+
+Default Value: `ClusterIP`
+
+***
+
 ### .spec.deployment.replicas
 
 Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec_deployment.go#L32)</sup>
@@ -112,7 +138,7 @@ Image define image details
 
 ### .spec.deployment.training.port
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec_deployment_component.go#L31)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec_deployment_component.go#L33)</sup>
 
 Port defines on which port the container will be listening for connections
 
@@ -144,6 +170,19 @@ Resources holds resource requests & limits for container
 
 Links:
 * [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core)
+
+***
+
+### .spec.deployment.training.serviceType
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec_deployment_component.go#L38)</sup>
+
+ServiceType determines how the Service is exposed
+
+Links:
+* [Kubernetes Documentation](https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types)
+
+Default Value: `ClusterIP`
 
 ***
 

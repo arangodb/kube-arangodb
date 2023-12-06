@@ -36,6 +36,9 @@ v1alpha1:
                           type: string
                         type: object
                     type: object
+                  serviceType:
+                    description: ServiceType determines how the Service is exposed
+                    type: string
                 type: object
               project:
                 description: Project defines how Project workload will be deployed
@@ -67,6 +70,9 @@ v1alpha1:
                           type: string
                         type: object
                     type: object
+                  serviceType:
+                    description: ServiceType determines how the Service is exposed
+                    type: string
                 type: object
               replicas:
                 description: Replicas defines the number of replicas running specified components. No replicas created if no components are defined.
@@ -102,6 +108,9 @@ v1alpha1:
                           type: string
                         type: object
                     type: object
+                  serviceType:
+                    description: ServiceType determines how the Service is exposed
+                    type: string
                 type: object
             type: object
           image:
