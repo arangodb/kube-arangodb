@@ -27,6 +27,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	apps "k8s.io/api/apps/v1"
 	batch "k8s.io/api/batch/v1"
 	core "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
@@ -120,11 +121,23 @@ func CreateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			vl := *v
 			_, err := k8s.CoreV1().Secrets(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
 			require.NoError(t, err)
+		case **core.Service:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := k8s.CoreV1().Services(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
+			require.NoError(t, err)
 		case **core.ServiceAccount:
 			require.NotNil(t, v)
 
 			vl := *v
 			_, err := k8s.CoreV1().ServiceAccounts(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
+			require.NoError(t, err)
+		case **apps.StatefulSet:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := k8s.AppsV1().StatefulSets(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
 			require.NoError(t, err)
 		case **api.ArangoDeployment:
 			require.NotNil(t, v)
@@ -223,11 +236,22 @@ func UpdateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			vl := *v
 			_, err := k8s.CoreV1().Secrets(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
 			require.NoError(t, err)
+		case **core.Service:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := k8s.CoreV1().Services(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
 		case **core.ServiceAccount:
 			require.NotNil(t, v)
 
 			vl := *v
 			_, err := k8s.CoreV1().ServiceAccounts(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **apps.StatefulSet:
+			require.NotNil(t, v)
+			vl := *v
+			_, err := k8s.AppsV1().StatefulSets(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
 			require.NoError(t, err)
 		case **api.ArangoDeployment:
 			require.NotNil(t, v)
@@ -450,12 +474,41 @@ func RefreshObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientS
 			} else {
 				*v = vn
 			}
+		case **core.Service:
+			require.NotNil(t, v)
+
+			vl := *v
+
+			vn, err := k8s.CoreV1().Services(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
+			if err != nil {
+				if kerrors.IsNotFound(err) {
+					*v = nil
+				} else {
+					require.NoError(t, err)
+				}
+			} else {
+				*v = vn
+			}
 		case **core.ServiceAccount:
 			require.NotNil(t, v)
 
 			vl := *v
 
 			vn, err := k8s.CoreV1().ServiceAccounts(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
+			if err != nil {
+				if kerrors.IsNotFound(err) {
+					*v = nil
+				} else {
+					require.NoError(t, err)
+				}
+			} else {
+				*v = vn
+			}
+		case **apps.StatefulSet:
+			require.NotNil(t, v)
+
+			vl := *v
+			vn, err := k8s.AppsV1().StatefulSets(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
 			if err != nil {
 				if kerrors.IsNotFound(err) {
 					*v = nil
@@ -616,7 +669,7 @@ func RefreshObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientS
 				*v = vn
 			}
 		default:
-			require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))
+			require.Fail(t, fmt.Sprintf("Unable to get object: %s", reflect.TypeOf(v).String()))
 		}
 	}
 }
@@ -649,10 +702,22 @@ func SetMetaBasedOnType(t *testing.T, object meta.Object) {
 		v.SetSelfLink(fmt.Sprintf("/api/v1/secrets/%s/%s",
 			object.GetNamespace(),
 			object.GetName()))
+	case *core.Service:
+		v.Kind = "Service"
+		v.APIVersion = "v1"
+		v.SetSelfLink(fmt.Sprintf("/api/v1/services/%s/%s",
+			object.GetNamespace(),
+			object.GetName()))
 	case *core.ServiceAccount:
 		v.Kind = "ServiceAccount"
 		v.APIVersion = "v1"
 		v.SetSelfLink(fmt.Sprintf("/api/v1/serviceaccounts/%s/%s",
+			object.GetNamespace(),
+			object.GetName()))
+	case *apps.StatefulSet:
+		v.Kind = "StatefulSet"
+		v.APIVersion = "v1"
+		v.SetSelfLink(fmt.Sprintf("/api/apps/v1/statefulsets/%s/%s",
 			object.GetNamespace(),
 			object.GetName()))
 	case *api.ArangoDeployment:
@@ -790,10 +855,18 @@ func NewItem(t *testing.T, o operation.Operation, object meta.Object) operation.
 		item.Group = ""
 		item.Version = "v1"
 		item.Kind = "Secret"
+	case *core.Service:
+		item.Group = ""
+		item.Version = "v1"
+		item.Kind = "Service"
 	case *core.ServiceAccount:
 		item.Group = ""
 		item.Version = "v1"
 		item.Kind = "ServiceAccount"
+	case *apps.StatefulSet:
+		item.Group = "apps"
+		item.Version = "v1"
+		item.Kind = "StatefulSet"
 	case *api.ArangoDeployment:
 		item.Group = deployment.ArangoDeploymentGroupName
 		item.Version = api.ArangoDeploymentVersion
