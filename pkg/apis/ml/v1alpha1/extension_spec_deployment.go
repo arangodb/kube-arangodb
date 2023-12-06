@@ -21,8 +21,6 @@
 package v1alpha1
 
 import (
-	core "k8s.io/api/core/v1"
-
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -33,14 +31,8 @@ type ArangoMLExtensionSpecDeployment struct {
 	// +doc/default: 1
 	Replicas *int32 `json:"replicas,omitempty"`
 
-	// ServiceType determines how the Service is exposed
-	// +doc/enum: ClusterIP|service will only be accessible inside the cluster, via the cluster IP
-	// +doc/enum: NodePort|service will be exposed on one port of every node, in addition to 'ClusterIP' type
-	// +doc/enum: LoadBalancer|service will be exposed via an external load balancer (if the cloud provider supports it), in addition to 'NodePort' type
-	// +doc/enum: ExternalName|service consists of only a reference to an external name that kubedns or equivalent will return as a CNAME record, with no exposing or proxying of any pods involved
-	// +doc/default: ClusterIP
-	// +doc/link: Kubernetes Documentation|https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
-	ServiceType *core.ServiceType `json:"serviceType,omitempty"`
+	// Service defines how components will be exposed
+	Service *ArangoMLExtensionSpecDeploymentService `json:"service,omitempty"`
 
 	// Prediction defines how Prediction workload will be deployed
 	Prediction *ArangoMLExtensionSpecDeploymentComponent `json:"prediction,omitempty"`
@@ -55,14 +47,6 @@ func (s *ArangoMLExtensionSpecDeployment) GetReplicas() int32 {
 		return 1
 	}
 	return *s.Replicas
-}
-
-func (s *ArangoMLExtensionSpecDeployment) GetServiceType() core.ServiceType {
-	if s == nil || s.ServiceType == nil {
-		return core.ServiceTypeClusterIP
-	}
-
-	return *s.ServiceType
 }
 
 func (s *ArangoMLExtensionSpecDeployment) GetPrediction() *ArangoMLExtensionSpecDeploymentComponent {
@@ -110,13 +94,22 @@ func (s *ArangoMLExtensionSpecDeployment) HasComponents() bool {
 	return false
 }
 
+func (s *ArangoMLExtensionSpecDeployment) GetService() *ArangoMLExtensionSpecDeploymentService {
+	if s == nil {
+		return nil
+	}
+	return s.Service
+}
+
 func (s *ArangoMLExtensionSpecDeployment) Validate() error {
 	if s == nil {
 		return nil
 	}
 
 	errs := []error{
-		shared.PrefixResourceErrors("serviceType", shared.ValidateServiceType(s.GetServiceType())),
+		shared.PrefixResourceErrors("service", shared.ValidateOptional(s.GetService(), func(service ArangoMLExtensionSpecDeploymentService) error {
+			return service.Validate()
+		})),
 	}
 
 	if s.GetReplicas() < 0 || s.GetReplicas() > 10 {

@@ -72,14 +72,18 @@ v1alpha1:
                 description: Replicas defines the number of replicas running specified components. No replicas created if no components are defined.
                 format: int32
                 type: integer
-              serviceType:
-                description: ServiceType determines how the Service is exposed
-                enum:
-                  - ClusterIP
-                  - NodePort
-                  - LoadBalancer
-                  - ExternalName
-                type: string
+              service:
+                description: Service defines how components will be exposed
+                properties:
+                  type:
+                    description: Type determines how the Service is exposed
+                    enum:
+                      - ClusterIP
+                      - NodePort
+                      - LoadBalancer
+                      - ExternalName
+                    type: string
+                type: object
               training:
                 description: Training defines how Training workload will be deployed
                 properties:

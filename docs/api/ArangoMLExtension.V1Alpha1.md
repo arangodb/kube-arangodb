@@ -94,7 +94,7 @@ Links:
 
 ### .spec.deployment.replicas
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec_deployment.go#L34)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec_deployment.go#L32)</sup>
 
 Replicas defines the number of replicas running specified components. No replicas created if no components are defined.
 
@@ -102,11 +102,11 @@ Default Value: `1`
 
 ***
 
-### .spec.deployment.serviceType
+### .spec.deployment.service.type
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec_deployment.go#L43)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec_deployment_service.go#L37)</sup>
 
-ServiceType determines how the Service is exposed
+Type determines how the Service is exposed
 
 Links:
 * [Kubernetes Documentation](https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types)
