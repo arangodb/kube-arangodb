@@ -96,6 +96,12 @@ type KubernetesObject interface {
 func CreateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSet.Interface, objects ...interface{}) func(t *testing.T) {
 	for _, object := range objects {
 		switch v := object.(type) {
+		case **batch.CronJob:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := k8s.BatchV1().CronJobs(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
+			require.NoError(t, err)
 		case **batch.Job:
 			require.NotNil(t, v)
 
@@ -174,6 +180,12 @@ func CreateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			vl := *v
 			_, err := k8s.RbacV1().RoleBindings(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
 			require.NoError(t, err)
+		case **mlApi.ArangoMLCronJob:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.MlV1alpha1().ArangoMLCronJobs(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
+			require.NoError(t, err)
 		default:
 			require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))
 		}
@@ -187,6 +199,12 @@ func CreateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 func UpdateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSet.Interface, objects ...interface{}) func(t *testing.T) {
 	for _, object := range objects {
 		switch v := object.(type) {
+		case **batch.CronJob:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := k8s.BatchV1().CronJobs(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
 		case **batch.Job:
 			require.NotNil(t, v)
 
@@ -241,6 +259,12 @@ func UpdateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			vl := *v
 			_, err := arango.MlV1alpha1().ArangoMLStorages(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
 			require.NoError(t, err)
+		case **mlApi.ArangoMLCronJob:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.MlV1alpha1().ArangoMLCronJobs(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
 		case **rbac.ClusterRole:
 			require.NotNil(t, v)
 
@@ -275,9 +299,112 @@ func UpdateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 	}
 }
 
+func DeleteObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSet.Interface, objects ...interface{}) func(t *testing.T) {
+	for _, object := range objects {
+		switch v := object.(type) {
+		case **batch.CronJob:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, k8s.BatchV1().CronJobs(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **batch.Job:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, k8s.BatchV1().Jobs(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **core.Pod:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, k8s.CoreV1().Pods(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **core.Secret:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, k8s.CoreV1().Secrets(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **core.ServiceAccount:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, k8s.CoreV1().ServiceAccounts(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **api.ArangoDeployment:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, arango.DatabaseV1().ArangoDeployments(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **api.ArangoClusterSynchronization:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, arango.DatabaseV1().ArangoClusterSynchronizations(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **backupApi.ArangoBackup:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, arango.BackupV1().ArangoBackups(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **mlApi.ArangoMLExtension:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, arango.MlV1alpha1().ArangoMLExtensions(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **mlApi.ArangoMLStorage:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, arango.MlV1alpha1().ArangoMLStorages(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **mlApi.ArangoMLCronJob:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, arango.MlV1alpha1().ArangoMLCronJobs(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **rbac.ClusterRole:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, k8s.RbacV1().ClusterRoles().Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **rbac.ClusterRoleBinding:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, k8s.RbacV1().ClusterRoleBindings().Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **rbac.Role:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, k8s.RbacV1().Roles(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **rbac.RoleBinding:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, k8s.RbacV1().RoleBindings(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		default:
+			require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))
+		}
+	}
+
+	return func(t *testing.T) {
+		RefreshObjects(t, k8s, arango, objects...)
+	}
+}
+
 func RefreshObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSet.Interface, objects ...interface{}) {
 	for _, object := range objects {
 		switch v := object.(type) {
+		case **batch.CronJob:
+			require.NotNil(t, v)
+
+			vl := *v
+
+			vn, err := k8s.BatchV1().CronJobs(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
+			if err != nil {
+				if kerrors.IsNotFound(err) {
+					*v = nil
+				} else {
+					require.NoError(t, err)
+				}
+			} else {
+				*v = vn
+			}
 		case **batch.Job:
 			require.NotNil(t, v)
 
@@ -413,6 +540,21 @@ func RefreshObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientS
 			} else {
 				*v = vn
 			}
+		case **mlApi.ArangoMLCronJob:
+			require.NotNil(t, v)
+
+			vl := *v
+
+			vn, err := arango.MlV1alpha1().ArangoMLCronJobs(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
+			if err != nil {
+				if kerrors.IsNotFound(err) {
+					*v = nil
+				} else {
+					require.NoError(t, err)
+				}
+			} else {
+				*v = vn
+			}
 		case **rbac.ClusterRole:
 			require.NotNil(t, v)
 
@@ -483,6 +625,12 @@ type MetaObjectMod[T meta.Object] func(t *testing.T, obj T)
 
 func SetMetaBasedOnType(t *testing.T, object meta.Object) {
 	switch v := object.(type) {
+	case *batch.CronJob:
+		v.Kind = "CronJob"
+		v.APIVersion = "batch/v1"
+		v.SetSelfLink(fmt.Sprintf("/api/batch/v1/cronjobs/%s/%s",
+			object.GetNamespace(),
+			object.GetName()))
 	case *batch.Job:
 		v.Kind = "Job"
 		v.APIVersion = "batch/v1"
@@ -571,6 +719,14 @@ func SetMetaBasedOnType(t *testing.T, object meta.Object) {
 		v.SetSelfLink(fmt.Sprintf("/api/rbac.authorization.k8s.io/v1/rolebingings/%s/%s",
 			object.GetNamespace(),
 			object.GetName()))
+	case *mlApi.ArangoMLCronJob:
+		v.Kind = ml.ArangoMLCronJobResourceKind
+		v.APIVersion = mlApi.SchemeGroupVersion.String()
+		v.SetSelfLink(fmt.Sprintf("/api/%s/%s/%s/%s",
+			mlApi.SchemeGroupVersion.String(),
+			ml.ArangoMLCronJobResourcePlural,
+			object.GetNamespace(),
+			object.GetName()))
 	default:
 		require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))
 	}
@@ -618,6 +774,10 @@ func NewItem(t *testing.T, o operation.Operation, object meta.Object) operation.
 	}
 
 	switch v := object.(type) {
+	case *batch.CronJob:
+		item.Group = "batch"
+		item.Version = "v1"
+		item.Kind = "CronJob"
 	case *batch.Job:
 		item.Group = "batch"
 		item.Version = "v1"
@@ -670,6 +830,10 @@ func NewItem(t *testing.T, o operation.Operation, object meta.Object) operation.
 		item.Group = "rbac.authorization.k8s.io"
 		item.Version = "v1"
 		item.Kind = "RoleBinding"
+	case *mlApi.ArangoMLCronJob:
+		item.Group = ml.ArangoMLGroupName
+		item.Version = mlApi.ArangoMLVersion
+		item.Kind = ml.ArangoMLCronJobResourceKind
 	default:
 		require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))
 	}

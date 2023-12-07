@@ -22,6 +22,7 @@ package operator
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -109,7 +110,9 @@ func (o *operator) processObject(obj interface{}) error {
 		o.workqueue.AddRateLimited(key)
 
 		if !IsReconcile(err) {
-			return errors.Newf("error syncing '%s': %s, re-queuing", key, err.Error())
+			message := fmt.Sprintf("error syncing '%s': %s, re-queuing", key, err.Error())
+			loggerWorker.Debug(message)
+			return errors.Newf(message)
 		}
 
 		return nil
