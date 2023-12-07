@@ -199,6 +199,12 @@ func CreateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 func UpdateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSet.Interface, objects ...interface{}) func(t *testing.T) {
 	for _, object := range objects {
 		switch v := object.(type) {
+		case **batch.CronJob:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := k8s.BatchV1().CronJobs(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
 		case **batch.Job:
 			require.NotNil(t, v)
 
@@ -253,6 +259,12 @@ func UpdateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			vl := *v
 			_, err := arango.MlV1alpha1().ArangoMLStorages(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
 			require.NoError(t, err)
+		case **mlApi.ArangoMLCronJob:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.MlV1alpha1().ArangoMLCronJobs(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
 		case **rbac.ClusterRole:
 			require.NotNil(t, v)
 
@@ -277,6 +289,94 @@ func UpdateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			vl := *v
 			_, err := k8s.RbacV1().RoleBindings(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
 			require.NoError(t, err)
+		default:
+			require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))
+		}
+	}
+
+	return func(t *testing.T) {
+		RefreshObjects(t, k8s, arango, objects...)
+	}
+}
+
+func DeleteObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSet.Interface, objects ...interface{}) func(t *testing.T) {
+	for _, object := range objects {
+		switch v := object.(type) {
+		case **batch.CronJob:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, k8s.BatchV1().CronJobs(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **batch.Job:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, k8s.BatchV1().Jobs(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **core.Pod:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, k8s.CoreV1().Pods(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **core.Secret:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, k8s.CoreV1().Secrets(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **core.ServiceAccount:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, k8s.CoreV1().ServiceAccounts(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **api.ArangoDeployment:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, arango.DatabaseV1().ArangoDeployments(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **api.ArangoClusterSynchronization:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, arango.DatabaseV1().ArangoClusterSynchronizations(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **backupApi.ArangoBackup:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, arango.BackupV1().ArangoBackups(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **mlApi.ArangoMLExtension:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, arango.MlV1alpha1().ArangoMLExtensions(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **mlApi.ArangoMLStorage:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, arango.MlV1alpha1().ArangoMLStorages(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **mlApi.ArangoMLCronJob:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, arango.MlV1alpha1().ArangoMLCronJobs(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **rbac.ClusterRole:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, k8s.RbacV1().ClusterRoles().Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **rbac.ClusterRoleBinding:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, k8s.RbacV1().ClusterRoleBindings().Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **rbac.Role:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, k8s.RbacV1().Roles(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **rbac.RoleBinding:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, k8s.RbacV1().RoleBindings(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
 		default:
 			require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))
 		}

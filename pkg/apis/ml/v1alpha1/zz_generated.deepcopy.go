@@ -230,6 +230,11 @@ func (in *ArangoMLCronJobStatus) DeepCopyInto(out *ArangoMLCronJobStatus) {
 		*out = new(batchv1.CronJobStatus)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.Ref != nil {
+		in, out := &in.Ref, &out.Ref
+		*out = new(sharedv1.Object)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 
