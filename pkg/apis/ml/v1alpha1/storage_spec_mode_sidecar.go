@@ -31,6 +31,10 @@ type ArangoMLStorageSpecModeSidecar struct {
 	// +doc/default: 9201
 	ListenPort *uint16 `json:"listenPort,omitempty"`
 
+	// ShutdownListenPort defines on which port the sidecar container will be listening for shutdown connections
+	// +doc/default: 9202
+	ShutdownListenPort *uint16 `json:"shutdownListenPort,omitempty"`
+
 	// Image define default image used for the extension
 	*sharedApi.Image `json:",inline"`
 
@@ -65,6 +69,10 @@ func (s *ArangoMLStorageSpecModeSidecar) Validate() error {
 		err = append(err, shared.PrefixResourceErrors("listenPort", errors.Newf("must be positive")))
 	}
 
+	if s.GetShutdownListenPort() < 1 {
+		err = append(err, shared.PrefixResourceErrors("shutdownListenPort", errors.Newf("must be positive")))
+	}
+
 	err = append(err, s.GetResources().Validate())
 
 	return shared.WithErrors(err...)
@@ -75,4 +83,11 @@ func (s *ArangoMLStorageSpecModeSidecar) GetListenPort() uint16 {
 		return 9201
 	}
 	return *s.ListenPort
+}
+
+func (s *ArangoMLStorageSpecModeSidecar) GetShutdownListenPort() uint16 {
+	if s == nil || s.ShutdownListenPort == nil {
+		return 9202
+	}
+	return *s.ShutdownListenPort
 }

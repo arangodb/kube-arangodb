@@ -21,14 +21,14 @@
 package cmd
 
 import (
-	"context"
 	"os"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
 	"github.com/arangodb/kube-arangodb/pkg/ml/storage"
-	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
+	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
 var (
@@ -48,6 +48,10 @@ var (
 	cmdMLStorageS3Options struct {
 		storage.ServiceConfig
 	}
+
+	cmdMLShutdownOptions struct {
+		shutdown.ServiceConfig
+	}
 )
 
 func init() {
@@ -55,6 +59,7 @@ func init() {
 	cmdMLStorage.AddCommand(cmdMLStorageS3)
 
 	f := cmdMLStorageS3.PersistentFlags()
+	f.StringVar(&cmdMLShutdownOptions.ListenAddress, "shutdown.address", "", "Address the GRPC shutdown service will listen on (IP:port)")
 	f.StringVar(&cmdMLStorageS3Options.ListenAddress, "server.address", "", "Address the GRPC service will listen on (IP:port)")
 
 	f.StringVar(&cmdMLStorageS3Options.S3.Endpoint, "s3.endpoint", "", "Endpoint of S3 API implementation")
@@ -76,12 +81,10 @@ func cmdMLStorageS3Run(cmd *cobra.Command, _ []string) {
 }
 
 func cmdMLStorageS3RunE(_ *cobra.Command) error {
-	ctx := util.CreateSignalContext(context.Background())
-
-	svc, err := storage.NewService(ctx, storage.StorageTypeS3Proxy, cmdMLStorageS3Options.ServiceConfig)
+	service, err := storage.NewService(shutdown.Context(), storage.StorageTypeS3Proxy, cmdMLStorageS3Options.ServiceConfig)
 	if err != nil {
 		return err
 	}
 
-	return svc.Run(ctx)
+	return svc.RunServices(shutdown.Context(), service, shutdown.ServiceCentral(cmdMLShutdownOptions.ServiceConfig))
 }

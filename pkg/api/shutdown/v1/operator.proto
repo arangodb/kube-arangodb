@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,17 +18,14 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-//go:build !enterprise
+syntax = "proto3";
 
-package storage
+option go_package = "github.com/arangodb/kube-arangodb/pkg/api/shutdown";
 
-import (
-	"context"
-	"errors"
+package server;
 
-	"github.com/arangodb/kube-arangodb/pkg/util/svc"
-)
+import "pkg/api/server/operator.proto";
 
-func NewService(_ context.Context, _ StorageType, _ ServiceConfig) (svc.Service, error) {
-	return nil, errors.New("this service is available only in enterprise edition of operator")
+service Shutdown {
+  rpc ShutdownServer (Empty) returns (Empty) {}
 }

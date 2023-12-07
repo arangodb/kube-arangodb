@@ -29,8 +29,8 @@ import (
 	"github.com/rs/zerolog"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kwatch "k8s.io/apimachinery/pkg/watch"
+	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/apps"
@@ -261,38 +261,29 @@ func (o *Operator) onStartOperatorV2(operatorType operatorV2type, stop <-chan st
 
 	zerolog.SetGlobalLevel(zerolog.DebugLevel)
 
-	restClient, err := rest.InClusterConfig()
-	if err != nil {
-		panic(err)
-	}
+	eventRecorder := event.NewEventRecorder(operatorName, o.Client.Kubernetes())
 
-	arangoClientSet, err := arangoClientSet.NewForConfig(restClient)
-	if err != nil {
-		panic(err)
-	}
+	arangoInformer := arangoInformer.NewSharedInformerFactoryWithOptions(o.Client.Arango(), 10*time.Second, arangoInformer.WithNamespace(o.Namespace))
 
-	kubeClientSet, err := kubernetes.NewForConfig(restClient)
-	if err != nil {
-		panic(err)
-	}
-
-	eventRecorder := event.NewEventRecorder(operatorName, kubeClientSet)
-
-	arangoInformer := arangoInformer.NewSharedInformerFactoryWithOptions(arangoClientSet, 10*time.Second, arangoInformer.WithNamespace(o.Namespace))
+	kubeInformer := informers.NewSharedInformerFactoryWithOptions(o.Client.Kubernetes(), 15*time.Second, informers.WithNamespace(o.Namespace))
 
 	switch operatorType {
 	case appsOperator:
-		o.onStartOperatorV2Apps(operator, eventRecorder, arangoClientSet, kubeClientSet, arangoInformer)
+		o.onStartOperatorV2Apps(operator, eventRecorder, o.Client.Arango(), o.Client.Kubernetes(), arangoInformer)
 		o.Dependencies.AppsProbe.SetReady()
 	case backupOperator:
-		o.onStartOperatorV2Backup(operator, eventRecorder, arangoClientSet, kubeClientSet, arangoInformer)
+		o.onStartOperatorV2Backup(operator, eventRecorder, o.Client.Arango(), o.Client.Kubernetes(), arangoInformer)
 		o.Dependencies.BackupProbe.SetReady()
 	case mlOperator:
-		o.onStartOperatorV2ML(operator, eventRecorder, arangoClientSet, kubeClientSet, arangoInformer)
+		o.onStartOperatorV2ML(operator, eventRecorder, o.Client.Arango(), o.Client.Kubernetes(), arangoInformer, kubeInformer)
 		o.Dependencies.MlProbe.SetReady()
 	}
 
-	if err = operator.RegisterStarter(arangoInformer); err != nil {
+	if err := operator.RegisterStarter(arangoInformer); err != nil {
+		panic(err)
+	}
+
+	if err := operator.RegisterStarter(kubeInformer); err != nil {
 		panic(err)
 	}
 

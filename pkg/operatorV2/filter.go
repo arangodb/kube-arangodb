@@ -18,17 +18,25 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-//go:build !enterprise
+package operator
 
-package storage
+import meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-import (
-	"context"
-	"errors"
+type InformerFilter func(obj meta.Object) bool
 
-	"github.com/arangodb/kube-arangodb/pkg/util/svc"
-)
+func informerFilterMerge(filters ...InformerFilter) InformerFilter {
+	if len(filters) == 0 {
+		return func(obj meta.Object) bool {
+			return true
+		}
+	}
+	return func(obj meta.Object) bool {
+		for _, filter := range filters {
+			if !filter(obj) {
+				return false
+			}
+		}
 
-func NewService(_ context.Context, _ StorageType, _ ServiceConfig) (svc.Service, error) {
-	return nil, errors.New("this service is available only in enterprise edition of operator")
+		return true
+	}
 }

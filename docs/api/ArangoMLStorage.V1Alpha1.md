@@ -143,6 +143,16 @@ Resources holds resource requests & limits for container
 Links:
 * [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core)
 
+***
+
+### .spec.mode.sidecar.shutdownListenPort
+
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/storage_spec_mode_sidecar.go#L36)</sup>
+
+ShutdownListenPort defines on which port the sidecar container will be listening for shutdown connections
+
+Default Value: `9202`
+
 ## Status
 
 ### .status.conditions

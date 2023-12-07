@@ -18,17 +18,40 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-//go:build !enterprise
-
-package storage
+package svc
 
 import (
 	"context"
-	"errors"
+	"sync"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/svc"
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 )
 
-func NewService(_ context.Context, _ StorageType, _ ServiceConfig) (svc.Service, error) {
-	return nil, errors.New("this service is available only in enterprise edition of operator")
+type Service interface {
+	Run(ctx context.Context) error
+}
+
+func RunServices(ctx context.Context, services ...Service) error {
+	if len(services) == 0 {
+		<-ctx.Done()
+		return nil
+	}
+
+	errors := make([]error, len(services))
+
+	var wg sync.WaitGroup
+
+	for id := range services {
+		wg.Add(1)
+
+		go func(id int) {
+			defer wg.Done()
+
+			errors[id] = services[id].Run(ctx)
+		}(id)
+	}
+
+	wg.Wait()
+
+	return shared.WithErrors(errors...)
 }
