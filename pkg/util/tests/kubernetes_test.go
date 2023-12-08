@@ -25,6 +25,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	apps "k8s.io/api/apps/v1"
 	batch "k8s.io/api/batch/v1"
 	core "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
@@ -64,6 +65,8 @@ func Test_NewMetaObject(t *testing.T) {
 	NewMetaObjectRun[*core.Pod](t)
 	NewMetaObjectRun[*core.Secret](t)
 	NewMetaObjectRun[*core.ServiceAccount](t)
+	NewMetaObjectRun[*core.Service](t)
+	NewMetaObjectRun[*apps.StatefulSet](t)
 	NewMetaObjectRun[*rbac.Role](t)
 	NewMetaObjectRun[*rbac.RoleBinding](t)
 	NewMetaObjectRun[*rbac.ClusterRole](t)

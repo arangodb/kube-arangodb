@@ -22,6 +22,7 @@ package license
 
 import (
 	"context"
+	"strconv"
 )
 
 type Status int
@@ -66,6 +67,28 @@ func (s Status) Valid() bool {
 
 func (s Status) Validate(feature Feature, subFeatures ...Feature) Status {
 	return s
+}
+func (s Status) String() string {
+	switch s {
+	case StatusMissing:
+		return "Missing"
+	case StatusInvalid:
+		return "Invalid"
+	case StatusInvalidSignature:
+		return "InvalidSignature"
+	case StatusNotYetValid:
+		return "NotYetValid"
+	case StatusNotAnymoreValid:
+		return "NotAnymoreValid"
+	case StatusFeatureNotEnabled:
+		return "FeatureNotEnabled"
+	case StatusFeatureExpired:
+		return "FeatureExpired"
+	case StatusValid:
+		return "Valid"
+	default:
+		return strconv.Itoa(int(s))
+	}
 }
 
 type Feature string

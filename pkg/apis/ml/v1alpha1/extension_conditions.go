@@ -28,6 +28,7 @@ const (
 	ExtensionBootstrapCompletedCondition   api.ConditionType = "BootstrapCompleted"
 	ExtensionMetadataServiceValidCondition api.ConditionType = "MetadataServiceValid"
 	ExtensionServiceAccountReadyCondition  api.ConditionType = "ServiceAccountReady"
+	ExtensionStatefulSetReadyCondition     api.ConditionType = "ExtensionDeploymentReady"
 	LicenseValidCondition                  api.ConditionType = "LicenseValid"
 	CronJobSyncedCondition                 api.ConditionType = "CronJobSynced"
 )

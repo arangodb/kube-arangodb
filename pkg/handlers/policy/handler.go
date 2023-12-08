@@ -70,7 +70,7 @@ func (h *handler) Handle(_ context.Context, item operation.Item) error {
 		return nil
 	}
 
-	// Get Backup object. It also cover NotFound case
+	// Get object. It also cover NotFound case
 	policy, err := h.client.BackupV1().ArangoBackupPolicies(item.Namespace).Get(context.Background(), item.Name, meta.GetOptions{})
 	if err != nil {
 		return err

@@ -24,7 +24,9 @@ import (
 	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 // CreateSecurityContext returns security context.
@@ -36,4 +38,30 @@ func CreateSecurityContext(spec *api.ServerGroupSpecSecurityContext) *core.Secur
 // CreatePodSecurityContext creates pod's security context.
 func CreatePodSecurityContext(spec *api.ServerGroupSpecSecurityContext) *core.PodSecurityContext {
 	return spec.NewPodSecurityContext(features.SecuredContainers().Enabled())
+}
+
+func CreateSecurePodSecurityContext() *core.PodSecurityContext {
+	psc := &core.PodSecurityContext{
+		RunAsUser:    util.NewType[int64](shared.DefaultRunAsUser),
+		RunAsGroup:   util.NewType[int64](shared.DefaultRunAsGroup),
+		RunAsNonRoot: util.NewType(true),
+		FSGroup:      util.NewType[int64](shared.DefaultFSGroup),
+	}
+
+	return psc
+}
+
+func CreateDefaultSecurityContext() *core.SecurityContext {
+	r := &core.SecurityContext{
+		RunAsUser:              util.NewType[int64](shared.DefaultRunAsUser),
+		RunAsGroup:             util.NewType[int64](shared.DefaultRunAsGroup),
+		RunAsNonRoot:           util.NewType(true),
+		ReadOnlyRootFilesystem: util.NewType(true),
+		Capabilities: &core.Capabilities{
+			Drop: []core.Capability{
+				"ALL",
+			},
+		},
+	}
+	return r
 }

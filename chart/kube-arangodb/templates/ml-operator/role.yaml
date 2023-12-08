@@ -46,10 +46,15 @@ rules:
         - "cronjobs"
         - "jobs"
       verbs: ["*"]
+    - apiGroups: ["apps"]
+      resources:
+        - "statefulsets"
+      verbs: ["*"]
     - apiGroups: [""]
       resources:
         - "pods"
         - "secrets"
+        - "services"
         - "serviceaccounts"
       verbs: ["*"]
 {{- end }}
