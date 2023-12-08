@@ -24,7 +24,6 @@ import (
 	batch "k8s.io/api/batch/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 )
 
@@ -34,13 +33,9 @@ type ArangoMLCronJobStatus struct {
 	Conditions api.ConditionList `json:"conditions,omitempty"`
 
 	// +doc/type: batch.CronJobStatus
-	// +doc/link: Kubernetes Documentation|https://godoc.org/k8s.io/api/batch/v1beta1#CronJobStatus
+	// +doc/link: Kubernetes Documentation|https://godoc.org/k8s.io/api/batch/v1#CronJobStatus
 	*batch.CronJobStatus `json:",inline"`
 
 	// Ref keeps the reference to the CronJob
 	Ref *sharedApi.Object `json:"ref,omitempty"`
-}
-
-func (a *ArangoMLCronJobStatus) Validate() error {
-	return shared.WithErrors(shared.PrefixResourceErrors("spec"))
 }

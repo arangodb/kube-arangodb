@@ -31,4 +31,5 @@ const (
 	ExtensionStatefulSetReadyCondition     api.ConditionType = "ExtensionDeploymentReady"
 	LicenseValidCondition                  api.ConditionType = "LicenseValid"
 	CronJobSyncedCondition                 api.ConditionType = "CronJobSynced"
+	BatchJobSyncedCondition                api.ConditionType = "BatchJobSynced"
 )

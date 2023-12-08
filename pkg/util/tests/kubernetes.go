@@ -193,6 +193,12 @@ func CreateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			vl := *v
 			_, err := k8s.RbacV1().RoleBindings(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
 			require.NoError(t, err)
+		case **mlApi.ArangoMLBatchJob:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.MlV1alpha1().ArangoMLBatchJobs(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
+			require.NoError(t, err)
 		case **mlApi.ArangoMLCronJob:
 			require.NotNil(t, v)
 
@@ -282,6 +288,12 @@ func UpdateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 
 			vl := *v
 			_, err := arango.MlV1alpha1().ArangoMLStorages(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **mlApi.ArangoMLBatchJob:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.MlV1alpha1().ArangoMLBatchJobs(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
 			require.NoError(t, err)
 		case **mlApi.ArangoMLCronJob:
 			require.NotNil(t, v)
@@ -376,6 +388,11 @@ func DeleteObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 
 			vl := *v
 			require.NoError(t, arango.MlV1alpha1().ArangoMLStorages(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **mlApi.ArangoMLBatchJob:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, arango.MlV1alpha1().ArangoMLBatchJobs(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
 		case **mlApi.ArangoMLCronJob:
 			require.NotNil(t, v)
 
@@ -593,6 +610,21 @@ func RefreshObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientS
 			} else {
 				*v = vn
 			}
+		case **mlApi.ArangoMLBatchJob:
+			require.NotNil(t, v)
+
+			vl := *v
+
+			vn, err := arango.MlV1alpha1().ArangoMLBatchJobs(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
+			if err != nil {
+				if kerrors.IsNotFound(err) {
+					*v = nil
+				} else {
+					require.NoError(t, err)
+				}
+			} else {
+				*v = vn
+			}
 		case **mlApi.ArangoMLCronJob:
 			require.NotNil(t, v)
 
@@ -784,6 +816,14 @@ func SetMetaBasedOnType(t *testing.T, object meta.Object) {
 		v.SetSelfLink(fmt.Sprintf("/api/rbac.authorization.k8s.io/v1/rolebingings/%s/%s",
 			object.GetNamespace(),
 			object.GetName()))
+	case *mlApi.ArangoMLBatchJob:
+		v.Kind = ml.ArangoMLBatchJobResourceKind
+		v.APIVersion = mlApi.SchemeGroupVersion.String()
+		v.SetSelfLink(fmt.Sprintf("/api/%s/%s/%s/%s",
+			mlApi.SchemeGroupVersion.String(),
+			ml.ArangoMLBatchJobResourcePlural,
+			object.GetNamespace(),
+			object.GetName()))
 	case *mlApi.ArangoMLCronJob:
 		v.Kind = ml.ArangoMLCronJobResourceKind
 		v.APIVersion = mlApi.SchemeGroupVersion.String()
@@ -903,6 +943,10 @@ func NewItem(t *testing.T, o operation.Operation, object meta.Object) operation.
 		item.Group = "rbac.authorization.k8s.io"
 		item.Version = "v1"
 		item.Kind = "RoleBinding"
+	case *mlApi.ArangoMLBatchJob:
+		item.Group = ml.ArangoMLGroupName
+		item.Version = mlApi.ArangoMLVersion
+		item.Kind = ml.ArangoMLBatchJobResourceKind
 	case *mlApi.ArangoMLCronJob:
 		item.Group = ml.ArangoMLGroupName
 		item.Version = mlApi.ArangoMLVersion

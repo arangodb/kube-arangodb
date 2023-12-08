@@ -33,6 +33,7 @@
 - (Improvement) (ML) Job Sidecar Shutdown
 - (Feature) (ML) Handler for Extension StatefulSet and Service
 - (Feature) (ML) Pod & Container Config
+- (Improvement) (ML) BatchJob status update
 
 ## [1.2.35](https://github.com/arangodb/kube-arangodb/tree/1.2.35) (2023-11-06)
 - (Maintenance) Update go-driver to v1.6.0, update IsNotFound() checks
