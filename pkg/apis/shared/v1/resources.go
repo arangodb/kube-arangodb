@@ -23,6 +23,7 @@ package v1
 import (
 	core "k8s.io/api/core/v1"
 
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
@@ -33,12 +34,20 @@ type Resources struct {
 	Resources *core.ResourceRequirements `json:"resources,omitempty"`
 }
 
-func (r *Resources) With(newResources core.ResourceRequirements) core.ResourceRequirements {
-	if res := r.GetResources(); res == nil {
-		return newResources
-	} else {
-		return resources.ApplyContainerResource(*res, newResources)
+func (r *Resources) With(newResources *Resources) *Resources {
+	if r == nil && newResources == nil {
+		return nil
 	}
+
+	if r == nil {
+		return newResources.DeepCopy()
+	}
+
+	if newResources == nil {
+		return r.DeepCopy()
+	}
+
+	return &Resources{Resources: util.NewType(resources.ApplyContainerResource(util.TypeOrDefault(r.GetResources()), util.TypeOrDefault(newResources.GetResources())))}
 }
 
 func (r *Resources) GetResources() *core.ResourceRequirements {

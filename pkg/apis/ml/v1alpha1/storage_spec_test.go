@@ -66,6 +66,7 @@ func Test_ArangoMLStorageSpec(t *testing.T) {
 				core.ResourceMemory: resource.MustParse("128Mi"),
 			},
 		}
+		s.Mode.Sidecar.ContainerTemplate = &sharedApi.ContainerTemplate{}
 		s.Mode.Sidecar.Resources = &sharedApi.Resources{Resources: &assignedRequirements}
 
 		expectedRequirements := core.ResourceRequirements{
@@ -76,7 +77,7 @@ func Test_ArangoMLStorageSpec(t *testing.T) {
 			},
 		}
 
-		actualRequirements := s.Mode.Sidecar.GetResources().With(core.ResourceRequirements{
+		actualRequirements := s.Mode.Sidecar.GetResources().With(&sharedApi.Resources{Resources: &core.ResourceRequirements{
 			Limits: core.ResourceList{
 				core.ResourceCPU:    resource.MustParse("100m"),
 				core.ResourceMemory: resource.MustParse("128Mi"),
@@ -85,7 +86,7 @@ func Test_ArangoMLStorageSpec(t *testing.T) {
 				core.ResourceCPU:    resource.MustParse("200m"),
 				core.ResourceMemory: resource.MustParse("256Mi"),
 			},
-		})
-		require.Equal(t, expectedRequirements, actualRequirements)
+		}})
+		require.Equal(t, expectedRequirements, *actualRequirements.GetResources())
 	})
 }

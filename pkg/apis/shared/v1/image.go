@@ -38,6 +38,18 @@ type Image struct {
 	PullSecrets []string `json:"pullSecrets,omitempty"`
 }
 
+func (i *Image) With(other *Image) *Image {
+	if i == nil && other == nil {
+		return nil
+	}
+
+	if other == nil {
+		return i.DeepCopy()
+	}
+
+	return other.DeepCopy()
+}
+
 func (i *Image) GetImage() string {
 	if i == nil || i.Image == nil {
 		return ""

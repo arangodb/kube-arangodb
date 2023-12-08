@@ -136,12 +136,23 @@ PullSecrets define Secrets used to pull Image from registry
 
 ### .spec.mode.sidecar.resources
 
-Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/resources.go#L33)</sup>
+Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/resources.go#L34)</sup>
 
 Resources holds resource requests & limits for container
 
 Links:
 * [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core)
+
+***
+
+### .spec.mode.sidecar.securityContext
+
+Type: `core.SecurityContext` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/security_container.go#L29)</sup>
+
+PodSecurityContext holds pod-level security attributes and common container settings.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
 
 ***
 
