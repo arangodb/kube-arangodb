@@ -21,8 +21,6 @@
 package storage
 
 import (
-	"context"
-
 	"github.com/arangodb/kube-arangodb/pkg/ml/storage/s3"
 )
 
@@ -35,8 +33,4 @@ const (
 type ServiceConfig struct {
 	ListenAddress string
 	S3            s3.Config
-}
-
-type Service interface {
-	Run(ctx context.Context) error
 }

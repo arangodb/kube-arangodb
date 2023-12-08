@@ -76,6 +76,21 @@ func ValidatePullPolicy(in core.PullPolicy) error {
 	return errors.Newf("Unknown pull policy: '%s'", string(in))
 }
 
+type ValidateInterface interface {
+	Validate() error
+}
+
+func Validate[T interface{}](in T) error {
+	return validate(in)
+}
+
+func validate(in any) error {
+	if v, ok := in.(ValidateInterface); ok {
+		return v.Validate()
+	}
+	return nil
+}
+
 // ValidateOptional Validates object if is not nil
 func ValidateOptional[T interface{}](in *T, validator func(T) error) error {
 	if in != nil {

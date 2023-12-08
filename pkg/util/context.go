@@ -31,6 +31,17 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 
+func WithKubernetesContextTimeoutP1A1[P1, A1 interface{}](ctx context.Context, f func(context.Context, A1) P1, a1 A1) P1 {
+	return WithContextTimeoutP1A1(ctx, globals.GetGlobals().Timeouts().Kubernetes().Get(), f, a1)
+}
+
+func WithContextTimeoutP1A1[P1, A1 interface{}](ctx context.Context, timeout time.Duration, f func(context.Context, A1) P1, a1 A1) P1 {
+	nCtx, c := context.WithTimeout(ctx, timeout)
+	defer c()
+
+	return f(nCtx, a1)
+}
+
 func WithKubernetesContextTimeoutP1A2[P1, A1, A2 interface{}](ctx context.Context, f func(context.Context, A1, A2) P1, a1 A1, a2 A2) P1 {
 	return WithContextTimeoutP1A2(ctx, globals.GetGlobals().Timeouts().Kubernetes().Get(), f, a1, a2)
 }

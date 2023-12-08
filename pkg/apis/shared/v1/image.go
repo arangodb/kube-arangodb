@@ -38,6 +38,14 @@ type Image struct {
 	PullSecrets []string `json:"pullSecrets,omitempty"`
 }
 
+func (i *Image) GetImage() string {
+	if i == nil || i.Image == nil {
+		return ""
+	}
+
+	return *i.Image
+}
+
 func (i *Image) Validate() error {
 	if i == nil {
 		return nil

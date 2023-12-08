@@ -107,9 +107,7 @@ func (s *ArangoMLExtensionSpecDeployment) Validate() error {
 	}
 
 	errs := []error{
-		shared.PrefixResourceErrors("service", shared.ValidateOptional(s.GetService(), func(service ArangoMLExtensionSpecDeploymentService) error {
-			return service.Validate()
-		})),
+		shared.PrefixResourceErrors("service", shared.ValidateOptional(s.GetService(), func(s ArangoMLExtensionSpecDeploymentService) error { return s.Validate() })),
 	}
 
 	if s.GetReplicas() < 0 || s.GetReplicas() > 10 {

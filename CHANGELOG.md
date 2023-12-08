@@ -30,6 +30,7 @@
 - (Improvement) (ML) Switch to fsnotify for file watching for MacOS support
 - (Feature) (ML) Unify Images, Resources and Lifecycle
 - (Improvement) (ML) CronJob status update
+- (Improvement) (ML) Job Sidecar Shutdown
 
 ## [1.2.35](https://github.com/arangodb/kube-arangodb/tree/1.2.35) (2023-11-06)
 - (Maintenance) Update go-driver to v1.6.0, update IsNotFound() checks

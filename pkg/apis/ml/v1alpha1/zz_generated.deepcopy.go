@@ -774,6 +774,11 @@ func (in *ArangoMLStorageSpecModeSidecar) DeepCopyInto(out *ArangoMLStorageSpecM
 		*out = new(uint16)
 		**out = **in
 	}
+	if in.ShutdownListenPort != nil {
+		in, out := &in.ShutdownListenPort, &out.ShutdownListenPort
+		*out = new(uint16)
+		**out = **in
+	}
 	if in.Image != nil {
 		in, out := &in.Image, &out.Image
 		*out = new(sharedv1.Image)

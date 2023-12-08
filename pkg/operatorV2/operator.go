@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ type Operator interface {
 
 	Start(threadiness int, stopCh <-chan struct{}) error
 
-	RegisterInformer(informer cache.SharedIndexInformer, group, version, kind string) error
+	RegisterInformer(informer cache.SharedIndexInformer, group, version, kind string, filters ...InformerFilter) error
 	RegisterStarter(starter Starter) error
 	RegisterHandler(handler Handler) error
 
@@ -158,7 +158,7 @@ func (o *operator) EnqueueItem(item operation.Item) {
 	o.workqueue.Add(item.String())
 }
 
-func (o *operator) RegisterInformer(informer cache.SharedIndexInformer, group, version, kind string) error {
+func (o *operator) RegisterInformer(informer cache.SharedIndexInformer, group, version, kind string, filters ...InformerFilter) error {
 	o.lock.Lock()
 	defer o.lock.Unlock()
 
@@ -174,7 +174,7 @@ func (o *operator) RegisterInformer(informer cache.SharedIndexInformer, group, v
 
 	o.informers = append(o.informers, informer)
 
-	informer.AddEventHandler(newResourceEventHandler(o, group, version, kind))
+	informer.AddEventHandler(newResourceEventHandler(o, group, version, kind, informerFilterMerge(filters...)))
 
 	return nil
 }

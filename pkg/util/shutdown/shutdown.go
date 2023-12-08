@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,26 +21,38 @@
 package shutdown
 
 import (
+	"context"
 	"os"
 	"os/signal"
 	"syscall"
 )
 
 func init() {
-	shutdown = make(chan struct{})
+	ctx, stop = context.WithCancel(context.Background())
 
 	sigChannel := make(chan os.Signal, 2)
 
 	signal.Notify(sigChannel, os.Interrupt, syscall.SIGTERM)
 
 	go func() {
-		defer close(shutdown)
+		defer stop()
 		<-sigChannel
 	}()
 }
 
-var shutdown chan struct{}
+var (
+	ctx  context.Context
+	stop context.CancelFunc
+)
+
+func Context() context.Context {
+	return ctx
+}
+
+func Stop() {
+	defer stop()
+}
 
 func Channel() <-chan struct{} {
-	return shutdown
+	return ctx.Done()
 }
