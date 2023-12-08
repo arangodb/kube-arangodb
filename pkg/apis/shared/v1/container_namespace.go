@@ -20,7 +20,7 @@
 
 package v1
 
-type Namespace struct {
+type ContainerNamespace struct {
 	// HostNetwork requests Host network for this pod. Use the host's network namespace.
 	// If this option is set, the ports that will be used must be specified.
 	// +doc/default: false
@@ -39,7 +39,7 @@ type Namespace struct {
 	ShareProcessNamespace *bool `json:"shareProcessNamespace,omitempty" protobuf:"varint,27,opt,name=shareProcessNamespace"`
 }
 
-func (c *Namespace) GetHostNetwork() bool {
+func (c *ContainerNamespace) GetHostNetwork() bool {
 	if c == nil {
 		return false
 	}
@@ -47,7 +47,7 @@ func (c *Namespace) GetHostNetwork() bool {
 	return c.HostNetwork
 }
 
-func (c *Namespace) GetHostPID() bool {
+func (c *ContainerNamespace) GetHostPID() bool {
 	if c == nil {
 		return false
 	}
@@ -55,7 +55,7 @@ func (c *Namespace) GetHostPID() bool {
 	return c.HostPID
 }
 
-func (c *Namespace) GetHostIPC() bool {
+func (c *ContainerNamespace) GetHostIPC() bool {
 	if c == nil {
 		return false
 	}
@@ -63,7 +63,7 @@ func (c *Namespace) GetHostIPC() bool {
 	return c.HostIPC
 }
 
-func (c *Namespace) GetShareProcessNamespace() *bool {
+func (c *ContainerNamespace) GetShareProcessNamespace() *bool {
 	if c == nil {
 		return nil
 	}
@@ -71,6 +71,6 @@ func (c *Namespace) GetShareProcessNamespace() *bool {
 	return c.ShareProcessNamespace
 }
 
-func (s *Namespace) Validate() error {
+func (c *ContainerNamespace) Validate() error {
 	return nil
 }

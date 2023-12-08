@@ -185,7 +185,7 @@ Links:
 
 ### .spec.init.hostIPC
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/namespace.go#L33)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/container_namespace.go#L33)</sup>
 
 HostIPC defines to use the host's ipc namespace.
 
@@ -195,7 +195,7 @@ Default Value: `false`
 
 ### .spec.init.hostNetwork
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/namespace.go#L27)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/container_namespace.go#L27)</sup>
 
 HostNetwork requests Host network for this pod. Use the host's network namespace.
 If this option is set, the ports that will be used must be specified.
@@ -206,7 +206,7 @@ Default Value: `false`
 
 ### .spec.init.hostPID
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/namespace.go#L30)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/container_namespace.go#L30)</sup>
 
 HostPID define to use the host's pid namespace.
 
@@ -297,7 +297,7 @@ Links:
 
 ### .spec.init.shareProcessNamespace
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/namespace.go#L39)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/container_namespace.go#L39)</sup>
 
 ShareProcessNamespace defines to share a single process namespace between all of the containers in a pod.
 When this is set containers will be able to view and signal processes from other containers

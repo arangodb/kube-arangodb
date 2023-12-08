@@ -26,8 +26,8 @@ type PodTemplate struct {
 	// Scheduling keeps the scheduling information
 	*Scheduling `json:",inline"`
 
-	// Namespace keeps the Container layer Kernel namespace configuration
-	*Namespace `json:",inline"`
+	// ContainerNamespace keeps the Container layer Kernel namespace configuration
+	*ContainerNamespace `json:",inline"`
 
 	// SecurityPod keeps the security settings for Pod
 	*SecurityPod `json:",inline"`
@@ -49,12 +49,12 @@ func (a *PodTemplate) GetScheduling() *Scheduling {
 	return a.Scheduling
 }
 
-func (a *PodTemplate) GetNamespace() *Namespace {
+func (a *PodTemplate) GetContainerNamespace() *ContainerNamespace {
 	if a == nil {
 		return nil
 	}
 
-	return a.Namespace
+	return a.ContainerNamespace
 }
 
 func (a *PodTemplate) Validate() error {
@@ -63,7 +63,7 @@ func (a *PodTemplate) Validate() error {
 	}
 	return shared.WithErrors(
 		a.GetScheduling().Validate(),
-		a.GetNamespace().Validate(),
+		a.GetContainerNamespace().Validate(),
 		a.GetSecurityPod().Validate(),
 	)
 }

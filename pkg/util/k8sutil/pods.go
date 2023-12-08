@@ -773,7 +773,7 @@ func InjectPodTemplate(spec *sharedApi.PodTemplate, pod *core.PodTemplateSpec) e
 		pod.Spec.SchedulerName = spec.GetSchedulerName()
 	}
 
-	if namespace := spec.GetNamespace(); namespace != nil {
+	if namespace := spec.GetContainerNamespace(); namespace != nil {
 		pod.Spec.HostNetwork = namespace.GetHostNetwork()
 		pod.Spec.HostPID = namespace.GetHostPID()
 		pod.Spec.HostIPC = namespace.GetHostIPC()
