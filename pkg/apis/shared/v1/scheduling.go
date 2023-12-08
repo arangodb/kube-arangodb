@@ -22,6 +22,9 @@ package v1
 
 import (
 	core "k8s.io/api/core/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/scheduling"
 )
 
 type SchedulingTolerations []core.Toleration
@@ -63,6 +66,15 @@ func (s *Scheduling) GetSchedulerName() string {
 	return ""
 }
 
+func (s *Scheduling) WithNodeSelector(d map[string]string) map[string]string {
+	if me := s.GetNodeSelector(); me == nil {
+		return d
+	} else {
+		util.CopyMap(d, me)
+		return d
+	}
+}
+
 func (s *Scheduling) GetAffinity() *core.Affinity {
 	if s != nil {
 		return s.Affinity
@@ -71,12 +83,32 @@ func (s *Scheduling) GetAffinity() *core.Affinity {
 	return nil
 }
 
+func (s *Scheduling) WithAffinity(d *core.Affinity) *core.Affinity {
+	if me := s.GetAffinity(); me == nil {
+		return d
+	} else if d == nil {
+		return me
+	} else {
+		result := d.DeepCopy()
+		scheduling.CopyAffinity(result, me)
+		return result
+	}
+}
+
 func (s *Scheduling) GetTolerations() SchedulingTolerations {
 	if s != nil {
 		return s.Tolerations
 	}
 
 	return nil
+}
+
+func (s *Scheduling) WithTolerations(d SchedulingTolerations) SchedulingTolerations {
+	if me := s.GetTolerations(); me == nil {
+		return d
+	} else {
+		return append(me, d...)
+	}
 }
 
 func (s *Scheduling) Validate() error {

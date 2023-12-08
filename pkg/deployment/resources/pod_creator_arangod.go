@@ -40,6 +40,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/scheduling"
 )
 
 const (
@@ -371,9 +372,9 @@ func (m *MemberArangoDPod) GetPodAntiAffinity() *core.PodAntiAffinity {
 
 	pod.AppendPodAntiAffinityDefault(m, &a)
 
-	pod.MergePodAntiAffinity(&a, topology.GetTopologyAffinityRules(m.context.GetName(), m.deploymentStatus, m.group, m.status).PodAntiAffinity)
+	scheduling.MergePodAntiAffinity(&a, topology.GetTopologyAffinityRules(m.context.GetName(), m.deploymentStatus, m.group, m.status).PodAntiAffinity)
 
-	pod.MergePodAntiAffinity(&a, m.groupSpec.AntiAffinity)
+	scheduling.MergePodAntiAffinity(&a, m.groupSpec.AntiAffinity)
 
 	return pod.ReturnPodAntiAffinityOrNil(a)
 }
@@ -381,9 +382,9 @@ func (m *MemberArangoDPod) GetPodAntiAffinity() *core.PodAntiAffinity {
 func (m *MemberArangoDPod) GetPodAffinity() *core.PodAffinity {
 	a := core.PodAffinity{}
 
-	pod.MergePodAffinity(&a, m.groupSpec.Affinity)
+	scheduling.MergePodAffinity(&a, m.groupSpec.Affinity)
 
-	pod.MergePodAffinity(&a, topology.GetTopologyAffinityRules(m.context.GetName(), m.deploymentStatus, m.group, m.status).PodAffinity)
+	scheduling.MergePodAffinity(&a, topology.GetTopologyAffinityRules(m.context.GetName(), m.deploymentStatus, m.group, m.status).PodAffinity)
 
 	return pod.ReturnPodAffinityOrNil(a)
 }
@@ -393,9 +394,9 @@ func (m *MemberArangoDPod) GetNodeAffinity() *core.NodeAffinity {
 
 	pod.AppendArchSelector(&a, m.status.Architecture.Default(m.spec.Architecture.GetDefault()).AsNodeSelectorRequirement())
 
-	pod.MergeNodeAffinity(&a, m.groupSpec.NodeAffinity)
+	scheduling.MergeNodeAffinity(&a, m.groupSpec.NodeAffinity)
 
-	pod.MergeNodeAffinity(&a, topology.GetTopologyAffinityRules(m.context.GetName(), m.deploymentStatus, m.group, m.status).NodeAffinity)
+	scheduling.MergeNodeAffinity(&a, topology.GetTopologyAffinityRules(m.context.GetName(), m.deploymentStatus, m.group, m.status).NodeAffinity)
 
 	return pod.ReturnNodeAffinityOrNil(a)
 }

@@ -45,6 +45,7 @@ import (
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/scheduling"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tolerations"
 )
 
@@ -360,7 +361,7 @@ func (i *ImageUpdatePod) GetPodAntiAffinity() *core.PodAntiAffinity {
 
 	pod.AppendPodAntiAffinityDefault(i, &a)
 
-	pod.MergePodAntiAffinity(&a, i.spec.ID.Get().AntiAffinity)
+	scheduling.MergePodAntiAffinity(&a, i.spec.ID.Get().AntiAffinity)
 
 	return pod.ReturnPodAntiAffinityOrNil(a)
 }
@@ -368,7 +369,7 @@ func (i *ImageUpdatePod) GetPodAntiAffinity() *core.PodAntiAffinity {
 func (i *ImageUpdatePod) GetPodAffinity() *core.PodAffinity {
 	a := core.PodAffinity{}
 
-	pod.MergePodAffinity(&a, i.spec.ID.Get().Affinity)
+	scheduling.MergePodAffinity(&a, i.spec.ID.Get().Affinity)
 
 	return pod.ReturnPodAffinityOrNil(a)
 }
@@ -377,7 +378,7 @@ func (i *ImageUpdatePod) GetNodeAffinity() *core.NodeAffinity {
 	a := core.NodeAffinity{}
 	pod.AppendArchSelector(&a, i.spec.Architecture.AsNodeSelectorRequirement())
 
-	pod.MergeNodeAffinity(&a, i.spec.ID.Get().NodeAffinity)
+	scheduling.MergeNodeAffinity(&a, i.spec.ID.Get().NodeAffinity)
 
 	return pod.ReturnNodeAffinityOrNil(a)
 }

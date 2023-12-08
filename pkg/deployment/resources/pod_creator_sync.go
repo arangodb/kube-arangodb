@@ -43,6 +43,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/scheduling"
 )
 
 const (
@@ -231,7 +232,7 @@ func (m *MemberSyncPod) GetPodAntiAffinity() *core.PodAntiAffinity {
 
 	pod.AppendPodAntiAffinityDefault(m, &a)
 
-	pod.MergePodAntiAffinity(&a, m.groupSpec.AntiAffinity)
+	scheduling.MergePodAntiAffinity(&a, m.groupSpec.AntiAffinity)
 
 	return pod.ReturnPodAntiAffinityOrNil(a)
 }
@@ -243,7 +244,7 @@ func (m *MemberSyncPod) GetPodAffinity() *core.PodAffinity {
 		pod.AppendAffinityWithRole(m, &a, api.ServerGroupDBServers.AsRole())
 	}
 
-	pod.MergePodAffinity(&a, m.groupSpec.Affinity)
+	scheduling.MergePodAffinity(&a, m.groupSpec.Affinity)
 
 	return pod.ReturnPodAffinityOrNil(a)
 }
@@ -253,7 +254,7 @@ func (m *MemberSyncPod) GetNodeAffinity() *core.NodeAffinity {
 
 	pod.AppendArchSelector(&a, m.memberStatus.Architecture.Default(m.spec.Architecture.GetDefault()).AsNodeSelectorRequirement())
 
-	pod.MergeNodeAffinity(&a, m.groupSpec.NodeAffinity)
+	scheduling.MergeNodeAffinity(&a, m.groupSpec.NodeAffinity)
 
 	return pod.ReturnNodeAffinityOrNil(a)
 }

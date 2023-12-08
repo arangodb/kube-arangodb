@@ -24,7 +24,6 @@ import (
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
@@ -60,27 +59,6 @@ func AppendArchSelector(a *core.NodeAffinity, nodeSelectorForArch core.NodeSelec
 	a.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms = append(a.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms, nodeSelectorForArch)
 }
 
-func GetArchFromAffinity(a *core.Affinity) api.ArangoDeploymentArchitectureType {
-	if a != nil && a.NodeAffinity != nil && a.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution != nil {
-		for _, nst := range a.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms {
-			for _, req := range nst.MatchExpressions {
-				if req.Key == shared.NodeArchAffinityLabel || req.Key == shared.NodeArchAffinityLabelBeta {
-					for _, arch := range req.Values {
-						return api.ArangoDeploymentArchitectureType(arch)
-					}
-				}
-			}
-		}
-	}
-	return ""
-}
-
-func SetArchInAffinity(a *core.Affinity, arch api.ArangoDeploymentArchitectureType) {
-	if a != nil && a.NodeAffinity != nil && a.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution != nil {
-		a.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms = []core.NodeSelectorTerm{arch.AsNodeSelectorRequirement()}
-	}
-}
-
 func AppendAffinityWithRole(p interfaces.PodCreator, a *core.PodAffinity, role string) {
 	labelSelector := &meta.LabelSelector{
 		MatchLabels: k8sutil.LabelsForDeployment(p.GetName(), role),
@@ -92,62 +70,6 @@ func AppendAffinityWithRole(p interfaces.PodCreator, a *core.PodAffinity, role s
 			TopologyKey:   shared.TopologyKeyHostname,
 		},
 	})
-}
-
-func MergePodAntiAffinity(a, b *core.PodAntiAffinity) {
-	if a == nil || b == nil {
-		return
-	}
-
-	a.PreferredDuringSchedulingIgnoredDuringExecution = append(a.PreferredDuringSchedulingIgnoredDuringExecution,
-		b.PreferredDuringSchedulingIgnoredDuringExecution...)
-
-	a.RequiredDuringSchedulingIgnoredDuringExecution = append(a.RequiredDuringSchedulingIgnoredDuringExecution,
-		b.RequiredDuringSchedulingIgnoredDuringExecution...)
-}
-
-func MergePodAffinity(a, b *core.PodAffinity) {
-	if a == nil || b == nil {
-		return
-	}
-
-	a.PreferredDuringSchedulingIgnoredDuringExecution = append(a.PreferredDuringSchedulingIgnoredDuringExecution,
-		b.PreferredDuringSchedulingIgnoredDuringExecution...)
-
-	a.RequiredDuringSchedulingIgnoredDuringExecution = append(a.RequiredDuringSchedulingIgnoredDuringExecution,
-		b.RequiredDuringSchedulingIgnoredDuringExecution...)
-}
-
-func MergeNodeAffinity(a, b *core.NodeAffinity) {
-	if a == nil || b == nil {
-		return
-	}
-
-	a.PreferredDuringSchedulingIgnoredDuringExecution = append(a.PreferredDuringSchedulingIgnoredDuringExecution,
-		b.PreferredDuringSchedulingIgnoredDuringExecution...)
-
-	var newSelectorTerms []core.NodeSelectorTerm
-
-	if b.RequiredDuringSchedulingIgnoredDuringExecution == nil || len(b.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms) == 0 {
-		newSelectorTerms = a.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms
-	} else if a.RequiredDuringSchedulingIgnoredDuringExecution == nil || len(a.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms) == 0 {
-		newSelectorTerms = b.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms
-	} else {
-		for _, aTerms := range a.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms {
-			for _, bTerms := range b.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms {
-				term := aTerms.DeepCopy()
-				if len(bTerms.MatchExpressions) != 0 {
-					term.MatchExpressions = append(term.MatchExpressions, bTerms.MatchExpressions...)
-				}
-				if len(bTerms.MatchFields) != 0 {
-					term.MatchFields = append(term.MatchFields, bTerms.MatchFields...)
-				}
-				newSelectorTerms = append(newSelectorTerms, *term)
-			}
-		}
-	}
-
-	a.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms = newSelectorTerms
 }
 
 func ReturnPodAffinityOrNil(a core.PodAffinity) *core.PodAffinity {
