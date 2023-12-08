@@ -18,31 +18,25 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+package v1
 
-import (
-	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
-)
+import core "k8s.io/api/core/v1"
 
-type ArangoMLExtensionSpecInit struct {
-	// Image define default image used for the init job
-	*sharedApi.Image `json:",inline"`
+type SecurityPod struct {
+	// PodSecurityContext holds pod-level security attributes and common container settings.
+	// +doc/type: core.PodSecurityContext
+	// +doc/link: Kubernetes docs|https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+	PodSecurityContext *core.PodSecurityContext `json:"podSecurityContext,omitempty"`
 }
 
-func (a *ArangoMLExtensionSpecInit) GetImage() *sharedApi.Image {
-	if a == nil || a.Image == nil {
+func (s *SecurityPod) GetPodSecurityContext() *core.PodSecurityContext {
+	if s == nil {
 		return nil
 	}
 
-	return a.Image
+	return s.PodSecurityContext
 }
 
-func (a *ArangoMLExtensionSpecInit) Validate() error {
-	if a == nil {
-		return nil
-	}
-	return shared.WithErrors(
-		a.GetImage().Validate(),
-	)
+func (s *SecurityPod) Validate() error {
+	return nil
 }

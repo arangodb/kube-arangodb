@@ -43,6 +43,18 @@ func SortKeys(m interface{}) []string {
 	return r
 }
 
+func CopyFullMap[K comparable, V any](src map[K]V) map[K]V {
+	if src == nil {
+		return nil
+	}
+
+	r := map[K]V{}
+
+	CopyMap(r, src)
+
+	return r
+}
+
 func CopyMap[K comparable, V any](dst, src map[K]V) {
 	// TODO: replace with maps.Copy when switching to go1.21
 	for k, v := range src {

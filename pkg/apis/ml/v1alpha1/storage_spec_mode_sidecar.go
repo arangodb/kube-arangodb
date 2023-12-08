@@ -35,27 +35,16 @@ type ArangoMLStorageSpecModeSidecar struct {
 	// +doc/default: 9202
 	ShutdownListenPort *uint16 `json:"shutdownListenPort,omitempty"`
 
-	// Image define default image used for the extension
-	*sharedApi.Image `json:",inline"`
-
-	// Resources holds resource requests & limits for sidecar container
-	*sharedApi.Resources `json:",inline"`
+	// ContainerTemplate Keeps the information about Container configuration
+	*sharedApi.ContainerTemplate `json:",inline"`
 }
 
-func (s *ArangoMLStorageSpecModeSidecar) GetImage() *sharedApi.Image {
-	if s == nil || s.Image == nil {
+func (s *ArangoMLStorageSpecModeSidecar) GetContainerTemplate() *sharedApi.ContainerTemplate {
+	if s == nil || s.ContainerTemplate == nil {
 		return nil
 	}
 
-	return s.Image
-}
-
-func (s *ArangoMLStorageSpecModeSidecar) GetResources() *sharedApi.Resources {
-	if s == nil || s.Resources == nil {
-		return nil
-	}
-
-	return s.Resources
+	return s.ContainerTemplate
 }
 
 func (s *ArangoMLStorageSpecModeSidecar) Validate() error {
@@ -73,7 +62,7 @@ func (s *ArangoMLStorageSpecModeSidecar) Validate() error {
 		err = append(err, shared.PrefixResourceErrors("shutdownListenPort", errors.Newf("must be positive")))
 	}
 
-	err = append(err, s.GetResources().Validate())
+	err = append(err, s.GetContainerTemplate().Validate())
 
 	return shared.WithErrors(err...)
 }

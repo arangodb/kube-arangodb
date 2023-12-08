@@ -36,6 +36,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
@@ -762,4 +763,42 @@ func GetFinalizers(spec api.ServerGroupSpec, group api.ServerGroup) []string {
 	}
 
 	return finalizers
+}
+
+func InjectPodTemplate(spec *sharedApi.PodTemplate, pod *core.PodTemplateSpec) error {
+	if scheduling := spec.GetScheduling(); scheduling != nil {
+		pod.Spec.Tolerations = scheduling.GetTolerations().DeepCopy()
+		pod.Spec.Affinity = scheduling.GetAffinity().DeepCopy()
+		pod.Spec.NodeSelector = util.CopyFullMap(scheduling.GetNodeSelector())
+		pod.Spec.SchedulerName = spec.GetSchedulerName()
+	}
+
+	if namespace := spec.GetContainerNamespace(); namespace != nil {
+		pod.Spec.HostNetwork = namespace.GetHostNetwork()
+		pod.Spec.HostPID = namespace.GetHostPID()
+		pod.Spec.HostIPC = namespace.GetHostIPC()
+		pod.Spec.ShareProcessNamespace = util.NewType(util.TypeOrDefault(namespace.GetShareProcessNamespace(), false))
+	}
+
+	if security := spec.GetSecurityPod(); security != nil {
+		pod.Spec.SecurityContext = security.PodSecurityContext.DeepCopy()
+	}
+
+	return nil
+}
+
+func InjectContainerTemplate(spec *sharedApi.ContainerTemplate, pod *core.PodTemplateSpec, container *core.Container) error {
+	if err := InjectImageDetails(spec.GetImage(), pod, container); err != nil {
+		return err
+	}
+
+	if res := spec.GetResources(); res != nil {
+		container.Resources = util.TypeOrDefault(res.GetResources())
+	}
+
+	if security := spec.GetSecurityContainer(); security != nil {
+		container.SecurityContext = security.SecurityContext.DeepCopy()
+	}
+
+	return nil
 }

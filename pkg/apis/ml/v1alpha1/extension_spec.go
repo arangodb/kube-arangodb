@@ -92,7 +92,7 @@ func (a *ArangoMLExtensionSpec) Validate() error {
 		shared.PrefixResourceErrors("storage", shared.ValidateRequired(a.GetStorage(), func(obj sharedApi.Object) error { return obj.Validate() })),
 		a.GetImage().Validate(),
 		shared.PrefixResourceErrors("init", a.GetInit().Validate()),
-		shared.ValidateAnyNotNil(".image or .init.image needs to be specified", a.GetImage(), a.GetInit().GetImage()),
+		shared.ValidateAnyNotNil(".image or .init.image needs to be specified", a.GetImage(), a.GetInit().GetContainerTemplate().GetImage()),
 		shared.PrefixResourceErrors("deployment", a.GetDeployment().Validate()),
 	))
 }
