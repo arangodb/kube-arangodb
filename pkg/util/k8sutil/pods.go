@@ -802,3 +802,34 @@ func InjectContainerTemplate(spec *sharedApi.ContainerTemplate, pod *core.PodTem
 
 	return nil
 }
+
+func CreateDefaultContainerTemplate(image *sharedApi.Image) *sharedApi.ContainerTemplate {
+	return &sharedApi.ContainerTemplate{
+		Image: image.DeepCopy(),
+		Resources: &sharedApi.Resources{
+			Resources: &core.ResourceRequirements{
+				Requests: core.ResourceList{
+					core.ResourceCPU:    resource.MustParse("100m"),
+					core.ResourceMemory: resource.MustParse("128Mi"),
+				},
+				Limits: core.ResourceList{
+					core.ResourceCPU:    resource.MustParse("200m"),
+					core.ResourceMemory: resource.MustParse("256Mi"),
+				},
+			},
+		},
+		SecurityContainer: &sharedApi.SecurityContainer{
+			SecurityContext: &core.SecurityContext{
+				RunAsUser:              util.NewType[int64](shared.DefaultRunAsUser),
+				RunAsGroup:             util.NewType[int64](shared.DefaultRunAsGroup),
+				RunAsNonRoot:           util.NewType(true),
+				ReadOnlyRootFilesystem: util.NewType(true),
+				Capabilities: &core.Capabilities{
+					Drop: []core.Capability{
+						"ALL",
+					},
+				},
+			},
+		},
+	}
+}

@@ -399,14 +399,9 @@ func (in *ArangoMLExtensionSpecDeploymentComponent) DeepCopyInto(out *ArangoMLEx
 		*out = new(int32)
 		**out = **in
 	}
-	if in.Image != nil {
-		in, out := &in.Image, &out.Image
-		*out = new(sharedv1.Image)
-		(*in).DeepCopyInto(*out)
-	}
-	if in.Resources != nil {
-		in, out := &in.Resources, &out.Resources
-		*out = new(sharedv1.Resources)
+	if in.ContainerTemplate != nil {
+		in, out := &in.ContainerTemplate, &out.ContainerTemplate
+		*out = new(sharedv1.ContainerTemplate)
 		(*in).DeepCopyInto(*out)
 	}
 	return

@@ -50,18 +50,3 @@ func CreateSecurePodSecurityContext() *core.PodSecurityContext {
 
 	return psc
 }
-
-func CreateDefaultSecurityContext() *core.SecurityContext {
-	r := &core.SecurityContext{
-		RunAsUser:              util.NewType[int64](shared.DefaultRunAsUser),
-		RunAsGroup:             util.NewType[int64](shared.DefaultRunAsGroup),
-		RunAsNonRoot:           util.NewType(true),
-		ReadOnlyRootFilesystem: util.NewType(true),
-		Capabilities: &core.Capabilities{
-			Drop: []core.Capability{
-				"ALL",
-			},
-		},
-	}
-	return r
-}

@@ -47,6 +47,17 @@ Links:
 
 ***
 
+### .spec.deployment.prediction.securityContext
+
+Type: `core.SecurityContext` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/security_container.go#L29)</sup>
+
+PodSecurityContext holds pod-level security attributes and common container settings.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
+
+***
+
 ### .spec.deployment.project.image
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/image.go#L31)</sup>
@@ -89,6 +100,17 @@ Resources holds resource requests & limits for container
 
 Links:
 * [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core)
+
+***
+
+### .spec.deployment.project.securityContext
+
+Type: `core.SecurityContext` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/security_container.go#L29)</sup>
+
+PodSecurityContext holds pod-level security attributes and common container settings.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
 
 ***
 
@@ -161,6 +183,17 @@ Resources holds resource requests & limits for container
 
 Links:
 * [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core)
+
+***
+
+### .spec.deployment.training.securityContext
+
+Type: `core.SecurityContext` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/security_container.go#L29)</sup>
+
+PodSecurityContext holds pod-level security attributes and common container settings.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
 
 ***
 
