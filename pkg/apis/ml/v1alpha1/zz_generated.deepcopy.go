@@ -363,6 +363,11 @@ func (in *ArangoMLExtensionSpecDeployment) DeepCopyInto(out *ArangoMLExtensionSp
 		*out = new(ArangoMLExtensionSpecDeploymentService)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.PodTemplate != nil {
+		in, out := &in.PodTemplate, &out.PodTemplate
+		*out = new(sharedv1.PodTemplate)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.Prediction != nil {
 		in, out := &in.Prediction, &out.Prediction
 		*out = new(ArangoMLExtensionSpecDeploymentComponent)
