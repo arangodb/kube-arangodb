@@ -24,26 +24,12 @@ import (
 	"context"
 	"time"
 
-	"google.golang.org/grpc"
-
 	"github.com/arangodb/kube-arangodb/pkg/api/server"
 	pbShutdown "github.com/arangodb/kube-arangodb/pkg/api/shutdown/v1"
 )
 
-func RegisterCentral(pb grpc.ServiceRegistrar) {
-	pbShutdown.RegisterShutdownServer(pb, NewShutdownableShutdownCentralServer())
-}
-
-func Register(pb grpc.ServiceRegistrar, closer context.CancelFunc) {
-	pbShutdown.RegisterShutdownServer(pb, NewShutdownableShutdownServer(closer))
-}
-
-func NewShutdownableShutdownCentralServer() ShutdownableShutdownServer {
-	return NewShutdownableShutdownServer(stop)
-}
-
-func NewShutdownableShutdownServer(closer context.CancelFunc) ShutdownableShutdownServer {
-	return &impl{closer: closer}
+func NewShutdownableShutdownServer() ShutdownableShutdownServer {
+	return &impl{closer: stop}
 }
 
 type ShutdownableShutdownServer interface {
