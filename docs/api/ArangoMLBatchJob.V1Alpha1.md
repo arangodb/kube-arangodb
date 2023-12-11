@@ -2,11 +2,51 @@
 
 ## Spec
 
+### .spec
+
+Type: `batch.Job` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/batchjob_spec.go#L33)</sup>
+
+Links:
+* [Kubernetes Documentation](https://godoc.org/k8s.io/api/batch/v1#JobSpec)
+
 ## Status
+
+### .status
+
+Type: `batch.JobStatus` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/batchjob_status.go#L37)</sup>
+
+Links:
+* [Kubernetes Documentation](https://godoc.org/k8s.io/api/batch/v1#JobStatus)
+
+***
 
 ### .status.conditions
 
-Type: `api.Conditions` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/batchjob_status.go#L28)</sup>
+Type: `api.Conditions` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/batchjob_status.go#L33)</sup>
 
 Conditions specific to the entire batch job
+
+***
+
+### .status.ref.name
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/object.go#L46)</sup>
+
+Name of the object
+
+***
+
+### .status.ref.namespace
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/object.go#L49)</sup>
+
+Namespace of the object. Should default to the namespace of the parent object
+
+***
+
+### .status.ref.uid
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/object.go#L52)</sup>
+
+UID keeps the information about object UID
 

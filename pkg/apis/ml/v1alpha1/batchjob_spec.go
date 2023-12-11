@@ -20,11 +20,28 @@
 
 package v1alpha1
 
-import "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+import (
+	batch "k8s.io/api/batch/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+)
 
 type ArangoMLBatchJobSpec struct {
+	// +doc/type: batch.Job
+	// +doc/link: Kubernetes Documentation|https://godoc.org/k8s.io/api/batch/v1#JobSpec
+	*batch.JobSpec `json:",inline"`
 }
 
 func (a *ArangoMLBatchJobSpec) Validate() error {
-	return shared.WithErrors(shared.PrefixResourceErrors("spec"))
+	if a == nil {
+		return errors.Newf("Spec is not defined")
+	}
+
+	var err []error
+	if a.JobSpec == nil {
+		err = append(err, shared.PrefixResourceErrors("spec", errors.Newf("JobSpec is not defined")))
+	}
+
+	return shared.WithErrors(err...)
 }
