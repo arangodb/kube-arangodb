@@ -7,22 +7,22 @@
 Type: `batch.CronJobSpec` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/cronjob_spec.go#L33)</sup>
 
 Links:
-* [Kubernetes Documentation](https://godoc.org/k8s.io/api/batch/v1beta1#CronJobSpec)
+* [Kubernetes Documentation](https://godoc.org/k8s.io/api/batch/v1#CronJobSpec)
 
 ## Status
 
 ### .status
 
-Type: `batch.CronJobStatus` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/cronjob_status.go#L38)</sup>
+Type: `batch.CronJobStatus` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/cronjob_status.go#L37)</sup>
 
 Links:
-* [Kubernetes Documentation](https://godoc.org/k8s.io/api/batch/v1beta1#CronJobStatus)
+* [Kubernetes Documentation](https://godoc.org/k8s.io/api/batch/v1#CronJobStatus)
 
 ***
 
 ### .status.conditions
 
-Type: `api.Conditions` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/cronjob_status.go#L34)</sup>
+Type: `api.Conditions` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/cronjob_status.go#L33)</sup>
 
 Conditions specific to the entire cron job
 
