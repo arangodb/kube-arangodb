@@ -35,4 +35,7 @@ type ArangoMLExtensionStatus struct {
 
 	// ServiceAccount keeps the information about ServiceAccount
 	ServiceAccount *shared.ServiceAccount `json:"serviceAccount,omitempty"`
+
+	// ArangoDB keeps the information about local arangodb reference
+	ArangoDB *ArangoMLExtensionStatusArangoDBRef `json:"arangoDB,omitempty"`
 }

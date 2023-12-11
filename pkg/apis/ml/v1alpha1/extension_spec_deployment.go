@@ -27,6 +27,29 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
+const (
+	ArangoMLExtensionSpecDeploymentComponentPrediction = "prediction"
+	ArangoMLExtensionSpecDeploymentComponentTraining   = "training"
+	ArangoMLExtensionSpecDeploymentComponentProject    = "project"
+
+	ArangoMLExtensionSpecDeploymentComponentPredictionDefaultPort = 16000
+	ArangoMLExtensionSpecDeploymentComponentTrainingDefaultPort   = 16001
+	ArangoMLExtensionSpecDeploymentComponentProjectDefaultPort    = 16002
+)
+
+func GetArangoMLExtensionSpecDeploymentComponentDefaultPort(component string) int32 {
+	switch component {
+	case ArangoMLExtensionSpecDeploymentComponentPrediction:
+		return ArangoMLExtensionSpecDeploymentComponentPredictionDefaultPort
+	case ArangoMLExtensionSpecDeploymentComponentTraining:
+		return ArangoMLExtensionSpecDeploymentComponentTrainingDefaultPort
+	case ArangoMLExtensionSpecDeploymentComponentProject:
+		return ArangoMLExtensionSpecDeploymentComponentProjectDefaultPort
+	}
+
+	return 0
+}
+
 type ArangoMLExtensionSpecDeployment struct {
 	// Replicas defines the number of replicas running specified components. No replicas created if no components are defined.
 	// +doc/default: 1
@@ -87,9 +110,9 @@ func (s *ArangoMLExtensionSpecDeployment) GetComponents() map[string]*ArangoMLEx
 		return nil
 	}
 	return map[string]*ArangoMLExtensionSpecDeploymentComponent{
-		"prediction": s.GetPrediction(),
-		"training":   s.GetTraining(),
-		"project":    s.GetProject(),
+		ArangoMLExtensionSpecDeploymentComponentPrediction: s.GetPrediction(),
+		ArangoMLExtensionSpecDeploymentComponentTraining:   s.GetTraining(),
+		ArangoMLExtensionSpecDeploymentComponentProject:    s.GetProject(),
 	}
 }
 
@@ -130,12 +153,22 @@ func (s *ArangoMLExtensionSpecDeployment) Validate() error {
 	var usedPorts util.List[int32]
 	for prefix, component := range s.GetComponents() {
 		err := component.Validate()
-		errs = append(errs, shared.PrefixResourceErrors(prefix, err))
+		if err != nil {
+			errs = append(errs, shared.PrefixResourceErrors(prefix, err))
+			continue
+		}
 		if err == nil {
-			if usedPorts.IndexOf(component.GetPort()) >= 0 {
-				errs = append(errs, shared.PrefixResourceErrors(prefix, errors.Newf("port %d already specified for other component", component.GetPort())))
+			port := component.GetPort(GetArangoMLExtensionSpecDeploymentComponentDefaultPort(prefix))
+
+			if port == 0 {
+				errs = append(errs, shared.PrefixResourceErrors(prefix, errors.Newf("port not defined")))
+				continue
+			}
+
+			if usedPorts.IndexOf(port) >= 0 {
+				errs = append(errs, shared.PrefixResourceErrors(prefix, errors.Newf("port %d already specified for other component", port)))
 			} else {
-				usedPorts.Append(component.GetPort())
+				usedPorts.Append(port)
 			}
 		}
 	}

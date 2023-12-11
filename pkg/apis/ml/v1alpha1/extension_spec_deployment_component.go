@@ -23,7 +23,6 @@ package v1alpha1
 import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 type ArangoMLExtensionSpecDeploymentComponent struct {
@@ -34,9 +33,9 @@ type ArangoMLExtensionSpecDeploymentComponent struct {
 	*sharedApi.ContainerTemplate `json:",inline"`
 }
 
-func (s *ArangoMLExtensionSpecDeploymentComponent) GetPort() int32 {
+func (s *ArangoMLExtensionSpecDeploymentComponent) GetPort(def int32) int32 {
 	if s == nil || s.Port == nil {
-		return 0
+		return def
 	}
 	return *s.Port
 }
@@ -55,10 +54,6 @@ func (s *ArangoMLExtensionSpecDeploymentComponent) Validate() error {
 	}
 
 	var err []error
-
-	if s.GetPort() < 1 {
-		err = append(err, shared.PrefixResourceErrors("port", errors.Newf("must be positive")))
-	}
 
 	err = append(err,
 		s.GetContainerTemplate().Validate(),
