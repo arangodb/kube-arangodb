@@ -30,12 +30,8 @@ type ArangoMLExtensionSpecDeploymentComponent struct {
 	// Port defines on which port the container will be listening for connections
 	Port *int32 `json:"port,omitempty"`
 
-	// Image defines image used for the component
-	*sharedApi.Image `json:",inline"`
-
-	// Resources holds resource requests & limits for container
-	// If not specified, default values will be used
-	*sharedApi.Resources `json:",inline"`
+	// ContainerTemplate Keeps the information about Container configuration
+	*sharedApi.ContainerTemplate `json:",inline"`
 }
 
 func (s *ArangoMLExtensionSpecDeploymentComponent) GetPort() int32 {
@@ -45,20 +41,12 @@ func (s *ArangoMLExtensionSpecDeploymentComponent) GetPort() int32 {
 	return *s.Port
 }
 
-func (s *ArangoMLExtensionSpecDeploymentComponent) GetImage() *sharedApi.Image {
-	if s == nil || s.Image == nil {
+func (s *ArangoMLExtensionSpecDeploymentComponent) GetContainerTemplate() *sharedApi.ContainerTemplate {
+	if s == nil || s.ContainerTemplate == nil {
 		return nil
 	}
 
-	return s.Image
-}
-
-func (s *ArangoMLExtensionSpecDeploymentComponent) GetResources() *sharedApi.Resources {
-	if s == nil || s.Resources == nil {
-		return nil
-	}
-
-	return s.Resources
+	return s.ContainerTemplate
 }
 
 func (s *ArangoMLExtensionSpecDeploymentComponent) Validate() error {
@@ -73,8 +61,7 @@ func (s *ArangoMLExtensionSpecDeploymentComponent) Validate() error {
 	}
 
 	err = append(err,
-		shared.PrefixResourceErrors("resources", s.GetResources().Validate()),
-		shared.PrefixResourceErrors("image", shared.ValidateRequired(s.GetImage(), func(obj sharedApi.Image) error { return obj.Validate() })),
+		s.GetContainerTemplate().Validate(),
 	)
 
 	return shared.WithErrors(err...)

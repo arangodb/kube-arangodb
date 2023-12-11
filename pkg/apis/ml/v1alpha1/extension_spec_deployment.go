@@ -22,6 +22,7 @@ package v1alpha1
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
@@ -33,6 +34,9 @@ type ArangoMLExtensionSpecDeployment struct {
 
 	// Service defines how components will be exposed
 	Service *ArangoMLExtensionSpecDeploymentService `json:"service,omitempty"`
+
+	// PodTemplate defines base template for pods
+	*sharedApi.PodTemplate
 
 	// Prediction defines how Prediction workload will be deployed
 	Prediction *ArangoMLExtensionSpecDeploymentComponent `json:"prediction,omitempty"`
@@ -47,6 +51,14 @@ func (s *ArangoMLExtensionSpecDeployment) GetReplicas() int32 {
 		return 1
 	}
 	return *s.Replicas
+}
+
+func (s *ArangoMLExtensionSpecDeployment) GetPodTemplate() *sharedApi.PodTemplate {
+	if s == nil || s.PodTemplate == nil {
+		return nil
+	}
+
+	return s.PodTemplate
 }
 
 func (s *ArangoMLExtensionSpecDeployment) GetPrediction() *ArangoMLExtensionSpecDeploymentComponent {
@@ -108,6 +120,7 @@ func (s *ArangoMLExtensionSpecDeployment) Validate() error {
 
 	errs := []error{
 		shared.PrefixResourceErrors("service", shared.ValidateOptional(s.GetService(), func(s ArangoMLExtensionSpecDeploymentService) error { return s.Validate() })),
+		s.GetPodTemplate().Validate(),
 	}
 
 	if s.GetReplicas() < 0 || s.GetReplicas() > 10 {
