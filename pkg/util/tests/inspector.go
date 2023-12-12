@@ -33,6 +33,7 @@ import (
 )
 
 const FakeNamespace = "fake"
+const FakeJWTSecretName = "fake-jwt-secret"
 
 func NewInspector(t *testing.T, c kclient.Client) inspectorInterface.Inspector {
 	i := inspector.NewInspector(throttle.NewAlwaysThrottleComponents(), c, FakeNamespace, FakeNamespace)
