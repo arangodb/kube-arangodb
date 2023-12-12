@@ -24,7 +24,7 @@ import (
 	core "k8s.io/api/core/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	sharedv1 "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -51,7 +51,7 @@ func ValidateServerGroupInitContainerName(name string) error {
 		return errors.Newf("InitContainer name %s is restricted", name)
 	}
 
-	return sharedv1.AsKubernetesResourceName(&name).Validate()
+	return sharedApi.AsKubernetesResourceName(&name).Validate()
 }
 
 type ServerGroupInitContainerMode string

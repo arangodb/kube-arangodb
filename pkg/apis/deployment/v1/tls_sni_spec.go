@@ -21,7 +21,7 @@
 package v1
 
 import (
-	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -34,7 +34,7 @@ func (s TLSSNISpec) Validate() error {
 	mapped := map[string]interface{}{}
 
 	for key, values := range s.Mapping {
-		if err := shared.IsValidName(key); err != nil {
+		if err := sharedApi.IsValidName(key); err != nil {
 			return err
 		}
 
@@ -46,7 +46,7 @@ func (s TLSSNISpec) Validate() error {
 			// Mark value as existing
 			mapped[value] = nil
 
-			if err := shared.IsValidDomain(value); err != nil {
+			if err := sharedApi.IsValidDomain(value); err != nil {
 				return err
 			}
 		}

@@ -20,9 +20,9 @@
 
 package v1alpha1
 
-import shared "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+import sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 
 type ArangoMLExtensionStatusArangoDBRef struct {
 	// Secret keeps the information about Secret for ArangoDB Authentication
-	Secret *shared.Object `json:"secret,omitempty"`
+	Secret *sharedApi.Object `json:"secret,omitempty"`
 }

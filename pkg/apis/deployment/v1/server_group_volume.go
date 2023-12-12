@@ -27,7 +27,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	sharedv1 "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -160,7 +160,7 @@ func (s *ServerGroupSpecVolume) Validate() error {
 	}
 
 	return shared.WithErrors(
-		shared.PrefixResourceErrors("name", sharedv1.AsKubernetesResourceName(&s.Name).Validate()),
+		shared.PrefixResourceErrors("name", sharedApi.AsKubernetesResourceName(&s.Name).Validate()),
 		shared.PrefixResourceErrors("secret", s.Secret.Validate()),
 		shared.PrefixResourceErrors("configMap", s.ConfigMap.Validate()),
 		shared.PrefixResourceErrors("emptyDir", s.EmptyDir.Validate()),
@@ -265,7 +265,7 @@ func (s *ServerGroupSpecVolumeSecret) Validate() error {
 	}
 
 	return shared.WithErrors(
-		shared.PrefixResourceError("secretName", sharedv1.AsKubernetesResourceName(&q.SecretName).Validate()),
+		shared.PrefixResourceError("secretName", sharedApi.AsKubernetesResourceName(&q.SecretName).Validate()),
 	)
 }
 
@@ -298,7 +298,7 @@ func (s *ServerGroupSpecVolumeConfigMap) Validate() error {
 	}
 
 	return shared.WithErrors(
-		shared.PrefixResourceError("name", sharedv1.AsKubernetesResourceName(&q.Name).Validate()),
+		shared.PrefixResourceError("name", sharedApi.AsKubernetesResourceName(&q.Name).Validate()),
 	)
 }
 
@@ -363,7 +363,7 @@ func (s *ServerGroupSpecVolumePersistentVolumeClaim) Validate() error {
 	}
 
 	return shared.WithErrors(
-		shared.PrefixResourceError("claimName", sharedv1.AsKubernetesResourceName(&q.ClaimName).Validate()),
+		shared.PrefixResourceError("claimName", sharedApi.AsKubernetesResourceName(&q.ClaimName).Validate()),
 	)
 }
 

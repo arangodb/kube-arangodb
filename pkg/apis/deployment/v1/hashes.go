@@ -20,7 +20,7 @@
 
 package v1
 
-import shared "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+import sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 
 type DeploymentStatusHashes struct {
 	Encryption DeploymentStatusHashesEncryption `json:"rocksDBEncryption,omitempty"`
@@ -29,21 +29,21 @@ type DeploymentStatusHashes struct {
 }
 
 type DeploymentStatusHashesEncryption struct {
-	Keys shared.HashList `json:"keys,omitempty"`
+	Keys sharedApi.HashList `json:"keys,omitempty"`
 
 	Propagated bool `json:"propagated,omitempty"`
 }
 
 type DeploymentStatusHashesTLS struct {
-	CA         *string         `json:"ca,omitempty"`
-	Truststore shared.HashList `json:"truststore,omitempty"`
+	CA         *string            `json:"ca,omitempty"`
+	Truststore sharedApi.HashList `json:"truststore,omitempty"`
 
 	Propagated bool `json:"propagated,omitempty"`
 }
 
 type DeploymentStatusHashesJWT struct {
-	Active  string          `json:"active,omitempty"`
-	Passive shared.HashList `json:"passive,omitempty"`
+	Active  string             `json:"active,omitempty"`
+	Passive sharedApi.HashList `json:"passive,omitempty"`
 
 	Propagated bool `json:"propagated,omitempty"`
 }
