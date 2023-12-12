@@ -76,7 +76,7 @@ Image define image details
 
 ### .spec.deployment.prediction.port
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec_deployment_component.go#L31)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec_deployment_component.go#L30)</sup>
 
 Port defines on which port the container will be listening for connections
 
@@ -132,7 +132,7 @@ Image define image details
 
 ### .spec.deployment.project.port
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec_deployment_component.go#L31)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec_deployment_component.go#L30)</sup>
 
 Port defines on which port the container will be listening for connections
 
@@ -180,7 +180,7 @@ Links:
 
 ### .spec.deployment.replicas
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec_deployment.go#L33)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec_deployment.go#L56)</sup>
 
 Replicas defines the number of replicas running specified components. No replicas created if no components are defined.
 
@@ -250,7 +250,7 @@ Image define image details
 
 ### .spec.deployment.training.port
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec_deployment_component.go#L31)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec_deployment_component.go#L30)</sup>
 
 Port defines on which port the container will be listening for connections
 
@@ -512,6 +512,30 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 UID keeps the information about object UID
 
 ## Status
+
+### .status.arangoDB.secret.name
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/object.go#L46)</sup>
+
+Name of the object
+
+***
+
+### .status.arangoDB.secret.namespace
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/object.go#L49)</sup>
+
+Namespace of the object. Should default to the namespace of the parent object
+
+***
+
+### .status.arangoDB.secret.uid
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/object.go#L52)</sup>
+
+UID keeps the information about object UID
+
+***
 
 ### .status.conditions
 
