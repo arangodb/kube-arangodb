@@ -23,7 +23,7 @@ package v1alpha1
 import (
 	core "k8s.io/api/core/v1"
 
-	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 )
 
 type ArangoMLExtensionSpecDeploymentService struct {

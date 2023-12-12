@@ -25,7 +25,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
+	sharedReconcile "github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -80,7 +80,7 @@ func (r *Reconciler) createScalePlan(status api.DeploymentStatus, members api.Me
 		// Scale up
 		toAdd := count - len(members)
 		for i := 0; i < toAdd; i++ {
-			plan = append(plan, actions.NewAction(api.ActionTypeAddMember, group, shared.WithPredefinedMember("")))
+			plan = append(plan, actions.NewAction(api.ActionTypeAddMember, group, sharedReconcile.WithPredefinedMember("")))
 		}
 		r.planLogger.
 			Int("count", count).
@@ -140,7 +140,7 @@ func (r *Reconciler) createReplaceMemberPlan(ctx context.Context, apiObject k8su
 
 			switch group {
 			case api.ServerGroupDBServers:
-				plan = append(plan, actions.NewAction(api.ActionTypeAddMember, group, shared.WithPredefinedMember("")))
+				plan = append(plan, actions.NewAction(api.ActionTypeAddMember, group, sharedReconcile.WithPredefinedMember("")))
 				r.planLogger.
 					Str("role", group.AsRole()).
 					Debug("Creating replacement plan")
@@ -151,7 +151,7 @@ func (r *Reconciler) createReplaceMemberPlan(ctx context.Context, apiObject k8su
 					Debug("Creating replacement plan")
 			case api.ServerGroupAgents:
 				plan = append(plan, cleanOutMember(group, member)...)
-				plan = append(plan, actions.NewAction(api.ActionTypeAddMember, group, shared.WithPredefinedMember("")))
+				plan = append(plan, actions.NewAction(api.ActionTypeAddMember, group, sharedReconcile.WithPredefinedMember("")))
 				r.planLogger.
 					Str("role", group.AsRole()).
 					Debug("Creating replacement plan")

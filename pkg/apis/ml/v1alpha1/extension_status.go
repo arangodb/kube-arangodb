@@ -22,7 +22,7 @@ package v1alpha1
 
 import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 )
 
 type ArangoMLExtensionStatus struct {
@@ -34,7 +34,7 @@ type ArangoMLExtensionStatus struct {
 	MetadataService *ArangoMLExtensionStatusMetadataService `json:"metadataService,omitempty"`
 
 	// ServiceAccount keeps the information about ServiceAccount
-	ServiceAccount *shared.ServiceAccount `json:"serviceAccount,omitempty"`
+	ServiceAccount *sharedApi.ServiceAccount `json:"serviceAccount,omitempty"`
 
 	// ArangoDB keeps the information about local arangodb reference
 	ArangoDB *ArangoMLExtensionStatusArangoDBRef `json:"arangoDB,omitempty"`

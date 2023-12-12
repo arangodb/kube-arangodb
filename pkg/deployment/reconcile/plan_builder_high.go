@@ -28,7 +28,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
+	sharedReconcile "github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
 	"github.com/arangodb/kube-arangodb/pkg/util/compare"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -154,18 +154,18 @@ func (r *Reconciler) updateMemberPhasePlan(ctx context.Context, apiObject k8suti
 }
 
 func pendingRestartMemberConditionAction(group api.ServerGroup, memberID string, reason string) api.Action {
-	return shared.UpdateMemberConditionActionV2(reason, api.ConditionTypePendingRestart, group, memberID, true, reason, "", "")
+	return sharedReconcile.UpdateMemberConditionActionV2(reason, api.ConditionTypePendingRestart, group, memberID, true, reason, "", "")
 }
 
 func restartMemberConditionAction(group api.ServerGroup, memberID string, reason string) api.Plan {
 	return api.Plan{
 		pendingRestartMemberConditionAction(group, memberID, reason),
-		shared.UpdateMemberConditionActionV2(reason, api.ConditionTypeRestart, group, memberID, true, reason, "", ""),
+		sharedReconcile.UpdateMemberConditionActionV2(reason, api.ConditionTypeRestart, group, memberID, true, reason, "", ""),
 	}
 }
 
 func tlsRotateConditionAction(group api.ServerGroup, memberID string, reason string) api.Action {
-	return shared.UpdateMemberConditionActionV2(reason, api.ConditionTypePendingTLSRotation, group, memberID, true, reason, "", "")
+	return sharedReconcile.UpdateMemberConditionActionV2(reason, api.ConditionTypePendingTLSRotation, group, memberID, true, reason, "", "")
 }
 
 func (r *Reconciler) updateMemberUpdateConditionsPlan(ctx context.Context, apiObject k8sutil.APIObject,
@@ -178,10 +178,10 @@ func (r *Reconciler) updateMemberUpdateConditionsPlan(ctx context.Context, apiOb
 			// We are in updating phase
 			if status.Plan.IsEmpty() {
 				// If plan is empty then something went wrong
-				plan = append(plan, shared.RemoveMemberConditionActionV2("Clean update actions after failure", api.ConditionTypePendingUpdate, e.Group, e.Member.ID),
-					shared.RemoveMemberConditionActionV2("Clean update actions after failure", api.ConditionTypeUpdating, e.Group, e.Member.ID),
-					shared.UpdateMemberConditionActionV2("Clean update actions after failure", api.ConditionTypeUpdateFailed, e.Group, e.Member.ID, true, "Clean update actions after failure", "", ""),
-					shared.UpdateMemberConditionActionV2("Clean update actions after failure", api.ConditionTypePendingRestart, e.Group, e.Member.ID, true, "Clean update actions after failure", "", ""))
+				plan = append(plan, sharedReconcile.RemoveMemberConditionActionV2("Clean update actions after failure", api.ConditionTypePendingUpdate, e.Group, e.Member.ID),
+					sharedReconcile.RemoveMemberConditionActionV2("Clean update actions after failure", api.ConditionTypeUpdating, e.Group, e.Member.ID),
+					sharedReconcile.UpdateMemberConditionActionV2("Clean update actions after failure", api.ConditionTypeUpdateFailed, e.Group, e.Member.ID, true, "Clean update actions after failure", "", ""),
+					sharedReconcile.UpdateMemberConditionActionV2("Clean update actions after failure", api.ConditionTypePendingRestart, e.Group, e.Member.ID, true, "Clean update actions after failure", "", ""))
 
 			}
 		}
@@ -249,7 +249,7 @@ func (r *Reconciler) updateMemberRotationConditions(apiObject k8sutil.APIObject,
 			} else if member.Conditions.IsTrue(api.ConditionTypeUpdating) || member.Conditions.IsTrue(api.ConditionTypePendingUpdate) {
 				return nil, nil
 			}
-			return api.Plan{shared.UpdateMemberConditionActionV2(reason, api.ConditionTypePendingUpdate, group, member.ID, true, reason, "", "")}, nil
+			return api.Plan{sharedReconcile.UpdateMemberConditionActionV2(reason, api.ConditionTypePendingUpdate, group, member.ID, true, reason, "", "")}, nil
 		case compare.SilentRotation:
 			// Propagate changes without restart, but apply plan if required
 			plan = append(plan, actions.NewAction(api.ActionTypeArangoMemberUpdatePodStatus, group, member, "Propagating status of pod").AddParam(ActionTypeArangoMemberUpdatePodStatusChecksum, checksum))

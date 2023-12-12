@@ -27,11 +27,11 @@ import (
 	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	sharedApis "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
+	sharedReconcile "github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 )
@@ -115,10 +115,10 @@ func (r *Reconciler) updateMemberConditionTypeMemberVolumeUnschedulableCondition
 		if unschedulable == e.Member.Conditions.IsTrue(api.ConditionTypeMemberVolumeUnschedulable) {
 			continue
 		} else if unschedulable && !e.Member.Conditions.IsTrue(api.ConditionTypeMemberVolumeUnschedulable) {
-			plan = append(plan, shared.UpdateMemberConditionActionV2("PV Unschedulable", api.ConditionTypeMemberVolumeUnschedulable, e.Group, e.Member.ID, true,
+			plan = append(plan, sharedReconcile.UpdateMemberConditionActionV2("PV Unschedulable", api.ConditionTypeMemberVolumeUnschedulable, e.Group, e.Member.ID, true,
 				"PV Unschedulable", "PV Unschedulable", ""))
 		} else if !unschedulable && e.Member.Conditions.IsTrue(api.ConditionTypeMemberVolumeUnschedulable) {
-			plan = append(plan, shared.RemoveMemberConditionActionV2("PV Schedulable", api.ConditionTypeMemberVolumeUnschedulable, e.Group, e.Member.ID))
+			plan = append(plan, sharedReconcile.RemoveMemberConditionActionV2("PV Schedulable", api.ConditionTypeMemberVolumeUnschedulable, e.Group, e.Member.ID))
 		}
 	}
 
@@ -179,7 +179,7 @@ func memberConditionTypeMemberVolumeUnschedulableLocalStorageGone(cache inspecto
 		if required := nodeAffinity.Required; required != nil {
 			for _, nst := range required.NodeSelectorTerms {
 				for _, expr := range nst.MatchExpressions {
-					if expr.Key == sharedApis.TopologyKeyHostname && expr.Operator == core.NodeSelectorOpIn {
+					if expr.Key == shared.TopologyKeyHostname && expr.Operator == core.NodeSelectorOpIn {
 						// We got exact key which is required for PV
 						if len(expr.Values) == 1 {
 							// Only one host assigned, we use it as localStorage - check if node exists

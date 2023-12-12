@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 package v2alpha1
 
 import (
-	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -34,7 +34,7 @@ func (s TLSSNISpec) Validate() error {
 	mapped := map[string]interface{}{}
 
 	for key, values := range s.Mapping {
-		if err := shared.IsValidName(key); err != nil {
+		if err := sharedApi.IsValidName(key); err != nil {
 			return err
 		}
 
@@ -46,7 +46,7 @@ func (s TLSSNISpec) Validate() error {
 			// Mark value as existing
 			mapped[value] = nil
 
-			if err := shared.IsValidDomain(value); err != nil {
+			if err := sharedApi.IsValidDomain(value); err != nil {
 				return err
 			}
 		}
