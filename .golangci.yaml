@@ -43,6 +43,8 @@ linters-settings:
         alias: sharedApi
       - pkg: github.com/arangodb/kube-arangodb/pkg/apis/shared
         alias: shared
+      - pkg: github.com/arangodb/kube-arangodb/pkg/handlers/enterprise/ml/shared
+        alias: mlShared
       - pkg: github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1
         alias: mlApi
   gci:
