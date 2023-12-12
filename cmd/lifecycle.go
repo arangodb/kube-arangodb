@@ -32,7 +32,7 @@ import (
 	"github.com/spf13/cobra"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"

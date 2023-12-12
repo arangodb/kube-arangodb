@@ -34,7 +34,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/apps"
 	appsApi "github.com/arangodb/kube-arangodb/pkg/apis/apps/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"

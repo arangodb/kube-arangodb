@@ -27,7 +27,7 @@ import (
 	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
 
-	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 

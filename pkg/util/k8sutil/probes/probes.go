@@ -25,7 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 )
 
 // HTTPProbeConfig contains settings for creating a liveness/readiness probe.

@@ -20,7 +20,7 @@
 
 package v1
 
-import "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+import shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 
 type PodTemplate struct {
 	// Scheduling keeps the scheduling information

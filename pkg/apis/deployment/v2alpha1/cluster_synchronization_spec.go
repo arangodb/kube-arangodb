@@ -23,7 +23,7 @@ package v2alpha1
 import (
 	"github.com/pkg/errors"
 
-	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 )
 
 type ArangoClusterSynchronizationSpec struct {

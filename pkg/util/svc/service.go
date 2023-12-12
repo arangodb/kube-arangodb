@@ -24,7 +24,7 @@ import (
 	"context"
 	"sync"
 
-	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 )
 
 type Service interface {
