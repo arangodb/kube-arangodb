@@ -25,7 +25,42 @@ import (
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 )
 
-type ArangoMLExtensionSpecInit struct {
+type ArangoMLJobsTemplates struct {
+	// Prediction defines template for the prediction job
+	Prediction *ArangoMLExtensionTemplateSpec `json:"prediction,omitempty"`
+
+	// Training defines template for the training job
+	Training *ArangoMLExtensionTemplateSpec `json:"training,omitempty"`
+}
+
+func (j *ArangoMLJobsTemplates) GetPrediction() *ArangoMLExtensionTemplateSpec {
+	if j == nil {
+		return nil
+	}
+
+	return j.Prediction
+}
+
+func (j *ArangoMLJobsTemplates) GetTraining() *ArangoMLExtensionTemplateSpec {
+	if j == nil {
+		return nil
+	}
+
+	return j.Training
+}
+
+func (j *ArangoMLJobsTemplates) Validate() error {
+	if j == nil {
+		return nil
+	}
+
+	return shared.WithErrors(
+		j.GetPrediction().Validate(),
+		j.GetTraining().Validate(),
+	)
+}
+
+type ArangoMLExtensionTemplateSpec struct {
 	// PodTemplate keeps the information about Pod configuration
 	*sharedApi.PodTemplate `json:",inline"`
 
@@ -33,7 +68,7 @@ type ArangoMLExtensionSpecInit struct {
 	*sharedApi.ContainerTemplate `json:",inline"`
 }
 
-func (a *ArangoMLExtensionSpecInit) GetPodTemplate() *sharedApi.PodTemplate {
+func (a *ArangoMLExtensionTemplateSpec) GetPodTemplate() *sharedApi.PodTemplate {
 	if a == nil {
 		return nil
 	}
@@ -41,7 +76,7 @@ func (a *ArangoMLExtensionSpecInit) GetPodTemplate() *sharedApi.PodTemplate {
 	return a.PodTemplate
 }
 
-func (a *ArangoMLExtensionSpecInit) GetContainerTemplate() *sharedApi.ContainerTemplate {
+func (a *ArangoMLExtensionTemplateSpec) GetContainerTemplate() *sharedApi.ContainerTemplate {
 	if a == nil {
 		return nil
 	}
@@ -49,7 +84,7 @@ func (a *ArangoMLExtensionSpecInit) GetContainerTemplate() *sharedApi.ContainerT
 	return a.ContainerTemplate
 }
 
-func (a *ArangoMLExtensionSpecInit) Validate() error {
+func (a *ArangoMLExtensionTemplateSpec) Validate() error {
 	if a == nil {
 		return nil
 	}
