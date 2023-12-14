@@ -295,26 +295,6 @@ func CreateTokenSecret(ctx context.Context, secrets secretv1.ModInterface, secre
 	return nil
 }
 
-// CreateJWTTokenFromSecret creates a JWT token
-func CreateJWTTokenFromSecret(ctx context.Context, secrets secretv1.ReadInterface, secretSecretName string, claims map[string]interface{}) (string, error) {
-	secret, err := GetTokenSecret(ctx, secrets, secretSecretName)
-	if err != nil {
-		return "", errors.WithStack(err)
-	}
-
-	// Create a new token object, specifying signing method and the claims
-	// you would like it to contain.
-	token := jg.NewWithClaims(jg.SigningMethodHS256, jg.MapClaims(claims))
-
-	// Sign and get the complete encoded token as a string using the secret
-	signedToken, err := token.SignedString([]byte(secret))
-	if err != nil {
-		return "", errors.WithStack(err)
-	}
-
-	return signedToken, nil
-}
-
 // CreateJWTFromSecret creates a JWT using the secret stored in secretSecretName and stores the
 // result in a new secret called tokenSecretName
 func CreateJWTFromSecret(ctx context.Context, cachedSecrets secretv1.ReadInterface, secrets secretv1.ModInterface, tokenSecretName, secretSecretName string, claims map[string]interface{}, ownerRef *meta.OwnerReference) error {
