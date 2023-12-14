@@ -32,9 +32,9 @@ const (
 	ArangoMLExtensionSpecDeploymentComponentTraining   = "training"
 	ArangoMLExtensionSpecDeploymentComponentProject    = "project"
 
-	ArangoMLExtensionSpecDeploymentComponentPredictionDefaultPort = 16000
-	ArangoMLExtensionSpecDeploymentComponentTrainingDefaultPort   = 16001
-	ArangoMLExtensionSpecDeploymentComponentProjectDefaultPort    = 16002
+	ArangoMLExtensionSpecDeploymentComponentPredictionDefaultPort = 8501
+	ArangoMLExtensionSpecDeploymentComponentTrainingDefaultPort   = 8502
+	ArangoMLExtensionSpecDeploymentComponentProjectDefaultPort    = 8503
 )
 
 func GetArangoMLExtensionSpecDeploymentComponentDefaultPort(component string) int32 {
