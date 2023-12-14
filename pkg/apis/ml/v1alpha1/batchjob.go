@@ -21,9 +21,13 @@
 package v1alpha1
 
 import (
+	"strings"
+
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/ml"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -39,7 +43,7 @@ type ArangoMLBatchJobList struct {
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// ArangoMLBatchJob contains definition and status of the ArangoML BatchJob.
+// ArangoMLBatchJob contains the definition and status of the ArangoML BatchJob.
 type ArangoMLBatchJob struct {
 	meta.TypeMeta   `json:",inline"`
 	meta.ObjectMeta `json:"metadata,omitempty"`
@@ -49,13 +53,13 @@ type ArangoMLBatchJob struct {
 }
 
 // AsOwner creates an OwnerReference for the given BatchJob
-func (d *ArangoMLBatchJob) AsOwner() meta.OwnerReference {
+func (a *ArangoMLBatchJob) AsOwner() meta.OwnerReference {
 	trueVar := true
 	return meta.OwnerReference{
 		APIVersion: SchemeGroupVersion.String(),
 		Kind:       ml.ArangoMLBatchJobResourceKind,
-		Name:       d.Name,
-		UID:        d.UID,
+		Name:       a.Name,
+		UID:        a.UID,
 		Controller: &trueVar,
 	}
 }
@@ -66,4 +70,58 @@ func (a *ArangoMLBatchJob) GetStatus() ArangoMLBatchJobStatus {
 
 func (a *ArangoMLBatchJob) SetStatus(status ArangoMLBatchJobStatus) {
 	a.Status = status
+}
+
+func (a *ArangoMLBatchJob) GetJobType() string {
+	val, ok := a.Labels[constants.MLJobTypeLabel]
+	if !ok {
+		return ""
+	}
+	return strings.ToLower(val)
+}
+
+func (a *ArangoMLBatchJob) GetScheduleType() string {
+	val, ok := a.Labels[constants.MLJobScheduleLabel]
+	if !ok {
+		return ""
+	}
+	return strings.ToLower(val)
+}
+
+func (a *ArangoMLBatchJob) GetMLDeploymentName() string {
+	val, ok := a.Labels[constants.MLJobScheduleLabel]
+	if !ok {
+		return ""
+	}
+	return val
+}
+
+func (a *ArangoMLBatchJob) ValidateLabels() error {
+	depl, ok := a.Labels[constants.MLDeploymentLabel]
+	if !ok {
+		return errors.Newf("Job missing label: %s", constants.MLDeploymentLabel)
+	}
+	if depl == "" {
+		return errors.Newf("Job empty value for label: %s", constants.MLDeploymentLabel)
+	}
+
+	t, ok := a.Labels[constants.MLJobTypeLabel]
+	if !ok {
+		return errors.Newf("Job missing label: %s", constants.MLJobTypeLabel)
+	}
+	jobType := strings.ToLower(t)
+	if jobType != constants.MLJobTrainingType && jobType != constants.MLJobPredictionType {
+		return errors.Newf("Job label (%s) has unexpected value: %s", constants.MLJobTypeLabel, t)
+	}
+
+	s, ok := a.Labels[constants.MLJobScheduleLabel]
+	if !ok {
+		return errors.Newf("Job missing label: %s", constants.MLJobTypeLabel)
+	}
+	scheduleType := strings.ToLower(s)
+	if scheduleType != constants.MLJobScheduleCPU && scheduleType != constants.MLJobScheduleGPU {
+		return errors.Newf("Job label (%s) has unexpected value: %s", constants.MLJobScheduleLabel, s)
+	}
+
+	return nil
 }

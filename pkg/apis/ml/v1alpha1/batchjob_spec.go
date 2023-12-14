@@ -43,5 +43,9 @@ func (a *ArangoMLBatchJobSpec) Validate() error {
 		err = append(err, shared.PrefixResourceErrors("spec", errors.Newf("JobSpec is not defined")))
 	}
 
+	if len(a.JobSpec.Template.Spec.Containers) != 1 {
+		err = append(err, shared.PrefixResourceErrors("spec.template.spec.containers", errors.Newf("Exactly one container is required")))
+	}
+
 	return shared.WithErrors(err...)
 }

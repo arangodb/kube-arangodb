@@ -43,5 +43,10 @@ func (a *ArangoMLCronJobSpec) Validate() error {
 		err = append(err, shared.PrefixResourceErrors("spec", errors.Newf("CronJobSpec is not defined")))
 	}
 
+	if len(a.CronJobSpec.JobTemplate.Spec.Template.Spec.Containers) != 1 {
+		err = append(err, shared.PrefixResourceErrors("spec.jobTemplate.spec.template.spec.containers",
+			errors.Newf("Exactly one container is required")))
+	}
+
 	return shared.WithErrors(err...)
 }

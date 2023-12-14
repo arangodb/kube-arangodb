@@ -642,13 +642,33 @@ func (in *ArangoMLJobsTemplates) DeepCopyInto(out *ArangoMLJobsTemplates) {
 	*out = *in
 	if in.Prediction != nil {
 		in, out := &in.Prediction, &out.Prediction
-		*out = new(ArangoMLExtensionTemplateSpec)
-		(*in).DeepCopyInto(*out)
+		*out = make(map[string]*ArangoMLExtensionTemplateSpec, len(*in))
+		for key, val := range *in {
+			var outVal *ArangoMLExtensionTemplateSpec
+			if val == nil {
+				(*out)[key] = nil
+			} else {
+				in, out := &val, &outVal
+				*out = new(ArangoMLExtensionTemplateSpec)
+				(*in).DeepCopyInto(*out)
+			}
+			(*out)[key] = outVal
+		}
 	}
 	if in.Training != nil {
 		in, out := &in.Training, &out.Training
-		*out = new(ArangoMLExtensionTemplateSpec)
-		(*in).DeepCopyInto(*out)
+		*out = make(map[string]*ArangoMLExtensionTemplateSpec, len(*in))
+		for key, val := range *in {
+			var outVal *ArangoMLExtensionTemplateSpec
+			if val == nil {
+				(*out)[key] = nil
+			} else {
+				in, out := &val, &outVal
+				*out = new(ArangoMLExtensionTemplateSpec)
+				(*in).DeepCopyInto(*out)
+			}
+			(*out)[key] = outVal
+		}
 	}
 	return
 }

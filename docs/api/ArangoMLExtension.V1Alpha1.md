@@ -451,7 +451,7 @@ Links:
 
 ***
 
-### .spec.jobsTemplates.prediction.affinity
+### .spec.jobsTemplates.prediction.\<string\>.affinity
 
 Type: `core.Affinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/scheduling.go#L37)</sup>
 
@@ -462,7 +462,7 @@ Links:
 
 ***
 
-### .spec.jobsTemplates.prediction.hostIPC
+### .spec.jobsTemplates.prediction.\<string\>.hostIPC
 
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/container_namespace.go#L33)</sup>
 
@@ -472,7 +472,7 @@ Default Value: `false`
 
 ***
 
-### .spec.jobsTemplates.prediction.hostNetwork
+### .spec.jobsTemplates.prediction.\<string\>.hostNetwork
 
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/container_namespace.go#L27)</sup>
 
@@ -483,7 +483,7 @@ Default Value: `false`
 
 ***
 
-### .spec.jobsTemplates.prediction.hostPID
+### .spec.jobsTemplates.prediction.\<string\>.hostPID
 
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/container_namespace.go#L30)</sup>
 
@@ -493,7 +493,7 @@ Default Value: `false`
 
 ***
 
-### .spec.jobsTemplates.prediction.image
+### .spec.jobsTemplates.prediction.\<string\>.image
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/image.go#L31)</sup>
 
@@ -501,7 +501,7 @@ Image define image details
 
 ***
 
-### .spec.jobsTemplates.prediction.nodeSelector
+### .spec.jobsTemplates.prediction.\<string\>.nodeSelector
 
 Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/scheduling.go#L32)</sup>
 
@@ -512,7 +512,7 @@ Links:
 
 ***
 
-### .spec.jobsTemplates.prediction.podSecurityContext
+### .spec.jobsTemplates.prediction.\<string\>.podSecurityContext
 
 Type: `core.PodSecurityContext` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/security_pod.go#L29)</sup>
 
@@ -523,7 +523,7 @@ Links:
 
 ***
 
-### .spec.jobsTemplates.prediction.pullPolicy
+### .spec.jobsTemplates.prediction.\<string\>.pullPolicy
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/image.go#L35)</sup>
 
@@ -533,7 +533,7 @@ Default Value: `IfNotPresent`
 
 ***
 
-### .spec.jobsTemplates.prediction.pullSecrets
+### .spec.jobsTemplates.prediction.\<string\>.pullSecrets
 
 Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/image.go#L38)</sup>
 
@@ -541,7 +541,7 @@ PullSecrets define Secrets used to pull Image from registry
 
 ***
 
-### .spec.jobsTemplates.prediction.resources
+### .spec.jobsTemplates.prediction.\<string\>.resources
 
 Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/resources.go#L34)</sup>
 
@@ -552,7 +552,7 @@ Links:
 
 ***
 
-### .spec.jobsTemplates.prediction.schedulerName
+### .spec.jobsTemplates.prediction.\<string\>.schedulerName
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/scheduling.go#L47)</sup>
 
@@ -563,7 +563,7 @@ Default Value: `""`
 
 ***
 
-### .spec.jobsTemplates.prediction.securityContext
+### .spec.jobsTemplates.prediction.\<string\>.securityContext
 
 Type: `core.SecurityContext` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/security_container.go#L29)</sup>
 
@@ -574,7 +574,7 @@ Links:
 
 ***
 
-### .spec.jobsTemplates.prediction.shareProcessNamespace
+### .spec.jobsTemplates.prediction.\<string\>.shareProcessNamespace
 
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/container_namespace.go#L39)</sup>
 
@@ -587,7 +587,7 @@ Default Value: `false`
 
 ***
 
-### .spec.jobsTemplates.prediction.tolerations
+### .spec.jobsTemplates.prediction.\<string\>.tolerations
 
 Type: `[]core.Toleration` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/scheduling.go#L42)</sup>
 
@@ -598,7 +598,7 @@ Links:
 
 ***
 
-### .spec.jobsTemplates.training.affinity
+### .spec.jobsTemplates.training.\<string\>.affinity
 
 Type: `core.Affinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/scheduling.go#L37)</sup>
 
@@ -609,7 +609,7 @@ Links:
 
 ***
 
-### .spec.jobsTemplates.training.hostIPC
+### .spec.jobsTemplates.training.\<string\>.hostIPC
 
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/container_namespace.go#L33)</sup>
 
@@ -619,7 +619,7 @@ Default Value: `false`
 
 ***
 
-### .spec.jobsTemplates.training.hostNetwork
+### .spec.jobsTemplates.training.\<string\>.hostNetwork
 
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/container_namespace.go#L27)</sup>
 
@@ -630,7 +630,7 @@ Default Value: `false`
 
 ***
 
-### .spec.jobsTemplates.training.hostPID
+### .spec.jobsTemplates.training.\<string\>.hostPID
 
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/container_namespace.go#L30)</sup>
 
@@ -640,7 +640,7 @@ Default Value: `false`
 
 ***
 
-### .spec.jobsTemplates.training.image
+### .spec.jobsTemplates.training.\<string\>.image
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/image.go#L31)</sup>
 
@@ -648,7 +648,7 @@ Image define image details
 
 ***
 
-### .spec.jobsTemplates.training.nodeSelector
+### .spec.jobsTemplates.training.\<string\>.nodeSelector
 
 Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/scheduling.go#L32)</sup>
 
@@ -659,7 +659,7 @@ Links:
 
 ***
 
-### .spec.jobsTemplates.training.podSecurityContext
+### .spec.jobsTemplates.training.\<string\>.podSecurityContext
 
 Type: `core.PodSecurityContext` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/security_pod.go#L29)</sup>
 
@@ -670,7 +670,7 @@ Links:
 
 ***
 
-### .spec.jobsTemplates.training.pullPolicy
+### .spec.jobsTemplates.training.\<string\>.pullPolicy
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/image.go#L35)</sup>
 
@@ -680,7 +680,7 @@ Default Value: `IfNotPresent`
 
 ***
 
-### .spec.jobsTemplates.training.pullSecrets
+### .spec.jobsTemplates.training.\<string\>.pullSecrets
 
 Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/image.go#L38)</sup>
 
@@ -688,7 +688,7 @@ PullSecrets define Secrets used to pull Image from registry
 
 ***
 
-### .spec.jobsTemplates.training.resources
+### .spec.jobsTemplates.training.\<string\>.resources
 
 Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/resources.go#L34)</sup>
 
@@ -699,7 +699,7 @@ Links:
 
 ***
 
-### .spec.jobsTemplates.training.schedulerName
+### .spec.jobsTemplates.training.\<string\>.schedulerName
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/scheduling.go#L47)</sup>
 
@@ -710,7 +710,7 @@ Default Value: `""`
 
 ***
 
-### .spec.jobsTemplates.training.securityContext
+### .spec.jobsTemplates.training.\<string\>.securityContext
 
 Type: `core.SecurityContext` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/security_container.go#L29)</sup>
 
@@ -721,7 +721,7 @@ Links:
 
 ***
 
-### .spec.jobsTemplates.training.shareProcessNamespace
+### .spec.jobsTemplates.training.\<string\>.shareProcessNamespace
 
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/container_namespace.go#L39)</sup>
 
@@ -734,7 +734,7 @@ Default Value: `false`
 
 ***
 
-### .spec.jobsTemplates.training.tolerations
+### .spec.jobsTemplates.training.\<string\>.tolerations
 
 Type: `[]core.Toleration` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/scheduling.go#L42)</sup>
 

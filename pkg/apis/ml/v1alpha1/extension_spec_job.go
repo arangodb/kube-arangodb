@@ -27,26 +27,10 @@ import (
 
 type ArangoMLJobsTemplates struct {
 	// Prediction defines template for the prediction job
-	Prediction *ArangoMLExtensionTemplateSpec `json:"prediction,omitempty"`
+	Prediction map[string]*ArangoMLExtensionTemplateSpec `json:"prediction,omitempty"`
 
 	// Training defines template for the training job
-	Training *ArangoMLExtensionTemplateSpec `json:"training,omitempty"`
-}
-
-func (j *ArangoMLJobsTemplates) GetPrediction() *ArangoMLExtensionTemplateSpec {
-	if j == nil {
-		return nil
-	}
-
-	return j.Prediction
-}
-
-func (j *ArangoMLJobsTemplates) GetTraining() *ArangoMLExtensionTemplateSpec {
-	if j == nil {
-		return nil
-	}
-
-	return j.Training
+	Training map[string]*ArangoMLExtensionTemplateSpec `json:"training,omitempty"`
 }
 
 func (j *ArangoMLJobsTemplates) Validate() error {
@@ -54,10 +38,20 @@ func (j *ArangoMLJobsTemplates) Validate() error {
 		return nil
 	}
 
-	return shared.WithErrors(
-		j.GetPrediction().Validate(),
-		j.GetTraining().Validate(),
-	)
+	var errs []error
+	for _, template := range j.Prediction {
+		if err := template.Validate(); err != nil {
+			errs = append(errs, shared.PrefixResourceErrors("prediction", err))
+		}
+	}
+
+	for _, template := range j.Training {
+		if err := template.Validate(); err != nil {
+			errs = append(errs, shared.PrefixResourceErrors("training", err))
+		}
+	}
+
+	return shared.WithErrors(errs...)
 }
 
 type ArangoMLExtensionTemplateSpec struct {
