@@ -787,6 +787,16 @@ func InjectPodTemplate(spec *sharedApi.PodTemplate, pod *core.PodTemplateSpec) e
 	return nil
 }
 
+func InjectContainersTemplate(spec *sharedApi.ContainerTemplate, pod *core.PodTemplateSpec, containers ...*core.Container) error {
+	for _, container := range containers {
+		if err := InjectContainerTemplate(spec, pod, container); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func InjectContainerTemplate(spec *sharedApi.ContainerTemplate, pod *core.PodTemplateSpec, container *core.Container) error {
 	if err := InjectImageDetails(spec.GetImage(), pod, container); err != nil {
 		return err
