@@ -40,15 +40,11 @@ func (j *ArangoMLJobsTemplates) Validate() error {
 
 	var errs []error
 	for _, template := range j.Prediction {
-		if err := template.Validate(); err != nil {
-			errs = append(errs, shared.PrefixResourceErrors("prediction", err))
-		}
+		errs = append(errs, shared.PrefixResourceErrors("prediction", template.Validate()))
 	}
 
 	for _, template := range j.Training {
-		if err := template.Validate(); err != nil {
-			errs = append(errs, shared.PrefixResourceErrors("training", err))
-		}
+		errs = append(errs, shared.PrefixResourceErrors("training", template.Validate()))
 	}
 
 	return shared.WithErrors(errs...)

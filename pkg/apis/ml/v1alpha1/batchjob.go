@@ -26,7 +26,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/ml"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	mlShared "github.com/arangodb/kube-arangodb/pkg/handlers/enterprise/ml/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -73,7 +73,7 @@ func (a *ArangoMLBatchJob) SetStatus(status ArangoMLBatchJobStatus) {
 }
 
 func (a *ArangoMLBatchJob) GetJobType() string {
-	val, ok := a.Labels[constants.MLJobTypeLabel]
+	val, ok := a.Labels[mlShared.MLJobTypeLabel]
 	if !ok {
 		return ""
 	}
@@ -81,7 +81,7 @@ func (a *ArangoMLBatchJob) GetJobType() string {
 }
 
 func (a *ArangoMLBatchJob) GetScheduleType() string {
-	val, ok := a.Labels[constants.MLJobScheduleLabel]
+	val, ok := a.Labels[mlShared.MLJobScheduleLabel]
 	if !ok {
 		return ""
 	}
@@ -89,7 +89,7 @@ func (a *ArangoMLBatchJob) GetScheduleType() string {
 }
 
 func (a *ArangoMLBatchJob) GetMLDeploymentName() string {
-	val, ok := a.Labels[constants.MLJobScheduleLabel]
+	val, ok := a.Labels[mlShared.MLJobScheduleLabel]
 	if !ok {
 		return ""
 	}
@@ -97,30 +97,30 @@ func (a *ArangoMLBatchJob) GetMLDeploymentName() string {
 }
 
 func (a *ArangoMLBatchJob) ValidateLabels() error {
-	depl, ok := a.Labels[constants.MLDeploymentLabel]
+	depl, ok := a.Labels[mlShared.MLDeploymentLabel]
 	if !ok {
-		return errors.Newf("Job missing label: %s", constants.MLDeploymentLabel)
+		return errors.Newf("Job missing label: %s", mlShared.MLDeploymentLabel)
 	}
 	if depl == "" {
-		return errors.Newf("Job empty value for label: %s", constants.MLDeploymentLabel)
+		return errors.Newf("Job empty value for label: %s", mlShared.MLDeploymentLabel)
 	}
 
-	t, ok := a.Labels[constants.MLJobTypeLabel]
+	t, ok := a.Labels[mlShared.MLJobTypeLabel]
 	if !ok {
-		return errors.Newf("Job missing label: %s", constants.MLJobTypeLabel)
+		return errors.Newf("Job missing label: %s", mlShared.MLJobTypeLabel)
 	}
 	jobType := strings.ToLower(t)
-	if jobType != constants.MLJobTrainingType && jobType != constants.MLJobPredictionType {
-		return errors.Newf("Job label (%s) has unexpected value: %s", constants.MLJobTypeLabel, t)
+	if jobType != mlShared.MLJobTrainingType && jobType != mlShared.MLJobPredictionType {
+		return errors.Newf("Job label (%s) has unexpected value: %s", mlShared.MLJobTypeLabel, t)
 	}
 
-	s, ok := a.Labels[constants.MLJobScheduleLabel]
+	s, ok := a.Labels[mlShared.MLJobScheduleLabel]
 	if !ok {
-		return errors.Newf("Job missing label: %s", constants.MLJobTypeLabel)
+		return errors.Newf("Job missing label: %s", mlShared.MLJobTypeLabel)
 	}
 	scheduleType := strings.ToLower(s)
-	if scheduleType != constants.MLJobScheduleCPU && scheduleType != constants.MLJobScheduleGPU {
-		return errors.Newf("Job label (%s) has unexpected value: %s", constants.MLJobScheduleLabel, s)
+	if scheduleType != mlShared.MLJobScheduleCPU && scheduleType != mlShared.MLJobScheduleGPU {
+		return errors.Newf("Job label (%s) has unexpected value: %s", mlShared.MLJobScheduleLabel, s)
 	}
 
 	return nil

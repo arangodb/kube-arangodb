@@ -71,16 +71,6 @@ const (
 	ClusterSyncLabelRole = "clustersync/role"
 	LabelRole            = "role"
 	LabelRoleLeader      = "leader"
-
-	MLDeploymentLabel  = "cloud.arangodb.com/deployment"
-	MLJobTypeLabel     = "job.cloud.arangodb.com/type"
-	MLJobScheduleLabel = "job.cloud.arangodb.com/schedule"
-
-	MLJobTrainingType   = "training"
-	MLJobPredictionType = "prediction"
-
-	MLJobScheduleCPU = "cpu"
-	MLJobScheduleGPU = "gpu"
 )
 
 func ManagedFinalizers() []string {
