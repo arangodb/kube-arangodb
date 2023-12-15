@@ -40,7 +40,7 @@ func (a *ArangoMLBatchJobSpec) Validate() error {
 
 	var err []error
 	if a.JobSpec == nil {
-		err = append(err, shared.PrefixResourceErrors("spec", errors.Newf("JobSpec is not defined")))
+		return shared.PrefixResourceErrors("spec", errors.Newf("JobSpec is not defined"))
 	}
 
 	if len(a.JobSpec.Template.Spec.Containers) != 1 {

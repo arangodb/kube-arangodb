@@ -21,13 +21,9 @@
 package v1alpha1
 
 import (
-	"strings"
-
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/ml"
-	mlShared "github.com/arangodb/kube-arangodb/pkg/handlers/enterprise/ml/shared"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -70,58 +66,4 @@ func (a *ArangoMLBatchJob) GetStatus() ArangoMLBatchJobStatus {
 
 func (a *ArangoMLBatchJob) SetStatus(status ArangoMLBatchJobStatus) {
 	a.Status = status
-}
-
-func (a *ArangoMLBatchJob) GetJobType() string {
-	val, ok := a.Labels[mlShared.MLJobTypeLabel]
-	if !ok {
-		return ""
-	}
-	return strings.ToLower(val)
-}
-
-func (a *ArangoMLBatchJob) GetScheduleType() string {
-	val, ok := a.Labels[mlShared.MLJobScheduleLabel]
-	if !ok {
-		return ""
-	}
-	return strings.ToLower(val)
-}
-
-func (a *ArangoMLBatchJob) GetMLDeploymentName() string {
-	val, ok := a.Labels[mlShared.MLJobScheduleLabel]
-	if !ok {
-		return ""
-	}
-	return val
-}
-
-func (a *ArangoMLBatchJob) ValidateLabels() error {
-	depl, ok := a.Labels[mlShared.MLDeploymentLabel]
-	if !ok {
-		return errors.Newf("Job missing label: %s", mlShared.MLDeploymentLabel)
-	}
-	if depl == "" {
-		return errors.Newf("Job empty value for label: %s", mlShared.MLDeploymentLabel)
-	}
-
-	t, ok := a.Labels[mlShared.MLJobTypeLabel]
-	if !ok {
-		return errors.Newf("Job missing label: %s", mlShared.MLJobTypeLabel)
-	}
-	jobType := strings.ToLower(t)
-	if jobType != mlShared.MLJobTrainingType && jobType != mlShared.MLJobPredictionType {
-		return errors.Newf("Job label (%s) has unexpected value: %s", mlShared.MLJobTypeLabel, t)
-	}
-
-	s, ok := a.Labels[mlShared.MLJobScheduleLabel]
-	if !ok {
-		return errors.Newf("Job missing label: %s", mlShared.MLJobTypeLabel)
-	}
-	scheduleType := strings.ToLower(s)
-	if scheduleType != mlShared.MLJobScheduleCPU && scheduleType != mlShared.MLJobScheduleGPU {
-		return errors.Newf("Job label (%s) has unexpected value: %s", mlShared.MLJobScheduleLabel, s)
-	}
-
-	return nil
 }

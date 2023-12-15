@@ -25,29 +25,78 @@ import (
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 )
 
+type JobType string
+
+const (
+	MLJobTrainingType   JobType = "training"
+	MLJobPredictionType JobType = "prediction"
+)
+
 type ArangoMLJobsTemplates struct {
 	// Prediction defines template for the prediction job
-	Prediction map[string]*ArangoMLExtensionTemplateSpec `json:"prediction,omitempty"`
+	Prediction *ArangoMLJobTemplates `json:"prediction,omitempty"`
 
 	// Training defines template for the training job
-	Training map[string]*ArangoMLExtensionTemplateSpec `json:"training,omitempty"`
+	Training *ArangoMLJobTemplates `json:"training,omitempty"`
 }
 
-func (j *ArangoMLJobsTemplates) Validate() error {
-	if j == nil {
+func (a *ArangoMLJobsTemplates) GetJobTemplates(jobType JobType) *ArangoMLJobTemplates {
+	switch jobType {
+	case MLJobTrainingType:
+		return a.Prediction
+	case MLJobPredictionType:
+		return a.Training
+	default:
+		return nil
+	}
+}
+
+func (a *ArangoMLJobsTemplates) Validate() error {
+	if a == nil {
 		return nil
 	}
 
-	var errs []error
-	for _, template := range j.Prediction {
-		errs = append(errs, shared.PrefixResourceErrors("prediction", template.Validate()))
+	return shared.WithErrors(
+		shared.PrefixResourceErrors("prediction", a.Prediction.Validate()),
+		shared.PrefixResourceErrors("training", a.Training.Validate()),
+	)
+}
+
+type JobScheduleType string
+
+const (
+	MLJobScheduleCPU JobScheduleType = "cpu"
+	MLJobScheduleGPU JobScheduleType = "gpu"
+)
+
+type ArangoMLJobTemplates struct {
+	// CPU defines templates for CPU jobs
+	CPU *ArangoMLExtensionTemplateSpec `json:"cpu,omitempty"`
+
+	// GPU defines templates for GPU jobs
+	GPU *ArangoMLExtensionTemplateSpec `json:"gpu,omitempty"`
+}
+
+func (a *ArangoMLJobTemplates) GetJobTemplateSpec(scheduleType JobScheduleType) *ArangoMLExtensionTemplateSpec {
+	switch scheduleType {
+	case MLJobScheduleCPU:
+		return a.CPU
+	case MLJobScheduleGPU:
+		return a.GPU
+	default:
+		return nil
+	}
+}
+
+func (a *ArangoMLJobTemplates) Validate() error {
+	if a == nil {
+		return nil
 	}
 
-	for _, template := range j.Training {
-		errs = append(errs, shared.PrefixResourceErrors("training", template.Validate()))
-	}
-
-	return shared.WithErrors(errs...)
+	return shared.WithErrors(
+		shared.PrefixResourceErrors("cpu", a.CPU.Validate()),
+		shared.PrefixResourceErrors("gpu", a.GPU.Validate()),
+	)
 }
 
 type ArangoMLExtensionTemplateSpec struct {
