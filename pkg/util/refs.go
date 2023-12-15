@@ -105,3 +105,23 @@ func CheckConditionalP1Nil[T, P1 interface{}](in ConditionalP1Function[T, P1], p
 
 	return nil
 }
+
+func Or(in ...bool) bool {
+	for _, v := range in {
+		if v {
+			return true
+		}
+	}
+
+	return false
+}
+
+func And(in ...bool) bool {
+	for _, v := range in {
+		if !v {
+			return false
+		}
+	}
+
+	return len(in) > 0
+}
