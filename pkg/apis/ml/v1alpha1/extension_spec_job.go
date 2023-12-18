@@ -41,11 +41,15 @@ type ArangoMLJobsTemplates struct {
 }
 
 func (a *ArangoMLJobsTemplates) GetJobTemplates(jobType JobType) *ArangoMLJobTemplates {
+	if a == nil {
+		return nil
+	}
+
 	switch jobType {
 	case MLJobTrainingType:
-		return a.Prediction
-	case MLJobPredictionType:
 		return a.Training
+	case MLJobPredictionType:
+		return a.Prediction
 	default:
 		return nil
 	}
