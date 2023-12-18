@@ -39,7 +39,7 @@ type ArangoMLBatchJobList struct {
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// ArangoMLBatchJob contains definition and status of the ArangoML BatchJob.
+// ArangoMLBatchJob contains the definition and status of the ArangoML BatchJob.
 type ArangoMLBatchJob struct {
 	meta.TypeMeta   `json:",inline"`
 	meta.ObjectMeta `json:"metadata,omitempty"`
@@ -49,13 +49,13 @@ type ArangoMLBatchJob struct {
 }
 
 // AsOwner creates an OwnerReference for the given BatchJob
-func (d *ArangoMLBatchJob) AsOwner() meta.OwnerReference {
+func (a *ArangoMLBatchJob) AsOwner() meta.OwnerReference {
 	trueVar := true
 	return meta.OwnerReference{
 		APIVersion: SchemeGroupVersion.String(),
 		Kind:       ml.ArangoMLBatchJobResourceKind,
-		Name:       d.Name,
-		UID:        d.UID,
+		Name:       a.Name,
+		UID:        a.UID,
 		Controller: &trueVar,
 	}
 }

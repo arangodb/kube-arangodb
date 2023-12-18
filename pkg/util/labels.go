@@ -18,24 +18,13 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+package util
 
 import (
-	batch "k8s.io/api/batch/v1"
-
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type ArangoMLBatchJobStatus struct {
-	// MLConditions specific to the entire batch job
-	// +doc/type: api.MLConditions
-	MLConditions api.ConditionList `json:"mlConditions,omitempty"`
-
-	// +doc/type: batch.JobStatus
-	// +doc/link: Kubernetes Documentation|https://godoc.org/k8s.io/api/batch/v1#JobStatus
-	*batch.JobStatus `json:",inline"`
-
-	// Ref keeps the reference to the CronJob
-	Ref *sharedApi.Object `json:"ref,omitempty"`
+func ExtractLabel(obj meta.Object, label string) (string, bool) {
+	v, ok := obj.GetLabels()[label]
+	return v, ok
 }

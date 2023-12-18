@@ -20,11 +20,11 @@ Links:
 
 ***
 
-### .status.conditions
+### .status.mlConditions
 
-Type: `api.Conditions` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/cronjob_status.go#L33)</sup>
+Type: `api.MLConditions` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/cronjob_status.go#L33)</sup>
 
-Conditions specific to the entire cron job
+MLConditions specific to the entire cron job
 
 ***
 
