@@ -28,9 +28,9 @@ import (
 )
 
 type ArangoMLBatchJobStatus struct {
-	// Conditions specific to the entire batch job
-	// +doc/type: api.Conditions
-	Conditions api.ConditionList `json:"conditions,omitempty"`
+	// MLConditions specific to the entire batch job
+	// +doc/type: api.MLConditions
+	MLConditions api.ConditionList `json:"mlConditions,omitempty"`
 
 	// +doc/type: batch.JobStatus
 	// +doc/link: Kubernetes Documentation|https://godoc.org/k8s.io/api/batch/v1#JobStatus
