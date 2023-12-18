@@ -705,7 +705,7 @@ v1alpha1:
             description: Image define image details
             type: string
           init:
-            description: ArangoMLExtensionTemplateSpec define Init job specification
+            description: ArangoMLExtensionTemplate define Init job specification
             properties:
               affinity:
                 description: Affinity defines scheduling constraints for workload

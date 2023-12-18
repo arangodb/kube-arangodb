@@ -75,13 +75,13 @@ const (
 
 type ArangoMLJobTemplates struct {
 	// CPU defines templates for CPU jobs
-	CPU *ArangoMLExtensionTemplateSpec `json:"cpu,omitempty"`
+	CPU *ArangoMLExtensionTemplate `json:"cpu,omitempty"`
 
 	// GPU defines templates for GPU jobs
-	GPU *ArangoMLExtensionTemplateSpec `json:"gpu,omitempty"`
+	GPU *ArangoMLExtensionTemplate `json:"gpu,omitempty"`
 }
 
-func (a *ArangoMLJobTemplates) GetJobTemplateSpec(scheduleType JobScheduleType) *ArangoMLExtensionTemplateSpec {
+func (a *ArangoMLJobTemplates) GetJobTemplateSpec(scheduleType JobScheduleType) *ArangoMLExtensionTemplate {
 	switch scheduleType {
 	case MLJobScheduleCPU:
 		return a.CPU
@@ -103,7 +103,7 @@ func (a *ArangoMLJobTemplates) Validate() error {
 	)
 }
 
-type ArangoMLExtensionTemplateSpec struct {
+type ArangoMLExtensionTemplate struct {
 	// PodTemplate keeps the information about Pod configuration
 	*sharedApi.PodTemplate `json:",inline"`
 
@@ -111,7 +111,7 @@ type ArangoMLExtensionTemplateSpec struct {
 	*sharedApi.ContainerTemplate `json:",inline"`
 }
 
-func (a *ArangoMLExtensionTemplateSpec) GetPodTemplate() *sharedApi.PodTemplate {
+func (a *ArangoMLExtensionTemplate) GetPodTemplate() *sharedApi.PodTemplate {
 	if a == nil {
 		return nil
 	}
@@ -119,7 +119,7 @@ func (a *ArangoMLExtensionTemplateSpec) GetPodTemplate() *sharedApi.PodTemplate 
 	return a.PodTemplate
 }
 
-func (a *ArangoMLExtensionTemplateSpec) GetContainerTemplate() *sharedApi.ContainerTemplate {
+func (a *ArangoMLExtensionTemplate) GetContainerTemplate() *sharedApi.ContainerTemplate {
 	if a == nil {
 		return nil
 	}
@@ -127,7 +127,7 @@ func (a *ArangoMLExtensionTemplateSpec) GetContainerTemplate() *sharedApi.Contai
 	return a.ContainerTemplate
 }
 
-func (a *ArangoMLExtensionTemplateSpec) Validate() error {
+func (a *ArangoMLExtensionTemplate) Validate() error {
 	if a == nil {
 		return nil
 	}

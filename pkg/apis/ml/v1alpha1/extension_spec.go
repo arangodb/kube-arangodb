@@ -36,8 +36,8 @@ type ArangoMLExtensionSpec struct {
 	// Image defines default image used for the extension
 	*sharedApi.Image `json:",inline"`
 
-	// ArangoMLExtensionTemplateSpec define Init job specification
-	Init *ArangoMLExtensionTemplateSpec `json:"init,omitempty"`
+	// ArangoMLExtensionTemplate define Init job specification
+	Init *ArangoMLExtensionTemplate `json:"init,omitempty"`
 
 	// Deployment specifies how the ML extension will be deployed into cluster
 	Deployment *ArangoMLExtensionSpecDeployment `json:"deployment,omitempty"`
@@ -62,7 +62,7 @@ func (a *ArangoMLExtensionSpec) GetImage() *sharedApi.Image {
 	return a.Image
 }
 
-func (a *ArangoMLExtensionSpec) GetInit() *ArangoMLExtensionTemplateSpec {
+func (a *ArangoMLExtensionSpec) GetInit() *ArangoMLExtensionTemplate {
 	if a == nil || a.Init == nil {
 		return nil
 	}
