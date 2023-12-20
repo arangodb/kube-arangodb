@@ -82,6 +82,10 @@ type ArangoMLJobTemplates struct {
 }
 
 func (a *ArangoMLJobTemplates) GetJobTemplateSpec(scheduleType JobScheduleType) *ArangoMLExtensionTemplate {
+	if a == nil {
+		return nil
+	}
+
 	switch scheduleType {
 	case MLJobScheduleCPU:
 		return a.CPU
