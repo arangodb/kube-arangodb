@@ -123,7 +123,7 @@ func P2[T interface{}, P1, P2 interface{}](
 	}
 
 	if m, p, err := Evaluate(actionBuilder, evaluatorsFunc...); err != nil {
-		log.Err(err).Error("Error while getting diff")
+		log.Err(err).Error("Error while running evaluators")
 		return SkippedRotation, nil, err
 	} else {
 		mode = mode.And(m)

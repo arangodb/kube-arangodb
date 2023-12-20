@@ -18,12 +18,30 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package util
+package compare
 
-// Ter implements a ternary operation: return cond ? a : b;
-func Ter[T any](cond bool, a T, b T) T {
-	if cond {
-		return a
+type DeepCopiable[T any] interface {
+	DeepCopy() *T
+}
+
+func NewGenericChecksumTemplate[T any, X DeepCopiable[T]](s X, fn func(X) (string, error)) (Template[T], error) {
+	checksum, err := fn(s)
+	if err != nil {
+		return nil, err
 	}
-	return b
+
+	return &genericChecksumTemplate[T]{s: s, checksum: checksum}, nil
+}
+
+type genericChecksumTemplate[T any] struct {
+	s        DeepCopiable[T]
+	checksum string
+}
+
+func (s *genericChecksumTemplate[T]) GetTemplate() *T {
+	return s.s.DeepCopy()
+}
+
+func (s *genericChecksumTemplate[T]) GetChecksum() string {
+	return s.checksum
 }
