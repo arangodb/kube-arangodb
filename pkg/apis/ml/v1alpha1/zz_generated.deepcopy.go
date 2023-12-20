@@ -556,6 +556,11 @@ func (in *ArangoMLExtensionStatusArangoDBRef) DeepCopyInto(out *ArangoMLExtensio
 		*out = new(sharedv1.Object)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.JWTTokenSecret != nil {
+		in, out := &in.JWTTokenSecret, &out.JWTTokenSecret
+		*out = new(sharedv1.Object)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 
@@ -579,6 +584,11 @@ func (in *ArangoMLExtensionStatusMetadataService) DeepCopyInto(out *ArangoMLExte
 	}
 	if in.Secret != nil {
 		in, out := &in.Secret, &out.Secret
+		*out = new(sharedv1.Object)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.JWTTokenSecret != nil {
+		in, out := &in.JWTTokenSecret, &out.JWTTokenSecret
 		*out = new(sharedv1.Object)
 		(*in).DeepCopyInto(*out)
 	}
