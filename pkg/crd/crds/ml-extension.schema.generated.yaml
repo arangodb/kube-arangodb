@@ -385,6 +385,9 @@ v1alpha1:
               prediction:
                 description: Prediction defines how Prediction workload will be deployed
                 properties:
+                  gpu:
+                    description: GPU defined if GPU Jobs are enabled for component. In use only for ArangoMLExtensionSpecDeploymentComponentPrediction and ArangoMLExtensionSpecDeploymentComponentTraining
+                    type: boolean
                   image:
                     description: Image define image details
                     type: string
@@ -476,6 +479,9 @@ v1alpha1:
               project:
                 description: Project defines how Project workload will be deployed
                 properties:
+                  gpu:
+                    description: GPU defined if GPU Jobs are enabled for component. In use only for ArangoMLExtensionSpecDeploymentComponentPrediction and ArangoMLExtensionSpecDeploymentComponentTraining
+                    type: boolean
                   image:
                     description: Image define image details
                     type: string
@@ -612,6 +618,9 @@ v1alpha1:
               training:
                 description: Training defines how Training workload will be deployed
                 properties:
+                  gpu:
+                    description: GPU defined if GPU Jobs are enabled for component. In use only for ArangoMLExtensionSpecDeploymentComponentPrediction and ArangoMLExtensionSpecDeploymentComponentTraining
+                    type: boolean
                   image:
                     description: Image define image details
                     type: string

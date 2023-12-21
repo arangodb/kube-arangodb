@@ -26,11 +26,22 @@ import (
 )
 
 type ArangoMLExtensionSpecDeploymentComponent struct {
+	// GPU defined if GPU Jobs are enabled for component. In use only for ArangoMLExtensionSpecDeploymentComponentPrediction and ArangoMLExtensionSpecDeploymentComponentTraining
+	// +doc/default: false
+	GPU *bool `json:"gpu,omitempty"`
+
 	// Port defines on which port the container will be listening for connections
 	Port *int32 `json:"port,omitempty"`
 
 	// ContainerTemplate Keeps the information about Container configuration
 	*sharedApi.ContainerTemplate `json:",inline"`
+}
+
+func (s *ArangoMLExtensionSpecDeploymentComponent) GetGPU() bool {
+	if s == nil || s.GPU == nil {
+		return false
+	}
+	return *s.GPU
 }
 
 func (s *ArangoMLExtensionSpecDeploymentComponent) GetPort(def int32) int32 {
