@@ -66,6 +66,28 @@ Links:
 
 ***
 
+### .spec.deployment.prediction.env
+
+Type: `core.EnvVar` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/envs.go#L33)</sup>
+
+Env keeps the information about environment variables provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envvar-v1-core)
+
+***
+
+### .spec.deployment.prediction.envFrom
+
+Type: `core.EnvFromSource` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/envs.go#L38)</sup>
+
+EnvFrom keeps the information about environment variable sources provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envfromsource-v1-core)
+
+***
+
 ### .spec.deployment.prediction.gpu
 
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec_deployment_component.go#L31)</sup>
@@ -129,6 +151,28 @@ PodSecurityContext holds pod-level security attributes and common container sett
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
+
+***
+
+### .spec.deployment.project.env
+
+Type: `core.EnvVar` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/envs.go#L33)</sup>
+
+Env keeps the information about environment variables provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envvar-v1-core)
+
+***
+
+### .spec.deployment.project.envFrom
+
+Type: `core.EnvFromSource` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/envs.go#L38)</sup>
+
+EnvFrom keeps the information about environment variable sources provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envfromsource-v1-core)
 
 ***
 
@@ -260,6 +304,28 @@ Links:
 
 ***
 
+### .spec.deployment.training.env
+
+Type: `core.EnvVar` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/envs.go#L33)</sup>
+
+Env keeps the information about environment variables provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envvar-v1-core)
+
+***
+
+### .spec.deployment.training.envFrom
+
+Type: `core.EnvFromSource` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/envs.go#L38)</sup>
+
+EnvFrom keeps the information about environment variable sources provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envfromsource-v1-core)
+
+***
+
 ### .spec.deployment.training.gpu
 
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec_deployment_component.go#L31)</sup>
@@ -342,6 +408,28 @@ Affinity defines scheduling constraints for workload
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity)
+
+***
+
+### .spec.init.env
+
+Type: `core.EnvVar` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/envs.go#L33)</sup>
+
+Env keeps the information about environment variables provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envvar-v1-core)
+
+***
+
+### .spec.init.envFrom
+
+Type: `core.EnvFromSource` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/envs.go#L38)</sup>
+
+EnvFrom keeps the information about environment variable sources provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envfromsource-v1-core)
 
 ***
 
@@ -492,6 +580,28 @@ Links:
 
 ***
 
+### .spec.jobsTemplates.prediction.cpu.env
+
+Type: `core.EnvVar` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/envs.go#L33)</sup>
+
+Env keeps the information about environment variables provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envvar-v1-core)
+
+***
+
+### .spec.jobsTemplates.prediction.cpu.envFrom
+
+Type: `core.EnvFromSource` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/envs.go#L38)</sup>
+
+EnvFrom keeps the information about environment variable sources provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envfromsource-v1-core)
+
+***
+
 ### .spec.jobsTemplates.prediction.cpu.hostIPC
 
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/container_namespace.go#L33)</sup>
@@ -636,6 +746,28 @@ Affinity defines scheduling constraints for workload
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity)
+
+***
+
+### .spec.jobsTemplates.prediction.gpu.env
+
+Type: `core.EnvVar` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/envs.go#L33)</sup>
+
+Env keeps the information about environment variables provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envvar-v1-core)
+
+***
+
+### .spec.jobsTemplates.prediction.gpu.envFrom
+
+Type: `core.EnvFromSource` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/envs.go#L38)</sup>
+
+EnvFrom keeps the information about environment variable sources provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envfromsource-v1-core)
 
 ***
 
@@ -786,6 +918,28 @@ Links:
 
 ***
 
+### .spec.jobsTemplates.training.cpu.env
+
+Type: `core.EnvVar` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/envs.go#L33)</sup>
+
+Env keeps the information about environment variables provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envvar-v1-core)
+
+***
+
+### .spec.jobsTemplates.training.cpu.envFrom
+
+Type: `core.EnvFromSource` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/envs.go#L38)</sup>
+
+EnvFrom keeps the information about environment variable sources provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envfromsource-v1-core)
+
+***
+
 ### .spec.jobsTemplates.training.cpu.hostIPC
 
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/container_namespace.go#L33)</sup>
@@ -930,6 +1084,28 @@ Affinity defines scheduling constraints for workload
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity)
+
+***
+
+### .spec.jobsTemplates.training.gpu.env
+
+Type: `core.EnvVar` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/envs.go#L33)</sup>
+
+Env keeps the information about environment variables provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envvar-v1-core)
+
+***
+
+### .spec.jobsTemplates.training.gpu.envFrom
+
+Type: `core.EnvFromSource` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/envs.go#L38)</sup>
+
+EnvFrom keeps the information about environment variable sources provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envfromsource-v1-core)
 
 ***
 

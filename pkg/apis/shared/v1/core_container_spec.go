@@ -33,6 +33,9 @@ type ContainerTemplate struct {
 
 	// SecurityContainer keeps the security settings for Container
 	*SecurityContainer `json:",inline"`
+
+	// Environments keeps the environment variables for Container
+	*Environments `json:",inline"`
 }
 
 func (a *ContainerTemplate) With(other *ContainerTemplate) *ContainerTemplate {
@@ -52,6 +55,7 @@ func (a *ContainerTemplate) With(other *ContainerTemplate) *ContainerTemplate {
 		Image:             a.GetImage().With(other.GetImage()),
 		Resources:         a.GetResources().With(other.GetResources()),
 		SecurityContainer: a.GetSecurityContainer().With(other.GetSecurityContainer()),
+		Environments:      a.GetEnvironments().With(other.GetEnvironments()),
 	}
 }
 
@@ -71,6 +75,14 @@ func (a *ContainerTemplate) GetSecurityContainer() *SecurityContainer {
 	return a.SecurityContainer
 }
 
+func (a *ContainerTemplate) GetEnvironments() *Environments {
+	if a == nil || a.Environments == nil {
+		return nil
+	}
+
+	return a.Environments
+}
+
 func (a *ContainerTemplate) GetResources() *Resources {
 	if a == nil || a.Resources == nil {
 		return nil
@@ -87,5 +99,6 @@ func (a *ContainerTemplate) Validate() error {
 		a.GetImage().Validate(),
 		a.GetResources().Validate(),
 		a.GetSecurityContainer().Validate(),
+		a.GetEnvironments().Validate(),
 	)
 }

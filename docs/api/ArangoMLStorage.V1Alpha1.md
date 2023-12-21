@@ -98,6 +98,28 @@ Default Value: `/`
 
 ***
 
+### .spec.mode.sidecar.env
+
+Type: `core.EnvVar` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/envs.go#L33)</sup>
+
+Env keeps the information about environment variables provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envvar-v1-core)
+
+***
+
+### .spec.mode.sidecar.envFrom
+
+Type: `core.EnvFromSource` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/envs.go#L38)</sup>
+
+EnvFrom keeps the information about environment variable sources provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envfromsource-v1-core)
+
+***
+
 ### .spec.mode.sidecar.image
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/image.go#L31)</sup>
