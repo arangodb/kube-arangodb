@@ -21,29 +21,13 @@
 package k8s
 
 import (
-	"crypto/sha256"
-	"encoding/json"
-	"fmt"
-
 	core "k8s.io/api/core/v1"
 
-	"github.com/arangodb/kube-arangodb/pkg/logging"
-	"github.com/arangodb/kube-arangodb/pkg/util/compare"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-func GetKubernetesServiceSpecDiff(logger logging.Logger, spec, current core.ServiceSpec) (compare.Mode, error) {
-	specTmpl, err := compare.NewGenericChecksumTemplate[core.ServiceSpec, *core.ServiceSpec](&spec, checksumServiceSpec)
-	if err != nil {
-		return compare.SilentRotation, err
-	}
-
-	actualTmpl, err := compare.NewGenericChecksumTemplate[core.ServiceSpec, *core.ServiceSpec](&current, checksumServiceSpec)
-	if err != nil {
-		return compare.SilentRotation, err
-	}
-
-	mode, _, err := compare.P0[core.ServiceSpec](logger, compare.NewActionBuilderStub(), checksumServiceSpec, specTmpl, actualTmpl)
-	return mode, err
+func ChecksumService(s *core.Service) (string, error) {
+	return checksumServiceSpec(&s.Spec)
 }
 
 func checksumServiceSpec(s *core.ServiceSpec) (string, error) {
@@ -53,12 +37,5 @@ func checksumServiceSpec(s *core.ServiceSpec) (string, error) {
 		"selector": s.Selector,
 		// add here more fields when needed
 	}
-
-	data, err := json.Marshal(parts)
-	if err != nil {
-		return "", err
-	}
-
-	checksum := fmt.Sprintf("%0x", sha256.Sum256(data))
-	return checksum, nil
+	return util.SHA256FromJSON(parts)
 }

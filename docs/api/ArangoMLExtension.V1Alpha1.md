@@ -1427,6 +1427,18 @@ UID keeps the information about object UID
 
 ***
 
+### .status.reconciliation.serviceChecksum
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_status_reconciliation.go#L25)</sup>
+
+***
+
+### .status.reconciliation.statefulSetChecksum
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_status_reconciliation.go#L24)</sup>
+
+***
+
 ### .status.serviceAccount.cluster.binding.name
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/object.go#L46)</sup>

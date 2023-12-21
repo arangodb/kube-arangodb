@@ -18,26 +18,23 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package k8s
+package v1alpha1
 
-import (
-	apps "k8s.io/api/apps/v1"
-
-	"github.com/arangodb/kube-arangodb/pkg/util"
-)
-
-func ChecksumStatefulSet(s *apps.StatefulSet) (string, error) {
-	return checksumStatefulSetSpec(&s.Spec)
+type ArangoMLExtensionStatusReconciliation struct {
+	StatefulSetChecksum string `json:"statefulSetChecksum,omitempty"`
+	ServiceChecksum     string `json:"serviceChecksum,omitempty"`
 }
 
-func checksumStatefulSetSpec(s *apps.StatefulSetSpec) (string, error) {
-	parts := map[string]interface{}{
-		"replicas":        s.Replicas,
-		"serviceName":     s.ServiceName,
-		"minReadySeconds": s.MinReadySeconds,
-		"selector":        s.Selector,
-		"template":        s.Template,
-		// add here more fields when needed
+func (r *ArangoMLExtensionStatusReconciliation) GetStatefulSetChecksum() string {
+	if r == nil {
+		return ""
 	}
-	return util.SHA256FromJSON(parts)
+	return r.StatefulSetChecksum
+}
+
+func (r *ArangoMLExtensionStatusReconciliation) GetServiceChecksum() string {
+	if r == nil {
+		return ""
+	}
+	return r.ServiceChecksum
 }
