@@ -68,6 +68,75 @@ v1alpha1:
               sidecar:
                 description: Sidecar mode runs the storage implementation as a sidecar
                 properties:
+                  env:
+                    description: Env keeps the information about environment variables provided to the container
+                    items:
+                      properties:
+                        name:
+                          type: string
+                        value:
+                          type: string
+                        valueFrom:
+                          properties:
+                            configMapKeyRef:
+                              properties:
+                                key:
+                                  type: string
+                                name:
+                                  type: string
+                                optional:
+                                  type: boolean
+                              type: object
+                            fieldRef:
+                              properties:
+                                apiVersion:
+                                  type: string
+                                fieldPath:
+                                  type: string
+                              type: object
+                            resourceFieldRef:
+                              properties:
+                                containerName:
+                                  type: string
+                                divisor:
+                                  type: string
+                                resource:
+                                  type: string
+                              type: object
+                            secretKeyRef:
+                              properties:
+                                key:
+                                  type: string
+                                name:
+                                  type: string
+                                optional:
+                                  type: boolean
+                              type: object
+                          type: object
+                      type: object
+                    type: array
+                  envFrom:
+                    description: EnvFrom keeps the information about environment variable sources provided to the container
+                    items:
+                      properties:
+                        configMapRef:
+                          properties:
+                            name:
+                              type: string
+                            optional:
+                              type: boolean
+                          type: object
+                        prefix:
+                          type: string
+                        secretRef:
+                          properties:
+                            name:
+                              type: string
+                            optional:
+                              type: boolean
+                          type: object
+                      type: object
+                    type: array
                   image:
                     description: Image define image details
                     type: string

@@ -44,6 +44,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/envs"
 	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
@@ -808,6 +809,11 @@ func InjectContainerTemplate(spec *sharedApi.ContainerTemplate, pod *core.PodTem
 
 	if security := spec.GetSecurityContainer(); security != nil {
 		container.SecurityContext = security.SecurityContext.DeepCopy()
+	}
+
+	if environments := spec.GetEnvironments(); environments != nil {
+		container.Env = envs.MergeEnvs(container.Env, environments.Env...)
+		container.EnvFrom = envs.MergeEnvFrom(container.EnvFrom, environments.EnvFrom...)
 	}
 
 	return nil
