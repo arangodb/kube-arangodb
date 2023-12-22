@@ -18,12 +18,26 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package util
+package k8s
 
-// Ter implements a ternary operation: return cond ? a : b;
-func Ter[T any](cond bool, a T, b T) T {
-	if cond {
-		return a
+import (
+	apps "k8s.io/api/apps/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
+)
+
+func ChecksumStatefulSet(s *apps.StatefulSet) (string, error) {
+	return checksumStatefulSetSpec(&s.Spec)
+}
+
+func checksumStatefulSetSpec(s *apps.StatefulSetSpec) (string, error) {
+	parts := map[string]interface{}{
+		"replicas":        s.Replicas,
+		"serviceName":     s.ServiceName,
+		"minReadySeconds": s.MinReadySeconds,
+		"selector":        s.Selector,
+		"template":        s.Template,
+		// add here more fields when needed
 	}
-	return b
+	return util.SHA256FromJSON(parts)
 }
