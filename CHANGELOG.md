@@ -39,6 +39,7 @@
 - (Feature) (ML) Support for deployments with JWT auth enabled
 - (Feature) (ML) GPU Jobs
 - (Feature) (ML) Container Envs
+- (Documentation) (ML) Minimal docs with examples how to deploye ArangoMLExtension
 
 ## [1.2.35](https://github.com/arangodb/kube-arangodb/tree/1.2.35) (2023-11-06)
 - (Maintenance) Update go-driver to v1.6.0, update IsNotFound() checks
