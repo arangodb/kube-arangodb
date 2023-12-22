@@ -2979,7 +2979,7 @@ Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.
 
 ### .spec.id.affinity
 
-Type: `core.PodAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_id_group_spec.go#L44)</sup>
+Type: `core.PodAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_id_group_spec.go#L48)</sup>
 
 Affinity specified additional affinity settings in ArangoDB Pod definitions
 
@@ -2990,12 +2990,22 @@ Links:
 
 ### .spec.id.antiAffinity
 
-Type: `core.PodAntiAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_id_group_spec.go#L40)</sup>
+Type: `core.PodAntiAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_id_group_spec.go#L44)</sup>
 
 AntiAffinity specified additional antiAffinity settings in ArangoDB Pod definitions
 
 Links:
 * [Documentation of core.Pod.AntiAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podantiaffinity-v1-core)
+
+***
+
+### .spec.id.args
+
+Type: `[]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_id_group_spec.go#L32)</sup>
+
+Args setting specifies additional command-line arguments passed to all servers of this group.
+
+Default Value: `[]`
 
 ***
 
@@ -3009,7 +3019,7 @@ Entrypoint overrides container executable
 
 ### .spec.id.nodeAffinity
 
-Type: `core.NodeAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_id_group_spec.go#L48)</sup>
+Type: `core.NodeAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_id_group_spec.go#L52)</sup>
 
 NodeAffinity specified additional nodeAffinity settings in ArangoDB Pod definitions
 
@@ -3020,7 +3030,7 @@ Links:
 
 ### .spec.id.nodeSelector
 
-Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_id_group_spec.go#L34)</sup>
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_id_group_spec.go#L38)</sup>
 
 NodeSelector specifies a set of selectors for nodes
 
@@ -3028,7 +3038,7 @@ NodeSelector specifies a set of selectors for nodes
 
 ### .spec.id.priorityClassName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_id_group_spec.go#L36)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_id_group_spec.go#L40)</sup>
 
 PriorityClassName specifies a priority class name
 
@@ -3036,7 +3046,7 @@ PriorityClassName specifies a priority class name
 
 ### .spec.id.resources
 
-Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_id_group_spec.go#L56)</sup>
+Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_id_group_spec.go#L60)</sup>
 
 Resources holds resource requests & limits
 
@@ -3173,7 +3183,7 @@ sysctls:
 
 ### .spec.id.serviceAccountName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_id_group_spec.go#L50)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_id_group_spec.go#L54)</sup>
 
 ServiceAccountName specifies the name of the service account used for Pods in this group.
 
@@ -3181,7 +3191,7 @@ ServiceAccountName specifies the name of the service account used for Pods in th
 
 ### .spec.id.tolerations
 
-Type: `[]core.Toleration` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_id_group_spec.go#L32)</sup>
+Type: `[]core.Toleration` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/deployment/v1/server_id_group_spec.go#L36)</sup>
 
 Tolerations specifies the tolerations added to Pods in this group.
 
