@@ -18,13 +18,40 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+package envs
 
-import sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+import core "k8s.io/api/core/v1"
 
-type ArangoMLExtensionStatusArangoDBRef struct {
-	// Secret keeps the information about ArangoDB deployment
-	Secret *sharedApi.Object `json:"secret,omitempty"`
-	// JWTTokenSecret keeps the JWT for ArangoDB authentication (only when ArangoDeployment has JWT enabled)
-	JWTTokenSecret *sharedApi.Object `json:"jwtTokenSecret,omitempty"`
+func MergeEnvs(in []core.EnvVar, envs ...core.EnvVar) []core.EnvVar {
+	out := append([]core.EnvVar{}, in...)
+
+	for _, env := range envs {
+		var envCopy core.EnvVar
+		env.DeepCopyInto(&envCopy)
+		if id := EnvId(out, envCopy.Name); id == -1 {
+			out = append(out, envCopy)
+		} else {
+			out[id] = envCopy
+		}
+	}
+
+	return out
+}
+
+func MergeEnvFrom(in []core.EnvFromSource, envs ...core.EnvFromSource) []core.EnvFromSource {
+	out := append([]core.EnvFromSource{}, in...)
+
+	out = append(out, envs...)
+
+	return out
+}
+
+func EnvId(in []core.EnvVar, name string) int {
+	for id := range in {
+		if in[id].Name == name {
+			return id
+		}
+	}
+
+	return -1
 }

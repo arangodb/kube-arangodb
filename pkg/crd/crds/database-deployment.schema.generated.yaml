@@ -2067,15 +2067,13 @@ v1:
             properties:
               jwtSecretName:
                 description: |-
-                  JWTSecretName setting specifies the name of a kubernetes `Secret` that contains
-                  the JWT token used for accessing all ArangoDB servers.
+                  JWTSecretName setting specifies the name of a kubernetes `Secret` that contains a secret key used for generating
+                  JWT tokens to access all ArangoDB servers.
                   When no name is specified, it defaults to `<deployment-name>-jwt`.
                   To disable authentication, set this value to `None`.
-                  If you specify a name of a `Secret`, that secret must have the token
-                  in a data field named `token`.
-                  If you specify a name of a `Secret` that does not exist, a random token is created
-                  and stored in a `Secret` with given name.
-                  Changing a JWT token results in restarting of a whole cluster.
+                  If you specify a name of a `Secret`, that secret must have the key value in a data field named `token`.
+                  If you specify a name of a `Secret` that does not exist, a random key is created and stored in a `Secret` with given name.
+                  Changing secret key results in restarting of a whole cluster.
                 type: string
             type: object
           bootstrap:
@@ -15228,15 +15226,13 @@ v1alpha:
             properties:
               jwtSecretName:
                 description: |-
-                  JWTSecretName setting specifies the name of a kubernetes `Secret` that contains
-                  the JWT token used for accessing all ArangoDB servers.
+                  JWTSecretName setting specifies the name of a kubernetes `Secret` that contains a secret key used for generating
+                  JWT tokens to access all ArangoDB servers.
                   When no name is specified, it defaults to `<deployment-name>-jwt`.
                   To disable authentication, set this value to `None`.
-                  If you specify a name of a `Secret`, that secret must have the token
-                  in a data field named `token`.
-                  If you specify a name of a `Secret` that does not exist, a random token is created
-                  and stored in a `Secret` with given name.
-                  Changing a JWT token results in restarting of a whole cluster.
+                  If you specify a name of a `Secret`, that secret must have the key value in a data field named `token`.
+                  If you specify a name of a `Secret` that does not exist, a random key is created and stored in a `Secret` with given name.
+                  Changing secret key results in restarting of a whole cluster.
                 type: string
             type: object
           bootstrap:
@@ -28389,15 +28385,13 @@ v2alpha1:
             properties:
               jwtSecretName:
                 description: |-
-                  JWTSecretName setting specifies the name of a kubernetes `Secret` that contains
-                  the JWT token used for accessing all ArangoDB servers.
+                  JWTSecretName setting specifies the name of a kubernetes `Secret` that contains a secret key used for generating
+                  JWT tokens to access all ArangoDB servers.
                   When no name is specified, it defaults to `<deployment-name>-jwt`.
                   To disable authentication, set this value to `None`.
-                  If you specify a name of a `Secret`, that secret must have the token
-                  in a data field named `token`.
-                  If you specify a name of a `Secret` that does not exist, a random token is created
-                  and stored in a `Secret` with given name.
-                  Changing a JWT token results in restarting of a whole cluster.
+                  If you specify a name of a `Secret`, that secret must have the key value in a data field named `token`.
+                  If you specify a name of a `Secret` that does not exist, a random key is created and stored in a `Secret` with given name.
+                  Changing secret key results in restarting of a whole cluster.
                 type: string
             type: object
           bootstrap:

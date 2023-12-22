@@ -66,6 +66,38 @@ Links:
 
 ***
 
+### .spec.deployment.prediction.env
+
+Type: `core.EnvVar` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/envs.go#L33)</sup>
+
+Env keeps the information about environment variables provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envvar-v1-core)
+
+***
+
+### .spec.deployment.prediction.envFrom
+
+Type: `core.EnvFromSource` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/envs.go#L38)</sup>
+
+EnvFrom keeps the information about environment variable sources provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envfromsource-v1-core)
+
+***
+
+### .spec.deployment.prediction.gpu
+
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec_deployment_component.go#L31)</sup>
+
+GPU defined if GPU Jobs are enabled for component. In use only for ArangoMLExtensionSpecDeploymentComponentPrediction and ArangoMLExtensionSpecDeploymentComponentTraining
+
+Default Value: `false`
+
+***
+
 ### .spec.deployment.prediction.image
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/image.go#L31)</sup>
@@ -76,7 +108,7 @@ Image define image details
 
 ### .spec.deployment.prediction.port
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec_deployment_component.go#L30)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec_deployment_component.go#L34)</sup>
 
 Port defines on which port the container will be listening for connections
 
@@ -122,6 +154,38 @@ Links:
 
 ***
 
+### .spec.deployment.project.env
+
+Type: `core.EnvVar` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/envs.go#L33)</sup>
+
+Env keeps the information about environment variables provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envvar-v1-core)
+
+***
+
+### .spec.deployment.project.envFrom
+
+Type: `core.EnvFromSource` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/envs.go#L38)</sup>
+
+EnvFrom keeps the information about environment variable sources provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envfromsource-v1-core)
+
+***
+
+### .spec.deployment.project.gpu
+
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec_deployment_component.go#L31)</sup>
+
+GPU defined if GPU Jobs are enabled for component. In use only for ArangoMLExtensionSpecDeploymentComponentPrediction and ArangoMLExtensionSpecDeploymentComponentTraining
+
+Default Value: `false`
+
+***
+
 ### .spec.deployment.project.image
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/image.go#L31)</sup>
@@ -132,7 +196,7 @@ Image define image details
 
 ### .spec.deployment.project.port
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec_deployment_component.go#L30)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec_deployment_component.go#L34)</sup>
 
 Port defines on which port the container will be listening for connections
 
@@ -240,6 +304,38 @@ Links:
 
 ***
 
+### .spec.deployment.training.env
+
+Type: `core.EnvVar` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/envs.go#L33)</sup>
+
+Env keeps the information about environment variables provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envvar-v1-core)
+
+***
+
+### .spec.deployment.training.envFrom
+
+Type: `core.EnvFromSource` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/envs.go#L38)</sup>
+
+EnvFrom keeps the information about environment variable sources provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envfromsource-v1-core)
+
+***
+
+### .spec.deployment.training.gpu
+
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec_deployment_component.go#L31)</sup>
+
+GPU defined if GPU Jobs are enabled for component. In use only for ArangoMLExtensionSpecDeploymentComponentPrediction and ArangoMLExtensionSpecDeploymentComponentTraining
+
+Default Value: `false`
+
+***
+
 ### .spec.deployment.training.image
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/image.go#L31)</sup>
@@ -250,7 +346,7 @@ Image define image details
 
 ### .spec.deployment.training.port
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec_deployment_component.go#L30)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_spec_deployment_component.go#L34)</sup>
 
 Port defines on which port the container will be listening for connections
 
@@ -312,6 +408,28 @@ Affinity defines scheduling constraints for workload
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity)
+
+***
+
+### .spec.init.env
+
+Type: `core.EnvVar` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/envs.go#L33)</sup>
+
+Env keeps the information about environment variables provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envvar-v1-core)
+
+***
+
+### .spec.init.envFrom
+
+Type: `core.EnvFromSource` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/envs.go#L38)</sup>
+
+EnvFrom keeps the information about environment variable sources provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envfromsource-v1-core)
 
 ***
 
@@ -462,6 +580,28 @@ Links:
 
 ***
 
+### .spec.jobsTemplates.prediction.cpu.env
+
+Type: `core.EnvVar` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/envs.go#L33)</sup>
+
+Env keeps the information about environment variables provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envvar-v1-core)
+
+***
+
+### .spec.jobsTemplates.prediction.cpu.envFrom
+
+Type: `core.EnvFromSource` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/envs.go#L38)</sup>
+
+EnvFrom keeps the information about environment variable sources provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envfromsource-v1-core)
+
+***
+
 ### .spec.jobsTemplates.prediction.cpu.hostIPC
 
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/container_namespace.go#L33)</sup>
@@ -606,6 +746,28 @@ Affinity defines scheduling constraints for workload
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity)
+
+***
+
+### .spec.jobsTemplates.prediction.gpu.env
+
+Type: `core.EnvVar` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/envs.go#L33)</sup>
+
+Env keeps the information about environment variables provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envvar-v1-core)
+
+***
+
+### .spec.jobsTemplates.prediction.gpu.envFrom
+
+Type: `core.EnvFromSource` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/envs.go#L38)</sup>
+
+EnvFrom keeps the information about environment variable sources provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envfromsource-v1-core)
 
 ***
 
@@ -756,6 +918,28 @@ Links:
 
 ***
 
+### .spec.jobsTemplates.training.cpu.env
+
+Type: `core.EnvVar` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/envs.go#L33)</sup>
+
+Env keeps the information about environment variables provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envvar-v1-core)
+
+***
+
+### .spec.jobsTemplates.training.cpu.envFrom
+
+Type: `core.EnvFromSource` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/envs.go#L38)</sup>
+
+EnvFrom keeps the information about environment variable sources provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envfromsource-v1-core)
+
+***
+
 ### .spec.jobsTemplates.training.cpu.hostIPC
 
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/container_namespace.go#L33)</sup>
@@ -900,6 +1084,28 @@ Affinity defines scheduling constraints for workload
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity)
+
+***
+
+### .spec.jobsTemplates.training.gpu.env
+
+Type: `core.EnvVar` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/envs.go#L33)</sup>
+
+Env keeps the information about environment variables provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envvar-v1-core)
+
+***
+
+### .spec.jobsTemplates.training.gpu.envFrom
+
+Type: `core.EnvFromSource` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/envs.go#L38)</sup>
+
+EnvFrom keeps the information about environment variable sources provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envfromsource-v1-core)
 
 ***
 
@@ -1101,6 +1307,30 @@ UID keeps the information about object UID
 
 ## Status
 
+### .status.arangoDB.jwtTokenSecret.name
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/object.go#L46)</sup>
+
+Name of the object
+
+***
+
+### .status.arangoDB.jwtTokenSecret.namespace
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/object.go#L49)</sup>
+
+Namespace of the object. Should default to the namespace of the parent object
+
+***
+
+### .status.arangoDB.jwtTokenSecret.uid
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/object.go#L52)</sup>
+
+UID keeps the information about object UID
+
+***
+
 ### .status.arangoDB.secret.name
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/object.go#L46)</sup>
@@ -1133,9 +1363,33 @@ Conditions specific to the entire extension
 
 ***
 
+### .status.metadataService.jwtTokenSecret.name
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/object.go#L46)</sup>
+
+Name of the object
+
+***
+
+### .status.metadataService.jwtTokenSecret.namespace
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/object.go#L49)</sup>
+
+Namespace of the object. Should default to the namespace of the parent object
+
+***
+
+### .status.metadataService.jwtTokenSecret.uid
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/object.go#L52)</sup>
+
+UID keeps the information about object UID
+
+***
+
 ### .status.metadataService.local.arangoMLFeatureStore
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_status_metadata_service.go#L38)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_status_metadata_service.go#L41)</sup>
 
 ArangoMLFeatureStoreDatabase define Database name to be used as MetadataService Backend
 
@@ -1143,7 +1397,7 @@ ArangoMLFeatureStoreDatabase define Database name to be used as MetadataService 
 
 ### .status.metadataService.local.arangoPipe
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_status_metadata_service.go#L35)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/extension_status_metadata_service.go#L38)</sup>
 
 ArangoPipeDatabase define Database name to be used as MetadataService Backend
 

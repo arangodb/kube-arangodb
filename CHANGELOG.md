@@ -36,6 +36,9 @@
 - (Improvement) (ML) BatchJob status update
 - (Feature) (ML) Multi DB Settings
 - (Feature) (ML) Port adjustments
+- (Feature) (ML) Support for deployments with JWT auth enabled
+- (Feature) (ML) GPU Jobs
+- (Feature) (ML) Container Envs
 
 ## [1.2.35](https://github.com/arangodb/kube-arangodb/tree/1.2.35) (2023-11-06)
 - (Maintenance) Update go-driver to v1.6.0, update IsNotFound() checks
