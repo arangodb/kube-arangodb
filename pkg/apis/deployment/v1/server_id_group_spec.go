@@ -26,6 +26,10 @@ import core "k8s.io/api/core/v1"
 type ServerIDGroupSpec struct {
 	// Entrypoint overrides container executable
 	Entrypoint *string `json:"entrypoint,omitempty"`
+	// Args setting specifies additional command-line arguments passed to all servers of this group.
+	// +doc/type: []string
+	// +doc/default: []
+	Args []string `json:"args,omitempty"`
 	// Tolerations specifies the tolerations added to Pods in this group.
 	// +doc/type: []core.Toleration
 	// +doc/link: Documentation of core.Toleration|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#toleration-v1-core

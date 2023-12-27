@@ -113,6 +113,52 @@ func TestEnsureImages(t *testing.T) {
 			},
 		},
 		{
+			Name: "Image has been changed with custom args",
+			ArangoDeployment: &api.ArangoDeployment{
+				Spec: api.DeploymentSpec{
+					Image: util.NewType[string](testNewImage),
+
+					ID: &api.ServerIDGroupSpec{
+						Args: []string{
+							"--my-custom-arg",
+						},
+					},
+				},
+			},
+			RetrySoon: true,
+			ExpectedPod: core.Pod{
+				Spec: core.PodSpec{
+					Volumes: []core.Volume{
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
+					},
+					Containers: []core.Container{
+						{
+							Name:    shared.ServerContainerName,
+							Image:   testNewImage,
+							Command: append(createTestCommandForImageUpdatePod(), "--my-custom-arg"),
+							Ports:   createTestPorts(api.ServerGroupAgents),
+							Resources: core.ResourceRequirements{
+								Limits:   make(core.ResourceList),
+								Requests: make(core.ResourceList),
+							},
+							VolumeMounts: []core.VolumeMount{
+								k8sutil.ArangodVolumeMount(),
+							},
+							ImagePullPolicy: core.PullIfNotPresent,
+							SecurityContext: securityContext.NewSecurityContext(),
+						},
+					},
+					RestartPolicy:                 core.RestartPolicyNever,
+					Tolerations:                   getTestTolerations(),
+					TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
+					Hostname:                      hostname,
+					Subdomain:                     testDeploymentName + "-int",
+					Affinity: k8sutil.CreateAffinity(testDeploymentName,
+						api.ServerGroupImageDiscovery.AsRole(), false, ""),
+				},
+			},
+		},
+		{
 			Before: func(t *testing.T, deployment *Deployment) {
 				c := deployment.acs.CurrentClusterCache()
 
