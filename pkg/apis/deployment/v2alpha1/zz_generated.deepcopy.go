@@ -2961,6 +2961,11 @@ func (in *ServerIDGroupSpec) DeepCopyInto(out *ServerIDGroupSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.Args != nil {
+		in, out := &in.Args, &out.Args
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	if in.Tolerations != nil {
 		in, out := &in.Tolerations, &out.Tolerations
 		*out = make([]v1.Toleration, len(*in))

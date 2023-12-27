@@ -165,7 +165,10 @@ func (s *ArangoMLExtensionSpecDeployment) Validate() error {
 				continue
 			}
 
-			if usedPorts.IndexOf(port) >= 0 {
+			duplicateCount := usedPorts.Count(func(i int32) bool {
+				return i == port
+			})
+			if duplicateCount > 0 {
 				errs = append(errs, shared.PrefixResourceErrors(prefix, errors.Newf("port %d already specified for other component", port)))
 			} else {
 				usedPorts.Append(port)

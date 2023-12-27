@@ -6461,6 +6461,11 @@ v1:
                       type: object
                     type: array
                 type: object
+              args:
+                description: Args setting specifies additional command-line arguments passed to all servers of this group.
+                items:
+                  type: string
+                type: array
               entrypoint:
                 description: Entrypoint overrides container executable
                 type: string
@@ -19620,6 +19625,11 @@ v1alpha:
                       type: object
                     type: array
                 type: object
+              args:
+                description: Args setting specifies additional command-line arguments passed to all servers of this group.
+                items:
+                  type: string
+                type: array
               entrypoint:
                 description: Entrypoint overrides container executable
                 type: string
@@ -32779,6 +32789,11 @@ v2alpha1:
                       type: object
                     type: array
                 type: object
+              args:
+                description: Args setting specifies additional command-line arguments passed to all servers of this group.
+                items:
+                  type: string
+                type: array
               entrypoint:
                 description: Entrypoint overrides container executable
                 type: string
