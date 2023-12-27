@@ -103,8 +103,14 @@ const (
 	// FeatureArangoSearch define feature name for ArangoSearch
 	FeatureArangoSearch Feature = "ArangoSearch"
 
-	// FeatureArangoML define feature name for ArangoML
-	FeatureArangoML Feature = "ArangoML"
+	// FeatureDataSciencePackage define feature name for DataSciencePackage
+	FeatureDataSciencePackage Feature = "DataSciencePackage"
+
+	// SubFeatureGraphML define feature name for GraphML - SubFeature of DataSciencePackage
+	SubFeatureGraphML Feature = "GraphML"
+
+	// SubFeatureAnalytics define feature name for Analytics - SubFeature of DataSciencePackage
+	SubFeatureAnalytics Feature = "Analytics"
 )
 
 func (f Feature) In(features []Feature) bool {
