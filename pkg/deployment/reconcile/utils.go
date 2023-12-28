@@ -27,18 +27,27 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
+	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
 	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
 
-func secretKeysToListWithPrefix(s *core.Secret) []string {
-	return strings.PrefixStringArray(secretKeysToList(s), "sha256:")
+func tlsSecretKeysToListWithPrefix(s *core.Secret) []string {
+	return secretKeysToListWithPrefix(s, resources.CACertName)
 }
 
-func secretKeysToList(s *core.Secret) []string {
+func secretKeysToListWithPrefix(s *core.Secret, skip ...string) []string {
+	return strings.PrefixStringArray(secretKeysToList(s, skip...), "sha256:")
+}
+
+func secretKeysToList(s *core.Secret, skip ...string) []string {
 	keys := make([]string, 0, len(s.Data))
 
 	for key := range s.Data {
+		if utils.StringList(skip).Has(key) {
+			continue
+		}
 		keys = append(keys, key)
 	}
 

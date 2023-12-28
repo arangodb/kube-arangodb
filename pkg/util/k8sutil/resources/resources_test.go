@@ -18,7 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package k8sutil
+package resources
 
 import (
 	"fmt"

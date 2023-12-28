@@ -57,7 +57,7 @@ func (l List[T]) Sort(fn func(T, T) bool) List[T] {
 	return clone
 }
 
-func MapList[T, V any](in List[T], fn func(T) V) List[V] {
+func MapList[T, V comparable](in List[T], fn func(T) V) List[V] {
 	if in == nil {
 		return nil
 	}

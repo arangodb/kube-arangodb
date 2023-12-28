@@ -23,6 +23,16 @@ package v1alpha1
 import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 
 const (
-	ReadyCondition     api.ConditionType = "Ready"
-	SpecValidCondition api.ConditionType = "SpecValid"
+	ReadyCondition                         api.ConditionType = "Ready"
+	SpecValidCondition                     api.ConditionType = "SpecValid"
+	ExtensionFoundCondition                api.ConditionType = "ExtensionFound"
+	ExtensionStorageFoundCondition         api.ConditionType = "StorageFound"
+	ExtensionDeploymentFoundCondition      api.ConditionType = "DeploymentFound"
+	ExtensionBootstrapCompletedCondition   api.ConditionType = "BootstrapCompleted"
+	ExtensionMetadataServiceValidCondition api.ConditionType = "MetadataServiceValid"
+	ExtensionServiceAccountReadyCondition  api.ConditionType = "ServiceAccountReady"
+	ExtensionStatefulSetReadyCondition     api.ConditionType = "ExtensionDeploymentReady"
+	LicenseValidCondition                  api.ConditionType = "LicenseValid"
+	CronJobSyncedCondition                 api.ConditionType = "CronJobSynced"
+	BatchJobSyncedCondition                api.ConditionType = "BatchJobSynced"
 )

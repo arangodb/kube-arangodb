@@ -23,6 +23,7 @@
 package operator
 
 import (
+	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
@@ -36,6 +37,6 @@ func (o *Operator) onStartML(stop <-chan struct{}) {
 	panic("Unable to start ML Operator in Community")
 }
 
-func (o *Operator) onStartOperatorV2ML(operator operatorV2.Operator, recorder event.Recorder, client arangoClientSet.Interface, kubeClient kubernetes.Interface, informer arangoInformer.SharedInformerFactory) {
+func (o *Operator) onStartOperatorV2ML(operator operatorV2.Operator, recorder event.Recorder, client arangoClientSet.Interface, kubeClient kubernetes.Interface, informer arangoInformer.SharedInformerFactory, kubeInformer informers.SharedInformerFactory) {
 	panic("Unable to start ML Operator in Community")
 }

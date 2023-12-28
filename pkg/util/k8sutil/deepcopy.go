@@ -21,5 +21,5 @@
 package k8sutil
 
 type DeepCopy[T interface{}] interface {
-	DeepCopy() T
+	DeepCopy() DeepCopy[T]
 }

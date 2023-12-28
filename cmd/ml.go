@@ -18,12 +18,22 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+package cmd
 
-import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-
-const (
-	ExtensionDeploymentFoundCondition api.ConditionType = "DeploymentFound"
-
-	ExtensionMetadataServiceValidCondition api.ConditionType = "MetadataServiceValid"
+import (
+	"github.com/spf13/cobra"
 )
+
+var (
+	cmdML = &cobra.Command{
+		Use: "ml",
+		Run: func(cmd *cobra.Command, args []string) {
+
+		},
+		Hidden: true,
+	}
+)
+
+func init() {
+	cmdMain.AddCommand(cmdML)
+}

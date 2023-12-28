@@ -31,7 +31,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
@@ -70,6 +70,7 @@ type ContainerIdentity struct {
 type ArangoDIdentity struct {
 	interfaces.ContainerCreator
 	input     pod.Input
+	ID        *api.ServerIDGroupSpec
 	License   *string
 	ipAddress string
 }
@@ -238,6 +239,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 				image:           image,
 				imagePullPolicy: ib.Spec.GetImagePullPolicy(),
 			},
+			ID:        ib.Spec.ID,
 			License:   license,
 			ipAddress: ib.Spec.GetListenAddr(),
 		},
@@ -460,7 +462,12 @@ func (a *ArangoDIdentity) GetCommand() ([]string, error) {
 	// Security
 	options.Merge(pod.Security().Args(a.input))
 
-	return options.Copy().Sort().AsArgsWithCommand(a.GetExecutor()), nil
+	args := options.Copy().Sort().AsArgsWithCommand(a.GetExecutor())
+	if added := a.ID.Get().Args; len(added) > 0 {
+		args = append(args, added...)
+	}
+
+	return args, nil
 }
 
 // GetEnvs returns environment variables for Arango identity containers.

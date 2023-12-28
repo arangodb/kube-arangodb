@@ -25,7 +25,8 @@ import (
 
 	core "k8s.io/api/core/v1"
 
-	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -60,4 +61,56 @@ func GetArangoDBImageIDFromPod(pod *core.Pod) (string, error) {
 
 	// If Server container is not found use first container
 	return ConvertImageID2Image(pod.Status.ContainerStatuses[0].ImageID), nil
+}
+
+// GetImageDetails Returns latest defined Image details
+func GetImageDetails(images ...*sharedApi.Image) *sharedApi.Image {
+	var out *sharedApi.Image
+
+	for _, image := range images {
+		if image != nil {
+			out = image
+		}
+	}
+
+	return out
+}
+
+// InjectImageDetails injects image details into the Pod definition
+func InjectImageDetails(image *sharedApi.Image, pod *core.PodTemplateSpec, containers ...*core.Container) error {
+	if image == nil {
+		return errors.Newf("Image not found")
+	} else if err := image.Validate(); err != nil {
+		return errors.Wrapf(err, "Unable to validate image")
+	}
+
+	for _, secret := range image.PullSecrets {
+		if HasImagePullSecret(pod.Spec.ImagePullSecrets, secret) {
+			continue
+		}
+
+		pod.Spec.ImagePullSecrets = append(pod.Spec.ImagePullSecrets, core.LocalObjectReference{
+			Name: secret,
+		})
+	}
+
+	for _, container := range containers {
+		container.Image = *image.Image
+
+		if ps := image.PullPolicy; ps != nil {
+			container.ImagePullPolicy = *ps
+		}
+	}
+
+	return nil
+}
+
+func HasImagePullSecret(secrets []core.LocalObjectReference, secret string) bool {
+	for _, sec := range secrets {
+		if sec.Name == secret {
+			return true
+		}
+	}
+
+	return false
 }

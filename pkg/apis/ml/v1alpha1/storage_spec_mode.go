@@ -21,7 +21,7 @@
 package v1alpha1
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -32,7 +32,7 @@ type ArangoMLStorageSpecMode struct {
 
 func (s *ArangoMLStorageSpecMode) GetSidecar() *ArangoMLStorageSpecModeSidecar {
 	if s == nil || s.Sidecar == nil {
-		return &ArangoMLStorageSpecModeSidecar{}
+		return nil
 	}
 	return s.Sidecar
 }

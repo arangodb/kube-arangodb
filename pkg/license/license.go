@@ -22,6 +22,7 @@ package license
 
 import (
 	"context"
+	"strconv"
 )
 
 type Status int
@@ -55,7 +56,7 @@ const (
 	// NotLicensed
 	StatusFeatureExpired
 
-	// StatusValid define state when  Operator should continue execution
+	// StatusValid define state when Operator should continue execution
 	// Licensed
 	StatusValid
 )
@@ -67,8 +68,59 @@ func (s Status) Valid() bool {
 func (s Status) Validate(feature Feature, subFeatures ...Feature) Status {
 	return s
 }
+func (s Status) String() string {
+	switch s {
+	case StatusMissing:
+		return "Missing"
+	case StatusInvalid:
+		return "Invalid"
+	case StatusInvalidSignature:
+		return "InvalidSignature"
+	case StatusNotYetValid:
+		return "NotYetValid"
+	case StatusNotAnymoreValid:
+		return "NotAnymoreValid"
+	case StatusFeatureNotEnabled:
+		return "FeatureNotEnabled"
+	case StatusFeatureExpired:
+		return "FeatureExpired"
+	case StatusValid:
+		return "Valid"
+	default:
+		return strconv.Itoa(int(s))
+	}
+}
 
 type Feature string
+
+const (
+	// FeatureAll define feature name for all features
+	FeatureAll Feature = "*"
+
+	// FeatureArangoDB define feature name for ArangoDB
+	FeatureArangoDB Feature = "ArangoDB"
+
+	// FeatureArangoSearch define feature name for ArangoSearch
+	FeatureArangoSearch Feature = "ArangoSearch"
+
+	// FeatureDataSciencePackage define feature name for DataSciencePackage
+	FeatureDataSciencePackage Feature = "DataSciencePackage"
+
+	// SubFeatureGraphML define feature name for GraphML - SubFeature of DataSciencePackage
+	SubFeatureGraphML Feature = "GraphML"
+
+	// SubFeatureAnalytics define feature name for Analytics - SubFeature of DataSciencePackage
+	SubFeatureAnalytics Feature = "Analytics"
+)
+
+func (f Feature) In(features []Feature) bool {
+	for _, v := range features {
+		if v == f {
+			return true
+		}
+	}
+	return false
+}
 
 type License interface {
 	// Validate validates the license scope. In case of:
@@ -84,5 +136,6 @@ type License interface {
 	// --- checks if subFeature or '*' is in the list of License Feature enabled SubFeatures
 	Validate(feature Feature, subFeatures ...Feature) Status
 
+	// Refresh refreshes the license from the source (Secret) and verifies the signature
 	Refresh(ctx context.Context) error
 }

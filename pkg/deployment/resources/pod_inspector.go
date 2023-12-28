@@ -31,7 +31,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
@@ -339,9 +339,11 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 
 		if k8sutil.IsPodReady(pod) && k8sutil.AreContainersReady(pod, coreContainers) {
 			// Pod is now ready
-			if anyOf(memberStatus.Conditions.Update(api.ConditionTypeReady, true, "Pod Ready", ""),
+			if util.Or(
+				memberStatus.Conditions.Update(api.ConditionTypeReady, true, "Pod Ready", ""),
 				memberStatus.Conditions.Update(api.ConditionTypeStarted, true, "Pod Started", ""),
-				memberStatus.Conditions.Update(api.ConditionTypeServing, true, "Pod Serving", "")) {
+				memberStatus.Conditions.Update(api.ConditionTypeServing, true, "Pod Serving", ""),
+			) {
 				log.Str("pod-name", pod.GetName()).Debug("Updating member condition Ready, Started & Serving to true")
 
 				if status.Topology.IsTopologyOwned(memberStatus.Topology) {
@@ -363,16 +365,20 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 			}
 		} else if k8sutil.AreContainersReady(pod, coreContainers) {
 			// Pod is not ready, but core containers are fine
-			if anyOf(memberStatus.Conditions.Update(api.ConditionTypeReady, false, "Pod Not Ready", ""),
-				memberStatus.Conditions.Update(api.ConditionTypeServing, true, "Pod is still serving", "")) {
+			if util.Or(
+				memberStatus.Conditions.Update(api.ConditionTypeReady, false, "Pod Not Ready", ""),
+				memberStatus.Conditions.Update(api.ConditionTypeServing, true, "Pod is still serving", ""),
+			) {
 				log.Str("pod-name", pod.GetName()).Debug("Updating member condition Ready to false, while all core containers are ready")
 				updateMemberStatusNeeded = true
 				nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
 			}
 		} else {
 			// Pod is not ready
-			if anyOf(memberStatus.Conditions.Update(api.ConditionTypeReady, false, "Pod Not Ready", ""),
-				memberStatus.Conditions.Update(api.ConditionTypeServing, false, "Pod Core containers are not ready", strings.Join(coreContainers, ", "))) {
+			if util.Or(
+				memberStatus.Conditions.Update(api.ConditionTypeReady, false, "Pod Not Ready", ""),
+				memberStatus.Conditions.Update(api.ConditionTypeServing, false, "Pod Core containers are not ready", strings.Join(coreContainers, ", ")),
+			) {
 				log.Str("pod-name", pod.GetName()).Debug("Updating member condition Ready & Serving to false")
 				updateMemberStatusNeeded = true
 				nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
@@ -565,14 +571,4 @@ func removeLabel(labels map[string]string, key string) map[string]string {
 	delete(labels, key)
 
 	return labels
-}
-
-func anyOf(bools ...bool) bool {
-	for _, b := range bools {
-		if b {
-			return true
-		}
-	}
-
-	return false
 }

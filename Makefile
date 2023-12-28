@@ -48,7 +48,7 @@ endif
 
 TEST_BUILD ?= 0
 GOBUILDARGS ?=
-GOBASEVERSION := 1.20.11
+GOBASEVERSION := 1.20.12
 GOVERSION := $(GOBASEVERSION)-alpine3.17
 DISTRIBUTION := alpine:3.15
 GOBUILDTAGS := $(RELEASE_MODE)
@@ -648,10 +648,12 @@ manifest-verify-helm-ee: manifests-verify-env-reset
 .PHONY: run-unit-tests
 run-unit-tests: $(SOURCES)
 	go test --count=1 --tags "$(GOBUILDTAGS)" $(TESTVERBOSEOPTIONS) \
+		$(REPOPATH)/pkg/apis/shared/... \
 		$(REPOPATH)/pkg/apis/backup/... \
 		$(REPOPATH)/pkg/apis/deployment/... \
 		$(REPOPATH)/pkg/apis/replication/... \
 		$(REPOPATH)/pkg/apis/storage/... \
+		$(REPOPATH)/pkg/apis/ml/... \
 		$(REPOPATH)/pkg/deployment/... \
 		$(REPOPATH)/pkg/storage/... \
 	    $(REPOPATH)/pkg/crd/... \
@@ -777,6 +779,7 @@ set-api-version/%:
 synchronize: synchronize-v2alpha1-with-v1
 
 synchronize-v2alpha1-with-v1:
+	@echo ">> Please use only COMMUNITY mode! Current RELEASE_MODE=$(RELEASE_MODE)"
 	@rm -f pkg/apis/deployment/v1/zz_generated.deepcopy.go pkg/apis/deployment/v2alpha1/zz_generated.deepcopy.go
 	@for file in $$(find "$(ROOT)/pkg/apis/deployment/v1/" -type f -exec $(REALPATH) --relative-to "$(ROOT)/pkg/apis/deployment/v1/" {} \;); do if [ ! -d "$(ROOT)/pkg/apis/deployment/v2alpha1/$$(dirname $${file})" ]; then mkdir -p "$(ROOT)/pkg/apis/deployment/v2alpha1/$$(dirname $${file})"; fi; done
 	@for file in $$(find "$(ROOT)/pkg/apis/deployment/v1/" -type f -exec $(REALPATH) --relative-to "$(ROOT)/pkg/apis/deployment/v1/" {} \;); do cat "$(ROOT)/pkg/apis/deployment/v1/$${file}" | $(SED) "s#package v1#package v2alpha1#g" | $(SED) 's#ArangoDeploymentVersion = "v1"#ArangoDeploymentVersion = "v2alpha1"#g' > "$(ROOT)/pkg/apis/deployment/v2alpha1/$${file}"; done
@@ -797,7 +800,7 @@ check-community:
 _check: sync-crds
 	@$(MAKE) fmt yamlfmt license-verify linter run-unit-tests bin vulncheck-optional
 
-generate: generate-internal generate-proto fmt
+generate: generate-internal generate-proto fmt yamlfmt
 
 generate-internal:
 	ROOT=$(ROOT) go test --count=1 "$(REPOPATH)/internal/..."

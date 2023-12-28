@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ package operation
 import (
 	"strings"
 
+	"github.com/rs/zerolog"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -131,4 +132,14 @@ func (i Item) Validate() error {
 
 func (i Item) String() string {
 	return strings.Join([]string{string(i.Operation), i.Group, i.Version, i.Kind, i.Namespace, i.Name}, separator)
+}
+
+func (i Item) WrapLogger(in *zerolog.Event) *zerolog.Event {
+	return in.
+		Str("operation", string(i.Operation)).
+		Str("namespace", i.Namespace).
+		Str("name", i.Name).
+		Str("group", i.Group).
+		Str("version", i.Version).
+		Str("kind", i.Kind)
 }

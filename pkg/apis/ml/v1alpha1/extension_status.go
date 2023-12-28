@@ -20,7 +20,10 @@
 
 package v1alpha1
 
-import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+import (
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+)
 
 type ArangoMLExtensionStatus struct {
 	// Conditions specific to the entire extension
@@ -29,4 +32,13 @@ type ArangoMLExtensionStatus struct {
 
 	// MetadataService keeps the MetadataService configuration
 	MetadataService *ArangoMLExtensionStatusMetadataService `json:"metadataService,omitempty"`
+
+	// ServiceAccount keeps the information about ServiceAccount
+	ServiceAccount *sharedApi.ServiceAccount `json:"serviceAccount,omitempty"`
+
+	// ArangoDB keeps the information about local arangodb reference
+	ArangoDB *ArangoMLExtensionStatusArangoDBRef `json:"arangoDB,omitempty"`
+
+	// Reconciliation keeps the information about reconciliation process. For internal use.
+	Reconciliation *ArangoMLExtensionStatusReconciliation `json:"reconciliation"`
 }

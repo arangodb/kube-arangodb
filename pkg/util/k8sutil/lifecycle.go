@@ -27,6 +27,7 @@ import (
 	core "k8s.io/api/core/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	resources2 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
 const (
@@ -51,6 +52,10 @@ func SetBinaryPath(path string) {
 	binaryPath = path
 }
 
+func BinaryPath() string {
+	return binaryPath
+}
+
 func LifecycleBinary() string {
 	return filepath.Join(LifecycleVolumeMountDir, filepath.Base(binaryPath))
 }
@@ -69,7 +74,7 @@ func InitLifecycleContainer(image, binaryPath string, resources *core.ResourceRe
 	}
 
 	if resources != nil {
-		c.Resources = ExtractPodAcceptedResourceRequirement(*resources)
+		c.Resources = resources2.ExtractPodAcceptedResourceRequirement(*resources)
 	}
 	return c, nil
 }
@@ -79,6 +84,11 @@ func NewLifecycleFinalizers() (*core.Lifecycle, error) {
 	return NewLifecycle("finalizers")
 }
 
+// NewLifecycleFinalizersWithBinary creates a lifecycle structure with preStop handler which wait for finalizers to be removed using specific binary path.
+func NewLifecycleFinalizersWithBinary(exePath string) (*core.Lifecycle, error) {
+	return NewLifecycleWithBinary(exePath, "finalizers")
+}
+
 // NewLifecyclePort creates a lifecycle structure with preStop handler which wait for port to be closed.
 func NewLifecyclePort() (*core.Lifecycle, error) {
 	return NewLifecycle("port")
@@ -86,7 +96,11 @@ func NewLifecyclePort() (*core.Lifecycle, error) {
 
 // NewLifecycle creates a lifecycle structure with preStop handler.
 func NewLifecycle(t string) (*core.Lifecycle, error) {
-	exePath := LifecycleBinary()
+	return NewLifecycleWithBinary(LifecycleBinary(), t)
+}
+
+// NewLifecycleWithBinary creates a lifecycle structure with preStop handler using specific binary path.
+func NewLifecycleWithBinary(exePath string, t string) (*core.Lifecycle, error) {
 	lifecycle := &core.Lifecycle{
 		PreStop: &core.LifecycleHandler{
 			Exec: &core.ExecAction{

@@ -20,10 +20,22 @@
 
 package v1alpha1
 
-import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+import (
+	batch "k8s.io/api/batch/v1"
+
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+)
 
 type ArangoMLCronJobStatus struct {
-	// Conditions specific to the entire cron job
-	// +doc/type: api.Conditions
-	Conditions api.ConditionList `json:"conditions,omitempty"`
+	// MLConditions specific to the entire cron job
+	// +doc/type: api.MLConditions
+	MLConditions api.ConditionList `json:"mlConditions,omitempty"`
+
+	// +doc/type: batch.CronJobStatus
+	// +doc/link: Kubernetes Documentation|https://godoc.org/k8s.io/api/batch/v1#CronJobStatus
+	*batch.CronJobStatus `json:",inline"`
+
+	// Ref keeps the reference to the CronJob
+	Ref *sharedApi.Object `json:"ref,omitempty"`
 }

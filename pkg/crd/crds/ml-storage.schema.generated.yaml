@@ -12,11 +12,6 @@ v1alpha1:
                   allowInsecure:
                     description: AllowInsecure if set to true, the Endpoint certificates won't be checked
                     type: boolean
-                  bucketName:
-                    description: |-
-                      BucketName specifies the name of the bucket
-                      Required
-                    type: string
                   caSecret:
                     description: |-
                       CASecret if not empty, the given Kubernetes Secret will be used to check the authenticity of Endpoint
@@ -25,10 +20,13 @@ v1alpha1:
                       - `ca.key` PEM encoded private key of the CA certificate
                     properties:
                       name:
+                        description: Name of the object
                         type: string
                       namespace:
+                        description: Namespace of the object. Should default to the namespace of the parent object
                         type: string
                       uid:
+                        description: UID keeps the information about object UID
                         type: string
                     type: object
                   credentialsSecret:
@@ -37,10 +35,13 @@ v1alpha1:
                       Required
                     properties:
                       name:
+                        description: Name of the object
                         type: string
                       namespace:
+                        description: Namespace of the object. Should default to the namespace of the parent object
                         type: string
                       uid:
+                        description: UID keeps the information about object UID
                         type: string
                     type: object
                   endpoint:
@@ -53,18 +54,106 @@ v1alpha1:
                     type: string
                 type: object
             type: object
+          bucketName:
+            description: |-
+              BucketName specifies the name of the bucket
+              Required
+            type: string
+          bucketPath:
+            description: BucketPath specifies the path within the bucket
+            type: string
           mode:
             description: Mode defines how storage implementation should be deployed
             properties:
               sidecar:
                 description: Sidecar mode runs the storage implementation as a sidecar
                 properties:
+                  env:
+                    description: Env keeps the information about environment variables provided to the container
+                    items:
+                      properties:
+                        name:
+                          type: string
+                        value:
+                          type: string
+                        valueFrom:
+                          properties:
+                            configMapKeyRef:
+                              properties:
+                                key:
+                                  type: string
+                                name:
+                                  type: string
+                                optional:
+                                  type: boolean
+                              type: object
+                            fieldRef:
+                              properties:
+                                apiVersion:
+                                  type: string
+                                fieldPath:
+                                  type: string
+                              type: object
+                            resourceFieldRef:
+                              properties:
+                                containerName:
+                                  type: string
+                                divisor:
+                                  type: string
+                                resource:
+                                  type: string
+                              type: object
+                            secretKeyRef:
+                              properties:
+                                key:
+                                  type: string
+                                name:
+                                  type: string
+                                optional:
+                                  type: boolean
+                              type: object
+                          type: object
+                      type: object
+                    type: array
+                  envFrom:
+                    description: EnvFrom keeps the information about environment variable sources provided to the container
+                    items:
+                      properties:
+                        configMapRef:
+                          properties:
+                            name:
+                              type: string
+                            optional:
+                              type: boolean
+                          type: object
+                        prefix:
+                          type: string
+                        secretRef:
+                          properties:
+                            name:
+                              type: string
+                            optional:
+                              type: boolean
+                          type: object
+                      type: object
+                    type: array
+                  image:
+                    description: Image define image details
+                    type: string
                   listenPort:
                     description: ListenPort defines on which port the sidecar container will be listening for connections
                     format: int32
                     type: integer
+                  pullPolicy:
+                    description: PullPolicy define Image pull policy
+                    type: string
+                  pullSecrets:
+                    description: PullSecrets define Secrets used to pull Image from registry
+                    items:
+                      type: string
+                    type: array
                   resources:
-                    description: Resources holds resource requests & limits for container running the S3 proxy
+                    description: Resources holds resource requests & limits for container
                     properties:
                       limits:
                         additionalProperties:
@@ -75,6 +164,70 @@ v1alpha1:
                           type: string
                         type: object
                     type: object
+                  securityContext:
+                    description: PodSecurityContext holds pod-level security attributes and common container settings.
+                    properties:
+                      allowPrivilegeEscalation:
+                        type: boolean
+                      capabilities:
+                        properties:
+                          add:
+                            items:
+                              type: string
+                            type: array
+                          drop:
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                      privileged:
+                        type: boolean
+                      procMount:
+                        type: string
+                      readOnlyRootFilesystem:
+                        type: boolean
+                      runAsGroup:
+                        format: int64
+                        type: integer
+                      runAsNonRoot:
+                        type: boolean
+                      runAsUser:
+                        format: int64
+                        type: integer
+                      seLinuxOptions:
+                        properties:
+                          level:
+                            type: string
+                          role:
+                            type: string
+                          type:
+                            type: string
+                          user:
+                            type: string
+                        type: object
+                      seccompProfile:
+                        properties:
+                          localhostProfile:
+                            type: string
+                          type:
+                            type: string
+                        type: object
+                      windowsOptions:
+                        properties:
+                          gmsaCredentialSpec:
+                            type: string
+                          gmsaCredentialSpecName:
+                            type: string
+                          hostProcess:
+                            type: boolean
+                          runAsUserName:
+                            type: string
+                        type: object
+                    type: object
+                  shutdownListenPort:
+                    description: ShutdownListenPort defines on which port the sidecar container will be listening for shutdown connections
+                    format: int32
+                    type: integer
                 type: object
             type: object
         type: object

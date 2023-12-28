@@ -32,7 +32,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
+	sharedReconcile "github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -137,11 +137,11 @@ func (r *Reconciler) createRotateOrUpgradePlanInternal(apiObject k8sutil.APIObje
 			p := make(api.Plan, 0, 2)
 
 			if upgradeCondition {
-				p = append(p, shared.RemoveConditionActionV2("Upgrade done", api.ConditionTypeUpgradeInProgress))
+				p = append(p, sharedReconcile.RemoveConditionActionV2("Upgrade done", api.ConditionTypeUpgradeInProgress))
 			}
 
 			if updateCondition {
-				p = append(p, shared.RemoveConditionActionV2("Update done", api.ConditionTypeUpdateInProgress))
+				p = append(p, sharedReconcile.RemoveConditionActionV2("Update done", api.ConditionTypeUpdateInProgress))
 			}
 
 			return p, false
@@ -157,7 +157,7 @@ func (r *Reconciler) createUpdatePlanInternalCondition(apiObject k8sutil.APIObje
 	if idle || len(plan) > 0 {
 		if !status.Conditions.IsTrue(api.ConditionTypeUpdateInProgress) {
 			plan = append(api.Plan{
-				shared.UpdateConditionActionV2("Update in progress", api.ConditionTypeUpdateInProgress, true, "", "", ""),
+				sharedReconcile.UpdateConditionActionV2("Update in progress", api.ConditionTypeUpdateInProgress, true, "", "", ""),
 			}, plan...)
 		}
 	}
@@ -205,8 +205,8 @@ func (r *Reconciler) createUpdatePlanInternal(apiObject k8sutil.APIObject, spec 
 		if svc, ok := cache.Service().V1().GetSimple(arangoMember.GetName()); ok {
 			if k8sutil.IsServiceRotationRequired(spec, svc) {
 				return api.Plan{
-					shared.RemoveMemberConditionActionV2("Cleaning update", api.ConditionTypePendingUpdate, m.Group, m.Member.ID),
-					shared.UpdateMemberConditionActionV2("Cleaning update", api.ConditionTypeUpdating, m.Group, m.Member.ID, true, "Cleaning update", "", ""),
+					sharedReconcile.RemoveMemberConditionActionV2("Cleaning update", api.ConditionTypePendingUpdate, m.Group, m.Member.ID),
+					sharedReconcile.UpdateMemberConditionActionV2("Cleaning update", api.ConditionTypeUpdating, m.Group, m.Member.ID, true, "Cleaning update", "", ""),
 				}, false
 			}
 		}
@@ -216,18 +216,18 @@ func (r *Reconciler) createUpdatePlanInternal(apiObject k8sutil.APIObject, spec 
 			continue
 		} else if mode != compare.InPlaceRotation {
 			return api.Plan{
-				shared.RemoveMemberConditionActionV2(reason, api.ConditionTypePendingUpdate, m.Group, m.Member.ID),
-				shared.UpdateMemberConditionActionV2(reason, api.ConditionTypeUpdating, m.Group, m.Member.ID, true, reason, "", ""),
+				sharedReconcile.RemoveMemberConditionActionV2(reason, api.ConditionTypePendingUpdate, m.Group, m.Member.ID),
+				sharedReconcile.UpdateMemberConditionActionV2(reason, api.ConditionTypeUpdating, m.Group, m.Member.ID, true, reason, "", ""),
 			}, false
 		} else {
 			p = withWaitForMember(p, m.Group, m.Member)
 
 			p = append(p, actions.NewAction(api.ActionTypeArangoMemberUpdatePodStatus, m.Group, m.Member, "Propagating status of pod").AddParam(ActionTypeArangoMemberUpdatePodStatusChecksum, checksum))
 			p = p.WrapWithPlan(api.Plan{
-				shared.RemoveMemberConditionActionV2(reason, api.ConditionTypePendingUpdate, m.Group, m.Member.ID),
-				shared.UpdateMemberConditionActionV2(reason, api.ConditionTypeUpdating, m.Group, m.Member.ID, true, reason, "", ""),
+				sharedReconcile.RemoveMemberConditionActionV2(reason, api.ConditionTypePendingUpdate, m.Group, m.Member.ID),
+				sharedReconcile.UpdateMemberConditionActionV2(reason, api.ConditionTypeUpdating, m.Group, m.Member.ID, true, reason, "", ""),
 			}, api.Plan{
-				shared.RemoveMemberConditionActionV2(reason, api.ConditionTypeUpdating, m.Group, m.Member.ID),
+				sharedReconcile.RemoveMemberConditionActionV2(reason, api.ConditionTypeUpdating, m.Group, m.Member.ID),
 			})
 
 			return p, false
@@ -242,7 +242,7 @@ func (r *Reconciler) createUpgradePlanInternalCondition(apiObject k8sutil.APIObj
 	if idle || len(plan) > 0 {
 		if !status.Conditions.IsTrue(api.ConditionTypeUpgradeInProgress) {
 			plan = append(api.Plan{
-				shared.UpdateConditionActionV2("Upgrade in progress", api.ConditionTypeUpgradeInProgress, true, "", "", ""),
+				sharedReconcile.UpdateConditionActionV2("Upgrade in progress", api.ConditionTypeUpgradeInProgress, true, "", "", ""),
 			}, plan...)
 		}
 	}

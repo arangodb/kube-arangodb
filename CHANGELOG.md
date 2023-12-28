@@ -17,11 +17,29 @@
 - (Bugfix) Handle optional taints for Storage Operator
 - (Bugfix) Fix Early Connections for 3.10+
 - (Maintenance) yamlfmt as CI Step
-- (Maintenance) Expose Context in OperatorV2 Item Handler 
+- (Maintenance) Expose Context in OperatorV2 Item Handler
 - (Feature) Improve K8S Mock for UT
 - (Feature) (ML) Introduce basic Conditions
 - (Improvement) Raise memory requests for init containers to 50mi
 - (Feature) (ML) Metadata Service Implementation
+- (Feature) License Manager for ML Deployment
+- (Feature) (ML) Storage S3 sidecar implementation
+- (Feature) TLS CA Secret Key
+- (Refactoring) Extract Resource Helpers
+- (Feature) (ML) Extension Storage Condition
+- (Improvement) (ML) Switch to fsnotify for file watching for MacOS support
+- (Feature) (ML) Unify Images, Resources and Lifecycle
+- (Improvement) (ML) CronJob status update
+- (Improvement) (ML) Job Sidecar Shutdown
+- (Feature) (ML) Handler for Extension StatefulSet and Service
+- (Feature) (ML) Pod & Container Config
+- (Improvement) (ML) BatchJob status update
+- (Feature) (ML) Multi DB Settings
+- (Feature) (ML) Port adjustments
+- (Feature) (ML) Support for deployments with JWT auth enabled
+- (Feature) (ML) GPU Jobs
+- (Feature) (ML) Container Envs
+- (Feature) Pass Arguments to ID Group
 
 ## [1.2.35](https://github.com/arangodb/kube-arangodb/tree/1.2.35) (2023-11-06)
 - (Maintenance) Update go-driver to v1.6.0, update IsNotFound() checks

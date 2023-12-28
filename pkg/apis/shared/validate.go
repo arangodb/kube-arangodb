@@ -21,12 +21,14 @@
 package shared
 
 import (
+	"fmt"
 	"regexp"
 
+	"github.com/google/uuid"
+	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
 
 var (
@@ -60,16 +62,92 @@ func ValidateOptionalResourceName(name string) error {
 
 // ValidateUID validates if it is valid Kubernetes UID
 func ValidateUID(uid types.UID) error {
-	v := strings.Split(string(uid), "-")
+	_, err := uuid.Parse(string(uid))
+	return err
+}
 
-	if len(v) != 0 &&
-		len(v[0]) != 6 &&
-		len(v[1]) != 4 &&
-		len(v[2]) != 4 &&
-		len(v[3]) != 4 &&
-		len(v[4]) != 6 {
-		return errors.Newf("Invalid UID: %s", uid)
+// ValidatePullPolicy Validates core.PullPolicy
+func ValidatePullPolicy(in core.PullPolicy) error {
+	switch in {
+	case core.PullAlways, core.PullNever, core.PullIfNotPresent:
+		return nil
+	}
+
+	return errors.Newf("Unknown pull policy: '%s'", string(in))
+}
+
+type ValidateInterface interface {
+	Validate() error
+}
+
+func Validate[T interface{}](in T) error {
+	return validate(in)
+}
+
+func validate(in any) error {
+	if v, ok := in.(ValidateInterface); ok {
+		return v.Validate()
+	}
+	return nil
+}
+
+// ValidateOptional Validates object if is not nil
+func ValidateOptional[T interface{}](in *T, validator func(T) error) error {
+	if in != nil {
+		return validator(*in)
 	}
 
 	return nil
+}
+
+// ValidateRequired Validates object and required not nil value
+func ValidateRequired[T interface{}](in *T, validator func(T) error) error {
+	if in != nil {
+		return validator(*in)
+	}
+
+	return errors.Newf("should be not nil")
+}
+
+// ValidateList validates all elements on the list
+func ValidateList[T interface{}](in []T, validator func(T) error) error {
+	errors := make([]error, len(in))
+
+	for id := range in {
+		errors[id] = PrefixResourceError(fmt.Sprintf("[%d]", id), validator(in[id]))
+	}
+
+	return WithErrors(errors...)
+}
+
+// ValidateImage Validates if provided image is valid
+func ValidateImage(image string) error {
+	if image == "" {
+		return errors.Newf("Image should be not empty")
+	}
+
+	return nil
+}
+
+// ValidateAnyNotNil Validates if any of the specified objects is not nil
+func ValidateAnyNotNil[T any](msg string, obj ...*T) error {
+	for _, o := range obj {
+		if o != nil {
+			return nil
+		}
+	}
+
+	return errors.Newf(msg)
+}
+
+// ValidateServiceType checks that service type is supported
+func ValidateServiceType(st core.ServiceType) error {
+	switch st {
+	case core.ServiceTypeClusterIP,
+		core.ServiceTypeNodePort,
+		core.ServiceTypeLoadBalancer,
+		core.ServiceTypeExternalName:
+		return nil
+	}
+	return errors.Newf("Unsupported service type %s", st)
 }

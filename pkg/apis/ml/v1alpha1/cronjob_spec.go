@@ -20,11 +20,33 @@
 
 package v1alpha1
 
-import "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+import (
+	batch "k8s.io/api/batch/v1"
+
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+)
 
 type ArangoMLCronJobSpec struct {
+	// +doc/type: batch.CronJobSpec
+	// +doc/link: Kubernetes Documentation|https://godoc.org/k8s.io/api/batch/v1#CronJobSpec
+	*batch.CronJobSpec `json:",inline"`
 }
 
 func (a *ArangoMLCronJobSpec) Validate() error {
-	return shared.WithErrors(shared.PrefixResourceErrors("spec"))
+	if a == nil {
+		return errors.Newf("Spec is not defined")
+	}
+
+	var err []error
+	if a.CronJobSpec == nil {
+		return shared.PrefixResourceErrors("spec", errors.Newf("CronJobSpec is not defined"))
+	}
+
+	if len(a.CronJobSpec.JobTemplate.Spec.Template.Spec.Containers) != 1 {
+		err = append(err, shared.PrefixResourceErrors("spec.jobTemplate.spec.template.spec.containers",
+			errors.Newf("Exactly one container is required")))
+	}
+
+	return shared.WithErrors(err...)
 }

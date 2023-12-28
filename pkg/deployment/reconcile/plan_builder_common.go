@@ -24,7 +24,7 @@ import (
 	"context"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
+	sharedReconcile "github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -41,7 +41,7 @@ func (r *Reconciler) cleanupConditions(ctx context.Context, apiObject k8sutil.AP
 
 	for _, c := range ObsoleteClusterConditions {
 		if _, ok := status.Conditions.Get(c); ok {
-			p = append(p, shared.RemoveConditionActionV2("Cleanup Condition", c))
+			p = append(p, sharedReconcile.RemoveConditionActionV2("Cleanup Condition", c))
 		}
 	}
 

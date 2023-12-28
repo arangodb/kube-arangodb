@@ -21,18 +21,9 @@
 package v1alpha1
 
 import (
-	core "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
-
-	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-)
-
-var (
-	defaultRequestsCPU    = resource.MustParse("100m")
-	defaultRequestsMemory = resource.MustParse("100Mi")
-	defaultLimitsCPU      = resource.MustParse("200m")
-	defaultLimitsMemory   = resource.MustParse("200Mi")
 )
 
 type ArangoMLStorageSpecModeSidecar struct {
@@ -40,20 +31,40 @@ type ArangoMLStorageSpecModeSidecar struct {
 	// +doc/default: 9201
 	ListenPort *uint16 `json:"listenPort,omitempty"`
 
-	// Resources holds resource requests & limits for container running the S3 proxy
-	// +doc/type: core.ResourceRequirements
-	// +doc/link: Documentation of core.ResourceRequirements|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core
-	Resources *core.ResourceRequirements `json:"resources,omitempty"`
+	// ShutdownListenPort defines on which port the sidecar container will be listening for shutdown connections
+	// +doc/default: 9202
+	ShutdownListenPort *uint16 `json:"shutdownListenPort,omitempty"`
+
+	// ContainerTemplate Keeps the information about Container configuration
+	*sharedApi.ContainerTemplate `json:",inline"`
+}
+
+func (s *ArangoMLStorageSpecModeSidecar) GetContainerTemplate() *sharedApi.ContainerTemplate {
+	if s == nil || s.ContainerTemplate == nil {
+		return nil
+	}
+
+	return s.ContainerTemplate
 }
 
 func (s *ArangoMLStorageSpecModeSidecar) Validate() error {
 	if s == nil {
 		s = &ArangoMLStorageSpecModeSidecar{}
 	}
+
+	var err []error
+
 	if s.GetListenPort() < 1 {
-		return shared.PrefixResourceErrors("database", errors.Newf("must be positive"))
+		err = append(err, shared.PrefixResourceErrors("listenPort", errors.Newf("must be positive")))
 	}
-	return nil
+
+	if s.GetShutdownListenPort() < 1 {
+		err = append(err, shared.PrefixResourceErrors("shutdownListenPort", errors.Newf("must be positive")))
+	}
+
+	err = append(err, s.GetContainerTemplate().Validate())
+
+	return shared.WithErrors(err...)
 }
 
 func (s *ArangoMLStorageSpecModeSidecar) GetListenPort() uint16 {
@@ -63,21 +74,9 @@ func (s *ArangoMLStorageSpecModeSidecar) GetListenPort() uint16 {
 	return *s.ListenPort
 }
 
-func (s *ArangoMLStorageSpecModeSidecar) GetResources() core.ResourceRequirements {
-	var resources core.ResourceRequirements
-	if s != nil && s.Resources != nil {
-		resources = *s.Resources
+func (s *ArangoMLStorageSpecModeSidecar) GetShutdownListenPort() uint16 {
+	if s == nil || s.ShutdownListenPort == nil {
+		return 9202
 	}
-
-	if len(resources.Requests) == 0 {
-		resources.Requests = make(core.ResourceList)
-		resources.Requests[core.ResourceCPU] = defaultRequestsCPU
-		resources.Requests[core.ResourceMemory] = defaultRequestsMemory
-	}
-	if len(resources.Limits) == 0 {
-		resources.Limits = make(core.ResourceList)
-		resources.Limits[core.ResourceCPU] = defaultLimitsCPU
-		resources.Limits[core.ResourceMemory] = defaultLimitsMemory
-	}
-	return resources
+	return *s.ShutdownListenPort
 }

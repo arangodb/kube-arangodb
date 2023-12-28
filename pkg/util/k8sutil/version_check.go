@@ -28,7 +28,7 @@ import (
 
 	"github.com/arangodb/go-driver"
 
-	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 )
 
 // ArangodVersionCheckInitContainer creates a container configured to check version.

@@ -29,13 +29,16 @@ import (
 	"path/filepath"
 	"reflect"
 	"strings"
-	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	openapi "k8s.io/kube-openapi/pkg/common"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
+)
+
+const (
+	rootPackageName = "github.com/arangodb/kube-arangodb"
 )
 
 func parseDocDefinition(t *testing.T, root, path, typ string, field *ast.Field, fs *token.FileSet) DocDefinition {
@@ -163,7 +166,7 @@ func iterateOverObjectDirect(t *testing.T, fields map[string]*ast.Field, name st
 				continue
 			}
 
-			fullFieldName := fmt.Sprintf("%s.%s", object.String(), f.Name)
+			fullFieldName := fmt.Sprintf("%s.%s.%s", object.PkgPath(), object.Name(), f.Name)
 
 			doc, ok := fields[fullFieldName]
 			if !ok && !f.Anonymous {
@@ -178,6 +181,20 @@ func iterateOverObjectDirect(t *testing.T, fields map[string]*ast.Field, name st
 					}
 					r[info] = doc
 					continue
+				}
+			}
+
+			// inline and anonymous field (embedded)
+			if inline && n == "" {
+				if doc != nil {
+					if t, ok := extractType(doc); ok {
+						info := typeInfo{
+							path: fmt.Sprintf("%s.%s", path, name),
+							typ:  t[0],
+						}
+						r[info] = doc
+						continue
+					}
 				}
 			}
 
@@ -267,24 +284,9 @@ func extractTag(tag string) (string, bool) {
 	return parts[0], false
 }
 
-type parsedSource struct {
-	fields map[string]*ast.Field
-	fs     *token.FileSet
-}
-
-var parsedSourcesCache = make(map[string]parsedSource)
-var parsedSourcesCacheLock sync.Mutex
-
 // parseSourceFiles returns map of <path to field in structure> -> AST for structure Field and the token inspector for all files in package
-func parseSourceFiles(t *testing.T, path string) (map[string]*ast.Field, *token.FileSet) {
-	parsedSourcesCacheLock.Lock()
-	defer parsedSourcesCacheLock.Unlock()
-
-	if ret, ok := parsedSourcesCache[path]; ok {
-		return ret.fields, ret.fs
-	}
-
-	d, fs := parseMultipleDirs(t, parser.ParseComments, path)
+func parseSourceFiles(t *testing.T, root string, fset *token.FileSet, path string) map[string]*ast.Field {
+	d := parseMultipleDirs(t, root, fset, parser.ParseComments, path)
 
 	r := map[string]*ast.Field{}
 
@@ -313,9 +315,32 @@ func parseSourceFiles(t *testing.T, path string) (map[string]*ast.Field, *token.
 				if nt != nil {
 					require.NotEmpty(t, nt.Name)
 
-					for _, name := range x.Names {
-						r[fmt.Sprintf("%s.%s.%s", k, nt.Name, name)] = x
+					if len(x.Names) > 0 {
+						for _, name := range x.Names {
+							r[fmt.Sprintf("%s.%s.%s", k, nt.Name, name)] = x
+						}
+					} else {
+						// If x.Names is empty, it's an anonymous field
+						if len(x.Names) == 0 {
+							// first check if it's a pointer to a struct
+							typeName, ok := x.Type.(*ast.StarExpr)
+							if ok {
+								ident, ok := typeName.X.(*ast.SelectorExpr)
+								if ok {
+									fieldName := ident.Sel.Name
+									r[fmt.Sprintf("%s.%s.%s", k, nt.Name, fieldName)] = x
+								}
+							} else {
+								// if it's not a pointer
+								ident, ok := x.Type.(*ast.SelectorExpr)
+								if ok {
+									fieldName := ident.Sel.Name
+									r[fmt.Sprintf("%s.%s.%s", k, nt.Name, fieldName)] = x
+								}
+							}
+						}
 					}
+
 				}
 			}
 
@@ -323,26 +348,29 @@ func parseSourceFiles(t *testing.T, path string) (map[string]*ast.Field, *token.
 		})
 	}
 
-	parsedSourcesCache[path] = parsedSource{fields: r, fs: fs}
-	return r, fs
+	return r
 }
 
-func parseMultipleDirs(t *testing.T, mode parser.Mode, dirs ...string) (map[string]*ast.Package, *token.FileSet) {
-	fset := token.NewFileSet() // positions are relative to fset
+func parseMultipleDirs(t *testing.T, root string, fset *token.FileSet, mode parser.Mode, dirs ...string) map[string]*ast.Package {
+	// positions are relative to fset
 
 	r := map[string]*ast.Package{}
 
 	for _, dir := range dirs {
 		d, err := parser.ParseDir(fset, dir, func(info fs.FileInfo) bool {
-			return !strings.HasSuffix(info.Name(), "_test.go")
+			return !strings.HasSuffix(info.Name(), "_test.go") &&
+				info.Name() != "zz_generated.deepcopy.go"
 		}, mode)
 		require.NoError(t, err)
 
-		for k, v := range d {
+		require.Len(t, d, 1)
+		k := strings.ReplaceAll(dir, root, rootPackageName)
+
+		for _, v := range d {
 			require.NotContains(t, r, k)
 			r[k] = v
 		}
 	}
 
-	return r, fset
+	return r
 }

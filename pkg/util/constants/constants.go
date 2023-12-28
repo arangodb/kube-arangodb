@@ -25,6 +25,7 @@ const (
 	EnvOperatorNodeNameArango = "NODE_NAME"
 	EnvOperatorPodName        = "MY_POD_NAME"
 	EnvOperatorPodNamespace   = "MY_POD_NAMESPACE"
+	EnvOperatorCoreContainer  = "MY_POD_CORE_CONTAINER"
 	EnvOperatorPodIP          = "MY_POD_IP"
 	EnvArangoJobSAName        = "ARANGOJOB_SA_NAME"
 
@@ -44,6 +45,9 @@ const (
 	SecretUsername = "username" // Key in Secret.data used to store a username used for basic authentication
 	SecretPassword = "password" // Key in Secret.data used to store a password used for basic authentication
 
+	SecretCredentialsAccessKey = "accessKey" // Key in Secret used to store an S3 API access key
+	SecretCredentialsSecretKey = "secretKey" // Key in Secret used to store an S3 API secret key
+
 	SecretAccessPackageYaml = "accessPackage.yaml" // Key in Secret.data used to store a YAML encoded access package
 
 	FinalizerDeplRemoveChildFinalizers = "database.arangodb.com/remove-child-finalizers" // Finalizer added to ArangoDeployment, indicating the need to remove finalizers from all children
@@ -53,6 +57,11 @@ const (
 	FinalizerPodGracefulShutdown       = "database.arangodb.com/graceful-shutdown"       // Finalizer added to All members, indicating the need for graceful shutdown
 	FinalizerPVCMemberExists           = "pvc.database.arangodb.com/member-exists"       // Finalizer added to PVCs, indicating the need to keep is as long as its member exists
 	FinalizerDelayPodTermination       = "pod.database.arangodb.com/delay"               // Finalizer added to Pod, delays termination
+
+	AnnotationShutdownManagedContainer      = "shutdown.arangodb.com/managed"
+	AnnotationShutdownContainer             = "container.shutdown.arangodb.com"
+	AnnotationShutdownCoreContainer         = "core.shutdown.arangodb.com"
+	AnnotationShutdownCoreContainerModeWait = "wait"
 
 	AnnotationEnforceAntiAffinity = "database.arangodb.com/enforce-anti-affinity" // Key of annotation added to PVC. Value is a boolean "true" or "false"
 

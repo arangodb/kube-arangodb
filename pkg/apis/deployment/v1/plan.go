@@ -82,9 +82,9 @@ type Action struct {
 	MemberID string `json:"memberID,omitempty"`
 	// Group involved in this action
 	Group ServerGroup `json:"group,omitempty"`
-	// CreationTime is set the when the action is created.
+	// CreationTime is set when the action is created.
 	CreationTime meta.Time `json:"creationTime"`
-	// StartTime is set the when the action has been started, but needs to wait to be finished.
+	// StartTime is set when the action has been started, but needs to wait to be finished.
 	StartTime *meta.Time `json:"startTime,omitempty"`
 	// Reason for this action
 	Reason string `json:"reason,omitempty"`
@@ -98,7 +98,7 @@ type Action struct {
 	TaskID types.UID `json:"taskID,omitempty"`
 	// Architecture of the member involved in this action (if any)
 	Architecture ArangoDeploymentArchitectureType `json:"arch,omitempty"`
-	// Progress describes what is a status of the current action.
+	// Progress describes the status of the current action.
 	Progress string `json:"progress,omitempty"`
 }
 

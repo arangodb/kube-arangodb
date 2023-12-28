@@ -33,50 +33,60 @@ import (
 
 func Test_ArangoMLStorageSpec(t *testing.T) {
 	s := ArangoMLStorageSpec{}
+	require.Nil(t, s.GetMode())
+	require.Nil(t, s.GetBackend())
 	require.Error(t, s.Validate())
-	require.NotNil(t, s.GetMode())
-	require.NotNil(t, s.GetBackend())
 
-	require.NotNil(t, s.Mode.GetSidecar())
 	s.Mode = &ArangoMLStorageSpecMode{}
+	require.Nil(t, s.Mode.GetSidecar())
 
-	require.NotNil(t, s.Backend.GetS3())
 	s.Backend = &ArangoMLStorageSpecBackend{}
+	require.Nil(t, s.Backend.GetS3())
 	require.Error(t, s.Validate())
 
-	require.NotNil(t, s.Mode.Sidecar.GetListenPort())
-	require.NotNil(t, s.Mode.Sidecar.GetResources())
 	s.Mode.Sidecar = &ArangoMLStorageSpecModeSidecar{}
+	require.Nil(t, s.Mode.Sidecar.GetResources())
+	require.NotNil(t, s.Mode.Sidecar.GetListenPort())
 
 	require.Error(t, s.Backend.S3.Validate())
 	s.Backend.S3 = &ArangoMLStorageSpecBackendS3{
-		Endpoint:   util.NewType("http://test.s3.example.com"),
-		BucketName: util.NewType("bucket"),
+		Endpoint: util.NewType("http://test.s3.example.com"),
 		CredentialsSecret: &sharedApi.Object{
 			Name:      "a-secret",
 			Namespace: nil,
 		},
 	}
+	s.BucketName = util.NewType("bucket")
 	require.NoError(t, s.Validate())
 
 	t.Run("default requests and limits assigned", func(t *testing.T) {
 		assignedRequirements := core.ResourceRequirements{
 			Requests: core.ResourceList{
-				core.ResourceCPU:    resource.MustParse("200m"),
-				core.ResourceMemory: resource.MustParse("200Mi"),
+				core.ResourceCPU:    resource.MustParse("100m"),
+				core.ResourceMemory: resource.MustParse("128Mi"),
 			},
 		}
-		s.Mode.Sidecar.Resources = &assignedRequirements
+		s.Mode.Sidecar.ContainerTemplate = &sharedApi.ContainerTemplate{}
+		s.Mode.Sidecar.Resources = &sharedApi.Resources{Resources: &assignedRequirements}
 
 		expectedRequirements := core.ResourceRequirements{
 			Requests: assignedRequirements.Requests,
 			Limits: core.ResourceList{
-				core.ResourceCPU:    resource.MustParse("200m"),
-				core.ResourceMemory: resource.MustParse("200Mi"),
+				core.ResourceCPU:    resource.MustParse("100m"),
+				core.ResourceMemory: resource.MustParse("128Mi"),
 			},
 		}
 
-		actualRequirements := s.Mode.Sidecar.GetResources()
-		require.Equal(t, expectedRequirements, actualRequirements)
+		actualRequirements := s.Mode.Sidecar.GetResources().With(&sharedApi.Resources{Resources: &core.ResourceRequirements{
+			Limits: core.ResourceList{
+				core.ResourceCPU:    resource.MustParse("100m"),
+				core.ResourceMemory: resource.MustParse("128Mi"),
+			},
+			Requests: core.ResourceList{
+				core.ResourceCPU:    resource.MustParse("200m"),
+				core.ResourceMemory: resource.MustParse("256Mi"),
+			},
+		}})
+		require.Equal(t, expectedRequirements, *actualRequirements.GetResources())
 	})
 }

@@ -20,14 +20,17 @@
 
 package v1alpha1
 
-import shared "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+import sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 
 type ArangoMLExtensionStatusMetadataService struct {
 	// Local define the Local ArangoDeployment Metadata Service configuration
 	Local *ArangoMLExtensionStatusMetadataServiceLocal `json:"local,omitempty"`
 
 	// Secret define the Secret specification to store all the details
-	Secret *shared.Object `json:"secret,omitempty"`
+	Secret *sharedApi.Object `json:"secret,omitempty"`
+
+	// JWTTokenSecret keeps the JWT for ArangoDB authentication (only when ArangoDeployment has JWT enabled)
+	JWTTokenSecret *sharedApi.Object `json:"jwtTokenSecret,omitempty"`
 }
 
 type ArangoMLExtensionStatusMetadataServiceLocal struct {

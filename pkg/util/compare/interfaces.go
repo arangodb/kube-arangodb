@@ -26,13 +26,7 @@ import (
 
 type Template[T interface{}] interface {
 	GetTemplate() *T
-	SetTemplate(*T)
-
-	GetTemplateChecksum() string
-	SetTemplateChecksum(string)
-
 	GetChecksum() string
-	SetChecksum(string)
 }
 
 type Checksum[T interface{}] func(in *T) (string, error)

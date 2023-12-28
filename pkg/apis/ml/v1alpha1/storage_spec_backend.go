@@ -21,7 +21,7 @@
 package v1alpha1
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -32,7 +32,7 @@ type ArangoMLStorageSpecBackend struct {
 
 func (s *ArangoMLStorageSpecBackend) GetS3() *ArangoMLStorageSpecBackendS3 {
 	if s == nil || s.S3 == nil {
-		return &ArangoMLStorageSpecBackendS3{}
+		return nil
 	}
 	return s.S3
 }

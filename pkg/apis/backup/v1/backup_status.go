@@ -23,7 +23,7 @@ package v1
 import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 )
 
 // ArangoBackupStatus contains the status part of
@@ -66,8 +66,8 @@ type ArangoBackupDetails struct {
 	Downloaded *bool `json:"downloaded,omitempty"`
 	Imported   *bool `json:"imported,omitempty"`
 	// CreationTimestamp ArangoBackup Custom Resource creation time in UTC
-	CreationTimestamp meta.Time       `json:"createdAt"`
-	Keys              shared.HashList `json:"keys,omitempty"`
+	CreationTimestamp meta.Time          `json:"createdAt"`
+	Keys              sharedApi.HashList `json:"keys,omitempty"`
 }
 
 func (a *ArangoBackupDetails) Equal(b *ArangoBackupDetails) bool {

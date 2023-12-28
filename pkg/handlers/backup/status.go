@@ -29,7 +29,7 @@ import (
 	"github.com/arangodb/go-driver"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
-	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/backup/state"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
@@ -155,12 +155,12 @@ func createBackupFromMeta(backupMeta driver.BackupMeta, old *backupApi.ArangoBac
 	return obj
 }
 
-func keysToHashList(l []driver.BackupMetaSha256) shared.HashList {
+func keysToHashList(l []driver.BackupMetaSha256) sharedApi.HashList {
 	if len(l) == 0 {
 		return nil
 	}
 
-	r := make(shared.HashList, len(l))
+	r := make(sharedApi.HashList, len(l))
 
 	for id, i := range l {
 		r[id] = fmt.Sprintf("sha256:%s", i.SHA256)

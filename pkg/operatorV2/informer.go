@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,12 +27,13 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 )
 
-func newResourceEventHandler(operator Operator, group, version, kind string) cache.ResourceEventHandler {
+func newResourceEventHandler(operator Operator, group, version, kind string, filter InformerFilter) cache.ResourceEventHandler {
 	return &resourceEventWrapper{
 		Operator: operator,
 		Group:    group,
 		Version:  version,
 		Kind:     kind,
+		filter:   filter,
 	}
 }
 
@@ -40,6 +41,8 @@ type resourceEventWrapper struct {
 	Operator Operator
 
 	Group, Version, Kind string
+
+	filter InformerFilter
 }
 
 func (r *resourceEventWrapper) push(o operation.Operation, obj interface{}) {
@@ -48,7 +51,13 @@ func (r *resourceEventWrapper) push(o operation.Operation, obj interface{}) {
 	}
 
 	if object, ok := obj.(meta.Object); ok {
+
 		if item, err := operation.NewItemFromObject(o, r.Group, r.Version, r.Kind, object); err == nil {
+			if f := r.filter; f != nil {
+				if !f(object) {
+					return
+				}
+			}
 			r.Operator.EnqueueItem(item)
 		}
 	}

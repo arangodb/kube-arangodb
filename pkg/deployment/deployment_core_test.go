@@ -30,9 +30,10 @@ import (
 	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
 func TestEnsurePod_ArangoDB_Core(t *testing.T) {
@@ -542,7 +543,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 							Image:     testImage,
 							Command:   createTestCommandForDBServer(firstDBServerStatus.ID, false, false, false),
 							Ports:     createTestPorts(api.ServerGroupDBServers),
-							Resources: k8sutil.ExtractPodAcceptedResourceRequirement(resourcesUnfiltered),
+							Resources: resources.ExtractPodAcceptedResourceRequirement(resourcesUnfiltered),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
@@ -599,7 +600,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 							Image:     testImage,
 							Command:   createTestCommandForDBServer(firstDBServerStatus.ID, false, false, false),
 							Ports:     createTestPorts(api.ServerGroupDBServers),
-							Resources: k8sutil.ExtractPodAcceptedResourceRequirement(resourcesUnfiltered),
+							Resources: resources.ExtractPodAcceptedResourceRequirement(resourcesUnfiltered),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
@@ -659,7 +660,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 							Image:     testImage,
 							Command:   createTestCommandForDBServer(firstDBServerStatus.ID, false, false, false),
 							Ports:     createTestPorts(api.ServerGroupDBServers),
-							Resources: k8sutil.ExtractPodAcceptedResourceRequirement(resourcesUnfiltered),
+							Resources: resources.ExtractPodAcceptedResourceRequirement(resourcesUnfiltered),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
@@ -1193,7 +1194,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
-						testArangodbInternalExporterContainer(false, true, k8sutil.ExtractPodAcceptedResourceRequirement(resourcesUnfiltered)),
+						testArangodbInternalExporterContainer(false, true, resources.ExtractPodAcceptedResourceRequirement(resourcesUnfiltered)),
 					},
 					RestartPolicy:                 core.RestartPolicyNever,
 					TerminationGracePeriodSeconds: &defaultDBServerTerminationTimeout,
@@ -1248,7 +1249,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 						k8sutil.LifecycleVolume(),
 					},
 					InitContainers: []core.Container{
-						createTestLifecycleContainer(k8sutil.ExtractPodAcceptedResourceRequirement(resourcesUnfiltered)),
+						createTestLifecycleContainer(resources.ExtractPodAcceptedResourceRequirement(resourcesUnfiltered)),
 					},
 					Containers: []core.Container{
 						{

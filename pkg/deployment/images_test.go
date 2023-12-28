@@ -33,7 +33,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
@@ -90,6 +90,52 @@ func TestEnsureImages(t *testing.T) {
 							Name:    shared.ServerContainerName,
 							Image:   testNewImage,
 							Command: createTestCommandForImageUpdatePod(),
+							Ports:   createTestPorts(api.ServerGroupAgents),
+							Resources: core.ResourceRequirements{
+								Limits:   make(core.ResourceList),
+								Requests: make(core.ResourceList),
+							},
+							VolumeMounts: []core.VolumeMount{
+								k8sutil.ArangodVolumeMount(),
+							},
+							ImagePullPolicy: core.PullIfNotPresent,
+							SecurityContext: securityContext.NewSecurityContext(),
+						},
+					},
+					RestartPolicy:                 core.RestartPolicyNever,
+					Tolerations:                   getTestTolerations(),
+					TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
+					Hostname:                      hostname,
+					Subdomain:                     testDeploymentName + "-int",
+					Affinity: k8sutil.CreateAffinity(testDeploymentName,
+						api.ServerGroupImageDiscovery.AsRole(), false, ""),
+				},
+			},
+		},
+		{
+			Name: "Image has been changed with custom args",
+			ArangoDeployment: &api.ArangoDeployment{
+				Spec: api.DeploymentSpec{
+					Image: util.NewType[string](testNewImage),
+
+					ID: &api.ServerIDGroupSpec{
+						Args: []string{
+							"--my-custom-arg",
+						},
+					},
+				},
+			},
+			RetrySoon: true,
+			ExpectedPod: core.Pod{
+				Spec: core.PodSpec{
+					Volumes: []core.Volume{
+						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
+					},
+					Containers: []core.Container{
+						{
+							Name:    shared.ServerContainerName,
+							Image:   testNewImage,
+							Command: append(createTestCommandForImageUpdatePod(), "--my-custom-arg"),
 							Ports:   createTestPorts(api.ServerGroupAgents),
 							Resources: core.ResourceRequirements{
 								Limits:   make(core.ResourceList),

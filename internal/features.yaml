@@ -234,3 +234,10 @@ features:
     releases:
       - operatorVersion: 1.2.35
         state: Production
+  - name: ArangoML integration
+    operatorEditions: Enterprise
+    arangoDBEditions: Enterprise
+    remarks: Support for ArangoML CRDs
+    releases:
+      - operatorVersion: 1.2.36
+        state: Alpha

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,8 +25,8 @@ import (
 
 	core "k8s.io/api/core/v1"
 
-	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	sharedv1 "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 )
 
 type ServerGroupSpecVolumeMounts []ServerGroupSpecVolumeMount
@@ -67,6 +67,6 @@ func (s *ServerGroupSpecVolumeMount) Validate() error {
 	}
 
 	return shared.WithErrors(
-		shared.PrefixResourceError("name", sharedv1.AsKubernetesResourceName(&s.Name).Validate()),
+		shared.PrefixResourceError("name", sharedApi.AsKubernetesResourceName(&s.Name).Validate()),
 	)
 }

@@ -26,7 +26,7 @@ import (
 	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
+	sharedReconcile "github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
 )
 
 func newSetConditionV2Action(action api.Action, actionCtx ActionContext) Action {
@@ -46,24 +46,24 @@ type actionSetConditionV2 struct {
 
 // Start starts the action for changing conditions on the provided member.
 func (a actionSetConditionV2) Start(ctx context.Context) (bool, error) {
-	at, ok := a.action.Params[shared.SetConditionActionV2KeyType]
+	at, ok := a.action.Params[sharedReconcile.SetConditionActionV2KeyType]
 	if !ok {
-		a.log.Info("key %s is missing in action definition", shared.SetConditionActionV2KeyType)
+		a.log.Info("key %s is missing in action definition", sharedReconcile.SetConditionActionV2KeyType)
 		return true, nil
 	}
 
-	aa, ok := a.action.Params[shared.SetConditionActionV2KeyAction]
+	aa, ok := a.action.Params[sharedReconcile.SetConditionActionV2KeyAction]
 	if !ok {
-		a.log.Info("key %s is missing in action definition", shared.SetConditionActionV2KeyAction)
+		a.log.Info("key %s is missing in action definition", sharedReconcile.SetConditionActionV2KeyAction)
 		return true, nil
 	}
 
 	switch at {
-	case shared.SetConditionActionV2KeyTypeAdd:
-		ah := a.action.Params[shared.SetConditionActionV2KeyHash]
-		am := a.action.Params[shared.SetConditionActionV2KeyMessage]
-		ar := a.action.Params[shared.SetConditionActionV2KeyReason]
-		as := a.action.Params[shared.SetConditionActionV2KeyStatus] == string(core.ConditionTrue)
+	case sharedReconcile.SetConditionActionV2KeyTypeAdd:
+		ah := a.action.Params[sharedReconcile.SetConditionActionV2KeyHash]
+		am := a.action.Params[sharedReconcile.SetConditionActionV2KeyMessage]
+		ar := a.action.Params[sharedReconcile.SetConditionActionV2KeyReason]
+		as := a.action.Params[sharedReconcile.SetConditionActionV2KeyStatus] == string(core.ConditionTrue)
 
 		if err := a.actionCtx.WithStatusUpdateErr(ctx, func(s *api.DeploymentStatus) (bool, error) {
 			return s.Conditions.UpdateWithHash(api.ConditionType(aa), as, ar, am, ah), nil
@@ -71,7 +71,7 @@ func (a actionSetConditionV2) Start(ctx context.Context) (bool, error) {
 			a.log.Err(err).Warn("unable to update status")
 			return true, nil
 		}
-	case shared.SetConditionActionV2KeyTypeRemove:
+	case sharedReconcile.SetConditionActionV2KeyTypeRemove:
 		if err := a.actionCtx.WithStatusUpdateErr(ctx, func(s *api.DeploymentStatus) (bool, error) {
 			return s.Conditions.Remove(api.ConditionType(aa)), nil
 		}); err != nil {

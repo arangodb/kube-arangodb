@@ -173,6 +173,9 @@ const (
 	// ActionRecreateMemberDefaultTimeout define default timeout for action ActionRecreateMember
 	ActionRecreateMemberDefaultTimeout time.Duration = 900 * time.Second // 15m0s
 
+	// ActionRefreshTLSCADefaultTimeout define default timeout for action ActionRefreshTLSCA
+	ActionRefreshTLSCADefaultTimeout time.Duration = 1800 * time.Second // 30m0s
+
 	// ActionRefreshTLSKeyfileCertificateDefaultTimeout define default timeout for action ActionRefreshTLSKeyfileCertificate
 	ActionRefreshTLSKeyfileCertificateDefaultTimeout time.Duration = 1800 * time.Second // 30m0s
 
@@ -433,6 +436,9 @@ const (
 	// ActionTypeRecreateMember in scopes Normal. Recreate member with same ID and Data
 	ActionTypeRecreateMember ActionType = "RecreateMember"
 
+	// ActionTypeRefreshTLSCA in scopes Normal. Refresh internal CA
+	ActionTypeRefreshTLSCA ActionType = "RefreshTLSCA"
+
 	// ActionTypeRefreshTLSKeyfileCertificate in scopes Normal. Recreate Server TLS Certificate secret
 	ActionTypeRefreshTLSKeyfileCertificate ActionType = "RefreshTLSKeyfileCertificate"
 
@@ -643,6 +649,8 @@ func (a ActionType) DefaultTimeout() time.Duration {
 		return ActionRebuildOutSyncedShardsDefaultTimeout
 	case ActionTypeRecreateMember:
 		return ActionRecreateMemberDefaultTimeout
+	case ActionTypeRefreshTLSCA:
+		return ActionRefreshTLSCADefaultTimeout
 	case ActionTypeRefreshTLSKeyfileCertificate:
 		return ActionRefreshTLSKeyfileCertificateDefaultTimeout
 	case ActionTypeRemoveMember:
@@ -818,6 +826,8 @@ func (a ActionType) Priority() ActionPriority {
 	case ActionTypeRebuildOutSyncedShards:
 		return ActionPriorityHigh
 	case ActionTypeRecreateMember:
+		return ActionPriorityNormal
+	case ActionTypeRefreshTLSCA:
 		return ActionPriorityNormal
 	case ActionTypeRefreshTLSKeyfileCertificate:
 		return ActionPriorityNormal
@@ -1006,6 +1016,8 @@ func (a ActionType) Optional() bool {
 	case ActionTypeRebuildOutSyncedShards:
 		return false
 	case ActionTypeRecreateMember:
+		return false
+	case ActionTypeRefreshTLSCA:
 		return false
 	case ActionTypeRefreshTLSKeyfileCertificate:
 		return false

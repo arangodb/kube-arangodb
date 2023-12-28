@@ -22,6 +22,7 @@ package internal
 
 import (
 	"fmt"
+	"go/token"
 	"os"
 	"path"
 	"reflect"
@@ -62,6 +63,10 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 	type genSpec struct {
 		obj interface{}
 	}
+
+	fset := token.NewFileSet()
+
+	sharedFields := parseSourceFiles(t, root, fset, fmt.Sprintf("%s/pkg/apis/shared/v1", root))
 
 	// CR file prefix -> packages to parse -> versions -> obj
 	input := map[string]map[string]map[string]genSpec{
@@ -207,10 +212,15 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 	for filePrefix, packagesToVersion := range input {
 		validationPerVersion := make(map[string]apiextensions.CustomResourceValidation, len(packagesToVersion))
 		for apiDir, versionMap := range packagesToVersion {
-			fields, fileSets := parseSourceFiles(t, apiDir)
+			fields := parseSourceFiles(t, root, fset, apiDir)
+
+			for n, f := range sharedFields {
+				require.NotContains(t, fields, n)
+				fields[n] = f
+			}
 
 			for version, generationSpec := range versionMap {
-				sb := newSchemaBuilder(root, fields, fileSets)
+				sb := newSchemaBuilder(root, fields, fset)
 				s := sb.TypeToSchema(t, reflect.TypeOf(generationSpec.obj), ".spec")
 				require.NotNil(t, s, version)
 

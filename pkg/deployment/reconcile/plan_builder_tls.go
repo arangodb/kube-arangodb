@@ -27,12 +27,15 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"sort"
 	"time"
+
+	core "k8s.io/api/core/v1"
 
 	"github.com/arangodb/go-driver"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
@@ -48,6 +51,22 @@ import (
 )
 
 const CertificateRenewalMargin = 7 * 24 * time.Hour
+
+func buildInternalCA(secret *core.Secret) string {
+	// Let's check if ca.crt needs to be created
+	keys := make([]string, 0, len(secret.Data))
+	for k, v := range secret.Data {
+		if k == resources.CACertName {
+			continue
+		}
+
+		keys = append(keys, string(v))
+	}
+
+	sort.Strings(keys)
+
+	return strings.Join(keys, "\n")
+}
 
 func (r *Reconciler) createTLSStatusPropagatedFieldUpdate(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
@@ -125,7 +144,7 @@ func (r *Reconciler) createTLSStatusUpdateRequired(apiObject k8sutil.APIObject, 
 		return false
 	}
 
-	keyHashes := secretKeysToListWithPrefix(trusted)
+	keyHashes := tlsSecretKeysToListWithPrefix(trusted)
 
 	if len(keyHashes) == 0 {
 		return false
@@ -190,6 +209,10 @@ func (r *Reconciler) createCAAppendPlan(ctx context.Context, apiObject k8sutil.A
 	if _, exists := trusted.Data[certSha]; !exists {
 		return api.Plan{actions.NewClusterAction(api.ActionTypeAppendTLSCACertificate, "Append CA to truststore").
 			AddParam(checksum, certSha)}
+	}
+
+	if string(trusted.Data[resources.CACertName]) != buildInternalCA(trusted) {
+		return api.Plan{actions.NewClusterAction(api.ActionTypeRefreshTLSCA, "Refresh CA")}
 	}
 
 	return nil
@@ -270,6 +293,10 @@ func (r *Reconciler) createCACleanPlan(ctx context.Context, apiObject k8sutil.AP
 	certSha := util.SHA256(caData)
 
 	for sha := range trusted.Data {
+		if sha == resources.CACertName {
+			continue
+		}
+
 		if certSha != sha {
 			return api.Plan{actions.NewClusterAction(api.ActionTypeCleanTLSCACertificate, "Clean CA from truststore").
 				AddParam(checksum, sha)}

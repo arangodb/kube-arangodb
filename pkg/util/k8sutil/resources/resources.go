@@ -18,7 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package k8sutil
+package resources
 
 import (
 	core "k8s.io/api/core/v1"
@@ -31,6 +31,16 @@ func ApplyContainerResourceRequirements(container *core.Container, resources cor
 
 	container.Resources.Limits = ApplyContainerResourceList(container.Resources.Limits, resources.Limits)
 	container.Resources.Requests = ApplyContainerResourceList(container.Resources.Requests, resources.Requests)
+}
+
+// ApplyContainerResource adds non-existing resources from `from` to `to` ResourceList
+func ApplyContainerResource(to core.ResourceRequirements, from core.ResourceRequirements) core.ResourceRequirements {
+	var r core.ResourceRequirements
+
+	r.Limits = ApplyContainerResourceList(to.Limits, from.Limits)
+	r.Requests = ApplyContainerResourceList(to.Requests, from.Requests)
+
+	return r
 }
 
 // ApplyContainerResourceList adds non-existing resources from `from` to `to` ResourceList

@@ -35,7 +35,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/json"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
@@ -43,6 +44,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/envs"
 	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
@@ -762,4 +764,88 @@ func GetFinalizers(spec api.ServerGroupSpec, group api.ServerGroup) []string {
 	}
 
 	return finalizers
+}
+
+func InjectPodTemplate(spec *sharedApi.PodTemplate, pod *core.PodTemplateSpec) error {
+	if scheduling := spec.GetScheduling(); scheduling != nil {
+		pod.Spec.Tolerations = scheduling.GetTolerations().DeepCopy()
+		pod.Spec.Affinity = scheduling.GetAffinity().DeepCopy()
+		pod.Spec.NodeSelector = util.CopyFullMap(scheduling.GetNodeSelector())
+		pod.Spec.SchedulerName = spec.GetSchedulerName()
+	}
+
+	if namespace := spec.GetContainerNamespace(); namespace != nil {
+		pod.Spec.HostNetwork = namespace.GetHostNetwork()
+		pod.Spec.HostPID = namespace.GetHostPID()
+		pod.Spec.HostIPC = namespace.GetHostIPC()
+		pod.Spec.ShareProcessNamespace = util.NewType(util.TypeOrDefault(namespace.GetShareProcessNamespace(), false))
+	}
+
+	if security := spec.GetSecurityPod(); security != nil {
+		pod.Spec.SecurityContext = security.PodSecurityContext.DeepCopy()
+	}
+
+	return nil
+}
+
+func InjectContainersTemplate(spec *sharedApi.ContainerTemplate, pod *core.PodTemplateSpec, containers ...*core.Container) error {
+	for _, container := range containers {
+		if err := InjectContainerTemplate(spec, pod, container); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func InjectContainerTemplate(spec *sharedApi.ContainerTemplate, pod *core.PodTemplateSpec, container *core.Container) error {
+	if err := InjectImageDetails(spec.GetImage(), pod, container); err != nil {
+		return err
+	}
+
+	if res := spec.GetResources(); res != nil {
+		container.Resources = util.TypeOrDefault(res.GetResources())
+	}
+
+	if security := spec.GetSecurityContainer(); security != nil {
+		container.SecurityContext = security.SecurityContext.DeepCopy()
+	}
+
+	if environments := spec.GetEnvironments(); environments != nil {
+		container.Env = envs.MergeEnvs(container.Env, environments.Env...)
+		container.EnvFrom = envs.MergeEnvFrom(container.EnvFrom, environments.EnvFrom...)
+	}
+
+	return nil
+}
+
+func CreateDefaultContainerTemplate(image *sharedApi.Image) *sharedApi.ContainerTemplate {
+	return &sharedApi.ContainerTemplate{
+		Image: image.DeepCopy(),
+		Resources: &sharedApi.Resources{
+			Resources: &core.ResourceRequirements{
+				Requests: core.ResourceList{
+					core.ResourceCPU:    resource.MustParse("100m"),
+					core.ResourceMemory: resource.MustParse("128Mi"),
+				},
+				Limits: core.ResourceList{
+					core.ResourceCPU:    resource.MustParse("200m"),
+					core.ResourceMemory: resource.MustParse("256Mi"),
+				},
+			},
+		},
+		SecurityContainer: &sharedApi.SecurityContainer{
+			SecurityContext: &core.SecurityContext{
+				RunAsUser:              util.NewType[int64](shared.DefaultRunAsUser),
+				RunAsGroup:             util.NewType[int64](shared.DefaultRunAsGroup),
+				RunAsNonRoot:           util.NewType(true),
+				ReadOnlyRootFilesystem: util.NewType(true),
+				Capabilities: &core.Capabilities{
+					Drop: []core.Capability{
+						"ALL",
+					},
+				},
+			},
+		},
+	}
 }

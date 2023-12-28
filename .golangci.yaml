@@ -35,8 +35,18 @@ linters-settings:
         alias: batch
       - pkg: k8s.io/api/storage/v1
         alias: storage
+      - pkg: github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared
+        alias: sharedReconcile
       - pkg: k8s.io/api/policy/v1
         alias: policy
+      - pkg: github.com/arangodb/kube-arangodb/pkg/apis/shared/v1
+        alias: sharedApi
+      - pkg: github.com/arangodb/kube-arangodb/pkg/apis/shared
+        alias: shared
+      - pkg: github.com/arangodb/kube-arangodb/pkg/handlers/enterprise/ml/shared
+        alias: mlShared
+      - pkg: github.com/arangodb/kube-arangodb/pkg/handlers/enterprise/ml/shared/test
+        alias: mlSharedTests
       - pkg: github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1
         alias: mlApi
   gci:
