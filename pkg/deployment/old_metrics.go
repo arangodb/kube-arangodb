@@ -144,8 +144,8 @@ func (i *inventory) CollectMetrics(in metrics.PushMetric) {
 					}
 
 				}
+				in.Push(i.deploymentAgencyStateMetric.Gauge(1, deployment.GetNamespace(), deployment.GetName()))
 			}
-			in.Push(i.deploymentAgencyStateMetric.Gauge(1, deployment.GetNamespace(), deployment.GetName()))
 		}
 	}
 }
