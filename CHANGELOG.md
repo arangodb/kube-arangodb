@@ -40,6 +40,7 @@
 - (Feature) (ML) GPU Jobs
 - (Feature) (ML) Container Envs
 - (Feature) Pass Arguments to ID Group
+- (Documentation) (ML) Minimal docs with examples how to deploy ArangoMLExtension
 
 ## [1.2.35](https://github.com/arangodb/kube-arangodb/tree/1.2.35) (2023-11-06)
 - (Maintenance) Update go-driver to v1.6.0, update IsNotFound() checks

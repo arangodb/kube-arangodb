@@ -14,6 +14,7 @@
   - [ArangoLocalStorage](storage-resource.md)
   - [Backup](backup-resource.md)
   - [BackupPolicy](backuppolicy-resource.md)
+  - [ArangoMLExtension](mlextension-resource.md)
 - [Configuration and secrets](configuration-and-secrets.md)
 - [Configuring your driver for ArangoDB access](driver-configuration.md)
 - [Using Helm](helm.md)
@@ -45,6 +46,7 @@ Each of these uses involves a different custom resource.
 - Use an [ArangoBackup](backup-resource.md) and [ArangoBackupPolicy](backuppolicy-resource.md) resources to create ArangoDB backups.
 - Use an [ArangoLocalStorage resource](storage-resource.md) to provide local `PersistentVolumes` for optimal I/O performance.
 - Use an [ArangoDeploymentReplication resource](deployment-replication-resource-reference.md) to configure ArangoDB Datacenter-to-Datacenter Replication.
+- Use an [ArangoMLExtension resource](mlextension-resource.md) to configure [ArangoML](https://github.com/arangoml) for your deployment.
 
 Continue with [Using the ArangoDB Kubernetes Operator](using-the-operator.md)
 to learn how to install the ArangoDB Kubernetes operator and create
