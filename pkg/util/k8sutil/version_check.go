@@ -32,7 +32,7 @@ import (
 )
 
 // ArangodVersionCheckInitContainer creates a container configured to check version.
-func ArangodVersionCheckInitContainer(name, executable, operatorImage string, version driver.Version, securityContext *core.SecurityContext) core.Container {
+func ArangodVersionCheckInitContainer(name, executable, operatorImage string, version driver.Version, resources core.ResourceRequirements, securityContext *core.SecurityContext) core.Container {
 	versionFile := filepath.Join(shared.ArangodVolumeMountDir, "VERSION-1")
 	var command = []string{
 		executable,
@@ -57,5 +57,5 @@ func ArangodVersionCheckInitContainer(name, executable, operatorImage string, ve
 	volumes := []core.VolumeMount{
 		ArangodVolumeMount(),
 	}
-	return operatorInitContainer(name, operatorImage, command, securityContext, volumes)
+	return operatorInitContainer(name, operatorImage, command, resources, securityContext, volumes)
 }

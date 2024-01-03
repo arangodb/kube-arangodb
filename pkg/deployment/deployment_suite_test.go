@@ -34,6 +34,7 @@ import (
 	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
 	extfake "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/fake"
+	"k8s.io/apimachinery/pkg/api/resource"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 	recordfake "k8s.io/client-go/tools/record"
@@ -683,7 +684,8 @@ func createTestLifecycleContainer(resources core.ResourceRequirements) core.Cont
 func createTestAlpineContainer(name string, requireUUID bool) core.Container {
 	binaryPath, _ := os.Executable()
 	var securityContext api.ServerGroupSpecSecurityContext
-	return k8sutil.ArangodInitContainer("uuid", name, "rocksdb", binaryPath, testImageOperator, requireUUID, securityContext.NewSecurityContext())
+	resources := emptyResources
+	return k8sutil.ArangodInitContainer("uuid", name, "rocksdb", binaryPath, testImageOperator, requireUUID, resources, securityContext.NewSecurityContext())
 }
 
 func (testCase *testCaseStruct) createTestPodData(deployment *Deployment, group api.ServerGroup,
@@ -887,6 +889,17 @@ func addLifecycle(name string, uuidRequired bool, license string, group api.Serv
 			p.Spec.Containers[0].Lifecycle = createTestLifecycle(api.ServerGroupAgents)
 		}
 
+		initContainerResources := core.ResourceRequirements{
+			Requests: core.ResourceList{
+				core.ResourceCPU:    resource.MustParse("100m"),
+				core.ResourceMemory: resource.MustParse("50Mi"),
+			},
+			Limits: core.ResourceList{
+				core.ResourceCPU:    resource.MustParse("100m"),
+				core.ResourceMemory: resource.MustParse("50Mi"),
+			},
+		}
+
 		if len(p.Spec.Containers) > 0 {
 			if _, ok := k8sutil.GetAnyVolumeMountByName(p.Spec.Containers[0].VolumeMounts, "lifecycle"); !ok {
 				p.Spec.Containers[0].VolumeMounts = append(p.Spec.Containers[0].VolumeMounts, k8sutil.LifecycleVolumeMount())
@@ -898,13 +911,15 @@ func addLifecycle(name string, uuidRequired bool, license string, group api.Serv
 					p.Spec.InitContainers...,
 				)
 			}
+
+			initContainerResources = *(p.Spec.Containers[0].Resources.DeepCopy())
 		}
 
 		if _, ok := k8sutil.GetAnyContainerByName(p.Spec.InitContainers, "uuid"); !ok {
 			binaryPath, _ := os.Executable()
 			p.Spec.InitContainers = append(
 				[]core.Container{
-					k8sutil.ArangodInitContainer("uuid", name, "rocksdb", binaryPath, testImageOperator, uuidRequired, securityContext.NewSecurityContext()),
+					k8sutil.ArangodInitContainer("uuid", name, "rocksdb", binaryPath, testImageOperator, uuidRequired, initContainerResources, securityContext.NewSecurityContext()),
 				},
 				p.Spec.InitContainers...,
 			)

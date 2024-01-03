@@ -464,7 +464,7 @@ func RocksdbEncryptionReadOnlyVolumeMount() core.VolumeMount {
 }
 
 // ArangodInitContainer creates a container configured to initialize a UUID file.
-func ArangodInitContainer(name, id, engine, executable, operatorImage string, requireUUID bool, securityContext *core.SecurityContext) core.Container {
+func ArangodInitContainer(name, id, engine, executable, operatorImage string, requireUUID bool, resources core.ResourceRequirements, securityContext *core.SecurityContext) core.Container {
 	uuidFile := filepath.Join(shared.ArangodVolumeMountDir, "UUID")
 	engineFile := filepath.Join(shared.ArangodVolumeMountDir, "ENGINE")
 	var command = []string{
@@ -486,11 +486,11 @@ func ArangodInitContainer(name, id, engine, executable, operatorImage string, re
 	volumes := []core.VolumeMount{
 		ArangodVolumeMount(),
 	}
-	return operatorInitContainer(name, operatorImage, command, securityContext, volumes)
+	return operatorInitContainer(name, operatorImage, command, resources, securityContext, volumes)
 }
 
 // ArangodWaiterInitContainer creates a container configured to wait for specific ArangoDeployment to be ready
-func ArangodWaiterInitContainer(name, deploymentName, executable, operatorImage string, isSecured bool, securityContext *core.SecurityContext) core.Container {
+func ArangodWaiterInitContainer(name, deploymentName, executable, operatorImage string, isSecured bool, resources core.ResourceRequirements, securityContext *core.SecurityContext) core.Container {
 	var command = []string{
 		executable,
 		"lifecycle",
@@ -503,25 +503,16 @@ func ArangodWaiterInitContainer(name, deploymentName, executable, operatorImage 
 	if isSecured {
 		volumes = append(volumes, TlsKeyfileVolumeMount())
 	}
-	return operatorInitContainer(name, operatorImage, command, securityContext, volumes)
+	return operatorInitContainer(name, operatorImage, command, resources, securityContext, volumes)
 }
 
 // createInitContainer creates operator-specific init container
-func operatorInitContainer(name, operatorImage string, command []string, securityContext *core.SecurityContext, volumes []core.VolumeMount) core.Container {
+func operatorInitContainer(name, operatorImage string, command []string, resources core.ResourceRequirements, securityContext *core.SecurityContext, volumes []core.VolumeMount) core.Container {
 	c := core.Container{
-		Name:    name,
-		Image:   operatorImage,
-		Command: command,
-		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
-				core.ResourceCPU:    resource.MustParse("100m"),
-				core.ResourceMemory: resource.MustParse("50Mi"),
-			},
-			Limits: core.ResourceList{
-				core.ResourceCPU:    resource.MustParse("100m"),
-				core.ResourceMemory: resource.MustParse("50Mi"),
-			},
-		},
+		Name:      name,
+		Image:     operatorImage,
+		Command:   command,
+		Resources: resources,
 		Env: []core.EnvVar{
 			{
 				Name:  "MY_POD_NAMESPACE",

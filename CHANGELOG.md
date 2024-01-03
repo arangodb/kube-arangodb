@@ -20,7 +20,7 @@
 - (Maintenance) Expose Context in OperatorV2 Item Handler
 - (Feature) Improve K8S Mock for UT
 - (Feature) (ML) Introduce basic Conditions
-- (Improvement) Raise memory requests for init containers to 50mi
+- (Improvement) Use same requests/limits for init containers as for main container
 - (Feature) (ML) Metadata Service Implementation
 - (Feature) License Manager for ML Deployment
 - (Feature) (ML) Storage S3 sidecar implementation

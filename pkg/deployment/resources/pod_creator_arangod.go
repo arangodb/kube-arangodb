@@ -469,8 +469,9 @@ func (m *MemberArangoDPod) GetInitContainers(cachedStatus interfaces.Inspector) 
 		requireUUID := m.group == api.ServerGroupDBServers && m.status.IsInitialized
 
 		sc := k8sutil.CreateSecurityContext(m.groupSpec.SecurityContext)
+		resources := m.GetContainerCreator().GetResourceRequirements()
 		c := k8sutil.ArangodInitContainer(api.ServerGroupReservedInitContainerNameUUID, m.status.ID, engine, executable,
-			m.resources.context.GetOperatorImage(), requireUUID, sc)
+			m.resources.context.GetOperatorImage(), requireUUID, resources, sc)
 		initContainers = append(initContainers, c)
 	}
 
@@ -495,8 +496,11 @@ func (m *MemberArangoDPod) GetInitContainers(cachedStatus interfaces.Inspector) 
 			switch m.group {
 			case api.ServerGroupAgents, api.ServerGroupDBServers, api.ServerGroupSingle:
 				if features.UpgradeVersionCheckV2().Enabled() {
-					c := k8sutil.ArangodVersionCheckInitContainer(api.ServerGroupReservedInitContainerNameVersionCheck, executable, m.resources.context.GetOperatorImage(),
-						m.imageInfo.ArangoDBVersion, m.groupSpec.SecurityContext.NewSecurityContext())
+					c := k8sutil.ArangodVersionCheckInitContainer(api.ServerGroupReservedInitContainerNameVersionCheck, executable,
+						m.resources.context.GetOperatorImage(),
+						m.imageInfo.ArangoDBVersion,
+						m.GetContainerCreator().GetResourceRequirements(),
+						m.groupSpec.SecurityContext.NewSecurityContext())
 					initContainers = append(initContainers, c)
 				} else if features.UpgradeVersionCheck().Enabled() {
 					upgradeContainer := &ArangoVersionCheckContainer{

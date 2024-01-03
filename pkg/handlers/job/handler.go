@@ -163,8 +163,13 @@ func (h *handler) prepareK8sJob(job *appsApi.ArangoJob) (*batch.Job, error) {
 		return &k8sJob, err
 	}
 
+	resources := core.ResourceRequirements{}
+	if len(job.Spec.JobTemplate.Template.Spec.Containers) > 0 {
+		resources = job.Spec.JobTemplate.Template.Spec.Containers[0].Resources
+	}
+
 	initContainer := k8sutil.ArangodWaiterInitContainer(api.ServerGroupReservedInitContainerNameWait, deployment.Name, executable,
-		h.operator.Image(), spec.TLS.IsSecure(), &core.SecurityContext{})
+		h.operator.Image(), spec.TLS.IsSecure(), resources, &core.SecurityContext{})
 
 	k8sJob.Spec.Template.Spec.InitContainers = append(k8sJob.Spec.Template.Spec.InitContainers, initContainer)
 
