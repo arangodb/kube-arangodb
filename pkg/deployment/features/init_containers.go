@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ package features
 
 func init() {
 	registerFeature(initContainerCopyResources)
+	registerFeature(initContainerUpscaleResources)
 }
 
 var initContainerCopyResources = &feature{
@@ -33,6 +34,19 @@ var initContainerCopyResources = &feature{
 	hidden:             false,
 }
 
+var initContainerUpscaleResources = &feature{
+	name:               "init-containers-upscale-resources",
+	description:        "Copy resources spec to built-in init containers if they are not specified or lower",
+	version:            "3.6.0",
+	enterpriseRequired: false,
+	enabledByDefault:   true,
+	hidden:             false,
+}
+
 func InitContainerCopyResources() Feature {
 	return initContainerCopyResources
+}
+
+func InitContainerUpscaleResources() Feature {
+	return initContainerUpscaleResources
 }
