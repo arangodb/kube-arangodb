@@ -1,3 +1,9 @@
+---
+layout: page
+title: How to collect debug data
+parent: How to ...
+---
+
 # How to collect debug data
 
 ## Agency dump

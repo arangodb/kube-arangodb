@@ -85,9 +85,11 @@ set automatically.
 
 Then fetch the CA secret using the following command (or use a Kubernetes client library to fetch it):
 
+<!-- {% raw %} -->
 ```bash
 kubectl get secret -n <namespace> <secret-name> --template='{{index .data "ca.crt"}}' | base64 -D > ca.crt
 ```
+<!-- {% endraw %} -->
 
 This results in a file called `ca.crt` containing a PEM encoded, x509 CA certificate.
 

@@ -1,3 +1,9 @@
+---
+title: ArangoMLCronJob V1Alpha1
+layout: page
+parent: CRD reference
+---
+
 # API Reference for ArangoMLCronJob V1Alpha1
 
 ## Spec

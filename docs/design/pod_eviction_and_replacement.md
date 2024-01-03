@@ -1,3 +1,9 @@
+---
+layout: page
+title: Pod eviction and replacement
+parent: Design overview
+---
+
 # Pod Eviction & Replacement
 
 This chapter specifies the rules around evicting pods from nodes and

@@ -1,3 +1,9 @@
+---
+layout: page
+title: Force rebuild out-synced Shards with broken Merkle Tree
+parent: List of all features
+---
+
 # Force rebuild out-synced Shards with broken Merkle Tree
 
 ## Overview

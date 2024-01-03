@@ -1,3 +1,9 @@
+---
+layout: page
+title: List of all features
+nav_order: 10
+---
+
 ## List of Community Edition features
 
 | Feature                                                         | Operator Version | Introduced | ArangoDB Version | ArangoDB Edition      | State        | Enabled | Flag                                                   | Remarks                                                                               |
