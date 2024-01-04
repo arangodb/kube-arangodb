@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -97,14 +97,15 @@ func (d DocDefinitions) RenderMarkdown(t *testing.T, repositoryPath string) []by
 			for id, enum := range el.Enum {
 				z := strings.Split(enum, "|")
 
+				snip := fmt.Sprintf("`\"%s\"`", z[0])
 				if id == 0 {
-					z[0] = fmt.Sprintf("%s (default)", z[0])
+					snip = fmt.Sprintf("%s (default)", snip)
 				}
 
 				if len(z) == 1 {
-					write(t, out, "* %s\n", z[0])
+					write(t, out, "* %s\n", snip)
 				} else if len(z) == 2 {
-					write(t, out, "* %s - %s\n", z[0], z[1])
+					write(t, out, "* %s - %s\n", snip, z[1])
 				} else {
 					require.Fail(t, "Invalid enum format")
 				}
