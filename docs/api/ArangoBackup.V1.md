@@ -243,7 +243,7 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 
 ### .status.message
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/backup/v1/backup_state.go#L88)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/backup/v1/backup_state.go#L91)</sup>
 
 Message for the state this object is in.
 
@@ -251,7 +251,7 @@ Message for the state this object is in.
 
 ### .status.progress.jobID
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/backup/v1/backup_state.go#L111)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/backup/v1/backup_state.go#L114)</sup>
 
 JobID ArangoDB job ID for uploading or downloading
 
@@ -259,7 +259,7 @@ JobID ArangoDB job ID for uploading or downloading
 
 ### .status.progress.progress
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/backup/v1/backup_state.go#L114)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/backup/v1/backup_state.go#L117)</sup>
 
 Progress ArangoDB job progress in percents
 
@@ -272,22 +272,25 @@ Example:
 
 ### .status.state
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/backup/v1/backup_state.go#L82)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/backup/v1/backup_state.go#L85)</sup>
 
 State holds the current high level state of the backup
 
 Possible Values: 
-* Pending (default) - state in which Custom Resource is queued. If Backup is possible changed to "Scheduled"
-* Scheduled - state which will start create/download process
-* Download - state in which download request will be created on ArangoDB
-* DownloadError - state when download failed
-* Downloading - state for downloading progress
-* Create - state for creation, field available set to true
-* Upload - state in which upload request will be created on ArangoDB
-* Uploading - state for uploading progress
-* UploadError - state when uploading failed
-* Ready - state when Backup is finished
-* Deleted - state when Backup was once in ready, but has been deleted
-* Failed - state for failure
-* Unavailable - state when Backup is not available on the ArangoDB. It can happen in case of upgrades, node restarts etc.
+* `""` (default) - state for un-initialized Custom Resource
+* `"Pending"` - state in which Custom Resource is queued. If Backup is possible changed to "Scheduled"
+* `"Scheduled"` - state which will start create/download process
+* `"Download"` - state in which download request will be created on ArangoDB
+* `"DownloadError"` - state when download failed
+* `"Downloading"` - state for downloading progress
+* `"Create"` - state for backup when it is scheduled for creation, field available set to true
+* `"Creating"` - state for backup when it is creating
+* `"CreateError"` - state for backup when it is creation failed
+* `"Upload"` - state in which upload request will be created on ArangoDB
+* `"Uploading"` - state for uploading progress
+* `"UploadError"` - state when uploading failed
+* `"Ready"` - state when Backup is finished
+* `"Deleted"` - state when Backup was once in ready, but has been deleted
+* `"Failed"` - state for failure
+* `"Unavailable"` - state when Backup is not available on the ArangoDB. It can happen in case of upgrades, node restarts etc.
 

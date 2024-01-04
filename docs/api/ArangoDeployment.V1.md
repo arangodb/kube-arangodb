@@ -156,8 +156,8 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 IndexMethod define group Indexing method
 
 Possible Values: 
-* random (default) - Pick random ID for member. Enforced on the Community Operator.
-* ordered - Use sequential number as Member ID, starting from 0. Enterprise Operator required.
+* `"random"` (default) - Pick random ID for member. Enforced on the Community Operator.
+* `"ordered"` - Use sequential number as Member ID, starting from 0. Enterprise Operator required.
 
 ***
 
@@ -577,8 +577,8 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 VolumeResizeMode specified resize mode for PVCs and PVs
 
 Possible Values: 
-* runtime (default) - PVC will be resized in Pod runtime (EKS, GKE)
-* rotate - Pod will be shutdown and PVC will be resized (AKS)
+* `"runtime"` (default) - PVC will be resized in Pod runtime (EKS, GKE)
+* `"rotate"` - Pod will be shutdown and PVC will be resized (AKS)
 
 ***
 
@@ -939,9 +939,9 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 AnnotationsMode defines annotations mode which should be use while overriding annotations.
 
 Possible Values: 
-* disabled (default) - Disable annotations/labels override. Default if there is no annotations/labels set in ArangoDeployment
-* append - Add new annotations/labels without affecting old ones
-* replace - Replace existing annotations/labels
+* `"disabled"` (default) - Disable annotations/labels override. Default if there is no annotations/labels set in ArangoDeployment
+* `"append"` - Add new annotations/labels without affecting old ones
+* `"replace"` - Replace existing annotations/labels
 
 ***
 
@@ -1040,11 +1040,11 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 CommunicationMethod define communication method used in deployment
 
 Possible Values: 
-* headless (default) - Define old communication mechanism, based on headless service.
-* dns - Define ClusterIP Service DNS based communication.
-* short-dns - Define ClusterIP Service DNS based communication. Use namespaced short DNS (used in migration)
-* headless-dns - Define Headless Service DNS based communication.
-* ip - Define ClusterIP Service IP based communication.
+* `"headless"` (default) - Define old communication mechanism, based on headless service.
+* `"dns"` - Define ClusterIP Service DNS based communication.
+* `"short-dns"` - Define ClusterIP Service DNS based communication. Use namespaced short DNS (used in migration)
+* `"headless-dns"` - Define Headless Service DNS based communication.
+* `"ip"` - Define ClusterIP Service IP based communication.
 
 ***
 
@@ -1202,8 +1202,8 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 IndexMethod define group Indexing method
 
 Possible Values: 
-* random (default) - Pick random ID for member. Enforced on the Community Operator.
-* ordered - Use sequential number as Member ID, starting from 0. Enterprise Operator required.
+* `"random"` (default) - Pick random ID for member. Enforced on the Community Operator.
+* `"ordered"` - Use sequential number as Member ID, starting from 0. Enterprise Operator required.
 
 ***
 
@@ -1623,8 +1623,8 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 VolumeResizeMode specified resize mode for PVCs and PVs
 
 Possible Values: 
-* runtime (default) - PVC will be resized in Pod runtime (EKS, GKE)
-* rotate - Pod will be shutdown and PVC will be resized (AKS)
+* `"runtime"` (default) - PVC will be resized in Pod runtime (EKS, GKE)
+* `"rotate"` - Pod will be shutdown and PVC will be resized (AKS)
 
 ***
 
@@ -2116,8 +2116,8 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 IndexMethod define group Indexing method
 
 Possible Values: 
-* random (default) - Pick random ID for member. Enforced on the Community Operator.
-* ordered - Use sequential number as Member ID, starting from 0. Enterprise Operator required.
+* `"random"` (default) - Pick random ID for member. Enforced on the Community Operator.
+* `"ordered"` - Use sequential number as Member ID, starting from 0. Enterprise Operator required.
 
 ***
 
@@ -2537,8 +2537,8 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 VolumeResizeMode specified resize mode for PVCs and PVs
 
 Possible Values: 
-* runtime (default) - PVC will be resized in Pod runtime (EKS, GKE)
-* rotate - Pod will be shutdown and PVC will be resized (AKS)
+* `"runtime"` (default) - PVC will be resized in Pod runtime (EKS, GKE)
+* `"rotate"` - Pod will be shutdown and PVC will be resized (AKS)
 
 ***
 
@@ -2902,8 +2902,8 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 Environment setting specifies the type of environment in which the deployment is created.
 
 Possible Values: 
-* Development (default) - This value optimizes the deployment for development use. It is possible to run a deployment on a small number of nodes (e.g. minikube).
-* Production - This value optimizes the deployment for production use. It puts required affinity constraints on all pods to avoid Agents & DB-Servers from running on the same machine.
+* `"Development"` (default) - This value optimizes the deployment for development use. It is possible to run a deployment on a small number of nodes (e.g. minikube).
+* `"Production"` - This value optimizes the deployment for production use. It puts required affinity constraints on all pods to avoid Agents & DB-Servers from running on the same machine.
 
 ***
 
@@ -2964,10 +2964,10 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 Type specifies the type of Service that will be created to provide access to the ArangoDB deployment from outside the Kubernetes cluster.
 
 Possible Values: 
-* Auto (default) - Create a Service of type LoadBalancer and fallback to a Service or type NodePort when the LoadBalancer is not assigned an IP address.
-* None - limit access to application running inside the Kubernetes cluster.
-* LoadBalancer - Create a Service of type LoadBalancer for the ArangoDB deployment.
-* NodePort - Create a Service of type NodePort for the ArangoDB deployment.
+* `"Auto"` (default) - Create a Service of type LoadBalancer and fallback to a Service or type NodePort when the LoadBalancer is not assigned an IP address.
+* `"None"` - limit access to application running inside the Kubernetes cluster.
+* `"LoadBalancer"` - Create a Service of type LoadBalancer for the ArangoDB deployment.
+* `"NodePort"` - Create a Service of type NodePort for the ArangoDB deployment.
 
 ***
 
@@ -3218,8 +3218,8 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 ImageDiscoveryMode specifies the image discovery mode.
 
 Possible Values: 
-* kubelet (default) - Use sha256 of the discovered image in the pods
-* direct - Use image provided in the spec.image directly in the pods
+* `"kubelet"` (default) - Use sha256 of the discovered image in the pods
+* `"direct"` - Use image provided in the spec.image directly in the pods
 
 ***
 
@@ -3233,9 +3233,9 @@ Links:
 * [Documentation of core.PullPolicy](https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy)
 
 Possible Values: 
-* Always (default) - Means that kubelet always attempts to pull the latest image. Container will fail If the pull fails.
-* Never - Means that kubelet never pulls an image, but only uses a local image. Container will fail if the image isn't present
-* IfNotPresent - Means that kubelet pulls if the image isn't present on disk. Container will fail if the image isn't present and the pull fails.
+* `"Always"` (default) - Means that kubelet always attempts to pull the latest image. Container will fail If the pull fails.
+* `"Never"` - Means that kubelet never pulls an image, but only uses a local image. Container will fail if the image isn't present
+* `"IfNotPresent"` - Means that kubelet pulls if the image isn't present on disk. Container will fail if the image isn't present and the pull fails.
 
 ***
 
@@ -3270,9 +3270,9 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 LabelsMode Define labels mode which should be use while overriding labels
 
 Possible Values: 
-* disabled (default) - Disable annotations/labels override. Default if there is no annotations/labels set in ArangoDeployment
-* append - Add new annotations/labels without affecting old ones
-* replace - Replace existing annotations/labels
+* `"disabled"` (default) - Disable annotations/labels override. Default if there is no annotations/labels set in ArangoDeployment
+* `"append"` - Add new annotations/labels without affecting old ones
+* `"replace"` - Replace existing annotations/labels
 
 ***
 
@@ -3308,8 +3308,8 @@ The propagation of the configuration changes can be deferred to the next restart
 This reduces the number of restarts for upgrading both the server and the operator from two to one.
 
 Possible Values: 
-* always (default) - Restart the member as soon as a configuration change is discovered
-* on-restart - Wait until the next restart to change the member configuration
+* `"always"` (default) - Restart the member as soon as a configuration change is discovered
+* `"on-restart"` - Wait until the next restart to change the member configuration
 
 ***
 
@@ -3399,9 +3399,9 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 Mode specifies the type of ArangoDB deployment to create.
 
 Possible Values: 
-* Cluster (default) - Full cluster. Defaults to 3 Agents, 3 DB-Servers & 3 Coordinators.
-* ActiveFailover - Active-failover single pair. Defaults to 3 Agents and 2 single servers.
-* Single - Single server only (note this does not provide high availability or reliability).
+* `"Cluster"` (default) - Full cluster. Defaults to 3 Agents, 3 DB-Servers & 3 Coordinators.
+* `"ActiveFailover"` - Active-failover single pair. Defaults to 3 Agents and 2 single servers.
+* `"Single"` - Single server only (note this does not provide high availability or reliability).
 
 This field is **immutable**: Change of the ArangoDeployment Mode is not possible after creation.
 
@@ -3644,8 +3644,8 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 IndexMethod define group Indexing method
 
 Possible Values: 
-* random (default) - Pick random ID for member. Enforced on the Community Operator.
-* ordered - Use sequential number as Member ID, starting from 0. Enterprise Operator required.
+* `"random"` (default) - Pick random ID for member. Enforced on the Community Operator.
+* `"ordered"` - Use sequential number as Member ID, starting from 0. Enterprise Operator required.
 
 ***
 
@@ -4065,8 +4065,8 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 VolumeResizeMode specified resize mode for PVCs and PVs
 
 Possible Values: 
-* runtime (default) - PVC will be resized in Pod runtime (EKS, GKE)
-* rotate - Pod will be shutdown and PVC will be resized (AKS)
+* `"runtime"` (default) - PVC will be resized in Pod runtime (EKS, GKE)
+* `"rotate"` - Pod will be shutdown and PVC will be resized (AKS)
 
 ***
 
@@ -4403,8 +4403,8 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 StorageEngine specifies the type of storage engine used for all servers in the cluster.
 
 Possible Values: 
-* RocksDB (default) - To use the RocksDB storage engine.
-* MMFiles - To use the MMFiles storage engine. Deprecated.
+* `"RocksDB"` (default) - To use the RocksDB storage engine.
+* `"MMFiles"` - To use the MMFiles storage engine. Deprecated.
 
 This field is **immutable**: This setting cannot be changed after the cluster has been created.
 
@@ -4529,10 +4529,10 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 Type specifies the type of Service that will be created to provide access to the ArangoDB deployment from outside the Kubernetes cluster.
 
 Possible Values: 
-* Auto (default) - Create a Service of type LoadBalancer and fallback to a Service or type NodePort when the LoadBalancer is not assigned an IP address.
-* None - limit access to application running inside the Kubernetes cluster.
-* LoadBalancer - Create a Service of type LoadBalancer for the ArangoDB deployment.
-* NodePort - Create a Service of type NodePort for the ArangoDB deployment.
+* `"Auto"` (default) - Create a Service of type LoadBalancer and fallback to a Service or type NodePort when the LoadBalancer is not assigned an IP address.
+* `"None"` - limit access to application running inside the Kubernetes cluster.
+* `"LoadBalancer"` - Create a Service of type LoadBalancer for the ArangoDB deployment.
+* `"NodePort"` - Create a Service of type NodePort for the ArangoDB deployment.
 
 ***
 
@@ -4759,8 +4759,8 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 IndexMethod define group Indexing method
 
 Possible Values: 
-* random (default) - Pick random ID for member. Enforced on the Community Operator.
-* ordered - Use sequential number as Member ID, starting from 0. Enterprise Operator required.
+* `"random"` (default) - Pick random ID for member. Enforced on the Community Operator.
+* `"ordered"` - Use sequential number as Member ID, starting from 0. Enterprise Operator required.
 
 ***
 
@@ -5180,8 +5180,8 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 VolumeResizeMode specified resize mode for PVCs and PVs
 
 Possible Values: 
-* runtime (default) - PVC will be resized in Pod runtime (EKS, GKE)
-* rotate - Pod will be shutdown and PVC will be resized (AKS)
+* `"runtime"` (default) - PVC will be resized in Pod runtime (EKS, GKE)
+* `"rotate"` - Pod will be shutdown and PVC will be resized (AKS)
 
 ***
 
@@ -5665,8 +5665,8 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 IndexMethod define group Indexing method
 
 Possible Values: 
-* random (default) - Pick random ID for member. Enforced on the Community Operator.
-* ordered - Use sequential number as Member ID, starting from 0. Enterprise Operator required.
+* `"random"` (default) - Pick random ID for member. Enforced on the Community Operator.
+* `"ordered"` - Use sequential number as Member ID, starting from 0. Enterprise Operator required.
 
 ***
 
@@ -6086,8 +6086,8 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 VolumeResizeMode specified resize mode for PVCs and PVs
 
 Possible Values: 
-* runtime (default) - PVC will be resized in Pod runtime (EKS, GKE)
-* rotate - Pod will be shutdown and PVC will be resized (AKS)
+* `"runtime"` (default) - PVC will be resized in Pod runtime (EKS, GKE)
+* `"rotate"` - Pod will be shutdown and PVC will be resized (AKS)
 
 ***
 
