@@ -62,6 +62,27 @@ GOASSETSBUILDER := $(GOBUILDDIR)/bin/go-assets-builder$(shell go env GOEXE)
 
 BUILDTIME = $(shell go run "$(ROOT)/tools/dategen/")
 
+GOBUILDLDFLAGS := -X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)
+GOBUILDGCFLAGS :=
+
+# Go Strip Section
+GOBUILDSTRIP ?= 1
+ifeq ($(GOBUILDSTRIP),1)
+GOBUILDLDFLAGS += -w -s
+endif
+
+# Go Disable function inlining
+GOBUILDDISABLEFUNCTIONINLINING ?= 1
+ifeq ($(GOBUILDDISABLEFUNCTIONINLINING),1)
+GOBUILDGCFLAGS += -l
+endif
+
+# Go Disable bound checks
+GOBUILDDISABLEBOUNDCHECKS ?= 1
+ifeq ($(GOBUILDDISABLEBOUNDCHECKS),1)
+GOBUILDGCFLAGS += -B
+endif
+
 HELM ?= $(shell which helm)
 
 UPPER = $(shell echo '$1' | tr '[:lower:]' '[:upper:]')
@@ -408,19 +429,19 @@ bin-all: $(BIN) $(VBIN_LINUX_AMD64) $(VBIN_LINUX_ARM64)
 
 $(VBIN_LINUX_AMD64): $(SOURCES) dashboard/assets.go VERSION
 	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/linux/amd64
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build ${GOBUILDARGS} --tags "$(GOBUILDTAGS)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(VBIN_LINUX_AMD64) ./cmd/main
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build ${GOBUILDARGS} --tags "$(GOBUILDTAGS)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(VBIN_OPS_LINUX_AMD64) ./cmd/main-ops
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build ${GOBUILDARGS} --tags "$(GOBUILDTAGS)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -gcflags=all="$(GOBUILDGCFLAGS)" -ldflags "$(GOBUILDLDFLAGS)" -o $(VBIN_LINUX_AMD64) ./cmd/main
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build ${GOBUILDARGS} --tags "$(GOBUILDTAGS)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -gcflags=all="$(GOBUILDGCFLAGS)" -ldflags "$(GOBUILDLDFLAGS)" -o $(VBIN_OPS_LINUX_AMD64) ./cmd/main-ops
 
 $(VBIN_LINUX_ARM64): $(SOURCES) dashboard/assets.go VERSION
 	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/linux/arm64
-	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build ${GOBUILDARGS} --tags "$(GOBUILDTAGS)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(VBIN_LINUX_ARM64) ./cmd/main
-	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build ${GOBUILDARGS} --tags "$(GOBUILDTAGS)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(VBIN_OPS_LINUX_ARM64) ./cmd/main-ops
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build ${GOBUILDARGS} --tags "$(GOBUILDTAGS)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -gcflags=all="$(GOBUILDGCFLAGS)" -ldflags "$(GOBUILDLDFLAGS)" -o $(VBIN_LINUX_ARM64) ./cmd/main
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build ${GOBUILDARGS} --tags "$(GOBUILDTAGS)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -gcflags=all="$(GOBUILDGCFLAGS)" -ldflags "$(GOBUILDLDFLAGS)" -o $(VBIN_OPS_LINUX_ARM64) ./cmd/main-ops
 
 bin-ops-all: $(VBIN_LINUX_AMD64) $(VBIN_LINUX_ARM64)
 	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/darwin/amd64
-	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build ${GOBUILDARGS} --tags "$(GOBUILDTAGS)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(VBIN_OPS_DARWIN_AMD64) ./cmd/main-ops
+	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build ${GOBUILDARGS} --tags "$(GOBUILDTAGS)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -gcflags=all="$(GOBUILDGCFLAGS)" -ldflags "$(GOBUILDLDFLAGS)" -o $(VBIN_OPS_DARWIN_AMD64) ./cmd/main-ops
 	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/darwin/arm64
-	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build ${GOBUILDARGS} --tags "$(GOBUILDTAGS)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(VBIN_OPS_DARWIN_ARM64) ./cmd/main-ops
+	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build ${GOBUILDARGS} --tags "$(GOBUILDTAGS)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -gcflags=all="$(GOBUILDGCFLAGS)" -ldflags "$(GOBUILDLDFLAGS)" -o $(VBIN_OPS_DARWIN_ARM64) ./cmd/main-ops
 
 $(BIN): $(VBIN_LINUX_AMD64)
 	@cp "$(VBIN_LINUX_AMD64)" "$(BIN)"
