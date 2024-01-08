@@ -272,9 +272,9 @@ func write(t *testing.T, out io.Writer, format string, args ...interface{}) {
 
 func writeFrontMatter(t *testing.T, out io.Writer, keyVals map[string]string) {
 	fm := ""
-	for key, val := range keyVals {
+	util.IterateSorted(keyVals, func(key, val string) {
 		fm += fmt.Sprintf("%s: %s\n", key, val)
-	}
+	})
 
 	if fm != "" {
 		fm = "---\n" + fm + "---\n\n"

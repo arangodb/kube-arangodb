@@ -1,7 +1,7 @@
 ---
 layout: page
-title: List of all features
 nav_order: 10
+title: List of all features
 ---
 
 ## List of Community Edition features
