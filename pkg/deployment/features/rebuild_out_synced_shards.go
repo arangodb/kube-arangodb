@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,6 @@ func init() {
 var rebuildOutSyncedShards = &feature{
 	name:               "force-rebuild-out-synced-shards",
 	description:        "Force rebuild permanently out-synced shards due to a bug in ArangoDB 3.8-3.10",
-	version:            "3.8.0",
 	enterpriseRequired: false,
 	enabledByDefault:   false,
 	hidden:             true,

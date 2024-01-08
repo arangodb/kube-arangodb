@@ -475,6 +475,13 @@ v1alpha1:
                   resources:
                     description: Resources holds resource requests & limits for container
                     properties:
+                      claims:
+                        items:
+                          properties:
+                            name:
+                              type: string
+                          type: object
+                        type: array
                       limits:
                         additionalProperties:
                           type: string
@@ -638,6 +645,13 @@ v1alpha1:
                   resources:
                     description: Resources holds resource requests & limits for container
                     properties:
+                      claims:
+                        items:
+                          properties:
+                            name:
+                              type: string
+                          type: object
+                        type: array
                       limits:
                         additionalProperties:
                           type: string
@@ -846,6 +860,13 @@ v1alpha1:
                   resources:
                     description: Resources holds resource requests & limits for container
                     properties:
+                      claims:
+                        items:
+                          properties:
+                            name:
+                              type: string
+                          type: object
+                        type: array
                       limits:
                         additionalProperties:
                           type: string
@@ -1382,6 +1403,13 @@ v1alpha1:
               resources:
                 description: Resources holds resource requests & limits for container
                 properties:
+                  claims:
+                    items:
+                      properties:
+                        name:
+                          type: string
+                      type: object
+                    type: array
                   limits:
                     additionalProperties:
                       type: string
@@ -1949,6 +1977,13 @@ v1alpha1:
                       resources:
                         description: Resources holds resource requests & limits for container
                         properties:
+                          claims:
+                            items:
+                              properties:
+                                name:
+                                  type: string
+                              type: object
+                            type: array
                           limits:
                             additionalProperties:
                               type: string
@@ -2510,6 +2545,13 @@ v1alpha1:
                       resources:
                         description: Resources holds resource requests & limits for container
                         properties:
+                          claims:
+                            items:
+                              properties:
+                                name:
+                                  type: string
+                              type: object
+                            type: array
                           limits:
                             additionalProperties:
                               type: string
@@ -3075,6 +3117,13 @@ v1alpha1:
                       resources:
                         description: Resources holds resource requests & limits for container
                         properties:
+                          claims:
+                            items:
+                              properties:
+                                name:
+                                  type: string
+                              type: object
+                            type: array
                           limits:
                             additionalProperties:
                               type: string
@@ -3636,6 +3685,13 @@ v1alpha1:
                       resources:
                         description: Resources holds resource requests & limits for container
                         properties:
+                          claims:
+                            items:
+                              properties:
+                                name:
+                                  type: string
+                              type: object
+                            type: array
                           limits:
                             additionalProperties:
                               type: string

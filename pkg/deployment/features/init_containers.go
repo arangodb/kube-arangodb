@@ -28,7 +28,6 @@ func init() {
 var initContainerCopyResources = &feature{
 	name:               "init-containers-copy-resources",
 	description:        "Copy resources spec to built-in init containers if they are not specified",
-	version:            "3.6.0",
 	enterpriseRequired: false,
 	enabledByDefault:   true,
 	hidden:             false,
@@ -37,7 +36,6 @@ var initContainerCopyResources = &feature{
 var initContainerUpscaleResources = &feature{
 	name:               "init-containers-upscale-resources",
 	description:        "Copy resources spec to built-in init containers if they are not specified or lower",
-	version:            "3.6.0",
 	enterpriseRequired: false,
 	enabledByDefault:   true,
 	hidden:             false,
