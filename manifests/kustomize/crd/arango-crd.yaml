@@ -386,3 +386,99 @@ spec:
       storage: false
       subresources:
         status: {}
+---
+# File: chart/kube-arangodb/crds/ml-storage.yaml
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: arangomlstorages.ml.arangodb.com
+spec:
+  group: ml.arangodb.com
+  names:
+    kind: ArangoMLStorage
+    listKind: ArangoMLStorageList
+    plural: arangomlstorages
+    singular: arangomlstorage
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: true
+      subresources:
+        status: {}
+---
+# File: chart/kube-arangodb/crds/ml-extension.yaml
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: arangomlextensions.ml.arangodb.com
+spec:
+  group: ml.arangodb.com
+  names:
+    kind: ArangoMLExtension
+    listKind: ArangoMLExtensionList
+    plural: arangomlextensions
+    singular: arangomlextension
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: true
+      subresources:
+        status: {}
+---
+# File: chart/kube-arangodb/crds/ml-job-batch.yaml
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: arangomlbatchjobs.ml.arangodb.com
+spec:
+  group: ml.arangodb.com
+  names:
+    kind: ArangoMLBatchJob
+    listKind: ArangoMLBatchJobList
+    plural: arangomlbatchjobs
+    singular: arangomlbatchjob
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: true
+      subresources:
+        status: {}
+---
+# File: chart/kube-arangodb/crds/ml-job-cron.yaml
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: arangomlcronjobs.ml.arangodb.com
+spec:
+  group: ml.arangodb.com
+  names:
+    kind: ArangoMLCronJob
+    listKind: ArangoMLCronJobList
+    plural: arangomlcronjobs
+    singular: arangomlcronjob
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: true
+      subresources:
+        status: {}
