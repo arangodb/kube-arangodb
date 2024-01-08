@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,7 +28,6 @@ import (
 	v2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v2alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
-	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	testing "k8s.io/client-go/testing"
@@ -40,9 +39,9 @@ type FakeArangoDeploymentReplications struct {
 	ns   string
 }
 
-var arangodeploymentreplicationsResource = schema.GroupVersionResource{Group: "replication.database.arangodb.com", Version: "v2alpha1", Resource: "arangodeploymentreplications"}
+var arangodeploymentreplicationsResource = v2alpha1.SchemeGroupVersion.WithResource("arangodeploymentreplications")
 
-var arangodeploymentreplicationsKind = schema.GroupVersionKind{Group: "replication.database.arangodb.com", Version: "v2alpha1", Kind: "ArangoDeploymentReplication"}
+var arangodeploymentreplicationsKind = v2alpha1.SchemeGroupVersion.WithKind("ArangoDeploymentReplication")
 
 // Get takes name of the arangoDeploymentReplication, and returns the corresponding arangoDeploymentReplication object, and an error if there is any.
 func (c *FakeArangoDeploymentReplications) Get(ctx context.Context, name string, options v1.GetOptions) (result *v2alpha1.ArangoDeploymentReplication, err error) {

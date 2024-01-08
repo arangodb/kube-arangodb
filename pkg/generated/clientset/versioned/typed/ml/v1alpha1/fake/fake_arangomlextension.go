@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,7 +28,6 @@ import (
 	v1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
-	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	testing "k8s.io/client-go/testing"
@@ -40,9 +39,9 @@ type FakeArangoMLExtensions struct {
 	ns   string
 }
 
-var arangomlextensionsResource = schema.GroupVersionResource{Group: "ml.arangodb.com", Version: "v1alpha1", Resource: "arangomlextensions"}
+var arangomlextensionsResource = v1alpha1.SchemeGroupVersion.WithResource("arangomlextensions")
 
-var arangomlextensionsKind = schema.GroupVersionKind{Group: "ml.arangodb.com", Version: "v1alpha1", Kind: "ArangoMLExtension"}
+var arangomlextensionsKind = v1alpha1.SchemeGroupVersion.WithKind("ArangoMLExtension")
 
 // Get takes name of the arangoMLExtension, and returns the corresponding arangoMLExtension object, and an error if there is any.
 func (c *FakeArangoMLExtensions) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.ArangoMLExtension, err error) {

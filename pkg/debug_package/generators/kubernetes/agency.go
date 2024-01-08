@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
+	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 )
 
 const LocalBinDir = "/usr/bin/arangodb_operator"
@@ -121,7 +122,7 @@ func discoverExecFunc() (ArangoOperatorExecFunc, error) {
 
 				var stderr, stdout bytes.Buffer
 
-				if err := shared.ExecuteCommandInPod(k, "operator", v.GetName(), v.GetNamespace(), []string{LocalBinDir, "version"}, nil, &stdout, &stderr); err != nil {
+				if err := shared.ExecuteCommandInPod(shutdown.Context(), k, "operator", v.GetName(), v.GetNamespace(), []string{LocalBinDir, "version"}, nil, &stdout, &stderr); err != nil {
 					continue
 				}
 
@@ -142,7 +143,7 @@ func discoverExecFunc() (ArangoOperatorExecFunc, error) {
 				in[id+1] = args[id]
 			}
 
-			err := shared.ExecuteCommandInPod(k, "operator", id, cli.GetInput().Namespace, in, nil, &stdout, &stderr)
+			err := shared.ExecuteCommandInPod(shutdown.Context(), k, "operator", id, cli.GetInput().Namespace, in, nil, &stdout, &stderr)
 
 			return stdout.Bytes(), stderr.Bytes(), err
 		}, nil

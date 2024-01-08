@@ -9,8 +9,8 @@ ifeq ($(shell uname),Darwin)
 	REALPATH ?= grealpath
 endif
 
-KUBERNETES_VERSION_MINOR:=25
-KUBERNETES_VERSION_PATCH:=13
+KUBERNETES_VERSION_MINOR:=28
+KUBERNETES_VERSION_PATCH:=5
 
 PROJECT := arangodb_operator
 SCRIPTDIR := $(shell pwd)
@@ -261,7 +261,7 @@ PROTOSOURCES := $(shell find ./ -type f  -name '*.proto' $(foreach EXCLUDE_DIR,$
 
 .DEFAULT_GOAL := all
 .PHONY: all
-all: check-vars verify-generated build
+all: check-vars build
 
 .PHONY: compile
 compile: check-vars build
@@ -394,7 +394,7 @@ update-generated:
 	@ln -s -f $(SCRIPTDIR) $(ORGDIR)/kube-arangodb
 	@$(SED) -e 's/^/\/\/ /' -e 's/ *$$//' $(ROOTDIR)/tools/codegen/license-header.txt > $(ROOTDIR)/tools/codegen/boilerplate.go.txt
 	GOPATH=$(GOBUILDDIR) $(VENDORDIR)/k8s.io/code-generator/generate-groups.sh  \
-			"all" \
+			"client lister informer deepcopy" \
 			"github.com/arangodb/kube-arangodb/pkg/generated" \
 			"github.com/arangodb/kube-arangodb/pkg/apis" \
 			"deployment:v1 replication:v1 storage:v1alpha backup:v1 deployment:v2alpha1 replication:v2alpha1 apps:v1 ml:v1alpha1" \
@@ -407,10 +407,6 @@ update-generated:
 			"shared:v1" \
 			--go-header-file "./tools/codegen/boilerplate.go.txt" \
 			$(VERIFYARGS)
-
-.PHONY: verify-generated
-verify-generated:
-	@${MAKE} -B -s VERIFYARGS=--verify-only update-generated
 
 dashboard/assets.go:
 	cd $(DASHBOARDDIR) && docker build -t $(DASHBOARDBUILDIMAGE) -f Dockerfile.build $(DASHBOARDDIR)

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -125,34 +125,23 @@ func (r *Resources) ensurePDBForGroup(ctx context.Context, group api.ServerGroup
 	cache := r.context.ACS().CurrentClusterCache()
 	pdbMod := cache.PodDisruptionBudgetsModInterface()
 
-	var minAvailable *intstr.IntOrString
-	var deletionTimestamp *meta.Time
-
-	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-		if inspector, err := cache.PodDisruptionBudget().V1(); err == nil {
-			if pdb, err := inspector.Read().Get(ctxChild, pdbName, meta.GetOptions{}); err != nil {
-				return err
-			} else {
-				minAvailable = pdb.Spec.MinAvailable
-				deletionTimestamp = pdb.GetDeletionTimestamp()
-			}
-		}
-
+	inspector, err := cache.PodDisruptionBudget().V1()
+	if err != nil {
 		return nil
-	})
+	}
+
+	pdb, found := inspector.GetSimple(pdbName)
+	if !found {
+		return nil
+	}
 
 	if kerrors.IsNotFound(err) {
 		if wantedMinAvail != 0 && wantedMinAvail < current {
 			// No PDB found - create new.
 			log.Debug("Creating new PDB")
 			err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-				var errInternal error
-
-				if cache.PodDisruptionBudget().Version().IsV1() {
-					pdb := newPDBV1(wantedMinAvail, deplName, group, r.context.GetAPIObject().AsOwner())
-					_, errInternal = pdbMod.V1().Create(ctxChild, pdb, meta.CreateOptions{})
-				}
-
+				pdb := newPDBV1(wantedMinAvail, deplName, group, r.context.GetAPIObject().AsOwner())
+				_, errInternal := pdbMod.V1().Create(ctxChild, pdb, meta.CreateOptions{})
 				return errInternal
 			})
 
@@ -169,24 +158,20 @@ func (r *Resources) ensurePDBForGroup(ctx context.Context, group api.ServerGroup
 	}
 
 	// PDB v1 or v1beta1 is here.
-	if minAvailable.IntValue() == wantedMinAvail && wantedMinAvail != 0 {
+	if pdb.Spec.MinAvailable.IntValue() == wantedMinAvail && wantedMinAvail != 0 {
 		return nil
 	}
 	// Update for PDBs is forbidden, thus one has to delete it and then create it again
 	// Otherwise delete it if wantedMinAvail is zero
 	log.Int("wanted-min-avail", wantedMinAvail).
-		Int("current-min-avail", minAvailable.IntValue()).
+		Int("current-min-avail", pdb.Spec.MinAvailable.IntValue()).
 		Debug("Recreating PDB")
 
 	// Trigger deletion only if not already deleted.
-	if deletionTimestamp == nil {
+	if pdb.GetDeletionTimestamp() == nil {
 		// Update the PDB.
 		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-			if cache.PodDisruptionBudget().Version().IsV1() {
-				return pdbMod.V1().Delete(ctxChild, pdbName, meta.DeleteOptions{})
-			}
-
-			return nil
+			return pdbMod.V1().Delete(ctxChild, pdbName, meta.DeleteOptions{})
 		})
 		if err != nil && !kerrors.IsNotFound(err) {
 			log.Err(err).Error("PDB deletion failed")

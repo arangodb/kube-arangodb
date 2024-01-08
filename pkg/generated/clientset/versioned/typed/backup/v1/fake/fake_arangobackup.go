@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,10 +25,9 @@ package fake
 import (
 	"context"
 
-	backupv1 "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
-	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	testing "k8s.io/client-go/testing"
@@ -40,25 +39,25 @@ type FakeArangoBackups struct {
 	ns   string
 }
 
-var arangobackupsResource = schema.GroupVersionResource{Group: "backup.arangodb.com", Version: "v1", Resource: "arangobackups"}
+var arangobackupsResource = v1.SchemeGroupVersion.WithResource("arangobackups")
 
-var arangobackupsKind = schema.GroupVersionKind{Group: "backup.arangodb.com", Version: "v1", Kind: "ArangoBackup"}
+var arangobackupsKind = v1.SchemeGroupVersion.WithKind("ArangoBackup")
 
 // Get takes name of the arangoBackup, and returns the corresponding arangoBackup object, and an error if there is any.
-func (c *FakeArangoBackups) Get(ctx context.Context, name string, options v1.GetOptions) (result *backupv1.ArangoBackup, err error) {
+func (c *FakeArangoBackups) Get(ctx context.Context, name string, options metav1.GetOptions) (result *v1.ArangoBackup, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(arangobackupsResource, c.ns, name), &backupv1.ArangoBackup{})
+		Invokes(testing.NewGetAction(arangobackupsResource, c.ns, name), &v1.ArangoBackup{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*backupv1.ArangoBackup), err
+	return obj.(*v1.ArangoBackup), err
 }
 
 // List takes label and field selectors, and returns the list of ArangoBackups that match those selectors.
-func (c *FakeArangoBackups) List(ctx context.Context, opts v1.ListOptions) (result *backupv1.ArangoBackupList, err error) {
+func (c *FakeArangoBackups) List(ctx context.Context, opts metav1.ListOptions) (result *v1.ArangoBackupList, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(arangobackupsResource, arangobackupsKind, c.ns, opts), &backupv1.ArangoBackupList{})
+		Invokes(testing.NewListAction(arangobackupsResource, arangobackupsKind, c.ns, opts), &v1.ArangoBackupList{})
 
 	if obj == nil {
 		return nil, err
@@ -68,8 +67,8 @@ func (c *FakeArangoBackups) List(ctx context.Context, opts v1.ListOptions) (resu
 	if label == nil {
 		label = labels.Everything()
 	}
-	list := &backupv1.ArangoBackupList{ListMeta: obj.(*backupv1.ArangoBackupList).ListMeta}
-	for _, item := range obj.(*backupv1.ArangoBackupList).Items {
+	list := &v1.ArangoBackupList{ListMeta: obj.(*v1.ArangoBackupList).ListMeta}
+	for _, item := range obj.(*v1.ArangoBackupList).Items {
 		if label.Matches(labels.Set(item.Labels)) {
 			list.Items = append(list.Items, item)
 		}
@@ -78,69 +77,69 @@ func (c *FakeArangoBackups) List(ctx context.Context, opts v1.ListOptions) (resu
 }
 
 // Watch returns a watch.Interface that watches the requested arangoBackups.
-func (c *FakeArangoBackups) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
+func (c *FakeArangoBackups) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewWatchAction(arangobackupsResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a arangoBackup and creates it.  Returns the server's representation of the arangoBackup, and an error, if there is any.
-func (c *FakeArangoBackups) Create(ctx context.Context, arangoBackup *backupv1.ArangoBackup, opts v1.CreateOptions) (result *backupv1.ArangoBackup, err error) {
+func (c *FakeArangoBackups) Create(ctx context.Context, arangoBackup *v1.ArangoBackup, opts metav1.CreateOptions) (result *v1.ArangoBackup, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(arangobackupsResource, c.ns, arangoBackup), &backupv1.ArangoBackup{})
+		Invokes(testing.NewCreateAction(arangobackupsResource, c.ns, arangoBackup), &v1.ArangoBackup{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*backupv1.ArangoBackup), err
+	return obj.(*v1.ArangoBackup), err
 }
 
 // Update takes the representation of a arangoBackup and updates it. Returns the server's representation of the arangoBackup, and an error, if there is any.
-func (c *FakeArangoBackups) Update(ctx context.Context, arangoBackup *backupv1.ArangoBackup, opts v1.UpdateOptions) (result *backupv1.ArangoBackup, err error) {
+func (c *FakeArangoBackups) Update(ctx context.Context, arangoBackup *v1.ArangoBackup, opts metav1.UpdateOptions) (result *v1.ArangoBackup, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(arangobackupsResource, c.ns, arangoBackup), &backupv1.ArangoBackup{})
+		Invokes(testing.NewUpdateAction(arangobackupsResource, c.ns, arangoBackup), &v1.ArangoBackup{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*backupv1.ArangoBackup), err
+	return obj.(*v1.ArangoBackup), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeArangoBackups) UpdateStatus(ctx context.Context, arangoBackup *backupv1.ArangoBackup, opts v1.UpdateOptions) (*backupv1.ArangoBackup, error) {
+func (c *FakeArangoBackups) UpdateStatus(ctx context.Context, arangoBackup *v1.ArangoBackup, opts metav1.UpdateOptions) (*v1.ArangoBackup, error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(arangobackupsResource, "status", c.ns, arangoBackup), &backupv1.ArangoBackup{})
+		Invokes(testing.NewUpdateSubresourceAction(arangobackupsResource, "status", c.ns, arangoBackup), &v1.ArangoBackup{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*backupv1.ArangoBackup), err
+	return obj.(*v1.ArangoBackup), err
 }
 
 // Delete takes name of the arangoBackup and deletes it. Returns an error if one occurs.
-func (c *FakeArangoBackups) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
+func (c *FakeArangoBackups) Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteActionWithOptions(arangobackupsResource, c.ns, name, opts), &backupv1.ArangoBackup{})
+		Invokes(testing.NewDeleteActionWithOptions(arangobackupsResource, c.ns, name, opts), &v1.ArangoBackup{})
 
 	return err
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakeArangoBackups) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+func (c *FakeArangoBackups) DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error {
 	action := testing.NewDeleteCollectionAction(arangobackupsResource, c.ns, listOpts)
 
-	_, err := c.Fake.Invokes(action, &backupv1.ArangoBackupList{})
+	_, err := c.Fake.Invokes(action, &v1.ArangoBackupList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched arangoBackup.
-func (c *FakeArangoBackups) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *backupv1.ArangoBackup, err error) {
+func (c *FakeArangoBackups) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.ArangoBackup, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(arangobackupsResource, c.ns, name, pt, data, subresources...), &backupv1.ArangoBackup{})
+		Invokes(testing.NewPatchSubresourceAction(arangobackupsResource, c.ns, name, pt, data, subresources...), &v1.ArangoBackup{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*backupv1.ArangoBackup), err
+	return obj.(*v1.ArangoBackup), err
 }
