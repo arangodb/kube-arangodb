@@ -1,3 +1,9 @@
+---
+layout: page
+title: Operator Ephemeral Volumes
+parent: List of all features
+---
+
 # Operator Ephemeral Volumes
 
 ## Overview

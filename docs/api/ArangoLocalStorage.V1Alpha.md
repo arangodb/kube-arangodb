@@ -1,3 +1,9 @@
+---
+layout: page
+parent: CRD reference
+title: ArangoLocalStorage V1Alpha
+---
+
 # API Reference for ArangoLocalStorage V1Alpha
 
 ## Spec

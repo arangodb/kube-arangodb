@@ -2,17 +2,29 @@
 
 [![Docker Pulls](https://img.shields.io/docker/pulls/arangodb/kube-arangodb.svg)](https://hub.docker.com/r/arangodb/kube-arangodb/)
 
-ArangoDB Kubernetes Operator helps to run ArangoDB deployments
-on Kubernetes clusters.
+The ArangoDB Kubernetes Operator (`kube-arangodb`) is a set of operators
+that you deploy in your Kubernetes cluster to:
+- Manage deployments of the [ArangoDB database](https://arangodb.com/)
+- Manage backups
+- Provide `PersistentVolumes` on local storage of your nodes for optimal storage performance.
+- Configure ArangoDB Datacenter-to-Datacenter Replication
 
-To get started, follow the Installation instructions below and/or
-read the [tutorial](docs/using-the-operator.md).  
+Each of these uses involves a different custom resource:
+- Use an [ArangoDeployment resource](docs/deployment-resource-reference.md) to create an ArangoDB database deployment.
+- Use an [ArangoMember resource](docs/api/ArangoMember.V1.md) to observe and adjust individual deployment members.
+- Use an [ArangoBackup](docs/backup-resource.md) and [ArangoBackupPolicy](docs/backuppolicy-resource.md) resources to create ArangoDB backups.
+- Use an [ArangoLocalStorage resource](docs/storage-resource.md) to provide local `PersistentVolumes` for optimal I/O performance.
+- Use an [ArangoDeploymentReplication resource](docs/deployment-replication-resource-reference.md) to configure ArangoDB Datacenter-to-Datacenter Replication.
+
+Continue with [Using the ArangoDB Kubernetes Operator](docs/using-the-operator.md)
+to learn how to install the ArangoDB Kubernetes operator and create your first deployment.
+
 
 ## State
 
 The ArangoDB Kubernetes Operator is Production ready.
 
-[Documentation](docs/README.md)
+[Documentation](https://arangodb.github.io/kube-arangodb/)
 
 ### Limits
 

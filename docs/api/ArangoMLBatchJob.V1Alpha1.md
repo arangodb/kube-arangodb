@@ -1,3 +1,9 @@
+---
+layout: page
+parent: CRD reference
+title: ArangoMLBatchJob V1Alpha1
+---
+
 # API Reference for ArangoMLBatchJob V1Alpha1
 
 ## Spec

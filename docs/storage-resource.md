@@ -1,3 +1,9 @@
+---
+layout: page
+parent: Custom resources overview
+title: ArangoLocalStorage
+---
+
 # ArangoLocalStorage Custom Resource
 
 [Full CustomResourceDefinition reference ->](./api/ArangoLocalStorage.V1Alpha.md)

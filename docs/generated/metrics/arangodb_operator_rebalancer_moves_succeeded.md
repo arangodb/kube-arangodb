@@ -1,3 +1,9 @@
+---
+layout: page
+title: arangodb_operator_rebalancer_moves_succeeded
+parent: List of available metrics
+---
+
 # arangodb_operator_rebalancer_moves_succeeded (Counter)
 
 ## Description

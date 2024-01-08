@@ -1,3 +1,9 @@
+---
+layout: page
+title: arangodb_operator_agency_index
+parent: List of available metrics
+---
+
 # arangodb_operator_agency_index (Gauge)
 
 ## Description

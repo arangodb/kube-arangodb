@@ -1,3 +1,9 @@
+---
+layout: page
+parent: CRD reference
+title: ArangoMLExtension V1Alpha1
+---
+
 # API Reference for ArangoMLExtension V1Alpha1
 
 ## Spec

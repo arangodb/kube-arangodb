@@ -1,3 +1,9 @@
+---
+layout: page
+parent: CRD reference
+title: ArangoMember V1
+---
+
 # API Reference for ArangoMember V1
 
 ## Spec

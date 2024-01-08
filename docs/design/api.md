@@ -1,3 +1,9 @@
+---
+layout: page
+title: Operator API
+parent: Design overview
+---
+
 # Operator API
 
 A running operator exposes HTTP and gRPC API listeners to allow retrieving and setting some configuration values programmatically.

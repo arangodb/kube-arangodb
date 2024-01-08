@@ -1,3 +1,9 @@
+---
+layout: page
+title: Restore defaults from last accepted state of deployment
+parent: List of all features
+---
+
 # Restore defaults from last accepted state of deployment
 
 ## Overview

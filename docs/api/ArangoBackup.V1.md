@@ -1,3 +1,9 @@
+---
+layout: page
+parent: CRD reference
+title: ArangoBackup V1
+---
+
 # API Reference for ArangoBackup V1
 
 ## Spec
