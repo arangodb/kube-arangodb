@@ -1,3 +1,9 @@
+---
+layout: page
+parent: CRD reference
+title: ArangoBackupPolicy V1
+---
+
 # API Reference for ArangoBackupPolicy V1
 
 ## Spec

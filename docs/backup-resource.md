@@ -1,3 +1,9 @@
+---
+layout: page
+parent: Custom resources overview
+title: ArangoBackup
+---
+
 # ArangoBackup Custom Resource
 
 [Full CustomResourceDefinition reference ->](./api/ArangoBackup.V1.md)

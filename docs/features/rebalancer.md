@@ -1,3 +1,9 @@
+---
+layout: page
+title: Rebalancer
+parent: List of all features
+---
+
 # ArangoDB Rebalancer Support
 
 ## How to use

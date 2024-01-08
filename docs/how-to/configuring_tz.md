@@ -1,3 +1,9 @@
+---
+layout: page
+title: How to configure timezone
+parent: How to ...
+---
+
 # How to configure timezone
 
 To set timezone for cluster components, mount the required timezone into container

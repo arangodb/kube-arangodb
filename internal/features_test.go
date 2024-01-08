@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,6 +41,12 @@ func Test_GenerateFeaturesIndex(t *testing.T) {
 	}()
 
 	const basePath = "docs/features"
+	writeFrontMatter(t, out, map[string]string{
+		"layout":    "page",
+		"title":     "List of all features",
+		"nav_order": "10",
+	})
+
 	write(t, out, "## List of Community Edition features\n")
 	section, err := GenerateReadmeFeatures(root, basePath, false)
 	require.NoError(t, err)

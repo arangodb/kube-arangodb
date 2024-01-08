@@ -1,3 +1,9 @@
+---
+layout: page
+title: How to set root user password
+parent: How to ...
+---
+
 # How to set root user password
 
 1) Create a kubernetes [Secret](https://kubernetes.io/docs/tasks/configmap-secret/managing-secret-using-kubectl/) with root password:

@@ -1,3 +1,9 @@
+---
+layout: page
+parent: CRD reference
+title: ArangoDeployment V1
+---
+
 # API Reference for ArangoDeployment V1
 
 ## Spec
