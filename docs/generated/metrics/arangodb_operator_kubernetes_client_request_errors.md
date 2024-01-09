@@ -1,3 +1,9 @@
+---
+layout: page
+title: arangodb_operator_kubernetes_client_request_errors
+parent: List of available metrics
+---
+
 # arangodb_operator_kubernetes_client_request_errors (Counter)
 
 ## Description

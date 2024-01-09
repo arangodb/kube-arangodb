@@ -1,3 +1,9 @@
+---
+layout: page
+title: arangodb_operator_agency_cache_member_commit_offset
+parent: List of available metrics
+---
+
 # arangodb_operator_agency_cache_member_commit_offset (Gauge)
 
 ## Description

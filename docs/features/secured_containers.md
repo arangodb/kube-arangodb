@@ -1,3 +1,9 @@
+---
+layout: page
+title: Secured containers
+parent: List of all features
+---
+
 # Secured Containers
 
 ## Overview

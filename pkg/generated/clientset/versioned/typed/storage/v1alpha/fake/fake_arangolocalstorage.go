@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,7 +28,6 @@ import (
 	v1alpha "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
-	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	testing "k8s.io/client-go/testing"
@@ -39,9 +38,9 @@ type FakeArangoLocalStorages struct {
 	Fake *FakeStorageV1alpha
 }
 
-var arangolocalstoragesResource = schema.GroupVersionResource{Group: "storage.arangodb.com", Version: "v1alpha", Resource: "arangolocalstorages"}
+var arangolocalstoragesResource = v1alpha.SchemeGroupVersion.WithResource("arangolocalstorages")
 
-var arangolocalstoragesKind = schema.GroupVersionKind{Group: "storage.arangodb.com", Version: "v1alpha", Kind: "ArangoLocalStorage"}
+var arangolocalstoragesKind = v1alpha.SchemeGroupVersion.WithKind("ArangoLocalStorage")
 
 // Get takes name of the arangoLocalStorage, and returns the corresponding arangoLocalStorage object, and an error if there is any.
 func (c *FakeArangoLocalStorages) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha.ArangoLocalStorage, err error) {

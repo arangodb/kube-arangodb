@@ -1,3 +1,9 @@
+---
+layout: page
+title: How to change architecture
+parent: How to ...
+---
+
 # How to change architecture / enable ARM support
 
 Currently `AMD64` is a default architecture in the operator

@@ -1,3 +1,9 @@
+---
+layout: page
+title: How to pass additional params to operator
+parent: How to ...
+---
+
 # How to pass additional params to operator
 
 It is possible to additionally fine-tune operator behavior by

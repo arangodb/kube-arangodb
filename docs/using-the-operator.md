@@ -1,3 +1,9 @@
+---
+layout: page
+title: Usage instructions
+nav_order: 1
+---
+
 # Using the ArangoDB Kubernetes Operator
 
 ## Installation

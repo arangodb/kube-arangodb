@@ -17,9 +17,11 @@ This process differs per operating system.
 To do so, you first have to fetch the CA certificate from its Kubernetes
 secret.
 
+<!-- {% raw %} -->
 ```bash
 kubectl get secret <deploy-name>-ca --template='{{index .data "ca.crt"}}' | base64 -D > ca.crt
 ```
+<!-- {% endraw %} -->
 
 ### Windows
 
