@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -76,10 +76,10 @@ func (r *Resources) InspectPVCs(ctx context.Context, cachedStatus inspectorInter
 			if k8sutil.IsPersistentVolumeClaimMarkedForDeletion(pvc) && len(pvc.GetFinalizers()) > 0 {
 				// Strange, pvc belongs to us, but we have no member for it.
 				// Remove all finalizers, so it can be removed.
-				log.Warn("PVC belongs to this deployment, but we don't know the member. Removing all finalizers")
+				log.Str("pvc", pvc.GetName()).Warn("PVC belongs to this deployment, but we don't know the member. Removing all finalizers")
 				_, err := k8sutil.RemovePVCFinalizers(ctx, r.context.ACS().CurrentClusterCache(), cachedStatus.PersistentVolumeClaimsModInterface().V1(), pvc, pvc.GetFinalizers(), false)
 				if err != nil {
-					log.Err(err).Debug("Failed to update PVC (to remove all finalizers)")
+					log.Str("pvc", pvc.GetName()).Err(err).Debug("Failed to update PVC (to remove all finalizers)")
 					return errors.WithStack(err)
 				}
 			}

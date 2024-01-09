@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -115,10 +115,10 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 			if k8sutil.IsPodMarkedForDeletion(pod) && len(pod.GetFinalizers()) > 0 {
 				// Strange, pod belongs to us, but we have no member for it.
 				// Remove all finalizers, so it can be removed.
-				log.Warn("Pod belongs to this deployment, but we don't know the member. Removing all finalizers")
+				log.Str("pod", pod.GetName()).Warn("Pod belongs to this deployment, but we don't know the member. Removing all finalizers")
 				_, err := k8sutil.RemovePodFinalizers(ctx, r.context.ACS().CurrentClusterCache(), cachedStatus.PodsModInterface().V1(), pod, pod.GetFinalizers(), false)
 				if err != nil {
-					log.Err(err).Debug("Failed to update pod (to remove all finalizers)")
+					log.Str("pod", pod.GetName()).Err(err).Debug("Failed to update pod (to remove all finalizers)")
 					return errors.WithStack(err)
 				}
 			}
