@@ -1,3 +1,9 @@
+---
+layout: page
+title: arangodb_operator_engine_panics_recovered
+parent: List of available metrics
+---
+
 # arangodb_operator_engine_panics_recovered (Counter)
 
 ## Description

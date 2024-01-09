@@ -1,3 +1,9 @@
+---
+layout: page
+title: Health checks
+parent: Design overview
+---
+
 # Health checks
 
 ## Liveness Probe

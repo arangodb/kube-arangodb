@@ -1,3 +1,9 @@
+---
+layout: page
+title: How to configure logging
+parent: How to ...
+---
+
 # How to configure logging
 
 ## Operator logging

@@ -1,3 +1,9 @@
+---
+layout: page
+title: How to override detected total memory
+parent: How to ...
+---
+
 # How to override detected total memory
 
 ## overrideDetectedTotalMemory

@@ -1,3 +1,9 @@
+---
+layout: page
+title: arangodb_operator_members_unexpected_container_exit_codes
+parent: List of available metrics
+---
+
 # arangodb_operator_members_unexpected_container_exit_codes (Counter)
 
 ## Description

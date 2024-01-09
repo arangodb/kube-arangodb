@@ -1,3 +1,9 @@
+---
+layout: page
+title: How to rotate Pod
+parent: How to ...
+---
+
 # How to rotate Pod
 
 Rotation of ArangoDeployment Pods can be triggered by Pod deletion or by annotation (safe way).

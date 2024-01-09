@@ -1,3 +1,9 @@
+---
+layout: page
+title: Kubernetes resources
+parent: Design overview
+---
+
 # Resources and labels
 
 The ArangoDB operator will create the following Kubernetes resources for specified
