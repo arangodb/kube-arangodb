@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,10 +25,9 @@ package fake
 import (
 	"context"
 
-	deploymentv1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
-	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	testing "k8s.io/client-go/testing"
@@ -40,25 +39,25 @@ type FakeArangoMembers struct {
 	ns   string
 }
 
-var arangomembersResource = schema.GroupVersionResource{Group: "database.arangodb.com", Version: "v1", Resource: "arangomembers"}
+var arangomembersResource = v1.SchemeGroupVersion.WithResource("arangomembers")
 
-var arangomembersKind = schema.GroupVersionKind{Group: "database.arangodb.com", Version: "v1", Kind: "ArangoMember"}
+var arangomembersKind = v1.SchemeGroupVersion.WithKind("ArangoMember")
 
 // Get takes name of the arangoMember, and returns the corresponding arangoMember object, and an error if there is any.
-func (c *FakeArangoMembers) Get(ctx context.Context, name string, options v1.GetOptions) (result *deploymentv1.ArangoMember, err error) {
+func (c *FakeArangoMembers) Get(ctx context.Context, name string, options metav1.GetOptions) (result *v1.ArangoMember, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(arangomembersResource, c.ns, name), &deploymentv1.ArangoMember{})
+		Invokes(testing.NewGetAction(arangomembersResource, c.ns, name), &v1.ArangoMember{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*deploymentv1.ArangoMember), err
+	return obj.(*v1.ArangoMember), err
 }
 
 // List takes label and field selectors, and returns the list of ArangoMembers that match those selectors.
-func (c *FakeArangoMembers) List(ctx context.Context, opts v1.ListOptions) (result *deploymentv1.ArangoMemberList, err error) {
+func (c *FakeArangoMembers) List(ctx context.Context, opts metav1.ListOptions) (result *v1.ArangoMemberList, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(arangomembersResource, arangomembersKind, c.ns, opts), &deploymentv1.ArangoMemberList{})
+		Invokes(testing.NewListAction(arangomembersResource, arangomembersKind, c.ns, opts), &v1.ArangoMemberList{})
 
 	if obj == nil {
 		return nil, err
@@ -68,8 +67,8 @@ func (c *FakeArangoMembers) List(ctx context.Context, opts v1.ListOptions) (resu
 	if label == nil {
 		label = labels.Everything()
 	}
-	list := &deploymentv1.ArangoMemberList{ListMeta: obj.(*deploymentv1.ArangoMemberList).ListMeta}
-	for _, item := range obj.(*deploymentv1.ArangoMemberList).Items {
+	list := &v1.ArangoMemberList{ListMeta: obj.(*v1.ArangoMemberList).ListMeta}
+	for _, item := range obj.(*v1.ArangoMemberList).Items {
 		if label.Matches(labels.Set(item.Labels)) {
 			list.Items = append(list.Items, item)
 		}
@@ -78,69 +77,69 @@ func (c *FakeArangoMembers) List(ctx context.Context, opts v1.ListOptions) (resu
 }
 
 // Watch returns a watch.Interface that watches the requested arangoMembers.
-func (c *FakeArangoMembers) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
+func (c *FakeArangoMembers) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewWatchAction(arangomembersResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a arangoMember and creates it.  Returns the server's representation of the arangoMember, and an error, if there is any.
-func (c *FakeArangoMembers) Create(ctx context.Context, arangoMember *deploymentv1.ArangoMember, opts v1.CreateOptions) (result *deploymentv1.ArangoMember, err error) {
+func (c *FakeArangoMembers) Create(ctx context.Context, arangoMember *v1.ArangoMember, opts metav1.CreateOptions) (result *v1.ArangoMember, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(arangomembersResource, c.ns, arangoMember), &deploymentv1.ArangoMember{})
+		Invokes(testing.NewCreateAction(arangomembersResource, c.ns, arangoMember), &v1.ArangoMember{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*deploymentv1.ArangoMember), err
+	return obj.(*v1.ArangoMember), err
 }
 
 // Update takes the representation of a arangoMember and updates it. Returns the server's representation of the arangoMember, and an error, if there is any.
-func (c *FakeArangoMembers) Update(ctx context.Context, arangoMember *deploymentv1.ArangoMember, opts v1.UpdateOptions) (result *deploymentv1.ArangoMember, err error) {
+func (c *FakeArangoMembers) Update(ctx context.Context, arangoMember *v1.ArangoMember, opts metav1.UpdateOptions) (result *v1.ArangoMember, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(arangomembersResource, c.ns, arangoMember), &deploymentv1.ArangoMember{})
+		Invokes(testing.NewUpdateAction(arangomembersResource, c.ns, arangoMember), &v1.ArangoMember{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*deploymentv1.ArangoMember), err
+	return obj.(*v1.ArangoMember), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeArangoMembers) UpdateStatus(ctx context.Context, arangoMember *deploymentv1.ArangoMember, opts v1.UpdateOptions) (*deploymentv1.ArangoMember, error) {
+func (c *FakeArangoMembers) UpdateStatus(ctx context.Context, arangoMember *v1.ArangoMember, opts metav1.UpdateOptions) (*v1.ArangoMember, error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(arangomembersResource, "status", c.ns, arangoMember), &deploymentv1.ArangoMember{})
+		Invokes(testing.NewUpdateSubresourceAction(arangomembersResource, "status", c.ns, arangoMember), &v1.ArangoMember{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*deploymentv1.ArangoMember), err
+	return obj.(*v1.ArangoMember), err
 }
 
 // Delete takes name of the arangoMember and deletes it. Returns an error if one occurs.
-func (c *FakeArangoMembers) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
+func (c *FakeArangoMembers) Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteActionWithOptions(arangomembersResource, c.ns, name, opts), &deploymentv1.ArangoMember{})
+		Invokes(testing.NewDeleteActionWithOptions(arangomembersResource, c.ns, name, opts), &v1.ArangoMember{})
 
 	return err
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakeArangoMembers) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+func (c *FakeArangoMembers) DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error {
 	action := testing.NewDeleteCollectionAction(arangomembersResource, c.ns, listOpts)
 
-	_, err := c.Fake.Invokes(action, &deploymentv1.ArangoMemberList{})
+	_, err := c.Fake.Invokes(action, &v1.ArangoMemberList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched arangoMember.
-func (c *FakeArangoMembers) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *deploymentv1.ArangoMember, err error) {
+func (c *FakeArangoMembers) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.ArangoMember, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(arangomembersResource, c.ns, name, pt, data, subresources...), &deploymentv1.ArangoMember{})
+		Invokes(testing.NewPatchSubresourceAction(arangomembersResource, c.ns, name, pt, data, subresources...), &v1.ArangoMember{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*deploymentv1.ArangoMember), err
+	return obj.(*v1.ArangoMember), err
 }

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,10 +33,9 @@ import (
 	"github.com/arangodb/go-driver"
 
 	"github.com/arangodb/kube-arangodb/internal/md"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
-
-const minSupportedArangoDBVersion = ">= 3.8.0"
 
 type PlatformsDoc struct {
 	Platforms Platforms `json:"platforms,omitempty" yaml:"platforms,omitempty"`
@@ -218,7 +217,7 @@ func GenerateReadmeFeatures(root, basePath string, eeOnly bool) (string, error) 
 			feature:    n,
 			oVersion:   util.TypeOrDefault[string](util.First(r.OperatorVersion, f.OperatorVersion), "ANY"),
 			introduced: util.TypeOrDefault[string](f.Releases[0].OperatorVersion, "ANY"),
-			aVersion:   util.TypeOrDefault[string](util.First(r.ArangoDBVersion, f.ArangoDBVersion), minSupportedArangoDBVersion),
+			aVersion:   util.TypeOrDefault[string](util.First(r.ArangoDBVersion, f.ArangoDBVersion), fmt.Sprintf(">= %s", features.MinSupportedArangoDBVersion)),
 			aEdition:   util.TypeOrDefault[string](util.First(r.ArangoDBEdition, f.ArangoDBEdition), "Community, Enterprise"),
 			aEdition:   util.TypeOrDefault[string](util.First(r.ArangoDBEdition, f.ArangoDBEdition), "Community, Enterprise"),
 			state:      util.TypeOrDefault[string](util.First(r.State, f.State), "Alpha"),

@@ -25,6 +25,13 @@ v1:
               resources:
                 description: Resources holds resource requests & limits. Overrides template provided on the group level.
                 properties:
+                  claims:
+                    items:
+                      properties:
+                        name:
+                          type: string
+                      type: object
+                    type: array
                   limits:
                     additionalProperties:
                       type: string
@@ -140,9 +147,18 @@ v1:
                             type: string
                           name:
                             type: string
+                          namespace:
+                            type: string
                         type: object
                       resources:
                         properties:
+                          claims:
+                            items:
+                              properties:
+                                name:
+                                  type: string
+                              type: object
+                            type: array
                           limits:
                             additionalProperties:
                               type: string
@@ -185,6 +201,10 @@ v1:
                         items:
                           type: string
                         type: array
+                      allocatedResourceStatuses:
+                        additionalProperties:
+                          type: string
+                        type: object
                       allocatedResources:
                         additionalProperties:
                           type: string
@@ -213,8 +233,6 @@ v1:
                           type: object
                         type: array
                       phase:
-                        type: string
-                      resizeStatus:
                         type: string
                     type: object
                 type: object
@@ -925,8 +943,24 @@ v1:
                                   format: int32
                                   type: integer
                               type: object
+                            resizePolicy:
+                              items:
+                                properties:
+                                  resourceName:
+                                    type: string
+                                  restartPolicy:
+                                    type: string
+                                type: object
+                              type: array
                             resources:
                               properties:
+                                claims:
+                                  items:
+                                    properties:
+                                      name:
+                                        type: string
+                                    type: object
+                                  type: array
                                 limits:
                                   additionalProperties:
                                     type: string
@@ -936,6 +970,8 @@ v1:
                                     type: string
                                   type: object
                               type: object
+                            restartPolicy:
+                              type: string
                             securityContext:
                               properties:
                                 allowPrivilegeEscalation:
@@ -1436,8 +1472,24 @@ v1:
                                   format: int32
                                   type: integer
                               type: object
+                            resizePolicy:
+                              items:
+                                properties:
+                                  resourceName:
+                                    type: string
+                                  restartPolicy:
+                                    type: string
+                                type: object
+                              type: array
                             resources:
                               properties:
+                                claims:
+                                  items:
+                                    properties:
+                                      name:
+                                        type: string
+                                    type: object
+                                  type: array
                                 limits:
                                   additionalProperties:
                                     type: string
@@ -1447,6 +1499,8 @@ v1:
                                     type: string
                                   type: object
                               type: object
+                            restartPolicy:
+                              type: string
                             securityContext:
                               properties:
                                 allowPrivilegeEscalation:
@@ -1953,8 +2007,24 @@ v1:
                                   format: int32
                                   type: integer
                               type: object
+                            resizePolicy:
+                              items:
+                                properties:
+                                  resourceName:
+                                    type: string
+                                  restartPolicy:
+                                    type: string
+                                type: object
+                              type: array
                             resources:
                               properties:
+                                claims:
+                                  items:
+                                    properties:
+                                      name:
+                                        type: string
+                                    type: object
+                                  type: array
                                 limits:
                                   additionalProperties:
                                     type: string
@@ -1964,6 +2034,8 @@ v1:
                                     type: string
                                   type: object
                               type: object
+                            restartPolicy:
+                              type: string
                             securityContext:
                               properties:
                                 allowPrivilegeEscalation:
@@ -2157,12 +2229,33 @@ v1:
                               type: string
                           type: object
                         type: array
+                      resourceClaims:
+                        items:
+                          properties:
+                            name:
+                              type: string
+                            source:
+                              properties:
+                                resourceClaimName:
+                                  type: string
+                                resourceClaimTemplateName:
+                                  type: string
+                              type: object
+                          type: object
+                        type: array
                       restartPolicy:
                         type: string
                       runtimeClassName:
                         type: string
                       schedulerName:
                         type: string
+                      schedulingGates:
+                        items:
+                          properties:
+                            name:
+                              type: string
+                          type: object
+                        type: array
                       securityContext:
                         properties:
                           fsGroup:
@@ -2549,9 +2642,18 @@ v1:
                                               type: string
                                             name:
                                               type: string
+                                            namespace:
+                                              type: string
                                           type: object
                                         resources:
                                           properties:
+                                            claims:
+                                              items:
+                                                properties:
+                                                  name:
+                                                    type: string
+                                                type: object
+                                              type: array
                                             limits:
                                               additionalProperties:
                                                 type: string
@@ -2975,6 +3077,13 @@ v1alpha:
               resources:
                 description: Resources holds resource requests & limits. Overrides template provided on the group level.
                 properties:
+                  claims:
+                    items:
+                      properties:
+                        name:
+                          type: string
+                      type: object
+                    type: array
                   limits:
                     additionalProperties:
                       type: string
@@ -3090,9 +3199,18 @@ v1alpha:
                             type: string
                           name:
                             type: string
+                          namespace:
+                            type: string
                         type: object
                       resources:
                         properties:
+                          claims:
+                            items:
+                              properties:
+                                name:
+                                  type: string
+                              type: object
+                            type: array
                           limits:
                             additionalProperties:
                               type: string
@@ -3135,6 +3253,10 @@ v1alpha:
                         items:
                           type: string
                         type: array
+                      allocatedResourceStatuses:
+                        additionalProperties:
+                          type: string
+                        type: object
                       allocatedResources:
                         additionalProperties:
                           type: string
@@ -3163,8 +3285,6 @@ v1alpha:
                           type: object
                         type: array
                       phase:
-                        type: string
-                      resizeStatus:
                         type: string
                     type: object
                 type: object
@@ -3875,8 +3995,24 @@ v1alpha:
                                   format: int32
                                   type: integer
                               type: object
+                            resizePolicy:
+                              items:
+                                properties:
+                                  resourceName:
+                                    type: string
+                                  restartPolicy:
+                                    type: string
+                                type: object
+                              type: array
                             resources:
                               properties:
+                                claims:
+                                  items:
+                                    properties:
+                                      name:
+                                        type: string
+                                    type: object
+                                  type: array
                                 limits:
                                   additionalProperties:
                                     type: string
@@ -3886,6 +4022,8 @@ v1alpha:
                                     type: string
                                   type: object
                               type: object
+                            restartPolicy:
+                              type: string
                             securityContext:
                               properties:
                                 allowPrivilegeEscalation:
@@ -4386,8 +4524,24 @@ v1alpha:
                                   format: int32
                                   type: integer
                               type: object
+                            resizePolicy:
+                              items:
+                                properties:
+                                  resourceName:
+                                    type: string
+                                  restartPolicy:
+                                    type: string
+                                type: object
+                              type: array
                             resources:
                               properties:
+                                claims:
+                                  items:
+                                    properties:
+                                      name:
+                                        type: string
+                                    type: object
+                                  type: array
                                 limits:
                                   additionalProperties:
                                     type: string
@@ -4397,6 +4551,8 @@ v1alpha:
                                     type: string
                                   type: object
                               type: object
+                            restartPolicy:
+                              type: string
                             securityContext:
                               properties:
                                 allowPrivilegeEscalation:
@@ -4903,8 +5059,24 @@ v1alpha:
                                   format: int32
                                   type: integer
                               type: object
+                            resizePolicy:
+                              items:
+                                properties:
+                                  resourceName:
+                                    type: string
+                                  restartPolicy:
+                                    type: string
+                                type: object
+                              type: array
                             resources:
                               properties:
+                                claims:
+                                  items:
+                                    properties:
+                                      name:
+                                        type: string
+                                    type: object
+                                  type: array
                                 limits:
                                   additionalProperties:
                                     type: string
@@ -4914,6 +5086,8 @@ v1alpha:
                                     type: string
                                   type: object
                               type: object
+                            restartPolicy:
+                              type: string
                             securityContext:
                               properties:
                                 allowPrivilegeEscalation:
@@ -5107,12 +5281,33 @@ v1alpha:
                               type: string
                           type: object
                         type: array
+                      resourceClaims:
+                        items:
+                          properties:
+                            name:
+                              type: string
+                            source:
+                              properties:
+                                resourceClaimName:
+                                  type: string
+                                resourceClaimTemplateName:
+                                  type: string
+                              type: object
+                          type: object
+                        type: array
                       restartPolicy:
                         type: string
                       runtimeClassName:
                         type: string
                       schedulerName:
                         type: string
+                      schedulingGates:
+                        items:
+                          properties:
+                            name:
+                              type: string
+                          type: object
+                        type: array
                       securityContext:
                         properties:
                           fsGroup:
@@ -5499,9 +5694,18 @@ v1alpha:
                                               type: string
                                             name:
                                               type: string
+                                            namespace:
+                                              type: string
                                           type: object
                                         resources:
                                           properties:
+                                            claims:
+                                              items:
+                                                properties:
+                                                  name:
+                                                    type: string
+                                                type: object
+                                              type: array
                                             limits:
                                               additionalProperties:
                                                 type: string
@@ -5925,6 +6129,13 @@ v2alpha1:
               resources:
                 description: Resources holds resource requests & limits. Overrides template provided on the group level.
                 properties:
+                  claims:
+                    items:
+                      properties:
+                        name:
+                          type: string
+                      type: object
+                    type: array
                   limits:
                     additionalProperties:
                       type: string
@@ -6040,9 +6251,18 @@ v2alpha1:
                             type: string
                           name:
                             type: string
+                          namespace:
+                            type: string
                         type: object
                       resources:
                         properties:
+                          claims:
+                            items:
+                              properties:
+                                name:
+                                  type: string
+                              type: object
+                            type: array
                           limits:
                             additionalProperties:
                               type: string
@@ -6085,6 +6305,10 @@ v2alpha1:
                         items:
                           type: string
                         type: array
+                      allocatedResourceStatuses:
+                        additionalProperties:
+                          type: string
+                        type: object
                       allocatedResources:
                         additionalProperties:
                           type: string
@@ -6113,8 +6337,6 @@ v2alpha1:
                           type: object
                         type: array
                       phase:
-                        type: string
-                      resizeStatus:
                         type: string
                     type: object
                 type: object
@@ -6825,8 +7047,24 @@ v2alpha1:
                                   format: int32
                                   type: integer
                               type: object
+                            resizePolicy:
+                              items:
+                                properties:
+                                  resourceName:
+                                    type: string
+                                  restartPolicy:
+                                    type: string
+                                type: object
+                              type: array
                             resources:
                               properties:
+                                claims:
+                                  items:
+                                    properties:
+                                      name:
+                                        type: string
+                                    type: object
+                                  type: array
                                 limits:
                                   additionalProperties:
                                     type: string
@@ -6836,6 +7074,8 @@ v2alpha1:
                                     type: string
                                   type: object
                               type: object
+                            restartPolicy:
+                              type: string
                             securityContext:
                               properties:
                                 allowPrivilegeEscalation:
@@ -7336,8 +7576,24 @@ v2alpha1:
                                   format: int32
                                   type: integer
                               type: object
+                            resizePolicy:
+                              items:
+                                properties:
+                                  resourceName:
+                                    type: string
+                                  restartPolicy:
+                                    type: string
+                                type: object
+                              type: array
                             resources:
                               properties:
+                                claims:
+                                  items:
+                                    properties:
+                                      name:
+                                        type: string
+                                    type: object
+                                  type: array
                                 limits:
                                   additionalProperties:
                                     type: string
@@ -7347,6 +7603,8 @@ v2alpha1:
                                     type: string
                                   type: object
                               type: object
+                            restartPolicy:
+                              type: string
                             securityContext:
                               properties:
                                 allowPrivilegeEscalation:
@@ -7853,8 +8111,24 @@ v2alpha1:
                                   format: int32
                                   type: integer
                               type: object
+                            resizePolicy:
+                              items:
+                                properties:
+                                  resourceName:
+                                    type: string
+                                  restartPolicy:
+                                    type: string
+                                type: object
+                              type: array
                             resources:
                               properties:
+                                claims:
+                                  items:
+                                    properties:
+                                      name:
+                                        type: string
+                                    type: object
+                                  type: array
                                 limits:
                                   additionalProperties:
                                     type: string
@@ -7864,6 +8138,8 @@ v2alpha1:
                                     type: string
                                   type: object
                               type: object
+                            restartPolicy:
+                              type: string
                             securityContext:
                               properties:
                                 allowPrivilegeEscalation:
@@ -8057,12 +8333,33 @@ v2alpha1:
                               type: string
                           type: object
                         type: array
+                      resourceClaims:
+                        items:
+                          properties:
+                            name:
+                              type: string
+                            source:
+                              properties:
+                                resourceClaimName:
+                                  type: string
+                                resourceClaimTemplateName:
+                                  type: string
+                              type: object
+                          type: object
+                        type: array
                       restartPolicy:
                         type: string
                       runtimeClassName:
                         type: string
                       schedulerName:
                         type: string
+                      schedulingGates:
+                        items:
+                          properties:
+                            name:
+                              type: string
+                          type: object
+                        type: array
                       securityContext:
                         properties:
                           fsGroup:
@@ -8449,9 +8746,18 @@ v2alpha1:
                                               type: string
                                             name:
                                               type: string
+                                            namespace:
+                                              type: string
                                           type: object
                                         resources:
                                           properties:
+                                            claims:
+                                              items:
+                                                properties:
+                                                  name:
+                                                    type: string
+                                                type: object
+                                              type: array
                                             limits:
                                               additionalProperties:
                                                 type: string
