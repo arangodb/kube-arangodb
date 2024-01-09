@@ -1,1 +1,56 @@
-theme: jekyll-theme-cayman
+theme: just-the-docs
+repository: arangodb/kube-arangodb
+github_username: arangodb
+baseurl: "/kube-arangodb"
+url: "" # the base hostname & protocol for your site, e.g. http://example.com
+strict_front_matter: true # fail on formatting errors
+favicon_ico: "/assets/images/favicon.png"
+
+footer_content: "© ArangoDB. Distributed by an <a href=\"https://github.com/arangodb/kube-arangodb/tree/master/LICENSE\">Apache license.</a>"
+
+gh_edit_link: true # show or hide "edit this page" link
+gh_edit_link_text: "Edit this page on GitHub."
+gh_edit_repository: "https://github.com/arangodb/kube-arangodb" # the github URL for your repo
+gh_edit_branch: "master" # the branch that your docs are served from
+# gh_edit_source: docs # the source that your files originate from
+gh_edit_view_mode: "edit" # "tree" or "edit" if you want the user to jump into the editor immediately
+
+search:
+  # Split pages into sections that can be searched individually
+  # Supports 1 - 6, default: 2
+  heading_level: 3
+  # Maximum amount of previews per search result
+  # Default: 3
+  previews: 3
+  # Maximum amount of words to display before a matched word in the preview
+  # Default: 5
+  preview_words_before: 5
+  # Maximum amount of words to display after a matched word in the preview
+  # Default: 10
+  preview_words_after: 10
+  # Set the search token separator
+  # Default: /[\s\-/]+/
+  tokenizer_separator: /[\s/]+/
+  # Display the relative url in search results
+  # Supports true (default) or false
+  rel_url: true
+  # Enable or disable the search button that appears in the bottom right corner of every page
+  # Supports true or false (default)
+  button: true
+
+aux_links:
+  "Go to main ArangoDB documentation":
+    - "https://docs.arangodb.com/"
+
+# Makes Aux links open in a new tab. Default is false
+aux_links_new_tab: true
+
+# Back to top link
+back_to_top: true
+back_to_top_text: "Back to top"
+
+# Color scheme currently only supports "dark", "light"/nil (default), or a custom scheme that you define
+# TODO: watch for https://github.com/just-the-docs/just-the-docs/pull/1086 to allow users to switch themes
+color_scheme: wider
+
+nav_sort: case_sensitive

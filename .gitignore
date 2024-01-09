@@ -8,3 +8,4 @@ vendor/
 deps/
 .vscode/
 **/*.enterprise.go
+_site
