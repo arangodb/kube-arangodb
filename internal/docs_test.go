@@ -36,6 +36,7 @@ import (
 	"github.com/coreos/go-semver/semver"
 	"github.com/stretchr/testify/require"
 
+	appsApi "github.com/arangodb/kube-arangodb/pkg/apis/apps/v1"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
@@ -146,6 +147,11 @@ func Test_GenerateAPIDocs(t *testing.T) {
 			},
 			"ArangoMember.V1": {
 				"Spec": deploymentApi.ArangoMember{}.Spec,
+			},
+		},
+		fmt.Sprintf("%s/pkg/apis/apps/v1", root): {
+			"ArangoJob.V1": {
+				"Spec": appsApi.ArangoJob{}.Spec,
 			},
 		},
 		fmt.Sprintf("%s/pkg/apis/backup/v1", root): {

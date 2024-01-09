@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -91,25 +91,25 @@ type ServerGroupSpec struct {
 	StorageClassName *string `json:"storageClassName,omitempty"`
 	// Resources holds resource requests & limits
 	// +doc/type: core.ResourceRequirements
-	// +doc/link: Documentation of core.ResourceRequirements|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core
+	// +doc/link: Documentation of core.ResourceRequirements|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#resourcerequirements-v1-core
 	Resources core.ResourceRequirements `json:"resources,omitempty"`
 	// OverrideDetectedTotalMemory determines if memory should be overridden based on values in resources.
 	// If is set to true and Container Memory Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` to the value from the Container Memory Limits.
 	// +doc/important: Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` Container Environment Variable
 	// +doc/default: true
-	// +doc/link: Docs of the ArangoDB Envs|https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/
+	// +doc/link: Documentation of the ArangoDB Envs|https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/
 	OverrideDetectedTotalMemory *bool `json:"overrideDetectedTotalMemory,omitempty"`
 	// MemoryReservation determines the system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.
 	// If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a specified value in percent.
 	// Accepted Range <0, 50>. If the value is outside the accepted range, it is adjusted to the closest value.
 	// +doc/default: 0
-	// +doc/link: Docs of the ArangoDB Envs|https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/
+	// +doc/link: Documentation of the ArangoDB Envs|https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/
 	MemoryReservation *int64 `json:"memoryReservation,omitempty"`
 	// OverrideDetectedNumberOfCores determines if number of cores should be overridden based on values in resources.
 	// If is set to true and Container CPU Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` to the value from the Container CPU Limits.
 	// +doc/important: Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` Container Environment Variable
 	// +doc/default: true
-	// +doc/link: Docs of the ArangoDB Envs|https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/
+	// +doc/link: Documentation of the ArangoDB Envs|https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/
 	OverrideDetectedNumberOfCores *bool `json:"overrideDetectedNumberOfCores,omitempty"`
 	// Tolerations specifies the tolerations added to Pods in this group.
 	// By default, suitable tolerations are set for the following keys with the `NoExecute` effect:
@@ -118,7 +118,7 @@ type ServerGroupSpec struct {
 	// - `node.alpha.kubernetes.io/unreachable` (will be removed in future version)
 	// For more information on tolerations, consult the https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
 	// +doc/type: []core.Toleration
-	// +doc/link: Documentation of core.Toleration|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#toleration-v1-core
+	// +doc/link: Documentation of core.Toleration|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#toleration-v1-core
 	Tolerations []core.Toleration `json:"tolerations,omitempty"`
 	// Annotations specified the annotations added to Pods in this group.
 	// Annotations are merged with `spec.annotations`.
@@ -161,7 +161,7 @@ type ServerGroupSpec struct {
 	// with size as specified by `spec.<group>.resources.requests.storage` will be created. In that case `storage`
 	// and `iops` is not forwarded to the pods resource requirements.
 	// +doc/type: core.PersistentVolumeClaim
-	// +doc/link: Documentation of core.PersistentVolumeClaim|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaim-v1-core
+	// +doc/link: Documentation of core.PersistentVolumeClaim|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#persistentvolumeclaim-v1-core
 	VolumeClaimTemplate *core.PersistentVolumeClaim `json:"volumeClaimTemplate,omitempty"`
 	// VolumeResizeMode specified resize mode for PVCs and PVs
 	// +doc/enum: runtime|PVC will be resized in Pod runtime (EKS, GKE)
@@ -172,22 +172,22 @@ type ServerGroupSpec struct {
 	VolumeAllowShrink *bool `json:"volumeAllowShrink,omitempty"`
 	// AntiAffinity specified additional antiAffinity settings in ArangoDB Pod definitions
 	// +doc/type: core.PodAntiAffinity
-	// +doc/link: Documentation of core.Pod.AntiAffinity|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podantiaffinity-v1-core
+	// +doc/link: Documentation of core.Pod.AntiAffinity|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#podantiaffinity-v1-core
 	AntiAffinity *core.PodAntiAffinity `json:"antiAffinity,omitempty"`
 	// Affinity specified additional affinity settings in ArangoDB Pod definitions
 	// +doc/type: core.PodAffinity
-	// +doc/link: Documentation of core.PodAffinity|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podaffinity-v1-core
+	// +doc/link: Documentation of core.PodAffinity|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#podaffinity-v1-core
 	Affinity *core.PodAffinity `json:"affinity,omitempty"`
 	// NodeAffinity specified additional nodeAffinity settings in ArangoDB Pod definitions
 	// +doc/type: core.NodeAffinity
-	// +doc/link: Documentation of code.NodeAffinity|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#nodeaffinity-v1-core
+	// +doc/link: Documentation of code.NodeAffinity|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#nodeaffinity-v1-core
 	NodeAffinity *core.NodeAffinity `json:"nodeAffinity,omitempty"`
 	// SidecarCoreNames is a list of sidecar containers which must run in the pod.
 	// Some names (e.g.: "server", "worker") are reserved, and they don't have any impact.
 	SidecarCoreNames []string `json:"sidecarCoreNames,omitempty"`
 	// Sidecars specifies a list of additional containers to be started
 	// +doc/type: []core.Container
-	// +doc/link: Documentation of core.Container|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core
+	// +doc/link: Documentation of core.Container|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#container-v1-core
 	Sidecars []core.Container `json:"sidecars,omitempty"`
 	// SecurityContext specifies additional `securityContext` settings in ArangoDB Pod definitions.
 	// This is similar (but not fully compatible) to k8s SecurityContext definition.
@@ -197,7 +197,7 @@ type ServerGroupSpec struct {
 	Volumes ServerGroupSpecVolumes `json:"volumes,omitempty"`
 	// VolumeMounts define list of volume mounts mounted into server container
 	// +doc/type: []ServerGroupSpecVolumeMount
-	// +doc/link: Documentation of ServerGroupSpecVolumeMount|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#volumemount-v1-core
+	// +doc/link: Documentation of ServerGroupSpecVolumeMount|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#volumemount-v1-core
 	VolumeMounts ServerGroupSpecVolumeMounts `json:"volumeMounts,omitempty"`
 	// EphemeralVolumes keeps information about ephemeral volumes.
 	EphemeralVolumes *EphemeralVolumes `json:"ephemeralVolumes,omitempty"`

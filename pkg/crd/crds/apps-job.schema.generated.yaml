@@ -4,8 +4,10 @@ v1:
       spec:
         properties:
           arangoDeploymentName:
+            description: ArangoDeploymentName holds the name of ArangoDeployment
             type: string
           jobTemplate:
+            description: JobTemplate holds the Kubernetes Job Template
             properties:
               activeDeadlineSeconds:
                 format: int64

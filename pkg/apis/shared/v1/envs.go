@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,12 +29,12 @@ import (
 type Environments struct {
 	// Env keeps the information about environment variables provided to the container
 	// +doc/type: core.EnvVar
-	// +doc/link: Kubernetes Docs|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envvar-v1-core
+	// +doc/link: Kubernetes Docs|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#envvar-v1-core
 	Env []core.EnvVar `json:"env,omitempty"`
 
 	// EnvFrom keeps the information about environment variable sources provided to the container
 	// +doc/type: core.EnvFromSource
-	// +doc/link: Kubernetes Docs|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envfromsource-v1-core
+	// +doc/link: Kubernetes Docs|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#envfromsource-v1-core
 	EnvFrom []core.EnvFromSource `json:"envFrom,omitempty"`
 }
 

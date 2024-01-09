@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -88,7 +88,7 @@ type MemberStatus struct {
 	// deprecated
 	// SideCarSpecs contains map of specifications specified for side cars
 	// +doc/type: map[string]core.Container
-	// +doc/link: Documentation of core.Container|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core
+	// +doc/link: Documentation of core.Container|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#container-v1-core
 	SideCarSpecs map[string]core.Container `json:"sidecars-specs,omitempty"`
 	// deprecated
 	// PodName holds the name of the Pod that currently runs this member
