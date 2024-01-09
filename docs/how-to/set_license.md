@@ -1,3 +1,9 @@
+---
+layout: page
+title: How to set a license key
+parent: How to ...
+---
+
 # How to set a license key
 
 After deploying the ArangoDB Kubernetes operator, use the command below to deploy your [license key](https://docs.arangodb.com/stable/operations/administration/license-management/)

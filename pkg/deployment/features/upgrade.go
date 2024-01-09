@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,7 +28,6 @@ func init() {
 var upgradeVersionCheck Feature = &feature{
 	name:               "upgrade-version-check",
 	description:        "Enable initContainer with pre version check",
-	version:            "3.6.0",
 	enterpriseRequired: false,
 	enabledByDefault:   true,
 }
@@ -36,7 +35,6 @@ var upgradeVersionCheck Feature = &feature{
 var upgradeVersionCheckV2 Feature = &feature{
 	name:               "upgrade-version-check-v2",
 	description:        "Enable initContainer with pre version check based by Operator",
-	version:            "3.6.0",
 	enterpriseRequired: false,
 	enabledByDefault:   false,
 }

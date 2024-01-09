@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,6 +41,23 @@ func applyInitContainersResourceResources(initContainers []core.Container, mainC
 		}
 
 		resources.ApplyContainerResourceRequirements(&initContainers[i], mainContainerResources)
+	}
+	return initContainers
+}
+
+// upscaleInitContainersResourceResources updates passed init containers to ensure that all resources are set (if such feature is enabled)
+// This is applied only to containers added by operator itself
+func upscaleInitContainersResourceResources(initContainers []core.Container, mainContainerResources core.ResourceRequirements) []core.Container {
+	if !features.InitContainerUpscaleResources().Enabled() {
+		return initContainers
+	}
+
+	for i := range initContainers {
+		if !api.IsReservedServerGroupInitContainerName(initContainers[i].Name) {
+			continue
+		}
+
+		resources.UpscaleContainerResourceRequirements(&initContainers[i], mainContainerResources)
 	}
 	return initContainers
 }

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,7 +28,6 @@ func init() {
 var ephemeralVolumes = &feature{
 	name:               "ephemeral-volumes",
 	description:        "Enables ephemeral volumes for apps and tmp directory",
-	version:            "3.7.0",
 	enterpriseRequired: false,
 	enabledByDefault:   false,
 }
@@ -36,7 +35,6 @@ var ephemeralVolumes = &feature{
 var sensitiveInformationProtection = &feature{
 	name:               "sensitive-information-protection",
 	description:        "Hide sensitive information from metrics and logs",
-	version:            "3.7.0",
 	enterpriseRequired: false,
 	enabledByDefault:   false,
 }

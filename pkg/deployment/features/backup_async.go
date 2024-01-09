@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,6 @@ func init() {
 var asyncBackupCreation = &feature{
 	name:               "async-backup-creation",
 	description:        "Create backups asynchronously to avoid blocking the operator and reaching the timeout",
-	version:            "3.7.0",
 	enterpriseRequired: false,
 	enabledByDefault:   false,
 }

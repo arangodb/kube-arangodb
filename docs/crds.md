@@ -1,3 +1,11 @@
+---
+layout: page
+has_children: true
+title: Custom resources overview
+nav_order: 4
+has_toc: false
+---
+
 # Custom resources overview
 
 Main CRDs:

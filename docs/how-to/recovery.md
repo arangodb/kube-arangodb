@@ -1,3 +1,9 @@
+---
+layout: page
+title: How to recover a destroyed deployment
+parent: How to ...
+---
+
 # How to recover a destroyed deployment 
 
 ## Overview

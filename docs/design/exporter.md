@@ -1,3 +1,9 @@
+---
+layout: page
+title: ArangoDB Metrics
+parent: Design overview
+---
+
 # ArangoDB Exporter for Prometheus
 
 This exporter exposes the statistics provided by a specific ArangoDB instance

@@ -1,3 +1,9 @@
+---
+layout: page
+title: arangodb_operator_agency_cache_health_present
+parent: List of available metrics
+---
+
 # arangodb_operator_agency_cache_health_present (Gauge)
 
 ## Description

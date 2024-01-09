@@ -4,13 +4,18 @@ v1:
       spec:
         properties:
           arangoDeploymentName:
+            description: ArangoDeploymentName holds the name of ArangoDeployment
             type: string
           jobTemplate:
+            description: JobTemplate holds the Kubernetes Job Template
             properties:
               activeDeadlineSeconds:
                 format: int64
                 type: integer
               backoffLimit:
+                format: int32
+                type: integer
+              backoffLimitPerIndex:
                 format: int32
                 type: integer
               completionMode:
@@ -20,6 +25,9 @@ v1:
                 type: integer
               manualSelector:
                 type: boolean
+              maxFailedIndexes:
+                format: int32
+                type: integer
               parallelism:
                 format: int32
                 type: integer
@@ -54,6 +62,8 @@ v1:
                       type: object
                     type: array
                 type: object
+              podReplacementPolicy:
+                type: string
               selector:
                 properties:
                   matchExpressions:
@@ -772,8 +782,24 @@ v1:
                                   format: int32
                                   type: integer
                               type: object
+                            resizePolicy:
+                              items:
+                                properties:
+                                  resourceName:
+                                    type: string
+                                  restartPolicy:
+                                    type: string
+                                type: object
+                              type: array
                             resources:
                               properties:
+                                claims:
+                                  items:
+                                    properties:
+                                      name:
+                                        type: string
+                                    type: object
+                                  type: array
                                 limits:
                                   additionalProperties:
                                     type: string
@@ -783,6 +809,8 @@ v1:
                                     type: string
                                   type: object
                               type: object
+                            restartPolicy:
+                              type: string
                             securityContext:
                               properties:
                                 allowPrivilegeEscalation:
@@ -1283,8 +1311,24 @@ v1:
                                   format: int32
                                   type: integer
                               type: object
+                            resizePolicy:
+                              items:
+                                properties:
+                                  resourceName:
+                                    type: string
+                                  restartPolicy:
+                                    type: string
+                                type: object
+                              type: array
                             resources:
                               properties:
+                                claims:
+                                  items:
+                                    properties:
+                                      name:
+                                        type: string
+                                    type: object
+                                  type: array
                                 limits:
                                   additionalProperties:
                                     type: string
@@ -1294,6 +1338,8 @@ v1:
                                     type: string
                                   type: object
                               type: object
+                            restartPolicy:
+                              type: string
                             securityContext:
                               properties:
                                 allowPrivilegeEscalation:
@@ -1800,8 +1846,24 @@ v1:
                                   format: int32
                                   type: integer
                               type: object
+                            resizePolicy:
+                              items:
+                                properties:
+                                  resourceName:
+                                    type: string
+                                  restartPolicy:
+                                    type: string
+                                type: object
+                              type: array
                             resources:
                               properties:
+                                claims:
+                                  items:
+                                    properties:
+                                      name:
+                                        type: string
+                                    type: object
+                                  type: array
                                 limits:
                                   additionalProperties:
                                     type: string
@@ -1811,6 +1873,8 @@ v1:
                                     type: string
                                   type: object
                               type: object
+                            restartPolicy:
+                              type: string
                             securityContext:
                               properties:
                                 allowPrivilegeEscalation:
@@ -2004,12 +2068,33 @@ v1:
                               type: string
                           type: object
                         type: array
+                      resourceClaims:
+                        items:
+                          properties:
+                            name:
+                              type: string
+                            source:
+                              properties:
+                                resourceClaimName:
+                                  type: string
+                                resourceClaimTemplateName:
+                                  type: string
+                              type: object
+                          type: object
+                        type: array
                       restartPolicy:
                         type: string
                       runtimeClassName:
                         type: string
                       schedulerName:
                         type: string
+                      schedulingGates:
+                        items:
+                          properties:
+                            name:
+                              type: string
+                          type: object
+                        type: array
                       securityContext:
                         properties:
                           fsGroup:
@@ -2396,9 +2481,18 @@ v1:
                                               type: string
                                             name:
                                               type: string
+                                            namespace:
+                                              type: string
                                           type: object
                                         resources:
                                           properties:
+                                            claims:
+                                              items:
+                                                properties:
+                                                  name:
+                                                    type: string
+                                                type: object
+                                              type: array
                                             limits:
                                               additionalProperties:
                                                 type: string

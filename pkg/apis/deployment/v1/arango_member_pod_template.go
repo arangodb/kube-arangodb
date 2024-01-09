@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ func GetArangoMemberPodTemplate(pod *core.PodTemplateSpec, podSpecChecksum strin
 type ArangoMemberPodTemplate struct {
 	// PodSpec specifies the Pod Spec used for this Member.
 	// +doc/type: core.PodTemplateSpec
-	// +doc/link: Documentation of core.PodTemplateSpec|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podtemplatespec-v1-core
+	// +doc/link: Documentation of core.PodTemplateSpec|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#podtemplatespec-v1-core
 	PodSpec *core.PodTemplateSpec `json:"podSpec,omitempty"`
 
 	// PodSpecChecksum keep the Pod Spec Checksum (without ignored fields).

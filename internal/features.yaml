@@ -220,6 +220,13 @@ features:
     releases:
       - operatorVersion: 1.2.33
         state: Production
+  - name: Upscale resources spec in init containers
+    enabled: true
+    remarks: Upscale resources spec to built-in init containers if they are not specified or lower
+    flag: --deployment.feature.init-containers-upscale-resources
+    releases:
+      - operatorVersion: 1.2.36
+        state: Production
   - name: Enforced ResignLeadership
     enabled: true
     remarks: Enforce ResignLeadership and ensure that Leaders are moved from restarted DBServer

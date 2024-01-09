@@ -1,3 +1,9 @@
+---
+layout: page
+title: Constraints
+parent: Design overview
+---
+
 # Constraints
 
 The ArangoDB operator tries to honor various constraints to support high availability of

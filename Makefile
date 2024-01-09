@@ -9,8 +9,8 @@ ifeq ($(shell uname),Darwin)
 	REALPATH ?= grealpath
 endif
 
-KUBERNETES_VERSION_MINOR:=25
-KUBERNETES_VERSION_PATCH:=13
+KUBERNETES_VERSION_MINOR:=28
+KUBERNETES_VERSION_PATCH:=5
 
 PROJECT := arangodb_operator
 SCRIPTDIR := $(shell pwd)
@@ -61,6 +61,27 @@ PULSAR := $(GOBUILDDIR)/bin/pulsar$(shell go env GOEXE)
 GOASSETSBUILDER := $(GOBUILDDIR)/bin/go-assets-builder$(shell go env GOEXE)
 
 BUILDTIME = $(shell go run "$(ROOT)/tools/dategen/")
+
+GOBUILDLDFLAGS := -X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)
+GOBUILDGCFLAGS :=
+
+# Go Strip Section
+GOBUILDSTRIP ?= 1
+ifeq ($(GOBUILDSTRIP),1)
+GOBUILDLDFLAGS += -w -s
+endif
+
+# Go Disable function inlining
+GOBUILDDISABLEFUNCTIONINLINING ?= 1
+ifeq ($(GOBUILDDISABLEFUNCTIONINLINING),1)
+GOBUILDGCFLAGS += -l
+endif
+
+# Go Disable bound checks
+GOBUILDDISABLEBOUNDCHECKS ?= 1
+ifeq ($(GOBUILDDISABLEBOUNDCHECKS),1)
+GOBUILDGCFLAGS += -B
+endif
 
 HELM ?= $(shell which helm)
 
@@ -240,7 +261,7 @@ PROTOSOURCES := $(shell find ./ -type f  -name '*.proto' $(foreach EXCLUDE_DIR,$
 
 .DEFAULT_GOAL := all
 .PHONY: all
-all: check-vars verify-generated build
+all: check-vars build
 
 .PHONY: compile
 compile: check-vars build
@@ -373,7 +394,7 @@ update-generated:
 	@ln -s -f $(SCRIPTDIR) $(ORGDIR)/kube-arangodb
 	@$(SED) -e 's/^/\/\/ /' -e 's/ *$$//' $(ROOTDIR)/tools/codegen/license-header.txt > $(ROOTDIR)/tools/codegen/boilerplate.go.txt
 	GOPATH=$(GOBUILDDIR) $(VENDORDIR)/k8s.io/code-generator/generate-groups.sh  \
-			"all" \
+			"client lister informer deepcopy" \
 			"github.com/arangodb/kube-arangodb/pkg/generated" \
 			"github.com/arangodb/kube-arangodb/pkg/apis" \
 			"deployment:v1 replication:v1 storage:v1alpha backup:v1 deployment:v2alpha1 replication:v2alpha1 apps:v1 ml:v1alpha1" \
@@ -386,10 +407,6 @@ update-generated:
 			"shared:v1" \
 			--go-header-file "./tools/codegen/boilerplate.go.txt" \
 			$(VERIFYARGS)
-
-.PHONY: verify-generated
-verify-generated:
-	@${MAKE} -B -s VERIFYARGS=--verify-only update-generated
 
 dashboard/assets.go:
 	cd $(DASHBOARDDIR) && docker build -t $(DASHBOARDBUILDIMAGE) -f Dockerfile.build $(DASHBOARDDIR)
@@ -408,19 +425,19 @@ bin-all: $(BIN) $(VBIN_LINUX_AMD64) $(VBIN_LINUX_ARM64)
 
 $(VBIN_LINUX_AMD64): $(SOURCES) dashboard/assets.go VERSION
 	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/linux/amd64
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build ${GOBUILDARGS} --tags "$(GOBUILDTAGS)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(VBIN_LINUX_AMD64) ./cmd/main
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build ${GOBUILDARGS} --tags "$(GOBUILDTAGS)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(VBIN_OPS_LINUX_AMD64) ./cmd/main-ops
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build ${GOBUILDARGS} --tags "$(GOBUILDTAGS)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -gcflags=all="$(GOBUILDGCFLAGS)" -ldflags "$(GOBUILDLDFLAGS)" -o $(VBIN_LINUX_AMD64) ./cmd/main
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build ${GOBUILDARGS} --tags "$(GOBUILDTAGS)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -gcflags=all="$(GOBUILDGCFLAGS)" -ldflags "$(GOBUILDLDFLAGS)" -o $(VBIN_OPS_LINUX_AMD64) ./cmd/main-ops
 
 $(VBIN_LINUX_ARM64): $(SOURCES) dashboard/assets.go VERSION
 	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/linux/arm64
-	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build ${GOBUILDARGS} --tags "$(GOBUILDTAGS)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(VBIN_LINUX_ARM64) ./cmd/main
-	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build ${GOBUILDARGS} --tags "$(GOBUILDTAGS)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(VBIN_OPS_LINUX_ARM64) ./cmd/main-ops
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build ${GOBUILDARGS} --tags "$(GOBUILDTAGS)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -gcflags=all="$(GOBUILDGCFLAGS)" -ldflags "$(GOBUILDLDFLAGS)" -o $(VBIN_LINUX_ARM64) ./cmd/main
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build ${GOBUILDARGS} --tags "$(GOBUILDTAGS)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -gcflags=all="$(GOBUILDGCFLAGS)" -ldflags "$(GOBUILDLDFLAGS)" -o $(VBIN_OPS_LINUX_ARM64) ./cmd/main-ops
 
 bin-ops-all: $(VBIN_LINUX_AMD64) $(VBIN_LINUX_ARM64)
 	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/darwin/amd64
-	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build ${GOBUILDARGS} --tags "$(GOBUILDTAGS)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(VBIN_OPS_DARWIN_AMD64) ./cmd/main-ops
+	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build ${GOBUILDARGS} --tags "$(GOBUILDTAGS)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -gcflags=all="$(GOBUILDGCFLAGS)" -ldflags "$(GOBUILDLDFLAGS)" -o $(VBIN_OPS_DARWIN_AMD64) ./cmd/main-ops
 	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/darwin/arm64
-	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build ${GOBUILDARGS} --tags "$(GOBUILDTAGS)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(VBIN_OPS_DARWIN_ARM64) ./cmd/main-ops
+	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build ${GOBUILDARGS} --tags "$(GOBUILDTAGS)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -gcflags=all="$(GOBUILDGCFLAGS)" -ldflags "$(GOBUILDLDFLAGS)" -o $(VBIN_OPS_DARWIN_ARM64) ./cmd/main-ops
 
 $(BIN): $(VBIN_LINUX_AMD64)
 	@cp "$(VBIN_LINUX_AMD64)" "$(BIN)"

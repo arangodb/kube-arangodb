@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -109,81 +109,6 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 						{
 							Name:    shared.ServerContainerName,
 							Image:   testImage,
-							Command: createTestCommandForCoordinator(firstCoordinatorStatus.ID, true, false),
-							Ports:   createTestPorts(api.ServerGroupAgents),
-							VolumeMounts: []core.VolumeMount{
-								k8sutil.ArangodVolumeMount(),
-								k8sutil.TlsKeyfileVolumeMount(),
-							},
-							Resources:       emptyResources,
-							ReadinessProbe:  createTestReadinessProbe(httpProbe, true, ""),
-							ImagePullPolicy: core.PullIfNotPresent,
-							SecurityContext: securityContext.NewSecurityContext(),
-						},
-					},
-					RestartPolicy:                 core.RestartPolicyNever,
-					TerminationGracePeriodSeconds: &defaultCoordinatorTerminationTimeout,
-					Hostname:                      testDeploymentName + "-" + api.ServerGroupCoordinatorsString + "-" + firstCoordinatorStatus.ID,
-					Subdomain:                     testDeploymentName + "-int",
-					Affinity: k8sutil.CreateAffinity(testDeploymentName, api.ServerGroupCoordinatorsString,
-						false, ""),
-				},
-			},
-		},
-		{
-			Name: "Pod SNI Mounts - Enterprise - 3.6.0",
-			ArangoDeployment: &api.ArangoDeployment{
-				Spec: api.DeploymentSpec{
-					Image:          util.NewType[string](createTestImageForVersion("3.6.0")),
-					Authentication: noAuthentication,
-					TLS: func() api.TLSSpec {
-						s := tlsSpec.DeepCopy()
-
-						s.SNI = &api.TLSSNISpec{
-							Mapping: map[string][]string{
-								"sni1": {
-									"a",
-									"b",
-								},
-								"sni2": {
-									"c",
-									"d",
-								},
-							}}
-
-						return *s
-					}(),
-				},
-			},
-			Features: testCaseFeatures{
-				TLSSNI: true,
-			},
-			Resources: func(t *testing.T, deployment *Deployment) {
-				createTLSSNISecret(t, deployment.SecretsModInterface(), "sni1", deployment.Namespace())
-				createTLSSNISecret(t, deployment.SecretsModInterface(), "sni2", deployment.Namespace())
-			},
-			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.currentObjectStatus = &api.DeploymentStatus{
-					Members: api.DeploymentStatusMembers{
-						Coordinators: api.MemberStatusList{
-							firstCoordinatorStatus,
-						},
-					},
-					Images: createTestImagesWithVersion(true, "3.6.0"),
-				}
-				testCase.createTestPodData(deployment, api.ServerGroupCoordinators, firstCoordinatorStatus)
-			},
-			ExpectedEvent: "member coordinator is created",
-			ExpectedPod: core.Pod{
-				Spec: core.PodSpec{
-					Volumes: []core.Volume{
-						k8sutil.CreateVolumeEmptyDir(shared.ArangodVolumeName),
-						createTestTLSVolume(api.ServerGroupCoordinatorsString, firstCoordinatorStatus.ID),
-					},
-					Containers: []core.Container{
-						{
-							Name:    shared.ServerContainerName,
-							Image:   createTestImageForVersion("3.6.0"),
 							Command: createTestCommandForCoordinator(firstCoordinatorStatus.ID, true, false),
 							Ports:   createTestPorts(api.ServerGroupAgents),
 							VolumeMounts: []core.VolumeMount{

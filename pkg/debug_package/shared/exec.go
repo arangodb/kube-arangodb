@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 package shared
 
 import (
+	"context"
 	"io"
 
 	core "k8s.io/api/core/v1"
@@ -31,7 +32,7 @@ import (
 )
 
 // ExecuteCommandInPod executes command in pod with the given pod name and namespace.
-func ExecuteCommandInPod(k kclient.Client, container, podName, namespace string,
+func ExecuteCommandInPod(ctx context.Context, k kclient.Client, container, podName, namespace string,
 	command []string, stdin io.Reader, stdout io.Writer, stderr io.Writer) error {
 
 	req := k.Kubernetes().CoreV1().RESTClient().Post().Resource("pods").Name(podName).
@@ -56,7 +57,7 @@ func ExecuteCommandInPod(k kclient.Client, container, podName, namespace string,
 		return err
 	}
 
-	return exec.Stream(remotecommand.StreamOptions{
+	return exec.StreamWithContext(ctx, remotecommand.StreamOptions{
 		Stdin:  stdin,
 		Stdout: stdout,
 		Stderr: stderr,

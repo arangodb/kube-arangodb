@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,12 +36,18 @@ import (
 	"github.com/coreos/go-semver/semver"
 	"github.com/stretchr/testify/require"
 
+	appsApi "github.com/arangodb/kube-arangodb/pkg/apis/apps/v1"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
 	replicationApi "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	storageApi "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+)
+
+const (
+	// title of docs/api/README.md page
+	apiIndexPageTitle = "CRD reference"
 )
 
 func (d DocDefinitions) RenderMarkdown(t *testing.T, repositoryPath string) []byte {
@@ -97,14 +103,15 @@ func (d DocDefinitions) RenderMarkdown(t *testing.T, repositoryPath string) []by
 			for id, enum := range el.Enum {
 				z := strings.Split(enum, "|")
 
+				snip := fmt.Sprintf("`\"%s\"`", z[0])
 				if id == 0 {
-					z[0] = fmt.Sprintf("%s (default)", z[0])
+					snip = fmt.Sprintf("%s (default)", snip)
 				}
 
 				if len(z) == 1 {
-					write(t, out, "* %s\n", z[0])
+					write(t, out, "* %s\n", snip)
 				} else if len(z) == 2 {
-					write(t, out, "* %s - %s\n", z[0], z[1])
+					write(t, out, "* %s - %s\n", snip, z[1])
 				} else {
 					require.Fail(t, "Invalid enum format")
 				}
@@ -140,6 +147,11 @@ func Test_GenerateAPIDocs(t *testing.T) {
 			},
 			"ArangoMember.V1": {
 				"Spec": deploymentApi.ArangoMember{}.Spec,
+			},
+		},
+		fmt.Sprintf("%s/pkg/apis/apps/v1", root): {
+			"ArangoJob.V1": {
+				"Spec": appsApi.ArangoJob{}.Spec,
 			},
 		},
 		fmt.Sprintf("%s/pkg/apis/backup/v1", root): {
@@ -182,7 +194,6 @@ func Test_GenerateAPIDocs(t *testing.T) {
 		},
 	}
 
-	resultPaths := make(map[string]string)
 	for apiDir, docs := range input {
 		fields := parseSourceFiles(t, root, fset, apiDir)
 
@@ -191,9 +202,8 @@ func Test_GenerateAPIDocs(t *testing.T) {
 			fields[n] = f
 		}
 
-		util.CopyMap(resultPaths, generateDocs(t, docs, fields, fset))
+		generateDocs(t, docs, fields, fset)
 	}
-	generateIndex(t, resultPaths)
 }
 
 func prepareGitHubTreePath(t *testing.T, root string) string {
@@ -242,7 +252,13 @@ func generateDocs(t *testing.T, objects map[string]map[string]interface{}, field
 				require.NoError(t, out.Close())
 			}()
 
-			write(t, out, "# API Reference for %s\n\n", strings.ReplaceAll(objectName, ".", " "))
+			objName := strings.ReplaceAll(objectName, ".", " ")
+			writeFrontMatter(t, out, map[string]string{
+				"layout": "page",
+				"title":  objName,
+				"parent": apiIndexPageTitle,
+			})
+			write(t, out, "# API Reference for %s\n\n", objName)
 
 			util.IterateSorted(renderSections, func(name string, section []byte) {
 				write(t, out, "## %s\n\n", name)
@@ -255,26 +271,20 @@ func generateDocs(t *testing.T, objects map[string]map[string]interface{}, field
 	return outPaths
 }
 
-func generateIndex(t *testing.T, apiDocs map[string]string) {
-	root := os.Getenv("ROOT")
-	require.NotEmpty(t, root)
-	outPath := path.Join(root, "docs/api/README.md")
-
-	out, err := os.OpenFile(outPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
-	require.NoError(t, err)
-	defer func() {
-		require.NoError(t, out.Close())
-	}()
-
-	write(t, out, "# Custom Resources API Reference\n\n")
-
-	util.IterateSorted(apiDocs, func(name string, filePath string) {
-		write(t, out, " - [%s](./%s)\n", name, filePath)
-	})
-	write(t, out, "\n")
-}
-
 func write(t *testing.T, out io.Writer, format string, args ...interface{}) {
 	_, err := out.Write([]byte(fmt.Sprintf(format, args...)))
 	require.NoError(t, err)
+}
+
+func writeFrontMatter(t *testing.T, out io.Writer, keyVals map[string]string) {
+	fm := ""
+	util.IterateSorted(keyVals, func(key, val string) {
+		fm += fmt.Sprintf("%s: %s\n", key, val)
+	})
+
+	if fm != "" {
+		fm = "---\n" + fm + "---\n\n"
+	}
+
+	write(t, out, fm)
 }

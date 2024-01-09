@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -66,12 +66,15 @@ var ArangoBackupStateMap = state.Map{
 
 type ArangoBackupState struct {
 	// State holds the current high level state of the backup
+	// +doc/enum: |state for un-initialized Custom Resource
 	// +doc/enum: Pending|state in which Custom Resource is queued. If Backup is possible changed to "Scheduled"
 	// +doc/enum: Scheduled|state which will start create/download process
 	// +doc/enum: Download|state in which download request will be created on ArangoDB
 	// +doc/enum: DownloadError|state when download failed
 	// +doc/enum: Downloading|state for downloading progress
-	// +doc/enum: Create|state for creation, field available set to true
+	// +doc/enum: Create|state for backup when it is scheduled for creation, field available set to true
+	// +doc/enum: Creating|state for backup when it is creating
+	// +doc/enum: CreateError|state for backup when it is creation failed
 	// +doc/enum: Upload|state in which upload request will be created on ArangoDB
 	// +doc/enum: Uploading|state for uploading progress
 	// +doc/enum: UploadError|state when uploading failed
