@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -88,6 +88,7 @@ func Test_ExtractPodAcceptedResourceRequirement(t *testing.T) {
 		}
 	})
 }
+
 func Test_ApplyContainerResourceRequirements(t *testing.T) {
 	v1, err := resource.ParseQuantity("1Gi")
 	require.NoError(t, err)
@@ -158,5 +159,75 @@ func Test_ApplyContainerResourceRequirements(t *testing.T) {
 
 		require.Contains(t, container.Resources.Limits, core.ResourceCPU)
 		require.Equal(t, v2, container.Resources.Limits[core.ResourceCPU])
+	})
+}
+
+func Test_UpsertContainerResourceRequirements(t *testing.T) {
+	v1, err := resource.ParseQuantity("1Gi")
+	require.NoError(t, err)
+
+	v2, err := resource.ParseQuantity("2Gi")
+	require.NoError(t, err)
+
+	v3, err := resource.ParseQuantity("4Gi")
+	require.NoError(t, err)
+
+	var container core.Container
+
+	t.Run("Ensure limits are copied", func(t *testing.T) {
+		UpscaleContainerResourceRequirements(&container, core.ResourceRequirements{
+			Limits: core.ResourceList{
+				core.ResourceMemory: v1,
+			},
+			Requests: core.ResourceList{
+				core.ResourceMemory: v1,
+			},
+		})
+
+		require.Len(t, container.Resources.Requests, 1)
+		require.Contains(t, container.Resources.Requests, core.ResourceMemory)
+		require.Equal(t, v1, container.Resources.Requests[core.ResourceMemory])
+
+		require.Len(t, container.Resources.Limits, 1)
+		require.Contains(t, container.Resources.Limits, core.ResourceMemory)
+		require.Equal(t, v1, container.Resources.Limits[core.ResourceMemory])
+	})
+
+	t.Run("Ensure limits are increased", func(t *testing.T) {
+		UpscaleContainerResourceRequirements(&container, core.ResourceRequirements{
+			Limits: core.ResourceList{
+				core.ResourceMemory: v2,
+			},
+			Requests: core.ResourceList{
+				core.ResourceMemory: v2,
+			},
+		})
+
+		require.Len(t, container.Resources.Requests, 1)
+		require.Contains(t, container.Resources.Requests, core.ResourceMemory)
+		require.Equal(t, v2, container.Resources.Requests[core.ResourceMemory])
+
+		require.Len(t, container.Resources.Limits, 1)
+		require.Contains(t, container.Resources.Limits, core.ResourceMemory)
+		require.Equal(t, v2, container.Resources.Limits[core.ResourceMemory])
+	})
+
+	t.Run("Ensure limits are not decreased", func(t *testing.T) {
+		UpscaleContainerResourceRequirements(&container, core.ResourceRequirements{
+			Limits: core.ResourceList{
+				core.ResourceMemory: v3,
+			},
+			Requests: core.ResourceList{
+				core.ResourceMemory: v1,
+			},
+		})
+
+		require.Len(t, container.Resources.Requests, 1)
+		require.Contains(t, container.Resources.Requests, core.ResourceMemory)
+		require.Equal(t, v2, container.Resources.Requests[core.ResourceMemory])
+
+		require.Len(t, container.Resources.Limits, 1)
+		require.Contains(t, container.Resources.Limits, core.ResourceMemory)
+		require.Equal(t, v3, container.Resources.Limits[core.ResourceMemory])
 	})
 }

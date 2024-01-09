@@ -1,3 +1,9 @@
+---
+layout: page
+title: Topology awareness
+parent: Design overview
+---
+
 # Topology awareness
 
 ## Table of contents

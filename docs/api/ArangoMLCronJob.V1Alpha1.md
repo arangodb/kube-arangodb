@@ -1,10 +1,16 @@
+---
+layout: page
+parent: CRD reference
+title: ArangoMLCronJob V1Alpha1
+---
+
 # API Reference for ArangoMLCronJob V1Alpha1
 
 ## Spec
 
 ### .spec
 
-Type: `batch.CronJobSpec` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/cronjob_spec.go#L33)</sup>
+Type: `batch.CronJobSpec` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/ml/v1alpha1/cronjob_spec.go#L33)</sup>
 
 Links:
 * [Kubernetes Documentation](https://godoc.org/k8s.io/api/batch/v1#CronJobSpec)
@@ -13,7 +19,7 @@ Links:
 
 ### .status
 
-Type: `batch.CronJobStatus` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/cronjob_status.go#L37)</sup>
+Type: `batch.CronJobStatus` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/ml/v1alpha1/cronjob_status.go#L37)</sup>
 
 Links:
 * [Kubernetes Documentation](https://godoc.org/k8s.io/api/batch/v1#CronJobStatus)
@@ -22,7 +28,7 @@ Links:
 
 ### .status.mlConditions
 
-Type: `api.MLConditions` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/ml/v1alpha1/cronjob_status.go#L33)</sup>
+Type: `api.MLConditions` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/ml/v1alpha1/cronjob_status.go#L33)</sup>
 
 MLConditions specific to the entire cron job
 
@@ -30,7 +36,7 @@ MLConditions specific to the entire cron job
 
 ### .status.ref.name
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/object.go#L46)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/shared/v1/object.go#L46)</sup>
 
 Name of the object
 
@@ -38,7 +44,7 @@ Name of the object
 
 ### .status.ref.namespace
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/object.go#L49)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/shared/v1/object.go#L49)</sup>
 
 Namespace of the object. Should default to the namespace of the parent object
 
@@ -46,7 +52,7 @@ Namespace of the object. Should default to the namespace of the parent object
 
 ### .status.ref.uid
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.35/pkg/apis/shared/v1/object.go#L52)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/shared/v1/object.go#L52)</sup>
 
 UID keeps the information about object UID
 

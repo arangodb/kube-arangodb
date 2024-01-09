@@ -1,3 +1,8 @@
+---
+layout: page
+nav_exclude: true
+---
+
 # Amazon AWS Remarks
 
 ## Elastic Block Storage

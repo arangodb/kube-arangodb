@@ -1,3 +1,9 @@
+---
+layout: page
+title: Rebalancer v2
+parent: List of all features
+---
+
 # ArangoDB Rebalancer V2 Support
 
 ## Overview

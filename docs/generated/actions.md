@@ -1,3 +1,9 @@
+---
+layout: page
+title: List of Plan Actions
+nav_order: 11
+---
+
 # ArangoDB Operator Actions
 
 ## List

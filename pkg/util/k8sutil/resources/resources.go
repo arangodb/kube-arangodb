@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -55,6 +55,44 @@ func ApplyContainerResourceList(to core.ResourceList, from core.ResourceList) co
 
 	for k, v := range from {
 		if _, ok := to[k]; !ok {
+			to[k] = v
+		}
+	}
+
+	return to
+}
+
+func UpscaleContainerResourceRequirements(container *core.Container, resources core.ResourceRequirements) {
+	if container == nil {
+		return
+	}
+
+	container.Resources.Limits = UpscaleContainerResourceList(container.Resources.Limits, resources.Limits)
+	container.Resources.Requests = UpscaleContainerResourceList(container.Resources.Requests, resources.Requests)
+}
+
+// UpscaleContainerResource scales up resources from `from` to `to` ResourceList
+func UpscaleContainerResource(to core.ResourceRequirements, from core.ResourceRequirements) core.ResourceRequirements {
+	var r core.ResourceRequirements
+
+	r.Limits = UpscaleContainerResourceList(to.Limits, from.Limits)
+	r.Requests = UpscaleContainerResourceList(to.Requests, from.Requests)
+
+	return r
+}
+
+// UpscaleContainerResourceList scales up resources from `from` to `to` ResourceList
+func UpscaleContainerResourceList(to core.ResourceList, from core.ResourceList) core.ResourceList {
+	if len(from) == 0 {
+		return to
+	}
+
+	if to == nil {
+		to = core.ResourceList{}
+	}
+
+	for k, v := range from {
+		if n, ok := to[k]; !ok || n.Cmp(v) < 0 {
 			to[k] = v
 		}
 	}

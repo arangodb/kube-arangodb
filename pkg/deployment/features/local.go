@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,6 +34,8 @@ import (
 )
 
 const prefixArg = "deployment.feature"
+
+const MinSupportedArangoDBVersion = "3.8.0"
 
 var features Features
 var featuresLock sync.Mutex
@@ -88,16 +90,16 @@ func Init(cmd *cobra.Command) error {
 	for _, feature := range features {
 		z := ""
 
-		if v := feature.Version(); v != "" || feature.EnterpriseRequired() {
-			if v != "" && feature.EnterpriseRequired() {
-				z = fmt.Sprintf("%s - Required version %s and Enterprise Edition", feature.Description(), v)
-			} else if v != "" {
-				z = fmt.Sprintf("%s - Required version %s", feature.Description(), v)
-			} else if feature.EnterpriseRequired() {
-				z = fmt.Sprintf("%s - Required Enterprise Edition", feature.Description())
-			} else {
-				z = feature.Description()
-			}
+		version := feature.Version()
+
+		if version == "" {
+			version = MinSupportedArangoDBVersion
+		}
+
+		if feature.EnterpriseRequired() {
+			z = fmt.Sprintf("%s - Required ArangoDB EE %s or higher", feature.Description(), version)
+		} else {
+			z = fmt.Sprintf("%s - Required ArangoDB %s or higher", feature.Description(), version)
 		}
 
 		featureArgName = GetFeatureArgName(feature.Name())
