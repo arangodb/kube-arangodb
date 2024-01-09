@@ -1,3 +1,11 @@
+---
+layout: page
+title: List of available metrics
+nav_order: 9
+has_children: true
+has_toc: false
+---
+
 # ArangoDB Operator Metrics
 
 ## List of the Operator metrics

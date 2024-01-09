@@ -1,3 +1,9 @@
+---
+layout: page
+title: Resource names
+parent: Design overview
+---
+
 # Kubernetes Pod name versus cluster ID
 
 All resources being created will get a name that contains

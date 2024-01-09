@@ -1,3 +1,9 @@
+---
+layout: page
+title: Lifecycle hooks and Finalizers
+parent: Design overview
+---
+
 # Lifecycle hooks & Finalizers
 
 The ArangoDB operator expects full control of the `Pods` and `PersistentVolumeClaims` it creates.

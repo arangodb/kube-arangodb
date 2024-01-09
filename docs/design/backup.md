@@ -1,3 +1,9 @@
+---
+layout: page
+title: Backups
+parent: Design overview
+---
+
 # ArangoBackup
 
 ## Lifetime

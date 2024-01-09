@@ -1,3 +1,9 @@
+---
+layout: page
+title: How to use maintenance mode
+parent: How to ...
+---
+
 # How to use maintenance mode
 
 ## ArangoDeployment maintenance

@@ -1,3 +1,9 @@
+---
+layout: page
+title: Usage instructions (Helm)
+nav_order: 2
+---
+
 # Using the ArangoDB Kubernetes Operator with Helm
 
 [`Helm`](https://www.helm.sh/) is a package manager for Kubernetes, which enables

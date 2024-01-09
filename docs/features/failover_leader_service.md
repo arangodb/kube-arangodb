@@ -1,3 +1,9 @@
+---
+layout: page
+title: Failover Leader service
+parent: List of all features
+---
+
 # Failover Leader service
 
 ## Overview
