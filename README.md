@@ -1,6 +1,6 @@
 # ArangoDB Kubernetes Operator
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/arangodb/kube-arangodb.svg)](https://hub.docker.com/r/arangodb/kube-arangodb/)
+[![Docker Pulls](https://img.shields.io/docker/pulls/arangodb/kube-arangodb.svg)](https://hub.docker.com/r/arangodb/kube-arangodb/) [![CircleCI](https://dl.circleci.com/status-badge/img/gh/arangodb/kube-arangodb/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/arangodb/kube-arangodb/tree/master)
 
 The ArangoDB Kubernetes Operator (`kube-arangodb`) is a set of operators
 that you deploy in your Kubernetes cluster to:
