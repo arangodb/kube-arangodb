@@ -82,5 +82,5 @@ Type: `[]core.Toleration` <sup>[\[ref\]](https://github.com/arangodb/kube-arango
 Tolerations specifies the tolerations added to pods of storage provisioner
 
 Links:
-* [Documentation of core.Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#toleration-v1-core)
+* [Documentation of core.Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#toleration-v1-core)
 

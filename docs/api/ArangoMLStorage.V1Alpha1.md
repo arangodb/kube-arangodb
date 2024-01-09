@@ -111,7 +111,7 @@ Type: `core.EnvVar` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blo
 Env keeps the information about environment variables provided to the container
 
 Links:
-* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envvar-v1-core)
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#envvar-v1-core)
 
 ***
 
@@ -122,7 +122,7 @@ Type: `core.EnvFromSource` <sup>[\[ref\]](https://github.com/arangodb/kube-arang
 EnvFrom keeps the information about environment variable sources provided to the container
 
 Links:
-* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envfromsource-v1-core)
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#envfromsource-v1-core)
 
 ***
 
@@ -169,7 +169,7 @@ Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kub
 Resources holds resource requests & limits for container
 
 Links:
-* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core)
+* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#resourcerequirements-v1-core)
 
 ***
 
