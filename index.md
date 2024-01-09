@@ -252,8 +252,8 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: my-custom-namespace
 resources:
-  - https://github.com/arangodb/kube-arangodb/manifests/kustomize/crd?ref=1.2.34
-  - https://github.com/arangodb/kube-arangodb/manifests/kustomize/deployment?ref=1.2.34
+  - https://github.com/arangodb/kube-arangodb/manifests/kustomize/crd?ref=1.2.36
+  - https://github.com/arangodb/kube-arangodb/manifests/kustomize/deployment?ref=1.2.36
 ```
 
 ##### Enterprise Edition example
@@ -262,8 +262,8 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: my-custom-namespace
 resources:
-  - https://github.com/arangodb/kube-arangodb/manifests/kustomize-enterprise/crd?ref=1.2.34
-  - https://github.com/arangodb/kube-arangodb/manifests/kustomize-enterprise/deployment?ref=1.2.34
+  - https://github.com/arangodb/kube-arangodb/manifests/kustomize-enterprise/crd?ref=1.2.36
+  - https://github.com/arangodb/kube-arangodb/manifests/kustomize-enterprise/deployment?ref=1.2.36
 ```
 
 ### Installation of latest release using Helm
