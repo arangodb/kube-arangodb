@@ -1,4 +1,5 @@
 theme: just-the-docs
+
 repository: arangodb/kube-arangodb
 github_username: arangodb
 baseurl: "/kube-arangodb"
