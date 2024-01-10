@@ -1,6 +1,6 @@
 # ArangoDB Kubernetes Operator
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/arangodb/kube-arangodb.svg)](https://hub.docker.com/r/arangodb/kube-arangodb/)
+[![Docker Pulls](https://img.shields.io/docker/pulls/arangodb/kube-arangodb.svg)](https://hub.docker.com/r/arangodb/kube-arangodb/) [![CircleCI](https://dl.circleci.com/status-badge/img/gh/arangodb/kube-arangodb/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/arangodb/kube-arangodb/tree/master)
 
 The ArangoDB Kubernetes Operator (`kube-arangodb`) is a set of operators
 that you deploy in your Kubernetes cluster to:
@@ -54,17 +54,17 @@ covers individual newer features separately.
 
 | Platform            | Kubernetes Version | ArangoDB Version | State      | Remarks                                   | Provider Remarks                   |
 |:--------------------|:-------------------|:-----------------|:-----------|:------------------------------------------|:-----------------------------------|
-| Google GKE          | 1.21-1.26          | >= 3.6.0         | Production | Don't use micro nodes                     |                                    |
-| Azure AKS           | 1.21-1.26          | >= 3.6.0         | Production |                                           |                                    |
-| Amazon EKS          | 1.21-1.26          | >= 3.6.0         | Production |                                           | [Amazon EKS](./docs/providers/eks) |
-| IBM Cloud           | 1.17               | >= 3.6.0         | Deprecated | Support will be dropped in Operator 1.5.0 |                                    |
-| IBM Cloud           | 1.18-1.21          | >= 3.6.0         | Production |                                           |                                    |
-| OpenShift           | 3.11               | >= 3.6.0         | Deprecated | Support will be dropped in Operator 1.5.0 |                                    |
-| OpenShift           | 4.2-4.13           | >= 3.6.0         | Production |                                           |                                    |
-| BareMetal (kubeadm) | <= 1.20            | >= 3.6.0         | Deprecated | Support will be dropped in Operator 1.5.0 |                                    |
-| BareMetal (kubeadm) | 1.21-1.27          | >= 3.6.0         | Production |                                           |                                    |
-| Minikube            | 1.21-1.27          | >= 3.6.0         | Devel Only |                                           |                                    |
-| Other               | 1.21-1.27          | >= 3.6.0         | Devel Only |                                           |                                    |
+| Google GKE          | 1.21-1.28          | >= 3.8.0         | Production | Don't use micro nodes                     |                                    |
+| Azure AKS           | 1.21-1.28          | >= 3.8.0         | Production |                                           |                                    |
+| Amazon EKS          | 1.21-1.28          | >= 3.8.0         | Production |                                           | [Amazon EKS](./docs/providers/eks) |
+| IBM Cloud           | <= 1.20            | >= 3.8.0         | Deprecated | Support will be dropped in Operator 1.5.0 |                                    |
+| IBM Cloud           | 1.21-1.28          | >= 3.8.0         | Production |                                           |                                    |
+| OpenShift           | 3.11               | >= 3.8.0         | Deprecated | Support will be dropped in Operator 1.5.0 |                                    |
+| OpenShift           | 4.2-4.14           | >= 3.8.0         | Production |                                           |                                    |
+| BareMetal (kubeadm) | <= 1.20            | >= 3.8.0         | Deprecated | Support will be dropped in Operator 1.5.0 |                                    |
+| BareMetal (kubeadm) | 1.21-1.28          | >= 3.8.0         | Production |                                           |                                    |
+| Minikube            | 1.21-1.28          | >= 3.8.0         | Devel Only |                                           |                                    |
+| Other               | 1.21-1.28          | >= 3.8.0         | Devel Only |                                           |                                    |
 
 [END_INJECT]: # (kubernetesVersionsTable)
 
