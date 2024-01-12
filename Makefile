@@ -244,7 +244,7 @@ SOURCES := $(shell $(SOURCES_QUERY))
 NON_EE_SOURCES_QUERY := $(SOURCES_QUERY) ! -name '*.enterprise.go'
 NON_EE_SOURCES := $(shell $(NON_EE_SOURCES_QUERY))
 
-YAML_EXCLUDE_DIRS := vendor .gobuild deps tools pkg/generated/clientset pkg/generated/informers pkg/generated/listers chart/kube-arangodb/templates chart/kube-arangodb-crd/templates chart/arangodb-ingress-proxy/templates
+YAML_EXCLUDE_DIRS := vendor .gobuild deps tools pkg/generated/clientset pkg/generated/informers pkg/generated/listers chart/kube-arangodb/templates chart/kube-arangodb-crd/templates chart/arangodb-ingress-proxy/templates chart/arangodb-bootstrap/templates
 YAML_EXCLUDE_FILES :=
 YAML_QUERY := find ./ -type f -name '*.yaml' $(foreach EXCLUDE_DIR,$(YAML_EXCLUDE_DIRS), ! -path "*/$(EXCLUDE_DIR)/*") $(foreach EXCLUDE_FILE,$(YAML_EXCLUDE_FILES), ! -path "*/$(EXCLUDE_FILE)")
 YAMLS := $(shell $(YAML_QUERY))
@@ -572,6 +572,13 @@ $(eval $(call manifest-generator, all, kube-arangodb, \
 	   --set "operator.features.ml=true" \
        --set "operator.features.k8sToK8sClusterSync=true" \
        --set "operator.features.backup=true"))
+
+.PHONY: chart-bootstrap
+chart-bootstrap: export CHART_NAME := arangodb-bootstrap
+chart-bootstrap: helm
+	@mkdir -p "$(ROOTDIR)/bin/charts"
+	@$(HELM_PACKAGE_CMD)
+manifests: chart-bootstrap
 
 .PHONY: chart-crd
 chart-crd: export CHART_NAME := kube-arangodb-crd

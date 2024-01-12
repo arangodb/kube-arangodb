@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ import (
 	appsApi "github.com/arangodb/kube-arangodb/pkg/apis/apps/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
@@ -132,7 +133,7 @@ func (h *handler) prepareK8sJob(job *appsApi.ArangoJob) (*batch.Job, error) {
 	k8sJob := batch.Job{}
 	k8sJob.Name = job.Name
 	k8sJob.Namespace = job.Namespace
-	k8sJob.Spec = *job.Spec.JobTemplate
+	job.Spec.JobTemplate.DeepCopyInto(&k8sJob.Spec)
 	k8sJob.Spec.Template.Spec.ServiceAccountName = os.Getenv(constants.EnvArangoJobSAName)
 	k8sJob.SetOwnerReferences(append(job.GetOwnerReferences(), job.AsOwner()))
 
@@ -144,29 +145,95 @@ func (h *handler) prepareK8sJob(job *appsApi.ArangoJob) (*batch.Job, error) {
 
 	spec := deployment.GetAcceptedSpec()
 
-	if spec.TLS.IsSecure() {
-		k8sJob.Spec.Template.Spec.Volumes = []core.Volume{
-			{
-				Name: shared.TlsKeyfileVolumeName,
-				VolumeSource: core.VolumeSource{
-					Secret: &core.SecretVolumeSource{
-						SecretName: spec.TLS.GetCASecretName(),
-					},
-				},
-			},
-		}
-	}
-
 	executable, err := os.Executable()
 	if err != nil {
 		logger.Error("reading Operator executable name error %v", err)
 		return &k8sJob, err
 	}
 
-	initContainer := k8sutil.ArangodWaiterInitContainer(api.ServerGroupReservedInitContainerNameWait, deployment.Name, executable,
-		h.operator.Image(), spec.TLS.IsSecure(), &core.SecurityContext{})
+	initContainer := k8sutil.ArangodWaiterInitContainer(api.ServerGroupReservedInitContainerNameWait,
+		deployment.Name,
+		executable,
+		h.operator.Image(),
+		&core.SecurityContext{})
 
 	k8sJob.Spec.Template.Spec.InitContainers = append(k8sJob.Spec.Template.Spec.InitContainers, initContainer)
+
+	if spec.TLS.IsSecure() {
+		// Add Volumes
+		k8sJob.Spec.Template.Spec.Volumes = append(k8sJob.Spec.Template.Spec.Volumes, core.Volume{
+			Name: shared.TlsKeyfileVolumeName,
+			VolumeSource: core.VolumeSource{
+				Secret: &core.SecretVolumeSource{
+					SecretName: spec.TLS.GetCASecretName(),
+				},
+			},
+		},
+		)
+
+		// Add VolumeMounts and envs
+		if err := k8sutil.AppendContainersLists(func(in *core.Container) error {
+			in.VolumeMounts = append(in.VolumeMounts, core.VolumeMount{
+				Name:      shared.TlsKeyfileVolumeName,
+				ReadOnly:  true,
+				MountPath: shared.TLSKeyfileVolumeMountDir,
+			})
+
+			in.Env = append(in.Env, core.EnvVar{
+				Name:  "ARANGODB_TLS",
+				Value: shared.TLSKeyfileVolumeMountDir,
+			})
+
+			return nil
+		}, k8sJob.Spec.Template.Spec.InitContainers, k8sJob.Spec.Template.Spec.Containers); err != nil {
+			return nil, err
+		}
+	}
+
+	if spec.Authentication.IsAuthenticated() {
+		k8sJob.Spec.Template.Spec.Volumes = append(k8sJob.Spec.Template.Spec.Volumes, core.Volume{
+			Name: shared.ClusterJWTSecretVolumeName,
+			VolumeSource: core.VolumeSource{
+				Secret: &core.SecretVolumeSource{
+					SecretName: pod.JWTSecretFolder(deployment.GetName()),
+				},
+			},
+		},
+		)
+
+		// Add VolumeMounts and envs
+		if err := k8sutil.AppendContainersLists(func(in *core.Container) error {
+			in.VolumeMounts = append(in.VolumeMounts, core.VolumeMount{
+				Name:      shared.ClusterJWTSecretVolumeName,
+				ReadOnly:  true,
+				MountPath: shared.ClusterJWTSecretVolumeMountDir,
+			})
+
+			in.Env = append(in.Env, core.EnvVar{
+				Name:  "ARANGODB_JWT",
+				Value: shared.ClusterJWTSecretVolumeMountDir,
+			})
+
+			return nil
+		}, k8sJob.Spec.Template.Spec.InitContainers, k8sJob.Spec.Template.Spec.Containers); err != nil {
+			return nil, err
+		}
+	}
+
+	// Add envs
+	if err := k8sutil.AppendContainersLists(func(in *core.Container) error {
+		in.Env = append(in.Env, core.EnvVar{
+			Name:  "ARANGODB_URL",
+			Value: deployment.GetName(),
+		}, core.EnvVar{
+			Name:  "ARANGODB_PORT",
+			Value: fmt.Sprintf("%d", shared.ArangoPort),
+		})
+
+		return nil
+	}, k8sJob.Spec.Template.Spec.InitContainers, k8sJob.Spec.Template.Spec.Containers); err != nil {
+		return nil, err
+	}
 
 	return &k8sJob, nil
 }

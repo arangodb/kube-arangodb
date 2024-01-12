@@ -1,0 +1,5 @@
+# do not switch to V2 yet - we still need to support Helm 2
+apiVersion: v1
+name: arangodb-bootstrap
+version: 1.2.36
+description: "ArangoDB Kubernetes Bootstrap Job"

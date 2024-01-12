@@ -1,0 +1,98 @@
+---
+
+apiVersion: apps.arangodb.com/v1
+kind: ArangoJob
+metadata:
+  name: {{ template "arangodb-bootstrap.fullName" . }}
+  namespace: {{ .Release.Namespace }}
+{{- if .Values.job.annotations }}
+  annotations:
+{{ toYaml .Values.job.annotations | indent 4 }}
+{{- end }}
+  labels:
+    app.kubernetes.io/name: {{ template "arangodb-bootstrap.name" . }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    release: {{ .Release.Name }}
+spec:
+  arangoDeploymentName: {{ .Values.deployment.name }}
+  jobTemplate:
+    backoffLimit: 4
+    template:
+      metadata:
+        labels:
+          app.kubernetes.io/name: {{ template "arangodb-bootstrap.name" . }}
+          helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+          app.kubernetes.io/managed-by: {{ .Release.Service }}
+          app.kubernetes.io/instance: {{ .Release.Name }}
+          release: {{ .Release.Name }}
+{{- if .Values.job.annotations }}
+        annotations:
+{{ toYaml .Values.job.annotations | indent 16 }}
+{{- end }}
+      spec:
+{{- if .Values.job.nodeSelector }}
+        nodeSelector:
+{{ toYaml .Values.job.nodeSelector | indent 16 }}
+{{- end }}
+        hostNetwork: false
+        hostPID: false
+        hostIPC: false
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: {{ .Values.job.securityContext.runAsUser }}
+        containers:
+          - name: bootstrap
+            imagePullPolicy: {{ .Values.job.imagePullPolicy }}
+            image: {{ .Values.job.image }}
+            args:
+            - /bin/sh
+            - /bootstrap/start.sh
+            - --javascript.execute
+            - /bootstrap/bootstrap.js
+            env:
+              - name: MY_POD_NAMESPACE
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.namespace
+              - name: MY_POD_NAME
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.name
+              - name: MY_POD_IP
+                valueFrom:
+                  fieldRef:
+                    fieldPath: status.podIP
+            volumeMounts:
+              - name: bootstrap
+                mountPath: /bootstrap
+                readOnly: true
+            securityContext:
+              privileged: false
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: false
+              capabilities:
+                drop:
+                  - 'ALL'
+{{- if .Values.job.resources }}
+            resources:
+{{ toYaml .Values.job.resources | indent 22 }}
+{{- end }}
+        restartPolicy: Never
+        volumes:
+          - name: bootstrap
+            configMap:
+              name: "{{ template "arangodb-bootstrap.fullName" . }}"
+        tolerations:
+          - key: "node.kubernetes.io/unreachable"
+            operator: "Exists"
+            effect: "NoExecute"
+            tolerationSeconds: 5
+          - key: "node.kubernetes.io/not-ready"
+            operator: "Exists"
+            effect: "NoExecute"
+            tolerationSeconds: 5
+{{- if .Values.job.tolerations }}
+{{ toYaml .Values.job.tolerations | indent 16 }}
+{{- end }}

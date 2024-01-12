@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -490,7 +490,7 @@ func ArangodInitContainer(name, id, engine, executable, operatorImage string, re
 }
 
 // ArangodWaiterInitContainer creates a container configured to wait for specific ArangoDeployment to be ready
-func ArangodWaiterInitContainer(name, deploymentName, executable, operatorImage string, isSecured bool, securityContext *core.SecurityContext) core.Container {
+func ArangodWaiterInitContainer(name, deploymentName, executable, operatorImage string, securityContext *core.SecurityContext) core.Container {
 	var command = []string{
 		executable,
 		"lifecycle",
@@ -499,11 +499,7 @@ func ArangodWaiterInitContainer(name, deploymentName, executable, operatorImage 
 		deploymentName,
 	}
 
-	var volumes []core.VolumeMount
-	if isSecured {
-		volumes = append(volumes, TlsKeyfileVolumeMount())
-	}
-	return operatorInitContainer(name, operatorImage, command, securityContext, volumes)
+	return operatorInitContainer(name, operatorImage, command, securityContext, nil)
 }
 
 // createInitContainer creates operator-specific init container
@@ -848,4 +844,30 @@ func CreateDefaultContainerTemplate(image *sharedApi.Image) *sharedApi.Container
 			},
 		},
 	}
+}
+
+type AppendContainerFunc func(in *core.Container) error
+
+func AppendContainersLists(appender AppendContainerFunc, containerLists ...[]core.Container) error {
+	for _, containers := range containerLists {
+		if err := AppendContainers(appender, util.PointerList(containers)...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func AppendContainers(appender AppendContainerFunc, containers ...*core.Container) error {
+	for _, container := range containers {
+		if err := AppendContainer(appender, container); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func AppendContainer(appender AppendContainerFunc, container *core.Container) error {
+	return appender(container)
 }
