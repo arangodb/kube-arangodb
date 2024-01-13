@@ -699,7 +699,7 @@ patch-chart:
 
 .PHONY: tidy
 tidy:
-	@go mod tidy -compat=$(GOMAJORMINOR)
+	@go mod tidy -v -compat=$(GOMAJORMINOR)
 
 .PHONY: deps-reload
 deps-reload: tidy init
