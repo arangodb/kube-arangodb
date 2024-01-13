@@ -54,7 +54,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 	start := time.Now()
 
 	if delay := d.delayer.Wait(); delay > 0 {
-		log.Info().Dur("delay", delay).Msgf("Reconciliation loop execution was delayed")
+		log.Debug().Dur("delay", delay).Msgf("Reconciliation loop execution was delayed")
 	}
 	defer d.delayer.Delay(d.config.ReconciliationDelay)
 
@@ -342,7 +342,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	} else if err, updated := d.reconciler.CreatePlan(ctx); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Plan creation failed")
 	} else if updated {
-		d.log.Info("Plan generated, reconciling")
+		d.log.Debug("Plan generated, reconciling")
 		return minInspectionInterval, nil
 	}
 

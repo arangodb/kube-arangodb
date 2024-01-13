@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ package reconcile
 
 import (
 	"context"
+	"time"
 
 	"github.com/rs/zerolog"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,7 +31,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 )
 
-var reconcileLogger = logging.Global().RegisterAndGetLogger("deployment-reconcile", logging.Info)
+var reconcileLogger = logging.Global().RegisterAndGetLogger("deployment-reconcile", logging.Info, logging.WithSamplingPeriod(time.Second*10))
 
 // Reconciler is the service that takes care of bring the a deployment
 // in line with its (changed) specification.

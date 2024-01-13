@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -63,8 +63,8 @@ const (
 )
 
 var (
-	logger       = logging.Global().RegisterAndGetLogger("inspector", logging.Info)
-	clientLogger = logging.Global().RegisterAndGetLogger("k8s-client", logging.Info)
+	logger       = logging.Global().RegisterAndGetLogger("inspector", logging.Info, logging.WithSamplingPeriod(time.Second*10))
+	clientLogger = logging.Global().RegisterAndGetLogger("k8s-client", logging.Info, logging.WithSamplingPeriod(time.Second*10))
 )
 
 func (i inspectorLoaders) Get(name string) int {
