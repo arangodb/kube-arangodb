@@ -575,6 +575,344 @@ Links:
 
 ***
 
+### .spec.jobsTemplates.featurization.cpu.affinity
+
+Type: `core.Affinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/shared/v1/scheduling.go#L37)</sup>
+
+Affinity defines scheduling constraints for workload
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity)
+
+***
+
+### .spec.jobsTemplates.featurization.cpu.env
+
+Type: `core.EnvVar` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/shared/v1/envs.go#L33)</sup>
+
+Env keeps the information about environment variables provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#envvar-v1-core)
+
+***
+
+### .spec.jobsTemplates.featurization.cpu.envFrom
+
+Type: `core.EnvFromSource` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/shared/v1/envs.go#L38)</sup>
+
+EnvFrom keeps the information about environment variable sources provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#envfromsource-v1-core)
+
+***
+
+### .spec.jobsTemplates.featurization.cpu.hostIPC
+
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/shared/v1/container_namespace.go#L33)</sup>
+
+HostIPC defines to use the host's ipc namespace.
+
+Default Value: `false`
+
+***
+
+### .spec.jobsTemplates.featurization.cpu.hostNetwork
+
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/shared/v1/container_namespace.go#L27)</sup>
+
+HostNetwork requests Host network for this pod. Use the host's network namespace.
+If this option is set, the ports that will be used must be specified.
+
+Default Value: `false`
+
+***
+
+### .spec.jobsTemplates.featurization.cpu.hostPID
+
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/shared/v1/container_namespace.go#L30)</sup>
+
+HostPID define to use the host's pid namespace.
+
+Default Value: `false`
+
+***
+
+### .spec.jobsTemplates.featurization.cpu.image
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/shared/v1/image.go#L31)</sup>
+
+Image define image details
+
+***
+
+### .spec.jobsTemplates.featurization.cpu.nodeSelector
+
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/shared/v1/scheduling.go#L32)</sup>
+
+NodeSelector is a selector that must be true for the workload to fit on a node.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector)
+
+***
+
+### .spec.jobsTemplates.featurization.cpu.podSecurityContext
+
+Type: `core.PodSecurityContext` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/shared/v1/security_pod.go#L29)</sup>
+
+PodSecurityContext holds pod-level security attributes and common container settings.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
+
+***
+
+### .spec.jobsTemplates.featurization.cpu.pullPolicy
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/shared/v1/image.go#L35)</sup>
+
+PullPolicy define Image pull policy
+
+Default Value: `IfNotPresent`
+
+***
+
+### .spec.jobsTemplates.featurization.cpu.pullSecrets
+
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/shared/v1/image.go#L38)</sup>
+
+PullSecrets define Secrets used to pull Image from registry
+
+***
+
+### .spec.jobsTemplates.featurization.cpu.resources
+
+Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/shared/v1/resources.go#L34)</sup>
+
+Resources holds resource requests & limits for container
+
+Links:
+* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#resourcerequirements-v1-core)
+
+***
+
+### .spec.jobsTemplates.featurization.cpu.schedulerName
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/shared/v1/scheduling.go#L47)</sup>
+
+SchedulerName specifies, the pod will be dispatched by specified scheduler.
+If not specified, the pod will be dispatched by default scheduler.
+
+Default Value: `""`
+
+***
+
+### .spec.jobsTemplates.featurization.cpu.securityContext
+
+Type: `core.SecurityContext` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/shared/v1/security_container.go#L29)</sup>
+
+PodSecurityContext holds pod-level security attributes and common container settings.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
+
+***
+
+### .spec.jobsTemplates.featurization.cpu.shareProcessNamespace
+
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/shared/v1/container_namespace.go#L39)</sup>
+
+ShareProcessNamespace defines to share a single process namespace between all of the containers in a pod.
+When this is set containers will be able to view and signal processes from other containers
+in the same pod, and the first process in each container will not be assigned PID 1.
+HostPID and ShareProcessNamespace cannot both be set.
+
+Default Value: `false`
+
+***
+
+### .spec.jobsTemplates.featurization.cpu.tolerations
+
+Type: `[]core.Toleration` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/shared/v1/scheduling.go#L42)</sup>
+
+Tolerations defines tolerations
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/)
+
+***
+
+### .spec.jobsTemplates.featurization.gpu.affinity
+
+Type: `core.Affinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/shared/v1/scheduling.go#L37)</sup>
+
+Affinity defines scheduling constraints for workload
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity)
+
+***
+
+### .spec.jobsTemplates.featurization.gpu.env
+
+Type: `core.EnvVar` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/shared/v1/envs.go#L33)</sup>
+
+Env keeps the information about environment variables provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#envvar-v1-core)
+
+***
+
+### .spec.jobsTemplates.featurization.gpu.envFrom
+
+Type: `core.EnvFromSource` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/shared/v1/envs.go#L38)</sup>
+
+EnvFrom keeps the information about environment variable sources provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#envfromsource-v1-core)
+
+***
+
+### .spec.jobsTemplates.featurization.gpu.hostIPC
+
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/shared/v1/container_namespace.go#L33)</sup>
+
+HostIPC defines to use the host's ipc namespace.
+
+Default Value: `false`
+
+***
+
+### .spec.jobsTemplates.featurization.gpu.hostNetwork
+
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/shared/v1/container_namespace.go#L27)</sup>
+
+HostNetwork requests Host network for this pod. Use the host's network namespace.
+If this option is set, the ports that will be used must be specified.
+
+Default Value: `false`
+
+***
+
+### .spec.jobsTemplates.featurization.gpu.hostPID
+
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/shared/v1/container_namespace.go#L30)</sup>
+
+HostPID define to use the host's pid namespace.
+
+Default Value: `false`
+
+***
+
+### .spec.jobsTemplates.featurization.gpu.image
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/shared/v1/image.go#L31)</sup>
+
+Image define image details
+
+***
+
+### .spec.jobsTemplates.featurization.gpu.nodeSelector
+
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/shared/v1/scheduling.go#L32)</sup>
+
+NodeSelector is a selector that must be true for the workload to fit on a node.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector)
+
+***
+
+### .spec.jobsTemplates.featurization.gpu.podSecurityContext
+
+Type: `core.PodSecurityContext` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/shared/v1/security_pod.go#L29)</sup>
+
+PodSecurityContext holds pod-level security attributes and common container settings.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
+
+***
+
+### .spec.jobsTemplates.featurization.gpu.pullPolicy
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/shared/v1/image.go#L35)</sup>
+
+PullPolicy define Image pull policy
+
+Default Value: `IfNotPresent`
+
+***
+
+### .spec.jobsTemplates.featurization.gpu.pullSecrets
+
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/shared/v1/image.go#L38)</sup>
+
+PullSecrets define Secrets used to pull Image from registry
+
+***
+
+### .spec.jobsTemplates.featurization.gpu.resources
+
+Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/shared/v1/resources.go#L34)</sup>
+
+Resources holds resource requests & limits for container
+
+Links:
+* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#resourcerequirements-v1-core)
+
+***
+
+### .spec.jobsTemplates.featurization.gpu.schedulerName
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/shared/v1/scheduling.go#L47)</sup>
+
+SchedulerName specifies, the pod will be dispatched by specified scheduler.
+If not specified, the pod will be dispatched by default scheduler.
+
+Default Value: `""`
+
+***
+
+### .spec.jobsTemplates.featurization.gpu.securityContext
+
+Type: `core.SecurityContext` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/shared/v1/security_container.go#L29)</sup>
+
+PodSecurityContext holds pod-level security attributes and common container settings.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
+
+***
+
+### .spec.jobsTemplates.featurization.gpu.shareProcessNamespace
+
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/shared/v1/container_namespace.go#L39)</sup>
+
+ShareProcessNamespace defines to share a single process namespace between all of the containers in a pod.
+When this is set containers will be able to view and signal processes from other containers
+in the same pod, and the first process in each container will not be assigned PID 1.
+HostPID and ShareProcessNamespace cannot both be set.
+
+Default Value: `false`
+
+***
+
+### .spec.jobsTemplates.featurization.gpu.tolerations
+
+Type: `[]core.Toleration` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/shared/v1/scheduling.go#L42)</sup>
+
+Tolerations defines tolerations
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/)
+
+***
+
 ### .spec.jobsTemplates.prediction.cpu.affinity
 
 Type: `core.Affinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/shared/v1/scheduling.go#L37)</sup>

@@ -4,6 +4,7 @@
 - (Documentation) Improve documentation rendering for GitHub Pages
 - (Maintenance) Reduce binary size
 - (Maintenance) Update Features Description, Supported K8S Versions and K8S Dependency to 1.28.5
+- (Feature) (ML) Featurization Job Type
 
 ## [1.2.36](https://github.com/arangodb/kube-arangodb/tree/1.2.36) (2024-01-08)
 - (Documentation) Improvements and fixes for rendered documentation (GH pages)
