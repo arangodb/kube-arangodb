@@ -399,7 +399,7 @@ func (d *Reconciler) executeAction(ctx context.Context, planAction api.Action, a
 	} else if isActionTimeout(timeout, planAction) {
 		if planAction.Type.Optional() {
 			log.Warn("Optional action not finished in time. Skipping")
-			return false, false, false, false, nil
+			return true, false, false, false, nil
 		}
 
 		log.Warn("Action not finished in time. Removing the entire plan")
