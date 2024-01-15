@@ -28,8 +28,9 @@ import (
 type JobType string
 
 const (
-	MLJobTrainingType   JobType = "training"
-	MLJobPredictionType JobType = "prediction"
+	MLJobTrainingType      JobType = "training"
+	MLJobPredictionType    JobType = "prediction"
+	MLJobFeaturizationType JobType = "featurization"
 )
 
 type ArangoMLJobsTemplates struct {
@@ -38,6 +39,9 @@ type ArangoMLJobsTemplates struct {
 
 	// Training defines template for the training job
 	Training *ArangoMLJobTemplates `json:"training,omitempty"`
+
+	// Featurization defines template for the featurization job
+	Featurization *ArangoMLJobTemplates `json:"featurization,omitempty"`
 }
 
 func (a *ArangoMLJobsTemplates) GetJobTemplates(jobType JobType) *ArangoMLJobTemplates {
@@ -50,6 +54,8 @@ func (a *ArangoMLJobsTemplates) GetJobTemplates(jobType JobType) *ArangoMLJobTem
 		return a.Training
 	case MLJobPredictionType:
 		return a.Prediction
+	case MLJobFeaturizationType:
+		return a.Featurization
 	default:
 		return nil
 	}
@@ -63,6 +69,7 @@ func (a *ArangoMLJobsTemplates) Validate() error {
 	return shared.WithErrors(
 		shared.PrefixResourceErrors("prediction", a.Prediction.Validate()),
 		shared.PrefixResourceErrors("training", a.Training.Validate()),
+		shared.PrefixResourceErrors("featurization", a.Featurization.Validate()),
 	)
 }
 
