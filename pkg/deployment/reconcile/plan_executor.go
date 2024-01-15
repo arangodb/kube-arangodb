@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -397,10 +397,14 @@ func (d *Reconciler) executeAction(ctx context.Context, planAction api.Action, a
 		d.context.CreateEvent(k8sutil.NewPlanAbortedEvent(d.context.GetAPIObject(), string(planAction.Type), planAction.MemberID, planAction.Group.AsRole()))
 		return false, true, false, false, nil
 	} else if isActionTimeout(timeout, planAction) {
+		if planAction.Type.Optional() {
+			log.Warn("Optional action not finished in time. Skipping")
+			return true, false, false, false, nil
+		}
+
 		log.Warn("Action not finished in time. Removing the entire plan")
 		d.context.CreateEvent(k8sutil.NewPlanTimeoutEvent(d.context.GetAPIObject(), string(planAction.Type), planAction.MemberID, planAction.Group.AsRole()))
 		return false, true, false, false, nil
-
 	}
 
 	// Timeout not yet expired, come back soon
