@@ -966,7 +966,7 @@ architecture to the other. The first list item defines the new default
 architecture for the deployment that you want to migrate to.
 
 Links:
-* [Architecture Change](/docs/how-to/arch_change.md)
+* [Architecture Change](../how-to/arch_change.md)
 
 Default Value: `['amd64']`
 
@@ -1000,7 +1000,7 @@ There are two magic values for the secret name:
 - `Auto` specifies automatic name generation, which is `<deploymentname>-root-password`.
 
 Links:
-* [How to set root user password](/docs/how-to/set_root_user_password.md)
+* [How to set root user password](../how-to/set_root_user_password.md)
 
 ***
 
@@ -3335,7 +3335,7 @@ Enabled if this is set to `true`, the operator runs a sidecar container for
 every Agent, DB-Server, Coordinator and Single server.
 
 Links:
-* [Metrics collection](/docs/metrics.md)
+* [Metrics collection](../metrics.md)
 
 Default Value: `false`
 
@@ -6430,7 +6430,7 @@ Type: `map[string]meta.Duration` <sup>[\[ref\]](https://github.com/arangodb/kube
 Actions keep map of the actions timeouts.
 
 Links:
-* [List of supported action names](/docs/generated/actions.md)
+* [List of supported action names](../generated/actions.md)
 * [Definition of meta.Duration](https://github.com/kubernetes/apimachinery/blob/v0.26.6/pkg/apis/meta/v1/duration.go)
 
 Example:

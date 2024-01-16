@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -58,7 +58,7 @@ type BootstrapSpec struct {
 	// - `None` specifies no action. This disables root password randomization. This is the default value. (Thus the root password is empty - not recommended)
 	// - `Auto` specifies automatic name generation, which is `<deploymentname>-root-password`.
 	// +doc/type: map[string]string
-	// +doc/link: How to set root user password|/docs/how-to/set_root_user_password.md
+	// +doc/link: How to set root user password|../how-to/set_root_user_password.md
 	PasswordSecretNames PasswordSecretNameList `json:"passwordSecretNames,omitempty"`
 }
 
