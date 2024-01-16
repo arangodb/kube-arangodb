@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,13 +21,15 @@
 package resources
 
 import (
+	"time"
+
 	"github.com/rs/zerolog"
 
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 )
 
 var (
-	logger = logging.Global().RegisterAndGetLogger("deployment-resources", logging.Info)
+	logger = logging.Global().RegisterAndGetLogger("deployment-resources", logging.Info, logging.WithSamplingPeriod(time.Second*10))
 )
 
 func (r *Resources) WrapLogger(in *zerolog.Event) *zerolog.Event {

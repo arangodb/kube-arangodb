@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,15 +32,21 @@ import (
 
 const TopicAll = "all"
 
+type Config struct {
+	Levels   map[string]Level
+	Sampling bool
+}
+
 type Factory interface {
-	Get(name string) Logger
+	Get(name string, opts ...func(*LoggerOptions)) Logger
 
 	LogLevels() map[string]Level
+	Configure(cfg Config)
 	ApplyLogLevels(in map[string]Level)
 	SetRoot(log zerolog.Logger)
 
 	RegisterLogger(name string, level Level) bool
-	RegisterAndGetLogger(name string, level Level) Logger
+	RegisterAndGetLogger(name string, level Level, opts ...func(*LoggerOptions)) Logger
 
 	RegisterWrappers(w ...Wrap)
 
@@ -71,6 +77,8 @@ type factory struct {
 
 	defaults map[string]Level
 	levels   map[string]Level
+
+	samplingEnabled bool
 }
 
 func (f *factory) Names() []string {
@@ -94,9 +102,19 @@ func (f *factory) RegisterWrappers(w ...Wrap) {
 	f.wrappers = append(f.wrappers, w...)
 }
 
-func (f *factory) RegisterAndGetLogger(name string, level Level) Logger {
+type LoggerOptions struct {
+	SamplingPeriod time.Duration
+}
+
+func WithSamplingPeriod(p time.Duration) func(o *LoggerOptions) {
+	return func(o *LoggerOptions) {
+		o.SamplingPeriod = p
+	}
+}
+
+func (f *factory) RegisterAndGetLogger(name string, level Level, opts ...func(*LoggerOptions)) Logger {
 	f.RegisterLogger(name, level)
-	return f.Get(name)
+	return f.Get(name, opts...)
 }
 
 func (f *factory) SetRoot(log zerolog.Logger) {
@@ -109,6 +127,11 @@ func (f *factory) SetRoot(log zerolog.Logger) {
 		l := log.Level(f.loggers[k].GetLevel())
 		f.loggers[k] = &l
 	}
+}
+
+func (f *factory) Configure(cfg Config) {
+	f.samplingEnabled = cfg.Sampling
+	f.ApplyLogLevels(cfg.Levels)
 }
 
 func (f *factory) ApplyLogLevels(in map[string]Level) {
@@ -191,12 +214,22 @@ func (f *factory) getLogger(name string) *zerolog.Logger {
 	return nil
 }
 
-func (f *factory) Get(name string) Logger {
+func (f *factory) Get(name string, opts ...func(*LoggerOptions)) Logger {
+	o := LoggerOptions{}
+	for _, f := range opts {
+		f(&o)
+	}
+
+	var sampler Sampler
+	if f.samplingEnabled {
+		sampler = NewLogEventSampler(o.SamplingPeriod)
+	}
 	return &chain{
 		logger: &logger{
 			factory: f,
 			name:    name,
 		},
+		sampler: sampler,
 	}
 }
 
@@ -260,9 +293,9 @@ type logger struct {
 type chain struct {
 	*logger
 
-	parent *chain
-
-	wrap Wrap
+	parent  *chain
+	sampler Sampler
+	wrap    Wrap
 }
 
 func (c *chain) TraceIO() LoggerIO {
@@ -370,6 +403,25 @@ func (c *chain) Str(key, value string) Logger {
 	return c.Wrap(Str(key, value))
 }
 
+func (c *chain) applyIfNeeded(level Level, msg string, args ...interface{}) {
+	l := c.factory.getLogger(c.name)
+	if l == nil {
+		return
+	}
+
+	if c.sampler != nil && !c.sampler.Sample(level, msg, args) {
+		// skip duplicate event
+		return
+	}
+
+	ev := WithLevel(l, level)
+	if ev == nil {
+		return
+	}
+
+	c.apply(ev).Msgf(msg, args...)
+}
+
 func (c *chain) apply(in *zerolog.Event) *zerolog.Event {
 	if p := c.parent; c.parent != nil {
 		in = p.apply(in)
@@ -394,57 +446,27 @@ func (c *chain) apply(in *zerolog.Event) *zerolog.Event {
 }
 
 func (c *chain) Trace(msg string, args ...interface{}) {
-	l := c.factory.getLogger(c.name)
-	if l == nil {
-		return
-	}
-
-	c.apply(l.Trace()).Msgf(msg, args...)
+	c.applyIfNeeded(Trace, msg, args...)
 }
 
 func (c *chain) Debug(msg string, args ...interface{}) {
-	l := c.factory.getLogger(c.name)
-	if l == nil {
-		return
-	}
-
-	c.apply(l.Debug()).Msgf(msg, args...)
+	c.applyIfNeeded(Debug, msg, args...)
 }
 
 func (c *chain) Info(msg string, args ...interface{}) {
-	l := c.factory.getLogger(c.name)
-	if l == nil {
-		return
-	}
-
-	c.apply(l.Info()).Msgf(msg, args...)
+	c.applyIfNeeded(Info, msg, args...)
 }
 
 func (c *chain) Warn(msg string, args ...interface{}) {
-	l := c.factory.getLogger(c.name)
-	if l == nil {
-		return
-	}
-
-	c.apply(l.Warn()).Msgf(msg, args...)
+	c.applyIfNeeded(Warn, msg, args...)
 }
 
 func (c *chain) Error(msg string, args ...interface{}) {
-	l := c.factory.getLogger(c.name)
-	if l == nil {
-		return
-	}
-
-	c.apply(l.Error()).Msgf(msg, args...)
+	c.applyIfNeeded(Error, msg, args...)
 }
 
 func (c *chain) Fatal(msg string, args ...interface{}) {
-	l := c.factory.getLogger(c.name)
-	if l == nil {
-		return
-	}
-
-	c.apply(l.Fatal()).Msgf(msg, args...)
+	c.applyIfNeeded(Fatal, msg, args...)
 }
 
 func (c *chain) Wrap(w Wrap) Logger {
