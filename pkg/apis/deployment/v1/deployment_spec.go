@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -248,7 +248,7 @@ type DeploymentSpec struct {
 	// list item for the architecture, except when you want to migrate from one
 	// architecture to the other. The first list item defines the new default
 	// architecture for the deployment that you want to migrate to.
-	// +doc/link: Architecture Change|/docs/how-to/arch_change.md
+	// +doc/link: Architecture Change|../how-to/arch_change.md
 	// +doc/type: []string
 	// +doc/default: ['amd64']
 	Architecture ArangoDeploymentArchitecture `json:"architecture,omitempty"`
