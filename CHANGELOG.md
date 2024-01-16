@@ -8,6 +8,7 @@
 - (Bugfix) Don't abort plan in case of optional action timeout
 - (Documentation) Use relative links for generated docs
 - (Improvement) Change default logging level to info. Add --log.sampling (default true). Adjust log levels.
+- (Maintenance) Bump Go to 1.21.6
 
 ## [1.2.36](https://github.com/arangodb/kube-arangodb/tree/1.2.36) (2024-01-08)
 - (Documentation) Improvements and fixes for rendered documentation (GH pages)
