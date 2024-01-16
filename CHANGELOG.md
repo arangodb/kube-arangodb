@@ -4,6 +4,9 @@
 - (Documentation) Improve documentation rendering for GitHub Pages
 - (Maintenance) Reduce binary size
 - (Maintenance) Update Features Description, Supported K8S Versions and K8S Dependency to 1.28.5
+- (Feature) (ML) Featurization Job Type
+- (Bugfix) Don't abort plan in case of optional action timeout
+- (Documentation) Use relative links for generated docs
 - (Improvement) Change default logging level to info. Add --log.sampling (default true). Adjust log levels.
 
 ## [1.2.36](https://github.com/arangodb/kube-arangodb/tree/1.2.36) (2024-01-08)

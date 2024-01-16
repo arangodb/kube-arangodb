@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -77,7 +77,7 @@ type ArangoBackupSpecOperation struct {
 	RepositoryURL string `json:"repositoryURL"`
 	// CredentialsSecretName is the name of the secret used while accessing repository
 	// +doc/immutable: can't be changed after backup creation
-	// +doc/link: Defining a secret for backup upload or download|/docs/backup-resource.md#defining-a-secret-for-backup-upload-or-download
+	// +doc/link: Defining a secret for backup upload or download|../backup-resource.md#defining-a-secret-for-backup-upload-or-download
 	CredentialsSecretName string `json:"credentialsSecretName,omitempty"`
 }
 
