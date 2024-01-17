@@ -42,28 +42,29 @@ Flags:
       --crd.install                                            Install missing CRD if access is possible (default true)
       --crd.preserve-unknown-fields stringArray                Controls which CRD should have enabled preserve unknown fields in validation schema <crd-name>=<true/false>. To apply for all, use crd-name 'all'.
       --crd.validation-schema stringArray                      Overrides default set of CRDs which should have validation schema enabled <crd-name>=<true/false>. To apply for all, use crd-name 'all'.
-      --deployment.feature.agency-poll                         Enable Agency Poll for Enterprise deployments - Required ArangoDB 3.8.0 or higher (default true)
+      --deployment.feature.active-failover                     Support for ActiveFailover mode - Required ArangoDB >= 3.8.0, < 3.12 (default true)
+      --deployment.feature.agency-poll                         Enable Agency Poll for Enterprise deployments - Required ArangoDB >= 3.8.0 (default true)
       --deployment.feature.all                                 Enable ALL Features
-      --deployment.feature.async-backup-creation               Create backups asynchronously to avoid blocking the operator and reaching the timeout - Required ArangoDB 3.8.0 or higher (default true)
-      --deployment.feature.backup-cleanup                      Cleanup imported backups if required - Required ArangoDB 3.8.0 or higher
-      --deployment.feature.deployment-spec-defaults-restore    Restore defaults from last accepted state of deployment - Required ArangoDB 3.8.0 or higher (default true)
-      --deployment.feature.enforced-resign-leadership          Enforce ResignLeadership and ensure that Leaders are moved from restarted DBServer - Required ArangoDB 3.8.0 or higher (default true)
-      --deployment.feature.ephemeral-volumes                   Enables ephemeral volumes for apps and tmp directory - Required ArangoDB 3.8.0 or higher
-      --deployment.feature.failover-leadership                 Support for leadership in fail-over mode - Required ArangoDB 3.8.0 or higher
-      --deployment.feature.init-containers-copy-resources      Copy resources spec to built-in init containers if they are not specified - Required ArangoDB 3.8.0 or higher (default true)
-      --deployment.feature.init-containers-upscale-resources   Copy resources spec to built-in init containers if they are not specified or lower - Required ArangoDB 3.8.0 or higher (default true)
-      --deployment.feature.local-storage.pass-reclaim-policy   [LocalStorage] Pass ReclaimPolicy from StorageClass instead of using hardcoded Retain - Required ArangoDB 3.8.0 or higher
-      --deployment.feature.local-volume-replacement-check      Replace volume for local-storage if volume is unschedulable (ex. node is gone) - Required ArangoDB 3.8.0 or higher
-      --deployment.feature.random-pod-names                    Enables generating random pod names - Required ArangoDB 3.8.0 or higher
-      --deployment.feature.rebalancer-v2                       Rebalancer V2 feature - Required ArangoDB 3.10.0 or higher
-      --deployment.feature.restart-policy-always               Allow to restart containers with always restart policy - Required ArangoDB 3.8.0 or higher
-      --deployment.feature.secured-containers                  Create server's containers with non root privileges. It enables 'ephemeral-volumes' feature implicitly - Required ArangoDB 3.8.0 or higher
-      --deployment.feature.sensitive-information-protection    Hide sensitive information from metrics and logs - Required ArangoDB 3.8.0 or higher
-      --deployment.feature.short-pod-names                     Enable Short Pod Names - Required ArangoDB 3.8.0 or higher
-      --deployment.feature.timezone-management                 Enable timezone management for pods - Required ArangoDB 3.8.0 or higher
-      --deployment.feature.tls-sni                             TLS SNI Support - Required ArangoDB EE 3.8.0 or higher (default true)
-      --deployment.feature.upgrade-version-check               Enable initContainer with pre version check - Required ArangoDB 3.8.0 or higher (default true)
-      --deployment.feature.upgrade-version-check-v2            Enable initContainer with pre version check based by Operator - Required ArangoDB 3.8.0 or higher
+      --deployment.feature.async-backup-creation               Create backups asynchronously to avoid blocking the operator and reaching the timeout - Required ArangoDB >= 3.8.0 (default true)
+      --deployment.feature.backup-cleanup                      Cleanup imported backups if required - Required ArangoDB >= 3.8.0
+      --deployment.feature.deployment-spec-defaults-restore    Restore defaults from last accepted state of deployment - Required ArangoDB >= 3.8.0 (default true)
+      --deployment.feature.enforced-resign-leadership          Enforce ResignLeadership and ensure that Leaders are moved from restarted DBServer - Required ArangoDB >= 3.8.0 (default true)
+      --deployment.feature.ephemeral-volumes                   Enables ephemeral volumes for apps and tmp directory - Required ArangoDB >= 3.8.0
+      --deployment.feature.failover-leadership                 Support for leadership in fail-over mode - Required ArangoDB >= 3.8.0, < 3.12
+      --deployment.feature.init-containers-copy-resources      Copy resources spec to built-in init containers if they are not specified - Required ArangoDB >= 3.8.0 (default true)
+      --deployment.feature.init-containers-upscale-resources   Copy resources spec to built-in init containers if they are not specified or lower - Required ArangoDB >= 3.8.0 (default true)
+      --deployment.feature.local-storage.pass-reclaim-policy   [LocalStorage] Pass ReclaimPolicy from StorageClass instead of using hardcoded Retain - Required ArangoDB >= 3.8.0
+      --deployment.feature.local-volume-replacement-check      Replace volume for local-storage if volume is unschedulable (ex. node is gone) - Required ArangoDB >= 3.8.0
+      --deployment.feature.random-pod-names                    Enables generating random pod names - Required ArangoDB >= 3.8.0
+      --deployment.feature.rebalancer-v2                       Rebalancer V2 feature - Required ArangoDB >= 3.10.0
+      --deployment.feature.restart-policy-always               Allow to restart containers with always restart policy - Required ArangoDB >= 3.8.0
+      --deployment.feature.secured-containers                  Create server's containers with non root privileges. It enables 'ephemeral-volumes' feature implicitly - Required ArangoDB >= 3.8.0
+      --deployment.feature.sensitive-information-protection    Hide sensitive information from metrics and logs - Required ArangoDB >= 3.8.0
+      --deployment.feature.short-pod-names                     Enable Short Pod Names - Required ArangoDB >= 3.8.0
+      --deployment.feature.timezone-management                 Enable timezone management for pods - Required ArangoDB >= 3.8.0
+      --deployment.feature.tls-sni                             TLS SNI Support - Required ArangoDB EE >= 3.8.0 (default true)
+      --deployment.feature.upgrade-version-check               Enable initContainer with pre version check - Required ArangoDB >= 3.8.0 (default true)
+      --deployment.feature.upgrade-version-check-v2            Enable initContainer with pre version check based by Operator - Required ArangoDB >= 3.8.0
       --features-config-map-name string                        Name of the Feature Map ConfigMap (default "arangodb-operator-feature-config-map")
   -h, --help                                                   help for arangodb_operator
       --http1.keep-alive                                       If false, disables HTTP keep-alives and will only use the connection to the server for a single HTTP request (default true)

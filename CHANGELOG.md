@@ -39,6 +39,7 @@
 - (Maintenance) Bump Kubernetes dependency to 1.31.2
 - (Documentation) Remove Interactive args for the DebugPackage command
 - (Maintenance) PropagationMode Enum docs
+- (Feature) Deprecate AF Mode
 
 ## [1.2.43](https://github.com/arangodb/kube-arangodb/tree/1.2.43) (2024-10-14)
 - (Feature) ArangoRoute CRD
@@ -121,6 +122,7 @@
 - (Feature) DebugPackage ArangoProfiles
 - (Feature) Scheduler CLI
 - (Feature) Parametrize ForceDelete timeout
+<<<<<<< HEAD
 - (Feature) Scheduler BatchJob Integration Definition
 - (Feature) Scheduler CronJob Integration Definition
 - (Feature) Scheduler BatchJob Integration Service
@@ -166,7 +168,7 @@
 - (Maintenance) Bump Go to 1.21.6
 - (Bugfix) Enable LazyLoader for CRD & CRD Schemas
 - (Feature) (ML) Restore ReadinessProbe for ML Storage sidecar
-- (Feature) AutoDelete for ArangoBackup 
+- (Feature) AutoDelete for ArangoBackup
 
 ## [1.2.36](https://github.com/arangodb/kube-arangodb/tree/1.2.36) (2024-01-08)
 - (Documentation) Improvements and fixes for rendered documentation (GH pages)

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,6 +32,8 @@ import (
 const (
 	Enabled  = "true"
 	Disabled = "false"
+
+	NoVersionLimit driver.Version = ""
 )
 
 type Features []Feature
@@ -58,7 +60,7 @@ type Feature interface {
 	Name() string
 	Description() string
 	Dependencies() []Feature
-	Version() driver.Version
+	Version() (driver.Version, driver.Version)
 	EnterpriseRequired() bool
 	OperatorEnterpriseRequired() bool
 	EnabledByDefault() bool
@@ -73,12 +75,24 @@ type Feature interface {
 
 type feature struct {
 	name, description                                                         string
-	version                                                                   driver.Version
+	version                                                                   featureVersion
 	enterpriseRequired, operatorEnterpriseRequired, enabledByDefault, enabled bool
 	deprecated                                                                string
 	constValue                                                                *bool
 	hidden                                                                    bool
 	dependencies                                                              []Feature
+}
+
+func newFeatureVersion(min, max driver.Version) featureVersion {
+	return featureVersion{
+		min: min,
+		max: max,
+	}
+}
+
+type featureVersion struct {
+	min driver.Version
+	max driver.Version
 }
 
 func (f feature) Dependencies() []Feature {
@@ -152,8 +166,8 @@ func (f *feature) EnabledPointer() *bool {
 	return &f.enabled
 }
 
-func (f feature) Version() driver.Version {
-	return f.version
+func (f feature) Version() (driver.Version, driver.Version) {
+	return f.version.min, f.version.max
 }
 
 func (f feature) EnterpriseRequired() bool {

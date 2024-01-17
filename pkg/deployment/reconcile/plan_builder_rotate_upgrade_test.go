@@ -123,7 +123,7 @@ func Test_RotateUpgrade_Condition(t *testing.T) {
 
 	for n, c := range testCases {
 		t.Run(n, func(t *testing.T) {
-			c.verify(t, r.podNeedsUpgrading(c.status, c.spec, c.images))
+			c.verify(t, r.podNeedsUpgrading(c.spec.Mode.Get(), c.status, c.spec, c.images))
 		})
 	}
 }
