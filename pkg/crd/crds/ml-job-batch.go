@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,21 +24,15 @@ import (
 	_ "embed"
 
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/arangodb/go-driver"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 const (
 	MLBatchJobVersion = driver.Version("1.0.0")
 )
-
-func init() {
-	if err := yaml.Unmarshal(mlBatchJob, &mlBatchJobCRD); err != nil {
-		panic(err)
-	}
-	mustLoadCRD(mlBatchJob, mlBatchJobSchemaRow, &mlBatchJobCRD, &mlBatchJobCRDSchemas)
-}
 
 func MLBatchJobWithOptions(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
 	return getCRD(mlBatchJobCRD, mlBatchJobCRDSchemas, opts...)
@@ -51,11 +45,11 @@ func MLBatchJobDefinitionWithOptions(opts ...func(*CRDOptions)) Definition {
 	}
 }
 
-var mlBatchJobCRD apiextensions.CustomResourceDefinition
-var mlBatchJobCRDSchemas crdSchemas
+var mlBatchJobCRD = util.NewYamlLoader[apiextensions.CustomResourceDefinition](mlBatchJob)
+var mlBatchJobCRDSchemas = util.NewYamlLoader[crdSchemas](mlBatchJobSchemaRaw)
 
 //go:embed ml-job-batch.yaml
 var mlBatchJob []byte
 
 //go:embed ml-job-batch.schema.generated.yaml
-var mlBatchJobSchemaRow []byte
+var mlBatchJobSchemaRaw []byte

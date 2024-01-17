@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,15 +26,13 @@ import (
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 
 	"github.com/arangodb/go-driver"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 const (
 	DatabaseDeploymentVersion = driver.Version("1.0.1")
 )
-
-func init() {
-	mustLoadCRD(databaseDeployment, databaseDeploymentSchemaRaw, &databaseDeploymentCRD, &databaseDeploymentCRDSchemas)
-}
 
 // Deprecated: use DatabaseDeploymentWithOptions instead
 func DatabaseDeployment() *apiextensions.CustomResourceDefinition {
@@ -57,8 +55,8 @@ func DatabaseDeploymentDefinitionWithOptions(opts ...func(*CRDOptions)) Definiti
 	}
 }
 
-var databaseDeploymentCRD apiextensions.CustomResourceDefinition
-var databaseDeploymentCRDSchemas crdSchemas
+var databaseDeploymentCRD = util.NewYamlLoader[apiextensions.CustomResourceDefinition](databaseDeployment)
+var databaseDeploymentCRDSchemas = util.NewYamlLoader[crdSchemas](databaseDeploymentSchemaRaw)
 
 //go:embed database-deployment.yaml
 var databaseDeployment []byte
