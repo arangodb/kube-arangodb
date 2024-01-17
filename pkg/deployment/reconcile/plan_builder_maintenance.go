@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -146,7 +146,7 @@ func (r *Reconciler) createMaintenanceManagementPlan(ctx context.Context, apiObj
 	}
 
 	if agencyState.Target.HotBackup.Create.Exists() {
-		r.log.Info("HotBackup in progress")
+		r.log.Debug("HotBackup in progress")
 		return nil
 	}
 
@@ -155,7 +155,7 @@ func (r *Reconciler) createMaintenanceManagementPlan(ctx context.Context, apiObj
 
 	if (cok && c.IsTrue()) != enabled {
 		// Condition not yet propagated
-		r.log.Info("Condition not yet propagated")
+		r.log.Str("condition", api.ConditionTypeMaintenance.String()).Debug("Condition not yet propagated")
 		return nil
 	}
 

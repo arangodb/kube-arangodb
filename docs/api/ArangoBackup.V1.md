@@ -57,7 +57,7 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 CredentialsSecretName is the name of the secret used while accessing repository
 
 Links:
-* [Defining a secret for backup upload or download](/docs/backup-resource.md#defining-a-secret-for-backup-upload-or-download)
+* [Defining a secret for backup upload or download](../backup-resource.md#defining-a-secret-for-backup-upload-or-download)
 
 This field is **immutable**: can't be changed after backup creation
 
@@ -144,7 +144,7 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 CredentialsSecretName is the name of the secret used while accessing repository
 
 Links:
-* [Defining a secret for backup upload or download](/docs/backup-resource.md#defining-a-secret-for-backup-upload-or-download)
+* [Defining a secret for backup upload or download](../backup-resource.md#defining-a-secret-for-backup-upload-or-download)
 
 This field is **immutable**: can't be changed after backup creation
 

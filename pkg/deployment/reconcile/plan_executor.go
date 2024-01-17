@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -192,7 +192,7 @@ func (d *Reconciler) executePlanStatus(ctx context.Context, pg planner) (bool, b
 	loopStatus = d.context.GetStatus()
 
 	if pg.Set(&loopStatus, newPlan) {
-		d.planLogger.Info("Updating plan")
+		d.planLogger.Debug("Updating plan")
 		if err := d.context.UpdateStatus(ctx, loopStatus); err != nil {
 			d.planLogger.Err(err).Debug("Failed to update CR status")
 			return false, false, errors.WithStack(err)
@@ -273,7 +273,7 @@ func (d *Reconciler) executePlan(ctx context.Context, statusPlan api.Plan, pg pl
 				if ok {
 					c.GetThrottles().Invalidate(components...)
 
-					d.planLogger.Info("Reloading cached status")
+					d.planLogger.Debug("Reloading cached status")
 					if err := c.Refresh(ctx); err != nil {
 						d.planLogger.Err(err).Warn("Unable to reload cached status")
 						return plan, recall, false, nil
@@ -338,7 +338,7 @@ func (d *Reconciler) executeOptionalAction(ctx context.Context, planAction api.A
 
 func (d *Reconciler) executeAction(ctx context.Context, planAction api.Action, action Action) (done, abort, callAgain, retry bool, err error) {
 	log := d.planLogger.Str("action", string(planAction.Type)).Str("member", planAction.MemberID)
-	log.Info("Executing action")
+	log.Debug("Executing action")
 
 	if !planAction.IsStarted() {
 		// Not started yet
@@ -356,10 +356,10 @@ func (d *Reconciler) executeAction(ctx context.Context, planAction api.Action, a
 		}
 
 		if ready {
-			log.Bool("ready", ready).Info("Action Start completed")
+			log.Bool("ready", ready).Debug("Action Start completed")
 			return true, false, false, false, nil
 		}
-		log.Bool("ready", ready).Info("Action Started")
+		log.Bool("ready", ready).Debug("Action Started")
 
 		return false, false, true, false, nil
 	}
@@ -397,10 +397,14 @@ func (d *Reconciler) executeAction(ctx context.Context, planAction api.Action, a
 		d.context.CreateEvent(k8sutil.NewPlanAbortedEvent(d.context.GetAPIObject(), string(planAction.Type), planAction.MemberID, planAction.Group.AsRole()))
 		return false, true, false, false, nil
 	} else if isActionTimeout(timeout, planAction) {
+		if planAction.Type.Optional() {
+			log.Warn("Optional action not finished in time. Skipping")
+			return true, false, false, false, nil
+		}
+
 		log.Warn("Action not finished in time. Removing the entire plan")
 		d.context.CreateEvent(k8sutil.NewPlanTimeoutEvent(d.context.GetAPIObject(), string(planAction.Type), planAction.MemberID, planAction.Group.AsRole()))
 		return false, true, false, false, nil
-
 	}
 
 	// Timeout not yet expired, come back soon

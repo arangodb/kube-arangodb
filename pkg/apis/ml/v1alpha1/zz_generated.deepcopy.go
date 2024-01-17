@@ -712,6 +712,11 @@ func (in *ArangoMLJobsTemplates) DeepCopyInto(out *ArangoMLJobsTemplates) {
 		*out = new(ArangoMLJobTemplates)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.Featurization != nil {
+		in, out := &in.Featurization, &out.Featurization
+		*out = new(ArangoMLJobTemplates)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 

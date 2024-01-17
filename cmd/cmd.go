@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -75,7 +75,7 @@ const (
 	defaultServerPort          = 8528
 	defaultAPIHTTPPort         = 8628
 	defaultAPIGRPCPort         = 8728
-	defaultLogLevel            = "debug"
+	defaultLogLevel            = "info"
 	defaultAdminSecretName     = "arangodb-operator-dashboard"
 	defaultAPIJWTSecretName    = "arangodb-operator-api-jwt"
 	defaultAPIJWTKeySecretName = "arangodb-operator-api-jwt-key"
@@ -98,6 +98,7 @@ var (
 
 	logFormat     string
 	logLevels     []string
+	logSampling   bool
 	serverOptions struct {
 		host            string
 		port            int
@@ -191,6 +192,7 @@ func init() {
 	f.BoolVar(&serverOptions.allowAnonymous, "server.allow-anonymous-access", false, "Allow anonymous access to the dashboard")
 	f.StringVar(&logFormat, "log.format", "pretty", "Set log format. Allowed values: 'pretty', 'JSON'. If empty, default format is used")
 	f.StringArrayVar(&logLevels, "log.level", []string{defaultLogLevel}, fmt.Sprintf("Set log levels in format <level> or <logger>=<level>. Possible loggers: %s", strings.Join(logging.Global().Names(), ", ")))
+	f.BoolVar(&logSampling, "log.sampling", true, "If true, operator will try to minimize duplication of logging events")
 	f.BoolVar(&apiOptions.enabled, "api.enabled", true, "Enable operator HTTP and gRPC API")
 	f.IntVar(&apiOptions.httpPort, "api.http-port", defaultAPIHTTPPort, "HTTP API port to listen on")
 	f.IntVar(&apiOptions.grpcPort, "api.grpc-port", defaultAPIGRPCPort, "gRPC API port to listen on")
@@ -312,7 +314,10 @@ func executeMain(cmd *cobra.Command, args []string) {
 	} else if strings.ToLower(logFormat) != "pretty" && logFormat != "" {
 		logger.Fatal("Unknown log format: %s", logFormat)
 	}
-	logging.Global().ApplyLogLevels(levels)
+	logging.Global().Configure(logging.Config{
+		Levels:   levels,
+		Sampling: logSampling,
+	})
 
 	podNameParts := strings.Split(name, "-")
 	operatorID := podNameParts[len(podNameParts)-1]
