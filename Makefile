@@ -51,7 +51,7 @@ GOBUILDARGS ?=
 GOBASEVERSION := 1.21.6
 GOVERSION := $(GOBASEVERSION)-alpine3.17
 DISTRIBUTION := alpine:3.15
-GOMAJORMINOR := $(shell echo $(GOBASEVERSION) | cut -d '.' -f 1-2)
+GOCOMPAT := $(shell sed -En 's/^go (.*)$$/\1/p' go.mod)
 
 GOBUILDTAGS := $(RELEASE_MODE)
 
@@ -699,7 +699,7 @@ patch-chart:
 
 .PHONY: tidy
 tidy:
-	@go mod tidy -v -compat=$(GOMAJORMINOR)
+	@go mod tidy -v -compat=$(GOCOMPAT)
 
 .PHONY: deps-reload
 deps-reload: tidy init
