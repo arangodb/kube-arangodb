@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,15 +26,13 @@ import (
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 
 	"github.com/arangodb/go-driver"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 const (
 	BackupsBackupPolicyPolicyVersion = driver.Version("1.0.1")
 )
-
-func init() {
-	mustLoadCRD(backupsBackupPolicy, backupsBackupPolicySchemaRaw, &backupsBackupPolicyCRD, &backupsBackupPolicyCRDSchemas)
-}
 
 // Deprecated: use BackupsBackupPolicyPolicyWithOptions instead
 func BackupsBackupPolicyPolicy() *apiextensions.CustomResourceDefinition {
@@ -57,8 +55,8 @@ func BackupsBackupPolicyDefinitionWithOptions(opts ...func(*CRDOptions)) Definit
 	}
 }
 
-var backupsBackupPolicyCRD apiextensions.CustomResourceDefinition
-var backupsBackupPolicyCRDSchemas crdSchemas
+var backupsBackupPolicyCRD = util.NewYamlLoader[apiextensions.CustomResourceDefinition](backupsBackupPolicy)
+var backupsBackupPolicyCRDSchemas = util.NewYamlLoader[crdSchemas](backupsBackupPolicySchemaRaw)
 
 //go:embed backups-backuppolicy.yaml
 var backupsBackupPolicy []byte
