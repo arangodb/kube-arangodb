@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,15 +26,13 @@ import (
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 
 	"github.com/arangodb/go-driver"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 const (
 	DatabaseTaskVersion = driver.Version("1.0.1")
 )
-
-func init() {
-	mustLoadCRD(databaseTask, databaseTaskSchemaRaw, &databaseTaskCRD, &databaseTaskCRDSchemas)
-}
 
 // Deprecated: use DatabaseTaskWithOptions instead
 func DatabaseTask() *apiextensions.CustomResourceDefinition {
@@ -57,8 +55,8 @@ func DatabaseTaskDefinitionWithOptions(opts ...func(*CRDOptions)) Definition {
 	}
 }
 
-var databaseTaskCRD apiextensions.CustomResourceDefinition
-var databaseTaskCRDSchemas crdSchemas
+var databaseTaskCRD = util.NewYamlLoader[apiextensions.CustomResourceDefinition](databaseTask)
+var databaseTaskCRDSchemas = util.NewYamlLoader[crdSchemas](databaseTaskSchemaRaw)
 
 //go:embed database-task.yaml
 var databaseTask []byte

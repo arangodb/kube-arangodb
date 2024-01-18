@@ -9,6 +9,7 @@
 - (Documentation) Use relative links for generated docs
 - (Improvement) Change default logging level to info. Add --log.sampling (default true). Adjust log levels.
 - (Maintenance) Bump Go to 1.21.6
+- (Bugfix) Enable LazyLoader for CRD & CRD Schemas
 - (Feature) (ML) Restore ReadinessProbe for ML Storage sidecar
 
 ## [1.2.36](https://github.com/arangodb/kube-arangodb/tree/1.2.36) (2024-01-08)

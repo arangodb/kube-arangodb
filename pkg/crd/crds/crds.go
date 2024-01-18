@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,9 +24,10 @@ import (
 	"fmt"
 
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/arangodb/go-driver"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 type Definition struct {
@@ -65,16 +66,6 @@ func AllDefinitions() []Definition {
 	}
 }
 
-func mustLoadCRD(crdRaw, crdSchemasRaw []byte, crd *apiextensions.CustomResourceDefinition, schemas *crdSchemas) {
-	if err := yaml.Unmarshal(crdRaw, crd); err != nil {
-		panic(err)
-	}
-
-	if err := yaml.Unmarshal(crdSchemasRaw, schemas); err != nil {
-		panic(err)
-	}
-}
-
 type crdSchemas map[string]apiextensions.CustomResourceValidation
 
 type CRDOptions struct {
@@ -97,13 +88,19 @@ func WithSchema() func(*CRDOptions) {
 	}
 }
 
-func getCRD(crd apiextensions.CustomResourceDefinition, schemas crdSchemas, opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
+func getCRD(crdLoader util.Loader[apiextensions.CustomResourceDefinition], schemasLoader util.Loader[crdSchemas], opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
 	o := &CRDOptions{}
 	for _, fn := range opts {
 		fn(o)
 	}
+
+	crd := crdLoader.MustGet()
+
 	if o.WithSchema {
 		crdWithSchema := crd.DeepCopy()
+
+		schemas := schemasLoader.MustGet()
+
 		for i, v := range crdWithSchema.Spec.Versions {
 			schema, ok := schemas[v.Name]
 			if !ok {
