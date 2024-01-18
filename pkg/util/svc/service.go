@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,13 +25,14 @@ import (
 	"sync"
 
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util/probe"
 )
 
 type Service interface {
 	Run(ctx context.Context) error
 }
 
-func RunServices(ctx context.Context, services ...Service) error {
+func RunServices(ctx context.Context, healthService probe.HealthService, services ...Service) error {
 	if len(services) == 0 {
 		<-ctx.Done()
 		return nil
@@ -48,9 +49,12 @@ func RunServices(ctx context.Context, services ...Service) error {
 			defer wg.Done()
 
 			errors[id] = services[id].Run(ctx)
+
+			healthService.Shutdown()
 		}(id)
 	}
 
+	healthService.SetServing()
 	wg.Wait()
 
 	return shared.WithErrors(errors...)

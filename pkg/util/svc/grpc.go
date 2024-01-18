@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,36 +18,27 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package shutdown
+package svc
 
 import (
 	"context"
 	"net"
 
 	"google.golang.org/grpc"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
-type ServiceConfig struct {
+type GRPCConfig struct {
 	ListenAddress string
 }
 
-func ServiceCentral(config ServiceConfig) svc.Service {
+type RegisterServerFunc func(server *grpc.Server)
+
+func NewGRPC(config GRPCConfig, registerFuncs ...RegisterServerFunc) Service {
 	server := grpc.NewServer( /* currently no auth parameters required */ )
 
-	RegisterCentral(server)
-
-	return &service{
-		cfg:        config,
-		grpcServer: server,
+	for _, fn := range registerFuncs {
+		fn(server)
 	}
-}
-
-func Service(config ServiceConfig, closer context.CancelFunc) svc.Service {
-	server := grpc.NewServer( /* currently no auth parameters required */ )
-
-	Register(server, closer)
 
 	return &service{
 		cfg:        config,
@@ -57,7 +48,7 @@ func Service(config ServiceConfig, closer context.CancelFunc) svc.Service {
 
 type service struct {
 	grpcServer *grpc.Server
-	cfg        ServiceConfig
+	cfg        GRPCConfig
 }
 
 func (s *service) Run(ctx context.Context) error {

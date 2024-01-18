@@ -918,8 +918,8 @@ func (in *ArangoMLStorageSpecModeSidecar) DeepCopyInto(out *ArangoMLStorageSpecM
 		*out = new(uint16)
 		**out = **in
 	}
-	if in.ShutdownListenPort != nil {
-		in, out := &in.ShutdownListenPort, &out.ShutdownListenPort
+	if in.ControllerListenPort != nil {
+		in, out := &in.ControllerListenPort, &out.ControllerListenPort
 		*out = new(uint16)
 		**out = **in
 	}

@@ -68,6 +68,10 @@ v1alpha1:
               sidecar:
                 description: Sidecar mode runs the storage implementation as a sidecar
                 properties:
+                  controllerListenPort:
+                    description: ControllerListenPort defines on which port the sidecar container will be listening for controller requests
+                    format: int32
+                    type: integer
                   env:
                     description: Env keeps the information about environment variables provided to the container
                     items:
@@ -231,10 +235,6 @@ v1alpha1:
                             type: string
                         type: object
                     type: object
-                  shutdownListenPort:
-                    description: ShutdownListenPort defines on which port the sidecar container will be listening for shutdown connections
-                    format: int32
-                    type: integer
                 type: object
             type: object
         type: object

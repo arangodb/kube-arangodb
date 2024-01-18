@@ -104,6 +104,16 @@ Default Value: `/`
 
 ***
 
+### .spec.mode.sidecar.controllerListenPort
+
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/ml/v1alpha1/storage_spec_mode_sidecar.go#L36)</sup>
+
+ControllerListenPort defines on which port the sidecar container will be listening for controller requests
+
+Default Value: `9202`
+
+***
+
 ### .spec.mode.sidecar.env
 
 Type: `core.EnvVar` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/shared/v1/envs.go#L33)</sup>
@@ -181,16 +191,6 @@ PodSecurityContext holds pod-level security attributes and common container sett
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
-
-***
-
-### .spec.mode.sidecar.shutdownListenPort
-
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/ml/v1alpha1/storage_spec_mode_sidecar.go#L36)</sup>
-
-ShutdownListenPort defines on which port the sidecar container will be listening for shutdown connections
-
-Default Value: `9202`
 
 ## Status
 

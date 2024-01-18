@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,9 +31,9 @@ type ArangoMLStorageSpecModeSidecar struct {
 	// +doc/default: 9201
 	ListenPort *uint16 `json:"listenPort,omitempty"`
 
-	// ShutdownListenPort defines on which port the sidecar container will be listening for shutdown connections
+	// ControllerListenPort defines on which port the sidecar container will be listening for controller requests
 	// +doc/default: 9202
-	ShutdownListenPort *uint16 `json:"shutdownListenPort,omitempty"`
+	ControllerListenPort *uint16 `json:"controllerListenPort,omitempty"`
 
 	// ContainerTemplate Keeps the information about Container configuration
 	*sharedApi.ContainerTemplate `json:",inline"`
@@ -58,8 +58,8 @@ func (s *ArangoMLStorageSpecModeSidecar) Validate() error {
 		err = append(err, shared.PrefixResourceErrors("listenPort", errors.Newf("must be positive")))
 	}
 
-	if s.GetShutdownListenPort() < 1 {
-		err = append(err, shared.PrefixResourceErrors("shutdownListenPort", errors.Newf("must be positive")))
+	if s.GetControllerListenPort() < 1 {
+		err = append(err, shared.PrefixResourceErrors("controllerListenPort", errors.Newf("must be positive")))
 	}
 
 	err = append(err, s.GetContainerTemplate().Validate())
@@ -74,9 +74,9 @@ func (s *ArangoMLStorageSpecModeSidecar) GetListenPort() uint16 {
 	return *s.ListenPort
 }
 
-func (s *ArangoMLStorageSpecModeSidecar) GetShutdownListenPort() uint16 {
-	if s == nil || s.ShutdownListenPort == nil {
+func (s *ArangoMLStorageSpecModeSidecar) GetControllerListenPort() uint16 {
+	if s == nil || s.ControllerListenPort == nil {
 		return 9202
 	}
-	return *s.ShutdownListenPort
+	return *s.ControllerListenPort
 }

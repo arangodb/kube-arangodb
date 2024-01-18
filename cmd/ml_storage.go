@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,8 +25,11 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc"
 
+	pbShutdown "github.com/arangodb/kube-arangodb/pkg/api/shutdown/v1"
 	"github.com/arangodb/kube-arangodb/pkg/ml/storage"
+	"github.com/arangodb/kube-arangodb/pkg/util/probe"
 	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
@@ -49,8 +52,8 @@ var (
 		storage.ServiceConfig
 	}
 
-	cmdMLShutdownOptions struct {
-		shutdown.ServiceConfig
+	cmdMLStorageControllerOptions struct {
+		svc.GRPCConfig
 	}
 )
 
@@ -59,7 +62,7 @@ func init() {
 	cmdMLStorage.AddCommand(cmdMLStorageS3)
 
 	f := cmdMLStorageS3.PersistentFlags()
-	f.StringVar(&cmdMLShutdownOptions.ListenAddress, "shutdown.address", "", "Address the GRPC shutdown service will listen on (IP:port)")
+	f.StringVar(&cmdMLStorageControllerOptions.ListenAddress, "controller.address", "", "Address the GRPC controller service will listen on (IP:port)")
 	f.StringVar(&cmdMLStorageS3Options.ListenAddress, "server.address", "", "Address the GRPC service will listen on (IP:port)")
 
 	f.StringVar(&cmdMLStorageS3Options.S3.Endpoint, "s3.endpoint", "", "Endpoint of S3 API implementation")
@@ -81,10 +84,16 @@ func cmdMLStorageS3Run(cmd *cobra.Command, _ []string) {
 }
 
 func cmdMLStorageS3RunE(_ *cobra.Command) error {
-	service, err := storage.NewService(shutdown.Context(), storage.StorageTypeS3Proxy, cmdMLStorageS3Options.ServiceConfig)
+	storageService, err := storage.NewService(shutdown.Context(), storage.StorageTypeS3Proxy, cmdMLStorageS3Options.ServiceConfig)
 	if err != nil {
 		return err
 	}
 
-	return svc.RunServices(shutdown.Context(), service, shutdown.ServiceCentral(cmdMLShutdownOptions.ServiceConfig))
+	healthService := probe.NewHealthService()
+
+	controllerService := svc.NewGRPC(cmdMLStorageControllerOptions.GRPCConfig, func(server *grpc.Server) {
+		pbShutdown.RegisterShutdownServer(server, shutdown.NewShutdownableShutdownServer())
+		healthService.Register(server)
+	})
+	return svc.RunServices(shutdown.Context(), healthService, storageService, controllerService)
 }
