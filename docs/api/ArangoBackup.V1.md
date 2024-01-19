@@ -52,9 +52,11 @@ This field is **immutable**: can't be changed after backup creation
 
 ### .spec.download.autoDelete
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/backup/v1/backup_spec.go#L83)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/backup/v1/backup_spec.go#L84)</sup>
 
 AutoDelete removes the ArangoBackup resource (which removes the backup from the cluster) after successful upload
+
+Default Value: `false`
 
 ***
 
@@ -73,7 +75,7 @@ This field is **immutable**: can't be changed after backup creation
 
 ### .spec.download.id
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/backup/v1/backup_spec.go#L91)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/backup/v1/backup_spec.go#L92)</sup>
 
 ID of the ArangoBackup to be downloaded
 
@@ -147,9 +149,11 @@ This field is **immutable**: can't be changed after backup creation
 
 ### .spec.upload.autoDelete
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/backup/v1/backup_spec.go#L83)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/backup/v1/backup_spec.go#L84)</sup>
 
 AutoDelete removes the ArangoBackup resource (which removes the backup from the cluster) after successful upload
+
+Default Value: `false`
 
 ***
 
