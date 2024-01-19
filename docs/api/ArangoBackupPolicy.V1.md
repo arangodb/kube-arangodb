@@ -114,6 +114,16 @@ This field is **immutable**: can't be changed after backup creation
 
 ***
 
+### .spec.template.upload.autoDelete
+
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/backup/v1/backup_spec.go#L84)</sup>
+
+AutoDelete removes the ArangoBackup resource (which removes the backup from the cluster) after successful upload
+
+Default Value: `false`
+
+***
+
 ### .spec.template.upload.credentialsSecretName
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.36/pkg/apis/backup/v1/backup_spec.go#L81)</sup>

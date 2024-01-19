@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
 
@@ -315,6 +316,38 @@ func Test_State_Ready_Upload(t *testing.T) {
 	newObj := refreshArangoBackup(t, handler, obj)
 	checkBackup(t, newObj, backupApi.ArangoBackupStateUpload, true)
 	compareBackupMeta(t, backupMeta, newObj)
+}
+
+func Test_State_Ready_Upload_AutoDelete(t *testing.T) {
+	// Arrange
+	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
+
+	obj, deployment := newObjectSet(t, backupApi.ArangoBackupStateReady)
+	obj.Spec.Upload = &backupApi.ArangoBackupSpecOperation{
+		RepositoryURL: "Any",
+		AutoDelete:    util.NewType[bool](true),
+	}
+
+	createResponse, err := mock.Create()
+	require.NoError(t, err)
+
+	backupMeta, err := mock.Get(createResponse.ID)
+	require.NoError(t, err)
+
+	obj.Status.Backup = createBackupFromMeta(backupMeta, &backupApi.ArangoBackupDetails{
+		Uploaded: util.NewType[bool](true),
+	})
+
+	// Act
+	createArangoDeployment(t, handler, deployment)
+	createArangoBackup(t, handler, obj)
+
+	require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
+
+	// Assert
+	_, err = handler.client.BackupV1().ArangoBackups(obj.Namespace).Get(context.Background(), obj.Name, meta.GetOptions{})
+	require.Error(t, err)
+	require.True(t, apiErrors.IsNotFound(err))
 }
 
 func Test_State_Ready_DownloadDoNothing(t *testing.T) {

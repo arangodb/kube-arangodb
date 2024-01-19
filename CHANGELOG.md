@@ -11,6 +11,7 @@
 - (Maintenance) Bump Go to 1.21.6
 - (Bugfix) Enable LazyLoader for CRD & CRD Schemas
 - (Feature) (ML) Restore ReadinessProbe for ML Storage sidecar
+- (Feature) AutoDelete for ArangoBackup 
 
 ## [1.2.36](https://github.com/arangodb/kube-arangodb/tree/1.2.36) (2024-01-08)
 - (Documentation) Improvements and fixes for rendered documentation (GH pages)

@@ -32,6 +32,9 @@ v1:
           download:
             description: Download Backup download settings
             properties:
+              autoDelete:
+                description: AutoDelete removes the ArangoBackup resource (which removes the backup from the cluster) after successful upload
+                type: boolean
               credentialsSecretName:
                 description: CredentialsSecretName is the name of the secret used while accessing repository
                 type: string
@@ -69,6 +72,9 @@ v1:
               Upload Backup upload settings.
               This field can be removed and created again with different values. This operation will trigger upload again.
             properties:
+              autoDelete:
+                description: AutoDelete removes the ArangoBackup resource (which removes the backup from the cluster) after successful upload
+                type: boolean
               credentialsSecretName:
                 description: CredentialsSecretName is the name of the secret used while accessing repository
                 type: string
@@ -116,6 +122,9 @@ v1alpha:
           download:
             description: Download Backup download settings
             properties:
+              autoDelete:
+                description: AutoDelete removes the ArangoBackup resource (which removes the backup from the cluster) after successful upload
+                type: boolean
               credentialsSecretName:
                 description: CredentialsSecretName is the name of the secret used while accessing repository
                 type: string
@@ -153,6 +162,9 @@ v1alpha:
               Upload Backup upload settings.
               This field can be removed and created again with different values. This operation will trigger upload again.
             properties:
+              autoDelete:
+                description: AutoDelete removes the ArangoBackup resource (which removes the backup from the cluster) after successful upload
+                type: boolean
               credentialsSecretName:
                 description: CredentialsSecretName is the name of the secret used while accessing repository
                 type: string

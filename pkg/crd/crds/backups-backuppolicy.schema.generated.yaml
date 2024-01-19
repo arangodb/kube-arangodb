@@ -77,6 +77,9 @@ v1:
                 type: object
               upload:
                 properties:
+                  autoDelete:
+                    description: AutoDelete removes the ArangoBackup resource (which removes the backup from the cluster) after successful upload
+                    type: boolean
                   credentialsSecretName:
                     description: CredentialsSecretName is the name of the secret used while accessing repository
                     type: string
@@ -170,6 +173,9 @@ v1alpha:
                 type: object
               upload:
                 properties:
+                  autoDelete:
+                    description: AutoDelete removes the ArangoBackup resource (which removes the backup from the cluster) after successful upload
+                    type: boolean
                   credentialsSecretName:
                     description: CredentialsSecretName is the name of the secret used while accessing repository
                     type: string
