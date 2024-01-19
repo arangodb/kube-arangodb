@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,10 @@
 package backup
 
 import (
+	"context"
 	"time"
+
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/go-driver"
 
@@ -128,6 +131,15 @@ func stateReadyHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.A
 			updateStatusBackupUpload(nil),
 			updateStatusAvailable(true),
 		)
+	}
+
+	// handle AutoDelete case
+	if backup.Spec.Upload != nil && backup.Spec.Upload.AutoDelete != nil && *backup.Spec.Upload.AutoDelete {
+		err := h.client.BackupV1().ArangoBackups(backup.Namespace).Delete(context.Background(), backup.Name, meta.DeleteOptions{})
+		if err != nil {
+			return nil, err
+		}
+		return wrapUpdateStatus(backup)
 	}
 
 	return wrapUpdateStatus(backup,

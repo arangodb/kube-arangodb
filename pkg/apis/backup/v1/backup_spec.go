@@ -79,6 +79,8 @@ type ArangoBackupSpecOperation struct {
 	// +doc/immutable: can't be changed after backup creation
 	// +doc/link: Defining a secret for backup upload or download|../backup-resource.md#defining-a-secret-for-backup-upload-or-download
 	CredentialsSecretName string `json:"credentialsSecretName,omitempty"`
+	// AutoDelete removes the ArangoBackup resource (which removes the backup from the cluster) after successful upload
+	AutoDelete *bool `json:"autoDelete,omitempty"`
 }
 
 type ArangoBackupSpecDownload struct {
