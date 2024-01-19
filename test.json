@@ -1,0 +1,8 @@
+{
+  "bootstrap": "v0.2.0-eab2c9e",
+  "training": "dev-main-83ffd30",
+  "prediction": "dev-main-0c0c6e8",
+  "projects": "dev-main-4366bfe",
+  "integration": "latest",
+  "grond": "latest"
+}
