@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.2.37](https://github.com/arangodb/kube-arangodb/tree/1.2.37) (2024-01-22)
 - (Documentation) Improve documentation rendering for GitHub Pages
 - (Maintenance) Reduce binary size
 - (Maintenance) Update Features Description, Supported K8S Versions and K8S Dependency to 1.28.5
