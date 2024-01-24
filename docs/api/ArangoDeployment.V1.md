@@ -15,7 +15,7 @@ Type: `core.PodAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangod
 Affinity specified additional affinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation of core.PodAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podaffinity-v1-core)
+* [Documentation of core.PodAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#podaffinity-v1-core)
 
 ***
 
@@ -62,7 +62,7 @@ Type: `core.PodAntiAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-ara
 AntiAffinity specified additional antiAffinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation of core.Pod.AntiAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podantiaffinity-v1-core)
+* [Documentation of core.Pod.AntiAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#podantiaffinity-v1-core)
 
 ***
 
@@ -116,7 +116,7 @@ Type: `resource.Quantity` <sup>[\[ref\]](https://github.com/arangodb/kube-arango
 Size define size of the ephemeral volume
 
 Links:
-* [Documentation of resource.Quantity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#quantity-resource-core)
+* [Documentation of resource.Quantity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#quantity-resource-core)
 
 ***
 
@@ -127,7 +127,7 @@ Type: `resource.Quantity` <sup>[\[ref\]](https://github.com/arangodb/kube-arango
 Size define size of the ephemeral volume
 
 Links:
-* [Documentation of resource.Quantity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#quantity-resource-core)
+* [Documentation of resource.Quantity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#quantity-resource-core)
 
 ***
 
@@ -174,7 +174,7 @@ Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangod
 Containers contains list of containers
 
 Links:
-* [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
+* [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#container-v1-core)
 
 ***
 
@@ -243,7 +243,7 @@ If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a 
 Accepted Range <0, 50>. If the value is outside the accepted range, it is adjusted to the closest value.
 
 Links:
-* [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+* [Documentation of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
 
 Default Value: `0`
 
@@ -264,7 +264,7 @@ Type: `core.NodeAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arango
 NodeAffinity specified additional nodeAffinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation of code.NodeAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#nodeaffinity-v1-core)
+* [Documentation of code.NodeAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#nodeaffinity-v1-core)
 
 ***
 
@@ -319,7 +319,7 @@ OverrideDetectedNumberOfCores determines if number of cores should be overridden
 If is set to true and Container CPU Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` to the value from the Container CPU Limits.
 
 Links:
-* [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+* [Documentation of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
 
 Default Value: `true`
 
@@ -335,7 +335,7 @@ OverrideDetectedTotalMemory determines if memory should be overridden based on v
 If is set to true and Container Memory Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` to the value from the Container Memory Limits.
 
 Links:
-* [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+* [Documentation of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
 
 Default Value: `true`
 
@@ -595,7 +595,7 @@ Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kub
 Resources holds resource requests & limits
 
 Links:
-* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core)
+* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#resourcerequirements-v1-core)
 
 ***
 
@@ -688,7 +688,7 @@ Type: `core.SeccompProfile` <sup>[\[ref\]](https://github.com/arangodb/kube-aran
 SeccompProfile defines a pod/container's seccomp profile settings. Only one profile source may be set.
 
 Links:
-* [Documentation of core.SeccompProfile](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#seccompprofile-v1-core)
+* [Documentation of core.SeccompProfile](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#seccompprofile-v1-core)
 
 ***
 
@@ -699,7 +699,7 @@ Type: `core.SELinuxOptions` <sup>[\[ref\]](https://github.com/arangodb/kube-aran
 SELinuxOptions are the labels to be applied to the container
 
 Links:
-* [Documentation of core.SELinuxOptions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#selinuxoptions-v1-core)
+* [Documentation of core.SELinuxOptions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#selinuxoptions-v1-core)
 
 ***
 
@@ -780,7 +780,7 @@ Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangod
 Sidecars specifies a list of additional containers to be started
 
 Links:
-* [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
+* [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#container-v1-core)
 
 ***
 
@@ -812,7 +812,7 @@ By default, suitable tolerations are set for the following keys with the `NoExec
 For more information on tolerations, consult the https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
 
 Links:
-* [Documentation of core.Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#toleration-v1-core)
+* [Documentation of core.Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#toleration-v1-core)
 
 ***
 
@@ -836,7 +836,7 @@ with size as specified by `spec.<group>.resources.requests.storage` will be crea
 and `iops` is not forwarded to the pods resource requirements.
 
 Links:
-* [Documentation of core.PersistentVolumeClaim](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaim-v1-core)
+* [Documentation of core.PersistentVolumeClaim](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#persistentvolumeclaim-v1-core)
 
 ***
 
@@ -847,7 +847,7 @@ Type: `[]ServerGroupSpecVolumeMount` <sup>[\[ref\]](https://github.com/arangodb/
 VolumeMounts define list of volume mounts mounted into server container
 
 Links:
-* [Documentation of ServerGroupSpecVolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#volumemount-v1-core)
+* [Documentation of ServerGroupSpecVolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#volumemount-v1-core)
 
 ***
 
@@ -858,7 +858,7 @@ Type: `core.ConfigMapVolumeSource` <sup>[\[ref\]](https://github.com/arangodb/ku
 ConfigMap which should be mounted into pod
 
 Links:
-* [Documentation of core.ConfigMapVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#configmapvolumesource-v1-core)
+* [Documentation of core.ConfigMapVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#configmapvolumesource-v1-core)
 
 ***
 
@@ -869,7 +869,7 @@ Type: `core.EmptyDirVolumeSource` <sup>[\[ref\]](https://github.com/arangodb/kub
 EmptyDir
 
 Links:
-* [Documentation of core.EmptyDirVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#emptydirvolumesource-v1-core)
+* [Documentation of core.EmptyDirVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#emptydirvolumesource-v1-core)
 
 ***
 
@@ -880,7 +880,7 @@ Type: `core.HostPathVolumeSource` <sup>[\[ref\]](https://github.com/arangodb/kub
 HostPath
 
 Links:
-* [Documentation of core.HostPathVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#hostpathvolumesource-v1-core)
+* [Documentation of core.HostPathVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#hostpathvolumesource-v1-core)
 
 ***
 
@@ -899,7 +899,7 @@ Type: `core.PersistentVolumeClaimVolumeSource` <sup>[\[ref\]](https://github.com
 PersistentVolumeClaim
 
 Links:
-* [Documentation of core.PersistentVolumeClaimVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaimvolumesource-v1-core)
+* [Documentation of core.PersistentVolumeClaimVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#persistentvolumeclaimvolumesource-v1-core)
 
 ***
 
@@ -910,7 +910,7 @@ Type: `core.SecretVolumeSource` <sup>[\[ref\]](https://github.com/arangodb/kube-
 Secret which should be mounted into pod
 
 Links:
-* [Documentation of core.SecretVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#secretvolumesource-v1-core)
+* [Documentation of core.SecretVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#secretvolumesource-v1-core)
 
 ***
 
@@ -966,7 +966,7 @@ architecture to the other. The first list item defines the new default
 architecture for the deployment that you want to migrate to.
 
 Links:
-* [Architecture Change](/docs/how-to/arch_change.md)
+* [Architecture Change](../how-to/arch_change.md)
 
 Default Value: `['amd64']`
 
@@ -1000,7 +1000,7 @@ There are two magic values for the secret name:
 - `Auto` specifies automatic name generation, which is `<deploymentname>-root-password`.
 
 Links:
-* [How to set root user password](/docs/how-to/set_root_user_password.md)
+* [How to set root user password](../how-to/set_root_user_password.md)
 
 ***
 
@@ -1061,7 +1061,7 @@ Type: `core.PodAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangod
 Affinity specified additional affinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation of core.PodAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podaffinity-v1-core)
+* [Documentation of core.PodAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#podaffinity-v1-core)
 
 ***
 
@@ -1108,7 +1108,7 @@ Type: `core.PodAntiAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-ara
 AntiAffinity specified additional antiAffinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation of core.Pod.AntiAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podantiaffinity-v1-core)
+* [Documentation of core.Pod.AntiAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#podantiaffinity-v1-core)
 
 ***
 
@@ -1162,7 +1162,7 @@ Type: `resource.Quantity` <sup>[\[ref\]](https://github.com/arangodb/kube-arango
 Size define size of the ephemeral volume
 
 Links:
-* [Documentation of resource.Quantity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#quantity-resource-core)
+* [Documentation of resource.Quantity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#quantity-resource-core)
 
 ***
 
@@ -1173,7 +1173,7 @@ Type: `resource.Quantity` <sup>[\[ref\]](https://github.com/arangodb/kube-arango
 Size define size of the ephemeral volume
 
 Links:
-* [Documentation of resource.Quantity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#quantity-resource-core)
+* [Documentation of resource.Quantity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#quantity-resource-core)
 
 ***
 
@@ -1220,7 +1220,7 @@ Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangod
 Containers contains list of containers
 
 Links:
-* [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
+* [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#container-v1-core)
 
 ***
 
@@ -1289,7 +1289,7 @@ If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a 
 Accepted Range <0, 50>. If the value is outside the accepted range, it is adjusted to the closest value.
 
 Links:
-* [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+* [Documentation of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
 
 Default Value: `0`
 
@@ -1310,7 +1310,7 @@ Type: `core.NodeAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arango
 NodeAffinity specified additional nodeAffinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation of code.NodeAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#nodeaffinity-v1-core)
+* [Documentation of code.NodeAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#nodeaffinity-v1-core)
 
 ***
 
@@ -1365,7 +1365,7 @@ OverrideDetectedNumberOfCores determines if number of cores should be overridden
 If is set to true and Container CPU Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` to the value from the Container CPU Limits.
 
 Links:
-* [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+* [Documentation of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
 
 Default Value: `true`
 
@@ -1381,7 +1381,7 @@ OverrideDetectedTotalMemory determines if memory should be overridden based on v
 If is set to true and Container Memory Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` to the value from the Container Memory Limits.
 
 Links:
-* [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+* [Documentation of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
 
 Default Value: `true`
 
@@ -1641,7 +1641,7 @@ Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kub
 Resources holds resource requests & limits
 
 Links:
-* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core)
+* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#resourcerequirements-v1-core)
 
 ***
 
@@ -1734,7 +1734,7 @@ Type: `core.SeccompProfile` <sup>[\[ref\]](https://github.com/arangodb/kube-aran
 SeccompProfile defines a pod/container's seccomp profile settings. Only one profile source may be set.
 
 Links:
-* [Documentation of core.SeccompProfile](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#seccompprofile-v1-core)
+* [Documentation of core.SeccompProfile](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#seccompprofile-v1-core)
 
 ***
 
@@ -1745,7 +1745,7 @@ Type: `core.SELinuxOptions` <sup>[\[ref\]](https://github.com/arangodb/kube-aran
 SELinuxOptions are the labels to be applied to the container
 
 Links:
-* [Documentation of core.SELinuxOptions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#selinuxoptions-v1-core)
+* [Documentation of core.SELinuxOptions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#selinuxoptions-v1-core)
 
 ***
 
@@ -1826,7 +1826,7 @@ Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangod
 Sidecars specifies a list of additional containers to be started
 
 Links:
-* [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
+* [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#container-v1-core)
 
 ***
 
@@ -1858,7 +1858,7 @@ By default, suitable tolerations are set for the following keys with the `NoExec
 For more information on tolerations, consult the https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
 
 Links:
-* [Documentation of core.Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#toleration-v1-core)
+* [Documentation of core.Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#toleration-v1-core)
 
 ***
 
@@ -1882,7 +1882,7 @@ with size as specified by `spec.<group>.resources.requests.storage` will be crea
 and `iops` is not forwarded to the pods resource requirements.
 
 Links:
-* [Documentation of core.PersistentVolumeClaim](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaim-v1-core)
+* [Documentation of core.PersistentVolumeClaim](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#persistentvolumeclaim-v1-core)
 
 ***
 
@@ -1893,7 +1893,7 @@ Type: `[]ServerGroupSpecVolumeMount` <sup>[\[ref\]](https://github.com/arangodb/
 VolumeMounts define list of volume mounts mounted into server container
 
 Links:
-* [Documentation of ServerGroupSpecVolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#volumemount-v1-core)
+* [Documentation of ServerGroupSpecVolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#volumemount-v1-core)
 
 ***
 
@@ -1904,7 +1904,7 @@ Type: `core.ConfigMapVolumeSource` <sup>[\[ref\]](https://github.com/arangodb/ku
 ConfigMap which should be mounted into pod
 
 Links:
-* [Documentation of core.ConfigMapVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#configmapvolumesource-v1-core)
+* [Documentation of core.ConfigMapVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#configmapvolumesource-v1-core)
 
 ***
 
@@ -1915,7 +1915,7 @@ Type: `core.EmptyDirVolumeSource` <sup>[\[ref\]](https://github.com/arangodb/kub
 EmptyDir
 
 Links:
-* [Documentation of core.EmptyDirVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#emptydirvolumesource-v1-core)
+* [Documentation of core.EmptyDirVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#emptydirvolumesource-v1-core)
 
 ***
 
@@ -1926,7 +1926,7 @@ Type: `core.HostPathVolumeSource` <sup>[\[ref\]](https://github.com/arangodb/kub
 HostPath
 
 Links:
-* [Documentation of core.HostPathVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#hostpathvolumesource-v1-core)
+* [Documentation of core.HostPathVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#hostpathvolumesource-v1-core)
 
 ***
 
@@ -1945,7 +1945,7 @@ Type: `core.PersistentVolumeClaimVolumeSource` <sup>[\[ref\]](https://github.com
 PersistentVolumeClaim
 
 Links:
-* [Documentation of core.PersistentVolumeClaimVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaimvolumesource-v1-core)
+* [Documentation of core.PersistentVolumeClaimVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#persistentvolumeclaimvolumesource-v1-core)
 
 ***
 
@@ -1956,7 +1956,7 @@ Type: `core.SecretVolumeSource` <sup>[\[ref\]](https://github.com/arangodb/kube-
 Secret which should be mounted into pod
 
 Links:
-* [Documentation of core.SecretVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#secretvolumesource-v1-core)
+* [Documentation of core.SecretVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#secretvolumesource-v1-core)
 
 ***
 
@@ -1975,7 +1975,7 @@ Type: `core.PodAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangod
 Affinity specified additional affinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation of core.PodAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podaffinity-v1-core)
+* [Documentation of core.PodAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#podaffinity-v1-core)
 
 ***
 
@@ -2022,7 +2022,7 @@ Type: `core.PodAntiAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-ara
 AntiAffinity specified additional antiAffinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation of core.Pod.AntiAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podantiaffinity-v1-core)
+* [Documentation of core.Pod.AntiAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#podantiaffinity-v1-core)
 
 ***
 
@@ -2076,7 +2076,7 @@ Type: `resource.Quantity` <sup>[\[ref\]](https://github.com/arangodb/kube-arango
 Size define size of the ephemeral volume
 
 Links:
-* [Documentation of resource.Quantity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#quantity-resource-core)
+* [Documentation of resource.Quantity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#quantity-resource-core)
 
 ***
 
@@ -2087,7 +2087,7 @@ Type: `resource.Quantity` <sup>[\[ref\]](https://github.com/arangodb/kube-arango
 Size define size of the ephemeral volume
 
 Links:
-* [Documentation of resource.Quantity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#quantity-resource-core)
+* [Documentation of resource.Quantity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#quantity-resource-core)
 
 ***
 
@@ -2134,7 +2134,7 @@ Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangod
 Containers contains list of containers
 
 Links:
-* [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
+* [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#container-v1-core)
 
 ***
 
@@ -2203,7 +2203,7 @@ If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a 
 Accepted Range <0, 50>. If the value is outside the accepted range, it is adjusted to the closest value.
 
 Links:
-* [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+* [Documentation of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
 
 Default Value: `0`
 
@@ -2224,7 +2224,7 @@ Type: `core.NodeAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arango
 NodeAffinity specified additional nodeAffinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation of code.NodeAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#nodeaffinity-v1-core)
+* [Documentation of code.NodeAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#nodeaffinity-v1-core)
 
 ***
 
@@ -2279,7 +2279,7 @@ OverrideDetectedNumberOfCores determines if number of cores should be overridden
 If is set to true and Container CPU Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` to the value from the Container CPU Limits.
 
 Links:
-* [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+* [Documentation of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
 
 Default Value: `true`
 
@@ -2295,7 +2295,7 @@ OverrideDetectedTotalMemory determines if memory should be overridden based on v
 If is set to true and Container Memory Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` to the value from the Container Memory Limits.
 
 Links:
-* [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+* [Documentation of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
 
 Default Value: `true`
 
@@ -2555,7 +2555,7 @@ Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kub
 Resources holds resource requests & limits
 
 Links:
-* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core)
+* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#resourcerequirements-v1-core)
 
 ***
 
@@ -2648,7 +2648,7 @@ Type: `core.SeccompProfile` <sup>[\[ref\]](https://github.com/arangodb/kube-aran
 SeccompProfile defines a pod/container's seccomp profile settings. Only one profile source may be set.
 
 Links:
-* [Documentation of core.SeccompProfile](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#seccompprofile-v1-core)
+* [Documentation of core.SeccompProfile](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#seccompprofile-v1-core)
 
 ***
 
@@ -2659,7 +2659,7 @@ Type: `core.SELinuxOptions` <sup>[\[ref\]](https://github.com/arangodb/kube-aran
 SELinuxOptions are the labels to be applied to the container
 
 Links:
-* [Documentation of core.SELinuxOptions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#selinuxoptions-v1-core)
+* [Documentation of core.SELinuxOptions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#selinuxoptions-v1-core)
 
 ***
 
@@ -2740,7 +2740,7 @@ Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangod
 Sidecars specifies a list of additional containers to be started
 
 Links:
-* [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
+* [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#container-v1-core)
 
 ***
 
@@ -2772,7 +2772,7 @@ By default, suitable tolerations are set for the following keys with the `NoExec
 For more information on tolerations, consult the https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
 
 Links:
-* [Documentation of core.Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#toleration-v1-core)
+* [Documentation of core.Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#toleration-v1-core)
 
 ***
 
@@ -2796,7 +2796,7 @@ with size as specified by `spec.<group>.resources.requests.storage` will be crea
 and `iops` is not forwarded to the pods resource requirements.
 
 Links:
-* [Documentation of core.PersistentVolumeClaim](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaim-v1-core)
+* [Documentation of core.PersistentVolumeClaim](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#persistentvolumeclaim-v1-core)
 
 ***
 
@@ -2807,7 +2807,7 @@ Type: `[]ServerGroupSpecVolumeMount` <sup>[\[ref\]](https://github.com/arangodb/
 VolumeMounts define list of volume mounts mounted into server container
 
 Links:
-* [Documentation of ServerGroupSpecVolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#volumemount-v1-core)
+* [Documentation of ServerGroupSpecVolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#volumemount-v1-core)
 
 ***
 
@@ -2818,7 +2818,7 @@ Type: `core.ConfigMapVolumeSource` <sup>[\[ref\]](https://github.com/arangodb/ku
 ConfigMap which should be mounted into pod
 
 Links:
-* [Documentation of core.ConfigMapVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#configmapvolumesource-v1-core)
+* [Documentation of core.ConfigMapVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#configmapvolumesource-v1-core)
 
 ***
 
@@ -2829,7 +2829,7 @@ Type: `core.EmptyDirVolumeSource` <sup>[\[ref\]](https://github.com/arangodb/kub
 EmptyDir
 
 Links:
-* [Documentation of core.EmptyDirVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#emptydirvolumesource-v1-core)
+* [Documentation of core.EmptyDirVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#emptydirvolumesource-v1-core)
 
 ***
 
@@ -2840,7 +2840,7 @@ Type: `core.HostPathVolumeSource` <sup>[\[ref\]](https://github.com/arangodb/kub
 HostPath
 
 Links:
-* [Documentation of core.HostPathVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#hostpathvolumesource-v1-core)
+* [Documentation of core.HostPathVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#hostpathvolumesource-v1-core)
 
 ***
 
@@ -2859,7 +2859,7 @@ Type: `core.PersistentVolumeClaimVolumeSource` <sup>[\[ref\]](https://github.com
 PersistentVolumeClaim
 
 Links:
-* [Documentation of core.PersistentVolumeClaimVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaimvolumesource-v1-core)
+* [Documentation of core.PersistentVolumeClaimVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#persistentvolumeclaimvolumesource-v1-core)
 
 ***
 
@@ -2870,7 +2870,7 @@ Type: `core.SecretVolumeSource` <sup>[\[ref\]](https://github.com/arangodb/kube-
 Secret which should be mounted into pod
 
 Links:
-* [Documentation of core.SecretVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#secretvolumesource-v1-core)
+* [Documentation of core.SecretVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#secretvolumesource-v1-core)
 
 ***
 
@@ -2990,7 +2990,7 @@ Type: `core.PodAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangod
 Affinity specified additional affinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation of core.PodAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podaffinity-v1-core)
+* [Documentation of core.PodAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#podaffinity-v1-core)
 
 ***
 
@@ -3001,7 +3001,7 @@ Type: `core.PodAntiAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-ara
 AntiAffinity specified additional antiAffinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation of core.Pod.AntiAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podantiaffinity-v1-core)
+* [Documentation of core.Pod.AntiAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#podantiaffinity-v1-core)
 
 ***
 
@@ -3030,7 +3030,7 @@ Type: `core.NodeAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arango
 NodeAffinity specified additional nodeAffinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation of code.NodeAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#nodeaffinity-v1-core)
+* [Documentation of code.NodeAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#nodeaffinity-v1-core)
 
 ***
 
@@ -3057,7 +3057,7 @@ Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kub
 Resources holds resource requests & limits
 
 Links:
-* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core)
+* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#resourcerequirements-v1-core)
 
 ***
 
@@ -3142,7 +3142,7 @@ Type: `core.SeccompProfile` <sup>[\[ref\]](https://github.com/arangodb/kube-aran
 SeccompProfile defines a pod/container's seccomp profile settings. Only one profile source may be set.
 
 Links:
-* [Documentation of core.SeccompProfile](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#seccompprofile-v1-core)
+* [Documentation of core.SeccompProfile](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#seccompprofile-v1-core)
 
 ***
 
@@ -3153,7 +3153,7 @@ Type: `core.SELinuxOptions` <sup>[\[ref\]](https://github.com/arangodb/kube-aran
 SELinuxOptions are the labels to be applied to the container
 
 Links:
-* [Documentation of core.SELinuxOptions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#selinuxoptions-v1-core)
+* [Documentation of core.SELinuxOptions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#selinuxoptions-v1-core)
 
 ***
 
@@ -3202,7 +3202,7 @@ Type: `[]core.Toleration` <sup>[\[ref\]](https://github.com/arangodb/kube-arango
 Tolerations specifies the tolerations added to Pods in this group.
 
 Links:
-* [Documentation of core.Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#toleration-v1-core)
+* [Documentation of core.Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#toleration-v1-core)
 
 ***
 
@@ -3299,7 +3299,7 @@ Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kub
 Resources holds resource requests & limits
 
 Links:
-* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core)
+* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#resourcerequirements-v1-core)
 
 ***
 
@@ -3335,7 +3335,7 @@ Enabled if this is set to `true`, the operator runs a sidecar container for
 every Agent, DB-Server, Coordinator and Single server.
 
 Links:
-* [Metrics collection](/docs/metrics.md)
+* [Metrics collection](../metrics.md)
 
 Default Value: `false`
 
@@ -3370,7 +3370,7 @@ Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kub
 Resources holds resource requests & limits
 
 Links:
-* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core)
+* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#resourcerequirements-v1-core)
 
 ***
 
@@ -3503,7 +3503,7 @@ Type: `core.PodAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangod
 Affinity specified additional affinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation of core.PodAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podaffinity-v1-core)
+* [Documentation of core.PodAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#podaffinity-v1-core)
 
 ***
 
@@ -3550,7 +3550,7 @@ Type: `core.PodAntiAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-ara
 AntiAffinity specified additional antiAffinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation of core.Pod.AntiAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podantiaffinity-v1-core)
+* [Documentation of core.Pod.AntiAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#podantiaffinity-v1-core)
 
 ***
 
@@ -3604,7 +3604,7 @@ Type: `resource.Quantity` <sup>[\[ref\]](https://github.com/arangodb/kube-arango
 Size define size of the ephemeral volume
 
 Links:
-* [Documentation of resource.Quantity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#quantity-resource-core)
+* [Documentation of resource.Quantity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#quantity-resource-core)
 
 ***
 
@@ -3615,7 +3615,7 @@ Type: `resource.Quantity` <sup>[\[ref\]](https://github.com/arangodb/kube-arango
 Size define size of the ephemeral volume
 
 Links:
-* [Documentation of resource.Quantity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#quantity-resource-core)
+* [Documentation of resource.Quantity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#quantity-resource-core)
 
 ***
 
@@ -3662,7 +3662,7 @@ Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangod
 Containers contains list of containers
 
 Links:
-* [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
+* [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#container-v1-core)
 
 ***
 
@@ -3731,7 +3731,7 @@ If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a 
 Accepted Range <0, 50>. If the value is outside the accepted range, it is adjusted to the closest value.
 
 Links:
-* [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+* [Documentation of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
 
 Default Value: `0`
 
@@ -3752,7 +3752,7 @@ Type: `core.NodeAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arango
 NodeAffinity specified additional nodeAffinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation of code.NodeAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#nodeaffinity-v1-core)
+* [Documentation of code.NodeAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#nodeaffinity-v1-core)
 
 ***
 
@@ -3807,7 +3807,7 @@ OverrideDetectedNumberOfCores determines if number of cores should be overridden
 If is set to true and Container CPU Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` to the value from the Container CPU Limits.
 
 Links:
-* [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+* [Documentation of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
 
 Default Value: `true`
 
@@ -3823,7 +3823,7 @@ OverrideDetectedTotalMemory determines if memory should be overridden based on v
 If is set to true and Container Memory Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` to the value from the Container Memory Limits.
 
 Links:
-* [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+* [Documentation of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
 
 Default Value: `true`
 
@@ -4083,7 +4083,7 @@ Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kub
 Resources holds resource requests & limits
 
 Links:
-* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core)
+* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#resourcerequirements-v1-core)
 
 ***
 
@@ -4176,7 +4176,7 @@ Type: `core.SeccompProfile` <sup>[\[ref\]](https://github.com/arangodb/kube-aran
 SeccompProfile defines a pod/container's seccomp profile settings. Only one profile source may be set.
 
 Links:
-* [Documentation of core.SeccompProfile](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#seccompprofile-v1-core)
+* [Documentation of core.SeccompProfile](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#seccompprofile-v1-core)
 
 ***
 
@@ -4187,7 +4187,7 @@ Type: `core.SELinuxOptions` <sup>[\[ref\]](https://github.com/arangodb/kube-aran
 SELinuxOptions are the labels to be applied to the container
 
 Links:
-* [Documentation of core.SELinuxOptions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#selinuxoptions-v1-core)
+* [Documentation of core.SELinuxOptions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#selinuxoptions-v1-core)
 
 ***
 
@@ -4268,7 +4268,7 @@ Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangod
 Sidecars specifies a list of additional containers to be started
 
 Links:
-* [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
+* [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#container-v1-core)
 
 ***
 
@@ -4300,7 +4300,7 @@ By default, suitable tolerations are set for the following keys with the `NoExec
 For more information on tolerations, consult the https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
 
 Links:
-* [Documentation of core.Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#toleration-v1-core)
+* [Documentation of core.Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#toleration-v1-core)
 
 ***
 
@@ -4324,7 +4324,7 @@ with size as specified by `spec.<group>.resources.requests.storage` will be crea
 and `iops` is not forwarded to the pods resource requirements.
 
 Links:
-* [Documentation of core.PersistentVolumeClaim](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaim-v1-core)
+* [Documentation of core.PersistentVolumeClaim](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#persistentvolumeclaim-v1-core)
 
 ***
 
@@ -4335,7 +4335,7 @@ Type: `[]ServerGroupSpecVolumeMount` <sup>[\[ref\]](https://github.com/arangodb/
 VolumeMounts define list of volume mounts mounted into server container
 
 Links:
-* [Documentation of ServerGroupSpecVolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#volumemount-v1-core)
+* [Documentation of ServerGroupSpecVolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#volumemount-v1-core)
 
 ***
 
@@ -4346,7 +4346,7 @@ Type: `core.ConfigMapVolumeSource` <sup>[\[ref\]](https://github.com/arangodb/ku
 ConfigMap which should be mounted into pod
 
 Links:
-* [Documentation of core.ConfigMapVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#configmapvolumesource-v1-core)
+* [Documentation of core.ConfigMapVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#configmapvolumesource-v1-core)
 
 ***
 
@@ -4357,7 +4357,7 @@ Type: `core.EmptyDirVolumeSource` <sup>[\[ref\]](https://github.com/arangodb/kub
 EmptyDir
 
 Links:
-* [Documentation of core.EmptyDirVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#emptydirvolumesource-v1-core)
+* [Documentation of core.EmptyDirVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#emptydirvolumesource-v1-core)
 
 ***
 
@@ -4368,7 +4368,7 @@ Type: `core.HostPathVolumeSource` <sup>[\[ref\]](https://github.com/arangodb/kub
 HostPath
 
 Links:
-* [Documentation of core.HostPathVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#hostpathvolumesource-v1-core)
+* [Documentation of core.HostPathVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#hostpathvolumesource-v1-core)
 
 ***
 
@@ -4387,7 +4387,7 @@ Type: `core.PersistentVolumeClaimVolumeSource` <sup>[\[ref\]](https://github.com
 PersistentVolumeClaim
 
 Links:
-* [Documentation of core.PersistentVolumeClaimVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaimvolumesource-v1-core)
+* [Documentation of core.PersistentVolumeClaimVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#persistentvolumeclaimvolumesource-v1-core)
 
 ***
 
@@ -4398,7 +4398,7 @@ Type: `core.SecretVolumeSource` <sup>[\[ref\]](https://github.com/arangodb/kube-
 Secret which should be mounted into pod
 
 Links:
-* [Documentation of core.SecretVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#secretvolumesource-v1-core)
+* [Documentation of core.SecretVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#secretvolumesource-v1-core)
 
 ***
 
@@ -4618,7 +4618,7 @@ Type: `core.PodAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangod
 Affinity specified additional affinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation of core.PodAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podaffinity-v1-core)
+* [Documentation of core.PodAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#podaffinity-v1-core)
 
 ***
 
@@ -4665,7 +4665,7 @@ Type: `core.PodAntiAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-ara
 AntiAffinity specified additional antiAffinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation of core.Pod.AntiAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podantiaffinity-v1-core)
+* [Documentation of core.Pod.AntiAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#podantiaffinity-v1-core)
 
 ***
 
@@ -4719,7 +4719,7 @@ Type: `resource.Quantity` <sup>[\[ref\]](https://github.com/arangodb/kube-arango
 Size define size of the ephemeral volume
 
 Links:
-* [Documentation of resource.Quantity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#quantity-resource-core)
+* [Documentation of resource.Quantity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#quantity-resource-core)
 
 ***
 
@@ -4730,7 +4730,7 @@ Type: `resource.Quantity` <sup>[\[ref\]](https://github.com/arangodb/kube-arango
 Size define size of the ephemeral volume
 
 Links:
-* [Documentation of resource.Quantity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#quantity-resource-core)
+* [Documentation of resource.Quantity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#quantity-resource-core)
 
 ***
 
@@ -4777,7 +4777,7 @@ Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangod
 Containers contains list of containers
 
 Links:
-* [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
+* [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#container-v1-core)
 
 ***
 
@@ -4846,7 +4846,7 @@ If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a 
 Accepted Range <0, 50>. If the value is outside the accepted range, it is adjusted to the closest value.
 
 Links:
-* [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+* [Documentation of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
 
 Default Value: `0`
 
@@ -4867,7 +4867,7 @@ Type: `core.NodeAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arango
 NodeAffinity specified additional nodeAffinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation of code.NodeAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#nodeaffinity-v1-core)
+* [Documentation of code.NodeAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#nodeaffinity-v1-core)
 
 ***
 
@@ -4922,7 +4922,7 @@ OverrideDetectedNumberOfCores determines if number of cores should be overridden
 If is set to true and Container CPU Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` to the value from the Container CPU Limits.
 
 Links:
-* [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+* [Documentation of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
 
 Default Value: `true`
 
@@ -4938,7 +4938,7 @@ OverrideDetectedTotalMemory determines if memory should be overridden based on v
 If is set to true and Container Memory Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` to the value from the Container Memory Limits.
 
 Links:
-* [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+* [Documentation of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
 
 Default Value: `true`
 
@@ -5198,7 +5198,7 @@ Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kub
 Resources holds resource requests & limits
 
 Links:
-* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core)
+* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#resourcerequirements-v1-core)
 
 ***
 
@@ -5291,7 +5291,7 @@ Type: `core.SeccompProfile` <sup>[\[ref\]](https://github.com/arangodb/kube-aran
 SeccompProfile defines a pod/container's seccomp profile settings. Only one profile source may be set.
 
 Links:
-* [Documentation of core.SeccompProfile](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#seccompprofile-v1-core)
+* [Documentation of core.SeccompProfile](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#seccompprofile-v1-core)
 
 ***
 
@@ -5302,7 +5302,7 @@ Type: `core.SELinuxOptions` <sup>[\[ref\]](https://github.com/arangodb/kube-aran
 SELinuxOptions are the labels to be applied to the container
 
 Links:
-* [Documentation of core.SELinuxOptions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#selinuxoptions-v1-core)
+* [Documentation of core.SELinuxOptions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#selinuxoptions-v1-core)
 
 ***
 
@@ -5383,7 +5383,7 @@ Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangod
 Sidecars specifies a list of additional containers to be started
 
 Links:
-* [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
+* [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#container-v1-core)
 
 ***
 
@@ -5415,7 +5415,7 @@ By default, suitable tolerations are set for the following keys with the `NoExec
 For more information on tolerations, consult the https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
 
 Links:
-* [Documentation of core.Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#toleration-v1-core)
+* [Documentation of core.Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#toleration-v1-core)
 
 ***
 
@@ -5439,7 +5439,7 @@ with size as specified by `spec.<group>.resources.requests.storage` will be crea
 and `iops` is not forwarded to the pods resource requirements.
 
 Links:
-* [Documentation of core.PersistentVolumeClaim](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaim-v1-core)
+* [Documentation of core.PersistentVolumeClaim](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#persistentvolumeclaim-v1-core)
 
 ***
 
@@ -5450,7 +5450,7 @@ Type: `[]ServerGroupSpecVolumeMount` <sup>[\[ref\]](https://github.com/arangodb/
 VolumeMounts define list of volume mounts mounted into server container
 
 Links:
-* [Documentation of ServerGroupSpecVolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#volumemount-v1-core)
+* [Documentation of ServerGroupSpecVolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#volumemount-v1-core)
 
 ***
 
@@ -5461,7 +5461,7 @@ Type: `core.ConfigMapVolumeSource` <sup>[\[ref\]](https://github.com/arangodb/ku
 ConfigMap which should be mounted into pod
 
 Links:
-* [Documentation of core.ConfigMapVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#configmapvolumesource-v1-core)
+* [Documentation of core.ConfigMapVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#configmapvolumesource-v1-core)
 
 ***
 
@@ -5472,7 +5472,7 @@ Type: `core.EmptyDirVolumeSource` <sup>[\[ref\]](https://github.com/arangodb/kub
 EmptyDir
 
 Links:
-* [Documentation of core.EmptyDirVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#emptydirvolumesource-v1-core)
+* [Documentation of core.EmptyDirVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#emptydirvolumesource-v1-core)
 
 ***
 
@@ -5483,7 +5483,7 @@ Type: `core.HostPathVolumeSource` <sup>[\[ref\]](https://github.com/arangodb/kub
 HostPath
 
 Links:
-* [Documentation of core.HostPathVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#hostpathvolumesource-v1-core)
+* [Documentation of core.HostPathVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#hostpathvolumesource-v1-core)
 
 ***
 
@@ -5502,7 +5502,7 @@ Type: `core.PersistentVolumeClaimVolumeSource` <sup>[\[ref\]](https://github.com
 PersistentVolumeClaim
 
 Links:
-* [Documentation of core.PersistentVolumeClaimVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaimvolumesource-v1-core)
+* [Documentation of core.PersistentVolumeClaimVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#persistentvolumeclaimvolumesource-v1-core)
 
 ***
 
@@ -5513,7 +5513,7 @@ Type: `core.SecretVolumeSource` <sup>[\[ref\]](https://github.com/arangodb/kube-
 Secret which should be mounted into pod
 
 Links:
-* [Documentation of core.SecretVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#secretvolumesource-v1-core)
+* [Documentation of core.SecretVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#secretvolumesource-v1-core)
 
 ***
 
@@ -5524,7 +5524,7 @@ Type: `core.PodAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangod
 Affinity specified additional affinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation of core.PodAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podaffinity-v1-core)
+* [Documentation of core.PodAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#podaffinity-v1-core)
 
 ***
 
@@ -5571,7 +5571,7 @@ Type: `core.PodAntiAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-ara
 AntiAffinity specified additional antiAffinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation of core.Pod.AntiAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#podantiaffinity-v1-core)
+* [Documentation of core.Pod.AntiAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#podantiaffinity-v1-core)
 
 ***
 
@@ -5625,7 +5625,7 @@ Type: `resource.Quantity` <sup>[\[ref\]](https://github.com/arangodb/kube-arango
 Size define size of the ephemeral volume
 
 Links:
-* [Documentation of resource.Quantity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#quantity-resource-core)
+* [Documentation of resource.Quantity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#quantity-resource-core)
 
 ***
 
@@ -5636,7 +5636,7 @@ Type: `resource.Quantity` <sup>[\[ref\]](https://github.com/arangodb/kube-arango
 Size define size of the ephemeral volume
 
 Links:
-* [Documentation of resource.Quantity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#quantity-resource-core)
+* [Documentation of resource.Quantity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#quantity-resource-core)
 
 ***
 
@@ -5683,7 +5683,7 @@ Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangod
 Containers contains list of containers
 
 Links:
-* [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
+* [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#container-v1-core)
 
 ***
 
@@ -5752,7 +5752,7 @@ If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a 
 Accepted Range <0, 50>. If the value is outside the accepted range, it is adjusted to the closest value.
 
 Links:
-* [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+* [Documentation of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
 
 Default Value: `0`
 
@@ -5773,7 +5773,7 @@ Type: `core.NodeAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arango
 NodeAffinity specified additional nodeAffinity settings in ArangoDB Pod definitions
 
 Links:
-* [Documentation of code.NodeAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#nodeaffinity-v1-core)
+* [Documentation of code.NodeAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#nodeaffinity-v1-core)
 
 ***
 
@@ -5828,7 +5828,7 @@ OverrideDetectedNumberOfCores determines if number of cores should be overridden
 If is set to true and Container CPU Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` to the value from the Container CPU Limits.
 
 Links:
-* [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+* [Documentation of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
 
 Default Value: `true`
 
@@ -5844,7 +5844,7 @@ OverrideDetectedTotalMemory determines if memory should be overridden based on v
 If is set to true and Container Memory Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` to the value from the Container Memory Limits.
 
 Links:
-* [Docs of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+* [Documentation of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
 
 Default Value: `true`
 
@@ -6104,7 +6104,7 @@ Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kub
 Resources holds resource requests & limits
 
 Links:
-* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#resourcerequirements-v1-core)
+* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#resourcerequirements-v1-core)
 
 ***
 
@@ -6197,7 +6197,7 @@ Type: `core.SeccompProfile` <sup>[\[ref\]](https://github.com/arangodb/kube-aran
 SeccompProfile defines a pod/container's seccomp profile settings. Only one profile source may be set.
 
 Links:
-* [Documentation of core.SeccompProfile](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#seccompprofile-v1-core)
+* [Documentation of core.SeccompProfile](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#seccompprofile-v1-core)
 
 ***
 
@@ -6208,7 +6208,7 @@ Type: `core.SELinuxOptions` <sup>[\[ref\]](https://github.com/arangodb/kube-aran
 SELinuxOptions are the labels to be applied to the container
 
 Links:
-* [Documentation of core.SELinuxOptions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#selinuxoptions-v1-core)
+* [Documentation of core.SELinuxOptions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#selinuxoptions-v1-core)
 
 ***
 
@@ -6289,7 +6289,7 @@ Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangod
 Sidecars specifies a list of additional containers to be started
 
 Links:
-* [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#container-v1-core)
+* [Documentation of core.Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#container-v1-core)
 
 ***
 
@@ -6321,7 +6321,7 @@ By default, suitable tolerations are set for the following keys with the `NoExec
 For more information on tolerations, consult the https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
 
 Links:
-* [Documentation of core.Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#toleration-v1-core)
+* [Documentation of core.Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#toleration-v1-core)
 
 ***
 
@@ -6345,7 +6345,7 @@ with size as specified by `spec.<group>.resources.requests.storage` will be crea
 and `iops` is not forwarded to the pods resource requirements.
 
 Links:
-* [Documentation of core.PersistentVolumeClaim](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaim-v1-core)
+* [Documentation of core.PersistentVolumeClaim](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#persistentvolumeclaim-v1-core)
 
 ***
 
@@ -6356,7 +6356,7 @@ Type: `[]ServerGroupSpecVolumeMount` <sup>[\[ref\]](https://github.com/arangodb/
 VolumeMounts define list of volume mounts mounted into server container
 
 Links:
-* [Documentation of ServerGroupSpecVolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#volumemount-v1-core)
+* [Documentation of ServerGroupSpecVolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#volumemount-v1-core)
 
 ***
 
@@ -6367,7 +6367,7 @@ Type: `core.ConfigMapVolumeSource` <sup>[\[ref\]](https://github.com/arangodb/ku
 ConfigMap which should be mounted into pod
 
 Links:
-* [Documentation of core.ConfigMapVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#configmapvolumesource-v1-core)
+* [Documentation of core.ConfigMapVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#configmapvolumesource-v1-core)
 
 ***
 
@@ -6378,7 +6378,7 @@ Type: `core.EmptyDirVolumeSource` <sup>[\[ref\]](https://github.com/arangodb/kub
 EmptyDir
 
 Links:
-* [Documentation of core.EmptyDirVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#emptydirvolumesource-v1-core)
+* [Documentation of core.EmptyDirVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#emptydirvolumesource-v1-core)
 
 ***
 
@@ -6389,7 +6389,7 @@ Type: `core.HostPathVolumeSource` <sup>[\[ref\]](https://github.com/arangodb/kub
 HostPath
 
 Links:
-* [Documentation of core.HostPathVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#hostpathvolumesource-v1-core)
+* [Documentation of core.HostPathVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#hostpathvolumesource-v1-core)
 
 ***
 
@@ -6408,7 +6408,7 @@ Type: `core.PersistentVolumeClaimVolumeSource` <sup>[\[ref\]](https://github.com
 PersistentVolumeClaim
 
 Links:
-* [Documentation of core.PersistentVolumeClaimVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#persistentvolumeclaimvolumesource-v1-core)
+* [Documentation of core.PersistentVolumeClaimVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#persistentvolumeclaimvolumesource-v1-core)
 
 ***
 
@@ -6419,7 +6419,7 @@ Type: `core.SecretVolumeSource` <sup>[\[ref\]](https://github.com/arangodb/kube-
 Secret which should be mounted into pod
 
 Links:
-* [Documentation of core.SecretVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#secretvolumesource-v1-core)
+* [Documentation of core.SecretVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#secretvolumesource-v1-core)
 
 ***
 
@@ -6430,7 +6430,7 @@ Type: `map[string]meta.Duration` <sup>[\[ref\]](https://github.com/arangodb/kube
 Actions keep map of the actions timeouts.
 
 Links:
-* [List of supported action names](/docs/generated/actions.md)
+* [List of supported action names](../generated/actions.md)
 * [Definition of meta.Duration](https://github.com/kubernetes/apimachinery/blob/v0.26.6/pkg/apis/meta/v1/duration.go)
 
 Example:
