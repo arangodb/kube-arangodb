@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Documentation) Move ML Extension example under "CRD overview"
 
 ## [1.2.37](https://github.com/arangodb/kube-arangodb/tree/1.2.37) (2024-01-22)
 - (Documentation) Improve documentation rendering for GitHub Pages
