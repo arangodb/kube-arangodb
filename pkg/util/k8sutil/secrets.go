@@ -23,7 +23,6 @@ package k8sutil
 import (
 	"context"
 
-	jg "github.com/golang-jwt/jwt"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -35,6 +34,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	secretv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
+	"github.com/arangodb/kube-arangodb/pkg/util/token"
 )
 
 // ValidateEncryptionKeySecret checks that a secret with given name in given namespace
@@ -302,12 +302,8 @@ func CreateJWTFromSecret(ctx context.Context, cachedSecrets secretv1.ReadInterfa
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	// Create a new token object, specifying signing method and the claims
-	// you would like it to contain.
-	token := jg.NewWithClaims(jg.SigningMethodHS256, jg.MapClaims(claims))
 
-	// Sign and get the complete encoded token as a string using the secret
-	signedToken, err := token.SignedString([]byte(secret))
+	signedToken, err := token.New([]byte(secret), claims)
 	if err != nil {
 		return errors.WithStack(err)
 	}

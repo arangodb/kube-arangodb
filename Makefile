@@ -223,16 +223,40 @@ endif
 
 BINNAME := $(PROJECT)
 BIN := $(BINDIR)/$(BINNAME)
-VBIN_LINUX_AMD64 := $(BINDIR)/$(RELEASE_MODE)/linux/amd64/$(BINNAME)
-VBIN_LINUX_ARM64 := $(BINDIR)/$(RELEASE_MODE)/linux/arm64/$(BINNAME)
 
 BIN_OPS_NAME := $(PROJECT)_ops
 BIN_OPS := $(BINDIR)/$(BIN_OPS_NAME)
-VBIN_OPS_LINUX_AMD64 := $(BINDIR)/$(RELEASE_MODE)/linux/amd64/$(BIN_OPS_NAME)
-VBIN_OPS_LINUX_ARM64 := $(BINDIR)/$(RELEASE_MODE)/linux/arm64/$(BIN_OPS_NAME)
 
-VBIN_OPS_DARWIN_AMD64 := $(BINDIR)/$(RELEASE_MODE)/darwin/amd64/$(BIN_OPS_NAME)
-VBIN_OPS_DARWIN_ARM64 := $(BINDIR)/$(RELEASE_MODE)/darwin/arm64/$(BIN_OPS_NAME)
+BIN_INT_NAME := $(PROJECT)_integration
+BIN_INT := $(BINDIR)/$(BIN_INT_NAME)
+
+define binary
+$(eval _OS:=$(call UPPER_ENV,$1))
+$(eval _ARCH:=$(call UPPER_ENV,$2))
+VBIN_$(_OS)_$(_ARCH) := $(BINDIR)/$(RELEASE_MODE)/$1/$2/$(BINNAME)
+VBIN_OPS_$(_OS)_$(_ARCH) := $(BINDIR)/$(RELEASE_MODE)/$1/$2/$(BIN_OPS_NAME)
+VBIN_INT_$(_OS)_$(_ARCH) := $(BINDIR)/$(RELEASE_MODE)/$1/$2/$(BIN_INT_NAME)
+
+$$(VBIN_$(_OS)_$(_ARCH)): $$(SOURCES) dashboard/assets.go VERSION
+	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/$1/$2
+	CGO_ENABLED=0 GOOS=$1 GOARCH=$2 go build $${GOBUILDARGS} --tags "$$(GOBUILDTAGS)" $$(COMPILE_DEBUG_FLAGS) -installsuffix netgo -gcflags=all="$$(GOBUILDGCFLAGS)" -ldflags "$$(GOBUILDLDFLAGS)" -o $$@ ./cmd/main
+
+$$(VBIN_OPS_$(_OS)_$(_ARCH)): $$(SOURCES) dashboard/assets.go VERSION
+	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/$1/$2
+	CGO_ENABLED=0 GOOS=$1 GOARCH=$2 go build $${GOBUILDARGS} --tags "$$(GOBUILDTAGS)" $$(COMPILE_DEBUG_FLAGS) -installsuffix netgo -gcflags=all="$$(GOBUILDGCFLAGS)" -ldflags "$$(GOBUILDLDFLAGS)" -o $$@ ./cmd/main-ops
+
+$$(VBIN_INT_$(_OS)_$(_ARCH)): $$(SOURCES) dashboard/assets.go VERSION
+	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/$1/$2
+	CGO_ENABLED=0 GOOS=$1 GOARCH=$2 go build $${GOBUILDARGS} --tags "$$(GOBUILDTAGS)" $$(COMPILE_DEBUG_FLAGS) -installsuffix netgo -gcflags=all="$$(GOBUILDGCFLAGS)" -ldflags "$$(GOBUILDLDFLAGS)" -o $$@ ./cmd/main-int
+
+bin-all: $$(VBIN_$(_OS)_$(_ARCH)) $$(VBIN_OPS_$(_OS)_$(_ARCH)) $$(VBIN_INT_$(_OS)_$(_ARCH))
+
+endef
+
+$(eval $(call binary,linux,amd64))
+$(eval $(call binary,linux,arm64))
+$(eval $(call binary,darwin,amd64))
+$(eval $(call binary,darwin,arm64))
 
 ifdef VERBOSE
 	TESTVERBOSEOPTIONS := -v
@@ -421,27 +445,12 @@ dashboard/assets.go:
 		$(DASHBOARDBUILDIMAGE)
 	$(GOASSETSBUILDER) -s /dashboard/build/ -o dashboard/assets.go -p dashboard dashboard/build
 
-.PHONY: bin bin-all
+# Binaries
+
+.PHONY: bin
 bin: $(BIN)
-bin-all: $(BIN) $(VBIN_LINUX_AMD64) $(VBIN_LINUX_ARM64)
 
-$(VBIN_LINUX_AMD64): $(SOURCES) dashboard/assets.go VERSION
-	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/linux/amd64
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build ${GOBUILDARGS} --tags "$(GOBUILDTAGS)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -gcflags=all="$(GOBUILDGCFLAGS)" -ldflags "$(GOBUILDLDFLAGS)" -o $(VBIN_LINUX_AMD64) ./cmd/main
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build ${GOBUILDARGS} --tags "$(GOBUILDTAGS)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -gcflags=all="$(GOBUILDGCFLAGS)" -ldflags "$(GOBUILDLDFLAGS)" -o $(VBIN_OPS_LINUX_AMD64) ./cmd/main-ops
-
-$(VBIN_LINUX_ARM64): $(SOURCES) dashboard/assets.go VERSION
-	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/linux/arm64
-	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build ${GOBUILDARGS} --tags "$(GOBUILDTAGS)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -gcflags=all="$(GOBUILDGCFLAGS)" -ldflags "$(GOBUILDLDFLAGS)" -o $(VBIN_LINUX_ARM64) ./cmd/main
-	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build ${GOBUILDARGS} --tags "$(GOBUILDTAGS)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -gcflags=all="$(GOBUILDGCFLAGS)" -ldflags "$(GOBUILDLDFLAGS)" -o $(VBIN_OPS_LINUX_ARM64) ./cmd/main-ops
-
-bin-ops-all: $(VBIN_LINUX_AMD64) $(VBIN_LINUX_ARM64)
-	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/darwin/amd64
-	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build ${GOBUILDARGS} --tags "$(GOBUILDTAGS)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -gcflags=all="$(GOBUILDGCFLAGS)" -ldflags "$(GOBUILDLDFLAGS)" -o $(VBIN_OPS_DARWIN_AMD64) ./cmd/main-ops
-	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/darwin/arm64
-	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build ${GOBUILDARGS} --tags "$(GOBUILDTAGS)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -gcflags=all="$(GOBUILDGCFLAGS)" -ldflags "$(GOBUILDLDFLAGS)" -o $(VBIN_OPS_DARWIN_ARM64) ./cmd/main-ops
-
-$(BIN): $(VBIN_LINUX_AMD64)
+$(BIN): $(VBIN_LINUX_AMD64) $(VBIN_OPS_LINUX_AMD64) $(VBIN_INT_LINUX_AMD64)
 	@cp "$(VBIN_LINUX_AMD64)" "$(BIN)"
 	@cp "$(VBIN_OPS_LINUX_AMD64)" "$(BIN_OPS)"
 
@@ -817,7 +826,7 @@ check-community:
 	@$(MAKE) _check RELEASE_MODE=community
 
 _check: sync-crds
-	@$(MAKE) fmt yamlfmt license-verify linter run-unit-tests bin vulncheck-optional
+	@$(MAKE) fmt yamlfmt license-verify linter run-unit-tests bin-all vulncheck-optional
 
 generate: generate-internal generate-proto fmt yamlfmt
 

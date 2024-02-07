@@ -1,0 +1,85 @@
+//
+// DISCLAIMER
+//
+// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Copyright holder is ArangoDB GmbH, Cologne, Germany
+//
+
+syntax = "proto3";
+
+import "google/protobuf/duration.proto";
+
+option go_package = "github.com/arangodb/kube-arangodb/integrations/v1/definition";
+
+package authentication;
+
+// AuthenticationV1 define ServiceInterface for Authentication V1
+service AuthenticationV1 {
+  // Validate and ensure that Authentication details are valid returns information about the user
+  rpc Validate (ValidateRequest) returns (ValidateResponse) {}
+
+  // CreateToken creates a token for the specified user
+  rpc CreateToken (CreateTokenRequest) returns (CreateTokenResponse) {}
+}
+
+// ValidateRequest defines request for AuthenticationV1 Validate Request
+message ValidateRequest {
+  // Token specifies a token extracted from the request or used currently
+  string Token = 1;
+}
+
+// ValidateResponse defines response for AuthenticationV1 Validate Request
+message ValidateResponse {
+  // IsValid returns information about the validity of the token
+  bool IsValid = 1;
+
+  // Message message for the validation phase
+  string Message = 2;
+
+  // Details returns token details if the token is valid
+  optional ValidateResponseDetails Details = 3;
+}
+
+// ValidateResponseDetails defines optional response for AuthenticationV1 Validate Request.
+// Returned only if the Token provided in the request is valid.
+message ValidateResponseDetails {
+  // Lifetime specify the lifetime of the token
+  google.protobuf.Duration Lifetime = 1;
+
+  // User returns the User used in the Token. If a user is not specified, `root` is returned
+  string User = 2;
+}
+
+// CreateTokenRequest defines request for AuthenticationV1 CreateToken Request
+message CreateTokenRequest {
+  // Lifetime specifies the lifetime of the token as duration. Defaults to 1 hour
+  optional google.protobuf.Duration Lifetime = 1;
+
+  // User specify the User for which token should be created. By default, the default user is used (root in most cases)
+  optional string User = 2;
+}
+
+// CreateTokenResponse defines response for AuthenticationV1 CreateToken Request
+message CreateTokenResponse {
+  // Lifetime specify the lifetime of the token as the duration
+  google.protobuf.Duration Lifetime = 1;
+
+  // User returns the User used in the Token
+  string User = 2;
+
+  // Token returns the Token as a string
+  string Token = 3;
+}
