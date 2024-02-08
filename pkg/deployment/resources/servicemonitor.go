@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2019-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2019-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -145,7 +145,7 @@ func (r *Resources) EnsureServiceMonitor(ctx context.Context, enabled bool) erro
 	client, ok := kclient.GetDefaultFactory().Client()
 	if !ok {
 		log.Error("Cannot get a monitoring client.")
-		return errors.Newf("Client not initialised")
+		return errors.Errorf("Client not initialised")
 	}
 
 	mClient := client.Monitoring()

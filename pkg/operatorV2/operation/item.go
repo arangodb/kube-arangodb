@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,7 +51,7 @@ func NewItemFromString(itemString string) (Item, error) {
 	parts := strings.Split(itemString, "/")
 
 	if len(parts) != 6 {
-		return Item{}, errors.Newf("expected 6 parts in %s, got %d", itemString, len(parts))
+		return Item{}, errors.Errorf("expected 6 parts in %s, got %d", itemString, len(parts))
 	}
 
 	return NewItem(Operation(parts[0]), parts[1], parts[2], parts[3], parts[4], parts[5])
@@ -94,11 +94,11 @@ type Item struct {
 
 func validateField(name, value string, allowEmpty bool) error {
 	if !allowEmpty && value == "" {
-		return errors.Newf(emptyError, name)
+		return errors.Errorf(emptyError, name)
 	}
 
 	if index := strings.Index(value, separator); index != -1 {
-		return errors.Newf(invalidCharacterError, separator, name)
+		return errors.Errorf(invalidCharacterError, separator, name)
 	}
 
 	return nil

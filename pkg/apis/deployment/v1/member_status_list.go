@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -183,7 +183,7 @@ func (l MemberStatusList) SelectMemberToRemove(selectors ...MemberToRemoveSelect
 				if member, ok := l.ElementByID(m); ok {
 					return member, nil
 				} else {
-					return MemberStatus{}, errors.Newf("Unable to find member with id %s", m)
+					return MemberStatus{}, errors.Errorf("Unable to find member with id %s", m)
 				}
 			}
 		}

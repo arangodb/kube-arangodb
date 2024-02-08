@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ func (s *ServerGroupIndexMethod) Validate() error {
 	case ServerGroupIndexMethodRandom, ServerGroupIndexMethodOrdered:
 		return nil
 	default:
-		return errors.Newf("Unknown IndexMethod %s", v)
+		return errors.Errorf("Unknown IndexMethod %s", v)
 	}
 }
 

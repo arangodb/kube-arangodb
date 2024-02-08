@@ -24,26 +24,40 @@ import (
 	"context"
 	"time"
 
+	"google.golang.org/grpc"
+
 	"github.com/arangodb/kube-arangodb/pkg/api/server"
 	pbShutdown "github.com/arangodb/kube-arangodb/pkg/api/shutdown/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
-func NewShutdownableShutdownServer() ShutdownableShutdownServer {
-	return &impl{closer: stop}
+func NewGlobalShutdownServer() svc.Handler {
+	return NewShutdownServer(stop)
 }
 
-type ShutdownableShutdownServer interface {
-	pbShutdown.ShutdownServer
-
-	Shutdown(cancelFunc context.CancelFunc)
+func NewShutdownServer(closer context.CancelFunc) svc.Handler {
+	return &impl{closer: closer}
 }
 
-var _ ShutdownableShutdownServer = &impl{}
+var _ pbShutdown.ShutdownServer = &impl{}
+var _ svc.Handler = &impl{}
 
 type impl struct {
 	pbShutdown.UnimplementedShutdownServer
 
 	closer context.CancelFunc
+}
+
+func (i *impl) Name() string {
+	return "shutdown"
+}
+
+func (i *impl) Health() svc.HealthState {
+	return svc.Healthy
+}
+
+func (i *impl) Register(registrar *grpc.Server) {
+	pbShutdown.RegisterShutdownServer(registrar, i)
 }
 
 func (i *impl) ShutdownServer(ctx context.Context, empty *server.Empty) (*server.Empty, error) {
@@ -54,8 +68,4 @@ func (i *impl) ShutdownServer(ctx context.Context, empty *server.Empty) (*server
 	}()
 
 	return &server.Empty{}, nil
-}
-
-func (i *impl) Shutdown(cancelFunc context.CancelFunc) {
-	cancelFunc()
 }

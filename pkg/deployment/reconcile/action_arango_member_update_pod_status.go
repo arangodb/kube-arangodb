@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -65,7 +65,7 @@ func (a *actionArangoMemberUpdatePodStatus) Start(ctx context.Context) (bool, er
 
 	member, ok := cache.ArangoMember().V1().GetSimple(name)
 	if !ok {
-		err := errors.Newf("ArangoMember not found")
+		err := errors.Errorf("ArangoMember not found")
 		a.log.Err(err).Error("ArangoMember not found")
 		return false, err
 	}

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -238,7 +238,7 @@ func (dr *DeploymentReplication) handleArangoDeploymentReplicationUpdatedEvent(e
 
 	// Save updated spec
 	if err := dr.updateCRSpec(newAPIObject.Spec); err != nil {
-		return errors.WithStack(errors.Newf("failed to update ArangoDeploymentReplication spec: %v", err))
+		return errors.WithStack(errors.Errorf("failed to update ArangoDeploymentReplication spec: %v", err))
 	}
 
 	// Trigger inspect
@@ -292,7 +292,7 @@ func (dr *DeploymentReplication) updateCRStatus() error {
 		}
 		if err != nil {
 			log.Err(err).Debug("failed to patch ArangoDeploymentReplication status")
-			return errors.WithStack(errors.Newf("failed to patch ArangoDeploymentReplication status: %v", err))
+			return errors.WithStack(errors.Errorf("failed to patch ArangoDeploymentReplication status: %v", err))
 		}
 	}
 }
@@ -329,7 +329,7 @@ func (dr *DeploymentReplication) updateCRSpec(newSpec api.DeploymentReplicationS
 		}
 		if err != nil {
 			log.Err(err).Debug("failed to patch ArangoDeploymentReplication spec")
-			return errors.WithStack(errors.Newf("failed to patch ArangoDeploymentReplication spec: %v", err))
+			return errors.WithStack(errors.Errorf("failed to patch ArangoDeploymentReplication spec: %v", err))
 		}
 	}
 }
@@ -388,7 +388,7 @@ func (dr *DeploymentReplication) reportFailedStatus() {
 			return errors.WithStack(err)
 		}
 		dr.apiObject = depl
-		return errors.WithStack(errors.Newf("retry needed"))
+		return errors.WithStack(errors.Errorf("retry needed"))
 	}
 
 	retry.Retry(op, time.Hour*24*365)

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -56,11 +56,11 @@ func loadOrSelfSignCertificate(cli typedCore.CoreV1Interface, cfg ServerConfig) 
 		}
 		certBytes, found := s.Data[core.TLSCertKey]
 		if !found {
-			return "", "", errors.Newf("No %s found in secret %s", core.TLSCertKey, cfg.TLSSecretName)
+			return "", "", errors.Errorf("No %s found in secret %s", core.TLSCertKey, cfg.TLSSecretName)
 		}
 		keyBytes, found := s.Data[core.TLSPrivateKeyKey]
 		if !found {
-			return "", "", errors.Newf("No %s found in secret %s", core.TLSPrivateKeyKey, cfg.TLSSecretName)
+			return "", "", errors.Errorf("No %s found in secret %s", core.TLSPrivateKeyKey, cfg.TLSSecretName)
 		}
 		return string(certBytes), string(keyBytes), nil
 	}

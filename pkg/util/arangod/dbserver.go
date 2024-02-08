@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -68,7 +68,7 @@ func IsDBServerEmpty(ctx context.Context, id string, client driver.Client) error
 				for _, serverID := range serverIDs {
 					if string(serverID) == id {
 						// DBServer still used in this shard
-						return errors.WithStack(errors.Newf("DBServer still used in shard %s of %s.%s", shardID, col.Parameters.Name, db.Name()))
+						return errors.WithStack(errors.Errorf("DBServer still used in shard %s of %s.%s", shardID, col.Parameters.Name, db.Name()))
 					}
 				}
 			}

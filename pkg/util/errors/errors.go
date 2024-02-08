@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,36 +22,29 @@ package errors
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"net"
 	"net/url"
 	"os"
 	"syscall"
 
-	errs "github.com/pkg/errors"
+	"github.com/pkg/errors"
 
 	driver "github.com/arangodb/go-driver"
 
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 )
 
-var (
-	Cause        = errs.Cause
-	New          = errs.New
-	WithStack    = errs.WithStack
-	Wrap         = errs.Wrap
-	Wrapf        = errs.Wrapf
-	WithMessage  = errs.WithMessage
-	WithMessagef = errs.WithMessagef
-)
+func Cause(err error) error {
+	return errors.Cause(err)
+}
 
 // CauseWithNil returns Cause of an error.
 // If error returned by Cause is same (no Causer interface implemented), function will return nil instead
 func CauseWithNil(err error) error {
 	if nerr := Cause(err); err == nil {
 		return nil
-	} else if nerr == err {
+	} else if errors.Is(nerr, err) {
 		// Cause returns same error if error object does not implement Causer interface
 		// To prevent infinite loops in usage CauseWithNil will return nil in this case
 		return nil
@@ -60,9 +53,37 @@ func CauseWithNil(err error) error {
 	}
 }
 
-func Newf(format string, args ...interface{}) error {
-	return New(fmt.Sprintf(format, args...))
+func New(message string) error {
+	return errors.New(message)
 }
+
+func Errorf(format string, args ...interface{}) error {
+	return errors.Errorf(format, args...)
+}
+
+func WithStack(err error) error {
+	return errors.WithStack(err)
+}
+
+func Wrap(err error, message string) error {
+	return errors.Wrap(err, message)
+}
+
+func Wrapf(err error, format string, args ...interface{}) error {
+	return errors.Wrapf(err, format, args...)
+}
+
+func WithMessage(err error, message string) error {
+	return errors.WithMessage(err, message)
+}
+
+func WithMessagef(err error, format string, args ...interface{}) error {
+	return errors.WithMessagef(err, format, args...)
+}
+
+func Is(err, target error) bool { return errors.Is(err, target) }
+
+func As(err error, target interface{}) bool { return errors.As(err, target) }
 
 type timeout interface {
 	Timeout() bool
@@ -73,7 +94,7 @@ func IsTimeout(err error) bool {
 	if err == nil {
 		return false
 	}
-	if t, ok := errs.Cause(err).(timeout); ok {
+	if t, ok := errors.Cause(err).(timeout); ok {
 		return t.Timeout()
 	}
 	return false
@@ -88,7 +109,7 @@ func IsTemporary(err error) bool {
 	if err == nil {
 		return false
 	}
-	if t, ok := errs.Cause(err).(temporary); ok {
+	if t, ok := errors.Cause(err).(temporary); ok {
 		return t.Temporary()
 	}
 	return false
@@ -96,7 +117,7 @@ func IsTemporary(err error) bool {
 
 // IsEOF returns true if the given error is caused by an EOF error.
 func IsEOF(err error) bool {
-	err = errs.Cause(err)
+	err = errors.Cause(err)
 	if err == io.EOF {
 		return true
 	}
@@ -108,7 +129,7 @@ func IsEOF(err error) bool {
 
 // IsConnectionRefused returns true if the given error is caused by an "connection refused" error.
 func IsConnectionRefused(err error) bool {
-	err = errs.Cause(err)
+	err = errors.Cause(err)
 	if err, ok := err.(syscall.Errno); ok {
 		return err == syscall.ECONNREFUSED
 	}
@@ -120,7 +141,7 @@ func IsConnectionRefused(err error) bool {
 
 // IsConnectionReset returns true if the given error is caused by an "connection reset by peer" error.
 func IsConnectionReset(err error) bool {
-	err = errs.Cause(err)
+	err = errors.Cause(err)
 	if err, ok := err.(syscall.Errno); ok {
 		return err == syscall.ECONNRESET
 	}
@@ -132,7 +153,7 @@ func IsConnectionReset(err error) bool {
 
 // IsContextCanceled returns true if the given error is caused by a context cancelation.
 func IsContextCanceled(err error) bool {
-	err = errs.Cause(err)
+	err = errors.Cause(err)
 	if err == context.Canceled {
 		return true
 	}
@@ -144,7 +165,7 @@ func IsContextCanceled(err error) bool {
 
 // IsContextDeadlineExpired returns true if the given error is caused by a context deadline expiration.
 func IsContextDeadlineExpired(err error) bool {
-	err = errs.Cause(err)
+	err = errors.Cause(err)
 	if err == context.DeadlineExceeded {
 		return true
 	}
@@ -157,7 +178,7 @@ func IsContextDeadlineExpired(err error) bool {
 // IsContextCanceledOrExpired returns true if the given error is caused by a context cancelation
 // or deadline expiration.
 func IsContextCanceledOrExpired(err error) bool {
-	err = errs.Cause(err)
+	err = errors.Cause(err)
 	if err == context.Canceled || err == context.DeadlineExceeded {
 		return true
 	}

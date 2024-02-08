@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,15 +38,15 @@ func GetAgencyState[T interface{}](ctx context.Context, connection conn.Connecti
 	}
 
 	if code != http.StatusOK {
-		return def, errors.Newf("Unknown response code %d", code)
+		return def, errors.Errorf("Unknown response code %d", code)
 	}
 
 	if resp == nil {
-		return def, errors.Newf("Missing response body")
+		return def, errors.Errorf("Missing response body")
 	}
 
 	if len(*resp) != 1 {
-		return def, errors.Newf("Invalid response size")
+		return def, errors.Errorf("Invalid response size")
 	}
 
 	return (*resp)[0], nil

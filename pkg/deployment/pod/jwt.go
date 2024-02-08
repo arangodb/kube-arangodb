@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -102,7 +102,7 @@ func (e jwt) Verify(i Input, cachedStatus interfaces.Inspector) error {
 	if !VersionHasJWTSecretKeyfolder(i.Version, i.Enterprise) {
 		secret, exists := cachedStatus.Secret().V1().GetSimple(i.Deployment.Authentication.GetJWTSecretName())
 		if !exists {
-			return errors.Newf("Secret for JWT token is missing %s", i.Deployment.Authentication.GetJWTSecretName())
+			return errors.Errorf("Secret for JWT token is missing %s", i.Deployment.Authentication.GetJWTSecretName())
 		}
 
 		if err := k8sutil.ValidateTokenFromSecret(secret); err != nil {

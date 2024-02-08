@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -54,7 +54,7 @@ func (d *Deployment) createAgencyMapping(ctx context.Context) error {
 	agents := status.Members.Agents
 
 	if len(agents) > *spec.Agents.Count {
-		return errors.Newf("Agency size is bigger than requested size")
+		return errors.Errorf("Agency size is bigger than requested size")
 	}
 
 	c := api.DeploymentStatusAgencySize(*spec.Agents.Count)
@@ -211,6 +211,6 @@ func (d *Deployment) renderMember(spec api.DeploymentSpec, status *api.Deploymen
 			Architecture: &arch,
 		}, nil
 	default:
-		return nil, errors.WithStack(errors.Newf("Unknown server group %d", group))
+		return nil, errors.WithStack(errors.Errorf("Unknown server group %d", group))
 	}
 }

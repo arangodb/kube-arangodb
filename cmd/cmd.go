@@ -33,7 +33,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
@@ -59,7 +58,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/server"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-	utilsError "github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -437,7 +436,7 @@ func executeMain(cmd *cobra.Command, args []string) {
 			if err != nil {
 				logger.Err(err).Fatal("Failed to create API server")
 			}
-			go utilsError.LogError(logger, "while running API server", apiServer.Run)
+			go errors.LogError(logger, "while running API server", apiServer.Run)
 		}
 
 		listenAddr := net.JoinHostPort(serverOptions.host, strconv.Itoa(serverOptions.port))
@@ -486,7 +485,7 @@ func executeMain(cmd *cobra.Command, args []string) {
 		}); err != nil {
 			logger.Err(err).Fatal("Failed to create HTTP server")
 		} else {
-			go utilsError.LogError(logger, "error while starting server", svr.Run)
+			go errors.LogError(logger, "error while starting server", svr.Run)
 		}
 
 		//	startChaos(context.Background(), cfg.KubeCli, cfg.Namespace, chaosLevel)

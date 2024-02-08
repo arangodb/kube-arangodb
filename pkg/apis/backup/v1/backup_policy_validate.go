@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,9 +38,9 @@ func (a *ArangoBackupPolicy) Validate() error {
 
 func (a *ArangoBackupPolicySpec) Validate() error {
 	if expr, err := cron.ParseStandard(a.Schedule); err != nil {
-		return errors.Newf("error while parsing expr: %s", err.Error())
+		return errors.Errorf("error while parsing expr: %s", err.Error())
 	} else if expr.Next(time.Now()).IsZero() {
-		return errors.Newf("invalid schedule format")
+		return errors.Errorf("invalid schedule format")
 	}
 
 	return nil

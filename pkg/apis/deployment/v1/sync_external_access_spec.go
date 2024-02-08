@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -77,19 +77,19 @@ func (s SyncExternalAccessSpec) Validate() error {
 	}
 	for _, ep := range s.MasterEndpoint {
 		if u, err := url.Parse(ep); err != nil {
-			return errors.WithStack(errors.Newf("Failed to parse master endpoint '%s': %s", ep, err))
+			return errors.WithStack(errors.Errorf("Failed to parse master endpoint '%s': %s", ep, err))
 		} else {
 			if u.Scheme != "http" && u.Scheme != "https" {
-				return errors.WithStack(errors.Newf("Invalid scheme '%s' in master endpoint '%s'", u.Scheme, ep))
+				return errors.WithStack(errors.Errorf("Invalid scheme '%s' in master endpoint '%s'", u.Scheme, ep))
 			}
 			if u.Host == "" {
-				return errors.WithStack(errors.Newf("Missing host in master endpoint '%s'", ep))
+				return errors.WithStack(errors.Errorf("Missing host in master endpoint '%s'", ep))
 			}
 		}
 	}
 	for _, name := range s.AccessPackageSecretNames {
 		if err := shared.ValidateResourceName(name); err != nil {
-			return errors.WithStack(errors.Newf("Invalid name '%s' in accessPackageSecretNames: %s", name, err))
+			return errors.WithStack(errors.Errorf("Invalid name '%s' in accessPackageSecretNames: %s", name, err))
 		}
 	}
 	return nil

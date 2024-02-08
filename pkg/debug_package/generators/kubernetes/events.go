@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -54,7 +54,7 @@ func listEvents(client kubernetes.Interface) func() ([]*core.Event, error) {
 func events(logger zerolog.Logger, files chan<- shared.File) error {
 	k, ok := kclient.GetDefaultFactory().Client()
 	if !ok {
-		return errors.Newf("Client is not initialised")
+		return errors.Errorf("Client is not initialised")
 	}
 
 	files <- shared.NewYAMLFile("kubernetes/events.yaml", listEvents(k.Kubernetes()))

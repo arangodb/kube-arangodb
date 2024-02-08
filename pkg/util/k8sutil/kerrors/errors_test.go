@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ var (
 	existsError    = apierrors.NewAlreadyExists(schema.GroupResource{Group: "groupName", Resource: "resourceName"}, "something")
 	invalidError   = apierrors.NewInvalid(schema.GroupKind{Group: "groupName", Kind: "kindName"}, "something", field.ErrorList{})
 	notFoundError  = apierrors.NewNotFound(schema.GroupResource{Group: "groupName", Resource: "resourceName"}, "something")
-	forbiddenError = apierrors.NewForbidden(schema.GroupResource{Group: "groupName", Resource: "resourceName"}, "something", errors.Newf("error"))
+	forbiddenError = apierrors.NewForbidden(schema.GroupResource{Group: "groupName", Resource: "resourceName"}, "something", errors.Errorf("error"))
 )
 
 func TestIsAlreadyExists(t *testing.T) {

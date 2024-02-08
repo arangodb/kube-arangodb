@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -65,19 +65,19 @@ func (p *arangoClusterSynchronizationsInspectorV1) Filter(filters ...ins.Filter)
 
 func (p *arangoClusterSynchronizationsInspectorV1) validate() error {
 	if p == nil {
-		return errors.Newf("ArangoClusterSynchronizationsV1Inspector is nil")
+		return errors.Errorf("ArangoClusterSynchronizationsV1Inspector is nil")
 	}
 
 	if p.arangoClusterSynchronizationInspector == nil {
-		return errors.Newf("Parent is nil")
+		return errors.Errorf("Parent is nil")
 	}
 
 	if p.arangoClusterSynchronizations == nil && p.err == nil {
-		return errors.Newf("ListSimple or err should be not nil")
+		return errors.Errorf("ListSimple or err should be not nil")
 	}
 
 	if p.arangoClusterSynchronizations != nil && p.err != nil {
-		return errors.Newf("ListSimple or err cannot be not nil together")
+		return errors.Errorf("ListSimple or err cannot be not nil together")
 	}
 
 	return nil

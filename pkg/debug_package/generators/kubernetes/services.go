@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -56,7 +56,7 @@ func listServices(client kubernetes.Interface) func() ([]*core.Service, error) {
 func services(logger zerolog.Logger, files chan<- shared.File) error {
 	k, ok := kclient.GetDefaultFactory().Client()
 	if !ok {
-		return errors.Newf("Client is not initialised")
+		return errors.Errorf("Client is not initialised")
 	}
 
 	services, err := listServices(k.Kubernetes())()

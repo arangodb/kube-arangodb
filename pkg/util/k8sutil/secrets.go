@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,10 +51,10 @@ func ValidateEncryptionKeyFromSecret(s *core.Secret) error {
 	// Check `key` field
 	keyData, found := s.Data[constants.SecretEncryptionKey]
 	if !found {
-		return errors.WithStack(errors.Newf("No '%s' found in secret '%s'", constants.SecretEncryptionKey, s.GetName()))
+		return errors.WithStack(errors.Errorf("No '%s' found in secret '%s'", constants.SecretEncryptionKey, s.GetName()))
 	}
 	if len(keyData) != 32 {
-		return errors.WithStack(errors.Newf("'%s' in secret '%s' is expected to be 32 bytes long, found %d", constants.SecretEncryptionKey, s.GetName(), len(keyData)))
+		return errors.WithStack(errors.Errorf("'%s' in secret '%s' is expected to be 32 bytes long, found %d", constants.SecretEncryptionKey, s.GetName(), len(keyData)))
 	}
 	return nil
 }
@@ -62,7 +62,7 @@ func ValidateEncryptionKeyFromSecret(s *core.Secret) error {
 // CreateEncryptionKeySecret creates a secret used to store a RocksDB encryption key.
 func CreateEncryptionKeySecret(secrets secretv1.ModInterface, secretName string, key []byte) error {
 	if len(key) != 32 {
-		return errors.WithStack(errors.Newf("Key in secret '%s' is expected to be 32 bytes long, got %d", secretName, len(key)))
+		return errors.WithStack(errors.Errorf("Key in secret '%s' is expected to be 32 bytes long, got %d", secretName, len(key)))
 	}
 	// Create secret
 	secret := &core.Secret{
@@ -90,7 +90,7 @@ func ValidateCACertificateSecret(ctx context.Context, secrets secretv1.ReadInter
 	// Check `ca.crt` field
 	_, found := s.Data[constants.SecretCACertificate]
 	if !found {
-		return errors.WithStack(errors.Newf("No '%s' found in secret '%s'", constants.SecretCACertificate, secretName))
+		return errors.WithStack(errors.Errorf("No '%s' found in secret '%s'", constants.SecretCACertificate, secretName))
 	}
 	return nil
 }
@@ -111,7 +111,7 @@ func GetCACertficateSecret(ctx context.Context, secrets secretv1.ReadInterface, 
 	// Load `ca.crt` field
 	cert, found := s.Data[constants.SecretCACertificate]
 	if !found {
-		return "", errors.WithStack(errors.Newf("No '%s' found in secret '%s'", constants.SecretCACertificate, secretName))
+		return "", errors.WithStack(errors.Errorf("No '%s' found in secret '%s'", constants.SecretCACertificate, secretName))
 	}
 	return string(cert), nil
 }
@@ -143,11 +143,11 @@ func GetCAFromSecret(s *core.Secret, ownerRef *meta.OwnerReference) (string, str
 	// Load `ca.crt` field
 	cert, found := s.Data[constants.SecretCACertificate]
 	if !found {
-		return "", "", isOwned, errors.WithStack(errors.Newf("No '%s' found in secret '%s'", constants.SecretCACertificate, s.GetName()))
+		return "", "", isOwned, errors.WithStack(errors.Errorf("No '%s' found in secret '%s'", constants.SecretCACertificate, s.GetName()))
 	}
 	priv, found := s.Data[constants.SecretCAKey]
 	if !found {
-		return "", "", isOwned, errors.WithStack(errors.Newf("No '%s' found in secret '%s'", constants.SecretCAKey, s.GetName()))
+		return "", "", isOwned, errors.WithStack(errors.Errorf("No '%s' found in secret '%s'", constants.SecretCAKey, s.GetName()))
 	}
 	return string(cert), string(priv), isOwned, nil
 }
@@ -155,12 +155,12 @@ func GetCAFromSecret(s *core.Secret, ownerRef *meta.OwnerReference) (string, str
 func GetKeyCertFromSecret(secret *core.Secret, certName, keyName string) (crypto.Certificates, interface{}, error) {
 	ca, exists := secret.Data[certName]
 	if !exists {
-		return nil, nil, errors.Newf("Key %s missing in secret", certName)
+		return nil, nil, errors.Errorf("Key %s missing in secret", certName)
 	}
 
 	key, exists := secret.Data[keyName]
 	if !exists {
-		return nil, nil, errors.Newf("Key %s missing in secret", keyName)
+		return nil, nil, errors.Errorf("Key %s missing in secret", keyName)
 	}
 
 	cert, keys, err := certificates.LoadFromPEM(string(ca), string(key))
@@ -208,7 +208,7 @@ func GetTLSKeyfileFromSecret(s *core.Secret) (string, error) {
 	// Load `tls.keyfile` field
 	keyfile, found := s.Data[constants.SecretTLSKeyfile]
 	if !found {
-		return "", errors.WithStack(errors.Newf("No '%s' found in secret '%s'", constants.SecretTLSKeyfile, s.GetName()))
+		return "", errors.WithStack(errors.Errorf("No '%s' found in secret '%s'", constants.SecretTLSKeyfile, s.GetName()))
 	}
 	return string(keyfile), nil
 }
@@ -249,7 +249,7 @@ func ValidateTokenFromSecret(s *core.Secret) error {
 	// Check `token` field
 	_, found := s.Data[constants.SecretKeyToken]
 	if !found {
-		return errors.WithStack(errors.Newf("No '%s' found in secret '%s'", constants.SecretKeyToken, s.GetName()))
+		return errors.WithStack(errors.Errorf("No '%s' found in secret '%s'", constants.SecretKeyToken, s.GetName()))
 	}
 	return nil
 }
@@ -268,7 +268,7 @@ func GetTokenFromSecret(s *core.Secret) (string, error) {
 	// Take the first data from the token key
 	data, found := s.Data[constants.SecretKeyToken]
 	if !found {
-		return "", errors.WithStack(errors.Newf("No '%s' data found in secret '%s'", constants.SecretKeyToken, s.GetName()))
+		return "", errors.WithStack(errors.Errorf("No '%s' data found in secret '%s'", constants.SecretKeyToken, s.GetName()))
 	}
 	return string(data), nil
 }
@@ -361,11 +361,11 @@ func GetBasicAuthSecret(secrets secretv1.Interface, secretName string) (string, 
 func GetSecretAuthCredentials(secret *core.Secret) (string, string, error) {
 	username, found := secret.Data[constants.SecretUsername]
 	if !found {
-		return "", "", errors.WithStack(errors.Newf("No '%s' found in secret '%s'", constants.SecretUsername, secret.Name))
+		return "", "", errors.WithStack(errors.Errorf("No '%s' found in secret '%s'", constants.SecretUsername, secret.Name))
 	}
 	password, found := secret.Data[constants.SecretPassword]
 	if !found {
-		return "", "", errors.WithStack(errors.Newf("No '%s' found in secret '%s'", constants.SecretPassword, secret.Name))
+		return "", "", errors.WithStack(errors.Errorf("No '%s' found in secret '%s'", constants.SecretPassword, secret.Name))
 	}
 	return string(username), string(password), nil
 }

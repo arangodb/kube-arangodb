@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -363,13 +363,13 @@ func (c *testContext) EnableScalingCluster(_ context.Context) error {
 // GetTLSKeyfile returns the keyfile encoded TLS certificate+key for
 // the given member.
 func (c *testContext) GetTLSKeyfile(group api.ServerGroup, member api.MemberStatus) (string, error) {
-	return "", errors.WithStack(errors.Newf("Not implemented"))
+	return "", errors.WithStack(errors.Errorf("Not implemented"))
 }
 
 // GetTLSCA returns the TLS CA certificate in the secret with given name.
 // Returns: publicKey, privateKey, ownerByDeployment, error
 func (c *testContext) GetTLSCA(secretName string) (string, string, bool, error) {
-	return "", "", false, errors.WithStack(errors.Newf("Not implemented"))
+	return "", "", false, errors.WithStack(errors.Errorf("Not implemented"))
 }
 
 // CreateEvent creates a given event.

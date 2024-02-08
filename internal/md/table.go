@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -53,7 +53,7 @@ func (t *table) AddRow(in map[Column]string) error {
 
 	for k, v := range in {
 		if _, ok := t.columns.Get(k.ID()); !ok {
-			return errors.Newf("Column not found")
+			return errors.Errorf("Column not found")
 		}
 
 		r[k.ID()] = v

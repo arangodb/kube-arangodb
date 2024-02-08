@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -334,7 +334,7 @@ func (ls *LocalStorage) handleArangoLocalStorageUpdatedEvent(event *localStorage
 
 	// Save updated spec
 	if err := ls.updateCRSpec(newAPIObject.Spec); err != nil {
-		return errors.WithStack(errors.Newf("failed to update ArangoLocalStorage spec: %v", err))
+		return errors.WithStack(errors.Errorf("failed to update ArangoLocalStorage spec: %v", err))
 	}
 
 	// Trigger inspect
@@ -380,7 +380,7 @@ func (ls *LocalStorage) updateCRStatus() error {
 		}
 		if err != nil {
 			ls.log.Err(err).Debug("failed to patch ArangoLocalStorage status")
-			return errors.WithStack(errors.Newf("failed to patch ArangoLocalStorage status: %v", err))
+			return errors.WithStack(errors.Errorf("failed to patch ArangoLocalStorage status: %v", err))
 		}
 	}
 }
@@ -414,7 +414,7 @@ func (ls *LocalStorage) updateCRSpec(newSpec api.LocalStorageSpec) error {
 		}
 		if err != nil {
 			ls.log.Err(err).Debug("failed to patch ArangoLocalStorage spec")
-			return errors.WithStack(errors.Newf("failed to patch ArangoLocalStorage spec: %v", err))
+			return errors.WithStack(errors.Errorf("failed to patch ArangoLocalStorage spec: %v", err))
 		}
 	}
 }
@@ -457,7 +457,7 @@ func (ls *LocalStorage) reportFailedStatus() {
 			return errors.WithStack(err)
 		}
 		ls.apiObject = depl
-		return errors.WithStack(errors.Newf("retry needed"))
+		return errors.WithStack(errors.Errorf("retry needed"))
 	}
 
 	retry.Retry(op, time.Hour*24*365)

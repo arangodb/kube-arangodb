@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,11 +39,11 @@ func (s *ArangoMLStorageSpecBackend) GetS3() *ArangoMLStorageSpecBackendS3 {
 
 func (s *ArangoMLStorageSpecBackend) Validate() error {
 	if s == nil {
-		return errors.Newf("Backend is not specified")
+		return errors.Errorf("Backend is not specified")
 	}
 
 	if s.S3 == nil {
-		return errors.Newf("At least one backend needs to be defined")
+		return errors.Errorf("At least one backend needs to be defined")
 	}
 
 	return shared.WithErrors(shared.PrefixResourceError("s3", s.S3.Validate()))

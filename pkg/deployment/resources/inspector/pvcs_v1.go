@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -45,19 +45,19 @@ type persistentVolumeClaimsInspectorV1 struct {
 
 func (p *persistentVolumeClaimsInspectorV1) validate() error {
 	if p == nil {
-		return errors.Newf("PersistentVolumeClaimsV1Inspector is nil")
+		return errors.Errorf("PersistentVolumeClaimsV1Inspector is nil")
 	}
 
 	if p.persistentVolumeClaimInspector == nil {
-		return errors.Newf("Parent is nil")
+		return errors.Errorf("Parent is nil")
 	}
 
 	if p.persistentVolumeClaims == nil {
-		return errors.Newf("PersistentVolumeClaims or err should be not nil")
+		return errors.Errorf("PersistentVolumeClaims or err should be not nil")
 	}
 
 	if p.err != nil {
-		return errors.Newf("PersistentVolumeClaims or err cannot be not nil together")
+		return errors.Errorf("PersistentVolumeClaims or err cannot be not nil together")
 	}
 
 	return nil

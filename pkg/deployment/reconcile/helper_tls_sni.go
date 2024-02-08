@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -46,19 +46,19 @@ func mapTLSSNIConfig(sni api.TLSSNISpec, cachedStatus inspectorInterface.Inspect
 	for name, servers := range mapping {
 		secret, exists := cachedStatus.Secret().V1().GetSimple(name)
 		if !exists {
-			return nil, errors.Newf("Secret %s does not exist", name)
+			return nil, errors.Errorf("Secret %s does not exist", name)
 		}
 
 		tlsKey, ok := secret.Data[constants.SecretTLSKeyfile]
 		if !ok {
-			return nil, errors.Newf("Not found tls keyfile key in SNI secret")
+			return nil, errors.Errorf("Not found tls keyfile key in SNI secret")
 		}
 
 		tlsKeyChecksum := fmt.Sprintf("%0x", sha256.Sum256(tlsKey))
 
 		for _, server := range servers {
 			if _, ok := fetchedSecrets[server]; ok {
-				return nil, errors.Newf("Not found tls key in SNI secret")
+				return nil, errors.Errorf("Not found tls key in SNI secret")
 			}
 			fetchedSecrets[server] = tlsKeyChecksum
 		}
@@ -81,13 +81,13 @@ func compareTLSSNIConfig(ctx context.Context, log logging.Logger, c driver.Conne
 	}
 
 	if len(m) != len(tlsDetails.Result.SNI) {
-		return false, errors.Newf("Count of SNI mounted secrets does not match")
+		return false, errors.Errorf("Count of SNI mounted secrets does not match")
 	}
 
 	for key, value := range tlsDetails.Result.SNI {
 		currentValue, ok := m[key]
 		if !ok {
-			return false, errors.Newf("Unable to fetch TLS SNI state")
+			return false, errors.Errorf("Unable to fetch TLS SNI state")
 		}
 
 		if value.GetSHA().Checksum() != currentValue {

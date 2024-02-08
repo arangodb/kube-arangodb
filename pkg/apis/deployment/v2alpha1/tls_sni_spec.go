@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@ func (s TLSSNISpec) Validate() error {
 
 		for _, value := range values {
 			if _, exists := mapped[value]; exists {
-				return errors.Newf("sni for host %s is already defined", value)
+				return errors.Errorf("sni for host %s is already defined", value)
 			}
 
 			// Mark value as existing
