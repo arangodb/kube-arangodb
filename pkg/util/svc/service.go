@@ -24,8 +24,6 @@ import (
 	"context"
 
 	"google.golang.org/grpc"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 type Service interface {
@@ -51,19 +49,10 @@ func (p *service) Start(ctx context.Context) ServiceStarter {
 }
 
 func NewService(cfg Configuration, handlers ...Handler) Service {
-	svc, err := newService(cfg, handlers...)
-	if err != nil {
-		return serviceError{err}
-	}
-
-	return svc
+	return newService(cfg, handlers...)
 }
 
-func newService(cfg Configuration, handlers ...Handler) (*service, error) {
-	if len(handlers) == 0 {
-		return nil, serviceError{errors.Errorf("Handlers are not defined")}
-	}
-
+func newService(cfg Configuration, handlers ...Handler) *service {
 	var q service
 
 	q.cfg = cfg
@@ -74,5 +63,5 @@ func newService(cfg Configuration, handlers ...Handler) (*service, error) {
 		handler.Register(q.server)
 	}
 
-	return &q, nil
+	return &q
 }

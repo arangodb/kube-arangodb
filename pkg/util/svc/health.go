@@ -108,12 +108,7 @@ func NewHealthService(cfg Configuration, t HealthType) HealthService {
 		t:      t,
 	}
 
-	svc, err := newService(cfg, health)
-	if err != nil {
-		return serviceError{err}
-	}
-
-	health.service = svc
+	health.service = newService(cfg, health)
 
 	return health
 }

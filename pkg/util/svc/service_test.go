@@ -23,20 +23,50 @@ package svc
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	pbHealth "google.golang.org/grpc/health/grpc_health_v1"
 )
 
 func Test_Service(t *testing.T) {
-	health := NewHealthService(Configuration{
+	h := NewHealthService(Configuration{
 		Address: "127.0.0.1:0",
 	}, Readiness)
 
-	ctx, c := context.WithTimeout(context.Background(), time.Second)
+	other := NewService(Configuration{
+		Address: "127.0.0.1:0",
+	})
+
+	ctx, c := context.WithCancel(context.Background())
 	defer c()
 
-	st := health.Start(ctx)
+	st := h.Start(ctx)
+
+	othStart := other.StartWithHealth(ctx, h)
+
+	healthConn, err := grpc.DialContext(ctx, st.Address(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	require.NoError(t, err)
+
+	defer healthConn.Close()
+
+	otherConn, err := grpc.DialContext(ctx, othStart.Address(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	require.NoError(t, err)
+
+	defer otherConn.Close()
+
+	cl := pbHealth.NewHealthClient(healthConn)
+
+	_, err = cl.Check(context.Background(), &pbHealth.HealthCheckRequest{})
+	require.NoError(t, err)
+
+	ol := pbHealth.NewHealthClient(otherConn)
+
+	_, err = ol.Check(context.Background(), &pbHealth.HealthCheckRequest{})
+	require.Error(t, err)
+
+	c()
 
 	require.NoError(t, st.Wait())
 }
