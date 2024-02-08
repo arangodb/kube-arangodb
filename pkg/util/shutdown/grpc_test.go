@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,50 +22,46 @@ package shutdown
 
 import (
 	"context"
+	"testing"
 	"time"
 
-	"google.golang.org/grpc"
+	"github.com/stretchr/testify/require"
 
 	"github.com/arangodb/kube-arangodb/pkg/api/server"
 	pbShutdown "github.com/arangodb/kube-arangodb/pkg/api/shutdown/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
+	"github.com/arangodb/kube-arangodb/pkg/util/tests/tgrpc"
 )
 
-func NewGlobalShutdownServer() svc.Handler {
-	return NewShutdownServer(stop)
+func Test_ShutdownGRPC(t *testing.T) {
+	ctx, c := context.WithCancel(context.Background())
+	defer c()
+
+	local := svc.NewService(svc.Configuration{
+		Address: "127.0.0.1:0",
+	}, NewShutdownServer(c))
+
+	start := local.Start(ctx)
+
+	require.False(t, isContextDone(ctx))
+
+	client := tgrpc.NewGRPCClient(t, ctx, pbShutdown.NewShutdownClient, start.Address())
+
+	_, err := client.ShutdownServer(ctx, &server.Empty{})
+	require.NoError(t, err)
+
+	time.Sleep(time.Second)
+
+	require.True(t, isContextDone(ctx))
+
+	require.NoError(t, start.Wait())
 }
 
-func NewShutdownServer(closer context.CancelFunc) svc.Handler {
-	return &impl{closer: closer}
-}
-
-var _ pbShutdown.ShutdownServer = &impl{}
-var _ svc.Handler = &impl{}
-
-type impl struct {
-	pbShutdown.UnimplementedShutdownServer
-
-	closer context.CancelFunc
-}
-
-func (i *impl) Name() string {
-	return "shutdown"
-}
-
-func (i *impl) Health() svc.HealthState {
-	return svc.Healthy
-}
-
-func (i *impl) Register(registrar *grpc.Server) {
-	pbShutdown.RegisterShutdownServer(registrar, i)
-}
-
-func (i *impl) ShutdownServer(ctx context.Context, empty *server.Empty) (*server.Empty, error) {
-	go func() {
-		defer i.closer()
-
-		time.Sleep(50 * time.Millisecond)
-	}()
-
-	return &server.Empty{}, nil
+func isContextDone(ctx context.Context) bool {
+	select {
+	case <-ctx.Done():
+		return true
+	default:
+		return false
+	}
 }

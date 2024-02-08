@@ -90,7 +90,7 @@ func cmdMLStorageS3RunE(_ *cobra.Command) error {
 		return err
 	}
 
-	svc := svc.NewService(cmdMLStorageS3Options.Configuration, storageService)
+	svc := svc.NewService(cmdMLStorageS3Options.Configuration, storageService, shutdown.NewGlobalShutdownServer())
 
 	svcRun := svc.StartWithHealth(shutdown.Context(), health)
 
