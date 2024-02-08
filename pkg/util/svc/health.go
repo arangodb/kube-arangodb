@@ -102,13 +102,17 @@ func (h *health) Register(registrar *grpc.Server) {
 	pbHealth.RegisterHealthServer(registrar, h)
 }
 
-func NewHealthService(cfg Configuration, t HealthType) HealthService {
+func NewHealthService(cfg Configuration, t HealthType, handlers ...Handler) HealthService {
 	health := &health{
 		Server: imHealth.NewServer(),
 		t:      t,
 	}
 
-	health.service = newService(cfg, health)
+	var h []Handler
+	h = append(h, health)
+	h = append(h, handlers...)
+
+	health.service = newService(cfg, h...)
 
 	return health
 }

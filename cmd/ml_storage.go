@@ -81,7 +81,7 @@ func cmdMLStorageS3Run(cmd *cobra.Command, _ []string) {
 }
 
 func cmdMLStorageS3RunE(_ *cobra.Command) error {
-	health := svc.NewHealthService(cmdMLStorageControllerOptions.Configuration, svc.Readiness)
+	health := svc.NewHealthService(cmdMLStorageControllerOptions.Configuration, svc.Readiness, shutdown.NewGlobalShutdownServer())
 
 	health.Start(shutdown.Context())
 
@@ -90,7 +90,7 @@ func cmdMLStorageS3RunE(_ *cobra.Command) error {
 		return err
 	}
 
-	svc := svc.NewService(cmdMLStorageS3Options.Configuration, storageService, shutdown.NewGlobalShutdownServer())
+	svc := svc.NewService(cmdMLStorageS3Options.Configuration, storageService)
 
 	svcRun := svc.StartWithHealth(shutdown.Context(), health)
 
