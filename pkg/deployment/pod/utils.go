@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ func GenerateMemberEndpoint(services service.Inspector, apiObject meta.Object, s
 	memberName := member.ArangoMemberName(apiObject.GetName(), group)
 	svc, ok := services.Service().V1().GetSimple(memberName)
 	if !ok {
-		return "", errors.Newf("Service %s not found", memberName)
+		return "", errors.Errorf("Service %s not found", memberName)
 	}
 
 	return GenerateMemberEndpointFromService(svc, apiObject, spec, group, member)
@@ -47,7 +47,7 @@ func GenerateMemberEndpointFromService(svc *core.Service, apiObject meta.Object,
 			return k8sutil.CreateServiceDNSNameWithDomain(svc, spec.ClusterDomain), nil
 		case api.DeploymentCommunicationMethodIP:
 			if svc.Spec.ClusterIP == "" {
-				return "", errors.Newf("ClusterIP of service %s is empty", svc.GetName())
+				return "", errors.Errorf("ClusterIP of service %s is empty", svc.GetName())
 			}
 
 			if svc.Spec.ClusterIP == core.ClusterIPNone {

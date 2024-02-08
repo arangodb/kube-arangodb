@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -167,7 +167,7 @@ func Generate(cmd *cobra.Command, out io.Writer, factories ...shared.Factory) er
 	}
 
 	if len(fileErrors) > 0 || len(factoryErrors) > 0 {
-		return errors.Newf("Error while receiving data")
+		return errors.Errorf("Error while receiving data")
 	}
 
 	return nil

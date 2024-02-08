@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,14 +37,14 @@ import (
 
 func ensureEncryptionSupport(actionCtx ActionContext) error {
 	if !actionCtx.GetSpec().RocksDB.IsEncrypted() {
-		return errors.Newf("Encryption is disabled")
+		return errors.Errorf("Encryption is disabled")
 	}
 
 	if image, ok := actionCtx.GetCurrentImageInfo(); !ok {
-		return errors.Newf("Missing image info")
+		return errors.Errorf("Missing image info")
 	} else {
 		if !features.EncryptionRotation().Supported(image.ArangoDBVersion, image.Enterprise) {
-			return errors.Newf("Supported only in Enterprise Edition 3.7.0+")
+			return errors.Errorf("Supported only in Enterprise Edition 3.7.0+")
 		}
 	}
 	return nil

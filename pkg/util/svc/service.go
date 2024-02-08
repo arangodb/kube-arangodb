@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,40 +22,57 @@ package svc
 
 import (
 	"context"
-	"sync"
 
-	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	"github.com/arangodb/kube-arangodb/pkg/util/probe"
+	"google.golang.org/grpc"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 type Service interface {
-	Run(ctx context.Context) error
+	Start(ctx context.Context) ServiceStarter
+
+	StartWithHealth(ctx context.Context, health Health) ServiceStarter
 }
 
-func RunServices(ctx context.Context, healthService probe.HealthService, services ...Service) error {
-	if len(services) == 0 {
-		<-ctx.Done()
-		return nil
+type service struct {
+	server *grpc.Server
+
+	cfg Configuration
+
+	handlers []Handler
+}
+
+func (p *service) StartWithHealth(ctx context.Context, health Health) ServiceStarter {
+	return newServiceStarter(ctx, p, health)
+}
+
+func (p *service) Start(ctx context.Context) ServiceStarter {
+	return newServiceStarter(ctx, p, emptyHealth{})
+}
+
+func NewService(cfg Configuration, handlers ...Handler) Service {
+	svc, err := newService(cfg, handlers...)
+	if err != nil {
+		return serviceError{err}
 	}
 
-	errors := make([]error, len(services))
+	return svc
+}
 
-	var wg sync.WaitGroup
-
-	for id := range services {
-		wg.Add(1)
-
-		go func(id int) {
-			defer wg.Done()
-
-			errors[id] = services[id].Run(ctx)
-
-			healthService.Shutdown()
-		}(id)
+func newService(cfg Configuration, handlers ...Handler) (*service, error) {
+	if len(handlers) == 0 {
+		return nil, serviceError{errors.Errorf("Handlers are not defined")}
 	}
 
-	healthService.SetServing()
-	wg.Wait()
+	var q service
 
-	return shared.WithErrors(errors...)
+	q.cfg = cfg
+	q.server = grpc.NewServer(cfg.Options...)
+	q.handlers = handlers
+
+	for _, handler := range q.handlers {
+		handler.Register(q.server)
+	}
+
+	return &q, nil
 }

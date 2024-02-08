@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -93,17 +93,17 @@ func (h health) Healthy() error {
 	}
 
 	if h.election[h.leaderID] != h.agencySize {
-		return errors.Newf("Not all agents are in quorum")
+		return errors.Errorf("Not all agents are in quorum")
 	}
 
 	index := h.commitIndexes[h.leaderID]
 	if index == 0 {
-		return errors.Newf("Agency CommitIndex is zero")
+		return errors.Errorf("Agency CommitIndex is zero")
 	}
 
 	for k, v := range h.commitIndexes {
 		if v != index {
-			return errors.Newf("Agent %s is behind in CommitIndex", k)
+			return errors.Errorf("Agent %s is behind in CommitIndex", k)
 		}
 	}
 
@@ -112,17 +112,17 @@ func (h health) Healthy() error {
 
 func (h health) Serving() error {
 	if h.agencySize == 0 {
-		return errors.Newf("Empty agents list")
+		return errors.Errorf("Empty agents list")
 	}
 
 	if len(h.election) == 0 {
-		return errors.Newf("No Leader")
+		return errors.Errorf("No Leader")
 	} else if len(h.election) > 1 {
-		return errors.Newf("Multiple leaders")
+		return errors.Errorf("Multiple leaders")
 	}
 
 	if len(h.leaders) <= h.agencySize/2 {
-		return errors.Newf("Quorum is not present")
+		return errors.Errorf("Quorum is not present")
 	}
 
 	return nil
@@ -342,7 +342,7 @@ func (c *cache) reload(ctx context.Context, size int, clients Connections) (*sta
 
 	data, index, ok := c.loader.State()
 	if !ok {
-		return nil, 0, errors.Newf("State is invalid after reload")
+		return nil, 0, errors.Errorf("State is invalid after reload")
 	}
 
 	return data, index, nil
@@ -441,5 +441,5 @@ func (c *cache) getLeader(ctx context.Context, size int, clients Connections) (c
 		}
 	}
 
-	return nil, h, errors.Newf("Unable to find agent")
+	return nil, h, errors.Errorf("Unable to find agent")
 }

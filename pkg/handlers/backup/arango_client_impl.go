@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -190,7 +190,7 @@ func (ac *arangoClientBackupImpl) Upload(backupID driver.BackupID) (driver.Backu
 
 	uploadSpec := ac.backup.Spec.Upload
 	if uploadSpec == nil {
-		return "", errors.Newf("upload was called but no upload spec was given")
+		return "", errors.Errorf("upload was called but no upload spec was given")
 	}
 
 	cred, err := ac.getCredentialsFromSecret(ctx, uploadSpec.CredentialsSecretName)
@@ -207,7 +207,7 @@ func (ac *arangoClientBackupImpl) Download(backupID driver.BackupID) (driver.Bac
 
 	downloadSpec := ac.backup.Spec.Download
 	if downloadSpec == nil {
-		return "", errors.Newf("Download was called but not download spec was given")
+		return "", errors.Errorf("Download was called but not download spec was given")
 	}
 
 	cred, err := ac.getCredentialsFromSecret(ctx, downloadSpec.CredentialsSecretName)
@@ -254,7 +254,7 @@ func (ac *arangoClientBackupImpl) Progress(jobID driver.BackupTransferJobID) (Ar
 		case "":
 			completedCount++
 		default:
-			return ArangoBackupProgress{}, errors.Newf("Unknown transfer status: %s", status.Status)
+			return ArangoBackupProgress{}, errors.Errorf("Unknown transfer status: %s", status.Status)
 		}
 	}
 

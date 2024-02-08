@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -65,7 +65,7 @@ func WithUpdateStatusInterfaceRetry[S interface{}, T Object[S]](ctx context.Cont
 		}
 	}
 
-	return util.Default[T](), errors.Newf("Unable to save Object %s/%s, retries exceeded", obj.GetNamespace(), obj.GetName())
+	return util.Default[T](), errors.Errorf("Unable to save Object %s/%s, retries exceeded", obj.GetNamespace(), obj.GetName())
 }
 
 func WithUpdateStatusInterface[S interface{}, T Object[S]](ctx context.Context, client UpdateStatusInterface[S, T], obj T, status S, opts meta.UpdateOptions) (T, error) {

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ package backup
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -44,7 +43,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	adbErrors "github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 var logger = logging.Global().RegisterAndGetLogger("backup-operator", logging.Info)
@@ -348,7 +347,7 @@ func (h *handler) processArangoBackup(backup *backupApi.ArangoBackup) (*backupAp
 		return f(h, backup)
 	}
 
-	return nil, adbErrors.Newf("state %s is not supported", backup.Status.State)
+	return nil, errors.Errorf("state %s is not supported", backup.Status.State)
 }
 
 func (h *handler) CanBeHandled(item operation.Item) bool {

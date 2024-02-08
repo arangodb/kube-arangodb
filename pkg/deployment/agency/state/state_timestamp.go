@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -66,7 +66,7 @@ func (s *Timestamp) Time() (time.Time, bool) {
 
 func (s *Timestamp) UnmarshalJSON(bytes []byte) error {
 	if s == nil {
-		return errors.Newf("Object is nil")
+		return errors.Errorf("Object is nil")
 	}
 
 	var t string

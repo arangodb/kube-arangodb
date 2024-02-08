@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -64,7 +64,7 @@ func (a *actionKillMemberPod) Start(ctx context.Context) (bool, error) {
 
 	cache, ok := a.actionCtx.ACS().ClusterCache(m.ClusterID)
 	if !ok {
-		return true, errors.Newf("Client is not ready")
+		return true, errors.Errorf("Client is not ready")
 	}
 
 	if ifPodUIDMismatch(m, a.action, cache) {
@@ -94,7 +94,7 @@ func (a *actionKillMemberPod) CheckProgress(ctx context.Context) (bool, bool, er
 
 	cache, ok := a.actionCtx.ACS().ClusterCache(m.ClusterID)
 	if !ok {
-		return false, false, errors.Newf("Client is not ready")
+		return false, false, errors.Errorf("Client is not ready")
 	}
 
 	p, ok := cache.Pod().V1().GetSimple(m.Pod.GetName())

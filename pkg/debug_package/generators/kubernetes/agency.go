@@ -49,7 +49,7 @@ func agencyDump(logger zerolog.Logger, files chan<- shared.File) error {
 
 	k, ok := kclient.GetDefaultFactory().Client()
 	if !ok {
-		return errors.Newf("Client is not initialised")
+		return errors.Errorf("Client is not initialised")
 	}
 
 	deployments, err := listArangoDeployments(k.Arango())()
@@ -100,7 +100,7 @@ func discoverExecFunc() (ArangoOperatorExecFunc, error) {
 
 		k, ok := kclient.GetDefaultFactory().Client()
 		if !ok {
-			return nil, errors.Newf("Client is not initialised")
+			return nil, errors.Errorf("Client is not initialised")
 		}
 
 		pods, err := listPods(k.Kubernetes())()
@@ -131,7 +131,7 @@ func discoverExecFunc() (ArangoOperatorExecFunc, error) {
 		}
 
 		if id == "" {
-			return nil, errors.Newf("Unable to find Operator pod")
+			return nil, errors.Errorf("Unable to find Operator pod")
 		}
 
 		return func(args ...string) ([]byte, []byte, error) {

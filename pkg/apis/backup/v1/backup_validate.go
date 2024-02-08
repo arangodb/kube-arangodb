@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ func (a *ArangoBackup) Validate() error {
 
 func (a *ArangoBackupSpec) Validate() error {
 	if a.Deployment.Name == "" {
-		return errors.Newf("deployment name can not be empty")
+		return errors.Errorf("deployment name can not be empty")
 	}
 
 	if a.Download != nil {
@@ -58,7 +58,7 @@ func (a *ArangoBackupSpec) Validate() error {
 
 func (a *ArangoBackupSpecOperation) Validate() error {
 	if a.RepositoryURL == "" {
-		return errors.Newf("RepositoryURL can not be empty")
+		return errors.Errorf("RepositoryURL can not be empty")
 	}
 
 	return nil
@@ -66,7 +66,7 @@ func (a *ArangoBackupSpecOperation) Validate() error {
 
 func (a *ArangoBackupSpecDownload) Validate() error {
 	if a.ID == "" {
-		return errors.Newf("ID can not be empty")
+		return errors.Errorf("ID can not be empty")
 	}
 
 	return a.ArangoBackupSpecOperation.Validate()

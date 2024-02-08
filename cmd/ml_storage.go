@@ -21,15 +21,13 @@
 package cmd
 
 import (
+	"context"
 	"os"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"google.golang.org/grpc"
 
-	pbShutdown "github.com/arangodb/kube-arangodb/pkg/api/shutdown/v1"
 	"github.com/arangodb/kube-arangodb/pkg/ml/storage"
-	"github.com/arangodb/kube-arangodb/pkg/util/probe"
 	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
@@ -53,7 +51,7 @@ var (
 	}
 
 	cmdMLStorageControllerOptions struct {
-		svc.GRPCConfig
+		Configuration svc.Configuration
 	}
 )
 
@@ -62,8 +60,8 @@ func init() {
 	cmdMLStorage.AddCommand(cmdMLStorageS3)
 
 	f := cmdMLStorageS3.PersistentFlags()
-	f.StringVar(&cmdMLStorageControllerOptions.ListenAddress, "controller.address", "", "Address the GRPC controller service will listen on (IP:port)")
-	f.StringVar(&cmdMLStorageS3Options.ListenAddress, "server.address", "", "Address the GRPC service will listen on (IP:port)")
+	f.StringVar(&cmdMLStorageControllerOptions.Configuration.Address, "controller.address", "", "Address the GRPC controller service will listen on (IP:port)")
+	f.StringVar(&cmdMLStorageS3Options.Configuration.Address, "server.address", "", "Address the GRPC service will listen on (IP:port)")
 
 	f.StringVar(&cmdMLStorageS3Options.S3.Endpoint, "s3.endpoint", "", "Endpoint of S3 API implementation")
 	f.StringVar(&cmdMLStorageS3Options.S3.CACrtFile, "s3.ca-crt", "", "Path to file containing CA certificate to validate endpoint connection")
@@ -84,16 +82,16 @@ func cmdMLStorageS3Run(cmd *cobra.Command, _ []string) {
 }
 
 func cmdMLStorageS3RunE(_ *cobra.Command) error {
+	health := svc.NewHealthService(cmdMLStorageS3Options.Configuration, svc.Readiness)
+
 	storageService, err := storage.NewService(shutdown.Context(), storage.StorageTypeS3Proxy, cmdMLStorageS3Options.ServiceConfig)
 	if err != nil {
 		return err
 	}
 
-	healthService := probe.NewHealthService()
+	svc := svc.NewService(cmdMLStorageControllerOptions.Configuration, storageService)
 
-	controllerService := svc.NewGRPC(cmdMLStorageControllerOptions.GRPCConfig, func(server *grpc.Server) {
-		pbShutdown.RegisterShutdownServer(server, shutdown.NewShutdownableShutdownServer())
-		healthService.Register(server)
-	})
-	return svc.RunServices(shutdown.Context(), healthService, storageService, controllerService)
+	svcRun := svc.StartWithHealth(context.Background(), health)
+
+	return svcRun.Wait()
 }

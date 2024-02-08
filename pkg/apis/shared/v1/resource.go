@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -67,13 +67,13 @@ func (n *KubernetesResourceName) String() string {
 // Validate validate if name is valid kubernetes DNS_LABEL
 func (n *KubernetesResourceName) Validate() error {
 	if n == nil {
-		return errors.Newf("cannot be undefined")
+		return errors.Errorf("cannot be undefined")
 	}
 
 	name := *n
 
 	if name == "" {
-		return errors.Newf("cannot be empty")
+		return errors.Errorf("cannot be empty")
 	}
 
 	if err := IsValidName(name.String()); err != nil {
@@ -90,11 +90,11 @@ func (n *KubernetesResourceName) Immutable(o *KubernetesResourceName) error {
 	}
 
 	if o == nil || n == nil {
-		return errors.Newf("field is immutable")
+		return errors.Errorf("field is immutable")
 	}
 
 	if *o != *n {
-		return errors.Newf("field is immutable")
+		return errors.Errorf("field is immutable")
 	}
 
 	return nil
@@ -104,7 +104,7 @@ func (n *KubernetesResourceName) Immutable(o *KubernetesResourceName) error {
 // More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 func IsValidName(name string) error {
 	if res := validation.IsDNS1123Label(name); len(res) > 0 {
-		return errors.Newf("Validation of label failed: %s", strings.Join(res, ", "))
+		return errors.Errorf("Validation of label failed: %s", strings.Join(res, ", "))
 	}
 
 	return nil
@@ -112,7 +112,7 @@ func IsValidName(name string) error {
 
 func IsValidDomain(name string) error {
 	if res := validation.IsDNS1123Subdomain(name); len(res) > 0 {
-		return errors.Newf("validation of domain failed: %s", strings.Join(res, ", "))
+		return errors.Errorf("validation of domain failed: %s", strings.Join(res, ", "))
 	}
 
 	return nil

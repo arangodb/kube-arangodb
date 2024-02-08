@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -146,13 +146,13 @@ func (o *Operator) handleDeploymentEvent(event *Event) error {
 			delete(o.deployments, apiObject.Name)
 			return nil
 		}
-		return errors.WithStack(errors.Newf("ignore failed deployment (%s). Please delete its CR", apiObject.Name))
+		return errors.WithStack(errors.Errorf("ignore failed deployment (%s). Please delete its CR", apiObject.Name))
 	}
 
 	switch event.Type {
 	case kwatch.Added:
 		if _, ok := o.deployments[apiObject.Name]; ok {
-			return errors.WithStack(errors.Newf("unsafe state. deployment (%s) was created before but we received event (%s)", apiObject.Name, event.Type))
+			return errors.WithStack(errors.Errorf("unsafe state. deployment (%s) was created before but we received event (%s)", apiObject.Name, event.Type))
 		}
 
 		// Fill in defaults
@@ -165,7 +165,7 @@ func (o *Operator) handleDeploymentEvent(event *Event) error {
 		cfg, deps := o.makeDeploymentConfigAndDeps()
 		nc, err := deployment.New(cfg, deps, apiObject)
 		if err != nil {
-			return errors.WithStack(errors.Newf("failed to create deployment: %s", err))
+			return errors.WithStack(errors.Errorf("failed to create deployment: %s", err))
 		}
 		o.deployments[apiObject.Name] = nc
 
@@ -175,7 +175,7 @@ func (o *Operator) handleDeploymentEvent(event *Event) error {
 	case kwatch.Modified:
 		depl, ok := o.deployments[apiObject.Name]
 		if !ok {
-			return errors.WithStack(errors.Newf("unsafe state. deployment (%s) was never created but we received event (%s)", apiObject.Name, event.Type))
+			return errors.WithStack(errors.Errorf("unsafe state. deployment (%s) was never created but we received event (%s)", apiObject.Name, event.Type))
 		}
 		depl.Update(apiObject)
 		deploymentsModified.Inc()
@@ -183,7 +183,7 @@ func (o *Operator) handleDeploymentEvent(event *Event) error {
 	case kwatch.Deleted:
 		depl, ok := o.deployments[apiObject.Name]
 		if !ok {
-			return errors.WithStack(errors.Newf("unsafe state. deployment (%s) was never created but we received event (%s)", apiObject.Name, event.Type))
+			return errors.WithStack(errors.Errorf("unsafe state. deployment (%s) was never created but we received event (%s)", apiObject.Name, event.Type))
 		}
 		depl.Stop()
 		delete(o.deployments, apiObject.Name)

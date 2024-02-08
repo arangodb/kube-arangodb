@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -136,12 +136,12 @@ func (r *Resources) EnsureSecrets(ctx context.Context, cachedStatus inspectorInt
 
 			member, ok := cachedStatus.ArangoMember().V1().GetSimple(memberName)
 			if !ok {
-				return errors.Newf("Member %s not found", memberName)
+				return errors.Errorf("Member %s not found", memberName)
 			}
 
 			service, ok := cachedStatus.Service().V1().GetSimple(memberName)
 			if !ok {
-				return errors.Newf("Service of member %s not found", memberName)
+				return errors.Errorf("Service of member %s not found", memberName)
 			}
 
 			tlsKeyfileSecretName := k8sutil.AppendTLSKeyfileSecretPostfix(member.GetName())
@@ -195,12 +195,12 @@ func (r *Resources) ensureTokenSecretFolder(ctx context.Context, cachedStatus in
 		if len(f.Data) == 0 {
 			s, exists := cachedStatus.Secret().V1().GetSimple(secretName)
 			if !exists {
-				return errors.Newf("Token secret does not exist")
+				return errors.Errorf("Token secret does not exist")
 			}
 
 			token, ok := s.Data[constants.SecretKeyToken]
 			if !ok {
-				return errors.Newf("Token secret is invalid")
+				return errors.Errorf("Token secret is invalid")
 			}
 
 			f.Data[util.SHA256(token)] = token
@@ -221,7 +221,7 @@ func (r *Resources) ensureTokenSecretFolder(ctx context.Context, cachedStatus in
 		if _, ok := f.Data[pod.ActiveJWTKey]; !ok {
 			_, b, ok := getFirstKeyFromMap(f.Data)
 			if !ok {
-				return errors.Newf("Token Folder secret is invalid")
+				return errors.Errorf("Token Folder secret is invalid")
 			}
 
 			p := patch.NewPatch()
@@ -244,7 +244,7 @@ func (r *Resources) ensureTokenSecretFolder(ctx context.Context, cachedStatus in
 		if _, ok := f.Data[constants.SecretKeyToken]; !ok {
 			b, ok := f.Data[pod.ActiveJWTKey]
 			if !ok {
-				return errors.Newf("Token Folder secret is invalid")
+				return errors.Errorf("Token Folder secret is invalid")
 			}
 
 			p := patch.NewPatch()
@@ -269,12 +269,12 @@ func (r *Resources) ensureTokenSecretFolder(ctx context.Context, cachedStatus in
 
 	s, exists := cachedStatus.Secret().V1().GetSimple(secretName)
 	if !exists {
-		return errors.Newf("Token secret does not exist")
+		return errors.Errorf("Token secret does not exist")
 	}
 
 	token, ok := s.Data[constants.SecretKeyToken]
 	if !ok {
-		return errors.Newf("Token secret is invalid")
+		return errors.Errorf("Token secret is invalid")
 	}
 
 	if err := r.createSecretWithMod(ctx, secrets, folderSecretName, func(s *core.Secret) {
@@ -365,14 +365,14 @@ func (r *Resources) ensureEncryptionKeyfolderSecret(ctx context.Context, cachedS
 		if folderExists {
 			return nil
 		}
-		return errors.Newf("Unable to find original secret %s", keyfileSecretName)
+		return errors.Errorf("Unable to find original secret %s", keyfileSecretName)
 	}
 
 	if len(keyfile.Data) == 0 {
 		if folderExists {
 			return nil
 		}
-		return errors.Newf("Missing key in secret")
+		return errors.Errorf("Missing key in secret")
 	}
 
 	d, ok := keyfile.Data[constants.SecretEncryptionKey]
@@ -380,7 +380,7 @@ func (r *Resources) ensureEncryptionKeyfolderSecret(ctx context.Context, cachedS
 		if folderExists {
 			return nil
 		}
-		return errors.Newf("Missing key in secret")
+		return errors.Errorf("Missing key in secret")
 	}
 
 	owner := r.context.GetAPIObject().AsOwner()
@@ -467,7 +467,7 @@ func (r *Resources) ensureExporterTokenSecretCreateRequired(cachedStatus inspect
 
 		jwtSecret, exists := cachedStatus.Secret().V1().GetSimple(secretSecretName)
 		if !exists {
-			return true, true, errors.Newf("Secret %s does not exists", secretSecretName)
+			return true, true, errors.Errorf("Secret %s does not exists", secretSecretName)
 		}
 
 		secret, err := k8sutil.GetTokenFromSecret(jwtSecret)

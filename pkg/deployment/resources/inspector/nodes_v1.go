@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -49,19 +49,19 @@ type nodesInspectorV1 struct {
 
 func (p *nodesInspectorV1) validate() error {
 	if p == nil {
-		return errors.Newf("NodesV1Inspector is nil")
+		return errors.Errorf("NodesV1Inspector is nil")
 	}
 
 	if p.nodeInspector == nil {
-		return errors.Newf("Parent is nil")
+		return errors.Errorf("Parent is nil")
 	}
 
 	if p.nodes == nil && p.err == nil {
-		return errors.Newf("Nodes or err should be not nil")
+		return errors.Errorf("Nodes or err should be not nil")
 	}
 
 	if p.nodes != nil && p.err != nil {
-		return errors.Newf("Nodes or err cannot be not nil together")
+		return errors.Errorf("Nodes or err cannot be not nil together")
 	}
 
 	return nil

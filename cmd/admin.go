@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -192,7 +192,7 @@ func getDeploymentAndCredentials(ctx context.Context,
 
 	client, ok := kclient.GetDefaultFactory().Client()
 	if !ok {
-		err = errors.Newf("Client not initialised")
+		err = errors.Errorf("Client not initialised")
 		return
 	}
 
@@ -337,7 +337,7 @@ func getCACertificate(ctx context.Context, secrets secretv1.ReadInterface, name 
 func getDeployment(ctx context.Context, namespace, deplName string) (api.ArangoDeployment, error) {
 	client, ok := kclient.GetDefaultFactory().Client()
 	if !ok {
-		return api.ArangoDeployment{}, errors.Newf("Client not initialised")
+		return api.ArangoDeployment{}, errors.Errorf("Client not initialised")
 	}
 
 	extCli := client.Arango()

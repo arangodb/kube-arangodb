@@ -55,11 +55,11 @@ func (s *ArangoMLStorageSpecModeSidecar) Validate() error {
 	var err []error
 
 	if s.GetListenPort() < 1 {
-		err = append(err, shared.PrefixResourceErrors("listenPort", errors.Newf("must be positive")))
+		err = append(err, shared.PrefixResourceErrors("listenPort", errors.Errorf("must be positive")))
 	}
 
 	if s.GetControllerListenPort() < 1 {
-		err = append(err, shared.PrefixResourceErrors("controllerListenPort", errors.Newf("must be positive")))
+		err = append(err, shared.PrefixResourceErrors("controllerListenPort", errors.Errorf("must be positive")))
 	}
 
 	err = append(err, s.GetContainerTemplate().Validate())

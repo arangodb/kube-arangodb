@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -139,14 +139,14 @@ func (c *pvCleaner) clean(pv core.PersistentVolume) error {
 	// Find local path
 	localSource := pv.Spec.PersistentVolumeSource.Local
 	if localSource == nil {
-		return errors.WithStack(errors.Newf("PersistentVolume has no local source"))
+		return errors.WithStack(errors.Errorf("PersistentVolume has no local source"))
 	}
 	localPath := localSource.Path
 
 	// Find client that serves the node
 	nodeName := pv.GetAnnotations()[nodeNameAnnotation]
 	if nodeName == "" {
-		return errors.WithStack(errors.Newf("PersistentVolume has no node-name annotation"))
+		return errors.WithStack(errors.Errorf("PersistentVolume has no node-name annotation"))
 	}
 	client, err := c.clientGetter(context.Background(), nodeName)
 	if err != nil {

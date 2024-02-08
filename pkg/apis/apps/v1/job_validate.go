@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,11 +32,11 @@ func (a *ArangoJob) Validate() error {
 
 func (a *ArangoJobSpec) Validate() error {
 	if a.ArangoDeploymentName == "" {
-		return errors.Newf("deployment name can not be empty")
+		return errors.Errorf("deployment name can not be empty")
 	}
 
 	if a.JobTemplate == nil {
-		return errors.Newf("jobTemplate name can not be empty")
+		return errors.Errorf("jobTemplate name can not be empty")
 	}
 
 	return nil

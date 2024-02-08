@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -204,7 +204,7 @@ func (d *Deployment) RefreshAgencyCache(ctx context.Context) (uint64, error) {
 		}
 	}
 
-	return 0, errors.Newf("Agency not yet established")
+	return 0, errors.Errorf("Agency not yet established")
 }
 
 func (d *Deployment) SetAgencyMaintenanceMode(ctx context.Context, enabled bool) error {
@@ -484,7 +484,7 @@ func (d *Deployment) acceptNewSpec(ctx context.Context, depl *api.ArangoDeployme
 			}
 
 			// We have immutable fields, throw an error and proceed
-			return true, false, errors.Newf("Immutable fields cannot be changed: %s", strings.Join(fields, ", "))
+			return true, false, errors.Errorf("Immutable fields cannot be changed: %s", strings.Join(fields, ", "))
 		}
 
 		// Update accepted spec
@@ -632,7 +632,7 @@ func (d *Deployment) applyPatch(ctx context.Context, p ...patch.Item) error {
 		}
 		if err != nil {
 			d.log.Err(err).Debug("failed to patch ArangoDeployment")
-			return errors.WithStack(errors.Newf("failed to patch ArangoDeployment: %v", err))
+			return errors.WithStack(errors.Errorf("failed to patch ArangoDeployment: %v", err))
 		}
 	}
 }

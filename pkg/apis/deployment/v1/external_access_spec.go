@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -100,12 +100,12 @@ func (s ExternalAccessSpec) Validate() error {
 	if s.AdvertisedEndpoint != nil {
 		ep := s.GetAdvertisedEndpoint()
 		if _, err := url.Parse(ep); err != nil {
-			return errors.WithStack(errors.Newf("Failed to parse advertised endpoint '%s': %s", ep, err))
+			return errors.WithStack(errors.Errorf("Failed to parse advertised endpoint '%s': %s", ep, err))
 		}
 	}
 	for _, x := range s.LoadBalancerSourceRanges {
 		if _, _, err := net.ParseCIDR(x); err != nil {
-			return errors.WithStack(errors.Newf("Failed to parse loadbalancer source range '%s': %s", x, err))
+			return errors.WithStack(errors.Errorf("Failed to parse loadbalancer source range '%s': %s", x, err))
 		}
 	}
 	return nil
