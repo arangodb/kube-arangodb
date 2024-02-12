@@ -18,7 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package shutdown
+package v1
 
 import (
 	"context"
@@ -26,30 +26,26 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/arangodb/kube-arangodb/pkg/api/server"
-	pbShutdown "github.com/arangodb/kube-arangodb/pkg/api/shutdown/v1"
+	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
+	pbShutdownV1 "github.com/arangodb/kube-arangodb/integrations/shutdown/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
-func NewGlobalShutdownServer() svc.Handler {
-	return NewShutdownServer(stop)
-}
-
-func NewShutdownServer(closer context.CancelFunc) svc.Handler {
+func New(closer context.CancelFunc) svc.Handler {
 	return &impl{closer: closer}
 }
 
-var _ pbShutdown.ShutdownServer = &impl{}
+var _ pbShutdownV1.ShutdownServer = &impl{}
 var _ svc.Handler = &impl{}
 
 type impl struct {
-	pbShutdown.UnimplementedShutdownServer
+	pbShutdownV1.UnimplementedShutdownServer
 
 	closer context.CancelFunc
 }
 
 func (i *impl) Name() string {
-	return "shutdown"
+	return Name
 }
 
 func (i *impl) Health() svc.HealthState {
@@ -57,15 +53,15 @@ func (i *impl) Health() svc.HealthState {
 }
 
 func (i *impl) Register(registrar *grpc.Server) {
-	pbShutdown.RegisterShutdownServer(registrar, i)
+	pbShutdownV1.RegisterShutdownServer(registrar, i)
 }
 
-func (i *impl) ShutdownServer(ctx context.Context, empty *server.Empty) (*server.Empty, error) {
+func (i *impl) ShutdownServer(ctx context.Context, empty *pbSharedV1.Empty) (*pbSharedV1.Empty, error) {
 	go func() {
 		defer i.closer()
 
 		time.Sleep(50 * time.Millisecond)
 	}()
 
-	return &server.Empty{}, nil
+	return &pbSharedV1.Empty{}, nil
 }

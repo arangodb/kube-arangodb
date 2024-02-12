@@ -1,5 +1,7 @@
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// DISCLAIMER
+//
+// Copyright 2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +22,7 @@ package s3
 
 import "github.com/arangodb/kube-arangodb/pkg/util/errors"
 
-type Config struct {
+type Configuration struct {
 	Endpoint      string
 	AllowInsecure bool
 	CACrtFile     string
@@ -32,7 +34,7 @@ type Config struct {
 	SecretKeyFile string // path to file containing S3 SecretKey
 }
 
-func (c Config) Validate() error {
+func (c Configuration) Validate() error {
 	if c.AccessKeyFile == "" {
 		return errors.Errorf("AccessKeyFile is not defined")
 	}

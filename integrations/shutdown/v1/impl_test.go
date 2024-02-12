@@ -18,7 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package shutdown
+package v1
 
 import (
 	"context"
@@ -27,8 +27,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/arangodb/kube-arangodb/pkg/api/server"
-	pbShutdown "github.com/arangodb/kube-arangodb/pkg/api/shutdown/v1"
+	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
+	pbShutdownV1 "github.com/arangodb/kube-arangodb/integrations/shutdown/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests/tgrpc"
 )
@@ -39,15 +39,15 @@ func Test_ShutdownGRPC(t *testing.T) {
 
 	local := svc.NewService(svc.Configuration{
 		Address: "127.0.0.1:0",
-	}, NewShutdownServer(c))
+	}, New(c))
 
 	start := local.Start(ctx)
 
 	require.False(t, isContextDone(ctx))
 
-	client := tgrpc.NewGRPCClient(t, ctx, pbShutdown.NewShutdownClient, start.Address())
+	client := tgrpc.NewGRPCClient(t, ctx, pbShutdownV1.NewShutdownClient, start.Address())
 
-	_, err := client.ShutdownServer(ctx, &server.Empty{})
+	_, err := client.ShutdownServer(ctx, &pbSharedV1.Empty{})
 	require.NoError(t, err)
 
 	time.Sleep(time.Second)

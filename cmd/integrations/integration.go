@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,14 +18,25 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-syntax = "proto3";
+package integrations
 
-option go_package = "github.com/arangodb/kube-arangodb/pkg/api/shutdown";
+import (
+	"context"
 
-package server;
+	"github.com/spf13/cobra"
 
-import "pkg/api/server/operator.proto";
+	"github.com/arangodb/kube-arangodb/pkg/util/svc"
+)
 
-service Shutdown {
-  rpc ShutdownServer (Empty) returns (Empty) {}
+type Factory func() Integration
+
+type ArgGen func(name string) string
+
+type Integration interface {
+	Name() string
+	Description() string
+
+	Register(cmd *cobra.Command, arg ArgGen) error
+
+	Handler(ctx context.Context) (svc.Handler, error)
 }

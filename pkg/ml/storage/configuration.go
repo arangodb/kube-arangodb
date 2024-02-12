@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,22 +18,20 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package cmd
+package storage
 
 import (
-	"github.com/spf13/cobra"
+	"github.com/arangodb/kube-arangodb/pkg/ml/storage/s3"
 )
 
-var (
-	cmdML = &cobra.Command{
-		Use: "ml",
-		Run: func(cmd *cobra.Command, args []string) {
+type Type string
 
-		},
-		Hidden: true,
-	}
+const (
+	S3 = Type("s3")
 )
 
-func init() {
-	cmdMain.AddCommand(cmdML)
+type Configuration struct {
+	Type Type
+
+	S3 s3.Configuration
 }
