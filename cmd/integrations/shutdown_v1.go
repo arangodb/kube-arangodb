@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,20 +18,39 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package storage
+package integrations
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/ml/storage/s3"
+	"context"
+
+	"github.com/spf13/cobra"
+
+	pbImplShutdownV1 "github.com/arangodb/kube-arangodb/integrations/shutdown/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
-type StorageType string
+func init() {
+	register(func() Integration {
+		return &shutdownV1{}
+	})
+}
 
-const (
-	StorageTypeS3Proxy = StorageType("s3")
-)
+type shutdownV1 struct {
+}
 
-type ServiceConfig struct {
-	Configuration svc.Configuration
-	S3            s3.Config
+func (s *shutdownV1) Handler(ctx context.Context) (svc.Handler, error) {
+	return shutdown.NewGlobalShutdownServer(), nil
+}
+
+func (s *shutdownV1) Name() string {
+	return pbImplShutdownV1.Name
+}
+
+func (s *shutdownV1) Description() string {
+	return "ShutdownV1 Handler"
+}
+
+func (s *shutdownV1) Register(cmd *cobra.Command, arg ArgGen) error {
+	return nil
 }

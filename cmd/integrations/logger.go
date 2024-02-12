@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,17 +18,14 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-//go:build !enterprise
-
-package storage
+package integrations
 
 import (
-	"context"
+	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/svc"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 )
 
-func NewService(_ context.Context, _ Configuration) (svc.Handler, error) {
-	return nil, errors.New("this service is available only in enterprise edition of operator")
-}
+var (
+	logger = logging.Global().RegisterAndGetLogger("integrations", logging.Info, logging.WithSamplingPeriod(time.Second*10))
+)
