@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -62,21 +62,21 @@ func (a *actionRemoveMemberPVC) Start(ctx context.Context) (bool, error) {
 
 	pvcUID, ok := a.action.GetParam("pvc")
 	if !ok {
-		return true, errors.Newf("PVC UID Parameter is missing")
+		return true, errors.Errorf("PVC UID Parameter is missing")
 	}
 
 	cache, ok := a.actionCtx.ACS().ClusterCache(m.ClusterID)
 	if !ok {
-		return true, errors.Newf("Cluster is not ready")
+		return true, errors.Errorf("Cluster is not ready")
 	}
 
 	agencyCache, ok := a.actionCtx.GetAgencyCache()
 	if !ok {
-		return true, errors.Newf("Agency is not ready")
+		return true, errors.Errorf("Agency is not ready")
 	}
 
 	if agencyCache.PlanLeaderServers().Contains(state.Server(m.ID)) {
-		return true, errors.Newf("Server is still used in cluster")
+		return true, errors.Errorf("Server is still used in cluster")
 	}
 
 	// We are safe to remove PVC

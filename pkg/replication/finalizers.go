@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -140,7 +140,7 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 			return errors.WithStack(err)
 		}*/
 		//sourceClient.Master().C
-		return false, errors.WithStack(errors.Newf("TODO"))
+		return false, errors.WithStack(errors.Errorf("TODO"))
 	}
 
 	// Destination still exists, stop/abort sync.

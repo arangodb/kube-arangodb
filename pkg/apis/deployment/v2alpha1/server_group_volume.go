@@ -87,14 +87,14 @@ func (s ServerGroupSpecVolumes) Validate() error {
 
 	for volumeName, count := range mappedVolumes {
 		if IsRestrictedVolumeName(volumeName) {
-			validationErrors = append(validationErrors, errors.Newf("volume with name %s is restricted", volumeName))
+			validationErrors = append(validationErrors, errors.Errorf("volume with name %s is restricted", volumeName))
 		}
 
 		if count == 1 {
 			continue
 		}
 
-		validationErrors = append(validationErrors, errors.Newf("volume with name %s defined more than once: %d", volumeName, count))
+		validationErrors = append(validationErrors, errors.Errorf("volume with name %s defined more than once: %d", volumeName, count))
 	}
 
 	return shared.WithErrors(validationErrors...)
@@ -202,11 +202,11 @@ func (s *ServerGroupSpecVolume) validate() error {
 	count := s.notNilFields()
 
 	if count == 0 {
-		return errors.Newf("at least one option need to be defined: secret, configMap or emptyDir")
+		return errors.Errorf("at least one option need to be defined: secret, configMap or emptyDir")
 	}
 
 	if count > 1 {
-		return errors.Newf("only one option can be defined: secret, configMap or emptyDir")
+		return errors.Errorf("only one option can be defined: secret, configMap or emptyDir")
 	}
 
 	return nil

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -258,7 +258,7 @@ func (s *stateInspector) GetMemberClient(id string) (driver.Client, error) {
 		}
 	}
 
-	return nil, errors.Newf("failed to get ArangoDB member client: %s", id)
+	return nil, errors.Errorf("failed to get ArangoDB member client: %s", id)
 }
 
 // GetMemberSyncClient returns member client to a server.
@@ -274,7 +274,7 @@ func (s *stateInspector) GetMemberSyncClient(id string) (client.API, error) {
 		}
 	}
 
-	return nil, errors.Newf("failed to get ArangoSync member client: %s", id)
+	return nil, errors.Errorf("failed to get ArangoSync member client: %s", id)
 }
 
 func (s *stateInspector) MemberState(id string) (State, bool) {
@@ -325,7 +325,7 @@ func (s State) GetDatabaseClient() (driver.Client, error) {
 		return nil, s.NotReachableErr
 	}
 
-	return nil, errors.Newf("ArangoDB is not reachable")
+	return nil, errors.Errorf("ArangoDB is not reachable")
 }
 
 func (s State) IsReachable() bool {

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -184,7 +184,7 @@ func (cc *cache) GetAgency(_ context.Context, agencyIDs ...string) (agency.Agenc
 	}
 
 	if len(dnsNames) == 0 {
-		return nil, errors.Newf("There is no DNS Name")
+		return nil, errors.Errorf("There is no DNS Name")
 	}
 
 	c, err := cc.factory.Agency(dnsNames...)

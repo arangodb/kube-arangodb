@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -81,12 +81,12 @@ func (s sni) Verify(i Input, cachedStatus interfaces.Inspector) error {
 	for _, secret := range util.SortKeys(i.Deployment.TLS.GetSNI().Mapping) {
 		kubeSecret, exists := cachedStatus.Secret().V1().GetSimple(secret)
 		if !exists {
-			return errors.Newf("SNI Secret not found %s", secret)
+			return errors.Errorf("SNI Secret not found %s", secret)
 		}
 
 		_, ok := kubeSecret.Data[constants.SecretTLSKeyfile]
 		if !ok {
-			return errors.Newf("Unable to find secret key %s/%s for SNI", secret, constants.SecretTLSKeyfile)
+			return errors.Errorf("Unable to find secret key %s/%s for SNI", secret, constants.SecretTLSKeyfile)
 		}
 	}
 	return nil

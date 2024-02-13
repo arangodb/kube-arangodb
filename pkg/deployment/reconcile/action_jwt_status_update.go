@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,11 +48,11 @@ func ensureJWTFolderSupportFromAction(actionCtx ActionContext) (bool, error) {
 
 func ensureJWTFolderSupport(spec api.DeploymentSpec, status api.DeploymentStatus) (bool, error) {
 	if !spec.IsAuthenticated() {
-		return false, errors.Newf("Authentication is disabled")
+		return false, errors.Errorf("Authentication is disabled")
 	}
 
 	if image := status.CurrentImage; image == nil {
-		return false, errors.Newf("Missing image info")
+		return false, errors.Errorf("Missing image info")
 	} else {
 		if !features.JWTRotation().Supported(image.ArangoDBVersion, image.Enterprise) {
 			return false, nil

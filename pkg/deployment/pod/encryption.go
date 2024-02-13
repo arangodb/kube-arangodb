@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -85,16 +85,16 @@ func GetEncryptionKey(ctx context.Context, secrets secretv1.ReadInterface, name 
 
 func GetEncryptionKeyFromSecret(keyfile *core.Secret) (string, []byte, error) {
 	if len(keyfile.Data) == 0 {
-		return "", nil, errors.Newf("Current encryption key is not valid - missing data section")
+		return "", nil, errors.Errorf("Current encryption key is not valid - missing data section")
 	}
 
 	d, ok := keyfile.Data[constants.SecretEncryptionKey]
 	if !ok {
-		return "", nil, errors.Newf("Current encryption key is not valid - missing field")
+		return "", nil, errors.Errorf("Current encryption key is not valid - missing field")
 	}
 
 	if len(d) != 32 {
-		return "", nil, errors.Newf("Current encryption key is not valid")
+		return "", nil, errors.Errorf("Current encryption key is not valid")
 	}
 
 	sha := fmt.Sprintf("%0x", sha256.Sum256(d))
@@ -170,7 +170,7 @@ func (e encryption) Verify(i Input, cachedStatus interfaces.Inspector) error {
 
 		secret, exists := cachedStatus.Secret().V1().GetSimple(i.Deployment.RocksDB.Encryption.GetKeySecretName())
 		if !exists {
-			return errors.Newf("Encryption key secret does not exist %s", i.Deployment.RocksDB.Encryption.GetKeySecretName())
+			return errors.Errorf("Encryption key secret does not exist %s", i.Deployment.RocksDB.Encryption.GetKeySecretName())
 		}
 
 		if err := k8sutil.ValidateEncryptionKeyFromSecret(secret); err != nil {

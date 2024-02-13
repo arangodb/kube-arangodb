@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -95,7 +95,7 @@ func newServerAuthentication(secrets typedCore.SecretInterface, adminSecretName 
 // Returns username, password, error
 func (s *serverAuthentication) fetchAdminSecret() (string, string, error) {
 	if s.adminSecretName == "" {
-		return "", "", errors.WithStack(errors.Newf("No admin secret name specified"))
+		return "", "", errors.WithStack(errors.Errorf("No admin secret name specified"))
 	}
 	secret, err := s.secrets.Get(context.Background(), s.adminSecretName, meta.GetOptions{})
 	if err != nil {
@@ -103,12 +103,12 @@ func (s *serverAuthentication) fetchAdminSecret() (string, string, error) {
 	}
 	var username, password string
 	if raw, found := secret.Data[core.BasicAuthUsernameKey]; !found {
-		return "", "", errors.WithStack(errors.Newf("Secret '%s' contains no '%s' field", s.adminSecretName, core.BasicAuthUsernameKey))
+		return "", "", errors.WithStack(errors.Errorf("Secret '%s' contains no '%s' field", s.adminSecretName, core.BasicAuthUsernameKey))
 	} else {
 		username = string(raw)
 	}
 	if raw, found := secret.Data[core.BasicAuthPasswordKey]; !found {
-		return "", "", errors.WithStack(errors.Newf("Secret '%s' contains no '%s' field", s.adminSecretName, core.BasicAuthPasswordKey))
+		return "", "", errors.WithStack(errors.Errorf("Secret '%s' contains no '%s' field", s.adminSecretName, core.BasicAuthPasswordKey))
 	} else {
 		password = string(raw)
 	}

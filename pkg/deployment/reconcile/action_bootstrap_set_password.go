@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -149,6 +149,6 @@ func (a actionBootstrapSetPassword) ensureUserPasswordSecret(ctx context.Context
 		if err == nil {
 			return pass, nil
 		}
-		return "", errors.Newf("invalid secret format in secret %s", secret)
+		return "", errors.Errorf("invalid secret format in secret %s", secret)
 	}
 }

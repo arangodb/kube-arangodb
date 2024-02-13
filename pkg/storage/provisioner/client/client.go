@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -184,7 +184,7 @@ func (c *client) do(ctx context.Context, req *http.Request, result interface{}) 
 		if err := provisioner.ParseResponseError(resp, body); err != nil {
 			return errors.WithStack(err)
 		}
-		return errors.WithStack(errors.Newf("Invalid status %d", statusCode))
+		return errors.WithStack(errors.Errorf("Invalid status %d", statusCode))
 	}
 
 	// Got a success status

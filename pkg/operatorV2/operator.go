@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -109,7 +109,7 @@ func (o *operator) ProcessItem(item operation.Item) error {
 		defer o.lock.Unlock()
 
 		if !o.started {
-			return errors.Newf("operator is not started started")
+			return errors.Errorf("operator is not started started")
 		}
 	}
 
@@ -121,12 +121,12 @@ func (o *operator) RegisterHandler(handler Handler) error {
 	defer o.lock.Unlock()
 
 	if o.started {
-		return errors.Newf("operator already started")
+		return errors.Errorf("operator already started")
 	}
 
 	for _, registeredHandlers := range o.handlers {
 		if registeredHandlers == handler {
-			return errors.Newf("handler already registered")
+			return errors.Errorf("handler already registered")
 		}
 	}
 
@@ -140,12 +140,12 @@ func (o *operator) RegisterStarter(starter Starter) error {
 	defer o.lock.Unlock()
 
 	if o.started {
-		return errors.Newf("operator already started")
+		return errors.Errorf("operator already started")
 	}
 
 	for _, registeredStarter := range o.starters {
 		if registeredStarter == starter {
-			return errors.Newf("starter already registered")
+			return errors.Errorf("starter already registered")
 		}
 	}
 
@@ -163,12 +163,12 @@ func (o *operator) RegisterInformer(informer cache.SharedIndexInformer, group, v
 	defer o.lock.Unlock()
 
 	if o.started {
-		return errors.Newf("operator already started")
+		return errors.Errorf("operator already started")
 	}
 
 	for _, registeredInformer := range o.informers {
 		if registeredInformer == informer {
-			return errors.Newf("informer already registered")
+			return errors.Errorf("informer already registered")
 		}
 	}
 
@@ -184,7 +184,7 @@ func (o *operator) Start(threadiness int, stopCh <-chan struct{}) error {
 	defer o.lock.Unlock()
 
 	if o.started {
-		return errors.Newf("operator already started")
+		return errors.Errorf("operator already started")
 	}
 
 	o.started = true
@@ -227,7 +227,7 @@ func (o *operator) waitForCacheSync(stopCh <-chan struct{}) error {
 	}
 
 	if ok := cache.WaitForCacheSync(stopCh, cacheSync...); !ok {
-		return errors.Newf("cache can not sync")
+		return errors.Errorf("cache can not sync")
 	}
 
 	return nil

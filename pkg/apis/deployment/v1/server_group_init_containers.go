@@ -48,7 +48,7 @@ func IsReservedServerGroupInitContainerName(name string) bool {
 
 func ValidateServerGroupInitContainerName(name string) error {
 	if IsReservedServerGroupInitContainerName(name) {
-		return errors.Newf("InitContainer name %s is restricted", name)
+		return errors.Errorf("InitContainer name %s is restricted", name)
 	}
 
 	return sharedApi.AsKubernetesResourceName(&name).Validate()
@@ -73,7 +73,7 @@ func (s *ServerGroupInitContainerMode) Validate() error {
 	case ServerGroupInitContainerIgnoreMode, ServerGroupInitContainerUpdateMode:
 		return nil
 	default:
-		return errors.Newf("Unknown serverGroupInitContainerMode %s", v)
+		return errors.Errorf("Unknown serverGroupInitContainerMode %s", v)
 	}
 }
 

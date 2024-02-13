@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -42,7 +42,7 @@ import (
 
 func EnsureServiceAccount(ctx context.Context, client kubernetes.Interface, owner meta.OwnerReference, obj *sharedApi.ServiceAccount, name, namespace string, role, clusterRole []rbac.PolicyRule) (bool, error) {
 	if obj == nil {
-		return false, errors.Newf("Object reference cannot be nil")
+		return false, errors.Errorf("Object reference cannot be nil")
 	}
 
 	// Check if secret exists

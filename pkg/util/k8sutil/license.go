@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,7 +48,7 @@ type LicenseSecret struct {
 func GetLicenseFromSecret(secret secret.Inspector, name string) (LicenseSecret, error) {
 	s, ok := secret.Secret().V1().GetSimple(name)
 	if !ok {
-		return LicenseSecret{}, errors.Newf("Secret %s not found", name)
+		return LicenseSecret{}, errors.Errorf("Secret %s not found", name)
 	}
 
 	var l LicenseSecret
@@ -72,7 +72,7 @@ func GetLicenseFromSecret(secret secret.Inspector, name string) (LicenseSecret, 
 			l.V2 = License(v2)
 		}
 	} else {
-		return LicenseSecret{}, errors.Newf("Key (%s, %s or %s) is missing in the license secret (%s)",
+		return LicenseSecret{}, errors.Errorf("Key (%s, %s or %s) is missing in the license secret (%s)",
 			constants.SecretKeyToken, constants.SecretKeyV2License, constants.SecretKeyV2Token, name)
 	}
 

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -147,7 +147,7 @@ func (s *ArangoMLExtensionSpecDeployment) Validate() error {
 	}
 
 	if s.GetReplicas() < 0 || s.GetReplicas() > 10 {
-		errs = append(errs, shared.PrefixResourceErrors("replicas", errors.Newf("out of range [0, 10]")))
+		errs = append(errs, shared.PrefixResourceErrors("replicas", errors.Errorf("out of range [0, 10]")))
 	}
 
 	var usedPorts util.List[int32]
@@ -161,7 +161,7 @@ func (s *ArangoMLExtensionSpecDeployment) Validate() error {
 			port := component.GetPort(GetArangoMLExtensionSpecDeploymentComponentDefaultPort(prefix))
 
 			if port == 0 {
-				errs = append(errs, shared.PrefixResourceErrors(prefix, errors.Newf("port not defined")))
+				errs = append(errs, shared.PrefixResourceErrors(prefix, errors.Errorf("port not defined")))
 				continue
 			}
 
@@ -169,7 +169,7 @@ func (s *ArangoMLExtensionSpecDeployment) Validate() error {
 				return i == port
 			})
 			if duplicateCount > 0 {
-				errs = append(errs, shared.PrefixResourceErrors(prefix, errors.Newf("port %d already specified for other component", port)))
+				errs = append(errs, shared.PrefixResourceErrors(prefix, errors.Errorf("port %d already specified for other component", port)))
 			} else {
 				usedPorts.Append(port)
 			}

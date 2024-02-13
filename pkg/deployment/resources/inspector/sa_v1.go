@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -45,19 +45,19 @@ type serviceAccountsInspectorV1 struct {
 
 func (p *serviceAccountsInspectorV1) validate() error {
 	if p == nil {
-		return errors.Newf("ServiceAccountsV1Inspector is nil")
+		return errors.Errorf("ServiceAccountsV1Inspector is nil")
 	}
 
 	if p.serviceAccountInspector == nil {
-		return errors.Newf("Parent is nil")
+		return errors.Errorf("Parent is nil")
 	}
 
 	if p.serviceAccounts == nil {
-		return errors.Newf("ServiceAccounts or err should be not nil")
+		return errors.Errorf("ServiceAccounts or err should be not nil")
 	}
 
 	if p.err != nil {
-		return errors.Newf("ServiceAccounts or err cannot be not nil together")
+		return errors.Errorf("ServiceAccounts or err cannot be not nil together")
 	}
 
 	return nil

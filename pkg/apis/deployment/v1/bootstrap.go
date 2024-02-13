@@ -92,12 +92,12 @@ func (b *BootstrapSpec) Validate() error {
 	for username, secretname := range b.PasswordSecretNames {
 		// Remove this restriction as soon as we can bootstrap databases
 		if username != UserNameRoot {
-			return errors.Newf("only username `root` allowed in passwordSecretNames")
+			return errors.Errorf("only username `root` allowed in passwordSecretNames")
 		}
 
 		if secretname.IsNone() {
 			if username != UserNameRoot {
-				return errors.Newf("magic value None not allowed for %s", username)
+				return errors.Errorf("magic value None not allowed for %s", username)
 			}
 		} else {
 			if err := shared.ValidateResourceName(string(secretname)); err != nil {

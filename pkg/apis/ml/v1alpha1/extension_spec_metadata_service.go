@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -93,7 +93,7 @@ func (a *ArangoMLExtensionSpecMetadataServiceLocal) Validate() error {
 	// If Nil then we use default
 
 	return shared.WithErrors(
-		shared.PrefixResourceErrors("arangoPipeDatabase", util.BoolSwitch(a.GetArangoPipeDatabase() != ArangoMLExtensionSpecMetadataServiceLocalDefaultArangoPipeDatabase, errors.Newf("Database name is hardcoded"), nil)),
-		shared.PrefixResourceErrors("arangoMLFeatureStore", util.BoolSwitch(a.GetArangoMLFeatureStoreDatabase() != ArangoMLExtensionSpecMetadataServiceLocalDefaultArangoMLFeatureStoreDatabase, errors.Newf("Database name is hardcoded"), nil)),
+		shared.PrefixResourceErrors("arangoPipeDatabase", util.BoolSwitch(a.GetArangoPipeDatabase() != ArangoMLExtensionSpecMetadataServiceLocalDefaultArangoPipeDatabase, errors.Errorf("Database name is hardcoded"), nil)),
+		shared.PrefixResourceErrors("arangoMLFeatureStore", util.BoolSwitch(a.GetArangoMLFeatureStoreDatabase() != ArangoMLExtensionSpecMetadataServiceLocalDefaultArangoMLFeatureStoreDatabase, errors.Errorf("Database name is hardcoded"), nil)),
 	)
 }

@@ -232,7 +232,7 @@ func (i *inspectorState) AnonymousObjects() []anonymous.Impl {
 
 func (i *inspectorState) GetCurrentArangoDeployment() (*api.ArangoDeployment, error) {
 	if i.deploymentResult == nil {
-		return nil, errors.Newf("Deployment not initialised")
+		return nil, errors.Errorf("Deployment not initialised")
 	}
 
 	return i.deploymentResult.depl, i.deploymentResult.err

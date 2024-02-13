@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,9 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+
+	pbImplShutdownV1 "github.com/arangodb/kube-arangodb/integrations/shutdown/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
 func init() {
@@ -38,6 +41,10 @@ func init() {
 		defer stop()
 		<-sigChannel
 	}()
+}
+
+func NewGlobalShutdownServer() svc.Handler {
+	return pbImplShutdownV1.New(stop)
 }
 
 var (

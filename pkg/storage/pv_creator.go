@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -85,7 +85,7 @@ func (ls *LocalStorage) createPVs(ctx context.Context, apiObject *api.ArangoLoca
 	}
 	if len(clients) == 0 {
 		// No provisioners available
-		return false, errors.WithStack(errors.Newf("No ready provisioner endpoints found"))
+		return false, errors.WithStack(errors.Errorf("No ready provisioner endpoints found"))
 	}
 
 	for i, claim := range unboundClaims {
@@ -267,7 +267,7 @@ func (ls *LocalStorage) createPV(ctx context.Context, apiObject *api.ArangoLocal
 			return nil
 		}
 	}
-	return errors.WithStack(errors.Newf("No more nodes available"))
+	return errors.WithStack(errors.Errorf("No more nodes available"))
 }
 
 // createValidEndpointList convers the given endpoints list into
@@ -360,7 +360,7 @@ func (ls *LocalStorage) bindClaimToVolume(claim core.PersistentVolumeClaim, volu
 				log.Info("PersistentVolumeClaim already bound to PersistentVolume")
 				return nil
 			}
-			return errors.WithStack(errors.Newf("PersistentVolumeClaim '%s' no longer needs a volume", claim.GetName()))
+			return errors.WithStack(errors.Errorf("PersistentVolumeClaim '%s' no longer needs a volume", claim.GetName()))
 		}
 
 		// Try to bind
@@ -376,7 +376,7 @@ func (ls *LocalStorage) bindClaimToVolume(claim core.PersistentVolumeClaim, volu
 		return nil
 	}
 	log.Error("All attempts to bind PVC to volume failed")
-	return errors.WithStack(errors.Newf("All attempts to bind PVC to volume failed"))
+	return errors.WithStack(errors.Errorf("All attempts to bind PVC to volume failed"))
 }
 
 // shortHash creates a 6 letter hash of the given name.

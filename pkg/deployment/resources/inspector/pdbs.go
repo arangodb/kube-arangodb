@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -190,11 +190,11 @@ func (p *podDisruptionBudgetsInspector) Throttle(c throttle.Components) throttle
 
 func (p *podDisruptionBudgetsInspector) validate() error {
 	if p == nil {
-		return errors.Newf("PodDisruptionBudgetInspector is nil")
+		return errors.Errorf("PodDisruptionBudgetInspector is nil")
 	}
 
 	if p.state == nil {
-		return errors.Newf("Parent is nil")
+		return errors.Errorf("Parent is nil")
 	}
 
 	if err := p.v1.validate(); err != nil {

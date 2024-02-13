@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ func GetAgencyConfig(ctx context.Context, connection conn.Connection) (*Config, 
 	}
 
 	if code != http.StatusOK {
-		return nil, errors.Newf("Unknown response code %d", code)
+		return nil, errors.Errorf("Unknown response code %d", code)
 	}
 
 	return resp, nil

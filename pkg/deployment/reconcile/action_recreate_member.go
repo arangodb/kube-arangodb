@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -52,19 +52,19 @@ type actionRecreateMember struct {
 func (a *actionRecreateMember) Start(ctx context.Context) (bool, error) {
 	m, g, ok := a.actionCtx.GetMemberStatusAndGroupByID(a.action.MemberID)
 	if !ok {
-		return false, errors.Newf("expecting member to be present in list, but it is not")
+		return false, errors.Errorf("expecting member to be present in list, but it is not")
 	}
 
 	cache, ok := a.actionCtx.ACS().ClusterCache(m.ClusterID)
 	if !ok {
-		return true, errors.Newf("Cluster is not ready")
+		return true, errors.Errorf("Cluster is not ready")
 	}
 
 	switch g {
 	case api.ServerGroupDBServers, api.ServerGroupAgents: // Only DBServers and Agents use persistent data
 		_, ok := cache.PersistentVolumeClaim().V1().GetSimple(m.PersistentVolumeClaim.GetName())
 		if !ok {
-			return false, errors.Newf("PVC is missing %s. Members won't be recreated without old PV", m.PersistentVolumeClaim.GetName())
+			return false, errors.Errorf("PVC is missing %s. Members won't be recreated without old PV", m.PersistentVolumeClaim.GetName())
 		}
 	}
 

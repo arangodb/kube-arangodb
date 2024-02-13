@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -55,11 +55,11 @@ func WaitCRDReady(clientset apiextensionsclient.Interface, crdName string) error
 				}
 			case apiextensionsv1.NamesAccepted:
 				if cond.Status == apiextensionsv1.ConditionFalse {
-					return errors.WithStack(errors.Newf("Name conflict: %v", cond.Reason))
+					return errors.WithStack(errors.Errorf("Name conflict: %v", cond.Reason))
 				}
 			}
 		}
-		return errors.WithStack(errors.Newf("Retry needed"))
+		return errors.WithStack(errors.Errorf("Retry needed"))
 	}
 	return WaitReady(op)
 }

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -49,19 +49,19 @@ type podDisruptionBudgetsInspectorV1 struct {
 
 func (p *podDisruptionBudgetsInspectorV1) validate() error {
 	if p == nil {
-		return errors.Newf("PodDisruptionBudgetsV1Inspector is nil")
+		return errors.Errorf("PodDisruptionBudgetsV1Inspector is nil")
 	}
 
 	if p.podDisruptionBudgetInspector == nil {
-		return errors.Newf("Parent is nil")
+		return errors.Errorf("Parent is nil")
 	}
 
 	if p.podDisruptionBudgets == nil && p.err == nil {
-		return errors.Newf("PodDisruptionBudgets or err should be not nil")
+		return errors.Errorf("PodDisruptionBudgets or err should be not nil")
 	}
 
 	if p.podDisruptionBudgets != nil && p.err != nil {
-		return errors.Newf("PodDisruptionBudgets or err cannot be not nil together")
+		return errors.Errorf("PodDisruptionBudgets or err cannot be not nil together")
 	}
 
 	return nil
