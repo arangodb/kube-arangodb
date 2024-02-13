@@ -1,3 +1,9 @@
+---
+layout: page
+parent: Custom resources overview
+title: ArangoMLExtension
+---
+
 # ArangoMLExtension Custom Resource
 
 
