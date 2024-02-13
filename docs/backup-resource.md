@@ -213,8 +213,8 @@ spec:
     name: "my-deployment"
   download:
     repositoryURL: "S3:test/kube-test"
-    credentialsSecretName: "my-s3-rclone-credentials"
     id: "backup-id"
+    credentialsSecretName: "my-s5-rclone-credentials"
 ```
 
 Download Backup with id `backup-id` from `S3://test/kube-test`  on ArangoDeployment named `my-deployment`
