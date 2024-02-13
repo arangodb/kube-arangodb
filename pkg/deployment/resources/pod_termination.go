@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -71,7 +71,7 @@ func (r *Resources) prepareAgencyPodTermination(p *core.Pod, memberStatus api.Me
 	pvc, ok := r.context.ACS().CurrentClusterCache().PersistentVolumeClaim().V1().GetSimple(memberStatus.PersistentVolumeClaim.GetName())
 	if !ok {
 		log.Warn("Failed to get PVC for member")
-		return errors.Newf("Failed to get PVC for member")
+		return errors.Errorf("Failed to get PVC for member")
 	}
 	if k8sutil.IsPersistentVolumeClaimMarkedForDeletion(pvc) {
 		agentDataWillBeGone = true
@@ -89,11 +89,11 @@ func (r *Resources) prepareAgencyPodTermination(p *core.Pod, memberStatus api.Me
 	agencyHealth, ok := r.context.GetAgencyHealth()
 	if !ok {
 		log.Debug("Agency health fetch failed")
-		return errors.Newf("Agency health fetch failed")
+		return errors.Errorf("Agency health fetch failed")
 	}
 	if err := agencyHealth.Healthy(); err != nil {
 		log.Err(err).Debug("Agency is not healthy. Cannot delete this one")
-		return errors.WithStack(errors.Newf("Agency is not healthy"))
+		return errors.WithStack(errors.Errorf("Agency is not healthy"))
 	}
 	// Complete agent recovery is needed, since data is already gone or not accessible
 	if memberStatus.Conditions.Update(api.ConditionTypeAgentRecoveryNeeded, true, "Data Gone", "") {
@@ -252,7 +252,7 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, p *core.P
 		// Check the job progress
 		cache, ok := r.context.GetAgencyCache()
 		if !ok {
-			return errors.Newf("AgencyCache is not ready")
+			return errors.Errorf("AgencyCache is not ready")
 		}
 
 		details, jobStatus := cache.Target.GetJob(state.JobID(memberStatus.CleanoutJobID))
@@ -275,7 +275,7 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, p *core.P
 		// Check the job progress
 		cache, ok := r.context.GetAgencyCache()
 		if !ok {
-			return errors.Newf("AgencyCache is not ready")
+			return errors.Errorf("AgencyCache is not ready")
 		}
 
 		details, jobStatus := cache.Target.GetJob(state.JobID(memberStatus.CleanoutJobID))
@@ -301,6 +301,6 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, p *core.P
 		}
 	}
 
-	return errors.WithStack(errors.Newf("Server is not yet cleaned out"))
+	return errors.WithStack(errors.Errorf("Server is not yet cleaned out"))
 
 }

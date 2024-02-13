@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -115,7 +115,7 @@ func (a actionRuntimeContainerImageUpdate) Post(ctx context.Context) error {
 
 	_, ok = cache.ArangoMember().V1().GetSimple(name)
 	if !ok {
-		err := errors.Newf("ArangoMember not found")
+		err := errors.Errorf("ArangoMember not found")
 		a.log.Err(err).Error("ArangoMember not found")
 		return err
 	}
@@ -179,7 +179,7 @@ func (a actionRuntimeContainerImageUpdate) Start(ctx context.Context) (bool, err
 
 	cache, ok := a.actionCtx.ACS().ClusterCache(m.ClusterID)
 	if !ok {
-		return true, errors.Newf("Client is not ready")
+		return true, errors.Errorf("Client is not ready")
 	}
 
 	name, image, ok := a.getContainerDetails()
@@ -195,7 +195,7 @@ func (a actionRuntimeContainerImageUpdate) Start(ctx context.Context) (bool, err
 
 	member, ok := a.actionCtx.ACS().CurrentClusterCache().ArangoMember().V1().GetSimple(m.ArangoMemberName(a.actionCtx.GetName(), a.action.Group))
 	if !ok {
-		err := errors.Newf("ArangoMember not found")
+		err := errors.Errorf("ArangoMember not found")
 		a.log.Err(err).Error("ArangoMember not found")
 		return false, err
 	}
@@ -250,7 +250,7 @@ func (a actionRuntimeContainerImageUpdate) Start(ctx context.Context) (bool, err
 
 	a.log.Str("container", name).Str("pod", pod.GetName()).Warn("Container not found")
 
-	return false, errors.Newf("Container %s not found in Pod %s", name, pod.GetName())
+	return false, errors.Errorf("Container %s not found in Pod %s", name, pod.GetName())
 }
 
 func (a actionRuntimeContainerImageUpdate) CheckProgress(ctx context.Context) (bool, bool, error) {
@@ -311,14 +311,14 @@ func (a actionRuntimeContainerImageUpdate) CheckProgress(ctx context.Context) (b
 		}
 
 		// Pod won't get up and running
-		return true, false, errors.Newf("Container %s failed during image replacement: (%d) %s: %s", name, s.ExitCode, s.Reason, s.Message)
+		return true, false, errors.Errorf("Container %s failed during image replacement: (%d) %s: %s", name, s.ExitCode, s.Reason, s.Message)
 	} else if s := cstatus.State.Waiting; s != nil {
 		if pod.Spec.RestartPolicy == core.RestartPolicyAlways {
 			lastTermination := cstatus.LastTerminationState.Terminated
 			if lastTermination != nil {
 				allowedRestartPeriod := time.Now().Add(time.Second * -20)
 				if lastTermination.FinishedAt.Time.Before(allowedRestartPeriod) {
-					return true, false, errors.Newf("Container %s continuously failing during image replacement: (%d) %s: %s", name, lastTermination.ExitCode, lastTermination.Reason, lastTermination.Message)
+					return true, false, errors.Errorf("Container %s continuously failing during image replacement: (%d) %s: %s", name, lastTermination.ExitCode, lastTermination.Reason, lastTermination.Message)
 				} else {
 					a.log.Str("pod-name", pod.GetName()).Debug("pod is restarting - we are not marking it as terminated yet..")
 				}

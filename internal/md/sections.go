@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -78,7 +78,7 @@ func ReplaceSection(in, replace, section string) (string, error) {
 
 		endID := strings.Index(in, end)
 		if endID == -1 {
-			return "", errors.Newf("END_INJECT sections is missing for section %s. Note that newline is required at the end and before tag", section)
+			return "", errors.Errorf("END_INJECT sections is missing for section %s. Note that newline is required at the end and before tag", section)
 		}
 
 		if strings.HasSuffix(replace, "\n\n") {

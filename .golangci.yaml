@@ -49,6 +49,14 @@ linters-settings:
         alias: mlSharedTests
       - pkg: github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1
         alias: mlApi
+      - pkg: github.com/arangodb/kube-arangodb/integrations/shutdown/v1/definition
+        alias: pbShutdownV1
+      - pkg: github.com/arangodb/kube-arangodb/integrations/shutdown/v1
+        alias: pbImplShutdownV1
+      - pkg: github.com/arangodb/kube-arangodb/integrations/shared/v1/definition
+        alias: pbSharedV1
+      - pkg: github.com/arangodb/kube-arangodb/integrations/shared/v1
+        alias: pbImplSharedV1
   gci:
     sections:
       - standard

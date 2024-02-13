@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -177,11 +177,11 @@ func (p *serviceMonitorsInspector) Throttle(c throttle.Components) throttle.Thro
 
 func (p *serviceMonitorsInspector) validate() error {
 	if p == nil {
-		return errors.Newf("ServiceMonitorInspector is nil")
+		return errors.Errorf("ServiceMonitorInspector is nil")
 	}
 
 	if p.state == nil {
-		return errors.Newf("Parent is nil")
+		return errors.Errorf("Parent is nil")
 	}
 
 	return p.v1.validate()

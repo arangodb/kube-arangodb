@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -148,13 +148,13 @@ func (o *Operator) handleDeploymentReplicationEvent(event *Event) error {
 			delete(o.deploymentReplications, apiObject.Name)
 			return nil
 		}
-		return errors.WithStack(errors.Newf("ignore failed deployment replication (%s). Please delete its CR", apiObject.Name))
+		return errors.WithStack(errors.Errorf("ignore failed deployment replication (%s). Please delete its CR", apiObject.Name))
 	}
 
 	switch event.Type {
 	case kwatch.Added:
 		if _, ok := o.deploymentReplications[apiObject.Name]; ok {
-			return errors.WithStack(errors.Newf("unsafe state. deployment replication (%s) was created before but we received event (%s)", apiObject.Name, event.Type))
+			return errors.WithStack(errors.Errorf("unsafe state. deployment replication (%s) was created before but we received event (%s)", apiObject.Name, event.Type))
 		}
 
 		// Fill in defaults
@@ -167,7 +167,7 @@ func (o *Operator) handleDeploymentReplicationEvent(event *Event) error {
 		cfg, deps := o.makeDeploymentReplicationConfigAndDeps()
 		nc, err := replication.New(cfg, deps, apiObject)
 		if err != nil {
-			return errors.WithStack(errors.Newf("failed to create deployment: %s", err))
+			return errors.WithStack(errors.Errorf("failed to create deployment: %s", err))
 		}
 		o.deploymentReplications[apiObject.Name] = nc
 
@@ -177,7 +177,7 @@ func (o *Operator) handleDeploymentReplicationEvent(event *Event) error {
 	case kwatch.Modified:
 		repl, ok := o.deploymentReplications[apiObject.Name]
 		if !ok {
-			return errors.WithStack(errors.Newf("unsafe state. deployment replication (%s) was never created but we received event (%s)", apiObject.Name, event.Type))
+			return errors.WithStack(errors.Errorf("unsafe state. deployment replication (%s) was never created but we received event (%s)", apiObject.Name, event.Type))
 		}
 		repl.Update(apiObject)
 		deploymentReplicationsModified.Inc()
@@ -185,7 +185,7 @@ func (o *Operator) handleDeploymentReplicationEvent(event *Event) error {
 	case kwatch.Deleted:
 		repl, ok := o.deploymentReplications[apiObject.Name]
 		if !ok {
-			return errors.WithStack(errors.Newf("unsafe state. deployment replication (%s) was never created but we received event (%s)", apiObject.Name, event.Type))
+			return errors.WithStack(errors.Errorf("unsafe state. deployment replication (%s) was never created but we received event (%s)", apiObject.Name, event.Type))
 		}
 		repl.Delete()
 		delete(o.deploymentReplications, apiObject.Name)

@@ -563,14 +563,14 @@ func (s *ServerGroupSpec) validateVolumes() error {
 
 	for _, mount := range s.VolumeMounts {
 		if _, ok := volumes[mount.Name]; !ok {
-			return errors.Newf("Volume %s is not defined, but required by mount", mount.Name)
+			return errors.Errorf("Volume %s is not defined, but required by mount", mount.Name)
 		}
 	}
 
 	for _, container := range s.InitContainers.GetContainers() {
 		for _, mount := range container.VolumeMounts {
 			if _, ok := volumes[mount.Name]; !ok {
-				return errors.Newf("Volume %s is not defined, but required by mount in init container %s", mount.Name, container.Name)
+				return errors.Errorf("Volume %s is not defined, but required by mount in init container %s", mount.Name, container.Name)
 			}
 		}
 	}
@@ -578,7 +578,7 @@ func (s *ServerGroupSpec) validateVolumes() error {
 	for _, container := range s.Sidecars {
 		for _, mount := range s.VolumeMounts {
 			if _, ok := volumes[mount.Name]; !ok {
-				return errors.Newf("Volume %s is not defined, but required by mount in sidecar %s", mount.Name, container.Name)
+				return errors.Errorf("Volume %s is not defined, but required by mount in sidecar %s", mount.Name, container.Name)
 			}
 		}
 	}

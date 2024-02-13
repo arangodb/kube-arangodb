@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -119,22 +119,22 @@ func (a *actionRebuildOutSyncedShards) CheckProgress(ctx context.Context) (bool,
 
 	jobID, ok := a.actionCtx.Get(a.action, actionRebuildOutSyncedShardsLocalJobID)
 	if !ok {
-		return false, true, errors.Newf("Local Key is missing in action: %s", actionRebuildOutSyncedShardsLocalJobID)
+		return false, true, errors.Errorf("Local Key is missing in action: %s", actionRebuildOutSyncedShardsLocalJobID)
 	}
 
 	batchID, ok := a.actionCtx.Get(a.action, actionRebuildOutSyncedShardsBatchID)
 	if !ok {
-		return false, true, errors.Newf("Local Key is missing in action: %s", actionRebuildOutSyncedShardsBatchID)
+		return false, true, errors.Errorf("Local Key is missing in action: %s", actionRebuildOutSyncedShardsBatchID)
 	}
 
 	database, ok := a.actionCtx.Get(a.action, actionRebuildOutSyncedShardsLocalDatabase)
 	if !ok {
-		return false, true, errors.Newf("Local Key is missing in action: %s", actionRebuildOutSyncedShardsLocalDatabase)
+		return false, true, errors.Errorf("Local Key is missing in action: %s", actionRebuildOutSyncedShardsLocalDatabase)
 	}
 
 	shardID, ok := a.actionCtx.Get(a.action, actionRebuildOutSyncedShardsLocalShard)
 	if !ok {
-		return false, true, errors.Newf("Local Key is missing in action: %s", actionRebuildOutSyncedShardsLocalShard)
+		return false, true, errors.Errorf("Local Key is missing in action: %s", actionRebuildOutSyncedShardsLocalShard)
 	}
 
 	// check first if there is rebuild job running

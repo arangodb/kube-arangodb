@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -270,7 +270,7 @@ func CreateServiceURL(svc core.Service, scheme string, portPredicate func(core.S
 		}
 	}
 	if !portFound {
-		return "", errors.WithStack(errors.Newf("Cannot find port in service '%s.%s'", svc.GetName(), svc.GetNamespace()))
+		return "", errors.WithStack(errors.Errorf("Cannot find port in service '%s.%s'", svc.GetName(), svc.GetNamespace()))
 	}
 
 	var host string
@@ -297,7 +297,7 @@ func CreateServiceURL(svc core.Service, scheme string, portPredicate func(core.S
 			return "", errors.WithStack(err)
 		}
 		if len(nodeList) == 0 {
-			return "", errors.WithStack(errors.Newf("No nodes found"))
+			return "", errors.WithStack(errors.Errorf("No nodes found"))
 		}
 		node := nodeList[util.Rand().Intn(len(nodeList))]
 		if len(node.Status.Addresses) > 0 {
@@ -308,10 +308,10 @@ func CreateServiceURL(svc core.Service, scheme string, portPredicate func(core.S
 			host = svc.Spec.ClusterIP
 		}
 	default:
-		return "", errors.WithStack(errors.Newf("Unknown service type '%s' in service '%s.%s'", svc.Spec.Type, svc.GetName(), svc.GetNamespace()))
+		return "", errors.WithStack(errors.Errorf("Unknown service type '%s' in service '%s.%s'", svc.Spec.Type, svc.GetName(), svc.GetNamespace()))
 	}
 	if host == "" {
-		return "", errors.WithStack(errors.Newf("Cannot find host for service '%s.%s'", svc.GetName(), svc.GetNamespace()))
+		return "", errors.WithStack(errors.Errorf("Cannot find host for service '%s.%s'", svc.GetName(), svc.GetNamespace()))
 	}
 	if !strings.HasSuffix(scheme, "://") {
 		scheme = scheme + "://"

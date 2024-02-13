@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -306,7 +306,7 @@ func (r *Resources) RenderPodForMember(ctx context.Context, acs sutil.ACS, spec 
 	apiObject := r.context.GetAPIObject()
 	m, group, found := status.Members.ElementByID(memberID)
 	if !found {
-		return nil, errors.WithStack(errors.Newf("Member '%s' not found", memberID))
+		return nil, errors.WithStack(errors.Errorf("Member '%s' not found", memberID))
 	}
 	groupSpec := spec.GetServerGroupSpec(group)
 
@@ -314,16 +314,16 @@ func (r *Resources) RenderPodForMember(ctx context.Context, acs sutil.ACS, spec 
 
 	member, ok := acs.CurrentClusterCache().ArangoMember().V1().GetSimple(memberName)
 	if !ok {
-		return nil, errors.Newf("ArangoMember %s not found", memberName)
+		return nil, errors.Errorf("ArangoMember %s not found", memberName)
 	}
 
 	cluster, ok := acs.Cluster(m.ClusterID)
 	if !ok {
-		return nil, errors.Newf("Cluster is not found")
+		return nil, errors.Errorf("Cluster is not found")
 	}
 
 	if !cluster.Ready() {
-		return nil, errors.Newf("Cluster is not ready")
+		return nil, errors.Errorf("Cluster is not ready")
 	}
 
 	cache := cluster.Cache()
@@ -357,7 +357,7 @@ func (r *Resources) RenderPodForMember(ctx context.Context, acs sutil.ACS, spec 
 		// Check image
 		if !imageInfo.Enterprise {
 			log.Str("image", spec.GetImage()).Debug("Image is not an enterprise image")
-			return nil, errors.WithStack(errors.Newf("Image '%s' does not contain an Enterprise version of ArangoDB", spec.GetImage()))
+			return nil, errors.WithStack(errors.Errorf("Image '%s' does not contain an Enterprise version of ArangoDB", spec.GetImage()))
 		}
 		// Check if the sync image is overwritten by the SyncSpec
 		imageInfo := imageInfo
@@ -378,7 +378,7 @@ func (r *Resources) RenderPodForMember(ctx context.Context, acs sutil.ACS, spec 
 			cachedStatus: cache,
 		}
 	} else {
-		return nil, errors.Newf("unable to render Pod")
+		return nil, errors.Errorf("unable to render Pod")
 	}
 
 	pod, err := RenderArangoPod(ctx, cache, apiObject, role, m.ID, podName, podCreator)
@@ -439,7 +439,7 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 
 	if template == nil {
 		// Template not yet propagated
-		return errors.Newf("Template not yet propagated")
+		return errors.Errorf("Template not yet propagated")
 	}
 
 	if status.CurrentImage == nil {
@@ -460,7 +460,7 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 	apiObject := r.context.GetAPIObject()
 
 	if !found {
-		return errors.WithStack(errors.Newf("Member '%s' not found", memberID))
+		return errors.WithStack(errors.Errorf("Member '%s' not found", memberID))
 	}
 
 	// Update pod name

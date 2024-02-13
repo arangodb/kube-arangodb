@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,22 +18,16 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package cmd
+package svc
 
-import (
-	"github.com/spf13/cobra"
-)
+import "context"
 
-var (
-	cmdML = &cobra.Command{
-		Use: "ml",
-		Run: func(cmd *cobra.Command, args []string) {
+func Run(ctx context.Context, health HealthService, services ...Service) error {
+	healthState := health.Start(ctx)
 
-		},
-		Hidden: true,
+	for _, svc := range services {
+		svc.StartWithHealth(ctx, health)
 	}
-)
 
-func init() {
-	cmdMain.AddCommand(cmdML)
+	return healthState.Wait()
 }

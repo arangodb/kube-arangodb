@@ -112,7 +112,7 @@ func mainE() error {
 	}
 
 	if !valid {
-		return errors.Newf("Parse of file failed")
+		return errors.Errorf("Parse of file failed")
 	}
 
 	return nil
@@ -211,5 +211,5 @@ func extractFileLicenseData(file string) (int, int, error) {
 		return from, to, nil
 	}
 
-	return 0, 0, errors.Newf("Unable to find license string")
+	return 0, 0, errors.Errorf("Unable to find license string")
 }

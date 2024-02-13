@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,16 +35,16 @@ type ArangoMLBatchJobSpec struct {
 
 func (a *ArangoMLBatchJobSpec) Validate() error {
 	if a == nil {
-		return errors.Newf("Spec is not defined")
+		return errors.Errorf("Spec is not defined")
 	}
 
 	var err []error
 	if a.JobSpec == nil {
-		return shared.PrefixResourceErrors("spec", errors.Newf("JobSpec is not defined"))
+		return shared.PrefixResourceErrors("spec", errors.Errorf("JobSpec is not defined"))
 	}
 
 	if len(a.JobSpec.Template.Spec.Containers) != 1 {
-		err = append(err, shared.PrefixResourceErrors("spec.template.spec.containers", errors.Newf("Exactly one container is required")))
+		err = append(err, shared.PrefixResourceErrors("spec.template.spec.containers", errors.Errorf("Exactly one container is required")))
 	}
 
 	return shared.WithErrors(err...)

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -147,7 +147,7 @@ func (o *Operator) handleLocalStorageEvent(event *Event) error {
 			delete(o.localStorages, apiObject.Name)
 			return nil
 		}
-		return errors.WithStack(errors.Newf("ignore failed local storage (%s). Please delete its CR", apiObject.Name))
+		return errors.WithStack(errors.Errorf("ignore failed local storage (%s). Please delete its CR", apiObject.Name))
 	}
 
 	// Fill in defaults
@@ -160,13 +160,13 @@ func (o *Operator) handleLocalStorageEvent(event *Event) error {
 	switch event.Type {
 	case kwatch.Added:
 		if _, ok := o.localStorages[apiObject.Name]; ok {
-			return errors.WithStack(errors.Newf("unsafe state. local storage (%s) was created before but we received event (%s)", apiObject.Name, event.Type))
+			return errors.WithStack(errors.Errorf("unsafe state. local storage (%s) was created before but we received event (%s)", apiObject.Name, event.Type))
 		}
 
 		cfg, deps := o.makeLocalStorageConfigAndDeps()
 		stg, err := storage.New(cfg, deps, apiObject)
 		if err != nil {
-			return errors.WithStack(errors.Newf("failed to create local storage: %s", err))
+			return errors.WithStack(errors.Errorf("failed to create local storage: %s", err))
 		}
 		o.localStorages[apiObject.Name] = stg
 
@@ -176,7 +176,7 @@ func (o *Operator) handleLocalStorageEvent(event *Event) error {
 	case kwatch.Modified:
 		stg, ok := o.localStorages[apiObject.Name]
 		if !ok {
-			return errors.WithStack(errors.Newf("unsafe state. local storage (%s) was never created but we received event (%s)", apiObject.Name, event.Type))
+			return errors.WithStack(errors.Errorf("unsafe state. local storage (%s) was never created but we received event (%s)", apiObject.Name, event.Type))
 		}
 		stg.Update(apiObject)
 		localStoragesModified.Inc()
@@ -184,7 +184,7 @@ func (o *Operator) handleLocalStorageEvent(event *Event) error {
 	case kwatch.Deleted:
 		stg, ok := o.localStorages[apiObject.Name]
 		if !ok {
-			return errors.WithStack(errors.Newf("unsafe state. local storage (%s) was never created but we received event (%s)", apiObject.Name, event.Type))
+			return errors.WithStack(errors.Errorf("unsafe state. local storage (%s) was never created but we received event (%s)", apiObject.Name, event.Type))
 		}
 		stg.Delete()
 		delete(o.localStorages, apiObject.Name)

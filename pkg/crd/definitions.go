@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -57,7 +57,7 @@ func registerCRD(getter crdDefinitionGetter, defaultOpts crds.CRDOptions) error 
 
 	def := getter(nil)
 	if _, ok := registeredCRDs[def.CRD.GetName()]; ok {
-		return errors.Newf("CRD %s already exists", def.CRD.GetName())
+		return errors.Errorf("CRD %s already exists", def.CRD.GetName())
 	}
 	registeredCRDs[def.CRD.GetName()] = crdRegistration{
 		getter:      getter,

@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Feature) Extract GRPC Server
+- (Feature) Extract Integration Service
 
 ## [1.2.37](https://github.com/arangodb/kube-arangodb/tree/1.2.37) (2024-01-22)
 - (Documentation) Improve documentation rendering for GitHub Pages

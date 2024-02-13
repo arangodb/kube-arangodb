@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -100,7 +100,7 @@ func (s scaleFilter) Select(in ScaleSelectFunc) ScaleFilter {
 func (s scaleFilter) Get() (api.MemberStatus, error) {
 	el, ok := util.RandomElement(s.in)
 	if !ok {
-		return api.MemberStatus{}, errors.Newf("Unable to select member")
+		return api.MemberStatus{}, errors.Errorf("Unable to select member")
 	}
 
 	return el, nil

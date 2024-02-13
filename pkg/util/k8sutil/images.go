@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -79,7 +79,7 @@ func GetImageDetails(images ...*sharedApi.Image) *sharedApi.Image {
 // InjectImageDetails injects image details into the Pod definition
 func InjectImageDetails(image *sharedApi.Image, pod *core.PodTemplateSpec, containers ...*core.Container) error {
 	if image == nil {
-		return errors.Newf("Image not found")
+		return errors.Errorf("Image not found")
 	} else if err := image.Validate(); err != nil {
 		return errors.Wrapf(err, "Unable to validate image")
 	}

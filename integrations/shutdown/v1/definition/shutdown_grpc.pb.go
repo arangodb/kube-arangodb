@@ -2,13 +2,13 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v3.21.1
-// source: pkg/api/shutdown/v1/operator.proto
+// source: integrations/shutdown/v1/definition/shutdown.proto
 
-package shutdown
+package definition
 
 import (
 	context "context"
-	server "github.com/arangodb/kube-arangodb/pkg/api/server"
+	definition "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -23,7 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ShutdownClient interface {
-	ShutdownServer(ctx context.Context, in *server.Empty, opts ...grpc.CallOption) (*server.Empty, error)
+	ShutdownServer(ctx context.Context, in *definition.Empty, opts ...grpc.CallOption) (*definition.Empty, error)
 }
 
 type shutdownClient struct {
@@ -34,9 +34,9 @@ func NewShutdownClient(cc grpc.ClientConnInterface) ShutdownClient {
 	return &shutdownClient{cc}
 }
 
-func (c *shutdownClient) ShutdownServer(ctx context.Context, in *server.Empty, opts ...grpc.CallOption) (*server.Empty, error) {
-	out := new(server.Empty)
-	err := c.cc.Invoke(ctx, "/server.Shutdown/ShutdownServer", in, out, opts...)
+func (c *shutdownClient) ShutdownServer(ctx context.Context, in *definition.Empty, opts ...grpc.CallOption) (*definition.Empty, error) {
+	out := new(definition.Empty)
+	err := c.cc.Invoke(ctx, "/shutdown.Shutdown/ShutdownServer", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func (c *shutdownClient) ShutdownServer(ctx context.Context, in *server.Empty, o
 // All implementations must embed UnimplementedShutdownServer
 // for forward compatibility
 type ShutdownServer interface {
-	ShutdownServer(context.Context, *server.Empty) (*server.Empty, error)
+	ShutdownServer(context.Context, *definition.Empty) (*definition.Empty, error)
 	mustEmbedUnimplementedShutdownServer()
 }
 
@@ -55,7 +55,7 @@ type ShutdownServer interface {
 type UnimplementedShutdownServer struct {
 }
 
-func (UnimplementedShutdownServer) ShutdownServer(context.Context, *server.Empty) (*server.Empty, error) {
+func (UnimplementedShutdownServer) ShutdownServer(context.Context, *definition.Empty) (*definition.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ShutdownServer not implemented")
 }
 func (UnimplementedShutdownServer) mustEmbedUnimplementedShutdownServer() {}
@@ -72,7 +72,7 @@ func RegisterShutdownServer(s grpc.ServiceRegistrar, srv ShutdownServer) {
 }
 
 func _Shutdown_ShutdownServer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(server.Empty)
+	in := new(definition.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -81,10 +81,10 @@ func _Shutdown_ShutdownServer_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/server.Shutdown/ShutdownServer",
+		FullMethod: "/shutdown.Shutdown/ShutdownServer",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ShutdownServer).ShutdownServer(ctx, req.(*server.Empty))
+		return srv.(ShutdownServer).ShutdownServer(ctx, req.(*definition.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -93,7 +93,7 @@ func _Shutdown_ShutdownServer_Handler(srv interface{}, ctx context.Context, dec 
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Shutdown_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "server.Shutdown",
+	ServiceName: "shutdown.Shutdown",
 	HandlerType: (*ShutdownServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -102,5 +102,5 @@ var Shutdown_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "pkg/api/shutdown/v1/operator.proto",
+	Metadata: "integrations/shutdown/v1/definition/shutdown.proto",
 }

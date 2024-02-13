@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -146,7 +146,7 @@ func (d *Deployment) UpdateMember(ctx context.Context, member api.MemberStatus) 
 	status := d.GetStatus()
 	_, group, found := status.Members.ElementByID(member.ID)
 	if !found {
-		return errors.WithStack(errors.Newf("Member %s not found", member.ID))
+		return errors.WithStack(errors.Errorf("Member %s not found", member.ID))
 	}
 	if err := status.Members.Update(member, group); err != nil {
 		return errors.WithStack(err)
@@ -252,7 +252,7 @@ func (d *Deployment) getAuth() (driver.Authentication, error) {
 	}
 
 	if !d.GetCachedStatus().Initialised() {
-		return nil, errors.Newf("Cache is not yet started")
+		return nil, errors.Errorf("Cache is not yet started")
 	}
 
 	var secret string
@@ -269,7 +269,7 @@ func (d *Deployment) getAuth() (driver.Authentication, error) {
 	}
 
 	if !found {
-		return nil, errors.Newf("JWT Secret is invalid")
+		return nil, errors.Errorf("JWT Secret is invalid")
 	}
 
 	jwt, err := jwt.CreateArangodJwtAuthorizationHeader(secret, "kube-arangodb")
@@ -676,11 +676,11 @@ func (d *Deployment) WithMemberStatusUpdateErr(ctx context.Context, id string, g
 	return d.WithStatusUpdateErr(ctx, func(s *api.DeploymentStatus) (bool, error) {
 		m, g, ok := s.Members.ElementByID(id)
 		if !ok {
-			return false, errors.Newf("Member %s not found", id)
+			return false, errors.Errorf("Member %s not found", id)
 		}
 
 		if g != group {
-			return false, errors.Newf("Invalid group for %s. Wanted %s, found %s", id, group.AsRole(), g.AsRole())
+			return false, errors.Errorf("Invalid group for %s. Wanted %s, found %s", id, group.AsRole(), g.AsRole())
 		}
 
 		changed, err := action(&m)

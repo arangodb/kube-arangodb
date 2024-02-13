@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -224,7 +224,7 @@ func createArangodClientAuthentication(ctx context.Context, cli typedCore.CoreV1
 		// Authentication is not enabled.
 		if ctx.Value(requireAuthenticationKey{}) != nil {
 			// Context requires authentication
-			return nil, errors.WithStack(errors.Newf("Authentication is required by context, but not provided in API object"))
+			return nil, errors.WithStack(errors.Errorf("Authentication is required by context, but not provided in API object"))
 		}
 	}
 	return nil, nil

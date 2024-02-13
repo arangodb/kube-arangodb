@@ -279,7 +279,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 
 	// Is the deployment in a good state?
 	if status.Conditions.IsTrue(api.ConditionTypeSecretsChanged) {
-		return minInspectionInterval, errors.Newf("Secrets changed")
+		return minInspectionInterval, errors.Errorf("Secrets changed")
 	}
 
 	// Ensure we have image info

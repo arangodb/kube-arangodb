@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -95,7 +95,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 
 		member, ok := cachedStatus.ArangoMember().V1().GetSimple(memberName)
 		if !ok {
-			return errors.Newf("Member %s not found", memberName)
+			return errors.Errorf("Member %s not found", memberName)
 		}
 
 		ports := CreateServerServicePortsWithSidecars(amInspector, e.Member.ArangoMemberName(deploymentName, e.Group))

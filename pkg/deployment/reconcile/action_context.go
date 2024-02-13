@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -365,7 +365,7 @@ func (ac *actionContext) UpdateMember(ctx context.Context, member api.MemberStat
 	status := ac.context.GetStatus()
 	_, group, found := status.Members.ElementByID(member.ID)
 	if !found {
-		return errors.WithStack(errors.Newf("Member %s not found", member.ID))
+		return errors.WithStack(errors.Errorf("Member %s not found", member.ID))
 	}
 	if err := status.Members.Update(member, group); err != nil {
 		return errors.WithStack(err)

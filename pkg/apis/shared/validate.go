@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,12 +40,12 @@ var (
 // See https://kubernetes.io/docs/concepts/overview/working-with-objects/names/
 func ValidateResourceName(name string) error {
 	if len(name) > 253 {
-		return errors.WithStack(errors.Newf("Name '%s' is too long", name))
+		return errors.WithStack(errors.Errorf("Name '%s' is too long", name))
 	}
 	if resourceNameRE.MatchString(name) {
 		return nil
 	}
-	return errors.WithStack(errors.Newf("Name '%s' is not a valid resource name", name))
+	return errors.WithStack(errors.Errorf("Name '%s' is not a valid resource name", name))
 }
 
 // ValidateOptionalResourceName validates a kubernetes resource name.
@@ -73,7 +73,7 @@ func ValidatePullPolicy(in core.PullPolicy) error {
 		return nil
 	}
 
-	return errors.Newf("Unknown pull policy: '%s'", string(in))
+	return errors.Errorf("Unknown pull policy: '%s'", string(in))
 }
 
 type ValidateInterface interface {
@@ -106,7 +106,7 @@ func ValidateRequired[T interface{}](in *T, validator func(T) error) error {
 		return validator(*in)
 	}
 
-	return errors.Newf("should be not nil")
+	return errors.Errorf("should be not nil")
 }
 
 // ValidateList validates all elements on the list
@@ -123,7 +123,7 @@ func ValidateList[T interface{}](in []T, validator func(T) error) error {
 // ValidateImage Validates if provided image is valid
 func ValidateImage(image string) error {
 	if image == "" {
-		return errors.Newf("Image should be not empty")
+		return errors.Errorf("Image should be not empty")
 	}
 
 	return nil
@@ -137,7 +137,7 @@ func ValidateAnyNotNil[T any](msg string, obj ...*T) error {
 		}
 	}
 
-	return errors.Newf(msg)
+	return errors.Errorf(msg)
 }
 
 // ValidateServiceType checks that service type is supported
@@ -149,5 +149,5 @@ func ValidateServiceType(st core.ServiceType) error {
 		core.ServiceTypeExternalName:
 		return nil
 	}
-	return errors.Newf("Unsupported service type %s", st)
+	return errors.Errorf("Unsupported service type %s", st)
 }

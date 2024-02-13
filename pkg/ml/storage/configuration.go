@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,13 +24,14 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/ml/storage/s3"
 )
 
-type StorageType string
+type Type string
 
 const (
-	StorageTypeS3Proxy = StorageType("s3")
+	S3 = Type("s3")
 )
 
-type ServiceConfig struct {
-	ListenAddress string
-	S3            s3.Config
+type Configuration struct {
+	Type Type
+
+	S3 s3.Configuration
 }
