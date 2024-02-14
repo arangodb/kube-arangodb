@@ -347,6 +347,14 @@ linter:
 linter-fix:
 	@$(GOPATH)/bin/golangci-lint run --fix --build-tags "$(GOBUILDTAGS)" $(foreach LINT_EXCLUDE,$(LINT_EXCLUDES),--exclude '$(LINT_EXCLUDE)') ./...
 
+.PHONY: protolint protolint-fix
+
+protolint:
+	@$(GOPATH)/bin/protolint lint $(PROTOSOURCES)
+
+protolint-fix:
+	@$(GOPATH)/bin/protolint lint --fix $(PROTOSOURCES)
+
 .PHONY: vulncheck vulncheck-optional
 vulncheck:
 	@echo ">> Checking for known vulnerabilities (required)"
@@ -726,6 +734,8 @@ tools-min: update-vendor
 	@GOBIN=$(GOPATH)/bin go install github.com/google/addlicense@6d92264d717064f28b32464f0f9693a5b4ef0239
 	@echo ">> Fetching yamlfmt"
 	@GOBIN=$(GOPATH)/bin go install github.com/google/yamlfmt/cmd/yamlfmt@v0.10.0
+	@echo ">> Fetching protolinter"
+	@GOBIN=$(GOPATH)/bin go install github.com/yoheimuta/protolint/cmd/protolint@v0.47.5
 
 .PHONY: tools
 tools: tools-min

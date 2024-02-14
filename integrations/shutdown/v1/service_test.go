@@ -34,26 +34,33 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/tests/tgrpc"
 )
 
-func Test_ShutdownGRPC(t *testing.T) {
-	ctx, c := context.WithCancel(context.Background())
-	defer c()
-
+func Client(t *testing.T, ctx context.Context, c context.CancelFunc) pbShutdownV1.ShutdownV1Client {
 	local := svc.NewService(svc.Configuration{
 		Address: "127.0.0.1:0",
 	}, New(c))
 
 	start := local.Start(ctx)
 
-	require.False(t, closer.IsChannelClosed(ctx.Done()))
-
 	client := tgrpc.NewGRPCClient(t, ctx, pbShutdownV1.NewShutdownV1Client, start.Address())
+
+	return client
+}
+
+func Test_AllowAll(t *testing.T) {
+	ctx, c := context.WithCancel(context.Background())
+	defer c()
+
+	nctx, nc := context.WithCancel(ctx)
+
+	client := Client(t, ctx, nc)
+
+	require.False(t, closer.IsChannelClosed(nctx.Done()))
 
 	_, err := client.Shutdown(ctx, &pbSharedV1.Empty{})
 	require.NoError(t, err)
 
-	time.Sleep(time.Second)
+	time.Sleep(100 * time.Millisecond)
 
-	require.True(t, closer.IsChannelClosed(ctx.Done()))
+	require.True(t, closer.IsChannelClosed(nctx.Done()))
 
-	require.NoError(t, start.Wait())
 }

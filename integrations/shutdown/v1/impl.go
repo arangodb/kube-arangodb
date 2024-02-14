@@ -35,11 +35,11 @@ func New(closer context.CancelFunc) svc.Handler {
 	return &impl{closer: closer}
 }
 
-var _ pbShutdownV1.ShutdownServer = &impl{}
+var _ pbShutdownV1.ShutdownV1Server = &impl{}
 var _ svc.Handler = &impl{}
 
 type impl struct {
-	pbShutdownV1.UnimplementedShutdownServer
+	pbShutdownV1.UnimplementedShutdownV1Server
 
 	closer context.CancelFunc
 }
@@ -53,10 +53,10 @@ func (i *impl) Health() svc.HealthState {
 }
 
 func (i *impl) Register(registrar *grpc.Server) {
-	pbShutdownV1.RegisterShutdownServer(registrar, i)
+	pbShutdownV1.RegisterShutdownV1Server(registrar, i)
 }
 
-func (i *impl) ShutdownServer(ctx context.Context, empty *pbSharedV1.Empty) (*pbSharedV1.Empty, error) {
+func (i *impl) Shutdown(ctx context.Context, empty *pbSharedV1.Empty) (*pbSharedV1.Empty, error) {
 	go func() {
 		defer i.closer()
 

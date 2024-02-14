@@ -4,6 +4,8 @@
 - (Feature) Extract GRPC Server
 - (Feature) Extract Integration Service
 - (Documentation) Move ML Extension example under "CRD overview"
+- (Feature) Authentication Service V1
+- (Feature) Authorization Service V0
 
 ## [1.2.37](https://github.com/arangodb/kube-arangodb/tree/1.2.37) (2024-01-22)
 - (Documentation) Improve documentation rendering for GitHub Pages

@@ -40,6 +40,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// Empty contains empty message used by other protos
 type Empty struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

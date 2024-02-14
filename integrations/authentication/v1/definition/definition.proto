@@ -20,11 +20,11 @@
 
 syntax = "proto3";
 
+package authentication;
+
 import "google/protobuf/duration.proto";
 
-option go_package = "github.com/arangodb/kube-arangodb/integrations/v1/definition";
-
-package authentication;
+option go_package = "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition";
 
 // AuthenticationV1 define ServiceInterface for Authentication V1
 service AuthenticationV1 {
@@ -37,49 +37,49 @@ service AuthenticationV1 {
 
 // ValidateRequest defines request for AuthenticationV1 Validate Request
 message ValidateRequest {
-  // Token specifies a token extracted from the request or used currently
-  string Token = 1;
+  // token specifies a token extracted from the request or used currently
+  string token = 1;
 }
 
 // ValidateResponse defines response for AuthenticationV1 Validate Request
 message ValidateResponse {
-  // IsValid returns information about the validity of the token
-  bool IsValid = 1;
+  // is_valid returns information about the validity of the token
+  bool is_valid = 1;
 
-  // Message message for the validation phase
-  string Message = 2;
+  // message message for the validation phase
+  string message = 2;
 
-  // Details returns token details if the token is valid
-  optional ValidateResponseDetails Details = 3;
+  // details returns token details if the token is valid
+  optional ValidateResponseDetails details = 3;
 }
 
 // ValidateResponseDetails defines optional response for AuthenticationV1 Validate Request.
 // Returned only if the Token provided in the request is valid.
 message ValidateResponseDetails {
-  // Lifetime specify the lifetime of the token
-  google.protobuf.Duration Lifetime = 1;
+  // lifetime specify the lifetime of the token
+  google.protobuf.Duration lifetime = 1;
 
-  // User returns the User used in the Token. If a user is not specified, `root` is returned
-  string User = 2;
+  // user returns the User used in the Token. If a user is not specified, `root` is returned
+  string user = 2;
 }
 
 // CreateTokenRequest defines request for AuthenticationV1 CreateToken Request
 message CreateTokenRequest {
-  // Lifetime specifies the lifetime of the token as duration. Defaults to 1 hour
-  optional google.protobuf.Duration Lifetime = 1;
+  // lifetime specifies the lifetime of the token as duration. Defaults to 1 hour
+  optional google.protobuf.Duration lifetime = 1;
 
-  // User specify the User for which token should be created. By default, the default user is used (root in most cases)
-  optional string User = 2;
+  // user specify the User for which token should be created. By default, the default user is used (root in most cases)
+  optional string user = 2;
 }
 
 // CreateTokenResponse defines response for AuthenticationV1 CreateToken Request
 message CreateTokenResponse {
-  // Lifetime specify the lifetime of the token as the duration
-  google.protobuf.Duration Lifetime = 1;
+  // lifetime specify the lifetime of the token as the duration
+  google.protobuf.Duration lifetime = 1;
 
-  // User returns the User used in the Token
-  string User = 2;
+  // user returns the User used in the Token
+  string user = 2;
 
-  // Token returns the Token as a string
-  string Token = 3;
+  // token returns the Token as a string
+  string token = 3;
 }

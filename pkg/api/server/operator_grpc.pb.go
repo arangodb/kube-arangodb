@@ -8,6 +8,7 @@ package server
 
 import (
 	context "context"
+	definition "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -22,9 +23,12 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type OperatorClient interface {
-	GetVersion(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Version, error)
-	GetLogLevel(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*LogLevelConfig, error)
-	SetLogLevel(ctx context.Context, in *LogLevelConfig, opts ...grpc.CallOption) (*Empty, error)
+	// GetVersion returns Operator version
+	GetVersion(ctx context.Context, in *definition.Empty, opts ...grpc.CallOption) (*Version, error)
+	// GetLogLevel returns Operator LogLevels
+	GetLogLevel(ctx context.Context, in *definition.Empty, opts ...grpc.CallOption) (*LogLevelConfig, error)
+	// SetLogLevel sets Operator LogLevels
+	SetLogLevel(ctx context.Context, in *LogLevelConfig, opts ...grpc.CallOption) (*definition.Empty, error)
 }
 
 type operatorClient struct {
@@ -35,7 +39,7 @@ func NewOperatorClient(cc grpc.ClientConnInterface) OperatorClient {
 	return &operatorClient{cc}
 }
 
-func (c *operatorClient) GetVersion(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Version, error) {
+func (c *operatorClient) GetVersion(ctx context.Context, in *definition.Empty, opts ...grpc.CallOption) (*Version, error) {
 	out := new(Version)
 	err := c.cc.Invoke(ctx, "/server.Operator/GetVersion", in, out, opts...)
 	if err != nil {
@@ -44,7 +48,7 @@ func (c *operatorClient) GetVersion(ctx context.Context, in *Empty, opts ...grpc
 	return out, nil
 }
 
-func (c *operatorClient) GetLogLevel(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*LogLevelConfig, error) {
+func (c *operatorClient) GetLogLevel(ctx context.Context, in *definition.Empty, opts ...grpc.CallOption) (*LogLevelConfig, error) {
 	out := new(LogLevelConfig)
 	err := c.cc.Invoke(ctx, "/server.Operator/GetLogLevel", in, out, opts...)
 	if err != nil {
@@ -53,8 +57,8 @@ func (c *operatorClient) GetLogLevel(ctx context.Context, in *Empty, opts ...grp
 	return out, nil
 }
 
-func (c *operatorClient) SetLogLevel(ctx context.Context, in *LogLevelConfig, opts ...grpc.CallOption) (*Empty, error) {
-	out := new(Empty)
+func (c *operatorClient) SetLogLevel(ctx context.Context, in *LogLevelConfig, opts ...grpc.CallOption) (*definition.Empty, error) {
+	out := new(definition.Empty)
 	err := c.cc.Invoke(ctx, "/server.Operator/SetLogLevel", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -66,9 +70,12 @@ func (c *operatorClient) SetLogLevel(ctx context.Context, in *LogLevelConfig, op
 // All implementations must embed UnimplementedOperatorServer
 // for forward compatibility
 type OperatorServer interface {
-	GetVersion(context.Context, *Empty) (*Version, error)
-	GetLogLevel(context.Context, *Empty) (*LogLevelConfig, error)
-	SetLogLevel(context.Context, *LogLevelConfig) (*Empty, error)
+	// GetVersion returns Operator version
+	GetVersion(context.Context, *definition.Empty) (*Version, error)
+	// GetLogLevel returns Operator LogLevels
+	GetLogLevel(context.Context, *definition.Empty) (*LogLevelConfig, error)
+	// SetLogLevel sets Operator LogLevels
+	SetLogLevel(context.Context, *LogLevelConfig) (*definition.Empty, error)
 	mustEmbedUnimplementedOperatorServer()
 }
 
@@ -76,13 +83,13 @@ type OperatorServer interface {
 type UnimplementedOperatorServer struct {
 }
 
-func (UnimplementedOperatorServer) GetVersion(context.Context, *Empty) (*Version, error) {
+func (UnimplementedOperatorServer) GetVersion(context.Context, *definition.Empty) (*Version, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetVersion not implemented")
 }
-func (UnimplementedOperatorServer) GetLogLevel(context.Context, *Empty) (*LogLevelConfig, error) {
+func (UnimplementedOperatorServer) GetLogLevel(context.Context, *definition.Empty) (*LogLevelConfig, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetLogLevel not implemented")
 }
-func (UnimplementedOperatorServer) SetLogLevel(context.Context, *LogLevelConfig) (*Empty, error) {
+func (UnimplementedOperatorServer) SetLogLevel(context.Context, *LogLevelConfig) (*definition.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetLogLevel not implemented")
 }
 func (UnimplementedOperatorServer) mustEmbedUnimplementedOperatorServer() {}
@@ -99,7 +106,7 @@ func RegisterOperatorServer(s grpc.ServiceRegistrar, srv OperatorServer) {
 }
 
 func _Operator_GetVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Empty)
+	in := new(definition.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -111,13 +118,13 @@ func _Operator_GetVersion_Handler(srv interface{}, ctx context.Context, dec func
 		FullMethod: "/server.Operator/GetVersion",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OperatorServer).GetVersion(ctx, req.(*Empty))
+		return srv.(OperatorServer).GetVersion(ctx, req.(*definition.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Operator_GetLogLevel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Empty)
+	in := new(definition.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -129,7 +136,7 @@ func _Operator_GetLogLevel_Handler(srv interface{}, ctx context.Context, dec fun
 		FullMethod: "/server.Operator/GetLogLevel",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OperatorServer).GetLogLevel(ctx, req.(*Empty))
+		return srv.(OperatorServer).GetLogLevel(ctx, req.(*definition.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }

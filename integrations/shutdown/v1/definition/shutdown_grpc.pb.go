@@ -19,86 +19,88 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// ShutdownClient is the client API for Shutdown service.
+// ShutdownV1Client is the client API for ShutdownV1 service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type ShutdownClient interface {
-	ShutdownServer(ctx context.Context, in *definition.Empty, opts ...grpc.CallOption) (*definition.Empty, error)
+type ShutdownV1Client interface {
+	// ShutdownServer sends the shutdown request
+	Shutdown(ctx context.Context, in *definition.Empty, opts ...grpc.CallOption) (*definition.Empty, error)
 }
 
-type shutdownClient struct {
+type shutdownV1Client struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewShutdownClient(cc grpc.ClientConnInterface) ShutdownClient {
-	return &shutdownClient{cc}
+func NewShutdownV1Client(cc grpc.ClientConnInterface) ShutdownV1Client {
+	return &shutdownV1Client{cc}
 }
 
-func (c *shutdownClient) ShutdownServer(ctx context.Context, in *definition.Empty, opts ...grpc.CallOption) (*definition.Empty, error) {
+func (c *shutdownV1Client) Shutdown(ctx context.Context, in *definition.Empty, opts ...grpc.CallOption) (*definition.Empty, error) {
 	out := new(definition.Empty)
-	err := c.cc.Invoke(ctx, "/shutdown.Shutdown/ShutdownServer", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/shutdown.ShutdownV1/Shutdown", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// ShutdownServer is the server API for Shutdown service.
-// All implementations must embed UnimplementedShutdownServer
+// ShutdownV1Server is the server API for ShutdownV1 service.
+// All implementations must embed UnimplementedShutdownV1Server
 // for forward compatibility
-type ShutdownServer interface {
-	ShutdownServer(context.Context, *definition.Empty) (*definition.Empty, error)
-	mustEmbedUnimplementedShutdownServer()
+type ShutdownV1Server interface {
+	// ShutdownServer sends the shutdown request
+	Shutdown(context.Context, *definition.Empty) (*definition.Empty, error)
+	mustEmbedUnimplementedShutdownV1Server()
 }
 
-// UnimplementedShutdownServer must be embedded to have forward compatible implementations.
-type UnimplementedShutdownServer struct {
+// UnimplementedShutdownV1Server must be embedded to have forward compatible implementations.
+type UnimplementedShutdownV1Server struct {
 }
 
-func (UnimplementedShutdownServer) ShutdownServer(context.Context, *definition.Empty) (*definition.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ShutdownServer not implemented")
+func (UnimplementedShutdownV1Server) Shutdown(context.Context, *definition.Empty) (*definition.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Shutdown not implemented")
 }
-func (UnimplementedShutdownServer) mustEmbedUnimplementedShutdownServer() {}
+func (UnimplementedShutdownV1Server) mustEmbedUnimplementedShutdownV1Server() {}
 
-// UnsafeShutdownServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to ShutdownServer will
+// UnsafeShutdownV1Server may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to ShutdownV1Server will
 // result in compilation errors.
-type UnsafeShutdownServer interface {
-	mustEmbedUnimplementedShutdownServer()
+type UnsafeShutdownV1Server interface {
+	mustEmbedUnimplementedShutdownV1Server()
 }
 
-func RegisterShutdownServer(s grpc.ServiceRegistrar, srv ShutdownServer) {
-	s.RegisterService(&Shutdown_ServiceDesc, srv)
+func RegisterShutdownV1Server(s grpc.ServiceRegistrar, srv ShutdownV1Server) {
+	s.RegisterService(&ShutdownV1_ServiceDesc, srv)
 }
 
-func _Shutdown_ShutdownServer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ShutdownV1_Shutdown_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(definition.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ShutdownServer).ShutdownServer(ctx, in)
+		return srv.(ShutdownV1Server).Shutdown(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/shutdown.Shutdown/ShutdownServer",
+		FullMethod: "/shutdown.ShutdownV1/Shutdown",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ShutdownServer).ShutdownServer(ctx, req.(*definition.Empty))
+		return srv.(ShutdownV1Server).Shutdown(ctx, req.(*definition.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// Shutdown_ServiceDesc is the grpc.ServiceDesc for Shutdown service.
+// ShutdownV1_ServiceDesc is the grpc.ServiceDesc for ShutdownV1 service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var Shutdown_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "shutdown.Shutdown",
-	HandlerType: (*ShutdownServer)(nil),
+var ShutdownV1_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "shutdown.ShutdownV1",
+	HandlerType: (*ShutdownV1Server)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "ShutdownServer",
-			Handler:    _Shutdown_ShutdownServer_Handler,
+			MethodName: "Shutdown",
+			Handler:    _ShutdownV1_Shutdown_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
