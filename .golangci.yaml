@@ -53,6 +53,10 @@ linters-settings:
         alias: pbShutdownV1
       - pkg: github.com/arangodb/kube-arangodb/integrations/shutdown/v1
         alias: pbImplShutdownV1
+      - pkg: github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition
+        alias: pbAuthenticationV1
+      - pkg: github.com/arangodb/kube-arangodb/integrations/authentication/v1
+        alias: pbImplAuthenticationV1
       - pkg: github.com/arangodb/kube-arangodb/integrations/shared/v1/definition
         alias: pbSharedV1
       - pkg: github.com/arangodb/kube-arangodb/integrations/shared/v1

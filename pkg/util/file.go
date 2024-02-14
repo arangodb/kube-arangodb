@@ -18,22 +18,46 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package cmd
+package util
 
 import (
-	"github.com/spf13/cobra"
+	"io"
+	"os"
 
-	"github.com/arangodb/kube-arangodb/pkg/integrations"
+	"github.com/pkg/errors"
 )
 
-func init() {
-	subCommand := &cobra.Command{
-		Use: "integration",
+func OpenWithRead(path string, size int) ([]byte, error) {
+	f, err := os.OpenFile(path, os.O_RDONLY, 0644)
+	if err != nil {
+		return nil, err
 	}
 
-	if err := integrations.Register(subCommand); err != nil {
-		panic(err.Error())
-	}
+	buff := make([]byte, size+1)
+	if s, err := Read(f, buff); err != nil {
+		if nerr := f.Close(); nerr != nil {
+			return nil, nerr
+		}
 
-	cmdMain.AddCommand(subCommand)
+		return nil, err
+	} else if s == 0 {
+		return nil, io.ErrUnexpectedEOF
+	} else {
+		return buff[:s], nil
+	}
+}
+
+func Read(in io.Reader, buff []byte) (int, error) {
+	readed := 0
+	for {
+		s, err := in.Read(buff)
+		readed += s
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				return readed, nil
+			}
+
+			return readed, err
+		}
+	}
 }

@@ -184,6 +184,7 @@ func init() {
 	var deprecatedStr string
 
 	f := cmdMain.Flags()
+
 	f.StringVar(&serverOptions.host, "server.host", defaultServerHost, "Host to listen on")
 	f.IntVar(&serverOptions.port, "server.port", defaultServerPort, "Port to listen on")
 	f.StringVar(&serverOptions.tlsSecretName, "server.tls-secret-name", "", "Name of secret containing tls.crt & tls.key for HTTPS server (if empty, self-signed certificate is used)")

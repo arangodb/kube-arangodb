@@ -49,6 +49,7 @@ import (
 	secretv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
+	"github.com/arangodb/kube-arangodb/pkg/util/token"
 )
 
 var (
@@ -422,8 +423,8 @@ func AppendKeyfileToKeyfolder(ctx context.Context, cachedStatus inspectorInterfa
 
 var (
 	exporterTokenClaims = jg.MapClaims{
-		"iss":       "arangodb",
-		"server_id": "exporter",
+		token.ClaimISS: token.ClaimISSValue,
+		"server_id":    "exporter",
 		"allowed_paths": []interface{}{"/_admin/statistics", "/_admin/statistics-description",
 			shared.ArangoExporterInternalEndpoint, shared.ArangoExporterInternalEndpointV2,
 			shared.ArangoExporterStatusEndpoint, shared.ArangoExporterClusterHealthEndpoint},

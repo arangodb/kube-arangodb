@@ -18,22 +18,29 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package cmd
+package token
 
 import (
-	"github.com/spf13/cobra"
+	jg "github.com/golang-jwt/jwt"
 
-	"github.com/arangodb/kube-arangodb/pkg/integrations"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func init() {
-	subCommand := &cobra.Command{
-		Use: "integration",
+func IsSignatureInvalidError(err error) bool {
+	return isJQError(err, jg.ErrSignatureInvalid)
+}
+
+func isJQError(err, expected error) bool {
+	if err == nil || expected == nil {
+		return false
 	}
 
-	if err := integrations.Register(subCommand); err != nil {
-		panic(err.Error())
+	var v *jg.ValidationError
+	if errors.As(err, &v) {
+		if errors.Is(v.Inner, expected) {
+			return true
+		}
 	}
 
-	cmdMain.AddCommand(subCommand)
+	return false
 }

@@ -77,12 +77,9 @@ func (c *configuration) Register(cmd *cobra.Command) error {
 		return c.registered[i].Name() < c.registered[j].Name()
 	})
 
-	subCommand := &cobra.Command{
-		Use:  "integration",
-		RunE: c.run,
-	}
+	cmd.RunE = c.run
 
-	f := subCommand.Flags()
+	f := cmd.Flags()
 
 	f.StringVar(&c.health.config.Address, "health.address", "0.0.0.0:9091", "Address to expose health service")
 	f.BoolVar(&c.health.shutdownEnabled, "health.shutdown.enabled", true, "Determines if shutdown service should be enabled and exposed")
@@ -93,14 +90,13 @@ func (c *configuration) Register(cmd *cobra.Command) error {
 
 		f.Bool(prefix, false, service.Description())
 
-		if err := service.Register(subCommand, func(name string) string {
+		if err := service.Register(cmd, func(name string) string {
 			return fmt.Sprintf("%s.%s", prefix, name)
 		}); err != nil {
 			return errors.Wrapf(err, "Unable to register service %s", service.Name())
 		}
 	}
 
-	cmd.AddCommand(subCommand)
 	return nil
 }
 
