@@ -20,35 +20,56 @@
 
 syntax = "proto3";
 
-option go_package = "github.com/arangodb/kube-arangodb/pkg/api/server";
-
 package server;
 
+import "integrations/shared/v1/definition/empty.proto";
+
+option go_package = "github.com/arangodb/kube-arangodb/pkg/api/server";
+
+// Operator defined Operator service
 service Operator {
-  rpc GetVersion (Empty) returns (Version) {}
-  rpc GetLogLevel (Empty) returns (LogLevelConfig) {}
-  rpc SetLogLevel (LogLevelConfig) returns (Empty) {}
+  // GetVersion returns Operator version
+  rpc GetVersion (shared.Empty) returns (Version) {}
+
+  // GetLogLevel returns Operator LogLevels
+  rpc GetLogLevel (shared.Empty) returns (LogLevelConfig) {}
+
+  // SetLogLevel sets Operator LogLevels
+  rpc SetLogLevel (LogLevelConfig) returns (shared.Empty) {}
 }
 
-message Empty {}
-
+// Version define the version details
 message Version {
+  // version keeps version info
   string version = 1;
+  // build keeps build info
   string build = 2;
+  // edition keeps the Operator edition
   string edition = 3;
+  // go_version keeps the version of go used in build
   string go_version = 4;
+  // build_date keeps the build date
   string build_date = 5;
 }
 
+// LogLevel defined the Log Levels
 enum LogLevel {
-  TRACE = 0;
-  DEBUG = 1;
-  INFO = 2;
-  WARN = 3;
-  ERROR = 4;
-  FATAL = 5;
+  // LOG_LEVEL_TRACE_UNSPECIFIED defines Trace or Undefined log level
+  LOG_LEVEL_TRACE_UNSPECIFIED = 0;
+  // LOG_LEVEL_DEBUG defines Debug log level
+  LOG_LEVEL_DEBUG = 1;
+  // LOG_LEVEL_INFO defines Info log level
+  LOG_LEVEL_INFO = 2;
+  // LOG_LEVEL_WARN defines Warn log level
+  LOG_LEVEL_WARN = 3;
+  // LOG_LEVEL_ERROR defines Error log level
+  LOG_LEVEL_ERROR = 4;
+  // LOG_LEVEL_FATAL defines Fatal log level
+  LOG_LEVEL_FATAL = 5;
 }
 
+// LogLevelConfig define the LogLevel Configs
 message LogLevelConfig {
+  // topics define map of the topics and corresponding log levels
   map<string, LogLevel> topics = 1;
 }

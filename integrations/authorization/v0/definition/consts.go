@@ -18,12 +18,8 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-syntax = "proto3";
+package definition
 
-package shared;
-
-option go_package = "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition";
-
-// Empty contains empty message used by other protos
-message Empty {
-}
+const (
+	Name = "authorization.v0"
+)

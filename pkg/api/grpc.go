@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,12 +24,13 @@ import (
 	"context"
 	"fmt"
 
+	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	pb "github.com/arangodb/kube-arangodb/pkg/api/server"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/version"
 )
 
-func (s *Server) GetVersion(ctx context.Context, _ *pb.Empty) (*pb.Version, error) {
+func (s *Server) GetVersion(ctx context.Context, _ *pbSharedV1.Empty) (*pb.Version, error) {
 	v := version.GetVersionV1()
 	return &pb.Version{
 		Version:   string(v.Version),
@@ -41,12 +42,12 @@ func (s *Server) GetVersion(ctx context.Context, _ *pb.Empty) (*pb.Version, erro
 }
 
 var loglevelMap = map[pb.LogLevel]logging.Level{
-	pb.LogLevel_TRACE: logging.Trace,
-	pb.LogLevel_DEBUG: logging.Debug,
-	pb.LogLevel_INFO:  logging.Info,
-	pb.LogLevel_WARN:  logging.Warn,
-	pb.LogLevel_ERROR: logging.Error,
-	pb.LogLevel_FATAL: logging.Fatal,
+	pb.LogLevel_LOG_LEVEL_TRACE_UNSPECIFIED: logging.Trace,
+	pb.LogLevel_LOG_LEVEL_DEBUG:             logging.Debug,
+	pb.LogLevel_LOG_LEVEL_INFO:              logging.Info,
+	pb.LogLevel_LOG_LEVEL_WARN:              logging.Warn,
+	pb.LogLevel_LOG_LEVEL_ERROR:             logging.Error,
+	pb.LogLevel_LOG_LEVEL_FATAL:             logging.Fatal,
 }
 
 func logLevelToGRPC(l logging.Level) pb.LogLevel {
@@ -55,10 +56,10 @@ func logLevelToGRPC(l logging.Level) pb.LogLevel {
 			return grpcVal
 		}
 	}
-	return pb.LogLevel_DEBUG
+	return pb.LogLevel_LOG_LEVEL_DEBUG
 }
 
-func (s *Server) GetLogLevel(ctx context.Context, _ *pb.Empty) (*pb.LogLevelConfig, error) {
+func (s *Server) GetLogLevel(ctx context.Context, _ *pbSharedV1.Empty) (*pb.LogLevelConfig, error) {
 	l := s.getLogLevelsByTopics()
 
 	topics := make(map[string]pb.LogLevel, len(l))
@@ -70,15 +71,15 @@ func (s *Server) GetLogLevel(ctx context.Context, _ *pb.Empty) (*pb.LogLevelConf
 	}, nil
 }
 
-func (s *Server) SetLogLevel(ctx context.Context, cfg *pb.LogLevelConfig) (*pb.Empty, error) {
+func (s *Server) SetLogLevel(ctx context.Context, cfg *pb.LogLevelConfig) (*pbSharedV1.Empty, error) {
 	l := make(map[string]logging.Level, len(cfg.Topics))
 	for topic, grpcLevel := range cfg.Topics {
 		level, ok := loglevelMap[grpcLevel]
 		if !ok {
-			return &pb.Empty{}, fmt.Errorf("unknown log level %s for topic %s", grpcLevel, topic)
+			return &pbSharedV1.Empty{}, fmt.Errorf("unknown log level %s for topic %s", grpcLevel, topic)
 		}
 		l[topic] = level
 	}
 	s.setLogLevelsByTopics(l)
-	return &pb.Empty{}, nil
+	return &pbSharedV1.Empty{}, nil
 }

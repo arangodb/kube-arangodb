@@ -68,7 +68,7 @@ type implementation struct {
 }
 
 func (i *implementation) Name() string {
-	return "authentication.v1"
+	return pbAuthenticationV1.Name
 }
 
 func (i *implementation) Health() svc.HealthState {

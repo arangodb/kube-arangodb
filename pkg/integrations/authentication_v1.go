@@ -26,6 +26,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pbImplAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1"
+	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
@@ -59,7 +60,7 @@ func (a *authenticationV1) Handler(ctx context.Context) (svc.Handler, error) {
 }
 
 func (a *authenticationV1) Name() string {
-	return "authentication.v1"
+	return pbAuthenticationV1.Name
 }
 
 func (a *authenticationV1) Description() string {

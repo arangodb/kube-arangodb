@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/closer"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -39,7 +39,7 @@ func RequestInvoke[T interface{}](invoker RequestInvoker, request *http.Request)
 	}
 
 	if body := resp.Body; body != nil {
-		c := util.CloseOnce(body)
+		c := closer.CloseOnce(body)
 		defer c.Close()
 
 		var obj T

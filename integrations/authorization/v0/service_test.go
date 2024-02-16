@@ -18,42 +18,38 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1
+package v0
 
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 
-	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
-	pbShutdownV1 "github.com/arangodb/kube-arangodb/integrations/shutdown/v1/definition"
-	"github.com/arangodb/kube-arangodb/pkg/util/closer"
+	pbAuthorizationV0 "github.com/arangodb/kube-arangodb/integrations/authorization/v0/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests/tgrpc"
 )
 
-func Test_ShutdownGRPC(t *testing.T) {
-	ctx, c := context.WithCancel(context.Background())
-	defer c()
-
+func Client(t *testing.T, ctx context.Context) pbAuthorizationV0.AuthorizationV0Client {
 	local := svc.NewService(svc.Configuration{
 		Address: "127.0.0.1:0",
-	}, New(c))
+	}, New())
 
 	start := local.Start(ctx)
 
-	require.False(t, closer.IsChannelClosed(ctx.Done()))
+	client := tgrpc.NewGRPCClient(t, ctx, pbAuthorizationV0.NewAuthorizationV0Client, start.Address())
 
-	client := tgrpc.NewGRPCClient(t, ctx, pbShutdownV1.NewShutdownV1Client, start.Address())
+	return client
+}
 
-	_, err := client.Shutdown(ctx, &pbSharedV1.Empty{})
+func Test_AllowAll(t *testing.T) {
+	ctx, c := context.WithCancel(context.Background())
+	defer c()
+
+	client := Client(t, ctx)
+
+	resp, err := client.Can(ctx, &pbAuthorizationV0.CanRequest{})
 	require.NoError(t, err)
-
-	time.Sleep(time.Second)
-
-	require.True(t, closer.IsChannelClosed(ctx.Done()))
-
-	require.NoError(t, start.Wait())
+	require.True(t, resp.Allowed)
 }

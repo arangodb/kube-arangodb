@@ -20,12 +20,14 @@
 
 syntax = "proto3";
 
-option go_package = "github.com/arangodb/kube-arangodb/integrations/shutdown/v1/definition";
-
 package shutdown;
 
 import "integrations/shared/v1/definition/empty.proto";
 
-service Shutdown {
-  rpc ShutdownServer (shared.Empty) returns (shared.Empty) {}
+option go_package = "github.com/arangodb/kube-arangodb/integrations/shutdown/v1/definition";
+
+// ShutdownV1 Service implementation
+service ShutdownV1 {
+  // ShutdownServer sends the shutdown request
+  rpc Shutdown (shared.Empty) returns (shared.Empty) {}
 }
