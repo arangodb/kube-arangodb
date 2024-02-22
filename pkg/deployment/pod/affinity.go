@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -92,90 +92,4 @@ func AppendAffinityWithRole(p interfaces.PodCreator, a *core.PodAffinity, role s
 			TopologyKey:   shared.TopologyKeyHostname,
 		},
 	})
-}
-
-func MergePodAntiAffinity(a, b *core.PodAntiAffinity) {
-	if a == nil || b == nil {
-		return
-	}
-
-	a.PreferredDuringSchedulingIgnoredDuringExecution = append(a.PreferredDuringSchedulingIgnoredDuringExecution,
-		b.PreferredDuringSchedulingIgnoredDuringExecution...)
-
-	a.RequiredDuringSchedulingIgnoredDuringExecution = append(a.RequiredDuringSchedulingIgnoredDuringExecution,
-		b.RequiredDuringSchedulingIgnoredDuringExecution...)
-}
-
-func MergePodAffinity(a, b *core.PodAffinity) {
-	if a == nil || b == nil {
-		return
-	}
-
-	a.PreferredDuringSchedulingIgnoredDuringExecution = append(a.PreferredDuringSchedulingIgnoredDuringExecution,
-		b.PreferredDuringSchedulingIgnoredDuringExecution...)
-
-	a.RequiredDuringSchedulingIgnoredDuringExecution = append(a.RequiredDuringSchedulingIgnoredDuringExecution,
-		b.RequiredDuringSchedulingIgnoredDuringExecution...)
-}
-
-func MergeNodeAffinity(a, b *core.NodeAffinity) {
-	if a == nil || b == nil {
-		return
-	}
-
-	a.PreferredDuringSchedulingIgnoredDuringExecution = append(a.PreferredDuringSchedulingIgnoredDuringExecution,
-		b.PreferredDuringSchedulingIgnoredDuringExecution...)
-
-	var newSelectorTerms []core.NodeSelectorTerm
-
-	if b.RequiredDuringSchedulingIgnoredDuringExecution == nil || len(b.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms) == 0 {
-		newSelectorTerms = a.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms
-	} else if a.RequiredDuringSchedulingIgnoredDuringExecution == nil || len(a.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms) == 0 {
-		newSelectorTerms = b.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms
-	} else {
-		for _, aTerms := range a.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms {
-			for _, bTerms := range b.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms {
-				term := aTerms.DeepCopy()
-				if len(bTerms.MatchExpressions) != 0 {
-					term.MatchExpressions = append(term.MatchExpressions, bTerms.MatchExpressions...)
-				}
-				if len(bTerms.MatchFields) != 0 {
-					term.MatchFields = append(term.MatchFields, bTerms.MatchFields...)
-				}
-				newSelectorTerms = append(newSelectorTerms, *term)
-			}
-		}
-	}
-
-	a.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms = newSelectorTerms
-}
-
-func ReturnPodAffinityOrNil(a core.PodAffinity) *core.PodAffinity {
-	if len(a.RequiredDuringSchedulingIgnoredDuringExecution) > 0 || len(a.PreferredDuringSchedulingIgnoredDuringExecution) > 0 {
-		return &a
-	}
-
-	return nil
-}
-
-func ReturnPodAntiAffinityOrNil(a core.PodAntiAffinity) *core.PodAntiAffinity {
-	if len(a.RequiredDuringSchedulingIgnoredDuringExecution) > 0 || len(a.PreferredDuringSchedulingIgnoredDuringExecution) > 0 {
-		return &a
-	}
-
-	return nil
-}
-
-func ReturnNodeAffinityOrNil(a core.NodeAffinity) *core.NodeAffinity {
-	if len(a.PreferredDuringSchedulingIgnoredDuringExecution) > 0 {
-		return &a
-	}
-
-	if s := a.RequiredDuringSchedulingIgnoredDuringExecution; s != nil {
-		if len(s.NodeSelectorTerms) > 0 {
-			return &a
-		}
-	}
-
-	return nil
 }

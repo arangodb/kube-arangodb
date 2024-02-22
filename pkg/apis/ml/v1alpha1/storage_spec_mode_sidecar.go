@@ -21,8 +21,8 @@
 package v1alpha1
 
 import (
+	schedulerContainerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -35,16 +35,16 @@ type ArangoMLStorageSpecModeSidecar struct {
 	// +doc/default: 9202
 	ControllerListenPort *uint16 `json:"controllerListenPort,omitempty"`
 
-	// ContainerTemplate Keeps the information about Container configuration
-	*sharedApi.ContainerTemplate `json:",inline"`
+	// Container Keeps the information about Container configuration
+	*schedulerContainerApi.Container `json:",inline"`
 }
 
-func (s *ArangoMLStorageSpecModeSidecar) GetContainerTemplate() *sharedApi.ContainerTemplate {
-	if s == nil || s.ContainerTemplate == nil {
+func (s *ArangoMLStorageSpecModeSidecar) GetContainer() *schedulerContainerApi.Container {
+	if s == nil || s.Container == nil {
 		return nil
 	}
 
-	return s.ContainerTemplate
+	return s.Container
 }
 
 func (s *ArangoMLStorageSpecModeSidecar) Validate() error {
@@ -62,7 +62,7 @@ func (s *ArangoMLStorageSpecModeSidecar) Validate() error {
 		err = append(err, shared.PrefixResourceErrors("controllerListenPort", errors.Errorf("must be positive")))
 	}
 
-	err = append(err, s.GetContainerTemplate().Validate())
+	err = append(err, s.GetContainer().Validate())
 
 	return shared.WithErrors(err...)
 }

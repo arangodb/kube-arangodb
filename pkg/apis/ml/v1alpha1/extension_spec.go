@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 package v1alpha1
 
 import (
+	schedulerContainerResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container/resources"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 )
@@ -34,7 +35,7 @@ type ArangoMLExtensionSpec struct {
 	Storage *sharedApi.Object `json:"storage,omitempty"`
 
 	// Image defines default image used for the extension
-	*sharedApi.Image `json:",inline"`
+	*schedulerContainerResourcesApi.Image `json:",inline"`
 
 	// ArangoMLExtensionTemplate define Init job specification
 	Init *ArangoMLExtensionTemplate `json:"init,omitempty"`
@@ -54,7 +55,7 @@ func (a *ArangoMLExtensionSpec) GetMetadataService() *ArangoMLExtensionSpecMetad
 	return a.MetadataService
 }
 
-func (a *ArangoMLExtensionSpec) GetImage() *sharedApi.Image {
+func (a *ArangoMLExtensionSpec) GetImage() *schedulerContainerResourcesApi.Image {
 	if a == nil || a.Image == nil {
 		return nil
 	}
@@ -102,7 +103,7 @@ func (a *ArangoMLExtensionSpec) Validate() error {
 		shared.PrefixResourceErrors("storage", shared.ValidateRequired(a.GetStorage(), func(obj sharedApi.Object) error { return obj.Validate() })),
 		a.GetImage().Validate(),
 		shared.PrefixResourceErrors("init", a.GetInit().Validate()),
-		shared.ValidateAnyNotNil(".image or .init.image needs to be specified", a.GetImage(), a.GetInit().GetContainerTemplate().GetImage()),
+		shared.ValidateAnyNotNil(".image or .init.image needs to be specified", a.GetImage(), a.GetInit().GetContainer().GetImage()),
 		shared.PrefixResourceErrors("deployment", a.GetDeployment().Validate()),
 		shared.PrefixResourceErrors("jobsTemplates", a.GetJobsTemplates().Validate()),
 	))

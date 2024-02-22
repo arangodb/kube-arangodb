@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -53,6 +53,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/container"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/probes"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
@@ -892,7 +893,7 @@ func addLifecycle(name string, uuidRequired bool, license string, group api.Serv
 				p.Spec.Containers[0].VolumeMounts = append(p.Spec.Containers[0].VolumeMounts, k8sutil.LifecycleVolumeMount())
 			}
 
-			if _, ok := k8sutil.GetAnyContainerByName(p.Spec.InitContainers, "init-lifecycle"); !ok {
+			if _, ok := container.GetAnyContainerByName(p.Spec.InitContainers, "init-lifecycle"); !ok {
 				p.Spec.InitContainers = append(
 					[]core.Container{createTestLifecycleContainer(emptyResources)},
 					p.Spec.InitContainers...,
@@ -900,7 +901,7 @@ func addLifecycle(name string, uuidRequired bool, license string, group api.Serv
 			}
 		}
 
-		if _, ok := k8sutil.GetAnyContainerByName(p.Spec.InitContainers, "uuid"); !ok {
+		if _, ok := container.GetAnyContainerByName(p.Spec.InitContainers, "uuid"); !ok {
 			binaryPath, _ := os.Executable()
 			p.Spec.InitContainers = append(
 				[]core.Container{

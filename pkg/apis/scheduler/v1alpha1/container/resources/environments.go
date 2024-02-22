@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1
+package resources
 
 import (
 	core "k8s.io/api/core/v1"
@@ -36,6 +36,17 @@ type Environments struct {
 	// +doc/type: core.EnvFromSource
 	// +doc/link: Kubernetes Docs|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#envfromsource-v1-core
 	EnvFrom []core.EnvFromSource `json:"envFrom,omitempty"`
+}
+
+func (e *Environments) Apply(container *core.Container) error {
+	if e == nil {
+		return nil
+	}
+
+	container.Env = envs.MergeEnvs(container.Env, e.Env...)
+	container.EnvFrom = envs.MergeEnvFrom(container.EnvFrom, e.EnvFrom...)
+
+	return nil
 }
 
 func (e *Environments) With(other *Environments) *Environments {

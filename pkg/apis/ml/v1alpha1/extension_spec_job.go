@@ -21,8 +21,9 @@
 package v1alpha1
 
 import (
+	schedulerContainerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container"
+	schedulerPodApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/pod"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 )
 
 type JobType string
@@ -115,27 +116,27 @@ func (a *ArangoMLJobTemplates) Validate() error {
 }
 
 type ArangoMLExtensionTemplate struct {
-	// PodTemplate keeps the information about Pod configuration
-	*sharedApi.PodTemplate `json:",inline"`
+	// Pod keeps the information about Pod configuration
+	*schedulerPodApi.Pod `json:",inline"`
 
-	// ContainerTemplate Keeps the information about Container configuration
-	*sharedApi.ContainerTemplate `json:",inline"`
+	// Container Keeps the information about Container configuration
+	*schedulerContainerApi.Container `json:",inline"`
 }
 
-func (a *ArangoMLExtensionTemplate) GetPodTemplate() *sharedApi.PodTemplate {
-	if a == nil {
+func (a *ArangoMLExtensionTemplate) GetPodTemplate() *schedulerPodApi.Pod {
+	if a == nil || a.Pod == nil {
 		return nil
 	}
 
-	return a.PodTemplate
+	return a.Pod
 }
 
-func (a *ArangoMLExtensionTemplate) GetContainerTemplate() *sharedApi.ContainerTemplate {
-	if a == nil {
+func (a *ArangoMLExtensionTemplate) GetContainer() *schedulerContainerApi.Container {
+	if a == nil || a.Container == nil {
 		return nil
 	}
 
-	return a.ContainerTemplate
+	return a.Container
 }
 
 func (a *ArangoMLExtensionTemplate) Validate() error {
@@ -145,6 +146,6 @@ func (a *ArangoMLExtensionTemplate) Validate() error {
 
 	return shared.WithErrors(
 		a.GetPodTemplate().Validate(),
-		a.GetContainerTemplate().Validate(),
+		a.GetContainer().Validate(),
 	)
 }

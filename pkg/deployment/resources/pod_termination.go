@@ -34,6 +34,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/container"
 )
 
 // prepareAgencyPodTermination checks if the given agency pod is allowed to terminate
@@ -174,7 +175,7 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, p *core.P
 		log.Err(err).Debug("Failed to access cluster")
 
 		if r.context.GetSpec().Recovery.Get().GetAutoRecover() {
-			if c, ok := k8sutil.GetContainerStatusByName(p, shared.ServerContainerName); ok {
+			if c, ok := container.GetContainerStatusByName(p, shared.ServerContainerName); ok {
 				if t := c.State.Terminated; t != nil {
 					return nil
 				}

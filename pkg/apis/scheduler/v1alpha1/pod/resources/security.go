@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,39 +18,53 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1
+package resources
 
-import core "k8s.io/api/core/v1"
+import (
+	core "k8s.io/api/core/v1"
+)
 
-type SecurityContainer struct {
+type Security struct {
 	// PodSecurityContext holds pod-level security attributes and common container settings.
-	// +doc/type: core.SecurityContext
+	// +doc/type: core.PodSecurityContext
 	// +doc/link: Kubernetes docs|https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
-	SecurityContext *core.SecurityContext `json:"securityContext,omitempty"`
+	PodSecurityContext *core.PodSecurityContext `json:"podSecurityContext,omitempty"`
 }
 
-func (s *SecurityContainer) With(other *SecurityContainer) *SecurityContainer {
-	if s == nil && other == nil {
-		return nil
-	}
-
-	if other == nil {
-		return s.DeepCopy()
-	}
-
-	// TODO: Add fine graned merge
-
-	return other.DeepCopy()
-}
-
-func (s *SecurityContainer) GetSecurityContext() *core.SecurityContext {
+func (s *Security) Apply(template *core.PodTemplateSpec) error {
 	if s == nil {
 		return nil
 	}
 
-	return s.SecurityContext
+	template.Spec.SecurityContext = s.PodSecurityContext.DeepCopy()
+
+	return nil
 }
 
-func (s *SecurityContainer) Validate() error {
+func (s *Security) GetSecurityContext() *core.PodSecurityContext {
+	if s == nil {
+		return nil
+	}
+
+	return s.PodSecurityContext
+}
+
+func (s *Security) With(newResources *Security) *Security {
+	if s == nil && newResources == nil {
+		return nil
+	}
+
+	if s == nil {
+		return newResources.DeepCopy()
+	}
+
+	if newResources == nil {
+		return s.DeepCopy()
+	}
+
+	return nil
+}
+
+func (s *Security) Validate() error {
 	return nil
 }

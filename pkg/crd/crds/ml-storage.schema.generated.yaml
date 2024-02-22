@@ -73,7 +73,6 @@ v1alpha1:
                     format: int32
                     type: integer
                   env:
-                    description: Env keeps the information about environment variables provided to the container
                     items:
                       properties:
                         name:
@@ -120,7 +119,6 @@ v1alpha1:
                       type: object
                     type: array
                   envFrom:
-                    description: EnvFrom keeps the information about environment variable sources provided to the container
                     items:
                       properties:
                         configMapRef:
@@ -142,22 +140,18 @@ v1alpha1:
                       type: object
                     type: array
                   image:
-                    description: Image define image details
                     type: string
+                  imagePullPolicy:
+                    type: string
+                  imagePullSecrets:
+                    items:
+                      type: string
+                    type: array
                   listenPort:
                     description: ListenPort defines on which port the sidecar container will be listening for connections
                     format: int32
                     type: integer
-                  pullPolicy:
-                    description: PullPolicy define Image pull policy
-                    type: string
-                  pullSecrets:
-                    description: PullSecrets define Secrets used to pull Image from registry
-                    items:
-                      type: string
-                    type: array
                   resources:
-                    description: Resources holds resource requests & limits for container
                     properties:
                       claims:
                         items:
@@ -176,7 +170,6 @@ v1alpha1:
                         type: object
                     type: object
                   securityContext:
-                    description: PodSecurityContext holds pod-level security attributes and common container settings.
                     properties:
                       allowPrivilegeEscalation:
                         type: boolean

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,24 +18,48 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1
+package resources
 
 import (
 	core "k8s.io/api/core/v1"
 
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
+
+type ImagePullSecrets []string
 
 type Image struct {
 	// Image define image details
 	Image *string `json:"image,omitempty"`
 
-	// PullPolicy define Image pull policy
+	// ImagePullPolicy define Image pull policy
 	// +doc/default: IfNotPresent
-	PullPolicy *core.PullPolicy `json:"pullPolicy,omitempty"`
+	ImagePullPolicy *core.PullPolicy `json:"imagePullPolicy,omitempty"`
 
-	// PullSecrets define Secrets used to pull Image from registry
-	PullSecrets []string `json:"pullSecrets,omitempty"`
+	// ImagePullSecrets define Secrets used to pull Image from registry
+	ImagePullSecrets ImagePullSecrets `json:"imagePullSecrets,omitempty"`
+}
+
+func (i *Image) Apply(pod *core.PodTemplateSpec, container *core.Container) error {
+	if i == nil {
+		return nil
+	}
+
+	container.Image = util.WithDefault(i.Image)
+	container.ImagePullPolicy = util.WithDefault(i.ImagePullPolicy)
+
+	for _, secret := range i.ImagePullSecrets {
+		if hasImagePullSecret(pod.Spec.ImagePullSecrets, secret) {
+			continue
+		}
+
+		pod.Spec.ImagePullSecrets = append(pod.Spec.ImagePullSecrets, core.LocalObjectReference{
+			Name: secret,
+		})
+	}
+
+	return nil
 }
 
 func (i *Image) With(other *Image) *Image {
@@ -65,7 +89,17 @@ func (i *Image) Validate() error {
 
 	return shared.WithErrors(
 		shared.PrefixResourceErrors("image", shared.ValidateRequired(i.Image, shared.ValidateImage)),
-		shared.PrefixResourceErrors("pullPolicy", shared.ValidateOptional(i.PullPolicy, shared.ValidatePullPolicy)),
-		shared.PrefixResourceErrors("pullSecrets", shared.ValidateList(i.PullSecrets, shared.ValidateResourceName)),
+		shared.PrefixResourceErrors("imagePullPolicy", shared.ValidateOptional(i.ImagePullPolicy, shared.ValidatePullPolicy)),
+		shared.PrefixResourceErrors("pullSecrets", shared.ValidateList(i.ImagePullSecrets, shared.ValidateResourceName)),
 	)
+}
+
+func hasImagePullSecret(secrets []core.LocalObjectReference, secret string) bool {
+	for _, sec := range secrets {
+		if sec.Name == secret {
+			return true
+		}
+	}
+
+	return false
 }

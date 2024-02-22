@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,8 +21,8 @@
 package v1alpha1
 
 import (
+	schedulerContainerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 )
 
 type ArangoMLExtensionSpecDeploymentComponent struct {
@@ -33,8 +33,8 @@ type ArangoMLExtensionSpecDeploymentComponent struct {
 	// Port defines on which port the container will be listening for connections
 	Port *int32 `json:"port,omitempty"`
 
-	// ContainerTemplate Keeps the information about Container configuration
-	*sharedApi.ContainerTemplate `json:",inline"`
+	// Container Keeps the information about Container configuration
+	*schedulerContainerApi.Container `json:",inline"`
 }
 
 func (s *ArangoMLExtensionSpecDeploymentComponent) GetGPU() bool {
@@ -51,12 +51,12 @@ func (s *ArangoMLExtensionSpecDeploymentComponent) GetPort(def int32) int32 {
 	return *s.Port
 }
 
-func (s *ArangoMLExtensionSpecDeploymentComponent) GetContainerTemplate() *sharedApi.ContainerTemplate {
-	if s == nil || s.ContainerTemplate == nil {
+func (s *ArangoMLExtensionSpecDeploymentComponent) GetContainer() *schedulerContainerApi.Container {
+	if s == nil || s.Container == nil {
 		return nil
 	}
 
-	return s.ContainerTemplate
+	return s.Container
 }
 
 func (s *ArangoMLExtensionSpecDeploymentComponent) Validate() error {
@@ -67,7 +67,7 @@ func (s *ArangoMLExtensionSpecDeploymentComponent) Validate() error {
 	var err []error
 
 	err = append(err,
-		s.GetContainerTemplate().Validate(),
+		s.GetContainer().Validate(),
 	)
 
 	return shared.WithErrors(err...)

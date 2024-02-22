@@ -39,6 +39,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/container"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/info"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
@@ -60,7 +61,7 @@ const (
 )
 
 func (r *Resources) handleRestartedPod(pod *core.Pod, memberStatus *api.MemberStatus, wasTerminated, markAsTerminated *bool) {
-	containerStatus, exist := k8sutil.GetContainerStatusByName(pod, api.ServerGroupReservedContainerNameServer)
+	containerStatus, exist := container.GetContainerStatusByName(pod, api.ServerGroupReservedContainerNameServer)
 	if exist && containerStatus.State.Terminated != nil {
 		// do not record termination time again in the code below
 		*wasTerminated = true
@@ -177,11 +178,11 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 			}
 
 			if markAsTerminated && memberStatus.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Failed", "") {
-				if containers := k8sutil.GetFailedContainerNames(pod.Status.InitContainerStatuses); len(containers) > 0 {
-					for _, container := range containers {
-						switch container {
+				if containers := container.GetFailedContainerNames(pod.Status.InitContainerStatuses); len(containers) > 0 {
+					for id := range containers {
+						switch containers[id] {
 						case api.ServerGroupReservedInitContainerNameVersionCheck:
-							if c, ok := k8sutil.GetAnyContainerStatusByName(pod.Status.InitContainerStatuses, container); ok {
+							if c, ok := container.GetAnyContainerStatusByName(pod.Status.InitContainerStatuses, containers[id]); ok {
 								if t := c.State.Terminated; t != nil && t.ExitCode == 11 {
 									memberStatus.Upgrade = true
 									updateMemberStatusNeeded = true
@@ -191,11 +192,11 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 							memberStatus.Conditions.Update(api.ConditionTypeUpgradeFailed, true, "Upgrade Failed", "")
 						}
 
-						if c, ok := k8sutil.GetAnyContainerStatusByName(pod.Status.InitContainerStatuses, container); ok {
+						if c, ok := container.GetAnyContainerStatusByName(pod.Status.InitContainerStatuses, containers[id]); ok {
 							if t := c.State.Terminated; t != nil && t.ExitCode != 0 {
 								log.Str("member", memberStatus.ID).
 									Str("pod", pod.GetName()).
-									Str("container", container).
+									Str("container", containers[id]).
 									Str("uid", string(pod.GetUID())).
 									Int32("exit-code", t.ExitCode).
 									Str("reason", t.Reason).
@@ -205,19 +206,19 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 									Time("finished", t.FinishedAt.Time).
 									Warn("Pod failed in unexpected way: Init Container failed")
 
-								r.metrics.IncMemberInitContainerRestarts(memberStatus.ID, container, t.Reason, t.ExitCode)
+								r.metrics.IncMemberInitContainerRestarts(memberStatus.ID, containers[id], t.Reason, t.ExitCode)
 							}
 						}
 					}
 				}
 
-				if containers := k8sutil.GetFailedContainerNames(pod.Status.ContainerStatuses); len(containers) > 0 {
-					for _, container := range containers {
-						if c, ok := k8sutil.GetAnyContainerStatusByName(pod.Status.ContainerStatuses, container); ok {
+				if containers := container.GetFailedContainerNames(pod.Status.ContainerStatuses); len(containers) > 0 {
+					for id := range containers {
+						if c, ok := container.GetAnyContainerStatusByName(pod.Status.ContainerStatuses, containers[id]); ok {
 							if t := c.State.Terminated; t != nil && t.ExitCode != 0 {
 								log.Str("member", memberStatus.ID).
 									Str("pod", pod.GetName()).
-									Str("container", container).
+									Str("container", containers[id]).
 									Str("uid", string(pod.GetUID())).
 									Int32("exit-code", t.ExitCode).
 									Str("reason", t.Reason).
@@ -227,7 +228,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 									Time("finished", t.FinishedAt.Time).
 									Warn("Pod failed in unexpected way: Core Container failed")
 
-								r.metrics.IncMemberContainerRestarts(memberStatus.ID, container, t.Reason, t.ExitCode)
+								r.metrics.IncMemberContainerRestarts(memberStatus.ID, containers[id], t.Reason, t.ExitCode)
 							}
 						}
 					}

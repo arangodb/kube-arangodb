@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,13 +18,17 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1
+package resources
 
 import (
 	core "k8s.io/api/core/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/affinity"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tolerations"
 )
 
-type SchedulingTolerations []core.Toleration
+type Tolerations []core.Toleration
 
 type Scheduling struct {
 	// NodeSelector is a selector that must be true for the workload to fit on a node.
@@ -39,12 +43,34 @@ type Scheduling struct {
 	// Tolerations defines tolerations
 	// +doc/type: []core.Toleration
 	// +doc/link: Kubernetes docs|https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
-	Tolerations SchedulingTolerations `json:"tolerations,omitempty"`
+	Tolerations Tolerations `json:"tolerations,omitempty"`
 
 	// SchedulerName specifies, the pod will be dispatched by specified scheduler.
 	// If not specified, the pod will be dispatched by default scheduler.
 	// +doc/default: ""
 	SchedulerName *string `json:"schedulerName,omitempty"`
+}
+
+func (s *Scheduling) Apply(template *core.PodTemplateSpec) error {
+	if s == nil {
+		return nil
+	}
+
+	if len(s.NodeSelector) == 0 {
+		template.Spec.NodeSelector = nil
+	} else {
+		template.Spec.NodeSelector = map[string]string{}
+		for k, v := range s.NodeSelector {
+			template.Spec.NodeSelector[k] = v
+		}
+	}
+
+	template.Spec.Affinity = s.Affinity.DeepCopy()
+	template.Spec.Tolerations = s.Tolerations.DeepCopy()
+
+	template.Spec.SchedulerName = util.WithDefault(s.SchedulerName)
+
+	return nil
 }
 
 func (s *Scheduling) GetNodeSelector() map[string]string {
@@ -71,12 +97,60 @@ func (s *Scheduling) GetAffinity() *core.Affinity {
 	return nil
 }
 
-func (s *Scheduling) GetTolerations() SchedulingTolerations {
+func (s *Scheduling) GetTolerations() Tolerations {
 	if s != nil {
 		return s.Tolerations
 	}
 
 	return nil
+}
+
+func (s *Scheduling) With(other *Scheduling) *Scheduling {
+	if s == nil && other == nil {
+		return nil
+	}
+
+	if other == nil {
+		return s.DeepCopy()
+	}
+
+	if s == nil {
+		return other.DeepCopy()
+	}
+
+	current := s.DeepCopy()
+	new := other.DeepCopy()
+
+	// NodeSelector
+	if len(current.NodeSelector) == 0 {
+		current.NodeSelector = new.NodeSelector
+	} else if len(new.NodeSelector) > 0 {
+		for k, v := range new.NodeSelector {
+			other.NodeSelector[k] = v
+		}
+	}
+
+	// SchedulerName
+	if new.SchedulerName != nil {
+		other.SchedulerName = new.SchedulerName
+	}
+
+	// Tolerations
+	new.Tolerations = tolerations.AddTolerationsIfNotFound(new.Tolerations, other.Tolerations...)
+
+	// Affinity
+	current.Affinity = affinity.Merge(current.Affinity, new.Affinity)
+
+	// return
+
+	if current.Affinity == nil &&
+		current.SchedulerName == nil &&
+		len(current.Tolerations) == 0 &&
+		len(current.NodeSelector) == 0 {
+		return nil
+	}
+
+	return current
 }
 
 func (s *Scheduling) Validate() error {
