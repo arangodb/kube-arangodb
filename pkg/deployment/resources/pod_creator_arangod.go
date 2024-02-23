@@ -35,6 +35,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/topology"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/affinity"
 	"github.com/arangodb/kube-arangodb/pkg/util/collection"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -367,37 +368,37 @@ func (m *MemberArangoDPod) GetImagePullSecrets() []string {
 }
 
 func (m *MemberArangoDPod) GetPodAntiAffinity() *core.PodAntiAffinity {
-	a := core.PodAntiAffinity{}
+	a := &core.PodAntiAffinity{}
 
-	pod.AppendPodAntiAffinityDefault(m, &a)
+	pod.AppendPodAntiAffinityDefault(m, a)
 
-	pod.MergePodAntiAffinity(&a, topology.GetTopologyAffinityRules(m.context.GetName(), m.deploymentStatus, m.group, m.status).PodAntiAffinity)
+	a = affinity.MergePodAntiAffinity(a, topology.GetTopologyAffinityRules(m.context.GetName(), m.deploymentStatus, m.group, m.status).PodAntiAffinity)
 
-	pod.MergePodAntiAffinity(&a, m.groupSpec.AntiAffinity)
+	a = affinity.MergePodAntiAffinity(a, m.groupSpec.AntiAffinity)
 
-	return pod.ReturnPodAntiAffinityOrNil(a)
+	return affinity.OptionalPodAntiAffinity(a)
 }
 
 func (m *MemberArangoDPod) GetPodAffinity() *core.PodAffinity {
-	a := core.PodAffinity{}
+	a := &core.PodAffinity{}
 
-	pod.MergePodAffinity(&a, m.groupSpec.Affinity)
+	a = affinity.MergePodAffinity(a, m.groupSpec.Affinity)
 
-	pod.MergePodAffinity(&a, topology.GetTopologyAffinityRules(m.context.GetName(), m.deploymentStatus, m.group, m.status).PodAffinity)
+	a = affinity.MergePodAffinity(a, topology.GetTopologyAffinityRules(m.context.GetName(), m.deploymentStatus, m.group, m.status).PodAffinity)
 
-	return pod.ReturnPodAffinityOrNil(a)
+	return affinity.OptionalPodAffinity(a)
 }
 
 func (m *MemberArangoDPod) GetNodeAffinity() *core.NodeAffinity {
-	a := core.NodeAffinity{}
+	a := &core.NodeAffinity{}
 
-	pod.AppendArchSelector(&a, m.status.Architecture.Default(m.spec.Architecture.GetDefault()).AsNodeSelectorRequirement())
+	pod.AppendArchSelector(a, m.status.Architecture.Default(m.spec.Architecture.GetDefault()).AsNodeSelectorRequirement())
 
-	pod.MergeNodeAffinity(&a, m.groupSpec.NodeAffinity)
+	a = affinity.MergeNodeAffinity(a, m.groupSpec.NodeAffinity)
 
-	pod.MergeNodeAffinity(&a, topology.GetTopologyAffinityRules(m.context.GetName(), m.deploymentStatus, m.group, m.status).NodeAffinity)
+	a = affinity.MergeNodeAffinity(a, topology.GetTopologyAffinityRules(m.context.GetName(), m.deploymentStatus, m.group, m.status).NodeAffinity)
 
-	return pod.ReturnNodeAffinityOrNil(a)
+	return affinity.OptionalNodeAffinity(a)
 }
 
 func (m *MemberArangoDPod) GetNodeSelector() map[string]string {

@@ -38,6 +38,8 @@ import (
 	fakereplicationv1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/replication/v1/fake"
 	replicationv2alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/replication/v2alpha1"
 	fakereplicationv2alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/replication/v2alpha1/fake"
+	schedulerv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/scheduler/v1alpha1"
+	fakeschedulerv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/scheduler/v1alpha1/fake"
 	storagev1alpha "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/storage/v1alpha"
 	fakestoragev1alpha "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/storage/v1alpha/fake"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -130,6 +132,11 @@ func (c *Clientset) ReplicationV1() replicationv1.ReplicationV1Interface {
 // ReplicationV2alpha1 retrieves the ReplicationV2alpha1Client
 func (c *Clientset) ReplicationV2alpha1() replicationv2alpha1.ReplicationV2alpha1Interface {
 	return &fakereplicationv2alpha1.FakeReplicationV2alpha1{Fake: &c.Fake}
+}
+
+// SchedulerV1alpha1 retrieves the SchedulerV1alpha1Client
+func (c *Clientset) SchedulerV1alpha1() schedulerv1alpha1.SchedulerV1alpha1Interface {
+	return &fakeschedulerv1alpha1.FakeSchedulerV1alpha1{Fake: &c.Fake}
 }
 
 // StorageV1alpha retrieves the StorageV1alphaClient

@@ -7,7 +7,6 @@ v1alpha1:
             description: Deployment specifies how the ML extension will be deployed into cluster
             properties:
               affinity:
-                description: Affinity defines scheduling constraints for workload
                 properties:
                   nodeAffinity:
                     properties:
@@ -307,23 +306,16 @@ v1alpha1:
                     type: object
                 type: object
               hostIPC:
-                description: HostIPC defines to use the host's ipc namespace.
                 type: boolean
               hostNetwork:
-                description: |-
-                  HostNetwork requests Host network for this pod. Use the host's network namespace.
-                  If this option is set, the ports that will be used must be specified.
                 type: boolean
               hostPID:
-                description: HostPID define to use the host's pid namespace.
                 type: boolean
               nodeSelector:
                 additionalProperties:
                   type: string
-                description: NodeSelector is a selector that must be true for the workload to fit on a node.
                 type: object
               podSecurityContext:
-                description: PodSecurityContext holds pod-level security attributes and common container settings.
                 properties:
                   fsGroup:
                     format: int64
@@ -386,7 +378,6 @@ v1alpha1:
                 description: Prediction defines how Prediction workload will be deployed
                 properties:
                   env:
-                    description: Env keeps the information about environment variables provided to the container
                     items:
                       properties:
                         name:
@@ -433,7 +424,6 @@ v1alpha1:
                       type: object
                     type: array
                   envFrom:
-                    description: EnvFrom keeps the information about environment variable sources provided to the container
                     items:
                       properties:
                         configMapRef:
@@ -458,22 +448,18 @@ v1alpha1:
                     description: GPU defined if GPU Jobs are enabled for component. In use only for ArangoMLExtensionSpecDeploymentComponentPrediction and ArangoMLExtensionSpecDeploymentComponentTraining
                     type: boolean
                   image:
-                    description: Image define image details
                     type: string
+                  imagePullPolicy:
+                    type: string
+                  imagePullSecrets:
+                    items:
+                      type: string
+                    type: array
                   port:
                     description: Port defines on which port the container will be listening for connections
                     format: int32
                     type: integer
-                  pullPolicy:
-                    description: PullPolicy define Image pull policy
-                    type: string
-                  pullSecrets:
-                    description: PullSecrets define Secrets used to pull Image from registry
-                    items:
-                      type: string
-                    type: array
                   resources:
-                    description: Resources holds resource requests & limits for container
                     properties:
                       claims:
                         items:
@@ -492,7 +478,6 @@ v1alpha1:
                         type: object
                     type: object
                   securityContext:
-                    description: PodSecurityContext holds pod-level security attributes and common container settings.
                     properties:
                       allowPrivilegeEscalation:
                         type: boolean
@@ -556,7 +541,6 @@ v1alpha1:
                 description: Project defines how Project workload will be deployed
                 properties:
                   env:
-                    description: Env keeps the information about environment variables provided to the container
                     items:
                       properties:
                         name:
@@ -603,7 +587,6 @@ v1alpha1:
                       type: object
                     type: array
                   envFrom:
-                    description: EnvFrom keeps the information about environment variable sources provided to the container
                     items:
                       properties:
                         configMapRef:
@@ -628,22 +611,18 @@ v1alpha1:
                     description: GPU defined if GPU Jobs are enabled for component. In use only for ArangoMLExtensionSpecDeploymentComponentPrediction and ArangoMLExtensionSpecDeploymentComponentTraining
                     type: boolean
                   image:
-                    description: Image define image details
                     type: string
+                  imagePullPolicy:
+                    type: string
+                  imagePullSecrets:
+                    items:
+                      type: string
+                    type: array
                   port:
                     description: Port defines on which port the container will be listening for connections
                     format: int32
                     type: integer
-                  pullPolicy:
-                    description: PullPolicy define Image pull policy
-                    type: string
-                  pullSecrets:
-                    description: PullSecrets define Secrets used to pull Image from registry
-                    items:
-                      type: string
-                    type: array
                   resources:
-                    description: Resources holds resource requests & limits for container
                     properties:
                       claims:
                         items:
@@ -662,7 +641,6 @@ v1alpha1:
                         type: object
                     type: object
                   securityContext:
-                    description: PodSecurityContext holds pod-level security attributes and common container settings.
                     properties:
                       allowPrivilegeEscalation:
                         type: boolean
@@ -727,9 +705,6 @@ v1alpha1:
                 format: int32
                 type: integer
               schedulerName:
-                description: |-
-                  SchedulerName specifies, the pod will be dispatched by specified scheduler.
-                  If not specified, the pod will be dispatched by default scheduler.
                 type: string
               service:
                 description: Service defines how components will be exposed
@@ -744,14 +719,8 @@ v1alpha1:
                     type: string
                 type: object
               shareProcessNamespace:
-                description: |-
-                  ShareProcessNamespace defines to share a single process namespace between all of the containers in a pod.
-                  When this is set containers will be able to view and signal processes from other containers
-                  in the same pod, and the first process in each container will not be assigned PID 1.
-                  HostPID and ShareProcessNamespace cannot both be set.
                 type: boolean
               tolerations:
-                description: Tolerations defines tolerations
                 items:
                   properties:
                     effect:
@@ -771,7 +740,6 @@ v1alpha1:
                 description: Training defines how Training workload will be deployed
                 properties:
                   env:
-                    description: Env keeps the information about environment variables provided to the container
                     items:
                       properties:
                         name:
@@ -818,7 +786,6 @@ v1alpha1:
                       type: object
                     type: array
                   envFrom:
-                    description: EnvFrom keeps the information about environment variable sources provided to the container
                     items:
                       properties:
                         configMapRef:
@@ -843,22 +810,18 @@ v1alpha1:
                     description: GPU defined if GPU Jobs are enabled for component. In use only for ArangoMLExtensionSpecDeploymentComponentPrediction and ArangoMLExtensionSpecDeploymentComponentTraining
                     type: boolean
                   image:
-                    description: Image define image details
                     type: string
+                  imagePullPolicy:
+                    type: string
+                  imagePullSecrets:
+                    items:
+                      type: string
+                    type: array
                   port:
                     description: Port defines on which port the container will be listening for connections
                     format: int32
                     type: integer
-                  pullPolicy:
-                    description: PullPolicy define Image pull policy
-                    type: string
-                  pullSecrets:
-                    description: PullSecrets define Secrets used to pull Image from registry
-                    items:
-                      type: string
-                    type: array
                   resources:
-                    description: Resources holds resource requests & limits for container
                     properties:
                       claims:
                         items:
@@ -877,7 +840,6 @@ v1alpha1:
                         type: object
                     type: object
                   securityContext:
-                    description: PodSecurityContext holds pod-level security attributes and common container settings.
                     properties:
                       allowPrivilegeEscalation:
                         type: boolean
@@ -939,13 +901,17 @@ v1alpha1:
                 type: object
             type: object
           image:
-            description: Image define image details
             type: string
+          imagePullPolicy:
+            type: string
+          imagePullSecrets:
+            items:
+              type: string
+            type: array
           init:
             description: ArangoMLExtensionTemplate define Init job specification
             properties:
               affinity:
-                description: Affinity defines scheduling constraints for workload
                 properties:
                   nodeAffinity:
                     properties:
@@ -1245,7 +1211,6 @@ v1alpha1:
                     type: object
                 type: object
               env:
-                description: Env keeps the information about environment variables provided to the container
                 items:
                   properties:
                     name:
@@ -1292,7 +1257,6 @@ v1alpha1:
                   type: object
                 type: array
               envFrom:
-                description: EnvFrom keeps the information about environment variable sources provided to the container
                 items:
                   properties:
                     configMapRef:
@@ -1314,26 +1278,24 @@ v1alpha1:
                   type: object
                 type: array
               hostIPC:
-                description: HostIPC defines to use the host's ipc namespace.
                 type: boolean
               hostNetwork:
-                description: |-
-                  HostNetwork requests Host network for this pod. Use the host's network namespace.
-                  If this option is set, the ports that will be used must be specified.
                 type: boolean
               hostPID:
-                description: HostPID define to use the host's pid namespace.
                 type: boolean
               image:
-                description: Image define image details
                 type: string
+              imagePullPolicy:
+                type: string
+              imagePullSecrets:
+                items:
+                  type: string
+                type: array
               nodeSelector:
                 additionalProperties:
                   type: string
-                description: NodeSelector is a selector that must be true for the workload to fit on a node.
                 type: object
               podSecurityContext:
-                description: PodSecurityContext holds pod-level security attributes and common container settings.
                 properties:
                   fsGroup:
                     format: int64
@@ -1392,16 +1354,7 @@ v1alpha1:
                         type: string
                     type: object
                 type: object
-              pullPolicy:
-                description: PullPolicy define Image pull policy
-                type: string
-              pullSecrets:
-                description: PullSecrets define Secrets used to pull Image from registry
-                items:
-                  type: string
-                type: array
               resources:
-                description: Resources holds resource requests & limits for container
                 properties:
                   claims:
                     items:
@@ -1420,12 +1373,8 @@ v1alpha1:
                     type: object
                 type: object
               schedulerName:
-                description: |-
-                  SchedulerName specifies, the pod will be dispatched by specified scheduler.
-                  If not specified, the pod will be dispatched by default scheduler.
                 type: string
               securityContext:
-                description: PodSecurityContext holds pod-level security attributes and common container settings.
                 properties:
                   allowPrivilegeEscalation:
                     type: boolean
@@ -1485,14 +1434,8 @@ v1alpha1:
                     type: object
                 type: object
               shareProcessNamespace:
-                description: |-
-                  ShareProcessNamespace defines to share a single process namespace between all of the containers in a pod.
-                  When this is set containers will be able to view and signal processes from other containers
-                  in the same pod, and the first process in each container will not be assigned PID 1.
-                  HostPID and ShareProcessNamespace cannot both be set.
                 type: boolean
               tolerations:
-                description: Tolerations defines tolerations
                 items:
                   properties:
                     effect:
@@ -1519,7 +1462,6 @@ v1alpha1:
                     description: CPU defines templates for CPU jobs
                     properties:
                       affinity:
-                        description: Affinity defines scheduling constraints for workload
                         properties:
                           nodeAffinity:
                             properties:
@@ -1819,7 +1761,6 @@ v1alpha1:
                             type: object
                         type: object
                       env:
-                        description: Env keeps the information about environment variables provided to the container
                         items:
                           properties:
                             name:
@@ -1866,7 +1807,6 @@ v1alpha1:
                           type: object
                         type: array
                       envFrom:
-                        description: EnvFrom keeps the information about environment variable sources provided to the container
                         items:
                           properties:
                             configMapRef:
@@ -1888,26 +1828,24 @@ v1alpha1:
                           type: object
                         type: array
                       hostIPC:
-                        description: HostIPC defines to use the host's ipc namespace.
                         type: boolean
                       hostNetwork:
-                        description: |-
-                          HostNetwork requests Host network for this pod. Use the host's network namespace.
-                          If this option is set, the ports that will be used must be specified.
                         type: boolean
                       hostPID:
-                        description: HostPID define to use the host's pid namespace.
                         type: boolean
                       image:
-                        description: Image define image details
                         type: string
+                      imagePullPolicy:
+                        type: string
+                      imagePullSecrets:
+                        items:
+                          type: string
+                        type: array
                       nodeSelector:
                         additionalProperties:
                           type: string
-                        description: NodeSelector is a selector that must be true for the workload to fit on a node.
                         type: object
                       podSecurityContext:
-                        description: PodSecurityContext holds pod-level security attributes and common container settings.
                         properties:
                           fsGroup:
                             format: int64
@@ -1966,16 +1904,7 @@ v1alpha1:
                                 type: string
                             type: object
                         type: object
-                      pullPolicy:
-                        description: PullPolicy define Image pull policy
-                        type: string
-                      pullSecrets:
-                        description: PullSecrets define Secrets used to pull Image from registry
-                        items:
-                          type: string
-                        type: array
                       resources:
-                        description: Resources holds resource requests & limits for container
                         properties:
                           claims:
                             items:
@@ -1994,12 +1923,8 @@ v1alpha1:
                             type: object
                         type: object
                       schedulerName:
-                        description: |-
-                          SchedulerName specifies, the pod will be dispatched by specified scheduler.
-                          If not specified, the pod will be dispatched by default scheduler.
                         type: string
                       securityContext:
-                        description: PodSecurityContext holds pod-level security attributes and common container settings.
                         properties:
                           allowPrivilegeEscalation:
                             type: boolean
@@ -2059,14 +1984,8 @@ v1alpha1:
                             type: object
                         type: object
                       shareProcessNamespace:
-                        description: |-
-                          ShareProcessNamespace defines to share a single process namespace between all of the containers in a pod.
-                          When this is set containers will be able to view and signal processes from other containers
-                          in the same pod, and the first process in each container will not be assigned PID 1.
-                          HostPID and ShareProcessNamespace cannot both be set.
                         type: boolean
                       tolerations:
-                        description: Tolerations defines tolerations
                         items:
                           properties:
                             effect:
@@ -2087,7 +2006,6 @@ v1alpha1:
                     description: GPU defines templates for GPU jobs
                     properties:
                       affinity:
-                        description: Affinity defines scheduling constraints for workload
                         properties:
                           nodeAffinity:
                             properties:
@@ -2387,7 +2305,6 @@ v1alpha1:
                             type: object
                         type: object
                       env:
-                        description: Env keeps the information about environment variables provided to the container
                         items:
                           properties:
                             name:
@@ -2434,7 +2351,6 @@ v1alpha1:
                           type: object
                         type: array
                       envFrom:
-                        description: EnvFrom keeps the information about environment variable sources provided to the container
                         items:
                           properties:
                             configMapRef:
@@ -2456,26 +2372,24 @@ v1alpha1:
                           type: object
                         type: array
                       hostIPC:
-                        description: HostIPC defines to use the host's ipc namespace.
                         type: boolean
                       hostNetwork:
-                        description: |-
-                          HostNetwork requests Host network for this pod. Use the host's network namespace.
-                          If this option is set, the ports that will be used must be specified.
                         type: boolean
                       hostPID:
-                        description: HostPID define to use the host's pid namespace.
                         type: boolean
                       image:
-                        description: Image define image details
                         type: string
+                      imagePullPolicy:
+                        type: string
+                      imagePullSecrets:
+                        items:
+                          type: string
+                        type: array
                       nodeSelector:
                         additionalProperties:
                           type: string
-                        description: NodeSelector is a selector that must be true for the workload to fit on a node.
                         type: object
                       podSecurityContext:
-                        description: PodSecurityContext holds pod-level security attributes and common container settings.
                         properties:
                           fsGroup:
                             format: int64
@@ -2534,16 +2448,7 @@ v1alpha1:
                                 type: string
                             type: object
                         type: object
-                      pullPolicy:
-                        description: PullPolicy define Image pull policy
-                        type: string
-                      pullSecrets:
-                        description: PullSecrets define Secrets used to pull Image from registry
-                        items:
-                          type: string
-                        type: array
                       resources:
-                        description: Resources holds resource requests & limits for container
                         properties:
                           claims:
                             items:
@@ -2562,12 +2467,8 @@ v1alpha1:
                             type: object
                         type: object
                       schedulerName:
-                        description: |-
-                          SchedulerName specifies, the pod will be dispatched by specified scheduler.
-                          If not specified, the pod will be dispatched by default scheduler.
                         type: string
                       securityContext:
-                        description: PodSecurityContext holds pod-level security attributes and common container settings.
                         properties:
                           allowPrivilegeEscalation:
                             type: boolean
@@ -2627,14 +2528,8 @@ v1alpha1:
                             type: object
                         type: object
                       shareProcessNamespace:
-                        description: |-
-                          ShareProcessNamespace defines to share a single process namespace between all of the containers in a pod.
-                          When this is set containers will be able to view and signal processes from other containers
-                          in the same pod, and the first process in each container will not be assigned PID 1.
-                          HostPID and ShareProcessNamespace cannot both be set.
                         type: boolean
                       tolerations:
-                        description: Tolerations defines tolerations
                         items:
                           properties:
                             effect:
@@ -2659,7 +2554,6 @@ v1alpha1:
                     description: CPU defines templates for CPU jobs
                     properties:
                       affinity:
-                        description: Affinity defines scheduling constraints for workload
                         properties:
                           nodeAffinity:
                             properties:
@@ -2959,7 +2853,6 @@ v1alpha1:
                             type: object
                         type: object
                       env:
-                        description: Env keeps the information about environment variables provided to the container
                         items:
                           properties:
                             name:
@@ -3006,7 +2899,6 @@ v1alpha1:
                           type: object
                         type: array
                       envFrom:
-                        description: EnvFrom keeps the information about environment variable sources provided to the container
                         items:
                           properties:
                             configMapRef:
@@ -3028,26 +2920,24 @@ v1alpha1:
                           type: object
                         type: array
                       hostIPC:
-                        description: HostIPC defines to use the host's ipc namespace.
                         type: boolean
                       hostNetwork:
-                        description: |-
-                          HostNetwork requests Host network for this pod. Use the host's network namespace.
-                          If this option is set, the ports that will be used must be specified.
                         type: boolean
                       hostPID:
-                        description: HostPID define to use the host's pid namespace.
                         type: boolean
                       image:
-                        description: Image define image details
                         type: string
+                      imagePullPolicy:
+                        type: string
+                      imagePullSecrets:
+                        items:
+                          type: string
+                        type: array
                       nodeSelector:
                         additionalProperties:
                           type: string
-                        description: NodeSelector is a selector that must be true for the workload to fit on a node.
                         type: object
                       podSecurityContext:
-                        description: PodSecurityContext holds pod-level security attributes and common container settings.
                         properties:
                           fsGroup:
                             format: int64
@@ -3106,16 +2996,7 @@ v1alpha1:
                                 type: string
                             type: object
                         type: object
-                      pullPolicy:
-                        description: PullPolicy define Image pull policy
-                        type: string
-                      pullSecrets:
-                        description: PullSecrets define Secrets used to pull Image from registry
-                        items:
-                          type: string
-                        type: array
                       resources:
-                        description: Resources holds resource requests & limits for container
                         properties:
                           claims:
                             items:
@@ -3134,12 +3015,8 @@ v1alpha1:
                             type: object
                         type: object
                       schedulerName:
-                        description: |-
-                          SchedulerName specifies, the pod will be dispatched by specified scheduler.
-                          If not specified, the pod will be dispatched by default scheduler.
                         type: string
                       securityContext:
-                        description: PodSecurityContext holds pod-level security attributes and common container settings.
                         properties:
                           allowPrivilegeEscalation:
                             type: boolean
@@ -3199,14 +3076,8 @@ v1alpha1:
                             type: object
                         type: object
                       shareProcessNamespace:
-                        description: |-
-                          ShareProcessNamespace defines to share a single process namespace between all of the containers in a pod.
-                          When this is set containers will be able to view and signal processes from other containers
-                          in the same pod, and the first process in each container will not be assigned PID 1.
-                          HostPID and ShareProcessNamespace cannot both be set.
                         type: boolean
                       tolerations:
-                        description: Tolerations defines tolerations
                         items:
                           properties:
                             effect:
@@ -3227,7 +3098,6 @@ v1alpha1:
                     description: GPU defines templates for GPU jobs
                     properties:
                       affinity:
-                        description: Affinity defines scheduling constraints for workload
                         properties:
                           nodeAffinity:
                             properties:
@@ -3527,7 +3397,6 @@ v1alpha1:
                             type: object
                         type: object
                       env:
-                        description: Env keeps the information about environment variables provided to the container
                         items:
                           properties:
                             name:
@@ -3574,7 +3443,6 @@ v1alpha1:
                           type: object
                         type: array
                       envFrom:
-                        description: EnvFrom keeps the information about environment variable sources provided to the container
                         items:
                           properties:
                             configMapRef:
@@ -3596,26 +3464,24 @@ v1alpha1:
                           type: object
                         type: array
                       hostIPC:
-                        description: HostIPC defines to use the host's ipc namespace.
                         type: boolean
                       hostNetwork:
-                        description: |-
-                          HostNetwork requests Host network for this pod. Use the host's network namespace.
-                          If this option is set, the ports that will be used must be specified.
                         type: boolean
                       hostPID:
-                        description: HostPID define to use the host's pid namespace.
                         type: boolean
                       image:
-                        description: Image define image details
                         type: string
+                      imagePullPolicy:
+                        type: string
+                      imagePullSecrets:
+                        items:
+                          type: string
+                        type: array
                       nodeSelector:
                         additionalProperties:
                           type: string
-                        description: NodeSelector is a selector that must be true for the workload to fit on a node.
                         type: object
                       podSecurityContext:
-                        description: PodSecurityContext holds pod-level security attributes and common container settings.
                         properties:
                           fsGroup:
                             format: int64
@@ -3674,16 +3540,7 @@ v1alpha1:
                                 type: string
                             type: object
                         type: object
-                      pullPolicy:
-                        description: PullPolicy define Image pull policy
-                        type: string
-                      pullSecrets:
-                        description: PullSecrets define Secrets used to pull Image from registry
-                        items:
-                          type: string
-                        type: array
                       resources:
-                        description: Resources holds resource requests & limits for container
                         properties:
                           claims:
                             items:
@@ -3702,12 +3559,8 @@ v1alpha1:
                             type: object
                         type: object
                       schedulerName:
-                        description: |-
-                          SchedulerName specifies, the pod will be dispatched by specified scheduler.
-                          If not specified, the pod will be dispatched by default scheduler.
                         type: string
                       securityContext:
-                        description: PodSecurityContext holds pod-level security attributes and common container settings.
                         properties:
                           allowPrivilegeEscalation:
                             type: boolean
@@ -3767,14 +3620,8 @@ v1alpha1:
                             type: object
                         type: object
                       shareProcessNamespace:
-                        description: |-
-                          ShareProcessNamespace defines to share a single process namespace between all of the containers in a pod.
-                          When this is set containers will be able to view and signal processes from other containers
-                          in the same pod, and the first process in each container will not be assigned PID 1.
-                          HostPID and ShareProcessNamespace cannot both be set.
                         type: boolean
                       tolerations:
-                        description: Tolerations defines tolerations
                         items:
                           properties:
                             effect:
@@ -3799,7 +3646,6 @@ v1alpha1:
                     description: CPU defines templates for CPU jobs
                     properties:
                       affinity:
-                        description: Affinity defines scheduling constraints for workload
                         properties:
                           nodeAffinity:
                             properties:
@@ -4099,7 +3945,6 @@ v1alpha1:
                             type: object
                         type: object
                       env:
-                        description: Env keeps the information about environment variables provided to the container
                         items:
                           properties:
                             name:
@@ -4146,7 +3991,6 @@ v1alpha1:
                           type: object
                         type: array
                       envFrom:
-                        description: EnvFrom keeps the information about environment variable sources provided to the container
                         items:
                           properties:
                             configMapRef:
@@ -4168,26 +4012,24 @@ v1alpha1:
                           type: object
                         type: array
                       hostIPC:
-                        description: HostIPC defines to use the host's ipc namespace.
                         type: boolean
                       hostNetwork:
-                        description: |-
-                          HostNetwork requests Host network for this pod. Use the host's network namespace.
-                          If this option is set, the ports that will be used must be specified.
                         type: boolean
                       hostPID:
-                        description: HostPID define to use the host's pid namespace.
                         type: boolean
                       image:
-                        description: Image define image details
                         type: string
+                      imagePullPolicy:
+                        type: string
+                      imagePullSecrets:
+                        items:
+                          type: string
+                        type: array
                       nodeSelector:
                         additionalProperties:
                           type: string
-                        description: NodeSelector is a selector that must be true for the workload to fit on a node.
                         type: object
                       podSecurityContext:
-                        description: PodSecurityContext holds pod-level security attributes and common container settings.
                         properties:
                           fsGroup:
                             format: int64
@@ -4246,16 +4088,7 @@ v1alpha1:
                                 type: string
                             type: object
                         type: object
-                      pullPolicy:
-                        description: PullPolicy define Image pull policy
-                        type: string
-                      pullSecrets:
-                        description: PullSecrets define Secrets used to pull Image from registry
-                        items:
-                          type: string
-                        type: array
                       resources:
-                        description: Resources holds resource requests & limits for container
                         properties:
                           claims:
                             items:
@@ -4274,12 +4107,8 @@ v1alpha1:
                             type: object
                         type: object
                       schedulerName:
-                        description: |-
-                          SchedulerName specifies, the pod will be dispatched by specified scheduler.
-                          If not specified, the pod will be dispatched by default scheduler.
                         type: string
                       securityContext:
-                        description: PodSecurityContext holds pod-level security attributes and common container settings.
                         properties:
                           allowPrivilegeEscalation:
                             type: boolean
@@ -4339,14 +4168,8 @@ v1alpha1:
                             type: object
                         type: object
                       shareProcessNamespace:
-                        description: |-
-                          ShareProcessNamespace defines to share a single process namespace between all of the containers in a pod.
-                          When this is set containers will be able to view and signal processes from other containers
-                          in the same pod, and the first process in each container will not be assigned PID 1.
-                          HostPID and ShareProcessNamespace cannot both be set.
                         type: boolean
                       tolerations:
-                        description: Tolerations defines tolerations
                         items:
                           properties:
                             effect:
@@ -4367,7 +4190,6 @@ v1alpha1:
                     description: GPU defines templates for GPU jobs
                     properties:
                       affinity:
-                        description: Affinity defines scheduling constraints for workload
                         properties:
                           nodeAffinity:
                             properties:
@@ -4667,7 +4489,6 @@ v1alpha1:
                             type: object
                         type: object
                       env:
-                        description: Env keeps the information about environment variables provided to the container
                         items:
                           properties:
                             name:
@@ -4714,7 +4535,6 @@ v1alpha1:
                           type: object
                         type: array
                       envFrom:
-                        description: EnvFrom keeps the information about environment variable sources provided to the container
                         items:
                           properties:
                             configMapRef:
@@ -4736,26 +4556,24 @@ v1alpha1:
                           type: object
                         type: array
                       hostIPC:
-                        description: HostIPC defines to use the host's ipc namespace.
                         type: boolean
                       hostNetwork:
-                        description: |-
-                          HostNetwork requests Host network for this pod. Use the host's network namespace.
-                          If this option is set, the ports that will be used must be specified.
                         type: boolean
                       hostPID:
-                        description: HostPID define to use the host's pid namespace.
                         type: boolean
                       image:
-                        description: Image define image details
                         type: string
+                      imagePullPolicy:
+                        type: string
+                      imagePullSecrets:
+                        items:
+                          type: string
+                        type: array
                       nodeSelector:
                         additionalProperties:
                           type: string
-                        description: NodeSelector is a selector that must be true for the workload to fit on a node.
                         type: object
                       podSecurityContext:
-                        description: PodSecurityContext holds pod-level security attributes and common container settings.
                         properties:
                           fsGroup:
                             format: int64
@@ -4814,16 +4632,7 @@ v1alpha1:
                                 type: string
                             type: object
                         type: object
-                      pullPolicy:
-                        description: PullPolicy define Image pull policy
-                        type: string
-                      pullSecrets:
-                        description: PullSecrets define Secrets used to pull Image from registry
-                        items:
-                          type: string
-                        type: array
                       resources:
-                        description: Resources holds resource requests & limits for container
                         properties:
                           claims:
                             items:
@@ -4842,12 +4651,8 @@ v1alpha1:
                             type: object
                         type: object
                       schedulerName:
-                        description: |-
-                          SchedulerName specifies, the pod will be dispatched by specified scheduler.
-                          If not specified, the pod will be dispatched by default scheduler.
                         type: string
                       securityContext:
-                        description: PodSecurityContext holds pod-level security attributes and common container settings.
                         properties:
                           allowPrivilegeEscalation:
                             type: boolean
@@ -4907,14 +4712,8 @@ v1alpha1:
                             type: object
                         type: object
                       shareProcessNamespace:
-                        description: |-
-                          ShareProcessNamespace defines to share a single process namespace between all of the containers in a pod.
-                          When this is set containers will be able to view and signal processes from other containers
-                          in the same pod, and the first process in each container will not be assigned PID 1.
-                          HostPID and ShareProcessNamespace cannot both be set.
                         type: boolean
                       tolerations:
-                        description: Tolerations defines tolerations
                         items:
                           properties:
                             effect:
@@ -4947,14 +4746,6 @@ v1alpha1:
                     type: string
                 type: object
             type: object
-          pullPolicy:
-            description: PullPolicy define Image pull policy
-            type: string
-          pullSecrets:
-            description: PullSecrets define Secrets used to pull Image from registry
-            items:
-              type: string
-            type: array
           storage:
             description: Storage specifies the ArangoMLStorage used within Extension
             properties:

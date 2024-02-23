@@ -137,72 +137,118 @@ func Test_GenerateAPIDocs(t *testing.T) {
 
 	fset := token.NewFileSet()
 
-	sharedFields := parseSourceFiles(t, root, fset, fmt.Sprintf("%s/pkg/apis/shared/v1", root))
+	type inputPackageTypes map[string]map[string]any
+
+	type inputPackage struct {
+		Types inputPackageTypes
+
+		Shared []string
+	}
+
+	type inputPackages map[string]map[string]inputPackage
 
 	// package path -> result doc file name -> name of the top-level field to be described -> field instance for reflection
-	input := map[string]map[string]map[string]interface{}{
-		fmt.Sprintf("%s/pkg/apis/deployment/v1", root): {
-			"ArangoDeployment.V1": {
-				"Spec": deploymentApi.ArangoDeployment{}.Spec,
-			},
-			"ArangoMember.V1": {
-				"Spec": deploymentApi.ArangoMember{}.Spec,
-			},
-		},
-		fmt.Sprintf("%s/pkg/apis/apps/v1", root): {
-			"ArangoJob.V1": {
-				"Spec": appsApi.ArangoJob{}.Spec,
-			},
-		},
-		fmt.Sprintf("%s/pkg/apis/backup/v1", root): {
-			"ArangoBackup.V1": {
-				"Spec":   backupApi.ArangoBackup{}.Spec,
-				"Status": backupApi.ArangoBackup{}.Status,
-			},
-			"ArangoBackupPolicy.V1": {
-				"Spec":   backupApi.ArangoBackupPolicy{}.Spec,
-				"Status": backupApi.ArangoBackupPolicy{}.Status,
+	input := inputPackages{
+		"deployment": map[string]inputPackage{
+			"v1": {
+				Types: inputPackageTypes{
+					"ArangoDeployment.V1": {
+						"Spec": deploymentApi.ArangoDeployment{}.Spec,
+					},
+					"ArangoMember.V1": {
+						"Spec": deploymentApi.ArangoMember{}.Spec,
+					},
+				},
 			},
 		},
-		fmt.Sprintf("%s/pkg/apis/ml/v1alpha1", root): {
-			"ArangoMLExtension.V1Alpha1": {
-				"Spec":   mlApi.ArangoMLExtension{}.Spec,
-				"Status": mlApi.ArangoMLExtension{}.Status,
-			},
-			"ArangoMLStorage.V1Alpha1": {
-				"Spec":   mlApi.ArangoMLStorage{}.Spec,
-				"Status": mlApi.ArangoMLStorage{}.Status,
-			},
-			"ArangoMLCronJob.V1Alpha1": {
-				"Spec":   mlApi.ArangoMLCronJob{}.Spec,
-				"Status": mlApi.ArangoMLCronJob{}.Status,
-			},
-			"ArangoMLBatchJob.V1Alpha1": {
-				"Spec":   mlApi.ArangoMLBatchJob{}.Spec,
-				"Status": mlApi.ArangoMLBatchJob{}.Status,
+		"apps": map[string]inputPackage{
+			"v1": {
+				Types: inputPackageTypes{
+					"ArangoJob.V1": {
+						"Spec": appsApi.ArangoJob{}.Spec,
+					},
+				},
 			},
 		},
-		fmt.Sprintf("%s/pkg/apis/replication/v1", root): {
-			"ArangoDeploymentReplication.V1": {
-				"Spec": replicationApi.ArangoDeploymentReplication{}.Spec,
+		"backup": map[string]inputPackage{
+			"v1": {
+				Types: inputPackageTypes{
+					"ArangoBackup.V1": {
+						"Spec":   backupApi.ArangoBackup{}.Spec,
+						"Status": backupApi.ArangoBackup{}.Status,
+					},
+					"ArangoBackupPolicy.V1": {
+						"Spec":   backupApi.ArangoBackupPolicy{}.Spec,
+						"Status": backupApi.ArangoBackupPolicy{}.Status,
+					},
+				},
 			},
 		},
-		fmt.Sprintf("%s/pkg/apis/storage/v1alpha", root): {
-			"ArangoLocalStorage.V1Alpha": {
-				"Spec": storageApi.ArangoLocalStorage{}.Spec,
+		"ml": map[string]inputPackage{
+			"v1alpha1": {
+				Types: inputPackageTypes{
+					"ArangoMLExtension.V1Alpha1": {
+						"Spec":   mlApi.ArangoMLExtension{}.Spec,
+						"Status": mlApi.ArangoMLExtension{}.Status,
+					},
+					"ArangoMLStorage.V1Alpha1": {
+						"Spec":   mlApi.ArangoMLStorage{}.Spec,
+						"Status": mlApi.ArangoMLStorage{}.Status,
+					},
+					"ArangoMLCronJob.V1Alpha1": {
+						"Spec":   mlApi.ArangoMLCronJob{}.Spec,
+						"Status": mlApi.ArangoMLCronJob{}.Status,
+					},
+					"ArangoMLBatchJob.V1Alpha1": {
+						"Spec":   mlApi.ArangoMLBatchJob{}.Spec,
+						"Status": mlApi.ArangoMLBatchJob{}.Status,
+					},
+				},
+				Shared: []string{
+					"shared/v1",
+					"scheduler/v1alpha1",
+					"scheduler/v1alpha1/container",
+					"scheduler/v1alpha1/container/resources",
+					"scheduler/v1alpha1/pod",
+					"scheduler/v1alpha1/pod/resources",
+				},
+			},
+		},
+		"replication": map[string]inputPackage{
+			"v1": {
+				Types: inputPackageTypes{
+					"ArangoDeploymentReplication.V1": {
+						"Spec": replicationApi.ArangoDeploymentReplication{}.Spec,
+					},
+				},
+			},
+		},
+		"storage": map[string]inputPackage{
+			"v1alpha": {
+				Types: inputPackageTypes{
+					"ArangoLocalStorage.V1Alpha": {
+						"Spec": storageApi.ArangoLocalStorage{}.Spec,
+					},
+				},
 			},
 		},
 	}
 
-	for apiDir, docs := range input {
-		fields := parseSourceFiles(t, root, fset, apiDir)
+	for name, versions := range input {
+		for version, docs := range versions {
+			fields := parseSourceFiles(t, root, fset, path.Join(root, "pkg/apis", name, version))
 
-		for n, f := range sharedFields {
-			require.NotContains(t, fields, n)
-			fields[n] = f
+			for _, p := range docs.Shared {
+				sharedFields := parseSourceFiles(t, root, fset, path.Join(root, "pkg/apis", p))
+
+				for n, f := range sharedFields {
+					require.NotContains(t, fields, n)
+					fields[n] = f
+				}
+			}
+
+			generateDocs(t, docs.Types, fields, fset)
 		}
-
-		generateDocs(t, docs, fields, fset)
 	}
 }
 

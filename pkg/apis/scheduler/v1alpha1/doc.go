@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,25 +18,6 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1
-
-import core "k8s.io/api/core/v1"
-
-type SecurityPod struct {
-	// PodSecurityContext holds pod-level security attributes and common container settings.
-	// +doc/type: core.PodSecurityContext
-	// +doc/link: Kubernetes docs|https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
-	PodSecurityContext *core.PodSecurityContext `json:"podSecurityContext,omitempty"`
-}
-
-func (s *SecurityPod) GetPodSecurityContext() *core.PodSecurityContext {
-	if s == nil {
-		return nil
-	}
-
-	return s.PodSecurityContext
-}
-
-func (s *SecurityPod) Validate() error {
-	return nil
-}
+// +k8s:deepcopy-gen=package
+// +groupName=scheduler.arangodb.com
+package v1alpha1

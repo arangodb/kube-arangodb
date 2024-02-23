@@ -36,6 +36,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
+	"github.com/arangodb/kube-arangodb/pkg/util/affinity"
 	"github.com/arangodb/kube-arangodb/pkg/util/collection"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -227,35 +228,35 @@ func (m *MemberSyncPod) GetImagePullSecrets() []string {
 }
 
 func (m *MemberSyncPod) GetPodAntiAffinity() *core.PodAntiAffinity {
-	a := core.PodAntiAffinity{}
+	a := &core.PodAntiAffinity{}
 
-	pod.AppendPodAntiAffinityDefault(m, &a)
+	pod.AppendPodAntiAffinityDefault(m, a)
 
-	pod.MergePodAntiAffinity(&a, m.groupSpec.AntiAffinity)
+	a = affinity.MergePodAntiAffinity(a, m.groupSpec.AntiAffinity)
 
-	return pod.ReturnPodAntiAffinityOrNil(a)
+	return affinity.OptionalPodAntiAffinity(a)
 }
 
 func (m *MemberSyncPod) GetPodAffinity() *core.PodAffinity {
-	a := core.PodAffinity{}
+	a := &core.PodAffinity{}
 
 	if m.group == api.ServerGroupSyncWorkers {
-		pod.AppendAffinityWithRole(m, &a, api.ServerGroupDBServers.AsRole())
+		pod.AppendAffinityWithRole(m, a, api.ServerGroupDBServers.AsRole())
 	}
 
-	pod.MergePodAffinity(&a, m.groupSpec.Affinity)
+	a = affinity.MergePodAffinity(a, m.groupSpec.Affinity)
 
-	return pod.ReturnPodAffinityOrNil(a)
+	return affinity.OptionalPodAffinity(a)
 }
 
 func (m *MemberSyncPod) GetNodeAffinity() *core.NodeAffinity {
-	a := core.NodeAffinity{}
+	a := &core.NodeAffinity{}
 
-	pod.AppendArchSelector(&a, m.memberStatus.Architecture.Default(m.spec.Architecture.GetDefault()).AsNodeSelectorRequirement())
+	pod.AppendArchSelector(a, m.memberStatus.Architecture.Default(m.spec.Architecture.GetDefault()).AsNodeSelectorRequirement())
 
-	pod.MergeNodeAffinity(&a, m.groupSpec.NodeAffinity)
+	a = affinity.MergeNodeAffinity(a, m.groupSpec.NodeAffinity)
 
-	return pod.ReturnNodeAffinityOrNil(a)
+	return affinity.OptionalNodeAffinity(a)
 }
 
 func (m *MemberSyncPod) GetNodeSelector() map[string]string {

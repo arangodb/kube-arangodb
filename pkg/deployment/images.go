@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/affinity"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -358,30 +359,30 @@ func (i *ImageUpdatePod) GetServiceAccountName() string {
 }
 
 func (i *ImageUpdatePod) GetPodAntiAffinity() *core.PodAntiAffinity {
-	a := core.PodAntiAffinity{}
+	a := &core.PodAntiAffinity{}
 
-	pod.AppendPodAntiAffinityDefault(i, &a)
+	pod.AppendPodAntiAffinityDefault(i, a)
 
-	pod.MergePodAntiAffinity(&a, i.spec.ID.Get().AntiAffinity)
+	a = affinity.MergePodAntiAffinity(a, i.spec.ID.Get().AntiAffinity)
 
-	return pod.ReturnPodAntiAffinityOrNil(a)
+	return affinity.OptionalPodAntiAffinity(a)
 }
 
 func (i *ImageUpdatePod) GetPodAffinity() *core.PodAffinity {
-	a := core.PodAffinity{}
+	a := &core.PodAffinity{}
 
-	pod.MergePodAffinity(&a, i.spec.ID.Get().Affinity)
+	a = affinity.MergePodAffinity(a, i.spec.ID.Get().Affinity)
 
-	return pod.ReturnPodAffinityOrNil(a)
+	return affinity.OptionalPodAffinity(a)
 }
 
 func (i *ImageUpdatePod) GetNodeAffinity() *core.NodeAffinity {
-	a := core.NodeAffinity{}
-	pod.AppendArchSelector(&a, i.spec.Architecture.AsNodeSelectorRequirement())
+	a := &core.NodeAffinity{}
+	pod.AppendArchSelector(a, i.spec.Architecture.AsNodeSelectorRequirement())
 
-	pod.MergeNodeAffinity(&a, i.spec.ID.Get().NodeAffinity)
+	a = affinity.MergeNodeAffinity(a, i.spec.ID.Get().NodeAffinity)
 
-	return pod.ReturnNodeAffinityOrNil(a)
+	return affinity.OptionalNodeAffinity(a)
 }
 
 func (i *ImageUpdatePod) Validate(_ interfaces.Inspector) error {

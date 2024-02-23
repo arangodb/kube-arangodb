@@ -30,6 +30,7 @@ import (
 	mlv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
 	replicationv1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	replicationv2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v2alpha1"
+	schedulerv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
 	storagev1alpha "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -49,6 +50,7 @@ var localSchemeBuilder = runtime.SchemeBuilder{
 	mlv1alpha1.AddToScheme,
 	replicationv1.AddToScheme,
 	replicationv2alpha1.AddToScheme,
+	schedulerv1alpha1.AddToScheme,
 	storagev1alpha.AddToScheme,
 }
 

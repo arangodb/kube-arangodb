@@ -41,6 +41,16 @@ linters-settings:
         alias: policy
       - pkg: github.com/arangodb/kube-arangodb/pkg/apis/shared/v1
         alias: sharedApi
+      - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1
+        alias: schedulerApi
+      - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container
+        alias: schedulerContainerApi
+      - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container/resources
+        alias: schedulerContainerResourcesApi
+      - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/pod
+        alias: schedulerPodApi
+      - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/pod/resources
+        alias: schedulerPodResourcesApi
       - pkg: github.com/arangodb/kube-arangodb/pkg/apis/shared
         alias: shared
       - pkg: github.com/arangodb/kube-arangodb/pkg/handlers/enterprise/ml/shared

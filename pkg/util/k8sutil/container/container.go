@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,9 +18,22 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package k8sutil
+package container
 
-import core "k8s.io/api/core/v1"
+import (
+	core "k8s.io/api/core/v1"
+)
+
+// GetContainerIDByName returns the container id in the given list with the given name.
+// Returns -1 if not found.
+func GetContainerIDByName(containers []core.Container, name string) int {
+	for id, c := range containers {
+		if c.Name == name {
+			return id
+		}
+	}
+	return -1
+}
 
 // GetContainerByName returns the container in the given pod with the given name.
 // Returns false if not found.
@@ -94,4 +107,16 @@ func IsResourceRequirementsChanged(wanted, given core.ResourceRequirements) bool
 	}
 
 	return checkList(wanted.Limits, given.Limits) || checkList(wanted.Requests, given.Requests)
+}
+
+// IsContainerFailed returns true if the arangodb container
+// has terminated wih a non-zero exit code.
+func IsContainerFailed(container *core.ContainerStatus) bool {
+	if c := container.State.Terminated; c != nil {
+		if c.ExitCode != 0 {
+			return true
+		}
+	}
+
+	return false
 }

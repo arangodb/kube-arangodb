@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1
+package resources
 
 import (
 	core "k8s.io/api/core/v1"
@@ -34,6 +34,16 @@ type Resources struct {
 	Resources *core.ResourceRequirements `json:"resources,omitempty"`
 }
 
+func (r *Resources) Apply(template *core.Container) error {
+	if r == nil {
+		return nil
+	}
+
+	template.Resources = util.WithDefault(r.Resources.DeepCopy())
+
+	return nil
+}
+
 func (r *Resources) With(newResources *Resources) *Resources {
 	if r == nil && newResources == nil {
 		return nil
@@ -47,15 +57,15 @@ func (r *Resources) With(newResources *Resources) *Resources {
 		return r.DeepCopy()
 	}
 
-	return &Resources{Resources: util.NewType(resources.ApplyContainerResource(util.TypeOrDefault(r.GetResources()), util.TypeOrDefault(newResources.GetResources())))}
+	return &Resources{Resources: util.NewType(resources.ApplyContainerResource(r.GetResources(), newResources.GetResources()))}
 }
 
-func (r *Resources) GetResources() *core.ResourceRequirements {
+func (r *Resources) GetResources() core.ResourceRequirements {
 	if r == nil || r.Resources == nil {
-		return nil
+		return core.ResourceRequirements{}
 	}
 
-	return r.Resources
+	return *r.Resources
 }
 
 func (r *Resources) Validate() error {
