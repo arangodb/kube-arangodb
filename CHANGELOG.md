@@ -2,6 +2,7 @@
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Feature) Extract Scheduler API
+- (Bugfix) Fix Image Discovery
 
 ## [1.2.38](https://github.com/arangodb/kube-arangodb/tree/1.2.38) (2024-02-22)
 - (Feature) Extract GRPC Server

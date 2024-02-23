@@ -166,12 +166,8 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 			return true, nil
 		}
 
-		imageID, err := k8sutil.GetArangoDBImageIDFromPod(pod)
-		if err != nil {
-			log.Err(err).Warn("failed to get image ID from pod")
-			return true, nil
-		}
-		if imageID == "" {
+		imageID, ok := k8sutil.GetArangoDBImageIDFromContainerStatuses(pod.Status.ContainerStatuses, shared.ServerContainerName)
+		if !ok {
 			// Fall back to specified image
 			imageID = image
 		}

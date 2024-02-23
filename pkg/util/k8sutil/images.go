@@ -26,8 +26,8 @@ import (
 	core "k8s.io/api/core/v1"
 
 	schedulerContainerResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container/resources"
-	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/container"
 )
 
 const (
@@ -44,23 +44,53 @@ func ConvertImageID2Image(imageID string) string {
 }
 
 // GetArangoDBImageIDFromPod returns the ArangoDB specific image from a pod
-func GetArangoDBImageIDFromPod(pod *core.Pod) (string, error) {
+func GetArangoDBImageIDFromPod(pod *core.Pod, names ...string) (string, error) {
 	if pod == nil {
 		return "", errors.New("failed to get container statuses from nil pod")
 	}
 
-	if len(pod.Status.ContainerStatuses) == 0 {
-		return "", errors.New("empty list of ContainerStatuses")
+	// First try to find container by name
+	if image, ok := GetArangoDBImageIDFromContainerStatuses(pod.Status.ContainerStatuses, names...); ok {
+		return image, nil
+	}
+	if image, ok := GetArangoDBImageIDFromContainers(pod.Spec.Containers, names...); ok {
+		return image, nil
 	}
 
-	for _, cs := range pod.Status.ContainerStatuses {
-		if cs.Name == shared.ServerContainerName {
-			return ConvertImageID2Image(cs.ImageID), nil
+	if cs := pod.Status.ContainerStatuses; len(cs) > 0 {
+		if image := cs[0].ImageID; image != "" {
+			return ConvertImageID2Image(image), nil
+		}
+	}
+	if cs := pod.Spec.Containers; len(cs) > 0 {
+		if image := cs[0].Image; image != "" {
+			return image, nil
 		}
 	}
 
-	// If Server container is not found use first container
-	return ConvertImageID2Image(pod.Status.ContainerStatuses[0].ImageID), nil
+	return "", errors.Errorf("Unable to find image from pod")
+}
+
+// GetArangoDBImageIDFromContainerStatuses returns the ArangoDB specific image from a container statuses
+func GetArangoDBImageIDFromContainerStatuses(containers []core.ContainerStatus, names ...string) (string, bool) {
+	for _, name := range names {
+		if id := container.GetContainerStatusIDByName(containers, name); id != -1 {
+			return ConvertImageID2Image(containers[id].ImageID), true
+		}
+	}
+
+	return "", false
+}
+
+// GetArangoDBImageIDFromContainers returns the ArangoDB specific image from a container specs
+func GetArangoDBImageIDFromContainers(containers []core.Container, names ...string) (string, bool) {
+	for _, name := range names {
+		if id := container.GetContainerIDByName(containers, name); id != -1 {
+			return containers[id].Image, true
+		}
+	}
+
+	return "", false
 }
 
 // GetImageDetails Returns latest defined Image details
