@@ -132,6 +132,8 @@ spec:
                         valueFrom:
                             fieldRef:
                                 fieldPath: metadata.name
+                      - name: MY_CONTAINER_NAME
+                        value: "operator"
                       - name: MY_POD_IP
                         valueFrom:
                             fieldRef:

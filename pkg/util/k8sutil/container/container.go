@@ -35,6 +35,17 @@ func GetContainerIDByName(containers []core.Container, name string) int {
 	return -1
 }
 
+// GetContainerStatusIDByName returns the container id in the given list with the given name.
+// // Returns -1 if not found.
+func GetContainerStatusIDByName(containers []core.ContainerStatus, name string) int {
+	for id, c := range containers {
+		if c.Name == name {
+			return id
+		}
+	}
+	return -1
+}
+
 // GetContainerByName returns the container in the given pod with the given name.
 // Returns false if not found.
 func GetContainerByName(p *core.Pod, name string) (core.Container, bool) {

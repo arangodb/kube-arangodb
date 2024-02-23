@@ -46,6 +46,7 @@ import (
 	"k8s.io/client-go/tools/record"
 
 	"github.com/arangodb/kube-arangodb/pkg/api"
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/crd"
 	agencyConfig "github.com/arangodb/kube-arangodb/pkg/deployment/agency/config"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
@@ -594,12 +595,8 @@ func getMyPodInfo(kubecli kubernetes.Interface, namespace, name string) (string,
 			return errors.WithStack(err)
 		}
 		sa = pod.Spec.ServiceAccountName
-		if image, err = k8sutil.GetArangoDBImageIDFromPod(pod); err != nil {
+		if image, err = k8sutil.GetArangoDBImageIDFromPod(pod, shared.ServerContainerName, shared.OperatorContainerName, constants.MyContainerNameEnv.GetOrDefault(shared.OperatorContainerName)); err != nil {
 			return errors.Wrap(err, "failed to get image ID from pod")
-		}
-		if image == "" {
-			// Fallback in case we don't know the id.
-			image = pod.Spec.Containers[0].Image
 		}
 		return nil
 	}

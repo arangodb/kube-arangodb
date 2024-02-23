@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ func TestGetArangoDBImageIDFromPod(t *testing.T) {
 			args: args{
 				pod: &core.Pod{},
 			},
-			wantErr: errors.New("empty list of ContainerStatuses"),
+			wantErr: errors.New("Unable to find image from pod"),
 		},
 		"image ID from the only container": {
 			args: args{
@@ -124,7 +124,7 @@ func TestGetArangoDBImageIDFromPod(t *testing.T) {
 
 	for testName, testCase := range tests {
 		t.Run(testName, func(t *testing.T) {
-			got, err := GetArangoDBImageIDFromPod(testCase.args.pod)
+			got, err := GetArangoDBImageIDFromPod(testCase.args.pod, shared.ServerContainerName)
 			if testCase.wantErr != nil {
 				require.EqualError(t, err, testCase.wantErr.Error())
 				return
