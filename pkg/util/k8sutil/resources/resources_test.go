@@ -163,6 +163,9 @@ func Test_ApplyContainerResourceRequirements(t *testing.T) {
 }
 
 func Test_UpsertContainerResourceRequirements(t *testing.T) {
+	v0, err := resource.ParseQuantity("512Mi")
+	require.NoError(t, err)
+
 	v1, err := resource.ParseQuantity("1Gi")
 	require.NoError(t, err)
 
@@ -173,6 +176,39 @@ func Test_UpsertContainerResourceRequirements(t *testing.T) {
 	require.NoError(t, err)
 
 	var container core.Container
+
+	t.Run("Ensure limits are applied optionally", func(t *testing.T) {
+		UpscaleContainerResourceRequirements(&container, core.ResourceRequirements{
+			Requests: core.ResourceList{
+				core.ResourceMemory: v1,
+			},
+		})
+
+		require.Len(t, container.Resources.Requests, 1)
+		require.Contains(t, container.Resources.Requests, core.ResourceMemory)
+		require.Equal(t, v1, container.Resources.Requests[core.ResourceMemory])
+
+		require.Len(t, container.Resources.Limits, 0)
+	})
+
+	t.Run("Ensure limits are upscaled optionally", func(t *testing.T) {
+		UpscaleContainerResourceRequirements(&container, core.ResourceRequirements{
+			Limits: core.ResourceList{
+				core.ResourceMemory: v0,
+			},
+			Requests: core.ResourceList{
+				core.ResourceMemory: v1,
+			},
+		})
+
+		require.Len(t, container.Resources.Requests, 1)
+		require.Contains(t, container.Resources.Requests, core.ResourceMemory)
+		require.Equal(t, v1, container.Resources.Requests[core.ResourceMemory])
+
+		require.Len(t, container.Resources.Limits, 1)
+		require.Contains(t, container.Resources.Limits, core.ResourceMemory)
+		require.Equal(t, v1, container.Resources.Limits[core.ResourceMemory])
+	})
 
 	t.Run("Ensure limits are copied", func(t *testing.T) {
 		UpscaleContainerResourceRequirements(&container, core.ResourceRequirements{
