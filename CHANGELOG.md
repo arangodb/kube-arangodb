@@ -4,6 +4,7 @@
 - (Feature) Extract Scheduler API
 - (Bugfix) Fix Image Discovery
 - (Bugfix) Fix Resources Copy mechanism to prevent invalid pod creation
+- (Bugfix) Wait for ImageStatus in ImageDiscover
 
 ## [1.2.38](https://github.com/arangodb/kube-arangodb/tree/1.2.38) (2024-02-22)
 - (Feature) Extract GRPC Server

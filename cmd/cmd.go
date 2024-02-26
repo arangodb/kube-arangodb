@@ -161,6 +161,10 @@ var (
 		backupArangoD       time.Duration
 		backupUploadArangoD time.Duration
 	}
+	operatorImageDiscovery struct {
+		timeout                time.Duration
+		defaultStatusDiscovery bool
+	}
 	operatorReconciliationRetry struct {
 		delay time.Duration
 		count int
@@ -241,6 +245,8 @@ func init() {
 	f.IntVar(&operatorBackup.concurrentUploads, "backup-concurrent-uploads", globals.DefaultBackupConcurrentUploads, "Number of concurrent uploads per deployment")
 	f.Uint64Var(&memoryLimit.hardLimit, "memory-limit", 0, "Define memory limit for hard shutdown and the dump of goroutines. Used for testing")
 	f.StringArrayVar(&metricsOptions.excludedMetricPrefixes, "metrics.excluded-prefixes", nil, "List of the excluded metrics prefixes")
+	f.BoolVar(&operatorImageDiscovery.defaultStatusDiscovery, "image.discovery.status", true, "Discover Operator Image from Pod Status by default. When disabled Pod Spec is used.")
+	f.DurationVar(&operatorImageDiscovery.timeout, "image.discovery.timeout", time.Minute, "Timeout for image discovery process")
 	if err := features.Init(&cmdMain); err != nil {
 		panic(err.Error())
 	}
@@ -584,6 +590,20 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 // getMyPodInfo looks up the image & service account of the pod with given name in given namespace
 // Returns image, serviceAccount, error.
 func getMyPodInfo(kubecli kubernetes.Interface, namespace, name string) (string, string, error) {
+	if image, sa, ok := getMyPodInfoWrap(kubecli, namespace, name, getMyImageInfoFunc(operatorImageDiscovery.defaultStatusDiscovery)); ok {
+		return image, sa, nil
+	}
+
+	logger.Warn("Unable to discover image, fallback to second method")
+
+	if image, sa, ok := getMyPodInfoWrap(kubecli, namespace, name, getMyImageInfoFunc(!operatorImageDiscovery.defaultStatusDiscovery)); ok {
+		return image, sa, nil
+	}
+
+	return "", "", errors.Errorf("Unable to discover image")
+}
+
+func getMyPodInfoWrap(kubecli kubernetes.Interface, namespace, name string, imageFunc func(in *core.Pod) (string, bool)) (string, string, bool) {
 	var image, sa string
 	op := func() error {
 		pod, err := kubecli.CoreV1().Pods(namespace).Get(context.Background(), name, meta.GetOptions{})
@@ -595,15 +615,26 @@ func getMyPodInfo(kubecli kubernetes.Interface, namespace, name string) (string,
 			return errors.WithStack(err)
 		}
 		sa = pod.Spec.ServiceAccountName
-		if image, err = k8sutil.GetArangoDBImageIDFromPod(pod, shared.ServerContainerName, shared.OperatorContainerName, constants.MyContainerNameEnv.GetOrDefault(shared.OperatorContainerName)); err != nil {
+		if i, ok := imageFunc(pod); !ok {
 			return errors.Wrap(err, "failed to get image ID from pod")
+		} else {
+			image = i
 		}
 		return nil
 	}
-	if err := retry.Retry(op, time.Minute*5); err != nil {
-		return "", "", errors.WithStack(err)
+	if err := retry.Retry(op, operatorImageDiscovery.timeout/2); err == nil {
+		return image, sa, true
 	}
-	return image, sa, nil
+	return "", "", false
+}
+
+func getMyImageInfoFunc(status bool) func(pod *core.Pod) (string, bool) {
+	return func(pod *core.Pod) (string, bool) {
+		if status {
+			return k8sutil.GetArangoDBImageIDFromContainerStatuses(pod.Status.ContainerStatuses, shared.ServerContainerName, shared.OperatorContainerName, constants.MyContainerNameEnv.GetOrDefault(shared.OperatorContainerName))
+		}
+		return k8sutil.GetArangoDBImageIDFromContainers(pod.Spec.Containers, shared.ServerContainerName, shared.OperatorContainerName, constants.MyContainerNameEnv.GetOrDefault(shared.OperatorContainerName))
+	}
 }
 
 func createRecorder(kubecli kubernetes.Interface, name, namespace string) record.EventRecorder {

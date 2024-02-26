@@ -53,13 +53,16 @@ func GetArangoDBImageIDFromPod(pod *core.Pod, names ...string) (string, error) {
 	if image, ok := GetArangoDBImageIDFromContainerStatuses(pod.Status.ContainerStatuses, names...); ok {
 		return image, nil
 	}
+
 	if image, ok := GetArangoDBImageIDFromContainers(pod.Spec.Containers, names...); ok {
 		return image, nil
 	}
 
 	if cs := pod.Status.ContainerStatuses; len(cs) > 0 {
 		if image := cs[0].ImageID; image != "" {
-			return ConvertImageID2Image(image), nil
+			if disc := ConvertImageID2Image(image); disc != "" {
+				return disc, nil
+			}
 		}
 	}
 	if cs := pod.Spec.Containers; len(cs) > 0 {
@@ -75,7 +78,11 @@ func GetArangoDBImageIDFromPod(pod *core.Pod, names ...string) (string, error) {
 func GetArangoDBImageIDFromContainerStatuses(containers []core.ContainerStatus, names ...string) (string, bool) {
 	for _, name := range names {
 		if id := container.GetContainerStatusIDByName(containers, name); id != -1 {
-			return ConvertImageID2Image(containers[id].ImageID), true
+			if image := containers[id].ImageID; image != "" {
+				if disc := ConvertImageID2Image(image); disc != "" {
+					return disc, true
+				}
+			}
 		}
 	}
 
@@ -86,7 +93,9 @@ func GetArangoDBImageIDFromContainerStatuses(containers []core.ContainerStatus, 
 func GetArangoDBImageIDFromContainers(containers []core.Container, names ...string) (string, bool) {
 	for _, name := range names {
 		if id := container.GetContainerIDByName(containers, name); id != -1 {
-			return containers[id].Image, true
+			if image := containers[id].Image; image != "" {
+				return image, true
+			}
 		}
 	}
 
