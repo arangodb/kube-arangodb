@@ -69,16 +69,30 @@ func UpscaleContainerResourceRequirements(container *core.Container, resources c
 
 	container.Resources.Limits = UpscaleContainerResourceList(container.Resources.Limits, resources.Limits)
 	container.Resources.Requests = UpscaleContainerResourceList(container.Resources.Requests, resources.Requests)
+
+	// Ensure that Limits are always higher or equals requests
+	container.Resources.Limits = UpscaleOptionalContainerResourceList(container.Resources.Limits, container.Resources.Requests)
 }
 
-// UpscaleContainerResource scales up resources from `from` to `to` ResourceList
-func UpscaleContainerResource(to core.ResourceRequirements, from core.ResourceRequirements) core.ResourceRequirements {
-	var r core.ResourceRequirements
+// UpscaleOptionalContainerResourceList scales up resources from `from` to `to` ResourceList if they exists in `to`
+func UpscaleOptionalContainerResourceList(to core.ResourceList, from core.ResourceList) core.ResourceList {
+	if len(from) == 0 {
+		return to
+	}
 
-	r.Limits = UpscaleContainerResourceList(to.Limits, from.Limits)
-	r.Requests = UpscaleContainerResourceList(to.Requests, from.Requests)
+	if to == nil {
+		to = core.ResourceList{}
+	}
 
-	return r
+	for k, v := range from {
+		if n, ok := to[k]; ok {
+			if n.Cmp(v) < 0 {
+				to[k] = v
+			}
+		}
+	}
+
+	return to
 }
 
 // UpscaleContainerResourceList scales up resources from `from` to `to` ResourceList
