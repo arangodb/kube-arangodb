@@ -23,8 +23,11 @@ package resources
 import (
 	core "k8s.io/api/core/v1"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/interfaces"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
+
+var _ interfaces.Pod[Namespace] = &Namespace{}
 
 type Namespace struct {
 	// HostNetwork requests Host network for this pod. Use the host's network namespace.

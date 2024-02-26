@@ -23,8 +23,11 @@ package resources
 import (
 	core "k8s.io/api/core/v1"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/interfaces"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/envs"
 )
+
+var _ interfaces.Container[Environments] = &Environments{}
 
 type Environments struct {
 	// Env keeps the information about environment variables provided to the container
@@ -38,7 +41,7 @@ type Environments struct {
 	EnvFrom []core.EnvFromSource `json:"envFrom,omitempty"`
 }
 
-func (e *Environments) Apply(container *core.Container) error {
+func (e *Environments) Apply(_ *core.PodTemplateSpec, container *core.Container) error {
 	if e == nil {
 		return nil
 	}

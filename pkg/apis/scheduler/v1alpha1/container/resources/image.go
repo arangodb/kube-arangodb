@@ -23,11 +23,14 @@ package resources
 import (
 	core "k8s.io/api/core/v1"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/interfaces"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 type ImagePullSecrets []string
+
+var _ interfaces.Container[Image] = &Image{}
 
 type Image struct {
 	// Image define image details

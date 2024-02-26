@@ -24,8 +24,10 @@ import (
 	core "k8s.io/api/core/v1"
 
 	schedulerContainerResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container/resources"
+	"github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/interfaces"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/container"
 )
 
@@ -89,6 +91,18 @@ func (c Containers) With(other Containers) Containers {
 	return ret
 }
 
+func (c Containers) Validate() error {
+	for name, container := range c {
+		if err := container.Validate(); err != nil {
+			return errors.Wrapf(err, "Container %s failed", name)
+		}
+	}
+
+	return nil
+}
+
+var _ interfaces.Container[Container] = &Container{}
+
 type Container struct {
 	// Security keeps the security settings for Container
 	*schedulerContainerResourcesApi.Security `json:",inline"`
@@ -109,10 +123,10 @@ func (c *Container) Apply(template *core.PodTemplateSpec, container *core.Contai
 	}
 
 	return shared.WithErrors(
-		c.Security.Apply(container),
-		c.Environments.Apply(container),
+		c.Security.Apply(template, container),
+		c.Environments.Apply(template, container),
 		c.Image.Apply(template, container),
-		c.Resources.Apply(container),
+		c.Resources.Apply(template, container),
 	)
 }
 

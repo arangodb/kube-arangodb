@@ -23,12 +23,15 @@ package resources
 import (
 	core "k8s.io/api/core/v1"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/interfaces"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/affinity"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tolerations"
 )
 
 type Tolerations []core.Toleration
+
+var _ interfaces.Pod[Scheduling] = &Scheduling{}
 
 type Scheduling struct {
 	// NodeSelector is a selector that must be true for the workload to fit on a node.
@@ -65,8 +68,13 @@ func (s *Scheduling) Apply(template *core.PodTemplateSpec) error {
 		}
 	}
 
-	template.Spec.Affinity = s.Affinity.DeepCopy()
-	template.Spec.Tolerations = s.Tolerations.DeepCopy()
+	if s.Affinity != nil {
+		if s.Affinity.NodeAffinity != nil || s.Affinity.PodAffinity != nil || s.Affinity.PodAntiAffinity != nil {
+			template.Spec.Affinity = s.Affinity.DeepCopy()
+		}
+	}
+
+	template.Spec.Tolerations = tolerations.AddTolerationsIfNotFound(nil, s.Tolerations.DeepCopy()...)
 
 	template.Spec.SchedulerName = util.WithDefault(s.SchedulerName)
 
@@ -126,17 +134,17 @@ func (s *Scheduling) With(other *Scheduling) *Scheduling {
 		current.NodeSelector = new.NodeSelector
 	} else if len(new.NodeSelector) > 0 {
 		for k, v := range new.NodeSelector {
-			other.NodeSelector[k] = v
+			current.NodeSelector[k] = v
 		}
 	}
 
 	// SchedulerName
 	if new.SchedulerName != nil {
-		other.SchedulerName = new.SchedulerName
+		current.SchedulerName = new.SchedulerName
 	}
 
 	// Tolerations
-	new.Tolerations = tolerations.AddTolerationsIfNotFound(new.Tolerations, other.Tolerations...)
+	current.Tolerations = tolerations.AddTolerationsIfNotFound(new.Tolerations, other.Tolerations...)
 
 	// Affinity
 	current.Affinity = affinity.Merge(current.Affinity, new.Affinity)

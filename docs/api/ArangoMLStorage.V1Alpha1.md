@@ -116,7 +116,7 @@ Default Value: `9202`
 
 ### .spec.mode.sidecar.env
 
-Type: `core.EnvVar` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/environments.go#L33)</sup>
+Type: `core.EnvVar` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/environments.go#L36)</sup>
 
 Env keeps the information about environment variables provided to the container
 
@@ -127,7 +127,7 @@ Links:
 
 ### .spec.mode.sidecar.envFrom
 
-Type: `core.EnvFromSource` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/environments.go#L38)</sup>
+Type: `core.EnvFromSource` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/environments.go#L41)</sup>
 
 EnvFrom keeps the information about environment variable sources provided to the container
 
@@ -138,7 +138,7 @@ Links:
 
 ### .spec.mode.sidecar.image
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L34)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L37)</sup>
 
 Image define image details
 
@@ -146,7 +146,7 @@ Image define image details
 
 ### .spec.mode.sidecar.imagePullPolicy
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L38)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L41)</sup>
 
 ImagePullPolicy define Image pull policy
 
@@ -156,7 +156,7 @@ Default Value: `IfNotPresent`
 
 ### .spec.mode.sidecar.imagePullSecrets
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L41)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L44)</sup>
 
 ImagePullSecrets define Secrets used to pull Image from registry
 
@@ -174,7 +174,7 @@ Default Value: `9201`
 
 ### .spec.mode.sidecar.resources
 
-Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/resources.go#L34)</sup>
+Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/resources.go#L37)</sup>
 
 Resources holds resource requests & limits for container
 
@@ -185,9 +185,9 @@ Links:
 
 ### .spec.mode.sidecar.securityContext
 
-Type: `core.SecurityContext` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/security.go#L31)</sup>
+Type: `core.SecurityContext` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/security.go#L35)</sup>
 
-PodSecurityContext holds pod-level security attributes and common container settings.
+SecurityContext holds container-level security attributes and common container settings.
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
