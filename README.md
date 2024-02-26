@@ -161,12 +161,15 @@ Flags:
       --deployment.feature.upgrade-version-check-v2            Enable initContainer with pre version check based by Operator - Required ArangoDB 3.8.0 or higher
       --features-config-map-name string                        Name of the Feature Map ConfigMap (default "arangodb-operator-feature-config-map")
   -h, --help                                                   help for arangodb_operator
+      --image.discovery.status                                 Discover Operator Image from Pod Status by default. When disabled Pod Spec is used. (default true)
+      --image.discovery.timeout duration                       Timeout for image discovery process (default 1m0s)
       --internal.scaling-integration                           Enable Scaling Integration
       --kubernetes.burst int                                   Burst for the k8s API (default 30)
       --kubernetes.max-batch-size int                          Size of batch during objects read (default 256)
       --kubernetes.qps float32                                 Number of queries per second for k8s API (default 15)
       --log.format string                                      Set log format. Allowed values: 'pretty', 'JSON'. If empty, default format is used (default "pretty")
-      --log.level stringArray                                  Set log levels in format <level> or <logger>=<level>. Possible loggers: action, agency, api-server, assertion, backup-operator, chaos-monkey, crd, deployment, deployment-ci, deployment-reconcile, deployment-replication, deployment-resilience, deployment-resources, deployment-storage, deployment-storage-pc, deployment-storage-service, http, inspector, k8s-client, ml-batchjob-operator, ml-cronjob-operator, ml-extension-operator, ml-extension-shutdown, ml-storage-operator, monitor, operator, operator-arangojob-handler, operator-v2, operator-v2-event, operator-v2-worker, panics, pod_compare, root, root-event-recorder, server, server-authentication (default [debug])
+      --log.level stringArray                                  Set log levels in format <level> or <logger>=<level>. Possible loggers: action, agency, api-server, assertion, backup-operator, chaos-monkey, crd, deployment, deployment-ci, deployment-reconcile, deployment-replication, deployment-resilience, deployment-resources, deployment-storage, deployment-storage-pc, deployment-storage-service, http, inspector, integrations, k8s-client, ml-batchjob-operator, ml-cronjob-operator, ml-extension-operator, ml-extension-shutdown, ml-storage-operator, monitor, operator, operator-arangojob-handler, operator-v2, operator-v2-event, operator-v2-worker, panics, pod_compare, root, root-event-recorder, server, server-authentication (default [info])
+      --log.sampling                                           If true, operator will try to minimize duplication of logging events (default true)
       --memory-limit uint                                      Define memory limit for hard shutdown and the dump of goroutines. Used for testing
       --metrics.excluded-prefixes stringArray                  List of the excluded metrics prefixes
       --mode.single                                            Enable single mode in Operator. WARNING: There should be only one replica of Operator, otherwise Operator can take unexpected actions
