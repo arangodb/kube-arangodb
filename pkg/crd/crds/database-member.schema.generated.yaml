@@ -244,7 +244,6 @@ v1:
                 description: Checksum keep the Pod Spec Checksum (with ignored fields).
                 type: string
               endpoint:
-                description: 'Deprecated: Endpoint is not saved into the template'
                 type: string
               podSpec:
                 description: PodSpec specifies the Pod Spec used for this Member.
@@ -3296,7 +3295,6 @@ v1alpha:
                 description: Checksum keep the Pod Spec Checksum (with ignored fields).
                 type: string
               endpoint:
-                description: 'Deprecated: Endpoint is not saved into the template'
                 type: string
               podSpec:
                 description: PodSpec specifies the Pod Spec used for this Member.
@@ -6348,7 +6346,6 @@ v2alpha1:
                 description: Checksum keep the Pod Spec Checksum (with ignored fields).
                 type: string
               endpoint:
-                description: 'Deprecated: Endpoint is not saved into the template'
                 type: string
               podSpec:
                 description: PodSpec specifies the Pod Spec used for this Member.

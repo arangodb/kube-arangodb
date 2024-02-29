@@ -85,24 +85,24 @@ type MemberStatus struct {
 	// SecondaryPersistentVolumeClaim keeps information about PVC for SecondaryPod
 	SecondaryPersistentVolumeClaim *MemberPersistentVolumeClaimStatus `json:"secondaryPersistentVolumeClaim,omitempty"`
 
-	// deprecated
+	// Deprecated
 	// SideCarSpecs contains map of specifications specified for side cars
 	// +doc/type: map[string]core.Container
 	// +doc/link: Documentation of core.Container|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#container-v1-core
 	SideCarSpecs map[string]core.Container `json:"sidecars-specs,omitempty"`
-	// deprecated
+	// Deprecated
 	// PodName holds the name of the Pod that currently runs this member
 	PodName string `json:"podName,omitempty"`
-	// deprecated
+	// Deprecated
 	// PodUID holds the UID of the Pod that currently runs this member
 	PodUID types.UID `json:"podUID,omitempty"`
-	// deprecated
+	// Deprecated
 	// PodSpecVersion holds the checksum of Pod spec that currently runs this member. Used to rotate pods
 	PodSpecVersion string `json:"podSpecVersion,omitempty"`
-	// deprecated
+	// Deprecated
 	// PersistentVolumeClaimName holds the name of the persistent volume claim used for this member (if any).
 	PersistentVolumeClaimName string `json:"persistentVolumeClaimName,omitempty"`
-	// deprecated
+	// Deprecated
 	// Endpoint definition how member should be reachable
 	Endpoint *string `json:"-"`
 }
@@ -156,7 +156,7 @@ func (s *MemberStatus) RemoveTerminationsBefore(timestamp time.Time) int {
 	}
 }
 
-// deprecated
+// Deprecated
 func (s *MemberStatus) GetEndpoint(defaultEndpoint string) string {
 	if s == nil || s.Endpoint == nil {
 		return defaultEndpoint

@@ -61,8 +61,19 @@ func (d DocDefinitions) RenderMarkdown(t *testing.T, repositoryPath string) []by
 		write(t, out, "### %s\n\n", el.Path)
 		write(t, out, "Type: `%s` <sup>[\\[ref\\]](%s/%s#L%d)</sup>\n\n", el.Type, repositoryPath, el.File, el.Line)
 
+		if d := el.Deprecated; len(d) > 0 {
+			write(t, out, "> [!WARNING]\n")
+			write(t, out, "> ***DEPRECATED***\n")
+			write(t, out, "> \n")
+			for _, line := range d {
+				write(t, out, "> **%s**\n", line)
+			}
+			write(t, out, "\n")
+		}
+
 		if d := el.Important; d != nil {
-			write(t, out, "**Important**: %s\n\n", *d)
+			write(t, out, "> [!IMPORTANT]\n")
+			write(t, out, "> **%s**\n\n", *d)
 		}
 
 		if len(el.Docs) > 0 {

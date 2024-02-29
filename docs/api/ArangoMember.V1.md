@@ -74,7 +74,10 @@ Checksum keep the Pod Spec Checksum (with ignored fields).
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/deployment/v1/arango_member_pod_template.go#L63)</sup>
 
-Deprecated: Endpoint is not saved into the template
+> [!WARNING]
+> ***DEPRECATED***
+> 
+> **Endpoint is not saved into the template**
 
 ***
 

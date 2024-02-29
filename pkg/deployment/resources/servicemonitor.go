@@ -85,6 +85,7 @@ func (r *Resources) serviceMonitorSpec() (coreosv1.ServiceMonitorSpec, error) {
 	deploymentName := apiObject.GetName()
 	spec := r.context.GetSpec()
 
+	//nolint:staticcheck
 	switch spec.Metrics.Mode.Get() {
 	case deploymentApi.MetricsModeInternal:
 		if spec.Metrics.Authentication.JWTTokenSecretName == nil {

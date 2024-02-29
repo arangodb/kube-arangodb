@@ -88,6 +88,8 @@ type ServerGroupSpec struct {
 	// SchedulerName define scheduler name used for group
 	SchedulerName *string `json:"schedulerName,omitempty"`
 	// StorageClassName specifies the classname for storage of the servers.
+	//
+	// Deprecated: Use VolumeClaimTemplate instead.
 	StorageClassName *string `json:"storageClassName,omitempty"`
 	// Resources holds resource requests & limits
 	// +doc/type: core.ResourceRequirements
@@ -168,7 +170,9 @@ type ServerGroupSpec struct {
 	// +doc/enum: rotate|Pod will be shutdown and PVC will be resized (AKS)
 	// +doc/default: runtime
 	VolumeResizeMode *PVCResizeMode `json:"pvcResizeMode,omitempty"`
-	// Deprecated: VolumeAllowShrink allows shrink the volume
+	// VolumeAllowShrink allows shrinking of the volume
+	//
+	// Deprecated: Not used anymore
 	VolumeAllowShrink *bool `json:"volumeAllowShrink,omitempty"`
 	// AntiAffinity specified additional antiAffinity settings in ArangoDB Pod definitions
 	// +doc/type: core.PodAntiAffinity

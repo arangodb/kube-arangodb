@@ -79,15 +79,23 @@ type MetricsSpec struct {
 	// +doc/default: false
 	// +doc/link: Metrics collection|../metrics.md
 	Enabled *bool `json:"enabled,omitempty"`
-	// deprecated
-	Image          *string                   `json:"image,omitempty"`
+
+	// Image used for the Metrics Sidecar
+	//
+	// Deprecated: Image is now extracted from Operator Pod
+	Image *string `json:"image,omitempty"`
+
 	Authentication MetricsAuthenticationSpec `json:"authentication,omitempty"`
 	// Resources holds resource requests & limits
 	// +doc/type: core.ResourceRequirements
 	// +doc/link: Documentation of core.ResourceRequirements|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#resourcerequirements-v1-core
 	Resources core.ResourceRequirements `json:"resources,omitempty"`
-	// deprecated
+
+	// Mode define metrics exported mode
+	//
+	// Deprecated: Not used anymore
 	Mode *MetricsMode `json:"mode,omitempty"`
+
 	// TLS defines if TLS should be enabled on Metrics exporter endpoint.
 	// This option will enable TLS only if TLS is enabled on ArangoDeployment,
 	// otherwise `true` value will not take any effect.

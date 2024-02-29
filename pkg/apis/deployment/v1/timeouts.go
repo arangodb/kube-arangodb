@@ -43,10 +43,10 @@ type Timeouts struct {
 	// +doc/example:   AddMember: 30m
 	Actions ActionTimeouts `json:"actions,omitempty"`
 
-	// deprecated
+	// Deprecated
 	AddMember *Timeout `json:"-"`
 
-	// deprecated
+	// Deprecated
 	RuntimeContainerImageUpdate *Timeout `json:"-"`
 }
 
