@@ -110,6 +110,7 @@ func (a *ArangoDContainer) GetPorts() []core.ContainerPort {
 	}
 
 	if a.spec.Metrics.IsEnabled() {
+		//nolint:staticcheck
 		switch a.spec.Metrics.Mode.Get() {
 		case api.MetricsModeInternal:
 			ports = append(ports, core.ContainerPort{
@@ -410,6 +411,7 @@ func (m *MemberArangoDPod) GetServiceAccountName() string {
 }
 
 func (m *MemberArangoDPod) GetSidecars(pod *core.Pod) error {
+	//nolint:staticcheck
 	if m.spec.Metrics.IsEnabled() && m.spec.Metrics.Mode.Get() != api.MetricsModeInternal {
 		var c *core.Container
 

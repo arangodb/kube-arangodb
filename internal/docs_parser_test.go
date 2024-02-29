@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ import (
 	openapi "k8s.io/kube-openapi/pkg/common"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 const (
@@ -73,10 +74,13 @@ func parseDocDefinition(t *testing.T, root, path, typ string, field *ast.Field, 
 		def.Important = util.NewType[string](important[0])
 	}
 
-	if docs, ok := extractNotTags(field); !ok {
+	if docs, dep, ok, err := extractNotTags(field); err != nil {
+		require.Fail(t, fmt.Sprintf("Error while getting tags for %s: %s", path, err.Error()))
+	} else if !ok {
 		println(def.Path, " is missing documentation!")
 	} else {
 		def.Docs = docs
+		def.Deprecated = dep
 	}
 
 	file := fs.File(field.Pos())
@@ -246,22 +250,40 @@ func extract(n *ast.Field, tag string) ([]string, bool) {
 	return ret, len(ret) > 0
 }
 
-func extractNotTags(n *ast.Field) ([]string, bool) {
+func extractNotTags(n *ast.Field) ([]string, []string, bool, error) {
 	if n.Doc == nil {
-		return nil, false
+		return nil, nil, false, nil
 	}
 
-	var ret []string
+	var ret, dep []string
+
+	var deprecated bool
 
 	for _, c := range n.Doc.List {
 		if strings.HasPrefix(c.Text, "// ") {
+			if strings.HasPrefix(c.Text, "// Deprecated") {
+				if !strings.HasPrefix(c.Text, "// Deprecated: ") {
+					return nil, nil, false, errors.Errorf("Invalid deprecated field")
+				}
+			}
+			if strings.HasPrefix(c.Text, "// Deprecated:") {
+				deprecated = true
+				dep = append(dep, strings.TrimSpace(strings.TrimPrefix(c.Text, "// Deprecated:")))
+				continue
+			}
+
 			if !strings.HasPrefix(c.Text, "// +doc/") {
-				ret = append(ret, strings.TrimPrefix(c.Text, "// "))
+				v := strings.TrimSpace(strings.TrimPrefix(c.Text, "// "))
+				if deprecated {
+					dep = append(dep, v)
+				} else {
+					ret = append(ret, v)
+				}
 			}
 		}
 	}
 
-	return ret, len(ret) > 0
+	return ret, dep, len(ret) > 0 || len(dep) > 0, nil
 }
 
 // isSimpleType returns the OpenAPI-compatible type name, type format and boolean indicating if this is simple type or not

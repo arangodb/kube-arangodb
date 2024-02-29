@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -57,8 +57,9 @@ func (a *ArangoDeploymentRebalancerSpec) GetParallelMoves() int {
 }
 
 type ArangoDeploymentRebalancerReadersSpec struct {
-	// deprecated does not work in Rebalancer V2
 	// Count Enable Shard Count machanism
+	//
+	// Deprecated: does not work in Rebalancer V2
 	Count *bool `json:"count,omitempty"`
 }
 

@@ -993,9 +993,7 @@ v1:
                 description: Probes specifies additional behaviour for probes
                 properties:
                   ReadinessProbeDisabled:
-                    description: |-
-                      OldReadinessProbeDisabled if true readinessProbes are disabled
-                      Deprecated: This field is deprecated, kept only for backward compatibility.
+                    description: OldReadinessProbeDisabled if true readinessProbes are disabled
                     type: boolean
                   livenessProbeDisabled:
                     description: LivenessProbeDisabled if set to true, the operator does not generate a liveness probe for new pods belonging to this group
@@ -1154,9 +1152,7 @@ v1:
                     description: AllowPrivilegeEscalation Controls whether a process can gain more privileges than its parent process.
                     type: boolean
                   dropAllCapabilities:
-                    description: |-
-                      DropAllCapabilities specifies if capabilities should be dropped for this pod containers
-                      Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
+                    description: DropAllCapabilities specifies if capabilities should be dropped for this pod containers
                     type: boolean
                   fsGroup:
                     description: FSGroup is a special supplemental group that applies to all containers in a pod.
@@ -1781,7 +1777,7 @@ v1:
                   type: object
                 type: array
               volumeAllowShrink:
-                description: 'Deprecated: VolumeAllowShrink allows shrink the volume'
+                description: VolumeAllowShrink allows shrinking of the volume
                 type: boolean
               volumeClaimTemplate:
                 description: |-
@@ -3156,9 +3152,7 @@ v1:
                 description: Probes specifies additional behaviour for probes
                 properties:
                   ReadinessProbeDisabled:
-                    description: |-
-                      OldReadinessProbeDisabled if true readinessProbes are disabled
-                      Deprecated: This field is deprecated, kept only for backward compatibility.
+                    description: OldReadinessProbeDisabled if true readinessProbes are disabled
                     type: boolean
                   livenessProbeDisabled:
                     description: LivenessProbeDisabled if set to true, the operator does not generate a liveness probe for new pods belonging to this group
@@ -3317,9 +3311,7 @@ v1:
                     description: AllowPrivilegeEscalation Controls whether a process can gain more privileges than its parent process.
                     type: boolean
                   dropAllCapabilities:
-                    description: |-
-                      DropAllCapabilities specifies if capabilities should be dropped for this pod containers
-                      Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
+                    description: DropAllCapabilities specifies if capabilities should be dropped for this pod containers
                     type: boolean
                   fsGroup:
                     description: FSGroup is a special supplemental group that applies to all containers in a pod.
@@ -3944,7 +3936,7 @@ v1:
                   type: object
                 type: array
               volumeAllowShrink:
-                description: 'Deprecated: VolumeAllowShrink allows shrink the volume'
+                description: VolumeAllowShrink allows shrinking of the volume
                 type: boolean
               volumeClaimTemplate:
                 description: |-
@@ -5237,9 +5229,7 @@ v1:
                 description: Probes specifies additional behaviour for probes
                 properties:
                   ReadinessProbeDisabled:
-                    description: |-
-                      OldReadinessProbeDisabled if true readinessProbes are disabled
-                      Deprecated: This field is deprecated, kept only for backward compatibility.
+                    description: OldReadinessProbeDisabled if true readinessProbes are disabled
                     type: boolean
                   livenessProbeDisabled:
                     description: LivenessProbeDisabled if set to true, the operator does not generate a liveness probe for new pods belonging to this group
@@ -5398,9 +5388,7 @@ v1:
                     description: AllowPrivilegeEscalation Controls whether a process can gain more privileges than its parent process.
                     type: boolean
                   dropAllCapabilities:
-                    description: |-
-                      DropAllCapabilities specifies if capabilities should be dropped for this pod containers
-                      Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
+                    description: DropAllCapabilities specifies if capabilities should be dropped for this pod containers
                     type: boolean
                   fsGroup:
                     description: FSGroup is a special supplemental group that applies to all containers in a pod.
@@ -6025,7 +6013,7 @@ v1:
                   type: object
                 type: array
               volumeAllowShrink:
-                description: 'Deprecated: VolumeAllowShrink allows shrink the volume'
+                description: VolumeAllowShrink allows shrinking of the volume
                 type: boolean
               volumeClaimTemplate:
                 description: |-
@@ -6745,9 +6733,7 @@ v1:
                     description: AllowPrivilegeEscalation Controls whether a process can gain more privileges than its parent process.
                     type: boolean
                   dropAllCapabilities:
-                    description: |-
-                      DropAllCapabilities specifies if capabilities should be dropped for this pod containers
-                      Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
+                    description: DropAllCapabilities specifies if capabilities should be dropped for this pod containers
                     type: boolean
                   fsGroup:
                     description: FSGroup is a special supplemental group that applies to all containers in a pod.
@@ -6932,10 +6918,10 @@ v1:
                   every Agent, DB-Server, Coordinator and Single server.
                 type: boolean
               image:
-                description: deprecated
+                description: Image used for the Metrics Sidecar
                 type: string
               mode:
-                description: deprecated
+                description: Mode define metrics exported mode
                 type: string
               port:
                 format: int32
@@ -7006,9 +6992,7 @@ v1:
               readers:
                 properties:
                   count:
-                    description: |-
-                      deprecated does not work in Rebalancer V2
-                      Count Enable Shard Count machanism
+                    description: Count Enable Shard Count machanism
                     type: boolean
                 type: object
             type: object
@@ -8033,9 +8017,7 @@ v1:
                 description: Probes specifies additional behaviour for probes
                 properties:
                   ReadinessProbeDisabled:
-                    description: |-
-                      OldReadinessProbeDisabled if true readinessProbes are disabled
-                      Deprecated: This field is deprecated, kept only for backward compatibility.
+                    description: OldReadinessProbeDisabled if true readinessProbes are disabled
                     type: boolean
                   livenessProbeDisabled:
                     description: LivenessProbeDisabled if set to true, the operator does not generate a liveness probe for new pods belonging to this group
@@ -8194,9 +8176,7 @@ v1:
                     description: AllowPrivilegeEscalation Controls whether a process can gain more privileges than its parent process.
                     type: boolean
                   dropAllCapabilities:
-                    description: |-
-                      DropAllCapabilities specifies if capabilities should be dropped for this pod containers
-                      Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
+                    description: DropAllCapabilities specifies if capabilities should be dropped for this pod containers
                     type: boolean
                   fsGroup:
                     description: FSGroup is a special supplemental group that applies to all containers in a pod.
@@ -8821,7 +8801,7 @@ v1:
                   type: object
                 type: array
               volumeAllowShrink:
-                description: 'Deprecated: VolumeAllowShrink allows shrink the volume'
+                description: VolumeAllowShrink allows shrinking of the volume
                 type: boolean
               volumeClaimTemplate:
                 description: |-
@@ -10257,9 +10237,7 @@ v1:
                 description: Probes specifies additional behaviour for probes
                 properties:
                   ReadinessProbeDisabled:
-                    description: |-
-                      OldReadinessProbeDisabled if true readinessProbes are disabled
-                      Deprecated: This field is deprecated, kept only for backward compatibility.
+                    description: OldReadinessProbeDisabled if true readinessProbes are disabled
                     type: boolean
                   livenessProbeDisabled:
                     description: LivenessProbeDisabled if set to true, the operator does not generate a liveness probe for new pods belonging to this group
@@ -10418,9 +10396,7 @@ v1:
                     description: AllowPrivilegeEscalation Controls whether a process can gain more privileges than its parent process.
                     type: boolean
                   dropAllCapabilities:
-                    description: |-
-                      DropAllCapabilities specifies if capabilities should be dropped for this pod containers
-                      Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
+                    description: DropAllCapabilities specifies if capabilities should be dropped for this pod containers
                     type: boolean
                   fsGroup:
                     description: FSGroup is a special supplemental group that applies to all containers in a pod.
@@ -11045,7 +11021,7 @@ v1:
                   type: object
                 type: array
               volumeAllowShrink:
-                description: 'Deprecated: VolumeAllowShrink allows shrink the volume'
+                description: VolumeAllowShrink allows shrinking of the volume
                 type: boolean
               volumeClaimTemplate:
                 description: |-
@@ -12331,9 +12307,7 @@ v1:
                 description: Probes specifies additional behaviour for probes
                 properties:
                   ReadinessProbeDisabled:
-                    description: |-
-                      OldReadinessProbeDisabled if true readinessProbes are disabled
-                      Deprecated: This field is deprecated, kept only for backward compatibility.
+                    description: OldReadinessProbeDisabled if true readinessProbes are disabled
                     type: boolean
                   livenessProbeDisabled:
                     description: LivenessProbeDisabled if set to true, the operator does not generate a liveness probe for new pods belonging to this group
@@ -12492,9 +12466,7 @@ v1:
                     description: AllowPrivilegeEscalation Controls whether a process can gain more privileges than its parent process.
                     type: boolean
                   dropAllCapabilities:
-                    description: |-
-                      DropAllCapabilities specifies if capabilities should be dropped for this pod containers
-                      Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
+                    description: DropAllCapabilities specifies if capabilities should be dropped for this pod containers
                     type: boolean
                   fsGroup:
                     description: FSGroup is a special supplemental group that applies to all containers in a pod.
@@ -13119,7 +13091,7 @@ v1:
                   type: object
                 type: array
               volumeAllowShrink:
-                description: 'Deprecated: VolumeAllowShrink allows shrink the volume'
+                description: VolumeAllowShrink allows shrinking of the volume
                 type: boolean
               volumeClaimTemplate:
                 description: |-
@@ -14502,9 +14474,7 @@ v1alpha:
                 description: Probes specifies additional behaviour for probes
                 properties:
                   ReadinessProbeDisabled:
-                    description: |-
-                      OldReadinessProbeDisabled if true readinessProbes are disabled
-                      Deprecated: This field is deprecated, kept only for backward compatibility.
+                    description: OldReadinessProbeDisabled if true readinessProbes are disabled
                     type: boolean
                   livenessProbeDisabled:
                     description: LivenessProbeDisabled if set to true, the operator does not generate a liveness probe for new pods belonging to this group
@@ -14663,9 +14633,7 @@ v1alpha:
                     description: AllowPrivilegeEscalation Controls whether a process can gain more privileges than its parent process.
                     type: boolean
                   dropAllCapabilities:
-                    description: |-
-                      DropAllCapabilities specifies if capabilities should be dropped for this pod containers
-                      Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
+                    description: DropAllCapabilities specifies if capabilities should be dropped for this pod containers
                     type: boolean
                   fsGroup:
                     description: FSGroup is a special supplemental group that applies to all containers in a pod.
@@ -15290,7 +15258,7 @@ v1alpha:
                   type: object
                 type: array
               volumeAllowShrink:
-                description: 'Deprecated: VolumeAllowShrink allows shrink the volume'
+                description: VolumeAllowShrink allows shrinking of the volume
                 type: boolean
               volumeClaimTemplate:
                 description: |-
@@ -16665,9 +16633,7 @@ v1alpha:
                 description: Probes specifies additional behaviour for probes
                 properties:
                   ReadinessProbeDisabled:
-                    description: |-
-                      OldReadinessProbeDisabled if true readinessProbes are disabled
-                      Deprecated: This field is deprecated, kept only for backward compatibility.
+                    description: OldReadinessProbeDisabled if true readinessProbes are disabled
                     type: boolean
                   livenessProbeDisabled:
                     description: LivenessProbeDisabled if set to true, the operator does not generate a liveness probe for new pods belonging to this group
@@ -16826,9 +16792,7 @@ v1alpha:
                     description: AllowPrivilegeEscalation Controls whether a process can gain more privileges than its parent process.
                     type: boolean
                   dropAllCapabilities:
-                    description: |-
-                      DropAllCapabilities specifies if capabilities should be dropped for this pod containers
-                      Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
+                    description: DropAllCapabilities specifies if capabilities should be dropped for this pod containers
                     type: boolean
                   fsGroup:
                     description: FSGroup is a special supplemental group that applies to all containers in a pod.
@@ -17453,7 +17417,7 @@ v1alpha:
                   type: object
                 type: array
               volumeAllowShrink:
-                description: 'Deprecated: VolumeAllowShrink allows shrink the volume'
+                description: VolumeAllowShrink allows shrinking of the volume
                 type: boolean
               volumeClaimTemplate:
                 description: |-
@@ -18746,9 +18710,7 @@ v1alpha:
                 description: Probes specifies additional behaviour for probes
                 properties:
                   ReadinessProbeDisabled:
-                    description: |-
-                      OldReadinessProbeDisabled if true readinessProbes are disabled
-                      Deprecated: This field is deprecated, kept only for backward compatibility.
+                    description: OldReadinessProbeDisabled if true readinessProbes are disabled
                     type: boolean
                   livenessProbeDisabled:
                     description: LivenessProbeDisabled if set to true, the operator does not generate a liveness probe for new pods belonging to this group
@@ -18907,9 +18869,7 @@ v1alpha:
                     description: AllowPrivilegeEscalation Controls whether a process can gain more privileges than its parent process.
                     type: boolean
                   dropAllCapabilities:
-                    description: |-
-                      DropAllCapabilities specifies if capabilities should be dropped for this pod containers
-                      Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
+                    description: DropAllCapabilities specifies if capabilities should be dropped for this pod containers
                     type: boolean
                   fsGroup:
                     description: FSGroup is a special supplemental group that applies to all containers in a pod.
@@ -19534,7 +19494,7 @@ v1alpha:
                   type: object
                 type: array
               volumeAllowShrink:
-                description: 'Deprecated: VolumeAllowShrink allows shrink the volume'
+                description: VolumeAllowShrink allows shrinking of the volume
                 type: boolean
               volumeClaimTemplate:
                 description: |-
@@ -20254,9 +20214,7 @@ v1alpha:
                     description: AllowPrivilegeEscalation Controls whether a process can gain more privileges than its parent process.
                     type: boolean
                   dropAllCapabilities:
-                    description: |-
-                      DropAllCapabilities specifies if capabilities should be dropped for this pod containers
-                      Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
+                    description: DropAllCapabilities specifies if capabilities should be dropped for this pod containers
                     type: boolean
                   fsGroup:
                     description: FSGroup is a special supplemental group that applies to all containers in a pod.
@@ -20441,10 +20399,10 @@ v1alpha:
                   every Agent, DB-Server, Coordinator and Single server.
                 type: boolean
               image:
-                description: deprecated
+                description: Image used for the Metrics Sidecar
                 type: string
               mode:
-                description: deprecated
+                description: Mode define metrics exported mode
                 type: string
               port:
                 format: int32
@@ -20515,9 +20473,7 @@ v1alpha:
               readers:
                 properties:
                   count:
-                    description: |-
-                      deprecated does not work in Rebalancer V2
-                      Count Enable Shard Count machanism
+                    description: Count Enable Shard Count machanism
                     type: boolean
                 type: object
             type: object
@@ -21542,9 +21498,7 @@ v1alpha:
                 description: Probes specifies additional behaviour for probes
                 properties:
                   ReadinessProbeDisabled:
-                    description: |-
-                      OldReadinessProbeDisabled if true readinessProbes are disabled
-                      Deprecated: This field is deprecated, kept only for backward compatibility.
+                    description: OldReadinessProbeDisabled if true readinessProbes are disabled
                     type: boolean
                   livenessProbeDisabled:
                     description: LivenessProbeDisabled if set to true, the operator does not generate a liveness probe for new pods belonging to this group
@@ -21703,9 +21657,7 @@ v1alpha:
                     description: AllowPrivilegeEscalation Controls whether a process can gain more privileges than its parent process.
                     type: boolean
                   dropAllCapabilities:
-                    description: |-
-                      DropAllCapabilities specifies if capabilities should be dropped for this pod containers
-                      Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
+                    description: DropAllCapabilities specifies if capabilities should be dropped for this pod containers
                     type: boolean
                   fsGroup:
                     description: FSGroup is a special supplemental group that applies to all containers in a pod.
@@ -22330,7 +22282,7 @@ v1alpha:
                   type: object
                 type: array
               volumeAllowShrink:
-                description: 'Deprecated: VolumeAllowShrink allows shrink the volume'
+                description: VolumeAllowShrink allows shrinking of the volume
                 type: boolean
               volumeClaimTemplate:
                 description: |-
@@ -23766,9 +23718,7 @@ v1alpha:
                 description: Probes specifies additional behaviour for probes
                 properties:
                   ReadinessProbeDisabled:
-                    description: |-
-                      OldReadinessProbeDisabled if true readinessProbes are disabled
-                      Deprecated: This field is deprecated, kept only for backward compatibility.
+                    description: OldReadinessProbeDisabled if true readinessProbes are disabled
                     type: boolean
                   livenessProbeDisabled:
                     description: LivenessProbeDisabled if set to true, the operator does not generate a liveness probe for new pods belonging to this group
@@ -23927,9 +23877,7 @@ v1alpha:
                     description: AllowPrivilegeEscalation Controls whether a process can gain more privileges than its parent process.
                     type: boolean
                   dropAllCapabilities:
-                    description: |-
-                      DropAllCapabilities specifies if capabilities should be dropped for this pod containers
-                      Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
+                    description: DropAllCapabilities specifies if capabilities should be dropped for this pod containers
                     type: boolean
                   fsGroup:
                     description: FSGroup is a special supplemental group that applies to all containers in a pod.
@@ -24554,7 +24502,7 @@ v1alpha:
                   type: object
                 type: array
               volumeAllowShrink:
-                description: 'Deprecated: VolumeAllowShrink allows shrink the volume'
+                description: VolumeAllowShrink allows shrinking of the volume
                 type: boolean
               volumeClaimTemplate:
                 description: |-
@@ -25840,9 +25788,7 @@ v1alpha:
                 description: Probes specifies additional behaviour for probes
                 properties:
                   ReadinessProbeDisabled:
-                    description: |-
-                      OldReadinessProbeDisabled if true readinessProbes are disabled
-                      Deprecated: This field is deprecated, kept only for backward compatibility.
+                    description: OldReadinessProbeDisabled if true readinessProbes are disabled
                     type: boolean
                   livenessProbeDisabled:
                     description: LivenessProbeDisabled if set to true, the operator does not generate a liveness probe for new pods belonging to this group
@@ -26001,9 +25947,7 @@ v1alpha:
                     description: AllowPrivilegeEscalation Controls whether a process can gain more privileges than its parent process.
                     type: boolean
                   dropAllCapabilities:
-                    description: |-
-                      DropAllCapabilities specifies if capabilities should be dropped for this pod containers
-                      Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
+                    description: DropAllCapabilities specifies if capabilities should be dropped for this pod containers
                     type: boolean
                   fsGroup:
                     description: FSGroup is a special supplemental group that applies to all containers in a pod.
@@ -26628,7 +26572,7 @@ v1alpha:
                   type: object
                 type: array
               volumeAllowShrink:
-                description: 'Deprecated: VolumeAllowShrink allows shrink the volume'
+                description: VolumeAllowShrink allows shrinking of the volume
                 type: boolean
               volumeClaimTemplate:
                 description: |-
@@ -28011,9 +27955,7 @@ v2alpha1:
                 description: Probes specifies additional behaviour for probes
                 properties:
                   ReadinessProbeDisabled:
-                    description: |-
-                      OldReadinessProbeDisabled if true readinessProbes are disabled
-                      Deprecated: This field is deprecated, kept only for backward compatibility.
+                    description: OldReadinessProbeDisabled if true readinessProbes are disabled
                     type: boolean
                   livenessProbeDisabled:
                     description: LivenessProbeDisabled if set to true, the operator does not generate a liveness probe for new pods belonging to this group
@@ -28172,9 +28114,7 @@ v2alpha1:
                     description: AllowPrivilegeEscalation Controls whether a process can gain more privileges than its parent process.
                     type: boolean
                   dropAllCapabilities:
-                    description: |-
-                      DropAllCapabilities specifies if capabilities should be dropped for this pod containers
-                      Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
+                    description: DropAllCapabilities specifies if capabilities should be dropped for this pod containers
                     type: boolean
                   fsGroup:
                     description: FSGroup is a special supplemental group that applies to all containers in a pod.
@@ -28799,7 +28739,7 @@ v2alpha1:
                   type: object
                 type: array
               volumeAllowShrink:
-                description: 'Deprecated: VolumeAllowShrink allows shrink the volume'
+                description: VolumeAllowShrink allows shrinking of the volume
                 type: boolean
               volumeClaimTemplate:
                 description: |-
@@ -30174,9 +30114,7 @@ v2alpha1:
                 description: Probes specifies additional behaviour for probes
                 properties:
                   ReadinessProbeDisabled:
-                    description: |-
-                      OldReadinessProbeDisabled if true readinessProbes are disabled
-                      Deprecated: This field is deprecated, kept only for backward compatibility.
+                    description: OldReadinessProbeDisabled if true readinessProbes are disabled
                     type: boolean
                   livenessProbeDisabled:
                     description: LivenessProbeDisabled if set to true, the operator does not generate a liveness probe for new pods belonging to this group
@@ -30335,9 +30273,7 @@ v2alpha1:
                     description: AllowPrivilegeEscalation Controls whether a process can gain more privileges than its parent process.
                     type: boolean
                   dropAllCapabilities:
-                    description: |-
-                      DropAllCapabilities specifies if capabilities should be dropped for this pod containers
-                      Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
+                    description: DropAllCapabilities specifies if capabilities should be dropped for this pod containers
                     type: boolean
                   fsGroup:
                     description: FSGroup is a special supplemental group that applies to all containers in a pod.
@@ -30962,7 +30898,7 @@ v2alpha1:
                   type: object
                 type: array
               volumeAllowShrink:
-                description: 'Deprecated: VolumeAllowShrink allows shrink the volume'
+                description: VolumeAllowShrink allows shrinking of the volume
                 type: boolean
               volumeClaimTemplate:
                 description: |-
@@ -32255,9 +32191,7 @@ v2alpha1:
                 description: Probes specifies additional behaviour for probes
                 properties:
                   ReadinessProbeDisabled:
-                    description: |-
-                      OldReadinessProbeDisabled if true readinessProbes are disabled
-                      Deprecated: This field is deprecated, kept only for backward compatibility.
+                    description: OldReadinessProbeDisabled if true readinessProbes are disabled
                     type: boolean
                   livenessProbeDisabled:
                     description: LivenessProbeDisabled if set to true, the operator does not generate a liveness probe for new pods belonging to this group
@@ -32416,9 +32350,7 @@ v2alpha1:
                     description: AllowPrivilegeEscalation Controls whether a process can gain more privileges than its parent process.
                     type: boolean
                   dropAllCapabilities:
-                    description: |-
-                      DropAllCapabilities specifies if capabilities should be dropped for this pod containers
-                      Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
+                    description: DropAllCapabilities specifies if capabilities should be dropped for this pod containers
                     type: boolean
                   fsGroup:
                     description: FSGroup is a special supplemental group that applies to all containers in a pod.
@@ -33043,7 +32975,7 @@ v2alpha1:
                   type: object
                 type: array
               volumeAllowShrink:
-                description: 'Deprecated: VolumeAllowShrink allows shrink the volume'
+                description: VolumeAllowShrink allows shrinking of the volume
                 type: boolean
               volumeClaimTemplate:
                 description: |-
@@ -33763,9 +33695,7 @@ v2alpha1:
                     description: AllowPrivilegeEscalation Controls whether a process can gain more privileges than its parent process.
                     type: boolean
                   dropAllCapabilities:
-                    description: |-
-                      DropAllCapabilities specifies if capabilities should be dropped for this pod containers
-                      Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
+                    description: DropAllCapabilities specifies if capabilities should be dropped for this pod containers
                     type: boolean
                   fsGroup:
                     description: FSGroup is a special supplemental group that applies to all containers in a pod.
@@ -33950,10 +33880,10 @@ v2alpha1:
                   every Agent, DB-Server, Coordinator and Single server.
                 type: boolean
               image:
-                description: deprecated
+                description: Image used for the Metrics Sidecar
                 type: string
               mode:
-                description: deprecated
+                description: Mode define metrics exported mode
                 type: string
               port:
                 format: int32
@@ -34024,9 +33954,7 @@ v2alpha1:
               readers:
                 properties:
                   count:
-                    description: |-
-                      deprecated does not work in Rebalancer V2
-                      Count Enable Shard Count machanism
+                    description: Count Enable Shard Count machanism
                     type: boolean
                 type: object
             type: object
@@ -35051,9 +34979,7 @@ v2alpha1:
                 description: Probes specifies additional behaviour for probes
                 properties:
                   ReadinessProbeDisabled:
-                    description: |-
-                      OldReadinessProbeDisabled if true readinessProbes are disabled
-                      Deprecated: This field is deprecated, kept only for backward compatibility.
+                    description: OldReadinessProbeDisabled if true readinessProbes are disabled
                     type: boolean
                   livenessProbeDisabled:
                     description: LivenessProbeDisabled if set to true, the operator does not generate a liveness probe for new pods belonging to this group
@@ -35212,9 +35138,7 @@ v2alpha1:
                     description: AllowPrivilegeEscalation Controls whether a process can gain more privileges than its parent process.
                     type: boolean
                   dropAllCapabilities:
-                    description: |-
-                      DropAllCapabilities specifies if capabilities should be dropped for this pod containers
-                      Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
+                    description: DropAllCapabilities specifies if capabilities should be dropped for this pod containers
                     type: boolean
                   fsGroup:
                     description: FSGroup is a special supplemental group that applies to all containers in a pod.
@@ -35839,7 +35763,7 @@ v2alpha1:
                   type: object
                 type: array
               volumeAllowShrink:
-                description: 'Deprecated: VolumeAllowShrink allows shrink the volume'
+                description: VolumeAllowShrink allows shrinking of the volume
                 type: boolean
               volumeClaimTemplate:
                 description: |-
@@ -37275,9 +37199,7 @@ v2alpha1:
                 description: Probes specifies additional behaviour for probes
                 properties:
                   ReadinessProbeDisabled:
-                    description: |-
-                      OldReadinessProbeDisabled if true readinessProbes are disabled
-                      Deprecated: This field is deprecated, kept only for backward compatibility.
+                    description: OldReadinessProbeDisabled if true readinessProbes are disabled
                     type: boolean
                   livenessProbeDisabled:
                     description: LivenessProbeDisabled if set to true, the operator does not generate a liveness probe for new pods belonging to this group
@@ -37436,9 +37358,7 @@ v2alpha1:
                     description: AllowPrivilegeEscalation Controls whether a process can gain more privileges than its parent process.
                     type: boolean
                   dropAllCapabilities:
-                    description: |-
-                      DropAllCapabilities specifies if capabilities should be dropped for this pod containers
-                      Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
+                    description: DropAllCapabilities specifies if capabilities should be dropped for this pod containers
                     type: boolean
                   fsGroup:
                     description: FSGroup is a special supplemental group that applies to all containers in a pod.
@@ -38063,7 +37983,7 @@ v2alpha1:
                   type: object
                 type: array
               volumeAllowShrink:
-                description: 'Deprecated: VolumeAllowShrink allows shrink the volume'
+                description: VolumeAllowShrink allows shrinking of the volume
                 type: boolean
               volumeClaimTemplate:
                 description: |-
@@ -39349,9 +39269,7 @@ v2alpha1:
                 description: Probes specifies additional behaviour for probes
                 properties:
                   ReadinessProbeDisabled:
-                    description: |-
-                      OldReadinessProbeDisabled if true readinessProbes are disabled
-                      Deprecated: This field is deprecated, kept only for backward compatibility.
+                    description: OldReadinessProbeDisabled if true readinessProbes are disabled
                     type: boolean
                   livenessProbeDisabled:
                     description: LivenessProbeDisabled if set to true, the operator does not generate a liveness probe for new pods belonging to this group
@@ -39510,9 +39428,7 @@ v2alpha1:
                     description: AllowPrivilegeEscalation Controls whether a process can gain more privileges than its parent process.
                     type: boolean
                   dropAllCapabilities:
-                    description: |-
-                      DropAllCapabilities specifies if capabilities should be dropped for this pod containers
-                      Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
+                    description: DropAllCapabilities specifies if capabilities should be dropped for this pod containers
                     type: boolean
                   fsGroup:
                     description: FSGroup is a special supplemental group that applies to all containers in a pod.
@@ -40137,7 +40053,7 @@ v2alpha1:
                   type: object
                 type: array
               volumeAllowShrink:
-                description: 'Deprecated: VolumeAllowShrink allows shrink the volume'
+                description: VolumeAllowShrink allows shrinking of the volume
                 type: boolean
               volumeClaimTemplate:
                 description: |-
