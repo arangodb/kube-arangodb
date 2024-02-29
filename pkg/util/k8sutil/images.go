@@ -54,7 +54,7 @@ func GetArangoDBImageIDFromPod(pod *core.Pod, names ...string) (string, error) {
 		return image, nil
 	}
 
-	if image, ok := GetArangoDBImageIDFromContainers(pod.Spec.Containers, names...); ok {
+	if image, ok := GetArangoDBImageFromContainers(pod.Spec.Containers, names...); ok {
 		return image, nil
 	}
 
@@ -89,8 +89,8 @@ func GetArangoDBImageIDFromContainerStatuses(containers []core.ContainerStatus, 
 	return "", false
 }
 
-// GetArangoDBImageIDFromContainers returns the ArangoDB specific image from a container specs
-func GetArangoDBImageIDFromContainers(containers []core.Container, names ...string) (string, bool) {
+// GetArangoDBImageFromContainers returns the ArangoDB specific image from a container specs
+func GetArangoDBImageFromContainers(containers []core.Container, names ...string) (string, bool) {
 	for _, name := range names {
 		if id := container.GetContainerIDByName(containers, name); id != -1 {
 			if image := containers[id].Image; image != "" {
