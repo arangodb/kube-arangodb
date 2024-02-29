@@ -616,7 +616,7 @@ func getMyPodInfoWrap(kubecli kubernetes.Interface, namespace, name string, imag
 		}
 		sa = pod.Spec.ServiceAccountName
 		if i, ok := imageFunc(pod); !ok {
-			return errors.Wrap(err, "failed to get image ID from pod")
+			return errors.Errorf("failed to get image ID from pod")
 		} else {
 			image = i
 		}
@@ -633,7 +633,7 @@ func getMyImageInfoFunc(status bool) func(pod *core.Pod) (string, bool) {
 		if status {
 			return k8sutil.GetArangoDBImageIDFromContainerStatuses(pod.Status.ContainerStatuses, shared.ServerContainerName, shared.OperatorContainerName, constants.MyContainerNameEnv.GetOrDefault(shared.OperatorContainerName))
 		}
-		return k8sutil.GetArangoDBImageIDFromContainers(pod.Spec.Containers, shared.ServerContainerName, shared.OperatorContainerName, constants.MyContainerNameEnv.GetOrDefault(shared.OperatorContainerName))
+		return k8sutil.GetArangoDBImageFromContainers(pod.Spec.Containers, shared.ServerContainerName, shared.OperatorContainerName, constants.MyContainerNameEnv.GetOrDefault(shared.OperatorContainerName))
 	}
 }
 
