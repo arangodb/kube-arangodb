@@ -167,12 +167,15 @@ Flags:
       --deployment.feature.upgrade-version-check-v2            Enable initContainer with pre version check based by Operator - Required ArangoDB 3.8.0 or higher
       --features-config-map-name string                        Name of the Feature Map ConfigMap (default "arangodb-operator-feature-config-map")
   -h, --help                                                   help for arangodb_operator
+      --image.discovery.status                                 Discover Operator Image from Pod Status by default. When disabled Pod Spec is used. (default true)
+      --image.discovery.timeout duration                       Timeout for image discovery process (default 1m0s)
       --internal.scaling-integration                           Enable Scaling Integration
       --kubernetes.burst int                                   Burst for the k8s API (default 30)
       --kubernetes.max-batch-size int                          Size of batch during objects read (default 256)
       --kubernetes.qps float32                                 Number of queries per second for k8s API (default 15)
       --log.format string                                      Set log format. Allowed values: 'pretty', 'JSON'. If empty, default format is used (default "pretty")
-      --log.level stringArray                                  Set log levels in format <level> or <logger>=<level>. Possible loggers: action, agency, api-server, assertion, backup-operator, chaos-monkey, crd, deployment, deployment-ci, deployment-reconcile, deployment-replication, deployment-resilience, deployment-resources, deployment-storage, deployment-storage-pc, deployment-storage-service, http, inspector, k8s-client, ml-batchjob-operator, ml-cronjob-operator, ml-extension-operator, ml-extension-shutdown, ml-storage-operator, monitor, operator, operator-arangojob-handler, operator-v2, operator-v2-event, operator-v2-worker, panics, pod_compare, root, root-event-recorder, server, server-authentication (default [debug])
+      --log.level stringArray                                  Set log levels in format <level> or <logger>=<level>. Possible loggers: action, agency, api-server, assertion, backup-operator, chaos-monkey, crd, deployment, deployment-ci, deployment-reconcile, deployment-replication, deployment-resilience, deployment-resources, deployment-storage, deployment-storage-pc, deployment-storage-service, http, inspector, integrations, k8s-client, ml-batchjob-operator, ml-cronjob-operator, ml-extension-operator, ml-extension-shutdown, ml-storage-operator, monitor, operator, operator-arangojob-handler, operator-v2, operator-v2-event, operator-v2-worker, panics, pod_compare, root, root-event-recorder, server, server-authentication (default [info])
+      --log.sampling                                           If true, operator will try to minimize duplication of logging events (default true)
       --memory-limit uint                                      Define memory limit for hard shutdown and the dump of goroutines. Used for testing
       --metrics.excluded-prefixes stringArray                  List of the excluded metrics prefixes
       --mode.single                                            Enable single mode in Operator. WARNING: There should be only one replica of Operator, otherwise Operator can take unexpected actions
@@ -208,8 +211,8 @@ Flags:
 ## Installation and Usage
 
 Docker images:
-- Community Edition: `arangodb/kube-arangodb:1.2.37`
-- Enterprise Edition: `arangodb/kube-arangodb-enterprise:1.2.37`
+- Community Edition: `arangodb/kube-arangodb:1.2.38`
+- Enterprise Edition: `arangodb/kube-arangodb-enterprise:1.2.38`
 
 ### Installation of latest release using Kubectl
 
@@ -218,22 +221,22 @@ running ArangoDB deployments.
 
 ##### Community Edition
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.37/manifests/arango-crd.yaml
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.37/manifests/arango-deployment.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.38/manifests/arango-crd.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.38/manifests/arango-deployment.yaml
 # To use `ArangoLocalStorage`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.37/manifests/arango-storage.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.38/manifests/arango-storage.yaml
 # To use `ArangoDeploymentReplication`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.37/manifests/arango-deployment-replication.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.38/manifests/arango-deployment-replication.yaml
 ```
 
 ##### Enterprise Edition
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.37/manifests/enterprise-crd.yaml
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.37/manifests/enterprise-deployment.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.38/manifests/enterprise-crd.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.38/manifests/enterprise-deployment.yaml
 # To use `ArangoLocalStorage`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.37/manifests/enterprise-storage.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.38/manifests/enterprise-storage.yaml
 # To use `ArangoDeploymentReplication`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.37/manifests/enterprise-deployment-replication.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.38/manifests/enterprise-deployment-replication.yaml
 ```
 
 ### Installation of latest release using kustomize
@@ -273,17 +276,17 @@ Only use this procedure for clean installation of the operator. For upgrades see
 ##### Community Edition
 ```bash
 # The following will install the operator and basic CRDs resources.
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.37/kube-arangodb-1.2.37.tgz
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.38/kube-arangodb-1.2.38.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.37/kube-arangodb-1.2.37.tgz --set "operator.features.storage=true"
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.38/kube-arangodb-1.2.38.tgz --set "operator.features.storage=true"
 ```
 
 ##### Enterprise Edition
 ```bash
 # The following will install the operator and basic CRDs resources.
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.37/kube-arangodb-1.2.37.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.37"
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.38/kube-arangodb-1.2.38.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.38"
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.37/kube-arangodb-1.2.37.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.37" --set "operator.features.storage=true"
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.38/kube-arangodb-1.2.38.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.38" --set "operator.features.storage=true"
 ```
 
 ### Upgrading the operator using Helm
@@ -312,17 +315,17 @@ Then you can install the new version with `helm install` as normal:
 ##### Community Edition
 ```bash
 # The following will install the operator and basic CRDs resources.
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.37/kube-arangodb-1.2.37.tgz
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.38/kube-arangodb-1.2.38.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.37/kube-arangodb-1.2.37.tgz --set "operator.features.storage=true"
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.38/kube-arangodb-1.2.38.tgz --set "operator.features.storage=true"
 ```
 
 ##### Enterprise Edition
 ```bash
 # The following will install the operator and basic CRDs resources.
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.37/kube-arangodb-1.2.37.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.37"
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.38/kube-arangodb-1.2.38.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.38"
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.37/kube-arangodb-1.2.37.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.37" --set "operator.features.storage=true"
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.38/kube-arangodb-1.2.38.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.38" --set "operator.features.storage=true"
 ```
 
 ## Building

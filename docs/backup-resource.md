@@ -192,7 +192,7 @@ spec:
   deployment:
     name: "my-deployment"
   upload:
-    repositoryURL: "S3://test/kube-test"
+    repositoryURL: "S3:test/kube-test"
     credentialsSecretName: "my-s3-rclone-credentials"
 ```
 
@@ -212,7 +212,7 @@ spec:
   deployment:
     name: "my-deployment"
   download:
-    repositoryURL: "S3://test/kube-test"
+    repositoryURL: "S3:test/kube-test"
     credentialsSecretName: "my-s3-rclone-credentials"
     id: "backup-id"
 ```
