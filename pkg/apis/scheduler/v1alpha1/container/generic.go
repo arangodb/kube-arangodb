@@ -24,13 +24,13 @@ import (
 	core "k8s.io/api/core/v1"
 
 	schedulerContainerResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container/resources"
+	"github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/interfaces"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 )
 
-type Generic struct {
-	// Security keeps the security settings for Container
-	*schedulerContainerResourcesApi.Security `json:",inline"`
+var _ interfaces.Pod[Generic] = &Generic{}
 
+type Generic struct {
 	// Environments keeps the environment variables for Container
 	*schedulerContainerResourcesApi.Environments `json:",inline"`
 }
@@ -42,22 +42,13 @@ func (c *Generic) Apply(template *core.PodTemplateSpec) error {
 
 	for id := range template.Spec.Containers {
 		if err := shared.WithErrors(
-			c.Security.Apply(&template.Spec.Containers[id]),
-			c.Environments.Apply(&template.Spec.Containers[id]),
+			c.Environments.Apply(template, &template.Spec.Containers[id]),
 		); err != nil {
 			return err
 		}
 	}
 
 	return nil
-}
-
-func (c *Generic) GetSecurity() *schedulerContainerResourcesApi.Security {
-	if c == nil || c.Security == nil {
-		return nil
-	}
-
-	return c.Security
 }
 
 func (c *Generic) GetEnvironments() *schedulerContainerResourcesApi.Environments {
@@ -82,7 +73,6 @@ func (c *Generic) With(other *Generic) *Generic {
 	}
 
 	return &Generic{
-		Security:     c.Security.With(other.Security),
 		Environments: c.Environments.With(other.Environments),
 	}
 }
@@ -93,7 +83,6 @@ func (c *Generic) Validate() error {
 	}
 
 	return shared.WithErrors(
-		shared.PrefixResourceErrors("containerSecurity", c.Security.Validate()),
 		shared.PrefixResourceErrors("containerEnvironments", c.Environments.Validate()),
 	)
 }

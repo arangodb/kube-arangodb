@@ -23,9 +23,12 @@ package pod
 import (
 	core "k8s.io/api/core/v1"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/interfaces"
 	schedulerPodResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/pod/resources"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 )
+
+var _ interfaces.Pod[Pod] = &Pod{}
 
 type Pod struct {
 	// Scheduling keeps the scheduling information
@@ -36,6 +39,26 @@ type Pod struct {
 
 	// Security keeps the security settings for Pod
 	*schedulerPodResourcesApi.Security `json:",inline"`
+}
+
+func (a *Pod) With(other *Pod) *Pod {
+	if a == nil && other == nil {
+		return nil
+	}
+
+	if a == nil {
+		return other.DeepCopy()
+	}
+
+	if other == nil {
+		return a.DeepCopy()
+	}
+
+	return &Pod{
+		Scheduling: a.Scheduling.With(other.Scheduling),
+		Namespace:  a.Namespace.With(other.Namespace),
+		Security:   a.Security.With(other.Security),
+	}
 }
 
 func (a *Pod) Apply(template *core.PodTemplateSpec) error {

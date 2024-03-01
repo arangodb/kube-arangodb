@@ -33,6 +33,16 @@ func ApplyContainerResourceRequirements(container *core.Container, resources cor
 	container.Resources.Requests = ApplyContainerResourceList(container.Resources.Requests, resources.Requests)
 }
 
+// MergeContainerResource updates resources from `from` to `to` ResourceList
+func MergeContainerResource(to core.ResourceRequirements, from core.ResourceRequirements) core.ResourceRequirements {
+	var r core.ResourceRequirements
+
+	r.Limits = MergeContainerResourceList(to.Limits, from.Limits)
+	r.Requests = MergeContainerResourceList(to.Requests, from.Requests)
+
+	return r
+}
+
 // ApplyContainerResource adds non-existing resources from `from` to `to` ResourceList
 func ApplyContainerResource(to core.ResourceRequirements, from core.ResourceRequirements) core.ResourceRequirements {
 	var r core.ResourceRequirements
@@ -41,6 +51,27 @@ func ApplyContainerResource(to core.ResourceRequirements, from core.ResourceRequ
 	r.Requests = ApplyContainerResourceList(to.Requests, from.Requests)
 
 	return r
+}
+
+// MergeContainerResourceList updates resources from `from` to `to` ResourceList
+func MergeContainerResourceList(to core.ResourceList, from core.ResourceList) core.ResourceList {
+	if len(from) == 0 {
+		return to
+	}
+
+	if to == nil {
+		to = core.ResourceList{}
+	}
+
+	for k, v := range from {
+		if v.IsZero() {
+			delete(to, k)
+		} else {
+			to[k] = v
+		}
+	}
+
+	return to
 }
 
 // ApplyContainerResourceList adds non-existing resources from `from` to `to` ResourceList

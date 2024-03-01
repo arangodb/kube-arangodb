@@ -22,7 +22,11 @@ package resources
 
 import (
 	core "k8s.io/api/core/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/interfaces"
 )
+
+var _ interfaces.Pod[Security] = &Security{}
 
 type Security struct {
 	// PodSecurityContext holds pod-level security attributes and common container settings.
@@ -62,7 +66,7 @@ func (s *Security) With(newResources *Security) *Security {
 		return s.DeepCopy()
 	}
 
-	return nil
+	return newResources.DeepCopy()
 }
 
 func (s *Security) Validate() error {

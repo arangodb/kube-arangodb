@@ -170,24 +170,31 @@ func MergeNodeSelector(a, b *core.NodeSelector) *core.NodeSelector {
 		return a.DeepCopy()
 	}
 
-	current := a.DeepCopy()
-	new := b.DeepCopy()
+	var terms []core.NodeSelectorTerm
 
-	for id := range current.NodeSelectorTerms {
-		term := current.NodeSelectorTerms[id]
-		for _, newTerm := range new.NodeSelectorTerms {
-			if len(newTerm.MatchExpressions) != 0 {
-				term.MatchExpressions = append(term.MatchExpressions, newTerm.MatchExpressions...)
+	for _, ida := range a.NodeSelectorTerms {
+		for _, idb := range b.NodeSelectorTerms {
+			var sa, sb core.NodeSelectorTerm
+
+			ida.DeepCopyInto(&sa)
+			idb.DeepCopyInto(&sb)
+
+			sa.MatchExpressions = append(sa.MatchExpressions, sb.MatchExpressions...)
+			sa.MatchFields = append(sa.MatchFields, sb.MatchFields...)
+
+			if len(sa.MatchExpressions) == 0 || len(sa.MatchFields) == 0 {
+				continue
 			}
-			if len(newTerm.MatchFields) != 0 {
-				term.MatchFields = append(term.MatchFields, newTerm.MatchFields...)
-			}
+
+			terms = append(terms, sa)
 		}
-
-		current.NodeSelectorTerms[id] = term
 	}
 
-	return current
+	if len(terms) == 0 {
+		return nil
+	}
+
+	return &core.NodeSelector{NodeSelectorTerms: terms}
 }
 
 func OptionalNodeAffinity(a *core.NodeAffinity) *core.NodeAffinity {

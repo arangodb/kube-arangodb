@@ -22,16 +22,20 @@ package resources
 
 import (
 	core "k8s.io/api/core/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/interfaces"
 )
 
+var _ interfaces.Container[Security] = &Security{}
+
 type Security struct {
-	// PodSecurityContext holds pod-level security attributes and common container settings.
+	// SecurityContext holds container-level security attributes and common container settings.
 	// +doc/type: core.SecurityContext
 	// +doc/link: Kubernetes docs|https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
 	SecurityContext *core.SecurityContext `json:"securityContext,omitempty"`
 }
 
-func (s *Security) Apply(template *core.Container) error {
+func (s *Security) Apply(_ *core.PodTemplateSpec, template *core.Container) error {
 	if s == nil {
 		return nil
 	}
