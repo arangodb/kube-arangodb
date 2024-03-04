@@ -7,6 +7,7 @@
 - (Bugfix) Wait for ImageStatus in ImageDiscover
 - (Bugfix) Fix Image Error Propagation
 - (Feature) JobScheduler Coverage
+- (Feature) JobScheduler Volumes, Probes, Lifecycle and Ports integration
 
 ## [1.2.38](https://github.com/arangodb/kube-arangodb/tree/1.2.38) (2024-02-22)
 - (Feature) Extract GRPC Server

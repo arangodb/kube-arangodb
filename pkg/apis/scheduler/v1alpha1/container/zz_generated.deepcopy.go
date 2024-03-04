@@ -52,6 +52,26 @@ func (in *Container) DeepCopyInto(out *Container) {
 		*out = new(resources.Resources)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.VolumeMounts != nil {
+		in, out := &in.VolumeMounts, &out.VolumeMounts
+		*out = new(resources.VolumeMounts)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.Probes != nil {
+		in, out := &in.Probes, &out.Probes
+		*out = new(resources.Probes)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.Networking != nil {
+		in, out := &in.Networking, &out.Networking
+		*out = new(resources.Networking)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.Lifecycle != nil {
+		in, out := &in.Lifecycle, &out.Lifecycle
+		*out = new(resources.Lifecycle)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 

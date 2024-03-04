@@ -18,28 +18,32 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+package resources
 
-import (
-	schedulerPodApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/pod"
-	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
-)
+import core "k8s.io/api/core/v1"
 
-type ProfileTemplate struct {
-	Priority *int `json:"priority,omitempty"`
+func MergeContainerPorts(in []core.ContainerPort, envs ...core.ContainerPort) []core.ContainerPort {
+	out := append([]core.ContainerPort{}, in...)
 
-	Pod *schedulerPodApi.Pod `json:"pod,omitempty"`
-
-	Container *ProfileContainerTemplate `json:"container,omitempty"`
-}
-
-func (p *ProfileTemplate) Validate() error {
-	if p == nil {
-		return nil
+	for _, env := range envs {
+		var envCopy core.ContainerPort
+		env.DeepCopyInto(&envCopy)
+		if id := ContainerPortId(out, envCopy.Name); id == -1 {
+			out = append(out, envCopy)
+		} else {
+			out[id] = envCopy
+		}
 	}
 
-	return shared.WithErrors(
-		shared.PrefixResourceErrors("pod", p.Pod.Validate()),
-		shared.PrefixResourceErrors("container", p.Container.Validate()),
-	)
+	return out
+}
+
+func ContainerPortId(in []core.ContainerPort, name string) int {
+	for id := range in {
+		if in[id].Name == name {
+			return id
+		}
+	}
+
+	return -1
 }

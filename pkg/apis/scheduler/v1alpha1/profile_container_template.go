@@ -24,16 +24,29 @@ import (
 	core "k8s.io/api/core/v1"
 
 	schedulerContainerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container"
-	"github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/interfaces"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 )
-
-var _ interfaces.Pod[ProfileContainerTemplate] = &ProfileContainerTemplate{}
 
 type ProfileContainerTemplate struct {
 	Containers schedulerContainerApi.Containers `json:"containers,omitempty"`
 
 	All *schedulerContainerApi.Generic `json:"all,omitempty"`
+}
+
+func (p *ProfileContainerTemplate) ApplyContainers(template *core.PodTemplateSpec) error {
+	if p == nil {
+		return nil
+	}
+
+	return p.Containers.Apply(template)
+}
+
+func (p *ProfileContainerTemplate) ApplyGeneric(template *core.PodTemplateSpec) error {
+	if p == nil {
+		return nil
+	}
+
+	return p.All.Apply(template)
 }
 
 func (p *ProfileContainerTemplate) With(other *ProfileContainerTemplate) *ProfileContainerTemplate {
@@ -63,16 +76,5 @@ func (p *ProfileContainerTemplate) Validate() error {
 	return shared.WithErrors(
 		shared.PrefixResourceErrors("containers", p.Containers.Validate()),
 		shared.PrefixResourceErrors("all", p.All.Validate()),
-	)
-}
-
-func (p *ProfileContainerTemplate) Apply(template *core.PodTemplateSpec) error {
-	if p == nil {
-		return nil
-	}
-
-	return shared.WithErrors(
-		shared.PrefixResourceErrors("containers", p.Containers.Apply(template)),
-		shared.PrefixResourceErrors("all", p.All.Apply(template)),
 	)
 }

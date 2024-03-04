@@ -20,6 +20,8 @@
 
 package util
 
+import "reflect"
+
 // NewType returns a reference to a simple type with given value.
 func NewType[T interface{}](input T) *T {
 	return &input
@@ -70,6 +72,17 @@ func First[T interface{}](input ...*T) *T {
 	}
 
 	return nil
+}
+
+// FirstNotDefault returns first not default value
+func FirstNotDefault[T interface{}](input ...T) T {
+	for _, i := range input {
+		if !reflect.DeepEqual(i, Default[T]()) {
+			return i
+		}
+	}
+
+	return Default[T]()
 }
 
 // LastFromList returns last element on the list

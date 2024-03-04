@@ -129,6 +129,46 @@ func Test_Container(t *testing.T) {
 					},
 				},
 			},
+			VolumeMounts: &schedulerContainerResourcesApi.VolumeMounts{
+				VolumeMounts: []core.VolumeMount{
+					{
+						Name:      "TEST",
+						MountPath: "/data",
+					},
+				},
+			},
+			Probes: &schedulerContainerResourcesApi.Probes{
+				LivenessProbe: &core.Probe{
+					InitialDelaySeconds: 1,
+				},
+				ReadinessProbe: &core.Probe{
+					InitialDelaySeconds: 2,
+				},
+				StartupProbe: &core.Probe{
+					InitialDelaySeconds: 3,
+				},
+			},
+			Lifecycle: &schedulerContainerResourcesApi.Lifecycle{
+				Lifecycle: &core.Lifecycle{
+					PostStart: &core.LifecycleHandler{
+						HTTPGet: &core.HTTPGetAction{
+							Path: "test1",
+						},
+					},
+					PreStop: &core.LifecycleHandler{
+						HTTPGet: &core.HTTPGetAction{
+							Path: "test2",
+						},
+					},
+				},
+			},
+			Networking: &schedulerContainerResourcesApi.Networking{
+				Ports: []core.ContainerPort{
+					{
+						Name: "TEST",
+					},
+				},
+			},
 		})(func(t *testing.T, pod *core.PodTemplateSpec, container *core.Container, spec *Container) {
 			// Spec
 			require.NotNil(t, spec.Resources)
@@ -149,6 +189,31 @@ func Test_Container(t *testing.T) {
 			require.Len(t, spec.Environments.Env, 1)
 			require.EqualValues(t, "key1", spec.Environments.Env[0].Name)
 			require.EqualValues(t, "value1", spec.Environments.Env[0].Value)
+
+			require.NotNil(t, spec.VolumeMounts)
+			require.Len(t, spec.VolumeMounts.VolumeMounts, 1)
+			require.EqualValues(t, "TEST", spec.VolumeMounts.VolumeMounts[0].Name)
+
+			require.NotNil(t, spec.Probes)
+			require.NotNil(t, spec.Probes.LivenessProbe)
+			require.EqualValues(t, 1, spec.Probes.LivenessProbe.InitialDelaySeconds)
+			require.NotNil(t, spec.Probes.ReadinessProbe)
+			require.EqualValues(t, 2, spec.Probes.ReadinessProbe.InitialDelaySeconds)
+			require.NotNil(t, spec.Probes.StartupProbe)
+			require.EqualValues(t, 3, spec.Probes.StartupProbe.InitialDelaySeconds)
+
+			require.NotNil(t, spec.Lifecycle)
+			require.NotNil(t, spec.Lifecycle.Lifecycle)
+			require.NotNil(t, spec.Lifecycle.Lifecycle.PostStart)
+			require.NotNil(t, spec.Lifecycle.Lifecycle.PostStart.HTTPGet)
+			require.EqualValues(t, "test1", spec.Lifecycle.Lifecycle.PostStart.HTTPGet.Path)
+			require.NotNil(t, spec.Lifecycle.Lifecycle.PreStop)
+			require.NotNil(t, spec.Lifecycle.Lifecycle.PreStop.HTTPGet)
+			require.EqualValues(t, "test2", spec.Lifecycle.Lifecycle.PreStop.HTTPGet.Path)
+
+			require.NotNil(t, spec.Networking)
+			require.Len(t, spec.Networking.Ports, 1)
+			require.EqualValues(t, "TEST", spec.Networking.Ports[0].Name)
 		})
 	})
 }
@@ -169,6 +234,29 @@ image: test
 resources:
   limits:
     cpu: 1
+
+volumeMounts:
+  - name: TEST
+
+livenessProbe:
+  initialDelaySeconds: 1
+
+readinessProbe:
+  initialDelaySeconds: 2
+
+startupProbe:
+  initialDelaySeconds: 3
+
+lifecycle:
+  postStart:
+    httpGet:
+      path: test1
+  preStop:
+    httpGet:
+      path: test2
+
+ports:
+  - name: TEST
 `, `
 ---
 
@@ -194,6 +282,31 @@ securityContext:
 			require.Len(t, spec.Environments.Env, 1)
 			require.EqualValues(t, "key1", spec.Environments.Env[0].Name)
 			require.EqualValues(t, "value1", spec.Environments.Env[0].Value)
+
+			require.NotNil(t, spec.VolumeMounts)
+			require.Len(t, spec.VolumeMounts.VolumeMounts, 1)
+			require.EqualValues(t, "TEST", spec.VolumeMounts.VolumeMounts[0].Name)
+
+			require.NotNil(t, spec.Probes)
+			require.NotNil(t, spec.Probes.LivenessProbe)
+			require.EqualValues(t, 1, spec.Probes.LivenessProbe.InitialDelaySeconds)
+			require.NotNil(t, spec.Probes.ReadinessProbe)
+			require.EqualValues(t, 2, spec.Probes.ReadinessProbe.InitialDelaySeconds)
+			require.NotNil(t, spec.Probes.StartupProbe)
+			require.EqualValues(t, 3, spec.Probes.StartupProbe.InitialDelaySeconds)
+
+			require.NotNil(t, spec.Lifecycle)
+			require.NotNil(t, spec.Lifecycle.Lifecycle)
+			require.NotNil(t, spec.Lifecycle.Lifecycle.PostStart)
+			require.NotNil(t, spec.Lifecycle.Lifecycle.PostStart.HTTPGet)
+			require.EqualValues(t, "test1", spec.Lifecycle.Lifecycle.PostStart.HTTPGet.Path)
+			require.NotNil(t, spec.Lifecycle.Lifecycle.PreStop)
+			require.NotNil(t, spec.Lifecycle.Lifecycle.PreStop.HTTPGet)
+			require.EqualValues(t, "test2", spec.Lifecycle.Lifecycle.PreStop.HTTPGet.Path)
+
+			require.NotNil(t, spec.Networking)
+			require.Len(t, spec.Networking.Ports, 1)
+			require.EqualValues(t, "TEST", spec.Networking.Ports[0].Name)
 		})
 	})
 	t.Run("With fields", func(t *testing.T) {

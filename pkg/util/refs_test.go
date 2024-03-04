@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -151,5 +151,47 @@ func Test_CheckConditionalNil(t *testing.T) {
 			require.NotNil(t, v)
 			require.EqualValues(t, 0, *v)
 		})
+	})
+}
+
+func Test_FirstNotDefault(t *testing.T) {
+	t.Run("String", func(t *testing.T) {
+		require.Equal(t, "", FirstNotDefault[string]())
+		require.Equal(t, "", FirstNotDefault[string](""))
+		require.Equal(t, "test", FirstNotDefault[string]("", "test"))
+		require.Equal(t, "test1", FirstNotDefault[string]("test1", "test"))
+	})
+	t.Run("Int", func(t *testing.T) {
+		require.Equal(t, 0, FirstNotDefault[int]())
+		require.Equal(t, 0, FirstNotDefault[int](0))
+		require.Equal(t, 1, FirstNotDefault[int](0, 1))
+		require.Equal(t, 2, FirstNotDefault[int](2, 1))
+	})
+	t.Run("Structs", func(t *testing.T) {
+		type z struct {
+			v int
+		}
+
+		require.Equal(t, z{}, FirstNotDefault[z]())
+		require.Equal(t, z{}, FirstNotDefault[z](z{}))
+		require.Equal(t, z{4}, FirstNotDefault[z](z{}, z{4}))
+		require.Equal(t, z{1}, FirstNotDefault[z](z{1}, z{4}))
+	})
+	t.Run("Pointers", func(t *testing.T) {
+		type z struct {
+			v int
+		}
+
+		var z1, z2 z
+
+		z1 = z{1}
+		z2 = z{2}
+
+		require.Equal(t, (*z)(nil), FirstNotDefault[*z]())
+		require.Equal(t, &z1, FirstNotDefault[*z](&z1))
+		require.NotEqual(t, nil, FirstNotDefault[*z](&z1))
+		require.NotEqual(t, &z2, FirstNotDefault[*z](&z1))
+		require.Equal(t, &z1, FirstNotDefault[*z](nil, &z1))
+		require.Equal(t, &z2, FirstNotDefault[*z](&z2, &z1))
 	})
 }

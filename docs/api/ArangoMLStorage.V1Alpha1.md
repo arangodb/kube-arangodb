@@ -162,6 +162,14 @@ ImagePullSecrets define Secrets used to pull Image from registry
 
 ***
 
+### .spec.mode.sidecar.lifecycle
+
+Type: `core.Lifecycle` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/lifecycle.go#L35)</sup>
+
+Lifecycle keeps actions that the management system should take in response to container lifecycle events.
+
+***
+
 ### .spec.mode.sidecar.listenPort
 
 Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/ml/v1alpha1/storage_spec_mode_sidecar.go#L32)</sup>
@@ -169,6 +177,41 @@ Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.
 ListenPort defines on which port the sidecar container will be listening for connections
 
 Default Value: `9201`
+
+***
+
+### .spec.mode.sidecar.livenessProbe
+
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L37)</sup>
+
+LivenessProbe keeps configuration of periodic probe of container liveness.
+Container will be restarted if the probe fails.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
+
+***
+
+### .spec.mode.sidecar.ports
+
+Type: `[]core.ContainerPort` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/networking.go#L39)</sup>
+
+Ports contains list of ports to expose from the container. Not specifying a port here
+DOES NOT prevent that port from being exposed. Any port which is
+listening on the default "0.0.0.0" address inside a container will be
+accessible from the network.
+
+***
+
+### .spec.mode.sidecar.readinessProbe
+
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L42)</sup>
+
+ReadinessProbe keeps configuration of periodic probe of container service readiness.
+Container will be removed from service endpoints if the probe fails.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
 
 ***
 
@@ -191,6 +234,29 @@ SecurityContext holds container-level security attributes and common container s
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
+
+***
+
+### .spec.mode.sidecar.startupProbe
+
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L50)</sup>
+
+StartupProbe indicates that the Pod has successfully initialized.
+If specified, no other probes are executed until this completes successfully.
+If this probe fails, the Pod will be restarted, just as if the livenessProbe failed.
+This can be used to provide different probe parameters at the beginning of a Pod's lifecycle,
+when it might take a long time to load data or warm a cache, than during steady-state operation.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
+
+***
+
+### .spec.mode.sidecar.volumeMounts
+
+Type: `[]core.VolumeMount` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/volume_mounts.go#L35)</sup>
+
+VolumeMounts keeps list of pod volumes to mount into the container's filesystem.
 
 ## Status
 

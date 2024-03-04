@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,17 +18,17 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package envs
+package resources
 
 import core "k8s.io/api/core/v1"
 
-func MergeEnvs(in []core.EnvVar, envs ...core.EnvVar) []core.EnvVar {
-	out := append([]core.EnvVar{}, in...)
+func MergeVolumes(in []core.Volume, envs ...core.Volume) []core.Volume {
+	out := append([]core.Volume{}, in...)
 
 	for _, env := range envs {
-		var envCopy core.EnvVar
+		var envCopy core.Volume
 		env.DeepCopyInto(&envCopy)
-		if id := EnvId(out, envCopy.Name); id == -1 {
+		if id := VolumeID(out, envCopy.Name); id == -1 {
 			out = append(out, envCopy)
 		} else {
 			out[id] = envCopy
@@ -38,15 +38,15 @@ func MergeEnvs(in []core.EnvVar, envs ...core.EnvVar) []core.EnvVar {
 	return out
 }
 
-func MergeEnvFrom(in []core.EnvFromSource, envs ...core.EnvFromSource) []core.EnvFromSource {
-	out := append([]core.EnvFromSource{}, in...)
+func MergeVolumeMounts(in []core.VolumeMount, envs ...core.VolumeMount) []core.VolumeMount {
+	out := append([]core.VolumeMount{}, in...)
 
 	out = append(out, envs...)
 
 	return out
 }
 
-func EnvId(in []core.EnvVar, name string) int {
+func VolumeID(in []core.Volume, name string) int {
 	for id := range in {
 		if in[id].Name == name {
 			return id

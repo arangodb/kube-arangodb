@@ -130,11 +130,54 @@ ImagePullSecrets define Secrets used to pull Image from registry
 
 ***
 
+### .spec.deployment.prediction.lifecycle
+
+Type: `core.Lifecycle` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/lifecycle.go#L35)</sup>
+
+Lifecycle keeps actions that the management system should take in response to container lifecycle events.
+
+***
+
+### .spec.deployment.prediction.livenessProbe
+
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L37)</sup>
+
+LivenessProbe keeps configuration of periodic probe of container liveness.
+Container will be restarted if the probe fails.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
+
+***
+
 ### .spec.deployment.prediction.port
 
 Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/ml/v1alpha1/extension_spec_deployment_component.go#L34)</sup>
 
 Port defines on which port the container will be listening for connections
+
+***
+
+### .spec.deployment.prediction.ports
+
+Type: `[]core.ContainerPort` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/networking.go#L39)</sup>
+
+Ports contains list of ports to expose from the container. Not specifying a port here
+DOES NOT prevent that port from being exposed. Any port which is
+listening on the default "0.0.0.0" address inside a container will be
+accessible from the network.
+
+***
+
+### .spec.deployment.prediction.readinessProbe
+
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L42)</sup>
+
+ReadinessProbe keeps configuration of periodic probe of container service readiness.
+Container will be removed from service endpoints if the probe fails.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
 
 ***
 
@@ -157,6 +200,29 @@ SecurityContext holds container-level security attributes and common container s
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
+
+***
+
+### .spec.deployment.prediction.startupProbe
+
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L50)</sup>
+
+StartupProbe indicates that the Pod has successfully initialized.
+If specified, no other probes are executed until this completes successfully.
+If this probe fails, the Pod will be restarted, just as if the livenessProbe failed.
+This can be used to provide different probe parameters at the beginning of a Pod's lifecycle,
+when it might take a long time to load data or warm a cache, than during steady-state operation.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
+
+***
+
+### .spec.deployment.prediction.volumeMounts
+
+Type: `[]core.VolumeMount` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/volume_mounts.go#L35)</sup>
+
+VolumeMounts keeps list of pod volumes to mount into the container's filesystem.
 
 ***
 
@@ -218,11 +284,54 @@ ImagePullSecrets define Secrets used to pull Image from registry
 
 ***
 
+### .spec.deployment.project.lifecycle
+
+Type: `core.Lifecycle` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/lifecycle.go#L35)</sup>
+
+Lifecycle keeps actions that the management system should take in response to container lifecycle events.
+
+***
+
+### .spec.deployment.project.livenessProbe
+
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L37)</sup>
+
+LivenessProbe keeps configuration of periodic probe of container liveness.
+Container will be restarted if the probe fails.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
+
+***
+
 ### .spec.deployment.project.port
 
 Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/ml/v1alpha1/extension_spec_deployment_component.go#L34)</sup>
 
 Port defines on which port the container will be listening for connections
+
+***
+
+### .spec.deployment.project.ports
+
+Type: `[]core.ContainerPort` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/networking.go#L39)</sup>
+
+Ports contains list of ports to expose from the container. Not specifying a port here
+DOES NOT prevent that port from being exposed. Any port which is
+listening on the default "0.0.0.0" address inside a container will be
+accessible from the network.
+
+***
+
+### .spec.deployment.project.readinessProbe
+
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L42)</sup>
+
+ReadinessProbe keeps configuration of periodic probe of container service readiness.
+Container will be removed from service endpoints if the probe fails.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
 
 ***
 
@@ -245,6 +354,29 @@ SecurityContext holds container-level security attributes and common container s
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
+
+***
+
+### .spec.deployment.project.startupProbe
+
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L50)</sup>
+
+StartupProbe indicates that the Pod has successfully initialized.
+If specified, no other probes are executed until this completes successfully.
+If this probe fails, the Pod will be restarted, just as if the livenessProbe failed.
+This can be used to provide different probe parameters at the beginning of a Pod's lifecycle,
+when it might take a long time to load data or warm a cache, than during steady-state operation.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
+
+***
+
+### .spec.deployment.project.volumeMounts
+
+Type: `[]core.VolumeMount` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/volume_mounts.go#L35)</sup>
+
+VolumeMounts keeps list of pod volumes to mount into the container's filesystem.
 
 ***
 
@@ -368,11 +500,54 @@ ImagePullSecrets define Secrets used to pull Image from registry
 
 ***
 
+### .spec.deployment.training.lifecycle
+
+Type: `core.Lifecycle` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/lifecycle.go#L35)</sup>
+
+Lifecycle keeps actions that the management system should take in response to container lifecycle events.
+
+***
+
+### .spec.deployment.training.livenessProbe
+
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L37)</sup>
+
+LivenessProbe keeps configuration of periodic probe of container liveness.
+Container will be restarted if the probe fails.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
+
+***
+
 ### .spec.deployment.training.port
 
 Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/ml/v1alpha1/extension_spec_deployment_component.go#L34)</sup>
 
 Port defines on which port the container will be listening for connections
+
+***
+
+### .spec.deployment.training.ports
+
+Type: `[]core.ContainerPort` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/networking.go#L39)</sup>
+
+Ports contains list of ports to expose from the container. Not specifying a port here
+DOES NOT prevent that port from being exposed. Any port which is
+listening on the default "0.0.0.0" address inside a container will be
+accessible from the network.
+
+***
+
+### .spec.deployment.training.readinessProbe
+
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L42)</sup>
+
+ReadinessProbe keeps configuration of periodic probe of container service readiness.
+Container will be removed from service endpoints if the probe fails.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
 
 ***
 
@@ -395,6 +570,40 @@ SecurityContext holds container-level security attributes and common container s
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
+
+***
+
+### .spec.deployment.training.startupProbe
+
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L50)</sup>
+
+StartupProbe indicates that the Pod has successfully initialized.
+If specified, no other probes are executed until this completes successfully.
+If this probe fails, the Pod will be restarted, just as if the livenessProbe failed.
+This can be used to provide different probe parameters at the beginning of a Pod's lifecycle,
+when it might take a long time to load data or warm a cache, than during steady-state operation.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
+
+***
+
+### .spec.deployment.training.volumeMounts
+
+Type: `[]core.VolumeMount` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/volume_mounts.go#L35)</sup>
+
+VolumeMounts keeps list of pod volumes to mount into the container's filesystem.
+
+***
+
+### .spec.deployment.volumes
+
+Type: `[]core.Volume` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/pod/resources/volumes.go#L36)</sup>
+
+Volumes keeps list of volumes that can be mounted by containers belonging to the pod.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/storage/volumes)
 
 ***
 
@@ -514,6 +723,26 @@ ImagePullSecrets define Secrets used to pull Image from registry
 
 ***
 
+### .spec.init.lifecycle
+
+Type: `core.Lifecycle` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/lifecycle.go#L35)</sup>
+
+Lifecycle keeps actions that the management system should take in response to container lifecycle events.
+
+***
+
+### .spec.init.livenessProbe
+
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L37)</sup>
+
+LivenessProbe keeps configuration of periodic probe of container liveness.
+Container will be restarted if the probe fails.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
+
+***
+
 ### .spec.init.nodeSelector
 
 Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/pod/resources/scheduling.go#L39)</sup>
@@ -533,6 +762,29 @@ PodSecurityContext holds pod-level security attributes and common container sett
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
+
+***
+
+### .spec.init.ports
+
+Type: `[]core.ContainerPort` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/networking.go#L39)</sup>
+
+Ports contains list of ports to expose from the container. Not specifying a port here
+DOES NOT prevent that port from being exposed. Any port which is
+listening on the default "0.0.0.0" address inside a container will be
+accessible from the network.
+
+***
+
+### .spec.init.readinessProbe
+
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L42)</sup>
+
+ReadinessProbe keeps configuration of periodic probe of container service readiness.
+Container will be removed from service endpoints if the probe fails.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
 
 ***
 
@@ -582,6 +834,21 @@ Default Value: `false`
 
 ***
 
+### .spec.init.startupProbe
+
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L50)</sup>
+
+StartupProbe indicates that the Pod has successfully initialized.
+If specified, no other probes are executed until this completes successfully.
+If this probe fails, the Pod will be restarted, just as if the livenessProbe failed.
+This can be used to provide different probe parameters at the beginning of a Pod's lifecycle,
+when it might take a long time to load data or warm a cache, than during steady-state operation.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
+
+***
+
 ### .spec.init.tolerations
 
 Type: `[]core.Toleration` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/pod/resources/scheduling.go#L49)</sup>
@@ -590,6 +857,25 @@ Tolerations defines tolerations
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/)
+
+***
+
+### .spec.init.volumeMounts
+
+Type: `[]core.VolumeMount` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/volume_mounts.go#L35)</sup>
+
+VolumeMounts keeps list of pod volumes to mount into the container's filesystem.
+
+***
+
+### .spec.init.volumes
+
+Type: `[]core.Volume` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/pod/resources/volumes.go#L36)</sup>
+
+Volumes keeps list of volumes that can be mounted by containers belonging to the pod.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/storage/volumes)
 
 ***
 
@@ -683,6 +969,26 @@ ImagePullSecrets define Secrets used to pull Image from registry
 
 ***
 
+### .spec.jobsTemplates.featurization.cpu.lifecycle
+
+Type: `core.Lifecycle` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/lifecycle.go#L35)</sup>
+
+Lifecycle keeps actions that the management system should take in response to container lifecycle events.
+
+***
+
+### .spec.jobsTemplates.featurization.cpu.livenessProbe
+
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L37)</sup>
+
+LivenessProbe keeps configuration of periodic probe of container liveness.
+Container will be restarted if the probe fails.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
+
+***
+
 ### .spec.jobsTemplates.featurization.cpu.nodeSelector
 
 Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/pod/resources/scheduling.go#L39)</sup>
@@ -702,6 +1008,29 @@ PodSecurityContext holds pod-level security attributes and common container sett
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
+
+***
+
+### .spec.jobsTemplates.featurization.cpu.ports
+
+Type: `[]core.ContainerPort` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/networking.go#L39)</sup>
+
+Ports contains list of ports to expose from the container. Not specifying a port here
+DOES NOT prevent that port from being exposed. Any port which is
+listening on the default "0.0.0.0" address inside a container will be
+accessible from the network.
+
+***
+
+### .spec.jobsTemplates.featurization.cpu.readinessProbe
+
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L42)</sup>
+
+ReadinessProbe keeps configuration of periodic probe of container service readiness.
+Container will be removed from service endpoints if the probe fails.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
 
 ***
 
@@ -751,6 +1080,21 @@ Default Value: `false`
 
 ***
 
+### .spec.jobsTemplates.featurization.cpu.startupProbe
+
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L50)</sup>
+
+StartupProbe indicates that the Pod has successfully initialized.
+If specified, no other probes are executed until this completes successfully.
+If this probe fails, the Pod will be restarted, just as if the livenessProbe failed.
+This can be used to provide different probe parameters at the beginning of a Pod's lifecycle,
+when it might take a long time to load data or warm a cache, than during steady-state operation.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
+
+***
+
 ### .spec.jobsTemplates.featurization.cpu.tolerations
 
 Type: `[]core.Toleration` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/pod/resources/scheduling.go#L49)</sup>
@@ -759,6 +1103,25 @@ Tolerations defines tolerations
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/)
+
+***
+
+### .spec.jobsTemplates.featurization.cpu.volumeMounts
+
+Type: `[]core.VolumeMount` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/volume_mounts.go#L35)</sup>
+
+VolumeMounts keeps list of pod volumes to mount into the container's filesystem.
+
+***
+
+### .spec.jobsTemplates.featurization.cpu.volumes
+
+Type: `[]core.Volume` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/pod/resources/volumes.go#L36)</sup>
+
+Volumes keeps list of volumes that can be mounted by containers belonging to the pod.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/storage/volumes)
 
 ***
 
@@ -852,6 +1215,26 @@ ImagePullSecrets define Secrets used to pull Image from registry
 
 ***
 
+### .spec.jobsTemplates.featurization.gpu.lifecycle
+
+Type: `core.Lifecycle` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/lifecycle.go#L35)</sup>
+
+Lifecycle keeps actions that the management system should take in response to container lifecycle events.
+
+***
+
+### .spec.jobsTemplates.featurization.gpu.livenessProbe
+
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L37)</sup>
+
+LivenessProbe keeps configuration of periodic probe of container liveness.
+Container will be restarted if the probe fails.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
+
+***
+
 ### .spec.jobsTemplates.featurization.gpu.nodeSelector
 
 Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/pod/resources/scheduling.go#L39)</sup>
@@ -871,6 +1254,29 @@ PodSecurityContext holds pod-level security attributes and common container sett
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
+
+***
+
+### .spec.jobsTemplates.featurization.gpu.ports
+
+Type: `[]core.ContainerPort` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/networking.go#L39)</sup>
+
+Ports contains list of ports to expose from the container. Not specifying a port here
+DOES NOT prevent that port from being exposed. Any port which is
+listening on the default "0.0.0.0" address inside a container will be
+accessible from the network.
+
+***
+
+### .spec.jobsTemplates.featurization.gpu.readinessProbe
+
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L42)</sup>
+
+ReadinessProbe keeps configuration of periodic probe of container service readiness.
+Container will be removed from service endpoints if the probe fails.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
 
 ***
 
@@ -920,6 +1326,21 @@ Default Value: `false`
 
 ***
 
+### .spec.jobsTemplates.featurization.gpu.startupProbe
+
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L50)</sup>
+
+StartupProbe indicates that the Pod has successfully initialized.
+If specified, no other probes are executed until this completes successfully.
+If this probe fails, the Pod will be restarted, just as if the livenessProbe failed.
+This can be used to provide different probe parameters at the beginning of a Pod's lifecycle,
+when it might take a long time to load data or warm a cache, than during steady-state operation.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
+
+***
+
 ### .spec.jobsTemplates.featurization.gpu.tolerations
 
 Type: `[]core.Toleration` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/pod/resources/scheduling.go#L49)</sup>
@@ -928,6 +1349,25 @@ Tolerations defines tolerations
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/)
+
+***
+
+### .spec.jobsTemplates.featurization.gpu.volumeMounts
+
+Type: `[]core.VolumeMount` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/volume_mounts.go#L35)</sup>
+
+VolumeMounts keeps list of pod volumes to mount into the container's filesystem.
+
+***
+
+### .spec.jobsTemplates.featurization.gpu.volumes
+
+Type: `[]core.Volume` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/pod/resources/volumes.go#L36)</sup>
+
+Volumes keeps list of volumes that can be mounted by containers belonging to the pod.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/storage/volumes)
 
 ***
 
@@ -1021,6 +1461,26 @@ ImagePullSecrets define Secrets used to pull Image from registry
 
 ***
 
+### .spec.jobsTemplates.prediction.cpu.lifecycle
+
+Type: `core.Lifecycle` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/lifecycle.go#L35)</sup>
+
+Lifecycle keeps actions that the management system should take in response to container lifecycle events.
+
+***
+
+### .spec.jobsTemplates.prediction.cpu.livenessProbe
+
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L37)</sup>
+
+LivenessProbe keeps configuration of periodic probe of container liveness.
+Container will be restarted if the probe fails.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
+
+***
+
 ### .spec.jobsTemplates.prediction.cpu.nodeSelector
 
 Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/pod/resources/scheduling.go#L39)</sup>
@@ -1040,6 +1500,29 @@ PodSecurityContext holds pod-level security attributes and common container sett
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
+
+***
+
+### .spec.jobsTemplates.prediction.cpu.ports
+
+Type: `[]core.ContainerPort` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/networking.go#L39)</sup>
+
+Ports contains list of ports to expose from the container. Not specifying a port here
+DOES NOT prevent that port from being exposed. Any port which is
+listening on the default "0.0.0.0" address inside a container will be
+accessible from the network.
+
+***
+
+### .spec.jobsTemplates.prediction.cpu.readinessProbe
+
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L42)</sup>
+
+ReadinessProbe keeps configuration of periodic probe of container service readiness.
+Container will be removed from service endpoints if the probe fails.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
 
 ***
 
@@ -1089,6 +1572,21 @@ Default Value: `false`
 
 ***
 
+### .spec.jobsTemplates.prediction.cpu.startupProbe
+
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L50)</sup>
+
+StartupProbe indicates that the Pod has successfully initialized.
+If specified, no other probes are executed until this completes successfully.
+If this probe fails, the Pod will be restarted, just as if the livenessProbe failed.
+This can be used to provide different probe parameters at the beginning of a Pod's lifecycle,
+when it might take a long time to load data or warm a cache, than during steady-state operation.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
+
+***
+
 ### .spec.jobsTemplates.prediction.cpu.tolerations
 
 Type: `[]core.Toleration` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/pod/resources/scheduling.go#L49)</sup>
@@ -1097,6 +1595,25 @@ Tolerations defines tolerations
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/)
+
+***
+
+### .spec.jobsTemplates.prediction.cpu.volumeMounts
+
+Type: `[]core.VolumeMount` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/volume_mounts.go#L35)</sup>
+
+VolumeMounts keeps list of pod volumes to mount into the container's filesystem.
+
+***
+
+### .spec.jobsTemplates.prediction.cpu.volumes
+
+Type: `[]core.Volume` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/pod/resources/volumes.go#L36)</sup>
+
+Volumes keeps list of volumes that can be mounted by containers belonging to the pod.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/storage/volumes)
 
 ***
 
@@ -1190,6 +1707,26 @@ ImagePullSecrets define Secrets used to pull Image from registry
 
 ***
 
+### .spec.jobsTemplates.prediction.gpu.lifecycle
+
+Type: `core.Lifecycle` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/lifecycle.go#L35)</sup>
+
+Lifecycle keeps actions that the management system should take in response to container lifecycle events.
+
+***
+
+### .spec.jobsTemplates.prediction.gpu.livenessProbe
+
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L37)</sup>
+
+LivenessProbe keeps configuration of periodic probe of container liveness.
+Container will be restarted if the probe fails.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
+
+***
+
 ### .spec.jobsTemplates.prediction.gpu.nodeSelector
 
 Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/pod/resources/scheduling.go#L39)</sup>
@@ -1209,6 +1746,29 @@ PodSecurityContext holds pod-level security attributes and common container sett
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
+
+***
+
+### .spec.jobsTemplates.prediction.gpu.ports
+
+Type: `[]core.ContainerPort` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/networking.go#L39)</sup>
+
+Ports contains list of ports to expose from the container. Not specifying a port here
+DOES NOT prevent that port from being exposed. Any port which is
+listening on the default "0.0.0.0" address inside a container will be
+accessible from the network.
+
+***
+
+### .spec.jobsTemplates.prediction.gpu.readinessProbe
+
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L42)</sup>
+
+ReadinessProbe keeps configuration of periodic probe of container service readiness.
+Container will be removed from service endpoints if the probe fails.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
 
 ***
 
@@ -1258,6 +1818,21 @@ Default Value: `false`
 
 ***
 
+### .spec.jobsTemplates.prediction.gpu.startupProbe
+
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L50)</sup>
+
+StartupProbe indicates that the Pod has successfully initialized.
+If specified, no other probes are executed until this completes successfully.
+If this probe fails, the Pod will be restarted, just as if the livenessProbe failed.
+This can be used to provide different probe parameters at the beginning of a Pod's lifecycle,
+when it might take a long time to load data or warm a cache, than during steady-state operation.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
+
+***
+
 ### .spec.jobsTemplates.prediction.gpu.tolerations
 
 Type: `[]core.Toleration` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/pod/resources/scheduling.go#L49)</sup>
@@ -1266,6 +1841,25 @@ Tolerations defines tolerations
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/)
+
+***
+
+### .spec.jobsTemplates.prediction.gpu.volumeMounts
+
+Type: `[]core.VolumeMount` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/volume_mounts.go#L35)</sup>
+
+VolumeMounts keeps list of pod volumes to mount into the container's filesystem.
+
+***
+
+### .spec.jobsTemplates.prediction.gpu.volumes
+
+Type: `[]core.Volume` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/pod/resources/volumes.go#L36)</sup>
+
+Volumes keeps list of volumes that can be mounted by containers belonging to the pod.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/storage/volumes)
 
 ***
 
@@ -1359,6 +1953,26 @@ ImagePullSecrets define Secrets used to pull Image from registry
 
 ***
 
+### .spec.jobsTemplates.training.cpu.lifecycle
+
+Type: `core.Lifecycle` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/lifecycle.go#L35)</sup>
+
+Lifecycle keeps actions that the management system should take in response to container lifecycle events.
+
+***
+
+### .spec.jobsTemplates.training.cpu.livenessProbe
+
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L37)</sup>
+
+LivenessProbe keeps configuration of periodic probe of container liveness.
+Container will be restarted if the probe fails.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
+
+***
+
 ### .spec.jobsTemplates.training.cpu.nodeSelector
 
 Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/pod/resources/scheduling.go#L39)</sup>
@@ -1378,6 +1992,29 @@ PodSecurityContext holds pod-level security attributes and common container sett
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
+
+***
+
+### .spec.jobsTemplates.training.cpu.ports
+
+Type: `[]core.ContainerPort` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/networking.go#L39)</sup>
+
+Ports contains list of ports to expose from the container. Not specifying a port here
+DOES NOT prevent that port from being exposed. Any port which is
+listening on the default "0.0.0.0" address inside a container will be
+accessible from the network.
+
+***
+
+### .spec.jobsTemplates.training.cpu.readinessProbe
+
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L42)</sup>
+
+ReadinessProbe keeps configuration of periodic probe of container service readiness.
+Container will be removed from service endpoints if the probe fails.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
 
 ***
 
@@ -1427,6 +2064,21 @@ Default Value: `false`
 
 ***
 
+### .spec.jobsTemplates.training.cpu.startupProbe
+
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L50)</sup>
+
+StartupProbe indicates that the Pod has successfully initialized.
+If specified, no other probes are executed until this completes successfully.
+If this probe fails, the Pod will be restarted, just as if the livenessProbe failed.
+This can be used to provide different probe parameters at the beginning of a Pod's lifecycle,
+when it might take a long time to load data or warm a cache, than during steady-state operation.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
+
+***
+
 ### .spec.jobsTemplates.training.cpu.tolerations
 
 Type: `[]core.Toleration` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/pod/resources/scheduling.go#L49)</sup>
@@ -1435,6 +2087,25 @@ Tolerations defines tolerations
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/)
+
+***
+
+### .spec.jobsTemplates.training.cpu.volumeMounts
+
+Type: `[]core.VolumeMount` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/volume_mounts.go#L35)</sup>
+
+VolumeMounts keeps list of pod volumes to mount into the container's filesystem.
+
+***
+
+### .spec.jobsTemplates.training.cpu.volumes
+
+Type: `[]core.Volume` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/pod/resources/volumes.go#L36)</sup>
+
+Volumes keeps list of volumes that can be mounted by containers belonging to the pod.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/storage/volumes)
 
 ***
 
@@ -1528,6 +2199,26 @@ ImagePullSecrets define Secrets used to pull Image from registry
 
 ***
 
+### .spec.jobsTemplates.training.gpu.lifecycle
+
+Type: `core.Lifecycle` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/lifecycle.go#L35)</sup>
+
+Lifecycle keeps actions that the management system should take in response to container lifecycle events.
+
+***
+
+### .spec.jobsTemplates.training.gpu.livenessProbe
+
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L37)</sup>
+
+LivenessProbe keeps configuration of periodic probe of container liveness.
+Container will be restarted if the probe fails.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
+
+***
+
 ### .spec.jobsTemplates.training.gpu.nodeSelector
 
 Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/pod/resources/scheduling.go#L39)</sup>
@@ -1547,6 +2238,29 @@ PodSecurityContext holds pod-level security attributes and common container sett
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
+
+***
+
+### .spec.jobsTemplates.training.gpu.ports
+
+Type: `[]core.ContainerPort` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/networking.go#L39)</sup>
+
+Ports contains list of ports to expose from the container. Not specifying a port here
+DOES NOT prevent that port from being exposed. Any port which is
+listening on the default "0.0.0.0" address inside a container will be
+accessible from the network.
+
+***
+
+### .spec.jobsTemplates.training.gpu.readinessProbe
+
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L42)</sup>
+
+ReadinessProbe keeps configuration of periodic probe of container service readiness.
+Container will be removed from service endpoints if the probe fails.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
 
 ***
 
@@ -1596,6 +2310,21 @@ Default Value: `false`
 
 ***
 
+### .spec.jobsTemplates.training.gpu.startupProbe
+
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L50)</sup>
+
+StartupProbe indicates that the Pod has successfully initialized.
+If specified, no other probes are executed until this completes successfully.
+If this probe fails, the Pod will be restarted, just as if the livenessProbe failed.
+This can be used to provide different probe parameters at the beginning of a Pod's lifecycle,
+when it might take a long time to load data or warm a cache, than during steady-state operation.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
+
+***
+
 ### .spec.jobsTemplates.training.gpu.tolerations
 
 Type: `[]core.Toleration` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/pod/resources/scheduling.go#L49)</sup>
@@ -1604,6 +2333,25 @@ Tolerations defines tolerations
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/)
+
+***
+
+### .spec.jobsTemplates.training.gpu.volumeMounts
+
+Type: `[]core.VolumeMount` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/container/resources/volume_mounts.go#L35)</sup>
+
+VolumeMounts keeps list of pod volumes to mount into the container's filesystem.
+
+***
+
+### .spec.jobsTemplates.training.gpu.volumes
+
+Type: `[]core.Volume` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/scheduler/v1alpha1/pod/resources/volumes.go#L36)</sup>
+
+Volumes keeps list of volumes that can be mounted by containers belonging to the pod.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/storage/volumes)
 
 ***
 

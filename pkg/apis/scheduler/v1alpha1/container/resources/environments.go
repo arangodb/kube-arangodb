@@ -24,7 +24,7 @@ import (
 	core "k8s.io/api/core/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/interfaces"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/envs"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
 var _ interfaces.Container[Environments] = &Environments{}
@@ -46,8 +46,8 @@ func (e *Environments) Apply(_ *core.PodTemplateSpec, container *core.Container)
 		return nil
 	}
 
-	container.Env = envs.MergeEnvs(container.Env, e.Env...)
-	container.EnvFrom = envs.MergeEnvFrom(container.EnvFrom, e.EnvFrom...)
+	container.Env = resources.MergeEnvs(container.Env, e.Env...)
+	container.EnvFrom = resources.MergeEnvFrom(container.EnvFrom, e.EnvFrom...)
 
 	return nil
 }
@@ -66,8 +66,8 @@ func (e *Environments) With(other *Environments) *Environments {
 	}
 
 	return &Environments{
-		Env:     envs.MergeEnvs(e.Env, other.Env...),
-		EnvFrom: envs.MergeEnvFrom(e.EnvFrom, other.EnvFrom...),
+		Env:     resources.MergeEnvs(e.Env, other.Env...),
+		EnvFrom: resources.MergeEnvFrom(e.EnvFrom, other.EnvFrom...),
 	}
 }
 
