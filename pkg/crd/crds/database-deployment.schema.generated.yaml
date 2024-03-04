@@ -6917,6 +6917,13 @@ v1:
                   Enabled if this is set to `true`, the operator runs a sidecar container for
                   every Agent, DB-Server, Coordinator and Single server.
                 type: boolean
+              extensions:
+                description: Extensions keeps the information about Metrics Extensions
+                properties:
+                  usageMetrics:
+                    description: UsageMetrics enables ArangoDB Usage metrics scrape. Affects only DBServers in the Cluster mode.
+                    type: boolean
+                type: object
               image:
                 description: Image used for the Metrics Sidecar
                 type: string
@@ -20398,6 +20405,13 @@ v1alpha:
                   Enabled if this is set to `true`, the operator runs a sidecar container for
                   every Agent, DB-Server, Coordinator and Single server.
                 type: boolean
+              extensions:
+                description: Extensions keeps the information about Metrics Extensions
+                properties:
+                  usageMetrics:
+                    description: UsageMetrics enables ArangoDB Usage metrics scrape. Affects only DBServers in the Cluster mode.
+                    type: boolean
+                type: object
               image:
                 description: Image used for the Metrics Sidecar
                 type: string
@@ -33879,6 +33893,13 @@ v2alpha1:
                   Enabled if this is set to `true`, the operator runs a sidecar container for
                   every Agent, DB-Server, Coordinator and Single server.
                 type: boolean
+              extensions:
+                description: Extensions keeps the information about Metrics Extensions
+                properties:
+                  usageMetrics:
+                    description: UsageMetrics enables ArangoDB Usage metrics scrape. Affects only DBServers in the Cluster mode.
+                    type: boolean
+                type: object
               image:
                 description: Image used for the Metrics Sidecar
                 type: string

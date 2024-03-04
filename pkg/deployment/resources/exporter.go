@@ -1,5 +1,5 @@
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/probes"
 )
 
-func createInternalExporterArgs(spec api.DeploymentSpec, groupSpec api.ServerGroupSpec, version driver.Version) []string {
+func createInternalExporterArgs(spec api.DeploymentSpec, group api.ServerGroup, groupSpec api.ServerGroupSpec, version driver.Version) []string {
 	tokenpath := filepath.Join(shared.ExporterJWTVolumeMountDir, constants.SecretKeyToken)
 	options := k8sutil.CreateOptionPairs(64)
 
@@ -46,8 +46,14 @@ func createInternalExporterArgs(spec api.DeploymentSpec, groupSpec api.ServerGro
 			scheme = "https"
 		}
 		options.Addf("--arangodb.endpoint", "%s://localhost:%d%s", scheme, groupSpec.GetPort(), path)
+		if spec.Metrics.GetExtensions().GetUsageMetrics() && group == api.ServerGroupDBServers {
+			options.Addf("--arangodb.endpoint", "%s://localhost:%d%s", scheme, groupSpec.GetPort(), shared.ArangoExporterUsageEndpoint)
+		}
 	} else {
 		options.Addf("--arangodb.endpoint", "http://localhost:%d%s", *port, path)
+		if spec.Metrics.GetExtensions().GetUsageMetrics() && group == api.ServerGroupDBServers {
+			options.Addf("--arangodb.endpoint", "http://localhost:%d%s", groupSpec.GetPort(), shared.ArangoExporterUsageEndpoint)
+		}
 	}
 
 	keyPath := filepath.Join(shared.TLSKeyfileVolumeMountDir, constants.SecretTLSKeyfile)

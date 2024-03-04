@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/exporter"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 var (
@@ -43,9 +44,9 @@ var (
 	exporterInput struct {
 		listenAddress string
 
-		endpoint string
-		jwtFile  string
-		timeout  time.Duration
+		endpoints []string
+		jwtFile   string
+		timeout   time.Duration
 
 		keyfile string
 	}
@@ -57,7 +58,7 @@ func init() {
 	f.StringVar(&exporterInput.listenAddress, "server.address", ":9101", "Address the exporter will listen on (IP:port)")
 	f.StringVar(&exporterInput.keyfile, "ssl.keyfile", "", "File containing TLS certificate used for the metrics server. Format equal to ArangoDB keyfiles")
 
-	f.StringVar(&exporterInput.endpoint, "arangodb.endpoint", "http://127.0.0.1:8529", "Endpoint used to reach the ArangoDB server")
+	f.StringSliceVar(&exporterInput.endpoints, "arangodb.endpoint", []string{"http://127.0.0.1:8529"}, "Endpoints used to reach the ArangoDB server")
 	f.StringVar(&exporterInput.jwtFile, "arangodb.jwt-file", "", "File containing the JWT for authentication with ArangoDB server")
 	f.DurationVar(&exporterInput.timeout, "arangodb.timeout", time.Second*15, "Timeout of statistics requests for ArangoDB")
 
@@ -83,7 +84,11 @@ func onSigterm(f func()) {
 }
 
 func cmdExporterCheckE() error {
-	p, err := exporter.NewPassthru(exporterInput.endpoint, func() (string, error) {
+	if len(exporterInput.endpoints) < 1 {
+		return errors.Errorf("Requires at least one ArangoDB Endpoint to be present")
+	}
+
+	p, err := exporter.NewPassthru(func() (string, error) {
 		if exporterInput.jwtFile == "" {
 			return "", nil
 		}
@@ -94,12 +99,12 @@ func cmdExporterCheckE() error {
 		}
 
 		return string(data), nil
-	}, false, 15*time.Second)
+	}, false, 15*time.Second, exporterInput.endpoints...)
 	if err != nil {
 		return err
 	}
 
-	mon := exporter.NewMonitor(exporterInput.endpoint, func() (string, error) {
+	mon := exporter.NewMonitor(exporterInput.endpoints[0], func() (string, error) {
 		if exporterInput.jwtFile == "" {
 			return "", nil
 		}
