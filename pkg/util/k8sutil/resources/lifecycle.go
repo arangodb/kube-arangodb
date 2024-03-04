@@ -18,28 +18,41 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+package resources
 
-import (
-	schedulerPodApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/pod"
-	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
-)
+import core "k8s.io/api/core/v1"
 
-type ProfileTemplate struct {
-	Priority *int `json:"priority,omitempty"`
-
-	Pod *schedulerPodApi.Pod `json:"pod,omitempty"`
-
-	Container *ProfileContainerTemplate `json:"container,omitempty"`
-}
-
-func (p *ProfileTemplate) Validate() error {
-	if p == nil {
+func MergeLifecycle(a, b *core.Lifecycle) *core.Lifecycle {
+	if a == nil && b == nil {
 		return nil
 	}
+	if a == nil {
+		return b.DeepCopy()
+	}
+	if b == nil {
+		return a.DeepCopy()
+	}
 
-	return shared.WithErrors(
-		shared.PrefixResourceErrors("pod", p.Pod.Validate()),
-		shared.PrefixResourceErrors("container", p.Container.Validate()),
-	)
+	return &core.Lifecycle{
+		PostStart: MergeLifecycleHandler(b.PostStart, a.PostStart),
+		PreStop:   MergeLifecycleHandler(b.PreStop, a.PreStop),
+	}
+}
+
+func MergeLifecycleHandler(a, b *core.LifecycleHandler) *core.LifecycleHandler {
+	if a == nil && b == nil {
+		return nil
+	}
+	if a == nil {
+		return b.DeepCopy()
+	}
+	if b == nil {
+		return a.DeepCopy()
+	}
+
+	if a.HTTPGet != nil || a.Exec != nil || a.TCPSocket != nil {
+		return a.DeepCopy()
+	}
+
+	return b.DeepCopy()
 }

@@ -182,6 +182,9 @@ nodeSelector:
 podSecurityContext:
   runAsUser: 10
 hostPID: true
+volumes:
+  - name: test
+    emptyDir: {}
 `)(func(t *testing.T, pod *core.PodTemplateSpec, spec *Pod) {
 			// Spec
 			require.NotNil(t, spec.Security)
@@ -195,6 +198,10 @@ hostPID: true
 			require.NotNil(t, spec.Namespace)
 			require.NotNil(t, spec.Namespace.HostPID)
 			require.True(t, *spec.Namespace.HostPID)
+			require.NotNil(t, spec.Volumes)
+			require.Len(t, spec.Volumes.Volumes, 1)
+			require.EqualValues(t, "test", spec.Volumes.Volumes[0].Name)
+			require.NotNil(t, spec.Volumes.Volumes[0].EmptyDir)
 
 			// Pod
 			require.NotNil(t, pod.Spec.SecurityContext)
@@ -207,6 +214,9 @@ hostPID: true
 			require.Nil(t, pod.Spec.Affinity)
 			require.NotNil(t, pod.Spec.HostPID)
 			require.True(t, pod.Spec.HostPID)
+			require.Len(t, pod.Spec.Volumes, 1)
+			require.EqualValues(t, "test", pod.Spec.Volumes[0].Name)
+			require.NotNil(t, pod.Spec.Volumes[0].EmptyDir)
 		})
 	})
 }

@@ -47,6 +47,11 @@ func (in *Pod) DeepCopyInto(out *Pod) {
 		*out = new(resources.Security)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.Volumes != nil {
+		in, out := &in.Volumes, &out.Volumes
+		*out = new(resources.Volumes)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 

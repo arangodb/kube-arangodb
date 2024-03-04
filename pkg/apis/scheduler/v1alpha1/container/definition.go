@@ -110,11 +110,23 @@ type Container struct {
 	// Environments keeps the environment variables for Container
 	*schedulerContainerResourcesApi.Environments `json:",inline"`
 
-	// Image define default image used for the job
+	// Image define default image used for the Container
 	*schedulerContainerResourcesApi.Image `json:",inline"`
 
-	// Resources define resources assigned to the pod
+	// Resources define resources assigned to the Container
 	*schedulerContainerResourcesApi.Resources `json:",inline"`
+
+	// VolumeMounts define volume mounts assigned to the Container
+	*schedulerContainerResourcesApi.VolumeMounts `json:",inline"`
+
+	// Probes define probes assigned to the Container
+	*schedulerContainerResourcesApi.Probes `json:",inline"`
+
+	// Networking define networking assigned to the Container
+	*schedulerContainerResourcesApi.Networking `json:",inline"`
+
+	// Lifecycle define lifecycle assigned to the Container
+	*schedulerContainerResourcesApi.Lifecycle `json:",inline"`
 }
 
 func (c *Container) Apply(template *core.PodTemplateSpec, container *core.Container) error {
@@ -127,6 +139,10 @@ func (c *Container) Apply(template *core.PodTemplateSpec, container *core.Contai
 		c.Environments.Apply(template, container),
 		c.Image.Apply(template, container),
 		c.Resources.Apply(template, container),
+		c.VolumeMounts.Apply(template, container),
+		c.Probes.Apply(template, container),
+		c.Networking.Apply(template, container),
+		c.Lifecycle.Apply(template, container),
 	)
 }
 
@@ -162,6 +178,38 @@ func (c *Container) GetEnvironments() *schedulerContainerResourcesApi.Environmen
 	return c.Environments
 }
 
+func (c *Container) GetVolumeMounts() *schedulerContainerResourcesApi.VolumeMounts {
+	if c == nil || c.VolumeMounts == nil {
+		return nil
+	}
+
+	return c.VolumeMounts
+}
+
+func (c *Container) GetProbes() *schedulerContainerResourcesApi.Probes {
+	if c == nil || c.Probes == nil {
+		return nil
+	}
+
+	return c.Probes
+}
+
+func (c *Container) GetNetworking() *schedulerContainerResourcesApi.Networking {
+	if c == nil || c.Networking == nil {
+		return nil
+	}
+
+	return c.Networking
+}
+
+func (c *Container) GetLifecycle() *schedulerContainerResourcesApi.Lifecycle {
+	if c == nil || c.Lifecycle == nil {
+		return nil
+	}
+
+	return c.Lifecycle
+}
+
 func (c *Container) With(other *Container) *Container {
 	if c == nil && other == nil {
 		return nil
@@ -180,6 +228,10 @@ func (c *Container) With(other *Container) *Container {
 		Environments: c.Environments.With(other.Environments),
 		Image:        c.Image.With(other.Image),
 		Resources:    c.Resources.With(other.Resources),
+		VolumeMounts: c.VolumeMounts.With(other.VolumeMounts),
+		Lifecycle:    c.Lifecycle.With(other.Lifecycle),
+		Networking:   c.Networking.With(other.Networking),
+		Probes:       c.Probes.With(other.Probes),
 	}
 }
 
@@ -193,5 +245,9 @@ func (c *Container) Validate() error {
 		shared.PrefixResourceErrors("containerEnvironments", c.Environments.Validate()),
 		shared.PrefixResourceErrors("containerResources", c.Image.Validate()),
 		shared.PrefixResourceErrors("containerImage", c.Resources.Validate()),
+		shared.PrefixResourceErrors("volumeMounts", c.VolumeMounts.Validate()),
+		shared.PrefixResourceErrors("lifecycle", c.Lifecycle.Validate()),
+		shared.PrefixResourceErrors("networking", c.Networking.Validate()),
+		shared.PrefixResourceErrors("probes", c.Probes.Validate()),
 	)
 }

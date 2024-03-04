@@ -39,6 +39,9 @@ type Pod struct {
 
 	// Security keeps the security settings for Pod
 	*schedulerPodResourcesApi.Security `json:",inline"`
+
+	// Volumes keeps the volumes settings for Pod
+	*schedulerPodResourcesApi.Volumes `json:",inline"`
 }
 
 func (a *Pod) With(other *Pod) *Pod {
@@ -58,6 +61,7 @@ func (a *Pod) With(other *Pod) *Pod {
 		Scheduling: a.Scheduling.With(other.Scheduling),
 		Namespace:  a.Namespace.With(other.Namespace),
 		Security:   a.Security.With(other.Security),
+		Volumes:    a.Volumes.With(other.Volumes),
 	}
 }
 
@@ -70,6 +74,7 @@ func (a *Pod) Apply(template *core.PodTemplateSpec) error {
 		a.Scheduling.Apply(template),
 		a.Namespace.Apply(template),
 		a.Security.Apply(template),
+		a.Volumes.Apply(template),
 	)
 }
 
@@ -97,6 +102,14 @@ func (a *Pod) GetContainerNamespace() *schedulerPodResourcesApi.Namespace {
 	return a.Namespace
 }
 
+func (a *Pod) GetVolumes() *schedulerPodResourcesApi.Volumes {
+	if a == nil {
+		return nil
+	}
+
+	return a.Volumes
+}
+
 func (a *Pod) Validate() error {
 	if a == nil {
 		return nil
@@ -105,5 +118,6 @@ func (a *Pod) Validate() error {
 		a.Scheduling.Validate(),
 		a.Namespace.Validate(),
 		a.Security.Validate(),
+		a.Volumes.Validate(),
 	)
 }
