@@ -25,7 +25,6 @@ import (
 
 	core "k8s.io/api/core/v1"
 
-	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -33,7 +32,7 @@ type ProfileTemplates []*ProfileTemplate
 
 func (p ProfileTemplates) Sort() ProfileTemplates {
 	sort.Slice(p, func(i, j int) bool {
-		if a, b := util.WithDefault(p[i].Priority), util.WithDefault(p[j].Priority); a != b {
+		if a, b := p[i].GetPriority(), p[j].GetPriority(); a != b {
 			return a < b
 		}
 
@@ -43,26 +42,32 @@ func (p ProfileTemplates) Sort() ProfileTemplates {
 	return p
 }
 
+func (p ProfileTemplates) Merge() *ProfileTemplate {
+	var z *ProfileTemplate
+
+	for _, q := range p {
+		z = z.With(q)
+	}
+
+	return z
+}
+
 func (p ProfileTemplates) RenderOnTemplate(pod *core.PodTemplateSpec) error {
+	t := p.Merge()
+
 	// Apply Pod Spec
-	for id := range p {
-		if err := p[id].Pod.Apply(pod); err != nil {
-			return errors.Wrapf(err, "Error while rendering Pod for %d", id)
-		}
+	if err := t.GetPod().Apply(pod); err != nil {
+		return errors.Wrapf(err, "Error while rendering Pod")
 	}
 
 	// Apply Generic Containers Spec
-	for id := range p {
-		if err := p[id].Container.ApplyGeneric(pod); err != nil {
-			return errors.Wrapf(err, "Error while rendering Pod for %d", id)
-		}
+	if err := t.GetContainer().ApplyGeneric(pod); err != nil {
+		return errors.Wrapf(err, "Error while rendering Pod")
 	}
 
 	// Apply Containers Spec
-	for id := range p {
-		if err := p[id].Container.ApplyContainers(pod); err != nil {
-			return errors.Wrapf(err, "Error while rendering Pod for %d", id)
-		}
+	if err := t.GetContainer().ApplyContainers(pod); err != nil {
+		return errors.Wrapf(err, "Error while rendering Pod")
 	}
 
 	return nil
