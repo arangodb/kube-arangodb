@@ -292,3 +292,11 @@ func (ac *arangoClientBackupImpl) Abort(jobID driver.BackupTransferJobID) error 
 
 	return ac.driver.Backup().Abort(ctx, jobID)
 }
+
+func (ac *arangoClientBackupImpl) HealthCheck() error {
+	ctx, cancel := globals.GetGlobalTimeouts().BackupArangoClientTimeout().WithTimeout(context.Background())
+	defer cancel()
+
+	_, err := ac.driver.Version(ctx)
+	return err
+}
