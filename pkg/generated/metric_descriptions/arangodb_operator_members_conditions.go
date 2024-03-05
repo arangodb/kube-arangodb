@@ -23,17 +23,17 @@ package metric_descriptions
 import "github.com/arangodb/kube-arangodb/pkg/util/metrics"
 
 var (
-	arangodbOperatorAgencyCacheMemberServing = metrics.NewDescription("arangodb_operator_agency_cache_member_serving", "Determines if agency member is reachable", []string{`namespace`, `name`, `agent`}, nil)
+	arangodbOperatorMembersConditions = metrics.NewDescription("arangodb_operator_members_conditions", "Representation of the ArangoMember condition state (true/false)", []string{`namespace`, `name`, `member`, `condition`}, nil)
 )
 
 func init() {
-	registerDescription(arangodbOperatorAgencyCacheMemberServing)
+	registerDescription(arangodbOperatorMembersConditions)
 }
 
-func ArangodbOperatorAgencyCacheMemberServing() metrics.Description {
-	return arangodbOperatorAgencyCacheMemberServing
+func ArangodbOperatorMembersConditions() metrics.Description {
+	return arangodbOperatorMembersConditions
 }
 
-func ArangodbOperatorAgencyCacheMemberServingGauge(value float64, namespace string, name string, agent string) metrics.Metric {
-	return ArangodbOperatorAgencyCacheMemberServing().Gauge(value, namespace, name, agent)
+func ArangodbOperatorMembersConditionsGauge(value float64, namespace string, name string, member string, condition string) metrics.Metric {
+	return ArangodbOperatorMembersConditions().Gauge(value, namespace, name, member, condition)
 }
