@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,6 +37,15 @@ func stateCreateHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.
 	client, err := h.arangoClientFactory(deployment, backup)
 	if err != nil {
 		return nil, newTemporaryError(err)
+	}
+
+	if err := client.HealthCheck(); err != nil {
+		return wrapUpdateStatus(backup,
+			updateStatusState(backupApi.ArangoBackupStateCreateError, "Create failed on HealthCheck with error: %s", err.Error()),
+			cleanStatusJob(),
+			updateStatusAvailable(false),
+			addBackOff(backup.Spec),
+		)
 	}
 
 	if features.AsyncBackupCreation().Enabled() {

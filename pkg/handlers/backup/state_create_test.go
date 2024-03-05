@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -151,6 +151,30 @@ func Test_State_Create_Upload(t *testing.T) {
 	require.NoError(t, err)
 
 	compareBackupMeta(t, backupMeta, newObj)
+}
+
+func Test_State_Create_CreateError_Health(t *testing.T) {
+	*features.AsyncBackupCreation().EnabledPointer() = false
+
+	// Arrange
+	handler, _ := newErrorsFakeHandler(mockErrorsArangoClientBackup{
+		healthCheckError: newFatalErrorf("error"),
+	})
+
+	obj, deployment := newObjectSet(t, backupApi.ArangoBackupStateCreate)
+
+	// Act
+	createArangoDeployment(t, handler, deployment)
+	createArangoBackup(t, handler, obj)
+
+	require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
+
+	// Assert
+	newObj := refreshArangoBackup(t, handler, obj)
+	require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateCreateError)
+	require.Equal(t, newObj.Status.Message, "Create failed on HealthCheck with error: error")
+	require.Nil(t, newObj.Status.Backup)
+	require.False(t, newObj.Status.Available)
 }
 
 func Test_State_Create_CreateError(t *testing.T) {

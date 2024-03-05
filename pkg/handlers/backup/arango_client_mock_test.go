@@ -64,7 +64,7 @@ func newMockArangoClientBackup(errors mockErrorsArangoClientBackup) *mockArangoC
 }
 
 type mockErrorsArangoClientBackup struct {
-	createError, listError, getError, uploadError, downloadError, progressError, existsError, deleteError, abortError error
+	createError, listError, getError, uploadError, downloadError, progressError, existsError, deleteError, abortError, healthCheckError error
 }
 
 type mockArangoClientBackupState struct {
@@ -243,6 +243,10 @@ func (m *mockArangoClientBackup) CreateAsync(jobID string) (ArangoBackupCreateRe
 		return ArangoBackupCreateResponse{}, async.NewErrorAsyncJobInProgress(strconv.Itoa(util.Rand().Int()))
 	}
 	return ArangoBackupCreateResponse{}, async.NewErrorAsyncJobInProgress(jobID)
+}
+
+func (m *mockArangoClientBackup) HealthCheck() error {
+	return m.state.errors.healthCheckError
 }
 
 func (m *mockArangoClientBackup) getIDs() []string {
