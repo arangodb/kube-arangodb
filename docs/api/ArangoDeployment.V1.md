@@ -3405,6 +3405,22 @@ Default Value: `false`
 
 ***
 
+### .spec.metrics.extensions.usageMetrics
+
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/deployment/v1/deployment_metrics_spec_extensions.go#L29)</sup>
+
+> [!IMPORTANT]
+> **UsageMetrics needs to be also enabled via DBServer Arguments**
+
+UsageMetrics enables ArangoDB Usage metrics scrape. Affects only DBServers in the Cluster mode.
+
+Links:
+* [Documentation](https://docs.arangodb.com/devel/develop/http-api/monitoring/metrics/#get-usage-metrics)
+
+Default Value: `false`
+
+***
+
 ### .spec.metrics.image
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.38/pkg/apis/deployment/v1/deployment_metrics_spec.go#L86)</sup>

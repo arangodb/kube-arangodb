@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -32,19 +33,20 @@ import (
 
 var _ http.Handler = &passthru{}
 
-func NewPassthru(arangodbEndpoint string, auth Authentication, sslVerify bool, timeout time.Duration) (http.Handler, error) {
+func NewPassthru(auth Authentication, sslVerify bool, timeout time.Duration, endpoints ...string) (http.Handler, error) {
 	return &passthru{
-		factory: newHttpClientFactory(arangodbEndpoint, auth, sslVerify, timeout),
+		factory:   newHttpClientFactory(auth, sslVerify, timeout),
+		endpoints: endpoints,
 	}, nil
 }
 
-type httpClientFactory func() (*http.Client, *http.Request, error)
+type httpClientFactory func(endpoint string) (*http.Client, *http.Request, error)
 
-func newHttpClientFactory(arangodbEndpoint string, auth Authentication, sslVerify bool, timeout time.Duration) httpClientFactory {
-	return func() (*http.Client, *http.Request, error) {
+func newHttpClientFactory(auth Authentication, sslVerify bool, timeout time.Duration) httpClientFactory {
+	return func(endpoint string) (*http.Client, *http.Request, error) {
 		transport := &http.Transport{}
 
-		req, err := http.NewRequest("GET", arangodbEndpoint, nil)
+		req, err := http.NewRequest("GET", endpoint, nil)
 		if err != nil {
 			return nil, nil, errors.WithStack(err)
 		}
@@ -78,57 +80,88 @@ func newHttpClientFactory(arangodbEndpoint string, auth Authentication, sslVerif
 }
 
 type passthru struct {
-	factory httpClientFactory
+	endpoints []string
+	factory   httpClientFactory
 }
 
-func (p passthru) get() (*http.Response, error) {
-	c, req, err := p.factory()
+func (p passthru) get(endpoint string) (*http.Response, error) {
+	c, req, err := p.factory(endpoint)
 	if err != nil {
 		return nil, err
 	}
 	return c.Do(req)
 }
 
-func (p passthru) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
-	data, err := p.get()
+func (p passthru) read(endpoint string) (string, error) {
+	data, err := p.get(endpoint)
 
 	if err != nil {
-		// Ignore error
-		resp.WriteHeader(http.StatusInternalServerError)
-		resp.Write([]byte(err.Error()))
-		return
+		return "", err
 	}
 
 	if data.Body == nil {
-		// Ignore error
-		resp.WriteHeader(http.StatusInternalServerError)
-		resp.Write([]byte("Body is empty"))
-		return
+		return "", err
 	}
 
 	defer data.Body.Close()
 
 	response, err := io.ReadAll(data.Body)
 	if err != nil {
+		return "", err
+	}
+
+	responseStr := string(response)
+
+	// Fix Header response
+	return strings.ReplaceAll(responseStr, "guage", "gauge"), nil
+}
+
+func (p passthru) getAll() (string, error) {
+	errs := make([]error, len(p.endpoints))
+	responses := make([]string, len(p.endpoints))
+
+	var wg sync.WaitGroup
+
+	for id := range p.endpoints {
+		wg.Add(1)
+
+		go func(id int) {
+			defer wg.Done()
+			responses[id], errs[id] = p.read(p.endpoints[id])
+		}(id)
+	}
+
+	wg.Wait()
+
+	for _, err := range errs {
+		if err != nil {
+			return "", errors.WithStack(err)
+		}
+	}
+
+	response := strings.Join(responses, "\n")
+
+	// Attach monitor data
+	monitorData := currentMembersStatus.Load()
+	if monitorData != nil {
+		response = response + monitorData.(string)
+	}
+
+	return response, nil
+}
+
+func (p passthru) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
+	response, err := p.getAll()
+
+	if err != nil {
 		// Ignore error
 		resp.WriteHeader(http.StatusInternalServerError)
 		resp.Write([]byte(err.Error()))
 		return
 	}
 
-	responseStr := string(response)
-
-	// Fix Header response
-	responseStr = strings.ReplaceAll(responseStr, "guage", "gauge")
-
-	// Attach monitor data
-	monitorData := currentMembersStatus.Load()
-	if monitorData != nil {
-		responseStr = responseStr + monitorData.(string)
-	}
-
-	resp.WriteHeader(data.StatusCode)
-	_, err = resp.Write([]byte(responseStr))
+	resp.WriteHeader(http.StatusOK)
+	_, err = resp.Write([]byte(response))
 	if err != nil {
 		// Ignore error
 		resp.WriteHeader(http.StatusInternalServerError)

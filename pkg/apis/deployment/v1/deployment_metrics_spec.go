@@ -105,6 +105,9 @@ type MetricsSpec struct {
 	ServiceMonitor *MetricsServiceMonitorSpec `json:"serviceMonitor,omitempty"`
 
 	Port *uint16 `json:"port,omitempty"`
+
+	// Extensions keeps the information about Metrics Extensions
+	Extensions *MetricsSpecExtensions `json:"extensions,omitempty"`
 }
 
 func (s *MetricsSpec) IsTLS() bool {
@@ -121,6 +124,14 @@ func (s *MetricsSpec) GetPort() uint16 {
 	}
 
 	return *s.Port
+}
+
+func (s *MetricsSpec) GetExtensions() *MetricsSpecExtensions {
+	if s == nil || s.Extensions == nil {
+		return nil
+	}
+
+	return s.Extensions
 }
 
 // IsEnabled returns whether metrics are enabled or not

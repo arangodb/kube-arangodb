@@ -426,8 +426,11 @@ var (
 		token.ClaimISS: token.ClaimISSValue,
 		"server_id":    "exporter",
 		"allowed_paths": []interface{}{"/_admin/statistics", "/_admin/statistics-description",
-			shared.ArangoExporterInternalEndpoint, shared.ArangoExporterInternalEndpointV2,
-			shared.ArangoExporterStatusEndpoint, shared.ArangoExporterClusterHealthEndpoint},
+			shared.ArangoExporterInternalEndpoint,
+			shared.ArangoExporterInternalEndpointV2,
+			shared.ArangoExporterUsageEndpoint,
+			shared.ArangoExporterStatusEndpoint,
+			shared.ArangoExporterClusterHealthEndpoint},
 	}
 )
 
@@ -442,6 +445,15 @@ func (r *Resources) ensureExporterTokenSecret(ctx context.Context, cachedStatus 
 		if !exists {
 			owner := r.context.GetAPIObject().AsOwner()
 			err = k8sutil.CreateJWTFromSecret(ctx, cachedStatus.Secret().V1().Read(), secrets, tokenSecretName, secretSecretName, exporterTokenClaims, &owner)
+			if kerrors.IsAlreadyExists(err) {
+				// Secret added while we tried it also
+				return nil
+			} else if err != nil {
+				// Failed to create secret
+				return errors.WithStack(err)
+			}
+		} else {
+			err = k8sutil.UpdateJWTFromSecret(ctx, cachedStatus.Secret().V1().Read(), secrets, tokenSecretName, secretSecretName, exporterTokenClaims)
 			if kerrors.IsAlreadyExists(err) {
 				// Secret added while we tried it also
 				return nil

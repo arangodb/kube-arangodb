@@ -31,6 +31,7 @@ const (
 	ArangoExporterClusterHealthEndpoint = "/_admin/cluster/health"
 	ArangoExporterInternalEndpoint      = "/_admin/metrics"
 	ArangoExporterInternalEndpointV2    = "/_admin/metrics/v2"
+	ArangoExporterUsageEndpoint         = "/_admin/usage-metrics"
 	ArangoExporterDefaultEndpoint       = "/metrics"
 
 	ArangoSyncStatusEndpoint = "/_api/version"

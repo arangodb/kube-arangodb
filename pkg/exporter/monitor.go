@@ -42,7 +42,7 @@ import (
 )
 
 const (
-	monitorMetricTemplate  = "arangodb_member_health{role=\"%s\",id=\"%s\"} %d \n"
+	monitorMetricTemplate  = "arangodb_member_health{role=\"%s\",id=\"%s\"} %d\n"
 	successRefreshInterval = time.Second * 120
 	failRefreshInterval    = time.Second * 15
 )
@@ -59,7 +59,8 @@ func NewMonitor(arangodbEndpoint string, auth Authentication, sslVerify bool, ti
 	}
 
 	return &monitor{
-		factory:   newHttpClientFactory(arangodbEndpoint, auth, sslVerify, timeout),
+		factory:   newHttpClientFactory(auth, sslVerify, timeout),
+		endpoint:  arangodbEndpoint,
 		healthURI: uri,
 	}
 }
@@ -67,6 +68,7 @@ func NewMonitor(arangodbEndpoint string, auth Authentication, sslVerify bool, ti
 type monitor struct {
 	factory   httpClientFactory
 	healthURI *url.URL
+	endpoint  string
 }
 
 // UpdateMonitorStatus load monitor metrics for current cluster into currentMembersStatus
@@ -102,7 +104,7 @@ func (m monitor) UpdateMonitorStatus(ctx context.Context) {
 
 // GetClusterHealth returns current ArangoDeployment cluster health status
 func (m monitor) GetClusterHealth() (*driver.ClusterHealth, error) {
-	c, req, err := m.factory()
+	c, req, err := m.factory(m.endpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +132,7 @@ func (m monitor) GetClusterHealth() (*driver.ClusterHealth, error) {
 func (m monitor) GetMemberStatus(id driver.ServerID, member driver.ServerHealth) (string, error) {
 	result := fmt.Sprintf(monitorMetricTemplate, member.Role, id, 0)
 
-	c, req, err := m.factory()
+	c, req, err := m.factory(m.endpoint)
 	if err != nil {
 		return result, err
 	}

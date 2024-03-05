@@ -295,6 +295,19 @@ func CreateTokenSecret(ctx context.Context, secrets secretv1.ModInterface, secre
 	return nil
 }
 
+// UpdateTokenSecret updates a secret with given name in given namespace
+// with a given token as value.
+func UpdateTokenSecret(ctx context.Context, secrets secretv1.ModInterface, secret *core.Secret, token string) error {
+	secret.Data = map[string][]byte{
+		constants.SecretKeyToken: []byte(token),
+	}
+	if _, err := secrets.Update(ctx, secret, meta.UpdateOptions{}); err != nil {
+		// Failed to update secret
+		return kerrors.NewResourceError(err, secret)
+	}
+	return nil
+}
+
 // CreateJWTFromSecret creates a JWT using the secret stored in secretSecretName and stores the
 // result in a new secret called tokenSecretName
 func CreateJWTFromSecret(ctx context.Context, cachedSecrets secretv1.ReadInterface, secrets secretv1.ModInterface, tokenSecretName, secretSecretName string, claims map[string]interface{}, ownerRef *meta.OwnerReference) error {
@@ -310,6 +323,29 @@ func CreateJWTFromSecret(ctx context.Context, cachedSecrets secretv1.ReadInterfa
 
 	return globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		return CreateTokenSecret(ctxChild, secrets, tokenSecretName, signedToken, ownerRef)
+	})
+}
+
+// UpdateJWTFromSecret updates a JWT using the secret stored in secretSecretName and stores the
+// result in a new secret called tokenSecretName
+func UpdateJWTFromSecret(ctx context.Context, cachedSecrets secretv1.ReadInterface, secrets secretv1.ModInterface, tokenSecretName, secretSecretName string, claims map[string]interface{}) error {
+	current, err := cachedSecrets.Get(ctx, tokenSecretName, meta.GetOptions{})
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	secret, err := GetTokenSecret(ctx, cachedSecrets, secretSecretName)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	signedToken, err := token.New([]byte(secret), claims)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	return globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		return UpdateTokenSecret(ctxChild, secrets, current, signedToken)
 	})
 }
 
