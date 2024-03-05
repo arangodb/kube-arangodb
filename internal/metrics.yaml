@@ -219,6 +219,18 @@ namespaces:
             description: "DeploymentReplication Namespace"
           - key: name
             description: "DeploymentReplication Name"
+    deployment:
+      conditions:
+        shortDescription: "Representation of the ArangoDeployment condition state (true/false)"
+        description: "Representation of the ArangoDeployment condition state (true/false)"
+        type: "Gauge"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+          - key: condition
+            description: "Condition Name"
     members:
       unexpected_container_exit_codes:
         shortDescription: "Counter of unexpected restarts in pod (Containers/InitContainers/EphemeralContainers)"
@@ -239,6 +251,19 @@ namespaces:
             description: "ExitCode"
           - key: reason
             description: "Reason"
+      conditions:
+        shortDescription: "Representation of the ArangoMember condition state (true/false)"
+        description: "Representation of the ArangoMember condition state (true/false)"
+        type: "Gauge"
+        labels:
+          - key: namespace
+            description: "Deployment Namespace"
+          - key: name
+            description: "Deployment Name"
+          - key: member
+            description: "Member ID"
+          - key: condition
+            description: "Condition Name"
     engine:
       panics_recovered:
         shortDescription: "Number of Panics recovered inside Operator reconciliation loop"

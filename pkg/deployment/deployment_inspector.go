@@ -153,6 +153,18 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 		d.metrics.Deployment.Propagated = updated.Status.Conditions.IsTrue(api.ConditionTypeSpecPropagated)
 		d.metrics.Deployment.UpToDate = updated.Status.Conditions.IsTrue(api.ConditionTypeUpToDate)
 
+		d.metrics.Conditions.RefreshDeployment(updated.Status.Conditions,
+			api.ConditionTypeSpecAccepted,
+			api.ConditionTypeSpecPropagated,
+			api.ConditionTypeUpToDate)
+
+		d.metrics.Conditions.RefreshMembers(updated.Status.Members.AsList(),
+			api.ConditionTypeServing,
+			api.ConditionTypeScheduled,
+			api.ConditionTypeReachable,
+			api.ConditionTypeStarted,
+			api.ConditionTypeReady)
+
 		// Is the deployment in failed state, if so, give up.
 		if d.GetPhase() == api.DeploymentPhaseFailed {
 			d.log.Debug("Deployment is in Failed state.")
@@ -480,6 +492,11 @@ func (d *Deployment) isUpToDateStatus(status api.DeploymentStatus) (upToDate boo
 		if member.Conditions.IsTrue(api.ConditionTypePVCResizePending) {
 			upToDate = false
 			reason = "PVC is resizing"
+			return
+		}
+		if !member.Conditions.IsTrue(api.ConditionTypeReady) {
+			upToDate = false
+			reason = "Not all members are ready"
 			return
 		}
 	}

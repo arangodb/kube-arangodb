@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,6 +41,8 @@ type Metrics struct {
 	Deployment struct {
 		Accepted, UpToDate, Propagated bool
 	}
+
+	Conditions ConditionsMetrics
 }
 
 func (d *Deployment) CollectMetrics(m metrics.PushMetric) {
@@ -90,4 +92,7 @@ func (d *Deployment) CollectMetrics(m metrics.PushMetric) {
 	if r := d.resources; r != nil {
 		r.CollectMetrics(m)
 	}
+
+	// Conditions
+	d.metrics.Conditions.CollectMetrics(d.namespace, d.name, m)
 }

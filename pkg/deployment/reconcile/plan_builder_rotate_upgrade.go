@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -466,6 +466,8 @@ func groupReadyForRestart(context PlanBuilderContext, status api.DeploymentStatu
 		return true, "Bootstrap not completed, restart is allowed"
 	}
 
+	members := status.Members.MembersOfGroup(group)
+
 	// If current member did not become ready even once. Kill it
 	if !member.Conditions.IsTrue(api.ConditionTypeStarted) {
 		return true, "Member is not started"
@@ -476,8 +478,15 @@ func groupReadyForRestart(context PlanBuilderContext, status api.DeploymentStatu
 		return true, "Member is not serving"
 	}
 
-	if !status.Members.MembersOfGroup(group).AllMembersServing() {
+	if !members.AllMembersServing() {
 		return false, "Not all members are serving"
+	}
+
+	if member.Conditions.IsTrue(api.ConditionTypeReady) {
+		// Our pod is ready, lets check other pods
+		if !members.AllMembersReady() {
+			return false, "Not all members are ready"
+		}
 	}
 
 	switch group {
