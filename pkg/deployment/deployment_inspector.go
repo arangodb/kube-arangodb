@@ -384,7 +384,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 
 		return minInspectionInterval, nil
 	} else {
-		isUpToDate, reason := d.isUpToDateStatus(status)
+		isUpToDate, reason := d.isUpToDateStatus(currentSpec.GetMode(), status)
 
 		if !isUpToDate && status.Conditions.IsTrue(api.ConditionTypeUpToDate) {
 			if err = d.updateConditionWithHash(ctx, api.ConditionTypeUpToDate, false, reason, "There are pending operations in plan or members are in restart process", *v); err != nil {
@@ -451,7 +451,7 @@ func (d *Deployment) sendCIUpdate() {
 	}
 }
 
-func (d *Deployment) isUpToDateStatus(status api.DeploymentStatus) (upToDate bool, reason string) {
+func (d *Deployment) isUpToDateStatus(mode api.DeploymentMode, status api.DeploymentStatus) (upToDate bool, reason string) {
 	if status.NonInternalActions() > 0 {
 		return false, "Plan is not empty"
 	}
@@ -494,10 +494,12 @@ func (d *Deployment) isUpToDateStatus(status api.DeploymentStatus) (upToDate boo
 			reason = "PVC is resizing"
 			return
 		}
-		if !member.Conditions.IsTrue(api.ConditionTypeReady) {
-			upToDate = false
-			reason = "Not all members are ready"
-			return
+		if mode != api.DeploymentModeActiveFailover {
+			if !member.Conditions.IsTrue(api.ConditionTypeReady) {
+				upToDate = false
+				reason = "Not all members are ready"
+				return
+			}
 		}
 	}
 
