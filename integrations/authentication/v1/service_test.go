@@ -23,8 +23,10 @@ package v1
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/durationpb"
 
 	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -188,4 +190,55 @@ func Test_Service_AskForDefaultIfBlocked(t *testing.T) {
 		User: util.NewType("blocked"),
 	})
 	require.EqualError(t, err, "rpc error: code = Unknown desc = User blocked is not allowed")
+}
+
+func Test_Service_WithTTL(t *testing.T) {
+	ctx, c := context.WithCancel(context.Background())
+	defer c()
+
+	client, directory := Client(t, ctx)
+
+	reSaveJWTTokens(t, directory, generateJWTToken())
+
+	extract := func(t *testing.T, duration time.Duration) (time.Duration, time.Duration) {
+		token, err := client.CreateToken(ctx, &pbAuthenticationV1.CreateTokenRequest{
+			Lifetime: durationpb.New(duration),
+		})
+		require.NoError(t, err)
+
+		valid, err := client.Validate(ctx, &pbAuthenticationV1.ValidateRequest{
+			Token: token.Token,
+		})
+		require.NoError(t, err)
+
+		require.NotNil(t, token.Lifetime)
+		require.True(t, valid.IsValid)
+		require.NotNil(t, valid.Details)
+
+		return token.Lifetime.AsDuration(), valid.Details.Lifetime.AsDuration()
+	}
+
+	t.Run("10h", func(t *testing.T) {
+		base, current := extract(t, 10*time.Hour)
+		require.EqualValues(t, time.Hour, base)
+		require.True(t, base-time.Second < current)
+	})
+
+	t.Run("1h", func(t *testing.T) {
+		base, current := extract(t, time.Hour)
+		require.EqualValues(t, time.Hour, base)
+		require.True(t, base-time.Second < current)
+	})
+
+	t.Run("1min", func(t *testing.T) {
+		base, current := extract(t, time.Minute)
+		require.EqualValues(t, time.Minute, base)
+		require.True(t, base-time.Second < current)
+	})
+
+	t.Run("1sec", func(t *testing.T) {
+		base, current := extract(t, time.Second)
+		require.EqualValues(t, time.Minute, base)
+		require.True(t, base-time.Second < current)
+	})
 }

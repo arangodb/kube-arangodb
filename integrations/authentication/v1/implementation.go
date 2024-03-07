@@ -165,13 +165,13 @@ func (i *implementation) CreateToken(ctx context.Context, request *pbAuthenticat
 		return nil, err
 	}
 
-	user, exp, err := i.extractTokenDetails(cache, signedToken)
+	user, _, err = i.extractTokenDetails(cache, signedToken)
 	if err != nil {
 		return nil, err
 	}
 
 	return &pbAuthenticationV1.CreateTokenResponse{
-		Lifetime: durationpb.New(exp),
+		Lifetime: durationpb.New(duration),
 		User:     user,
 		Token:    signedToken,
 	}, nil
@@ -195,8 +195,11 @@ func (i *implementation) extractTokenDetails(cache *cache, t string) (string, ti
 	duration := DefaultTokenMaxTTL
 
 	if v, ok := p[token.ClaimEXP]; ok {
-		if s, ok := v.(int64); ok {
-			duration = time.Until(time.Unix(s, 0))
+		switch o := v.(type) {
+		case int64:
+			duration = time.Until(time.Unix(o, 0))
+		case float64:
+			duration = time.Until(time.Unix(int64(o), 0))
 		}
 	}
 

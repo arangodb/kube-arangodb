@@ -37,6 +37,8 @@ const (
 	DefaultTokenMinTTL     = time.Minute
 	DefaultTokenMaxTTL     = time.Hour
 	DefaultTokenDefaultTTL = time.Hour
+
+	DefaultMaxTokenSize = 64
 )
 
 type Mod func(c Configuration) Configuration
@@ -52,6 +54,7 @@ func NewConfiguration() Configuration {
 			MinTTL:       DefaultTokenMinTTL,
 			MaxTTL:       DefaultTokenMaxTTL,
 			DefaultTTL:   DefaultTokenDefaultTTL,
+			MaxSize:      DefaultMaxTokenSize,
 		},
 	}
 }
@@ -82,7 +85,7 @@ func (c Configuration) Validate() error {
 	}
 
 	if c.TTL < 0 {
-		return errors.Errorf("TTLS should be not negative")
+		return errors.Errorf("TLS should be not negative")
 	}
 
 	if err := c.Create.Validate(); err != nil {
@@ -98,6 +101,8 @@ type Token struct {
 	AllowedUsers []string
 
 	MinTTL, MaxTTL, DefaultTTL time.Duration
+
+	MaxSize uint16
 }
 
 func (t Token) Validate() error {
@@ -115,6 +120,10 @@ func (t Token) Validate() error {
 
 	if t.DefaultTTL > t.MaxTTL {
 		return errors.Errorf("DefautTTL Cannot be higher than MaxTTL")
+	}
+
+	if t.MaxSize <= 0 {
+		return errors.Errorf("MaxSize cannot be less or equal 0")
 	}
 
 	if len(t.AllowedUsers) > 0 {
