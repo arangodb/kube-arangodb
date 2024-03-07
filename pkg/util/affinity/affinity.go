@@ -182,7 +182,7 @@ func MergeNodeSelector(a, b *core.NodeSelector) *core.NodeSelector {
 			sa.MatchExpressions = append(sa.MatchExpressions, sb.MatchExpressions...)
 			sa.MatchFields = append(sa.MatchFields, sb.MatchFields...)
 
-			if len(sa.MatchExpressions) == 0 || len(sa.MatchFields) == 0 {
+			if len(sa.MatchExpressions) == 0 && len(sa.MatchFields) == 0 {
 				continue
 			}
 
