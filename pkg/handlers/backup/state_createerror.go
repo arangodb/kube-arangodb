@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,7 +29,8 @@ import (
 func stateCreateErrorHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.ArangoBackupStatus, error) {
 	if !backup.Spec.Backoff.Enabled() {
 		return wrapUpdateStatus(backup,
-			updateStatusState(backupApi.ArangoBackupStateFailed, "retries are disabled"),
+			updateStatusStateOnly(backupApi.ArangoBackupStateFailed),
+			cleanBackOff(),
 			cleanStatusJob())
 	}
 

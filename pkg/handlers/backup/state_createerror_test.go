@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -97,7 +97,8 @@ func Test_State_CreateError_Retry_WhenBackoffDisabled_C1(t *testing.T) {
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
 	require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateFailed)
-	require.Equal(t, newObj.Status.Message, "retries are disabled")
+	require.Nil(t, newObj.Status.Backoff)
+	require.Equal(t, newObj.Status.Message, "")
 }
 
 func Test_State_CreateError_Retry_WhenBackoffDisabled_C2(t *testing.T) {
@@ -126,7 +127,42 @@ func Test_State_CreateError_Retry_WhenBackoffDisabled_C2(t *testing.T) {
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
 	require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateFailed)
-	require.Equal(t, newObj.Status.Message, "retries are disabled")
+	require.Nil(t, newObj.Status.Backoff)
+	require.Equal(t, newObj.Status.Message, "")
+}
+
+func Test_State_CreateError_Retry_WhenBackoffDisabled_C3(t *testing.T) {
+	// Arrange
+	message := "SomeRandomErrorMessage"
+
+	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
+
+	obj, deployment := newObjectSet(t, backupApi.ArangoBackupStateCreateError)
+
+	obj.Status.Message = message
+
+	backupMeta, err := mock.Create()
+	require.NoError(t, err)
+
+	obj.Status.Backup = &backupApi.ArangoBackupDetails{
+		ID:                string(backupMeta.ID),
+		Version:           backupMeta.Version,
+		CreationTimestamp: meta.Now(),
+	}
+
+	obj.Status.Time.Time = time.Now().Add(-2 * downloadDelay)
+
+	// Act
+	createArangoDeployment(t, handler, deployment)
+	createArangoBackup(t, handler, obj)
+
+	require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
+
+	// Assert
+	newObj := refreshArangoBackup(t, handler, obj)
+	require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateFailed)
+	require.Nil(t, newObj.Status.Backoff)
+	require.Equal(t, newObj.Status.Message, message)
 }
 
 func Test_State_CreateError_Transfer_To_Failed(t *testing.T) {
