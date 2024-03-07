@@ -48,7 +48,7 @@ endif
 
 TEST_BUILD ?= 0
 GOBUILDARGS ?=
-GOBASEVERSION := 1.21.6
+GOBASEVERSION := 1.21.8
 GOVERSION := $(GOBASEVERSION)-alpine3.18
 DISTRIBUTION := alpine:3.15
 GOCOMPAT := $(shell sed -En 's/^go (.*)$$/\1/p' go.mod)
