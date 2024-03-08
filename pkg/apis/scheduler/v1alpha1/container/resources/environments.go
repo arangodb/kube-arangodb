@@ -24,7 +24,7 @@ import (
 	core "k8s.io/api/core/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/interfaces"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
+	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
 var _ interfaces.Container[Environments] = &Environments{}
@@ -32,12 +32,12 @@ var _ interfaces.Container[Environments] = &Environments{}
 type Environments struct {
 	// Env keeps the information about environment variables provided to the container
 	// +doc/type: core.EnvVar
-	// +doc/link: Kubernetes Docs|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#envvar-v1-core
+	// +doc/link: Kubernetes Docs|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#envvar-v1-core
 	Env []core.EnvVar `json:"env,omitempty"`
 
 	// EnvFrom keeps the information about environment variable sources provided to the container
 	// +doc/type: core.EnvFromSource
-	// +doc/link: Kubernetes Docs|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#envfromsource-v1-core
+	// +doc/link: Kubernetes Docs|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#envfromsource-v1-core
 	EnvFrom []core.EnvFromSource `json:"envFrom,omitempty"`
 }
 
@@ -46,8 +46,8 @@ func (e *Environments) Apply(_ *core.PodTemplateSpec, container *core.Container)
 		return nil
 	}
 
-	container.Env = resources.MergeEnvs(container.Env, e.Env...)
-	container.EnvFrom = resources.MergeEnvFrom(container.EnvFrom, e.EnvFrom...)
+	container.Env = kresources.MergeEnvs(container.Env, e.Env...)
+	container.EnvFrom = kresources.MergeEnvFrom(container.EnvFrom, e.EnvFrom...)
 
 	return nil
 }
@@ -66,8 +66,8 @@ func (e *Environments) With(other *Environments) *Environments {
 	}
 
 	return &Environments{
-		Env:     resources.MergeEnvs(e.Env, other.Env...),
-		EnvFrom: resources.MergeEnvFrom(e.EnvFrom, other.EnvFrom...),
+		Env:     kresources.MergeEnvs(e.Env, other.Env...),
+		EnvFrom: kresources.MergeEnvFrom(e.EnvFrom, other.EnvFrom...),
 	}
 }
 

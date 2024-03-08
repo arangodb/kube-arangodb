@@ -24,7 +24,7 @@ import (
 	core "k8s.io/api/core/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/interfaces"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
+	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
 var _ interfaces.Container[Probes] = &Probes{}
@@ -76,9 +76,9 @@ func (n *Probes) With(newResources *Probes) *Probes {
 	}
 
 	return &Probes{
-		LivenessProbe:  resources.MergeProbes(n.LivenessProbe, newResources.LivenessProbe),
-		ReadinessProbe: resources.MergeProbes(n.ReadinessProbe, newResources.ReadinessProbe),
-		StartupProbe:   resources.MergeProbes(n.StartupProbe, newResources.StartupProbe),
+		LivenessProbe:  kresources.MergeProbes(n.LivenessProbe, newResources.LivenessProbe),
+		ReadinessProbe: kresources.MergeProbes(n.ReadinessProbe, newResources.ReadinessProbe),
+		StartupProbe:   kresources.MergeProbes(n.StartupProbe, newResources.StartupProbe),
 	}
 }
 

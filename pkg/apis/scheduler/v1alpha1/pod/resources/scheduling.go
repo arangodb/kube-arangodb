@@ -25,7 +25,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/interfaces"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/affinity"
+	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tolerations"
 )
 
@@ -147,7 +147,7 @@ func (s *Scheduling) With(other *Scheduling) *Scheduling {
 	current.Tolerations = tolerations.AddTolerationsIfNotFound(new.Tolerations, other.Tolerations...)
 
 	// Affinity
-	current.Affinity = affinity.Merge(current.Affinity, new.Affinity)
+	current.Affinity = kresources.Merge(current.Affinity, new.Affinity)
 
 	// return
 

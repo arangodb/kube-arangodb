@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,17 +18,20 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1
+//go:build !kube_arangodb_k8s_1_28
 
-import batch "k8s.io/api/batch/v1"
+package resources
 
-type ArangoJobSpec struct {
-	// ArangoDeploymentName holds the name of ArangoDeployment
-	ArangoDeploymentName string `json:"arangoDeploymentName"`
+import (
+	core "k8s.io/api/core/v1"
+)
 
-	// JobTemplate holds the Kubernetes Job Template
-	// +doc/type: batch.JobSpec
-	// +doc/link: Kubernetes Documentation|https://kubernetes.io/docs/concepts/workloads/controllers/job/
-	// +doc/link: Documentation of batch.JobSpec|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#jobspec-v1-batch
-	JobTemplate *batch.JobSpec `json:"jobTemplate,omitempty"`
+// ExtractStorageResourceRequirement filters resource requirements for Pods.
+func ExtractStorageResourceRequirement(resources core.ResourceRequirements) core.VolumeResourceRequirements {
+	filterStorage := NewPodResourceListFilter(core.ResourceStorage, "iops")
+
+	return core.VolumeResourceRequirements{
+		Limits:   filterStorage(resources.Limits),
+		Requests: filterStorage(resources.Requests),
+	}
 }

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,8 +31,12 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	persistentvolumeclaimv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
-	resources2 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
+	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
+
+// ExtractStorageResourceRequirement filters resource requirements for Pods.
+// Keep reference for backward compatibility
+var ExtractStorageResourceRequirement = kresources.ExtractStorageResourceRequirement
 
 // IsPersistentVolumeClaimMarkedForDeletion returns true if the pvc has been marked for deletion.
 func IsPersistentVolumeClaimMarkedForDeletion(pvc *core.PersistentVolumeClaim) bool {
@@ -57,16 +61,6 @@ func IsPersistentVolumeClaimResizing(pvc *core.PersistentVolumeClaim) bool {
 		}
 	}
 	return false
-}
-
-// ExtractStorageResourceRequirement filters resource requirements for Pods.
-func ExtractStorageResourceRequirement(resources core.ResourceRequirements) core.ResourceRequirements {
-	filterStorage := resources2.NewPodResourceListFilter(core.ResourceStorage, "iops")
-
-	return core.ResourceRequirements{
-		Limits:   filterStorage(resources.Limits),
-		Requests: filterStorage(resources.Requests),
-	}
 }
 
 // CreatePersistentVolumeClaim creates a persistent volume claim with given name and configuration.

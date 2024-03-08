@@ -1,5 +1,12 @@
 # Maintainer Instructions
 
+## Build
+
+Due to changes in the upstream Kubernetes API Dependency, by default Client and Operator will compile with Kubernetes 1.29+
+
+If Client is used with:
+- 1.28 or lower, build tag `kube_arangodb_k8s_1_28` is required
+
 ## Before
 
 To run templating models HELM needs to be installed. We are supporting HELM 2.14+

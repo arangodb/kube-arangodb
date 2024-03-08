@@ -25,7 +25,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/interfaces"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
+	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
 var _ interfaces.Container[Resources] = &Resources{}
@@ -33,7 +33,7 @@ var _ interfaces.Container[Resources] = &Resources{}
 type Resources struct {
 	// Resources holds resource requests & limits for container
 	// +doc/type: core.ResourceRequirements
-	// +doc/link: Documentation of core.ResourceRequirements|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#resourcerequirements-v1-core
+	// +doc/link: Documentation of core.ResourceRequirements|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#resourcerequirements-v1-core
 	Resources *core.ResourceRequirements `json:"resources,omitempty"`
 }
 
@@ -60,7 +60,7 @@ func (r *Resources) With(newResources *Resources) *Resources {
 		return r.DeepCopy()
 	}
 
-	return &Resources{Resources: util.NewType(resources.MergeContainerResource(r.GetResources(), newResources.GetResources()))}
+	return &Resources{Resources: util.NewType(kresources.MergeContainerResource(r.GetResources(), newResources.GetResources()))}
 }
 
 func (r *Resources) GetResources() core.ResourceRequirements {
@@ -70,7 +70,7 @@ func (r *Resources) GetResources() core.ResourceRequirements {
 
 	local := r.Resources.DeepCopy()
 
-	local.Limits = resources.UpscaleOptionalContainerResourceList(local.Limits, local.Requests)
+	local.Limits = kresources.UpscaleOptionalContainerResourceList(local.Limits, local.Requests)
 
 	return *local
 }

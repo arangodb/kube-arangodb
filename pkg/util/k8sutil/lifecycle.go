@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import (
 	core "k8s.io/api/core/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-	resources2 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
+	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
 const (
@@ -74,7 +74,7 @@ func InitLifecycleContainer(image, binaryPath string, resources *core.ResourceRe
 	}
 
 	if resources != nil {
-		c.Resources = resources2.ExtractPodAcceptedResourceRequirement(*resources)
+		c.Resources = kresources.ExtractPodAcceptedResourceRequirement(*resources)
 	}
 	return c, nil
 }

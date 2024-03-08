@@ -24,7 +24,7 @@ import (
 	core "k8s.io/api/core/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/interfaces"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
+	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
 var _ interfaces.Container[Lifecycle] = &Lifecycle{}
@@ -59,7 +59,7 @@ func (n *Lifecycle) With(newResources *Lifecycle) *Lifecycle {
 	}
 
 	return &Lifecycle{
-		Lifecycle: resources.MergeLifecycle(n.Lifecycle, newResources.Lifecycle),
+		Lifecycle: kresources.MergeLifecycle(n.Lifecycle, newResources.Lifecycle),
 	}
 }
 

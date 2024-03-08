@@ -88,7 +88,7 @@ type MetricsSpec struct {
 	Authentication MetricsAuthenticationSpec `json:"authentication,omitempty"`
 	// Resources holds resource requests & limits
 	// +doc/type: core.ResourceRequirements
-	// +doc/link: Documentation of core.ResourceRequirements|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#resourcerequirements-v1-core
+	// +doc/link: Documentation of core.ResourceRequirements|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#resourcerequirements-v1-core
 	Resources core.ResourceRequirements `json:"resources,omitempty"`
 
 	// Mode define metrics exported mode

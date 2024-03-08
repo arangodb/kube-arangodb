@@ -37,7 +37,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/affinity"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -46,6 +45,7 @@ import (
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
+	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tolerations"
 )
 
@@ -359,26 +359,26 @@ func (i *ImageUpdatePod) GetPodAntiAffinity() *core.PodAntiAffinity {
 
 	pod.AppendPodAntiAffinityDefault(i, a)
 
-	a = affinity.MergePodAntiAffinity(a, i.spec.ID.Get().AntiAffinity)
+	a = kresources.MergePodAntiAffinity(a, i.spec.ID.Get().AntiAffinity)
 
-	return affinity.OptionalPodAntiAffinity(a)
+	return kresources.OptionalPodAntiAffinity(a)
 }
 
 func (i *ImageUpdatePod) GetPodAffinity() *core.PodAffinity {
 	a := &core.PodAffinity{}
 
-	a = affinity.MergePodAffinity(a, i.spec.ID.Get().Affinity)
+	a = kresources.MergePodAffinity(a, i.spec.ID.Get().Affinity)
 
-	return affinity.OptionalPodAffinity(a)
+	return kresources.OptionalPodAffinity(a)
 }
 
 func (i *ImageUpdatePod) GetNodeAffinity() *core.NodeAffinity {
 	a := &core.NodeAffinity{}
 	pod.AppendArchSelector(a, i.spec.Architecture.AsNodeSelectorRequirement())
 
-	a = affinity.MergeNodeAffinity(a, i.spec.ID.Get().NodeAffinity)
+	a = kresources.MergeNodeAffinity(a, i.spec.ID.Get().NodeAffinity)
 
-	return affinity.OptionalNodeAffinity(a)
+	return kresources.OptionalNodeAffinity(a)
 }
 
 func (i *ImageUpdatePod) Validate(_ interfaces.Inspector) error {

@@ -24,7 +24,7 @@ import (
 	core "k8s.io/api/core/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/interfaces"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
+	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
 var _ interfaces.Container[VolumeMounts] = &VolumeMounts{}
@@ -61,7 +61,7 @@ func (v *VolumeMounts) With(other *VolumeMounts) *VolumeMounts {
 	}
 
 	return &VolumeMounts{
-		VolumeMounts: resources.MergeVolumeMounts(v.VolumeMounts, other.VolumeMounts...),
+		VolumeMounts: kresources.MergeVolumeMounts(v.VolumeMounts, other.VolumeMounts...),
 	}
 }
 

@@ -32,7 +32,7 @@ type ServerIDGroupSpec struct {
 	Args []string `json:"args,omitempty"`
 	// Tolerations specifies the tolerations added to Pods in this group.
 	// +doc/type: []core.Toleration
-	// +doc/link: Documentation of core.Toleration|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#toleration-v1-core
+	// +doc/link: Documentation of core.Toleration|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#toleration-v1-core
 	Tolerations []core.Toleration `json:"tolerations,omitempty"`
 	// NodeSelector specifies a set of selectors for nodes
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
@@ -40,15 +40,15 @@ type ServerIDGroupSpec struct {
 	PriorityClassName string `json:"priorityClassName,omitempty"`
 	// AntiAffinity specified additional antiAffinity settings in ArangoDB Pod definitions
 	// +doc/type: core.PodAntiAffinity
-	// +doc/link: Documentation of core.Pod.AntiAffinity|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#podantiaffinity-v1-core
+	// +doc/link: Documentation of core.Pod.AntiAffinity|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#podantiaffinity-v1-core
 	AntiAffinity *core.PodAntiAffinity `json:"antiAffinity,omitempty"`
 	// Affinity specified additional affinity settings in ArangoDB Pod definitions
 	// +doc/type: core.PodAffinity
-	// +doc/link: Documentation of core.PodAffinity|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#podaffinity-v1-core
+	// +doc/link: Documentation of core.PodAffinity|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#podaffinity-v1-core
 	Affinity *core.PodAffinity `json:"affinity,omitempty"`
 	// NodeAffinity specified additional nodeAffinity settings in ArangoDB Pod definitions
 	// +doc/type: core.NodeAffinity
-	// +doc/link: Documentation of code.NodeAffinity|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#nodeaffinity-v1-core
+	// +doc/link: Documentation of code.NodeAffinity|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#nodeaffinity-v1-core
 	NodeAffinity *core.NodeAffinity `json:"nodeAffinity,omitempty"`
 	// ServiceAccountName specifies the name of the service account used for Pods in this group.
 	ServiceAccountName *string `json:"serviceAccountName,omitempty"`
@@ -56,7 +56,7 @@ type ServerIDGroupSpec struct {
 	SecurityContext *ServerGroupSpecSecurityContext `json:"securityContext,omitempty"`
 	// Resources holds resource requests & limits
 	// +doc/type: core.ResourceRequirements
-	// +doc/link: Documentation of core.ResourceRequirements|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#resourcerequirements-v1-core
+	// +doc/link: Documentation of core.ResourceRequirements|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#resourcerequirements-v1-core
 	Resources *core.ResourceRequirements `json:"resources,omitempty"`
 }
 

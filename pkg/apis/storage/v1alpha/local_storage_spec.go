@@ -37,7 +37,7 @@ type LocalStorageSpec struct {
 
 	// Tolerations specifies the tolerations added to pods of storage provisioner
 	// +doc/type: []core.Toleration
-	// +doc/link: Documentation of core.Toleration|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#toleration-v1-core
+	// +doc/link: Documentation of core.Toleration|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#toleration-v1-core
 	Tolerations []core.Toleration `json:"tolerations,omitempty"`
 	// NodeSelector setting specifies which nodes the operator will provision persistent volumes on.
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`

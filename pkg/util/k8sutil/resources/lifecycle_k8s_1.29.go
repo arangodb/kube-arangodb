@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,17 +18,26 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1
+//go:build !kube_arangodb_k8s_1_28
 
-import batch "k8s.io/api/batch/v1"
+package resources
 
-type ArangoJobSpec struct {
-	// ArangoDeploymentName holds the name of ArangoDeployment
-	ArangoDeploymentName string `json:"arangoDeploymentName"`
+import core "k8s.io/api/core/v1"
 
-	// JobTemplate holds the Kubernetes Job Template
-	// +doc/type: batch.JobSpec
-	// +doc/link: Kubernetes Documentation|https://kubernetes.io/docs/concepts/workloads/controllers/job/
-	// +doc/link: Documentation of batch.JobSpec|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#jobspec-v1-batch
-	JobTemplate *batch.JobSpec `json:"jobTemplate,omitempty"`
+func MergeLifecycleHandler(a, b *core.LifecycleHandler) *core.LifecycleHandler {
+	if a == nil && b == nil {
+		return nil
+	}
+	if a == nil {
+		return b.DeepCopy()
+	}
+	if b == nil {
+		return a.DeepCopy()
+	}
+
+	if a.HTTPGet != nil || a.Exec != nil || a.TCPSocket != nil || a.Sleep != nil {
+		return a.DeepCopy()
+	}
+
+	return b.DeepCopy()
 }

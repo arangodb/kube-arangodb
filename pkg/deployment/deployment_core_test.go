@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ import (
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
+	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
 func TestEnsurePod_ArangoDB_Core(t *testing.T) {
@@ -543,7 +543,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 							Image:     testImage,
 							Command:   createTestCommandForDBServer(firstDBServerStatus.ID, false, false, false),
 							Ports:     createTestPorts(api.ServerGroupDBServers),
-							Resources: resources.ExtractPodAcceptedResourceRequirement(resourcesUnfiltered),
+							Resources: kresources.ExtractPodAcceptedResourceRequirement(resourcesUnfiltered),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
@@ -600,7 +600,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 							Image:     testImage,
 							Command:   createTestCommandForDBServer(firstDBServerStatus.ID, false, false, false),
 							Ports:     createTestPorts(api.ServerGroupDBServers),
-							Resources: resources.ExtractPodAcceptedResourceRequirement(resourcesUnfiltered),
+							Resources: kresources.ExtractPodAcceptedResourceRequirement(resourcesUnfiltered),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
@@ -660,7 +660,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 							Image:     testImage,
 							Command:   createTestCommandForDBServer(firstDBServerStatus.ID, false, false, false),
 							Ports:     createTestPorts(api.ServerGroupDBServers),
-							Resources: resources.ExtractPodAcceptedResourceRequirement(resourcesUnfiltered),
+							Resources: kresources.ExtractPodAcceptedResourceRequirement(resourcesUnfiltered),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
@@ -1194,7 +1194,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
-						testArangodbInternalExporterContainer(false, true, resources.ExtractPodAcceptedResourceRequirement(resourcesUnfiltered)),
+						testArangodbInternalExporterContainer(false, true, kresources.ExtractPodAcceptedResourceRequirement(resourcesUnfiltered)),
 					},
 					RestartPolicy:                 core.RestartPolicyNever,
 					TerminationGracePeriodSeconds: &defaultDBServerTerminationTimeout,
@@ -1249,7 +1249,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 						k8sutil.LifecycleVolume(),
 					},
 					InitContainers: []core.Container{
-						createTestLifecycleContainer(resources.ExtractPodAcceptedResourceRequirement(resourcesUnfiltered)),
+						createTestLifecycleContainer(kresources.ExtractPodAcceptedResourceRequirement(resourcesUnfiltered)),
 					},
 					Containers: []core.Container{
 						{
