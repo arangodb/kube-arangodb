@@ -50,6 +50,7 @@ func (a *authenticationV1) Register(cmd *cobra.Command, arg ArgGen) error {
 	f.DurationVar(&a.config.Create.DefaultTTL, arg("token.ttl.default"), pbImplAuthenticationV1.DefaultTokenDefaultTTL, "Default Token TTL")
 	f.DurationVar(&a.config.Create.MinTTL, arg("token.ttl.min"), pbImplAuthenticationV1.DefaultTokenMinTTL, "Min Token TTL")
 	f.DurationVar(&a.config.Create.MaxTTL, arg("token.ttl.max"), pbImplAuthenticationV1.DefaultTokenMaxTTL, "Max Token TTL")
+	f.Uint16Var(&a.config.Create.MaxSize, arg("token.max-size"), pbImplAuthenticationV1.DefaultMaxTokenSize, "Max Token max size in bytes")
 	f.StringSliceVar(&a.config.Create.AllowedUsers, arg("token.allowed"), []string{}, "Allowed users for the Token")
 
 	return nil

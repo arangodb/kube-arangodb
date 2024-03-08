@@ -43,7 +43,7 @@ type cache struct {
 	validationTokens [][]byte
 }
 
-func (i *implementation) newCache() (*cache, error) {
+func (i *implementation) newCache(cfg Configuration) (*cache, error) {
 	files, err := os.ReadDir(i.cfg.Path)
 	if err != nil {
 		return nil, err
@@ -66,7 +66,7 @@ func (i *implementation) newCache() (*cache, error) {
 			continue
 		}
 
-		buff := make([]byte, 32)
+		buff := make([]byte, cfg.Create.MaxSize)
 
 		for id := range buff {
 			buff[id] = 0
@@ -133,7 +133,7 @@ func (i *implementation) refreshCache() (*cache, error) {
 
 	// Get was not successful, retry
 
-	if c, err := i.newCache(); err != nil {
+	if c, err := i.newCache(i.cfg); err != nil {
 		return nil, err
 	} else if c == nil {
 		return nil, errors.Errorf("cache returned is nil")
