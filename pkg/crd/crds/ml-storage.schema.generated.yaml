@@ -179,6 +179,12 @@ v1alpha1:
                               scheme:
                                 type: string
                             type: object
+                          sleep:
+                            properties:
+                              seconds:
+                                format: int64
+                                type: integer
+                            type: object
                           tcpSocket:
                             properties:
                               host:
@@ -217,6 +223,12 @@ v1alpha1:
                                 type: string
                               scheme:
                                 type: string
+                            type: object
+                          sleep:
+                            properties:
+                              seconds:
+                                format: int64
+                                type: integer
                             type: object
                           tcpSocket:
                             properties:

@@ -38,21 +38,3 @@ func MergeLifecycle(a, b *core.Lifecycle) *core.Lifecycle {
 		PreStop:   MergeLifecycleHandler(b.PreStop, a.PreStop),
 	}
 }
-
-func MergeLifecycleHandler(a, b *core.LifecycleHandler) *core.LifecycleHandler {
-	if a == nil && b == nil {
-		return nil
-	}
-	if a == nil {
-		return b.DeepCopy()
-	}
-	if b == nil {
-		return a.DeepCopy()
-	}
-
-	if a.HTTPGet != nil || a.Exec != nil || a.TCPSocket != nil {
-		return a.DeepCopy()
-	}
-
-	return b.DeepCopy()
-}

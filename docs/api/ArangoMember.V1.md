@@ -47,7 +47,7 @@ Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kub
 Resources holds resource requests & limits. Overrides template provided on the group level.
 
 Links:
-* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#resourcerequirements-v1-core)
+* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#resourcerequirements-v1-core)
 
 ***
 
@@ -58,7 +58,7 @@ Type: `core.PersistentVolumeClaim` <sup>[\[ref\]](https://github.com/arangodb/ku
 VolumeClaimTemplate specifies a template for volume claims. Overrides template provided on the group level.
 
 Links:
-* [Documentation of core.PersistentVolumeClaim](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#persistentvolumeclaim-v1-core)
+* [Documentation of core.PersistentVolumeClaim](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#persistentvolumeclaim-v1-core)
 
 ***
 
@@ -88,7 +88,7 @@ Type: `core.PodTemplateSpec` <sup>[\[ref\]](https://github.com/arangodb/kube-ara
 PodSpec specifies the Pod Spec used for this Member.
 
 Links:
-* [Documentation of core.PodTemplateSpec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#podtemplatespec-v1-core)
+* [Documentation of core.PodTemplateSpec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#podtemplatespec-v1-core)
 
 ***
 

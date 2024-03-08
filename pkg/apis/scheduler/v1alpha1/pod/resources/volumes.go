@@ -24,7 +24,7 @@ import (
 	core "k8s.io/api/core/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/interfaces"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
+	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
 var _ interfaces.Pod[Volumes] = &Volumes{}
@@ -62,7 +62,7 @@ func (v *Volumes) With(other *Volumes) *Volumes {
 	}
 
 	return &Volumes{
-		Volumes: resources.MergeVolumes(v.Volumes, other.Volumes...),
+		Volumes: kresources.MergeVolumes(v.Volumes, other.Volumes...),
 	}
 }
 

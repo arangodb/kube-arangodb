@@ -24,5 +24,5 @@ JobTemplate holds the Kubernetes Job Template
 
 Links:
 * [Kubernetes Documentation](https://kubernetes.io/docs/concepts/workloads/controllers/job/)
-* [Documentation of batch.JobSpec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#jobspec-v1-batch)
+* [Documentation of batch.JobSpec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#jobspec-v1-batch)
 

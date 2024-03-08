@@ -77,6 +77,8 @@ linters-settings:
         alias: pbSharedV1
       - pkg: github.com/arangodb/kube-arangodb/integrations/shared/v1
         alias: pbImplSharedV1
+      - pkg: github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources
+        alias: kresources
   gci:
     sections:
       - standard

@@ -36,14 +36,13 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
-	"github.com/arangodb/kube-arangodb/pkg/util/affinity"
 	"github.com/arangodb/kube-arangodb/pkg/util/collection"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
+	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
 const (
@@ -154,7 +153,7 @@ func (a *ArangoSyncContainer) GetProbes() (*core.Probe, *core.Probe, *core.Probe
 }
 
 func (a *ArangoSyncContainer) GetResourceRequirements() core.ResourceRequirements {
-	return resources.ExtractPodAcceptedResourceRequirement(a.arangoMember.Spec.Overrides.GetResources(&a.groupSpec))
+	return kresources.ExtractPodAcceptedResourceRequirement(a.arangoMember.Spec.Overrides.GetResources(&a.groupSpec))
 }
 
 func (a *ArangoSyncContainer) GetLifecycle() (*core.Lifecycle, error) {
@@ -232,9 +231,9 @@ func (m *MemberSyncPod) GetPodAntiAffinity() *core.PodAntiAffinity {
 
 	pod.AppendPodAntiAffinityDefault(m, a)
 
-	a = affinity.MergePodAntiAffinity(a, m.groupSpec.AntiAffinity)
+	a = kresources.MergePodAntiAffinity(a, m.groupSpec.AntiAffinity)
 
-	return affinity.OptionalPodAntiAffinity(a)
+	return kresources.OptionalPodAntiAffinity(a)
 }
 
 func (m *MemberSyncPod) GetPodAffinity() *core.PodAffinity {
@@ -244,9 +243,9 @@ func (m *MemberSyncPod) GetPodAffinity() *core.PodAffinity {
 		pod.AppendAffinityWithRole(m, a, api.ServerGroupDBServers.AsRole())
 	}
 
-	a = affinity.MergePodAffinity(a, m.groupSpec.Affinity)
+	a = kresources.MergePodAffinity(a, m.groupSpec.Affinity)
 
-	return affinity.OptionalPodAffinity(a)
+	return kresources.OptionalPodAffinity(a)
 }
 
 func (m *MemberSyncPod) GetNodeAffinity() *core.NodeAffinity {
@@ -254,9 +253,9 @@ func (m *MemberSyncPod) GetNodeAffinity() *core.NodeAffinity {
 
 	pod.AppendArchSelector(a, m.memberStatus.Architecture.Default(m.spec.Architecture.GetDefault()).AsNodeSelectorRequirement())
 
-	a = affinity.MergeNodeAffinity(a, m.groupSpec.NodeAffinity)
+	a = kresources.MergeNodeAffinity(a, m.groupSpec.NodeAffinity)
 
-	return affinity.OptionalNodeAffinity(a)
+	return kresources.OptionalNodeAffinity(a)
 }
 
 func (m *MemberSyncPod) GetNodeSelector() map[string]string {
@@ -310,7 +309,7 @@ func (m *MemberSyncPod) GetInitContainers(cachedStatus interfaces.Inspector) ([]
 		initContainers = append(initContainers, c)
 	}
 
-	res := resources.ExtractPodInitContainerAcceptedResourceRequirement(m.GetContainerCreator().GetResourceRequirements())
+	res := kresources.ExtractPodInitContainerAcceptedResourceRequirement(m.GetContainerCreator().GetResourceRequirements())
 
 	initContainers = applyInitContainersResourceResources(initContainers, res)
 	initContainers = upscaleInitContainersResourceResources(initContainers, res)

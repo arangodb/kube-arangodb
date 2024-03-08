@@ -25,7 +25,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/interfaces"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
+	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
 var _ interfaces.Container[Networking] = &Networking{}
@@ -78,7 +78,7 @@ func (n *Networking) With(newResources *Networking) *Networking {
 		return n.DeepCopy()
 	}
 
-	return &Networking{Ports: resources.MergeContainerPorts(n.Ports, newResources.Ports...)}
+	return &Networking{Ports: kresources.MergeContainerPorts(n.Ports, newResources.Ports...)}
 }
 
 func (n *Networking) Validate() error {

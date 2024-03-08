@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
+	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
 func TestEnsurePod_Sync_Error(t *testing.T) {
@@ -1305,7 +1305,7 @@ func TestEnsurePod_Sync_Worker(t *testing.T) {
 							},
 							ImagePullPolicy: core.PullIfNotPresent,
 							Lifecycle:       createTestLifecycle(api.ServerGroupSyncMasters),
-							Resources:       resources.ExtractPodAcceptedResourceRequirement(resourcesUnfiltered),
+							Resources:       kresources.ExtractPodAcceptedResourceRequirement(resourcesUnfiltered),
 							SecurityContext: securityContext.NewSecurityContext(),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.LifecycleVolumeMount(),
@@ -1400,7 +1400,7 @@ func TestEnsurePod_Sync_Worker(t *testing.T) {
 							},
 							ImagePullPolicy: core.PullIfNotPresent,
 							Lifecycle:       createTestLifecycle(api.ServerGroupSyncMasters),
-							Resources:       resources.ExtractPodAcceptedResourceRequirement(resourcesUnfiltered),
+							Resources:       kresources.ExtractPodAcceptedResourceRequirement(resourcesUnfiltered),
 							SecurityContext: securityContext.NewSecurityContext(),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.LifecycleVolumeMount(),

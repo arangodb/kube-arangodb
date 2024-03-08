@@ -14,6 +14,7 @@
 - (Maintenance) Update Go to 1.21.8 & Dependencies
 - (Feature) (ArangoBackup) Propagate message during retries
 - (Bugfix) Fix ActiveFailover Mode
+- (Maintenance) Update K8S API to 1.29.2 
 
 ## [1.2.38](https://github.com/arangodb/kube-arangodb/tree/1.2.38) (2024-02-22)
 - (Feature) Extract GRPC Server
