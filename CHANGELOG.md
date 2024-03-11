@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.2.39](https://github.com/arangodb/kube-arangodb/tree/1.2.39) (2024-03-11)
 - (Feature) Extract Scheduler API
 - (Bugfix) Fix Image Discovery
 - (Bugfix) Fix Resources Copy mechanism to prevent invalid pod creation
