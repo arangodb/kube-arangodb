@@ -104,6 +104,40 @@ Default Value: `/`
 
 ***
 
+### .spec.mode.sidecar.args
+
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L50)</sup>
+
+Arguments to the entrypoint.
+The container image's CMD is used if this is not provided.
+Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+of whether the variable exists or not. Cannot be updated.
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell)
+
+***
+
+### .spec.mode.sidecar.command
+
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L40)</sup>
+
+Entrypoint array. Not executed within a shell.
+The container image's ENTRYPOINT is used if this is not provided.
+Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+of whether the variable exists or not. Cannot be updated.
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell)
+
+***
+
 ### .spec.mode.sidecar.controllerListenPort
 
 Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/ml/v1alpha1/storage_spec_mode_sidecar.go#L36)</sup>
@@ -257,6 +291,16 @@ Links:
 Type: `[]core.VolumeMount` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/volume_mounts.go#L35)</sup>
 
 VolumeMounts keeps list of pod volumes to mount into the container's filesystem.
+
+***
+
+### .spec.mode.sidecar.workingDir
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L55)</sup>
+
+Container's working directory.
+If not specified, the container runtime's default will be used, which
+might be configured in the container image.
 
 ## Status
 

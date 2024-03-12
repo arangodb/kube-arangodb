@@ -76,11 +76,13 @@ func Test_Generic(t *testing.T) {
 	t.Run("Nil", func(t *testing.T) {
 		applyGeneric(t, nil, nil)(func(t *testing.T, pod *core.PodTemplateSpec, spec *Generic) {
 			require.Nil(t, spec.Environments)
+			require.Nil(t, spec.VolumeMounts)
 		})
 	})
 	t.Run("Empty template", func(t *testing.T) {
 		applyGeneric(t, &core.PodTemplateSpec{})(func(t *testing.T, pod *core.PodTemplateSpec, spec *Generic) {
 			require.Nil(t, spec.Environments)
+			require.Nil(t, spec.VolumeMounts)
 		})
 	})
 	t.Run("With fields", func(t *testing.T) {
@@ -99,7 +101,19 @@ func Test_Generic(t *testing.T) {
 					},
 				},
 			},
+			VolumeMounts: &schedulerContainerResourcesApi.VolumeMounts{
+				VolumeMounts: []core.VolumeMount{
+					{
+						Name:      "TEST",
+						MountPath: "/data",
+					},
+				},
+			},
 		})(func(t *testing.T, pod *core.PodTemplateSpec, spec *Generic) {
+			require.NotNil(t, spec.VolumeMounts)
+			require.Len(t, spec.VolumeMounts.VolumeMounts, 1)
+			require.EqualValues(t, "TEST", spec.VolumeMounts.VolumeMounts[0].Name)
+
 			// Spec
 			require.NotNil(t, spec.Environments)
 			require.Len(t, spec.Environments.Env, 1)

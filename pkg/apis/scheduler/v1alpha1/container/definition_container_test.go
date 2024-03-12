@@ -90,6 +90,8 @@ func Test_Container(t *testing.T) {
 			require.Nil(t, spec.Image)
 			require.Nil(t, spec.Security)
 			require.Nil(t, spec.Environments)
+			require.Nil(t, spec.VolumeMounts)
+			require.Nil(t, spec.Core)
 
 			require.Len(t, container.Env, 0)
 		})
@@ -100,12 +102,17 @@ func Test_Container(t *testing.T) {
 			require.Nil(t, spec.Image)
 			require.Nil(t, spec.Security)
 			require.Nil(t, spec.Environments)
+			require.Nil(t, spec.VolumeMounts)
+			require.Nil(t, spec.Core)
 
 			require.Len(t, container.Env, 0)
 		})
 	})
 	t.Run("With fields", func(t *testing.T) {
 		applyContainer(t, &core.PodTemplateSpec{}, &core.Container{}, &Container{
+			Core: &schedulerContainerResourcesApi.Core{
+				Args: []string{"A"},
+			},
 			Security: &schedulerContainerResourcesApi.Security{
 				SecurityContext: &core.SecurityContext{
 					RunAsUser: util.NewType[int64](50),
@@ -171,6 +178,12 @@ func Test_Container(t *testing.T) {
 			},
 		})(func(t *testing.T, pod *core.PodTemplateSpec, container *core.Container, spec *Container) {
 			// Spec
+			require.NotNil(t, spec.Core)
+			require.NotNil(t, spec.Core.Args)
+			require.Contains(t, spec.Core.Args, "A")
+			require.Empty(t, spec.Core.Command)
+			require.Empty(t, spec.Core.WorkingDir)
+
 			require.NotNil(t, spec.Resources)
 			require.NotNil(t, spec.Resources.Resources)
 			require.Contains(t, spec.Resources.Resources.Limits, core.ResourceCPU)
@@ -225,6 +238,9 @@ func Test_Container_YAML(t *testing.T) {
 securityContext:
   runAsUser: 50
 
+args:
+- A
+
 env:
 - name: key1
   value: value1
@@ -264,6 +280,12 @@ securityContext:
   runAsUser: 10
 `)(func(t *testing.T, pod *core.PodTemplateSpec, container *core.Container, spec *Container) {
 			// Spec
+			require.NotNil(t, spec.Core)
+			require.NotNil(t, spec.Core.Args)
+			require.Contains(t, spec.Core.Args, "A")
+			require.Empty(t, spec.Core.Command)
+			require.Empty(t, spec.Core.WorkingDir)
+
 			require.NotNil(t, spec.Resources)
 			require.NotNil(t, spec.Resources.Resources)
 			require.Contains(t, spec.Resources.Resources.Limits, core.ResourceCPU)

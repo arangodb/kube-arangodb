@@ -52,15 +52,17 @@ func (p ProfileTemplates) Render() (*core.PodTemplateSpec, error) {
 			return nil, errors.Wrapf(err, "Error while rendering Pod for %d", id)
 		}
 	}
-	// Apply Containers Spec
-	for id := range p {
-		if err := p[id].Container.ApplyContainers(&pod); err != nil {
-			return nil, errors.Wrapf(err, "Error while rendering Pod for %d", id)
-		}
-	}
+
 	// Apply Generic Containers Spec
 	for id := range p {
 		if err := p[id].Container.ApplyGeneric(&pod); err != nil {
+			return nil, errors.Wrapf(err, "Error while rendering Pod for %d", id)
+		}
+	}
+
+	// Apply Containers Spec
+	for id := range p {
+		if err := p[id].Container.ApplyContainers(&pod); err != nil {
 			return nil, errors.Wrapf(err, "Error while rendering Pod for %d", id)
 		}
 	}
