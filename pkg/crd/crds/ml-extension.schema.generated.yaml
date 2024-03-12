@@ -409,6 +409,14 @@ v1alpha1:
               prediction:
                 description: Prediction defines how Prediction workload will be deployed
                 properties:
+                  args:
+                    items:
+                      type: string
+                    type: array
+                  command:
+                    items:
+                      type: string
+                    type: array
                   env:
                     items:
                       properties:
@@ -890,10 +898,20 @@ v1alpha1:
                           type: string
                       type: object
                     type: array
+                  workingDir:
+                    type: string
                 type: object
               project:
                 description: Project defines how Project workload will be deployed
                 properties:
+                  args:
+                    items:
+                      type: string
+                    type: array
+                  command:
+                    items:
+                      type: string
+                    type: array
                   env:
                     items:
                       properties:
@@ -1375,6 +1393,8 @@ v1alpha1:
                           type: string
                       type: object
                     type: array
+                  workingDir:
+                    type: string
                 type: object
               replicas:
                 description: Replicas defines the number of replicas running specified components. No replicas created if no components are defined.
@@ -1415,6 +1435,14 @@ v1alpha1:
               training:
                 description: Training defines how Training workload will be deployed
                 properties:
+                  args:
+                    items:
+                      type: string
+                    type: array
+                  command:
+                    items:
+                      type: string
+                    type: array
                   env:
                     items:
                       properties:
@@ -1896,6 +1924,8 @@ v1alpha1:
                           type: string
                       type: object
                     type: array
+                  workingDir:
+                    type: string
                 type: object
               volumes:
                 items:
@@ -2920,6 +2950,14 @@ v1alpha1:
                         type: array
                     type: object
                 type: object
+              args:
+                items:
+                  type: string
+                type: array
+              command:
+                items:
+                  type: string
+                type: array
               env:
                 items:
                   properties:
@@ -4163,6 +4201,8 @@ v1alpha1:
                       type: object
                   type: object
                 type: array
+              workingDir:
+                type: string
             type: object
           jobsTemplates:
             description: JobsTemplates defines templates for jobs
@@ -4504,6 +4544,14 @@ v1alpha1:
                                 type: array
                             type: object
                         type: object
+                      args:
+                        items:
+                          type: string
+                        type: array
+                      command:
+                        items:
+                          type: string
+                        type: array
                       env:
                         items:
                           properties:
@@ -5747,6 +5795,8 @@ v1alpha1:
                               type: object
                           type: object
                         type: array
+                      workingDir:
+                        type: string
                     type: object
                   gpu:
                     description: GPU defines templates for GPU jobs
@@ -6082,6 +6132,14 @@ v1alpha1:
                                 type: array
                             type: object
                         type: object
+                      args:
+                        items:
+                          type: string
+                        type: array
+                      command:
+                        items:
+                          type: string
+                        type: array
                       env:
                         items:
                           properties:
@@ -7325,6 +7383,8 @@ v1alpha1:
                               type: object
                           type: object
                         type: array
+                      workingDir:
+                        type: string
                     type: object
                 type: object
               prediction:
@@ -7664,6 +7724,14 @@ v1alpha1:
                                 type: array
                             type: object
                         type: object
+                      args:
+                        items:
+                          type: string
+                        type: array
+                      command:
+                        items:
+                          type: string
+                        type: array
                       env:
                         items:
                           properties:
@@ -8907,6 +8975,8 @@ v1alpha1:
                               type: object
                           type: object
                         type: array
+                      workingDir:
+                        type: string
                     type: object
                   gpu:
                     description: GPU defines templates for GPU jobs
@@ -9242,6 +9312,14 @@ v1alpha1:
                                 type: array
                             type: object
                         type: object
+                      args:
+                        items:
+                          type: string
+                        type: array
+                      command:
+                        items:
+                          type: string
+                        type: array
                       env:
                         items:
                           properties:
@@ -10485,6 +10563,8 @@ v1alpha1:
                               type: object
                           type: object
                         type: array
+                      workingDir:
+                        type: string
                     type: object
                 type: object
               training:
@@ -10824,6 +10904,14 @@ v1alpha1:
                                 type: array
                             type: object
                         type: object
+                      args:
+                        items:
+                          type: string
+                        type: array
+                      command:
+                        items:
+                          type: string
+                        type: array
                       env:
                         items:
                           properties:
@@ -12067,6 +12155,8 @@ v1alpha1:
                               type: object
                           type: object
                         type: array
+                      workingDir:
+                        type: string
                     type: object
                   gpu:
                     description: GPU defines templates for GPU jobs
@@ -12402,6 +12492,14 @@ v1alpha1:
                                 type: array
                             type: object
                         type: object
+                      args:
+                        items:
+                          type: string
+                        type: array
+                      command:
+                        items:
+                          type: string
+                        type: array
                       env:
                         items:
                           properties:
@@ -13645,6 +13743,8 @@ v1alpha1:
                               type: object
                           type: object
                         type: array
+                      workingDir:
+                        type: string
                     type: object
                 type: object
             type: object

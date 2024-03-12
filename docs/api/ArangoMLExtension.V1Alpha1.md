@@ -72,6 +72,40 @@ Links:
 
 ***
 
+### .spec.deployment.prediction.args
+
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L50)</sup>
+
+Arguments to the entrypoint.
+The container image's CMD is used if this is not provided.
+Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+of whether the variable exists or not. Cannot be updated.
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell)
+
+***
+
+### .spec.deployment.prediction.command
+
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L40)</sup>
+
+Entrypoint array. Not executed within a shell.
+The container image's ENTRYPOINT is used if this is not provided.
+Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+of whether the variable exists or not. Cannot be updated.
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell)
+
+***
+
 ### .spec.deployment.prediction.env
 
 Type: `core.EnvVar` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/environments.go#L36)</sup>
@@ -223,6 +257,50 @@ Links:
 Type: `[]core.VolumeMount` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/volume_mounts.go#L35)</sup>
 
 VolumeMounts keeps list of pod volumes to mount into the container's filesystem.
+
+***
+
+### .spec.deployment.prediction.workingDir
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L55)</sup>
+
+Container's working directory.
+If not specified, the container runtime's default will be used, which
+might be configured in the container image.
+
+***
+
+### .spec.deployment.project.args
+
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L50)</sup>
+
+Arguments to the entrypoint.
+The container image's CMD is used if this is not provided.
+Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+of whether the variable exists or not. Cannot be updated.
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell)
+
+***
+
+### .spec.deployment.project.command
+
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L40)</sup>
+
+Entrypoint array. Not executed within a shell.
+The container image's ENTRYPOINT is used if this is not provided.
+Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+of whether the variable exists or not. Cannot be updated.
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell)
 
 ***
 
@@ -380,6 +458,16 @@ VolumeMounts keeps list of pod volumes to mount into the container's filesystem.
 
 ***
 
+### .spec.deployment.project.workingDir
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L55)</sup>
+
+Container's working directory.
+If not specified, the container runtime's default will be used, which
+might be configured in the container image.
+
+***
+
 ### .spec.deployment.replicas
 
 Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/ml/v1alpha1/extension_spec_deployment.go#L56)</sup>
@@ -439,6 +527,40 @@ Tolerations defines tolerations
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/)
+
+***
+
+### .spec.deployment.training.args
+
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L50)</sup>
+
+Arguments to the entrypoint.
+The container image's CMD is used if this is not provided.
+Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+of whether the variable exists or not. Cannot be updated.
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell)
+
+***
+
+### .spec.deployment.training.command
+
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L40)</sup>
+
+Entrypoint array. Not executed within a shell.
+The container image's ENTRYPOINT is used if this is not provided.
+Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+of whether the variable exists or not. Cannot be updated.
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell)
 
 ***
 
@@ -596,6 +718,16 @@ VolumeMounts keeps list of pod volumes to mount into the container's filesystem.
 
 ***
 
+### .spec.deployment.training.workingDir
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L55)</sup>
+
+Container's working directory.
+If not specified, the container runtime's default will be used, which
+might be configured in the container image.
+
+***
+
 ### .spec.deployment.volumes
 
 Type: `[]core.Volume` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/volumes.go#L36)</sup>
@@ -641,6 +773,40 @@ Affinity defines scheduling constraints for workload
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity)
+
+***
+
+### .spec.init.args
+
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L50)</sup>
+
+Arguments to the entrypoint.
+The container image's CMD is used if this is not provided.
+Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+of whether the variable exists or not. Cannot be updated.
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell)
+
+***
+
+### .spec.init.command
+
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L40)</sup>
+
+Entrypoint array. Not executed within a shell.
+The container image's ENTRYPOINT is used if this is not provided.
+Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+of whether the variable exists or not. Cannot be updated.
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell)
 
 ***
 
@@ -879,6 +1045,16 @@ Links:
 
 ***
 
+### .spec.init.workingDir
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L55)</sup>
+
+Container's working directory.
+If not specified, the container runtime's default will be used, which
+might be configured in the container image.
+
+***
+
 ### .spec.jobsTemplates.featurization.cpu.affinity
 
 Type: `core.Affinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/scheduling.go#L44)</sup>
@@ -887,6 +1063,40 @@ Affinity defines scheduling constraints for workload
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity)
+
+***
+
+### .spec.jobsTemplates.featurization.cpu.args
+
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L50)</sup>
+
+Arguments to the entrypoint.
+The container image's CMD is used if this is not provided.
+Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+of whether the variable exists or not. Cannot be updated.
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell)
+
+***
+
+### .spec.jobsTemplates.featurization.cpu.command
+
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L40)</sup>
+
+Entrypoint array. Not executed within a shell.
+The container image's ENTRYPOINT is used if this is not provided.
+Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+of whether the variable exists or not. Cannot be updated.
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell)
 
 ***
 
@@ -1125,6 +1335,16 @@ Links:
 
 ***
 
+### .spec.jobsTemplates.featurization.cpu.workingDir
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L55)</sup>
+
+Container's working directory.
+If not specified, the container runtime's default will be used, which
+might be configured in the container image.
+
+***
+
 ### .spec.jobsTemplates.featurization.gpu.affinity
 
 Type: `core.Affinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/scheduling.go#L44)</sup>
@@ -1133,6 +1353,40 @@ Affinity defines scheduling constraints for workload
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity)
+
+***
+
+### .spec.jobsTemplates.featurization.gpu.args
+
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L50)</sup>
+
+Arguments to the entrypoint.
+The container image's CMD is used if this is not provided.
+Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+of whether the variable exists or not. Cannot be updated.
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell)
+
+***
+
+### .spec.jobsTemplates.featurization.gpu.command
+
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L40)</sup>
+
+Entrypoint array. Not executed within a shell.
+The container image's ENTRYPOINT is used if this is not provided.
+Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+of whether the variable exists or not. Cannot be updated.
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell)
 
 ***
 
@@ -1371,6 +1625,16 @@ Links:
 
 ***
 
+### .spec.jobsTemplates.featurization.gpu.workingDir
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L55)</sup>
+
+Container's working directory.
+If not specified, the container runtime's default will be used, which
+might be configured in the container image.
+
+***
+
 ### .spec.jobsTemplates.prediction.cpu.affinity
 
 Type: `core.Affinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/scheduling.go#L44)</sup>
@@ -1379,6 +1643,40 @@ Affinity defines scheduling constraints for workload
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity)
+
+***
+
+### .spec.jobsTemplates.prediction.cpu.args
+
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L50)</sup>
+
+Arguments to the entrypoint.
+The container image's CMD is used if this is not provided.
+Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+of whether the variable exists or not. Cannot be updated.
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell)
+
+***
+
+### .spec.jobsTemplates.prediction.cpu.command
+
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L40)</sup>
+
+Entrypoint array. Not executed within a shell.
+The container image's ENTRYPOINT is used if this is not provided.
+Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+of whether the variable exists or not. Cannot be updated.
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell)
 
 ***
 
@@ -1617,6 +1915,16 @@ Links:
 
 ***
 
+### .spec.jobsTemplates.prediction.cpu.workingDir
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L55)</sup>
+
+Container's working directory.
+If not specified, the container runtime's default will be used, which
+might be configured in the container image.
+
+***
+
 ### .spec.jobsTemplates.prediction.gpu.affinity
 
 Type: `core.Affinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/scheduling.go#L44)</sup>
@@ -1625,6 +1933,40 @@ Affinity defines scheduling constraints for workload
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity)
+
+***
+
+### .spec.jobsTemplates.prediction.gpu.args
+
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L50)</sup>
+
+Arguments to the entrypoint.
+The container image's CMD is used if this is not provided.
+Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+of whether the variable exists or not. Cannot be updated.
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell)
+
+***
+
+### .spec.jobsTemplates.prediction.gpu.command
+
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L40)</sup>
+
+Entrypoint array. Not executed within a shell.
+The container image's ENTRYPOINT is used if this is not provided.
+Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+of whether the variable exists or not. Cannot be updated.
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell)
 
 ***
 
@@ -1863,6 +2205,16 @@ Links:
 
 ***
 
+### .spec.jobsTemplates.prediction.gpu.workingDir
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L55)</sup>
+
+Container's working directory.
+If not specified, the container runtime's default will be used, which
+might be configured in the container image.
+
+***
+
 ### .spec.jobsTemplates.training.cpu.affinity
 
 Type: `core.Affinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/scheduling.go#L44)</sup>
@@ -1871,6 +2223,40 @@ Affinity defines scheduling constraints for workload
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity)
+
+***
+
+### .spec.jobsTemplates.training.cpu.args
+
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L50)</sup>
+
+Arguments to the entrypoint.
+The container image's CMD is used if this is not provided.
+Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+of whether the variable exists or not. Cannot be updated.
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell)
+
+***
+
+### .spec.jobsTemplates.training.cpu.command
+
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L40)</sup>
+
+Entrypoint array. Not executed within a shell.
+The container image's ENTRYPOINT is used if this is not provided.
+Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+of whether the variable exists or not. Cannot be updated.
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell)
 
 ***
 
@@ -2109,6 +2495,16 @@ Links:
 
 ***
 
+### .spec.jobsTemplates.training.cpu.workingDir
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L55)</sup>
+
+Container's working directory.
+If not specified, the container runtime's default will be used, which
+might be configured in the container image.
+
+***
+
 ### .spec.jobsTemplates.training.gpu.affinity
 
 Type: `core.Affinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/scheduling.go#L44)</sup>
@@ -2117,6 +2513,40 @@ Affinity defines scheduling constraints for workload
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity)
+
+***
+
+### .spec.jobsTemplates.training.gpu.args
+
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L50)</sup>
+
+Arguments to the entrypoint.
+The container image's CMD is used if this is not provided.
+Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+of whether the variable exists or not. Cannot be updated.
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell)
+
+***
+
+### .spec.jobsTemplates.training.gpu.command
+
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L40)</sup>
+
+Entrypoint array. Not executed within a shell.
+The container image's ENTRYPOINT is used if this is not provided.
+Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+of whether the variable exists or not. Cannot be updated.
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell)
 
 ***
 
@@ -2352,6 +2782,16 @@ Volumes keeps list of volumes that can be mounted by containers belonging to the
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/concepts/storage/volumes)
+
+***
+
+### .spec.jobsTemplates.training.gpu.workingDir
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L55)</sup>
+
+Container's working directory.
+If not specified, the container runtime's default will be used, which
+might be configured in the container image.
 
 ***
 

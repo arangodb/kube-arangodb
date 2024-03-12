@@ -33,16 +33,20 @@ var _ interfaces.Pod[Generic] = &Generic{}
 type Generic struct {
 	// Environments keeps the environment variables for Container
 	*schedulerContainerResourcesApi.Environments `json:",inline"`
+
+	// VolumeMounts define volume mounts assigned to the Container
+	*schedulerContainerResourcesApi.VolumeMounts `json:",inline"`
 }
 
-func (c *Generic) Apply(template *core.PodTemplateSpec) error {
-	if c == nil {
+func (g *Generic) Apply(template *core.PodTemplateSpec) error {
+	if g == nil {
 		return nil
 	}
 
 	for id := range template.Spec.Containers {
 		if err := shared.WithErrors(
-			c.Environments.Apply(template, &template.Spec.Containers[id]),
+			g.Environments.Apply(template, &template.Spec.Containers[id]),
+			g.VolumeMounts.Apply(template, &template.Spec.Containers[id]),
 		); err != nil {
 			return err
 		}
@@ -51,38 +55,48 @@ func (c *Generic) Apply(template *core.PodTemplateSpec) error {
 	return nil
 }
 
-func (c *Generic) GetEnvironments() *schedulerContainerResourcesApi.Environments {
-	if c == nil || c.Environments == nil {
+func (g *Generic) GetEnvironments() *schedulerContainerResourcesApi.Environments {
+	if g == nil || g.Environments == nil {
 		return nil
 	}
 
-	return c.Environments
+	return g.Environments
 }
 
-func (c *Generic) With(other *Generic) *Generic {
-	if c == nil && other == nil {
+func (g *Generic) GetVolumeMounts() *schedulerContainerResourcesApi.VolumeMounts {
+	if g == nil || g.VolumeMounts == nil {
 		return nil
 	}
 
-	if c == nil {
+	return g.VolumeMounts
+}
+
+func (g *Generic) With(other *Generic) *Generic {
+	if g == nil && other == nil {
+		return nil
+	}
+
+	if g == nil {
 		return other.DeepCopy()
 	}
 
 	if other == nil {
-		return c.DeepCopy()
+		return g.DeepCopy()
 	}
 
 	return &Generic{
-		Environments: c.Environments.With(other.Environments),
+		Environments: g.Environments.With(other.Environments),
+		VolumeMounts: g.VolumeMounts.With(other.VolumeMounts),
 	}
 }
 
-func (c *Generic) Validate() error {
-	if c == nil {
+func (g *Generic) Validate() error {
+	if g == nil {
 		return nil
 	}
 
 	return shared.WithErrors(
-		shared.PrefixResourceErrors("containerEnvironments", c.Environments.Validate()),
+		shared.PrefixResourceErrors("containerEnvironments", g.Environments.Validate()),
+		shared.PrefixResourceErrors("volumeMounts", g.VolumeMounts.Validate()),
 	)
 }

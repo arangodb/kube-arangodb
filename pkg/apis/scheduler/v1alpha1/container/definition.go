@@ -104,6 +104,9 @@ func (c Containers) Validate() error {
 var _ interfaces.Container[Container] = &Container{}
 
 type Container struct {
+	// Core keeps the core settings for Container
+	*schedulerContainerResourcesApi.Core `json:",inline"`
+
 	// Security keeps the security settings for Container
 	*schedulerContainerResourcesApi.Security `json:",inline"`
 
@@ -135,6 +138,7 @@ func (c *Container) Apply(template *core.PodTemplateSpec, container *core.Contai
 	}
 
 	return shared.WithErrors(
+		c.Core.Apply(template, container),
 		c.Security.Apply(template, container),
 		c.Environments.Apply(template, container),
 		c.Image.Apply(template, container),
@@ -144,6 +148,14 @@ func (c *Container) Apply(template *core.PodTemplateSpec, container *core.Contai
 		c.Networking.Apply(template, container),
 		c.Lifecycle.Apply(template, container),
 	)
+}
+
+func (c *Container) GetCore() *schedulerContainerResourcesApi.Core {
+	if c == nil || c.Core == nil {
+		return nil
+	}
+
+	return c.Core
 }
 
 func (c *Container) GetImage() *schedulerContainerResourcesApi.Image {
@@ -224,6 +236,7 @@ func (c *Container) With(other *Container) *Container {
 	}
 
 	return &Container{
+		Core:         c.Core.With(other.Core),
 		Security:     c.Security.With(other.Security),
 		Environments: c.Environments.With(other.Environments),
 		Image:        c.Image.With(other.Image),
@@ -241,6 +254,7 @@ func (c *Container) Validate() error {
 	}
 
 	return shared.WithErrors(
+		shared.PrefixResourceErrors("core", c.Core.Validate()),
 		shared.PrefixResourceErrors("containerSecurity", c.Security.Validate()),
 		shared.PrefixResourceErrors("containerEnvironments", c.Environments.Validate()),
 		shared.PrefixResourceErrors("containerResources", c.Image.Validate()),
