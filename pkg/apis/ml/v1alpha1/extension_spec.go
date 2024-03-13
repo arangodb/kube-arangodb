@@ -21,7 +21,6 @@
 package v1alpha1
 
 import (
-	schedulerContainerResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container/resources"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 )
@@ -33,9 +32,6 @@ type ArangoMLExtensionSpec struct {
 
 	// Storage specifies the ArangoMLStorage used within Extension
 	Storage *sharedApi.Object `json:"storage,omitempty"`
-
-	// Image defines default image used for the extension
-	*schedulerContainerResourcesApi.Image `json:",inline"`
 
 	// ArangoMLExtensionTemplate define Init job specification
 	Init *ArangoMLExtensionTemplate `json:"init,omitempty"`
@@ -53,14 +49,6 @@ func (a *ArangoMLExtensionSpec) GetMetadataService() *ArangoMLExtensionSpecMetad
 	}
 
 	return a.MetadataService
-}
-
-func (a *ArangoMLExtensionSpec) GetImage() *schedulerContainerResourcesApi.Image {
-	if a == nil || a.Image == nil {
-		return nil
-	}
-
-	return a.Image
 }
 
 func (a *ArangoMLExtensionSpec) GetInit() *ArangoMLExtensionTemplate {
@@ -101,9 +89,7 @@ func (a *ArangoMLExtensionSpec) Validate() error {
 	return shared.WithErrors(shared.PrefixResourceErrors("spec",
 		shared.PrefixResourceErrors("metadataService", a.GetMetadataService().Validate()),
 		shared.PrefixResourceErrors("storage", shared.ValidateRequired(a.GetStorage(), func(obj sharedApi.Object) error { return obj.Validate() })),
-		a.GetImage().Validate(),
 		shared.PrefixResourceErrors("init", a.GetInit().Validate()),
-		shared.ValidateAnyNotNil(".image or .init.image needs to be specified", a.GetImage(), a.GetInit().GetContainer().GetImage()),
 		shared.PrefixResourceErrors("deployment", a.GetDeployment().Validate()),
 		shared.PrefixResourceErrors("jobsTemplates", a.GetJobsTemplates().Validate()),
 	))

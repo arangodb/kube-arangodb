@@ -28,7 +28,6 @@ package v1alpha1
 import (
 	deploymentv1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	container "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container"
-	resources "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container/resources"
 	pod "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/pod"
 	sharedv1 "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	v1 "k8s.io/api/batch/v1"
@@ -338,11 +337,6 @@ func (in *ArangoMLExtensionSpec) DeepCopyInto(out *ArangoMLExtensionSpec) {
 	if in.Storage != nil {
 		in, out := &in.Storage, &out.Storage
 		*out = new(sharedv1.Object)
-		(*in).DeepCopyInto(*out)
-	}
-	if in.Image != nil {
-		in, out := &in.Image, &out.Image
-		*out = new(resources.Image)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.Init != nil {

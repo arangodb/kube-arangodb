@@ -317,7 +317,7 @@ license-range:
 fmt:
 	@echo ">> Ensuring style of files"
 	@$(GOPATH)/bin/goimports -w $(SOURCES)
-	@$(GOPATH)/bin/gci write -s "standard" -s "default" -s "prefix(github.com/arangodb)" -s "prefix(github.com/arangodb/kube-arangodb)" $(SOURCES) 
+	@$(GOPATH)/bin/gci write -s "standard" -s "default" -s "prefix(github.com/arangodb)" -s "prefix(github.com/arangodb/kube-arangodb)" $(SOURCES)
 
 .PHONY: yamlfmt
 yamlfmt:
@@ -337,7 +337,7 @@ license:
 .PHONY: fmt-verify
 fmt-verify: license-verify
 	@echo ">> Verify files style"
-	@if [ X"$$($(GOPATH)/bin/goimports -l $(SOURCES) | wc -l)" != X"0" ]; then echo ">> Style errors"; $(GOPATH)/bin/goimports -l $(SOURCES); exit 1; fi
+	@if $(GOPATH)/bin/goimports -l $(SOURCES) | grep -v "^$$"; then echo ">> Style errors"; exit 1; fi
 
 .PHONY: linter
 linter:
@@ -729,7 +729,7 @@ tools-min: update-vendor
 	@echo ">> Fetching golangci-lint linter"
 	@GOBIN=$(GOPATH)/bin go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.56.2
 	@echo ">> Fetching goimports"
-	@GOBIN=$(GOPATH)/bin go install golang.org/x/tools/cmd/goimports@0bb7e5c47b1a31f85d4f173edc878a8e049764a5
+	@GOBIN=$(GOPATH)/bin go install golang.org/x/tools/cmd/goimports@v0.19.0
 	@echo ">> Fetching license check"
 	@GOBIN=$(GOPATH)/bin go install github.com/google/addlicense@6d92264d717064f28b32464f0f9693a5b4ef0239
 	@echo ">> Fetching yamlfmt"

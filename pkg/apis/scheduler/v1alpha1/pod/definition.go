@@ -31,6 +31,9 @@ import (
 var _ interfaces.Pod[Pod] = &Pod{}
 
 type Pod struct {
+	// Metadata keeps the metadata settings for Pod
+	*schedulerPodResourcesApi.Metadata `json:",inline"`
+
 	// Scheduling keeps the scheduling information
 	*schedulerPodResourcesApi.Scheduling `json:",inline"`
 
@@ -42,6 +45,9 @@ type Pod struct {
 
 	// Volumes keeps the volumes settings for Pod
 	*schedulerPodResourcesApi.Volumes `json:",inline"`
+
+	// ServiceAccount keeps the service account settings for Pod
+	*schedulerPodResourcesApi.ServiceAccount `json:",inline"`
 }
 
 func (a *Pod) With(other *Pod) *Pod {
@@ -58,10 +64,12 @@ func (a *Pod) With(other *Pod) *Pod {
 	}
 
 	return &Pod{
-		Scheduling: a.Scheduling.With(other.Scheduling),
-		Namespace:  a.Namespace.With(other.Namespace),
-		Security:   a.Security.With(other.Security),
-		Volumes:    a.Volumes.With(other.Volumes),
+		Scheduling:     a.Scheduling.With(other.Scheduling),
+		Namespace:      a.Namespace.With(other.Namespace),
+		Security:       a.Security.With(other.Security),
+		Volumes:        a.Volumes.With(other.Volumes),
+		ServiceAccount: a.ServiceAccount.With(other.ServiceAccount),
+		Metadata:       a.Metadata.With(other.Metadata),
 	}
 }
 
@@ -75,6 +83,8 @@ func (a *Pod) Apply(template *core.PodTemplateSpec) error {
 		a.Namespace.Apply(template),
 		a.Security.Apply(template),
 		a.Volumes.Apply(template),
+		a.ServiceAccount.Apply(template),
+		a.Metadata.Apply(template),
 	)
 }
 
@@ -110,6 +120,22 @@ func (a *Pod) GetVolumes() *schedulerPodResourcesApi.Volumes {
 	return a.Volumes
 }
 
+func (a *Pod) GetServiceAccount() *schedulerPodResourcesApi.ServiceAccount {
+	if a == nil {
+		return nil
+	}
+
+	return a.ServiceAccount
+}
+
+func (a *Pod) GetMetadata() *schedulerPodResourcesApi.Metadata {
+	if a == nil {
+		return nil
+	}
+
+	return a.Metadata
+}
+
 func (a *Pod) Validate() error {
 	if a == nil {
 		return nil
@@ -119,5 +145,7 @@ func (a *Pod) Validate() error {
 		a.Namespace.Validate(),
 		a.Security.Validate(),
 		a.Volumes.Validate(),
+		a.ServiceAccount.Validate(),
+		a.Metadata.Validate(),
 	)
 }

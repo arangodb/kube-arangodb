@@ -95,7 +95,11 @@ func (in ProfileTemplates) DeepCopyInto(out *ProfileTemplates) {
 		in := &in
 		*out = make(ProfileTemplates, len(*in))
 		for i := range *in {
-			(*in)[i].DeepCopyInto(&(*out)[i])
+			if (*in)[i] != nil {
+				in, out := &(*in)[i], &(*out)[i]
+				*out = new(ProfileTemplate)
+				(*in).DeepCopyInto(*out)
+			}
 		}
 		return
 	}

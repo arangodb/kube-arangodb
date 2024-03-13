@@ -29,7 +29,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-type ProfileTemplates []ProfileTemplate
+type ProfileTemplates []*ProfileTemplate
 
 func (p ProfileTemplates) Sort() ProfileTemplates {
 	sort.Slice(p, func(i, j int) bool {
@@ -43,29 +43,27 @@ func (p ProfileTemplates) Sort() ProfileTemplates {
 	return p
 }
 
-func (p ProfileTemplates) Render() (*core.PodTemplateSpec, error) {
-	var pod core.PodTemplateSpec
-
+func (p ProfileTemplates) RenderOnTemplate(pod *core.PodTemplateSpec) error {
 	// Apply Pod Spec
 	for id := range p {
-		if err := p[id].Pod.Apply(&pod); err != nil {
-			return nil, errors.Wrapf(err, "Error while rendering Pod for %d", id)
+		if err := p[id].Pod.Apply(pod); err != nil {
+			return errors.Wrapf(err, "Error while rendering Pod for %d", id)
 		}
 	}
 
 	// Apply Generic Containers Spec
 	for id := range p {
-		if err := p[id].Container.ApplyGeneric(&pod); err != nil {
-			return nil, errors.Wrapf(err, "Error while rendering Pod for %d", id)
+		if err := p[id].Container.ApplyGeneric(pod); err != nil {
+			return errors.Wrapf(err, "Error while rendering Pod for %d", id)
 		}
 	}
 
 	// Apply Containers Spec
 	for id := range p {
-		if err := p[id].Container.ApplyContainers(&pod); err != nil {
-			return nil, errors.Wrapf(err, "Error while rendering Pod for %d", id)
+		if err := p[id].Container.ApplyContainers(pod); err != nil {
+			return errors.Wrapf(err, "Error while rendering Pod for %d", id)
 		}
 	}
 
-	return pod.DeepCopy(), nil
+	return nil
 }

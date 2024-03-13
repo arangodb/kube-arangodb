@@ -21,9 +21,11 @@
 package v1alpha1
 
 import (
+	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
 	schedulerContainerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container"
 	schedulerPodApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/pod"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 type JobType string
@@ -137,6 +139,32 @@ func (a *ArangoMLExtensionTemplate) GetContainer() *schedulerContainerApi.Contai
 	}
 
 	return a.Container
+}
+
+func (a *ArangoMLExtensionTemplate) AsTemplate(name string) *schedulerApi.ProfileTemplate {
+	if a == nil {
+		return nil
+	}
+
+	if a.Pod == nil && a.Container == nil {
+		return nil
+	}
+
+	t := &schedulerApi.ProfileTemplate{}
+
+	if p := a.Pod; p != nil {
+		t.Pod = p.DeepCopy()
+	}
+
+	if p := a.Container; p != nil {
+		t.Container = &schedulerApi.ProfileContainerTemplate{
+			Containers: schedulerContainerApi.Containers{
+				name: util.TypeOrDefault(p.DeepCopy()),
+			},
+		}
+	}
+
+	return t
 }
 
 func (a *ArangoMLExtensionTemplate) Validate() error {

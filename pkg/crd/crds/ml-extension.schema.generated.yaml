@@ -337,16 +337,43 @@ v1alpha1:
                         type: array
                     type: object
                 type: object
+              annotations:
+                additionalProperties:
+                  type: string
+                type: object
+              automountServiceAccountToken:
+                type: boolean
               hostIPC:
                 type: boolean
               hostNetwork:
                 type: boolean
               hostPID:
                 type: boolean
+              labels:
+                additionalProperties:
+                  type: string
+                type: object
               nodeSelector:
                 additionalProperties:
                   type: string
                 type: object
+              ownerReferences:
+                items:
+                  properties:
+                    apiVersion:
+                      type: string
+                    blockOwnerDeletion:
+                      type: boolean
+                    controller:
+                      type: boolean
+                    kind:
+                      type: string
+                    name:
+                      type: string
+                    uid:
+                      type: string
+                  type: object
+                type: array
               podSecurityContext:
                 properties:
                   fsGroup:
@@ -1414,6 +1441,8 @@ v1alpha1:
                       - ExternalName
                     type: string
                 type: object
+              serviceAccountName:
+                type: string
               shareProcessNamespace:
                 type: boolean
               tolerations:
@@ -2608,14 +2637,6 @@ v1alpha1:
                   type: object
                 type: array
             type: object
-          image:
-            type: string
-          imagePullPolicy:
-            type: string
-          imagePullSecrets:
-            items:
-              type: string
-            type: array
           init:
             description: ArangoMLExtensionTemplate define Init job specification
             properties:
@@ -2950,10 +2971,16 @@ v1alpha1:
                         type: array
                     type: object
                 type: object
+              annotations:
+                additionalProperties:
+                  type: string
+                type: object
               args:
                 items:
                   type: string
                 type: array
+              automountServiceAccountToken:
+                type: boolean
               command:
                 items:
                   type: string
@@ -3039,6 +3066,10 @@ v1alpha1:
                 items:
                   type: string
                 type: array
+              labels:
+                additionalProperties:
+                  type: string
+                type: object
               lifecycle:
                 properties:
                   postStart:
@@ -3201,6 +3232,23 @@ v1alpha1:
                 additionalProperties:
                   type: string
                 type: object
+              ownerReferences:
+                items:
+                  properties:
+                    apiVersion:
+                      type: string
+                    blockOwnerDeletion:
+                      type: boolean
+                    controller:
+                      type: boolean
+                    kind:
+                      type: string
+                    name:
+                      type: string
+                    uid:
+                      type: string
+                  type: object
+                type: array
               podSecurityContext:
                 properties:
                   fsGroup:
@@ -3421,6 +3469,8 @@ v1alpha1:
                         type: string
                     type: object
                 type: object
+              serviceAccountName:
+                type: string
               shareProcessNamespace:
                 type: boolean
               startupProbe:
@@ -4544,10 +4594,16 @@ v1alpha1:
                                 type: array
                             type: object
                         type: object
+                      annotations:
+                        additionalProperties:
+                          type: string
+                        type: object
                       args:
                         items:
                           type: string
                         type: array
+                      automountServiceAccountToken:
+                        type: boolean
                       command:
                         items:
                           type: string
@@ -4633,6 +4689,10 @@ v1alpha1:
                         items:
                           type: string
                         type: array
+                      labels:
+                        additionalProperties:
+                          type: string
+                        type: object
                       lifecycle:
                         properties:
                           postStart:
@@ -4795,6 +4855,23 @@ v1alpha1:
                         additionalProperties:
                           type: string
                         type: object
+                      ownerReferences:
+                        items:
+                          properties:
+                            apiVersion:
+                              type: string
+                            blockOwnerDeletion:
+                              type: boolean
+                            controller:
+                              type: boolean
+                            kind:
+                              type: string
+                            name:
+                              type: string
+                            uid:
+                              type: string
+                          type: object
+                        type: array
                       podSecurityContext:
                         properties:
                           fsGroup:
@@ -5015,6 +5092,8 @@ v1alpha1:
                                 type: string
                             type: object
                         type: object
+                      serviceAccountName:
+                        type: string
                       shareProcessNamespace:
                         type: boolean
                       startupProbe:
@@ -6132,10 +6211,16 @@ v1alpha1:
                                 type: array
                             type: object
                         type: object
+                      annotations:
+                        additionalProperties:
+                          type: string
+                        type: object
                       args:
                         items:
                           type: string
                         type: array
+                      automountServiceAccountToken:
+                        type: boolean
                       command:
                         items:
                           type: string
@@ -6221,6 +6306,10 @@ v1alpha1:
                         items:
                           type: string
                         type: array
+                      labels:
+                        additionalProperties:
+                          type: string
+                        type: object
                       lifecycle:
                         properties:
                           postStart:
@@ -6383,6 +6472,23 @@ v1alpha1:
                         additionalProperties:
                           type: string
                         type: object
+                      ownerReferences:
+                        items:
+                          properties:
+                            apiVersion:
+                              type: string
+                            blockOwnerDeletion:
+                              type: boolean
+                            controller:
+                              type: boolean
+                            kind:
+                              type: string
+                            name:
+                              type: string
+                            uid:
+                              type: string
+                          type: object
+                        type: array
                       podSecurityContext:
                         properties:
                           fsGroup:
@@ -6603,6 +6709,8 @@ v1alpha1:
                                 type: string
                             type: object
                         type: object
+                      serviceAccountName:
+                        type: string
                       shareProcessNamespace:
                         type: boolean
                       startupProbe:
@@ -7724,10 +7832,16 @@ v1alpha1:
                                 type: array
                             type: object
                         type: object
+                      annotations:
+                        additionalProperties:
+                          type: string
+                        type: object
                       args:
                         items:
                           type: string
                         type: array
+                      automountServiceAccountToken:
+                        type: boolean
                       command:
                         items:
                           type: string
@@ -7813,6 +7927,10 @@ v1alpha1:
                         items:
                           type: string
                         type: array
+                      labels:
+                        additionalProperties:
+                          type: string
+                        type: object
                       lifecycle:
                         properties:
                           postStart:
@@ -7975,6 +8093,23 @@ v1alpha1:
                         additionalProperties:
                           type: string
                         type: object
+                      ownerReferences:
+                        items:
+                          properties:
+                            apiVersion:
+                              type: string
+                            blockOwnerDeletion:
+                              type: boolean
+                            controller:
+                              type: boolean
+                            kind:
+                              type: string
+                            name:
+                              type: string
+                            uid:
+                              type: string
+                          type: object
+                        type: array
                       podSecurityContext:
                         properties:
                           fsGroup:
@@ -8195,6 +8330,8 @@ v1alpha1:
                                 type: string
                             type: object
                         type: object
+                      serviceAccountName:
+                        type: string
                       shareProcessNamespace:
                         type: boolean
                       startupProbe:
@@ -9312,10 +9449,16 @@ v1alpha1:
                                 type: array
                             type: object
                         type: object
+                      annotations:
+                        additionalProperties:
+                          type: string
+                        type: object
                       args:
                         items:
                           type: string
                         type: array
+                      automountServiceAccountToken:
+                        type: boolean
                       command:
                         items:
                           type: string
@@ -9401,6 +9544,10 @@ v1alpha1:
                         items:
                           type: string
                         type: array
+                      labels:
+                        additionalProperties:
+                          type: string
+                        type: object
                       lifecycle:
                         properties:
                           postStart:
@@ -9563,6 +9710,23 @@ v1alpha1:
                         additionalProperties:
                           type: string
                         type: object
+                      ownerReferences:
+                        items:
+                          properties:
+                            apiVersion:
+                              type: string
+                            blockOwnerDeletion:
+                              type: boolean
+                            controller:
+                              type: boolean
+                            kind:
+                              type: string
+                            name:
+                              type: string
+                            uid:
+                              type: string
+                          type: object
+                        type: array
                       podSecurityContext:
                         properties:
                           fsGroup:
@@ -9783,6 +9947,8 @@ v1alpha1:
                                 type: string
                             type: object
                         type: object
+                      serviceAccountName:
+                        type: string
                       shareProcessNamespace:
                         type: boolean
                       startupProbe:
@@ -10904,10 +11070,16 @@ v1alpha1:
                                 type: array
                             type: object
                         type: object
+                      annotations:
+                        additionalProperties:
+                          type: string
+                        type: object
                       args:
                         items:
                           type: string
                         type: array
+                      automountServiceAccountToken:
+                        type: boolean
                       command:
                         items:
                           type: string
@@ -10993,6 +11165,10 @@ v1alpha1:
                         items:
                           type: string
                         type: array
+                      labels:
+                        additionalProperties:
+                          type: string
+                        type: object
                       lifecycle:
                         properties:
                           postStart:
@@ -11155,6 +11331,23 @@ v1alpha1:
                         additionalProperties:
                           type: string
                         type: object
+                      ownerReferences:
+                        items:
+                          properties:
+                            apiVersion:
+                              type: string
+                            blockOwnerDeletion:
+                              type: boolean
+                            controller:
+                              type: boolean
+                            kind:
+                              type: string
+                            name:
+                              type: string
+                            uid:
+                              type: string
+                          type: object
+                        type: array
                       podSecurityContext:
                         properties:
                           fsGroup:
@@ -11375,6 +11568,8 @@ v1alpha1:
                                 type: string
                             type: object
                         type: object
+                      serviceAccountName:
+                        type: string
                       shareProcessNamespace:
                         type: boolean
                       startupProbe:
@@ -12492,10 +12687,16 @@ v1alpha1:
                                 type: array
                             type: object
                         type: object
+                      annotations:
+                        additionalProperties:
+                          type: string
+                        type: object
                       args:
                         items:
                           type: string
                         type: array
+                      automountServiceAccountToken:
+                        type: boolean
                       command:
                         items:
                           type: string
@@ -12581,6 +12782,10 @@ v1alpha1:
                         items:
                           type: string
                         type: array
+                      labels:
+                        additionalProperties:
+                          type: string
+                        type: object
                       lifecycle:
                         properties:
                           postStart:
@@ -12743,6 +12948,23 @@ v1alpha1:
                         additionalProperties:
                           type: string
                         type: object
+                      ownerReferences:
+                        items:
+                          properties:
+                            apiVersion:
+                              type: string
+                            blockOwnerDeletion:
+                              type: boolean
+                            controller:
+                              type: boolean
+                            kind:
+                              type: string
+                            name:
+                              type: string
+                            uid:
+                              type: string
+                          type: object
+                        type: array
                       podSecurityContext:
                         properties:
                           fsGroup:
@@ -12963,6 +13185,8 @@ v1alpha1:
                                 type: string
                             type: object
                         type: object
+                      serviceAccountName:
+                        type: string
                       shareProcessNamespace:
                         type: boolean
                       startupProbe:
