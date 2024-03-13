@@ -19,6 +19,27 @@ Links:
 
 ***
 
+### .spec.deployment.annotations
+
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/metadata.go#L45)</sup>
+
+Annotations is an unstructured key value map stored with a resource that may be
+set by external tools to store and retrieve arbitrary metadata. They are not
+queryable and should be preserved when modifying objects.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations)
+
+***
+
+### .spec.deployment.automountServiceAccountToken
+
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/service_account.go#L38)</sup>
+
+AutomountServiceAccountToken indicates whether a service account token should be automatically mounted.
+
+***
+
 ### .spec.deployment.hostIPC
 
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/namespace.go#L42)</sup>
@@ -50,6 +71,19 @@ Default Value: `false`
 
 ***
 
+### .spec.deployment.labels
+
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/metadata.go#L39)</sup>
+
+Map of string keys and values that can be used to organize and categorize
+(scope and select) objects. May match selectors of replication controllers
+and services.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels)
+
+***
+
 ### .spec.deployment.nodeSelector
 
 Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/scheduling.go#L39)</sup>
@@ -58,6 +92,17 @@ NodeSelector is a selector that must be true for the workload to fit on a node.
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector)
+
+***
+
+### .spec.deployment.ownerReferences
+
+Type: `meta.OwnerReference` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/metadata.go#L52)</sup>
+
+List of objects depended by this object. If ALL objects in the list have
+been deleted, this object will be garbage collected. If this object is managed by a controller,
+then an entry in this list will point to this controller, with the controller field set to true.
+There cannot be more than one managing controller.
 
 ***
 
@@ -506,6 +551,17 @@ Possible Values:
 
 ***
 
+### .spec.deployment.serviceAccountName
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/service_account.go#L35)</sup>
+
+ServiceAccountName is the name of the ServiceAccount to use to run this pod.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/)
+
+***
+
 ### .spec.deployment.shareProcessNamespace
 
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/namespace.go#L48)</sup>
@@ -739,32 +795,6 @@ Links:
 
 ***
 
-### .spec.image
-
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L37)</sup>
-
-Image define image details
-
-***
-
-### .spec.imagePullPolicy
-
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L41)</sup>
-
-ImagePullPolicy define Image pull policy
-
-Default Value: `IfNotPresent`
-
-***
-
-### .spec.imagePullSecrets
-
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L44)</sup>
-
-ImagePullSecrets define Secrets used to pull Image from registry
-
-***
-
 ### .spec.init.affinity
 
 Type: `core.Affinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/scheduling.go#L44)</sup>
@@ -773,6 +803,19 @@ Affinity defines scheduling constraints for workload
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity)
+
+***
+
+### .spec.init.annotations
+
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/metadata.go#L45)</sup>
+
+Annotations is an unstructured key value map stored with a resource that may be
+set by external tools to store and retrieve arbitrary metadata. They are not
+queryable and should be preserved when modifying objects.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations)
 
 ***
 
@@ -790,6 +833,14 @@ of whether the variable exists or not. Cannot be updated.
 
 Links:
 * [Kubernetes Docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell)
+
+***
+
+### .spec.init.automountServiceAccountToken
+
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/service_account.go#L38)</sup>
+
+AutomountServiceAccountToken indicates whether a service account token should be automatically mounted.
 
 ***
 
@@ -889,6 +940,19 @@ ImagePullSecrets define Secrets used to pull Image from registry
 
 ***
 
+### .spec.init.labels
+
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/metadata.go#L39)</sup>
+
+Map of string keys and values that can be used to organize and categorize
+(scope and select) objects. May match selectors of replication controllers
+and services.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels)
+
+***
+
 ### .spec.init.lifecycle
 
 Type: `core.Lifecycle` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/lifecycle.go#L35)</sup>
@@ -917,6 +981,17 @@ NodeSelector is a selector that must be true for the workload to fit on a node.
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector)
+
+***
+
+### .spec.init.ownerReferences
+
+Type: `meta.OwnerReference` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/metadata.go#L52)</sup>
+
+List of objects depended by this object. If ALL objects in the list have
+been deleted, this object will be garbage collected. If this object is managed by a controller,
+then an entry in this list will point to this controller, with the controller field set to true.
+There cannot be more than one managing controller.
 
 ***
 
@@ -984,6 +1059,17 @@ SecurityContext holds container-level security attributes and common container s
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
+
+***
+
+### .spec.init.serviceAccountName
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/service_account.go#L35)</sup>
+
+ServiceAccountName is the name of the ServiceAccount to use to run this pod.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/)
 
 ***
 
@@ -1066,6 +1152,19 @@ Links:
 
 ***
 
+### .spec.jobsTemplates.featurization.cpu.annotations
+
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/metadata.go#L45)</sup>
+
+Annotations is an unstructured key value map stored with a resource that may be
+set by external tools to store and retrieve arbitrary metadata. They are not
+queryable and should be preserved when modifying objects.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations)
+
+***
+
 ### .spec.jobsTemplates.featurization.cpu.args
 
 Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L50)</sup>
@@ -1080,6 +1179,14 @@ of whether the variable exists or not. Cannot be updated.
 
 Links:
 * [Kubernetes Docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell)
+
+***
+
+### .spec.jobsTemplates.featurization.cpu.automountServiceAccountToken
+
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/service_account.go#L38)</sup>
+
+AutomountServiceAccountToken indicates whether a service account token should be automatically mounted.
 
 ***
 
@@ -1179,6 +1286,19 @@ ImagePullSecrets define Secrets used to pull Image from registry
 
 ***
 
+### .spec.jobsTemplates.featurization.cpu.labels
+
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/metadata.go#L39)</sup>
+
+Map of string keys and values that can be used to organize and categorize
+(scope and select) objects. May match selectors of replication controllers
+and services.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels)
+
+***
+
 ### .spec.jobsTemplates.featurization.cpu.lifecycle
 
 Type: `core.Lifecycle` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/lifecycle.go#L35)</sup>
@@ -1207,6 +1327,17 @@ NodeSelector is a selector that must be true for the workload to fit on a node.
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector)
+
+***
+
+### .spec.jobsTemplates.featurization.cpu.ownerReferences
+
+Type: `meta.OwnerReference` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/metadata.go#L52)</sup>
+
+List of objects depended by this object. If ALL objects in the list have
+been deleted, this object will be garbage collected. If this object is managed by a controller,
+then an entry in this list will point to this controller, with the controller field set to true.
+There cannot be more than one managing controller.
 
 ***
 
@@ -1274,6 +1405,17 @@ SecurityContext holds container-level security attributes and common container s
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
+
+***
+
+### .spec.jobsTemplates.featurization.cpu.serviceAccountName
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/service_account.go#L35)</sup>
+
+ServiceAccountName is the name of the ServiceAccount to use to run this pod.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/)
 
 ***
 
@@ -1356,6 +1498,19 @@ Links:
 
 ***
 
+### .spec.jobsTemplates.featurization.gpu.annotations
+
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/metadata.go#L45)</sup>
+
+Annotations is an unstructured key value map stored with a resource that may be
+set by external tools to store and retrieve arbitrary metadata. They are not
+queryable and should be preserved when modifying objects.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations)
+
+***
+
 ### .spec.jobsTemplates.featurization.gpu.args
 
 Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L50)</sup>
@@ -1370,6 +1525,14 @@ of whether the variable exists or not. Cannot be updated.
 
 Links:
 * [Kubernetes Docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell)
+
+***
+
+### .spec.jobsTemplates.featurization.gpu.automountServiceAccountToken
+
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/service_account.go#L38)</sup>
+
+AutomountServiceAccountToken indicates whether a service account token should be automatically mounted.
 
 ***
 
@@ -1469,6 +1632,19 @@ ImagePullSecrets define Secrets used to pull Image from registry
 
 ***
 
+### .spec.jobsTemplates.featurization.gpu.labels
+
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/metadata.go#L39)</sup>
+
+Map of string keys and values that can be used to organize and categorize
+(scope and select) objects. May match selectors of replication controllers
+and services.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels)
+
+***
+
 ### .spec.jobsTemplates.featurization.gpu.lifecycle
 
 Type: `core.Lifecycle` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/lifecycle.go#L35)</sup>
@@ -1497,6 +1673,17 @@ NodeSelector is a selector that must be true for the workload to fit on a node.
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector)
+
+***
+
+### .spec.jobsTemplates.featurization.gpu.ownerReferences
+
+Type: `meta.OwnerReference` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/metadata.go#L52)</sup>
+
+List of objects depended by this object. If ALL objects in the list have
+been deleted, this object will be garbage collected. If this object is managed by a controller,
+then an entry in this list will point to this controller, with the controller field set to true.
+There cannot be more than one managing controller.
 
 ***
 
@@ -1564,6 +1751,17 @@ SecurityContext holds container-level security attributes and common container s
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
+
+***
+
+### .spec.jobsTemplates.featurization.gpu.serviceAccountName
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/service_account.go#L35)</sup>
+
+ServiceAccountName is the name of the ServiceAccount to use to run this pod.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/)
 
 ***
 
@@ -1646,6 +1844,19 @@ Links:
 
 ***
 
+### .spec.jobsTemplates.prediction.cpu.annotations
+
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/metadata.go#L45)</sup>
+
+Annotations is an unstructured key value map stored with a resource that may be
+set by external tools to store and retrieve arbitrary metadata. They are not
+queryable and should be preserved when modifying objects.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations)
+
+***
+
 ### .spec.jobsTemplates.prediction.cpu.args
 
 Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L50)</sup>
@@ -1660,6 +1871,14 @@ of whether the variable exists or not. Cannot be updated.
 
 Links:
 * [Kubernetes Docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell)
+
+***
+
+### .spec.jobsTemplates.prediction.cpu.automountServiceAccountToken
+
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/service_account.go#L38)</sup>
+
+AutomountServiceAccountToken indicates whether a service account token should be automatically mounted.
 
 ***
 
@@ -1759,6 +1978,19 @@ ImagePullSecrets define Secrets used to pull Image from registry
 
 ***
 
+### .spec.jobsTemplates.prediction.cpu.labels
+
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/metadata.go#L39)</sup>
+
+Map of string keys and values that can be used to organize and categorize
+(scope and select) objects. May match selectors of replication controllers
+and services.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels)
+
+***
+
 ### .spec.jobsTemplates.prediction.cpu.lifecycle
 
 Type: `core.Lifecycle` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/lifecycle.go#L35)</sup>
@@ -1787,6 +2019,17 @@ NodeSelector is a selector that must be true for the workload to fit on a node.
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector)
+
+***
+
+### .spec.jobsTemplates.prediction.cpu.ownerReferences
+
+Type: `meta.OwnerReference` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/metadata.go#L52)</sup>
+
+List of objects depended by this object. If ALL objects in the list have
+been deleted, this object will be garbage collected. If this object is managed by a controller,
+then an entry in this list will point to this controller, with the controller field set to true.
+There cannot be more than one managing controller.
 
 ***
 
@@ -1854,6 +2097,17 @@ SecurityContext holds container-level security attributes and common container s
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
+
+***
+
+### .spec.jobsTemplates.prediction.cpu.serviceAccountName
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/service_account.go#L35)</sup>
+
+ServiceAccountName is the name of the ServiceAccount to use to run this pod.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/)
 
 ***
 
@@ -1936,6 +2190,19 @@ Links:
 
 ***
 
+### .spec.jobsTemplates.prediction.gpu.annotations
+
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/metadata.go#L45)</sup>
+
+Annotations is an unstructured key value map stored with a resource that may be
+set by external tools to store and retrieve arbitrary metadata. They are not
+queryable and should be preserved when modifying objects.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations)
+
+***
+
 ### .spec.jobsTemplates.prediction.gpu.args
 
 Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L50)</sup>
@@ -1950,6 +2217,14 @@ of whether the variable exists or not. Cannot be updated.
 
 Links:
 * [Kubernetes Docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell)
+
+***
+
+### .spec.jobsTemplates.prediction.gpu.automountServiceAccountToken
+
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/service_account.go#L38)</sup>
+
+AutomountServiceAccountToken indicates whether a service account token should be automatically mounted.
 
 ***
 
@@ -2049,6 +2324,19 @@ ImagePullSecrets define Secrets used to pull Image from registry
 
 ***
 
+### .spec.jobsTemplates.prediction.gpu.labels
+
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/metadata.go#L39)</sup>
+
+Map of string keys and values that can be used to organize and categorize
+(scope and select) objects. May match selectors of replication controllers
+and services.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels)
+
+***
+
 ### .spec.jobsTemplates.prediction.gpu.lifecycle
 
 Type: `core.Lifecycle` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/lifecycle.go#L35)</sup>
@@ -2077,6 +2365,17 @@ NodeSelector is a selector that must be true for the workload to fit on a node.
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector)
+
+***
+
+### .spec.jobsTemplates.prediction.gpu.ownerReferences
+
+Type: `meta.OwnerReference` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/metadata.go#L52)</sup>
+
+List of objects depended by this object. If ALL objects in the list have
+been deleted, this object will be garbage collected. If this object is managed by a controller,
+then an entry in this list will point to this controller, with the controller field set to true.
+There cannot be more than one managing controller.
 
 ***
 
@@ -2144,6 +2443,17 @@ SecurityContext holds container-level security attributes and common container s
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
+
+***
+
+### .spec.jobsTemplates.prediction.gpu.serviceAccountName
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/service_account.go#L35)</sup>
+
+ServiceAccountName is the name of the ServiceAccount to use to run this pod.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/)
 
 ***
 
@@ -2226,6 +2536,19 @@ Links:
 
 ***
 
+### .spec.jobsTemplates.training.cpu.annotations
+
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/metadata.go#L45)</sup>
+
+Annotations is an unstructured key value map stored with a resource that may be
+set by external tools to store and retrieve arbitrary metadata. They are not
+queryable and should be preserved when modifying objects.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations)
+
+***
+
 ### .spec.jobsTemplates.training.cpu.args
 
 Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L50)</sup>
@@ -2240,6 +2563,14 @@ of whether the variable exists or not. Cannot be updated.
 
 Links:
 * [Kubernetes Docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell)
+
+***
+
+### .spec.jobsTemplates.training.cpu.automountServiceAccountToken
+
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/service_account.go#L38)</sup>
+
+AutomountServiceAccountToken indicates whether a service account token should be automatically mounted.
 
 ***
 
@@ -2339,6 +2670,19 @@ ImagePullSecrets define Secrets used to pull Image from registry
 
 ***
 
+### .spec.jobsTemplates.training.cpu.labels
+
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/metadata.go#L39)</sup>
+
+Map of string keys and values that can be used to organize and categorize
+(scope and select) objects. May match selectors of replication controllers
+and services.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels)
+
+***
+
 ### .spec.jobsTemplates.training.cpu.lifecycle
 
 Type: `core.Lifecycle` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/lifecycle.go#L35)</sup>
@@ -2367,6 +2711,17 @@ NodeSelector is a selector that must be true for the workload to fit on a node.
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector)
+
+***
+
+### .spec.jobsTemplates.training.cpu.ownerReferences
+
+Type: `meta.OwnerReference` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/metadata.go#L52)</sup>
+
+List of objects depended by this object. If ALL objects in the list have
+been deleted, this object will be garbage collected. If this object is managed by a controller,
+then an entry in this list will point to this controller, with the controller field set to true.
+There cannot be more than one managing controller.
 
 ***
 
@@ -2434,6 +2789,17 @@ SecurityContext holds container-level security attributes and common container s
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
+
+***
+
+### .spec.jobsTemplates.training.cpu.serviceAccountName
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/service_account.go#L35)</sup>
+
+ServiceAccountName is the name of the ServiceAccount to use to run this pod.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/)
 
 ***
 
@@ -2516,6 +2882,19 @@ Links:
 
 ***
 
+### .spec.jobsTemplates.training.gpu.annotations
+
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/metadata.go#L45)</sup>
+
+Annotations is an unstructured key value map stored with a resource that may be
+set by external tools to store and retrieve arbitrary metadata. They are not
+queryable and should be preserved when modifying objects.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations)
+
+***
+
 ### .spec.jobsTemplates.training.gpu.args
 
 Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L50)</sup>
@@ -2530,6 +2909,14 @@ of whether the variable exists or not. Cannot be updated.
 
 Links:
 * [Kubernetes Docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell)
+
+***
+
+### .spec.jobsTemplates.training.gpu.automountServiceAccountToken
+
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/service_account.go#L38)</sup>
+
+AutomountServiceAccountToken indicates whether a service account token should be automatically mounted.
 
 ***
 
@@ -2629,6 +3016,19 @@ ImagePullSecrets define Secrets used to pull Image from registry
 
 ***
 
+### .spec.jobsTemplates.training.gpu.labels
+
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/metadata.go#L39)</sup>
+
+Map of string keys and values that can be used to organize and categorize
+(scope and select) objects. May match selectors of replication controllers
+and services.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels)
+
+***
+
 ### .spec.jobsTemplates.training.gpu.lifecycle
 
 Type: `core.Lifecycle` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/lifecycle.go#L35)</sup>
@@ -2657,6 +3057,17 @@ NodeSelector is a selector that must be true for the workload to fit on a node.
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector)
+
+***
+
+### .spec.jobsTemplates.training.gpu.ownerReferences
+
+Type: `meta.OwnerReference` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/metadata.go#L52)</sup>
+
+List of objects depended by this object. If ALL objects in the list have
+been deleted, this object will be garbage collected. If this object is managed by a controller,
+then an entry in this list will point to this controller, with the controller field set to true.
+There cannot be more than one managing controller.
 
 ***
 
@@ -2724,6 +3135,17 @@ SecurityContext holds container-level security attributes and common container s
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
+
+***
+
+### .spec.jobsTemplates.training.gpu.serviceAccountName
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/service_account.go#L35)</sup>
+
+ServiceAccountName is the name of the ServiceAccount to use to run this pod.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/)
 
 ***
 

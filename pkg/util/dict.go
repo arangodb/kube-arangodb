@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,6 +51,24 @@ func CopyFullMap[K comparable, V any](src map[K]V) map[K]V {
 	r := map[K]V{}
 
 	CopyMap(r, src)
+
+	return r
+}
+
+func MergeMaps[K comparable, V any](override bool, maps ...map[K]V) map[K]V {
+	r := map[K]V{}
+
+	for _, m := range maps {
+		for k, v := range m {
+			if !override {
+				if _, ok := r[k]; ok {
+					continue
+				}
+			}
+
+			r[k] = v
+		}
+	}
 
 	return r
 }

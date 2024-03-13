@@ -78,12 +78,14 @@ func Test_Pod(t *testing.T) {
 		applyPod(t, nil)(func(t *testing.T, pod *core.PodTemplateSpec, _ *Pod) {
 			require.Nil(t, pod.Spec.SecurityContext)
 			require.Nil(t, pod.Spec.Affinity)
+			require.Empty(t, pod.Spec.ServiceAccountName)
 		})
 	})
 	t.Run("Empty template", func(t *testing.T) {
 		applyPod(t, &core.PodTemplateSpec{})(func(t *testing.T, pod *core.PodTemplateSpec, _ *Pod) {
 			require.Nil(t, pod.Spec.SecurityContext)
 			require.Nil(t, pod.Spec.Affinity)
+			require.Empty(t, pod.Spec.ServiceAccountName)
 		})
 	})
 	t.Run("Add scheduling", func(t *testing.T) {
@@ -128,12 +130,16 @@ func Test_Pod_YAML(t *testing.T) {
 			require.Nil(t, spec.Security)
 			require.Nil(t, spec.Scheduling)
 			require.Nil(t, spec.Namespace)
+			require.Nil(t, spec.ServiceAccount)
+			require.Nil(t, spec.Metadata)
 		})
 	})
 	t.Run("Empty template", func(t *testing.T) {
 		applyPodYAML(t, &core.PodTemplateSpec{})(func(t *testing.T, pod *core.PodTemplateSpec, _ *Pod) {
 			require.Nil(t, pod.Spec.SecurityContext)
 			require.Nil(t, pod.Spec.Affinity)
+			require.Empty(t, pod.Spec.ServiceAccountName)
+			require.Nil(t, pod.Labels)
 		})
 	})
 	t.Run("Add nodeSelector", func(t *testing.T) {
@@ -182,6 +188,9 @@ nodeSelector:
 podSecurityContext:
   runAsUser: 10
 hostPID: true
+serviceAccountName: test
+labels:
+  A: B
 volumes:
   - name: test
     emptyDir: {}
@@ -202,6 +211,11 @@ volumes:
 			require.Len(t, spec.Volumes.Volumes, 1)
 			require.EqualValues(t, "test", spec.Volumes.Volumes[0].Name)
 			require.NotNil(t, spec.Volumes.Volumes[0].EmptyDir)
+			require.NotNil(t, spec.ServiceAccount)
+			require.EqualValues(t, "test", spec.ServiceAccount.ServiceAccountName)
+			require.NotNil(t, spec.Labels)
+			require.Contains(t, spec.Labels, "A")
+			require.EqualValues(t, "B", spec.Labels["A"])
 
 			// Pod
 			require.NotNil(t, pod.Spec.SecurityContext)
@@ -217,6 +231,9 @@ volumes:
 			require.Len(t, pod.Spec.Volumes, 1)
 			require.EqualValues(t, "test", pod.Spec.Volumes[0].Name)
 			require.NotNil(t, pod.Spec.Volumes[0].EmptyDir)
+			require.NotNil(t, pod.Labels)
+			require.Contains(t, pod.Labels, "A")
+			require.EqualValues(t, "B", spec.Labels["A"])
 		})
 	})
 }

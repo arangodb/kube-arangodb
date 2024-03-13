@@ -33,6 +33,28 @@ import (
 
 type Containers map[string]Container
 
+func (c *Containers) ExtendContainers(spec *Container, names ...string) {
+	if c == nil {
+		return
+	}
+
+	r := c.DeepCopy()
+
+	if r == nil {
+		r = Containers{}
+	}
+
+	for _, n := range names {
+		if v, ok := r[n]; ok {
+			r[n] = util.TypeOrDefault(v.With(spec))
+		} else {
+			r[n] = util.TypeOrDefault(spec.DeepCopy())
+		}
+	}
+
+	*c = r
+}
+
 func (c Containers) Apply(template *core.PodTemplateSpec) error {
 	if len(c) == 0 {
 		return nil
