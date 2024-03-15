@@ -6,6 +6,7 @@
 - (Feature) Extend Backup Details in DebugPackage
 - (Feature) (ML) Use Scheduler API
 - (Feature) (Scheduler) Introduce Scheduler CRD
+- (Feature) Discover Namespace in DebugPackage from K8S
 
 ## [1.2.39](https://github.com/arangodb/kube-arangodb/tree/1.2.39) (2024-03-11)
 - (Feature) Extract Scheduler API
