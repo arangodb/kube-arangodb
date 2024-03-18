@@ -41,6 +41,7 @@ import (
 	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
 	replicationApi "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
+	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
 	storageApi "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
@@ -231,6 +232,22 @@ func Test_GenerateAPIDocs(t *testing.T) {
 					"ArangoDeploymentReplication.V1": {
 						"Spec": replicationApi.ArangoDeploymentReplication{}.Spec,
 					},
+				},
+			},
+		},
+		"scheduler": map[string]inputPackage{
+			"v1alpha1": {
+				Types: inputPackageTypes{
+					"ArangoProfile.V1Alpha1": {
+						"Spec": schedulerApi.ArangoProfile{}.Spec,
+					},
+				},
+				Shared: []string{
+					"shared/v1",
+					"scheduler/v1alpha1/container",
+					"scheduler/v1alpha1/container/resources",
+					"scheduler/v1alpha1/pod",
+					"scheduler/v1alpha1/pod/resources",
 				},
 			},
 		},

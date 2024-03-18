@@ -21,5 +21,9 @@
 package scheduler
 
 const (
+	ArangoProfileCRDName        = ArangoProfileResourcePlural + "." + ArangoSchedulerGroupName
+	ArangoProfileResourceKind   = "ArangoProfile"
+	ArangoProfileResourcePlural = "arangoprofiles"
+
 	ArangoSchedulerGroupName = "scheduler.arangodb.com"
 )

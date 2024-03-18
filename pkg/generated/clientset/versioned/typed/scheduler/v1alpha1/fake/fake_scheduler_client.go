@@ -23,12 +23,17 @@
 package fake
 
 import (
+	v1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/scheduler/v1alpha1"
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"
 )
 
 type FakeSchedulerV1alpha1 struct {
 	*testing.Fake
+}
+
+func (c *FakeSchedulerV1alpha1) ArangoProfiles(namespace string) v1alpha1.ArangoProfileInterface {
+	return &FakeArangoProfiles{c, namespace}
 }
 
 // RESTClient returns a RESTClient that is used to communicate

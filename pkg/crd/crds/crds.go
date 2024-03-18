@@ -63,6 +63,9 @@ func AllDefinitions() []Definition {
 		MLStorageDefinitionWithOptions(),
 		MLCronJobDefinitionWithOptions(),
 		MLBatchJobDefinitionWithOptions(),
+
+		// Scheduler
+		SchedulerProfileDefinitionWithOptions(),
 	}
 }
 

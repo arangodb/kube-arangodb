@@ -32,11 +32,16 @@ import (
 
 type SchedulerV1alpha1Interface interface {
 	RESTClient() rest.Interface
+	ArangoProfilesGetter
 }
 
 // SchedulerV1alpha1Client is used to interact with features provided by the scheduler.arangodb.com group.
 type SchedulerV1alpha1Client struct {
 	restClient rest.Interface
+}
+
+func (c *SchedulerV1alpha1Client) ArangoProfiles(namespace string) ArangoProfileInterface {
+	return newArangoProfiles(c, namespace)
 }
 
 // NewForConfig creates a new SchedulerV1alpha1Client for the given config.
