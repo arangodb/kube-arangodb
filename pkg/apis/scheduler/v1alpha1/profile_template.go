@@ -23,6 +23,7 @@ package v1alpha1
 import (
 	schedulerPodApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/pod"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 type ProfileTemplate struct {
@@ -31,6 +32,50 @@ type ProfileTemplate struct {
 	Pod *schedulerPodApi.Pod `json:"pod,omitempty"`
 
 	Container *ProfileContainerTemplate `json:"container,omitempty"`
+}
+
+func (p *ProfileTemplate) GetPod() *schedulerPodApi.Pod {
+	if p == nil || p.Pod == nil {
+		return nil
+	}
+
+	return p.Pod
+}
+
+func (p *ProfileTemplate) GetContainer() *ProfileContainerTemplate {
+	if p == nil || p.Container == nil {
+		return nil
+	}
+
+	return p.Container
+}
+
+func (p *ProfileTemplate) GetPriority() int {
+	if p == nil || p.Priority == nil {
+		return 0
+	}
+
+	return *p.Priority
+}
+
+func (p *ProfileTemplate) With(other *ProfileTemplate) *ProfileTemplate {
+	if p == nil && other == nil {
+		return nil
+	}
+
+	if p == nil {
+		return other.DeepCopy()
+	}
+
+	if other == nil {
+		return p.DeepCopy()
+	}
+
+	return &ProfileTemplate{
+		Priority:  util.NewType(max(p.GetPriority(), other.GetPriority())),
+		Pod:       p.Pod.With(other.Pod),
+		Container: p.Container.With(other.Container),
+	}
 }
 
 func (p *ProfileTemplate) Validate() error {

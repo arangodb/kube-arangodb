@@ -23,6 +23,7 @@ package operator
 import (
 	"context"
 	"fmt"
+	"runtime/debug"
 
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -50,6 +51,10 @@ func (o *operator) processNextItem() bool {
 				e = e.Int("err", obj)
 			default:
 				e.Interface("err", obj)
+			}
+
+			if v := debug.Stack(); len(v) != 0 {
+				e = e.Str("stack", string(v))
 			}
 
 			e.Error("Recovered from panic")

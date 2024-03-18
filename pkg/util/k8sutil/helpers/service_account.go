@@ -383,12 +383,3 @@ func EnsureServiceAccount(ctx context.Context, client kubernetes.Interface, owne
 
 	return false, nil
 }
-
-func AppendServiceAccount(obj *sharedApi.ServiceAccount, spec *core.PodTemplateSpec) {
-	if obj == nil || obj.Object == nil || spec == nil {
-		return
-	}
-
-	spec.Spec.ServiceAccountName = obj.Object.GetName()
-	spec.Spec.AutomountServiceAccountToken = util.NewType(true)
-}
