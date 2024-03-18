@@ -47,7 +47,10 @@ func Resource(resource string) schema.GroupResource {
 
 // addKnownTypes adds the set of types defined in this package to the supplied scheme.
 func addKnownTypes(s *runtime.Scheme) error {
-	s.AddKnownTypes(SchemeGroupVersion)
+	s.AddKnownTypes(SchemeGroupVersion,
+		&ArangoProfile{},
+		&ArangoProfileList{},
+	)
 	meta.AddToGroupVersion(s, SchemeGroupVersion)
 	return nil
 }

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,6 +40,7 @@ import (
 	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
 	replicationv1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	replicationv2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v2alpha1"
+	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
 	storagev1alpha "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
@@ -176,6 +177,13 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 			fmt.Sprintf("%s/pkg/apis/storage/v1alpha", root): {
 				"v1alpha": {
 					storagev1alpha.ArangoLocalStorage{}.Spec,
+				},
+			},
+		},
+		"scheduler-profile": {
+			fmt.Sprintf("%s/pkg/apis/scheduler/v1alpha1", root): {
+				"v1alpha1": {
+					schedulerApi.ArangoProfile{}.Spec,
 				},
 			},
 		},

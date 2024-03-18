@@ -5,6 +5,7 @@
 - (Feature) Add Metadata fields to the Scheduler Pod Spec
 - (Feature) Extend Backup Details in DebugPackage
 - (Feature) (ML) Use Scheduler API
+- (Feature) (Scheduler) Introduce Scheduler CRD
 
 ## [1.2.39](https://github.com/arangodb/kube-arangodb/tree/1.2.39) (2024-03-11)
 - (Feature) Extract Scheduler API

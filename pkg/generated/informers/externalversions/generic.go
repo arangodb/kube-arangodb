@@ -32,6 +32,7 @@ import (
 	v1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
 	replicationv1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	replicationv2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v2alpha1"
+	schedulerv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
 	v1alpha "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
@@ -110,6 +111,10 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		// Group=replication.database.arangodb.com, Version=v2alpha1
 	case replicationv2alpha1.SchemeGroupVersion.WithResource("arangodeploymentreplications"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Replication().V2alpha1().ArangoDeploymentReplications().Informer()}, nil
+
+		// Group=scheduler.arangodb.com, Version=v1alpha1
+	case schedulerv1alpha1.SchemeGroupVersion.WithResource("arangoprofiles"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Scheduler().V1alpha1().ArangoProfiles().Informer()}, nil
 
 		// Group=storage.arangodb.com, Version=v1alpha
 	case v1alpha.SchemeGroupVersion.WithResource("arangolocalstorages"):
