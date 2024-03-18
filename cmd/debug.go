@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,16 +32,25 @@ import (
 
 func init() {
 	cmdMain.AddCommand(debugPackage)
+	cmdMain.AddCommand(debugPackageV2)
 
-	f := debugPackage.Flags()
-
-	f.StringVarP(&debugPackageInput.Output, "output", "o", "out.tar.gz", "Output of the result gz file. If set to `-` then stdout is used")
+	debugPackage.Flags().StringVarP(&debugPackageInput.Output, "output", "o", "out.tar.gz", "Output of the result gz file. If set to `-` then stdout is used")
+	debugPackageV2.Flags().StringVarP(&debugPackageInput.Output, "output", "o", "out.tar.gz", "Output of the result gz file. If set to `-` then stdout is used")
 
 	debug_package.InitCommand(debugPackage)
+	debug_package.InitCommand(debugPackageV2)
 }
 
 var debugPackage = &cobra.Command{
-	Use:   "debugPackage",
+	Use:        "debugPackage",
+	Short:      "Generate debug package for debugging",
+	RunE:       debugPackageFunc,
+	Hidden:     true,
+	Deprecated: "Use debug-package command instead",
+}
+
+var debugPackageV2 = &cobra.Command{
+	Use:   "debug-package",
 	Short: "Generate debug package for debugging",
 	RunE:  debugPackageFunc,
 }

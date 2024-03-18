@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,11 +20,15 @@
 
 package cli
 
-import "github.com/spf13/cobra"
+import (
+	"github.com/spf13/cobra"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+)
 
 func Register(cmd *cobra.Command) {
 	f := cmd.Flags()
-	f.StringVarP(&input.Namespace, "namespace", "n", "default", "Kubernetes namespace")
+	f.StringVarP(&input.Namespace, "namespace", "n", constants.NamespaceWithDefault("default"), "Kubernetes namespace")
 	f.BoolVar(&input.HideSensitiveData, "hide-sensitive-data", true, "Hide sensitive data")
 	f.BoolVar(&input.PodLogs, "pod-logs", true, "Collect pod logs")
 }
