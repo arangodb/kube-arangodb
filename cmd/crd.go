@@ -52,6 +52,7 @@ var (
 var (
 	crdInstallOptions struct {
 		validationSchema []string
+		force            bool
 	}
 )
 
@@ -65,6 +66,7 @@ func init() {
 
 	f := cmdCRDInstall.Flags()
 	f.StringArrayVar(&crdInstallOptions.validationSchema, "crd.validation-schema", defaultValidationSchemaEnabled, "Controls which CRD should have validation schema <crd-name>=<true/false>.")
+	f.BoolVar(&crdInstallOptions.force, "crd.force-update", false, "Enforce CRD Schema update")
 	cmdCRD.AddCommand(cmdCRDInstall)
 }
 
@@ -109,7 +111,7 @@ func cmdCRDInstallRun(cmd *cobra.Command, args []string) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	err = crd.EnsureCRDWithOptions(ctx, client, crd.EnsureCRDOptions{IgnoreErrors: false, CRDOptions: crdOpts})
+	err = crd.EnsureCRDWithOptions(ctx, client, crd.EnsureCRDOptions{IgnoreErrors: false, CRDOptions: crdOpts, ForceUpdate: crdInstallOptions.force})
 	if err != nil {
 		os.Exit(1)
 	}
