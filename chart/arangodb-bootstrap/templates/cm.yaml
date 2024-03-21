@@ -1,0 +1,19 @@
+{{- $files := .Files }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "arangodb-bootstrap.fullName" . }}
+  namespace: {{ .Release.Namespace }}
+{{- if .Values.job.annotations }}
+  annotations:
+{{ toYaml .Values.operator.annotations | indent 4 }}
+{{- end }}
+  labels:
+    app.kubernetes.io/name: {{ template "arangodb-bootstrap.name" . }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    release: {{ .Release.Name }}
+data:
+{{ (tpl (.Files.Glob "files/*").AsConfig . ) | indent 2 }}
