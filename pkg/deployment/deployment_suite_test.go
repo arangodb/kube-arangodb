@@ -53,9 +53,9 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/container"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/probes"
+	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
@@ -893,7 +893,7 @@ func addLifecycle(name string, uuidRequired bool, license string, group api.Serv
 				p.Spec.Containers[0].VolumeMounts = append(p.Spec.Containers[0].VolumeMounts, k8sutil.LifecycleVolumeMount())
 			}
 
-			if _, ok := container.GetAnyContainerByName(p.Spec.InitContainers, "init-lifecycle"); !ok {
+			if _, ok := kresources.GetAnyContainerByName(p.Spec.InitContainers, "init-lifecycle"); !ok {
 				p.Spec.InitContainers = append(
 					[]core.Container{createTestLifecycleContainer(emptyResources)},
 					p.Spec.InitContainers...,
@@ -901,7 +901,7 @@ func addLifecycle(name string, uuidRequired bool, license string, group api.Serv
 			}
 		}
 
-		if _, ok := container.GetAnyContainerByName(p.Spec.InitContainers, "uuid"); !ok {
+		if _, ok := kresources.GetAnyContainerByName(p.Spec.InitContainers, "uuid"); !ok {
 			binaryPath, _ := os.Executable()
 			p.Spec.InitContainers = append(
 				[]core.Container{

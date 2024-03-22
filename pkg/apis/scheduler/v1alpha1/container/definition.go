@@ -28,7 +28,7 @@ import (
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/container"
+	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
 type Containers map[string]Container
@@ -61,7 +61,7 @@ func (c Containers) Apply(template *core.PodTemplateSpec) error {
 	}
 
 	for k, v := range c {
-		if id := container.GetContainerIDByName(template.Spec.Containers, k); id >= 0 {
+		if id := kresources.GetContainerIDByName(template.Spec.Containers, k); id >= 0 {
 			if err := v.Apply(template, &template.Spec.Containers[id]); err != nil {
 				return err
 			}

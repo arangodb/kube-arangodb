@@ -31,7 +31,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/container"
+	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
 func newRuntimeContainerImageUpdateAction(action api.Action, actionCtx ActionContext) Action {
@@ -286,13 +286,13 @@ func (a actionRuntimeContainerImageUpdate) CheckProgress(ctx context.Context) (b
 		return true, false, nil
 	}
 
-	cspec, ok := container.GetContainerByName(pod, name)
+	cspec, ok := kresources.GetContainerByName(pod, name)
 	if !ok {
 		a.log.Info("Unable to find container spec")
 		return true, false, nil
 	}
 
-	cstatus, ok := container.GetContainerStatusByName(pod, name)
+	cstatus, ok := kresources.GetContainerStatusByName(pod, name)
 	if !ok {
 		a.log.Info("Unable to find container status")
 		return true, false, nil
