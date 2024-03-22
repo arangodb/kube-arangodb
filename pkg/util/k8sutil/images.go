@@ -27,7 +27,7 @@ import (
 
 	schedulerContainerResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/container"
+	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
 const (
@@ -77,7 +77,7 @@ func GetArangoDBImageIDFromPod(pod *core.Pod, names ...string) (string, error) {
 // GetArangoDBImageIDFromContainerStatuses returns the ArangoDB specific image from a container statuses
 func GetArangoDBImageIDFromContainerStatuses(containers []core.ContainerStatus, names ...string) (string, bool) {
 	for _, name := range names {
-		if id := container.GetContainerStatusIDByName(containers, name); id != -1 {
+		if id := kresources.GetContainerStatusIDByName(containers, name); id != -1 {
 			if image := containers[id].ImageID; image != "" {
 				if disc := ConvertImageID2Image(image); disc != "" {
 					return disc, true
@@ -92,7 +92,7 @@ func GetArangoDBImageIDFromContainerStatuses(containers []core.ContainerStatus, 
 // GetArangoDBImageFromContainers returns the ArangoDB specific image from a container specs
 func GetArangoDBImageFromContainers(containers []core.Container, names ...string) (string, bool) {
 	for _, name := range names {
-		if id := container.GetContainerIDByName(containers, name); id != -1 {
+		if id := kresources.GetContainerIDByName(containers, name); id != -1 {
 			if image := containers[id].Image; image != "" {
 				return image, true
 			}
