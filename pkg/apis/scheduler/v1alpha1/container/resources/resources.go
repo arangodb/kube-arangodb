@@ -42,7 +42,10 @@ func (r *Resources) Apply(_ *core.PodTemplateSpec, template *core.Container) err
 		return nil
 	}
 
-	template.Resources = r.GetResources()
+	res := r.GetResources()
+
+	template.Resources.Limits = kresources.UpscaleContainerResourceList(template.Resources.Limits, res.Limits)
+	template.Resources.Requests = kresources.UpscaleContainerResourceList(template.Resources.Requests, res.Requests)
 
 	return nil
 }

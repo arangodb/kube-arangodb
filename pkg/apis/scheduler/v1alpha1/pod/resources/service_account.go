@@ -46,7 +46,9 @@ func (s *ServiceAccount) Apply(template *core.PodTemplateSpec) error {
 	c := s.DeepCopy()
 
 	template.Spec.ServiceAccountName = c.ServiceAccountName
-	template.Spec.AutomountServiceAccountToken = c.AutomountServiceAccountToken
+	if c.AutomountServiceAccountToken != nil {
+		template.Spec.AutomountServiceAccountToken = c.AutomountServiceAccountToken
+	}
 
 	return nil
 }

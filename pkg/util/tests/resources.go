@@ -18,27 +18,19 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+package tests
 
 import (
-	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"testing"
+
+	"github.com/stretchr/testify/require"
+	core "k8s.io/api/core/v1"
+
+	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
-type ProfileSpec struct {
-	// Selectors keeps information about ProfileSelectors
-	Selectors *ProfileSelectors `json:"selectors,omitempty"`
-
-	// Template keeps the Profile Template
-	Template *ProfileTemplate `json:"template,omitempty"`
-}
-
-func (p *ProfileSpec) Validate() error {
-	if p == nil {
-		return nil
-	}
-
-	return shared.WithErrors(
-		shared.PrefixResourceErrors("selectors", p.Selectors.Validate()),
-		shared.PrefixResourceErrors("template", p.Template.Validate()),
-	)
+func GetContainerByNameT(t *testing.T, containers []core.Container, name string) core.Container {
+	id := kresources.GetContainerIDByName(containers, name)
+	require.NotEqualValues(t, -1, id)
+	return containers[id]
 }

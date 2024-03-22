@@ -9,6 +9,7 @@
 - (Feature) Discover Namespace in DebugPackage from K8S
 - (Feature) Expose Force CRD Install option
 - (Maintenance) Move Container utils functions
+- (Feature) ArangoProfile Selectors
 
 ## [1.2.39](https://github.com/arangodb/kube-arangodb/tree/1.2.39) (2024-03-11)
 - (Feature) Extract Scheduler API

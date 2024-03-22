@@ -71,6 +71,14 @@ Default Value: `false`
 
 ***
 
+### .spec.deployment.imagePullSecrets
+
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/image.go#L36)</sup>
+
+ImagePullSecrets define Secrets used to pull Image from registry
+
+***
+
 ### .spec.deployment.labels
 
 Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/metadata.go#L39)</sup>

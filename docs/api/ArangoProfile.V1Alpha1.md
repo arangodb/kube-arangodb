@@ -8,6 +8,14 @@ title: ArangoProfile V1Alpha1
 
 ## Spec
 
+### .spec.selectors.label
+
+Type: `meta.LabelSelector` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/profile_selectors.go#L32)</sup>
+
+Label keeps information about label selector
+
+***
+
 ### .spec.template.container.all.env
 
 Type: `core.EnvVar` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/environments.go#L36)</sup>
@@ -278,6 +286,14 @@ Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.
 HostPID define to use the host's pid namespace.
 
 Default Value: `false`
+
+***
+
+### .spec.template.pod.imagePullSecrets
+
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/image.go#L36)</sup>
+
+ImagePullSecrets define Secrets used to pull Image from registry
 
 ***
 

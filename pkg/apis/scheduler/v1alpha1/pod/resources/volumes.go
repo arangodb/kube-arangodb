@@ -43,7 +43,7 @@ func (v *Volumes) Apply(template *core.PodTemplateSpec) error {
 
 	obj := v.DeepCopy()
 
-	template.Spec.Volumes = obj.Volumes
+	template.Spec.Volumes = kresources.MergeVolumes(template.Spec.Volumes, obj.Volumes...)
 
 	return nil
 }
