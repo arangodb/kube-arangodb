@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ import (
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
+	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
@@ -76,4 +77,5 @@ func Test_NewMetaObject(t *testing.T) {
 	NewMetaObjectRun[*backupApi.ArangoBackup](t)
 	NewMetaObjectRun[*mlApi.ArangoMLExtension](t)
 	NewMetaObjectRun[*mlApi.ArangoMLStorage](t)
+	NewMetaObjectRun[*schedulerApi.ArangoProfile](t)
 }

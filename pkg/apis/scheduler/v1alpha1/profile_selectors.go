@@ -21,24 +21,29 @@
 package v1alpha1
 
 import (
-	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
-type ProfileSpec struct {
-	// Selectors keeps information about ProfileSelectors
-	Selectors *ProfileSelectors `json:"selectors,omitempty"`
-
-	// Template keeps the Profile Template
-	Template *ProfileTemplate `json:"template,omitempty"`
+type ProfileSelectors struct {
+	// Label keeps information about label selector
+	// +doc/type: meta.LabelSelector
+	Label *meta.LabelSelector `json:"label,omitempty"`
 }
 
-func (p *ProfileSpec) Validate() error {
+func (p *ProfileSelectors) Validate() error {
 	if p == nil {
 		return nil
 	}
 
-	return shared.WithErrors(
-		shared.PrefixResourceErrors("selectors", p.Selectors.Validate()),
-		shared.PrefixResourceErrors("template", p.Template.Validate()),
-	)
+	return nil
+}
+
+func (p *ProfileSelectors) Select(labels map[string]string) bool {
+	if p == nil || p.Label == nil {
+		return false
+	}
+
+	return kresources.SelectLabels(p.Label, labels)
 }

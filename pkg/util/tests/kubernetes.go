@@ -41,6 +41,8 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/ml"
 	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/scheduler"
+	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
@@ -205,6 +207,12 @@ func CreateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			vl := *v
 			_, err := arango.MlV1alpha1().ArangoMLCronJobs(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
 			require.NoError(t, err)
+		case **schedulerApi.ArangoProfile:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.SchedulerV1alpha1().ArangoProfiles(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
+			require.NoError(t, err)
 		default:
 			require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))
 		}
@@ -324,6 +332,12 @@ func UpdateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 
 			vl := *v
 			_, err := k8s.RbacV1().RoleBindings(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **schedulerApi.ArangoProfile:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.SchedulerV1alpha1().ArangoProfiles(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
 			require.NoError(t, err)
 		default:
 			require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))
@@ -700,6 +714,21 @@ func RefreshObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientS
 			} else {
 				*v = vn
 			}
+		case **schedulerApi.ArangoProfile:
+			require.NotNil(t, v)
+
+			vl := *v
+
+			vn, err := arango.SchedulerV1alpha1().ArangoProfiles(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
+			if err != nil {
+				if kerrors.IsNotFound(err) {
+					*v = nil
+				} else {
+					require.NoError(t, err)
+				}
+			} else {
+				*v = vn
+			}
 		default:
 			require.Fail(t, fmt.Sprintf("Unable to get object: %s", reflect.TypeOf(v).String()))
 		}
@@ -832,9 +861,21 @@ func SetMetaBasedOnType(t *testing.T, object meta.Object) {
 			ml.ArangoMLCronJobResourcePlural,
 			object.GetNamespace(),
 			object.GetName()))
+	case *schedulerApi.ArangoProfile:
+		v.Kind = scheduler.ArangoProfileResourceKind
+		v.APIVersion = schedulerApi.SchemeGroupVersion.String()
+		v.SetSelfLink(fmt.Sprintf("/api/%s/%s/%s/%s",
+			schedulerApi.SchemeGroupVersion.String(),
+			scheduler.ArangoProfileResourcePlural,
+			object.GetNamespace(),
+			object.GetName()))
 	default:
 		require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))
 	}
+}
+
+func NewMetaObjectInDefaultNamespace[T meta.Object](t *testing.T, name string, mods ...MetaObjectMod[T]) T {
+	return NewMetaObject[T](t, FakeNamespace, name, mods...)
 }
 
 func NewMetaObject[T meta.Object](t *testing.T, namespace, name string, mods ...MetaObjectMod[T]) T {
@@ -951,6 +992,10 @@ func NewItem(t *testing.T, o operation.Operation, object meta.Object) operation.
 		item.Group = ml.ArangoMLGroupName
 		item.Version = mlApi.ArangoMLVersion
 		item.Kind = ml.ArangoMLCronJobResourceKind
+	case *schedulerApi.ArangoProfile:
+		item.Group = scheduler.ArangoSchedulerGroupName
+		item.Version = schedulerApi.ArangoSchedulerVersion
+		item.Kind = scheduler.ArangoProfileResourceKind
 	default:
 		require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))
 	}

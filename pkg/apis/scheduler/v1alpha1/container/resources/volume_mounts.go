@@ -42,7 +42,7 @@ func (v *VolumeMounts) Apply(_ *core.PodTemplateSpec, container *core.Container)
 
 	obj := v.DeepCopy()
 
-	container.VolumeMounts = obj.VolumeMounts
+	container.VolumeMounts = kresources.MergeVolumeMounts(container.VolumeMounts, obj.VolumeMounts...)
 
 	return nil
 }

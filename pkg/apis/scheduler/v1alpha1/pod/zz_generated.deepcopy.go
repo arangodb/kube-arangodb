@@ -37,6 +37,11 @@ func (in *Pod) DeepCopyInto(out *Pod) {
 		*out = new(resources.Metadata)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.Image != nil {
+		in, out := &in.Image, &out.Image
+		*out = new(resources.Image)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.Scheduling != nil {
 		in, out := &in.Scheduling, &out.Scheduling
 		*out = new(resources.Scheduling)

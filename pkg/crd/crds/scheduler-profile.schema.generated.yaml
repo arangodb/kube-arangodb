@@ -3,6 +3,31 @@ v1alpha1:
     properties:
       spec:
         properties:
+          selectors:
+            description: Selectors keeps information about ProfileSelectors
+            properties:
+              label:
+                description: Label keeps information about label selector
+                properties:
+                  matchExpressions:
+                    items:
+                      properties:
+                        key:
+                          type: string
+                        operator:
+                          type: string
+                        values:
+                          items:
+                            type: string
+                          type: array
+                      type: object
+                    type: array
+                  matchLabels:
+                    additionalProperties:
+                      type: string
+                    type: object
+                type: object
+            type: object
           template:
             description: Template keeps the Profile Template
             properties:
@@ -930,6 +955,10 @@ v1alpha1:
                     type: boolean
                   hostPID:
                     type: boolean
+                  imagePullSecrets:
+                    items:
+                      type: string
+                    type: array
                   labels:
                     additionalProperties:
                       type: string

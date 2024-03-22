@@ -34,6 +34,9 @@ type Pod struct {
 	// Metadata keeps the metadata settings for Pod
 	*schedulerPodResourcesApi.Metadata `json:",inline"`
 
+	// Image keeps the image information
+	*schedulerPodResourcesApi.Image `json:",inline"`
+
 	// Scheduling keeps the scheduling information
 	*schedulerPodResourcesApi.Scheduling `json:",inline"`
 
@@ -65,6 +68,7 @@ func (a *Pod) With(other *Pod) *Pod {
 
 	return &Pod{
 		Scheduling:     a.Scheduling.With(other.Scheduling),
+		Image:          a.Image.With(other.Image),
 		Namespace:      a.Namespace.With(other.Namespace),
 		Security:       a.Security.With(other.Security),
 		Volumes:        a.Volumes.With(other.Volumes),
@@ -80,6 +84,7 @@ func (a *Pod) Apply(template *core.PodTemplateSpec) error {
 
 	return shared.WithErrors(
 		a.Scheduling.Apply(template),
+		a.Image.Apply(template),
 		a.Namespace.Apply(template),
 		a.Security.Apply(template),
 		a.Volumes.Apply(template),
@@ -94,6 +99,14 @@ func (a *Pod) GetSecurity() *schedulerPodResourcesApi.Security {
 	}
 
 	return a.Security
+}
+
+func (a *Pod) GetImage() *schedulerPodResourcesApi.Image {
+	if a == nil {
+		return nil
+	}
+
+	return a.Image
 }
 
 func (a *Pod) GetScheduling() *schedulerPodResourcesApi.Scheduling {
@@ -142,6 +155,7 @@ func (a *Pod) Validate() error {
 	}
 	return shared.WithErrors(
 		a.Scheduling.Validate(),
+		a.Image.Validate(),
 		a.Namespace.Validate(),
 		a.Security.Validate(),
 		a.Volumes.Validate(),

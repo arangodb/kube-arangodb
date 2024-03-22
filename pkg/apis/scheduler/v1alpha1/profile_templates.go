@@ -33,7 +33,7 @@ type ProfileTemplates []*ProfileTemplate
 func (p ProfileTemplates) Sort() ProfileTemplates {
 	sort.Slice(p, func(i, j int) bool {
 		if a, b := p[i].GetPriority(), p[j].GetPriority(); a != b {
-			return a < b
+			return a > b
 		}
 
 		return false
@@ -45,8 +45,8 @@ func (p ProfileTemplates) Sort() ProfileTemplates {
 func (p ProfileTemplates) Merge() *ProfileTemplate {
 	var z *ProfileTemplate
 
-	for _, q := range p {
-		z = z.With(q)
+	for id := len(p) - 1; id >= 0; id-- {
+		z = z.With(p[id])
 	}
 
 	return z
