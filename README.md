@@ -85,7 +85,7 @@ covers individual newer features separately.
 | [Force Rebuild Out Synced Shards](docs/features/rebuild_out_synced_shards.md) | 1.2.27           | 1.2.27     | >= 3.8.0         | Community, Enterprise | Production   | False   | --deployment.feature.force-rebuild-out-synced-shards   | It should be used only if user is aware of the risks.                                 |
 | [Spec Default Restore](docs/features/deployment_spec_defaults.md)             | 1.2.25           | 1.2.21     | >= 3.8.0         | Community, Enterprise | Beta         | True    | --deployment.feature.deployment-spec-defaults-restore  | If set to False Operator will not change ArangoDeployment Spec                        |
 | Version Check                                                                 | 1.2.23           | 1.1.4      | >= 3.8.0         | Community, Enterprise | Production   | True    | --deployment.feature.upgrade-version-check             | N/A                                                                                   |
-| [Failover Leader service](docs/features/failover_leader_service.md)           | 1.2.13           | 1.2.13     | >= 3.8.0         | Community, Enterprise | Production   | False   | --deployment.feature.failover-leadership               | N/A                                                                                   |
+| [Failover Leader service](docs/features/failover_leader_service.md)           | 1.2.13           | 1.2.13     | < 3.12.0         | Community, Enterprise | Production   | False   | --deployment.feature.failover-leadership               | N/A                                                                                   |
 | Graceful Restart                                                              | 1.2.5            | 1.0.7      | >= 3.8.0         | Community, Enterprise | Production   | True    | ---deployment.feature.graceful-shutdown                | N/A                                                                                   |
 | Optional Graceful Restart                                                     | 1.2.0            | 1.2.5      | >= 3.8.0         | Community, Enterprise | Production   | False   | --deployment.feature.optional-graceful-shutdown        | N/A                                                                                   |
 | Operator Internal Metrics Exporter                                            | 1.2.0            | 1.2.0      | >= 3.8.0         | Community, Enterprise | Production   | True    | --deployment.feature.metrics-exporter                  | N/A                                                                                   |
@@ -95,6 +95,7 @@ covers individual newer features separately.
 | JWT Rotation Support                                                          | 1.1.0            | 1.0.3      | >= 3.8.0         | Enterprise            | Production   | True    | --deployment.feature.jwt-rotation                      | N/A                                                                                   |
 | Operator Single Mode                                                          | 1.0.4            | 1.0.4      | >= 3.8.0         | Community, Enterprise | Production   | False   | --mode.single                                          | Only 1 instance of Operator allowed in namespace when feature is enabled              |
 | TLS SNI Support                                                               | 1.0.3            | 1.0.3      | >= 3.8.0         | Enterprise            | Production   | True    | --deployment.feature.tls-sni                           | N/A                                                                                   |
+| ActiveFailover Support                                                        | 1.0.0            | 1.0.0      | < 3.12.0         | Community, Enterprise | Production   | True    | --deployment.feature.active-failover                   | N/A                                                                                   |
 | Disabling of liveness probes                                                  | 0.3.11           | 0.3.10     | >= 3.8.0         | Community, Enterprise | Production   | True    | N/A                                                    | N/A                                                                                   |
 | Pod Disruption Budgets                                                        | 0.3.11           | 0.3.10     | >= 3.8.0         | Community, Enterprise | Production   | True    | N/A                                                    | N/A                                                                                   |
 | Prometheus Metrics Exporter                                                   | 0.3.11           | 0.3.10     | >= 3.8.0         | Community, Enterprise | Production   | True    | N/A                                                    | Prometheus required                                                                   |
@@ -138,27 +139,28 @@ Flags:
       --chaos.allowed                                          Set to allow chaos in deployments. Only activated when allowed and enabled in deployment
       --crd.install                                            Install missing CRD if access is possible (default true)
       --crd.validation-schema stringArray                      Overrides default set of CRDs which should have validation schema enabled <crd-name>=<true/false>.
-      --deployment.feature.agency-poll                         Enable Agency Poll for Enterprise deployments - Required ArangoDB 3.8.0 or higher (default true)
+      --deployment.feature.active-failover                     Support for ActiveFailover mode - Required ArangoDB >= 3.8.0, < 3.12 (default true)
+      --deployment.feature.agency-poll                         Enable Agency Poll for Enterprise deployments - Required ArangoDB >= 3.8.0 (default true)
       --deployment.feature.all                                 Enable ALL Features
-      --deployment.feature.async-backup-creation               Create backups asynchronously to avoid blocking the operator and reaching the timeout - Required ArangoDB 3.8.0 or higher
-      --deployment.feature.deployment-spec-defaults-restore    Restore defaults from last accepted state of deployment - Required ArangoDB 3.8.0 or higher (default true)
-      --deployment.feature.enforced-resign-leadership          Enforce ResignLeadership and ensure that Leaders are moved from restarted DBServer - Required ArangoDB 3.8.0 or higher (default true)
-      --deployment.feature.ephemeral-volumes                   Enables ephemeral volumes for apps and tmp directory - Required ArangoDB 3.8.0 or higher
-      --deployment.feature.failover-leadership                 Support for leadership in fail-over mode - Required ArangoDB 3.8.0 or higher
-      --deployment.feature.init-containers-copy-resources      Copy resources spec to built-in init containers if they are not specified - Required ArangoDB 3.8.0 or higher (default true)
-      --deployment.feature.init-containers-upscale-resources   Copy resources spec to built-in init containers if they are not specified or lower - Required ArangoDB 3.8.0 or higher (default true)
-      --deployment.feature.local-storage.pass-reclaim-policy   [LocalStorage] Pass ReclaimPolicy from StorageClass instead of using hardcoded Retain - Required ArangoDB 3.8.0 or higher
-      --deployment.feature.local-volume-replacement-check      Replace volume for local-storage if volume is unschedulable (ex. node is gone) - Required ArangoDB 3.8.0 or higher
-      --deployment.feature.random-pod-names                    Enables generating random pod names - Required ArangoDB 3.8.0 or higher
-      --deployment.feature.rebalancer-v2                       Rebalancer V2 feature - Required ArangoDB 3.10.0 or higher
-      --deployment.feature.restart-policy-always               Allow to restart containers with always restart policy - Required ArangoDB 3.8.0 or higher
-      --deployment.feature.secured-containers                  Create server's containers with non root privileges. It enables 'ephemeral-volumes' feature implicitly - Required ArangoDB 3.8.0 or higher
-      --deployment.feature.sensitive-information-protection    Hide sensitive information from metrics and logs - Required ArangoDB 3.8.0 or higher
-      --deployment.feature.short-pod-names                     Enable Short Pod Names - Required ArangoDB 3.8.0 or higher
-      --deployment.feature.timezone-management                 Enable timezone management for pods - Required ArangoDB 3.8.0 or higher
-      --deployment.feature.tls-sni                             TLS SNI Support - Required ArangoDB EE 3.8.0 or higher (default true)
-      --deployment.feature.upgrade-version-check               Enable initContainer with pre version check - Required ArangoDB 3.8.0 or higher (default true)
-      --deployment.feature.upgrade-version-check-v2            Enable initContainer with pre version check based by Operator - Required ArangoDB 3.8.0 or higher
+      --deployment.feature.async-backup-creation               Create backups asynchronously to avoid blocking the operator and reaching the timeout - Required ArangoDB >= 3.8.0
+      --deployment.feature.deployment-spec-defaults-restore    Restore defaults from last accepted state of deployment - Required ArangoDB >= 3.8.0 (default true)
+      --deployment.feature.enforced-resign-leadership          Enforce ResignLeadership and ensure that Leaders are moved from restarted DBServer - Required ArangoDB >= 3.8.0 (default true)
+      --deployment.feature.ephemeral-volumes                   Enables ephemeral volumes for apps and tmp directory - Required ArangoDB >= 3.8.0
+      --deployment.feature.failover-leadership                 Support for leadership in fail-over mode - Required ArangoDB >= 3.8.0, < 3.12
+      --deployment.feature.init-containers-copy-resources      Copy resources spec to built-in init containers if they are not specified - Required ArangoDB >= 3.8.0 (default true)
+      --deployment.feature.init-containers-upscale-resources   Copy resources spec to built-in init containers if they are not specified or lower - Required ArangoDB >= 3.8.0 (default true)
+      --deployment.feature.local-storage.pass-reclaim-policy   [LocalStorage] Pass ReclaimPolicy from StorageClass instead of using hardcoded Retain - Required ArangoDB >= 3.8.0
+      --deployment.feature.local-volume-replacement-check      Replace volume for local-storage if volume is unschedulable (ex. node is gone) - Required ArangoDB >= 3.8.0
+      --deployment.feature.random-pod-names                    Enables generating random pod names - Required ArangoDB >= 3.8.0
+      --deployment.feature.rebalancer-v2                       Rebalancer V2 feature - Required ArangoDB >= 3.10.0
+      --deployment.feature.restart-policy-always               Allow to restart containers with always restart policy - Required ArangoDB >= 3.8.0
+      --deployment.feature.secured-containers                  Create server's containers with non root privileges. It enables 'ephemeral-volumes' feature implicitly - Required ArangoDB >= 3.8.0
+      --deployment.feature.sensitive-information-protection    Hide sensitive information from metrics and logs - Required ArangoDB >= 3.8.0
+      --deployment.feature.short-pod-names                     Enable Short Pod Names - Required ArangoDB >= 3.8.0
+      --deployment.feature.timezone-management                 Enable timezone management for pods - Required ArangoDB >= 3.8.0
+      --deployment.feature.tls-sni                             TLS SNI Support - Required ArangoDB EE >= 3.8.0 (default true)
+      --deployment.feature.upgrade-version-check               Enable initContainer with pre version check - Required ArangoDB >= 3.8.0 (default true)
+      --deployment.feature.upgrade-version-check-v2            Enable initContainer with pre version check based by Operator - Required ArangoDB >= 3.8.0
       --features-config-map-name string                        Name of the Feature Map ConfigMap (default "arangodb-operator-feature-config-map")
   -h, --help                                                   help for arangodb_operator
       --image.discovery.status                                 Discover Operator Image from Pod Status by default. When disabled Pod Spec is used. (default true)

@@ -22,15 +22,29 @@ package features
 
 func init() {
 	registerFeature(failoverLeadership)
+	registerFeature(activeFailover)
+}
+
+var activeFailover = &feature{
+	name:               "active-failover",
+	description:        "Support for ActiveFailover mode",
+	version:            newFeatureVersion("", "3.12"),
+	enterpriseRequired: false,
+	enabledByDefault:   true,
 }
 
 var failoverLeadership = &feature{
 	name:               "failover-leadership",
 	description:        "Support for leadership in fail-over mode",
+	version:            newFeatureVersion("", "3.12"),
 	enterpriseRequired: false,
 	enabledByDefault:   false,
 }
 
 func FailoverLeadership() Feature {
 	return failoverLeadership
+}
+
+func ActiveFailover() Feature {
+	return activeFailover
 }

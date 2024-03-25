@@ -90,16 +90,21 @@ func Init(cmd *cobra.Command) error {
 	for _, feature := range features {
 		z := ""
 
-		version := feature.Version()
+		minVersion, maxVersion := feature.Version()
 
-		if version == "" {
-			version = MinSupportedArangoDBVersion
+		if minVersion == "" {
+			minVersion = MinSupportedArangoDBVersion
+		}
+
+		versionDesc := fmt.Sprintf(">= %s", minVersion)
+		if maxVersion != NoVersionLimit {
+			versionDesc = fmt.Sprintf(">= %s, < %s", minVersion, maxVersion)
 		}
 
 		if feature.EnterpriseRequired() {
-			z = fmt.Sprintf("%s - Required ArangoDB EE %s or higher", feature.Description(), version)
+			z = fmt.Sprintf("%s - Required ArangoDB EE %s", feature.Description(), versionDesc)
 		} else {
-			z = fmt.Sprintf("%s - Required ArangoDB %s or higher", feature.Description(), version)
+			z = fmt.Sprintf("%s - Required ArangoDB %s", feature.Description(), versionDesc)
 		}
 
 		featureArgName = GetFeatureArgName(feature.Name())
@@ -143,8 +148,12 @@ func cmdRun(_ *cobra.Command, _ []string) {
 		} else {
 			println("Enabled: false")
 		}
-		if v := feature.Version(); v != "" {
-			println(fmt.Sprintf("ArangoDB Version Required: >= %s", v))
+		if min, max := feature.Version(); min != NoVersionLimit && max != NoVersionLimit {
+			println(fmt.Sprintf("ArangoDB Version Required: >= %s, <= %s", min, max))
+		} else if min != NoVersionLimit {
+			println(fmt.Sprintf("ArangoDB Version Required: >= %s", min))
+		} else if max != NoVersionLimit {
+			println(fmt.Sprintf("ArangoDB Version Required: <= %s", max))
 		}
 
 		if feature.EnterpriseRequired() {
@@ -186,7 +195,20 @@ func Supported(f Feature, v driver.Version, enterprise bool) bool {
 		}
 	}
 
-	return v.CompareTo(f.Version()) >= 0
+	min, max := f.Version()
+	if min != NoVersionLimit {
+		if v.CompareTo(min) < 0 {
+			return false
+		}
+	}
+
+	if max != NoVersionLimit {
+		if v.CompareTo(max) >= 0 {
+			return false
+		}
+	}
+
+	return true
 }
 
 // GetFeatureMap returns all features' arguments names.

@@ -313,7 +313,7 @@ func (r *Reconciler) createUpgradePlanInternal(apiObject k8sutil.APIObject, spec
 
 // podNeedsUpgrading decides if an upgrade of the pod is needed (to comply with
 // the given spec) and if that is allowed.
-func (r *Reconciler) podNeedsUpgrading(status api.MemberStatus, spec api.DeploymentSpec, images api.ImageInfoList) upgradeDecision {
+func (r *Reconciler) podNeedsUpgrading(mode api.DeploymentMode, status api.MemberStatus, spec api.DeploymentSpec, images api.ImageInfoList) upgradeDecision {
 	currentImage, found := currentImageInfo(spec, images)
 	if !found {
 		// Hold rotation tasks - we do not know image
@@ -330,6 +330,7 @@ func (r *Reconciler) podNeedsUpgrading(status api.MemberStatus, spec api.Deploym
 		// No change
 		return upgradeDecision{UpgradeNeeded: false}
 	}
+
 	// Image changed, check if change is allowed
 	specVersion := currentImage.ArangoDBVersion
 	memberVersion := memberImage.ArangoDBVersion
@@ -352,6 +353,21 @@ func (r *Reconciler) podNeedsUpgrading(status api.MemberStatus, spec api.Deploym
 			UpgradeAllowed: false,
 		}
 	}
+
+	// Check if ActiveFailover is supported on new version
+	if mode == api.DeploymentModeActiveFailover && !features.ActiveFailover().ImageSupported(&currentImage) {
+		// Upgrade to 3.12 in Active Failover mode is not supported!
+		// No change
+		return upgradeDecision{
+			FromVersion:    memberVersion,
+			FromLicense:    memberLicense,
+			ToVersion:      specVersion,
+			ToLicense:      specLicense,
+			UpgradeNeeded:  true,
+			UpgradeAllowed: false,
+		}
+	}
+
 	if specVersion.Major() != memberVersion.Major() || specVersion.Minor() != memberVersion.Minor() {
 		// Is allowed, with `--database.auto-upgrade`
 		r.planLogger.Str("spec-version", string(specVersion)).Str("pod-version", string(memberVersion)).

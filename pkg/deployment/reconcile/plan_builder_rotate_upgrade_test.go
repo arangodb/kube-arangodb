@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -105,7 +105,7 @@ func Test_RotateUpgrade_Condition(t *testing.T) {
 
 	for n, c := range testCases {
 		t.Run(n, func(t *testing.T) {
-			c.verify(t, r.podNeedsUpgrading(c.status, c.spec, c.images))
+			c.verify(t, r.podNeedsUpgrading(c.spec.Mode.Get(), c.status, c.spec, c.images))
 		})
 	}
 }

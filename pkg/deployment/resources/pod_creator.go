@@ -310,6 +310,10 @@ func (r *Resources) RenderPodForMember(ctx context.Context, acs sutil.ACS, spec 
 	}
 	groupSpec := spec.GetServerGroupSpec(group)
 
+	if spec.Mode.Get() == api.DeploymentModeActiveFailover && !features.ActiveFailover().ImageSupported(&imageInfo) {
+		return nil, errors.Errorf("ActiveFailover starting from ArangoDB 3.12 is not supported")
+	}
+
 	memberName := m.ArangoMemberName(r.context.GetAPIObject().GetName(), group)
 
 	member, ok := acs.CurrentClusterCache().ArangoMember().V1().GetSimple(memberName)
