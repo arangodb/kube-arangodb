@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,11 +23,12 @@ package globals
 import "time"
 
 const (
-	DefaultKubernetesTimeout     = 2 * time.Second
-	DefaultArangoDTimeout        = time.Second * 5
-	DefaultArangoDAgencyTimeout  = time.Second * 10
-	DefaultArangoDCheckTimeout   = time.Second * 2
-	DefaultReconciliationTimeout = time.Minute
+	DefaultKubernetesTimeout                  = 2 * time.Second
+	DefaultArangoDTimeout                     = time.Second * 5
+	DefaultArangoDAgencyTimeout               = time.Second * 10
+	DefaultArangoDCheckTimeout                = time.Second * 2
+	DefaultReconciliationTimeout              = time.Minute
+	DefaultForcePodDeletionGracePeriodTimeout = 15 * time.Minute
 
 	BackupDefaultArangoClientTimeout = 30 * time.Second
 	BackupUploadArangoClientTimeout  = 300 * time.Second
@@ -50,15 +51,16 @@ const (
 
 var globalObj = &globals{
 	timeouts: &globalTimeouts{
-		requests:                        NewTimeout(DefaultKubernetesTimeout),
-		arangod:                         NewTimeout(DefaultArangoDTimeout),
-		arangodCheck:                    NewTimeout(DefaultArangoDCheckTimeout),
-		reconciliation:                  NewTimeout(DefaultReconciliationTimeout),
-		agency:                          NewTimeout(DefaultArangoDAgencyTimeout),
-		shardRebuild:                    NewTimeout(DefaultOutSyncedShardRebuildTimeout),
-		shardRebuildRetry:               NewTimeout(DefaultOutSyncedShardRebuildRetryTimeout),
-		backupArangoClientTimeout:       NewTimeout(BackupDefaultArangoClientTimeout),
-		backupArangoClientUploadTimeout: NewTimeout(BackupUploadArangoClientTimeout),
+		requests:                           NewTimeout(DefaultKubernetesTimeout),
+		arangod:                            NewTimeout(DefaultArangoDTimeout),
+		arangodCheck:                       NewTimeout(DefaultArangoDCheckTimeout),
+		reconciliation:                     NewTimeout(DefaultReconciliationTimeout),
+		agency:                             NewTimeout(DefaultArangoDAgencyTimeout),
+		shardRebuild:                       NewTimeout(DefaultOutSyncedShardRebuildTimeout),
+		shardRebuildRetry:                  NewTimeout(DefaultOutSyncedShardRebuildRetryTimeout),
+		backupArangoClientTimeout:          NewTimeout(BackupDefaultArangoClientTimeout),
+		backupArangoClientUploadTimeout:    NewTimeout(BackupUploadArangoClientTimeout),
+		forcePodDeletionGracePeriodTimeout: NewTimeout(DefaultForcePodDeletionGracePeriodTimeout),
 	},
 	kubernetes: &globalKubernetes{
 		requestBatchSize: NewInt64(DefaultKubernetesRequestBatchSize),
@@ -144,6 +146,8 @@ type GlobalTimeouts interface {
 	ArangoDCheck() Timeout
 	Agency() Timeout
 
+	ForcePodDeletionGracePeriodTimeout() Timeout
+
 	BackupArangoClientTimeout() Timeout
 	BackupArangoClientUploadTimeout() Timeout
 }
@@ -152,6 +156,11 @@ type globalTimeouts struct {
 	requests, arangod, reconciliation, arangodCheck, agency, shardRebuild, shardRebuildRetry Timeout
 	backupArangoClientTimeout                                                                Timeout
 	backupArangoClientUploadTimeout                                                          Timeout
+	forcePodDeletionGracePeriodTimeout                                                       Timeout
+}
+
+func (g *globalTimeouts) ForcePodDeletionGracePeriodTimeout() Timeout {
+	return g.forcePodDeletionGracePeriodTimeout
 }
 
 func (g *globalTimeouts) Agency() Timeout {

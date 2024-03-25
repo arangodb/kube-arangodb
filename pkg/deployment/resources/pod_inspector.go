@@ -57,7 +57,6 @@ const (
 	// we will mark the pod as scheduled for termination
 	recheckSoonPodInspectorInterval = util.Interval(time.Second) // Time between Pod inspection if we think something will change soon
 	maxPodInspectorInterval         = util.Interval(time.Hour)   // Maximum time between Pod inspection (if nothing else happens)
-	forcePodDeletionGracePeriod     = 15 * time.Minute
 )
 
 func (r *Resources) handleRestartedPod(pod *core.Pod, memberStatus *api.MemberStatus, wasTerminated, markAsTerminated *bool) {
@@ -426,13 +425,15 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 				var gps int64 = 10
 
 				forceDelete := false
-				if t := k8sutil.PodStopTime(pod); !t.IsZero() {
-					if time.Since(t) > forcePodDeletionGracePeriod {
-						forceDelete = true
-					}
-				} else if t := pod.DeletionTimestamp; t != nil {
-					if time.Since(t.Time) > forcePodDeletionGracePeriod {
-						forceDelete = true
+				if gracePeriod := globals.GetGlobalTimeouts().ForcePodDeletionGracePeriodTimeout().Get(); gracePeriod > 0 {
+					if t := k8sutil.PodStopTime(pod); !t.IsZero() {
+						if time.Since(t) > gracePeriod {
+							forceDelete = true
+						}
+					} else if t := pod.DeletionTimestamp; t != nil {
+						if time.Since(t.Time) > gracePeriod {
+							forceDelete = true
+						}
 					}
 				}
 
