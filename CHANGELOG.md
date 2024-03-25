@@ -12,6 +12,7 @@
 - (Feature) ArangoProfile Selectors
 - (Bugfix) Remove ImagePullSecrets Reference from Container
 - (Feature) DebugPackage ArangoProfiles
+- (Feature) Scheduler CLI
 
 ## [1.2.39](https://github.com/arangodb/kube-arangodb/tree/1.2.39) (2024-03-11)
 - (Feature) Extract Scheduler API
