@@ -28,8 +28,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-type ImagePullSecrets []string
-
 var _ interfaces.Container[Image] = &Image{}
 
 type Image struct {
@@ -39,9 +37,6 @@ type Image struct {
 	// ImagePullPolicy define Image pull policy
 	// +doc/default: IfNotPresent
 	ImagePullPolicy *core.PullPolicy `json:"imagePullPolicy,omitempty"`
-
-	// ImagePullSecrets define Secrets used to pull Image from registry
-	ImagePullSecrets ImagePullSecrets `json:"imagePullSecrets,omitempty"`
 }
 
 func (i *Image) Apply(pod *core.PodTemplateSpec, container *core.Container) error {
@@ -51,16 +46,6 @@ func (i *Image) Apply(pod *core.PodTemplateSpec, container *core.Container) erro
 
 	container.Image = util.WithDefault(i.Image)
 	container.ImagePullPolicy = util.WithDefault(i.ImagePullPolicy)
-
-	for _, secret := range i.ImagePullSecrets {
-		if hasImagePullSecret(pod.Spec.ImagePullSecrets, secret) {
-			continue
-		}
-
-		pod.Spec.ImagePullSecrets = append(pod.Spec.ImagePullSecrets, core.LocalObjectReference{
-			Name: secret,
-		})
-	}
 
 	return nil
 }
@@ -93,16 +78,5 @@ func (i *Image) Validate() error {
 	return shared.WithErrors(
 		shared.PrefixResourceErrors("image", shared.ValidateRequired(i.Image, shared.ValidateImage)),
 		shared.PrefixResourceErrors("imagePullPolicy", shared.ValidateOptional(i.ImagePullPolicy, shared.ValidatePullPolicy)),
-		shared.PrefixResourceErrors("pullSecrets", shared.ValidateList(i.ImagePullSecrets, shared.ValidateResourceName)),
 	)
-}
-
-func hasImagePullSecret(secrets []core.LocalObjectReference, secret string) bool {
-	for _, sec := range secrets {
-		if sec.Name == secret {
-			return true
-		}
-	}
-
-	return false
 }

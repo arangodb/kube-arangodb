@@ -151,10 +151,6 @@ v1alpha1:
                     type: string
                   imagePullPolicy:
                     type: string
-                  imagePullSecrets:
-                    items:
-                      type: string
-                    type: array
                   lifecycle:
                     properties:
                       postStart:

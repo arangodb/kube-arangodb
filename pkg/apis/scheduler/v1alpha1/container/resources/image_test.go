@@ -92,29 +92,18 @@ func Test_Image(t *testing.T) {
 		applyImage(t, &core.PodTemplateSpec{}, &core.Container{}, &Image{
 			Image:           util.NewType("image"),
 			ImagePullPolicy: util.NewType(core.PullAlways),
-			ImagePullSecrets: []string{
-				"secret",
-			},
 		})(func(t *testing.T, pod *core.PodTemplateSpec, container *core.Container) {
 			require.EqualValues(t, "image", container.Image)
 			require.EqualValues(t, core.PullAlways, container.ImagePullPolicy)
-			require.Len(t, pod.Spec.ImagePullSecrets, 1)
-			require.Equal(t, "secret", pod.Spec.ImagePullSecrets[0].Name)
 		})
 	})
 	t.Run("With PS2", func(t *testing.T) {
 		applyImage(t, &core.PodTemplateSpec{}, &core.Container{}, &Image{
 			Image:           util.NewType("image"),
 			ImagePullPolicy: util.NewType(core.PullAlways),
-			ImagePullSecrets: []string{
-				"secret",
-				"secret",
-			},
 		})(func(t *testing.T, pod *core.PodTemplateSpec, container *core.Container) {
 			require.EqualValues(t, "image", container.Image)
 			require.EqualValues(t, core.PullAlways, container.ImagePullPolicy)
-			require.Len(t, pod.Spec.ImagePullSecrets, 1)
-			require.Equal(t, "secret", pod.Spec.ImagePullSecrets[0].Name)
 		})
 	})
 }

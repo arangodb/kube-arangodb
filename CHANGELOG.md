@@ -10,6 +10,7 @@
 - (Feature) Expose Force CRD Install option
 - (Maintenance) Move Container utils functions
 - (Feature) ArangoProfile Selectors
+- (Bugfix) Remove ImagePullSecrets Reference from Container
 
 ## [1.2.39](https://github.com/arangodb/kube-arangodb/tree/1.2.39) (2024-03-11)
 - (Feature) Extract Scheduler API
