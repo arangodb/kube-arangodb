@@ -104,7 +104,7 @@ Links:
 
 ### .spec.template.container.containers.\<string\>.image
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L37)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L35)</sup>
 
 Image define image details
 
@@ -112,19 +112,11 @@ Image define image details
 
 ### .spec.template.container.containers.\<string\>.imagePullPolicy
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L41)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L39)</sup>
 
 ImagePullPolicy define Image pull policy
 
 Default Value: `IfNotPresent`
-
-***
-
-### .spec.template.container.containers.\<string\>.imagePullSecrets
-
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L44)</sup>
-
-ImagePullSecrets define Secrets used to pull Image from registry
 
 ***
 

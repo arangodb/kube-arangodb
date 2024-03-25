@@ -193,7 +193,7 @@ Default Value: `false`
 
 ### .spec.deployment.prediction.image
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L37)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L35)</sup>
 
 Image define image details
 
@@ -201,19 +201,11 @@ Image define image details
 
 ### .spec.deployment.prediction.imagePullPolicy
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L41)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L39)</sup>
 
 ImagePullPolicy define Image pull policy
 
 Default Value: `IfNotPresent`
-
-***
-
-### .spec.deployment.prediction.imagePullSecrets
-
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L44)</sup>
-
-ImagePullSecrets define Secrets used to pull Image from registry
 
 ***
 
@@ -391,7 +383,7 @@ Default Value: `false`
 
 ### .spec.deployment.project.image
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L37)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L35)</sup>
 
 Image define image details
 
@@ -399,19 +391,11 @@ Image define image details
 
 ### .spec.deployment.project.imagePullPolicy
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L41)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L39)</sup>
 
 ImagePullPolicy define Image pull policy
 
 Default Value: `IfNotPresent`
-
-***
-
-### .spec.deployment.project.imagePullSecrets
-
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L44)</sup>
-
-ImagePullSecrets define Secrets used to pull Image from registry
 
 ***
 
@@ -662,7 +646,7 @@ Default Value: `false`
 
 ### .spec.deployment.training.image
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L37)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L35)</sup>
 
 Image define image details
 
@@ -670,19 +654,11 @@ Image define image details
 
 ### .spec.deployment.training.imagePullPolicy
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L41)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L39)</sup>
 
 ImagePullPolicy define Image pull policy
 
 Default Value: `IfNotPresent`
-
-***
-
-### .spec.deployment.training.imagePullSecrets
-
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L44)</sup>
-
-ImagePullSecrets define Secrets used to pull Image from registry
 
 ***
 
@@ -924,7 +900,7 @@ Default Value: `false`
 
 ### .spec.init.image
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L37)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L35)</sup>
 
 Image define image details
 
@@ -932,7 +908,7 @@ Image define image details
 
 ### .spec.init.imagePullPolicy
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L41)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L39)</sup>
 
 ImagePullPolicy define Image pull policy
 
@@ -942,7 +918,7 @@ Default Value: `IfNotPresent`
 
 ### .spec.init.imagePullSecrets
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L44)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/image.go#L36)</sup>
 
 ImagePullSecrets define Secrets used to pull Image from registry
 
@@ -1270,7 +1246,7 @@ Default Value: `false`
 
 ### .spec.jobsTemplates.featurization.cpu.image
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L37)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L35)</sup>
 
 Image define image details
 
@@ -1278,7 +1254,7 @@ Image define image details
 
 ### .spec.jobsTemplates.featurization.cpu.imagePullPolicy
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L41)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L39)</sup>
 
 ImagePullPolicy define Image pull policy
 
@@ -1288,7 +1264,7 @@ Default Value: `IfNotPresent`
 
 ### .spec.jobsTemplates.featurization.cpu.imagePullSecrets
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L44)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/image.go#L36)</sup>
 
 ImagePullSecrets define Secrets used to pull Image from registry
 
@@ -1616,7 +1592,7 @@ Default Value: `false`
 
 ### .spec.jobsTemplates.featurization.gpu.image
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L37)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L35)</sup>
 
 Image define image details
 
@@ -1624,7 +1600,7 @@ Image define image details
 
 ### .spec.jobsTemplates.featurization.gpu.imagePullPolicy
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L41)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L39)</sup>
 
 ImagePullPolicy define Image pull policy
 
@@ -1634,7 +1610,7 @@ Default Value: `IfNotPresent`
 
 ### .spec.jobsTemplates.featurization.gpu.imagePullSecrets
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L44)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/image.go#L36)</sup>
 
 ImagePullSecrets define Secrets used to pull Image from registry
 
@@ -1962,7 +1938,7 @@ Default Value: `false`
 
 ### .spec.jobsTemplates.prediction.cpu.image
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L37)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L35)</sup>
 
 Image define image details
 
@@ -1970,7 +1946,7 @@ Image define image details
 
 ### .spec.jobsTemplates.prediction.cpu.imagePullPolicy
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L41)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L39)</sup>
 
 ImagePullPolicy define Image pull policy
 
@@ -1980,7 +1956,7 @@ Default Value: `IfNotPresent`
 
 ### .spec.jobsTemplates.prediction.cpu.imagePullSecrets
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L44)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/image.go#L36)</sup>
 
 ImagePullSecrets define Secrets used to pull Image from registry
 
@@ -2308,7 +2284,7 @@ Default Value: `false`
 
 ### .spec.jobsTemplates.prediction.gpu.image
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L37)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L35)</sup>
 
 Image define image details
 
@@ -2316,7 +2292,7 @@ Image define image details
 
 ### .spec.jobsTemplates.prediction.gpu.imagePullPolicy
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L41)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L39)</sup>
 
 ImagePullPolicy define Image pull policy
 
@@ -2326,7 +2302,7 @@ Default Value: `IfNotPresent`
 
 ### .spec.jobsTemplates.prediction.gpu.imagePullSecrets
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L44)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/image.go#L36)</sup>
 
 ImagePullSecrets define Secrets used to pull Image from registry
 
@@ -2654,7 +2630,7 @@ Default Value: `false`
 
 ### .spec.jobsTemplates.training.cpu.image
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L37)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L35)</sup>
 
 Image define image details
 
@@ -2662,7 +2638,7 @@ Image define image details
 
 ### .spec.jobsTemplates.training.cpu.imagePullPolicy
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L41)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L39)</sup>
 
 ImagePullPolicy define Image pull policy
 
@@ -2672,7 +2648,7 @@ Default Value: `IfNotPresent`
 
 ### .spec.jobsTemplates.training.cpu.imagePullSecrets
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L44)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/image.go#L36)</sup>
 
 ImagePullSecrets define Secrets used to pull Image from registry
 
@@ -3000,7 +2976,7 @@ Default Value: `false`
 
 ### .spec.jobsTemplates.training.gpu.image
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L37)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L35)</sup>
 
 Image define image details
 
@@ -3008,7 +2984,7 @@ Image define image details
 
 ### .spec.jobsTemplates.training.gpu.imagePullPolicy
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L41)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L39)</sup>
 
 ImagePullPolicy define Image pull policy
 
@@ -3018,7 +2994,7 @@ Default Value: `IfNotPresent`
 
 ### .spec.jobsTemplates.training.gpu.imagePullSecrets
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L44)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.39/pkg/apis/scheduler/v1alpha1/pod/resources/image.go#L36)</sup>
 
 ImagePullSecrets define Secrets used to pull Image from registry
 
