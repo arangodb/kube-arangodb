@@ -31,8 +31,6 @@ import (
 	"github.com/pkg/errors"
 
 	driver "github.com/arangodb/go-driver"
-
-	"github.com/arangodb/kube-arangodb/pkg/logging"
 )
 
 func Cause(err error) error {
@@ -206,12 +204,6 @@ func libCause(err error) (bool, error) {
 		default:
 			return err != original, err
 		}
-	}
-}
-
-func LogError(logger logging.Logger, msg string, f func() error) {
-	if err := f(); err != nil {
-		logger.Err(err).Error(msg)
 	}
 }
 

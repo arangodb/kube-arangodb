@@ -75,7 +75,6 @@ const (
 	defaultServerPort          = 8528
 	defaultAPIHTTPPort         = 8628
 	defaultAPIGRPCPort         = 8728
-	defaultLogLevel            = "info"
 	defaultAdminSecretName     = "arangodb-operator-dashboard"
 	defaultAPIJWTSecretName    = "arangodb-operator-api-jwt"
 	defaultAPIJWTKeySecretName = "arangodb-operator-api-jwt-key"
@@ -96,9 +95,6 @@ var (
 		hardLimit uint64
 	}
 
-	logFormat     string
-	logLevels     []string
-	logSampling   bool
 	serverOptions struct {
 		host            string
 		port            int
@@ -195,9 +191,6 @@ func init() {
 	f.StringVar(&serverOptions.tlsSecretName, "server.tls-secret-name", "", "Name of secret containing tls.crt & tls.key for HTTPS server (if empty, self-signed certificate is used)")
 	f.StringVar(&serverOptions.adminSecretName, "server.admin-secret-name", defaultAdminSecretName, "Name of secret containing username + password for login to the dashboard")
 	f.BoolVar(&serverOptions.allowAnonymous, "server.allow-anonymous-access", false, "Allow anonymous access to the dashboard")
-	f.StringVar(&logFormat, "log.format", "pretty", "Set log format. Allowed values: 'pretty', 'JSON'. If empty, default format is used")
-	f.StringArrayVar(&logLevels, "log.level", []string{defaultLogLevel}, fmt.Sprintf("Set log levels in format <level> or <logger>=<level>. Possible loggers: %s", strings.Join(logging.Global().Names(), ", ")))
-	f.BoolVar(&logSampling, "log.sampling", true, "If true, operator will try to minimize duplication of logging events")
 	f.BoolVar(&apiOptions.enabled, "api.enabled", true, "Enable operator HTTP and gRPC API")
 	f.IntVar(&apiOptions.httpPort, "api.http-port", defaultAPIHTTPPort, "HTTP API port to listen on")
 	f.IntVar(&apiOptions.grpcPort, "api.grpc-port", defaultAPIGRPCPort, "gRPC API port to listen on")
@@ -247,6 +240,9 @@ func init() {
 	f.StringArrayVar(&metricsOptions.excludedMetricPrefixes, "metrics.excluded-prefixes", nil, "List of the excluded metrics prefixes")
 	f.BoolVar(&operatorImageDiscovery.defaultStatusDiscovery, "image.discovery.status", true, "Discover Operator Image from Pod Status by default. When disabled Pod Spec is used.")
 	f.DurationVar(&operatorImageDiscovery.timeout, "image.discovery.timeout", time.Minute, "Timeout for image discovery process")
+	if err := logging.Init(&cmdMain); err != nil {
+		panic(err.Error())
+	}
 	if err := features.Init(&cmdMain); err != nil {
 		panic(err.Error())
 	}
@@ -308,23 +304,9 @@ func executeMain(cmd *cobra.Command, args []string) {
 	kclient.SetDefaultBurst(operatorKubernetesOptions.burst)
 
 	// Prepare log service
-	var err error
-
-	levels, err := logging.ParseLogLevelsFromArgs(logLevels)
-	if err != nil {
-		logger.Err(err).Fatal("Unable to parse log level")
+	if err := logging.Enable(); err != nil {
+		logger.Err(err).Fatal("Unable to enable logger")
 	}
-
-	// Set root logger to stdout (JSON formatted) if not prettified
-	if strings.ToUpper(logFormat) == "JSON" {
-		logging.Global().SetRoot(zerolog.New(os.Stdout).With().Timestamp().Logger())
-	} else if strings.ToLower(logFormat) != "pretty" && logFormat != "" {
-		logger.Fatal("Unknown log format: %s", logFormat)
-	}
-	logging.Global().Configure(logging.Config{
-		Levels:   levels,
-		Sampling: logSampling,
-	})
 
 	podNameParts := strings.Split(name, "-")
 	operatorID := podNameParts[len(podNameParts)-1]
@@ -347,16 +329,16 @@ func executeMain(cmd *cobra.Command, args []string) {
 		!operatorOptions.enableBackup && !operatorOptions.enableApps && !operatorOptions.enableK2KClusterSync && !operatorOptions.enableML {
 		if !operatorOptions.versionOnly {
 			if version.GetVersionV1().IsEnterprise() {
-				logger.Err(err).Fatal("Turn on --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync, --operator.ml or any combination of these")
+				logger.Fatal("Turn on --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync, --operator.ml or any combination of these")
 			} else {
-				logger.Err(err).Fatal("Turn on --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync or any combination of these")
+				logger.Fatal("Turn on --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync or any combination of these")
 			}
 		}
 	} else if operatorOptions.versionOnly {
-		logger.Err(err).Fatal("Options --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync, --operator.ml cannot be enabled together with --operator.version")
+		logger.Fatal("Options --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync, --operator.ml cannot be enabled together with --operator.version")
 	} else if !version.GetVersionV1().IsEnterprise() {
 		if operatorOptions.enableML {
-			logger.Err(err).Fatal("Options --operator.ml can be enabled only on the Enterprise Operator")
+			logger.Fatal("Options --operator.ml can be enabled only on the Enterprise Operator")
 		}
 	}
 
@@ -444,7 +426,11 @@ func executeMain(cmd *cobra.Command, args []string) {
 			if err != nil {
 				logger.Err(err).Fatal("Failed to create API server")
 			}
-			go errors.LogError(logger, "while running API server", apiServer.Run)
+			go func() {
+				if err := apiServer.Run(); err != nil {
+					logger.Err(err).Error("while running API server")
+				}
+			}()
 		}
 
 		listenAddr := net.JoinHostPort(serverOptions.host, strconv.Itoa(serverOptions.port))
@@ -493,7 +479,11 @@ func executeMain(cmd *cobra.Command, args []string) {
 		}); err != nil {
 			logger.Err(err).Fatal("Failed to create HTTP server")
 		} else {
-			go errors.LogError(logger, "error while starting server", svr.Run)
+			go func() {
+				if err := svr.Run(); err != nil {
+					logger.Err(err).Error("error while starting server")
+				}
+			}()
 		}
 
 		//	startChaos(context.Background(), cfg.KubeCli, cfg.Namespace, chaosLevel)
