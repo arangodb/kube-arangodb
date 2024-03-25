@@ -27,6 +27,13 @@ rules:
       verbs:
         - "*"
     - apiGroups:
+        - "scheduler.arangodb.com"
+      resources:
+        - "arangoprofiles"
+        - "arangoprofiles/status"
+      verbs:
+        - "*"
+    - apiGroups:
         - "database.arangodb.com"
       resources:
         - "arangodeployments"

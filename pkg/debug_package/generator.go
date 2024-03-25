@@ -44,6 +44,7 @@ var rootFactories = []shared.Factory{
 	kubernetes.AgencyDump(),
 	kubernetes.ML(),
 	kubernetes.Backup(),
+	kubernetes.Scheduler(),
 }
 
 func InitCommand(cmd *cobra.Command) {

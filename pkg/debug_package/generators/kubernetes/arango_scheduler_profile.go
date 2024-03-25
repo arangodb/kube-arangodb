@@ -26,7 +26,7 @@ import (
 
 	"github.com/rs/zerolog"
 
-	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/cli"
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -34,8 +34,8 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
-func backupBackups(logger zerolog.Logger, files chan<- shared.File, client kclient.Client) error {
-	backups, err := listBackupBackups(client)
+func schedulerProfiles(logger zerolog.Logger, files chan<- shared.File, client kclient.Client) error {
+	profiles, err := listSchedulerProfiles(client)
 	if err != nil {
 		if kerrors.IsForbiddenOrNotFound(err) {
 			return nil
@@ -44,25 +44,25 @@ func backupBackups(logger zerolog.Logger, files chan<- shared.File, client kclie
 		return err
 	}
 
-	if err := errors.ExecuteWithErrorArrayP2(backupBackup, client, files, backups...); err != nil {
-		logger.Err(err).Msgf("Error while collecting arango ml batchjobs")
+	if err := errors.ExecuteWithErrorArrayP2(schedulerProfile, client, files, profiles...); err != nil {
+		logger.Err(err).Msgf("Error while collecting arango scheduler profiles")
 		return err
 	}
 
 	return nil
 }
 
-func backupBackup(client kclient.Client, files chan<- shared.File, ext *backupApi.ArangoBackup) error {
-	files <- shared.NewYAMLFile(fmt.Sprintf("kubernetes/arango/backup/backups/%s.yaml", ext.GetName()), func() ([]interface{}, error) {
+func schedulerProfile(client kclient.Client, files chan<- shared.File, ext *schedulerApi.ArangoProfile) error {
+	files <- shared.NewYAMLFile(fmt.Sprintf("kubernetes/arango/scheduler/profiles/%s.yaml", ext.GetName()), func() ([]interface{}, error) {
 		return []interface{}{ext}, nil
 	})
 
 	return nil
 }
 
-func listBackupBackups(client kclient.Client) ([]*backupApi.ArangoBackup, error) {
-	return ListObjects[*backupApi.ArangoBackupList, *backupApi.ArangoBackup](context.Background(), client.Arango().BackupV1().ArangoBackups(cli.GetInput().Namespace), func(result *backupApi.ArangoBackupList) []*backupApi.ArangoBackup {
-		q := make([]*backupApi.ArangoBackup, len(result.Items))
+func listSchedulerProfiles(client kclient.Client) ([]*schedulerApi.ArangoProfile, error) {
+	return ListObjects[*schedulerApi.ArangoProfileList, *schedulerApi.ArangoProfile](context.Background(), client.Arango().SchedulerV1alpha1().ArangoProfiles(cli.GetInput().Namespace), func(result *schedulerApi.ArangoProfileList) []*schedulerApi.ArangoProfile {
+		q := make([]*schedulerApi.ArangoProfile, len(result.Items))
 
 		for id, e := range result.Items {
 			q[id] = e.DeepCopy()
