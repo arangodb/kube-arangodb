@@ -25,6 +25,7 @@ import (
 
 	core "k8s.io/api/core/v1"
 
+	pbSchedulerV1 "github.com/arangodb/kube-arangodb/integrations/scheduler/v1/definition"
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
 	schedulerContainerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container"
 	schedulerContainerResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container/resources"
@@ -33,59 +34,55 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-const DefaultContainerName = "job"
+func baseAsTemplate(in *pbSchedulerV1.Spec) *schedulerApi.ProfileTemplate {
+	containers := schedulerContainerApi.Containers{}
 
-type Request struct {
-	Labels map[string]string
-
-	Profiles []string
-
-	Envs map[string]string
-
-	Container *string
-
-	Image *string
-
-	Args []string
-}
-
-func (r Request) AsTemplate() *schedulerApi.ProfileTemplate {
-	var container schedulerContainerApi.Container
-
-	if len(r.Envs) > 0 {
-		container.Environments = &schedulerContainerResourcesApi.Environments{}
-
-		for k, v := range r.Envs {
-			container.Environments.Env = append(container.Environments.Env, core.EnvVar{
-				Name:  k,
-				Value: v,
-			})
+	for n, c := range in.Containers {
+		if c == nil {
+			continue
 		}
+
+		var container schedulerContainerApi.Container
+
+		if image := c.Image; image != nil {
+			container.Image = &schedulerContainerResourcesApi.Image{
+				Image: c.Image,
+			}
+		}
+
+		if len(c.Args) > 0 {
+			container.Core = &schedulerContainerResourcesApi.Core{
+				Args: c.Args,
+			}
+		}
+
+		if len(c.EnvironmentVariables) > 0 {
+			container.Environments = &schedulerContainerResourcesApi.Environments{}
+
+			for k, v := range c.EnvironmentVariables {
+				container.Env = append(container.Env, core.EnvVar{
+					Name:  k,
+					Value: v,
+				})
+			}
+		}
+
+		containers[n] = container
 	}
 
-	if len(r.Args) > 0 {
-		container.Core = &schedulerContainerResourcesApi.Core{
-			Args: r.Args,
-		}
-	}
-
-	if r.Image != nil {
-		container.Image = &schedulerContainerResourcesApi.Image{
-			Image: util.NewType(util.TypeOrDefault(r.Image)),
-		}
-	}
-
-	return &schedulerApi.ProfileTemplate{
+	var t = schedulerApi.ProfileTemplate{
 		Priority: util.NewType(math.MaxInt),
-		Pod: &schedulerPodApi.Pod{
-			Metadata: &schedulerPodResourcesApi.Metadata{
-				Labels: util.MergeMaps(true, r.Labels),
-			},
-		},
+		Pod:      &schedulerPodApi.Pod{},
 		Container: &schedulerApi.ProfileContainerTemplate{
-			Containers: map[string]schedulerContainerApi.Container{
-				util.TypeOrDefault(r.Container, DefaultContainerName): container,
-			},
+			Containers: containers,
 		},
 	}
+
+	if job := in.Job; job != nil {
+		t.Pod.Metadata = &schedulerPodResourcesApi.Metadata{
+			Labels: job.Labels,
+		}
+	}
+
+	return &t
 }

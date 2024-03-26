@@ -18,22 +18,29 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package cmd
+package v1
 
-import (
-	"github.com/spf13/cobra"
+type Mod func(c Configuration) Configuration
 
-	"github.com/arangodb/kube-arangodb/pkg/scheduler"
-)
+func NewConfiguration() Configuration {
+	return Configuration{
+		Namespace:    "default",
+		VerifyAccess: true,
+	}
+}
 
-func init() {
-	cmd := &cobra.Command{
-		Use: "scheduler",
+type Configuration struct {
+	Namespace string
+
+	VerifyAccess bool
+}
+
+func (c Configuration) With(mods ...Mod) Configuration {
+	n := c
+
+	for _, mod := range mods {
+		n = mod(n)
 	}
 
-	if err := scheduler.InitCommand(cmd); err != nil {
-		panic(err.Error())
-	}
-
-	cmdMain.AddCommand(cmd)
+	return n
 }

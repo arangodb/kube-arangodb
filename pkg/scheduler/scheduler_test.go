@@ -30,6 +30,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
 
+	pbSchedulerV1 "github.com/arangodb/kube-arangodb/integrations/scheduler/v1/definition"
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
 	schedulerContainerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container"
 	schedulerContainerResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container/resources"
@@ -37,6 +38,8 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 )
+
+const DefaultContainerName = "job"
 
 func newScheduler(t *testing.T, objects ...*schedulerApi.ArangoProfile) Scheduler {
 	client := kclient.NewFakeClientBuilder().Client()
@@ -55,7 +58,58 @@ type validatorExec func(in validator)
 
 type validator func(t *testing.T, err error, template *core.PodTemplateSpec, accepted []string)
 
-func render(t *testing.T, s Scheduler, in Request, templates ...*schedulerApi.ProfileTemplate) validatorExec {
+func getRequest(in ...func(obj *pbSchedulerV1.Spec)) *pbSchedulerV1.Spec {
+	var r pbSchedulerV1.Spec
+	for _, i := range in {
+		i(&r)
+	}
+
+	return &r
+}
+
+func withProfiles(profiles ...string) func(obj *pbSchedulerV1.Spec) {
+	return func(obj *pbSchedulerV1.Spec) {
+		if obj.Job == nil {
+			obj.Job = &pbSchedulerV1.JobBase{}
+		}
+
+		obj.Job.Profiles = append(obj.Job.Profiles, profiles...)
+	}
+}
+
+func withLabels(labels map[string]string) func(obj *pbSchedulerV1.Spec) {
+	return func(obj *pbSchedulerV1.Spec) {
+		if obj.Job == nil {
+			obj.Job = &pbSchedulerV1.JobBase{}
+		}
+
+		if obj.Job.Labels == nil {
+			obj.Job.Labels = make(map[string]string)
+		}
+
+		for k, v := range labels {
+			obj.Job.Labels[k] = v
+		}
+	}
+}
+
+func withDefaultContainer(in ...func(obj *pbSchedulerV1.ContainerBase)) func(obj *pbSchedulerV1.Spec) {
+	return func(obj *pbSchedulerV1.Spec) {
+		if obj.Containers == nil {
+			obj.Containers = make(map[string]*pbSchedulerV1.ContainerBase)
+		}
+
+		var c pbSchedulerV1.ContainerBase
+
+		for _, i := range in {
+			i(&c)
+		}
+
+		obj.Containers[DefaultContainerName] = &c
+	}
+}
+
+func render(t *testing.T, s Scheduler, in *pbSchedulerV1.Spec, templates ...*schedulerApi.ProfileTemplate) validatorExec {
 	pod, accepted, err := s.Render(context.Background(), in, templates...)
 	t.Logf("Accepted templates: %s", strings.Join(accepted, ", "))
 	if err != nil {
@@ -79,20 +133,22 @@ func runValidate(t *testing.T, err error, template *core.PodTemplateSpec, accept
 	}
 }
 
+func Test_Nil(t *testing.T) {
+	render(t, newScheduler(t, tests.NewMetaObjectInDefaultNamespace[*schedulerApi.ArangoProfile](t, "test")), nil)(func(t *testing.T, err error, template *core.PodTemplateSpec, accepted []string) {
+		require.EqualError(t, err, "Unable to parse nil Spec")
+	})
+}
+
 func Test_NoProfiles(t *testing.T) {
-	render(t, newScheduler(t, tests.NewMetaObjectInDefaultNamespace[*schedulerApi.ArangoProfile](t, "test")), Request{})(func(t *testing.T, err error, template *core.PodTemplateSpec, accepted []string) {
-		require.NoError(t, err)
-
-		require.Len(t, accepted, 0)
-
-		tests.GetContainerByNameT(t, template.Spec.Containers, DefaultContainerName)
+	render(t, newScheduler(t, tests.NewMetaObjectInDefaultNamespace[*schedulerApi.ArangoProfile](t, "test")), &pbSchedulerV1.Spec{})(func(t *testing.T, err error, template *core.PodTemplateSpec, accepted []string) {
+		require.EqualError(t, err, "Required at least 1 container")
 	})
 }
 
 func Test_MissingSelectedProfile(t *testing.T) {
-	render(t, newScheduler(t, tests.NewMetaObjectInDefaultNamespace[*schedulerApi.ArangoProfile](t, "test")), Request{
-		Profiles: []string{"missing"},
-	})(func(t *testing.T, err error, template *core.PodTemplateSpec, accepted []string) {
+	render(t, newScheduler(t, tests.NewMetaObjectInDefaultNamespace[*schedulerApi.ArangoProfile](t, "test")),
+		getRequest(withProfiles("missing"), withDefaultContainer()),
+	)(func(t *testing.T, err error, template *core.PodTemplateSpec, accepted []string) {
 		require.EqualError(t, err, "Profile with name `missing` is missing")
 	})
 }
@@ -110,7 +166,9 @@ func Test_SelectorWithoutSelector(t *testing.T) {
 				},
 			},
 		}
-	})), Request{})(func(t *testing.T, err error, template *core.PodTemplateSpec, accepted []string) {
+	})), getRequest(withDefaultContainer(func(obj *pbSchedulerV1.ContainerBase) {
+		obj.Image = util.NewType("")
+	})))(func(t *testing.T, err error, template *core.PodTemplateSpec, accepted []string) {
 		require.NoError(t, err)
 
 		require.Len(t, accepted, 0)
@@ -136,7 +194,7 @@ func Test_SelectorWithSelectorAll(t *testing.T) {
 				},
 			},
 		}
-	})), Request{})(func(t *testing.T, err error, template *core.PodTemplateSpec, accepted []string) {
+	})), getRequest(withDefaultContainer()))(func(t *testing.T, err error, template *core.PodTemplateSpec, accepted []string) {
 		require.NoError(t, err)
 
 		require.Len(t, accepted, 1)
@@ -172,7 +230,7 @@ func Test_SelectorWithSpecificSelector_MissingLabel(t *testing.T) {
 				},
 			},
 		}
-	})), Request{})(func(t *testing.T, err error, template *core.PodTemplateSpec, accepted []string) {
+	})), getRequest(withDefaultContainer()))(func(t *testing.T, err error, template *core.PodTemplateSpec, accepted []string) {
 		require.NoError(t, err)
 
 		require.Len(t, accepted, 0)
@@ -205,11 +263,9 @@ func Test_SelectorWithSpecificSelector_PresentLabel(t *testing.T) {
 				},
 			},
 		}
-	})), Request{
-		Labels: map[string]string{
-			"ml.arangodb.com/type": "training",
-		},
-	}, nil)(func(t *testing.T, err error, template *core.PodTemplateSpec, accepted []string) {
+	})), getRequest(withDefaultContainer(), withLabels(map[string]string{
+		"ml.arangodb.com/type": "training",
+	})), nil)(func(t *testing.T, err error, template *core.PodTemplateSpec, accepted []string) {
 		require.NoError(t, err)
 
 		require.Len(t, accepted, 1)
@@ -270,11 +326,10 @@ func Test_SelectorWithSpecificSelector_PresentLabel_ByPriority(t *testing.T) {
 					},
 				},
 			}
-		})), Request{
-		Labels: map[string]string{
-			"ml.arangodb.com/type": "training",
-		},
-	})(func(t *testing.T, err error, template *core.PodTemplateSpec, accepted []string) {
+		})), getRequest(withDefaultContainer(), withLabels(map[string]string{
+		"ml.arangodb.com/type": "training",
+	},
+	)))(func(t *testing.T, err error, template *core.PodTemplateSpec, accepted []string) {
 		require.NoError(t, err)
 
 		require.Len(t, accepted, 2)

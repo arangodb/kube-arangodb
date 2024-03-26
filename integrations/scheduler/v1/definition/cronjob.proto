@@ -28,15 +28,15 @@ option go_package = "github.com/arangodb/kube-arangodb/integrations/scheduler/v1
 
 // Keeps information about Kubernetes Batch/V1 CronJob
 message CronJob {
-  // Keeps BatchJob settings
-  BatchJobSpec job = 1;
-
   // Keeps the CronJob Settings
-  CronJobSpec spec = 2;
+  CronJobSpec spec = 1;
 }
 
 // Information about CronJob run settings
 message CronJobSpec {
   // Schedule definition
   string schedule = 1;
+
+  // Keeps BatchJob settings
+  BatchJobSpec job = 2;
 }

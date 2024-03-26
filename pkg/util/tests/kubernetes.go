@@ -48,6 +48,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
 type handleFunc struct {
@@ -223,6 +224,10 @@ func CreateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 	}
 }
 
+func UpdateObjectsC(t *testing.T, client kclient.Client, objects ...interface{}) func(t *testing.T) {
+	return UpdateObjects(t, client.Kubernetes(), client.Arango(), objects...)
+}
+
 func UpdateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSet.Interface, objects ...interface{}) func(t *testing.T) {
 	for _, object := range objects {
 		switch v := object.(type) {
@@ -349,7 +354,7 @@ func UpdateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 	}
 }
 
-func DeleteObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSet.Interface, objects ...interface{}) func(t *testing.T) {
+func DeleteObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSet.Interface, objects ...interface{}) {
 	for _, object := range objects {
 		switch v := object.(type) {
 		case **batch.CronJob:
@@ -372,11 +377,21 @@ func DeleteObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 
 			vl := *v
 			require.NoError(t, k8s.CoreV1().Secrets(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **core.Service:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, k8s.CoreV1().Services(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
 		case **core.ServiceAccount:
 			require.NotNil(t, v)
 
 			vl := *v
 			require.NoError(t, k8s.CoreV1().ServiceAccounts(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **apps.StatefulSet:
+			require.NotNil(t, v)
+			vl := *v
+			err := k8s.AppsV1().StatefulSets(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{})
+			require.NoError(t, err)
 		case **api.ArangoDeployment:
 			require.NotNil(t, v)
 
@@ -432,14 +447,19 @@ func DeleteObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 
 			vl := *v
 			require.NoError(t, k8s.RbacV1().RoleBindings(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **schedulerApi.ArangoProfile:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, arango.SchedulerV1alpha1().ArangoProfiles(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
 		default:
-			require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))
+			require.Fail(t, fmt.Sprintf("Unable to delete object: %s", reflect.TypeOf(v).String()))
 		}
 	}
+}
 
-	return func(t *testing.T) {
-		RefreshObjects(t, k8s, arango, objects...)
-	}
+func RefreshObjectsC(t *testing.T, client kclient.Client, objects ...interface{}) {
+	RefreshObjects(t, client.Kubernetes(), client.Arango(), objects...)
 }
 
 func RefreshObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSet.Interface, objects ...interface{}) {
