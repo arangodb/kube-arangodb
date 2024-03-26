@@ -18,8 +18,29 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package scheduler
+package v1
 
-import "github.com/arangodb/kube-arangodb/pkg/logging"
+type Mod func(c Configuration) Configuration
 
-var logger = logging.Global().RegisterAndGetLogger("scheduler", logging.Info)
+func NewConfiguration() Configuration {
+	return Configuration{
+		Namespace:    "default",
+		VerifyAccess: true,
+	}
+}
+
+type Configuration struct {
+	Namespace string
+
+	VerifyAccess bool
+}
+
+func (c Configuration) With(mods ...Mod) Configuration {
+	n := c
+
+	for _, mod := range mods {
+		n = mod(n)
+	}
+
+	return n
+}

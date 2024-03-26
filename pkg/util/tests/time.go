@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 func DurationBetween() func(t *testing.T, expected time.Duration, skew float64) {
@@ -38,4 +40,49 @@ func DurationBetween() func(t *testing.T, expected time.Duration, skew float64) 
 			require.Failf(t, "Skew is too big", "Expected %d, got %d", expected, current)
 		}
 	}
+}
+
+func Interrupt() error {
+	return interrupt{}
+}
+
+type interrupt struct {
+}
+
+func (i interrupt) Error() string {
+	return "interrupt"
+}
+
+func NewTimeout(in Timeout) Timeout {
+	return in
+}
+
+type Timeout func() error
+
+func (t Timeout) WithTimeout(timeout, interval time.Duration) error {
+	timeoutT := time.NewTimer(timeout)
+	defer timeoutT.Stop()
+
+	intervalT := time.NewTicker(interval)
+	defer intervalT.Stop()
+
+	for {
+		select {
+		case <-timeoutT.C:
+			return errors.Errorf("Timeouted!")
+		case <-intervalT.C:
+			if err := t(); err != nil {
+				var interrupt interrupt
+				if errors.As(err, &interrupt) {
+					return nil
+				}
+
+				return err
+			}
+		}
+	}
+}
+
+func (t Timeout) WithTimeoutT(z *testing.T, timeout, interval time.Duration) {
+	require.NoError(z, t.WithTimeout(timeout, interval))
 }

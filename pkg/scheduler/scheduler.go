@@ -25,6 +25,7 @@ import (
 
 	core "k8s.io/api/core/v1"
 
+	pbSchedulerV1 "github.com/arangodb/kube-arangodb/integrations/scheduler/v1/definition"
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/generators/kubernetes"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -39,7 +40,7 @@ func NewScheduler(client kclient.Client, namespace string) Scheduler {
 }
 
 type Scheduler interface {
-	Render(ctx context.Context, in Request, templates ...*schedulerApi.ProfileTemplate) (*core.PodTemplateSpec, []string, error)
+	Render(ctx context.Context, in *pbSchedulerV1.Spec, templates ...*schedulerApi.ProfileTemplate) (*core.PodTemplateSpec, []string, error)
 }
 
 type scheduler struct {
@@ -47,7 +48,11 @@ type scheduler struct {
 	namespace string
 }
 
-func (s scheduler) Render(ctx context.Context, in Request, templates ...*schedulerApi.ProfileTemplate) (*core.PodTemplateSpec, []string, error) {
+func (s scheduler) Render(ctx context.Context, in *pbSchedulerV1.Spec, templates ...*schedulerApi.ProfileTemplate) (*core.PodTemplateSpec, []string, error) {
+	if in == nil {
+		return nil, nil, errors.Errorf("Unable to parse nil Spec")
+	}
+
 	profileMap, err := kubernetes.MapObjects[*schedulerApi.ArangoProfileList, *schedulerApi.ArangoProfile](ctx, s.client.Arango().SchedulerV1alpha1().ArangoProfiles(s.namespace), func(result *schedulerApi.ArangoProfileList) []*schedulerApi.ArangoProfile {
 		q := make([]*schedulerApi.ArangoProfile, len(result.Items))
 
@@ -62,6 +67,18 @@ func (s scheduler) Render(ctx context.Context, in Request, templates ...*schedul
 		return nil, nil, err
 	}
 
+	var labels map[string]string
+	var additionalProfiles []string
+
+	if job := in.Job; job != nil {
+		labels = job.Labels
+		additionalProfiles = job.Profiles
+	}
+
+	if len(in.Containers) == 0 {
+		return nil, nil, errors.Errorf("Required at least 1 container")
+	}
+
 	profiles := profileMap.AsList().Filter(func(a *schedulerApi.ArangoProfile) bool {
 		return a != nil && a.Spec.Template != nil
 	}).Filter(func(a *schedulerApi.ArangoProfile) bool {
@@ -69,14 +86,14 @@ func (s scheduler) Render(ctx context.Context, in Request, templates ...*schedul
 			return false
 		}
 
-		if !a.Spec.Selectors.Select(in.Labels) {
+		if !a.Spec.Selectors.Select(labels) {
 			return false
 		}
 
 		return true
 	})
 
-	for _, name := range in.Profiles {
+	for _, name := range additionalProfiles {
 		p, ok := profileMap.ByName(name)
 		if !ok {
 			return nil, nil, errors.Errorf("Profile with name `%s` is missing", name)
@@ -103,7 +120,7 @@ func (s scheduler) Render(ctx context.Context, in Request, templates ...*schedul
 
 	extracted := schedulerApi.ProfileTemplates(kubernetes.Extract(profiles, func(in *schedulerApi.ArangoProfile) *schedulerApi.ProfileTemplate {
 		return in.Spec.Template
-	}).Append(templates...).Append(in.AsTemplate()))
+	}).Append(templates...).Append(baseAsTemplate(in)))
 
 	names := kubernetes.Extract(profiles, func(in *schedulerApi.ArangoProfile) string {
 		return in.GetName()

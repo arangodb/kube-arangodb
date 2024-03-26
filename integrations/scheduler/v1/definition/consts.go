@@ -18,22 +18,8 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package cmd
+package definition
 
-import (
-	"github.com/spf13/cobra"
-
-	"github.com/arangodb/kube-arangodb/pkg/scheduler"
+const (
+	Name = "scheduler.v1"
 )
-
-func init() {
-	cmd := &cobra.Command{
-		Use: "scheduler",
-	}
-
-	if err := scheduler.InitCommand(cmd); err != nil {
-		panic(err.Error())
-	}
-
-	cmdMain.AddCommand(cmd)
-}
