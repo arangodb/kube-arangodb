@@ -432,8 +432,13 @@ func DeleteObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 
 			vl := *v
 			require.NoError(t, k8s.RbacV1().RoleBindings(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **schedulerApi.ArangoProfile:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, arango.SchedulerV1alpha1().ArangoProfiles(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
 		default:
-			require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))
+			require.Fail(t, fmt.Sprintf("Unable to delete object: %s", reflect.TypeOf(v).String()))
 		}
 	}
 
