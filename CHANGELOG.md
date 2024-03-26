@@ -14,6 +14,7 @@
 - (Feature) DebugPackage ArangoProfiles
 - (Feature) Scheduler CLI
 - (Feature) Parametrize ForceDelete timeout
+- (Feature) Scheduler BatchJob Integration Definition
 
 ## [1.2.39](https://github.com/arangodb/kube-arangodb/tree/1.2.39) (2024-03-11)
 - (Feature) Extract Scheduler API

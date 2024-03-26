@@ -61,6 +61,10 @@ linters-settings:
         alias: mlSharedTests
       - pkg: github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1
         alias: mlApi
+      - pkg: github.com/arangodb/kube-arangodb/integrations/scheduler/v1/definition
+        alias: pbSchedulerV1
+      - pkg: github.com/arangodb/kube-arangodb/integrations/scheduler/v1
+        alias: pbImplSchedulerV1
       - pkg: github.com/arangodb/kube-arangodb/integrations/shutdown/v1/definition
         alias: pbShutdownV1
       - pkg: github.com/arangodb/kube-arangodb/integrations/shutdown/v1

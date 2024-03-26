@@ -1,0 +1,58 @@
+//
+// DISCLAIMER
+//
+// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Copyright holder is ArangoDB GmbH, Cologne, Germany
+//
+
+syntax = "proto3";
+
+package scheduler;
+
+option go_package = "github.com/arangodb/kube-arangodb/integrations/scheduler/v1/definition";
+
+// Keeps information about Kubernetes Batch/V1 Job
+message BatchJob {
+  // Keeps BatchJob settings
+  BatchJobSpec spec = 1;
+
+  // Keeps current BatchJob Status
+  optional BatchJobStatus status = 2;
+}
+
+// Information about BatchJob run settings, like completions and parallelism
+message BatchJobSpec {
+  // Number of concurrent Pods which are started within a job. Defaults to 1
+  optional int32 parallelism = 1;
+
+  // Number of expected completed runs. Defaults to 1
+  optional int32 completions = 2;
+
+  // Number of allowed Pod failures. Defaults to 0
+  optional int32 backoff_limit = 3;
+}
+
+// Information about BatchJob Status
+message BatchJobStatus {
+  // Number of active and running Pods within BatchJob
+  int32 active = 1;
+
+  // Number of completed Pods withing BatchJob
+  int32 succeeded = 2;
+
+  // Number of failed Pods within BatchJob
+  int32 failed = 3;
+}
