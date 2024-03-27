@@ -30,6 +30,16 @@ type SchedulerV1Client interface {
 	ListBatchJob(ctx context.Context, in *ListBatchJobRequest, opts ...grpc.CallOption) (*ListBatchJobResponse, error)
 	// Deletes BatchJob. If job does not exists, Exists flag is set to false
 	DeleteBatchJob(ctx context.Context, in *DeleteBatchJobRequest, opts ...grpc.CallOption) (*DeleteBatchJobResponse, error)
+	// Creates CronJob from specification
+	CreateCronJob(ctx context.Context, in *CreateCronJobRequest, opts ...grpc.CallOption) (*CreateCronJobResponse, error)
+	// Returns CronJob. If job does not exists, Exists flag is set to false
+	GetCronJob(ctx context.Context, in *GetCronJobRequest, opts ...grpc.CallOption) (*GetCronJobResponse, error)
+	// Updates CronJob from specification
+	UpdateCronJob(ctx context.Context, in *UpdateCronJobRequest, opts ...grpc.CallOption) (*UpdateCronJobResponse, error)
+	// Returns list of the CronJobs
+	ListCronJob(ctx context.Context, in *ListCronJobRequest, opts ...grpc.CallOption) (*ListCronJobResponse, error)
+	// Deletes CronJob. If job does not exists, Exists flag is set to false
+	DeleteCronJob(ctx context.Context, in *DeleteCronJobRequest, opts ...grpc.CallOption) (*DeleteCronJobResponse, error)
 }
 
 type schedulerV1Client struct {
@@ -76,6 +86,51 @@ func (c *schedulerV1Client) DeleteBatchJob(ctx context.Context, in *DeleteBatchJ
 	return out, nil
 }
 
+func (c *schedulerV1Client) CreateCronJob(ctx context.Context, in *CreateCronJobRequest, opts ...grpc.CallOption) (*CreateCronJobResponse, error) {
+	out := new(CreateCronJobResponse)
+	err := c.cc.Invoke(ctx, "/scheduler.SchedulerV1/CreateCronJob", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *schedulerV1Client) GetCronJob(ctx context.Context, in *GetCronJobRequest, opts ...grpc.CallOption) (*GetCronJobResponse, error) {
+	out := new(GetCronJobResponse)
+	err := c.cc.Invoke(ctx, "/scheduler.SchedulerV1/GetCronJob", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *schedulerV1Client) UpdateCronJob(ctx context.Context, in *UpdateCronJobRequest, opts ...grpc.CallOption) (*UpdateCronJobResponse, error) {
+	out := new(UpdateCronJobResponse)
+	err := c.cc.Invoke(ctx, "/scheduler.SchedulerV1/UpdateCronJob", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *schedulerV1Client) ListCronJob(ctx context.Context, in *ListCronJobRequest, opts ...grpc.CallOption) (*ListCronJobResponse, error) {
+	out := new(ListCronJobResponse)
+	err := c.cc.Invoke(ctx, "/scheduler.SchedulerV1/ListCronJob", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *schedulerV1Client) DeleteCronJob(ctx context.Context, in *DeleteCronJobRequest, opts ...grpc.CallOption) (*DeleteCronJobResponse, error) {
+	out := new(DeleteCronJobResponse)
+	err := c.cc.Invoke(ctx, "/scheduler.SchedulerV1/DeleteCronJob", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SchedulerV1Server is the server API for SchedulerV1 service.
 // All implementations must embed UnimplementedSchedulerV1Server
 // for forward compatibility
@@ -88,6 +143,16 @@ type SchedulerV1Server interface {
 	ListBatchJob(context.Context, *ListBatchJobRequest) (*ListBatchJobResponse, error)
 	// Deletes BatchJob. If job does not exists, Exists flag is set to false
 	DeleteBatchJob(context.Context, *DeleteBatchJobRequest) (*DeleteBatchJobResponse, error)
+	// Creates CronJob from specification
+	CreateCronJob(context.Context, *CreateCronJobRequest) (*CreateCronJobResponse, error)
+	// Returns CronJob. If job does not exists, Exists flag is set to false
+	GetCronJob(context.Context, *GetCronJobRequest) (*GetCronJobResponse, error)
+	// Updates CronJob from specification
+	UpdateCronJob(context.Context, *UpdateCronJobRequest) (*UpdateCronJobResponse, error)
+	// Returns list of the CronJobs
+	ListCronJob(context.Context, *ListCronJobRequest) (*ListCronJobResponse, error)
+	// Deletes CronJob. If job does not exists, Exists flag is set to false
+	DeleteCronJob(context.Context, *DeleteCronJobRequest) (*DeleteCronJobResponse, error)
 	mustEmbedUnimplementedSchedulerV1Server()
 }
 
@@ -106,6 +171,21 @@ func (UnimplementedSchedulerV1Server) ListBatchJob(context.Context, *ListBatchJo
 }
 func (UnimplementedSchedulerV1Server) DeleteBatchJob(context.Context, *DeleteBatchJobRequest) (*DeleteBatchJobResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteBatchJob not implemented")
+}
+func (UnimplementedSchedulerV1Server) CreateCronJob(context.Context, *CreateCronJobRequest) (*CreateCronJobResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateCronJob not implemented")
+}
+func (UnimplementedSchedulerV1Server) GetCronJob(context.Context, *GetCronJobRequest) (*GetCronJobResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCronJob not implemented")
+}
+func (UnimplementedSchedulerV1Server) UpdateCronJob(context.Context, *UpdateCronJobRequest) (*UpdateCronJobResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateCronJob not implemented")
+}
+func (UnimplementedSchedulerV1Server) ListCronJob(context.Context, *ListCronJobRequest) (*ListCronJobResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListCronJob not implemented")
+}
+func (UnimplementedSchedulerV1Server) DeleteCronJob(context.Context, *DeleteCronJobRequest) (*DeleteCronJobResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteCronJob not implemented")
 }
 func (UnimplementedSchedulerV1Server) mustEmbedUnimplementedSchedulerV1Server() {}
 
@@ -192,6 +272,96 @@ func _SchedulerV1_DeleteBatchJob_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SchedulerV1_CreateCronJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateCronJobRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SchedulerV1Server).CreateCronJob(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/scheduler.SchedulerV1/CreateCronJob",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SchedulerV1Server).CreateCronJob(ctx, req.(*CreateCronJobRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SchedulerV1_GetCronJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetCronJobRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SchedulerV1Server).GetCronJob(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/scheduler.SchedulerV1/GetCronJob",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SchedulerV1Server).GetCronJob(ctx, req.(*GetCronJobRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SchedulerV1_UpdateCronJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateCronJobRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SchedulerV1Server).UpdateCronJob(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/scheduler.SchedulerV1/UpdateCronJob",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SchedulerV1Server).UpdateCronJob(ctx, req.(*UpdateCronJobRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SchedulerV1_ListCronJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListCronJobRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SchedulerV1Server).ListCronJob(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/scheduler.SchedulerV1/ListCronJob",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SchedulerV1Server).ListCronJob(ctx, req.(*ListCronJobRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SchedulerV1_DeleteCronJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteCronJobRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SchedulerV1Server).DeleteCronJob(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/scheduler.SchedulerV1/DeleteCronJob",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SchedulerV1Server).DeleteCronJob(ctx, req.(*DeleteCronJobRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // SchedulerV1_ServiceDesc is the grpc.ServiceDesc for SchedulerV1 service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -214,6 +384,26 @@ var SchedulerV1_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteBatchJob",
 			Handler:    _SchedulerV1_DeleteBatchJob_Handler,
+		},
+		{
+			MethodName: "CreateCronJob",
+			Handler:    _SchedulerV1_CreateCronJob_Handler,
+		},
+		{
+			MethodName: "GetCronJob",
+			Handler:    _SchedulerV1_GetCronJob_Handler,
+		},
+		{
+			MethodName: "UpdateCronJob",
+			Handler:    _SchedulerV1_UpdateCronJob_Handler,
+		},
+		{
+			MethodName: "ListCronJob",
+			Handler:    _SchedulerV1_ListCronJob_Handler,
+		},
+		{
+			MethodName: "DeleteCronJob",
+			Handler:    _SchedulerV1_DeleteCronJob_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
