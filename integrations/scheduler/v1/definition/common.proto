@@ -1,0 +1,67 @@
+//
+// DISCLAIMER
+//
+// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Copyright holder is ArangoDB GmbH, Cologne, Germany
+//
+
+syntax = "proto3";
+
+package scheduler;
+
+option go_package = "github.com/arangodb/kube-arangodb/integrations/scheduler/v1/definition";
+
+// Common base of the Jobs
+message JobBase {
+  // Map of the Labels assigned to the job. Used for Profile selection
+  map<string, string> labels = 1;
+
+  // List of additional profiles assigned to Job
+  repeated string profiles = 2;
+}
+
+// Basic information about Job
+message Metadata {
+  // Name of the job
+  string name = 1;
+
+  // Optionally extends name of the job with random characters
+  optional bool generate_name = 2;
+}
+
+// Basic information about container
+message ContainerBase {
+  // Container Image used to run container
+  optional string image = 1;
+
+  // Arguments passed to the container
+  repeated string args = 2;
+
+  // EnvironmentVariables passed to the container
+  map<string, string> environment_variables = 3;
+}
+
+// Common Spec of the Schedule request
+message Spec {
+  // Keeps requested Metadata
+  Metadata metadata = 1;
+
+  // Keeps requested Job base
+  JobBase job = 2;
+
+  // Keeps map of the containers
+  map<string, ContainerBase> containers = 3;
+}
