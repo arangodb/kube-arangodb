@@ -24,11 +24,14 @@ package scheduler;
 
 import "integrations/scheduler/v1/definition/batchjob.proto";
 import "integrations/scheduler/v1/definition/common.proto";
+import "integrations/scheduler/v1/definition/cronjob.proto";
 
 option go_package = "github.com/arangodb/kube-arangodb/integrations/scheduler/v1/definition";
 
 // Definition of the ServiceInterface for Scheduler V1
 service SchedulerV1 {
+  // BatchJob
+  
   // Creates BatchJob from specification
   rpc CreateBatchJob(CreateBatchJobRequest) returns (CreateBatchJobResponse) {};
 
@@ -40,7 +43,26 @@ service SchedulerV1 {
 
   // Deletes BatchJob. If job does not exists, Exists flag is set to false
   rpc DeleteBatchJob(DeleteBatchJobRequest) returns (DeleteBatchJobResponse) {};
+  
+  // CronJob
+
+  // Creates CronJob from specification
+  rpc CreateCronJob(CreateCronJobRequest) returns (CreateCronJobResponse) {};
+
+  // Returns CronJob. If job does not exists, Exists flag is set to false
+  rpc GetCronJob(GetCronJobRequest) returns (GetCronJobResponse) {};
+
+  // Updates CronJob from specification
+  rpc UpdateCronJob(UpdateCronJobRequest) returns (UpdateCronJobResponse) {};
+
+  // Returns list of the CronJobs
+  rpc ListCronJob(ListCronJobRequest) returns (ListCronJobResponse) {};
+
+  // Deletes CronJob. If job does not exists, Exists flag is set to false
+  rpc DeleteCronJob(DeleteCronJobRequest) returns (DeleteCronJobResponse) {};
 }
+
+// BatchJob
 
 // Create Request
 message CreateBatchJobRequest {
@@ -97,6 +119,87 @@ message DeleteBatchJobRequest {
 
 // Delete Response
 message DeleteBatchJobResponse {
+  // Defines if job was found
+  bool exists = 1;
+}
+
+// CronJob
+
+// Create Request
+message CreateCronJobRequest {
+  // Spec of the Schedule request
+  Spec spec = 1;
+
+  // CronJob run settings
+  CronJobSpec cron_job = 2;
+}
+
+// Create Response
+message CreateCronJobResponse {
+  // Name of the scheduled job
+  string name = 1;
+
+  // List of the assigned profiles
+  repeated string profiles = 2;
+}
+
+// Get Request
+message GetCronJobRequest {
+  // Name of the scheduled job
+  string name = 1;
+}
+
+// Get Response
+message GetCronJobResponse {
+  // Defines if job was found
+  bool exists = 1;
+
+  // CronJob run settings and current status
+  optional CronJob cron_job = 2;
+  
+  // Keeps list of created BatchJobs
+  repeated string batch_jobs = 3;
+}
+
+// Update Request
+message UpdateCronJobRequest {
+  // Name of the scheduled job
+  string name = 1;
+
+  // CronJob spec to be updated
+  CronJobSpec spec = 2;
+}
+
+// Update Response
+message UpdateCronJobResponse {
+  // Defines if job was found
+  bool exists = 1;
+
+  // CronJob run settings and current status
+  optional CronJob cron_job = 2;
+}
+
+// List Request
+message ListCronJobRequest {
+}
+
+// List Response
+message ListCronJobResponse {
+  // List of the CronJobs
+  repeated string cron_jobs = 1;
+}
+
+// Delete Request
+message DeleteCronJobRequest {
+  // Name of the scheduled job
+  string name = 1;
+
+  // Defines if all child containers/pods should be removed together with job
+  optional bool delete_child_pods = 2;
+}
+
+// Delete Response
+message DeleteCronJobResponse {
   // Defines if job was found
   bool exists = 1;
 }
