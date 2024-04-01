@@ -16,6 +16,7 @@
 - (Feature) Parametrize ForceDelete timeout
 - (Feature) Scheduler BatchJob Integration Definition
 - (Feature) Scheduler CronJob Integration Definition
+- (Feature) Scheduler BatchJob Integration Service
 
 ## [1.2.39](https://github.com/arangodb/kube-arangodb/tree/1.2.39) (2024-03-11)
 - (Feature) Extract Scheduler API

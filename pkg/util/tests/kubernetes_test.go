@@ -57,6 +57,8 @@ func NewMetaObjectRun[T meta.Object](t *testing.T) {
 			refresh(t)
 
 			UpdateObjects(t, c.Kubernetes(), c.Arango(), &obj)
+
+			DeleteObjects(t, c.Kubernetes(), c.Arango(), &obj)
 		})
 	})
 }

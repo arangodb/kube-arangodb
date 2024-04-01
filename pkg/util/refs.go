@@ -63,6 +63,12 @@ func Default[T interface{}]() T {
 	return d
 }
 
+// DefaultInterface returns generic default value for type T as Interface
+func DefaultInterface[T interface{}]() interface{} {
+	var d T
+	return d
+}
+
 // First returns first not nil value
 func First[T interface{}](input ...*T) *T {
 	for _, i := range input {
