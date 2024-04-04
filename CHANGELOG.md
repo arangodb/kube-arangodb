@@ -18,6 +18,7 @@
 - (Feature) Scheduler CronJob Integration Definition
 - (Feature) Scheduler BatchJob Integration Service
 - (Maintenance) Update Go to 1.22.2
+- (Feature) Object Checksum
 
 ## [1.2.39](https://github.com/arangodb/kube-arangodb/tree/1.2.39) (2024-03-11)
 - (Feature) Extract Scheduler API
