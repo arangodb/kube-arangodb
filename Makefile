@@ -48,7 +48,7 @@ endif
 
 TEST_BUILD ?= 0
 GOBUILDARGS ?=
-GOBASEVERSION := 1.21.8
+GOBASEVERSION := 1.22.2
 GOVERSION := $(GOBASEVERSION)-alpine3.18
 DISTRIBUTION := alpine:3.15
 GOCOMPAT := $(shell sed -En 's/^go (.*)$$/\1/p' go.mod)
@@ -752,7 +752,7 @@ tools: tools-min
 	@GOBIN=$(GOPATH)/bin go install github.com/golang/protobuf/protoc-gen-go@v1.5.2
 	@GOBIN=$(GOPATH)/bin go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
 	@echo ">> Fetching govulncheck"
-	@GOBIN=$(GOPATH)/bin go install golang.org/x/vuln/cmd/govulncheck@v0.1.0
+	@GOBIN=$(GOPATH)/bin go install golang.org/x/vuln/cmd/govulncheck@v1.0.4
 
 .PHONY: vendor
 vendor:
