@@ -19,6 +19,9 @@ v1alpha1:
                       - `ca.crt` PEM encoded public key of the CA certificate
                       - `ca.key` PEM encoded private key of the CA certificate
                     properties:
+                      checksum:
+                        description: UID keeps the information about object Checksum
+                        type: string
                       name:
                         description: Name of the object
                         type: string
@@ -34,6 +37,9 @@ v1alpha1:
                       CredentialsSecret specifies the Kubernetes Secret containing AccessKey and SecretKey for S3 API authorization
                       Required
                     properties:
+                      checksum:
+                        description: UID keeps the information about object Checksum
+                        type: string
                       name:
                         description: Name of the object
                         type: string

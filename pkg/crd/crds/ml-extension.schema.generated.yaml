@@ -13981,6 +13981,9 @@ v1alpha1:
           storage:
             description: Storage specifies the ArangoMLStorage used within Extension
             properties:
+              checksum:
+                description: UID keeps the information about object Checksum
+                type: string
               name:
                 description: Name of the object
                 type: string
