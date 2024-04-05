@@ -62,6 +62,11 @@ func (in *Object) DeepCopyInto(out *Object) {
 		*out = new(types.UID)
 		**out = **in
 	}
+	if in.Checksum != nil {
+		in, out := &in.Checksum, &out.Checksum
+		*out = new(string)
+		**out = **in
+	}
 	return
 }
 

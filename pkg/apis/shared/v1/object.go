@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,6 +28,12 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
+func NewObjectWithChecksum(object meta.Object, checksum string) Object {
+	obj := NewObject(object)
+	obj.Checksum = util.NewType(checksum)
+	return obj
+}
+
 func NewObject(object meta.Object) Object {
 	var n Object
 
@@ -50,6 +56,9 @@ type Object struct {
 
 	// UID keeps the information about object UID
 	UID *types.UID `json:"uid,omitempty"`
+
+	// UID keeps the information about object Checksum
+	Checksum *string `json:"checksum,omitempty"`
 }
 
 func (o *Object) IsEmpty() bool {
@@ -78,6 +87,16 @@ func (o *Object) GetNamespace(obj meta.Object) string {
 func (o *Object) GetUID() types.UID {
 	if o != nil {
 		if n := o.UID; n != nil {
+			return *n
+		}
+	}
+
+	return ""
+}
+
+func (o *Object) GetChecksum() string {
+	if o != nil {
+		if n := o.Checksum; n != nil {
 			return *n
 		}
 	}
