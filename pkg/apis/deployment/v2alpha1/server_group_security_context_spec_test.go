@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -99,6 +99,28 @@ func TestServerGroupSpecSecurityContext_NewPodSecurityContext(t *testing.T) {
 						Value: "2",
 					},
 				},
+			},
+		},
+		"pass seccompProfile opts": {
+			sc: &ServerGroupSpecSecurityContext{
+				SeccompProfile: &core.SeccompProfile{
+					Type: core.SeccompProfileTypeRuntimeDefault,
+				},
+			},
+			secured: false,
+			want: &core.PodSecurityContext{
+				SeccompProfile: &core.SeccompProfile{
+					Type: core.SeccompProfileTypeRuntimeDefault,
+				},
+			},
+		},
+		"pass seLinuxOptions opts": {
+			sc: &ServerGroupSpecSecurityContext{
+				SELinuxOptions: &core.SELinuxOptions{Type: "test"},
+			},
+			secured: false,
+			want: &core.PodSecurityContext{
+				SELinuxOptions: &core.SELinuxOptions{Type: "test"},
 			},
 		},
 	}
@@ -223,6 +245,34 @@ func TestServerGroupSpecSecurityContext_NewSecurityContext(t *testing.T) {
 				RunAsGroup:             util.NewType[int64](shared.DefaultRunAsGroup),
 				RunAsNonRoot:           util.NewType(false),
 				RunAsUser:              util.NewType[int64](3001),
+			},
+		},
+		"pass seccompProfile opts": {
+			sc: &ServerGroupSpecSecurityContext{
+				SeccompProfile: &core.SeccompProfile{
+					Type: core.SeccompProfileTypeRuntimeDefault,
+				},
+			},
+			secured: false,
+			want: &core.SecurityContext{
+				Capabilities: &core.Capabilities{
+					Drop: []core.Capability{"ALL"},
+				},
+				SeccompProfile: &core.SeccompProfile{
+					Type: core.SeccompProfileTypeRuntimeDefault,
+				},
+			},
+		},
+		"pass seLinuxOptions opts": {
+			sc: &ServerGroupSpecSecurityContext{
+				SELinuxOptions: &core.SELinuxOptions{Type: "test"},
+			},
+			secured: false,
+			want: &core.SecurityContext{
+				Capabilities: &core.Capabilities{
+					Drop: []core.Capability{"ALL"},
+				},
+				SELinuxOptions: &core.SELinuxOptions{Type: "test"},
 			},
 		},
 	}

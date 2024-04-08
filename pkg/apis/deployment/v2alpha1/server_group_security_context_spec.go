@@ -116,6 +116,15 @@ func (s *ServerGroupSpecSecurityContext) NewPodSecurityContext(secured bool) *co
 		}
 	}
 
+	if s != nil {
+		if psc == nil {
+			psc = &core.PodSecurityContext{}
+		}
+
+		psc.SeccompProfile = s.SeccompProfile.DeepCopy()
+		psc.SELinuxOptions = s.SELinuxOptions.DeepCopy()
+	}
+
 	if s != nil && len(s.Sysctls) > 0 {
 		var sysctls []core.Sysctl
 		for k, v := range s.Sysctls {
