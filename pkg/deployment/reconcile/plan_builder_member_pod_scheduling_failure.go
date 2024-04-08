@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -67,31 +67,30 @@ func (r *Reconciler) createMemberPodSchedulingFailurePlan(ctx context.Context,
 			continue
 		}
 
-		if r.isSchedulingParametersChanged(renderedPod.Spec, m.Member, context) {
-			l.Info("Adding KillMemberPod action: scheduling failed and parameters already updated")
-			p = append(p,
-				actions.NewAction(api.ActionTypeKillMemberPod, m.Group, m.Member, "Scheduling failed"),
-			)
+		cache, ok := context.ACS().ClusterCache(m.Member.ClusterID)
+		if !ok {
+			continue
+		}
+
+		memberName := m.Member.ArangoMemberName(context.GetName(), m.Group)
+		member, ok := cache.ArangoMember().V1().GetSimple(memberName)
+		if !ok {
+			continue
+		}
+
+		if template := member.Spec.Template; template != nil {
+			if pod := template.PodSpec; pod != nil {
+				if !r.schedulingParametersAreTheSame(renderedPod.Spec, pod.Spec) {
+					l.Info("Adding KillMemberPod action: scheduling failed and parameters already updated")
+					p = append(p,
+						actions.NewAction(api.ActionTypeKillMemberPod, m.Group, m.Member, "Scheduling failed"),
+					)
+				}
+			}
 		}
 	}
 
 	return p
-}
-
-// isSchedulingParametersChanged returns true if parameters related to pod scheduling has changed
-func (r *Reconciler) isSchedulingParametersChanged(expectedSpec core.PodSpec, member api.MemberStatus, context PlanBuilderContext) bool {
-	cache, ok := context.ACS().ClusterCache(member.ClusterID)
-	if !ok {
-		return false
-	}
-	pod, ok := cache.Pod().V1().GetSimple(member.Pod.GetName())
-	if !ok {
-		return false
-	}
-	if r.schedulingParametersAreTheSame(expectedSpec, pod.Spec) {
-		return false
-	}
-	return true
 }
 
 func (r *Reconciler) schedulingParametersAreTheSame(expectedSpec, actualSpec core.PodSpec) bool {
