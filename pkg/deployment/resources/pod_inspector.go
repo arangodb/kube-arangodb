@@ -393,6 +393,11 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 				nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
 			}
 		} else {
+			if memberStatus.Conditions.Update(api.ConditionTypeScheduled, false, "Pod is not scheduled", "") {
+				updateMemberStatusNeeded = true
+				nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
+			}
+
 			if k8sutil.IsPodNotScheduledFor(pod, podScheduleTimeout) {
 				// Pod cannot be scheduled for to long
 				log.Str("pod-name", pod.GetName()).Debug("Pod scheduling timeout")
