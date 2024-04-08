@@ -23,12 +23,14 @@ package reconcile
 import (
 	"context"
 	"reflect"
+	"time"
 
 	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -38,6 +40,12 @@ func (r *Reconciler) createMemberPodSchedulingFailurePlan(ctx context.Context,
 	_ k8sutil.APIObject, spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext) api.Plan {
 
 	var p api.Plan
+
+	if globals.GetGlobalTimeouts().PodSchedulingGracePeriod().Get() == 0 {
+		// Scheduling grace period is not enabled
+		return nil
+	}
+
 	if !status.Conditions.IsTrue(api.ConditionTypePodSchedulingFailure) {
 		return p
 	}
@@ -53,6 +61,19 @@ func (r *Reconciler) createMemberPodSchedulingFailurePlan(ctx context.Context,
 		if m.Member.Conditions.IsTrue(api.ConditionTypeScheduled) || m.Member.Conditions.IsTrue(api.ConditionTypeTerminating) {
 			// Action is needed only for pods which are not scheduled yet
 			continue
+		}
+
+		if c, ok := m.Member.Conditions.Get(api.ConditionTypeScheduled); !ok {
+			// Action cant proceed if pod is not scheduled
+			continue
+		} else if c.LastTransitionTime.IsZero() {
+			// LastTransitionTime is not set
+			continue
+		} else {
+			if time.Since(c.LastTransitionTime.Time) <= globals.GetGlobalTimeouts().PodSchedulingGracePeriod().Get() {
+				// In grace period
+				continue
+			}
 		}
 
 		imageInfo, imageFound := context.SelectImageForMember(spec, status, m.Member)

@@ -20,6 +20,7 @@
 - (Maintenance) Update Go to 1.22.2
 - (Feature) Object Checksum
 - (Bugfix) Use Rendered Spec in case of scheduling compare
+- (Feature) Parametrize Scheduling Graceful Duration
 
 ## [1.2.39](https://github.com/arangodb/kube-arangodb/tree/1.2.39) (2024-03-11)
 - (Feature) Extract Scheduler API
