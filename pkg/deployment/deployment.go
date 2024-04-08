@@ -498,8 +498,12 @@ func (d *Deployment) acceptNewSpec(ctx context.Context, depl *api.ArangoDeployme
 }
 
 func (d *Deployment) patchAcceptedSpec(ctx context.Context, spec *api.DeploymentSpec, checksum string) error {
-	return d.ApplyPatch(ctx, patch.ItemReplace(patch.NewPath("status", "accepted-spec"), spec),
-		patch.ItemReplace(patch.NewPath("status", "acceptedSpecVersion"), checksum))
+	s := d.GetStatus()
+
+	s.AcceptedSpecVersion = util.NewType(checksum)
+	s.AcceptedSpec = spec.DeepCopy()
+
+	return d.updateCRStatus(ctx, s)
 }
 
 // handleArangoDeploymentUpdatedEvent is called when the deployment is updated by the user.
