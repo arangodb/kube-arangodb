@@ -157,6 +157,7 @@ var (
 		backupArangoD               time.Duration
 		backupUploadArangoD         time.Duration
 		forcePodDeletionGracePeriod time.Duration
+		podSchedulingGracePeriod    time.Duration
 	}
 	operatorImageDiscovery struct {
 		timeout                time.Duration
@@ -226,6 +227,7 @@ func init() {
 	f.DurationVar(&operatorTimeouts.backupArangoD, "timeout.backup-arangod", globals.BackupDefaultArangoClientTimeout, "The request timeout to the ArangoDB during backup calls")
 	f.DurationVar(&operatorTimeouts.backupUploadArangoD, "timeout.backup-upload", globals.BackupUploadArangoClientTimeout, "The request timeout to the ArangoDB during uploading files")
 	f.DurationVar(&operatorTimeouts.forcePodDeletionGracePeriod, "timeout.force-delete-pod-grace-period", globals.DefaultForcePodDeletionGracePeriodTimeout, "Default period when ArangoDB Pod should be forcefully removed after all containers were stopped - set to 0 to disable forceful removals")
+	f.DurationVar(&operatorTimeouts.podSchedulingGracePeriod, "timeout.pod-scheduling-grace-period", globals.DefaultPodSchedulingGracePeriod, "Default period when ArangoDB Pod should be deleted in case of scheduling info change - set to 0 to disable")
 	f.DurationVar(&shutdownOptions.delay, "shutdown.delay", defaultShutdownDelay, "The delay before running shutdown handlers")
 	f.DurationVar(&shutdownOptions.timeout, "shutdown.timeout", defaultShutdownTimeout, "Timeout for shutdown handlers")
 	f.DurationVar(&operatorReconciliationRetry.delay, "operator.reconciliation.retry.delay", globals.DefaultOperatorUpdateRetryDelay, "Delay between Object Update operations in the Reconciliation loop")
@@ -294,6 +296,7 @@ func executeMain(cmd *cobra.Command, args []string) {
 	globals.GetGlobalTimeouts().BackupArangoClientTimeout().Set(operatorTimeouts.backupArangoD)
 	globals.GetGlobalTimeouts().BackupArangoClientUploadTimeout().Set(operatorTimeouts.backupUploadArangoD)
 	globals.GetGlobalTimeouts().ForcePodDeletionGracePeriodTimeout().Set(operatorTimeouts.forcePodDeletionGracePeriod)
+	globals.GetGlobalTimeouts().PodSchedulingGracePeriod().Set(operatorTimeouts.podSchedulingGracePeriod)
 
 	globals.GetGlobals().Retry().OperatorUpdateRetryDelay().Set(operatorReconciliationRetry.delay)
 	globals.GetGlobals().Retry().OperatorUpdateRetryCount().Set(operatorReconciliationRetry.count)

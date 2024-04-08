@@ -29,6 +29,7 @@ const (
 	DefaultArangoDCheckTimeout                = time.Second * 2
 	DefaultReconciliationTimeout              = time.Minute
 	DefaultForcePodDeletionGracePeriodTimeout = 15 * time.Minute
+	DefaultPodSchedulingGracePeriod           = 15 * time.Second
 
 	BackupDefaultArangoClientTimeout = 30 * time.Second
 	BackupUploadArangoClientTimeout  = 300 * time.Second
@@ -61,6 +62,7 @@ var globalObj = &globals{
 		backupArangoClientTimeout:          NewTimeout(BackupDefaultArangoClientTimeout),
 		backupArangoClientUploadTimeout:    NewTimeout(BackupUploadArangoClientTimeout),
 		forcePodDeletionGracePeriodTimeout: NewTimeout(DefaultForcePodDeletionGracePeriodTimeout),
+		podSchedulingGracePeriod:           NewTimeout(DefaultPodSchedulingGracePeriod),
 	},
 	kubernetes: &globalKubernetes{
 		requestBatchSize: NewInt64(DefaultKubernetesRequestBatchSize),
@@ -147,6 +149,7 @@ type GlobalTimeouts interface {
 	Agency() Timeout
 
 	ForcePodDeletionGracePeriodTimeout() Timeout
+	PodSchedulingGracePeriod() Timeout
 
 	BackupArangoClientTimeout() Timeout
 	BackupArangoClientUploadTimeout() Timeout
@@ -156,11 +159,15 @@ type globalTimeouts struct {
 	requests, arangod, reconciliation, arangodCheck, agency, shardRebuild, shardRebuildRetry Timeout
 	backupArangoClientTimeout                                                                Timeout
 	backupArangoClientUploadTimeout                                                          Timeout
-	forcePodDeletionGracePeriodTimeout                                                       Timeout
+	forcePodDeletionGracePeriodTimeout, podSchedulingGracePeriod                             Timeout
 }
 
 func (g *globalTimeouts) ForcePodDeletionGracePeriodTimeout() Timeout {
 	return g.forcePodDeletionGracePeriodTimeout
+}
+
+func (g *globalTimeouts) PodSchedulingGracePeriod() Timeout {
+	return g.podSchedulingGracePeriod
 }
 
 func (g *globalTimeouts) Agency() Timeout {
