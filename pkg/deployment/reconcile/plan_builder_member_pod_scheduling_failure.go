@@ -50,8 +50,10 @@ func (r *Reconciler) createMemberPodSchedulingFailurePlan(ctx context.Context,
 		return p
 	}
 
+	q := r.log.Str("step", "CreateMemberPodSchedulingFailurePlan")
+
 	for _, m := range status.Members.AsList() {
-		l := r.log.Str("id", m.Member.ID).Str("role", m.Group.AsRole())
+		l := q.Str("id", m.Member.ID).Str("role", m.Group.AsRole())
 
 		if m.Member.Phase != api.MemberPhaseCreated || m.Member.Pod.GetName() == "" {
 			// Act only when phase is created
@@ -65,48 +67,54 @@ func (r *Reconciler) createMemberPodSchedulingFailurePlan(ctx context.Context,
 
 		if c, ok := m.Member.Conditions.Get(api.ConditionTypeScheduled); !ok {
 			// Action cant proceed if pod is not scheduled
+			l.Debug("Unable to find scheduled condition")
 			continue
 		} else if c.LastTransitionTime.IsZero() {
 			// LastTransitionTime is not set
+			l.Debug("Scheduled condition LastTransitionTime is zero")
 			continue
 		} else {
-			if time.Since(c.LastTransitionTime.Time) <= globals.GetGlobalTimeouts().PodSchedulingGracePeriod().Get() {
+			if d := time.Since(c.LastTransitionTime.Time); d <= globals.GetGlobalTimeouts().PodSchedulingGracePeriod().Get() {
 				// In grace period
+				l.Dur("since", d).Debug("Still in grace period")
 				continue
 			}
 		}
 
-		imageInfo, imageFound := context.SelectImageForMember(spec, status, m.Member)
-		if !imageFound {
-			l.Warn("could not find image for already created member")
-			continue
-		}
-
-		renderedPod, err := context.RenderPodForMember(ctx, context.ACS(), spec, status, m.Member.ID, imageInfo)
-		if err != nil {
-			l.Err(err).Warn("could not render pod for already created member")
-			continue
-		}
-
 		cache, ok := context.ACS().ClusterCache(m.Member.ClusterID)
 		if !ok {
+			l.Warn("Unable to get member name")
 			continue
 		}
 
 		memberName := m.Member.ArangoMemberName(context.GetName(), m.Group)
 		member, ok := cache.ArangoMember().V1().GetSimple(memberName)
 		if !ok {
+			l.Warn("Unable to get ArangoMember")
 			continue
 		}
 
-		if template := member.Spec.Template; template != nil {
-			if pod := template.PodSpec; pod != nil {
-				if !r.schedulingParametersAreTheSame(renderedPod.Spec, pod.Spec) {
-					l.Info("Adding KillMemberPod action: scheduling failed and parameters already updated")
-					p = append(p,
-						actions.NewAction(api.ActionTypeKillMemberPod, m.Group, m.Member, "Scheduling failed"),
-					)
+		if m.Member.Conditions.IsTrue(api.ConditionTypeScheduleSpecChanged) {
+			l.Info("Adding KillMemberPod action: scheduling failed and scheduling changed condition is present")
+			p = append(p,
+				actions.NewAction(api.ActionTypeKillMemberPod, m.Group, m.Member, "Scheduling failed"),
+			)
+		} else {
+			if statusTemplate, specTemplate := member.Status.Template, member.Spec.Template; statusTemplate != nil && specTemplate != nil {
+				if statusTemplateSpec, specTemplateSpec := statusTemplate.PodSpec, specTemplate.PodSpec; statusTemplateSpec != nil && specTemplateSpec != nil {
+					if !r.schedulingParametersAreTheSame(specTemplateSpec.Spec, statusTemplateSpec.Spec) {
+						l.Info("Adding KillMemberPod action: scheduling failed and parameters already updated")
+						p = append(p,
+							actions.NewAction(api.ActionTypeKillMemberPod, m.Group, m.Member, "Scheduling failed"),
+						)
+					} else {
+						l.Info("Scheduling parameters are not updated")
+					}
+				} else {
+					l.Warn("Pod TemplateSpec is nil")
 				}
+			} else {
+				l.Warn("Pod Template is nil")
 			}
 		}
 	}

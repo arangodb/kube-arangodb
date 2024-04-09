@@ -23,6 +23,7 @@
 - (Feature) Parametrize Scheduling Graceful Duration
 - (Bugfix) Change Accepted Spec Propagation
 - (Bugfix) Pass SecurityContext Pod Settings for SELinux and Seccomp
+- (Feature) Add ScheduleSpecChanged Condition
 
 ## [1.2.39](https://github.com/arangodb/kube-arangodb/tree/1.2.39) (2024-03-11)
 - (Feature) Extract Scheduler API
