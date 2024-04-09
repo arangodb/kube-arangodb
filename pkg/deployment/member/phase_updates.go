@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -85,6 +85,7 @@ func removeMemberConditionsMapFunc(m *api.MemberStatus) {
 	m.Conditions.Remove(api.ConditionTypeActive)
 	m.Conditions.Remove(api.ConditionTypeStarted)
 	m.Conditions.Remove(api.ConditionTypeScheduled)
+	m.Conditions.Remove(api.ConditionTypeScheduleSpecChanged)
 	m.Conditions.Remove(api.ConditionTypeReachable)
 	m.Conditions.Remove(api.ConditionTypeServing)
 	m.Conditions.Remove(api.ConditionTypeTerminated)

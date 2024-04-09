@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,29 +21,10 @@
 package rotation
 
 import (
-	"reflect"
-
-	core "k8s.io/api/core/v1"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/compare"
+	sharedReconcile "github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
 )
 
-func comparePodTolerations(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *core.PodTemplateSpec) compare.Func {
-	return func(builder api.ActionBuilder) (mode compare.Mode, plan api.Plan, err error) {
-		if !reflect.DeepEqual(spec.Spec.Tolerations, status.Spec.Tolerations) {
-			plan = append(plan,
-				SchedulingChangeAction(builder),
-				builder.NewAction(api.ActionTypeRuntimeContainerSyncTolerations),
-			)
-
-			status.Spec.Tolerations = spec.Spec.Tolerations
-			mode = mode.And(compare.InPlaceRotation)
-
-			return
-		}
-
-		return
-	}
-
+func SchedulingChangeAction(builder api.ActionBuilder) api.Action {
+	return sharedReconcile.UpdateMemberConditionActionV2("Scheduling Changed", api.ConditionTypeScheduleSpecChanged, builder.Group(), builder.MemberID(), true, "Scheduling Changed", "", "")
 }

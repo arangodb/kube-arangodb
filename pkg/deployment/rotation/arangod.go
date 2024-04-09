@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -54,6 +54,7 @@ func affinityCompare(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *core
 				e = err
 				return
 			} else if specC != statusC {
+				plan = append(plan, SchedulingChangeAction(builder))
 				mode = mode.And(compare.SilentRotation)
 				status.Spec.Affinity = spec.Spec.Affinity.DeepCopy()
 				return
