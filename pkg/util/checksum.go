@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ func SHA256(data []byte) string {
 	return fmt.Sprintf("%0x", sha256.Sum256(data))
 }
 
-func SHA256FromJSON(a interface{}) (string, error) {
+func SHA256FromJSON[T interface{}](a T) (string, error) {
 	d, err := json.Marshal(a)
 	if err != nil {
 		return "", err
@@ -44,7 +44,7 @@ func SHA256FromJSON(a interface{}) (string, error) {
 	return SHA256(d), nil
 }
 
-func CompareJSON(a, b interface{}) (bool, error) {
+func CompareJSON[T interface{}](a, b T) (bool, error) {
 	ad, err := SHA256FromJSON(a)
 	if err != nil {
 		return false, err
@@ -55,4 +55,18 @@ func CompareJSON(a, b interface{}) (bool, error) {
 	}
 
 	return ad == bd, nil
+}
+
+func CompareJSONP[T interface{}](a, b *T) (bool, error) {
+	var a1, b1 T
+
+	if a != nil {
+		a1 = *a
+	}
+
+	if b != nil {
+		b1 = *b
+	}
+
+	return CompareJSON(a1, b1)
 }

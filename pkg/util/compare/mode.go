@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,6 +37,31 @@ const (
 	// EnforcedRotation Enforce pod restart. Returned plan is ignored
 	EnforcedRotation
 )
+
+const (
+	SkippedRotationString  = "Skipped"
+	SilentRotationString   = "Silent"
+	InPlaceRotationString  = "InPlace"
+	GracefulRotationString = "Graceful"
+	EnforcedRotationString = "EnforcedSkipped"
+)
+
+func (m Mode) String() string {
+	switch m {
+	case SkippedRotation:
+		return SkippedRotationString
+	case SilentRotation:
+		return SilentRotationString
+	case InPlaceRotation:
+		return InPlaceRotationString
+	case GracefulRotation:
+		return GracefulRotationString
+	case EnforcedRotation:
+		return EnforcedRotationString
+	}
+
+	return ""
+}
 
 // And returns the higher value of the rotation mode.
 func (m Mode) And(b Mode) Mode {
