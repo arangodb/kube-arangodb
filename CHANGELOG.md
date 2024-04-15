@@ -2,6 +2,7 @@
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Maintenance) Bump Prometheus API Version
+- (Bugfix) Prevent unexpected rotation in case of SecurityContext change
 
 ## [1.2.40](https://github.com/arangodb/kube-arangodb/tree/1.2.40) (2024-04-10)
 - (Feature) Add Core fields to the Scheduler Container Spec

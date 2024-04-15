@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -111,7 +111,7 @@ func runTestCasesForModeAndGroup(t *testing.T, m api.DeploymentMode, g api.Serve
 			require.Error(t, err)
 			require.EqualError(t, err, q.expectedErr)
 		} else {
-			require.Equal(t, q.expectedMode, mode)
+			require.Equalf(t, q.expectedMode, mode, "Expected %s, got %s", q.expectedMode.String(), mode.String())
 
 			switch mode {
 			case compare2.InPlaceRotation:
