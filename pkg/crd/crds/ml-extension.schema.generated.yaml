@@ -341,7 +341,85 @@ v1alpha1:
                 additionalProperties:
                   type: string
                 type: object
+              args:
+                items:
+                  type: string
+                type: array
               automountServiceAccountToken:
+                type: boolean
+              command:
+                items:
+                  type: string
+                type: array
+              env:
+                items:
+                  properties:
+                    name:
+                      type: string
+                    value:
+                      type: string
+                    valueFrom:
+                      properties:
+                        configMapKeyRef:
+                          properties:
+                            key:
+                              type: string
+                            name:
+                              type: string
+                            optional:
+                              type: boolean
+                          type: object
+                        fieldRef:
+                          properties:
+                            apiVersion:
+                              type: string
+                            fieldPath:
+                              type: string
+                          type: object
+                        resourceFieldRef:
+                          properties:
+                            containerName:
+                              type: string
+                            divisor:
+                              type: string
+                            resource:
+                              type: string
+                          type: object
+                        secretKeyRef:
+                          properties:
+                            key:
+                              type: string
+                            name:
+                              type: string
+                            optional:
+                              type: boolean
+                          type: object
+                      type: object
+                  type: object
+                type: array
+              envFrom:
+                items:
+                  properties:
+                    configMapRef:
+                      properties:
+                        name:
+                          type: string
+                        optional:
+                          type: boolean
+                      type: object
+                    prefix:
+                      type: string
+                    secretRef:
+                      properties:
+                        name:
+                          type: string
+                        optional:
+                          type: boolean
+                      type: object
+                  type: object
+                type: array
+              gpu:
+                description: GPU defined if GPU Jobs are enabledt.
                 type: boolean
               hostIPC:
                 type: boolean
@@ -349,6 +427,10 @@ v1alpha1:
                 type: boolean
               hostPID:
                 type: boolean
+              image:
+                type: string
+              imagePullPolicy:
+                type: string
               imagePullSecrets:
                 items:
                   type: string
@@ -356,6 +438,164 @@ v1alpha1:
               labels:
                 additionalProperties:
                   type: string
+                type: object
+              lifecycle:
+                properties:
+                  postStart:
+                    properties:
+                      exec:
+                        properties:
+                          command:
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                      httpGet:
+                        properties:
+                          host:
+                            type: string
+                          httpHeaders:
+                            items:
+                              properties:
+                                name:
+                                  type: string
+                                value:
+                                  type: string
+                              type: object
+                            type: array
+                          path:
+                            type: string
+                          port:
+                            format: int-or-string
+                            type: string
+                          scheme:
+                            type: string
+                        type: object
+                      sleep:
+                        properties:
+                          seconds:
+                            format: int64
+                            type: integer
+                        type: object
+                      tcpSocket:
+                        properties:
+                          host:
+                            type: string
+                          port:
+                            format: int-or-string
+                            type: string
+                        type: object
+                    type: object
+                  preStop:
+                    properties:
+                      exec:
+                        properties:
+                          command:
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                      httpGet:
+                        properties:
+                          host:
+                            type: string
+                          httpHeaders:
+                            items:
+                              properties:
+                                name:
+                                  type: string
+                                value:
+                                  type: string
+                              type: object
+                            type: array
+                          path:
+                            type: string
+                          port:
+                            format: int-or-string
+                            type: string
+                          scheme:
+                            type: string
+                        type: object
+                      sleep:
+                        properties:
+                          seconds:
+                            format: int64
+                            type: integer
+                        type: object
+                      tcpSocket:
+                        properties:
+                          host:
+                            type: string
+                          port:
+                            format: int-or-string
+                            type: string
+                        type: object
+                    type: object
+                type: object
+              livenessProbe:
+                properties:
+                  exec:
+                    properties:
+                      command:
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                  failureThreshold:
+                    format: int32
+                    type: integer
+                  grpc:
+                    properties:
+                      port:
+                        format: int32
+                        type: integer
+                      service:
+                        type: string
+                    type: object
+                  httpGet:
+                    properties:
+                      host:
+                        type: string
+                      httpHeaders:
+                        items:
+                          properties:
+                            name:
+                              type: string
+                            value:
+                              type: string
+                          type: object
+                        type: array
+                      path:
+                        type: string
+                      port:
+                        format: int-or-string
+                        type: string
+                      scheme:
+                        type: string
+                    type: object
+                  initialDelaySeconds:
+                    format: int32
+                    type: integer
+                  periodSeconds:
+                    format: int32
+                    type: integer
+                  successThreshold:
+                    format: int32
+                    type: integer
+                  tcpSocket:
+                    properties:
+                      host:
+                        type: string
+                      port:
+                        format: int-or-string
+                        type: string
+                    type: object
+                  terminationGracePeriodSeconds:
+                    format: int64
+                    type: integer
+                  timeoutSeconds:
+                    format: int32
+                    type: integer
                 type: object
               nodeSelector:
                 additionalProperties:
@@ -437,994 +677,175 @@ v1alpha1:
                         type: string
                     type: object
                 type: object
-              prediction:
-                description: Prediction defines how Prediction workload will be deployed
+              port:
+                description: Port defines on which port the container will be listening for connections
+                format: int32
+                type: integer
+              ports:
+                items:
+                  properties:
+                    containerPort:
+                      format: int32
+                      type: integer
+                    hostIP:
+                      type: string
+                    hostPort:
+                      format: int32
+                      type: integer
+                    name:
+                      type: string
+                    protocol:
+                      type: string
+                  type: object
+                type: array
+              readinessProbe:
                 properties:
-                  args:
-                    items:
-                      type: string
-                    type: array
-                  command:
-                    items:
-                      type: string
-                    type: array
-                  env:
-                    items:
-                      properties:
-                        name:
-                          type: string
-                        value:
-                          type: string
-                        valueFrom:
-                          properties:
-                            configMapKeyRef:
-                              properties:
-                                key:
-                                  type: string
-                                name:
-                                  type: string
-                                optional:
-                                  type: boolean
-                              type: object
-                            fieldRef:
-                              properties:
-                                apiVersion:
-                                  type: string
-                                fieldPath:
-                                  type: string
-                              type: object
-                            resourceFieldRef:
-                              properties:
-                                containerName:
-                                  type: string
-                                divisor:
-                                  type: string
-                                resource:
-                                  type: string
-                              type: object
-                            secretKeyRef:
-                              properties:
-                                key:
-                                  type: string
-                                name:
-                                  type: string
-                                optional:
-                                  type: boolean
-                              type: object
-                          type: object
-                      type: object
-                    type: array
-                  envFrom:
-                    items:
-                      properties:
-                        configMapRef:
-                          properties:
-                            name:
-                              type: string
-                            optional:
-                              type: boolean
-                          type: object
-                        prefix:
-                          type: string
-                        secretRef:
-                          properties:
-                            name:
-                              type: string
-                            optional:
-                              type: boolean
-                          type: object
-                      type: object
-                    type: array
-                  gpu:
-                    description: GPU defined if GPU Jobs are enabled for component. In use only for ArangoMLExtensionSpecDeploymentComponentPrediction and ArangoMLExtensionSpecDeploymentComponentTraining
-                    type: boolean
-                  image:
-                    type: string
-                  imagePullPolicy:
-                    type: string
-                  lifecycle:
+                  exec:
                     properties:
-                      postStart:
-                        properties:
-                          exec:
-                            properties:
-                              command:
-                                items:
-                                  type: string
-                                type: array
-                            type: object
-                          httpGet:
-                            properties:
-                              host:
-                                type: string
-                              httpHeaders:
-                                items:
-                                  properties:
-                                    name:
-                                      type: string
-                                    value:
-                                      type: string
-                                  type: object
-                                type: array
-                              path:
-                                type: string
-                              port:
-                                format: int-or-string
-                                type: string
-                              scheme:
-                                type: string
-                            type: object
-                          sleep:
-                            properties:
-                              seconds:
-                                format: int64
-                                type: integer
-                            type: object
-                          tcpSocket:
-                            properties:
-                              host:
-                                type: string
-                              port:
-                                format: int-or-string
-                                type: string
-                            type: object
-                        type: object
-                      preStop:
-                        properties:
-                          exec:
-                            properties:
-                              command:
-                                items:
-                                  type: string
-                                type: array
-                            type: object
-                          httpGet:
-                            properties:
-                              host:
-                                type: string
-                              httpHeaders:
-                                items:
-                                  properties:
-                                    name:
-                                      type: string
-                                    value:
-                                      type: string
-                                  type: object
-                                type: array
-                              path:
-                                type: string
-                              port:
-                                format: int-or-string
-                                type: string
-                              scheme:
-                                type: string
-                            type: object
-                          sleep:
-                            properties:
-                              seconds:
-                                format: int64
-                                type: integer
-                            type: object
-                          tcpSocket:
-                            properties:
-                              host:
-                                type: string
-                              port:
-                                format: int-or-string
-                                type: string
-                            type: object
-                        type: object
+                      command:
+                        items:
+                          type: string
+                        type: array
                     type: object
-                  livenessProbe:
-                    properties:
-                      exec:
-                        properties:
-                          command:
-                            items:
-                              type: string
-                            type: array
-                        type: object
-                      failureThreshold:
-                        format: int32
-                        type: integer
-                      grpc:
-                        properties:
-                          port:
-                            format: int32
-                            type: integer
-                          service:
-                            type: string
-                        type: object
-                      httpGet:
-                        properties:
-                          host:
-                            type: string
-                          httpHeaders:
-                            items:
-                              properties:
-                                name:
-                                  type: string
-                                value:
-                                  type: string
-                              type: object
-                            type: array
-                          path:
-                            type: string
-                          port:
-                            format: int-or-string
-                            type: string
-                          scheme:
-                            type: string
-                        type: object
-                      initialDelaySeconds:
-                        format: int32
-                        type: integer
-                      periodSeconds:
-                        format: int32
-                        type: integer
-                      successThreshold:
-                        format: int32
-                        type: integer
-                      tcpSocket:
-                        properties:
-                          host:
-                            type: string
-                          port:
-                            format: int-or-string
-                            type: string
-                        type: object
-                      terminationGracePeriodSeconds:
-                        format: int64
-                        type: integer
-                      timeoutSeconds:
-                        format: int32
-                        type: integer
-                    type: object
-                  port:
-                    description: Port defines on which port the container will be listening for connections
+                  failureThreshold:
                     format: int32
                     type: integer
-                  ports:
-                    items:
-                      properties:
-                        containerPort:
-                          format: int32
-                          type: integer
-                        hostIP:
-                          type: string
-                        hostPort:
-                          format: int32
-                          type: integer
-                        name:
-                          type: string
-                        protocol:
-                          type: string
-                      type: object
-                    type: array
-                  readinessProbe:
+                  grpc:
                     properties:
-                      exec:
-                        properties:
-                          command:
-                            items:
-                              type: string
-                            type: array
-                        type: object
-                      failureThreshold:
+                      port:
                         format: int32
                         type: integer
-                      grpc:
-                        properties:
-                          port:
-                            format: int32
-                            type: integer
-                          service:
-                            type: string
-                        type: object
-                      httpGet:
-                        properties:
-                          host:
-                            type: string
-                          httpHeaders:
-                            items:
-                              properties:
-                                name:
-                                  type: string
-                                value:
-                                  type: string
-                              type: object
-                            type: array
-                          path:
-                            type: string
-                          port:
-                            format: int-or-string
-                            type: string
-                          scheme:
-                            type: string
-                        type: object
-                      initialDelaySeconds:
-                        format: int32
-                        type: integer
-                      periodSeconds:
-                        format: int32
-                        type: integer
-                      successThreshold:
-                        format: int32
-                        type: integer
-                      tcpSocket:
-                        properties:
-                          host:
-                            type: string
-                          port:
-                            format: int-or-string
-                            type: string
-                        type: object
-                      terminationGracePeriodSeconds:
-                        format: int64
-                        type: integer
-                      timeoutSeconds:
-                        format: int32
-                        type: integer
+                      service:
+                        type: string
                     type: object
-                  resources:
+                  httpGet:
                     properties:
-                      claims:
+                      host:
+                        type: string
+                      httpHeaders:
                         items:
                           properties:
                             name:
                               type: string
+                            value:
+                              type: string
                           type: object
                         type: array
-                      limits:
-                        additionalProperties:
-                          type: string
-                        type: object
-                      requests:
-                        additionalProperties:
-                          type: string
-                        type: object
-                    type: object
-                  securityContext:
-                    properties:
-                      allowPrivilegeEscalation:
-                        type: boolean
-                      capabilities:
-                        properties:
-                          add:
-                            items:
-                              type: string
-                            type: array
-                          drop:
-                            items:
-                              type: string
-                            type: array
-                        type: object
-                      privileged:
-                        type: boolean
-                      procMount:
+                      path:
                         type: string
-                      readOnlyRootFilesystem:
-                        type: boolean
-                      runAsGroup:
-                        format: int64
-                        type: integer
-                      runAsNonRoot:
-                        type: boolean
-                      runAsUser:
-                        format: int64
-                        type: integer
-                      seLinuxOptions:
-                        properties:
-                          level:
-                            type: string
-                          role:
-                            type: string
-                          type:
-                            type: string
-                          user:
-                            type: string
-                        type: object
-                      seccompProfile:
-                        properties:
-                          localhostProfile:
-                            type: string
-                          type:
-                            type: string
-                        type: object
-                      windowsOptions:
-                        properties:
-                          gmsaCredentialSpec:
-                            type: string
-                          gmsaCredentialSpecName:
-                            type: string
-                          hostProcess:
-                            type: boolean
-                          runAsUserName:
-                            type: string
-                        type: object
+                      port:
+                        format: int-or-string
+                        type: string
+                      scheme:
+                        type: string
                     type: object
-                  startupProbe:
-                    properties:
-                      exec:
-                        properties:
-                          command:
-                            items:
-                              type: string
-                            type: array
-                        type: object
-                      failureThreshold:
-                        format: int32
-                        type: integer
-                      grpc:
-                        properties:
-                          port:
-                            format: int32
-                            type: integer
-                          service:
-                            type: string
-                        type: object
-                      httpGet:
-                        properties:
-                          host:
-                            type: string
-                          httpHeaders:
-                            items:
-                              properties:
-                                name:
-                                  type: string
-                                value:
-                                  type: string
-                              type: object
-                            type: array
-                          path:
-                            type: string
-                          port:
-                            format: int-or-string
-                            type: string
-                          scheme:
-                            type: string
-                        type: object
-                      initialDelaySeconds:
-                        format: int32
-                        type: integer
-                      periodSeconds:
-                        format: int32
-                        type: integer
-                      successThreshold:
-                        format: int32
-                        type: integer
-                      tcpSocket:
-                        properties:
-                          host:
-                            type: string
-                          port:
-                            format: int-or-string
-                            type: string
-                        type: object
-                      terminationGracePeriodSeconds:
-                        format: int64
-                        type: integer
-                      timeoutSeconds:
-                        format: int32
-                        type: integer
-                    type: object
-                  volumeMounts:
-                    items:
-                      properties:
-                        mountPath:
-                          type: string
-                        mountPropagation:
-                          type: string
-                        name:
-                          type: string
-                        readOnly:
-                          type: boolean
-                        subPath:
-                          type: string
-                        subPathExpr:
-                          type: string
-                      type: object
-                    type: array
-                  workingDir:
-                    type: string
-                type: object
-              project:
-                description: Project defines how Project workload will be deployed
-                properties:
-                  args:
-                    items:
-                      type: string
-                    type: array
-                  command:
-                    items:
-                      type: string
-                    type: array
-                  env:
-                    items:
-                      properties:
-                        name:
-                          type: string
-                        value:
-                          type: string
-                        valueFrom:
-                          properties:
-                            configMapKeyRef:
-                              properties:
-                                key:
-                                  type: string
-                                name:
-                                  type: string
-                                optional:
-                                  type: boolean
-                              type: object
-                            fieldRef:
-                              properties:
-                                apiVersion:
-                                  type: string
-                                fieldPath:
-                                  type: string
-                              type: object
-                            resourceFieldRef:
-                              properties:
-                                containerName:
-                                  type: string
-                                divisor:
-                                  type: string
-                                resource:
-                                  type: string
-                              type: object
-                            secretKeyRef:
-                              properties:
-                                key:
-                                  type: string
-                                name:
-                                  type: string
-                                optional:
-                                  type: boolean
-                              type: object
-                          type: object
-                      type: object
-                    type: array
-                  envFrom:
-                    items:
-                      properties:
-                        configMapRef:
-                          properties:
-                            name:
-                              type: string
-                            optional:
-                              type: boolean
-                          type: object
-                        prefix:
-                          type: string
-                        secretRef:
-                          properties:
-                            name:
-                              type: string
-                            optional:
-                              type: boolean
-                          type: object
-                      type: object
-                    type: array
-                  gpu:
-                    description: GPU defined if GPU Jobs are enabled for component. In use only for ArangoMLExtensionSpecDeploymentComponentPrediction and ArangoMLExtensionSpecDeploymentComponentTraining
-                    type: boolean
-                  image:
-                    type: string
-                  imagePullPolicy:
-                    type: string
-                  lifecycle:
-                    properties:
-                      postStart:
-                        properties:
-                          exec:
-                            properties:
-                              command:
-                                items:
-                                  type: string
-                                type: array
-                            type: object
-                          httpGet:
-                            properties:
-                              host:
-                                type: string
-                              httpHeaders:
-                                items:
-                                  properties:
-                                    name:
-                                      type: string
-                                    value:
-                                      type: string
-                                  type: object
-                                type: array
-                              path:
-                                type: string
-                              port:
-                                format: int-or-string
-                                type: string
-                              scheme:
-                                type: string
-                            type: object
-                          sleep:
-                            properties:
-                              seconds:
-                                format: int64
-                                type: integer
-                            type: object
-                          tcpSocket:
-                            properties:
-                              host:
-                                type: string
-                              port:
-                                format: int-or-string
-                                type: string
-                            type: object
-                        type: object
-                      preStop:
-                        properties:
-                          exec:
-                            properties:
-                              command:
-                                items:
-                                  type: string
-                                type: array
-                            type: object
-                          httpGet:
-                            properties:
-                              host:
-                                type: string
-                              httpHeaders:
-                                items:
-                                  properties:
-                                    name:
-                                      type: string
-                                    value:
-                                      type: string
-                                  type: object
-                                type: array
-                              path:
-                                type: string
-                              port:
-                                format: int-or-string
-                                type: string
-                              scheme:
-                                type: string
-                            type: object
-                          sleep:
-                            properties:
-                              seconds:
-                                format: int64
-                                type: integer
-                            type: object
-                          tcpSocket:
-                            properties:
-                              host:
-                                type: string
-                              port:
-                                format: int-or-string
-                                type: string
-                            type: object
-                        type: object
-                    type: object
-                  livenessProbe:
-                    properties:
-                      exec:
-                        properties:
-                          command:
-                            items:
-                              type: string
-                            type: array
-                        type: object
-                      failureThreshold:
-                        format: int32
-                        type: integer
-                      grpc:
-                        properties:
-                          port:
-                            format: int32
-                            type: integer
-                          service:
-                            type: string
-                        type: object
-                      httpGet:
-                        properties:
-                          host:
-                            type: string
-                          httpHeaders:
-                            items:
-                              properties:
-                                name:
-                                  type: string
-                                value:
-                                  type: string
-                              type: object
-                            type: array
-                          path:
-                            type: string
-                          port:
-                            format: int-or-string
-                            type: string
-                          scheme:
-                            type: string
-                        type: object
-                      initialDelaySeconds:
-                        format: int32
-                        type: integer
-                      periodSeconds:
-                        format: int32
-                        type: integer
-                      successThreshold:
-                        format: int32
-                        type: integer
-                      tcpSocket:
-                        properties:
-                          host:
-                            type: string
-                          port:
-                            format: int-or-string
-                            type: string
-                        type: object
-                      terminationGracePeriodSeconds:
-                        format: int64
-                        type: integer
-                      timeoutSeconds:
-                        format: int32
-                        type: integer
-                    type: object
-                  port:
-                    description: Port defines on which port the container will be listening for connections
+                  initialDelaySeconds:
                     format: int32
                     type: integer
-                  ports:
-                    items:
-                      properties:
-                        containerPort:
-                          format: int32
-                          type: integer
-                        hostIP:
-                          type: string
-                        hostPort:
-                          format: int32
-                          type: integer
-                        name:
-                          type: string
-                        protocol:
-                          type: string
-                      type: object
-                    type: array
-                  readinessProbe:
+                  periodSeconds:
+                    format: int32
+                    type: integer
+                  successThreshold:
+                    format: int32
+                    type: integer
+                  tcpSocket:
                     properties:
-                      exec:
-                        properties:
-                          command:
-                            items:
-                              type: string
-                            type: array
-                        type: object
-                      failureThreshold:
-                        format: int32
-                        type: integer
-                      grpc:
-                        properties:
-                          port:
-                            format: int32
-                            type: integer
-                          service:
-                            type: string
-                        type: object
-                      httpGet:
-                        properties:
-                          host:
-                            type: string
-                          httpHeaders:
-                            items:
-                              properties:
-                                name:
-                                  type: string
-                                value:
-                                  type: string
-                              type: object
-                            type: array
-                          path:
-                            type: string
-                          port:
-                            format: int-or-string
-                            type: string
-                          scheme:
-                            type: string
-                        type: object
-                      initialDelaySeconds:
-                        format: int32
-                        type: integer
-                      periodSeconds:
-                        format: int32
-                        type: integer
-                      successThreshold:
-                        format: int32
-                        type: integer
-                      tcpSocket:
-                        properties:
-                          host:
-                            type: string
-                          port:
-                            format: int-or-string
-                            type: string
-                        type: object
-                      terminationGracePeriodSeconds:
-                        format: int64
-                        type: integer
-                      timeoutSeconds:
-                        format: int32
-                        type: integer
-                    type: object
-                  resources:
-                    properties:
-                      claims:
-                        items:
-                          properties:
-                            name:
-                              type: string
-                          type: object
-                        type: array
-                      limits:
-                        additionalProperties:
-                          type: string
-                        type: object
-                      requests:
-                        additionalProperties:
-                          type: string
-                        type: object
-                    type: object
-                  securityContext:
-                    properties:
-                      allowPrivilegeEscalation:
-                        type: boolean
-                      capabilities:
-                        properties:
-                          add:
-                            items:
-                              type: string
-                            type: array
-                          drop:
-                            items:
-                              type: string
-                            type: array
-                        type: object
-                      privileged:
-                        type: boolean
-                      procMount:
+                      host:
                         type: string
-                      readOnlyRootFilesystem:
-                        type: boolean
-                      runAsGroup:
-                        format: int64
-                        type: integer
-                      runAsNonRoot:
-                        type: boolean
-                      runAsUser:
-                        format: int64
-                        type: integer
-                      seLinuxOptions:
-                        properties:
-                          level:
-                            type: string
-                          role:
-                            type: string
-                          type:
-                            type: string
-                          user:
-                            type: string
-                        type: object
-                      seccompProfile:
-                        properties:
-                          localhostProfile:
-                            type: string
-                          type:
-                            type: string
-                        type: object
-                      windowsOptions:
-                        properties:
-                          gmsaCredentialSpec:
-                            type: string
-                          gmsaCredentialSpecName:
-                            type: string
-                          hostProcess:
-                            type: boolean
-                          runAsUserName:
-                            type: string
-                        type: object
+                      port:
+                        format: int-or-string
+                        type: string
                     type: object
-                  startupProbe:
-                    properties:
-                      exec:
-                        properties:
-                          command:
-                            items:
-                              type: string
-                            type: array
-                        type: object
-                      failureThreshold:
-                        format: int32
-                        type: integer
-                      grpc:
-                        properties:
-                          port:
-                            format: int32
-                            type: integer
-                          service:
-                            type: string
-                        type: object
-                      httpGet:
-                        properties:
-                          host:
-                            type: string
-                          httpHeaders:
-                            items:
-                              properties:
-                                name:
-                                  type: string
-                                value:
-                                  type: string
-                              type: object
-                            type: array
-                          path:
-                            type: string
-                          port:
-                            format: int-or-string
-                            type: string
-                          scheme:
-                            type: string
-                        type: object
-                      initialDelaySeconds:
-                        format: int32
-                        type: integer
-                      periodSeconds:
-                        format: int32
-                        type: integer
-                      successThreshold:
-                        format: int32
-                        type: integer
-                      tcpSocket:
-                        properties:
-                          host:
-                            type: string
-                          port:
-                            format: int-or-string
-                            type: string
-                        type: object
-                      terminationGracePeriodSeconds:
-                        format: int64
-                        type: integer
-                      timeoutSeconds:
-                        format: int32
-                        type: integer
-                    type: object
-                  volumeMounts:
-                    items:
-                      properties:
-                        mountPath:
-                          type: string
-                        mountPropagation:
-                          type: string
-                        name:
-                          type: string
-                        readOnly:
-                          type: boolean
-                        subPath:
-                          type: string
-                        subPathExpr:
-                          type: string
-                      type: object
-                    type: array
-                  workingDir:
-                    type: string
+                  terminationGracePeriodSeconds:
+                    format: int64
+                    type: integer
+                  timeoutSeconds:
+                    format: int32
+                    type: integer
                 type: object
               replicas:
                 description: Replicas defines the number of replicas running specified components. No replicas created if no components are defined.
                 format: int32
                 type: integer
+              resources:
+                properties:
+                  claims:
+                    items:
+                      properties:
+                        name:
+                          type: string
+                      type: object
+                    type: array
+                  limits:
+                    additionalProperties:
+                      type: string
+                    type: object
+                  requests:
+                    additionalProperties:
+                      type: string
+                    type: object
+                type: object
               schedulerName:
                 type: string
+              securityContext:
+                properties:
+                  allowPrivilegeEscalation:
+                    type: boolean
+                  capabilities:
+                    properties:
+                      add:
+                        items:
+                          type: string
+                        type: array
+                      drop:
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                  privileged:
+                    type: boolean
+                  procMount:
+                    type: string
+                  readOnlyRootFilesystem:
+                    type: boolean
+                  runAsGroup:
+                    format: int64
+                    type: integer
+                  runAsNonRoot:
+                    type: boolean
+                  runAsUser:
+                    format: int64
+                    type: integer
+                  seLinuxOptions:
+                    properties:
+                      level:
+                        type: string
+                      role:
+                        type: string
+                      type:
+                        type: string
+                      user:
+                        type: string
+                    type: object
+                  seccompProfile:
+                    properties:
+                      localhostProfile:
+                        type: string
+                      type:
+                        type: string
+                    type: object
+                  windowsOptions:
+                    properties:
+                      gmsaCredentialSpec:
+                        type: string
+                      gmsaCredentialSpecName:
+                        type: string
+                      hostProcess:
+                        type: boolean
+                      runAsUserName:
+                        type: string
+                    type: object
+                type: object
               service:
                 description: Service defines how components will be exposed
                 properties:
@@ -1441,6 +862,71 @@ v1alpha1:
                 type: string
               shareProcessNamespace:
                 type: boolean
+              startupProbe:
+                properties:
+                  exec:
+                    properties:
+                      command:
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                  failureThreshold:
+                    format: int32
+                    type: integer
+                  grpc:
+                    properties:
+                      port:
+                        format: int32
+                        type: integer
+                      service:
+                        type: string
+                    type: object
+                  httpGet:
+                    properties:
+                      host:
+                        type: string
+                      httpHeaders:
+                        items:
+                          properties:
+                            name:
+                              type: string
+                            value:
+                              type: string
+                          type: object
+                        type: array
+                      path:
+                        type: string
+                      port:
+                        format: int-or-string
+                        type: string
+                      scheme:
+                        type: string
+                    type: object
+                  initialDelaySeconds:
+                    format: int32
+                    type: integer
+                  periodSeconds:
+                    format: int32
+                    type: integer
+                  successThreshold:
+                    format: int32
+                    type: integer
+                  tcpSocket:
+                    properties:
+                      host:
+                        type: string
+                      port:
+                        format: int-or-string
+                        type: string
+                    type: object
+                  terminationGracePeriodSeconds:
+                    format: int64
+                    type: integer
+                  timeoutSeconds:
+                    format: int32
+                    type: integer
+                type: object
               tolerations:
                 items:
                   properties:
@@ -1457,497 +943,23 @@ v1alpha1:
                       type: string
                   type: object
                 type: array
-              training:
-                description: Training defines how Training workload will be deployed
-                properties:
-                  args:
-                    items:
+              volumeMounts:
+                items:
+                  properties:
+                    mountPath:
                       type: string
-                    type: array
-                  command:
-                    items:
+                    mountPropagation:
                       type: string
-                    type: array
-                  env:
-                    items:
-                      properties:
-                        name:
-                          type: string
-                        value:
-                          type: string
-                        valueFrom:
-                          properties:
-                            configMapKeyRef:
-                              properties:
-                                key:
-                                  type: string
-                                name:
-                                  type: string
-                                optional:
-                                  type: boolean
-                              type: object
-                            fieldRef:
-                              properties:
-                                apiVersion:
-                                  type: string
-                                fieldPath:
-                                  type: string
-                              type: object
-                            resourceFieldRef:
-                              properties:
-                                containerName:
-                                  type: string
-                                divisor:
-                                  type: string
-                                resource:
-                                  type: string
-                              type: object
-                            secretKeyRef:
-                              properties:
-                                key:
-                                  type: string
-                                name:
-                                  type: string
-                                optional:
-                                  type: boolean
-                              type: object
-                          type: object
-                      type: object
-                    type: array
-                  envFrom:
-                    items:
-                      properties:
-                        configMapRef:
-                          properties:
-                            name:
-                              type: string
-                            optional:
-                              type: boolean
-                          type: object
-                        prefix:
-                          type: string
-                        secretRef:
-                          properties:
-                            name:
-                              type: string
-                            optional:
-                              type: boolean
-                          type: object
-                      type: object
-                    type: array
-                  gpu:
-                    description: GPU defined if GPU Jobs are enabled for component. In use only for ArangoMLExtensionSpecDeploymentComponentPrediction and ArangoMLExtensionSpecDeploymentComponentTraining
-                    type: boolean
-                  image:
-                    type: string
-                  imagePullPolicy:
-                    type: string
-                  lifecycle:
-                    properties:
-                      postStart:
-                        properties:
-                          exec:
-                            properties:
-                              command:
-                                items:
-                                  type: string
-                                type: array
-                            type: object
-                          httpGet:
-                            properties:
-                              host:
-                                type: string
-                              httpHeaders:
-                                items:
-                                  properties:
-                                    name:
-                                      type: string
-                                    value:
-                                      type: string
-                                  type: object
-                                type: array
-                              path:
-                                type: string
-                              port:
-                                format: int-or-string
-                                type: string
-                              scheme:
-                                type: string
-                            type: object
-                          sleep:
-                            properties:
-                              seconds:
-                                format: int64
-                                type: integer
-                            type: object
-                          tcpSocket:
-                            properties:
-                              host:
-                                type: string
-                              port:
-                                format: int-or-string
-                                type: string
-                            type: object
-                        type: object
-                      preStop:
-                        properties:
-                          exec:
-                            properties:
-                              command:
-                                items:
-                                  type: string
-                                type: array
-                            type: object
-                          httpGet:
-                            properties:
-                              host:
-                                type: string
-                              httpHeaders:
-                                items:
-                                  properties:
-                                    name:
-                                      type: string
-                                    value:
-                                      type: string
-                                  type: object
-                                type: array
-                              path:
-                                type: string
-                              port:
-                                format: int-or-string
-                                type: string
-                              scheme:
-                                type: string
-                            type: object
-                          sleep:
-                            properties:
-                              seconds:
-                                format: int64
-                                type: integer
-                            type: object
-                          tcpSocket:
-                            properties:
-                              host:
-                                type: string
-                              port:
-                                format: int-or-string
-                                type: string
-                            type: object
-                        type: object
-                    type: object
-                  livenessProbe:
-                    properties:
-                      exec:
-                        properties:
-                          command:
-                            items:
-                              type: string
-                            type: array
-                        type: object
-                      failureThreshold:
-                        format: int32
-                        type: integer
-                      grpc:
-                        properties:
-                          port:
-                            format: int32
-                            type: integer
-                          service:
-                            type: string
-                        type: object
-                      httpGet:
-                        properties:
-                          host:
-                            type: string
-                          httpHeaders:
-                            items:
-                              properties:
-                                name:
-                                  type: string
-                                value:
-                                  type: string
-                              type: object
-                            type: array
-                          path:
-                            type: string
-                          port:
-                            format: int-or-string
-                            type: string
-                          scheme:
-                            type: string
-                        type: object
-                      initialDelaySeconds:
-                        format: int32
-                        type: integer
-                      periodSeconds:
-                        format: int32
-                        type: integer
-                      successThreshold:
-                        format: int32
-                        type: integer
-                      tcpSocket:
-                        properties:
-                          host:
-                            type: string
-                          port:
-                            format: int-or-string
-                            type: string
-                        type: object
-                      terminationGracePeriodSeconds:
-                        format: int64
-                        type: integer
-                      timeoutSeconds:
-                        format: int32
-                        type: integer
-                    type: object
-                  port:
-                    description: Port defines on which port the container will be listening for connections
-                    format: int32
-                    type: integer
-                  ports:
-                    items:
-                      properties:
-                        containerPort:
-                          format: int32
-                          type: integer
-                        hostIP:
-                          type: string
-                        hostPort:
-                          format: int32
-                          type: integer
-                        name:
-                          type: string
-                        protocol:
-                          type: string
-                      type: object
-                    type: array
-                  readinessProbe:
-                    properties:
-                      exec:
-                        properties:
-                          command:
-                            items:
-                              type: string
-                            type: array
-                        type: object
-                      failureThreshold:
-                        format: int32
-                        type: integer
-                      grpc:
-                        properties:
-                          port:
-                            format: int32
-                            type: integer
-                          service:
-                            type: string
-                        type: object
-                      httpGet:
-                        properties:
-                          host:
-                            type: string
-                          httpHeaders:
-                            items:
-                              properties:
-                                name:
-                                  type: string
-                                value:
-                                  type: string
-                              type: object
-                            type: array
-                          path:
-                            type: string
-                          port:
-                            format: int-or-string
-                            type: string
-                          scheme:
-                            type: string
-                        type: object
-                      initialDelaySeconds:
-                        format: int32
-                        type: integer
-                      periodSeconds:
-                        format: int32
-                        type: integer
-                      successThreshold:
-                        format: int32
-                        type: integer
-                      tcpSocket:
-                        properties:
-                          host:
-                            type: string
-                          port:
-                            format: int-or-string
-                            type: string
-                        type: object
-                      terminationGracePeriodSeconds:
-                        format: int64
-                        type: integer
-                      timeoutSeconds:
-                        format: int32
-                        type: integer
-                    type: object
-                  resources:
-                    properties:
-                      claims:
-                        items:
-                          properties:
-                            name:
-                              type: string
-                          type: object
-                        type: array
-                      limits:
-                        additionalProperties:
-                          type: string
-                        type: object
-                      requests:
-                        additionalProperties:
-                          type: string
-                        type: object
-                    type: object
-                  securityContext:
-                    properties:
-                      allowPrivilegeEscalation:
-                        type: boolean
-                      capabilities:
-                        properties:
-                          add:
-                            items:
-                              type: string
-                            type: array
-                          drop:
-                            items:
-                              type: string
-                            type: array
-                        type: object
-                      privileged:
-                        type: boolean
-                      procMount:
-                        type: string
-                      readOnlyRootFilesystem:
-                        type: boolean
-                      runAsGroup:
-                        format: int64
-                        type: integer
-                      runAsNonRoot:
-                        type: boolean
-                      runAsUser:
-                        format: int64
-                        type: integer
-                      seLinuxOptions:
-                        properties:
-                          level:
-                            type: string
-                          role:
-                            type: string
-                          type:
-                            type: string
-                          user:
-                            type: string
-                        type: object
-                      seccompProfile:
-                        properties:
-                          localhostProfile:
-                            type: string
-                          type:
-                            type: string
-                        type: object
-                      windowsOptions:
-                        properties:
-                          gmsaCredentialSpec:
-                            type: string
-                          gmsaCredentialSpecName:
-                            type: string
-                          hostProcess:
-                            type: boolean
-                          runAsUserName:
-                            type: string
-                        type: object
-                    type: object
-                  startupProbe:
-                    properties:
-                      exec:
-                        properties:
-                          command:
-                            items:
-                              type: string
-                            type: array
-                        type: object
-                      failureThreshold:
-                        format: int32
-                        type: integer
-                      grpc:
-                        properties:
-                          port:
-                            format: int32
-                            type: integer
-                          service:
-                            type: string
-                        type: object
-                      httpGet:
-                        properties:
-                          host:
-                            type: string
-                          httpHeaders:
-                            items:
-                              properties:
-                                name:
-                                  type: string
-                                value:
-                                  type: string
-                              type: object
-                            type: array
-                          path:
-                            type: string
-                          port:
-                            format: int-or-string
-                            type: string
-                          scheme:
-                            type: string
-                        type: object
-                      initialDelaySeconds:
-                        format: int32
-                        type: integer
-                      periodSeconds:
-                        format: int32
-                        type: integer
-                      successThreshold:
-                        format: int32
-                        type: integer
-                      tcpSocket:
-                        properties:
-                          host:
-                            type: string
-                          port:
-                            format: int-or-string
-                            type: string
-                        type: object
-                      terminationGracePeriodSeconds:
-                        format: int64
-                        type: integer
-                      timeoutSeconds:
-                        format: int32
-                        type: integer
-                    type: object
-                  volumeMounts:
-                    items:
-                      properties:
-                        mountPath:
-                          type: string
-                        mountPropagation:
-                          type: string
-                        name:
-                          type: string
-                        readOnly:
-                          type: boolean
-                        subPath:
-                          type: string
-                        subPathExpr:
-                          type: string
-                      type: object
-                    type: array
-                  workingDir:
-                    type: string
-                type: object
+                    name:
+                      type: string
+                    readOnly:
+                      type: boolean
+                    subPath:
+                      type: string
+                    subPathExpr:
+                      type: string
+                  type: object
+                type: array
               volumes:
                 items:
                   properties:
@@ -2628,6 +1640,8 @@ v1alpha1:
                       type: object
                   type: object
                 type: array
+              workingDir:
+                type: string
             type: object
           init:
             description: ArangoMLExtensionTemplate define Init job specification

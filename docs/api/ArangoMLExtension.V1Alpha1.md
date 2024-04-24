@@ -32,11 +32,77 @@ Links:
 
 ***
 
+### .spec.deployment.args
+
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L50)</sup>
+
+Arguments to the entrypoint.
+The container image's CMD is used if this is not provided.
+Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+of whether the variable exists or not. Cannot be updated.
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell)
+
+***
+
 ### .spec.deployment.automountServiceAccountToken
 
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/pod/resources/service_account.go#L38)</sup>
 
 AutomountServiceAccountToken indicates whether a service account token should be automatically mounted.
+
+***
+
+### .spec.deployment.command
+
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L40)</sup>
+
+Entrypoint array. Not executed within a shell.
+The container image's ENTRYPOINT is used if this is not provided.
+Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+of whether the variable exists or not. Cannot be updated.
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell)
+
+***
+
+### .spec.deployment.env
+
+Type: `core.EnvVar` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/environments.go#L36)</sup>
+
+Env keeps the information about environment variables provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#envvar-v1-core)
+
+***
+
+### .spec.deployment.envFrom
+
+Type: `core.EnvFromSource` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/environments.go#L41)</sup>
+
+EnvFrom keeps the information about environment variable sources provided to the container
+
+Links:
+* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#envfromsource-v1-core)
+
+***
+
+### .spec.deployment.gpu
+
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/ml/v1alpha1/extension_spec_deployment.go#L52)</sup>
+
+GPU defined if GPU Jobs are enabledt.
+
+Default Value: `false`
 
 ***
 
@@ -71,6 +137,24 @@ Default Value: `false`
 
 ***
 
+### .spec.deployment.image
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L35)</sup>
+
+Image define image details
+
+***
+
+### .spec.deployment.imagePullPolicy
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L39)</sup>
+
+ImagePullPolicy define Image pull policy
+
+Default Value: `IfNotPresent`
+
+***
+
 ### .spec.deployment.imagePullSecrets
 
 Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/pod/resources/image.go#L36)</sup>
@@ -89,6 +173,26 @@ and services.
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels)
+
+***
+
+### .spec.deployment.lifecycle
+
+Type: `core.Lifecycle` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/lifecycle.go#L35)</sup>
+
+Lifecycle keeps actions that the management system should take in response to container lifecycle events.
+
+***
+
+### .spec.deployment.livenessProbe
+
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L37)</sup>
+
+LivenessProbe keeps configuration of periodic probe of container liveness.
+Container will be restarted if the probe fails.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
 
 ***
 
@@ -125,119 +229,15 @@ Links:
 
 ***
 
-### .spec.deployment.prediction.args
+### .spec.deployment.port
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L50)</sup>
-
-Arguments to the entrypoint.
-The container image's CMD is used if this is not provided.
-Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
-cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
-to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
-produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
-of whether the variable exists or not. Cannot be updated.
-
-Links:
-* [Kubernetes Docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell)
-
-***
-
-### .spec.deployment.prediction.command
-
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L40)</sup>
-
-Entrypoint array. Not executed within a shell.
-The container image's ENTRYPOINT is used if this is not provided.
-Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
-cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
-to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
-produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
-of whether the variable exists or not. Cannot be updated.
-
-Links:
-* [Kubernetes Docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell)
-
-***
-
-### .spec.deployment.prediction.env
-
-Type: `core.EnvVar` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/environments.go#L36)</sup>
-
-Env keeps the information about environment variables provided to the container
-
-Links:
-* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#envvar-v1-core)
-
-***
-
-### .spec.deployment.prediction.envFrom
-
-Type: `core.EnvFromSource` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/environments.go#L41)</sup>
-
-EnvFrom keeps the information about environment variable sources provided to the container
-
-Links:
-* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#envfromsource-v1-core)
-
-***
-
-### .spec.deployment.prediction.gpu
-
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/ml/v1alpha1/extension_spec_deployment_component.go#L31)</sup>
-
-GPU defined if GPU Jobs are enabled for component. In use only for ArangoMLExtensionSpecDeploymentComponentPrediction and ArangoMLExtensionSpecDeploymentComponentTraining
-
-Default Value: `false`
-
-***
-
-### .spec.deployment.prediction.image
-
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L35)</sup>
-
-Image define image details
-
-***
-
-### .spec.deployment.prediction.imagePullPolicy
-
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L39)</sup>
-
-ImagePullPolicy define Image pull policy
-
-Default Value: `IfNotPresent`
-
-***
-
-### .spec.deployment.prediction.lifecycle
-
-Type: `core.Lifecycle` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/lifecycle.go#L35)</sup>
-
-Lifecycle keeps actions that the management system should take in response to container lifecycle events.
-
-***
-
-### .spec.deployment.prediction.livenessProbe
-
-Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L37)</sup>
-
-LivenessProbe keeps configuration of periodic probe of container liveness.
-Container will be restarted if the probe fails.
-
-Links:
-* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
-
-***
-
-### .spec.deployment.prediction.port
-
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/ml/v1alpha1/extension_spec_deployment_component.go#L34)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/ml/v1alpha1/extension_spec_deployment.go#L55)</sup>
 
 Port defines on which port the container will be listening for connections
 
 ***
 
-### .spec.deployment.prediction.ports
+### .spec.deployment.ports
 
 Type: `[]core.ContainerPort` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/networking.go#L39)</sup>
 
@@ -248,7 +248,7 @@ accessible from the network.
 
 ***
 
-### .spec.deployment.prediction.readinessProbe
+### .spec.deployment.readinessProbe
 
 Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L42)</sup>
 
@@ -257,261 +257,27 @@ Container will be removed from service endpoints if the probe fails.
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
-
-***
-
-### .spec.deployment.prediction.resources
-
-Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/resources.go#L37)</sup>
-
-Resources holds resource requests & limits for container
-
-Links:
-* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#resourcerequirements-v1-core)
-
-***
-
-### .spec.deployment.prediction.securityContext
-
-Type: `core.SecurityContext` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/security.go#L35)</sup>
-
-SecurityContext holds container-level security attributes and common container settings.
-
-Links:
-* [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
-
-***
-
-### .spec.deployment.prediction.startupProbe
-
-Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L50)</sup>
-
-StartupProbe indicates that the Pod has successfully initialized.
-If specified, no other probes are executed until this completes successfully.
-If this probe fails, the Pod will be restarted, just as if the livenessProbe failed.
-This can be used to provide different probe parameters at the beginning of a Pod's lifecycle,
-when it might take a long time to load data or warm a cache, than during steady-state operation.
-
-Links:
-* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
-
-***
-
-### .spec.deployment.prediction.volumeMounts
-
-Type: `[]core.VolumeMount` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/volume_mounts.go#L35)</sup>
-
-VolumeMounts keeps list of pod volumes to mount into the container's filesystem.
-
-***
-
-### .spec.deployment.prediction.workingDir
-
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L55)</sup>
-
-Container's working directory.
-If not specified, the container runtime's default will be used, which
-might be configured in the container image.
-
-***
-
-### .spec.deployment.project.args
-
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L50)</sup>
-
-Arguments to the entrypoint.
-The container image's CMD is used if this is not provided.
-Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
-cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
-to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
-produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
-of whether the variable exists or not. Cannot be updated.
-
-Links:
-* [Kubernetes Docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell)
-
-***
-
-### .spec.deployment.project.command
-
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L40)</sup>
-
-Entrypoint array. Not executed within a shell.
-The container image's ENTRYPOINT is used if this is not provided.
-Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
-cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
-to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
-produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
-of whether the variable exists or not. Cannot be updated.
-
-Links:
-* [Kubernetes Docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell)
-
-***
-
-### .spec.deployment.project.env
-
-Type: `core.EnvVar` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/environments.go#L36)</sup>
-
-Env keeps the information about environment variables provided to the container
-
-Links:
-* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#envvar-v1-core)
-
-***
-
-### .spec.deployment.project.envFrom
-
-Type: `core.EnvFromSource` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/environments.go#L41)</sup>
-
-EnvFrom keeps the information about environment variable sources provided to the container
-
-Links:
-* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#envfromsource-v1-core)
-
-***
-
-### .spec.deployment.project.gpu
-
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/ml/v1alpha1/extension_spec_deployment_component.go#L31)</sup>
-
-GPU defined if GPU Jobs are enabled for component. In use only for ArangoMLExtensionSpecDeploymentComponentPrediction and ArangoMLExtensionSpecDeploymentComponentTraining
-
-Default Value: `false`
-
-***
-
-### .spec.deployment.project.image
-
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L35)</sup>
-
-Image define image details
-
-***
-
-### .spec.deployment.project.imagePullPolicy
-
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L39)</sup>
-
-ImagePullPolicy define Image pull policy
-
-Default Value: `IfNotPresent`
-
-***
-
-### .spec.deployment.project.lifecycle
-
-Type: `core.Lifecycle` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/lifecycle.go#L35)</sup>
-
-Lifecycle keeps actions that the management system should take in response to container lifecycle events.
-
-***
-
-### .spec.deployment.project.livenessProbe
-
-Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L37)</sup>
-
-LivenessProbe keeps configuration of periodic probe of container liveness.
-Container will be restarted if the probe fails.
-
-Links:
-* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
-
-***
-
-### .spec.deployment.project.port
-
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/ml/v1alpha1/extension_spec_deployment_component.go#L34)</sup>
-
-Port defines on which port the container will be listening for connections
-
-***
-
-### .spec.deployment.project.ports
-
-Type: `[]core.ContainerPort` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/networking.go#L39)</sup>
-
-Ports contains list of ports to expose from the container. Not specifying a port here
-DOES NOT prevent that port from being exposed. Any port which is
-listening on the default "0.0.0.0" address inside a container will be
-accessible from the network.
-
-***
-
-### .spec.deployment.project.readinessProbe
-
-Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L42)</sup>
-
-ReadinessProbe keeps configuration of periodic probe of container service readiness.
-Container will be removed from service endpoints if the probe fails.
-
-Links:
-* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
-
-***
-
-### .spec.deployment.project.resources
-
-Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/resources.go#L37)</sup>
-
-Resources holds resource requests & limits for container
-
-Links:
-* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#resourcerequirements-v1-core)
-
-***
-
-### .spec.deployment.project.securityContext
-
-Type: `core.SecurityContext` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/security.go#L35)</sup>
-
-SecurityContext holds container-level security attributes and common container settings.
-
-Links:
-* [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
-
-***
-
-### .spec.deployment.project.startupProbe
-
-Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L50)</sup>
-
-StartupProbe indicates that the Pod has successfully initialized.
-If specified, no other probes are executed until this completes successfully.
-If this probe fails, the Pod will be restarted, just as if the livenessProbe failed.
-This can be used to provide different probe parameters at the beginning of a Pod's lifecycle,
-when it might take a long time to load data or warm a cache, than during steady-state operation.
-
-Links:
-* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
-
-***
-
-### .spec.deployment.project.volumeMounts
-
-Type: `[]core.VolumeMount` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/volume_mounts.go#L35)</sup>
-
-VolumeMounts keeps list of pod volumes to mount into the container's filesystem.
-
-***
-
-### .spec.deployment.project.workingDir
-
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L55)</sup>
-
-Container's working directory.
-If not specified, the container runtime's default will be used, which
-might be configured in the container image.
 
 ***
 
 ### .spec.deployment.replicas
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/ml/v1alpha1/extension_spec_deployment.go#L56)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/ml/v1alpha1/extension_spec_deployment.go#L39)</sup>
 
 Replicas defines the number of replicas running specified components. No replicas created if no components are defined.
 
 Default Value: `1`
+
+***
+
+### .spec.deployment.resources
+
+Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/resources.go#L37)</sup>
+
+Resources holds resource requests & limits for container
+
+Links:
+* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#resourcerequirements-v1-core)
 
 ***
 
@@ -523,6 +289,17 @@ SchedulerName specifies, the pod will be dispatched by specified scheduler.
 If not specified, the pod will be dispatched by default scheduler.
 
 Default Value: `""`
+
+***
+
+### .spec.deployment.securityContext
+
+Type: `core.SecurityContext` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/security.go#L35)</sup>
+
+SecurityContext holds container-level security attributes and common container settings.
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
 
 ***
 
@@ -567,175 +344,7 @@ Default Value: `false`
 
 ***
 
-### .spec.deployment.tolerations
-
-Type: `[]core.Toleration` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/pod/resources/scheduling.go#L49)</sup>
-
-Tolerations defines tolerations
-
-Links:
-* [Kubernetes docs](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/)
-
-***
-
-### .spec.deployment.training.args
-
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L50)</sup>
-
-Arguments to the entrypoint.
-The container image's CMD is used if this is not provided.
-Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
-cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
-to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
-produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
-of whether the variable exists or not. Cannot be updated.
-
-Links:
-* [Kubernetes Docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell)
-
-***
-
-### .spec.deployment.training.command
-
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L40)</sup>
-
-Entrypoint array. Not executed within a shell.
-The container image's ENTRYPOINT is used if this is not provided.
-Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
-cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
-to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
-produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
-of whether the variable exists or not. Cannot be updated.
-
-Links:
-* [Kubernetes Docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell)
-
-***
-
-### .spec.deployment.training.env
-
-Type: `core.EnvVar` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/environments.go#L36)</sup>
-
-Env keeps the information about environment variables provided to the container
-
-Links:
-* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#envvar-v1-core)
-
-***
-
-### .spec.deployment.training.envFrom
-
-Type: `core.EnvFromSource` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/environments.go#L41)</sup>
-
-EnvFrom keeps the information about environment variable sources provided to the container
-
-Links:
-* [Kubernetes Docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#envfromsource-v1-core)
-
-***
-
-### .spec.deployment.training.gpu
-
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/ml/v1alpha1/extension_spec_deployment_component.go#L31)</sup>
-
-GPU defined if GPU Jobs are enabled for component. In use only for ArangoMLExtensionSpecDeploymentComponentPrediction and ArangoMLExtensionSpecDeploymentComponentTraining
-
-Default Value: `false`
-
-***
-
-### .spec.deployment.training.image
-
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L35)</sup>
-
-Image define image details
-
-***
-
-### .spec.deployment.training.imagePullPolicy
-
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L39)</sup>
-
-ImagePullPolicy define Image pull policy
-
-Default Value: `IfNotPresent`
-
-***
-
-### .spec.deployment.training.lifecycle
-
-Type: `core.Lifecycle` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/lifecycle.go#L35)</sup>
-
-Lifecycle keeps actions that the management system should take in response to container lifecycle events.
-
-***
-
-### .spec.deployment.training.livenessProbe
-
-Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L37)</sup>
-
-LivenessProbe keeps configuration of periodic probe of container liveness.
-Container will be restarted if the probe fails.
-
-Links:
-* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
-
-***
-
-### .spec.deployment.training.port
-
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/ml/v1alpha1/extension_spec_deployment_component.go#L34)</sup>
-
-Port defines on which port the container will be listening for connections
-
-***
-
-### .spec.deployment.training.ports
-
-Type: `[]core.ContainerPort` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/networking.go#L39)</sup>
-
-Ports contains list of ports to expose from the container. Not specifying a port here
-DOES NOT prevent that port from being exposed. Any port which is
-listening on the default "0.0.0.0" address inside a container will be
-accessible from the network.
-
-***
-
-### .spec.deployment.training.readinessProbe
-
-Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L42)</sup>
-
-ReadinessProbe keeps configuration of periodic probe of container service readiness.
-Container will be removed from service endpoints if the probe fails.
-
-Links:
-* [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
-
-***
-
-### .spec.deployment.training.resources
-
-Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/resources.go#L37)</sup>
-
-Resources holds resource requests & limits for container
-
-Links:
-* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#resourcerequirements-v1-core)
-
-***
-
-### .spec.deployment.training.securityContext
-
-Type: `core.SecurityContext` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/security.go#L35)</sup>
-
-SecurityContext holds container-level security attributes and common container settings.
-
-Links:
-* [Kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
-
-***
-
-### .spec.deployment.training.startupProbe
+### .spec.deployment.startupProbe
 
 Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L50)</sup>
 
@@ -750,21 +359,22 @@ Links:
 
 ***
 
-### .spec.deployment.training.volumeMounts
+### .spec.deployment.tolerations
+
+Type: `[]core.Toleration` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/pod/resources/scheduling.go#L49)</sup>
+
+Tolerations defines tolerations
+
+Links:
+* [Kubernetes docs](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/)
+
+***
+
+### .spec.deployment.volumeMounts
 
 Type: `[]core.VolumeMount` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/volume_mounts.go#L35)</sup>
 
 VolumeMounts keeps list of pod volumes to mount into the container's filesystem.
-
-***
-
-### .spec.deployment.training.workingDir
-
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L55)</sup>
-
-Container's working directory.
-If not specified, the container runtime's default will be used, which
-might be configured in the container image.
 
 ***
 
@@ -776,6 +386,16 @@ Volumes keeps list of volumes that can be mounted by containers belonging to the
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/concepts/storage/volumes)
+
+***
+
+### .spec.deployment.workingDir
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L55)</sup>
+
+Container's working directory.
+If not specified, the container runtime's default will be used, which
+might be configured in the container image.
 
 ***
 
