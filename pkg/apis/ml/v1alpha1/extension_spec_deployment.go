@@ -47,7 +47,7 @@ type ArangoMLExtensionSpecDeployment struct {
 	// Container Keeps the information about Container configuration
 	*schedulerContainerApi.Container `json:",inline"`
 
-	// GPU defined if GPU Jobs are enabledt.
+	// GPU defined if GPU Jobs are enabled.
 	// +doc/default: false
 	GPU *bool `json:"gpu,omitempty"`
 

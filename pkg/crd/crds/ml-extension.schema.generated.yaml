@@ -419,7 +419,7 @@ v1alpha1:
                   type: object
                 type: array
               gpu:
-                description: GPU defined if GPU Jobs are enabledt.
+                description: GPU defined if GPU Jobs are enabled.
                 type: boolean
               hostIPC:
                 type: boolean

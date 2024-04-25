@@ -100,7 +100,7 @@ Links:
 
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/ml/v1alpha1/extension_spec_deployment.go#L52)</sup>
 
-GPU defined if GPU Jobs are enabledt.
+GPU defined if GPU Jobs are enabled.
 
 Default Value: `false`
 
