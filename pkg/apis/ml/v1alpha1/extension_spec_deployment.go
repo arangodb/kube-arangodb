@@ -30,7 +30,7 @@ import (
 const (
 	ArangoMLExtensionSpecDeploymentApi = "api"
 
-	ArangoMLExtensionSpecDeploymentComponentDefaultPort = 8501
+	ArangoMLExtensionSpecDeploymentComponentDefaultPort = 8502
 )
 
 type ArangoMLExtensionSpecDeployment struct {
