@@ -132,10 +132,6 @@ func (r *Resources) ensurePDBForGroup(ctx context.Context, group api.ServerGroup
 
 	pdb, found := inspector.GetSimple(pdbName)
 	if !found {
-		return nil
-	}
-
-	if kerrors.IsNotFound(err) {
 		if wantedMinAvail != 0 && wantedMinAvail < current {
 			// No PDB found - create new.
 			log.Debug("Creating new PDB")
