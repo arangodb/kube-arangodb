@@ -88,8 +88,20 @@ func Test_CRD(t *testing.T) {
 }
 
 func Test_AllDefinitionsDefined(t *testing.T) {
+	registered := map[string]bool{}
+
 	for _, def := range AllDefinitions() {
-		require.NotEmpty(t, def.Version)
+		a, b := def.Checksum()
+
+		require.NotEmpty(t, a)
+		require.NotEmpty(t, b)
+
+		require.NotContains(t, registered, a)
+		require.NotContains(t, registered, b)
+
+		registered[a] = true
+		registered[b] = true
+
 		require.NotNil(t, def.CRD)
 	}
 }

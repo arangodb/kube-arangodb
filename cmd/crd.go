@@ -34,6 +34,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/crd/crds"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
+	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 )
 
 var (
@@ -108,7 +109,7 @@ func cmdCRDInstallRun(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	ctx, cancel := context.WithTimeout(shutdown.Context(), time.Minute)
 	defer cancel()
 
 	err = crd.EnsureCRDWithOptions(ctx, client, crd.EnsureCRDOptions{IgnoreErrors: false, CRDOptions: crdOpts, ForceUpdate: crdInstallOptions.force})

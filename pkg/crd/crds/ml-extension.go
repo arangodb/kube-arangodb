@@ -24,29 +24,25 @@ import (
 	_ "embed"
 
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-
-	"github.com/arangodb/go-driver"
-
-	"github.com/arangodb/kube-arangodb/pkg/util"
-)
-
-const (
-	MLExtensionVersion = driver.Version("1.0.0")
 )
 
 func MLExtensionWithOptions(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
-	return getCRD(mlExtensionCRD, mlExtensionCRDSchemas, opts...)
+	return getCRD(MLExtensionDefinitionData(), opts...)
 }
 
 func MLExtensionDefinitionWithOptions(opts ...func(*CRDOptions)) Definition {
 	return Definition{
-		Version: MLExtensionVersion,
-		CRD:     MLExtensionWithOptions(opts...),
+		DefinitionData: MLExtensionDefinitionData(),
+		CRD:            MLExtensionWithOptions(opts...),
 	}
 }
 
-var mlExtensionCRD = util.NewYamlLoader[apiextensions.CustomResourceDefinition](mlExtension)
-var mlExtensionCRDSchemas = util.NewYamlLoader[crdSchemas](mlExtensionSchemaRaw)
+func MLExtensionDefinitionData() DefinitionData {
+	return DefinitionData{
+		definition:       mlExtension,
+		schemaDefinition: mlExtensionSchemaRaw,
+	}
+}
 
 //go:embed ml-extension.yaml
 var mlExtension []byte

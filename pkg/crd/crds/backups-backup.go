@@ -24,14 +24,6 @@ import (
 	_ "embed"
 
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-
-	"github.com/arangodb/go-driver"
-
-	"github.com/arangodb/kube-arangodb/pkg/util"
-)
-
-const (
-	BackupsBackupVersion = driver.Version("1.0.1")
 )
 
 // Deprecated: use BackupsBackupWithOptions instead
@@ -40,7 +32,7 @@ func BackupsBackup() *apiextensions.CustomResourceDefinition {
 }
 
 func BackupsBackupWithOptions(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
-	return getCRD(backupsBackupCRD, backupsBackupCRDSchemas, opts...)
+	return getCRD(BackupsBackupDefinitionData(), opts...)
 }
 
 // Deprecated: use BackupsBackupDefinitionWithOptions instead
@@ -50,13 +42,17 @@ func BackupsBackupDefinition() Definition {
 
 func BackupsBackupDefinitionWithOptions(opts ...func(*CRDOptions)) Definition {
 	return Definition{
-		Version: BackupsBackupVersion,
-		CRD:     BackupsBackupWithOptions(opts...),
+		DefinitionData: BackupsBackupDefinitionData(),
+		CRD:            BackupsBackupWithOptions(opts...),
 	}
 }
 
-var backupsBackupCRD = util.NewYamlLoader[apiextensions.CustomResourceDefinition](backupsBackup)
-var backupsBackupCRDSchemas = util.NewYamlLoader[crdSchemas](backupsBackupSchemaRaw)
+func BackupsBackupDefinitionData() DefinitionData {
+	return DefinitionData{
+		definition:       backupsBackup,
+		schemaDefinition: backupsBackupSchemaRaw,
+	}
+}
 
 //go:embed backups-backup.yaml
 var backupsBackup []byte

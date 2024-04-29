@@ -24,14 +24,6 @@ import (
 	_ "embed"
 
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-
-	"github.com/arangodb/go-driver"
-
-	"github.com/arangodb/kube-arangodb/pkg/util"
-)
-
-const (
-	StorageLocalStorageVersion = driver.Version("1.0.1")
 )
 
 // Deprecated: use StorageLocalStorageWithOptions instead
@@ -40,7 +32,7 @@ func StorageLocalStorage() *apiextensions.CustomResourceDefinition {
 }
 
 func StorageLocalStorageWithOptions(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
-	return getCRD(storageLocalStorageCRD, storageLocalStorageCRDSchemas, opts...)
+	return getCRD(StorageLocalStorageDefinitionData(), opts...)
 }
 
 // Deprecated: use StorageLocalStorageDefinitionWithOptions instead
@@ -50,13 +42,17 @@ func StorageLocalStorageDefinition() Definition {
 
 func StorageLocalStorageDefinitionWithOptions(opts ...func(*CRDOptions)) Definition {
 	return Definition{
-		Version: StorageLocalStorageVersion,
-		CRD:     StorageLocalStorageWithOptions(opts...),
+		DefinitionData: StorageLocalStorageDefinitionData(),
+		CRD:            StorageLocalStorageWithOptions(opts...),
 	}
 }
 
-var storageLocalStorageCRD = util.NewYamlLoader[apiextensions.CustomResourceDefinition](storageLocalStorage)
-var storageLocalStorageCRDSchemas = util.NewYamlLoader[crdSchemas](storageLocalStorageSchemaRaw)
+func StorageLocalStorageDefinitionData() DefinitionData {
+	return DefinitionData{
+		definition:       storageLocalStorage,
+		schemaDefinition: storageLocalStorageSchemaRaw,
+	}
+}
 
 //go:embed storage-localstorage.yaml
 var storageLocalStorage []byte

@@ -25,14 +25,35 @@ import (
 
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 
-	"github.com/arangodb/go-driver"
-
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 type Definition struct {
-	Version driver.Version
-	CRD     *apiextensions.CustomResourceDefinition
+	DefinitionData
+	CRD *apiextensions.CustomResourceDefinition
+}
+
+type DefinitionData struct {
+	definition       []byte
+	schemaDefinition []byte
+}
+
+func (d DefinitionData) definitionLoader() util.Loader[apiextensions.CustomResourceDefinition] {
+	return util.NewYamlLoader[apiextensions.CustomResourceDefinition](d.definition)
+}
+
+func (d DefinitionData) schemaDefinitionLoader() util.Loader[crdSchemas] {
+	return util.NewYamlLoader[crdSchemas](d.schemaDefinition)
+}
+
+func (d DefinitionData) Checksum() (definition, schema string) {
+	if len(d.definition) > 0 {
+		definition = util.SHA256(d.definition)
+	}
+	if len(d.schemaDefinition) > 0 {
+		schema = util.SHA256(d.schemaDefinition)
+	}
+	return
 }
 
 func AllDefinitions() []Definition {
@@ -75,6 +96,14 @@ type CRDOptions struct {
 	WithSchema bool
 }
 
+func (o *CRDOptions) GetWithSchema() bool {
+	if o == nil {
+		return false
+	}
+
+	return o.WithSchema
+}
+
 func (o *CRDOptions) AsFunc() func(*CRDOptions) {
 	return func(opts *CRDOptions) {
 		if o == nil || opts == nil {
@@ -91,18 +120,18 @@ func WithSchema() func(*CRDOptions) {
 	}
 }
 
-func getCRD(crdLoader util.Loader[apiextensions.CustomResourceDefinition], schemasLoader util.Loader[crdSchemas], opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
+func getCRD(data DefinitionData, opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
 	o := &CRDOptions{}
 	for _, fn := range opts {
 		fn(o)
 	}
 
-	crd := crdLoader.MustGet()
+	crd := data.definitionLoader().MustGet()
 
 	if o.WithSchema {
 		crdWithSchema := crd.DeepCopy()
 
-		schemas := schemasLoader.MustGet()
+		schemas := data.schemaDefinitionLoader().MustGet()
 
 		for i, v := range crdWithSchema.Spec.Versions {
 			schema, ok := schemas[v.Name]

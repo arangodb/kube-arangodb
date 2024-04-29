@@ -24,29 +24,25 @@ import (
 	_ "embed"
 
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-
-	"github.com/arangodb/go-driver"
-
-	"github.com/arangodb/kube-arangodb/pkg/util"
-)
-
-const (
-	MLCronJobVersion = driver.Version("1.0.0")
 )
 
 func MLCronJobWithOptions(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
-	return getCRD(mlCronJobCRD, mlCronJobCRDSchemas, opts...)
+	return getCRD(MLCronJobDefinitionData(), opts...)
 }
 
 func MLCronJobDefinitionWithOptions(opts ...func(*CRDOptions)) Definition {
 	return Definition{
-		Version: MLCronJobVersion,
-		CRD:     MLCronJobWithOptions(opts...),
+		DefinitionData: MLCronJobDefinitionData(),
+		CRD:            MLCronJobWithOptions(opts...),
 	}
 }
 
-var mlCronJobCRD = util.NewYamlLoader[apiextensions.CustomResourceDefinition](mlCronJob)
-var mlCronJobCRDSchemas = util.NewYamlLoader[crdSchemas](mlCronJobSchemaRaw)
+func MLCronJobDefinitionData() DefinitionData {
+	return DefinitionData{
+		definition:       mlCronJob,
+		schemaDefinition: mlCronJobSchemaRaw,
+	}
+}
 
 //go:embed ml-job-cron.yaml
 var mlCronJob []byte

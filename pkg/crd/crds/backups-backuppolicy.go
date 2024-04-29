@@ -24,14 +24,6 @@ import (
 	_ "embed"
 
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-
-	"github.com/arangodb/go-driver"
-
-	"github.com/arangodb/kube-arangodb/pkg/util"
-)
-
-const (
-	BackupsBackupPolicyPolicyVersion = driver.Version("1.0.1")
 )
 
 // Deprecated: use BackupsBackupPolicyPolicyWithOptions instead
@@ -40,7 +32,7 @@ func BackupsBackupPolicyPolicy() *apiextensions.CustomResourceDefinition {
 }
 
 func BackupsBackupPolicyPolicyWithOptions(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
-	return getCRD(backupsBackupPolicyCRD, backupsBackupPolicyCRDSchemas, opts...)
+	return getCRD(BackupsBackupPolicyDefinitionData(), opts...)
 }
 
 // Deprecated: use func BackupsBackupPolicyDefinitionWithOptions instead
@@ -50,13 +42,17 @@ func BackupsBackupPolicyDefinition() Definition {
 
 func BackupsBackupPolicyDefinitionWithOptions(opts ...func(*CRDOptions)) Definition {
 	return Definition{
-		Version: BackupsBackupPolicyPolicyVersion,
-		CRD:     BackupsBackupPolicyPolicyWithOptions(opts...),
+		DefinitionData: BackupsBackupPolicyDefinitionData(),
+		CRD:            BackupsBackupPolicyPolicyWithOptions(opts...),
 	}
 }
 
-var backupsBackupPolicyCRD = util.NewYamlLoader[apiextensions.CustomResourceDefinition](backupsBackupPolicy)
-var backupsBackupPolicyCRDSchemas = util.NewYamlLoader[crdSchemas](backupsBackupPolicySchemaRaw)
+func BackupsBackupPolicyDefinitionData() DefinitionData {
+	return DefinitionData{
+		definition:       backupsBackupPolicy,
+		schemaDefinition: backupsBackupPolicySchemaRaw,
+	}
+}
 
 //go:embed backups-backuppolicy.yaml
 var backupsBackupPolicy []byte
