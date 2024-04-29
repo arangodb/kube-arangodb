@@ -2873,38 +2873,6 @@ UID keeps the information about object UID
 
 ## Status
 
-### .status.arangoDB.jwtTokenSecret.checksum
-
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/shared/v1/object.go#L61)</sup>
-
-UID keeps the information about object Checksum
-
-***
-
-### .status.arangoDB.jwtTokenSecret.name
-
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/shared/v1/object.go#L52)</sup>
-
-Name of the object
-
-***
-
-### .status.arangoDB.jwtTokenSecret.namespace
-
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/shared/v1/object.go#L55)</sup>
-
-Namespace of the object. Should default to the namespace of the parent object
-
-***
-
-### .status.arangoDB.jwtTokenSecret.uid
-
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/shared/v1/object.go#L58)</sup>
-
-UID keeps the information about object UID
-
-***
-
 ### .status.arangoDB.secret.checksum
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/shared/v1/object.go#L61)</sup>
@@ -2945,41 +2913,9 @@ Conditions specific to the entire extension
 
 ***
 
-### .status.metadataService.jwtTokenSecret.checksum
-
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/shared/v1/object.go#L61)</sup>
-
-UID keeps the information about object Checksum
-
-***
-
-### .status.metadataService.jwtTokenSecret.name
-
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/shared/v1/object.go#L52)</sup>
-
-Name of the object
-
-***
-
-### .status.metadataService.jwtTokenSecret.namespace
-
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/shared/v1/object.go#L55)</sup>
-
-Namespace of the object. Should default to the namespace of the parent object
-
-***
-
-### .status.metadataService.jwtTokenSecret.uid
-
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/shared/v1/object.go#L58)</sup>
-
-UID keeps the information about object UID
-
-***
-
 ### .status.metadataService.local.arangoMLFeatureStore
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/ml/v1alpha1/extension_status_metadata_service.go#L41)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/ml/v1alpha1/extension_status_metadata_service.go#L38)</sup>
 
 ArangoMLFeatureStoreDatabase define Database name to be used as MetadataService Backend
 
@@ -2987,7 +2923,7 @@ ArangoMLFeatureStoreDatabase define Database name to be used as MetadataService 
 
 ### .status.metadataService.local.arangoPipe
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/ml/v1alpha1/extension_status_metadata_service.go#L38)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/ml/v1alpha1/extension_status_metadata_service.go#L35)</sup>
 
 ArangoPipeDatabase define Database name to be used as MetadataService Backend
 

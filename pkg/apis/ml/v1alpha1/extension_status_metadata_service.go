@@ -28,9 +28,6 @@ type ArangoMLExtensionStatusMetadataService struct {
 
 	// Secret define the Secret specification to store all the details
 	Secret *sharedApi.Object `json:"secret,omitempty"`
-
-	// JWTTokenSecret keeps the JWT for ArangoDB authentication (only when ArangoDeployment has JWT enabled)
-	JWTTokenSecret *sharedApi.Object `json:"jwtTokenSecret,omitempty"`
 }
 
 type ArangoMLExtensionStatusMetadataServiceLocal struct {

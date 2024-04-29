@@ -25,6 +25,4 @@ import sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 type ArangoMLExtensionStatusArangoDBRef struct {
 	// Secret keeps the information about ArangoDB deployment
 	Secret *sharedApi.Object `json:"secret,omitempty"`
-	// JWTTokenSecret keeps the JWT for ArangoDB authentication (only when ArangoDeployment has JWT enabled)
-	JWTTokenSecret *sharedApi.Object `json:"jwtTokenSecret,omitempty"`
 }
