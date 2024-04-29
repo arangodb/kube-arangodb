@@ -24,29 +24,25 @@ import (
 	_ "embed"
 
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-
-	"github.com/arangodb/go-driver"
-
-	"github.com/arangodb/kube-arangodb/pkg/util"
-)
-
-const (
-	MLBatchJobVersion = driver.Version("1.0.0")
 )
 
 func MLBatchJobWithOptions(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
-	return getCRD(mlBatchJobCRD, mlBatchJobCRDSchemas, opts...)
+	return getCRD(MLBatchJobDefinitionData(), opts...)
 }
 
 func MLBatchJobDefinitionWithOptions(opts ...func(*CRDOptions)) Definition {
 	return Definition{
-		Version: MLBatchJobVersion,
-		CRD:     MLBatchJobWithOptions(opts...),
+		DefinitionData: MLBatchJobDefinitionData(),
+		CRD:            MLBatchJobWithOptions(opts...),
 	}
 }
 
-var mlBatchJobCRD = util.NewYamlLoader[apiextensions.CustomResourceDefinition](mlBatchJob)
-var mlBatchJobCRDSchemas = util.NewYamlLoader[crdSchemas](mlBatchJobSchemaRaw)
+func MLBatchJobDefinitionData() DefinitionData {
+	return DefinitionData{
+		definition:       mlBatchJob,
+		schemaDefinition: mlBatchJobSchemaRaw,
+	}
+}
 
 //go:embed ml-job-batch.yaml
 var mlBatchJob []byte

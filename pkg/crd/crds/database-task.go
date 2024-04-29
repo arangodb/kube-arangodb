@@ -24,14 +24,6 @@ import (
 	_ "embed"
 
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-
-	"github.com/arangodb/go-driver"
-
-	"github.com/arangodb/kube-arangodb/pkg/util"
-)
-
-const (
-	DatabaseTaskVersion = driver.Version("1.0.1")
 )
 
 // Deprecated: use DatabaseTaskWithOptions instead
@@ -40,7 +32,7 @@ func DatabaseTask() *apiextensions.CustomResourceDefinition {
 }
 
 func DatabaseTaskWithOptions(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
-	return getCRD(databaseTaskCRD, databaseTaskCRDSchemas, opts...)
+	return getCRD(DatabaseTaskDefinitionData(), opts...)
 }
 
 // Deprecated: use DatabaseTaskDefinitionWithOptions instead
@@ -50,13 +42,17 @@ func DatabaseTaskDefinition() Definition {
 
 func DatabaseTaskDefinitionWithOptions(opts ...func(*CRDOptions)) Definition {
 	return Definition{
-		Version: DatabaseTaskVersion,
-		CRD:     DatabaseTaskWithOptions(opts...),
+		DefinitionData: DatabaseTaskDefinitionData(),
+		CRD:            DatabaseTaskWithOptions(opts...),
 	}
 }
 
-var databaseTaskCRD = util.NewYamlLoader[apiextensions.CustomResourceDefinition](databaseTask)
-var databaseTaskCRDSchemas = util.NewYamlLoader[crdSchemas](databaseTaskSchemaRaw)
+func DatabaseTaskDefinitionData() DefinitionData {
+	return DefinitionData{
+		definition:       databaseTask,
+		schemaDefinition: databaseTaskSchemaRaw,
+	}
+}
 
 //go:embed database-task.yaml
 var databaseTask []byte

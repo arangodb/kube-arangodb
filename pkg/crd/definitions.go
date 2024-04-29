@@ -27,7 +27,10 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-const Version = "arangodb.com/version"
+const (
+	Version = "arangodb.com/version"
+	Schema  = "arangodb.com/schema"
+)
 
 type crdDefinitionGetter func(opts *crds.CRDOptions) crds.Definition
 

@@ -28,8 +28,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/arangodb/go-driver"
-
 	"github.com/arangodb/kube-arangodb/pkg/crd/crds"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
@@ -65,13 +63,13 @@ func EnsureCRDWithOptions(ctx context.Context, client kclient.Client, opts Ensur
 			continue
 		}
 
-		var opt *crds.CRDOptions
+		var opt = &crdReg.defaultOpts
 		if o, ok := opts.CRDOptions[crdName]; ok {
 			opt = &o
 		}
 		def := crdReg.getter(opt)
 
-		err := tryApplyCRD(ctx, client, def, opts.ForceUpdate)
+		err := tryApplyCRD(ctx, client, def, opt, opts.ForceUpdate)
 		if !opts.IgnoreErrors && err != nil {
 			return err
 		}
@@ -79,10 +77,18 @@ func EnsureCRDWithOptions(ctx context.Context, client kclient.Client, opts Ensur
 	return nil
 }
 
-func tryApplyCRD(ctx context.Context, client kclient.Client, def crds.Definition, forceUpdate bool) error {
+func tryApplyCRD(ctx context.Context, client kclient.Client, def crds.Definition, opts *crds.CRDOptions, forceUpdate bool) error {
 	crdDefinitions := client.KubernetesExtensions().ApiextensionsV1().CustomResourceDefinitions()
 
 	crdName := def.CRD.Name
+
+	definitionVersion, definitionSchemaVersion := def.DefinitionData.Checksum()
+
+	logger := logger.Str("version", definitionVersion)
+
+	if opts.GetWithSchema() {
+		logger = logger.Str("schema", definitionSchemaVersion)
+	}
 
 	c, err := crdDefinitions.Get(ctx, crdName, meta.GetOptions{})
 	if err != nil {
@@ -102,10 +108,14 @@ func tryApplyCRD(ctx context.Context, client kclient.Client, def crds.Definition
 			ObjectMeta: meta.ObjectMeta{
 				Name: crdName,
 				Labels: map[string]string{
-					Version: string(def.Version),
+					Version: definitionVersion,
 				},
 			},
 			Spec: def.CRD.Spec,
+		}
+
+		if opts.GetWithSchema() {
+			c.Labels[Schema] = definitionSchemaVersion
 		}
 
 		if _, err := crdDefinitions.Create(ctx, c, meta.CreateOptions{}); err != nil {
@@ -127,14 +137,20 @@ func tryApplyCRD(ctx context.Context, client kclient.Client, def crds.Definition
 		c.ObjectMeta.Labels = map[string]string{}
 	}
 
-	if v, ok := c.ObjectMeta.Labels[Version]; ok && v != "" {
-		if !forceUpdate && !isUpdateRequired(def.Version, driver.Version(v)) {
-			logger.Str("crd", crdName).Info("CRD Update not required")
-			return nil
+	if !forceUpdate {
+		if v, ok := c.ObjectMeta.Labels[Version]; ok && v == definitionVersion {
+			if v, ok := c.ObjectMeta.Labels[Schema]; (opts.GetWithSchema() && (ok && v == definitionSchemaVersion)) || (!opts.GetWithSchema() && !ok) {
+				logger.Str("crd", crdName).Info("CRD Update not required")
+				return nil
+			}
 		}
 	}
 
-	c.ObjectMeta.Labels[Version] = string(def.Version)
+	c.ObjectMeta.Labels[Version] = definitionVersion
+	delete(c.ObjectMeta.Labels, Schema)
+	if opts.GetWithSchema() {
+		c.ObjectMeta.Labels[Schema] = definitionSchemaVersion
+	}
 	c.Spec = def.CRD.Spec
 
 	if _, err := crdDefinitions.Update(ctx, c, meta.UpdateOptions{}); err != nil {

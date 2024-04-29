@@ -67,6 +67,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util/probe"
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
+	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 	"github.com/arangodb/kube-arangodb/pkg/version"
 )
 
@@ -378,7 +379,7 @@ func executeMain(cmd *cobra.Command, args []string) {
 		}
 
 		if crdOptions.install {
-			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+			ctx, cancel := context.WithTimeout(shutdown.Context(), time.Minute)
 			defer cancel()
 
 			crdOpts, err := prepareCRDOptions(crdOptions.validationSchema)

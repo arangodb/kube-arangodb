@@ -24,14 +24,6 @@ import (
 	_ "embed"
 
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-
-	"github.com/arangodb/go-driver"
-
-	"github.com/arangodb/kube-arangodb/pkg/util"
-)
-
-const (
-	ReplicationDeploymentReplicationVersion = driver.Version("1.0.1")
 )
 
 // Deprecated: use ReplicationDeploymentReplicationWithOptions instead
@@ -40,7 +32,7 @@ func ReplicationDeploymentReplication() *apiextensions.CustomResourceDefinition 
 }
 
 func ReplicationDeploymentReplicationWithOptions(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
-	return getCRD(replicationDeploymentReplicationCRD, replicationDeploymentReplicationCRDSchemas, opts...)
+	return getCRD(ReplicationDeploymentReplicationDefinitionData(), opts...)
 }
 
 // Deprecated: use ReplicationDeploymentReplicationDefinitionWithOptions instead
@@ -50,13 +42,17 @@ func ReplicationDeploymentReplicationDefinition() Definition {
 
 func ReplicationDeploymentReplicationDefinitionWithOptions(opts ...func(*CRDOptions)) Definition {
 	return Definition{
-		Version: ReplicationDeploymentReplicationVersion,
-		CRD:     ReplicationDeploymentReplicationWithOptions(opts...),
+		DefinitionData: ReplicationDeploymentReplicationDefinitionData(),
+		CRD:            ReplicationDeploymentReplicationWithOptions(opts...),
 	}
 }
 
-var replicationDeploymentReplicationCRD = util.NewYamlLoader[apiextensions.CustomResourceDefinition](replicationDeploymentReplication)
-var replicationDeploymentReplicationCRDSchemas = util.NewYamlLoader[crdSchemas](replicationDeploymentReplicationSchemaRaw)
+func ReplicationDeploymentReplicationDefinitionData() DefinitionData {
+	return DefinitionData{
+		definition:       replicationDeploymentReplication,
+		schemaDefinition: replicationDeploymentReplicationSchemaRaw,
+	}
+}
 
 //go:embed replication-deploymentreplication.yaml
 var replicationDeploymentReplication []byte

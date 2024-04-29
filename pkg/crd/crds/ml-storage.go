@@ -24,29 +24,25 @@ import (
 	_ "embed"
 
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-
-	"github.com/arangodb/go-driver"
-
-	"github.com/arangodb/kube-arangodb/pkg/util"
-)
-
-const (
-	MLStorageVersion = driver.Version("1.0.0")
 )
 
 func MLStorageWithOptions(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
-	return getCRD(mlStorageCRD, mlStorageCRDSchemas, opts...)
+	return getCRD(MLStorageDefinitionData(), opts...)
 }
 
 func MLStorageDefinitionWithOptions(opts ...func(*CRDOptions)) Definition {
 	return Definition{
-		Version: MLStorageVersion,
-		CRD:     MLStorageWithOptions(opts...),
+		DefinitionData: MLStorageDefinitionData(),
+		CRD:            MLStorageWithOptions(opts...),
 	}
 }
 
-var mlStorageCRD = util.NewYamlLoader[apiextensions.CustomResourceDefinition](mlStorage)
-var mlStorageCRDSchemas = util.NewYamlLoader[crdSchemas](mlStorageSchemaRaw)
+func MLStorageDefinitionData() DefinitionData {
+	return DefinitionData{
+		definition:       mlStorage,
+		schemaDefinition: mlStorageSchemaRaw,
+	}
+}
 
 //go:embed ml-storage.yaml
 var mlStorage []byte

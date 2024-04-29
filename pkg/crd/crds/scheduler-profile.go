@@ -24,29 +24,25 @@ import (
 	_ "embed"
 
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-
-	"github.com/arangodb/go-driver"
-
-	"github.com/arangodb/kube-arangodb/pkg/util"
-)
-
-const (
-	SchedulerProfileVersion = driver.Version("1.0.0")
 )
 
 func SchedulerProfileWithOptions(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
-	return getCRD(schedulerProfileCRD, schedulerProfileCRDSchemas, opts...)
+	return getCRD(SchedulerProfileDefinitionData(), opts...)
 }
 
 func SchedulerProfileDefinitionWithOptions(opts ...func(*CRDOptions)) Definition {
 	return Definition{
-		Version: SchedulerProfileVersion,
-		CRD:     SchedulerProfileWithOptions(opts...),
+		DefinitionData: SchedulerProfileDefinitionData(),
+		CRD:            SchedulerProfileWithOptions(opts...),
 	}
 }
 
-var schedulerProfileCRD = util.NewYamlLoader[apiextensions.CustomResourceDefinition](schedulerProfile)
-var schedulerProfileCRDSchemas = util.NewYamlLoader[crdSchemas](schedulerProfileSchemaRaw)
+func SchedulerProfileDefinitionData() DefinitionData {
+	return DefinitionData{
+		definition:       schedulerProfile,
+		schemaDefinition: schedulerProfileSchemaRaw,
+	}
+}
 
 //go:embed scheduler-profile.yaml
 var schedulerProfile []byte

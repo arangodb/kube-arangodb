@@ -24,14 +24,6 @@ import (
 	_ "embed"
 
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-
-	"github.com/arangodb/go-driver"
-
-	"github.com/arangodb/kube-arangodb/pkg/util"
-)
-
-const (
-	AppsJobVersion = driver.Version("1.0.1")
 )
 
 // Deprecated: use AppsJobWithOptions instead
@@ -40,7 +32,7 @@ func AppsJob() *apiextensions.CustomResourceDefinition {
 }
 
 func AppsJobWithOptions(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
-	return getCRD(appsJobsCRD, appsJobsCRDSchemas, opts...)
+	return getCRD(AppsJobDefinitionData(), opts...)
 }
 
 // Deprecated: use AppsJobDefinitionWithOptions instead
@@ -50,13 +42,17 @@ func AppsJobDefinition() Definition {
 
 func AppsJobDefinitionWithOptions(opts ...func(*CRDOptions)) Definition {
 	return Definition{
-		Version: AppsJobVersion,
-		CRD:     AppsJobWithOptions(opts...),
+		DefinitionData: AppsJobDefinitionData(),
+		CRD:            AppsJobWithOptions(opts...),
 	}
 }
 
-var appsJobsCRD = util.NewYamlLoader[apiextensions.CustomResourceDefinition](appsJobs)
-var appsJobsCRDSchemas = util.NewYamlLoader[crdSchemas](appsJobsSchemaRaw)
+func AppsJobDefinitionData() DefinitionData {
+	return DefinitionData{
+		definition:       appsJobs,
+		schemaDefinition: appsJobsSchemaRaw,
+	}
+}
 
 //go:embed apps-job.yaml
 var appsJobs []byte
