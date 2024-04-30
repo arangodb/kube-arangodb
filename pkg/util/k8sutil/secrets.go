@@ -216,7 +216,7 @@ func GetTLSKeyfileFromSecret(s *core.Secret) (string, error) {
 // CreateTLSKeyfileSecret creates a secret used to store a PEM encoded keyfile
 // in the format ArangoDB accepts it for its `--ssl.keyfile` option.
 func CreateTLSKeyfileSecret(ctx context.Context, secrets secretv1.ModInterface, secretName string, keyfile string,
-	ownerRef *meta.OwnerReference) error {
+	ownerRef *meta.OwnerReference) (*core.Secret, error) {
 	// Create secret
 	secret := &core.Secret{
 		ObjectMeta: meta.ObjectMeta{
@@ -228,11 +228,12 @@ func CreateTLSKeyfileSecret(ctx context.Context, secrets secretv1.ModInterface, 
 	}
 	// Attach secret to owner
 	AddOwnerRefToObject(secret, ownerRef)
-	if _, err := secrets.Create(ctx, secret, meta.CreateOptions{}); err != nil {
+	if s, err := secrets.Create(ctx, secret, meta.CreateOptions{}); err != nil {
 		// Failed to create secret
-		return kerrors.NewResourceError(err, secret)
+		return nil, kerrors.NewResourceError(err, secret)
+	} else {
+		return s, nil
 	}
-	return nil
 }
 
 // ValidateTokenSecret checks that a secret with given name in given namespace

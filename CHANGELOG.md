@@ -7,6 +7,7 @@
 - (Bugfix) Fix Schema Apply Checksum
 - (Bugfix) Use MD5 instead of SHA256 for CRD Checksums
 - (Feature) (ML) Unify API
+- (Feature) (ML) Add TLS Secrets
 
 ## [1.2.40](https://github.com/arangodb/kube-arangodb/tree/1.2.40) (2024-04-10)
 - (Feature) Add Core fields to the Scheduler Container Spec

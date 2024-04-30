@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -62,6 +62,39 @@ func WithContextTimeoutP2A2[P1, P2, A1, A2 interface{}](ctx context.Context, tim
 	defer c()
 
 	return f(nCtx, a1, a2)
+}
+
+func WithKubernetesContextTimeoutP1A4[P1, A1, A2, A3, A4 interface{}](ctx context.Context, f func(context.Context, A1, A2, A3, A4) P1, a1 A1, a2 A2, a3 A3, a4 A4) P1 {
+	return WithContextTimeoutP1A4(ctx, globals.GetGlobals().Timeouts().Kubernetes().Get(), f, a1, a2, a3, a4)
+}
+
+func WithContextTimeoutP1A4[P1, A1, A2, A3, A4 interface{}](ctx context.Context, timeout time.Duration, f func(context.Context, A1, A2, A3, A4) P1, a1 A1, a2 A2, a3 A3, a4 A4) P1 {
+	nCtx, c := context.WithTimeout(ctx, timeout)
+	defer c()
+
+	return f(nCtx, a1, a2, a3, a4)
+}
+
+func WithKubernetesContextTimeoutP2A4[P1, P2, A1, A2, A3, A4 interface{}](ctx context.Context, f func(context.Context, A1, A2, A3, A4) (P1, P2), a1 A1, a2 A2, a3 A3, a4 A4) (P1, P2) {
+	return WithContextTimeoutP2A4(ctx, globals.GetGlobals().Timeouts().Kubernetes().Get(), f, a1, a2, a3, a4)
+}
+
+func WithContextTimeoutP2A4[P1, P2, A1, A2, A3, A4 interface{}](ctx context.Context, timeout time.Duration, f func(context.Context, A1, A2, A3, A4) (P1, P2), a1 A1, a2 A2, a3 A3, a4 A4) (P1, P2) {
+	nCtx, c := context.WithTimeout(ctx, timeout)
+	defer c()
+
+	return f(nCtx, a1, a2, a3, a4)
+}
+
+func WithKubernetesContextTimeoutP4A3[P1, P2, P3, P4, A1, A2, A3 interface{}](ctx context.Context, f func(context.Context, A1, A2, A3) (P1, P2, P3, P4), a1 A1, a2 A2, a3 A3) (P1, P2, P3, P4) {
+	return WithContextTimeoutP4A3(ctx, globals.GetGlobals().Timeouts().Kubernetes().Get(), f, a1, a2, a3)
+}
+
+func WithContextTimeoutP4A3[P1, P2, P3, P4, A1, A2, A3 interface{}](ctx context.Context, timeout time.Duration, f func(context.Context, A1, A2, A3) (P1, P2, P3, P4), a1 A1, a2 A2, a3 A3) (P1, P2, P3, P4) {
+	nCtx, c := context.WithTimeout(ctx, timeout)
+	defer c()
+
+	return f(nCtx, a1, a2, a3)
 }
 
 type PatchInterface[P1 meta.Object] interface {
