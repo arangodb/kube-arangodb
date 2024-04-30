@@ -21,6 +21,7 @@
 package util
 
 import (
+	"crypto/md5"
 	"crypto/sha256"
 	"fmt"
 
@@ -33,6 +34,14 @@ func SHA256FromString(data string) string {
 
 func SHA256(data []byte) string {
 	return fmt.Sprintf("%0x", sha256.Sum256(data))
+}
+
+func MD5FromString(data string) string {
+	return MD5([]byte(data))
+}
+
+func MD5(data []byte) string {
+	return fmt.Sprintf("%0x", md5.Sum(data))
 }
 
 func SHA256FromJSON[T interface{}](a T) (string, error) {
