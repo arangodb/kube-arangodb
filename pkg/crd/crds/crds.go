@@ -48,10 +48,10 @@ func (d DefinitionData) schemaDefinitionLoader() util.Loader[crdSchemas] {
 
 func (d DefinitionData) Checksum() (definition, schema string) {
 	if len(d.definition) > 0 {
-		definition = util.SHA256(d.definition)
+		definition = util.MD5(d.definition)
 	}
 	if len(d.schemaDefinition) > 0 {
-		schema = util.SHA256(d.schemaDefinition)
+		schema = util.MD5(d.schemaDefinition)
 	}
 	return
 }
