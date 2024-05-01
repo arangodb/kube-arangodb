@@ -36,6 +36,14 @@ const (
 	MLJobFeaturizationType JobType = "featurization"
 )
 
+func MLJobTypes() []JobType {
+	return []JobType{
+		MLJobTrainingType,
+		MLJobPredictionType,
+		MLJobFeaturizationType,
+	}
+}
+
 type ArangoMLJobsTemplates struct {
 	// Prediction defines template for the prediction job
 	Prediction *ArangoMLJobTemplates `json:"prediction,omitempty"`

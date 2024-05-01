@@ -21,34 +21,17 @@
 package v1alpha1
 
 import (
+	schedulerContainerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container"
 	schedulerPodApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/pod"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 const (
-	ArangoMLExtensionSpecDeploymentComponentPrediction = "prediction"
-	ArangoMLExtensionSpecDeploymentComponentTraining   = "training"
-	ArangoMLExtensionSpecDeploymentComponentProject    = "project"
+	ArangoMLExtensionSpecDeploymentApi = "api"
 
-	ArangoMLExtensionSpecDeploymentComponentPredictionDefaultPort = 8501
-	ArangoMLExtensionSpecDeploymentComponentTrainingDefaultPort   = 8502
-	ArangoMLExtensionSpecDeploymentComponentProjectDefaultPort    = 8503
+	ArangoMLExtensionSpecDeploymentComponentDefaultPort = 8502
 )
-
-func GetArangoMLExtensionSpecDeploymentComponentDefaultPort(component string) int32 {
-	switch component {
-	case ArangoMLExtensionSpecDeploymentComponentPrediction:
-		return ArangoMLExtensionSpecDeploymentComponentPredictionDefaultPort
-	case ArangoMLExtensionSpecDeploymentComponentTraining:
-		return ArangoMLExtensionSpecDeploymentComponentTrainingDefaultPort
-	case ArangoMLExtensionSpecDeploymentComponentProject:
-		return ArangoMLExtensionSpecDeploymentComponentProjectDefaultPort
-	}
-
-	return 0
-}
 
 type ArangoMLExtensionSpecDeployment struct {
 	// Replicas defines the number of replicas running specified components. No replicas created if no components are defined.
@@ -61,12 +44,15 @@ type ArangoMLExtensionSpecDeployment struct {
 	// Pod defines base template for pods
 	*schedulerPodApi.Pod
 
-	// Prediction defines how Prediction workload will be deployed
-	Prediction *ArangoMLExtensionSpecDeploymentComponent `json:"prediction,omitempty"`
-	// Training defines how Training workload will be deployed
-	Training *ArangoMLExtensionSpecDeploymentComponent `json:"training,omitempty"`
-	// Project defines how Project workload will be deployed
-	Project *ArangoMLExtensionSpecDeploymentComponent `json:"project,omitempty"`
+	// Container Keeps the information about Container configuration
+	*schedulerContainerApi.Container `json:",inline"`
+
+	// GPU defined if GPU Jobs are enabled.
+	// +doc/default: false
+	GPU *bool `json:"gpu,omitempty"`
+
+	// Port defines on which port the container will be listening for connections
+	Port *int32 `json:"port,omitempty"`
 }
 
 func (s *ArangoMLExtensionSpecDeployment) GetReplicas() int32 {
@@ -84,49 +70,26 @@ func (s *ArangoMLExtensionSpecDeployment) GetPodTemplate() *schedulerPodApi.Pod 
 	return s.Pod
 }
 
-func (s *ArangoMLExtensionSpecDeployment) GetPrediction() *ArangoMLExtensionSpecDeploymentComponent {
-	if s == nil {
-		return nil
-	}
-	return s.Prediction
-}
-
-func (s *ArangoMLExtensionSpecDeployment) GetTraining() *ArangoMLExtensionSpecDeploymentComponent {
-	if s == nil {
-		return nil
-	}
-	return s.Training
-}
-
-func (s *ArangoMLExtensionSpecDeployment) GetProject() *ArangoMLExtensionSpecDeploymentComponent {
-	if s == nil {
-		return nil
-	}
-	return s.Project
-}
-
-func (s *ArangoMLExtensionSpecDeployment) GetComponents() map[string]*ArangoMLExtensionSpecDeploymentComponent {
-	if s == nil {
-		return nil
-	}
-	return map[string]*ArangoMLExtensionSpecDeploymentComponent{
-		ArangoMLExtensionSpecDeploymentComponentPrediction: s.GetPrediction(),
-		ArangoMLExtensionSpecDeploymentComponentTraining:   s.GetTraining(),
-		ArangoMLExtensionSpecDeploymentComponentProject:    s.GetProject(),
-	}
-}
-
-func (s *ArangoMLExtensionSpecDeployment) HasComponents() bool {
-	if s == nil || len(s.GetComponents()) == 0 {
+func (s *ArangoMLExtensionSpecDeployment) GetGPU() bool {
+	if s == nil || s.GPU == nil {
 		return false
 	}
+	return *s.GPU
+}
 
-	for _, c := range s.GetComponents() {
-		if c != nil {
-			return true
-		}
+func (s *ArangoMLExtensionSpecDeployment) GetPort(def int32) int32 {
+	if s == nil || s.Port == nil {
+		return def
 	}
-	return false
+	return *s.Port
+}
+
+func (s *ArangoMLExtensionSpecDeployment) GetContainer() *schedulerContainerApi.Container {
+	if s == nil || s.Container == nil {
+		return nil
+	}
+
+	return s.Container
 }
 
 func (s *ArangoMLExtensionSpecDeployment) GetService() *ArangoMLExtensionSpecDeploymentService {
@@ -144,36 +107,11 @@ func (s *ArangoMLExtensionSpecDeployment) Validate() error {
 	errs := []error{
 		shared.PrefixResourceErrors("service", shared.ValidateOptional(s.GetService(), func(s ArangoMLExtensionSpecDeploymentService) error { return s.Validate() })),
 		s.GetPodTemplate().Validate(),
+		s.GetContainer().Validate(),
 	}
 
 	if s.GetReplicas() < 0 || s.GetReplicas() > 10 {
 		errs = append(errs, shared.PrefixResourceErrors("replicas", errors.Errorf("out of range [0, 10]")))
-	}
-
-	var usedPorts util.List[int32]
-	for prefix, component := range s.GetComponents() {
-		err := component.Validate()
-		if err != nil {
-			errs = append(errs, shared.PrefixResourceErrors(prefix, err))
-			continue
-		}
-		if err == nil {
-			port := component.GetPort(GetArangoMLExtensionSpecDeploymentComponentDefaultPort(prefix))
-
-			if port == 0 {
-				errs = append(errs, shared.PrefixResourceErrors(prefix, errors.Errorf("port not defined")))
-				continue
-			}
-
-			duplicateCount := usedPorts.Count(func(i int32) bool {
-				return i == port
-			})
-			if duplicateCount > 0 {
-				errs = append(errs, shared.PrefixResourceErrors(prefix, errors.Errorf("port %d already specified for other component", port)))
-			} else {
-				usedPorts.Append(port)
-			}
-		}
 	}
 	return shared.WithErrors(errs...)
 }

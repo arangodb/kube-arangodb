@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,9 +28,6 @@ type ArangoMLExtensionStatusMetadataService struct {
 
 	// Secret define the Secret specification to store all the details
 	Secret *sharedApi.Object `json:"secret,omitempty"`
-
-	// JWTTokenSecret keeps the JWT for ArangoDB authentication (only when ArangoDeployment has JWT enabled)
-	JWTTokenSecret *sharedApi.Object `json:"jwtTokenSecret,omitempty"`
 }
 
 type ArangoMLExtensionStatusMetadataServiceLocal struct {
