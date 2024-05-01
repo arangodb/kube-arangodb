@@ -94,6 +94,20 @@ func (o *Object) GetUID() types.UID {
 	return ""
 }
 
+func (o *Object) AsUIDPrecondition() *meta.Preconditions {
+	if o == nil || o.UID == nil {
+		return nil
+	}
+
+	uid := o.GetUID()
+
+	if uid == "" {
+		return nil
+	}
+
+	return meta.NewUIDPreconditions(string(uid))
+}
+
 func (o *Object) GetChecksum() string {
 	if o != nil {
 		if n := o.Checksum; n != nil {

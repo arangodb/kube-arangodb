@@ -98,7 +98,7 @@ Links:
 
 ### .spec.deployment.gpu
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/ml/v1alpha1/extension_spec_deployment.go#L52)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/ml/v1alpha1/extension_spec_deployment.go#L55)</sup>
 
 GPU defined if GPU Jobs are enabled.
 
@@ -231,7 +231,7 @@ Links:
 
 ### .spec.deployment.port
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/ml/v1alpha1/extension_spec_deployment.go#L55)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/ml/v1alpha1/extension_spec_deployment.go#L58)</sup>
 
 Port defines on which port the container will be listening for connections
 
@@ -356,6 +356,22 @@ when it might take a long time to load data or warm a cache, than during steady-
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
+
+***
+
+### .spec.deployment.tls.altNames
+
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/ml/v1alpha1/extension_spec_deployment_tls.go#L28)</sup>
+
+AltNames define TLS AltNames used when TLS on the ArangoDB is enabled
+
+***
+
+### .spec.deployment.tls.enabled
+
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/ml/v1alpha1/extension_spec_deployment_tls.go#L25)</sup>
+
+Enabled define if TLS Should be enabled. If is not set then default is taken from ArangoDeployment settings
 
 ***
 
@@ -2898,6 +2914,38 @@ Namespace of the object. Should default to the namespace of the parent object
 ***
 
 ### .status.arangoDB.secret.uid
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/shared/v1/object.go#L58)</sup>
+
+UID keeps the information about object UID
+
+***
+
+### .status.arangoDB.tls.checksum
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/shared/v1/object.go#L61)</sup>
+
+UID keeps the information about object Checksum
+
+***
+
+### .status.arangoDB.tls.name
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/shared/v1/object.go#L52)</sup>
+
+Name of the object
+
+***
+
+### .status.arangoDB.tls.namespace
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/shared/v1/object.go#L55)</sup>
+
+Namespace of the object. Should default to the namespace of the parent object
+
+***
+
+### .status.arangoDB.tls.uid
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/shared/v1/object.go#L58)</sup>
 

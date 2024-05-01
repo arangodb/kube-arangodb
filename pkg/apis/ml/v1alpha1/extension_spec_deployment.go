@@ -41,6 +41,9 @@ type ArangoMLExtensionSpecDeployment struct {
 	// Service defines how components will be exposed
 	Service *ArangoMLExtensionSpecDeploymentService `json:"service,omitempty"`
 
+	// TLS defined TLS Settings for extension
+	TLS *ArangoMLExtensionSpecDeploymentTLS `json:"tls,omitempty"`
+
 	// Pod defines base template for pods
 	*schedulerPodApi.Pod
 
@@ -97,6 +100,13 @@ func (s *ArangoMLExtensionSpecDeployment) GetService() *ArangoMLExtensionSpecDep
 		return nil
 	}
 	return s.Service
+}
+
+func (s *ArangoMLExtensionSpecDeployment) GetTLS() *ArangoMLExtensionSpecDeploymentTLS {
+	if s == nil {
+		return nil
+	}
+	return s.TLS
 }
 
 func (s *ArangoMLExtensionSpecDeployment) Validate() error {

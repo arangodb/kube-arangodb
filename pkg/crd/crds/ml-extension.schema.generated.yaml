@@ -927,6 +927,18 @@ v1alpha1:
                     format: int32
                     type: integer
                 type: object
+              tls:
+                description: TLS defined TLS Settings for extension
+                properties:
+                  altNames:
+                    description: AltNames define TLS AltNames used when TLS on the ArangoDB is enabled
+                    items:
+                      type: string
+                    type: array
+                  enabled:
+                    description: Enabled define if TLS Should be enabled. If is not set then default is taken from ArangoDeployment settings
+                    type: boolean
+                type: object
               tolerations:
                 items:
                   properties:

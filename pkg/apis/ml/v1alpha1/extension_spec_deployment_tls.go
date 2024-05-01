@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,11 +20,10 @@
 
 package v1alpha1
 
-import sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+type ArangoMLExtensionSpecDeploymentTLS struct {
+	// Enabled define if TLS Should be enabled. If is not set then default is taken from ArangoDeployment settings
+	Enabled *bool `json:"enabled,omitempty"`
 
-type ArangoMLExtensionStatusArangoDBRef struct {
-	// Secret keeps the information about ArangoDB deployment
-	Secret *sharedApi.Object `json:"secret,omitempty"`
-	// TLS keeps information about TLS Secret rendered from ArangoDB deployment
-	TLS *sharedApi.Object `json:"tls,omitempty"`
+	// AltNames define TLS AltNames used when TLS on the ArangoDB is enabled
+	AltNames []string `json:"altNames,omitempty"`
 }
