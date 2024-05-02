@@ -27,3 +27,19 @@ type ArangoMLExtensionSpecDeploymentTLS struct {
 	// AltNames define TLS AltNames used when TLS on the ArangoDB is enabled
 	AltNames []string `json:"altNames,omitempty"`
 }
+
+func (a *ArangoMLExtensionSpecDeploymentTLS) IsEnabled() bool {
+	if a == nil || a.Enabled == nil {
+		return true
+	}
+
+	return *a.Enabled
+}
+
+func (a *ArangoMLExtensionSpecDeploymentTLS) GetAltNames() []string {
+	if a == nil || a.AltNames == nil {
+		return nil
+	}
+
+	return a.AltNames
+}
