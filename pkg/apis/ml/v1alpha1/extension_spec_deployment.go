@@ -21,8 +21,8 @@
 package v1alpha1
 
 import (
-	schedulerContainerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container"
-	schedulerPodApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/pod"
+	schedulerContainerApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container"
+	schedulerPodApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/pod"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
@@ -45,10 +45,10 @@ type ArangoMLExtensionSpecDeployment struct {
 	TLS *ArangoMLExtensionSpecDeploymentTLS `json:"tls,omitempty"`
 
 	// Pod defines base template for pods
-	*schedulerPodApi.Pod
+	*schedulerPodApiv1alpha1.Pod
 
 	// Container Keeps the information about Container configuration
-	*schedulerContainerApi.Container `json:",inline"`
+	*schedulerContainerApiv1alpha1.Container `json:",inline"`
 
 	// GPU defined if GPU Jobs are enabled.
 	// +doc/default: false
@@ -65,7 +65,7 @@ func (s *ArangoMLExtensionSpecDeployment) GetReplicas() int32 {
 	return *s.Replicas
 }
 
-func (s *ArangoMLExtensionSpecDeployment) GetPodTemplate() *schedulerPodApi.Pod {
+func (s *ArangoMLExtensionSpecDeployment) GetPodTemplate() *schedulerPodApiv1alpha1.Pod {
 	if s == nil || s.Pod == nil {
 		return nil
 	}
@@ -87,7 +87,7 @@ func (s *ArangoMLExtensionSpecDeployment) GetPort(def int32) int32 {
 	return *s.Port
 }
 
-func (s *ArangoMLExtensionSpecDeployment) GetContainer() *schedulerContainerApi.Container {
+func (s *ArangoMLExtensionSpecDeployment) GetContainer() *schedulerContainerApiv1alpha1.Container {
 	if s == nil || s.Container == nil {
 		return nil
 	}

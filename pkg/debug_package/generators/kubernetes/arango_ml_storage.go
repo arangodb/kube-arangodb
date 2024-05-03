@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import (
 
 	"github.com/rs/zerolog"
 
-	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
+	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/cli"
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -61,7 +61,7 @@ func mlStorage(client kclient.Client, files chan<- shared.File, ext *mlApi.Arang
 }
 
 func listMLStorages(client kclient.Client) ([]*mlApi.ArangoMLStorage, error) {
-	return ListObjects[*mlApi.ArangoMLStorageList, *mlApi.ArangoMLStorage](context.Background(), client.Arango().MlV1alpha1().ArangoMLStorages(cli.GetInput().Namespace), func(result *mlApi.ArangoMLStorageList) []*mlApi.ArangoMLStorage {
+	return ListObjects[*mlApi.ArangoMLStorageList, *mlApi.ArangoMLStorage](context.Background(), client.Arango().MlV1beta1().ArangoMLStorages(cli.GetInput().Namespace), func(result *mlApi.ArangoMLStorageList) []*mlApi.ArangoMLStorage {
 		q := make([]*mlApi.ArangoMLStorage, len(result.Items))
 
 		for id, e := range result.Items {

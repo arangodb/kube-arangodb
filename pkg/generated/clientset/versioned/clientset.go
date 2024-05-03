@@ -31,9 +31,11 @@ import (
 	databasev1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/deployment/v1"
 	databasev2alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/deployment/v2alpha1"
 	mlv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/ml/v1alpha1"
+	mlv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/ml/v1beta1"
 	replicationv1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/replication/v1"
 	replicationv2alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/replication/v2alpha1"
 	schedulerv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/scheduler/v1alpha1"
+	schedulerv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/scheduler/v1beta1"
 	storagev1alpha "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/storage/v1alpha"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
@@ -47,9 +49,11 @@ type Interface interface {
 	DatabaseV1() databasev1.DatabaseV1Interface
 	DatabaseV2alpha1() databasev2alpha1.DatabaseV2alpha1Interface
 	MlV1alpha1() mlv1alpha1.MlV1alpha1Interface
+	MlV1beta1() mlv1beta1.MlV1beta1Interface
 	ReplicationV1() replicationv1.ReplicationV1Interface
 	ReplicationV2alpha1() replicationv2alpha1.ReplicationV2alpha1Interface
 	SchedulerV1alpha1() schedulerv1alpha1.SchedulerV1alpha1Interface
+	SchedulerV1beta1() schedulerv1beta1.SchedulerV1beta1Interface
 	StorageV1alpha() storagev1alpha.StorageV1alphaInterface
 }
 
@@ -61,9 +65,11 @@ type Clientset struct {
 	databaseV1          *databasev1.DatabaseV1Client
 	databaseV2alpha1    *databasev2alpha1.DatabaseV2alpha1Client
 	mlV1alpha1          *mlv1alpha1.MlV1alpha1Client
+	mlV1beta1           *mlv1beta1.MlV1beta1Client
 	replicationV1       *replicationv1.ReplicationV1Client
 	replicationV2alpha1 *replicationv2alpha1.ReplicationV2alpha1Client
 	schedulerV1alpha1   *schedulerv1alpha1.SchedulerV1alpha1Client
+	schedulerV1beta1    *schedulerv1beta1.SchedulerV1beta1Client
 	storageV1alpha      *storagev1alpha.StorageV1alphaClient
 }
 
@@ -92,6 +98,11 @@ func (c *Clientset) MlV1alpha1() mlv1alpha1.MlV1alpha1Interface {
 	return c.mlV1alpha1
 }
 
+// MlV1beta1 retrieves the MlV1beta1Client
+func (c *Clientset) MlV1beta1() mlv1beta1.MlV1beta1Interface {
+	return c.mlV1beta1
+}
+
 // ReplicationV1 retrieves the ReplicationV1Client
 func (c *Clientset) ReplicationV1() replicationv1.ReplicationV1Interface {
 	return c.replicationV1
@@ -105,6 +116,11 @@ func (c *Clientset) ReplicationV2alpha1() replicationv2alpha1.ReplicationV2alpha
 // SchedulerV1alpha1 retrieves the SchedulerV1alpha1Client
 func (c *Clientset) SchedulerV1alpha1() schedulerv1alpha1.SchedulerV1alpha1Interface {
 	return c.schedulerV1alpha1
+}
+
+// SchedulerV1beta1 retrieves the SchedulerV1beta1Client
+func (c *Clientset) SchedulerV1beta1() schedulerv1beta1.SchedulerV1beta1Interface {
+	return c.schedulerV1beta1
 }
 
 // StorageV1alpha retrieves the StorageV1alphaClient
@@ -176,6 +192,10 @@ func NewForConfigAndClient(c *rest.Config, httpClient *http.Client) (*Clientset,
 	if err != nil {
 		return nil, err
 	}
+	cs.mlV1beta1, err = mlv1beta1.NewForConfigAndClient(&configShallowCopy, httpClient)
+	if err != nil {
+		return nil, err
+	}
 	cs.replicationV1, err = replicationv1.NewForConfigAndClient(&configShallowCopy, httpClient)
 	if err != nil {
 		return nil, err
@@ -185,6 +205,10 @@ func NewForConfigAndClient(c *rest.Config, httpClient *http.Client) (*Clientset,
 		return nil, err
 	}
 	cs.schedulerV1alpha1, err = schedulerv1alpha1.NewForConfigAndClient(&configShallowCopy, httpClient)
+	if err != nil {
+		return nil, err
+	}
+	cs.schedulerV1beta1, err = schedulerv1beta1.NewForConfigAndClient(&configShallowCopy, httpClient)
 	if err != nil {
 		return nil, err
 	}
@@ -218,9 +242,11 @@ func New(c rest.Interface) *Clientset {
 	cs.databaseV1 = databasev1.New(c)
 	cs.databaseV2alpha1 = databasev2alpha1.New(c)
 	cs.mlV1alpha1 = mlv1alpha1.New(c)
+	cs.mlV1beta1 = mlv1beta1.New(c)
 	cs.replicationV1 = replicationv1.New(c)
 	cs.replicationV2alpha1 = replicationv2alpha1.New(c)
 	cs.schedulerV1alpha1 = schedulerv1alpha1.New(c)
+	cs.schedulerV1beta1 = schedulerv1beta1.New(c)
 	cs.storageV1alpha = storagev1alpha.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)

@@ -17,6 +17,15 @@ spec:
           type: object
           x-kubernetes-preserve-unknown-fields: true
       served: true
+      storage: false
+      subresources:
+        status: {}
+    - name: v1beta1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
       storage: true
       subresources:
         status: {}

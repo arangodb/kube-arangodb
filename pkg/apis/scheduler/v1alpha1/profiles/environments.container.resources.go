@@ -24,9 +24,9 @@ import (
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 
-	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
-	schedulerContainerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container"
-	schedulerContainerResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container/resources"
+	schedulerApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
+	schedulerContainerApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container"
+	schedulerContainerResourcesApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container/resources"
 )
 
 var (
@@ -34,14 +34,14 @@ var (
 	divisor1Mi = resource.MustParse("1Mi")
 )
 
-func ContainerResourceEnvironments() *schedulerApi.ProfileTemplate {
+func ContainerResourceEnvironments() *schedulerApiv1alpha1.ProfileTemplate {
 	return containerResourceEnvironments.DeepCopy()
 }
 
-var containerResourceEnvironments = schedulerApi.ProfileTemplate{
-	Container: &schedulerApi.ProfileContainerTemplate{
-		All: &schedulerContainerApi.Generic{
-			Environments: &schedulerContainerResourcesApi.Environments{
+var containerResourceEnvironments = schedulerApiv1alpha1.ProfileTemplate{
+	Container: &schedulerApiv1alpha1.ProfileContainerTemplate{
+		All: &schedulerContainerApiv1alpha1.Generic{
+			Environments: &schedulerContainerResourcesApiv1alpha1.Environments{
 				Env: []core.EnvVar{
 					{
 						Name: "CONTAINER_CPU_REQUESTS",

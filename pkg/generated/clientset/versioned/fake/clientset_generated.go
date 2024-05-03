@@ -34,12 +34,16 @@ import (
 	fakedatabasev2alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/deployment/v2alpha1/fake"
 	mlv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/ml/v1alpha1"
 	fakemlv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/ml/v1alpha1/fake"
+	mlv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/ml/v1beta1"
+	fakemlv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/ml/v1beta1/fake"
 	replicationv1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/replication/v1"
 	fakereplicationv1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/replication/v1/fake"
 	replicationv2alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/replication/v2alpha1"
 	fakereplicationv2alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/replication/v2alpha1/fake"
 	schedulerv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/scheduler/v1alpha1"
 	fakeschedulerv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/scheduler/v1alpha1/fake"
+	schedulerv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/scheduler/v1beta1"
+	fakeschedulerv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/scheduler/v1beta1/fake"
 	storagev1alpha "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/storage/v1alpha"
 	fakestoragev1alpha "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/storage/v1alpha/fake"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -124,6 +128,11 @@ func (c *Clientset) MlV1alpha1() mlv1alpha1.MlV1alpha1Interface {
 	return &fakemlv1alpha1.FakeMlV1alpha1{Fake: &c.Fake}
 }
 
+// MlV1beta1 retrieves the MlV1beta1Client
+func (c *Clientset) MlV1beta1() mlv1beta1.MlV1beta1Interface {
+	return &fakemlv1beta1.FakeMlV1beta1{Fake: &c.Fake}
+}
+
 // ReplicationV1 retrieves the ReplicationV1Client
 func (c *Clientset) ReplicationV1() replicationv1.ReplicationV1Interface {
 	return &fakereplicationv1.FakeReplicationV1{Fake: &c.Fake}
@@ -137,6 +146,11 @@ func (c *Clientset) ReplicationV2alpha1() replicationv2alpha1.ReplicationV2alpha
 // SchedulerV1alpha1 retrieves the SchedulerV1alpha1Client
 func (c *Clientset) SchedulerV1alpha1() schedulerv1alpha1.SchedulerV1alpha1Interface {
 	return &fakeschedulerv1alpha1.FakeSchedulerV1alpha1{Fake: &c.Fake}
+}
+
+// SchedulerV1beta1 retrieves the SchedulerV1beta1Client
+func (c *Clientset) SchedulerV1beta1() schedulerv1beta1.SchedulerV1beta1Interface {
+	return &fakeschedulerv1beta1.FakeSchedulerV1beta1{Fake: &c.Fake}
 }
 
 // StorageV1alpha retrieves the StorageV1alphaClient

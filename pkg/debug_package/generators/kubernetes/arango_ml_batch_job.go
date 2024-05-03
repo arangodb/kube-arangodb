@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import (
 
 	"github.com/rs/zerolog"
 
-	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
+	mlApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/cli"
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -52,7 +52,7 @@ func mlBatchJobs(logger zerolog.Logger, files chan<- shared.File, client kclient
 	return nil
 }
 
-func mlBatchJob(client kclient.Client, files chan<- shared.File, ext *mlApi.ArangoMLBatchJob) error {
+func mlBatchJob(client kclient.Client, files chan<- shared.File, ext *mlApiv1alpha1.ArangoMLBatchJob) error {
 	files <- shared.NewYAMLFile(fmt.Sprintf("kubernetes/arango/ml/batchjobs/%s.yaml", ext.GetName()), func() ([]interface{}, error) {
 		return []interface{}{ext}, nil
 	})
@@ -60,9 +60,9 @@ func mlBatchJob(client kclient.Client, files chan<- shared.File, ext *mlApi.Aran
 	return nil
 }
 
-func listMLBatchJobs(client kclient.Client) ([]*mlApi.ArangoMLBatchJob, error) {
-	return ListObjects[*mlApi.ArangoMLBatchJobList, *mlApi.ArangoMLBatchJob](context.Background(), client.Arango().MlV1alpha1().ArangoMLBatchJobs(cli.GetInput().Namespace), func(result *mlApi.ArangoMLBatchJobList) []*mlApi.ArangoMLBatchJob {
-		q := make([]*mlApi.ArangoMLBatchJob, len(result.Items))
+func listMLBatchJobs(client kclient.Client) ([]*mlApiv1alpha1.ArangoMLBatchJob, error) {
+	return ListObjects[*mlApiv1alpha1.ArangoMLBatchJobList, *mlApiv1alpha1.ArangoMLBatchJob](context.Background(), client.Arango().MlV1alpha1().ArangoMLBatchJobs(cli.GetInput().Namespace), func(result *mlApiv1alpha1.ArangoMLBatchJobList) []*mlApiv1alpha1.ArangoMLBatchJob {
+		q := make([]*mlApiv1alpha1.ArangoMLBatchJob, len(result.Items))
 
 		for id, e := range result.Items {
 			q[id] = e.DeepCopy()

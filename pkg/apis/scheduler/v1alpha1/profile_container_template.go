@@ -23,14 +23,14 @@ package v1alpha1
 import (
 	core "k8s.io/api/core/v1"
 
-	schedulerContainerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container"
+	schedulerContainerApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 )
 
 type ProfileContainerTemplate struct {
-	Containers schedulerContainerApi.Containers `json:"containers,omitempty"`
+	Containers schedulerContainerApiv1alpha1.Containers `json:"containers,omitempty"`
 
-	All *schedulerContainerApi.Generic `json:"all,omitempty"`
+	All *schedulerContainerApiv1alpha1.Generic `json:"all,omitempty"`
 }
 
 func (p *ProfileContainerTemplate) ApplyContainers(template *core.PodTemplateSpec) error {

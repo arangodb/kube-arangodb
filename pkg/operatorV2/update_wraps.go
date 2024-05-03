@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,8 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
-	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
+	mlApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
+	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
 )
 
 func WithArangoBackupUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[backupApi.ArangoBackupStatus, *backupApi.ArangoBackup], obj *backupApi.ArangoBackup, status backupApi.ArangoBackupStatus, opts meta.UpdateOptions) (*backupApi.ArangoBackup, error) {
@@ -37,12 +38,12 @@ func WithArangoExtensionUpdateStatusInterfaceRetry(ctx context.Context, client U
 	return WithUpdateStatusInterfaceRetry[mlApi.ArangoMLExtensionStatus, *mlApi.ArangoMLExtension](ctx, client, obj, status, opts)
 }
 
-func WithArangoCronJobUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[mlApi.ArangoMLCronJobStatus, *mlApi.ArangoMLCronJob], obj *mlApi.ArangoMLCronJob, status mlApi.ArangoMLCronJobStatus, opts meta.UpdateOptions) (*mlApi.ArangoMLCronJob, error) {
-	return WithUpdateStatusInterfaceRetry[mlApi.ArangoMLCronJobStatus, *mlApi.ArangoMLCronJob](ctx, client, obj, status, opts)
+func WithArangoCronJobUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[mlApiv1alpha1.ArangoMLCronJobStatus, *mlApiv1alpha1.ArangoMLCronJob], obj *mlApiv1alpha1.ArangoMLCronJob, status mlApiv1alpha1.ArangoMLCronJobStatus, opts meta.UpdateOptions) (*mlApiv1alpha1.ArangoMLCronJob, error) {
+	return WithUpdateStatusInterfaceRetry[mlApiv1alpha1.ArangoMLCronJobStatus, *mlApiv1alpha1.ArangoMLCronJob](ctx, client, obj, status, opts)
 }
 
-func WithArangoBatchJobUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[mlApi.ArangoMLBatchJobStatus, *mlApi.ArangoMLBatchJob], obj *mlApi.ArangoMLBatchJob, status mlApi.ArangoMLBatchJobStatus, opts meta.UpdateOptions) (*mlApi.ArangoMLBatchJob, error) {
-	return WithUpdateStatusInterfaceRetry[mlApi.ArangoMLBatchJobStatus, *mlApi.ArangoMLBatchJob](ctx, client, obj, status, opts)
+func WithArangoBatchJobUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[mlApiv1alpha1.ArangoMLBatchJobStatus, *mlApiv1alpha1.ArangoMLBatchJob], obj *mlApiv1alpha1.ArangoMLBatchJob, status mlApiv1alpha1.ArangoMLBatchJobStatus, opts meta.UpdateOptions) (*mlApiv1alpha1.ArangoMLBatchJob, error) {
+	return WithUpdateStatusInterfaceRetry[mlApiv1alpha1.ArangoMLBatchJobStatus, *mlApiv1alpha1.ArangoMLBatchJob](ctx, client, obj, status, opts)
 }
 
 func WithArangoStorageUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[mlApi.ArangoMLStorageStatus, *mlApi.ArangoMLStorage], obj *mlApi.ArangoMLStorage, status mlApi.ArangoMLStorageStatus, opts meta.UpdateOptions) (*mlApi.ArangoMLStorage, error) {

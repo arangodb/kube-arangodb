@@ -24,7 +24,7 @@ import (
 	core "k8s.io/api/core/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/interfaces"
-	schedulerPodResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/pod/resources"
+	schedulerPodResourcesApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/pod/resources"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 )
 
@@ -32,25 +32,25 @@ var _ interfaces.Pod[Pod] = &Pod{}
 
 type Pod struct {
 	// Metadata keeps the metadata settings for Pod
-	*schedulerPodResourcesApi.Metadata `json:",inline"`
+	*schedulerPodResourcesApiv1alpha1.Metadata `json:",inline"`
 
 	// Image keeps the image information
-	*schedulerPodResourcesApi.Image `json:",inline"`
+	*schedulerPodResourcesApiv1alpha1.Image `json:",inline"`
 
 	// Scheduling keeps the scheduling information
-	*schedulerPodResourcesApi.Scheduling `json:",inline"`
+	*schedulerPodResourcesApiv1alpha1.Scheduling `json:",inline"`
 
 	// Namespace keeps the Container layer Kernel namespace configuration
-	*schedulerPodResourcesApi.Namespace `json:",inline"`
+	*schedulerPodResourcesApiv1alpha1.Namespace `json:",inline"`
 
 	// Security keeps the security settings for Pod
-	*schedulerPodResourcesApi.Security `json:",inline"`
+	*schedulerPodResourcesApiv1alpha1.Security `json:",inline"`
 
 	// Volumes keeps the volumes settings for Pod
-	*schedulerPodResourcesApi.Volumes `json:",inline"`
+	*schedulerPodResourcesApiv1alpha1.Volumes `json:",inline"`
 
 	// ServiceAccount keeps the service account settings for Pod
-	*schedulerPodResourcesApi.ServiceAccount `json:",inline"`
+	*schedulerPodResourcesApiv1alpha1.ServiceAccount `json:",inline"`
 }
 
 func (a *Pod) With(other *Pod) *Pod {
@@ -93,7 +93,7 @@ func (a *Pod) Apply(template *core.PodTemplateSpec) error {
 	)
 }
 
-func (a *Pod) GetSecurity() *schedulerPodResourcesApi.Security {
+func (a *Pod) GetSecurity() *schedulerPodResourcesApiv1alpha1.Security {
 	if a == nil {
 		return nil
 	}
@@ -101,7 +101,7 @@ func (a *Pod) GetSecurity() *schedulerPodResourcesApi.Security {
 	return a.Security
 }
 
-func (a *Pod) GetImage() *schedulerPodResourcesApi.Image {
+func (a *Pod) GetImage() *schedulerPodResourcesApiv1alpha1.Image {
 	if a == nil {
 		return nil
 	}
@@ -109,7 +109,7 @@ func (a *Pod) GetImage() *schedulerPodResourcesApi.Image {
 	return a.Image
 }
 
-func (a *Pod) GetScheduling() *schedulerPodResourcesApi.Scheduling {
+func (a *Pod) GetScheduling() *schedulerPodResourcesApiv1alpha1.Scheduling {
 	if a == nil {
 		return nil
 	}
@@ -117,7 +117,7 @@ func (a *Pod) GetScheduling() *schedulerPodResourcesApi.Scheduling {
 	return a.Scheduling
 }
 
-func (a *Pod) GetContainerNamespace() *schedulerPodResourcesApi.Namespace {
+func (a *Pod) GetContainerNamespace() *schedulerPodResourcesApiv1alpha1.Namespace {
 	if a == nil {
 		return nil
 	}
@@ -125,7 +125,7 @@ func (a *Pod) GetContainerNamespace() *schedulerPodResourcesApi.Namespace {
 	return a.Namespace
 }
 
-func (a *Pod) GetVolumes() *schedulerPodResourcesApi.Volumes {
+func (a *Pod) GetVolumes() *schedulerPodResourcesApiv1alpha1.Volumes {
 	if a == nil {
 		return nil
 	}
@@ -133,7 +133,7 @@ func (a *Pod) GetVolumes() *schedulerPodResourcesApi.Volumes {
 	return a.Volumes
 }
 
-func (a *Pod) GetServiceAccount() *schedulerPodResourcesApi.ServiceAccount {
+func (a *Pod) GetServiceAccount() *schedulerPodResourcesApiv1alpha1.ServiceAccount {
 	if a == nil {
 		return nil
 	}
@@ -141,7 +141,7 @@ func (a *Pod) GetServiceAccount() *schedulerPodResourcesApi.ServiceAccount {
 	return a.ServiceAccount
 }
 
-func (a *Pod) GetMetadata() *schedulerPodResourcesApi.Metadata {
+func (a *Pod) GetMetadata() *schedulerPodResourcesApiv1alpha1.Metadata {
 	if a == nil {
 		return nil
 	}

@@ -39,9 +39,11 @@ import (
 	appsApi "github.com/arangodb/kube-arangodb/pkg/apis/apps/v1"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
+	mlApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
+	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
 	replicationApi "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
-	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
+	schedulerApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
+	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	storageApi "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
@@ -200,20 +202,20 @@ func Test_GenerateAPIDocs(t *testing.T) {
 			"v1alpha1": {
 				Types: inputPackageTypes{
 					"ArangoMLExtension.V1Alpha1": {
-						"Spec":   mlApi.ArangoMLExtension{}.Spec,
-						"Status": mlApi.ArangoMLExtension{}.Status,
+						"Spec":   mlApiv1alpha1.ArangoMLExtension{}.Spec,
+						"Status": mlApiv1alpha1.ArangoMLExtension{}.Status,
 					},
 					"ArangoMLStorage.V1Alpha1": {
-						"Spec":   mlApi.ArangoMLStorage{}.Spec,
-						"Status": mlApi.ArangoMLStorage{}.Status,
+						"Spec":   mlApiv1alpha1.ArangoMLStorage{}.Spec,
+						"Status": mlApiv1alpha1.ArangoMLStorage{}.Status,
 					},
 					"ArangoMLCronJob.V1Alpha1": {
-						"Spec":   mlApi.ArangoMLCronJob{}.Spec,
-						"Status": mlApi.ArangoMLCronJob{}.Status,
+						"Spec":   mlApiv1alpha1.ArangoMLCronJob{}.Spec,
+						"Status": mlApiv1alpha1.ArangoMLCronJob{}.Status,
 					},
 					"ArangoMLBatchJob.V1Alpha1": {
-						"Spec":   mlApi.ArangoMLBatchJob{}.Spec,
-						"Status": mlApi.ArangoMLBatchJob{}.Status,
+						"Spec":   mlApiv1alpha1.ArangoMLBatchJob{}.Spec,
+						"Status": mlApiv1alpha1.ArangoMLBatchJob{}.Status,
 					},
 				},
 				Shared: []string{
@@ -223,6 +225,26 @@ func Test_GenerateAPIDocs(t *testing.T) {
 					"scheduler/v1alpha1/container/resources",
 					"scheduler/v1alpha1/pod",
 					"scheduler/v1alpha1/pod/resources",
+				},
+			},
+			"v1beta1": {
+				Types: inputPackageTypes{
+					"ArangoMLExtension.V1Beta1": {
+						"Spec":   mlApi.ArangoMLExtension{}.Spec,
+						"Status": mlApi.ArangoMLExtension{}.Status,
+					},
+					"ArangoMLStorage.V1Beta1": {
+						"Spec":   mlApi.ArangoMLStorage{}.Spec,
+						"Status": mlApi.ArangoMLStorage{}.Status,
+					},
+				},
+				Shared: []string{
+					"shared/v1",
+					"scheduler/v1beta1",
+					"scheduler/v1beta1/container",
+					"scheduler/v1beta1/container/resources",
+					"scheduler/v1beta1/pod",
+					"scheduler/v1beta1/pod/resources",
 				},
 			},
 		},
@@ -239,7 +261,7 @@ func Test_GenerateAPIDocs(t *testing.T) {
 			"v1alpha1": {
 				Types: inputPackageTypes{
 					"ArangoProfile.V1Alpha1": {
-						"Spec": schedulerApi.ArangoProfile{}.Spec,
+						"Spec": schedulerApiv1alpha1.ArangoProfile{}.Spec,
 					},
 				},
 				Shared: []string{
@@ -248,6 +270,20 @@ func Test_GenerateAPIDocs(t *testing.T) {
 					"scheduler/v1alpha1/container/resources",
 					"scheduler/v1alpha1/pod",
 					"scheduler/v1alpha1/pod/resources",
+				},
+			},
+			"v1beta1": {
+				Types: inputPackageTypes{
+					"ArangoProfile.V1Beta1": {
+						"Spec": schedulerApi.ArangoProfile{}.Spec,
+					},
+				},
+				Shared: []string{
+					"shared/v1",
+					"scheduler/v1beta1/container",
+					"scheduler/v1beta1/container/resources",
+					"scheduler/v1beta1/pod",
+					"scheduler/v1beta1/pod/resources",
 				},
 			},
 		},

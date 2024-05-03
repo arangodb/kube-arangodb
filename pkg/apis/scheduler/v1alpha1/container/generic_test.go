@@ -27,7 +27,7 @@ import (
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
 
-	schedulerContainerResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container/resources"
+	schedulerContainerResourcesApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container/resources"
 )
 
 func applyGeneric(t *testing.T, template *core.PodTemplateSpec, ns ...*Generic) func(in func(t *testing.T, pod *core.PodTemplateSpec, spec *Generic)) {
@@ -93,7 +93,7 @@ func Test_Generic(t *testing.T) {
 				},
 			},
 		}, &Generic{
-			Environments: &schedulerContainerResourcesApi.Environments{
+			Environments: &schedulerContainerResourcesApiv1alpha1.Environments{
 				Env: []core.EnvVar{
 					{
 						Name:  "key1",
@@ -101,7 +101,7 @@ func Test_Generic(t *testing.T) {
 					},
 				},
 			},
-			VolumeMounts: &schedulerContainerResourcesApi.VolumeMounts{
+			VolumeMounts: &schedulerContainerResourcesApiv1alpha1.VolumeMounts{
 				VolumeMounts: []core.VolumeMount{
 					{
 						Name:      "TEST",

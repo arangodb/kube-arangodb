@@ -23,7 +23,7 @@ package container
 import (
 	core "k8s.io/api/core/v1"
 
-	schedulerContainerResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container/resources"
+	schedulerContainerResourcesApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container/resources"
 	"github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/interfaces"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -127,31 +127,31 @@ var _ interfaces.Container[Container] = &Container{}
 
 type Container struct {
 	// Core keeps the core settings for Container
-	*schedulerContainerResourcesApi.Core `json:",inline"`
+	*schedulerContainerResourcesApiv1alpha1.Core `json:",inline"`
 
 	// Security keeps the security settings for Container
-	*schedulerContainerResourcesApi.Security `json:",inline"`
+	*schedulerContainerResourcesApiv1alpha1.Security `json:",inline"`
 
 	// Environments keeps the environment variables for Container
-	*schedulerContainerResourcesApi.Environments `json:",inline"`
+	*schedulerContainerResourcesApiv1alpha1.Environments `json:",inline"`
 
 	// Image define default image used for the Container
-	*schedulerContainerResourcesApi.Image `json:",inline"`
+	*schedulerContainerResourcesApiv1alpha1.Image `json:",inline"`
 
 	// Resources define resources assigned to the Container
-	*schedulerContainerResourcesApi.Resources `json:",inline"`
+	*schedulerContainerResourcesApiv1alpha1.Resources `json:",inline"`
 
 	// VolumeMounts define volume mounts assigned to the Container
-	*schedulerContainerResourcesApi.VolumeMounts `json:",inline"`
+	*schedulerContainerResourcesApiv1alpha1.VolumeMounts `json:",inline"`
 
 	// Probes define probes assigned to the Container
-	*schedulerContainerResourcesApi.Probes `json:",inline"`
+	*schedulerContainerResourcesApiv1alpha1.Probes `json:",inline"`
 
 	// Networking define networking assigned to the Container
-	*schedulerContainerResourcesApi.Networking `json:",inline"`
+	*schedulerContainerResourcesApiv1alpha1.Networking `json:",inline"`
 
 	// Lifecycle define lifecycle assigned to the Container
-	*schedulerContainerResourcesApi.Lifecycle `json:",inline"`
+	*schedulerContainerResourcesApiv1alpha1.Lifecycle `json:",inline"`
 }
 
 func (c *Container) Apply(template *core.PodTemplateSpec, container *core.Container) error {
@@ -172,7 +172,7 @@ func (c *Container) Apply(template *core.PodTemplateSpec, container *core.Contai
 	)
 }
 
-func (c *Container) GetCore() *schedulerContainerResourcesApi.Core {
+func (c *Container) GetCore() *schedulerContainerResourcesApiv1alpha1.Core {
 	if c == nil || c.Core == nil {
 		return nil
 	}
@@ -180,7 +180,7 @@ func (c *Container) GetCore() *schedulerContainerResourcesApi.Core {
 	return c.Core
 }
 
-func (c *Container) GetImage() *schedulerContainerResourcesApi.Image {
+func (c *Container) GetImage() *schedulerContainerResourcesApiv1alpha1.Image {
 	if c == nil || c.Image == nil {
 		return nil
 	}
@@ -188,7 +188,7 @@ func (c *Container) GetImage() *schedulerContainerResourcesApi.Image {
 	return c.Image
 }
 
-func (c *Container) GetResources() *schedulerContainerResourcesApi.Resources {
+func (c *Container) GetResources() *schedulerContainerResourcesApiv1alpha1.Resources {
 	if c == nil || c.Resources == nil {
 		return nil
 	}
@@ -196,7 +196,7 @@ func (c *Container) GetResources() *schedulerContainerResourcesApi.Resources {
 	return c.Resources
 }
 
-func (c *Container) GetSecurity() *schedulerContainerResourcesApi.Security {
+func (c *Container) GetSecurity() *schedulerContainerResourcesApiv1alpha1.Security {
 	if c == nil || c.Security == nil {
 		return nil
 	}
@@ -204,7 +204,7 @@ func (c *Container) GetSecurity() *schedulerContainerResourcesApi.Security {
 	return c.Security
 }
 
-func (c *Container) GetEnvironments() *schedulerContainerResourcesApi.Environments {
+func (c *Container) GetEnvironments() *schedulerContainerResourcesApiv1alpha1.Environments {
 	if c == nil || c.Environments == nil {
 		return nil
 	}
@@ -212,7 +212,7 @@ func (c *Container) GetEnvironments() *schedulerContainerResourcesApi.Environmen
 	return c.Environments
 }
 
-func (c *Container) GetVolumeMounts() *schedulerContainerResourcesApi.VolumeMounts {
+func (c *Container) GetVolumeMounts() *schedulerContainerResourcesApiv1alpha1.VolumeMounts {
 	if c == nil || c.VolumeMounts == nil {
 		return nil
 	}
@@ -220,7 +220,7 @@ func (c *Container) GetVolumeMounts() *schedulerContainerResourcesApi.VolumeMoun
 	return c.VolumeMounts
 }
 
-func (c *Container) GetProbes() *schedulerContainerResourcesApi.Probes {
+func (c *Container) GetProbes() *schedulerContainerResourcesApiv1alpha1.Probes {
 	if c == nil || c.Probes == nil {
 		return nil
 	}
@@ -228,7 +228,7 @@ func (c *Container) GetProbes() *schedulerContainerResourcesApi.Probes {
 	return c.Probes
 }
 
-func (c *Container) GetNetworking() *schedulerContainerResourcesApi.Networking {
+func (c *Container) GetNetworking() *schedulerContainerResourcesApiv1alpha1.Networking {
 	if c == nil || c.Networking == nil {
 		return nil
 	}
@@ -236,7 +236,7 @@ func (c *Container) GetNetworking() *schedulerContainerResourcesApi.Networking {
 	return c.Networking
 }
 
-func (c *Container) GetLifecycle() *schedulerContainerResourcesApi.Lifecycle {
+func (c *Container) GetLifecycle() *schedulerContainerResourcesApiv1alpha1.Lifecycle {
 	if c == nil || c.Lifecycle == nil {
 		return nil
 	}

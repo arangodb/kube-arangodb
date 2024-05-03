@@ -26,7 +26,7 @@ import (
 	core "k8s.io/api/core/v1"
 
 	pbSchedulerV1 "github.com/arangodb/kube-arangodb/integrations/scheduler/v1/definition"
-	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
+	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/generators/kubernetes"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
@@ -53,7 +53,7 @@ func (s scheduler) Render(ctx context.Context, in *pbSchedulerV1.Spec, templates
 		return nil, nil, errors.Errorf("Unable to parse nil Spec")
 	}
 
-	profileMap, err := kubernetes.MapObjects[*schedulerApi.ArangoProfileList, *schedulerApi.ArangoProfile](ctx, s.client.Arango().SchedulerV1alpha1().ArangoProfiles(s.namespace), func(result *schedulerApi.ArangoProfileList) []*schedulerApi.ArangoProfile {
+	profileMap, err := kubernetes.MapObjects[*schedulerApi.ArangoProfileList, *schedulerApi.ArangoProfile](ctx, s.client.Arango().SchedulerV1beta1().ArangoProfiles(s.namespace), func(result *schedulerApi.ArangoProfileList) []*schedulerApi.ArangoProfile {
 		q := make([]*schedulerApi.ArangoProfile, len(result.Items))
 
 		for id, e := range result.Items {
