@@ -9,6 +9,7 @@
 - (Feature) (ML) Unify API
 - (Feature) (ML) Add TLS Secrets
 - (Feature) (ML) Allow to change API port
+- (Feature) (ML) Enable TLS
 
 ## [1.2.40](https://github.com/arangodb/kube-arangodb/tree/1.2.40) (2024-04-10)
 - (Feature) Add Core fields to the Scheduler Container Spec
