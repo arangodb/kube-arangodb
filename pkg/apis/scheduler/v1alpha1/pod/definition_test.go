@@ -27,7 +27,7 @@ import (
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
 
-	schedulerPodResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/pod/resources"
+	schedulerPodResourcesApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/pod/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
@@ -90,19 +90,19 @@ func Test_Pod(t *testing.T) {
 	})
 	t.Run("Add scheduling", func(t *testing.T) {
 		applyPod(t, &core.PodTemplateSpec{}, &Pod{
-			Security: &schedulerPodResourcesApi.Security{
+			Security: &schedulerPodResourcesApiv1alpha1.Security{
 				PodSecurityContext: &core.PodSecurityContext{
 					RunAsGroup: util.NewType[int64](50),
 				},
 			},
 		}, &Pod{
-			Scheduling: &schedulerPodResourcesApi.Scheduling{
+			Scheduling: &schedulerPodResourcesApiv1alpha1.Scheduling{
 				NodeSelector: map[string]string{
 					"A": "B",
 				},
 			},
 		}, &Pod{
-			Scheduling: &schedulerPodResourcesApi.Scheduling{
+			Scheduling: &schedulerPodResourcesApiv1alpha1.Scheduling{
 				NodeSelector: map[string]string{
 					"A1": "B1",
 				},

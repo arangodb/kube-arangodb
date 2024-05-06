@@ -35,8 +35,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/json"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	schedulerContainerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container"
-	schedulerContainerResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container/resources"
+	schedulerContainerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container"
+	schedulerContainerResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container/resources"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"

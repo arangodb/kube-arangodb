@@ -25,7 +25,7 @@ import (
 
 	core "k8s.io/api/core/v1"
 
-	schedulerContainerResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container/resources"
+	schedulerContainerResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )

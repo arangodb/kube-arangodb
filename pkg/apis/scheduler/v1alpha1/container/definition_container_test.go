@@ -28,7 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/util/yaml"
 
-	schedulerContainerResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container/resources"
+	schedulerContainerResourcesApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
@@ -110,15 +110,15 @@ func Test_Container(t *testing.T) {
 	})
 	t.Run("With fields", func(t *testing.T) {
 		applyContainer(t, &core.PodTemplateSpec{}, &core.Container{}, &Container{
-			Core: &schedulerContainerResourcesApi.Core{
+			Core: &schedulerContainerResourcesApiv1alpha1.Core{
 				Args: []string{"A"},
 			},
-			Security: &schedulerContainerResourcesApi.Security{
+			Security: &schedulerContainerResourcesApiv1alpha1.Security{
 				SecurityContext: &core.SecurityContext{
 					RunAsUser: util.NewType[int64](50),
 				},
 			},
-			Environments: &schedulerContainerResourcesApi.Environments{
+			Environments: &schedulerContainerResourcesApiv1alpha1.Environments{
 				Env: []core.EnvVar{
 					{
 						Name:  "key1",
@@ -126,17 +126,17 @@ func Test_Container(t *testing.T) {
 					},
 				},
 			},
-			Image: &schedulerContainerResourcesApi.Image{
+			Image: &schedulerContainerResourcesApiv1alpha1.Image{
 				Image: util.NewType("test"),
 			},
-			Resources: &schedulerContainerResourcesApi.Resources{
+			Resources: &schedulerContainerResourcesApiv1alpha1.Resources{
 				Resources: &core.ResourceRequirements{
 					Limits: map[core.ResourceName]resource.Quantity{
 						core.ResourceCPU: resource.MustParse("1"),
 					},
 				},
 			},
-			VolumeMounts: &schedulerContainerResourcesApi.VolumeMounts{
+			VolumeMounts: &schedulerContainerResourcesApiv1alpha1.VolumeMounts{
 				VolumeMounts: []core.VolumeMount{
 					{
 						Name:      "TEST",
@@ -144,7 +144,7 @@ func Test_Container(t *testing.T) {
 					},
 				},
 			},
-			Probes: &schedulerContainerResourcesApi.Probes{
+			Probes: &schedulerContainerResourcesApiv1alpha1.Probes{
 				LivenessProbe: &core.Probe{
 					InitialDelaySeconds: 1,
 				},
@@ -155,7 +155,7 @@ func Test_Container(t *testing.T) {
 					InitialDelaySeconds: 3,
 				},
 			},
-			Lifecycle: &schedulerContainerResourcesApi.Lifecycle{
+			Lifecycle: &schedulerContainerResourcesApiv1alpha1.Lifecycle{
 				Lifecycle: &core.Lifecycle{
 					PostStart: &core.LifecycleHandler{
 						HTTPGet: &core.HTTPGetAction{
@@ -169,7 +169,7 @@ func Test_Container(t *testing.T) {
 					},
 				},
 			},
-			Networking: &schedulerContainerResourcesApi.Networking{
+			Networking: &schedulerContainerResourcesApiv1alpha1.Networking{
 				Ports: []core.ContainerPort{
 					{
 						Name: "TEST",

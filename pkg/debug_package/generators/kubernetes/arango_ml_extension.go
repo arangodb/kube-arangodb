@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import (
 
 	"github.com/rs/zerolog"
 
-	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
+	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/cli"
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -61,7 +61,7 @@ func mlExtension(client kclient.Client, files chan<- shared.File, ext *mlApi.Ara
 }
 
 func listMLExtensions(client kclient.Client) ([]*mlApi.ArangoMLExtension, error) {
-	return ListObjects[*mlApi.ArangoMLExtensionList, *mlApi.ArangoMLExtension](context.Background(), client.Arango().MlV1alpha1().ArangoMLExtensions(cli.GetInput().Namespace), func(result *mlApi.ArangoMLExtensionList) []*mlApi.ArangoMLExtension {
+	return ListObjects[*mlApi.ArangoMLExtensionList, *mlApi.ArangoMLExtension](context.Background(), client.Arango().MlV1beta1().ArangoMLExtensions(cli.GetInput().Namespace), func(result *mlApi.ArangoMLExtensionList) []*mlApi.ArangoMLExtension {
 		q := make([]*mlApi.ArangoMLExtension, len(result.Items))
 
 		for id, e := range result.Items {

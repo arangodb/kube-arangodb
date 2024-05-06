@@ -21,7 +21,7 @@
 package v1alpha1
 
 import (
-	schedulerPodApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/pod"
+	schedulerPodApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/pod"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
@@ -29,12 +29,12 @@ import (
 type ProfileTemplate struct {
 	Priority *int `json:"priority,omitempty"`
 
-	Pod *schedulerPodApi.Pod `json:"pod,omitempty"`
+	Pod *schedulerPodApiv1alpha1.Pod `json:"pod,omitempty"`
 
 	Container *ProfileContainerTemplate `json:"container,omitempty"`
 }
 
-func (p *ProfileTemplate) GetPod() *schedulerPodApi.Pod {
+func (p *ProfileTemplate) GetPod() *schedulerPodApiv1alpha1.Pod {
 	if p == nil || p.Pod == nil {
 		return nil
 	}

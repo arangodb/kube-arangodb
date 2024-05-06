@@ -30,7 +30,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	pbSchedulerV1 "github.com/arangodb/kube-arangodb/integrations/scheduler/v1/definition"
-	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
+	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"

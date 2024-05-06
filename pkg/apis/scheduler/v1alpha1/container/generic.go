@@ -23,7 +23,7 @@ package container
 import (
 	core "k8s.io/api/core/v1"
 
-	schedulerContainerResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container/resources"
+	schedulerContainerResourcesApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container/resources"
 	"github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/interfaces"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 )
@@ -32,10 +32,10 @@ var _ interfaces.Pod[Generic] = &Generic{}
 
 type Generic struct {
 	// Environments keeps the environment variables for Container
-	*schedulerContainerResourcesApi.Environments `json:",inline"`
+	*schedulerContainerResourcesApiv1alpha1.Environments `json:",inline"`
 
 	// VolumeMounts define volume mounts assigned to the Container
-	*schedulerContainerResourcesApi.VolumeMounts `json:",inline"`
+	*schedulerContainerResourcesApiv1alpha1.VolumeMounts `json:",inline"`
 }
 
 func (g *Generic) Apply(template *core.PodTemplateSpec) error {
@@ -55,7 +55,7 @@ func (g *Generic) Apply(template *core.PodTemplateSpec) error {
 	return nil
 }
 
-func (g *Generic) GetEnvironments() *schedulerContainerResourcesApi.Environments {
+func (g *Generic) GetEnvironments() *schedulerContainerResourcesApiv1alpha1.Environments {
 	if g == nil || g.Environments == nil {
 		return nil
 	}
@@ -63,7 +63,7 @@ func (g *Generic) GetEnvironments() *schedulerContainerResourcesApi.Environments
 	return g.Environments
 }
 
-func (g *Generic) GetVolumeMounts() *schedulerContainerResourcesApi.VolumeMounts {
+func (g *Generic) GetVolumeMounts() *schedulerContainerResourcesApiv1alpha1.VolumeMounts {
 	if g == nil || g.VolumeMounts == nil {
 		return nil
 	}

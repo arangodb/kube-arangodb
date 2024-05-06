@@ -37,10 +37,12 @@ import (
 	backupv1 "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	deploymentv1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	deploymentv2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v2alpha1"
-	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
+	mlApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
+	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
 	replicationv1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	replicationv2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v2alpha1"
-	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
+	schedulerApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
+	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	storagev1alpha "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
@@ -183,6 +185,9 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 		"scheduler-profile": {
 			fmt.Sprintf("%s/pkg/apis/scheduler/v1alpha1", root): {
 				"v1alpha1": {
+					schedulerApiv1alpha1.ArangoProfile{}.Spec,
+				},
+				"v1beta1": {
 					schedulerApi.ArangoProfile{}.Spec,
 				},
 			},
@@ -190,6 +195,9 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 		"ml-extension": {
 			fmt.Sprintf("%s/pkg/apis/ml/v1alpha1", root): {
 				"v1alpha1": {
+					mlApiv1alpha1.ArangoMLExtension{}.Spec,
+				},
+				"v1beta1": {
 					mlApi.ArangoMLExtension{}.Spec,
 				},
 			},
@@ -197,6 +205,9 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 		"ml-storage": {
 			fmt.Sprintf("%s/pkg/apis/ml/v1alpha1", root): {
 				"v1alpha1": {
+					mlApiv1alpha1.ArangoMLStorage{}.Spec,
+				},
+				"v1beta1": {
 					mlApi.ArangoMLStorage{}.Spec,
 				},
 			},
@@ -204,14 +215,14 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 		"ml-job-cron": {
 			fmt.Sprintf("%s/pkg/apis/ml/v1alpha1", root): {
 				"v1alpha1": {
-					mlApi.ArangoMLCronJob{}.Spec,
+					mlApiv1alpha1.ArangoMLCronJob{}.Spec,
 				},
 			},
 		},
 		"ml-job-batch": {
 			fmt.Sprintf("%s/pkg/apis/ml/v1alpha1", root): {
 				"v1alpha1": {
-					mlApi.ArangoMLBatchJob{}.Spec,
+					mlApiv1alpha1.ArangoMLBatchJob{}.Spec,
 				},
 			},
 		},

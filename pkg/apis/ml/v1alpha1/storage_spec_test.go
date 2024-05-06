@@ -27,8 +27,8 @@ import (
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 
-	schedulerContainerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container"
-	schedulerContainerResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container/resources"
+	schedulerContainerApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container"
+	schedulerContainerResourcesApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container/resources"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
@@ -68,8 +68,8 @@ func Test_ArangoMLStorageSpec(t *testing.T) {
 				core.ResourceMemory: resource.MustParse("128Mi"),
 			},
 		}
-		s.Mode.Sidecar.Container = &schedulerContainerApi.Container{}
-		s.Mode.Sidecar.Resources = &schedulerContainerResourcesApi.Resources{Resources: &assignedRequirements}
+		s.Mode.Sidecar.Container = &schedulerContainerApiv1alpha1.Container{}
+		s.Mode.Sidecar.Resources = &schedulerContainerResourcesApiv1alpha1.Resources{Resources: &assignedRequirements}
 
 		expectedRequirements := core.ResourceRequirements{
 			Requests: assignedRequirements.Requests,
@@ -79,7 +79,7 @@ func Test_ArangoMLStorageSpec(t *testing.T) {
 			},
 		}
 
-		actualRequirements := s.Mode.Sidecar.GetResources().With(&schedulerContainerResourcesApi.Resources{Resources: &core.ResourceRequirements{
+		actualRequirements := s.Mode.Sidecar.GetResources().With(&schedulerContainerResourcesApiv1alpha1.Resources{Resources: &core.ResourceRequirements{
 			Limits: core.ResourceList{
 				core.ResourceCPU:    resource.MustParse("200m"),
 				core.ResourceMemory: resource.MustParse("256Mi"),

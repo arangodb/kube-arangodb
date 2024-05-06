@@ -23,19 +23,19 @@ package profiles
 import (
 	core "k8s.io/api/core/v1"
 
-	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
-	schedulerContainerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container"
-	schedulerContainerResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container/resources"
+	schedulerApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
+	schedulerContainerApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container"
+	schedulerContainerResourcesApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container/resources"
 )
 
-func ContainerKubernetesEnvironments() *schedulerApi.ProfileTemplate {
+func ContainerKubernetesEnvironments() *schedulerApiv1alpha1.ProfileTemplate {
 	return containerKubernetesEnvironments.DeepCopy()
 }
 
-var containerKubernetesEnvironments = schedulerApi.ProfileTemplate{
-	Container: &schedulerApi.ProfileContainerTemplate{
-		All: &schedulerContainerApi.Generic{
-			Environments: &schedulerContainerResourcesApi.Environments{
+var containerKubernetesEnvironments = schedulerApiv1alpha1.ProfileTemplate{
+	Container: &schedulerApiv1alpha1.ProfileContainerTemplate{
+		All: &schedulerContainerApiv1alpha1.Generic{
+			Environments: &schedulerContainerResourcesApiv1alpha1.Environments{
 				Env: []core.EnvVar{
 					{
 						Name: "KUBE_NAMESPACE",

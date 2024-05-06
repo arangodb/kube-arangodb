@@ -21,9 +21,9 @@
 package v1alpha1
 
 import (
-	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
-	schedulerContainerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container"
-	schedulerPodApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/pod"
+	schedulerApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
+	schedulerContainerApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container"
+	schedulerPodApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/pod"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
@@ -127,13 +127,13 @@ func (a *ArangoMLJobTemplates) Validate() error {
 
 type ArangoMLExtensionTemplate struct {
 	// Pod keeps the information about Pod configuration
-	*schedulerPodApi.Pod `json:",inline"`
+	*schedulerPodApiv1alpha1.Pod `json:",inline"`
 
 	// Container Keeps the information about Container configuration
-	*schedulerContainerApi.Container `json:",inline"`
+	*schedulerContainerApiv1alpha1.Container `json:",inline"`
 }
 
-func (a *ArangoMLExtensionTemplate) GetPodTemplate() *schedulerPodApi.Pod {
+func (a *ArangoMLExtensionTemplate) GetPodTemplate() *schedulerPodApiv1alpha1.Pod {
 	if a == nil || a.Pod == nil {
 		return nil
 	}
@@ -141,7 +141,7 @@ func (a *ArangoMLExtensionTemplate) GetPodTemplate() *schedulerPodApi.Pod {
 	return a.Pod
 }
 
-func (a *ArangoMLExtensionTemplate) GetContainer() *schedulerContainerApi.Container {
+func (a *ArangoMLExtensionTemplate) GetContainer() *schedulerContainerApiv1alpha1.Container {
 	if a == nil || a.Container == nil {
 		return nil
 	}
@@ -149,7 +149,7 @@ func (a *ArangoMLExtensionTemplate) GetContainer() *schedulerContainerApi.Contai
 	return a.Container
 }
 
-func (a *ArangoMLExtensionTemplate) AsTemplate(name string) *schedulerApi.ProfileTemplate {
+func (a *ArangoMLExtensionTemplate) AsTemplate(name string) *schedulerApiv1alpha1.ProfileTemplate {
 	if a == nil {
 		return nil
 	}
@@ -158,15 +158,15 @@ func (a *ArangoMLExtensionTemplate) AsTemplate(name string) *schedulerApi.Profil
 		return nil
 	}
 
-	t := &schedulerApi.ProfileTemplate{}
+	t := &schedulerApiv1alpha1.ProfileTemplate{}
 
 	if p := a.Pod; p != nil {
 		t.Pod = p.DeepCopy()
 	}
 
 	if p := a.Container; p != nil {
-		t.Container = &schedulerApi.ProfileContainerTemplate{
-			Containers: schedulerContainerApi.Containers{
+		t.Container = &schedulerApiv1alpha1.ProfileContainerTemplate{
+			Containers: schedulerContainerApiv1alpha1.Containers{
 				name: util.TypeOrDefault(p.DeepCopy()),
 			},
 		}

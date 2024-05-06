@@ -28,7 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/util/yaml"
 
-	schedulerContainerResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container/resources"
+	schedulerContainerResourcesApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
@@ -90,10 +90,10 @@ func Test_Containers(t *testing.T) {
 	t.Run("Add container", func(t *testing.T) {
 		applyContainers(t, &core.PodTemplateSpec{}, Containers{
 			"test": {
-				Image: &schedulerContainerResourcesApi.Image{
+				Image: &schedulerContainerResourcesApiv1alpha1.Image{
 					Image: util.NewType("test"),
 				},
-				Resources: &schedulerContainerResourcesApi.Resources{
+				Resources: &schedulerContainerResourcesApiv1alpha1.Resources{
 					Resources: &core.ResourceRequirements{
 						Limits: map[core.ResourceName]resource.Quantity{
 							core.ResourceCPU: resource.MustParse("1"),
@@ -122,10 +122,10 @@ func Test_Containers(t *testing.T) {
 			},
 		}, Containers{
 			"test": {
-				Image: &schedulerContainerResourcesApi.Image{
+				Image: &schedulerContainerResourcesApiv1alpha1.Image{
 					Image: util.NewType("test"),
 				},
-				Resources: &schedulerContainerResourcesApi.Resources{
+				Resources: &schedulerContainerResourcesApiv1alpha1.Resources{
 					Resources: &core.ResourceRequirements{
 						Limits: map[core.ResourceName]resource.Quantity{
 							core.ResourceCPU: resource.MustParse("1"),

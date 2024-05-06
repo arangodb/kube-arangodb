@@ -26,7 +26,7 @@ import (
 
 	"github.com/rs/zerolog"
 
-	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
+	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/cli"
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -61,7 +61,7 @@ func schedulerProfile(client kclient.Client, files chan<- shared.File, ext *sche
 }
 
 func listSchedulerProfiles(client kclient.Client) ([]*schedulerApi.ArangoProfile, error) {
-	return ListObjects[*schedulerApi.ArangoProfileList, *schedulerApi.ArangoProfile](context.Background(), client.Arango().SchedulerV1alpha1().ArangoProfiles(cli.GetInput().Namespace), func(result *schedulerApi.ArangoProfileList) []*schedulerApi.ArangoProfile {
+	return ListObjects[*schedulerApi.ArangoProfileList, *schedulerApi.ArangoProfile](context.Background(), client.Arango().SchedulerV1beta1().ArangoProfiles(cli.GetInput().Namespace), func(result *schedulerApi.ArangoProfileList) []*schedulerApi.ArangoProfile {
 		q := make([]*schedulerApi.ArangoProfile, len(result.Items))
 
 		for id, e := range result.Items {

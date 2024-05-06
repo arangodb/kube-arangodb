@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import (
 
 	"github.com/rs/zerolog"
 
-	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
+	mlApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/cli"
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -52,7 +52,7 @@ func mlCronJobs(logger zerolog.Logger, files chan<- shared.File, client kclient.
 	return nil
 }
 
-func mlCronJob(client kclient.Client, files chan<- shared.File, ext *mlApi.ArangoMLCronJob) error {
+func mlCronJob(client kclient.Client, files chan<- shared.File, ext *mlApiv1alpha1.ArangoMLCronJob) error {
 	files <- shared.NewYAMLFile(fmt.Sprintf("kubernetes/arango/ml/cronjobs/%s.yaml", ext.GetName()), func() ([]interface{}, error) {
 		return []interface{}{ext}, nil
 	})
@@ -60,9 +60,9 @@ func mlCronJob(client kclient.Client, files chan<- shared.File, ext *mlApi.Arang
 	return nil
 }
 
-func listMLCronJobs(client kclient.Client) ([]*mlApi.ArangoMLCronJob, error) {
-	return ListObjects[*mlApi.ArangoMLCronJobList, *mlApi.ArangoMLCronJob](context.Background(), client.Arango().MlV1alpha1().ArangoMLCronJobs(cli.GetInput().Namespace), func(result *mlApi.ArangoMLCronJobList) []*mlApi.ArangoMLCronJob {
-		q := make([]*mlApi.ArangoMLCronJob, len(result.Items))
+func listMLCronJobs(client kclient.Client) ([]*mlApiv1alpha1.ArangoMLCronJob, error) {
+	return ListObjects[*mlApiv1alpha1.ArangoMLCronJobList, *mlApiv1alpha1.ArangoMLCronJob](context.Background(), client.Arango().MlV1alpha1().ArangoMLCronJobs(cli.GetInput().Namespace), func(result *mlApiv1alpha1.ArangoMLCronJobList) []*mlApiv1alpha1.ArangoMLCronJob {
+		q := make([]*mlApiv1alpha1.ArangoMLCronJob, len(result.Items))
 
 		for id, e := range result.Items {
 			q[id] = e.DeepCopy()

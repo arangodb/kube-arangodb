@@ -21,7 +21,7 @@
 package v1alpha1
 
 import (
-	schedulerContainerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container"
+	schedulerContainerApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
@@ -36,10 +36,10 @@ type ArangoMLStorageSpecModeSidecar struct {
 	ControllerListenPort *uint16 `json:"controllerListenPort,omitempty"`
 
 	// Container Keeps the information about Container configuration
-	*schedulerContainerApi.Container `json:",inline"`
+	*schedulerContainerApiv1alpha1.Container `json:",inline"`
 }
 
-func (s *ArangoMLStorageSpecModeSidecar) GetContainer() *schedulerContainerApi.Container {
+func (s *ArangoMLStorageSpecModeSidecar) GetContainer() *schedulerContainerApiv1alpha1.Container {
 	if s == nil || s.Container == nil {
 		return nil
 	}

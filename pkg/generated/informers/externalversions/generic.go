@@ -30,9 +30,11 @@ import (
 	deploymentv1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	v2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v2alpha1"
 	v1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
+	v1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
 	replicationv1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	replicationv2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v2alpha1"
 	schedulerv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
+	schedulerv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	v1alpha "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
@@ -104,6 +106,12 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	case v1alpha1.SchemeGroupVersion.WithResource("arangomlstorages"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Ml().V1alpha1().ArangoMLStorages().Informer()}, nil
 
+		// Group=ml.arangodb.com, Version=v1beta1
+	case v1beta1.SchemeGroupVersion.WithResource("arangomlextensions"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Ml().V1beta1().ArangoMLExtensions().Informer()}, nil
+	case v1beta1.SchemeGroupVersion.WithResource("arangomlstorages"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Ml().V1beta1().ArangoMLStorages().Informer()}, nil
+
 		// Group=replication.database.arangodb.com, Version=v1
 	case replicationv1.SchemeGroupVersion.WithResource("arangodeploymentreplications"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Replication().V1().ArangoDeploymentReplications().Informer()}, nil
@@ -115,6 +123,10 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		// Group=scheduler.arangodb.com, Version=v1alpha1
 	case schedulerv1alpha1.SchemeGroupVersion.WithResource("arangoprofiles"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Scheduler().V1alpha1().ArangoProfiles().Informer()}, nil
+
+		// Group=scheduler.arangodb.com, Version=v1beta1
+	case schedulerv1beta1.SchemeGroupVersion.WithResource("arangoprofiles"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Scheduler().V1beta1().ArangoProfiles().Informer()}, nil
 
 		// Group=storage.arangodb.com, Version=v1alpha
 	case v1alpha.SchemeGroupVersion.WithResource("arangolocalstorages"):

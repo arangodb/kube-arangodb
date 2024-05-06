@@ -41,26 +41,40 @@ linters-settings:
         alias: policy
       - pkg: github.com/arangodb/kube-arangodb/pkg/apis/shared/v1
         alias: sharedApi
-      - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1
+      - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1
         alias: schedulerApi
-      - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/profiles
-        alias: schedulerProfiles
-      - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container
+      - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/profiles
+        alias: schedulerProfilesv1beta1
+      - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container
         alias: schedulerContainerApi
-      - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container/resources
+      - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container/resources
         alias: schedulerContainerResourcesApi
-      - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/pod
+      - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/pod
         alias: schedulerPodApi
-      - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/pod/resources
+      - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/pod/resources
         alias: schedulerPodResourcesApi
+      - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1
+        alias: schedulerApiv1alpha1
+      - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/profiles
+        alias: schedulerProfilesv1alpha1
+      - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container
+        alias: schedulerContainerApiv1alpha1
+      - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container/resources
+        alias: schedulerContainerResourcesApiv1alpha1
+      - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/pod
+        alias: schedulerPodApiv1alpha1
+      - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/pod/resources
+        alias: schedulerPodResourcesApiv1alpha1
       - pkg: github.com/arangodb/kube-arangodb/pkg/apis/shared
         alias: shared
       - pkg: github.com/arangodb/kube-arangodb/pkg/handlers/enterprise/ml/shared
         alias: mlShared
       - pkg: github.com/arangodb/kube-arangodb/pkg/handlers/enterprise/ml/shared/test
         alias: mlSharedTests
-      - pkg: github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1
+      - pkg: github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1
         alias: mlApi
+      - pkg: github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1
+        alias: mlApiv1alpha1
       - pkg: github.com/arangodb/kube-arangodb/integrations/scheduler/v1/definition
         alias: pbSchedulerV1
       - pkg: github.com/arangodb/kube-arangodb/integrations/scheduler/v1
