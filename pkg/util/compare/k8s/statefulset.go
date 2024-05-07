@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,23 +21,49 @@
 package k8s
 
 import (
+	"fmt"
+
 	apps "k8s.io/api/apps/v1"
 
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helpers"
 )
 
-func ChecksumStatefulSet(s *apps.StatefulSet) (string, error) {
-	return checksumStatefulSetSpec(&s.Spec)
+func AppsStatefulSet(in *apps.StatefulSet) *apps.StatefulSet {
+	return FilterP(in, func(in *apps.StatefulSet) *apps.StatefulSet {
+		return &apps.StatefulSet{
+			ObjectMeta: ObjectMetaFilter(in.ObjectMeta),
+			Spec: Filter(in.Spec, func(in apps.StatefulSetSpec) apps.StatefulSetSpec {
+				return apps.StatefulSetSpec{
+					Template:        in.Template,
+					Replicas:        in.Replicas,
+					MinReadySeconds: in.MinReadySeconds,
+					Selector:        in.Selector,
+					ServiceName:     in.ServiceName,
+				}
+			}),
+		}
+	})
 }
 
-func checksumStatefulSetSpec(s *apps.StatefulSetSpec) (string, error) {
-	parts := map[string]interface{}{
-		"replicas":        s.Replicas,
-		"serviceName":     s.ServiceName,
-		"minReadySeconds": s.MinReadySeconds,
-		"selector":        s.Selector,
-		"template":        s.Template,
-		// add here more fields when needed
-	}
-	return util.SHA256FromJSON(parts)
+func AppsStatefulSetChecksum(in *apps.StatefulSet) (string, error) {
+	return util.SHA256FromJSON(AppsStatefulSet(in))
+}
+
+func AppsStatefulSetRecreate(logger logging.Logger) helpers.Decision[*apps.StatefulSet] {
+	return helpers.NewImmutableFields[*apps.StatefulSet](func(a, b *apps.StatefulSet, changes map[string]string) helpers.Action {
+		if len(changes) > 0 {
+			s := logger
+
+			for k, v := range changes {
+				s = s.Str(fmt.Sprintf("field%s", k), v)
+			}
+
+			s.Info("Replace of StatefulSet %s required", a.GetName())
+			return helpers.ActionReplace
+		}
+
+		return helpers.ActionOK
+	}).Evaluate()
 }

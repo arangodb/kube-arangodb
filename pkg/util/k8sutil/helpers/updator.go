@@ -22,12 +22,14 @@ package helpers
 
 import (
 	"context"
+	"fmt"
 
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
+	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
@@ -54,6 +56,8 @@ type Object interface {
 	meta.Object
 }
 
+type ClientFactory[T Object] func(namespace string) Client[T]
+
 type Client[T Object] interface {
 	Get(ctx context.Context, name string, options meta.GetOptions) (T, error)
 	Update(ctx context.Context, object T, options meta.UpdateOptions) (T, error)
@@ -63,24 +67,48 @@ type Client[T Object] interface {
 
 type Generate[T Object] func(ctx context.Context, ref *sharedApi.Object) (T, bool, string, error)
 
-func OperatorUpdate[T Object](ctx context.Context, logger logging.Logger, client Client[T], ref **sharedApi.Object, generator Generate[T], decisions ...Decision[T]) (bool, error) {
-	changed, err := Update[T](ctx, logger, client, ref, generator, decisions...)
+type Config[T Object] struct {
+	Events  event.RecorderInstance
+	Logger  logging.Logger
+	Factory ClientFactory[T]
+	Kind    string
+}
+
+func NewUpdator[T Object](config Config[T]) Updator[T] {
+	return updator[T]{
+		config: config,
+	}
+}
+
+type Updator[T Object] interface {
+	OperatorUpdate(ctx context.Context, namespace string, parent meta.Object, ref **sharedApi.Object, generator Generate[T], decisions ...Decision[T]) (T, bool, error)
+	Update(ctx context.Context, namespace string, parent meta.Object, ref **sharedApi.Object, generator Generate[T], decisions ...Decision[T]) (T, bool, error)
+}
+
+type updator[T Object] struct {
+	config Config[T]
+}
+
+func (u updator[T]) OperatorUpdate(ctx context.Context, namespace string, parent meta.Object, ref **sharedApi.Object, generator Generate[T], decisions ...Decision[T]) (T, bool, error) {
+	obj, changed, err := u.Update(ctx, namespace, parent, ref, generator, decisions...)
 	if err != nil {
-		return false, err
+		return util.Default[T](), false, err
 	}
 
 	if changed {
-		return true, operator.Reconcile("Change in resources")
+		return obj, true, operator.Reconcile("Change in resources")
 	}
 
-	return false, nil
+	return obj, false, nil
 }
 
-func Update[T Object](ctx context.Context, logger logging.Logger, client Client[T], ref **sharedApi.Object, generator Generate[T], decisions ...Decision[T]) (bool, error) {
+func (u updator[T]) Update(ctx context.Context, namespace string, parent meta.Object, ref **sharedApi.Object, generator Generate[T], decisions ...Decision[T]) (T, bool, error) {
 	decision := Decision[T](EmptyDecision[T]).With(decisions...)
 
+	client := u.config.Factory(namespace)
+
 	if ref == nil {
-		return false, errors.Errorf("Reference is nil")
+		return util.Default[T](), false, errors.Errorf("Reference is nil")
 	}
 
 	currentRef := *ref
@@ -92,43 +120,52 @@ func Update[T Object](ctx context.Context, logger logging.Logger, client Client[
 		object, err := util.WithKubernetesContextTimeoutP2A2(ctx, client.Get, currentRef.GetName(), meta.GetOptions{})
 		if err != nil {
 			if !kerrors.Is(err, kerrors.NotFound) {
-				return false, err
+				return util.Default[T](), false, err
 			}
 
-			*ref = nil
-			logger.
+			u.config.Logger.
 				Str("name", currentRef.GetName()).
 				Str("checksum", currentRef.GetChecksum()).
 				Str("uid", string(currentRef.GetUID())).
 				Debug("Object has been removed")
 
-			return true, nil
+			if events := u.config.Events; events != nil {
+				events.Normal(parent, fmt.Sprintf("%sDeleted", u.config.Kind), "Deleted kubernetes %s %s", u.config.Kind, currentRef.GetName())
+			}
+
+			*ref = nil
+
+			return util.Default[T](), true, nil
 		}
 
 		if object.GetDeletionTimestamp() != nil {
 			// Object is currently deleting
-			logger.
+			u.config.Logger.
 				Str("name", currentRef.GetName()).
 				Str("checksum", currentRef.GetChecksum()).
 				Str("uid", string(currentRef.GetUID())).
 				Debug("Object is currently deleting")
-			return true, nil
+			return object, true, nil
 		}
 
 		if object.GetUID() != currentRef.GetUID() {
-			logger.
+			u.config.Logger.
 				Str("name", currentRef.GetName()).
 				Str("checksum", currentRef.GetChecksum()).
 				Str("uid", string(currentRef.GetUID())).
 				Warn("Recreation Required as UID changed")
 
+			if events := u.config.Events; events != nil {
+				events.Warning(parent, fmt.Sprintf("%sForceDelete", u.config.Kind), "Deletion of kubernetes %s %s requested as UID changed", u.config.Kind, currentRef.GetName())
+			}
+
 			if err := util.WithKubernetesContextTimeoutP1A2(ctx, client.Delete, currentRef.GetName(), meta.DeleteOptions{}); err != nil {
 				if !kerrors.Is(err, kerrors.NotFound) {
-					return false, err
+					return util.Default[T](), false, err
 				}
 			}
 
-			return true, nil
+			return util.Default[T](), true, nil
 		}
 
 		discoveredObject = object
@@ -137,53 +174,58 @@ func Update[T Object](ctx context.Context, logger logging.Logger, client Client[
 
 	object, skip, checksum, err := generator(ctx, currentRef.DeepCopy())
 	if err != nil {
-		return false, err
+		return util.Default[T](), false, err
 	}
 
 	if skip {
 		// Skip update as it is not required
-		return false, nil
+		return util.Default[T](), false, nil
 	}
 
 	if object == util.Default[T]() {
 		// Object is supposed to be removed
 		if currentRef == nil {
 			// Nothing to do
-			return false, nil
+			return util.Default[T](), false, nil
 		}
 
 		// Remove object
 		if err := util.WithKubernetesContextTimeoutP1A2(ctx, client.Delete, currentRef.GetName(), meta.DeleteOptions{}); err != nil {
 			if !kerrors.Is(err, kerrors.NotFound) {
-				return false, err
+				return util.Default[T](), false, err
 			}
 		}
 
-		logger.
+		u.config.Logger.
 			Str("name", currentRef.GetName()).
 			Str("checksum", currentRef.GetChecksum()).
 			Str("uid", string(currentRef.GetUID())).
 			Info("Object deletion has been requested")
 
-		return true, nil
+		return util.Default[T](), true, nil
 	}
 
 	if !discoveredObjectExists {
 		// Let's create Object
 		newObject, err := util.WithKubernetesContextTimeoutP2A2(ctx, client.Create, object, meta.CreateOptions{})
 		if err != nil {
-			return false, err
+			return util.Default[T](), false, err
 		}
 
 		currentRef = util.NewType(sharedApi.NewObjectWithChecksum(newObject, checksum))
 		*ref = currentRef
-		logger.
+
+		u.config.Logger.
 			Str("name", currentRef.GetName()).
 			Str("checksum", currentRef.GetChecksum()).
 			Str("uid", string(currentRef.GetUID())).
 			Info("Object has been created")
 
-		return true, nil
+		if events := u.config.Events; events != nil {
+			events.Normal(parent, fmt.Sprintf("%sCreated", u.config.Kind), "Created kubernetes %s %s", u.config.Kind, currentRef.GetName())
+		}
+
+		return newObject, true, nil
 	}
 
 	// Object exists, lets check if update is required
@@ -195,16 +237,16 @@ func Update[T Object](ctx context.Context, logger logging.Logger, client Client[
 		Object:   object,
 	})
 	if err != nil {
-		return false, err
+		return util.Default[T](), false, err
 	}
 
 	switch action {
 	case ActionOK:
 		// Nothing to do
-		return false, nil
+		return discoveredObject, false, nil
 	case ActionReplace:
 		// Object needs to be removed
-		logger.
+		u.config.Logger.
 			Str("name", currentRef.GetName()).
 			Str("checksum", currentRef.GetChecksum()).
 			Str("uid", string(currentRef.GetUID())).
@@ -212,13 +254,17 @@ func Update[T Object](ctx context.Context, logger logging.Logger, client Client[
 
 		if err := util.WithKubernetesContextTimeoutP1A2(ctx, client.Delete, currentRef.GetName(), meta.DeleteOptions{}); err != nil {
 			if !kerrors.Is(err, kerrors.NotFound) {
-				return false, err
+				return util.Default[T](), false, err
 			}
 		}
 
-		return true, nil
+		if events := u.config.Events; events != nil {
+			events.Normal(parent, fmt.Sprintf("%sReplaced", u.config.Kind), "Replaced kubernetes %s %s", u.config.Kind, currentRef.GetName())
+		}
+
+		return util.Default[T](), true, nil
 	case ActionUpdate:
-		logger.
+		u.config.Logger.
 			Str("name", currentRef.GetName()).
 			Str("checksum", currentRef.GetChecksum()).
 			Str("uid", string(currentRef.GetUID())).
@@ -227,18 +273,22 @@ func Update[T Object](ctx context.Context, logger logging.Logger, client Client[
 		newObject, err := util.WithKubernetesContextTimeoutP2A2(ctx, client.Update, object, meta.UpdateOptions{})
 		if err != nil {
 			if !kerrors.Is(err, kerrors.NotFound) {
-				return false, err
+				return util.Default[T](), false, err
 			}
 
 			// Reconcile if object was not found
-			return true, nil
+			return util.Default[T](), true, nil
+		}
+
+		if events := u.config.Events; events != nil {
+			events.Normal(parent, fmt.Sprintf("%sUpdated", u.config.Kind), "Updated kubernetes %s %s", u.config.Kind, currentRef.GetName())
 		}
 
 		*ref = util.NewType(sharedApi.NewObjectWithChecksum(newObject, checksum))
 
-		return true, nil
+		return newObject, true, nil
 
 	default:
-		return false, errors.Errorf("Unknown action returned")
+		return util.Default[T](), false, errors.Errorf("Unknown action returned")
 	}
 }
