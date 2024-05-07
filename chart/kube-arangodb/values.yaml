@@ -33,6 +33,7 @@ operator:
     apps: false
     k8sToK8sClusterSync: false
     ml: false
+    analytics: false
   tolerations: []
 rbac:
   enabled: true

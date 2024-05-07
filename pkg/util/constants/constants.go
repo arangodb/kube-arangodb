@@ -72,6 +72,7 @@ const (
 
 	BackupLabelRole      = "backup/role"
 	MLLabelRole          = "ml/role"
+	AnalyticsLabelRole   = "analytics/role"
 	AppsLabelRole        = "apps/role"
 	ClusterSyncLabelRole = "clustersync/role"
 	LabelRole            = "role"

@@ -114,6 +114,9 @@ spec:
 {{ if .Values.operator.features.ml }}
                     - --operator.ml
 {{- end }}
+{{ if .Values.operator.features.analytics }}
+                    - --operator.analytics
+{{- end }}
 {{ if .Values.operator.features.k8sToK8sClusterSync }}
                     - --operator.k2k-cluster-sync
 {{- end }}

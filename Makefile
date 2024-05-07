@@ -431,15 +431,23 @@ update-generated:
 			"client lister informer deepcopy" \
 			"github.com/arangodb/kube-arangodb/pkg/generated" \
 			"github.com/arangodb/kube-arangodb/pkg/apis" \
-			"deployment:v1 replication:v1 storage:v1alpha backup:v1 deployment:v2alpha1 replication:v2alpha1 apps:v1 ml:v1alpha1 ml:v1beta1 scheduler:v1alpha1 scheduler:v1beta1" \
+			"deployment:v1 deployment:v2alpha1 \
+			replication:v1 replication:v2alpha1 \
+			storage:v1alpha \
+			backup:v1 \
+			apps:v1 \
+			ml:v1alpha1 ml:v1beta1 \
+			scheduler:v1alpha1 scheduler:v1beta1 \
+			analytics:v1alpha1" \
 			--go-header-file "./tools/codegen/boilerplate.go.txt" \
 			$(VERIFYARGS)
 	GOPATH=$(GOBUILDDIR) $(VENDORDIR)/k8s.io/code-generator/generate-groups.sh  \
 			"deepcopy" \
 			"github.com/arangodb/kube-arangodb/pkg/generated" \
 			"github.com/arangodb/kube-arangodb/pkg/apis" \
-			"shared:v1 scheduler:v1alpha1/container scheduler:v1alpha1/container/resources scheduler:v1alpha1/pod scheduler:v1alpha1/pod/resources\
-			shared:v1 scheduler:v1beta1/container scheduler:v1beta1/container/resources scheduler:v1beta1/pod scheduler:v1beta1/pod/resources" \
+			"shared:v1 \
+			scheduler:v1alpha1/container scheduler:v1alpha1/container/resources scheduler:v1alpha1/pod scheduler:v1alpha1/pod/resources \
+			scheduler:v1beta1/container scheduler:v1beta1/container/resources scheduler:v1beta1/pod scheduler:v1beta1/pod/resources" \
 			--go-header-file "./tools/codegen/boilerplate.go.txt" \
 			$(VERIFYARGS)
 
@@ -858,7 +866,8 @@ CRDS:=apps-job \
       database-clustersynchronization database-deployment database-member database-task \
       replication-deploymentreplication \
       ml-storage ml-extension ml-job-batch ml-job-cron \
-      scheduler-profile
+      scheduler-profile \
+      analytics-graphanalyticsengine
 
 .PHONY: sync-crds
 sync-crds:

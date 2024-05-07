@@ -25,6 +25,7 @@ import (
 
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	analyticsApi "github.com/arangodb/kube-arangodb/pkg/apis/analytics/v1alpha1"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	mlApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
 	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
@@ -44,6 +45,10 @@ func WithArangoCronJobUpdateStatusInterfaceRetry(ctx context.Context, client Upd
 
 func WithArangoBatchJobUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[mlApiv1alpha1.ArangoMLBatchJobStatus, *mlApiv1alpha1.ArangoMLBatchJob], obj *mlApiv1alpha1.ArangoMLBatchJob, status mlApiv1alpha1.ArangoMLBatchJobStatus, opts meta.UpdateOptions) (*mlApiv1alpha1.ArangoMLBatchJob, error) {
 	return WithUpdateStatusInterfaceRetry[mlApiv1alpha1.ArangoMLBatchJobStatus, *mlApiv1alpha1.ArangoMLBatchJob](ctx, client, obj, status, opts)
+}
+
+func WithAnalyticsGAEUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[analyticsApi.GraphAnalyticsEngineStatus, *analyticsApi.GraphAnalyticsEngine], obj *analyticsApi.GraphAnalyticsEngine, status analyticsApi.GraphAnalyticsEngineStatus, opts meta.UpdateOptions) (*analyticsApi.GraphAnalyticsEngine, error) {
+	return WithUpdateStatusInterfaceRetry[analyticsApi.GraphAnalyticsEngineStatus, *analyticsApi.GraphAnalyticsEngine](ctx, client, obj, status, opts)
 }
 
 func WithArangoStorageUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[mlApi.ArangoMLStorageStatus, *mlApi.ArangoMLStorage], obj *mlApi.ArangoMLStorage, status mlApi.ArangoMLStorageStatus, opts meta.UpdateOptions) (*mlApi.ArangoMLStorage, error) {

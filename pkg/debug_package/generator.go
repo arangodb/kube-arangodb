@@ -43,6 +43,7 @@ var rootFactories = []shared.Factory{
 	kubernetes.Deployments(),
 	kubernetes.AgencyDump(),
 	kubernetes.ML(),
+	kubernetes.Analytics(),
 	kubernetes.Backup(),
 	kubernetes.Scheduler(),
 }

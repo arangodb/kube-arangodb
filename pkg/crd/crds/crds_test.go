@@ -123,6 +123,7 @@ func Test_CRDGetters(t *testing.T) {
 		ReplicationDeploymentReplicationWithOptions,
 		StorageLocalStorageWithOptions,
 		SchedulerProfileWithOptions,
+		AnalyticsGAEWithOptions,
 	}
 	require.Equal(t, len(AllDefinitions()), len(getters))
 

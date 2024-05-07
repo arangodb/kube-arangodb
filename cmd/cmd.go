@@ -118,6 +118,7 @@ var (
 		enableBackup                bool // Run backup operator
 		enableApps                  bool // Run apps operator
 		enableML                    bool // Run ml operator
+		enableAnalytics             bool // Run analytics operator
 		versionOnly                 bool // Run only version endpoint, explicitly disabled with other
 		enableK2KClusterSync        bool // Run k2kClusterSync operator
 
@@ -181,6 +182,7 @@ var (
 	backupProbe                probe.ReadyProbe
 	appsProbe                  probe.ReadyProbe
 	mlProbe                    probe.ReadyProbe
+	analyticsProbe             probe.ReadyProbe
 	k2KClusterSyncProbe        probe.ReadyProbe
 )
 
@@ -206,6 +208,7 @@ func init() {
 	f.BoolVar(&operatorOptions.enableBackup, "operator.backup", false, "Enable to run the ArangoBackup operator")
 	f.BoolVar(&operatorOptions.enableApps, "operator.apps", false, "Enable to run the ArangoApps operator")
 	f.BoolVar(&operatorOptions.enableML, "operator.ml", false, "Enable to run the ArangoML operator")
+	f.BoolVar(&operatorOptions.enableAnalytics, "operator.analytics", false, "Enable to run the Analytics operator")
 	f.BoolVar(&operatorOptions.enableK2KClusterSync, "operator.k2k-cluster-sync", false, "Enable to run the ListSimple operator")
 	f.MarkDeprecated("operator.k2k-cluster-sync", "Enabled within deployment operator")
 	f.BoolVar(&operatorOptions.versionOnly, "operator.version", false, "Enable only version endpoint in Operator")
@@ -333,19 +336,19 @@ func executeMain(cmd *cobra.Command, args []string) {
 
 	// Check operating mode
 	if !operatorOptions.enableDeployment && !operatorOptions.enableDeploymentReplication && !operatorOptions.enableStorage &&
-		!operatorOptions.enableBackup && !operatorOptions.enableApps && !operatorOptions.enableK2KClusterSync && !operatorOptions.enableML {
+		!operatorOptions.enableBackup && !operatorOptions.enableApps && !operatorOptions.enableK2KClusterSync && !operatorOptions.enableML && !operatorOptions.enableAnalytics {
 		if !operatorOptions.versionOnly {
 			if version.GetVersionV1().IsEnterprise() {
-				logger.Fatal("Turn on --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync, --operator.ml or any combination of these")
+				logger.Fatal("Turn on --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync, --operator.ml, --operator.analytics or any combination of these")
 			} else {
 				logger.Fatal("Turn on --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync or any combination of these")
 			}
 		}
 	} else if operatorOptions.versionOnly {
-		logger.Fatal("Options --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync, --operator.ml cannot be enabled together with --operator.version")
+		logger.Fatal("Options --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync, --operator.ml, --operator.analytics cannot be enabled together with --operator.version")
 	} else if !version.GetVersionV1().IsEnterprise() {
-		if operatorOptions.enableML {
-			logger.Fatal("Options --operator.ml can be enabled only on the Enterprise Operator")
+		if operatorOptions.enableML || operatorOptions.enableAnalytics {
+			logger.Fatal("Options --operator.ml, --operator.analytics can be enabled only on the Enterprise Operator")
 		}
 	}
 
@@ -476,6 +479,10 @@ func executeMain(cmd *cobra.Command, args []string) {
 				Enabled: cfg.EnableML,
 				Probe:   &mlProbe,
 			},
+			Analytics: server.OperatorDependency{
+				Enabled: cfg.EnableAnalytics,
+				Probe:   &analyticsProbe,
+			},
 			ClusterSync: server.OperatorDependency{
 				Enabled: cfg.EnableK2KClusterSync,
 				Probe:   &k2KClusterSyncProbe,
@@ -559,6 +566,7 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		EnableBackup:                operatorOptions.enableBackup,
 		EnableApps:                  operatorOptions.enableApps,
 		EnableML:                    operatorOptions.enableML,
+		EnableAnalytics:             operatorOptions.enableAnalytics,
 		EnableK2KClusterSync:        operatorOptions.enableK2KClusterSync,
 		AllowChaos:                  chaosOptions.allowed,
 		ScalingIntegrationEnabled:   operatorOptions.scalingIntegrationEnabled,
@@ -578,6 +586,7 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		BackupProbe:                &backupProbe,
 		AppsProbe:                  &appsProbe,
 		MlProbe:                    &mlProbe,
+		AnalyticsProbe:             &analyticsProbe,
 		K2KClusterSyncProbe:        &k2KClusterSyncProbe,
 	}
 
