@@ -44,7 +44,7 @@ linters-settings:
       - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1
         alias: schedulerApi
       - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/profiles
-        alias: schedulerProfilesv1beta1
+        alias: schedulerProfiles
       - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container
         alias: schedulerContainerApi
       - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container/resources

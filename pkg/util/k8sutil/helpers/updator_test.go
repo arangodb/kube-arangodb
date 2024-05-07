@@ -44,15 +44,26 @@ func init() {
 	logging.Global().SetRoot(zerolog.New(os.Stdout).With().Timestamp().Logger())
 }
 
-func runUpdate[T Object](t *testing.T, iterations int, client Client[T], ref **sharedApi.Object, generator Generate[T], decisions ...Decision[T]) {
+func runUpdate[T Object](t *testing.T, iterations int, factory ClientFactory[T], ref **sharedApi.Object, generator Generate[T], decisions ...Decision[T]) {
 	logger := logging.Global().Get("test")
 
 	i := 0
 
+	var obj T
+
+	o := tests.GVK(t, obj)
+
+	update := NewUpdator[T](Config[T]{
+		Events:  nil,
+		Logger:  logger,
+		Factory: factory,
+		Kind:    o.Kind,
+	})
+
 	for i = 1; i < 1024; i++ {
 		var changed bool
 		t.Run(fmt.Sprintf("Iteration %d", i), func(t *testing.T) {
-			ok, err := Update[T](context.Background(), logger, client, ref, generator, decisions...)
+			_, ok, err := update.Update(context.Background(), tests.FakeNamespace, nil, ref, generator, decisions...)
 			require.NoError(t, err)
 			changed = ok
 		})
@@ -81,7 +92,7 @@ func get[T Object](t *testing.T, client Client[T], in T) (T, bool) {
 func Test_Updator(t *testing.T) {
 	logging.Global().RegisterLogger("test", logging.Trace)
 
-	client := fake.NewSimpleClientset().CoreV1().Secrets(tests.FakeNamespace)
+	factory := fake.NewSimpleClientset()
 
 	var secret = core.Secret{
 		ObjectMeta: meta.ObjectMeta{
@@ -98,22 +109,27 @@ func Test_Updator(t *testing.T) {
 		return secret.DeepCopy(), false, checksum, nil
 	}
 
+	client := factory.CoreV1().Secrets(tests.FakeNamespace)
+	clientF := func(namespace string) Client[*core.Secret] {
+		return factory.CoreV1().Secrets(namespace)
+	}
+
 	t.Run("Ensure default is handled", func(t *testing.T) {
-		runUpdate[*core.Secret](t, 2, client, &ref, retSecret)
+		runUpdate[*core.Secret](t, 2, clientF, &ref, retSecret)
 
 		_, ok := get[*core.Secret](t, client, &secret)
 		require.True(t, ok)
 	})
 
 	t.Run("Ensure rerun is handled", func(t *testing.T) {
-		runUpdate[*core.Secret](t, 1, client, &ref, retSecret)
+		runUpdate[*core.Secret](t, 1, clientF, &ref, retSecret)
 
 		_, ok := get[*core.Secret](t, client, &secret)
 		require.True(t, ok)
 	})
 
 	t.Run("Ensure delete is not handled when skip is requested", func(t *testing.T) {
-		runUpdate[*core.Secret](t, 1, client, &ref, func(ctx context.Context, _ *sharedApi.Object) (*core.Secret, bool, string, error) {
+		runUpdate[*core.Secret](t, 1, clientF, &ref, func(ctx context.Context, _ *sharedApi.Object) (*core.Secret, bool, string, error) {
 			return nil, true, "", nil
 		})
 
@@ -122,7 +138,7 @@ func Test_Updator(t *testing.T) {
 	})
 
 	t.Run("Ensure delete is handled", func(t *testing.T) {
-		runUpdate[*core.Secret](t, 3, client, &ref, func(ctx context.Context, _ *sharedApi.Object) (*core.Secret, bool, string, error) {
+		runUpdate[*core.Secret](t, 3, clientF, &ref, func(ctx context.Context, _ *sharedApi.Object) (*core.Secret, bool, string, error) {
 			return nil, false, "", nil
 		})
 
@@ -131,7 +147,7 @@ func Test_Updator(t *testing.T) {
 	})
 
 	t.Run("Recreate", func(t *testing.T) {
-		runUpdate[*core.Secret](t, 2, client, &ref, retSecret)
+		runUpdate[*core.Secret](t, 2, clientF, &ref, retSecret)
 
 		_, ok := get[*core.Secret](t, client, &secret)
 		require.True(t, ok)
@@ -140,7 +156,7 @@ func Test_Updator(t *testing.T) {
 	t.Run("Change checksum without handler", func(t *testing.T) {
 		checksum = util.SHA256FromString("NEW")
 
-		runUpdate[*core.Secret](t, 1, client, &ref, retSecret)
+		runUpdate[*core.Secret](t, 1, clientF, &ref, retSecret)
 
 		require.NotEqual(t, checksum, ref.GetChecksum())
 
@@ -149,7 +165,7 @@ func Test_Updator(t *testing.T) {
 	})
 
 	t.Run("Change checksum with recreate handler", func(t *testing.T) {
-		runUpdate[*core.Secret](t, 4, client, &ref, retSecret, ReplaceChecksum[*core.Secret])
+		runUpdate[*core.Secret](t, 4, clientF, &ref, retSecret, ReplaceChecksum[*core.Secret])
 
 		require.Equal(t, checksum, ref.GetChecksum())
 
@@ -160,7 +176,7 @@ func Test_Updator(t *testing.T) {
 	t.Run("UUID Changed", func(t *testing.T) {
 		ref.UID = util.NewType(uuid.NewUUID())
 
-		runUpdate[*core.Secret](t, 4, client, &ref, retSecret)
+		runUpdate[*core.Secret](t, 4, clientF, &ref, retSecret)
 
 		s, ok := get[*core.Secret](t, client, &secret)
 		require.True(t, ok)
@@ -174,7 +190,7 @@ func Test_Updator(t *testing.T) {
 			},
 		})
 
-		runUpdate[*core.Secret](t, 1, client, &ref, retSecret)
+		runUpdate[*core.Secret](t, 1, clientF, &ref, retSecret)
 
 		s, ok := get[*core.Secret](t, client, &secret)
 		require.True(t, ok)
@@ -182,7 +198,7 @@ func Test_Updator(t *testing.T) {
 	})
 
 	t.Run("Owner Added With Handler", func(t *testing.T) {
-		runUpdate[*core.Secret](t, 2, client, &ref, retSecret, UpdateOwnerReference[*core.Secret])
+		runUpdate[*core.Secret](t, 2, clientF, &ref, retSecret, UpdateOwnerReference[*core.Secret])
 
 		s, ok := get[*core.Secret](t, client, &secret)
 		require.True(t, ok)
