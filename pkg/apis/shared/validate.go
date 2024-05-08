@@ -35,6 +35,10 @@ var (
 	resourceNameRE = regexp.MustCompile(`^([0-9\-\.a-z])+$`)
 )
 
+const (
+	ServiceTypeNone core.ServiceType = "None"
+)
+
 // ValidateResourceName validates a kubernetes resource name.
 // If not valid, an error is returned.
 // See https://kubernetes.io/docs/concepts/overview/working-with-objects/names/
@@ -146,7 +150,8 @@ func ValidateServiceType(st core.ServiceType) error {
 	case core.ServiceTypeClusterIP,
 		core.ServiceTypeNodePort,
 		core.ServiceTypeLoadBalancer,
-		core.ServiceTypeExternalName:
+		core.ServiceTypeExternalName,
+		ServiceTypeNone:
 		return nil
 	}
 	return errors.Errorf("Unsupported service type %s", st)

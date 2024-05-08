@@ -24,6 +24,7 @@ import (
 	schedulerContainerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container"
 	schedulerPodApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/pod"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -42,7 +43,7 @@ type ArangoMLExtensionSpecDeployment struct {
 	Service *ArangoMLExtensionSpecDeploymentService `json:"service,omitempty"`
 
 	// TLS defined TLS Settings for extension
-	TLS *ArangoMLExtensionSpecDeploymentTLS `json:"tls,omitempty"`
+	TLS *sharedApi.TLS `json:"tls,omitempty"`
 
 	// Pod defines base template for pods
 	*schedulerPodApi.Pod
@@ -102,7 +103,7 @@ func (s *ArangoMLExtensionSpecDeployment) GetService() *ArangoMLExtensionSpecDep
 	return s.Service
 }
 
-func (s *ArangoMLExtensionSpecDeployment) GetTLS() *ArangoMLExtensionSpecDeploymentTLS {
+func (s *ArangoMLExtensionSpecDeployment) GetTLS() *sharedApi.TLS {
 	if s == nil {
 		return nil
 	}

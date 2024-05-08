@@ -856,6 +856,7 @@ v1alpha1:
                       - NodePort
                       - LoadBalancer
                       - ExternalName
+                      - None
                     type: string
                 type: object
               serviceAccountName:
@@ -13944,10 +13945,12 @@ v1beta1:
               tls:
                 properties:
                   altNames:
+                    description: AltNames define TLS AltNames used when TLS on the ArangoDB is enabled
                     items:
                       type: string
                     type: array
                   enabled:
+                    description: Enabled define if TLS Should be enabled. If is not set then default is taken from ArangoDeployment settings
                     type: boolean
                 type: object
               tolerations:

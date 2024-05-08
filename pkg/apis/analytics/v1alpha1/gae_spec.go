@@ -28,6 +28,16 @@ import (
 type GraphAnalyticsEngineSpec struct {
 	// DeploymentName define deployment name used in the object. Immutable
 	DeploymentName *string `json:"deploymentName,omitempty"`
+
+	// Deployment specifies how the GAE will be deployed into cluster
+	Deployment *GraphAnalyticsEngineSpecDeployment `json:"deployment,omitempty"`
+}
+
+func (a *GraphAnalyticsEngineSpec) GetDeployment() *GraphAnalyticsEngineSpecDeployment {
+	if a == nil || a.Deployment == nil {
+		return nil
+	}
+	return a.Deployment
 }
 
 func (g *GraphAnalyticsEngineSpec) Validate() error {

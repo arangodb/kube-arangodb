@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,18 +20,13 @@
 
 package v1alpha1
 
-import (
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-)
+import sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 
-type GraphAnalyticsEngineStatus struct {
-	// Conditions specific to the entire extension
-	// +doc/type: api.Conditions
-	Conditions api.ConditionList `json:"conditions,omitempty"`
-
-	// ArangoDB keeps the information about local arangodb reference
-	ArangoDB *GraphAnalyticsEngineStatusArangoDBRef `json:"arangoDB,omitempty"`
-
-	// Reconciliation keeps the information about reconciliation process. For internal use.
-	Reconciliation *GraphAnalyticsEngineStatusReconciliation `json:"reconciliation,omitempty"`
+type GraphAnalyticsEngineStatusArangoDBRef struct {
+	// Secret keeps the information about ArangoDB deployment
+	Secret *sharedApi.Object `json:"secret,omitempty"`
+	// TLS keeps information about TLS Secret rendered from ArangoDB deployment
+	TLS *sharedApi.Object `json:"tls,omitempty"`
+	// Deployment keeps the ArangoDeployment reference
+	Deployment *sharedApi.Object `json:"deployment,omitempty"`
 }

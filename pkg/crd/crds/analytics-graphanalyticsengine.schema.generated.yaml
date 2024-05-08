@@ -3,6 +3,39 @@ v1alpha1:
     properties:
       spec:
         properties:
+          deployment:
+            description: Deployment specifies how the GAE will be deployed into cluster
+            properties:
+              port:
+                description: Port defines on which port the container will be listening for connections
+                format: int32
+                type: integer
+              service:
+                description: Service defines how components will be exposed
+                properties:
+                  type:
+                    description: Type determines how the Service is exposed
+                    enum:
+                      - ClusterIP
+                      - NodePort
+                      - LoadBalancer
+                      - ExternalName
+                      - None
+                    type: string
+                type: object
+              tls:
+                description: TLS defined TLS Settings
+                properties:
+                  altNames:
+                    description: AltNames define TLS AltNames used when TLS on the ArangoDB is enabled
+                    items:
+                      type: string
+                    type: array
+                  enabled:
+                    description: Enabled define if TLS Should be enabled. If is not set then default is taken from ArangoDeployment settings
+                    type: boolean
+                type: object
+            type: object
           deploymentName:
             description: DeploymentName define deployment name used in the object. Immutable
             type: string
