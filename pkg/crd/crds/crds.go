@@ -87,6 +87,9 @@ func AllDefinitions() []Definition {
 
 		// Scheduler
 		SchedulerProfileDefinitionWithOptions(),
+
+		// Analytics
+		AnalyticsGAEDefinitionWithOptions(),
 	}
 }
 

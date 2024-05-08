@@ -25,11 +25,12 @@ package externalversions
 import (
 	"fmt"
 
+	v1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/analytics/v1alpha1"
 	v1 "github.com/arangodb/kube-arangodb/pkg/apis/apps/v1"
 	backupv1 "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	deploymentv1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	v2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v2alpha1"
-	v1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
+	mlv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
 	v1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
 	replicationv1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	replicationv2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v2alpha1"
@@ -66,7 +67,11 @@ func (f *genericInformer) Lister() cache.GenericLister {
 // TODO extend this to unknown resources with a client pool
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
-	// Group=apps.arangodb.com, Version=v1
+	// Group=analytics.arangodb.com, Version=v1alpha1
+	case v1alpha1.SchemeGroupVersion.WithResource("graphanalyticsengines"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Analytics().V1alpha1().GraphAnalyticsEngines().Informer()}, nil
+
+		// Group=apps.arangodb.com, Version=v1
 	case v1.SchemeGroupVersion.WithResource("arangojobs"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Apps().V1().ArangoJobs().Informer()}, nil
 
@@ -97,13 +102,13 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Database().V2alpha1().ArangoTasks().Informer()}, nil
 
 		// Group=ml.arangodb.com, Version=v1alpha1
-	case v1alpha1.SchemeGroupVersion.WithResource("arangomlbatchjobs"):
+	case mlv1alpha1.SchemeGroupVersion.WithResource("arangomlbatchjobs"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Ml().V1alpha1().ArangoMLBatchJobs().Informer()}, nil
-	case v1alpha1.SchemeGroupVersion.WithResource("arangomlcronjobs"):
+	case mlv1alpha1.SchemeGroupVersion.WithResource("arangomlcronjobs"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Ml().V1alpha1().ArangoMLCronJobs().Informer()}, nil
-	case v1alpha1.SchemeGroupVersion.WithResource("arangomlextensions"):
+	case mlv1alpha1.SchemeGroupVersion.WithResource("arangomlextensions"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Ml().V1alpha1().ArangoMLExtensions().Informer()}, nil
-	case v1alpha1.SchemeGroupVersion.WithResource("arangomlstorages"):
+	case mlv1alpha1.SchemeGroupVersion.WithResource("arangomlstorages"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Ml().V1alpha1().ArangoMLStorages().Informer()}, nil
 
 		// Group=ml.arangodb.com, Version=v1beta1

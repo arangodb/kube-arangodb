@@ -36,6 +36,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/client-go/kubernetes"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/analytics"
+	analyticsApi "github.com/arangodb/kube-arangodb/pkg/apis/analytics/v1alpha1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
@@ -235,6 +237,12 @@ func CreateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			vl := *v
 			_, err := arango.SchedulerV1beta1().ArangoProfiles(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
 			require.NoError(t, err)
+		case **analyticsApi.GraphAnalyticsEngine:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.AnalyticsV1alpha1().GraphAnalyticsEngines(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
+			require.NoError(t, err)
 		default:
 			require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))
 		}
@@ -383,6 +391,12 @@ func UpdateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			vl := *v
 			_, err := arango.SchedulerV1beta1().ArangoProfiles(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
 			require.NoError(t, err)
+		case **analyticsApi.GraphAnalyticsEngine:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.AnalyticsV1alpha1().GraphAnalyticsEngines(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
 		default:
 			require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))
 		}
@@ -506,6 +520,11 @@ func DeleteObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 
 			vl := *v
 			require.NoError(t, arango.SchedulerV1beta1().ArangoProfiles(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **analyticsApi.GraphAnalyticsEngine:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, arango.AnalyticsV1alpha1().GraphAnalyticsEngines(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
 		default:
 			require.Fail(t, fmt.Sprintf("Unable to delete object: %s", reflect.TypeOf(v).String()))
 		}
@@ -848,6 +867,21 @@ func RefreshObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientS
 			} else {
 				*v = vn
 			}
+		case **analyticsApi.GraphAnalyticsEngine:
+			require.NotNil(t, v)
+
+			vl := *v
+
+			vn, err := arango.AnalyticsV1alpha1().GraphAnalyticsEngines(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
+			if err != nil {
+				if kerrors.IsNotFound(err) {
+					*v = nil
+				} else {
+					require.NoError(t, err)
+				}
+			} else {
+				*v = vn
+			}
 		default:
 			require.Fail(t, fmt.Sprintf("Unable to get object: %s", reflect.TypeOf(v).String()))
 		}
@@ -1010,6 +1044,14 @@ func SetMetaBasedOnType(t *testing.T, object meta.Object) {
 		v.SetSelfLink(fmt.Sprintf("/api/%s/%s/%s/%s",
 			schedulerApi.SchemeGroupVersion.String(),
 			scheduler.ArangoProfileResourcePlural,
+			object.GetNamespace(),
+			object.GetName()))
+	case *analyticsApi.GraphAnalyticsEngine:
+		v.Kind = analytics.GraphAnalyticsEngineResourceKind
+		v.APIVersion = analyticsApi.SchemeGroupVersion.String()
+		v.SetSelfLink(fmt.Sprintf("/api/%s/%s/%s/%s",
+			analyticsApi.SchemeGroupVersion.String(),
+			analytics.GraphAnalyticsEngineResourcePlural,
 			object.GetNamespace(),
 			object.GetName()))
 	default:
@@ -1181,6 +1223,12 @@ func GVK(t *testing.T, object meta.Object) schema.GroupVersionKind {
 			Group:   scheduler.ArangoSchedulerGroupName,
 			Version: schedulerApi.ArangoSchedulerVersion,
 			Kind:    scheduler.ArangoProfileResourceKind,
+		}
+	case *analyticsApi.GraphAnalyticsEngine:
+		return schema.GroupVersionKind{
+			Group:   analytics.ArangoAnalyticsGroupName,
+			Version: analyticsApi.ArangoAnalyticsVersion,
+			Kind:    analytics.GraphAnalyticsEngineResourceKind,
 		}
 	default:
 		require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))

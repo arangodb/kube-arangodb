@@ -36,6 +36,7 @@ import (
 	"github.com/coreos/go-semver/semver"
 	"github.com/stretchr/testify/require"
 
+	analyticsApi "github.com/arangodb/kube-arangodb/pkg/apis/analytics/v1alpha1"
 	appsApi "github.com/arangodb/kube-arangodb/pkg/apis/apps/v1"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -245,6 +246,19 @@ func Test_GenerateAPIDocs(t *testing.T) {
 					"scheduler/v1beta1/container/resources",
 					"scheduler/v1beta1/pod",
 					"scheduler/v1beta1/pod/resources",
+				},
+			},
+		},
+		"analytics": map[string]inputPackage{
+			"v1alpha1": {
+				Types: inputPackageTypes{
+					"GraphAnalyticsEngine.V1Alpha1": {
+						"Spec":   analyticsApi.GraphAnalyticsEngine{}.Spec,
+						"Status": analyticsApi.GraphAnalyticsEngine{}.Status,
+					},
+				},
+				Shared: []string{
+					"shared/v1",
 				},
 			},
 		},

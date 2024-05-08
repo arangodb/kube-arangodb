@@ -69,6 +69,7 @@ type Dependencies struct {
 	Backup                OperatorDependency
 	Apps                  OperatorDependency
 	ML                    OperatorDependency
+	Analytics             OperatorDependency
 	ClusterSync           OperatorDependency
 	Operators             Operators
 	Secrets               typedCore.SecretInterface
@@ -188,6 +189,10 @@ func NewServer(cli typedCore.CoreV1Interface, cfg Config, deps Dependencies) (*S
 	if deps.ML.Enabled {
 		r.GET("/ready/ml", gin.WrapF(deps.ML.Probe.ReadyHandler))
 		readyProbes = append(readyProbes, deps.ML.Probe)
+	}
+	if deps.Analytics.Enabled {
+		r.GET("/ready/analytics", gin.WrapF(deps.Analytics.Probe.ReadyHandler))
+		readyProbes = append(readyProbes, deps.Analytics.Probe)
 	}
 	r.GET("/ready", gin.WrapF(ready(readyProbes...)))
 	r.GET("/metrics", gin.WrapF(metrics.Handler()))

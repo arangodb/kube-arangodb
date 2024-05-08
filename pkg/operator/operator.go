@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -68,9 +68,10 @@ var logger = logging.Global().RegisterAndGetLogger("operator", logging.Info)
 type operatorV2type string
 
 const (
-	backupOperator operatorV2type = "backup"
-	mlOperator     operatorV2type = "ml"
-	appsOperator   operatorV2type = "apps"
+	backupOperator    operatorV2type = "backup"
+	mlOperator        operatorV2type = "ml"
+	analyticsOperator operatorV2type = "analytics"
+	appsOperator      operatorV2type = "apps"
 )
 
 type Event struct {
@@ -100,6 +101,7 @@ type Config struct {
 	EnableDeploymentReplication bool
 	EnableStorage               bool
 	EnableML                    bool
+	EnableAnalytics             bool
 	EnableBackup                bool
 	EnableApps                  bool
 	EnableK2KClusterSync        bool
@@ -121,6 +123,7 @@ type Dependencies struct {
 	StorageProbe               *probe.ReadyProbe
 	BackupProbe                *probe.ReadyProbe
 	MlProbe                    *probe.ReadyProbe
+	AnalyticsProbe             *probe.ReadyProbe
 	AppsProbe                  *probe.ReadyProbe
 	K2KClusterSyncProbe        *probe.ReadyProbe
 }
@@ -180,6 +183,13 @@ func (o *Operator) Run() {
 			go o.runLeaderElection("arango-ml-operator", constants.MLLabelRole, o.onStartML, o.Dependencies.MlProbe)
 		} else {
 			go o.runWithoutLeaderElection("arango-ml-operator", constants.MLLabelRole, o.onStartML, o.Dependencies.MlProbe)
+		}
+	}
+	if o.Config.EnableAnalytics {
+		if !o.Config.SingleMode {
+			go o.runLeaderElection("arango-analytics-operator", constants.AnalyticsLabelRole, o.onStartAnalytics, o.Dependencies.AnalyticsProbe)
+		} else {
+			go o.runWithoutLeaderElection("arango-analytics-operator", constants.AnalyticsLabelRole, o.onStartAnalytics, o.Dependencies.AnalyticsProbe)
 		}
 	}
 	if o.Config.EnableK2KClusterSync {
@@ -277,6 +287,9 @@ func (o *Operator) onStartOperatorV2(operatorType operatorV2type, stop <-chan st
 	case mlOperator:
 		o.onStartOperatorV2ML(operator, eventRecorder, o.Client.Arango(), o.Client.Kubernetes(), arangoInformer, kubeInformer)
 		o.Dependencies.MlProbe.SetReady()
+	case analyticsOperator:
+		o.onStartOperatorV2Analytics(operator, eventRecorder, o.Client.Arango(), o.Client.Kubernetes(), arangoInformer, kubeInformer)
+		o.Dependencies.AnalyticsProbe.SetReady()
 	}
 
 	if err := operator.RegisterStarter(arangoInformer); err != nil {
@@ -291,6 +304,7 @@ func (o *Operator) onStartOperatorV2(operatorType operatorV2type, stop <-chan st
 
 	operator.Start(8, stop)
 	o.Dependencies.MlProbe.SetReady()
+	o.Dependencies.AnalyticsProbe.SetReady()
 
 	<-stop
 }
