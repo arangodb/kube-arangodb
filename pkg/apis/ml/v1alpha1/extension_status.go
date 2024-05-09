@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,5 +40,5 @@ type ArangoMLExtensionStatus struct {
 	ArangoDB *ArangoMLExtensionStatusArangoDBRef `json:"arangoDB,omitempty"`
 
 	// Reconciliation keeps the information about reconciliation process. For internal use.
-	Reconciliation *ArangoMLExtensionStatusReconciliation `json:"reconciliation"`
+	Reconciliation *ArangoMLExtensionStatusReconciliation `json:"reconciliation,omitempty"`
 }

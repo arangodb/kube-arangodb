@@ -18,9 +18,9 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1beta1
+package v1
 
-type ArangoMLExtensionSpecDeploymentTLS struct {
+type TLS struct {
 	// Enabled define if TLS Should be enabled. If is not set then default is taken from ArangoDeployment settings
 	Enabled *bool `json:"enabled,omitempty"`
 
@@ -28,7 +28,7 @@ type ArangoMLExtensionSpecDeploymentTLS struct {
 	AltNames []string `json:"altNames,omitempty"`
 }
 
-func (a *ArangoMLExtensionSpecDeploymentTLS) IsEnabled() bool {
+func (a *TLS) IsEnabled() bool {
 	if a == nil || a.Enabled == nil {
 		return true
 	}
@@ -36,7 +36,7 @@ func (a *ArangoMLExtensionSpecDeploymentTLS) IsEnabled() bool {
 	return *a.Enabled
 }
 
-func (a *ArangoMLExtensionSpecDeploymentTLS) GetAltNames() []string {
+func (a *TLS) GetAltNames() []string {
 	if a == nil || a.AltNames == nil {
 		return nil
 	}

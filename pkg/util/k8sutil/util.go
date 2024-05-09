@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -52,10 +52,14 @@ const (
 	LabelValueArangoActive = "true"
 	// LabelKeyArangoMLStatefulSet is the key of the label used to define k8s StatefulSet for ML Extension
 	LabelKeyArangoMLStatefulSet = "ml.arangodb.com/statefulset"
+	// LabelKeyAnalyticsGAEStatefulSet is the key of the label used to define k8s StatefulSet for Analytics GAE
+	LabelKeyAnalyticsGAEStatefulSet = "analytics.arangodb.com/statefulset"
 	// AppName is the value for the "app" label
 	AppName = "arangodb"
 	// AppArangoML is the value for the "app" label
 	AppArangoML = "arangoml"
+	// AppAnalytics is the value for the "app" label
+	AppAnalytics = "analytics"
 )
 
 // AddOwnerRefToObject adds given owner reference to given object

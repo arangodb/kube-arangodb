@@ -40,5 +40,5 @@ type ArangoMLExtensionStatus struct {
 	ArangoDB *ArangoMLExtensionStatusArangoDBRef `json:"arangoDB,omitempty"`
 
 	// Reconciliation keeps the information about reconciliation process. For internal use.
-	Reconciliation *ArangoMLExtensionStatusReconciliation `json:"reconciliation"`
+	Reconciliation *ArangoMLExtensionStatusReconciliation `json:"reconciliation,omitempty"`
 }

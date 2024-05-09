@@ -32,6 +32,7 @@ type ArangoMLExtensionSpecDeploymentService struct {
 	// +doc/enum: NodePort|service will be exposed on one port of every node, in addition to 'ClusterIP' type
 	// +doc/enum: LoadBalancer|service will be exposed via an external load balancer (if the cloud provider supports it), in addition to 'NodePort' type
 	// +doc/enum: ExternalName|service consists of only a reference to an external name that kubedns or equivalent will return as a CNAME record, with no exposing or proxying of any pods involved
+	// +doc/enum: None|service is not created
 	// +doc/default: ClusterIP
 	// +doc/link: Kubernetes Documentation|https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
 	Type *core.ServiceType `json:"type,omitempty"`

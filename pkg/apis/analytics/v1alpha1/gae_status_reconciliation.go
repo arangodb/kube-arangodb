@@ -20,26 +20,23 @@
 
 package v1alpha1
 
-type ArangoMLExtensionSpecDeploymentTLS struct {
-	// Enabled define if TLS Should be enabled. If is not set then default is taken from ArangoDeployment settings
-	Enabled *bool `json:"enabled,omitempty"`
+import sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 
-	// AltNames define TLS AltNames used when TLS on the ArangoDB is enabled
-	AltNames []string `json:"altNames,omitempty"`
+type GraphAnalyticsEngineStatusReconciliation struct {
+	StatefulSet *sharedApi.Object `json:"statefulSet,omitempty"`
+	Service     *sharedApi.Object `json:"service,omitempty"`
 }
 
-func (a *ArangoMLExtensionSpecDeploymentTLS) IsEnabled() bool {
-	if a == nil || a.Enabled == nil {
-		return true
-	}
-
-	return *a.Enabled
-}
-
-func (a *ArangoMLExtensionSpecDeploymentTLS) GetAltNames() []string {
-	if a == nil || a.AltNames == nil {
+func (g *GraphAnalyticsEngineStatusReconciliation) GetStatefulSet() *sharedApi.Object {
+	if g == nil {
 		return nil
 	}
+	return g.StatefulSet
+}
 
-	return a.AltNames
+func (g *GraphAnalyticsEngineStatusReconciliation) GetService() *sharedApi.Object {
+	if g == nil {
+		return nil
+	}
+	return g.Service
 }
