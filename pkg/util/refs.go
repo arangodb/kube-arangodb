@@ -20,7 +20,9 @@
 
 package util
 
-import "reflect"
+import (
+	"reflect"
+)
 
 // NewType returns a reference to a simple type with given value.
 func NewType[T interface{}](input T) *T {

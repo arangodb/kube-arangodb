@@ -21,6 +21,7 @@
 package v1beta1
 
 import (
+	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 )
@@ -41,6 +42,9 @@ type ArangoMLExtensionSpec struct {
 
 	// JobsTemplates defines templates for jobs
 	JobsTemplates *ArangoMLJobsTemplates `json:"jobsTemplates,omitempty"`
+
+	// IntegrationSidecar define the integration sidecar spec
+	IntegrationSidecar *schedulerApi.IntegrationSidecar `json:"integrationSidecar,omitempty"`
 }
 
 func (a *ArangoMLExtensionSpec) GetMetadataService() *ArangoMLExtensionSpecMetadataService {
@@ -81,6 +85,13 @@ func (a *ArangoMLExtensionSpec) GetJobsTemplates() *ArangoMLJobsTemplates {
 	return a.JobsTemplates
 }
 
+func (a *ArangoMLExtensionSpec) GetIntegrationSidecar() *schedulerApi.IntegrationSidecar {
+	if a == nil || a.IntegrationSidecar == nil {
+		return nil
+	}
+	return a.IntegrationSidecar
+}
+
 func (a *ArangoMLExtensionSpec) Validate() error {
 	if a == nil {
 		a = &ArangoMLExtensionSpec{}
@@ -92,5 +103,6 @@ func (a *ArangoMLExtensionSpec) Validate() error {
 		shared.PrefixResourceErrors("init", a.GetInit().Validate()),
 		shared.PrefixResourceErrors("deployment", a.GetDeployment().Validate()),
 		shared.PrefixResourceErrors("jobsTemplates", a.GetJobsTemplates().Validate()),
+		shared.PrefixResourceErrors("integrationSidecar", a.GetIntegrationSidecar().Validate()),
 	))
 }

@@ -21,8 +21,14 @@
 package v1beta1
 
 import (
-	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+)
+
+type ArangoMLStorageSpecModeType int
+
+const (
+	ArangoMLStorageSpecModeTypeUnknown ArangoMLStorageSpecModeType = iota
+	ArangoMLStorageSpecModeTypeSidecar
 )
 
 type ArangoMLStorageSpecMode struct {
@@ -37,9 +43,18 @@ func (s *ArangoMLStorageSpecMode) GetSidecar() *ArangoMLStorageSpecModeSidecar {
 	return s.Sidecar
 }
 
+func (s *ArangoMLStorageSpecMode) GetType() ArangoMLStorageSpecModeType {
+	return ArangoMLStorageSpecModeTypeSidecar
+}
+
 func (s *ArangoMLStorageSpecMode) Validate() error {
 	if s == nil {
-		return errors.Errorf("Mode is not defined")
+		s = &ArangoMLStorageSpecMode{}
 	}
-	return shared.WithErrors(shared.PrefixResourceError("sidecar", s.Sidecar.Validate()))
+
+	if s.GetType() == ArangoMLStorageSpecModeTypeUnknown {
+		return errors.Errorf("Unknown mode type")
+	}
+
+	return nil
 }
