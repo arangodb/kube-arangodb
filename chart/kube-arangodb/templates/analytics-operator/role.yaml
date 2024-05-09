@@ -28,9 +28,14 @@ rules:
         - "get"
         - "list"
         - "watch"
+    - apiGroups: ["apps"]
+      resources:
+        - "statefulsets"
+      verbs: ["*"]
     - apiGroups: [ "" ]
       resources:
         - "secrets"
+        - "services"
       verbs: [ "*" ]
 {{- end }}
 {{- end }}
