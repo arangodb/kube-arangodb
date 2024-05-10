@@ -18,12 +18,23 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1beta1
+package k8s
 
-type ArangoMLExtensionStatusMetadataService struct {
-	// ArangoPipeDatabase define Database name to be used as MetadataService Backend
-	ArangoPipeDatabase string `json:"arangoPipe"`
+import (
+	core "k8s.io/api/core/v1"
 
-	// ArangoMLFeatureStoreDatabase define Database name to be used as MetadataService Backend
-	ArangoMLFeatureStoreDatabase string `json:"arangoMLFeatureStore,omitempty"`
+	"github.com/arangodb/kube-arangodb/pkg/util"
+)
+
+func CoreSecret(in *core.Secret) *core.Secret {
+	return FilterP(in, func(in *core.Secret) *core.Secret {
+		return &core.Secret{
+			ObjectMeta: ObjectMetaFilter(in.ObjectMeta),
+			Data:       in.Data,
+		}
+	})
+}
+
+func CoreSecretChecksum(in *core.Secret) (string, error) {
+	return util.SHA256FromJSON(CoreSecret(in))
 }

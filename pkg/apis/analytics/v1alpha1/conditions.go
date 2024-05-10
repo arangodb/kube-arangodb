@@ -23,10 +23,11 @@ package v1alpha1
 import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 
 const (
-	LicenseValidCondition     api.ConditionType = "LicenseValid"
-	DeploymentFoundCondition  api.ConditionType = "DeploymentFound"
-	ReadyCondition            api.ConditionType = "Ready"
-	SpecValidCondition        api.ConditionType = "SpecValid"
-	StatefulSetReadyCondition api.ConditionType = "StatefulSetReady"
-	TLSEnabledCondition       api.ConditionType = "TLSEnabled"
+	LicenseValidCondition         api.ConditionType = "LicenseValid"
+	DeploymentFoundCondition      api.ConditionType = "DeploymentFound"
+	ReadyCondition                api.ConditionType = "Ready"
+	SpecValidCondition            api.ConditionType = "SpecValid"
+	StatefulSetReadyCondition     api.ConditionType = "StatefulSetReady"
+	TLSEnabledCondition           api.ConditionType = "TLSEnabled"
+	MetadataServiceValidCondition api.ConditionType = "MetadataServiceValid"
 )
