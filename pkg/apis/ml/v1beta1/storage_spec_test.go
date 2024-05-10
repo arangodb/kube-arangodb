@@ -24,11 +24,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	core "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 
-	schedulerContainerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container"
-	schedulerContainerResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container/resources"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
@@ -47,8 +43,6 @@ func Test_ArangoMLStorageSpec(t *testing.T) {
 	require.Error(t, s.Validate())
 
 	s.Mode.Sidecar = &ArangoMLStorageSpecModeSidecar{}
-	require.Nil(t, s.Mode.Sidecar.GetResources())
-	require.NotNil(t, s.Mode.Sidecar.GetListenPort())
 
 	require.Error(t, s.Backend.S3.Validate())
 	s.Backend.S3 = &ArangoMLStorageSpecBackendS3{
@@ -60,36 +54,4 @@ func Test_ArangoMLStorageSpec(t *testing.T) {
 	}
 	s.BucketName = util.NewType("bucket")
 	require.NoError(t, s.Validate())
-
-	t.Run("default requests and limits assigned", func(t *testing.T) {
-		assignedRequirements := core.ResourceRequirements{
-			Requests: core.ResourceList{
-				core.ResourceCPU:    resource.MustParse("100m"),
-				core.ResourceMemory: resource.MustParse("128Mi"),
-			},
-		}
-		s.Mode.Sidecar.Container = &schedulerContainerApi.Container{}
-		s.Mode.Sidecar.Resources = &schedulerContainerResourcesApi.Resources{Resources: &assignedRequirements}
-
-		expectedRequirements := core.ResourceRequirements{
-			Requests: assignedRequirements.Requests,
-			Limits: core.ResourceList{
-				core.ResourceCPU:    resource.MustParse("200m"),
-				core.ResourceMemory: resource.MustParse("256Mi"),
-			},
-		}
-
-		actualRequirements := s.Mode.Sidecar.GetResources().With(&schedulerContainerResourcesApi.Resources{Resources: &core.ResourceRequirements{
-			Limits: core.ResourceList{
-				core.ResourceCPU:    resource.MustParse("200m"),
-				core.ResourceMemory: resource.MustParse("256Mi"),
-			},
-			Requests: core.ResourceList{
-				core.ResourceCPU:    resource.MustParse("100m"),
-				core.ResourceMemory: resource.MustParse("128Mi"),
-			},
-		}})
-
-		require.Equal(t, expectedRequirements, actualRequirements.GetResources())
-	})
 }

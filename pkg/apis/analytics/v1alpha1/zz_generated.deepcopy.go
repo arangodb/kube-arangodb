@@ -27,6 +27,7 @@ package v1alpha1
 
 import (
 	deploymentv1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	v1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	v1 "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	corev1 "k8s.io/api/core/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -104,6 +105,11 @@ func (in *GraphAnalyticsEngineSpec) DeepCopyInto(out *GraphAnalyticsEngineSpec) 
 	if in.Deployment != nil {
 		in, out := &in.Deployment, &out.Deployment
 		*out = new(GraphAnalyticsEngineSpecDeployment)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.IntegrationSidecar != nil {
+		in, out := &in.IntegrationSidecar, &out.IntegrationSidecar
+		*out = new(v1beta1.IntegrationSidecar)
 		(*in).DeepCopyInto(*out)
 	}
 	return
