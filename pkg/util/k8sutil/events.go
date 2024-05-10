@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,12 +41,17 @@ type Event struct {
 	Message        string
 }
 
-// APIObject helps to abstract an object from our custom API.
-type APIObject interface {
-	runtime.Object
+type K8SObject interface {
 	meta.Object
 	// AsOwner creates an OwnerReference for the given deployment
 	AsOwner() meta.OwnerReference
+}
+
+// APIObject helps to abstract an object from our custom API.
+type APIObject interface {
+	runtime.Object
+
+	K8SObject
 
 	OwnerOf(in meta.Object) bool
 }
