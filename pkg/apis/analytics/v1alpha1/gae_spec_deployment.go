@@ -21,6 +21,8 @@
 package v1alpha1
 
 import (
+	schedulerContainerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container"
+	schedulerPodApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/pod"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 )
@@ -34,6 +36,12 @@ const (
 type GraphAnalyticsEngineSpecDeployment struct {
 	// Service defines how components will be exposed
 	Service *GraphAnalyticsEngineSpecDeploymentService `json:"service,omitempty"`
+
+	// Pod defines base template for pods
+	*schedulerPodApi.Pod
+
+	// Container Keeps the information about Container configuration
+	*schedulerContainerApi.Container `json:",inline"`
 
 	// TLS defined TLS Settings
 	TLS *sharedApi.TLS `json:"tls,omitempty"`
@@ -63,6 +71,22 @@ func (g *GraphAnalyticsEngineSpecDeployment) GetTLS() *sharedApi.TLS {
 	return g.TLS
 }
 
+func (s *GraphAnalyticsEngineSpecDeployment) GetContainer() *schedulerContainerApi.Container {
+	if s == nil || s.Container == nil {
+		return nil
+	}
+
+	return s.Container
+}
+
+func (s *GraphAnalyticsEngineSpecDeployment) GetPodTemplate() *schedulerPodApi.Pod {
+	if s == nil || s.Pod == nil {
+		return nil
+	}
+
+	return s.Pod
+}
+
 func (g *GraphAnalyticsEngineSpecDeployment) Validate() error {
 	if g == nil {
 		return nil
@@ -70,5 +94,7 @@ func (g *GraphAnalyticsEngineSpecDeployment) Validate() error {
 
 	return shared.WithErrors(
 		shared.PrefixResourceErrors("service", shared.ValidateOptional(g.GetService(), func(s GraphAnalyticsEngineSpecDeploymentService) error { return s.Validate() })),
+		g.GetPodTemplate().Validate(),
+		g.GetContainer().Validate(),
 	)
 }
