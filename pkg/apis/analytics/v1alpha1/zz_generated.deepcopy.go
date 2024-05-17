@@ -28,6 +28,8 @@ package v1alpha1
 import (
 	deploymentv1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	v1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
+	container "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container"
+	pod "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/pod"
 	v1 "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	corev1 "k8s.io/api/core/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -131,6 +133,16 @@ func (in *GraphAnalyticsEngineSpecDeployment) DeepCopyInto(out *GraphAnalyticsEn
 	if in.Service != nil {
 		in, out := &in.Service, &out.Service
 		*out = new(GraphAnalyticsEngineSpecDeploymentService)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.Pod != nil {
+		in, out := &in.Pod, &out.Pod
+		*out = new(pod.Pod)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.Container != nil {
+		in, out := &in.Container, &out.Container
+		*out = new(container.Container)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.TLS != nil {

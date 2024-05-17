@@ -29,6 +29,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/cli"
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
@@ -43,6 +44,13 @@ func listSecrets(client kubernetes.Interface) func() ([]*core.Secret, error) {
 			q := make([]*core.Secret, len(result.Items))
 
 			for id, e := range result.Items {
+				z := e.DeepCopy()
+
+				if cli.GetInput().HideSensitiveData {
+					for k := range z.Data {
+						z.Data[k] = []byte(util.SHA256(z.Data[k]))
+					}
+				}
 				q[id] = e.DeepCopy()
 			}
 
