@@ -17,6 +17,7 @@
 - (Feature) (ML) Unify Integration Sidecar
 - (Feature) (Analytics) Metadata
 - (Feature) (Analytics) StatefulSet
+- (Feature) Imported ArangoBackup Cleanup
 
 ## [1.2.40](https://github.com/arangodb/kube-arangodb/tree/1.2.40) (2024-04-10)
 - (Feature) Add Core fields to the Scheduler Container Spec

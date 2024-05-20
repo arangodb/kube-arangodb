@@ -21,6 +21,7 @@
 package internal
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"path"
@@ -28,10 +29,12 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 
 	"github.com/arangodb/go-driver"
 
+	"github.com/arangodb/kube-arangodb/cmd"
 	"github.com/arangodb/kube-arangodb/internal/md"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -128,11 +131,45 @@ func GenerateReadme(root string) error {
 		readmeSections["limits"] = section
 	}
 
+	if section, err := GenerateHelp(cmd.Command()); err != nil {
+		return err
+	} else {
+		readmeSections["operatorArguments"] = section
+	}
+
 	if err := md.ReplaceSectionsInFile(path.Join(root, "README.md"), readmeSections); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func GenerateHelp(cmd *cobra.Command) (string, error) {
+	var lines []string
+
+	lines = append(lines, "```", "Flags:")
+
+	buff := bytes.NewBuffer(nil)
+
+	cmd.SetOut(buff)
+
+	cmd.SetArgs([]string{"--help"})
+
+	if err := cmd.Execute(); err != nil {
+		return "", err
+	}
+
+	help := buff.String()
+
+	for _, line := range strings.Split(help, "\n") {
+		if strings.HasPrefix(line, "      --") {
+			lines = append(lines, line)
+		}
+	}
+
+	lines = append(lines, "```")
+
+	return md.WrapWithNewLines(md.WrapWithNewLines(strings.Join(lines, "\n"))), nil
 }
 
 func GenerateReadmeFeatures(root, basePath string, eeOnly bool) (string, error) {
