@@ -1,3 +1,4 @@
+{{- $root := . -}}
 //
 // DISCLAIMER
 //
@@ -20,7 +21,13 @@
 
 package metric_descriptions
 
-import "github.com/arangodb/kube-arangodb/pkg/util/metrics"
+import (
+    "github.com/arangodb/kube-arangodb/pkg/util/metrics"
+{{- if .global }}
+
+	"sync"
+{{- end }}
+)
 
 var (
     {{ .fname }} = metrics.NewDescription("{{ .name }}", "{{ .shortDescription }}", {{ .labels }}, nil)
@@ -28,7 +35,115 @@ var (
 
 func init() {
     registerDescription({{ .fname }})
+{{- if .global }}
+    registerCollector({{ .fname }}Global)
+{{- end }}
 }
+
+{{- if .global }}
+
+func {{ .ename }}Add({{ .fparams }}) {
+    {{ .fname }}Global.Add(value, {{ .ename }}Item{
+{{- range $i, $field := .mapKeys }}
+        {{ $field }}: {{ index $root.mapIKeys $field }},
+{{- end }}
+    })
+}
+{{- if eq .type "Counter" }}
+
+func {{ .ename }}Inc({{ .args }}) {
+    {{ .fname }}Global.Inc({{ .ename }}Item{
+{{- range $i, $field := .mapKeys }}
+        {{ $field }}: {{ index $root.mapIKeys $field }},
+{{- end }}
+    })
+}
+{{- end }}
+
+func Get{{ .ename }}Factory() {{ .ename }}Factory {
+    return {{ .fname }}Global
+}
+
+var {{ .fname }}Global = &{{ .fname }}Factory{
+ items: {{ .fname }}Items{},
+}
+
+type {{ .ename }}Factory interface {
+    Add(value float64, object {{ .ename }}Item)
+    Remove(object {{ .ename }}Item)
+    Items() []{{ .ename }}Item
+{{- if eq .type "Counter" }}
+
+    Inc(object {{ .ename }}Item)
+{{- end }}
+}
+
+type {{ .fname }}Factory struct {
+    lock sync.RWMutex
+
+    items {{ .fname }}Items
+}
+
+func (a *{{ .fname }}Factory) Add(value float64, object {{ .ename }}Item) {
+    a.lock.Lock()
+    defer a.lock.Unlock()
+
+    v, ok := a.items[object]
+    if !ok {
+        a.items[object] = value
+        return
+    }
+
+    a.items[object] = value + v
+}
+
+func (a *{{ .fname }}Factory) Remove(obj {{ .ename }}Item) {
+    a.lock.Lock()
+    defer a.lock.Unlock()
+
+    delete(a.items, obj)
+}
+
+func (a *{{ .fname }}Factory) Items() []{{ .ename }}Item {
+    a.lock.Lock()
+    defer a.lock.Unlock()
+
+    var r = make([]{{ .ename }}Item, len(a.items))
+
+    for k := range a.items {
+        r = append(r, k)
+    }
+
+    return r
+}
+{{- if eq .type "Counter" }}
+
+func (a *{{ .fname }}Factory) Inc(object {{ .ename }}Item) {
+    a.Add(1, object)
+}
+{{- end }}
+
+func (a *{{ .fname }}Factory) CollectMetrics(in metrics.PushMetric) {
+    a.lock.RLock()
+    defer a.lock.RUnlock()
+
+	for k, v := range a.items {
+	    in.Push({{ .fname }}.{{ .type }}(v{{- range .mapKeys }}, k.{{ . }}{{- end }}))
+	}
+}
+
+func (a *{{ .fname }}Factory) CollectDescriptions(in metrics.PushDescription) {
+	in.Push({{ .fname }})
+}
+
+type {{ .fname }}Items map[{{ .ename }}Item]float64
+
+type {{ .ename }}Item struct {
+{{- range .mapKeys }}
+    {{ . }} {{ index $root.mapTypes . }}
+{{- end }}
+}
+{{- else }}
 
 func {{ .ename }}() metrics.Description {
     return {{ .fname }}
@@ -37,3 +152,4 @@ func {{ .ename }}() metrics.Description {
 func {{ .ename }}{{ .type }}({{ .fparams }}) metrics.Metric {
     return {{ .ename }}().{{ .type }}({{ .fkeys }})
 }
+{{- end }}

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -97,6 +97,8 @@ type Metric struct {
 	Description      string `json:"description" yaml:"description"`
 	Type             string `json:"type" yaml:"type"`
 	ShortDescription string `json:"shortDescription" yaml:"shortDescription"`
+
+	Global bool `json:"global" yaml:"global"`
 
 	Labels        []Label    `json:"labels" yaml:"labels"`
 	AlertingRules []Alerting `json:"alertingRules" yaml:"alertingRules"`
@@ -311,6 +313,10 @@ func generateMetricsGO(root string, in MetricsDoc) error {
 				params = append(params, "value float64")
 				keys = append(keys, "value")
 
+				var mapTypes = map[string]string{}
+				var mapKeys []string
+				var mapIKeys = map[string]string{}
+
 				for _, label := range details.Labels {
 					v := strings.Split(strings.ToLower(label.Key), "_")
 					for id := range v {
@@ -323,12 +329,21 @@ func generateMetricsGO(root string, in MetricsDoc) error {
 
 					k := strings.Join(v, "")
 
+					v[0] = strings.Title(v[0])
+
+					kPublic := strings.Join(v, "")
+
 					keys = append(keys, k)
+					mapKeys = append(mapKeys, kPublic)
+
+					mapIKeys[kPublic] = k
 
 					if t := label.Type; t != nil {
 						params = append(params, fmt.Sprintf("%s %s", k, *t))
+						mapTypes[kPublic] = *t
 					} else {
 						params = append(params, fmt.Sprintf("%s string", k))
+						mapTypes[kPublic] = "string"
 					}
 				}
 
@@ -337,8 +352,13 @@ func generateMetricsGO(root string, in MetricsDoc) error {
 					"fname":            strings.Join(fnameParts, ""),
 					"ename":            strings.Join(tparts, ""),
 					"shortDescription": details.ShortDescription,
+					"global":           details.Global,
 					"labels":           generateLabels(details.Labels),
 					"type":             details.Type,
+					"mapTypes":         mapTypes,
+					"mapKeys":          mapKeys,
+					"mapIKeys":         mapIKeys,
+					"args":             strings.Join(params[1:], ", "),
 					"fparams":          strings.Join(params, ", "),
 					"fkeys":            strings.Join(keys, ", "),
 				}); err != nil {

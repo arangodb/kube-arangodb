@@ -20,7 +20,9 @@
 
 package metric_descriptions
 
-import "github.com/arangodb/kube-arangodb/pkg/util/metrics"
+import (
+	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
+)
 
 var (
 	arangodbOperatorRebalancerMovesGenerated = metrics.NewDescription("arangodb_operator_rebalancer_moves_generated", "Define how many moves were generated", []string{`namespace`, `name`}, nil)

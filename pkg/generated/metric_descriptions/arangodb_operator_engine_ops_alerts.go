@@ -20,7 +20,9 @@
 
 package metric_descriptions
 
-import "github.com/arangodb/kube-arangodb/pkg/util/metrics"
+import (
+	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
+)
 
 var (
 	arangodbOperatorEngineOpsAlerts = metrics.NewDescription("arangodb_operator_engine_ops_alerts", "Counter for actions which requires ops attention", []string{`namespace`, `name`}, nil)

@@ -28,6 +28,9 @@ import (
 var (
 	descriptions []metrics.Description
 	descriptionsLock sync.Mutex
+
+	collectors []metrics.Collector
+	collectorsLock sync.Mutex
 )
 
 func registerDescription( d ... metrics.Description) {
@@ -41,9 +44,29 @@ func registerDescription( d ... metrics.Description) {
 	descriptions = append(descriptions, d...)
 }
 
+func registerCollector( d ... metrics.Collector) {
+	if len(d) == 0 {
+		return
+	}
+
+	collectorsLock.Lock()
+	defer collectorsLock.Unlock()
+
+	collectors = append(collectors, d...)
+}
+
 func Descriptions (c metrics.PushDescription) {
 	descriptionsLock.Lock()
 	defer descriptionsLock.Unlock()
 
 	c.Push(descriptions...)
+}
+
+func Collectors (c metrics.PushMetric) {
+	collectorsLock.Lock()
+	defer collectorsLock.Unlock()
+
+	for _, collector := range collectors {
+		collector.CollectMetrics(c)
+	}
 }

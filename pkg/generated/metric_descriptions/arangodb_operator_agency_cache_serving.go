@@ -20,7 +20,9 @@
 
 package metric_descriptions
 
-import "github.com/arangodb/kube-arangodb/pkg/util/metrics"
+import (
+	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
+)
 
 var (
 	arangodbOperatorAgencyCacheServing = metrics.NewDescription("arangodb_operator_agency_cache_serving", "Determines if agency is serving", []string{`namespace`, `name`}, nil)

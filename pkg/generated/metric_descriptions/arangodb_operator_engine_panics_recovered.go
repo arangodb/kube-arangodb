@@ -20,7 +20,9 @@
 
 package metric_descriptions
 
-import "github.com/arangodb/kube-arangodb/pkg/util/metrics"
+import (
+	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
+)
 
 var (
 	arangodbOperatorEnginePanicsRecovered = metrics.NewDescription("arangodb_operator_engine_panics_recovered", "Number of Panics recovered inside Operator reconciliation loop", []string{`section`}, nil)

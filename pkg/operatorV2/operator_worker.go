@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"runtime/debug"
 
+	"github.com/arangodb/kube-arangodb/pkg/generated/metric_descriptions"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
@@ -101,7 +102,7 @@ func (o *operator) processObject(obj interface{}) error {
 		return nil
 	}
 
-	o.objectProcessed.Inc()
+	metric_descriptions.ArangoOperatorObjectsProcessedInc(o.operator.name)
 
 	loggerWorker.Trace("Received Item Action: %s, Type: %s/%s/%s, Namespace: %s, Name: %s",
 		item.Operation,

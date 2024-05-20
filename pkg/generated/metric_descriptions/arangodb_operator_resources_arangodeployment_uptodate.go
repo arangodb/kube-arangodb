@@ -20,7 +20,9 @@
 
 package metric_descriptions
 
-import "github.com/arangodb/kube-arangodb/pkg/util/metrics"
+import (
+	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
+)
 
 var (
 	arangodbOperatorResourcesArangodeploymentUptodate = metrics.NewDescription("arangodb_operator_resources_arangodeployment_uptodate", "Defines if ArangoDeployment is uptodate", []string{`namespace`, `name`}, nil)

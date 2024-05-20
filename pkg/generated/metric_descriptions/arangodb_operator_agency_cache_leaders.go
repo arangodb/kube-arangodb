@@ -20,7 +20,9 @@
 
 package metric_descriptions
 
-import "github.com/arangodb/kube-arangodb/pkg/util/metrics"
+import (
+	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
+)
 
 var (
 	arangodbOperatorAgencyCacheLeaders = metrics.NewDescription("arangodb_operator_agency_cache_leaders", "Determines agency leader vote count", []string{`namespace`, `name`, `agent`}, nil)

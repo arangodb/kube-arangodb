@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -71,6 +71,8 @@ func (i *inventory) CollectDescriptions(in metrics.PushDescription) {
 }
 
 func (i *inventory) CollectMetrics(in metrics.PushMetric) {
+	metric_descriptions.Collectors(in)
+
 	for _, deployments := range i.deployments {
 		for _, deployment := range deployments {
 			in.Push(i.deploymentsMetric.Gauge(1, deployment.GetNamespace(), deployment.GetName()))

@@ -20,7 +20,9 @@
 
 package metric_descriptions
 
-import "github.com/arangodb/kube-arangodb/pkg/util/metrics"
+import (
+	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
+)
 
 var (
 	arangodbOperatorRebalancerMovesCurrent = metrics.NewDescription("arangodb_operator_rebalancer_moves_current", "Define how many moves are currently in progress", []string{`namespace`, `name`}, nil)

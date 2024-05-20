@@ -20,7 +20,9 @@
 
 package metric_descriptions
 
-import "github.com/arangodb/kube-arangodb/pkg/util/metrics"
+import (
+	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
+)
 
 var (
 	arangodbOperatorKubernetesClientRequests = metrics.NewDescription("arangodb_operator_kubernetes_client_requests", "Number of Kubernetes Client requests", []string{`component`, `verb`}, nil)

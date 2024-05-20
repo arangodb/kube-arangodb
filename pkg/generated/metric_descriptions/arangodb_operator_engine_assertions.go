@@ -20,7 +20,9 @@
 
 package metric_descriptions
 
-import "github.com/arangodb/kube-arangodb/pkg/util/metrics"
+import (
+	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
+)
 
 var (
 	arangodbOperatorEngineAssertions = metrics.NewDescription("arangodb_operator_engine_assertions", "Number of assertions invoked during Operator runtime", []string{`key`}, nil)

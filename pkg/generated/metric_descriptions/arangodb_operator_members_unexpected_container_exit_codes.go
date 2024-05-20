@@ -20,7 +20,9 @@
 
 package metric_descriptions
 
-import "github.com/arangodb/kube-arangodb/pkg/util/metrics"
+import (
+	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
+)
 
 var (
 	arangodbOperatorMembersUnexpectedContainerExitCodes = metrics.NewDescription("arangodb_operator_members_unexpected_container_exit_codes", "Counter of unexpected restarts in pod (Containers/InitContainers/EphemeralContainers)", []string{`namespace`, `name`, `member`, `container`, `container_type`, `code`, `reason`}, nil)
