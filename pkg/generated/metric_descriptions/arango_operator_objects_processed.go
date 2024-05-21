@@ -35,16 +35,6 @@ func init() {
 	registerCollector(arangoOperatorObjectsProcessedGlobal)
 }
 
-func ArangoOperatorObjectsProcessed() metrics.Description {
-	return arangoOperatorObjectsProcessed
-}
-
-func ArangoOperatorObjectsProcessedGet(operatorName string) float64 {
-	return arangoOperatorObjectsProcessedGlobal.Get(ArangoOperatorObjectsProcessedItem{
-		OperatorName: operatorName,
-	})
-}
-
 func ArangoOperatorObjectsProcessedAdd(value float64, operatorName string) {
 	arangoOperatorObjectsProcessedGlobal.Add(value, ArangoOperatorObjectsProcessedItem{
 		OperatorName: operatorName,
@@ -66,7 +56,6 @@ var arangoOperatorObjectsProcessedGlobal = &arangoOperatorObjectsProcessedFactor
 }
 
 type ArangoOperatorObjectsProcessedFactory interface {
-	Get(object ArangoOperatorObjectsProcessedItem) float64
 	Add(value float64, object ArangoOperatorObjectsProcessedItem)
 	Remove(object ArangoOperatorObjectsProcessedItem)
 	Items() []ArangoOperatorObjectsProcessedItem
@@ -78,18 +67,6 @@ type arangoOperatorObjectsProcessedFactory struct {
 	lock sync.RWMutex
 
 	items arangoOperatorObjectsProcessedItems
-}
-
-func (a *arangoOperatorObjectsProcessedFactory) Get(object ArangoOperatorObjectsProcessedItem) float64 {
-	a.lock.Lock()
-	defer a.lock.Unlock()
-
-	v, ok := a.items[object]
-	if !ok {
-		return 0
-	}
-
-	return v
 }
 
 func (a *arangoOperatorObjectsProcessedFactory) Add(value float64, object ArangoOperatorObjectsProcessedItem) {
@@ -116,7 +93,7 @@ func (a *arangoOperatorObjectsProcessedFactory) Items() []ArangoOperatorObjectsP
 	a.lock.Lock()
 	defer a.lock.Unlock()
 
-	var r = make([]ArangoOperatorObjectsProcessedItem, 0, len(a.items))
+	var r = make([]ArangoOperatorObjectsProcessedItem, len(a.items))
 
 	for k := range a.items {
 		r = append(r, k)
