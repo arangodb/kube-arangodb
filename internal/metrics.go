@@ -38,6 +38,9 @@ var metricsGoTemplate []byte
 //go:embed metrics.item.go.tmpl
 var metricsItemGoTemplate []byte
 
+//go:embed metrics.item.go_test.tmpl
+var metricsItemGoTestTemplate []byte
+
 //go:embed metrics.item.tmpl
 var metricItemTemplate []byte
 
@@ -279,21 +282,21 @@ func generateLabels(labels []Label) string {
 
 func generateMetricsGO(root string, in MetricsDoc) error {
 	i, err := template.New("metrics").Parse(string(metricsItemGoTemplate))
-
 	if err != nil {
 		return err
 	}
+
+	t, err := template.New("metrics").Parse(string(metricsItemGoTestTemplate))
+	if err != nil {
+		return err
+	}
+
 	for _, namespace := range in.Namespaces.Keys() {
 		for _, g := range in.Namespaces[namespace].Keys() {
 			for _, metric := range in.Namespaces[namespace][g].Keys() {
 				details := in.Namespaces[namespace][g][metric]
 
 				mname := fmt.Sprintf("%s_%s_%s", namespace, g, metric)
-
-				out, err := os.OpenFile(path.Join(root, fmt.Sprintf("%s.go", mname)), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
-				if err != nil {
-					return err
-				}
 
 				parts := strings.Split(mname, "_")
 				tparts := strings.Split(strings.Title(strings.Join(parts, " ")), " ")
@@ -347,25 +350,42 @@ func generateMetricsGO(root string, in MetricsDoc) error {
 					}
 				}
 
-				if err := i.Execute(out, map[string]interface{}{
-					"name":             mname,
-					"fname":            strings.Join(fnameParts, ""),
-					"ename":            strings.Join(tparts, ""),
-					"shortDescription": details.ShortDescription,
-					"global":           details.Global,
-					"labels":           generateLabels(details.Labels),
-					"type":             details.Type,
-					"mapTypes":         mapTypes,
-					"mapKeys":          mapKeys,
-					"mapIKeys":         mapIKeys,
-					"args":             strings.Join(params[1:], ", "),
-					"fparams":          strings.Join(params, ", "),
-					"fkeys":            strings.Join(keys, ", "),
-				}); err != nil {
+				save := func(template *template.Template, path string) error {
+					out, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+					if err != nil {
+						return err
+					}
+
+					if err := template.Execute(out, map[string]interface{}{
+						"name":             mname,
+						"fname":            strings.Join(fnameParts, ""),
+						"ename":            strings.Join(tparts, ""),
+						"shortDescription": details.ShortDescription,
+						"global":           details.Global,
+						"labels":           generateLabels(details.Labels),
+						"type":             details.Type,
+						"mapTypes":         mapTypes,
+						"mapKeys":          mapKeys,
+						"mapIKeys":         mapIKeys,
+						"args":             strings.Join(params[1:], ", "),
+						"fparams":          strings.Join(params, ", "),
+						"fkeys":            strings.Join(keys, ", "),
+					}); err != nil {
+						return err
+					}
+
+					if err := out.Close(); err != nil {
+						return err
+					}
+
+					return nil
+				}
+
+				if err := save(i, path.Join(root, fmt.Sprintf("%s.go", mname))); err != nil {
 					return err
 				}
 
-				if err := out.Close(); err != nil {
+				if err := save(t, path.Join(root, fmt.Sprintf("%s_test.go", mname))); err != nil {
 					return err
 				}
 			}

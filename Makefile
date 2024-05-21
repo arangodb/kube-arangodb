@@ -703,6 +703,7 @@ run-unit-tests: $(SOURCES)
 		$(REPOPATH)/pkg/storage/... \
 	    $(REPOPATH)/pkg/crd/... \
 		$(REPOPATH)/pkg/util/... \
+		$(REPOPATH)/pkg/generated/metric_descriptions/... \
 		$(REPOPATH)/cmd/... \
 		$(REPOPATH)/pkg/handlers/...
 

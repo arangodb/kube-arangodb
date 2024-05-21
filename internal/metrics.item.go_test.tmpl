@@ -22,134 +22,158 @@
 package metric_descriptions
 
 import (
-    "github.com/arangodb/kube-arangodb/pkg/util/metrics"
+    "testing"
 {{- if .global }}
 
-	"sync"
+	"github.com/stretchr/testify/require"
 {{- end }}
 )
 
-var (
-    {{ .fname }} = metrics.NewDescription("{{ .name }}", "{{ .shortDescription }}", {{ .labels }}, nil)
-)
-
-func init() {
-    registerDescription({{ .fname }})
-{{- if .global }}
-    registerCollector({{ .fname }}Global)
-{{- end }}
+func Test_{{ .ename }}_Descriptor(t *testing.T) {
+	{{ .ename }}()
 }
 
 {{- if .global }}
 
-func {{ .ename }}Add({{ .fparams }}) {
-    {{ .fname }}Global.Add(value, {{ .ename }}Item{
+func Test_{{ .ename }}_Global(t *testing.T) {
+	global := Get{{ .ename }}Factory()
+
+	object1 := {{ .ename }}Item{
 {{- range $i, $field := .mapKeys }}
-        {{ $field }}: {{ index $root.mapIKeys $field }},
+        {{ $field }}: "1",
 {{- end }}
-    })
-}
-{{- if eq .type "Counter" }}
-
-func {{ .ename }}Inc({{ .args }}) {
-    {{ .fname }}Global.Inc({{ .ename }}Item{
-{{- range $i, $field := .mapKeys }}
-        {{ $field }}: {{ index $root.mapIKeys $field }},
-{{- end }}
-    })
-}
-{{- end }}
-
-func Get{{ .ename }}Factory() {{ .ename }}Factory {
-    return {{ .fname }}Global
-}
-
-var {{ .fname }}Global = &{{ .fname }}Factory{
- items: {{ .fname }}Items{},
-}
-
-type {{ .ename }}Factory interface {
-    Add(value float64, object {{ .ename }}Item)
-    Remove(object {{ .ename }}Item)
-    Items() []{{ .ename }}Item
-{{- if eq .type "Counter" }}
-
-    Inc(object {{ .ename }}Item)
-{{- end }}
-}
-
-type {{ .fname }}Factory struct {
-    lock sync.RWMutex
-
-    items {{ .fname }}Items
-}
-
-func (a *{{ .fname }}Factory) Add(value float64, object {{ .ename }}Item) {
-    a.lock.Lock()
-    defer a.lock.Unlock()
-
-    v, ok := a.items[object]
-    if !ok {
-        a.items[object] = value
-        return
-    }
-
-    a.items[object] = value + v
-}
-
-func (a *{{ .fname }}Factory) Remove(obj {{ .ename }}Item) {
-    a.lock.Lock()
-    defer a.lock.Unlock()
-
-    delete(a.items, obj)
-}
-
-func (a *{{ .fname }}Factory) Items() []{{ .ename }}Item {
-    a.lock.Lock()
-    defer a.lock.Unlock()
-
-    var r = make([]{{ .ename }}Item, len(a.items))
-
-    for k := range a.items {
-        r = append(r, k)
-    }
-
-    return r
-}
-{{- if eq .type "Counter" }}
-
-func (a *{{ .fname }}Factory) Inc(object {{ .ename }}Item) {
-    a.Add(1, object)
-}
-{{- end }}
-
-func (a *{{ .fname }}Factory) CollectMetrics(in metrics.PushMetric) {
-    a.lock.RLock()
-    defer a.lock.RUnlock()
-
-	for k, v := range a.items {
-	    in.Push({{ .fname }}.{{ .type }}(v{{- range .mapKeys }}, k.{{ . }}{{- end }}))
 	}
-}
 
-func (a *{{ .fname }}Factory) CollectDescriptions(in metrics.PushDescription) {
-	in.Push({{ .fname }})
-}
-
-type {{ .fname }}Items map[{{ .ename }}Item]float64
-
-type {{ .ename }}Item struct {
-{{- range .mapKeys }}
-    {{ . }} {{ index $root.mapTypes . }}
+	object2 := {{ .ename }}Item{
+{{- range $i, $field := .mapKeys }}
+        {{ $field }}: "2",
 {{- end }}
-}
-{{- else }}
+	}
 
-func {{ .ename }}() metrics.Description {
-    return {{ .fname }}
-}
+	t.Run("List", func(t *testing.T) {
+		require.Len(t, global.Items(), 0)
+	})
 
-func {{ .ename }}{{ .type }}({{ .fparams }}) metrics.Metric {
-    return {{ .ename }}().{{ .type }}({{ .fkeys }})
+	t.Run("Precheck", func(t *testing.T) {
+		require.EqualValues(t, 0, global.Get(object1))
+		require.EqualValues(t, 0, global.Get(object2))
+	})
+
+	t.Run("Add", func(t *testing.T) {
+	    global.Add(10, object1)
+
+		require.EqualValues(t, 10, global.Get(object1))
+		require.EqualValues(t, 0, global.Get(object2))
+	})
+
+	t.Run("List", func(t *testing.T) {
+		require.Len(t, global.Items(), 1)
+	})
+
+	t.Run("Add", func(t *testing.T) {
+	    global.Add(3, object2)
+
+		require.EqualValues(t, 10, global.Get(object1))
+		require.EqualValues(t, 3, global.Get(object2))
+	})
+
+	t.Run("List", func(t *testing.T) {
+		require.Len(t, global.Items(), 2)
+	})
+
+	t.Run("Dec", func(t *testing.T) {
+	    global.Add(-1, object1)
+
+		require.EqualValues(t, 9, global.Get(object1))
+		require.EqualValues(t, 3, global.Get(object2))
+	})
+
+	t.Run("List", func(t *testing.T) {
+		require.Len(t, global.Items(), 2)
+	})
+
+	t.Run("Remove", func(t *testing.T) {
+	    global.Remove(object1)
+
+		require.EqualValues(t, 0, global.Get(object1))
+		require.EqualValues(t, 3, global.Get(object2))
+	})
+
+	t.Run("List", func(t *testing.T) {
+		require.Len(t, global.Items(), 1)
+	})
+
+	t.Run("Remove", func(t *testing.T) {
+	    global.Remove(object1)
+
+		require.EqualValues(t, 0, global.Get(object1))
+		require.EqualValues(t, 3, global.Get(object2))
+	})
+
+	t.Run("List", func(t *testing.T) {
+		require.Len(t, global.Items(), 1)
+	})
+
+	t.Run("Remove", func(t *testing.T) {
+	    global.Remove(object2)
+
+		require.EqualValues(t, 0, global.Get(object1))
+		require.EqualValues(t, 0, global.Get(object2))
+	})
+
+	t.Run("List", func(t *testing.T) {
+		require.Len(t, global.Items(), 0)
+	})
 }
+{{- if eq .type "Counter" }}
+
+func Test_{{ .ename }}_Global_Counter(t *testing.T) {
+	global := Get{{ .ename }}Factory()
+
+	object1 := {{ .ename }}Item{
+{{- range $i, $field := .mapKeys }}
+        {{ $field }}: "1",
+{{- end }}
+	}
+
+	object2 := {{ .ename }}Item{
+{{- range $i, $field := .mapKeys }}
+        {{ $field }}: "2",
+{{- end }}
+	}
+
+	t.Run("List", func(t *testing.T) {
+		require.Len(t, global.Items(), 0)
+	})
+
+	t.Run("Precheck", func(t *testing.T) {
+		require.EqualValues(t, 0, global.Get(object1))
+		require.EqualValues(t, 0, global.Get(object2))
+	})
+
+	t.Run("Add", func(t *testing.T) {
+	    global.Add(10, object1)
+
+		require.EqualValues(t, 10, global.Get(object1))
+		require.EqualValues(t, 0, global.Get(object2))
+	})
+
+	t.Run("List", func(t *testing.T) {
+		require.Len(t, global.Items(), 1)
+	})
+
+	t.Run("Inc", func(t *testing.T) {
+	    global.Inc(object1)
+	    global.Inc(object2)
+
+		require.EqualValues(t, 11, global.Get(object1))
+		require.EqualValues(t, 1, global.Get(object2))
+	})
+
+	t.Run("List", func(t *testing.T) {
+		require.Len(t, global.Items(), 2)
+	})
+}
+{{- end }}
+
 {{- end }}

@@ -40,7 +40,19 @@ func init() {
 {{- end }}
 }
 
+func {{ .ename }}() metrics.Description {
+    return {{ .fname }}
+}
+
 {{- if .global }}
+
+func {{ .ename }}Get({{ .args }}) float64 {
+    return {{ .fname }}Global.Get({{ .ename }}Item{
+{{- range $i, $field := .mapKeys }}
+        {{ $field }}: {{ index $root.mapIKeys $field }},
+{{- end }}
+    })
+}
 
 func {{ .ename }}Add({{ .fparams }}) {
     {{ .fname }}Global.Add(value, {{ .ename }}Item{
@@ -69,6 +81,7 @@ var {{ .fname }}Global = &{{ .fname }}Factory{
 }
 
 type {{ .ename }}Factory interface {
+    Get(object {{ .ename }}Item) float64
     Add(value float64, object {{ .ename }}Item)
     Remove(object {{ .ename }}Item)
     Items() []{{ .ename }}Item
@@ -82,6 +95,18 @@ type {{ .fname }}Factory struct {
     lock sync.RWMutex
 
     items {{ .fname }}Items
+}
+
+func (a *{{ .fname }}Factory) Get(object {{ .ename }}Item) float64 {
+    a.lock.Lock()
+    defer a.lock.Unlock()
+
+    v, ok := a.items[object]
+    if !ok {
+        return 0
+    }
+
+    return v
 }
 
 func (a *{{ .fname }}Factory) Add(value float64, object {{ .ename }}Item) {
@@ -108,7 +133,7 @@ func (a *{{ .fname }}Factory) Items() []{{ .ename }}Item {
     a.lock.Lock()
     defer a.lock.Unlock()
 
-    var r = make([]{{ .ename }}Item, len(a.items))
+    var r = make([]{{ .ename }}Item, 0, len(a.items))
 
     for k := range a.items {
         r = append(r, k)
@@ -144,10 +169,6 @@ type {{ .ename }}Item struct {
 {{- end }}
 }
 {{- else }}
-
-func {{ .ename }}() metrics.Description {
-    return {{ .fname }}
-}
 
 func {{ .ename }}{{ .type }}({{ .fparams }}) metrics.Metric {
     return {{ .ename }}().{{ .type }}({{ .fkeys }})
