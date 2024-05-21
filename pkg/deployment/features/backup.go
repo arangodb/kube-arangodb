@@ -22,11 +22,19 @@ package features
 
 func init() {
 	registerFeature(asyncBackupCreation)
+	registerFeature(backupCleanup)
 }
 
 var asyncBackupCreation = &feature{
 	name:               "async-backup-creation",
 	description:        "Create backups asynchronously to avoid blocking the operator and reaching the timeout",
+	enterpriseRequired: false,
+	enabledByDefault:   true,
+}
+
+var backupCleanup = &feature{
+	name:               "backup-cleanup",
+	description:        "Cleanup imported backups if required",
 	enterpriseRequired: false,
 	enabledByDefault:   false,
 }
@@ -34,4 +42,9 @@ var asyncBackupCreation = &feature{
 // AsyncBackupCreation returns mode for backup creation (sync/async).
 func AsyncBackupCreation() Feature {
 	return asyncBackupCreation
+}
+
+// BackupCleanup returns mode for Imported backups cleanup.
+func BackupCleanup() Feature {
+	return backupCleanup
 }

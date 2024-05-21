@@ -262,6 +262,10 @@ func init() {
 	}
 }
 
+func Command() *cobra.Command {
+	return &cmdMain
+}
+
 func Execute() int {
 	flag.CommandLine.AddGoFlagSet(goflag.CommandLine)
 

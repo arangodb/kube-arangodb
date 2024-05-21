@@ -37,6 +37,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
@@ -133,6 +134,35 @@ func (h *handler) refreshDeployment(deployment *database.ArangoDeployment) error
 		}
 	}
 
+	if err = h.cleanupImportedBackups(backups.Items); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (h *handler) cleanupImportedBackups(backups []backupApi.ArangoBackup) error {
+	if !features.BackupCleanup().Enabled() {
+		return nil
+	}
+	for _, backup := range backups {
+		if backup.GetDeletionTimestamp() != nil {
+			continue
+		}
+
+		if b := backup.Status.Backup; b == nil || !util.TypeOrDefault(b.Imported, false) {
+			continue
+		}
+
+		logger.Str("name", backup.GetName()).Str("namespace", backup.GetNamespace()).Info("Removing Imported ArangoBackup")
+
+		err := h.client.BackupV1().ArangoBackups(backup.GetNamespace()).Delete(context.Background(), backup.GetName(), meta.DeleteOptions{})
+		if err != nil {
+			return err
+		}
+
+	}
+
 	return nil
 }
 
@@ -153,11 +183,15 @@ func (h *handler) refreshDeploymentBackup(deployment *database.ArangoDeployment,
 		}
 	}
 
+	name := fmt.Sprintf("backup-%s", uuid.NewUUID())
+
+	logger.Str("id", string(backupMeta.ID)).Strs("namespace", deployment.GetNamespace()).Str("namespace", name).Info("Importing ArangoBackup from API")
+
 	// New backup found, need to recreate
 	backup := &backupApi.ArangoBackup{
 		ObjectMeta: meta.ObjectMeta{
-			Name:      fmt.Sprintf("backup-%s", uuid.NewUUID()),
-			Namespace: deployment.Namespace,
+			Name:      name,
+			Namespace: deployment.GetNamespace(),
 		},
 		Spec: backupApi.ArangoBackupSpec{
 			Deployment: backupApi.ArangoBackupSpecDeployment{
