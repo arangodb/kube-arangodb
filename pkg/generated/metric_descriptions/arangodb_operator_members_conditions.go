@@ -20,7 +20,9 @@
 
 package metric_descriptions
 
-import "github.com/arangodb/kube-arangodb/pkg/util/metrics"
+import (
+	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
+)
 
 var (
 	arangodbOperatorMembersConditions = metrics.NewDescription("arangodb_operator_members_conditions", "Representation of the ArangoMember condition state (true/false)", []string{`namespace`, `name`, `member`, `condition`}, nil)

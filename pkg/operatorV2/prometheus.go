@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,28 +26,16 @@ import (
 
 type prometheusMetrics struct {
 	operator *operator
-
-	objectProcessed prometheus.Counter
 }
 
 func newCollector(operator *operator) *prometheusMetrics {
 	return &prometheusMetrics{
 		operator: operator,
-
-		objectProcessed: prometheus.NewCounter(prometheus.CounterOpts{
-			Name: "arango_operator_objects_processed",
-			Help: "Count of the processed objects",
-			ConstLabels: map[string]string{
-				"operator_name": operator.name,
-			},
-		}),
 	}
 }
 
 func (p *prometheusMetrics) connectors() []prometheus.Collector {
-	return []prometheus.Collector{
-		p.objectProcessed,
-	}
+	return []prometheus.Collector{}
 }
 
 func (p *prometheusMetrics) Describe(r chan<- *prometheus.Desc) {

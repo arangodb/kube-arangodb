@@ -20,7 +20,9 @@
 
 package metric_descriptions
 
-import "github.com/arangodb/kube-arangodb/pkg/util/metrics"
+import (
+	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
+)
 
 var (
 	arangodbOperatorResourcesArangodeploymentPropagated = metrics.NewDescription("arangodb_operator_resources_arangodeployment_propagated", "Defines if ArangoDeployment Spec is propagated", []string{`namespace`, `name`}, nil)

@@ -1,6 +1,16 @@
 documentation: docs/generated/metrics
 destination: pkg/generated/metric_descriptions
 namespaces:
+  arango_operator:
+    objects:
+      processed:
+        shortDescription: "Number of the processed objects"
+        description: "Number of the processed objects"
+        type: "Counter"
+        global: true
+        labels:
+          - key: operator_name
+            description: "Operator Name"
   arangodb_operator:
     agency_cache:
       present:

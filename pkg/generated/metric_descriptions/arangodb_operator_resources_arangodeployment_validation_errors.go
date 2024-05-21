@@ -20,7 +20,9 @@
 
 package metric_descriptions
 
-import "github.com/arangodb/kube-arangodb/pkg/util/metrics"
+import (
+	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
+)
 
 var (
 	arangodbOperatorResourcesArangodeploymentValidationErrors = metrics.NewDescription("arangodb_operator_resources_arangodeployment_validation_errors", "Counter for deployment validation errors", []string{`namespace`, `name`}, nil)

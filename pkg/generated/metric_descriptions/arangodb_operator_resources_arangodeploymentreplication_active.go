@@ -20,7 +20,9 @@
 
 package metric_descriptions
 
-import "github.com/arangodb/kube-arangodb/pkg/util/metrics"
+import (
+	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
+)
 
 var (
 	arangodbOperatorResourcesArangodeploymentreplicationActive = metrics.NewDescription("arangodb_operator_resources_arangodeploymentreplication_active", "Defines if ArangoDeploymentReplication is configured and running", []string{`namespace`, `name`}, nil)

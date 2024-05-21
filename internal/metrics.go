@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,6 +37,9 @@ var metricsGoTemplate []byte
 
 //go:embed metrics.item.go.tmpl
 var metricsItemGoTemplate []byte
+
+//go:embed metrics.item.go_test.tmpl
+var metricsItemGoTestTemplate []byte
 
 //go:embed metrics.item.tmpl
 var metricItemTemplate []byte
@@ -97,6 +100,8 @@ type Metric struct {
 	Description      string `json:"description" yaml:"description"`
 	Type             string `json:"type" yaml:"type"`
 	ShortDescription string `json:"shortDescription" yaml:"shortDescription"`
+
+	Global bool `json:"global" yaml:"global"`
 
 	Labels        []Label    `json:"labels" yaml:"labels"`
 	AlertingRules []Alerting `json:"alertingRules" yaml:"alertingRules"`
@@ -277,21 +282,21 @@ func generateLabels(labels []Label) string {
 
 func generateMetricsGO(root string, in MetricsDoc) error {
 	i, err := template.New("metrics").Parse(string(metricsItemGoTemplate))
-
 	if err != nil {
 		return err
 	}
+
+	t, err := template.New("metrics").Parse(string(metricsItemGoTestTemplate))
+	if err != nil {
+		return err
+	}
+
 	for _, namespace := range in.Namespaces.Keys() {
 		for _, g := range in.Namespaces[namespace].Keys() {
 			for _, metric := range in.Namespaces[namespace][g].Keys() {
 				details := in.Namespaces[namespace][g][metric]
 
 				mname := fmt.Sprintf("%s_%s_%s", namespace, g, metric)
-
-				out, err := os.OpenFile(path.Join(root, fmt.Sprintf("%s.go", mname)), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
-				if err != nil {
-					return err
-				}
 
 				parts := strings.Split(mname, "_")
 				tparts := strings.Split(strings.Title(strings.Join(parts, " ")), " ")
@@ -311,6 +316,10 @@ func generateMetricsGO(root string, in MetricsDoc) error {
 				params = append(params, "value float64")
 				keys = append(keys, "value")
 
+				var mapTypes = map[string]string{}
+				var mapKeys []string
+				var mapIKeys = map[string]string{}
+
 				for _, label := range details.Labels {
 					v := strings.Split(strings.ToLower(label.Key), "_")
 					for id := range v {
@@ -323,29 +332,60 @@ func generateMetricsGO(root string, in MetricsDoc) error {
 
 					k := strings.Join(v, "")
 
+					v[0] = strings.Title(v[0])
+
+					kPublic := strings.Join(v, "")
+
 					keys = append(keys, k)
+					mapKeys = append(mapKeys, kPublic)
+
+					mapIKeys[kPublic] = k
 
 					if t := label.Type; t != nil {
 						params = append(params, fmt.Sprintf("%s %s", k, *t))
+						mapTypes[kPublic] = *t
 					} else {
 						params = append(params, fmt.Sprintf("%s string", k))
+						mapTypes[kPublic] = "string"
 					}
 				}
 
-				if err := i.Execute(out, map[string]interface{}{
-					"name":             mname,
-					"fname":            strings.Join(fnameParts, ""),
-					"ename":            strings.Join(tparts, ""),
-					"shortDescription": details.ShortDescription,
-					"labels":           generateLabels(details.Labels),
-					"type":             details.Type,
-					"fparams":          strings.Join(params, ", "),
-					"fkeys":            strings.Join(keys, ", "),
-				}); err != nil {
+				save := func(template *template.Template, path string) error {
+					out, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+					if err != nil {
+						return err
+					}
+
+					if err := template.Execute(out, map[string]interface{}{
+						"name":             mname,
+						"fname":            strings.Join(fnameParts, ""),
+						"ename":            strings.Join(tparts, ""),
+						"shortDescription": details.ShortDescription,
+						"global":           details.Global,
+						"labels":           generateLabels(details.Labels),
+						"type":             details.Type,
+						"mapTypes":         mapTypes,
+						"mapKeys":          mapKeys,
+						"mapIKeys":         mapIKeys,
+						"args":             strings.Join(params[1:], ", "),
+						"fparams":          strings.Join(params, ", "),
+						"fkeys":            strings.Join(keys, ", "),
+					}); err != nil {
+						return err
+					}
+
+					if err := out.Close(); err != nil {
+						return err
+					}
+
+					return nil
+				}
+
+				if err := save(i, path.Join(root, fmt.Sprintf("%s.go", mname))); err != nil {
 					return err
 				}
 
-				if err := out.Close(); err != nil {
+				if err := save(t, path.Join(root, fmt.Sprintf("%s_test.go", mname))); err != nil {
 					return err
 				}
 			}

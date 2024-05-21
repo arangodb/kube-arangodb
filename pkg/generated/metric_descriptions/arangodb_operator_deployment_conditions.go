@@ -20,7 +20,9 @@
 
 package metric_descriptions
 
-import "github.com/arangodb/kube-arangodb/pkg/util/metrics"
+import (
+	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
+)
 
 var (
 	arangodbOperatorDeploymentConditions = metrics.NewDescription("arangodb_operator_deployment_conditions", "Representation of the ArangoDeployment condition state (true/false)", []string{`namespace`, `name`, `condition`}, nil)

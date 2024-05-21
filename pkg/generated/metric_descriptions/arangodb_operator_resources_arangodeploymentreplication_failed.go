@@ -20,7 +20,9 @@
 
 package metric_descriptions
 
-import "github.com/arangodb/kube-arangodb/pkg/util/metrics"
+import (
+	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
+)
 
 var (
 	arangodbOperatorResourcesArangodeploymentreplicationFailed = metrics.NewDescription("arangodb_operator_resources_arangodeploymentreplication_failed", "Defines if ArangoDeploymentReplication is in Failed phase", []string{`namespace`, `name`}, nil)
