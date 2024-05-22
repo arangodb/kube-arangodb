@@ -10,7 +10,7 @@ title: ArangoLocalStorage V1Alpha
 
 ### .spec.localPath
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/storage/v1alpha/local_storage_spec.go#L36)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/storage/v1alpha/local_storage_spec.go#L36)</sup>
 
 LocalPath setting specifies one or more local directories (on the nodes) used to create persistent volumes in.
 
@@ -18,7 +18,7 @@ LocalPath setting specifies one or more local directories (on the nodes) used to
 
 ### .spec.nodeSelector
 
-Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/storage/v1alpha/local_storage_spec.go#L43)</sup>
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/storage/v1alpha/local_storage_spec.go#L43)</sup>
 
 NodeSelector setting specifies which nodes the operator will provision persistent volumes on.
 
@@ -26,7 +26,7 @@ NodeSelector setting specifies which nodes the operator will provision persisten
 
 ### .spec.podCustomization.priority
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/storage/v1alpha/local_storage_pod_customization.go#L25)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/storage/v1alpha/local_storage_pod_customization.go#L25)</sup>
 
 Priority if defined, sets the priority for pods of storage provisioner
 
@@ -34,7 +34,7 @@ Priority if defined, sets the priority for pods of storage provisioner
 
 ### .spec.privileged
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/storage/v1alpha/local_storage_spec.go#L45)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/storage/v1alpha/local_storage_spec.go#L45)</sup>
 
 Privileged if set, passes Privileged flag to SecurityContext for pods of storage provisioner
 
@@ -42,7 +42,7 @@ Privileged if set, passes Privileged flag to SecurityContext for pods of storage
 
 ### .spec.storageClass.isDefault
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/storage/v1alpha/storage_class_spec.go#L42)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/storage/v1alpha/storage_class_spec.go#L42)</sup>
 
 IsDefault setting specifies if the created `StorageClass` will
 be marked as default storage class.
@@ -53,7 +53,7 @@ Default Value: `false`
 
 ### .spec.storageClass.name
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/storage/v1alpha/storage_class_spec.go#L38)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/storage/v1alpha/storage_class_spec.go#L38)</sup>
 
 Name setting specifies the name of the storage class that
 created `PersistentVolume` will use.
@@ -66,7 +66,7 @@ Default Value: `""`
 
 ### .spec.storageClass.reclaimPolicy
 
-Type: `core.PersistentVolumeReclaimPolicy` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/storage/v1alpha/storage_class_spec.go#L46)</sup>
+Type: `core.PersistentVolumeReclaimPolicy` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/storage/v1alpha/storage_class_spec.go#L46)</sup>
 
 ReclaimPolicy defines what happens to a persistent volume when released from its claim.
 
@@ -77,7 +77,7 @@ Links:
 
 ### .spec.tolerations
 
-Type: `[]core.Toleration` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/storage/v1alpha/local_storage_spec.go#L41)</sup>
+Type: `[]core.Toleration` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/storage/v1alpha/local_storage_spec.go#L41)</sup>
 
 Tolerations specifies the tolerations added to pods of storage provisioner
 

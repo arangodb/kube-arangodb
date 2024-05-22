@@ -10,7 +10,7 @@ title: ArangoMember V1
 
 ### .spec.deletion_priority
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/deployment/v1/arango_member_spec.go#L47)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/deployment/v1/arango_member_spec.go#L47)</sup>
 
 DeletionPriority define Deletion Priority.
 Higher value means higher priority. Default is 0.
@@ -20,7 +20,7 @@ Example: set 1 for Coordinator which should be deleted first and scale down coor
 
 ### .spec.deploymentUID
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/deployment/v1/arango_member_spec.go#L36)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/deployment/v1/arango_member_spec.go#L36)</sup>
 
 DeploymentUID define Deployment UID.
 
@@ -28,7 +28,7 @@ DeploymentUID define Deployment UID.
 
 ### .spec.group
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/deployment/v1/arango_member_spec.go#L31)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/deployment/v1/arango_member_spec.go#L31)</sup>
 
 Group define Member Groups.
 
@@ -36,13 +36,13 @@ Group define Member Groups.
 
 ### .spec.id
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/deployment/v1/arango_member_spec.go#L33)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/deployment/v1/arango_member_spec.go#L33)</sup>
 
 ***
 
 ### .spec.overrides.resources
 
-Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/deployment/v1/arango_member_spec_overrides.go#L38)</sup>
+Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/deployment/v1/arango_member_spec_overrides.go#L38)</sup>
 
 Resources holds resource requests & limits. Overrides template provided on the group level.
 
@@ -53,7 +53,7 @@ Links:
 
 ### .spec.overrides.volumeClaimTemplate
 
-Type: `core.PersistentVolumeClaim` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/deployment/v1/arango_member_spec_overrides.go#L33)</sup>
+Type: `core.PersistentVolumeClaim` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/deployment/v1/arango_member_spec_overrides.go#L33)</sup>
 
 VolumeClaimTemplate specifies a template for volume claims. Overrides template provided on the group level.
 
@@ -64,7 +64,7 @@ Links:
 
 ### .spec.template.checksum
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/deployment/v1/arango_member_pod_template.go#L60)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/deployment/v1/arango_member_pod_template.go#L60)</sup>
 
 Checksum keep the Pod Spec Checksum (with ignored fields).
 
@@ -72,7 +72,7 @@ Checksum keep the Pod Spec Checksum (with ignored fields).
 
 ### .spec.template.endpoint
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/deployment/v1/arango_member_pod_template.go#L63)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/deployment/v1/arango_member_pod_template.go#L63)</sup>
 
 > [!WARNING]
 > ***DEPRECATED***
@@ -83,7 +83,7 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 
 ### .spec.template.podSpec
 
-Type: `core.PodTemplateSpec` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/deployment/v1/arango_member_pod_template.go#L54)</sup>
+Type: `core.PodTemplateSpec` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/deployment/v1/arango_member_pod_template.go#L54)</sup>
 
 PodSpec specifies the Pod Spec used for this Member.
 
@@ -94,7 +94,7 @@ Links:
 
 ### .spec.template.podSpecChecksum
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/deployment/v1/arango_member_pod_template.go#L57)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/deployment/v1/arango_member_pod_template.go#L57)</sup>
 
 PodSpecChecksum keep the Pod Spec Checksum (without ignored fields).
 
