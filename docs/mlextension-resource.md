@@ -9,7 +9,7 @@ title: ArangoMLExtension
 
 #### Enterprise Edition only
 
-[Full CustomResourceDefinition reference ->](./api/ArangoMLExtension.V1Alpha1.md)
+[Full CustomResourceDefinition reference ->](./api/ArangoMLExtension.v1beta1.md)
 
 
 You can spin up the [ArangoML](https://github.com/arangoml) engine on existing ArangoDeployment.
@@ -29,7 +29,7 @@ If you don't have one yet, consider checking [kube-arangodb installation guide](
   - Create Kubernetes Secret containing CA certificates to validate connection to endpoint if your Minio installation uses encrypted connection. The secret data should contain two fields: `ca.crt` and `ca.key` (both PEM-encoded).
   - Create ArangoMLStorage resource. Example:
   ```yaml
-    apiVersion: ml.arangodb.com/v1alpha1
+    apiVersion: ml.arangodb.com/v1beta1
     kind: ArangoMLStorage
     metadata:
       name: myarangoml-storage
@@ -50,7 +50,7 @@ If you don't have one yet, consider checking [kube-arangodb installation guide](
 3) Create `ArangoMLExtension` CR. The name of extension **must** be the same as the name of `ArangoDeployment` and it should be created in the same namespace. 
   Assuming you have ArangoDeployment with name `myarangodb`, create CR:
   ```yaml
-    apiVersion: ml.arangodb.com/v1alpha1
+    apiVersion: ml.arangodb.com/v1beta1
     kind: ArangoMLExtension
     metadata:
       name: myarangodb
@@ -59,16 +59,9 @@ If you don't have one yet, consider checking [kube-arangodb installation guide](
         name: myarangoml-storage # name of the ArangoMLStorage created on the previous step
       deployment:
         # you can add here: tolerations, nodeSelector, nodeAffinity, scheduler and many other parameters. See full CRD reference for details.
-        replicas: 1 # by default only one pod is running which contains containers for each component (prediction, training, project). You can scale it up or down.
-        prediction: 
-          image: <prediction-image>
-          # you can configure various parameters for container running this component here. See full CRD reference for details.
-        project:
-          image: <projects-image>
-          # you can configure various parameters for container running this component here. See full CRD reference for details.
-        training:
-          image: <training-image>
-          # you can configure various parameters for container running this component here. See full CRD reference for details.
+        replicas: 1 # by default only one pod is running which contains containers for api. You can scale it up or down.
+        image: <api-image>
+        # you can configure various parameters for container running this component here. See full CRD reference for details.
       init: # configuration for Kubernetes Job running initial bootstrap of ArangoML for your cluster.
         image: <init-image>
         # you can add here: tolerations, nodeSelector, nodeAffinity, scheduler and many other parameters. See full CRD reference for details.

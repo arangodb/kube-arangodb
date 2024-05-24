@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.2.41](https://github.com/arangodb/kube-arangodb/tree/1.2.41) (2024-05-24)
 - (Maintenance) Bump Prometheus API Version
 - (Bugfix) Prevent unexpected rotation in case of SecurityContext change
 - (Bugfix) Ensure PDB is created
