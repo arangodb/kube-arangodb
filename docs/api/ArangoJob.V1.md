@@ -10,7 +10,7 @@ title: ArangoJob V1
 
 ### .spec.arangoDeploymentName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/apps/v1/job_spec.go#L27)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/apps/v1/job_spec.go#L27)</sup>
 
 ArangoDeploymentName holds the name of ArangoDeployment
 
@@ -18,7 +18,7 @@ ArangoDeploymentName holds the name of ArangoDeployment
 
 ### .spec.jobTemplate
 
-Type: `batch.JobSpec` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.40/pkg/apis/apps/v1/job_spec.go#L33)</sup>
+Type: `batch.JobSpec` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/apps/v1/job_spec.go#L33)</sup>
 
 JobTemplate holds the Kubernetes Job Template
 
