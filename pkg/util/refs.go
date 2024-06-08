@@ -155,3 +155,13 @@ func And(in ...bool) bool {
 
 	return len(in) > 0
 }
+
+func PointerList[T interface{}](in []T) []*T {
+	ret := make([]*T, len(in))
+
+	for id := range in {
+		ret[id] = &in[id]
+	}
+
+	return ret
+}

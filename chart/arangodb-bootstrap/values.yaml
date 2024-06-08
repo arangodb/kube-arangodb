@@ -1,0 +1,43 @@
+deployment:
+  name: arango
+users:
+  user1: ""
+databases:
+  "*":
+    grants:
+      user1: rw
+    collections:
+      "*":
+        grants:
+          user1: rw
+  mySuperDB:
+    options: {}
+    grants:
+      user1: rw
+    collections:
+      collection1:
+        grants:
+          user1: rw
+        type: edge
+        attributes:
+          zz: 55
+  mySuperDB2:
+    options: {}
+    grants:
+      user1: rw
+job:
+  image: arangodb/arangodb:3.10.5
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets: []
+  annotations: {}
+  resources:
+    limits:
+      cpu: 1
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  securityContext:
+    runAsUser: 1000
+  nodeSelector: {}
+  tolerations: []
