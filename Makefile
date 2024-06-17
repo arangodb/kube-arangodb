@@ -10,7 +10,7 @@ ifeq ($(shell uname),Darwin)
 endif
 
 KUBERNETES_VERSION_MINOR:=29
-KUBERNETES_VERSION_PATCH:=2
+KUBERNETES_VERSION_PATCH:=6
 
 PROJECT := arangodb_operator
 SCRIPTDIR := $(shell pwd)
