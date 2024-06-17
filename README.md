@@ -141,7 +141,8 @@ Flags:
       --backup-concurrent-uploads int                          Number of concurrent uploads per deployment (default 4)
       --chaos.allowed                                          Set to allow chaos in deployments. Only activated when allowed and enabled in deployment
       --crd.install                                            Install missing CRD if access is possible (default true)
-      --crd.validation-schema stringArray                      Overrides default set of CRDs which should have validation schema enabled <crd-name>=<true/false>.
+      --crd.preserve-unknown-fields stringArray                Controls which CRD should have enabled preserve unknown fields in validation schema <crd-name>=<true/false>. To apply for all, use crd-name 'all'.
+      --crd.validation-schema stringArray                      Overrides default set of CRDs which should have validation schema enabled <crd-name>=<true/false>. To apply for all, use crd-name 'all'.
       --deployment.feature.agency-poll                         Enable Agency Poll for Enterprise deployments - Required ArangoDB 3.8.0 or higher (default true)
       --deployment.feature.all                                 Enable ALL Features
       --deployment.feature.async-backup-creation               Create backups asynchronously to avoid blocking the operator and reaching the timeout - Required ArangoDB 3.8.0 or higher (default true)

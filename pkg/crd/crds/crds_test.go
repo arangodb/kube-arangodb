@@ -36,7 +36,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/storage"
 )
 
-func ensureCRDCompliance(t *testing.T, name string, crdDef *apiextensions.CustomResourceDefinition, schemaExpected bool) {
+func ensureCRDCompliance(t *testing.T, name string, crdDef *apiextensions.CustomResourceDefinition, schemaExpected, preserveExpected bool) {
 	t.Helper()
 
 	require.NotNil(t, crdDef)
@@ -45,8 +45,25 @@ func ensureCRDCompliance(t *testing.T, name string, crdDef *apiextensions.Custom
 		t.Run(name+" "+version.Name, func(t *testing.T) {
 			require.NotNil(t, version.Schema)
 			require.Equal(t, "object", version.Schema.OpenAPIV3Schema.Type)
-			require.NotNil(t, version.Schema.OpenAPIV3Schema.XPreserveUnknownFields)
-			require.True(t, *version.Schema.OpenAPIV3Schema.XPreserveUnknownFields)
+
+			if preserveExpected {
+				require.NotNil(t, version.Schema.OpenAPIV3Schema.XPreserveUnknownFields)
+				require.True(t, *version.Schema.OpenAPIV3Schema.XPreserveUnknownFields)
+			} else {
+				require.Nil(t, version.Schema.OpenAPIV3Schema.XPreserveUnknownFields)
+
+				if version.Subresources != nil {
+					if version.Subresources.Status != nil {
+						t.Run("Status", func(t *testing.T) {
+							require.Contains(t, version.Schema.OpenAPIV3Schema.Properties, "status")
+							status := version.Schema.OpenAPIV3Schema.Properties["status"]
+							require.NotNil(t, status.XPreserveUnknownFields)
+							require.True(t, *status.XPreserveUnknownFields)
+						})
+					}
+				}
+			}
+
 			if schemaExpected {
 				require.NotEmpty(t, version.Schema.OpenAPIV3Schema.Properties)
 			} else {
@@ -79,10 +96,13 @@ func Test_CRD(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("%s-no-schema", tc.name), func(t *testing.T) {
-			ensureCRDCompliance(t, tc.name, tc.getter().CRD, false)
+			ensureCRDCompliance(t, tc.name, tc.getter().CRD, false, true)
 		})
 		t.Run(fmt.Sprintf("%s-with-schema", tc.name), func(t *testing.T) {
-			ensureCRDCompliance(t, tc.name, tc.getter(WithSchema()).CRD, true)
+			ensureCRDCompliance(t, tc.name, tc.getter(WithSchema()).CRD, true, true)
+		})
+		t.Run(fmt.Sprintf("%s-with-schema-np", tc.name), func(t *testing.T) {
+			ensureCRDCompliance(t, tc.name, tc.getter(WithSchema(), WithoutPreserve()).CRD, true, false)
 		})
 	}
 }
@@ -131,13 +151,13 @@ func Test_CRDGetters(t *testing.T) {
 		t.Run("no-schema", func(t *testing.T) {
 			crd := g()
 			require.NotNil(t, crd)
-			ensureCRDCompliance(t, crd.Spec.Names.Plural+"."+crd.Spec.Group, crd, false)
+			ensureCRDCompliance(t, crd.Spec.Names.Plural+"."+crd.Spec.Group, crd, false, true)
 		})
 
 		t.Run("with-schema", func(t *testing.T) {
 			crdWithSchema := g(WithSchema())
 			require.NotNil(t, crdWithSchema)
-			ensureCRDCompliance(t, crdWithSchema.Spec.Names.Plural+"."+crdWithSchema.Spec.Group+"", crdWithSchema, true)
+			ensureCRDCompliance(t, crdWithSchema.Spec.Names.Plural+"."+crdWithSchema.Spec.Group+"", crdWithSchema, true, true)
 		})
 	}
 }

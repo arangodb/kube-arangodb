@@ -2,6 +2,7 @@
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Maintenance) Go 1.22.4 & Kubernetes 1.29.6 libraries
+- (Feature) Fix CRD Schema types
 
 ## [1.2.41](https://github.com/arangodb/kube-arangodb/tree/1.2.41) (2024-05-24)
 - (Maintenance) Bump Prometheus API Version

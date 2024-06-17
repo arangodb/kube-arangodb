@@ -45,7 +45,6 @@ import (
 	schedulerApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	storagev1alpha "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
-	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 func (def DocDefinition) ApplyToSchema(s *apiextensions.JSONSchemaProps) {
@@ -65,7 +64,7 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 	require.NotEmpty(t, root)
 
 	type genSpec struct {
-		obj interface{}
+		objects map[string]interface{}
 	}
 
 	fset := token.NewFileSet()
@@ -77,195 +76,280 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 		"apps-job": {
 			fmt.Sprintf("%s/pkg/apis/apps/v1", root): {
 				"v1": {
-					appsv1.ArangoJob{}.Spec,
+					objects: map[string]interface{}{
+						"spec": appsv1.ArangoJob{}.Spec,
+					},
 				},
 			},
 		},
 		"backups-backup": {
 			fmt.Sprintf("%s/pkg/apis/backup/v1", root): {
 				"v1": {
-					backupv1.ArangoBackup{}.Spec,
+					objects: map[string]interface{}{
+						"spec": backupv1.ArangoBackup{}.Spec,
+					},
 				},
 				"v1alpha": {
-					backupv1.ArangoBackup{}.Spec,
+					objects: map[string]interface{}{
+						"spec": backupv1.ArangoBackup{}.Spec,
+					},
 				},
 			},
 		},
 		"backups-backuppolicy": {
 			fmt.Sprintf("%s/pkg/apis/backup/v1", root): {
 				"v1": {
-					backupv1.ArangoBackupPolicy{}.Spec,
+					objects: map[string]interface{}{
+						"spec": backupv1.ArangoBackupPolicy{}.Spec,
+					},
 				},
 				"v1alpha": {
-					backupv1.ArangoBackupPolicy{}.Spec,
+					objects: map[string]interface{}{
+						"spec": backupv1.ArangoBackupPolicy{}.Spec,
+					},
 				},
 			},
 		},
 		"database-deployment": {
 			fmt.Sprintf("%s/pkg/apis/deployment/v1", root): {
 				"v1": {
-					deploymentv1.ArangoDeployment{}.Spec,
+					objects: map[string]interface{}{
+						"spec": deploymentv1.ArangoDeployment{}.Spec,
+					},
 				},
 				"v1alpha": {
-					deploymentv1.ArangoDeployment{}.Spec,
+					objects: map[string]interface{}{
+						"spec": deploymentv1.ArangoDeployment{}.Spec,
+					},
 				},
 			},
 			fmt.Sprintf("%s/pkg/apis/deployment/v2alpha1", root): {
 				"v2alpha1": {
-					deploymentv2alpha1.ArangoDeployment{}.Spec,
+					objects: map[string]interface{}{
+						"spec": deploymentv2alpha1.ArangoDeployment{}.Spec,
+					},
 				},
 			},
 		},
 		"database-member": {
 			fmt.Sprintf("%s/pkg/apis/deployment/v1", root): {
 				"v1": {
-					deploymentv1.ArangoMember{}.Spec,
-				},
-				"v1alpha": {
-					deploymentv1.ArangoMember{}.Spec,
+					objects: map[string]interface{}{
+						"spec": deploymentv1.ArangoMember{}.Spec,
+					},
 				},
 			},
 			fmt.Sprintf("%s/pkg/apis/deployment/v2alpha1", root): {
 				"v2alpha1": {
-					deploymentv2alpha1.ArangoMember{}.Spec,
+					objects: map[string]interface{}{
+						"spec": deploymentv2alpha1.ArangoMember{}.Spec,
+					},
 				},
 			},
 		},
 		"database-clustersynchronization": {
 			fmt.Sprintf("%s/pkg/apis/deployment/v1", root): {
 				"v1": {
-					deploymentv1.ArangoClusterSynchronization{}.Spec,
-				},
-				"v1alpha": {
-					deploymentv1.ArangoClusterSynchronization{}.Spec,
+					objects: map[string]interface{}{
+						"spec": deploymentv1.ArangoClusterSynchronization{}.Spec,
+					},
 				},
 			},
 			fmt.Sprintf("%s/pkg/apis/deployment/v2alpha1", root): {
 				"v2alpha1": {
-					deploymentv2alpha1.ArangoClusterSynchronization{}.Spec,
+					objects: map[string]interface{}{
+						"spec": deploymentv2alpha1.ArangoClusterSynchronization{}.Spec,
+					},
 				},
 			},
 		},
 		"database-task": {
 			fmt.Sprintf("%s/pkg/apis/deployment/v1", root): {
 				"v1": {
-					deploymentv1.ArangoTask{}.Spec,
+					objects: map[string]interface{}{
+						"spec": deploymentv1.ArangoTask{}.Spec,
+					},
 				},
 				"v1alpha": {
-					deploymentv1.ArangoTask{}.Spec,
+					objects: map[string]interface{}{
+						"spec": deploymentv1.ArangoTask{}.Spec,
+					},
 				},
 			},
 			fmt.Sprintf("%s/pkg/apis/deployment/v2alpha1", root): {
 				"v2alpha1": {
-					deploymentv2alpha1.ArangoTask{}.Spec,
+					objects: map[string]interface{}{
+						"spec": deploymentv2alpha1.ArangoTask{}.Spec,
+					},
 				},
 			},
 		},
 		"replication-deploymentreplication": {
 			fmt.Sprintf("%s/pkg/apis/replication/v1", root): {
 				"v1": {
-					replicationv1.ArangoDeploymentReplication{}.Spec,
+					objects: map[string]interface{}{
+						"spec": replicationv1.ArangoDeploymentReplication{}.Spec,
+					},
 				},
 				"v1alpha": {
-					replicationv1.ArangoDeploymentReplication{}.Spec,
+					objects: map[string]interface{}{
+						"spec": replicationv1.ArangoDeploymentReplication{}.Spec,
+					},
 				},
 			},
 			fmt.Sprintf("%s/pkg/apis/replication/v2alpha1", root): {
 				"v2alpha1": {
-					replicationv2alpha1.ArangoDeploymentReplication{}.Spec,
+					objects: map[string]interface{}{
+						"spec": replicationv2alpha1.ArangoDeploymentReplication{}.Spec,
+					},
 				},
 			},
 		},
 		"storage-localstorage": {
 			fmt.Sprintf("%s/pkg/apis/storage/v1alpha", root): {
 				"v1alpha": {
-					storagev1alpha.ArangoLocalStorage{}.Spec,
+					objects: map[string]interface{}{
+						"spec": storagev1alpha.ArangoLocalStorage{}.Spec,
+					},
 				},
 			},
 		},
 		"scheduler-profile": {
 			fmt.Sprintf("%s/pkg/apis/scheduler/v1alpha1", root): {
 				"v1alpha1": {
-					schedulerApiv1alpha1.ArangoProfile{}.Spec,
+					objects: map[string]interface{}{
+						"spec": schedulerApiv1alpha1.ArangoProfile{}.Spec,
+					},
 				},
 				"v1beta1": {
-					schedulerApi.ArangoProfile{}.Spec,
+					objects: map[string]interface{}{
+						"spec": schedulerApi.ArangoProfile{}.Spec,
+					},
 				},
 			},
 		},
 		"ml-extension": {
 			fmt.Sprintf("%s/pkg/apis/ml/v1alpha1", root): {
 				"v1alpha1": {
-					mlApiv1alpha1.ArangoMLExtension{}.Spec,
+					objects: map[string]interface{}{
+						"spec": mlApiv1alpha1.ArangoMLExtension{}.Spec,
+					},
 				},
 				"v1beta1": {
-					mlApi.ArangoMLExtension{}.Spec,
+					objects: map[string]interface{}{
+						"spec": mlApi.ArangoMLExtension{}.Spec,
+					},
 				},
 			},
 		},
 		"ml-storage": {
 			fmt.Sprintf("%s/pkg/apis/ml/v1alpha1", root): {
 				"v1alpha1": {
-					mlApiv1alpha1.ArangoMLStorage{}.Spec,
+					objects: map[string]interface{}{
+						"spec": mlApiv1alpha1.ArangoMLStorage{}.Spec,
+					},
 				},
 				"v1beta1": {
-					mlApi.ArangoMLStorage{}.Spec,
+					objects: map[string]interface{}{
+						"spec": mlApi.ArangoMLStorage{}.Spec,
+					},
 				},
 			},
 		},
 		"ml-job-cron": {
 			fmt.Sprintf("%s/pkg/apis/ml/v1alpha1", root): {
 				"v1alpha1": {
-					mlApiv1alpha1.ArangoMLCronJob{}.Spec,
+					objects: map[string]interface{}{
+						"spec": mlApiv1alpha1.ArangoMLCronJob{}.Spec,
+					},
 				},
 			},
 		},
 		"ml-job-batch": {
 			fmt.Sprintf("%s/pkg/apis/ml/v1alpha1", root): {
 				"v1alpha1": {
-					mlApiv1alpha1.ArangoMLBatchJob{}.Spec,
+					objects: map[string]interface{}{
+						"spec": mlApiv1alpha1.ArangoMLBatchJob{}.Spec,
+					},
 				},
 			},
 		},
 		"analytics-graphanalyticsengine": {
 			fmt.Sprintf("%s/pkg/apis/analytics/v1alpha1", root): {
 				"v1alpha1": {
-					analyticsApi.GraphAnalyticsEngine{}.Spec,
+					objects: map[string]interface{}{
+						"spec": analyticsApi.GraphAnalyticsEngine{}.Spec,
+					},
 				},
 			},
 		},
 	}
 
 	for filePrefix, packagesToVersion := range input {
-		validationPerVersion := make(map[string]apiextensions.CustomResourceValidation, len(packagesToVersion))
-		for apiDir, versionMap := range packagesToVersion {
-			fields := parseSourceFiles(t, root, fset, apiDir)
+		t.Run(filePrefix, func(t *testing.T) {
+			// Preload Definition
+			data, err := os.ReadFile(fmt.Sprintf("%s/pkg/crd/crds/%s.yaml", root, filePrefix))
+			require.NoError(t, err)
 
-			for n, f := range sharedFields {
-				require.NotContains(t, fields, n)
-				fields[n] = f
-			}
+			var crd apiextensions.CustomResourceDefinition
 
-			for version, generationSpec := range versionMap {
-				sb := newSchemaBuilder(root, fields, fset)
-				s := sb.TypeToSchema(t, reflect.TypeOf(generationSpec.obj), ".spec")
-				require.NotNil(t, s, version)
+			require.NoError(t, yaml.Unmarshal(data, &crd))
 
-				validationPerVersion[version] = apiextensions.CustomResourceValidation{
-					OpenAPIV3Schema: &apiextensions.JSONSchemaProps{
-						Type:                   "object",
-						Properties:             map[string]apiextensions.JSONSchemaProps{"spec": *s},
-						XPreserveUnknownFields: util.NewType(true),
-					},
+			validationPerVersion := make(map[string]apiextensions.CustomResourceValidation, len(packagesToVersion))
+			for apiDir, versionMap := range packagesToVersion {
+				fields := parseSourceFiles(t, root, fset, apiDir)
+
+				for n, f := range sharedFields {
+					require.NotContains(t, fields, n)
+					fields[n] = f
+				}
+
+				for version, generationSpec := range versionMap {
+					crdVersion := findCRDVersion(t, crd, version)
+
+					t.Log(crdVersion.Schema)
+
+					if _, ok := generationSpec.objects["status"]; !ok {
+						generationSpec.objects["status"] = allowAnyType{}
+					}
+
+					sb := newSchemaBuilder(root, fields, fset)
+
+					objects := map[string]apiextensions.JSONSchemaProps{}
+
+					for k, obj := range generationSpec.objects {
+						s := sb.TypeToSchema(t, reflect.TypeOf(obj), fmt.Sprintf(".%s", k))
+						require.NotNil(t, s, version)
+
+						objects[k] = *s
+					}
+
+					validationPerVersion[version] = apiextensions.CustomResourceValidation{
+						OpenAPIV3Schema: &apiextensions.JSONSchemaProps{
+							Type:       "object",
+							Properties: objects,
+						},
+					}
 				}
 			}
-		}
 
-		yamlRaw, err := yaml.Marshal(validationPerVersion)
-		require.NoError(t, err)
+			yamlRaw, err := yaml.Marshal(validationPerVersion)
+			require.NoError(t, err)
 
-		outPath := path.Join(root, "pkg/crd/crds", fmt.Sprintf("%s.schema.generated.yaml", filePrefix))
-		err = os.WriteFile(outPath, yamlRaw, 0644)
-		require.NoError(t, err)
+			outPath := path.Join(root, "pkg/crd/crds", fmt.Sprintf("%s.schema.generated.yaml", filePrefix))
+			err = os.WriteFile(outPath, yamlRaw, 0644)
+			require.NoError(t, err)
+		})
 	}
+}
+
+func findCRDVersion(t *testing.T, crd apiextensions.CustomResourceDefinition, version string) apiextensions.CustomResourceDefinitionVersion {
+	for _, v := range crd.Spec.Versions {
+		if v.Name == version {
+			return v
+		}
+	}
+
+	require.FailNowf(t, "Unable to find version", "Trying to find %s/%s", crd.GetName(), version)
+	return apiextensions.CustomResourceDefinitionVersion{}
 }

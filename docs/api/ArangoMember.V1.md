@@ -10,7 +10,7 @@ title: ArangoMember V1
 
 ### .spec.deletion_priority
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/deployment/v1/arango_member_spec.go#L47)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/deployment/v1/arango_member_spec.go#L48)</sup>
 
 DeletionPriority define Deletion Priority.
 Higher value means higher priority. Default is 0.
@@ -20,7 +20,7 @@ Example: set 1 for Coordinator which should be deleted first and scale down coor
 
 ### .spec.deploymentUID
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/deployment/v1/arango_member_spec.go#L36)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/deployment/v1/arango_member_spec.go#L37)</sup>
 
 DeploymentUID define Deployment UID.
 
@@ -28,7 +28,7 @@ DeploymentUID define Deployment UID.
 
 ### .spec.group
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/deployment/v1/arango_member_spec.go#L31)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/deployment/v1/arango_member_spec.go#L32)</sup>
 
 Group define Member Groups.
 
@@ -36,7 +36,7 @@ Group define Member Groups.
 
 ### .spec.id
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/deployment/v1/arango_member_spec.go#L33)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/deployment/v1/arango_member_spec.go#L34)</sup>
 
 ***
 

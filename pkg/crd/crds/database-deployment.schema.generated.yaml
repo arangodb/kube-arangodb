@@ -464,8 +464,8 @@ v1:
                                     path:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                     scheme:
                                       type: string
                                   type: object
@@ -480,8 +480,8 @@ v1:
                                     host:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                   type: object
                               type: object
                             preStop:
@@ -509,8 +509,8 @@ v1:
                                     path:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                     scheme:
                                       type: string
                                   type: object
@@ -525,8 +525,8 @@ v1:
                                     host:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                   type: object
                               type: object
                           type: object
@@ -566,8 +566,8 @@ v1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -585,8 +585,8 @@ v1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -650,8 +650,8 @@ v1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -669,8 +669,8 @@ v1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -803,8 +803,8 @@ v1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -822,8 +822,8 @@ v1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -1251,8 +1251,8 @@ v1:
                     type: array
                   sysctls:
                     additionalProperties:
-                      format: int-or-string
                       type: string
+                      x-kubernetes-int-or-string: true
                     description: |-
                       Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
                       sysctls (by the container runtime) might fail to launch.
@@ -1394,8 +1394,8 @@ v1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -1410,8 +1410,8 @@ v1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                           type: object
                         preStop:
@@ -1439,8 +1439,8 @@ v1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -1455,8 +1455,8 @@ v1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                           type: object
                       type: object
@@ -1496,8 +1496,8 @@ v1:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -1515,8 +1515,8 @@ v1:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -1580,8 +1580,8 @@ v1:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -1599,8 +1599,8 @@ v1:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -1733,8 +1733,8 @@ v1:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -1752,8 +1752,8 @@ v1:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -2683,8 +2683,8 @@ v1:
                                     path:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                     scheme:
                                       type: string
                                   type: object
@@ -2699,8 +2699,8 @@ v1:
                                     host:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                   type: object
                               type: object
                             preStop:
@@ -2728,8 +2728,8 @@ v1:
                                     path:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                     scheme:
                                       type: string
                                   type: object
@@ -2744,8 +2744,8 @@ v1:
                                     host:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                   type: object
                               type: object
                           type: object
@@ -2785,8 +2785,8 @@ v1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -2804,8 +2804,8 @@ v1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -2869,8 +2869,8 @@ v1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -2888,8 +2888,8 @@ v1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -3022,8 +3022,8 @@ v1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -3041,8 +3041,8 @@ v1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -3470,8 +3470,8 @@ v1:
                     type: array
                   sysctls:
                     additionalProperties:
-                      format: int-or-string
                       type: string
+                      x-kubernetes-int-or-string: true
                     description: |-
                       Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
                       sysctls (by the container runtime) might fail to launch.
@@ -3613,8 +3613,8 @@ v1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -3629,8 +3629,8 @@ v1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                           type: object
                         preStop:
@@ -3658,8 +3658,8 @@ v1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -3674,8 +3674,8 @@ v1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                           type: object
                       type: object
@@ -3715,8 +3715,8 @@ v1:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -3734,8 +3734,8 @@ v1:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -3799,8 +3799,8 @@ v1:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -3818,8 +3818,8 @@ v1:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -3952,8 +3952,8 @@ v1:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -3971,8 +3971,8 @@ v1:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -4820,8 +4820,8 @@ v1:
                                     path:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                     scheme:
                                       type: string
                                   type: object
@@ -4836,8 +4836,8 @@ v1:
                                     host:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                   type: object
                               type: object
                             preStop:
@@ -4865,8 +4865,8 @@ v1:
                                     path:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                     scheme:
                                       type: string
                                   type: object
@@ -4881,8 +4881,8 @@ v1:
                                     host:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                   type: object
                               type: object
                           type: object
@@ -4922,8 +4922,8 @@ v1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -4941,8 +4941,8 @@ v1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -5006,8 +5006,8 @@ v1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -5025,8 +5025,8 @@ v1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -5159,8 +5159,8 @@ v1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -5178,8 +5178,8 @@ v1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -5607,8 +5607,8 @@ v1:
                     type: array
                   sysctls:
                     additionalProperties:
-                      format: int-or-string
                       type: string
+                      x-kubernetes-int-or-string: true
                     description: |-
                       Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
                       sysctls (by the container runtime) might fail to launch.
@@ -5750,8 +5750,8 @@ v1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -5766,8 +5766,8 @@ v1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                           type: object
                         preStop:
@@ -5795,8 +5795,8 @@ v1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -5811,8 +5811,8 @@ v1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                           type: object
                       type: object
@@ -5852,8 +5852,8 @@ v1:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -5871,8 +5871,8 @@ v1:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -5936,8 +5936,8 @@ v1:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -5955,8 +5955,8 @@ v1:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -6089,8 +6089,8 @@ v1:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -6108,8 +6108,8 @@ v1:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -7000,8 +7000,8 @@ v1:
                     type: array
                   sysctls:
                     additionalProperties:
-                      format: int-or-string
                       type: string
+                      x-kubernetes-int-or-string: true
                     description: |-
                       Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
                       sysctls (by the container runtime) might fail to launch.
@@ -7707,8 +7707,8 @@ v1:
                                     path:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                     scheme:
                                       type: string
                                   type: object
@@ -7723,8 +7723,8 @@ v1:
                                     host:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                   type: object
                               type: object
                             preStop:
@@ -7752,8 +7752,8 @@ v1:
                                     path:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                     scheme:
                                       type: string
                                   type: object
@@ -7768,8 +7768,8 @@ v1:
                                     host:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                   type: object
                               type: object
                           type: object
@@ -7809,8 +7809,8 @@ v1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -7828,8 +7828,8 @@ v1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -7893,8 +7893,8 @@ v1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -7912,8 +7912,8 @@ v1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -8046,8 +8046,8 @@ v1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -8065,8 +8065,8 @@ v1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -8494,8 +8494,8 @@ v1:
                     type: array
                   sysctls:
                     additionalProperties:
-                      format: int-or-string
                       type: string
+                      x-kubernetes-int-or-string: true
                     description: |-
                       Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
                       sysctls (by the container runtime) might fail to launch.
@@ -8637,8 +8637,8 @@ v1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -8653,8 +8653,8 @@ v1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                           type: object
                         preStop:
@@ -8682,8 +8682,8 @@ v1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -8698,8 +8698,8 @@ v1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                           type: object
                       type: object
@@ -8739,8 +8739,8 @@ v1:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -8758,8 +8758,8 @@ v1:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -8823,8 +8823,8 @@ v1:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -8842,8 +8842,8 @@ v1:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -8976,8 +8976,8 @@ v1:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -8995,8 +8995,8 @@ v1:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -9987,8 +9987,8 @@ v1:
                                     path:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                     scheme:
                                       type: string
                                   type: object
@@ -10003,8 +10003,8 @@ v1:
                                     host:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                   type: object
                               type: object
                             preStop:
@@ -10032,8 +10032,8 @@ v1:
                                     path:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                     scheme:
                                       type: string
                                   type: object
@@ -10048,8 +10048,8 @@ v1:
                                     host:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                   type: object
                               type: object
                           type: object
@@ -10089,8 +10089,8 @@ v1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -10108,8 +10108,8 @@ v1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -10173,8 +10173,8 @@ v1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -10192,8 +10192,8 @@ v1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -10326,8 +10326,8 @@ v1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -10345,8 +10345,8 @@ v1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -10774,8 +10774,8 @@ v1:
                     type: array
                   sysctls:
                     additionalProperties:
-                      format: int-or-string
                       type: string
+                      x-kubernetes-int-or-string: true
                     description: |-
                       Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
                       sysctls (by the container runtime) might fail to launch.
@@ -10917,8 +10917,8 @@ v1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -10933,8 +10933,8 @@ v1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                           type: object
                         preStop:
@@ -10962,8 +10962,8 @@ v1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -10978,8 +10978,8 @@ v1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                           type: object
                       type: object
@@ -11019,8 +11019,8 @@ v1:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -11038,8 +11038,8 @@ v1:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -11103,8 +11103,8 @@ v1:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -11122,8 +11122,8 @@ v1:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -11256,8 +11256,8 @@ v1:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -11275,8 +11275,8 @@ v1:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -12117,8 +12117,8 @@ v1:
                                     path:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                     scheme:
                                       type: string
                                   type: object
@@ -12133,8 +12133,8 @@ v1:
                                     host:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                   type: object
                               type: object
                             preStop:
@@ -12162,8 +12162,8 @@ v1:
                                     path:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                     scheme:
                                       type: string
                                   type: object
@@ -12178,8 +12178,8 @@ v1:
                                     host:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                   type: object
                               type: object
                           type: object
@@ -12219,8 +12219,8 @@ v1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -12238,8 +12238,8 @@ v1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -12303,8 +12303,8 @@ v1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -12322,8 +12322,8 @@ v1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -12456,8 +12456,8 @@ v1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -12475,8 +12475,8 @@ v1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -12904,8 +12904,8 @@ v1:
                     type: array
                   sysctls:
                     additionalProperties:
-                      format: int-or-string
                       type: string
+                      x-kubernetes-int-or-string: true
                     description: |-
                       Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
                       sysctls (by the container runtime) might fail to launch.
@@ -13047,8 +13047,8 @@ v1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -13063,8 +13063,8 @@ v1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                           type: object
                         preStop:
@@ -13092,8 +13092,8 @@ v1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -13108,8 +13108,8 @@ v1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                           type: object
                       type: object
@@ -13149,8 +13149,8 @@ v1:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -13168,8 +13168,8 @@ v1:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -13233,8 +13233,8 @@ v1:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -13252,8 +13252,8 @@ v1:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -13386,8 +13386,8 @@ v1:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -13405,8 +13405,8 @@ v1:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -13876,8 +13876,11 @@ v1:
                 type: boolean
             type: object
         type: object
+      status:
+        description: Object with preserved fields for backward compatibility
+        type: object
+        x-kubernetes-preserve-unknown-fields: true
     type: object
-    x-kubernetes-preserve-unknown-fields: true
 v1alpha:
   openAPIV3Schema:
     properties:
@@ -14344,8 +14347,8 @@ v1alpha:
                                     path:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                     scheme:
                                       type: string
                                   type: object
@@ -14360,8 +14363,8 @@ v1alpha:
                                     host:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                   type: object
                               type: object
                             preStop:
@@ -14389,8 +14392,8 @@ v1alpha:
                                     path:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                     scheme:
                                       type: string
                                   type: object
@@ -14405,8 +14408,8 @@ v1alpha:
                                     host:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                   type: object
                               type: object
                           type: object
@@ -14446,8 +14449,8 @@ v1alpha:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -14465,8 +14468,8 @@ v1alpha:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -14530,8 +14533,8 @@ v1alpha:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -14549,8 +14552,8 @@ v1alpha:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -14683,8 +14686,8 @@ v1alpha:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -14702,8 +14705,8 @@ v1alpha:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -15131,8 +15134,8 @@ v1alpha:
                     type: array
                   sysctls:
                     additionalProperties:
-                      format: int-or-string
                       type: string
+                      x-kubernetes-int-or-string: true
                     description: |-
                       Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
                       sysctls (by the container runtime) might fail to launch.
@@ -15274,8 +15277,8 @@ v1alpha:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -15290,8 +15293,8 @@ v1alpha:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                           type: object
                         preStop:
@@ -15319,8 +15322,8 @@ v1alpha:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -15335,8 +15338,8 @@ v1alpha:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                           type: object
                       type: object
@@ -15376,8 +15379,8 @@ v1alpha:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -15395,8 +15398,8 @@ v1alpha:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -15460,8 +15463,8 @@ v1alpha:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -15479,8 +15482,8 @@ v1alpha:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -15613,8 +15616,8 @@ v1alpha:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -15632,8 +15635,8 @@ v1alpha:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -16563,8 +16566,8 @@ v1alpha:
                                     path:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                     scheme:
                                       type: string
                                   type: object
@@ -16579,8 +16582,8 @@ v1alpha:
                                     host:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                   type: object
                               type: object
                             preStop:
@@ -16608,8 +16611,8 @@ v1alpha:
                                     path:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                     scheme:
                                       type: string
                                   type: object
@@ -16624,8 +16627,8 @@ v1alpha:
                                     host:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                   type: object
                               type: object
                           type: object
@@ -16665,8 +16668,8 @@ v1alpha:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -16684,8 +16687,8 @@ v1alpha:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -16749,8 +16752,8 @@ v1alpha:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -16768,8 +16771,8 @@ v1alpha:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -16902,8 +16905,8 @@ v1alpha:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -16921,8 +16924,8 @@ v1alpha:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -17350,8 +17353,8 @@ v1alpha:
                     type: array
                   sysctls:
                     additionalProperties:
-                      format: int-or-string
                       type: string
+                      x-kubernetes-int-or-string: true
                     description: |-
                       Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
                       sysctls (by the container runtime) might fail to launch.
@@ -17493,8 +17496,8 @@ v1alpha:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -17509,8 +17512,8 @@ v1alpha:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                           type: object
                         preStop:
@@ -17538,8 +17541,8 @@ v1alpha:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -17554,8 +17557,8 @@ v1alpha:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                           type: object
                       type: object
@@ -17595,8 +17598,8 @@ v1alpha:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -17614,8 +17617,8 @@ v1alpha:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -17679,8 +17682,8 @@ v1alpha:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -17698,8 +17701,8 @@ v1alpha:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -17832,8 +17835,8 @@ v1alpha:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -17851,8 +17854,8 @@ v1alpha:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -18700,8 +18703,8 @@ v1alpha:
                                     path:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                     scheme:
                                       type: string
                                   type: object
@@ -18716,8 +18719,8 @@ v1alpha:
                                     host:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                   type: object
                               type: object
                             preStop:
@@ -18745,8 +18748,8 @@ v1alpha:
                                     path:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                     scheme:
                                       type: string
                                   type: object
@@ -18761,8 +18764,8 @@ v1alpha:
                                     host:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                   type: object
                               type: object
                           type: object
@@ -18802,8 +18805,8 @@ v1alpha:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -18821,8 +18824,8 @@ v1alpha:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -18886,8 +18889,8 @@ v1alpha:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -18905,8 +18908,8 @@ v1alpha:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -19039,8 +19042,8 @@ v1alpha:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -19058,8 +19061,8 @@ v1alpha:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -19487,8 +19490,8 @@ v1alpha:
                     type: array
                   sysctls:
                     additionalProperties:
-                      format: int-or-string
                       type: string
+                      x-kubernetes-int-or-string: true
                     description: |-
                       Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
                       sysctls (by the container runtime) might fail to launch.
@@ -19630,8 +19633,8 @@ v1alpha:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -19646,8 +19649,8 @@ v1alpha:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                           type: object
                         preStop:
@@ -19675,8 +19678,8 @@ v1alpha:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -19691,8 +19694,8 @@ v1alpha:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                           type: object
                       type: object
@@ -19732,8 +19735,8 @@ v1alpha:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -19751,8 +19754,8 @@ v1alpha:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -19816,8 +19819,8 @@ v1alpha:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -19835,8 +19838,8 @@ v1alpha:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -19969,8 +19972,8 @@ v1alpha:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -19988,8 +19991,8 @@ v1alpha:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -20880,8 +20883,8 @@ v1alpha:
                     type: array
                   sysctls:
                     additionalProperties:
-                      format: int-or-string
                       type: string
+                      x-kubernetes-int-or-string: true
                     description: |-
                       Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
                       sysctls (by the container runtime) might fail to launch.
@@ -21587,8 +21590,8 @@ v1alpha:
                                     path:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                     scheme:
                                       type: string
                                   type: object
@@ -21603,8 +21606,8 @@ v1alpha:
                                     host:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                   type: object
                               type: object
                             preStop:
@@ -21632,8 +21635,8 @@ v1alpha:
                                     path:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                     scheme:
                                       type: string
                                   type: object
@@ -21648,8 +21651,8 @@ v1alpha:
                                     host:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                   type: object
                               type: object
                           type: object
@@ -21689,8 +21692,8 @@ v1alpha:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -21708,8 +21711,8 @@ v1alpha:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -21773,8 +21776,8 @@ v1alpha:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -21792,8 +21795,8 @@ v1alpha:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -21926,8 +21929,8 @@ v1alpha:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -21945,8 +21948,8 @@ v1alpha:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -22374,8 +22377,8 @@ v1alpha:
                     type: array
                   sysctls:
                     additionalProperties:
-                      format: int-or-string
                       type: string
+                      x-kubernetes-int-or-string: true
                     description: |-
                       Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
                       sysctls (by the container runtime) might fail to launch.
@@ -22517,8 +22520,8 @@ v1alpha:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -22533,8 +22536,8 @@ v1alpha:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                           type: object
                         preStop:
@@ -22562,8 +22565,8 @@ v1alpha:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -22578,8 +22581,8 @@ v1alpha:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                           type: object
                       type: object
@@ -22619,8 +22622,8 @@ v1alpha:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -22638,8 +22641,8 @@ v1alpha:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -22703,8 +22706,8 @@ v1alpha:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -22722,8 +22725,8 @@ v1alpha:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -22856,8 +22859,8 @@ v1alpha:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -22875,8 +22878,8 @@ v1alpha:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -23867,8 +23870,8 @@ v1alpha:
                                     path:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                     scheme:
                                       type: string
                                   type: object
@@ -23883,8 +23886,8 @@ v1alpha:
                                     host:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                   type: object
                               type: object
                             preStop:
@@ -23912,8 +23915,8 @@ v1alpha:
                                     path:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                     scheme:
                                       type: string
                                   type: object
@@ -23928,8 +23931,8 @@ v1alpha:
                                     host:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                   type: object
                               type: object
                           type: object
@@ -23969,8 +23972,8 @@ v1alpha:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -23988,8 +23991,8 @@ v1alpha:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -24053,8 +24056,8 @@ v1alpha:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -24072,8 +24075,8 @@ v1alpha:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -24206,8 +24209,8 @@ v1alpha:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -24225,8 +24228,8 @@ v1alpha:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -24654,8 +24657,8 @@ v1alpha:
                     type: array
                   sysctls:
                     additionalProperties:
-                      format: int-or-string
                       type: string
+                      x-kubernetes-int-or-string: true
                     description: |-
                       Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
                       sysctls (by the container runtime) might fail to launch.
@@ -24797,8 +24800,8 @@ v1alpha:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -24813,8 +24816,8 @@ v1alpha:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                           type: object
                         preStop:
@@ -24842,8 +24845,8 @@ v1alpha:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -24858,8 +24861,8 @@ v1alpha:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                           type: object
                       type: object
@@ -24899,8 +24902,8 @@ v1alpha:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -24918,8 +24921,8 @@ v1alpha:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -24983,8 +24986,8 @@ v1alpha:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -25002,8 +25005,8 @@ v1alpha:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -25136,8 +25139,8 @@ v1alpha:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -25155,8 +25158,8 @@ v1alpha:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -25997,8 +26000,8 @@ v1alpha:
                                     path:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                     scheme:
                                       type: string
                                   type: object
@@ -26013,8 +26016,8 @@ v1alpha:
                                     host:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                   type: object
                               type: object
                             preStop:
@@ -26042,8 +26045,8 @@ v1alpha:
                                     path:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                     scheme:
                                       type: string
                                   type: object
@@ -26058,8 +26061,8 @@ v1alpha:
                                     host:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                   type: object
                               type: object
                           type: object
@@ -26099,8 +26102,8 @@ v1alpha:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -26118,8 +26121,8 @@ v1alpha:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -26183,8 +26186,8 @@ v1alpha:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -26202,8 +26205,8 @@ v1alpha:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -26336,8 +26339,8 @@ v1alpha:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -26355,8 +26358,8 @@ v1alpha:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -26784,8 +26787,8 @@ v1alpha:
                     type: array
                   sysctls:
                     additionalProperties:
-                      format: int-or-string
                       type: string
+                      x-kubernetes-int-or-string: true
                     description: |-
                       Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
                       sysctls (by the container runtime) might fail to launch.
@@ -26927,8 +26930,8 @@ v1alpha:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -26943,8 +26946,8 @@ v1alpha:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                           type: object
                         preStop:
@@ -26972,8 +26975,8 @@ v1alpha:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -26988,8 +26991,8 @@ v1alpha:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                           type: object
                       type: object
@@ -27029,8 +27032,8 @@ v1alpha:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -27048,8 +27051,8 @@ v1alpha:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -27113,8 +27116,8 @@ v1alpha:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -27132,8 +27135,8 @@ v1alpha:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -27266,8 +27269,8 @@ v1alpha:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -27285,8 +27288,8 @@ v1alpha:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -27756,8 +27759,11 @@ v1alpha:
                 type: boolean
             type: object
         type: object
+      status:
+        description: Object with preserved fields for backward compatibility
+        type: object
+        x-kubernetes-preserve-unknown-fields: true
     type: object
-    x-kubernetes-preserve-unknown-fields: true
 v2alpha1:
   openAPIV3Schema:
     properties:
@@ -28224,8 +28230,8 @@ v2alpha1:
                                     path:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                     scheme:
                                       type: string
                                   type: object
@@ -28240,8 +28246,8 @@ v2alpha1:
                                     host:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                   type: object
                               type: object
                             preStop:
@@ -28269,8 +28275,8 @@ v2alpha1:
                                     path:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                     scheme:
                                       type: string
                                   type: object
@@ -28285,8 +28291,8 @@ v2alpha1:
                                     host:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                   type: object
                               type: object
                           type: object
@@ -28326,8 +28332,8 @@ v2alpha1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -28345,8 +28351,8 @@ v2alpha1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -28410,8 +28416,8 @@ v2alpha1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -28429,8 +28435,8 @@ v2alpha1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -28563,8 +28569,8 @@ v2alpha1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -28582,8 +28588,8 @@ v2alpha1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -29011,8 +29017,8 @@ v2alpha1:
                     type: array
                   sysctls:
                     additionalProperties:
-                      format: int-or-string
                       type: string
+                      x-kubernetes-int-or-string: true
                     description: |-
                       Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
                       sysctls (by the container runtime) might fail to launch.
@@ -29154,8 +29160,8 @@ v2alpha1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -29170,8 +29176,8 @@ v2alpha1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                           type: object
                         preStop:
@@ -29199,8 +29205,8 @@ v2alpha1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -29215,8 +29221,8 @@ v2alpha1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                           type: object
                       type: object
@@ -29256,8 +29262,8 @@ v2alpha1:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -29275,8 +29281,8 @@ v2alpha1:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -29340,8 +29346,8 @@ v2alpha1:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -29359,8 +29365,8 @@ v2alpha1:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -29493,8 +29499,8 @@ v2alpha1:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -29512,8 +29518,8 @@ v2alpha1:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -30443,8 +30449,8 @@ v2alpha1:
                                     path:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                     scheme:
                                       type: string
                                   type: object
@@ -30459,8 +30465,8 @@ v2alpha1:
                                     host:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                   type: object
                               type: object
                             preStop:
@@ -30488,8 +30494,8 @@ v2alpha1:
                                     path:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                     scheme:
                                       type: string
                                   type: object
@@ -30504,8 +30510,8 @@ v2alpha1:
                                     host:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                   type: object
                               type: object
                           type: object
@@ -30545,8 +30551,8 @@ v2alpha1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -30564,8 +30570,8 @@ v2alpha1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -30629,8 +30635,8 @@ v2alpha1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -30648,8 +30654,8 @@ v2alpha1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -30782,8 +30788,8 @@ v2alpha1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -30801,8 +30807,8 @@ v2alpha1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -31230,8 +31236,8 @@ v2alpha1:
                     type: array
                   sysctls:
                     additionalProperties:
-                      format: int-or-string
                       type: string
+                      x-kubernetes-int-or-string: true
                     description: |-
                       Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
                       sysctls (by the container runtime) might fail to launch.
@@ -31373,8 +31379,8 @@ v2alpha1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -31389,8 +31395,8 @@ v2alpha1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                           type: object
                         preStop:
@@ -31418,8 +31424,8 @@ v2alpha1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -31434,8 +31440,8 @@ v2alpha1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                           type: object
                       type: object
@@ -31475,8 +31481,8 @@ v2alpha1:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -31494,8 +31500,8 @@ v2alpha1:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -31559,8 +31565,8 @@ v2alpha1:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -31578,8 +31584,8 @@ v2alpha1:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -31712,8 +31718,8 @@ v2alpha1:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -31731,8 +31737,8 @@ v2alpha1:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -32580,8 +32586,8 @@ v2alpha1:
                                     path:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                     scheme:
                                       type: string
                                   type: object
@@ -32596,8 +32602,8 @@ v2alpha1:
                                     host:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                   type: object
                               type: object
                             preStop:
@@ -32625,8 +32631,8 @@ v2alpha1:
                                     path:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                     scheme:
                                       type: string
                                   type: object
@@ -32641,8 +32647,8 @@ v2alpha1:
                                     host:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                   type: object
                               type: object
                           type: object
@@ -32682,8 +32688,8 @@ v2alpha1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -32701,8 +32707,8 @@ v2alpha1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -32766,8 +32772,8 @@ v2alpha1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -32785,8 +32791,8 @@ v2alpha1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -32919,8 +32925,8 @@ v2alpha1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -32938,8 +32944,8 @@ v2alpha1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -33367,8 +33373,8 @@ v2alpha1:
                     type: array
                   sysctls:
                     additionalProperties:
-                      format: int-or-string
                       type: string
+                      x-kubernetes-int-or-string: true
                     description: |-
                       Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
                       sysctls (by the container runtime) might fail to launch.
@@ -33510,8 +33516,8 @@ v2alpha1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -33526,8 +33532,8 @@ v2alpha1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                           type: object
                         preStop:
@@ -33555,8 +33561,8 @@ v2alpha1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -33571,8 +33577,8 @@ v2alpha1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                           type: object
                       type: object
@@ -33612,8 +33618,8 @@ v2alpha1:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -33631,8 +33637,8 @@ v2alpha1:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -33696,8 +33702,8 @@ v2alpha1:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -33715,8 +33721,8 @@ v2alpha1:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -33849,8 +33855,8 @@ v2alpha1:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -33868,8 +33874,8 @@ v2alpha1:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -34760,8 +34766,8 @@ v2alpha1:
                     type: array
                   sysctls:
                     additionalProperties:
-                      format: int-or-string
                       type: string
+                      x-kubernetes-int-or-string: true
                     description: |-
                       Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
                       sysctls (by the container runtime) might fail to launch.
@@ -35467,8 +35473,8 @@ v2alpha1:
                                     path:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                     scheme:
                                       type: string
                                   type: object
@@ -35483,8 +35489,8 @@ v2alpha1:
                                     host:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                   type: object
                               type: object
                             preStop:
@@ -35512,8 +35518,8 @@ v2alpha1:
                                     path:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                     scheme:
                                       type: string
                                   type: object
@@ -35528,8 +35534,8 @@ v2alpha1:
                                     host:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                   type: object
                               type: object
                           type: object
@@ -35569,8 +35575,8 @@ v2alpha1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -35588,8 +35594,8 @@ v2alpha1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -35653,8 +35659,8 @@ v2alpha1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -35672,8 +35678,8 @@ v2alpha1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -35806,8 +35812,8 @@ v2alpha1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -35825,8 +35831,8 @@ v2alpha1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -36254,8 +36260,8 @@ v2alpha1:
                     type: array
                   sysctls:
                     additionalProperties:
-                      format: int-or-string
                       type: string
+                      x-kubernetes-int-or-string: true
                     description: |-
                       Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
                       sysctls (by the container runtime) might fail to launch.
@@ -36397,8 +36403,8 @@ v2alpha1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -36413,8 +36419,8 @@ v2alpha1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                           type: object
                         preStop:
@@ -36442,8 +36448,8 @@ v2alpha1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -36458,8 +36464,8 @@ v2alpha1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                           type: object
                       type: object
@@ -36499,8 +36505,8 @@ v2alpha1:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -36518,8 +36524,8 @@ v2alpha1:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -36583,8 +36589,8 @@ v2alpha1:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -36602,8 +36608,8 @@ v2alpha1:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -36736,8 +36742,8 @@ v2alpha1:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -36755,8 +36761,8 @@ v2alpha1:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -37747,8 +37753,8 @@ v2alpha1:
                                     path:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                     scheme:
                                       type: string
                                   type: object
@@ -37763,8 +37769,8 @@ v2alpha1:
                                     host:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                   type: object
                               type: object
                             preStop:
@@ -37792,8 +37798,8 @@ v2alpha1:
                                     path:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                     scheme:
                                       type: string
                                   type: object
@@ -37808,8 +37814,8 @@ v2alpha1:
                                     host:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                   type: object
                               type: object
                           type: object
@@ -37849,8 +37855,8 @@ v2alpha1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -37868,8 +37874,8 @@ v2alpha1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -37933,8 +37939,8 @@ v2alpha1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -37952,8 +37958,8 @@ v2alpha1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -38086,8 +38092,8 @@ v2alpha1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -38105,8 +38111,8 @@ v2alpha1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -38534,8 +38540,8 @@ v2alpha1:
                     type: array
                   sysctls:
                     additionalProperties:
-                      format: int-or-string
                       type: string
+                      x-kubernetes-int-or-string: true
                     description: |-
                       Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
                       sysctls (by the container runtime) might fail to launch.
@@ -38677,8 +38683,8 @@ v2alpha1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -38693,8 +38699,8 @@ v2alpha1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                           type: object
                         preStop:
@@ -38722,8 +38728,8 @@ v2alpha1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -38738,8 +38744,8 @@ v2alpha1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                           type: object
                       type: object
@@ -38779,8 +38785,8 @@ v2alpha1:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -38798,8 +38804,8 @@ v2alpha1:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -38863,8 +38869,8 @@ v2alpha1:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -38882,8 +38888,8 @@ v2alpha1:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -39016,8 +39022,8 @@ v2alpha1:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -39035,8 +39041,8 @@ v2alpha1:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -39877,8 +39883,8 @@ v2alpha1:
                                     path:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                     scheme:
                                       type: string
                                   type: object
@@ -39893,8 +39899,8 @@ v2alpha1:
                                     host:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                   type: object
                               type: object
                             preStop:
@@ -39922,8 +39928,8 @@ v2alpha1:
                                     path:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                     scheme:
                                       type: string
                                   type: object
@@ -39938,8 +39944,8 @@ v2alpha1:
                                     host:
                                       type: string
                                     port:
-                                      format: int-or-string
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                   type: object
                               type: object
                           type: object
@@ -39979,8 +39985,8 @@ v2alpha1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -39998,8 +40004,8 @@ v2alpha1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -40063,8 +40069,8 @@ v2alpha1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -40082,8 +40088,8 @@ v2alpha1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -40216,8 +40222,8 @@ v2alpha1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -40235,8 +40241,8 @@ v2alpha1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                             terminationGracePeriodSeconds:
                               format: int64
@@ -40664,8 +40670,8 @@ v2alpha1:
                     type: array
                   sysctls:
                     additionalProperties:
-                      format: int-or-string
                       type: string
+                      x-kubernetes-int-or-string: true
                     description: |-
                       Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
                       sysctls (by the container runtime) might fail to launch.
@@ -40807,8 +40813,8 @@ v2alpha1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -40823,8 +40829,8 @@ v2alpha1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                           type: object
                         preStop:
@@ -40852,8 +40858,8 @@ v2alpha1:
                                 path:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 scheme:
                                   type: string
                               type: object
@@ -40868,8 +40874,8 @@ v2alpha1:
                                 host:
                                   type: string
                                 port:
-                                  format: int-or-string
                                   type: string
+                                  x-kubernetes-int-or-string: true
                               type: object
                           type: object
                       type: object
@@ -40909,8 +40915,8 @@ v2alpha1:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -40928,8 +40934,8 @@ v2alpha1:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -40993,8 +40999,8 @@ v2alpha1:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -41012,8 +41018,8 @@ v2alpha1:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -41146,8 +41152,8 @@ v2alpha1:
                             path:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                             scheme:
                               type: string
                           type: object
@@ -41165,8 +41171,8 @@ v2alpha1:
                             host:
                               type: string
                             port:
-                              format: int-or-string
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         terminationGracePeriodSeconds:
                           format: int64
@@ -41636,5 +41642,8 @@ v2alpha1:
                 type: boolean
             type: object
         type: object
+      status:
+        description: Object with preserved fields for backward compatibility
+        type: object
+        x-kubernetes-preserve-unknown-fields: true
     type: object
-    x-kubernetes-preserve-unknown-fields: true

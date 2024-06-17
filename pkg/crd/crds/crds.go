@@ -95,8 +95,16 @@ func AllDefinitions() []Definition {
 
 type crdSchemas map[string]apiextensions.CustomResourceValidation
 
+func DefaultCRDOptions() *CRDOptions {
+	return &CRDOptions{
+		WithSchema:   false,
+		WithPreserve: true,
+	}
+}
+
 type CRDOptions struct {
-	WithSchema bool
+	WithSchema   bool
+	WithPreserve bool
 }
 
 func (o *CRDOptions) GetWithSchema() bool {
@@ -107,12 +115,26 @@ func (o *CRDOptions) GetWithSchema() bool {
 	return o.WithSchema
 }
 
+func (o *CRDOptions) GetWithPreserve() bool {
+	if o == nil {
+		return false
+	}
+
+	return o.WithPreserve
+}
+
 func (o *CRDOptions) AsFunc() func(*CRDOptions) {
 	return func(opts *CRDOptions) {
-		if o == nil || opts == nil {
-			opts = &CRDOptions{}
-		} else {
-			opts.WithSchema = o.WithSchema
+		if opts == nil {
+			return
+		}
+
+		if o != nil {
+			opts.WithSchema = o.GetWithSchema()
+		}
+
+		if o != nil {
+			opts.WithPreserve = o.GetWithPreserve()
 		}
 	}
 }
@@ -123,8 +145,26 @@ func WithSchema() func(*CRDOptions) {
 	}
 }
 
+func WithoutSchema() func(*CRDOptions) {
+	return func(o *CRDOptions) {
+		o.WithSchema = false
+	}
+}
+
+func WithPreserve() func(*CRDOptions) {
+	return func(o *CRDOptions) {
+		o.WithPreserve = true
+	}
+}
+
+func WithoutPreserve() func(*CRDOptions) {
+	return func(o *CRDOptions) {
+		o.WithPreserve = false
+	}
+}
+
 func getCRD(data DefinitionData, opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
-	o := &CRDOptions{}
+	o := DefaultCRDOptions()
 	for _, fn := range opts {
 		fn(o)
 	}
@@ -142,6 +182,11 @@ func getCRD(data DefinitionData, opts ...func(*CRDOptions)) *apiextensions.Custo
 				panic(fmt.Sprintf("Validation schema is not defined for version %s of %s", v.Name, crd.Name))
 			}
 			crdWithSchema.Spec.Versions[i].Schema = schema.DeepCopy()
+			if s := crdWithSchema.Spec.Versions[i].Schema.OpenAPIV3Schema; s != nil {
+				if o.GetWithPreserve() {
+					s.XPreserveUnknownFields = util.NewType(true)
+				}
+			}
 		}
 
 		return crdWithSchema

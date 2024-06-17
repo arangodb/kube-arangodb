@@ -59,5 +59,8 @@ v1alpha:
               type: object
             type: array
         type: object
+      status:
+        description: Object with preserved fields for backward compatibility
+        type: object
+        x-kubernetes-preserve-unknown-fields: true
     type: object
-    x-kubernetes-preserve-unknown-fields: true

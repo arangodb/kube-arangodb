@@ -22,14 +22,19 @@ package crd
 
 import (
 	"context"
+	"io"
+	"sort"
+	"strconv"
 
 	authorization "k8s.io/api/authorization/v1"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/yaml"
 
 	"github.com/arangodb/kube-arangodb/pkg/crd/crds"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
@@ -57,6 +62,7 @@ func EnsureCRDWithOptions(ctx context.Context, client kclient.Client, opts Ensur
 	defer crdsLock.Unlock()
 
 	for crdName, crdReg := range registeredCRDs {
+
 		getAccess := verifyCRDAccess(ctx, client, crdName, "get")
 		if !getAccess.Allowed {
 			logger.Str("crd", crdName).Info("Get Operations is not allowed. Continue")
@@ -77,6 +83,90 @@ func EnsureCRDWithOptions(ctx context.Context, client kclient.Client, opts Ensur
 	return nil
 }
 
+func GenerateCRDYAMLWithOptions(opts EnsureCRDOptions, out io.Writer) error {
+	crds := GenerateCRDWithOptions(opts)
+
+	for id, crd := range crds {
+		obj := map[string]interface{}{
+			"apiVersion": "apiextensions.k8s.io/v1",
+			"kind":       "CustomResourceDefinition",
+			"metadata": map[string]interface{}{
+				"labels": crd.Labels,
+				"name":   crd.Name,
+			},
+			"spec": crd.Spec,
+		}
+
+		data, err := yaml.Marshal(obj)
+		if err != nil {
+			return err
+		}
+
+		if id > 0 {
+			_, err = util.WriteAll(out, []byte("\n\n---\n\n"))
+			if err != nil {
+				return err
+			}
+		}
+
+		_, err = util.WriteAll(out, data)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func GenerateCRDWithOptions(opts EnsureCRDOptions) []apiextensions.CustomResourceDefinition {
+	crdsLock.Lock()
+	defer crdsLock.Unlock()
+
+	ret := make([]apiextensions.CustomResourceDefinition, 0, len(registeredCRDs))
+
+	for crdName, crdReg := range registeredCRDs {
+		var opt = &crdReg.defaultOpts
+		if o, ok := opts.CRDOptions[crdName]; ok {
+			opt = &o
+		}
+		def := crdReg.getter(opt)
+
+		ret = append(ret, *renderCRD(def, opt))
+	}
+
+	sort.Slice(ret, func(i, j int) bool {
+		return ret[i].GetName() < ret[j].GetName()
+	})
+
+	return ret
+}
+
+func renderCRD(def crds.Definition, opts *crds.CRDOptions) *apiextensions.CustomResourceDefinition {
+	crdName := def.CRD.Name
+
+	definitionVersion, definitionSchemaVersion := def.DefinitionData.Checksum()
+
+	schema := opts.GetWithSchema()
+	preserve := !schema || opts.GetWithPreserve()
+
+	c := &apiextensions.CustomResourceDefinition{
+		ObjectMeta: meta.ObjectMeta{
+			Name: crdName,
+			Labels: map[string]string{
+				Version:               definitionVersion,
+				PreserveUnknownFields: strconv.FormatBool(preserve),
+			},
+		},
+		Spec: def.CRD.Spec,
+	}
+
+	if schema {
+		c.Labels[Schema] = definitionSchemaVersion
+	}
+
+	return c
+}
+
 func tryApplyCRD(ctx context.Context, client kclient.Client, def crds.Definition, opts *crds.CRDOptions, forceUpdate bool) error {
 	crdDefinitions := client.KubernetesExtensions().ApiextensionsV1().CustomResourceDefinitions()
 
@@ -86,9 +176,14 @@ func tryApplyCRD(ctx context.Context, client kclient.Client, def crds.Definition
 
 	logger := logger.Str("version", definitionVersion)
 
-	if opts.GetWithSchema() {
+	schema := opts.GetWithSchema()
+	preserve := !schema || opts.GetWithPreserve()
+
+	if schema {
 		logger = logger.Str("schema", definitionSchemaVersion)
 	}
+
+	logger = logger.Bool("preserve", preserve)
 
 	c, err := crdDefinitions.Get(ctx, crdName, meta.GetOptions{})
 	if err != nil {
@@ -104,19 +199,7 @@ func tryApplyCRD(ctx context.Context, client kclient.Client, def crds.Definition
 			return nil
 		}
 
-		c = &apiextensions.CustomResourceDefinition{
-			ObjectMeta: meta.ObjectMeta{
-				Name: crdName,
-				Labels: map[string]string{
-					Version: definitionVersion,
-				},
-			},
-			Spec: def.CRD.Spec,
-		}
-
-		if opts.GetWithSchema() {
-			c.Labels[Schema] = definitionSchemaVersion
-		}
+		c = renderCRD(def, opts)
 
 		if _, err := crdDefinitions.Create(ctx, c, meta.CreateOptions{}); err != nil {
 			logger.Err(err).Str("crd", crdName).Warn("Create Operations is not allowed due to error")
@@ -133,24 +216,27 @@ func tryApplyCRD(ctx context.Context, client kclient.Client, def crds.Definition
 		return nil
 	}
 
-	if c.ObjectMeta.Labels == nil {
-		c.ObjectMeta.Labels = map[string]string{}
+	if c.Labels == nil {
+		c.Labels = map[string]string{}
 	}
 
 	if !forceUpdate {
-		if v, ok := c.ObjectMeta.Labels[Version]; ok && v == definitionVersion {
-			if v, ok := c.ObjectMeta.Labels[Schema]; (opts.GetWithSchema() && (ok && v == definitionSchemaVersion)) || (!opts.GetWithSchema() && !ok) {
-				logger.Str("crd", crdName).Info("CRD Update not required")
-				return nil
+		if v, ok := c.Labels[Version]; ok && v == definitionVersion {
+			if v, ok := c.Labels[Schema]; (schema && (ok && v == definitionSchemaVersion)) || (!schema && !ok) {
+				if v, ok := c.Labels[PreserveUnknownFields]; (preserve && ok && v == "true") || (!preserve && (!ok || v != "true")) {
+					logger.Str("crd", crdName).Info("CRD Update not required")
+					return nil
+				}
 			}
 		}
 	}
 
-	c.ObjectMeta.Labels[Version] = definitionVersion
-	delete(c.ObjectMeta.Labels, Schema)
-	if opts.GetWithSchema() {
-		c.ObjectMeta.Labels[Schema] = definitionSchemaVersion
+	c.Labels[Version] = definitionVersion
+	delete(c.Labels, Schema)
+	if schema {
+		c.Labels[Schema] = definitionSchemaVersion
 	}
+	c.Labels[PreserveUnknownFields] = strconv.FormatBool(preserve)
 	c.Spec = def.CRD.Spec
 
 	if _, err := crdDefinitions.Update(ctx, c, meta.UpdateOptions{}); err != nil {
