@@ -27,5 +27,8 @@ import (
 func init() {
 	registerCRDWithPanic(func(opts *crds.CRDOptions) crds.Definition {
 		return crds.SchedulerProfileDefinitionWithOptions(opts.AsFunc())
-	}, nil)
+	}, &crds.CRDOptions{
+		WithSchema:   true,
+		WithPreserve: false,
+	})
 }

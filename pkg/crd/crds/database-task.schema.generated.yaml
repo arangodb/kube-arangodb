@@ -9,8 +9,11 @@ v1:
           type:
             type: string
         type: object
+      status:
+        description: Object with preserved fields for backward compatibility
+        type: object
+        x-kubernetes-preserve-unknown-fields: true
     type: object
-    x-kubernetes-preserve-unknown-fields: true
 v1alpha:
   openAPIV3Schema:
     properties:
@@ -22,8 +25,11 @@ v1alpha:
           type:
             type: string
         type: object
+      status:
+        description: Object with preserved fields for backward compatibility
+        type: object
+        x-kubernetes-preserve-unknown-fields: true
     type: object
-    x-kubernetes-preserve-unknown-fields: true
 v2alpha1:
   openAPIV3Schema:
     properties:
@@ -35,5 +41,8 @@ v2alpha1:
           type:
             type: string
         type: object
+      status:
+        description: Object with preserved fields for backward compatibility
+        type: object
+        x-kubernetes-preserve-unknown-fields: true
     type: object
-    x-kubernetes-preserve-unknown-fields: true

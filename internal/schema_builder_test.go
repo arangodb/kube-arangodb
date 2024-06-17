@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,6 +30,8 @@ import (
 	"github.com/stretchr/testify/require"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	openapi "k8s.io/kube-openapi/pkg/common"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 type schemaBuilder struct {
@@ -37,6 +39,8 @@ type schemaBuilder struct {
 	fields map[string]*ast.Field
 	fs     *token.FileSet
 }
+
+type allowAnyType struct{}
 
 func newSchemaBuilder(root string, fields map[string]*ast.Field, fs *token.FileSet) *schemaBuilder {
 	return &schemaBuilder{
@@ -54,6 +58,14 @@ func (b *schemaBuilder) tryGetKubeOpenAPIDefinitions(t *testing.T, obj reflect.T
 		return b.openAPIDefToSchemaPros(t, o.OpenAPIDefinition())
 	}
 
+	if obj := b.tryGetKubeOpenAPIV2Definitions(t, reflect.New(obj).Interface()); obj != nil {
+		return obj
+	}
+
+	return nil
+}
+
+func (b *schemaBuilder) tryGetKubeOpenAPIV2Definitions(t *testing.T, obj interface{}) *apiextensions.JSONSchemaProps {
 	type openAPISchemaTypeGetter interface {
 		OpenAPISchemaType() []string
 	}
@@ -61,15 +73,23 @@ func (b *schemaBuilder) tryGetKubeOpenAPIDefinitions(t *testing.T, obj reflect.T
 		OpenAPISchemaFormat() string
 	}
 	var typ, frmt string
-	if o, ok := reflect.New(obj).Interface().(openAPISchemaTypeGetter); ok {
+	if o, ok := obj.(openAPISchemaTypeGetter); ok {
 		strs := o.OpenAPISchemaType()
 		require.Len(t, strs, 1)
 		typ = strs[0]
 	}
-	if o, ok := reflect.New(obj).Interface().(openAPISchemaFormatGetter); ok {
+	if o, ok := obj.(openAPISchemaFormatGetter); ok {
 		frmt = o.OpenAPISchemaFormat()
 	}
 	if typ != "" || frmt != "" {
+		if frmt == "int-or-string" && typ == "string" {
+
+			return &apiextensions.JSONSchemaProps{
+				Type:         typ,
+				XIntOrString: true,
+			}
+		}
+
 		return &apiextensions.JSONSchemaProps{
 			Type:   typ,
 			Format: frmt,
@@ -83,37 +103,42 @@ func (b *schemaBuilder) openAPIDefToSchemaPros(t *testing.T, _ *openapi.OpenAPID
 	return nil
 }
 
-func (b *schemaBuilder) TypeToSchema(t *testing.T, obj reflect.Type, path string) *apiextensions.JSONSchemaProps {
-	var schema *apiextensions.JSONSchemaProps
-	t.Run(obj.Name(), func(t *testing.T) {
-		// first check if type already implements a method to get OpenAPI schema:
-		schema = b.tryGetKubeOpenAPIDefinitions(t, obj)
-		if schema != nil {
+func (b *schemaBuilder) TypeToSchema(t *testing.T, obj reflect.Type, path string) (schema *apiextensions.JSONSchemaProps) {
+	// first check if type already implements a method to get OpenAPI schema:
+	schema = b.tryGetKubeOpenAPIDefinitions(t, obj)
+	if schema != nil {
+		return
+	}
+
+	// fallback to our impl:
+	switch obj.Kind() {
+	case reflect.Pointer:
+		schema = b.TypeToSchema(t, obj.Elem(), path)
+	case reflect.Struct:
+		if obj == reflect.TypeOf(allowAnyType{}) || obj == reflect.TypeOf(&allowAnyType{}) {
+			schema = &apiextensions.JSONSchemaProps{
+				Type:                   "object",
+				Description:            "Object with preserved fields for backward compatibility",
+				XPreserveUnknownFields: util.NewType(true),
+			}
 			return
 		}
-
-		// fallback to our impl:
-		switch obj.Kind() {
-		case reflect.Pointer:
-			schema = b.TypeToSchema(t, obj.Elem(), path)
-		case reflect.Struct:
-			schema = b.StructToSchema(t, obj, path)
-		case reflect.Array, reflect.Slice:
-			schema = b.ArrayToSchema(t, obj.Elem(), path)
-		case reflect.Map:
-			schema = b.MapToSchema(t, obj, path)
-		default:
-			if typ, frmt, simple := isSimpleType(obj); simple {
-				schema = &apiextensions.JSONSchemaProps{
-					Type:   typ,
-					Format: frmt,
-				}
-			} else {
-				t.Fatalf("Unsupported obj kind: %s", obj.Kind())
-				return
+		schema = b.StructToSchema(t, obj, path)
+	case reflect.Array, reflect.Slice:
+		schema = b.ArrayToSchema(t, obj.Elem(), path)
+	case reflect.Map:
+		schema = b.MapToSchema(t, obj, path)
+	default:
+		if typ, frmt, simple := isSimpleType(obj); simple {
+			schema = &apiextensions.JSONSchemaProps{
+				Type:   typ,
+				Format: frmt,
 			}
+		} else {
+			t.Fatalf("Unsupported obj kind: %s", obj.Kind())
+			return
 		}
-	})
+	}
 	return schema
 }
 

@@ -15,27 +15,11 @@ v1:
                 type: string
             type: object
         type: object
-    type: object
-    x-kubernetes-preserve-unknown-fields: true
-v1alpha:
-  openAPIV3Schema:
-    properties:
-      spec:
-        properties:
-          deploymentName:
-            type: string
-          kubeconfig:
-            properties:
-              namespace:
-                type: string
-              secretKey:
-                type: string
-              secretName:
-                type: string
-            type: object
+      status:
+        description: Object with preserved fields for backward compatibility
         type: object
+        x-kubernetes-preserve-unknown-fields: true
     type: object
-    x-kubernetes-preserve-unknown-fields: true
 v2alpha1:
   openAPIV3Schema:
     properties:
@@ -53,5 +37,8 @@ v2alpha1:
                 type: string
             type: object
         type: object
+      status:
+        description: Object with preserved fields for backward compatibility
+        type: object
+        x-kubernetes-preserve-unknown-fields: true
     type: object
-    x-kubernetes-preserve-unknown-fields: true

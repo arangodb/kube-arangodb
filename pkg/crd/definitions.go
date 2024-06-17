@@ -28,8 +28,9 @@ import (
 )
 
 const (
-	Version = "arangodb.com/version"
-	Schema  = "arangodb.com/schema"
+	Version               = "arangodb.com/version"
+	Schema                = "arangodb.com/schema"
+	PreserveUnknownFields = "arangodb.com/x-preserve-unknown-fields"
 )
 
 type crdDefinitionGetter func(opts *crds.CRDOptions) crds.Definition

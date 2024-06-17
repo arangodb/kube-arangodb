@@ -40,13 +40,19 @@ func dropLogMessages(t *testing.T, s tests.LogScanner) map[string]string {
 	lines := map[string]string{}
 
 	for i := 0; i < len(crds.AllDefinitions()); i++ {
-		var data map[string]string
+		var data map[string]interface{}
 		require.True(t, s.GetData(t, 500*time.Millisecond, &data))
 
-		p, ok := data["crd"]
+		pr, ok := data["crd"]
 		require.True(t, ok)
 
-		m, ok := data["message"]
+		p, ok := pr.(string)
+		require.True(t, ok)
+
+		mr, ok := data["message"]
+		require.True(t, ok)
+
+		m, ok := mr.(string)
 		require.True(t, ok)
 
 		lines[p] = m
