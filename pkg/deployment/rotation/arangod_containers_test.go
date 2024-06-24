@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -247,10 +247,6 @@ func logLevelTestCaseGen(name string, mode compare.Mode, spec, status []string) 
 
 func Test_Container_LogArgs(t *testing.T) {
 	testCases := []TestCase{
-		logLevelTestCaseGen("Only log level arguments of the ArangoDB server have been changed",
-			compare.InPlaceRotation,
-			[]string{"--log.level=INFO", "--log.level=requests=error"},
-			[]string{"--log.level=INFO"}),
 		logLevelTestCaseGen("ArangoDB server arguments have not been changed",
 			compare.SkippedRotation,
 			[]string{"--log.level=INFO"},
@@ -259,6 +255,10 @@ func Test_Container_LogArgs(t *testing.T) {
 			compare.SkippedRotation,
 			[]string{"--log.level=INFO", "--log.level=requests=debug"},
 			[]string{"--log.level=INFO", "--log.level=requests=debug"}),
+		logLevelTestCaseGen("Multi ArangoDB server arguments have not been changed - extended",
+			compare.SkippedRotation,
+			[]string{"--foo=true", "--log.level=INFO", "--foo=false", "--log.level=requests=error", "--log.level=agency=trace", "--log.level=agencycomm=INFO"},
+			[]string{"--foo=true", "--log.level=INFO", "--foo=false", "--log.level=requests=error", "--log.level=agency=trace", "--log.level=agencycomm=INFO"}),
 		logLevelTestCaseGen("Not only log argument changed",
 			compare.GracefulRotation,
 			[]string{"--log.level=INFO", "--server.endpoint=localhost"},
@@ -271,6 +271,26 @@ func Test_Container_LogArgs(t *testing.T) {
 			compare.InPlaceRotation,
 			[]string{"--foo", "--log.level=INFO"},
 			[]string{"--foo"}),
+		logLevelTestCaseGen("Only log level arguments of the ArangoDB server have been changed",
+			compare.InPlaceRotation,
+			[]string{"--log.level=INFO", "--log.level=requests=error"},
+			[]string{"--log.level=INFO"}),
+		logLevelTestCaseGen("Only order of log level arguments have been changed (checksum doesn't match)",
+			compare.InPlaceRotation,
+			[]string{"--log.level=INFO", "--log.level=requests=error", "--log.level=agency=trace", "--log.level=agencycomm=INFO", "--log.level=heartbeat=INFO"},
+			[]string{"--log.level=INFO", "--log.level=requests=error", "--log.level=heartbeat=INFO", "--log.level=agency=trace", "--log.level=agencycomm=INFO"}),
+		logLevelTestCaseGen("Change order of other args",
+			compare.GracefulRotation,
+			[]string{"--foo=true", "--log.level=INFO", "--foo=false"},
+			[]string{"--foo=false", "--log.level=INFO", "--foo=true"}),
+		logLevelTestCaseGen("Change order of the main args and main args",
+			compare.GracefulRotation,
+			[]string{"--foo=true", "--log.level=INFO", "--bar=false", "--log.level=requests=error", "--log.level=agency=trace", "--log.level=agencycomm=INFO", "--log.level=heartbeat=INFO"},
+			[]string{"--bar=false", "--log.level=INFO", "--foo=true", "--log.level=requests=error", "--log.level=heartbeat=INFO", "--log.level=agency=trace", "--log.level=agencycomm=INFO"}),
+		logLevelTestCaseGen("Change order of the logs and add log level",
+			compare.GracefulRotation,
+			[]string{"--foo=true", "--log.level=INFO", "--bar=false", "--log.level=requests=error", "--log.level=agency=trace", "--log.level=agencycomm=INFO", "--log.level=heartbeat=INFO"},
+			[]string{"--bar=false", "--log.level=INFO", "--foo=true", "--log.level=requests=error", "--log.level=agency=trace", "--log.level=agencycomm=INFO"}),
 	}
 
 	runTestCases(t)(testCases...)
