@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -210,18 +210,48 @@ func filterReservedInitContainers(c []core.Container) []core.Container {
 // isOnlyLogLevelChanged returns true when status and spec log level arguments are different.
 // If any other argument than --log.level is different false is returned.
 func isOnlyLogLevelChanged(specArgs, statusArgs []string) bool {
-	diff := arangoStrings.DiffStrings(specArgs, statusArgs)
+	nonLogSpecArgs, logSpecArgs := splitLogLevelPrefixItems(specArgs)
+	nonLogStatusArgs, logStatusArgs := splitLogLevelPrefixItems(statusArgs)
+
+	diff := arangoStrings.DiffStrings(nonLogSpecArgs, nonLogStatusArgs)
 	if len(diff) == 0 {
+		// ensure that the order of arguments is the same, besides log level one
+		for i, v := range nonLogSpecArgs {
+			if v != nonLogStatusArgs[i] {
+				return false
+			}
+		}
+	} else if len(diff) > 0 {
 		return false
 	}
 
-	for _, arg := range diff {
-		if !strings.HasPrefix(strings.TrimLeft(arg, " "), "--log.level") {
-			return false
-		}
+	if len(logSpecArgs) != len(logStatusArgs) {
+		return true
 	}
 
-	return true
+	// check if log level arguments order is the same
+	for i, v := range logSpecArgs {
+		if v != logStatusArgs[i] {
+			return true
+		}
+
+	}
+	return false
+}
+
+func splitLogLevelPrefixItems(args []string) ([]string, []string) {
+	var nonLogLevel []string
+	var logLevel []string
+
+	for _, arg := range args {
+		if !strings.HasPrefix(arg, "--log.level") {
+			nonLogLevel = append(nonLogLevel, arg)
+		} else {
+			logLevel = append(logLevel, arg)
+
+		}
+	}
+	return nonLogLevel, logLevel
 }
 
 func internalContainerLifecycleCompare(spec, status *core.Container) compare.Mode {
