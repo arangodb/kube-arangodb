@@ -55,7 +55,7 @@ func LabelsForExporterServiceMonitor(name string, obj deploymentApi.DeploymentSp
 func LabelsForExporterServiceMonitorSelector(name string) map[string]string {
 	return map[string]string{
 		k8sutil.LabelKeyArangoDeployment: name,
-		k8sutil.LabelKeyApp:              k8sutil.AppName,
+		k8sutil.LabelKeyArangoExporter:   "yes",
 	}
 }
 
