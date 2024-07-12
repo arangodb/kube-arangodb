@@ -4,6 +4,7 @@
 - (Maintenance) Go 1.22.4 & Kubernetes 1.29.6 libraries
 - (Feature) Fix CRD Schema types
 - (Bugfix) Adjust Prometheus Monitor labels
+- (Feature) Expose HTTP Client Config
 
 ## [1.2.41](https://github.com/arangodb/kube-arangodb/tree/1.2.41) (2024-05-24)
 - (Maintenance) Bump Prometheus API Version

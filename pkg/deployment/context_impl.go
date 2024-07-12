@@ -22,12 +22,9 @@ package deployment
 
 import (
 	"context"
-	"crypto/tls"
 	"fmt"
 	"net"
-	nhttp "net/http"
 	"strconv"
-	"time"
 
 	core "k8s.io/api/core/v1"
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
@@ -53,9 +50,11 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
 	"github.com/arangodb/kube-arangodb/pkg/replication"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	persistentvolumeclaimv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim/v1"
@@ -219,24 +218,7 @@ func (d *Deployment) GetAgency(ctx context.Context, agencyIDs ...string) (agency
 }
 
 func (d *Deployment) getConnConfig() (http.ConnectionConfig, error) {
-	transport := &nhttp.Transport{
-		Proxy: nhttp.ProxyFromEnvironment,
-		DialContext: (&net.Dialer{
-			Timeout:   10 * time.Second,
-			KeepAlive: 100 * time.Millisecond,
-			DualStack: true,
-		}).DialContext,
-		MaxIdleConns:          100,
-		IdleConnTimeout:       100 * time.Millisecond,
-		TLSHandshakeTimeout:   10 * time.Second,
-		ExpectContinueTimeout: 1 * time.Second,
-	}
-
-	if d.GetSpec().TLS.IsSecure() {
-		transport.TLSClientConfig = &tls.Config{
-			InsecureSkipVerify: true,
-		}
-	}
+	transport := operatorHTTP.RoundTripperWithShortTransport(operatorHTTP.WithTransportTLS(util.BoolSwitch(d.GetSpec().TLS.IsSecure(), operatorHTTP.Insecure, nil)))
 
 	connConfig := http.ConnectionConfig{
 		Transport:          transport,

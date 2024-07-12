@@ -262,6 +262,9 @@ func init() {
 	if err := reconcile.ActionsConfigGlobal.Init(&cmdMain); err != nil {
 		panic(err.Error())
 	}
+	if err := operatorHTTP.InitConfiguration(&cmdMain); err != nil {
+		panic(err.Error())
+	}
 }
 
 func Command() *cobra.Command {

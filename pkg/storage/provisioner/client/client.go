@@ -23,16 +23,15 @@ package client
 import (
 	"bytes"
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"io"
-	"net"
 	"net/http"
 	"net/url"
 	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 )
 
 // New creates a new client for the provisioner API.
@@ -44,37 +43,21 @@ func New(endpoint string) (provisioner.API, error) {
 	u.Path = ""
 	return &client{
 		endpoint: *u,
+		client: &http.Client{
+			Transport: operatorHTTP.RoundTripper(operatorHTTP.WithTransportTLS(operatorHTTP.Insecure)),
+			Timeout:   defaultHTTPTimeout,
+		},
 	}, nil
 }
 
 type client struct {
 	endpoint url.URL
+
+	client *http.Client
 }
 
 const (
 	defaultHTTPTimeout = time.Minute * 2
-)
-
-var (
-	httpClient = &http.Client{
-		Timeout: defaultHTTPTimeout,
-		Transport: &http.Transport{
-			Proxy: http.ProxyFromEnvironment,
-			DialContext: (&net.Dialer{
-				Timeout:   30 * time.Second,
-				KeepAlive: 30 * time.Second,
-				DualStack: true,
-			}).DialContext,
-			MaxIdleConns:        100,
-			MaxIdleConnsPerHost: 10,
-			IdleConnTimeout:     90 * time.Second,
-			TLSHandshakeTimeout: 90 * time.Second,
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: true,
-			},
-			ExpectContinueTimeout: 1 * time.Second,
-		},
-	}
 )
 
 // GetNodeInfo fetches information from the current node.
@@ -165,7 +148,7 @@ func (c *client) newRequest(method string, localPath string, body interface{}) (
 // do performs the given request and parses the result.
 func (c *client) do(ctx context.Context, req *http.Request, result interface{}) error {
 	req = req.WithContext(ctx)
-	resp, err := httpClient.Do(req)
+	resp, err := c.client.Do(req)
 	if err != nil {
 		// Request failed
 		return errors.WithStack(err)

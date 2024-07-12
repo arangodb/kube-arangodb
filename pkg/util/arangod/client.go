@@ -22,11 +22,9 @@ package arangod
 
 import (
 	"context"
-	"crypto/tls"
 	"net"
 	nhttp "net/http"
 	"strconv"
-	"time"
 
 	typedCore "k8s.io/client-go/kubernetes/typed/core/v1"
 
@@ -39,6 +37,7 @@ import (
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -61,58 +60,21 @@ func WithRequireAuthentication(ctx context.Context) context.Context {
 	return context.WithValue(ctx, requireAuthenticationKey{}, true)
 }
 
-var (
-	sharedHTTPTransport = &nhttp.Transport{
-		Proxy: nhttp.ProxyFromEnvironment,
-		DialContext: (&net.Dialer{
-			Timeout:   30 * time.Second,
-			KeepAlive: 90 * time.Second,
-			DualStack: true,
-		}).DialContext,
-		MaxIdleConns:          100,
-		IdleConnTimeout:       90 * time.Second,
-		TLSHandshakeTimeout:   10 * time.Second,
-		ExpectContinueTimeout: 1 * time.Second,
-	}
-	sharedHTTPSTransport = &nhttp.Transport{
-		Proxy: nhttp.ProxyFromEnvironment,
-		DialContext: (&net.Dialer{
-			Timeout:   30 * time.Second,
-			KeepAlive: 90 * time.Second,
-			DualStack: true,
-		}).DialContext,
-		MaxIdleConns:          100,
-		IdleConnTimeout:       90 * time.Second,
-		TLSHandshakeTimeout:   10 * time.Second,
-		ExpectContinueTimeout: 1 * time.Second,
-		TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
-	}
-	sharedHTTPTransportShortTimeout = &nhttp.Transport{
-		Proxy: nhttp.ProxyFromEnvironment,
-		DialContext: (&net.Dialer{
-			Timeout:   30 * time.Second,
-			KeepAlive: 100 * time.Millisecond,
-			DualStack: true,
-		}).DialContext,
-		MaxIdleConns:          100,
-		IdleConnTimeout:       100 * time.Millisecond,
-		TLSHandshakeTimeout:   10 * time.Second,
-		ExpectContinueTimeout: 1 * time.Second,
-	}
-	sharedHTTPSTransportShortTimeout = &nhttp.Transport{
-		Proxy: nhttp.ProxyFromEnvironment,
-		DialContext: (&net.Dialer{
-			Timeout:   30 * time.Second,
-			KeepAlive: 100 * time.Millisecond,
-			DualStack: true,
-		}).DialContext,
-		MaxIdleConns:          100,
-		IdleConnTimeout:       100 * time.Millisecond,
-		TLSHandshakeTimeout:   10 * time.Second,
-		ExpectContinueTimeout: 1 * time.Second,
-		TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
-	}
-)
+func sharedHTTPTransport() nhttp.RoundTripper {
+	return operatorHTTP.Transport()
+}
+
+func sharedHTTPSTransport() nhttp.RoundTripper {
+	return operatorHTTP.Transport(operatorHTTP.WithTransportTLS(operatorHTTP.Insecure))
+}
+
+func sharedHTTPTransportShortTimeout() nhttp.RoundTripper {
+	return operatorHTTP.RoundTripperWithShortTransport()
+}
+
+func sharedHTTPSTransportShortTimeout() nhttp.RoundTripper {
+	return operatorHTTP.RoundTripperWithShortTransport(operatorHTTP.WithTransportTLS(operatorHTTP.Insecure))
+}
 
 // CreateArangodClient creates a go-driver client for a specific member in the given group.
 func CreateArangodClient(ctx context.Context, cli typedCore.CoreV1Interface, apiObject *api.ArangoDeployment, group api.ServerGroup, id string, asyncSupport bool) (driver.Client, error) {
@@ -192,7 +154,7 @@ func createArangodHTTPConfigForDNSNames(apiObject *api.ArangoDeployment, dnsName
 		}
 	}
 	connConfig := http.ConnectionConfig{
-		Transport:          transport,
+		Transport:          transport(),
 		DontFollowRedirect: true,
 	}
 	for _, dnsName := range dnsNames {
