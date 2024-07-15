@@ -16,7 +16,9 @@ parameters:
 executors:
   golang-executor:
     docker:
-      - image: gcr.io/gcr-for-testing/golang:1.22.4
+      - image: 889010145541.dkr.ecr.eu-central-1.amazonaws.com/cicd/golang:1.22.5
+        aws_auth:
+          oidc_role_arn: arn:aws:iam::889010145541:role/circleci-registry-integration-eu-central-1
   machine-executor:
     machine:
       image: ubuntu-2204:current
