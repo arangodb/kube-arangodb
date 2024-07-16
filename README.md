@@ -166,6 +166,14 @@ Flags:
       --deployment.feature.upgrade-version-check               Enable initContainer with pre version check - Required ArangoDB 3.8.0 or higher (default true)
       --deployment.feature.upgrade-version-check-v2            Enable initContainer with pre version check based by Operator - Required ArangoDB 3.8.0 or higher
       --features-config-map-name string                        Name of the Feature Map ConfigMap (default "arangodb-operator-feature-config-map")
+      --http1.keep-alive                                       If false, disables HTTP keep-alives and will only use the connection to the server for a single HTTP request (default true)
+      --http1.transport.dial-timeout duration                  Maximum amount of time a dial will wait for a connect to complete (default 30s)
+      --http1.transport.idle-conn-timeout duration             Maximum amount of time an idle (keep-alive) connection will remain idle before closing itself. Zero means no limit (default 1m30s)
+      --http1.transport.idle-conn-timeout-short duration       Maximum amount of time an idle (keep-alive) connection will remain idle before closing itself. Zero means no limit (default 100ms)
+      --http1.transport.keep-alive-timeout duration            Interval between keep-alive probes for an active network connection (default 1m30s)
+      --http1.transport.keep-alive-timeout-short duration      Interval between keep-alive probes for an active network connection (default 100ms)
+      --http1.transport.max-idle-conns int                     Maximum number of idle (keep-alive) connections across all hosts. Zero means no limit (default 100)
+      --http1.transport.tls-handshake-timeout duration         Maximum amount of time to wait for a TLS handshake. Zero means no timeout (default 10s)
       --image.discovery.status                                 Discover Operator Image from Pod Status by default. When disabled Pod Spec is used. (default true)
       --image.discovery.timeout duration                       Timeout for image discovery process (default 1m0s)
       --internal.scaling-integration                           Enable Scaling Integration

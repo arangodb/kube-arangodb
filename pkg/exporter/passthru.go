@@ -21,14 +21,15 @@
 package exporter
 
 import (
-	"crypto/tls"
 	"io"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 )
 
 var _ http.Handler = &passthru{}
@@ -44,15 +45,11 @@ type httpClientFactory func(endpoint string) (*http.Client, *http.Request, error
 
 func newHttpClientFactory(auth Authentication, sslVerify bool, timeout time.Duration) httpClientFactory {
 	return func(endpoint string) (*http.Client, *http.Request, error) {
-		transport := &http.Transport{}
+		transport := operatorHTTP.Transport(operatorHTTP.WithTransportTLS(util.BoolSwitch(sslVerify, operatorHTTP.Insecure, nil)))
 
 		req, err := http.NewRequest("GET", endpoint, nil)
 		if err != nil {
 			return nil, nil, errors.WithStack(err)
-		}
-
-		if !sslVerify {
-			transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 		}
 
 		jwt, err := auth()
