@@ -61,15 +61,15 @@ func getShutdownHelper(a actionImpl) (ActionCore, api.MemberStatus, bool) {
 		return nil, api.MemberStatus{}, false
 	}
 
-	if ifPodUIDMismatch(m, a.action, cache) {
-		a.log.Error("Member UID is changed")
-		return NewActionSuccess(), m, true
-	}
-
 	pod, ok := cache.Pod().V1().GetSimple(m.Pod.GetName())
 	if !ok {
 		a.log.Str("pod-name", m.Pod.GetName()).Warn("pod is already gone")
 		// Pod does not exist, so create success action to finish it immediately.
+		return NewActionSuccess(), m, true
+	}
+
+	if ifPodUIDMismatch(m, a.action, cache) {
+		a.log.Error("Member UID is changed")
 		return NewActionSuccess(), m, true
 	}
 
