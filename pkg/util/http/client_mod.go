@@ -23,35 +23,24 @@ package http
 import (
 	"crypto/tls"
 	"net/http"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/mod"
 )
 
-type Mod[T any] func(in T)
-
-type TransportMod Mod[*http.Transport]
-
-type TransportTLSMod Mod[*tls.Config]
-
-func Transport(mods ...TransportMod) http.RoundTripper {
+func Transport(mods ...mod.Mod[*http.Transport]) http.RoundTripper {
 	var c http.Transport
 
-	for _, m := range mods {
-		if m == nil {
-			continue
-		}
-		m(&c)
-	}
+	mod.Exec[*http.Transport](&c, mods...)
 
 	return &c
 }
 
-func WithTransportTLS(mods ...TransportTLSMod) TransportMod {
+func WithTransportTLS(mods ...mod.Mod[*tls.Config]) mod.Mod[*http.Transport] {
 	return func(in *http.Transport) {
 		if in.TLSClientConfig == nil {
 			in.TLSClientConfig = &tls.Config{}
 		}
 
-		for _, mod := range mods {
-			mod(in.TLSClientConfig)
-		}
+		mod.Exec(in.TLSClientConfig, mods...)
 	}
 }

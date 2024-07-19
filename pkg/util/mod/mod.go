@@ -18,38 +18,14 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package http
+package mod
 
-import (
-	"crypto/tls"
-	"crypto/x509"
-	"net/http"
+type Mod[T any] func(in T)
 
-	"github.com/arangodb/kube-arangodb/pkg/util/mod"
-)
-
-func RoundTripper(mods ...mod.Mod[*http.Transport]) http.RoundTripper {
-	df := append([]mod.Mod[*http.Transport]{
-		configuration.DefaultTransport,
-	}, mods...)
-
-	return Transport(df...)
-}
-
-func RoundTripperWithShortTransport(mods ...mod.Mod[*http.Transport]) http.RoundTripper {
-	df := append([]mod.Mod[*http.Transport]{
-		configuration.ShortTransport,
-	}, mods...)
-
-	return Transport(df...)
-}
-
-func Insecure(in *tls.Config) {
-	in.InsecureSkipVerify = true
-}
-
-func WithRootCA(ca *x509.CertPool) mod.Mod[*tls.Config] {
-	return func(in *tls.Config) {
-		in.RootCAs = ca
+func Exec[T any](in T, mods ...Mod[T]) {
+	for _, mod := range mods {
+		if mod != nil {
+			mod(in)
+		}
 	}
 }
