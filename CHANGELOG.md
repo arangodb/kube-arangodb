@@ -6,6 +6,7 @@
 - (Bugfix) Adjust Prometheus Monitor labels
 - (Feature) Expose HTTP Client Config
 - (Bugfix) MarkedToRemove Condition Check
+- (Bugfix) Fix HTTP Client NPE
 
 ## [1.2.41](https://github.com/arangodb/kube-arangodb/tree/1.2.41) (2024-05-24)
 - (Maintenance) Bump Prometheus API Version

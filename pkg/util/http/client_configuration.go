@@ -47,18 +47,22 @@ const (
 	defaultTransportExpectContinueTimeout = 1 * time.Second
 )
 
-var configuration = configurationObject{
-	TransportKeepAlive:             defaultTransportKeepAlive,
-	TransportForceAttemptHTTP2:     defaultTransportForceAttemptHTTP2,
-	TransportMaxIdleConns:          defaultTransportMaxIdleConns,
-	TransportDialTimeout:           defaultTransportDialTimeout,
-	TransportKeepAliveTimeout:      defaultTransportKeepAliveTimeout,
-	TransportKeepAliveTimeoutShort: defaultTransportKeepAliveTimeoutShort,
-	TransportIdleConnTimeout:       defaultTransportIdleConnTimeout,
-	TransportIdleConnTimeoutShort:  defaultTransportIdleConnTimeoutShort,
-	TransportTLSHandshakeTimeout:   defaultTransportTLSHandshakeTimeout,
-	TransportExpectContinueTimeout: defaultTransportExpectContinueTimeout,
+func newConfiguration() configurationObject {
+	return configurationObject{
+		TransportKeepAlive:             defaultTransportKeepAlive,
+		TransportForceAttemptHTTP2:     defaultTransportForceAttemptHTTP2,
+		TransportMaxIdleConns:          defaultTransportMaxIdleConns,
+		TransportDialTimeout:           defaultTransportDialTimeout,
+		TransportKeepAliveTimeout:      defaultTransportKeepAliveTimeout,
+		TransportKeepAliveTimeoutShort: defaultTransportKeepAliveTimeoutShort,
+		TransportIdleConnTimeout:       defaultTransportIdleConnTimeout,
+		TransportIdleConnTimeoutShort:  defaultTransportIdleConnTimeoutShort,
+		TransportTLSHandshakeTimeout:   defaultTransportTLSHandshakeTimeout,
+		TransportExpectContinueTimeout: defaultTransportExpectContinueTimeout,
+	}
 }
+
+var configuration = newConfiguration()
 
 type configurationObject struct {
 	TransportKeepAlive         bool
@@ -82,19 +86,19 @@ func (c *configurationObject) Init(cmd *cobra.Command) error {
 
 	f := cmd.PersistentFlags()
 
-	f.BoolVar(&configuration.TransportKeepAlive, "http1.keep-alive", defaultTransportKeepAlive, "If false, disables HTTP keep-alives and will only use the connection to the server for a single HTTP request")
-	f.BoolVar(&configuration.TransportForceAttemptHTTP2, "http1.force-attempt-http2", defaultTransportForceAttemptHTTP2, "controls whether HTTP/2 is enabled")
+	f.BoolVar(&c.TransportKeepAlive, "http1.keep-alive", defaultTransportKeepAlive, "If false, disables HTTP keep-alives and will only use the connection to the server for a single HTTP request")
+	f.BoolVar(&c.TransportForceAttemptHTTP2, "http1.force-attempt-http2", defaultTransportForceAttemptHTTP2, "controls whether HTTP/2 is enabled")
 
-	f.IntVar(&configuration.TransportMaxIdleConns, "http1.transport.max-idle-conns", defaultTransportMaxIdleConns, "Maximum number of idle (keep-alive) connections across all hosts. Zero means no limit")
+	f.IntVar(&c.TransportMaxIdleConns, "http1.transport.max-idle-conns", defaultTransportMaxIdleConns, "Maximum number of idle (keep-alive) connections across all hosts. Zero means no limit")
 
-	f.DurationVar(&configuration.TransportDialTimeout, "http1.transport.dial-timeout", defaultTransportDialTimeout, "Maximum amount of time a dial will wait for a connect to complete")
-	f.DurationVar(&configuration.TransportKeepAliveTimeout, "http1.transport.keep-alive-timeout", defaultTransportKeepAliveTimeout, "Interval between keep-alive probes for an active network connection")
-	f.DurationVar(&configuration.TransportKeepAliveTimeoutShort, "http1.transport.keep-alive-timeout-short", defaultTransportKeepAliveTimeoutShort, "Interval between keep-alive probes for an active network connection")
+	f.DurationVar(&c.TransportDialTimeout, "http1.transport.dial-timeout", defaultTransportDialTimeout, "Maximum amount of time a dial will wait for a connect to complete")
+	f.DurationVar(&c.TransportKeepAliveTimeout, "http1.transport.keep-alive-timeout", defaultTransportKeepAliveTimeout, "Interval between keep-alive probes for an active network connection")
+	f.DurationVar(&c.TransportKeepAliveTimeoutShort, "http1.transport.keep-alive-timeout-short", defaultTransportKeepAliveTimeoutShort, "Interval between keep-alive probes for an active network connection")
 
-	f.DurationVar(&configuration.TransportIdleConnTimeout, "http1.transport.idle-conn-timeout", defaultTransportIdleConnTimeout, "Maximum amount of time an idle (keep-alive) connection will remain idle before closing itself. Zero means no limit")
-	f.DurationVar(&configuration.TransportIdleConnTimeoutShort, "http1.transport.idle-conn-timeout-short", defaultTransportIdleConnTimeoutShort, "Maximum amount of time an idle (keep-alive) connection will remain idle before closing itself. Zero means no limit")
-	f.DurationVar(&configuration.TransportTLSHandshakeTimeout, "http1.transport.tls-handshake-timeout", defaultTransportTLSHandshakeTimeout, "Maximum amount of time to wait for a TLS handshake. Zero means no timeout")
-	f.DurationVar(&configuration.TransportExpectContinueTimeout, "http1.transport.except-continue-timeout", defaultTransportExpectContinueTimeout, "")
+	f.DurationVar(&c.TransportIdleConnTimeout, "http1.transport.idle-conn-timeout", defaultTransportIdleConnTimeout, "Maximum amount of time an idle (keep-alive) connection will remain idle before closing itself. Zero means no limit")
+	f.DurationVar(&c.TransportIdleConnTimeoutShort, "http1.transport.idle-conn-timeout-short", defaultTransportIdleConnTimeoutShort, "Maximum amount of time an idle (keep-alive) connection will remain idle before closing itself. Zero means no limit")
+	f.DurationVar(&c.TransportTLSHandshakeTimeout, "http1.transport.tls-handshake-timeout", defaultTransportTLSHandshakeTimeout, "Maximum amount of time to wait for a TLS handshake. Zero means no timeout")
+	f.DurationVar(&c.TransportExpectContinueTimeout, "http1.transport.except-continue-timeout", defaultTransportExpectContinueTimeout, "")
 
 	if err := f.MarkHidden("http1.transport.except-continue-timeout"); err != nil {
 		return err
