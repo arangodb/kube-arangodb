@@ -45,7 +45,7 @@ type httpClientFactory func(endpoint string) (*http.Client, *http.Request, error
 
 func newHttpClientFactory(auth Authentication, sslVerify bool, timeout time.Duration) httpClientFactory {
 	return func(endpoint string) (*http.Client, *http.Request, error) {
-		transport := operatorHTTP.Transport(operatorHTTP.WithTransportTLS(util.BoolSwitch(sslVerify, operatorHTTP.Insecure, nil)))
+		transport := operatorHTTP.Transport(operatorHTTP.WithTransportTLS(util.BoolSwitch(sslVerify, nil, operatorHTTP.Insecure)))
 
 		req, err := http.NewRequest("GET", endpoint, nil)
 		if err != nil {
