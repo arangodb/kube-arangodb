@@ -54,17 +54,17 @@ covers individual newer features separately.
 
 | Platform            | Kubernetes Version | ArangoDB Version | State      | Remarks                                   | Provider Remarks                   |
 |:--------------------|:-------------------|:-----------------|:-----------|:------------------------------------------|:-----------------------------------|
-| Google GKE          | 1.21-1.28          | >= 3.8.0         | Production | Don't use micro nodes                     |                                    |
-| Azure AKS           | 1.21-1.28          | >= 3.8.0         | Production |                                           |                                    |
-| Amazon EKS          | 1.21-1.28          | >= 3.8.0         | Production |                                           | [Amazon EKS](./docs/providers/eks) |
+| Google GKE          | 1.25-1.30          | >= 3.8.0         | Production | Don't use micro nodes                     |                                    |
+| Azure AKS           | 1.25-1.30          | >= 3.8.0         | Production |                                           |                                    |
+| Amazon EKS          | 1.25-1.30          | >= 3.8.0         | Production |                                           | [Amazon EKS](./docs/providers/eks) |
 | IBM Cloud           | <= 1.20            | >= 3.8.0         | Deprecated | Support will be dropped in Operator 1.5.0 |                                    |
-| IBM Cloud           | 1.21-1.28          | >= 3.8.0         | Production |                                           |                                    |
+| IBM Cloud           | 1.25-1.30          | >= 3.8.0         | Production |                                           |                                    |
 | OpenShift           | 3.11               | >= 3.8.0         | Deprecated | Support will be dropped in Operator 1.5.0 |                                    |
 | OpenShift           | 4.2-4.14           | >= 3.8.0         | Production |                                           |                                    |
 | BareMetal (kubeadm) | <= 1.20            | >= 3.8.0         | Deprecated | Support will be dropped in Operator 1.5.0 |                                    |
-| BareMetal (kubeadm) | 1.21-1.28          | >= 3.8.0         | Production |                                           |                                    |
-| Minikube            | 1.21-1.28          | >= 3.8.0         | Devel Only |                                           |                                    |
-| Other               | 1.21-1.28          | >= 3.8.0         | Devel Only |                                           |                                    |
+| BareMetal (kubeadm) | 1.25-1.30          | >= 3.8.0         | Production |                                           |                                    |
+| Minikube            | 1.25-1.30          | >= 3.8.0         | Devel Only |                                           |                                    |
+| Other               | 1.25-1.30          | >= 3.8.0         | Devel Only |                                           |                                    |
 
 [END_INJECT]: # (kubernetesVersionsTable)
 
@@ -285,6 +285,32 @@ resources:
 
 Only use this procedure for clean installation of the operator. For upgrades see next section
 
+#### From Chart Repository
+
+##### Chart Installation
+
+```bash
+# Add helm repository
+helm repo add kube-arangodb https://arangodb.github.io/kube-arangodb
+```
+
+##### Community Edition
+```bash
+# The following will install the operator and basic CRDs resources.
+helm install --generate-name kube-arangodb/kube-arangodb
+# To use `ArangoLocalStorage`, set field `operator.features.storage` to true
+helm install --generate-name kube-arangodb/kube-arangodb --set "operator.features.storage=true"
+```
+
+##### Enterprise Edition
+```bash
+helm install --generate-name kube-arangodb/kube-arangodb-enterprise
+# To use `ArangoLocalStorage`, set field `operator.features.storage` to true
+helm install --generate-name kube-arangodb/kube-arangodb-enterprise --set "operator.features.storage=true"
+```
+
+#### From Chart Release
+
 ##### Community Edition
 ```bash
 # The following will install the operator and basic CRDs resources.
@@ -296,9 +322,9 @@ helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/
 ##### Enterprise Edition
 ```bash
 # The following will install the operator and basic CRDs resources.
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.41/kube-arangodb-1.2.41.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.41"
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.41/kube-arangodb-enterprise-1.2.41.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.41/kube-arangodb-1.2.41.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.41" --set "operator.features.storage=true"
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.41/kube-arangodb-enterprise-1.2.41.tgz --set "operator.features.storage=true"
 ```
 
 ### Upgrading the operator using Helm
@@ -335,9 +361,9 @@ helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/
 ##### Enterprise Edition
 ```bash
 # The following will install the operator and basic CRDs resources.
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.41/kube-arangodb-1.2.41.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.41"
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.41/kube-arangodb-enterprise-1.2.41.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.41/kube-arangodb-1.2.41.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.41" --set "operator.features.storage=true"
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.41/kube-arangodb-enterprise-1.2.41.tgz --set "operator.features.storage=true"
 ```
 
 ## Building

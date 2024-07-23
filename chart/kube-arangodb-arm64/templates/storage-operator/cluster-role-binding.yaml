@@ -1,0 +1,24 @@
+{{ if .Values.rbac.enabled -}}
+{{ if .Values.operator.features.storage -}}
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+    name: {{ template "kube-arangodb.rbac-cluster" . }}-storage
+    labels:
+        app.kubernetes.io/name: {{ template "kube-arangodb.name" . }}
+        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+        app.kubernetes.io/managed-by: {{ .Release.Service }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        release: {{ .Release.Name }}
+roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: {{ template "kube-arangodb.rbac-cluster" . }}-storage
+subjects:
+    - kind: ServiceAccount
+      name: {{ template "kube-arangodb.operatorName" . }}
+      namespace: {{ .Release.Namespace }}
+
+{{- end }}
+{{- end }}

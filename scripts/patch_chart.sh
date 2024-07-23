@@ -17,7 +17,7 @@ function replaceInFile {
     sed -i --expression "${EXPR}" ${FILE}
 }
 
-for f in kube-arangodb kube-arangodb-crd; do
+for f in kube-arangodb kube-arangodb-enterprise kube-arangodb-arm64 kube-arangodb-enterprise-arm64 kube-arangodb-crd; do
     replaceInFile "s@^version: .*\$@version: ${VERSION}@g" "chart/${f}/Chart.yaml"
     if [[ -f "chart/${f}/values.yaml" ]]; then
         replaceInFile "s@^  image: .*\$@  image: ${IMAGE}@g" "chart/${f}/values.yaml"
