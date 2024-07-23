@@ -270,7 +270,9 @@ SOURCES := $(shell $(SOURCES_QUERY))
 NON_EE_SOURCES_QUERY := $(SOURCES_QUERY) ! -name '*.enterprise.go'
 NON_EE_SOURCES := $(shell $(NON_EE_SOURCES_QUERY))
 
-YAML_EXCLUDE_DIRS := vendor .gobuild deps tools pkg/generated/clientset pkg/generated/informers pkg/generated/listers chart/kube-arangodb/templates chart/kube-arangodb-crd/templates chart/arangodb-ingress-proxy/templates
+YAML_EXCLUDE_DIRS := vendor .gobuild deps tools pkg/generated/clientset pkg/generated/informers pkg/generated/listers \
+                     chart/kube-arangodb/templates chart/kube-arangodb-arm64/templates chart/kube-arangodb-enterprise/templates chart/kube-arangodb-enterprise-arm64/templates  \
+                     chart/kube-arangodb-crd/templates chart/arangodb-ingress-proxy/templates
 YAML_EXCLUDE_FILES :=
 YAML_QUERY := find ./ -type f -name '*.yaml' $(foreach EXCLUDE_DIR,$(YAML_EXCLUDE_DIRS), ! -path "*/$(EXCLUDE_DIR)/*") $(foreach EXCLUDE_FILE,$(YAML_EXCLUDE_FILES), ! -path "*/$(EXCLUDE_FILE)")
 YAMLS := $(shell $(YAML_QUERY))
@@ -616,6 +618,30 @@ chart-operator: helm
 
 manifests: chart-operator
 
+.PHONY: chart-operator-enterprise
+chart-operator-enterprise: export CHART_NAME := kube-arangodb-enterprise
+chart-operator-enterprise: helm
+	@mkdir -p "$(ROOTDIR)/bin/charts"
+	@$(HELM_PACKAGE_CMD)
+
+manifests: chart-operator-enterprise
+
+.PHONY: chart-operator-arm64
+chart-operator-arm64: export CHART_NAME := kube-arangodb-arm64
+chart-operator-arm64: helm
+	@mkdir -p "$(ROOTDIR)/bin/charts"
+	@$(HELM_PACKAGE_CMD)
+
+manifests: chart-operator-arm64
+
+.PHONY: chart-operator-enterprise-arm64
+chart-operator-enterprise-arm64: export CHART_NAME := kube-arangodb-enterprise-arm64
+chart-operator-enterprise-arm64: helm
+	@mkdir -p "$(ROOTDIR)/bin/charts"
+	@$(HELM_PACKAGE_CMD)
+
+manifests: chart-operator-enterprise-arm64
+
 .PHONY: manifests-verify
 manifests-verify:
 	$(MAKE) manifest-verify-plain-ce
@@ -870,6 +896,24 @@ CRDS:=apps-job \
       scheduler-profile \
       analytics-graphanalyticsengine
 
+.PHONY: sync
+sync:
+
 .PHONY: sync-crds
 sync-crds:
 	@cp $(foreach FILE,$(CRDS),"$(ROOT)/chart/kube-arangodb/crds/$(FILE).yaml" ) "$(ROOT)/pkg/crd/crds/"
+
+sync: sync-crds
+
+.PHONY: sync-charts
+sync-charts:
+	@(cd "$(ROOT)/chart/kube-arangodb"; find . -type d -not -name values.yaml -exec mkdir -p "$(ROOT)/chart/kube-arangodb-enterprise/{}" \;)
+	@(cd "$(ROOT)/chart/kube-arangodb"; find . -type f -not -name values.yaml -not -name Chart.yaml -exec cp "$(ROOT)/chart/kube-arangodb/{}" "$(ROOT)/chart/kube-arangodb-enterprise/{}" \;)
+
+	@(cd "$(ROOT)/chart/kube-arangodb"; find . -type d -not -name values.yaml -exec mkdir -p "$(ROOT)/chart/kube-arangodb-enterprise-arm64/{}" \;)
+	@(cd "$(ROOT)/chart/kube-arangodb"; find . -type f -not -name values.yaml -not -name Chart.yaml -exec cp "$(ROOT)/chart/kube-arangodb/{}" "$(ROOT)/chart/kube-arangodb-enterprise-arm64/{}" \;)
+
+	@(cd "$(ROOT)/chart/kube-arangodb"; find . -type d -not -name values.yaml -exec mkdir -p "$(ROOT)/chart/kube-arangodb-arm64/{}" \;)
+	@(cd "$(ROOT)/chart/kube-arangodb"; find . -type f -not -name values.yaml -not -name Chart.yaml -exec cp "$(ROOT)/chart/kube-arangodb/{}" "$(ROOT)/chart/kube-arangodb-arm64/{}" \;)
+
+sync: sync-charts

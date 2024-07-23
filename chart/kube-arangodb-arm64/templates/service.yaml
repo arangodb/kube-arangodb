@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "kube-arangodb.operatorName" . }}
+  namespace: {{ .Release.Namespace }}
+{{- if .Values.operator.annotations }}
+  annotations:
+{{ toYaml .Values.operator.annotations | indent 8 }}
+{{- end }}
+  labels:
+    app.kubernetes.io/name: {{ template "kube-arangodb.name" . }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    release: {{ .Release.Name }}
+spec:
+  ports:
+    - name: server
+      port: 8528
+      protocol: TCP
+      targetPort: 8528
+    - name: http-api
+      port: 8628
+      protocol: TCP
+      targetPort: 8628
+    - name: grpc-api
+      port: 8728
+      protocol: TCP
+      targetPort: 8728
+  selector:
+    app.kubernetes.io/name: {{ template "kube-arangodb.name" . }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    release: {{ .Release.Name }}
+    role: leader
+  type: {{ .Values.operator.service.type }}

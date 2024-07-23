@@ -1,0 +1,5 @@
+# do not switch to V2 yet - we still need to support Helm 2
+apiVersion: v1
+name: kube-arangodb-arm64
+version: 1.2.41
+description: "ArangoDB Kubernetes Operator with ARM64 defaults"

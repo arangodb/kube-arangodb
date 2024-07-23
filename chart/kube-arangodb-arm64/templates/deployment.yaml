@@ -1,0 +1,193 @@
+{{ if eq .Values.operator.scope "legacy" -}}
+# Scope "legacy" selected
+{{ else if eq .Values.operator.scope "namespaced" -}}
+# Scope "namespaced" selected
+{{ if .Values.operator.features.storage -}}
+{{ fail (printf "Storage Operator not supported in %s scope!" .Values.operator.scope) -}}
+{{ end -}}
+{{ else -}}
+{{ fail (printf "Operator Scope %s is not supported!" .Values.operator.scope) -}}
+{{ end -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: {{ template "kube-arangodb.operatorName" . }}
+    namespace: {{ .Release.Namespace }}
+{{- if .Values.operator.annotations }}
+    annotations:
+{{ toYaml .Values.operator.annotations | indent 8 }}
+{{- end }}
+    labels:
+        app.kubernetes.io/name: {{ template "kube-arangodb.name" . }}
+        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+        app.kubernetes.io/managed-by: {{ .Release.Service }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        release: {{ .Release.Name }}
+spec:
+{{- if .Values.operator.debug }}
+    replicas: 1
+{{- else }}
+    replicas: {{ .Values.operator.replicaCount }}
+{{- end }}
+    strategy:
+{{ toYaml .Values.operator.updateStrategy | indent 8 }}
+    selector:
+        matchLabels:
+            app.kubernetes.io/name: {{ template "kube-arangodb.name" . }}
+            app.kubernetes.io/managed-by: {{ .Release.Service }}
+            app.kubernetes.io/instance: {{ .Release.Name }}
+            release: {{ .Release.Name }}
+    template:
+        metadata:
+            labels:
+                app.kubernetes.io/name: {{ template "kube-arangodb.name" . }}
+                helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+                app.kubernetes.io/managed-by: {{ .Release.Service }}
+                app.kubernetes.io/instance: {{ .Release.Name }}
+                release: {{ .Release.Name }}
+{{- if .Values.operator.annotations }}
+            annotations:
+{{ toYaml .Values.operator.annotations | indent 16 }}
+{{- end }}
+        spec:
+{{- if .Values.operator.nodeSelector }}
+            nodeSelector:
+{{ toYaml .Values.operator.nodeSelector | indent 16 }}
+{{- end }}
+            serviceAccountName: {{ template "kube-arangodb.operatorName" . }}
+            affinity:
+              nodeAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                  nodeSelectorTerms:
+                    - matchExpressions:
+                        - key: kubernetes.io/arch
+                          operator: In
+                          values:
+{{- range .Values.operator.architectures }}
+                          - {{ . | quote }}
+{{- end }}
+              podAntiAffinity:
+                preferredDuringSchedulingIgnoredDuringExecution:
+                  - weight: 100
+                    podAffinityTerm:
+                      topologyKey: "kubernetes.io/hostname"
+                      labelSelector:
+                        matchExpressions:
+                          - key: app.kubernetes.io/name
+                            operator: In
+                            values:
+                              - {{ template "kube-arangodb.name" . }}
+                          - key: app.kubernetes.io/instance
+                            operator: In
+                            values:
+                              - {{ .Release.Name }}
+            hostNetwork: false
+            hostPID: false
+            hostIPC: false
+            securityContext:
+                runAsNonRoot: true
+                runAsUser: {{ .Values.operator.securityContext.runAsUser }}
+            containers:
+                - name: operator
+                  imagePullPolicy: {{ .Values.operator.imagePullPolicy }}
+                  image: {{ .Values.operator.image }}
+                  args:
+                    - --scope={{ .Values.operator.scope }}
+{{- if .Values.operator.features.deployment }}
+                    - --operator.deployment
+{{- end -}}
+{{ if .Values.operator.features.deploymentReplications }}
+                    - --operator.deployment-replication
+{{- end -}}
+{{ if .Values.operator.features.storage }}
+                    - --operator.storage
+{{- end }}
+{{ if .Values.operator.features.backup }}
+                    - --operator.backup
+{{- end }}
+{{- if or .Values.operator.debug (eq ( int .Values.operator.replicaCount)  1)  }}
+                    - --mode.single
+{{- end }}
+{{ if .Values.operator.features.apps }}
+                    - --operator.apps
+{{- end }}
+{{ if .Values.operator.features.ml }}
+                    - --operator.ml
+{{- end }}
+{{ if .Values.operator.features.analytics }}
+                    - --operator.analytics
+{{- end }}
+{{ if .Values.operator.features.k8sToK8sClusterSync }}
+                    - --operator.k2k-cluster-sync
+{{- end }}
+                    - --chaos.allowed={{ .Values.operator.allowChaos }}
+{{- if .Values.operator.args }}
+{{- range .Values.operator.args }}
+                    - {{ . | quote }}
+{{- end }}
+{{- end }}
+                  env:
+                      - name: MY_POD_NAMESPACE
+                        valueFrom:
+                            fieldRef:
+                                fieldPath: metadata.namespace
+                      - name: MY_POD_NAME
+                        valueFrom:
+                            fieldRef:
+                                fieldPath: metadata.name
+                      - name: MY_CONTAINER_NAME
+                        value: "operator"
+                      - name: MY_POD_IP
+                        valueFrom:
+                            fieldRef:
+                                fieldPath: status.podIP
+{{- if .Values.operator.features.apps }}
+                      - name: ARANGOJOB_SA_NAME
+                        value: "{{ template "kube-arangodb.operatorName" . }}-job"
+{{- end }}
+                  ports:
+                      - name: metrics
+                        containerPort: 8528
+                  securityContext:
+                      privileged: false
+                      allowPrivilegeEscalation: false
+                      readOnlyRootFilesystem: true
+                      capabilities:
+                          drop:
+                              - 'ALL'
+{{- if .Values.operator.debug }}
+                          add:
+                            - 'SYS_PTRACE'
+{{- end }}
+{{- if .Values.operator.resources }}
+                  resources:
+{{ toYaml .Values.operator.resources | indent 22 }}
+{{- end }}
+{{- if not .Values.operator.debug }}
+                  livenessProbe:
+                      httpGet:
+                          path: /health
+                          port: 8528
+                          scheme: HTTPS
+                      initialDelaySeconds: 5
+                      periodSeconds: 10
+                  readinessProbe:
+                      httpGet:
+                          path: /ready
+                          port: 8528
+                          scheme: HTTPS
+                      initialDelaySeconds: 5
+                      periodSeconds: 10
+{{- end }}
+            tolerations:
+                - key: "node.kubernetes.io/unreachable"
+                  operator: "Exists"
+                  effect: "NoExecute"
+                  tolerationSeconds: 5
+                - key: "node.kubernetes.io/not-ready"
+                  operator: "Exists"
+                  effect: "NoExecute"
+                  tolerationSeconds: 5
+{{- if .Values.operator.tolerations }}
+{{ toYaml .Values.operator.tolerations | indent 16 }}
+{{- end }}

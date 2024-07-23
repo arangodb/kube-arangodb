@@ -7,6 +7,7 @@
 - (Feature) Expose HTTP Client Config
 - (Bugfix) MarkedToRemove Condition Check
 - (Bugfix) Fix HTTP Client NPE
+- (Documentation) Update Supported K8S Versions and Charts
 
 ## [1.2.41](https://github.com/arangodb/kube-arangodb/tree/1.2.41) (2024-05-24)
 - (Maintenance) Bump Prometheus API Version
