@@ -16,6 +16,9 @@ rules:
     - apiGroups: ["database.arangodb.com"]
       resources: ["arangodeployments", "arangodeployments/status","arangomembers", "arangomembers/status"]
       verbs: ["*"]
+    - apiGroups: ["networking.arangodb.com"]
+      resources: ["arangoroutes", "arangoroutes/status"]
+      verbs: ["*"]
 {{- if .Values.rbac.extensions.acs }}
     - apiGroups: ["database.arangodb.com"]
       resources: ["arangoclustersynchronizations", "arangoclustersynchronizations/status"]

@@ -42,6 +42,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoclustersynchronization"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoroute"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangotask"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/endpoints"
@@ -134,6 +135,7 @@ type inspectorState struct {
 	serviceMonitors               *serviceMonitorsInspector
 	arangoMembers                 *arangoMembersInspector
 	arangoTasks                   *arangoTasksInspector
+	arangoRoutes                  *arangoRoutesInspector
 	arangoClusterSynchronizations *arangoClusterSynchronizationsInspector
 	endpoints                     *endpointsInspector
 
@@ -165,6 +167,10 @@ func (i *inspectorState) RegisterInformers(k8s informers.SharedInformerFactory, 
 
 	if _, err := i.ArangoTask().V1(); err == nil {
 		arango.Database().V1().ArangoTasks().Informer().AddEventHandler(i.eventHandler(definitions.ArangoTask))
+	}
+
+	if _, err := i.ArangoRoute().V1Alpha1(); err == nil {
+		arango.Networking().V1alpha1().ArangoRoutes().Informer().AddEventHandler(i.eventHandler(definitions.ArangoRoute))
 	}
 
 	if _, err := i.ArangoClusterSynchronization().V1(); err == nil {
@@ -225,6 +231,7 @@ func (i *inspectorState) AnonymousObjects() []anonymous.Impl {
 		i.serviceMonitors,
 		i.arangoMembers,
 		i.arangoTasks,
+		i.arangoRoutes,
 		i.arangoClusterSynchronizations,
 		i.endpoints,
 	}
@@ -315,6 +322,10 @@ func (i *inspectorState) ArangoClusterSynchronization() arangoclustersynchroniza
 
 func (i *inspectorState) ArangoTask() arangotask.Definition {
 	return i.arangoTasks
+}
+
+func (i *inspectorState) ArangoRoute() arangoroute.Definition {
+	return i.arangoRoutes
 }
 
 func (i *inspectorState) Refresh(ctx context.Context) error {
@@ -464,6 +475,10 @@ func (i *inspectorState) validate() error {
 		return err
 	}
 
+	if err := i.arangoRoutes.validate(); err != nil {
+		return err
+	}
+
 	if err := i.arangoTasks.validate(); err != nil {
 		return err
 	}
@@ -495,6 +510,7 @@ func (i *inspectorState) copyCore() *inspectorState {
 		serviceMonitors:               i.serviceMonitors,
 		arangoMembers:                 i.arangoMembers,
 		arangoTasks:                   i.arangoTasks,
+		arangoRoutes:                  i.arangoRoutes,
 		arangoClusterSynchronizations: i.arangoClusterSynchronizations,
 		throttles:                     i.throttles.Copy(),
 		versionInfo:                   i.versionInfo,

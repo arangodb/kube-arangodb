@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,14 +32,15 @@ type Inspector interface {
 }
 
 func NewAlwaysThrottleComponents() Components {
-	return NewThrottleComponents(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+	return NewThrottleComponents(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 }
 
-func NewThrottleComponents(acs, am, at, node, pvc, pod, pv, pdb, secret, service, serviceAccount, sm, endpoints time.Duration) Components {
+func NewThrottleComponents(acs, am, at, ar, node, pvc, pod, pv, pdb, secret, service, serviceAccount, sm, endpoints time.Duration) Components {
 	return &throttleComponents{
 		arangoClusterSynchronization: NewThrottle(acs),
 		arangoMember:                 NewThrottle(am),
 		arangoTask:                   NewThrottle(at),
+		arangoRoute:                  NewThrottle(ar),
 		node:                         NewThrottle(node),
 		persistentVolume:             NewThrottle(pv),
 		persistentVolumeClaim:        NewThrottle(pvc),
@@ -57,6 +58,7 @@ type Components interface {
 	ArangoClusterSynchronization() Throttle
 	ArangoMember() Throttle
 	ArangoTask() Throttle
+	ArangoRoute() Throttle
 	Node() Throttle
 	PersistentVolume() Throttle
 	PersistentVolumeClaim() Throttle
@@ -79,6 +81,7 @@ type throttleComponents struct {
 	arangoClusterSynchronization Throttle
 	arangoMember                 Throttle
 	arangoTask                   Throttle
+	arangoRoute                  Throttle
 	node                         Throttle
 	persistentVolume             Throttle
 	persistentVolumeClaim        Throttle
@@ -126,6 +129,8 @@ func (t *throttleComponents) Get(c definitions.Component) Throttle {
 		return t.arangoMember
 	case definitions.ArangoTask:
 		return t.arangoTask
+	case definitions.ArangoRoute:
+		return t.arangoRoute
 	case definitions.Node:
 		return t.node
 	case definitions.PersistentVolume:
@@ -156,6 +161,7 @@ func (t *throttleComponents) Copy() Components {
 		arangoClusterSynchronization: t.arangoClusterSynchronization.Copy(),
 		arangoMember:                 t.arangoMember.Copy(),
 		arangoTask:                   t.arangoTask.Copy(),
+		arangoRoute:                  t.arangoRoute.Copy(),
 		node:                         t.node.Copy(),
 		persistentVolume:             t.persistentVolume.Copy(),
 		persistentVolumeClaim:        t.persistentVolumeClaim.Copy(),
@@ -179,6 +185,10 @@ func (t *throttleComponents) ArangoMember() Throttle {
 
 func (t *throttleComponents) ArangoTask() Throttle {
 	return t.arangoTask
+}
+
+func (t *throttleComponents) ArangoRoute() Throttle {
+	return t.arangoRoute
 }
 
 func (t *throttleComponents) Node() Throttle {

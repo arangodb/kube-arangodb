@@ -77,6 +77,8 @@ linters-settings:
         alias: mlSharedTests
       - pkg: github.com/arangodb/kube-arangodb/pkg/apis/analytics/v1alpha1
         alias: analyticsApi
+      - pkg: github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1
+        alias: networkingApi
       - pkg: github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1
         alias: mlApi
       - pkg: github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1

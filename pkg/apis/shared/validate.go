@@ -33,11 +33,16 @@ import (
 
 var (
 	resourceNameRE = regexp.MustCompile(`^([0-9\-\.a-z])+$`)
+	apiPathRE      = regexp.MustCompile(`^/([A-Za-z0-9\-]+/)*$`)
 )
 
 const (
 	ServiceTypeNone core.ServiceType = "None"
 )
+
+type ValidateInterface interface {
+	Validate() error
+}
 
 // ValidateResourceName validates a kubernetes resource name.
 // If not valid, an error is returned.
@@ -70,6 +75,19 @@ func ValidateUID(uid types.UID) error {
 	return err
 }
 
+// ValidateAPIPath validates if it is valid API Path
+func ValidateAPIPath(path string) error {
+	if path == "" {
+		return nil
+	}
+
+	if apiPathRE.MatchString(path) {
+		return nil
+	}
+
+	return errors.WithStack(errors.Errorf("String '%s' is not a valid api path", path))
+}
+
 // ValidatePullPolicy Validates core.PullPolicy
 func ValidatePullPolicy(in core.PullPolicy) error {
 	switch in {
@@ -80,19 +98,19 @@ func ValidatePullPolicy(in core.PullPolicy) error {
 	return errors.Errorf("Unknown pull policy: '%s'", string(in))
 }
 
-type ValidateInterface interface {
-	Validate() error
-}
-
 func Validate[T interface{}](in T) error {
-	return validate(in)
+	res, _ := validate(in)
+	return res
 }
 
-func validate(in any) error {
-	if v, ok := in.(ValidateInterface); ok {
-		return v.Validate()
+func validate(in any) (error, bool) {
+	if in == nil {
+		return nil, false
 	}
-	return nil
+	if v, ok := in.(ValidateInterface); ok {
+		return v.Validate(), true
+	}
+	return nil, false
 }
 
 // ValidateOptional Validates object if is not nil
@@ -104,6 +122,17 @@ func ValidateOptional[T interface{}](in *T, validator func(T) error) error {
 	return nil
 }
 
+// ValidateOptionalInterface Validates object if is not nil
+func ValidateOptionalInterface[T ValidateInterface](in T) error {
+	res, _ := validate(in)
+	return res
+}
+
+// ValidateOptionalInterfacePath Validates object if is not nil with path
+func ValidateOptionalInterfacePath[T ValidateInterface](path string, in T) error {
+	return PrefixResourceError(path, ValidateOptionalInterface(in))
+}
+
 // ValidateRequired Validates object and required not nil value
 func ValidateRequired[T interface{}](in *T, validator func(T) error) error {
 	if in != nil {
@@ -111,6 +140,20 @@ func ValidateRequired[T interface{}](in *T, validator func(T) error) error {
 	}
 
 	return errors.Errorf("should be not nil")
+}
+
+// ValidateRequiredInterface Validates object if is not nil
+func ValidateRequiredInterface[T ValidateInterface](in T) error {
+	res, ok := validate(in)
+	if !ok {
+		return errors.Errorf("should be not nil")
+	}
+	return res
+}
+
+// ValidateRequiredInterfacePath Validates object if is not nil with path
+func ValidateRequiredInterfacePath[T ValidateInterface](path string, in T) error {
+	return PrefixResourceError(path, ValidateRequiredInterface(in))
 }
 
 // ValidateList validates all elements on the list

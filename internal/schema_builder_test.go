@@ -228,7 +228,7 @@ func (b *schemaBuilder) StructToSchema(t *testing.T, structObj reflect.Type, pat
 				schema.Properties[k] = v
 			}
 		} else {
-			require.NotEmpty(t, n, fullFieldName)
+			require.NotEmpty(t, n, fullFieldName, inline)
 			schema.Properties[n] = *s
 		}
 	}
