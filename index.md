@@ -60,17 +60,17 @@ covers individual newer features separately.
 
 | Platform            | Kubernetes Version | ArangoDB Version | State      | Remarks                                   | Provider Remarks                   |
 |:--------------------|:-------------------|:-----------------|:-----------|:------------------------------------------|:-----------------------------------|
-| Google GKE          | 1.21-1.28          | >= 3.8.0         | Production | Don't use micro nodes                     |                                    |
-| Azure AKS           | 1.21-1.28          | >= 3.8.0         | Production |                                           |                                    |
-| Amazon EKS          | 1.21-1.28          | >= 3.8.0         | Production |                                           | [Amazon EKS](./docs/providers/eks) |
+| Google GKE          | 1.25-1.30          | >= 3.8.0         | Production | Don't use micro nodes                     |                                    |
+| Azure AKS           | 1.25-1.30          | >= 3.8.0         | Production |                                           |                                    |
+| Amazon EKS          | 1.25-1.30          | >= 3.8.0         | Production |                                           | [Amazon EKS](./docs/providers/eks) |
 | IBM Cloud           | <= 1.20            | >= 3.8.0         | Deprecated | Support will be dropped in Operator 1.5.0 |                                    |
-| IBM Cloud           | 1.21-1.28          | >= 3.8.0         | Production |                                           |                                    |
+| IBM Cloud           | 1.25-1.30          | >= 3.8.0         | Production |                                           |                                    |
 | OpenShift           | 3.11               | >= 3.8.0         | Deprecated | Support will be dropped in Operator 1.5.0 |                                    |
 | OpenShift           | 4.2-4.14           | >= 3.8.0         | Production |                                           |                                    |
 | BareMetal (kubeadm) | <= 1.20            | >= 3.8.0         | Deprecated | Support will be dropped in Operator 1.5.0 |                                    |
-| BareMetal (kubeadm) | 1.21-1.28          | >= 3.8.0         | Production |                                           |                                    |
-| Minikube            | 1.21-1.28          | >= 3.8.0         | Devel Only |                                           |                                    |
-| Other               | 1.21-1.28          | >= 3.8.0         | Devel Only |                                           |                                    |
+| BareMetal (kubeadm) | 1.25-1.30          | >= 3.8.0         | Production |                                           |                                    |
+| Minikube            | 1.25-1.30          | >= 3.8.0         | Devel Only |                                           |                                    |
+| Other               | 1.25-1.30          | >= 3.8.0         | Devel Only |                                           |                                    |
 
 [END_INJECT]: # (kubernetesVersionsTable)
 
@@ -147,7 +147,8 @@ Flags:
       --backup-concurrent-uploads int                          Number of concurrent uploads per deployment (default 4)
       --chaos.allowed                                          Set to allow chaos in deployments. Only activated when allowed and enabled in deployment
       --crd.install                                            Install missing CRD if access is possible (default true)
-      --crd.validation-schema stringArray                      Overrides default set of CRDs which should have validation schema enabled <crd-name>=<true/false>.
+      --crd.preserve-unknown-fields stringArray                Controls which CRD should have enabled preserve unknown fields in validation schema <crd-name>=<true/false>. To apply for all, use crd-name 'all'.
+      --crd.validation-schema stringArray                      Overrides default set of CRDs which should have validation schema enabled <crd-name>=<true/false>. To apply for all, use crd-name 'all'.
       --deployment.feature.agency-poll                         Enable Agency Poll for Enterprise deployments - Required ArangoDB 3.8.0 or higher (default true)
       --deployment.feature.all                                 Enable ALL Features
       --deployment.feature.async-backup-creation               Create backups asynchronously to avoid blocking the operator and reaching the timeout - Required ArangoDB 3.8.0 or higher (default true)
@@ -171,6 +172,14 @@ Flags:
       --deployment.feature.upgrade-version-check               Enable initContainer with pre version check - Required ArangoDB 3.8.0 or higher (default true)
       --deployment.feature.upgrade-version-check-v2            Enable initContainer with pre version check based by Operator - Required ArangoDB 3.8.0 or higher
       --features-config-map-name string                        Name of the Feature Map ConfigMap (default "arangodb-operator-feature-config-map")
+      --http1.keep-alive                                       If false, disables HTTP keep-alives and will only use the connection to the server for a single HTTP request (default true)
+      --http1.transport.dial-timeout duration                  Maximum amount of time a dial will wait for a connect to complete (default 30s)
+      --http1.transport.idle-conn-timeout duration             Maximum amount of time an idle (keep-alive) connection will remain idle before closing itself. Zero means no limit (default 1m30s)
+      --http1.transport.idle-conn-timeout-short duration       Maximum amount of time an idle (keep-alive) connection will remain idle before closing itself. Zero means no limit (default 100ms)
+      --http1.transport.keep-alive-timeout duration            Interval between keep-alive probes for an active network connection (default 1m30s)
+      --http1.transport.keep-alive-timeout-short duration      Interval between keep-alive probes for an active network connection (default 100ms)
+      --http1.transport.max-idle-conns int                     Maximum number of idle (keep-alive) connections across all hosts. Zero means no limit (default 100)
+      --http1.transport.tls-handshake-timeout duration         Maximum amount of time to wait for a TLS handshake. Zero means no timeout (default 10s)
       --image.discovery.status                                 Discover Operator Image from Pod Status by default. When disabled Pod Spec is used. (default true)
       --image.discovery.timeout duration                       Timeout for image discovery process (default 1m0s)
       --internal.scaling-integration                           Enable Scaling Integration
@@ -220,8 +229,8 @@ Flags:
 ### Installation and Usage
 
 Docker images:
-- Community Edition: `arangodb/kube-arangodb:1.2.41`
-- Enterprise Edition: `arangodb/kube-arangodb-enterprise:1.2.41`
+- Community Edition: `arangodb/kube-arangodb:1.2.42`
+- Enterprise Edition: `arangodb/kube-arangodb-enterprise:1.2.42`
 
 ### Installation of latest release using Kubectl
 
@@ -230,22 +239,22 @@ running ArangoDB deployments.
 
 ##### Community Edition
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.41/manifests/arango-crd.yaml
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.41/manifests/arango-deployment.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.42/manifests/arango-crd.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.42/manifests/arango-deployment.yaml
 # To use `ArangoLocalStorage`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.41/manifests/arango-storage.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.42/manifests/arango-storage.yaml
 # To use `ArangoDeploymentReplication`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.41/manifests/arango-deployment-replication.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.42/manifests/arango-deployment-replication.yaml
 ```
 
 ##### Enterprise Edition
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.41/manifests/enterprise-crd.yaml
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.41/manifests/enterprise-deployment.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.42/manifests/enterprise-crd.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.42/manifests/enterprise-deployment.yaml
 # To use `ArangoLocalStorage`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.41/manifests/enterprise-storage.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.42/manifests/enterprise-storage.yaml
 # To use `ArangoDeploymentReplication`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.41/manifests/enterprise-deployment-replication.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.42/manifests/enterprise-deployment-replication.yaml
 ```
 
 ### Installation of latest release using kustomize
@@ -282,20 +291,46 @@ resources:
 
 Only use this procedure for clean installation of the operator. For upgrades see next section
 
+#### From Chart Repository
+
+##### Chart Installation
+
+```bash
+# Add helm repository
+helm repo add kube-arangodb https://arangodb.github.io/kube-arangodb
+```
+
 ##### Community Edition
 ```bash
 # The following will install the operator and basic CRDs resources.
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.41/kube-arangodb-1.2.41.tgz
+helm install --generate-name kube-arangodb/kube-arangodb
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.41/kube-arangodb-1.2.41.tgz --set "operator.features.storage=true"
+helm install --generate-name kube-arangodb/kube-arangodb --set "operator.features.storage=true"
+```
+
+##### Enterprise Edition
+```bash
+helm install --generate-name kube-arangodb/kube-arangodb-enterprise
+# To use `ArangoLocalStorage`, set field `operator.features.storage` to true
+helm install --generate-name kube-arangodb/kube-arangodb-enterprise --set "operator.features.storage=true"
+```
+
+#### From Chart Release
+
+##### Community Edition
+```bash
+# The following will install the operator and basic CRDs resources.
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.42/kube-arangodb-1.2.42.tgz
+# To use `ArangoLocalStorage`, set field `operator.features.storage` to true
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.42/kube-arangodb-1.2.42.tgz --set "operator.features.storage=true"
 ```
 
 ##### Enterprise Edition
 ```bash
 # The following will install the operator and basic CRDs resources.
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.41/kube-arangodb-1.2.41.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.41"
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.41/kube-arangodb-enterprise-1.2.41.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.41/kube-arangodb-1.2.41.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.41" --set "operator.features.storage=true"
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.41/kube-arangodb-enterprise-1.2.41.tgz --set "operator.features.storage=true"
 ```
 
 ### Upgrading the operator using Helm
@@ -324,17 +359,17 @@ Then you can install the new version with `helm install` as normal:
 ##### Community Edition
 ```bash
 # The following will install the operator and basic CRDs resources.
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.41/kube-arangodb-1.2.41.tgz
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.42/kube-arangodb-1.2.42.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.41/kube-arangodb-1.2.41.tgz --set "operator.features.storage=true"
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.42/kube-arangodb-1.2.42.tgz --set "operator.features.storage=true"
 ```
 
 ##### Enterprise Edition
 ```bash
 # The following will install the operator and basic CRDs resources.
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.41/kube-arangodb-1.2.41.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.41"
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.41/kube-arangodb-enterprise-1.2.41.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.41/kube-arangodb-1.2.41.tgz --set "operator.image=arangodb/kube-arangodb-enterprise:1.2.41" --set "operator.features.storage=true"
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.41/kube-arangodb-enterprise-1.2.41.tgz --set "operator.features.storage=true"
 ```
 
 ## Building
