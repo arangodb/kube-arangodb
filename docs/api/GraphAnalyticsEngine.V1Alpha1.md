@@ -10,7 +10,7 @@ title: GraphAnalyticsEngine V1Alpha1
 
 ### .spec.deployment.affinity
 
-Type: `core.Affinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/pod/resources/scheduling.go#L44)</sup>
+Type: `core.Affinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/pod/resources/scheduling.go#L44)</sup>
 
 Affinity defines scheduling constraints for workload
 
@@ -21,7 +21,7 @@ Links:
 
 ### .spec.deployment.annotations
 
-Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/pod/resources/metadata.go#L45)</sup>
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/pod/resources/metadata.go#L45)</sup>
 
 Annotations is an unstructured key value map stored with a resource that may be
 set by external tools to store and retrieve arbitrary metadata. They are not
@@ -34,7 +34,7 @@ Links:
 
 ### .spec.deployment.args
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/container/resources/core.go#L50)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/core.go#L50)</sup>
 
 Arguments to the entrypoint.
 The container image's CMD is used if this is not provided.
@@ -51,7 +51,7 @@ Links:
 
 ### .spec.deployment.automountServiceAccountToken
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/pod/resources/service_account.go#L38)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/pod/resources/service_account.go#L38)</sup>
 
 AutomountServiceAccountToken indicates whether a service account token should be automatically mounted.
 
@@ -59,7 +59,7 @@ AutomountServiceAccountToken indicates whether a service account token should be
 
 ### .spec.deployment.command
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/container/resources/core.go#L40)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/core.go#L40)</sup>
 
 Entrypoint array. Not executed within a shell.
 The container image's ENTRYPOINT is used if this is not provided.
@@ -76,7 +76,7 @@ Links:
 
 ### .spec.deployment.env
 
-Type: `core.EnvVar` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/container/resources/environments.go#L36)</sup>
+Type: `core.EnvVar` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/environments.go#L36)</sup>
 
 Env keeps the information about environment variables provided to the container
 
@@ -87,7 +87,7 @@ Links:
 
 ### .spec.deployment.envFrom
 
-Type: `core.EnvFromSource` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/container/resources/environments.go#L41)</sup>
+Type: `core.EnvFromSource` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/environments.go#L41)</sup>
 
 EnvFrom keeps the information about environment variable sources provided to the container
 
@@ -98,7 +98,7 @@ Links:
 
 ### .spec.deployment.hostIPC
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/pod/resources/namespace.go#L42)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/pod/resources/namespace.go#L42)</sup>
 
 HostIPC defines to use the host's ipc namespace.
 
@@ -108,7 +108,7 @@ Default Value: `false`
 
 ### .spec.deployment.hostNetwork
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/pod/resources/namespace.go#L36)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/pod/resources/namespace.go#L36)</sup>
 
 HostNetwork requests Host network for this pod. Use the host's network namespace.
 If this option is set, the ports that will be used must be specified.
@@ -119,7 +119,7 @@ Default Value: `false`
 
 ### .spec.deployment.hostPID
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/pod/resources/namespace.go#L39)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/pod/resources/namespace.go#L39)</sup>
 
 HostPID define to use the host's pid namespace.
 
@@ -129,7 +129,7 @@ Default Value: `false`
 
 ### .spec.deployment.image
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/container/resources/image.go#L35)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/image.go#L35)</sup>
 
 Image define image details
 
@@ -137,7 +137,7 @@ Image define image details
 
 ### .spec.deployment.imagePullPolicy
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/container/resources/image.go#L39)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/image.go#L39)</sup>
 
 ImagePullPolicy define Image pull policy
 
@@ -147,7 +147,7 @@ Default Value: `IfNotPresent`
 
 ### .spec.deployment.imagePullSecrets
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/pod/resources/image.go#L36)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/pod/resources/image.go#L36)</sup>
 
 ImagePullSecrets define Secrets used to pull Image from registry
 
@@ -155,7 +155,7 @@ ImagePullSecrets define Secrets used to pull Image from registry
 
 ### .spec.deployment.labels
 
-Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/pod/resources/metadata.go#L39)</sup>
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/pod/resources/metadata.go#L39)</sup>
 
 Map of string keys and values that can be used to organize and categorize
 (scope and select) objects. May match selectors of replication controllers
@@ -168,7 +168,7 @@ Links:
 
 ### .spec.deployment.lifecycle
 
-Type: `core.Lifecycle` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/container/resources/lifecycle.go#L35)</sup>
+Type: `core.Lifecycle` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/lifecycle.go#L35)</sup>
 
 Lifecycle keeps actions that the management system should take in response to container lifecycle events.
 
@@ -176,7 +176,7 @@ Lifecycle keeps actions that the management system should take in response to co
 
 ### .spec.deployment.livenessProbe
 
-Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/container/resources/probes.go#L37)</sup>
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/probes.go#L37)</sup>
 
 LivenessProbe keeps configuration of periodic probe of container liveness.
 Container will be restarted if the probe fails.
@@ -188,7 +188,7 @@ Links:
 
 ### .spec.deployment.nodeSelector
 
-Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/pod/resources/scheduling.go#L39)</sup>
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/pod/resources/scheduling.go#L39)</sup>
 
 NodeSelector is a selector that must be true for the workload to fit on a node.
 
@@ -199,7 +199,7 @@ Links:
 
 ### .spec.deployment.ownerReferences
 
-Type: `meta.OwnerReference` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/pod/resources/metadata.go#L52)</sup>
+Type: `meta.OwnerReference` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/pod/resources/metadata.go#L52)</sup>
 
 List of objects depended by this object. If ALL objects in the list have
 been deleted, this object will be garbage collected. If this object is managed by a controller,
@@ -210,7 +210,7 @@ There cannot be more than one managing controller.
 
 ### .spec.deployment.podSecurityContext
 
-Type: `core.PodSecurityContext` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/pod/resources/security.go#L35)</sup>
+Type: `core.PodSecurityContext` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/pod/resources/security.go#L35)</sup>
 
 PodSecurityContext holds pod-level security attributes and common container settings.
 
@@ -221,7 +221,7 @@ Links:
 
 ### .spec.deployment.port
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/analytics/v1alpha1/gae_spec_deployment.go#L50)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/analytics/v1alpha1/gae_spec_deployment.go#L50)</sup>
 
 Port defines on which port the container will be listening for connections
 
@@ -229,7 +229,7 @@ Port defines on which port the container will be listening for connections
 
 ### .spec.deployment.ports
 
-Type: `[]core.ContainerPort` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/container/resources/networking.go#L39)</sup>
+Type: `[]core.ContainerPort` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/networking.go#L39)</sup>
 
 Ports contains list of ports to expose from the container. Not specifying a port here
 DOES NOT prevent that port from being exposed. Any port which is
@@ -240,7 +240,7 @@ accessible from the network.
 
 ### .spec.deployment.readinessProbe
 
-Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/container/resources/probes.go#L42)</sup>
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/probes.go#L42)</sup>
 
 ReadinessProbe keeps configuration of periodic probe of container service readiness.
 Container will be removed from service endpoints if the probe fails.
@@ -252,7 +252,7 @@ Links:
 
 ### .spec.deployment.resources
 
-Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/container/resources/resources.go#L37)</sup>
+Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/resources.go#L37)</sup>
 
 Resources holds resource requests & limits for container
 
@@ -263,7 +263,7 @@ Links:
 
 ### .spec.deployment.schedulerName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/pod/resources/scheduling.go#L54)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/pod/resources/scheduling.go#L54)</sup>
 
 SchedulerName specifies, the pod will be dispatched by specified scheduler.
 If not specified, the pod will be dispatched by default scheduler.
@@ -274,7 +274,7 @@ Default Value: `""`
 
 ### .spec.deployment.securityContext
 
-Type: `core.SecurityContext` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/container/resources/security.go#L35)</sup>
+Type: `core.SecurityContext` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/security.go#L35)</sup>
 
 SecurityContext holds container-level security attributes and common container settings.
 
@@ -285,7 +285,7 @@ Links:
 
 ### .spec.deployment.service.type
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/analytics/v1alpha1/gae_spec_deployment_service.go#L38)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/analytics/v1alpha1/gae_spec_deployment_service.go#L38)</sup>
 
 Type determines how the Service is exposed
 
@@ -303,7 +303,7 @@ Possible Values:
 
 ### .spec.deployment.serviceAccountName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/pod/resources/service_account.go#L35)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/pod/resources/service_account.go#L35)</sup>
 
 ServiceAccountName is the name of the ServiceAccount to use to run this pod.
 
@@ -314,7 +314,7 @@ Links:
 
 ### .spec.deployment.shareProcessNamespace
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/pod/resources/namespace.go#L48)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/pod/resources/namespace.go#L48)</sup>
 
 ShareProcessNamespace defines to share a single process namespace between all of the containers in a pod.
 When this is set containers will be able to view and signal processes from other containers
@@ -327,7 +327,7 @@ Default Value: `false`
 
 ### .spec.deployment.startupProbe
 
-Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/container/resources/probes.go#L50)</sup>
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/probes.go#L50)</sup>
 
 StartupProbe indicates that the Pod has successfully initialized.
 If specified, no other probes are executed until this completes successfully.
@@ -342,7 +342,7 @@ Links:
 
 ### .spec.deployment.tls.altNames
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/shared/v1/tls.go#L28)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/shared/v1/tls.go#L28)</sup>
 
 AltNames define TLS AltNames used when TLS on the ArangoDB is enabled
 
@@ -350,7 +350,7 @@ AltNames define TLS AltNames used when TLS on the ArangoDB is enabled
 
 ### .spec.deployment.tls.enabled
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/shared/v1/tls.go#L25)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/shared/v1/tls.go#L25)</sup>
 
 Enabled define if TLS Should be enabled. If is not set then default is taken from ArangoDeployment settings
 
@@ -358,7 +358,7 @@ Enabled define if TLS Should be enabled. If is not set then default is taken fro
 
 ### .spec.deployment.tolerations
 
-Type: `[]core.Toleration` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/pod/resources/scheduling.go#L49)</sup>
+Type: `[]core.Toleration` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/pod/resources/scheduling.go#L49)</sup>
 
 Tolerations defines tolerations
 
@@ -369,7 +369,7 @@ Links:
 
 ### .spec.deployment.volumeMounts
 
-Type: `[]core.VolumeMount` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/container/resources/volume_mounts.go#L35)</sup>
+Type: `[]core.VolumeMount` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/volume_mounts.go#L35)</sup>
 
 VolumeMounts keeps list of pod volumes to mount into the container's filesystem.
 
@@ -377,7 +377,7 @@ VolumeMounts keeps list of pod volumes to mount into the container's filesystem.
 
 ### .spec.deployment.volumes
 
-Type: `[]core.Volume` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/pod/resources/volumes.go#L36)</sup>
+Type: `[]core.Volume` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/pod/resources/volumes.go#L36)</sup>
 
 Volumes keeps list of volumes that can be mounted by containers belonging to the pod.
 
@@ -388,7 +388,7 @@ Links:
 
 ### .spec.deployment.workingDir
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/container/resources/core.go#L55)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/core.go#L55)</sup>
 
 Container's working directory.
 If not specified, the container runtime's default will be used, which
@@ -398,7 +398,7 @@ might be configured in the container image.
 
 ### .spec.deploymentName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/analytics/v1alpha1/gae_spec.go#L31)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/analytics/v1alpha1/gae_spec.go#L31)</sup>
 
 DeploymentName define deployment name used in the object. Immutable
 
@@ -406,7 +406,7 @@ DeploymentName define deployment name used in the object. Immutable
 
 ### .spec.integrationSidecar.args
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/container/resources/core.go#L50)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/core.go#L50)</sup>
 
 Arguments to the entrypoint.
 The container image's CMD is used if this is not provided.
@@ -423,7 +423,7 @@ Links:
 
 ### .spec.integrationSidecar.command
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/container/resources/core.go#L40)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/core.go#L40)</sup>
 
 Entrypoint array. Not executed within a shell.
 The container image's ENTRYPOINT is used if this is not provided.
@@ -440,7 +440,7 @@ Links:
 
 ### .spec.integrationSidecar.controllerListenPort
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/integration.go#L36)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/integration.go#L36)</sup>
 
 ControllerListenPort defines on which port the sidecar container will be listening for controller requests
 
@@ -450,7 +450,7 @@ Default Value: `9202`
 
 ### .spec.integrationSidecar.env
 
-Type: `core.EnvVar` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/container/resources/environments.go#L36)</sup>
+Type: `core.EnvVar` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/environments.go#L36)</sup>
 
 Env keeps the information about environment variables provided to the container
 
@@ -461,7 +461,7 @@ Links:
 
 ### .spec.integrationSidecar.envFrom
 
-Type: `core.EnvFromSource` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/container/resources/environments.go#L41)</sup>
+Type: `core.EnvFromSource` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/environments.go#L41)</sup>
 
 EnvFrom keeps the information about environment variable sources provided to the container
 
@@ -472,7 +472,7 @@ Links:
 
 ### .spec.integrationSidecar.image
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/container/resources/image.go#L35)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/image.go#L35)</sup>
 
 Image define image details
 
@@ -480,7 +480,7 @@ Image define image details
 
 ### .spec.integrationSidecar.imagePullPolicy
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/container/resources/image.go#L39)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/image.go#L39)</sup>
 
 ImagePullPolicy define Image pull policy
 
@@ -490,7 +490,7 @@ Default Value: `IfNotPresent`
 
 ### .spec.integrationSidecar.lifecycle
 
-Type: `core.Lifecycle` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/container/resources/lifecycle.go#L35)</sup>
+Type: `core.Lifecycle` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/lifecycle.go#L35)</sup>
 
 Lifecycle keeps actions that the management system should take in response to container lifecycle events.
 
@@ -498,7 +498,7 @@ Lifecycle keeps actions that the management system should take in response to co
 
 ### .spec.integrationSidecar.listenPort
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/integration.go#L32)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/integration.go#L32)</sup>
 
 ListenPort defines on which port the sidecar container will be listening for connections
 
@@ -508,7 +508,7 @@ Default Value: `9201`
 
 ### .spec.integrationSidecar.livenessProbe
 
-Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/container/resources/probes.go#L37)</sup>
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/probes.go#L37)</sup>
 
 LivenessProbe keeps configuration of periodic probe of container liveness.
 Container will be restarted if the probe fails.
@@ -520,7 +520,7 @@ Links:
 
 ### .spec.integrationSidecar.ports
 
-Type: `[]core.ContainerPort` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/container/resources/networking.go#L39)</sup>
+Type: `[]core.ContainerPort` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/networking.go#L39)</sup>
 
 Ports contains list of ports to expose from the container. Not specifying a port here
 DOES NOT prevent that port from being exposed. Any port which is
@@ -531,7 +531,7 @@ accessible from the network.
 
 ### .spec.integrationSidecar.readinessProbe
 
-Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/container/resources/probes.go#L42)</sup>
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/probes.go#L42)</sup>
 
 ReadinessProbe keeps configuration of periodic probe of container service readiness.
 Container will be removed from service endpoints if the probe fails.
@@ -543,7 +543,7 @@ Links:
 
 ### .spec.integrationSidecar.resources
 
-Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/container/resources/resources.go#L37)</sup>
+Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/resources.go#L37)</sup>
 
 Resources holds resource requests & limits for container
 
@@ -554,7 +554,7 @@ Links:
 
 ### .spec.integrationSidecar.securityContext
 
-Type: `core.SecurityContext` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/container/resources/security.go#L35)</sup>
+Type: `core.SecurityContext` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/security.go#L35)</sup>
 
 SecurityContext holds container-level security attributes and common container settings.
 
@@ -565,7 +565,7 @@ Links:
 
 ### .spec.integrationSidecar.startupProbe
 
-Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/container/resources/probes.go#L50)</sup>
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/probes.go#L50)</sup>
 
 StartupProbe indicates that the Pod has successfully initialized.
 If specified, no other probes are executed until this completes successfully.
@@ -580,7 +580,7 @@ Links:
 
 ### .spec.integrationSidecar.volumeMounts
 
-Type: `[]core.VolumeMount` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/container/resources/volume_mounts.go#L35)</sup>
+Type: `[]core.VolumeMount` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/volume_mounts.go#L35)</sup>
 
 VolumeMounts keeps list of pod volumes to mount into the container's filesystem.
 
@@ -588,7 +588,7 @@ VolumeMounts keeps list of pod volumes to mount into the container's filesystem.
 
 ### .spec.integrationSidecar.workingDir
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/scheduler/v1beta1/container/resources/core.go#L55)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/core.go#L55)</sup>
 
 Container's working directory.
 If not specified, the container runtime's default will be used, which
@@ -598,7 +598,7 @@ might be configured in the container image.
 
 ### .status.arangoDB.deployment.checksum
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/shared/v1/object.go#L61)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/shared/v1/object.go#L61)</sup>
 
 UID keeps the information about object Checksum
 
@@ -606,7 +606,7 @@ UID keeps the information about object Checksum
 
 ### .status.arangoDB.deployment.name
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/shared/v1/object.go#L52)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/shared/v1/object.go#L52)</sup>
 
 Name of the object
 
@@ -614,7 +614,7 @@ Name of the object
 
 ### .status.arangoDB.deployment.namespace
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/shared/v1/object.go#L55)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/shared/v1/object.go#L55)</sup>
 
 Namespace of the object. Should default to the namespace of the parent object
 
@@ -622,7 +622,7 @@ Namespace of the object. Should default to the namespace of the parent object
 
 ### .status.arangoDB.deployment.uid
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/shared/v1/object.go#L58)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/shared/v1/object.go#L58)</sup>
 
 UID keeps the information about object UID
 
@@ -630,7 +630,7 @@ UID keeps the information about object UID
 
 ### .status.arangoDB.secret.checksum
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/shared/v1/object.go#L61)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/shared/v1/object.go#L61)</sup>
 
 UID keeps the information about object Checksum
 
@@ -638,7 +638,7 @@ UID keeps the information about object Checksum
 
 ### .status.arangoDB.secret.name
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/shared/v1/object.go#L52)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/shared/v1/object.go#L52)</sup>
 
 Name of the object
 
@@ -646,7 +646,7 @@ Name of the object
 
 ### .status.arangoDB.secret.namespace
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/shared/v1/object.go#L55)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/shared/v1/object.go#L55)</sup>
 
 Namespace of the object. Should default to the namespace of the parent object
 
@@ -654,7 +654,7 @@ Namespace of the object. Should default to the namespace of the parent object
 
 ### .status.arangoDB.secret.uid
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/shared/v1/object.go#L58)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/shared/v1/object.go#L58)</sup>
 
 UID keeps the information about object UID
 
@@ -662,7 +662,7 @@ UID keeps the information about object UID
 
 ### .status.arangoDB.tls.checksum
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/shared/v1/object.go#L61)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/shared/v1/object.go#L61)</sup>
 
 UID keeps the information about object Checksum
 
@@ -670,7 +670,7 @@ UID keeps the information about object Checksum
 
 ### .status.arangoDB.tls.name
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/shared/v1/object.go#L52)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/shared/v1/object.go#L52)</sup>
 
 Name of the object
 
@@ -678,7 +678,7 @@ Name of the object
 
 ### .status.arangoDB.tls.namespace
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/shared/v1/object.go#L55)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/shared/v1/object.go#L55)</sup>
 
 Namespace of the object. Should default to the namespace of the parent object
 
@@ -686,7 +686,7 @@ Namespace of the object. Should default to the namespace of the parent object
 
 ### .status.arangoDB.tls.uid
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/shared/v1/object.go#L58)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/shared/v1/object.go#L58)</sup>
 
 UID keeps the information about object UID
 
@@ -694,7 +694,7 @@ UID keeps the information about object UID
 
 ### .status.conditions
 
-Type: `api.Conditions` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/analytics/v1alpha1/gae_status.go#L30)</sup>
+Type: `api.Conditions` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/analytics/v1alpha1/gae_status.go#L30)</sup>
 
 Conditions specific to the entire extension
 
@@ -702,7 +702,7 @@ Conditions specific to the entire extension
 
 ### .status.reconciliation.service.checksum
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/shared/v1/object.go#L61)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/shared/v1/object.go#L61)</sup>
 
 UID keeps the information about object Checksum
 
@@ -710,7 +710,7 @@ UID keeps the information about object Checksum
 
 ### .status.reconciliation.service.name
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/shared/v1/object.go#L52)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/shared/v1/object.go#L52)</sup>
 
 Name of the object
 
@@ -718,7 +718,7 @@ Name of the object
 
 ### .status.reconciliation.service.namespace
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/shared/v1/object.go#L55)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/shared/v1/object.go#L55)</sup>
 
 Namespace of the object. Should default to the namespace of the parent object
 
@@ -726,7 +726,7 @@ Namespace of the object. Should default to the namespace of the parent object
 
 ### .status.reconciliation.service.uid
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/shared/v1/object.go#L58)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/shared/v1/object.go#L58)</sup>
 
 UID keeps the information about object UID
 
@@ -734,7 +734,7 @@ UID keeps the information about object UID
 
 ### .status.reconciliation.statefulSet.checksum
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/shared/v1/object.go#L61)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/shared/v1/object.go#L61)</sup>
 
 UID keeps the information about object Checksum
 
@@ -742,7 +742,7 @@ UID keeps the information about object Checksum
 
 ### .status.reconciliation.statefulSet.name
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/shared/v1/object.go#L52)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/shared/v1/object.go#L52)</sup>
 
 Name of the object
 
@@ -750,7 +750,7 @@ Name of the object
 
 ### .status.reconciliation.statefulSet.namespace
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/shared/v1/object.go#L55)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/shared/v1/object.go#L55)</sup>
 
 Namespace of the object. Should default to the namespace of the parent object
 
@@ -758,7 +758,7 @@ Namespace of the object. Should default to the namespace of the parent object
 
 ### .status.reconciliation.statefulSet.uid
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.41/pkg/apis/shared/v1/object.go#L58)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/shared/v1/object.go#L58)</sup>
 
 UID keeps the information about object UID
 
