@@ -293,7 +293,7 @@ func isSimpleType(obj reflect.Type) (string, string, bool) {
 }
 
 func extractTag(tag string) (string, bool) {
-	parts := strings.SplitN(tag, ",", 2)
+	parts := strings.Split(tag, ",")
 
 	if len(parts) == 1 {
 		return parts[0], false

@@ -90,6 +90,9 @@ func AllDefinitions() []Definition {
 
 		// Analytics
 		AnalyticsGAEDefinitionWithOptions(),
+
+		// Networking
+		NetworkingRouteDefinitionWithOptions(),
 	}
 }
 

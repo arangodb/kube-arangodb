@@ -440,7 +440,8 @@ update-generated:
 			apps:v1 \
 			ml:v1alpha1 ml:v1beta1 \
 			scheduler:v1alpha1 scheduler:v1beta1 \
-			analytics:v1alpha1" \
+			analytics:v1alpha1 \
+			networking:v1alpha1" \
 			--go-header-file "./tools/codegen/boilerplate.go.txt" \
 			$(VERIFYARGS)
 	GOPATH=$(GOBUILDDIR) $(VENDORDIR)/k8s.io/code-generator/generate-groups.sh  \
@@ -894,7 +895,8 @@ CRDS:=apps-job \
       replication-deploymentreplication \
       ml-storage ml-extension ml-job-batch ml-job-cron \
       scheduler-profile \
-      analytics-graphanalyticsengine
+      analytics-graphanalyticsengine \
+      networking-route
 
 .PHONY: sync
 sync:

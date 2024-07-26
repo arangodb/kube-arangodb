@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ package mods
 import (
 	arangoclustersynchronizationv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoclustersynchronization/v1"
 	arangomemberv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember/v1"
+	arangoroutev1alpha1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoroute/v1alpha1"
 	arangotaskv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangotask/v1"
 	endpointsv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/endpoints/v1"
 	persistentvolumeclaimv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim/v1"
@@ -78,6 +79,10 @@ type ArangoClusterSynchronizationMods interface {
 	V1() arangoclustersynchronizationv1.ModInterface
 }
 
+type ArangoRouteMods interface {
+	V1Alpha1() arangoroutev1alpha1.ModInterface
+}
+
 type Mods interface {
 	PodsModInterface() PodsMods
 	ServiceAccountsModInterface() ServiceAccountsMods
@@ -91,4 +96,5 @@ type Mods interface {
 	ArangoMemberModInterface() ArangoMemberMods
 	ArangoTaskModInterface() ArangoTaskMods
 	ArangoClusterSynchronizationModInterface() ArangoClusterSynchronizationMods
+	ArangoRouteModInterface() ArangoRouteMods
 }
