@@ -26,7 +26,27 @@ import (
 	"fmt"
 
 	"k8s.io/apimachinery/pkg/util/json"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
+
+type Hash interface {
+	Hash() string
+}
+
+func SHA256FromExtract[T any](extract func(T) string, obj ...T) string {
+	return SHA256FromStringArray(strings.Join(FormatList(obj, extract), "|"))
+}
+
+func SHA256FromHashArray[T Hash](data []T) string {
+	return SHA256FromExtract(func(t T) string {
+		return t.Hash()
+	}, data...)
+}
+
+func SHA256FromStringArray(data ...string) string {
+	return SHA256FromString(strings.Join(data, "|"))
+}
 
 func SHA256FromString(data string) string {
 	return SHA256([]byte(data))

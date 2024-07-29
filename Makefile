@@ -777,7 +777,7 @@ tools-min: update-vendor
 .PHONY: tools
 tools: tools-min
 	@echo ">> Fetching gci"
-	@GOBIN=$(GOPATH)/bin go install github.com/daixiang0/gci@v0.3.0
+	@GOBIN=$(GOPATH)/bin go install github.com/daixiang0/gci@v0.13.4
 	@echo ">> Fetching yamlfmt"
 	@GOBIN=$(GOPATH)/bin go install github.com/google/yamlfmt/cmd/yamlfmt@v0.10.0
 	@echo ">> Downloading protobuf compiler..."

@@ -29,6 +29,7 @@ import (
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	mlApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
 	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
+	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
 )
 
 func WithArangoBackupUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[backupApi.ArangoBackupStatus, *backupApi.ArangoBackup], obj *backupApi.ArangoBackup, status backupApi.ArangoBackupStatus, opts meta.UpdateOptions) (*backupApi.ArangoBackup, error) {
@@ -49,6 +50,10 @@ func WithArangoBatchJobUpdateStatusInterfaceRetry(ctx context.Context, client Up
 
 func WithAnalyticsGAEUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[analyticsApi.GraphAnalyticsEngineStatus, *analyticsApi.GraphAnalyticsEngine], obj *analyticsApi.GraphAnalyticsEngine, status analyticsApi.GraphAnalyticsEngineStatus, opts meta.UpdateOptions) (*analyticsApi.GraphAnalyticsEngine, error) {
 	return WithUpdateStatusInterfaceRetry[analyticsApi.GraphAnalyticsEngineStatus, *analyticsApi.GraphAnalyticsEngine](ctx, client, obj, status, opts)
+}
+
+func WithNetworkingArangoRouteUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[networkingApi.ArangoRouteStatus, *networkingApi.ArangoRoute], obj *networkingApi.ArangoRoute, status networkingApi.ArangoRouteStatus, opts meta.UpdateOptions) (*networkingApi.ArangoRoute, error) {
+	return WithUpdateStatusInterfaceRetry[networkingApi.ArangoRouteStatus, *networkingApi.ArangoRoute](ctx, client, obj, status, opts)
 }
 
 func WithArangoStorageUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[mlApi.ArangoMLStorageStatus, *mlApi.ArangoMLStorage], obj *mlApi.ArangoMLStorage, status mlApi.ArangoMLStorageStatus, opts meta.UpdateOptions) (*mlApi.ArangoMLStorage, error) {

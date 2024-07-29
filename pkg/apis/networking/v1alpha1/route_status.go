@@ -20,10 +20,19 @@
 
 package v1alpha1
 
-import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+import (
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+)
 
 type ArangoRouteStatus struct {
 	// Conditions specific to the entire extension
 	// +doc/type: api.Conditions
 	Conditions api.ConditionList `json:"conditions,omitempty"`
+
+	// Deployment keeps the ArangoDeployment reference
+	Deployment *sharedApi.Object `json:"deployment,omitempty"`
+
+	// Targets keeps the target details
+	Targets ArangoRouteStatusTargets `json:"targets,omitempty"`
 }

@@ -117,6 +117,9 @@ spec:
 {{ if .Values.operator.features.analytics }}
                     - --operator.analytics
 {{- end }}
+{{ if .Values.operator.features.networking }}
+                    - --operator.networking
+{{- end }}
 {{ if .Values.operator.features.k8sToK8sClusterSync }}
                     - --operator.k2k-cluster-sync
 {{- end }}

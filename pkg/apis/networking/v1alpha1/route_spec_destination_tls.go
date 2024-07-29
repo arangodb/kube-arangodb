@@ -25,6 +25,14 @@ type ArangoRouteSpecDestinationTLS struct {
 	Insecure *bool `json:"insecure,omitempty"`
 }
 
-func (s *ArangoRouteSpecDestinationTLS) Validate() error {
+func (a *ArangoRouteSpecDestinationTLS) GetInsecure() bool {
+	if a == nil || a.Insecure == nil {
+		return false
+	}
+
+	return true
+}
+
+func (a *ArangoRouteSpecDestinationTLS) Validate() error {
 	return nil
 }
