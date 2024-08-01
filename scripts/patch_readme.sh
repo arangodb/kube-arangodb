@@ -33,4 +33,5 @@ replaceInFile "s@^kubectl apply -f https://raw.githubusercontent.com/arangodb/ku
 replaceInFile "s@^kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/.*/manifests/enterprise-storage.yaml\$@kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/${VERSION}/manifests/enterprise-storage.yaml@g" ${f}
 
 replaceInFile "s@https://github\.com/arangodb/kube-arangodb/releases/download/.*/kube-arangodb-crd-[[:digit:]].*\.tgz@https://github.com/arangodb/kube-arangodb/releases/download/${VERSION}/kube-arangodb-crd-${VERSION}.tgz@g" ${f}
+replaceInFile "s@https://github\.com/arangodb/kube-arangodb/releases/download/.*/kube-arangodb-enterprise-[[:digit:]].*\.tgz@https://github.com/arangodb/kube-arangodb/releases/download/${VERSION}/kube-arangodb-enterprise-${VERSION}.tgz@g" ${f}
 replaceInFile "s@https://github\.com/arangodb/kube-arangodb/releases/download/.*/kube-arangodb-[[:digit:]].*\.tgz@https://github.com/arangodb/kube-arangodb/releases/download/${VERSION}/kube-arangodb-${VERSION}.tgz@g" ${f}
