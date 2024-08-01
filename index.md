@@ -328,9 +328,9 @@ helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/
 ##### Enterprise Edition
 ```bash
 # The following will install the operator and basic CRDs resources.
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.41/kube-arangodb-enterprise-1.2.41.tgz
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.42/kube-arangodb-enterprise-1.2.42.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.41/kube-arangodb-enterprise-1.2.41.tgz --set "operator.features.storage=true"
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.42/kube-arangodb-enterprise-1.2.42.tgz --set "operator.features.storage=true"
 ```
 
 ### Upgrading the operator using Helm
@@ -367,9 +367,9 @@ helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/
 ##### Enterprise Edition
 ```bash
 # The following will install the operator and basic CRDs resources.
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.41/kube-arangodb-enterprise-1.2.41.tgz
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.42/kube-arangodb-enterprise-1.2.42.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.41/kube-arangodb-enterprise-1.2.41.tgz --set "operator.features.storage=true"
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.42/kube-arangodb-enterprise-1.2.42.tgz --set "operator.features.storage=true"
 ```
 
 ## Building

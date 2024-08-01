@@ -731,4 +731,13 @@ entries:
     urls:
     - https://github.com/arangodb/kube-arangodb/releases/download/1.2.1/kube-arangodb-crd-1.2.1.tgz
     version: 1.2.1
-generated: "2024-07-25T14:04:29.383718+02:00"
+  kube-arangodb-enterprise:
+  - apiVersion: v1
+    created: "2024-08-01T21:06:37.326375+02:00"
+    description: ArangoDB Kubernetes Enterprise Operator
+    digest: 5bd6051f3eeaaa5e6961a582dc77a24c7bf71ee2533c9b8acbd3c5da8ec3e1ad
+    name: kube-arangodb-enterprise
+    urls:
+    - https://github.com/arangodb/kube-arangodb/releases/download/1.2.42/kube-arangodb-enterprise-1.2.42.tgz
+    version: 1.2.42
+generated: "2024-08-01T21:06:37.397204+02:00"
