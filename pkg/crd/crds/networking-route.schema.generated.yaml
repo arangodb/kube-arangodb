@@ -4,7 +4,7 @@ v1alpha1:
       spec:
         properties:
           deployment:
-            description: Deployment specifies the ArangoDeployment object name
+            description: DeploymentName specifies the ArangoDeployment object name
             type: string
           destination:
             description: Destination defines the route destination

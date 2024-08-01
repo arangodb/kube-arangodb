@@ -21,6 +21,7 @@
 package util
 
 import (
+	"maps"
 	"reflect"
 	"sort"
 )
@@ -50,7 +51,7 @@ func CopyFullMap[K comparable, V any](src map[K]V) map[K]V {
 
 	r := map[K]V{}
 
-	CopyMap(r, src)
+	maps.Copy(r, src)
 
 	return r
 }
@@ -71,13 +72,6 @@ func MergeMaps[K comparable, V any](override bool, maps ...map[K]V) map[K]V {
 	}
 
 	return r
-}
-
-func CopyMap[K comparable, V any](dst, src map[K]V) {
-	// TODO: replace with maps.Copy when switching to go1.21
-	for k, v := range src {
-		dst[k] = v
-	}
 }
 
 func IterateSorted[V any](m map[string]V, cb func(string, V)) {

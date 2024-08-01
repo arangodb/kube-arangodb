@@ -22,6 +22,7 @@ package shared
 
 import (
 	"fmt"
+	"reflect"
 	"regexp"
 
 	"github.com/google/uuid"
@@ -55,6 +56,15 @@ func ValidateResourceName(name string) error {
 		return nil
 	}
 	return errors.WithStack(errors.Errorf("Name '%s' is not a valid resource name", name))
+}
+
+// ValidateResourceNamePointer validates a kubernetes resource name.
+// If not valid, an error is returned.
+func ValidateResourceNamePointer(name *string) error {
+	if name == nil {
+		return errors.WithStack(errors.Errorf("Name is nil"))
+	}
+	return ValidateResourceName(*name)
 }
 
 // ValidateOptionalResourceName validates a kubernetes resource name.
@@ -98,13 +108,16 @@ func ValidatePullPolicy(in core.PullPolicy) error {
 	return errors.Errorf("Unknown pull policy: '%s'", string(in))
 }
 
-func Validate[T interface{}](in T) error {
+func Validate[T any](in T) error {
 	res, _ := validate(in)
 	return res
 }
 
 func validate(in any) (error, bool) {
 	if in == nil {
+		return nil, false
+	}
+	if reflect.ValueOf(in).IsZero() {
 		return nil, false
 	}
 	if v, ok := in.(ValidateInterface); ok {
@@ -114,12 +127,17 @@ func validate(in any) (error, bool) {
 }
 
 // ValidateOptional Validates object if is not nil
-func ValidateOptional[T interface{}](in *T, validator func(T) error) error {
+func ValidateOptional[T any](in *T, validator func(T) error) error {
 	if in != nil {
 		return validator(*in)
 	}
 
 	return nil
+}
+
+// ValidateOptionalPath Validates object if is not nil
+func ValidateOptionalPath[T any](path string, in *T, validator func(T) error) error {
+	return PrefixResourceErrors(path, ValidateOptional(in, validator))
 }
 
 // ValidateOptionalInterface Validates object if is not nil
@@ -130,16 +148,21 @@ func ValidateOptionalInterface[T ValidateInterface](in T) error {
 
 // ValidateOptionalInterfacePath Validates object if is not nil with path
 func ValidateOptionalInterfacePath[T ValidateInterface](path string, in T) error {
-	return PrefixResourceError(path, ValidateOptionalInterface(in))
+	return PrefixResourceErrors(path, ValidateOptionalInterface(in))
 }
 
 // ValidateRequired Validates object and required not nil value
-func ValidateRequired[T interface{}](in *T, validator func(T) error) error {
+func ValidateRequired[T any](in *T, validator func(T) error) error {
 	if in != nil {
 		return validator(*in)
 	}
 
 	return errors.Errorf("should be not nil")
+}
+
+// ValidateRequiredPath Validates object and required not nil value
+func ValidateRequiredPath[T any](path string, in *T, validator func(T) error) error {
+	return PrefixResourceErrors(path, ValidateRequired(in, validator))
 }
 
 // ValidateRequiredInterface Validates object if is not nil
@@ -153,11 +176,11 @@ func ValidateRequiredInterface[T ValidateInterface](in T) error {
 
 // ValidateRequiredInterfacePath Validates object if is not nil with path
 func ValidateRequiredInterfacePath[T ValidateInterface](path string, in T) error {
-	return PrefixResourceError(path, ValidateRequiredInterface(in))
+	return PrefixResourceErrors(path, ValidateRequiredInterface(in))
 }
 
 // ValidateList validates all elements on the list
-func ValidateList[T interface{}](in []T, validator func(T) error) error {
+func ValidateList[T any](in []T, validator func(T) error) error {
 	errors := make([]error, len(in))
 
 	for id := range in {

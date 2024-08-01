@@ -2,6 +2,7 @@
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Feature) ArangoRoute CRD
+- (Feature) ArangoRoute Operator
 
 ## [1.2.42](https://github.com/arangodb/kube-arangodb/tree/1.2.42) (2024-07-23)
 - (Maintenance) Go 1.22.4 & Kubernetes 1.29.6 libraries

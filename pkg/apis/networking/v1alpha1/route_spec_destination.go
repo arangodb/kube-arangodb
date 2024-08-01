@@ -33,15 +33,39 @@ type ArangoRouteSpecDestination struct {
 	TLS *ArangoRouteSpecDestinationTLS `json:"tls,omitempty"`
 }
 
-func (s *ArangoRouteSpecDestination) Validate() error {
-	if s == nil {
-		s = &ArangoRouteSpecDestination{}
+func (s *ArangoRouteSpecDestination) GetService() *ArangoRouteSpecDestinationService {
+	if s == nil || s.Service == nil {
+		return nil
+	}
+
+	return s.Service
+}
+
+func (s *ArangoRouteSpecDestination) GetSchema() *ArangoRouteSpecDestinationSchema {
+	if s == nil || s.Schema == nil {
+		return nil
+	}
+
+	return s.Schema
+}
+
+func (s *ArangoRouteSpecDestination) GetTLS() *ArangoRouteSpecDestinationTLS {
+	if s == nil || s.TLS == nil {
+		return nil
+	}
+
+	return s.TLS
+}
+
+func (a *ArangoRouteSpecDestination) Validate() error {
+	if a == nil {
+		a = &ArangoRouteSpecDestination{}
 	}
 
 	if err := shared.WithErrors(
-		shared.ValidateOptionalInterfacePath("service", s.Service),
-		shared.ValidateOptionalInterfacePath("schema", s.Schema),
-		shared.ValidateOptionalInterfacePath("tls", s.TLS),
+		shared.ValidateOptionalInterfacePath("service", a.Service),
+		shared.ValidateOptionalInterfacePath("schema", a.Schema),
+		shared.ValidateOptionalInterfacePath("tls", a.TLS),
 	); err != nil {
 		return err
 	}

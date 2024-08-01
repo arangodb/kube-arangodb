@@ -29,21 +29,21 @@ type ArangoRouteSpecRoute struct {
 	Path *string `json:"path,omitempty"`
 }
 
-func (s *ArangoRouteSpecRoute) GetPath() string {
-	if s == nil && s.Path == nil {
+func (a *ArangoRouteSpecRoute) GetPath() string {
+	if a == nil || a.Path == nil {
 		return "/"
 	}
 
-	return *s.Path
+	return *a.Path
 }
 
-func (s *ArangoRouteSpecRoute) Validate() error {
-	if s == nil {
-		s = &ArangoRouteSpecRoute{}
+func (a *ArangoRouteSpecRoute) Validate() error {
+	if a == nil {
+		a = &ArangoRouteSpecRoute{}
 	}
 
 	if err := shared.WithErrors(
-		shared.PrefixResourceError("path", shared.ValidateAPIPath(s.GetPath())),
+		shared.PrefixResourceError("path", shared.ValidateAPIPath(a.GetPath())),
 	); err != nil {
 		return err
 	}

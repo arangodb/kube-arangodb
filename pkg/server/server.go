@@ -70,6 +70,7 @@ type Dependencies struct {
 	Apps                  OperatorDependency
 	ML                    OperatorDependency
 	Analytics             OperatorDependency
+	Networking            OperatorDependency
 	ClusterSync           OperatorDependency
 	Operators             Operators
 	Secrets               typedCore.SecretInterface
@@ -193,6 +194,10 @@ func NewServer(cli typedCore.CoreV1Interface, cfg Config, deps Dependencies) (*S
 	if deps.Analytics.Enabled {
 		r.GET("/ready/analytics", gin.WrapF(deps.Analytics.Probe.ReadyHandler))
 		readyProbes = append(readyProbes, deps.Analytics.Probe)
+	}
+	if deps.Networking.Enabled {
+		r.GET("/ready/networking", gin.WrapF(deps.Networking.Probe.ReadyHandler))
+		readyProbes = append(readyProbes, deps.Networking.Probe)
 	}
 	r.GET("/ready", gin.WrapF(ready(readyProbes...)))
 	r.GET("/metrics", gin.WrapF(metrics.Handler()))

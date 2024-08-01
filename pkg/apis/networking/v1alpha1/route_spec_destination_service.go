@@ -36,12 +36,22 @@ type ArangoRouteSpecDestinationService struct {
 	Port *intstr.IntOrString `json:"port,omitempty"`
 }
 
-func (s *ArangoRouteSpecDestinationService) Validate() error {
-	if s == nil {
-		s = &ArangoRouteSpecDestinationService{}
+func (a *ArangoRouteSpecDestinationService) GetPort() *intstr.IntOrString {
+	if a == nil || a.Port == nil {
+		return nil
 	}
 
-	if err := shared.WithErrors(s.Object.Validate()); err != nil {
+	return a.Port
+}
+
+func (a *ArangoRouteSpecDestinationService) Validate() error {
+	if a == nil {
+		a = &ArangoRouteSpecDestinationService{}
+	}
+
+	if err := shared.WithErrors(a.Object.Validate(), shared.ValidateRequiredPath("port", a.Port, func(i intstr.IntOrString) error {
+		return nil
+	})); err != nil {
 		return err
 	}
 

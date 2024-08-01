@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ package util
 
 import "sort"
 
-type List[T any] []T
+type List[T comparable] []T
 
 func (l List[T]) Filter(fn func(T) bool) List[T] {
 	if l == nil {
@@ -57,6 +57,16 @@ func (l List[T]) Sort(fn func(T, T) bool) List[T] {
 	return clone
 }
 
+func PickFromList[V any](in []V, q func(v V) bool) (V, bool) {
+	for _, v := range in {
+		if q(v) {
+			return v, true
+		}
+	}
+
+	return Default[V](), false
+}
+
 func MapList[T, V comparable](in List[T], fn func(T) V) List[V] {
 	if in == nil {
 		return nil
@@ -66,4 +76,28 @@ func MapList[T, V comparable](in List[T], fn func(T) V) List[V] {
 		result = append(result, fn(em))
 	}
 	return result
+}
+
+func FormatList[A, B any](in []A, format func(A) B) []B {
+	var r = make([]B, len(in))
+
+	for id := range in {
+		r[id] = format(in[id])
+	}
+
+	return r
+}
+
+func FormatListErr[A, B any](in []A, format func(A) (B, error)) ([]B, error) {
+	var r = make([]B, len(in))
+
+	for id := range in {
+		if o, err := format(in[id]); err != nil {
+			return nil, err
+		} else {
+			r[id] = o
+		}
+	}
+
+	return r, nil
 }

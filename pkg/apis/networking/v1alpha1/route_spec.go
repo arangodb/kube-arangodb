@@ -23,8 +23,8 @@ package v1alpha1
 import shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 
 type ArangoRouteSpec struct {
-	// Deployment specifies the ArangoDeployment object name
-	Deployment string `json:"deployment,omitempty"`
+	// DeploymentName specifies the ArangoDeployment object name
+	DeploymentName *string `json:"deployment,omitempty"`
 
 	// Destination defines the route destination
 	Destination *ArangoRouteSpecDestination `json:"destination,omitempty"`
@@ -33,15 +33,30 @@ type ArangoRouteSpec struct {
 	Route *ArangoRouteSpecRoute `json:"route,omitempty"`
 }
 
+func (s *ArangoRouteSpec) GetDestination() *ArangoRouteSpecDestination {
+	if s == nil || s.Destination == nil {
+		return nil
+	}
+
+	return s.Destination
+}
+
+func (s *ArangoRouteSpec) GetRoute() *ArangoRouteSpecRoute {
+	if s == nil || s.Route == nil {
+		return nil
+	}
+	return s.Route
+}
+
 func (s *ArangoRouteSpec) Validate() error {
 	if s == nil {
 		s = &ArangoRouteSpec{}
 	}
 
 	if err := shared.WithErrors(shared.PrefixResourceErrors("spec",
-		shared.PrefixResourceError("deployment", shared.ValidateResourceName(s.Deployment)),
+		shared.PrefixResourceErrors("deployment", shared.ValidateResourceNamePointer(s.DeploymentName)),
 		shared.ValidateRequiredInterfacePath("destination", s.Destination),
-		shared.ValidateRequiredInterfacePath("route", s.Route),
+		shared.ValidateOptionalInterfacePath("route", s.Route),
 	)); err != nil {
 		return err
 	}
