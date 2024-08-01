@@ -364,6 +364,15 @@ entries:
   kube-arangodb-crd:
   - apiVersion: v1
     appVersion: 3.5.0
+    created: "2024-07-25T14:04:29.160379+02:00"
+    description: ArangoDB Kubernetes Custom Resource Definitions (Deprecated)
+    digest: 1c014cb77b5c31c9bedf680325125735e8f47c60bebab88b36c329370943393f
+    name: kube-arangodb-crd
+    urls:
+    - https://github.com/arangodb/kube-arangodb/releases/download/1.2.42/kube-arangodb-crd-1.2.42.tgz
+    version: 1.2.42
+  - apiVersion: v1
+    appVersion: 3.5.0
     created: "2024-05-24T22:23:27.719739585Z"
     description: ArangoDB Kubernetes Custom Resource Definitions (Deprecated)
     digest: 0ee7516d7b507f94d6ac0484b8b67de8ef33bdbeca5b3a0ba3dee32c70e2f84f
