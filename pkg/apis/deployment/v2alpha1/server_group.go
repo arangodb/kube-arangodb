@@ -144,6 +144,35 @@ func (g ServerGroup) AsRole() string {
 	}
 }
 
+// Enabled checks if group is enabled for a mode
+func (g ServerGroup) Enabled(mode DeploymentMode) bool {
+	switch mode {
+	case DeploymentModeSingle:
+		switch g {
+		case ServerGroupSingle:
+			return true
+		default:
+			return false
+		}
+	case DeploymentModeActiveFailover:
+		switch g {
+		case ServerGroupAgents, ServerGroupDBServers, ServerGroupCoordinators, ServerGroupSyncMasters, ServerGroupSyncWorkers:
+			return true
+		default:
+			return false
+		}
+	case DeploymentModeCluster:
+		switch g {
+		case ServerGroupSingle, ServerGroupAgents:
+			return true
+		default:
+			return false
+		}
+	default:
+		return false
+	}
+}
+
 // AsRoleAbbreviated returns the abbreviation of the "role" value for the given group.
 func (g ServerGroup) AsRoleAbbreviated() string {
 	switch g {

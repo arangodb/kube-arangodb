@@ -919,3 +919,8 @@ sync-charts:
 	@(cd "$(ROOT)/chart/kube-arangodb"; find . -type f -not -name values.yaml -not -name Chart.yaml -exec cp "$(ROOT)/chart/kube-arangodb/{}" "$(ROOT)/chart/kube-arangodb-arm64/{}" \;)
 
 sync: sync-charts
+
+ci-check:
+	@$(MAKE) tidy vendor update-generated synchronize-v2alpha1-with-v1 generate-internal sync fmt yamlfmt license
+	@git checkout -- go.sum # ignore changes in go.sum
+	@if [ ! -z "$(git status --porcelain)" ]; then echo "There are uncommited changes!"; git status; exit 1; fi
