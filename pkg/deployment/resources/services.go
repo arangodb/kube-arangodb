@@ -22,6 +22,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -49,9 +50,7 @@ var (
 )
 
 // createService returns service's object.
-func (r *Resources) createService(name, namespace, clusterIP string, serviceType core.ServiceType, owner meta.OwnerReference, ports []core.ServicePort,
-	selector map[string]string) *core.Service {
-
+func (r *Resources) createService(name, namespace, clusterIP string, serviceType core.ServiceType, publishNotReadyAddresses bool, owner meta.OwnerReference, ports []core.ServicePort, selector map[string]string) *core.Service {
 	return &core.Service{
 		ObjectMeta: meta.ObjectMeta{
 			Name:      name,
@@ -64,7 +63,7 @@ func (r *Resources) createService(name, namespace, clusterIP string, serviceType
 			Type:                     serviceType,
 			ClusterIP:                clusterIP,
 			Ports:                    ports,
-			PublishNotReadyAddresses: true,
+			PublishNotReadyAddresses: publishNotReadyAddresses,
 			Selector:                 selector,
 		},
 	}
@@ -101,7 +100,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 		ports := CreateServerServicePortsWithSidecars(amInspector, e.Member.ArangoMemberName(deploymentName, e.Group))
 		selector := k8sutil.LabelsForActiveMember(deploymentName, e.Group.AsRole(), e.Member.ID)
 		if s, ok := cachedStatus.Service().V1().GetSimple(member.GetName()); !ok {
-			s := r.createService(member.GetName(), member.GetNamespace(), spec.CommunicationMethod.ServiceClusterIP(), spec.CommunicationMethod.ServiceType(), member.AsOwner(), ports, selector)
+			s := r.createService(member.GetName(), member.GetNamespace(), spec.CommunicationMethod.ServiceClusterIP(), spec.CommunicationMethod.ServiceType(), true, member.AsOwner(), ports, selector)
 
 			err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				_, err := svcs.Create(ctxChild, s, meta.CreateOptions{})
@@ -125,6 +124,63 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 				return err
 			} else if changed {
 				reconcileRequired.Required()
+			}
+		}
+	}
+
+	// Group Services
+	for _, group := range api.AllServerGroups {
+		if !group.Enabled(spec.GetMode()) {
+			continue
+		}
+
+		name := fmt.Sprintf("%s-%s", deploymentName, group.AsRole())
+		s, ok := cachedStatus.Service().V1().GetSimple(name)
+
+		details := spec.GetServerGroupSpec(group)
+		if details.GetCount() == 0 {
+			if !ok {
+				// We do not expect service and it is gone
+				continue
+			}
+
+			if err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
+				return svcs.Delete(ctxChild, s.GetName(), meta.DeleteOptions{})
+			}); err != nil {
+				if !kerrors.IsNotFound(err) {
+					return err
+				}
+				reconcileRequired.Required()
+			}
+		} else {
+			selector := k8sutil.LabelsForDeployment(deploymentName, group.AsRole())
+			ports := []core.ServicePort{CreateServerServicePort()}
+			// Service should exists
+			if !ok {
+				s := r.createService(name, apiObject.GetNamespace(), spec.CommunicationMethod.ServiceClusterIP(), spec.CommunicationMethod.ServiceType(), false, apiObject.AsOwner(), ports, selector)
+
+				err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
+					_, err := svcs.Create(ctxChild, s, meta.CreateOptions{})
+					return err
+				})
+				if err != nil {
+					if !kerrors.IsConflict(err) {
+						return err
+					}
+				}
+
+				reconcileRequired.Required()
+				continue
+			} else {
+				if changed, err := patcher.ServicePatcher(ctx, svcs, s, meta.PatchOptions{},
+					patcher.PatchServicePorts(ports),
+					patcher.PatchServiceSelector(selector),
+					patcher.PatchServicePublishNotReadyAddresses(false),
+					patcher.PatchServiceType(spec.CommunicationMethod.ServiceType())); err != nil {
+					return err
+				} else if changed {
+					reconcileRequired.Required()
+				}
 			}
 		}
 	}
