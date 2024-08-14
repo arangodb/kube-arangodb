@@ -1101,6 +1101,7 @@ func (in *DeploymentSpec) DeepCopyInto(out *DeploymentSpec) {
 	in.Coordinators.DeepCopyInto(&out.Coordinators)
 	in.SyncMasters.DeepCopyInto(&out.SyncMasters)
 	in.SyncWorkers.DeepCopyInto(&out.SyncWorkers)
+	in.Gateways.DeepCopyInto(&out.Gateways)
 	if in.MemberPropagationMode != nil {
 		in, out := &in.MemberPropagationMode, &out.MemberPropagationMode
 		*out = new(DeploymentMemberPropagationMode)
@@ -1516,6 +1517,13 @@ func (in *DeploymentStatusMembers) DeepCopyInto(out *DeploymentStatusMembers) {
 	}
 	if in.SyncWorkers != nil {
 		in, out := &in.SyncWorkers, &out.SyncWorkers
+		*out = make(MemberStatusList, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
+	if in.Gateways != nil {
+		in, out := &in.Gateways, &out.Gateways
 		*out = make(MemberStatusList, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])

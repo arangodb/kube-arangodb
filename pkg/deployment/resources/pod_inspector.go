@@ -530,7 +530,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 	}
 
 	spec := r.context.GetSpec()
-	allMembersReady := status.Members.AllMembersReady(spec.GetMode(), r.context.IsSyncEnabled())
+	allMembersReady := status.Members.AllMembersReady(spec.GetMode(), r.context.IsSyncEnabled(), spec.IsGatewayEnabled())
 	status.Conditions.Update(api.ConditionTypeReady, allMembersReady, "", "")
 
 	// Update conditions

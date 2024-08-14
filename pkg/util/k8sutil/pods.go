@@ -641,6 +641,18 @@ func CreateVolumeWithSecret(name, secretName string) core.Volume {
 		},
 	}
 }
+func CreateVolumeWithConfigMap(name, configMapName string) core.Volume {
+	return core.Volume{
+		Name: name,
+		VolumeSource: core.VolumeSource{
+			ConfigMap: &core.ConfigMapVolumeSource{
+				LocalObjectReference: core.LocalObjectReference{
+					Name: configMapName,
+				},
+			},
+		},
+	}
+}
 
 func CreateVolumeWithPersitantVolumeClaim(name, claimName string) core.Volume {
 	return core.Volume{

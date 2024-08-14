@@ -25,6 +25,7 @@ const (
 	ArangoPort           = 8529
 	ArangoSyncMasterPort = 8629
 	ArangoSyncWorkerPort = 8729
+	ArangoGatewayPort    = 10000
 	ArangoExporterPort   = 9101
 
 	ArangoExporterStatusEndpoint        = "/_api/version"

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ type DeploymentStatusMembers struct {
 	Coordinators MemberStatusList `json:"coordinators,omitempty"`
 	SyncMasters  MemberStatusList `json:"syncmasters,omitempty"`
 	SyncWorkers  MemberStatusList `json:"syncworkers,omitempty"`
+	Gateways     MemberStatusList `json:"gateways,omitempty"`
 }
 
 // Equal checks for equality
@@ -44,7 +45,8 @@ func (ds DeploymentStatusMembers) Equal(other DeploymentStatusMembers) bool {
 		ds.DBServers.Equal(other.DBServers) &&
 		ds.Coordinators.Equal(other.Coordinators) &&
 		ds.SyncMasters.Equal(other.SyncMasters) &&
-		ds.SyncWorkers.Equal(other.SyncWorkers)
+		ds.SyncWorkers.Equal(other.SyncWorkers) &&
+		ds.Gateways.Equal(other.Gateways)
 }
 
 // ContainsID returns true if the given set of members contains a member with given ID.
@@ -54,7 +56,8 @@ func (ds DeploymentStatusMembers) ContainsID(id string) bool {
 		ds.DBServers.ContainsID(id) ||
 		ds.Coordinators.ContainsID(id) ||
 		ds.SyncMasters.ContainsID(id) ||
-		ds.SyncWorkers.ContainsID(id)
+		ds.SyncWorkers.ContainsID(id) ||
+		ds.Gateways.ContainsID(id)
 }
 
 // ElementByID returns the element in the given list that has the given ID and true.
@@ -77,6 +80,9 @@ func (ds DeploymentStatusMembers) ElementByID(id string) (MemberStatus, ServerGr
 	}
 	if result, found := ds.SyncWorkers.ElementByID(id); found {
 		return result, ServerGroupSyncWorkers, true
+	}
+	if result, found := ds.Gateways.ElementByID(id); found {
+		return result, ServerGroupGateways, true
 	}
 	return MemberStatus{}, 0, false
 }
@@ -129,6 +135,10 @@ func (ds DeploymentStatusMembers) ForServerGroup(cb MemberStatusFunc, group Serv
 		if err := cb(ServerGroupSyncWorkers, ds.SyncWorkers); err != nil {
 			return errors.WithStack(err)
 		}
+	case ServerGroupGateways:
+		if err := cb(ServerGroupGateways, ds.Gateways); err != nil {
+			return errors.WithStack(err)
+		}
 	}
 	return nil
 }
@@ -154,6 +164,9 @@ func (ds DeploymentStatusMembers) MemberStatusByPodName(podName string) (MemberS
 	}
 	if result, found := ds.SyncWorkers.ElementByPodName(podName); found {
 		return result, ServerGroupSyncWorkers, true
+	}
+	if result, found := ds.Gateways.ElementByPodName(podName); found {
+		return result, ServerGroupGateways, true
 	}
 	return MemberStatus{}, 0, false
 }
@@ -190,6 +203,8 @@ func (ds *DeploymentStatusMembers) Add(status MemberStatus, group ServerGroup) e
 		err = ds.SyncMasters.add(status)
 	case ServerGroupSyncWorkers:
 		err = ds.SyncWorkers.add(status)
+	case ServerGroupGateways:
+		err = ds.Gateways.add(status)
 	default:
 		return errors.WithStack(errors.Wrapf(NotFoundError, "ServerGroup %d is not known", group))
 	}
@@ -215,6 +230,8 @@ func (ds *DeploymentStatusMembers) Update(status MemberStatus, group ServerGroup
 		err = ds.SyncMasters.update(status)
 	case ServerGroupSyncWorkers:
 		err = ds.SyncWorkers.update(status)
+	case ServerGroupGateways:
+		err = ds.Gateways.update(status)
 	default:
 		return errors.WithStack(errors.Wrapf(NotFoundError, "ServerGroup %d is not known", group))
 	}
@@ -241,6 +258,8 @@ func (ds *DeploymentStatusMembers) RemoveByID(id string, group ServerGroup) erro
 		err = ds.SyncMasters.removeByID(id)
 	case ServerGroupSyncWorkers:
 		err = ds.SyncWorkers.removeByID(id)
+	case ServerGroupGateways:
+		err = ds.Gateways.removeByID(id)
 	default:
 		return errors.WithStack(errors.Wrapf(NotFoundError, "ServerGroup %d is not known", group))
 	}
@@ -250,23 +269,30 @@ func (ds *DeploymentStatusMembers) RemoveByID(id string, group ServerGroup) erro
 	return nil
 }
 
-// AllMembersReady returns true when all members, that must be ready for the given mode, are in the Ready state.
-func (ds DeploymentStatusMembers) AllMembersReady(mode DeploymentMode, syncEnabled bool) bool {
+// AllMembersReady returns true when all members, that must be ready for the given mode are in the Ready state.
+func (ds DeploymentStatusMembers) AllMembersReady(mode DeploymentMode, syncEnabled, gatewayEnabled bool) bool {
 	syncReady := func() bool {
 		if syncEnabled {
 			return ds.SyncMasters.AllMembersReady() && ds.SyncWorkers.AllMembersReady()
 		}
 		return true
 	}
+	gatewayReady := func() bool {
+		if gatewayEnabled {
+			return ds.Gateways.AllMembersReady()
+		}
+		return true
+	}
 	switch mode {
 	case DeploymentModeSingle:
-		return ds.Single.MembersReady() > 0
+		return ds.Single.MembersReady() > 0 && gatewayReady()
 	case DeploymentModeActiveFailover:
 		return ds.Agents.AllMembersReady() && ds.Single.MembersReady() > 0
 	case DeploymentModeCluster:
 		return ds.Agents.AllMembersReady() &&
 			ds.DBServers.AllMembersReady() &&
 			ds.Coordinators.AllMembersReady() &&
+			gatewayReady() &&
 			syncReady()
 	default:
 		return false
@@ -288,6 +314,8 @@ func (ds DeploymentStatusMembers) MembersOfGroup(group ServerGroup) MemberStatus
 		return ds.SyncMasters
 	case ServerGroupSyncWorkers:
 		return ds.SyncWorkers
+	case ServerGroupGateways:
+		return ds.Gateways
 	default:
 		return MemberStatusList{}
 	}

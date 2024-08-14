@@ -189,6 +189,11 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 	counterMetric.Inc()
 	headlessPorts, headlessSelector := k8sutil.HeadlessServiceDetails(deploymentName)
 
+	// todo
+	/*	if spec.IsGatewayEnabled() {
+		// set headlessSelector to point to gateway
+	}*/
+
 	if s, exists := cachedStatus.Service().V1().GetSimple(k8sutil.CreateHeadlessServiceName(deploymentName)); !exists {
 		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
@@ -256,6 +261,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 		return errors.WithStack(err)
 	}
 
+	//todo
 	if r.context.IsSyncEnabled() {
 		// External (and internal) Sync master service
 		counterMetric.Inc()

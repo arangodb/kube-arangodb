@@ -286,6 +286,17 @@ func createArangoSyncArgs(apiObject meta.Object, spec api.DeploymentSpec, group 
 	return args
 }
 
+func createArangoGatewayArgs(apiObject meta.Object, spec api.DeploymentSpec, group api.ServerGroup, groupSpec api.ServerGroupSpec, member api.MemberStatus) []string {
+	args := []string{
+		fmt.Sprintf("-c %s", GatewayConfigFilePath),
+	}
+	if len(groupSpec.Args) > 0 {
+		args = append(args, groupSpec.Args...)
+	}
+
+	return args
+}
+
 // CreatePodTolerations creates a list of tolerations for a pod created for the given group.
 func (r *Resources) CreatePodTolerations(group api.ServerGroup, groupSpec api.ServerGroupSpec) []core.Toleration {
 	return tolerations.MergeTolerationsIfNotFound(tolerations.CreatePodTolerations(r.context.GetMode(), group), groupSpec.GetTolerations())
@@ -368,6 +379,22 @@ func (r *Resources) RenderPodForMember(ctx context.Context, acs sutil.ACS, spec 
 		}
 
 		podCreator = &MemberSyncPod{
+			podName:      podName,
+			groupSpec:    groupSpec,
+			spec:         spec,
+			group:        group,
+			resources:    r,
+			imageInfo:    imageInfo,
+			arangoMember: *member,
+			apiObject:    apiObject,
+			memberStatus: m,
+			cachedStatus: cache,
+		}
+	case api.ServerGroupGateways:
+		// todo change me later
+		imageInfo.Image = "envoyproxy/envoy:v1.31-latest"
+
+		podCreator = &MemberGatewayPod{
 			podName:      podName,
 			groupSpec:    groupSpec,
 			spec:         spec,
@@ -548,6 +575,27 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 		m.Pod.Propagate(&m)
 
 		log.Str("pod-name", pod.Name).Debug("Created pod")
+	case api.ServerGroupGateways:
+		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
+		defer cancel()
+		podName, uid, err := CreateArangoPod(ctxChild, cachedStatus.PodsModInterface().V1(), apiObject, spec, group, CreatePodFromTemplate(template.PodSpec))
+		if err != nil {
+			if uErr := r.context.WithMemberStatusUpdateErr(ctx, m.ID, group, updateMemberPhase(api.MemberPhaseCreationFailed)); uErr != nil {
+				return errors.WithStack(uErr)
+			}
+			return errors.WithStack(err)
+		}
+
+		var pod api.MemberPodStatus
+
+		pod.Name = podName
+		pod.UID = uid
+		pod.SpecVersion = template.PodSpecChecksum
+
+		m.Pod = &pod
+		m.Pod.Propagate(&m)
+
+		log.Str("pod-name", pod.Name).Debug("Created Gateway pod")
 	default:
 		return assertion.InvalidGroupKey.Assert(true, "Unable to create pod for an unknown group: %s", group.AsRole())
 	}

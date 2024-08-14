@@ -72,6 +72,12 @@ func (r *Resources) EnsurePDBs(ctx context.Context) error {
 			currSyncWorker = status.Members.SyncWorkers.MembersReady()
 		}
 
+		minGateways, currGateways := 0, 0
+		if spec.IsGatewayEnabled() {
+			minGateways = spec.GetServerGroupSpec(api.ServerGroupGateways).GetCount() - 1
+			currGateways = status.Members.Gateways.MembersReady()
+		}
+
 		// Ensure all PDBs as calculated
 		if err := r.ensurePDBForGroup(ctx, api.ServerGroupAgents, minAgents, currAgents); err != nil {
 			return err
@@ -86,6 +92,9 @@ func (r *Resources) EnsurePDBs(ctx context.Context) error {
 			return err
 		}
 		if err := r.ensurePDBForGroup(ctx, api.ServerGroupSyncWorkers, minSyncWorker, currSyncWorker); err != nil {
+			return err
+		}
+		if err := r.ensurePDBForGroup(ctx, api.ServerGroupGateways, minGateways, currGateways); err != nil {
 			return err
 		}
 	}

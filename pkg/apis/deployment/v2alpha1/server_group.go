@@ -84,6 +84,7 @@ const (
 	ServerGroupCoordinators   ServerGroup = 4
 	ServerGroupSyncMasters    ServerGroup = 5
 	ServerGroupSyncWorkers    ServerGroup = 6
+	ServerGroupGateways       ServerGroup = 7
 	ServerGroupImageDiscovery ServerGroup = -1
 
 	ServerGroupSingleString         = "single"
@@ -92,6 +93,7 @@ const (
 	ServerGroupCoordinatorsString   = "coordinator"
 	ServerGroupSyncMastersString    = "syncmaster"
 	ServerGroupSyncWorkersString    = "syncworker"
+	ServerGroupGatewaysString       = "gateways"
 	ServerGroupImageDiscoveryString = "id"
 
 	ServerGroupSingleAbbreviatedString         = "sngl"
@@ -100,6 +102,7 @@ const (
 	ServerGroupCoordinatorsAbbreviatedString   = "crdn"
 	ServerGroupSyncMastersAbbreviatedString    = "syma"
 	ServerGroupSyncWorkersAbbreviatedString    = "sywo"
+	ServerGroupGatewaysAbbreviatedString       = "gway"
 	ServerGroupImageDiscoveryAbbreviatedString = "id"
 )
 
@@ -112,6 +115,7 @@ var (
 		ServerGroupCoordinators,
 		ServerGroupSyncMasters,
 		ServerGroupSyncWorkers,
+		ServerGroupGateways,
 	}
 	// AllArangoDServerGroups contains a constant list of all ArangoD server groups
 	AllArangoDServerGroups = []ServerGroup{
@@ -151,6 +155,8 @@ func (g ServerGroup) AsRole() string {
 		return ServerGroupSyncMastersString
 	case ServerGroupSyncWorkers:
 		return ServerGroupSyncWorkersString
+	case ServerGroupGateways:
+		return ServerGroupGatewaysString
 	case ServerGroupImageDiscovery:
 		return ServerGroupImageDiscoveryString
 	default:
@@ -202,6 +208,8 @@ func (g ServerGroup) AsRoleAbbreviated() string {
 		return ServerGroupSyncMastersAbbreviatedString
 	case ServerGroupSyncWorkers:
 		return ServerGroupSyncWorkersAbbreviatedString
+	case ServerGroupGateways:
+		return ServerGroupGatewaysAbbreviatedString
 	case ServerGroupImageDiscovery:
 		return ServerGroupImageDiscoveryAbbreviatedString
 	default:
@@ -228,7 +236,7 @@ func (g ServerGroup) DefaultTerminationGracePeriod() time.Duration {
 // IsStateless returns true when the groups runs servers without a persistent volume.
 func (g ServerGroup) IsStateless() bool {
 	switch g {
-	case ServerGroupCoordinators, ServerGroupSyncMasters, ServerGroupSyncWorkers:
+	case ServerGroupCoordinators, ServerGroupSyncMasters, ServerGroupSyncWorkers, ServerGroupGateways:
 		return true
 	default:
 		return false
@@ -249,6 +257,16 @@ func (g ServerGroup) IsArangod() bool {
 func (g ServerGroup) IsArangosync() bool {
 	switch g {
 	case ServerGroupSyncMasters, ServerGroupSyncWorkers:
+		return true
+	default:
+		return false
+	}
+}
+
+// IsGateway returns true when the group is a gateway group
+func (g ServerGroup) IsGateway() bool {
+	switch g {
+	case ServerGroupGateways:
 		return true
 	default:
 		return false
@@ -280,6 +298,8 @@ func ServerGroupFromAbbreviatedRole(label string) ServerGroup {
 		return ServerGroupSyncMasters
 	case ServerGroupSyncWorkersAbbreviatedString:
 		return ServerGroupSyncWorkers
+	case ServerGroupGatewaysAbbreviatedString:
+		return ServerGroupGateways
 	case ServerGroupImageDiscoveryAbbreviatedString:
 		return ServerGroupImageDiscovery
 	default:
@@ -287,7 +307,7 @@ func ServerGroupFromAbbreviatedRole(label string) ServerGroup {
 	}
 }
 
-// ServerGroupFromAbbreviatedRole returns ServerGroup from role
+// ServerGroupFromRole returns ServerGroup from role
 func ServerGroupFromRole(label string) ServerGroup {
 	switch label {
 	case ServerGroupSingleString:
@@ -302,6 +322,8 @@ func ServerGroupFromRole(label string) ServerGroup {
 		return ServerGroupSyncMasters
 	case ServerGroupSyncWorkersString:
 		return ServerGroupSyncWorkers
+	case ServerGroupGatewaysString:
+		return ServerGroupGateways
 	case ServerGroupImageDiscoveryString:
 		return ServerGroupImageDiscovery
 	default:
