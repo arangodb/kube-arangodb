@@ -34,6 +34,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoroute"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangotask"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/configmap"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/endpoints"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/mods"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/node"
@@ -76,6 +77,7 @@ type Inspector interface {
 
 	pod.Inspector
 	secret.Inspector
+	configmap.Inspector
 	persistentvolumeclaim.Inspector
 	service.Inspector
 	poddisruptionbudget.Inspector

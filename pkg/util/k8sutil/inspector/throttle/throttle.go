@@ -32,10 +32,10 @@ type Inspector interface {
 }
 
 func NewAlwaysThrottleComponents() Components {
-	return NewThrottleComponents(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+	return NewThrottleComponents(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 }
 
-func NewThrottleComponents(acs, am, at, ar, node, pvc, pod, pv, pdb, secret, service, serviceAccount, sm, endpoints time.Duration) Components {
+func NewThrottleComponents(acs, am, at, ar, node, pvc, pod, pv, pdb, secret, cm, service, serviceAccount, sm, endpoints time.Duration) Components {
 	return &throttleComponents{
 		arangoClusterSynchronization: NewThrottle(acs),
 		arangoMember:                 NewThrottle(am),
@@ -47,6 +47,7 @@ func NewThrottleComponents(acs, am, at, ar, node, pvc, pod, pv, pdb, secret, ser
 		pod:                          NewThrottle(pod),
 		podDisruptionBudget:          NewThrottle(pdb),
 		secret:                       NewThrottle(secret),
+		configMap:                    NewThrottle(cm),
 		service:                      NewThrottle(service),
 		serviceAccount:               NewThrottle(serviceAccount),
 		serviceMonitor:               NewThrottle(sm),
@@ -65,6 +66,7 @@ type Components interface {
 	Pod() Throttle
 	PodDisruptionBudget() Throttle
 	Secret() Throttle
+	ConfigMap() Throttle
 	Service() Throttle
 	ServiceAccount() Throttle
 	ServiceMonitor() Throttle
@@ -88,10 +90,15 @@ type throttleComponents struct {
 	pod                          Throttle
 	podDisruptionBudget          Throttle
 	secret                       Throttle
+	configMap                    Throttle
 	service                      Throttle
 	serviceAccount               Throttle
 	serviceMonitor               Throttle
 	endpoints                    Throttle
+}
+
+func (t *throttleComponents) ConfigMap() Throttle {
+	return t.configMap
 }
 
 func (t *throttleComponents) PersistentVolume() Throttle {
@@ -143,6 +150,8 @@ func (t *throttleComponents) Get(c definitions.Component) Throttle {
 		return t.podDisruptionBudget
 	case definitions.Secret:
 		return t.secret
+	case definitions.ConfigMap:
+		return t.configMap
 	case definitions.Service:
 		return t.service
 	case definitions.ServiceAccount:
@@ -168,6 +177,7 @@ func (t *throttleComponents) Copy() Components {
 		pod:                          t.pod.Copy(),
 		podDisruptionBudget:          t.podDisruptionBudget.Copy(),
 		secret:                       t.secret.Copy(),
+		configMap:                    t.configMap.Copy(),
 		service:                      t.service.Copy(),
 		serviceAccount:               t.serviceAccount.Copy(),
 		serviceMonitor:               t.serviceMonitor.Copy(),

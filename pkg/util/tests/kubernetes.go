@@ -131,6 +131,12 @@ func CreateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			vl := *v
 			_, err := k8s.CoreV1().Secrets(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
 			require.NoError(t, err)
+		case **core.ConfigMap:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := k8s.CoreV1().ConfigMaps(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
+			require.NoError(t, err)
 		case **core.Service:
 			require.NotNil(t, v)
 
@@ -292,6 +298,12 @@ func UpdateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			vl := *v
 			_, err := k8s.CoreV1().Secrets(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
 			require.NoError(t, err)
+		case **core.ConfigMap:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := k8s.CoreV1().ConfigMaps(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
 		case **core.Service:
 			require.NotNil(t, v)
 
@@ -444,6 +456,11 @@ func DeleteObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 
 			vl := *v
 			require.NoError(t, k8s.CoreV1().Secrets(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **core.ConfigMap:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, k8s.CoreV1().ConfigMaps(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
 		case **core.Service:
 			require.NotNil(t, v)
 
@@ -608,6 +625,21 @@ func RefreshObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientS
 			vl := *v
 
 			vn, err := k8s.CoreV1().Secrets(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
+			if err != nil {
+				if kerrors.IsNotFound(err) {
+					*v = nil
+				} else {
+					require.NoError(t, err)
+				}
+			} else {
+				*v = vn
+			}
+		case **core.ConfigMap:
+			require.NotNil(t, v)
+
+			vl := *v
+
+			vn, err := k8s.CoreV1().ConfigMaps(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
 			if err != nil {
 				if kerrors.IsNotFound(err) {
 					*v = nil
@@ -950,6 +982,12 @@ func SetMetaBasedOnType(t *testing.T, object meta.Object) {
 		v.SetSelfLink(fmt.Sprintf("/api/v1/secrets/%s/%s",
 			object.GetNamespace(),
 			object.GetName()))
+	case *core.ConfigMap:
+		v.Kind = "ConfigMap"
+		v.APIVersion = "v1"
+		v.SetSelfLink(fmt.Sprintf("/api/v1/configmaps/%s/%s",
+			object.GetNamespace(),
+			object.GetName()))
 	case *core.Service:
 		v.Kind = "Service"
 		v.APIVersion = "v1"
@@ -1163,6 +1201,12 @@ func GVK(t *testing.T, object meta.Object) schema.GroupVersionKind {
 			Group:   "",
 			Version: "v1",
 			Kind:    "Secret",
+		}
+	case *core.ConfigMap:
+		return schema.GroupVersionKind{
+			Group:   "",
+			Version: "v1",
+			Kind:    "ConfigMap",
 		}
 	case *core.Service:
 		return schema.GroupVersionKind{
