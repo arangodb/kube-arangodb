@@ -70,6 +70,7 @@ func Test_NewMetaObject(t *testing.T) {
 	NewMetaObjectRun[*batch.Job](t)
 	NewMetaObjectRun[*core.Pod](t)
 	NewMetaObjectRun[*core.Secret](t)
+	NewMetaObjectRun[*core.ConfigMap](t)
 	NewMetaObjectRun[*core.ServiceAccount](t)
 	NewMetaObjectRun[*core.Service](t)
 	NewMetaObjectRun[*apps.StatefulSet](t)

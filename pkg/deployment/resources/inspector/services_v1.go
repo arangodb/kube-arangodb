@@ -63,15 +63,6 @@ func (p *servicesInspectorV1) validate() error {
 	return nil
 }
 
-func (p *servicesInspectorV1) Services() []*core.Service {
-	var r []*core.Service
-	for _, service := range p.services {
-		r = append(r, service)
-	}
-
-	return r
-}
-
 func (p *servicesInspectorV1) GetSimple(name string) (*core.Service, bool) {
 	service, ok := p.services[name]
 	if !ok {

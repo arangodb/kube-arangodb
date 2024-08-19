@@ -25,6 +25,7 @@ import (
 	arangomemberv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember/v1"
 	arangoroutev1alpha1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoroute/v1alpha1"
 	arangotaskv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangotask/v1"
+	configMapv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/configmap/v1"
 	endpointsv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/endpoints/v1"
 	persistentvolumeclaimv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim/v1"
 	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
@@ -45,6 +46,10 @@ type ServiceAccountsMods interface {
 
 type SecretsMods interface {
 	V1() secretv1.ModInterface
+}
+
+type ConfigMapsMods interface {
+	V1() configMapv1.ModInterface
 }
 
 type PersistentVolumeClaimsMods interface {
@@ -87,6 +92,7 @@ type Mods interface {
 	PodsModInterface() PodsMods
 	ServiceAccountsModInterface() ServiceAccountsMods
 	SecretsModInterface() SecretsMods
+	ConfigMapsModInterface() ConfigMapsMods
 	PersistentVolumeClaimsModInterface() PersistentVolumeClaimsMods
 	ServicesModInterface() ServicesMods
 	EndpointsModInterface() EndpointsMods

@@ -38,6 +38,7 @@ func NewDefaultThrottle() throttle.Components {
 		time.Second,    // Pod
 		30*time.Second, // PDB
 		10*time.Second, // Secret
+		30*time.Second, // ConfigMap
 		10*time.Second, // Service
 		30*time.Second, // SA
 		30*time.Second, // ServiceMonitor

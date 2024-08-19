@@ -35,6 +35,7 @@ const (
 	Pod                          Component = "Pod"
 	PodDisruptionBudget          Component = "PodDisruptionBudget"
 	Secret                       Component = "Secret"
+	ConfigMap                    Component = "ConfigMap"
 	Service                      Component = "Service"
 	ServiceAccount               Component = "ServiceAccount"
 	ServiceMonitor               Component = "ServiceMonitor"
@@ -53,6 +54,7 @@ func AllComponents() []Component {
 		Pod,
 		PodDisruptionBudget,
 		Secret,
+		ConfigMap,
 		Service,
 		ServiceAccount,
 		ServiceMonitor,

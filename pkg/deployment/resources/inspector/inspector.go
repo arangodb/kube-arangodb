@@ -44,6 +44,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoroute"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangotask"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/configmap"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/endpoints"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/node"
@@ -126,6 +127,7 @@ type inspectorState struct {
 
 	pods                          *podsInspector
 	secrets                       *secretsInspector
+	configMaps                    *configMapsInspector
 	persistentVolumeClaims        *persistentVolumeClaimsInspector
 	services                      *servicesInspector
 	serviceAccounts               *serviceAccountsInspector
@@ -158,6 +160,7 @@ func (i *inspectorState) RegisterInformers(k8s informers.SharedInformerFactory, 
 
 	k8s.Core().V1().Pods().Informer().AddEventHandler(i.eventHandler(definitions.Pod))
 	k8s.Core().V1().Secrets().Informer().AddEventHandler(i.eventHandler(definitions.Secret))
+	k8s.Core().V1().ConfigMaps().Informer().AddEventHandler(i.eventHandler(definitions.ConfigMap))
 	k8s.Core().V1().Services().Informer().AddEventHandler(i.eventHandler(definitions.Service))
 	k8s.Core().V1().ServiceAccounts().Informer().AddEventHandler(i.eventHandler(definitions.ServiceAccount))
 	k8s.Core().V1().Endpoints().Informer().AddEventHandler(i.eventHandler(definitions.Endpoints))
@@ -222,6 +225,7 @@ func (i *inspectorState) AnonymousObjects() []anonymous.Impl {
 	return []anonymous.Impl{
 		i.pods,
 		i.secrets,
+		i.configMaps,
 		i.persistentVolumeClaims,
 		i.services,
 		i.serviceAccounts,
@@ -278,6 +282,10 @@ func (i *inspectorState) LastRefresh() time.Time {
 
 func (i *inspectorState) Secret() secret.Definition {
 	return i.secrets
+}
+
+func (i *inspectorState) ConfigMap() configmap.Definition {
+	return i.configMaps
 }
 
 func (i *inspectorState) PersistentVolumeClaim() persistentvolumeclaim.Definition {
@@ -443,6 +451,10 @@ func (i *inspectorState) validate() error {
 		return err
 	}
 
+	if err := i.configMaps.validate(); err != nil {
+		return err
+	}
+
 	if err := i.serviceAccounts.validate(); err != nil {
 		return err
 	}
@@ -501,6 +513,7 @@ func (i *inspectorState) copyCore() *inspectorState {
 		client:                        i.client,
 		pods:                          i.pods,
 		secrets:                       i.secrets,
+		configMaps:                    i.configMaps,
 		persistentVolumeClaims:        i.persistentVolumeClaims,
 		services:                      i.services,
 		serviceAccounts:               i.serviceAccounts,
