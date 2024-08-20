@@ -81,7 +81,7 @@ func GetGatewayConfigMapName(name string) string {
 func (a *ArangoGatewayContainer) GetCommand() ([]string, error) {
 	cmd := make([]string, 0, 128)
 	cmd = append(cmd, a.GetExecutor())
-	cmd = append(cmd, createArangoGatewayArgs(a.apiObject, a.spec, a.group, a.groupSpec, a.memberStatus)...)
+	cmd = append(cmd, createArangoGatewayArgs(a.groupSpec)...)
 	return cmd, nil
 }
 

@@ -286,7 +286,7 @@ func createArangoSyncArgs(apiObject meta.Object, spec api.DeploymentSpec, group 
 	return args
 }
 
-func createArangoGatewayArgs(apiObject meta.Object, spec api.DeploymentSpec, group api.ServerGroup, groupSpec api.ServerGroupSpec, member api.MemberStatus) []string {
+func createArangoGatewayArgs(groupSpec api.ServerGroupSpec) []string {
 	args := []string{
 		fmt.Sprintf("-c %s", GatewayConfigFilePath),
 	}
