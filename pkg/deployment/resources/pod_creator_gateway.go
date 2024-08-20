@@ -90,7 +90,7 @@ func (a *ArangoGatewayContainer) GetName() string {
 }
 
 func (a *ArangoGatewayContainer) GetPorts() []core.ContainerPort {
-	port := shared.ArangoGatewayPort
+	port := shared.ArangoPort
 
 	return []core.ContainerPort{
 		{

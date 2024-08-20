@@ -43,7 +43,7 @@ func GenerateMemberEndpoint(services service.Inspector, apiObject meta.Object, s
 
 func GenerateMemberEndpointFromService(svc *core.Service, apiObject meta.Object, spec api.DeploymentSpec, group api.ServerGroup, member api.MemberStatus) (string, error) {
 	switch group.Type() {
-	case api.ServerGroupTypeArangoD:
+	case api.ServerGroupTypeArangoD, api.ServerGroupGateways:
 		switch method := spec.CommunicationMethod.Get(); method {
 		case api.DeploymentCommunicationMethodDNS, api.DeploymentCommunicationMethodHeadlessDNS:
 			return k8sutil.CreateServiceDNSNameWithDomain(svc, spec.ClusterDomain), nil
