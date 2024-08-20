@@ -82,7 +82,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 	defer metrics.SetDuration(inspectServicesDurationGauges.WithLabelValues(deploymentName), start)
 	counterMetric := inspectedServicesCounters.WithLabelValues(deploymentName)
 
-	if spec.IsGatewayEnabled() {
+	if features.Gateway().Enabled() && spec.IsGatewayEnabled() {
 		role = api.ServerGroupGateways.AsRole()
 	}
 

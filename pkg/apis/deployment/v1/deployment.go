@@ -115,7 +115,7 @@ func (d *ArangoDeployment) foreachServerGroup(cb ServerGroupFunc, spec Deploymen
 	if err := cb(ServerGroupSyncWorkers, spec.SyncWorkers, &status.Members.SyncWorkers); err != nil {
 		return errors.WithStack(err)
 	}
-	if err := cb(ServerGroupGateways, spec.Gateways, &status.Members.Gateways); err != nil {
+	if err := cb(ServerGroupGateways, spec.Gateways.Get(), &status.Members.Gateways); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil

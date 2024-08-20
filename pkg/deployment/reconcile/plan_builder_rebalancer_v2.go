@@ -24,6 +24,7 @@ import (
 	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 )
 
 func (r *Reconciler) createRebalancerV2GeneratePlan(spec api.DeploymentSpec, status api.DeploymentStatus) api.Plan {
@@ -44,7 +45,7 @@ func (r *Reconciler) createRebalancerV2GeneratePlan(spec api.DeploymentSpec, sta
 
 	r.metrics.Rebalancer.SetEnabled(true)
 
-	if !status.Members.AllMembersReady(spec.Mode.Get(), spec.Sync.IsEnabled(), spec.IsGatewayEnabled()) {
+	if !status.Members.AllMembersReady(spec.Mode.Get(), spec.Sync.IsEnabled(), features.Gateway().Enabled() && spec.IsGatewayEnabled()) {
 		return nil
 	}
 

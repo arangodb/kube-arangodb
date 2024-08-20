@@ -169,14 +169,14 @@ func (g ServerGroup) Enabled(mode DeploymentMode) bool {
 	switch mode {
 	case DeploymentModeSingle:
 		switch g {
-		case ServerGroupSingle:
+		case ServerGroupSingle, ServerGroupGateways:
 			return true
 		default:
 			return false
 		}
 	case DeploymentModeCluster:
 		switch g {
-		case ServerGroupAgents, ServerGroupDBServers, ServerGroupCoordinators, ServerGroupSyncMasters, ServerGroupSyncWorkers:
+		case ServerGroupAgents, ServerGroupDBServers, ServerGroupCoordinators, ServerGroupSyncMasters, ServerGroupSyncWorkers, ServerGroupGateways:
 			return true
 		default:
 			return false

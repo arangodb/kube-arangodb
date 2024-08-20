@@ -29,6 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -73,7 +74,7 @@ func (r *Resources) EnsurePDBs(ctx context.Context) error {
 		}
 
 		minGateways, currGateways := 0, 0
-		if spec.IsGatewayEnabled() {
+		if features.Gateway().Enabled() && spec.IsGatewayEnabled() {
 			minGateways = spec.GetServerGroupSpec(api.ServerGroupGateways).GetCount() - 1
 			currGateways = status.Members.Gateways.MembersReady()
 		}
