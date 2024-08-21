@@ -475,7 +475,7 @@ $(BIN): $(VBIN_LINUX_AMD64) $(VBIN_OPS_LINUX_AMD64) $(VBIN_INT_LINUX_AMD64)
 	@cp "$(VBIN_OPS_LINUX_AMD64)" "$(BIN_OPS)"
 
 .PHONY: docker
-docker: check-vars $(VBIN_LINUX_AMD64) $(VBIN_LINUX_ARM64)
+docker: clean check-vars $(VBIN_LINUX_AMD64) $(VBIN_LINUX_ARM64)
 ifdef PUSHIMAGES
 	docker buildx build --no-cache -f $(DOCKERFILE) --build-arg GOVERSION=$(GOVERSION) --build-arg DISTRIBUTION=$(DISTRIBUTION) \
 		--build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "RELEASE_MODE=$(RELEASE_MODE)" \

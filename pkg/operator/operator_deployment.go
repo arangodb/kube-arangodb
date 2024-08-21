@@ -149,6 +149,13 @@ func (o *Operator) handleDeploymentEvent(event *Event) error {
 		return errors.WithStack(errors.Errorf("ignore failed deployment (%s). Please delete its CR", apiObject.Name))
 	}
 
+	defer func() {
+		// recover() will return nil if there's no panic
+		if r := recover(); r != nil {
+			o.log.Error("Recovered from panic:", r)
+		}
+	}()
+
 	switch event.Type {
 	case kwatch.Added:
 		if _, ok := o.deployments[apiObject.Name]; ok {

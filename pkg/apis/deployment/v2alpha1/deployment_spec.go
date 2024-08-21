@@ -436,6 +436,11 @@ func (s *DeploymentSpec) SetDefaults(deploymentName string) {
 	if s.GetImagePullPolicy() == "" {
 		s.ImagePullPolicy = util.NewType[core.PullPolicy](core.PullIfNotPresent)
 	}
+	if s.Gateway.IsEnabled() {
+		if s.Gateways == nil {
+			s.Gateways = &ServerGroupSpec{}
+		}
+	}
 	s.ExternalAccess.SetDefaults()
 	s.RocksDB.SetDefaults()
 	s.Authentication.SetDefaults(deploymentName + "-jwt")
@@ -574,7 +579,7 @@ func (s *DeploymentSpec) Validate() error {
 	if err := s.Architecture.Validate(); err != nil {
 		return errors.WithStack(errors.Wrap(err, "spec.architecture"))
 	}
-	if err := s.Architecture.Validate(); err != nil {
+	if err := s.Gateway.Validate(); err != nil {
 		return errors.WithStack(errors.Wrap(err, "spec.architecture"))
 	}
 	return nil
