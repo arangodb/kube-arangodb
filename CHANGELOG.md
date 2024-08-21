@@ -6,6 +6,7 @@
 - (Feature) Add Kubernetes Services for Group
 - (Bugfix) Fix Networking Client
 - (Feature) ConfigMap Inspector
+- (Feature) Envoy Image Layer
 
 ## [1.2.42](https://github.com/arangodb/kube-arangodb/tree/1.2.42) (2024-07-23)
 - (Maintenance) Go 1.22.4 & Kubernetes 1.29.6 libraries

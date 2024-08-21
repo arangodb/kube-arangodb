@@ -1,5 +1,15 @@
-ARG IMAGE=scratch
-FROM ${IMAGE}
+ARG IMAGE=alpine:3.17
+ARG ENVOY_IMAGE=envoyproxy/envoy:v1.31.0
+
+# Build Steps
+
+FROM ${ENVOY_IMAGE} AS envoy
+
+FROM ${IMAGE} AS base
+
+RUN apk upgrade --no-cache
+
+FROM base
 
 ARG VERSION
 LABEL name="kube-arangodb" \
@@ -15,5 +25,6 @@ ADD ./LICENSE /licenses/LICENSE
 ARG RELEASE_MODE=community
 ARG TARGETARCH
 ADD bin/${RELEASE_MODE}/linux/${TARGETARCH}/arangodb_operator /usr/bin/arangodb_operator
+COPY --from=envoy /usr/local/bin/envoy /usr/local/bin/envoy
 
 ENTRYPOINT [ "/usr/bin/arangodb_operator" ]
