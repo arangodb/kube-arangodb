@@ -125,9 +125,9 @@ func (s *stateInspector) RefreshState(ctx context.Context, members api.Deploymen
 		defer cancel()
 
 		switch members[id].Group.Type() {
-		case api.ServerGroupTypeArangoD:
-			results[id] = s.fetchArangosyncMemberState(ctxChild, members[id])
 		case api.ServerGroupTypeArangoSync:
+			results[id] = s.fetchArangosyncMemberState(ctxChild, members[id])
+		case api.ServerGroupTypeArangoD:
 			results[id] = s.fetchServerMemberState(ctxChild, members[id], servingGroup)
 			if results[id].IsServing() {
 				client = results[id].client
