@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,55 +30,55 @@ import (
 
 func TestServerGroupSpecValidateCount(t *testing.T) {
 	// Valid
-	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](1)}.WithGroup(ServerGroupSingle).Validate(ServerGroupSingle, true, DeploymentModeSingle, EnvironmentDevelopment))
-	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](0)}.WithGroup(ServerGroupSingle).Validate(ServerGroupSingle, false, DeploymentModeCluster, EnvironmentDevelopment))
-	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](1)}.WithGroup(ServerGroupAgents).Validate(ServerGroupAgents, true, DeploymentModeCluster, EnvironmentDevelopment))
-	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](3)}.WithGroup(ServerGroupAgents).Validate(ServerGroupAgents, true, DeploymentModeCluster, EnvironmentDevelopment))
-	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](1)}.WithGroup(ServerGroupAgents).Validate(ServerGroupAgents, true, DeploymentModeActiveFailover, EnvironmentDevelopment))
-	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](3)}.WithGroup(ServerGroupAgents).Validate(ServerGroupAgents, true, DeploymentModeActiveFailover, EnvironmentDevelopment))
-	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](2)}.WithGroup(ServerGroupDBServers).Validate(ServerGroupDBServers, true, DeploymentModeCluster, EnvironmentDevelopment))
-	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](6)}.WithGroup(ServerGroupDBServers).Validate(ServerGroupDBServers, true, DeploymentModeCluster, EnvironmentDevelopment))
-	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](1)}.WithGroup(ServerGroupCoordinators).Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentDevelopment))
-	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](2)}.WithGroup(ServerGroupCoordinators).Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentDevelopment))
-	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](3)}.WithGroup(ServerGroupAgents).Validate(ServerGroupAgents, true, DeploymentModeCluster, EnvironmentProduction))
-	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](3)}.WithGroup(ServerGroupAgents).Validate(ServerGroupAgents, true, DeploymentModeActiveFailover, EnvironmentProduction))
-	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](2)}.WithGroup(ServerGroupDBServers).Validate(ServerGroupDBServers, true, DeploymentModeCluster, EnvironmentProduction))
-	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](2)}.WithGroup(ServerGroupCoordinators).Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentProduction))
-	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](2)}.WithGroup(ServerGroupSyncMasters).Validate(ServerGroupSyncMasters, true, DeploymentModeCluster, EnvironmentProduction))
-	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](2)}.WithGroup(ServerGroupSyncWorkers).Validate(ServerGroupSyncWorkers, true, DeploymentModeCluster, EnvironmentProduction))
+	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](1)}.New().WithGroup(ServerGroupSingle).New().New().Validate(ServerGroupSingle, true, DeploymentModeSingle, EnvironmentDevelopment))
+	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](0)}.New().WithGroup(ServerGroupSingle).New().Validate(ServerGroupSingle, false, DeploymentModeCluster, EnvironmentDevelopment))
+	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](1)}.New().WithGroup(ServerGroupAgents).New().Validate(ServerGroupAgents, true, DeploymentModeCluster, EnvironmentDevelopment))
+	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](3)}.New().WithGroup(ServerGroupAgents).New().Validate(ServerGroupAgents, true, DeploymentModeCluster, EnvironmentDevelopment))
+	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](1)}.New().WithGroup(ServerGroupAgents).New().Validate(ServerGroupAgents, true, DeploymentModeActiveFailover, EnvironmentDevelopment))
+	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](3)}.New().WithGroup(ServerGroupAgents).New().Validate(ServerGroupAgents, true, DeploymentModeActiveFailover, EnvironmentDevelopment))
+	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](2)}.New().WithGroup(ServerGroupDBServers).New().Validate(ServerGroupDBServers, true, DeploymentModeCluster, EnvironmentDevelopment))
+	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](6)}.New().WithGroup(ServerGroupDBServers).New().Validate(ServerGroupDBServers, true, DeploymentModeCluster, EnvironmentDevelopment))
+	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](1)}.New().WithGroup(ServerGroupCoordinators).New().Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentDevelopment))
+	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](2)}.New().WithGroup(ServerGroupCoordinators).New().Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentDevelopment))
+	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](3)}.New().WithGroup(ServerGroupAgents).New().Validate(ServerGroupAgents, true, DeploymentModeCluster, EnvironmentProduction))
+	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](3)}.New().WithGroup(ServerGroupAgents).New().Validate(ServerGroupAgents, true, DeploymentModeActiveFailover, EnvironmentProduction))
+	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](2)}.New().WithGroup(ServerGroupDBServers).New().Validate(ServerGroupDBServers, true, DeploymentModeCluster, EnvironmentProduction))
+	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](2)}.New().WithGroup(ServerGroupCoordinators).New().Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentProduction))
+	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](2)}.New().WithGroup(ServerGroupSyncMasters).New().Validate(ServerGroupSyncMasters, true, DeploymentModeCluster, EnvironmentProduction))
+	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](2)}.New().WithGroup(ServerGroupSyncWorkers).New().Validate(ServerGroupSyncWorkers, true, DeploymentModeCluster, EnvironmentProduction))
 
-	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](2), MinCount: util.NewType[int](2), MaxCount: util.NewType[int](5)}.WithGroup(ServerGroupCoordinators).Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentDevelopment))
-	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](1), MaxCount: util.NewType[int](5)}.WithGroup(ServerGroupCoordinators).Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentDevelopment))
-	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](6), MinCount: util.NewType[int](2)}.WithGroup(ServerGroupCoordinators).Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentDevelopment))
-	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](5), MinCount: util.NewType[int](5), MaxCount: util.NewType[int](5)}.WithGroup(ServerGroupCoordinators).Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentDevelopment))
-	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](2)}.WithGroup(ServerGroupCoordinators).Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentDevelopment))
+	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](2), MinCount: util.NewType[int](2), MaxCount: util.NewType[int](5)}.New().WithGroup(ServerGroupCoordinators).New().Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentDevelopment))
+	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](1), MaxCount: util.NewType[int](5)}.New().WithGroup(ServerGroupCoordinators).New().Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentDevelopment))
+	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](6), MinCount: util.NewType[int](2)}.New().WithGroup(ServerGroupCoordinators).New().Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentDevelopment))
+	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](5), MinCount: util.NewType[int](5), MaxCount: util.NewType[int](5)}.New().WithGroup(ServerGroupCoordinators).New().Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentDevelopment))
+	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](2)}.New().WithGroup(ServerGroupCoordinators).New().Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentDevelopment))
 
 	// Invalid
-	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](1)}.WithGroup(ServerGroupSingle).Validate(ServerGroupSingle, false, DeploymentModeCluster, EnvironmentDevelopment))
-	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](2)}.WithGroup(ServerGroupSingle).Validate(ServerGroupSingle, true, DeploymentModeSingle, EnvironmentDevelopment))
-	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](1)}.WithGroup(ServerGroupSingle).Validate(ServerGroupSingle, true, DeploymentModeActiveFailover, EnvironmentProduction))
-	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](0)}.WithGroup(ServerGroupAgents).Validate(ServerGroupAgents, true, DeploymentModeCluster, EnvironmentDevelopment))
-	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](0)}.WithGroup(ServerGroupAgents).Validate(ServerGroupAgents, true, DeploymentModeActiveFailover, EnvironmentDevelopment))
-	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](0)}.WithGroup(ServerGroupDBServers).Validate(ServerGroupDBServers, true, DeploymentModeCluster, EnvironmentDevelopment))
-	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](0)}.WithGroup(ServerGroupCoordinators).Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentDevelopment))
-	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](0)}.WithGroup(ServerGroupSyncMasters).Validate(ServerGroupSyncMasters, true, DeploymentModeCluster, EnvironmentDevelopment))
-	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](0)}.WithGroup(ServerGroupSyncWorkers).Validate(ServerGroupSyncWorkers, true, DeploymentModeCluster, EnvironmentDevelopment))
-	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](-1)}.WithGroup(ServerGroupAgents).Validate(ServerGroupAgents, true, DeploymentModeCluster, EnvironmentDevelopment))
-	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](-1)}.WithGroup(ServerGroupAgents).Validate(ServerGroupAgents, true, DeploymentModeActiveFailover, EnvironmentDevelopment))
-	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](-1)}.WithGroup(ServerGroupDBServers).Validate(ServerGroupDBServers, true, DeploymentModeCluster, EnvironmentDevelopment))
-	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](-1)}.WithGroup(ServerGroupCoordinators).Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentDevelopment))
-	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](-1)}.WithGroup(ServerGroupSyncMasters).Validate(ServerGroupSyncMasters, true, DeploymentModeCluster, EnvironmentDevelopment))
-	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](-1)}.WithGroup(ServerGroupSyncWorkers).Validate(ServerGroupSyncWorkers, true, DeploymentModeCluster, EnvironmentDevelopment))
-	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](2)}.WithGroup(ServerGroupAgents).Validate(ServerGroupAgents, true, DeploymentModeCluster, EnvironmentProduction))
-	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](2)}.WithGroup(ServerGroupAgents).Validate(ServerGroupAgents, true, DeploymentModeActiveFailover, EnvironmentProduction))
-	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](1)}.WithGroup(ServerGroupDBServers).Validate(ServerGroupDBServers, true, DeploymentModeCluster, EnvironmentProduction))
-	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](1)}.WithGroup(ServerGroupCoordinators).Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentProduction))
-	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](1)}.WithGroup(ServerGroupSyncMasters).Validate(ServerGroupSyncMasters, true, DeploymentModeCluster, EnvironmentProduction))
-	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](1)}.WithGroup(ServerGroupSyncWorkers).Validate(ServerGroupSyncWorkers, true, DeploymentModeCluster, EnvironmentProduction))
+	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](1)}.New().WithGroup(ServerGroupSingle).New().Validate(ServerGroupSingle, false, DeploymentModeCluster, EnvironmentDevelopment))
+	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](2)}.New().WithGroup(ServerGroupSingle).New().Validate(ServerGroupSingle, true, DeploymentModeSingle, EnvironmentDevelopment))
+	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](1)}.New().WithGroup(ServerGroupSingle).New().Validate(ServerGroupSingle, true, DeploymentModeActiveFailover, EnvironmentProduction))
+	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](0)}.New().WithGroup(ServerGroupAgents).New().Validate(ServerGroupAgents, true, DeploymentModeCluster, EnvironmentDevelopment))
+	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](0)}.New().WithGroup(ServerGroupAgents).New().Validate(ServerGroupAgents, true, DeploymentModeActiveFailover, EnvironmentDevelopment))
+	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](0)}.New().WithGroup(ServerGroupDBServers).New().Validate(ServerGroupDBServers, true, DeploymentModeCluster, EnvironmentDevelopment))
+	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](0)}.New().WithGroup(ServerGroupCoordinators).New().Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentDevelopment))
+	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](0)}.New().WithGroup(ServerGroupSyncMasters).New().Validate(ServerGroupSyncMasters, true, DeploymentModeCluster, EnvironmentDevelopment))
+	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](0)}.New().WithGroup(ServerGroupSyncWorkers).New().Validate(ServerGroupSyncWorkers, true, DeploymentModeCluster, EnvironmentDevelopment))
+	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](-1)}.New().WithGroup(ServerGroupAgents).New().Validate(ServerGroupAgents, true, DeploymentModeCluster, EnvironmentDevelopment))
+	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](-1)}.New().WithGroup(ServerGroupAgents).New().Validate(ServerGroupAgents, true, DeploymentModeActiveFailover, EnvironmentDevelopment))
+	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](-1)}.New().WithGroup(ServerGroupDBServers).New().Validate(ServerGroupDBServers, true, DeploymentModeCluster, EnvironmentDevelopment))
+	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](-1)}.New().WithGroup(ServerGroupCoordinators).New().Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentDevelopment))
+	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](-1)}.New().WithGroup(ServerGroupSyncMasters).New().Validate(ServerGroupSyncMasters, true, DeploymentModeCluster, EnvironmentDevelopment))
+	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](-1)}.New().WithGroup(ServerGroupSyncWorkers).New().Validate(ServerGroupSyncWorkers, true, DeploymentModeCluster, EnvironmentDevelopment))
+	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](2)}.New().WithGroup(ServerGroupAgents).New().Validate(ServerGroupAgents, true, DeploymentModeCluster, EnvironmentProduction))
+	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](2)}.New().WithGroup(ServerGroupAgents).New().Validate(ServerGroupAgents, true, DeploymentModeActiveFailover, EnvironmentProduction))
+	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](1)}.New().WithGroup(ServerGroupDBServers).New().Validate(ServerGroupDBServers, true, DeploymentModeCluster, EnvironmentProduction))
+	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](1)}.New().WithGroup(ServerGroupCoordinators).New().Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentProduction))
+	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](1)}.New().WithGroup(ServerGroupSyncMasters).New().Validate(ServerGroupSyncMasters, true, DeploymentModeCluster, EnvironmentProduction))
+	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](1)}.New().WithGroup(ServerGroupSyncWorkers).New().Validate(ServerGroupSyncWorkers, true, DeploymentModeCluster, EnvironmentProduction))
 
-	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](2), MinCount: util.NewType[int](5), MaxCount: util.NewType[int](1)}.WithGroup(ServerGroupCoordinators).Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentDevelopment))
-	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](6), MaxCount: util.NewType[int](5)}.WithGroup(ServerGroupCoordinators).Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentDevelopment))
-	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](1), MinCount: util.NewType[int](2)}.WithGroup(ServerGroupCoordinators).Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentDevelopment))
+	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](2), MinCount: util.NewType[int](5), MaxCount: util.NewType[int](1)}.New().WithGroup(ServerGroupCoordinators).New().Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentDevelopment))
+	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](6), MaxCount: util.NewType[int](5)}.New().WithGroup(ServerGroupCoordinators).New().Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentDevelopment))
+	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](1), MinCount: util.NewType[int](2)}.New().WithGroup(ServerGroupCoordinators).New().Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentDevelopment))
 
 }
 
@@ -88,47 +88,47 @@ func TestServerGroupSpecDefault(t *testing.T) {
 		return spec
 	}
 
-	assert.Equal(t, 1, def(ServerGroupSpec{}, ServerGroupSingle, true, DeploymentModeSingle).GetCount())
-	assert.Equal(t, 2, def(ServerGroupSpec{}, ServerGroupSingle, true, DeploymentModeActiveFailover).GetCount())
-	assert.Equal(t, 0, def(ServerGroupSpec{}, ServerGroupSingle, false, DeploymentModeCluster).GetCount())
+	assert.Equal(t, 1, def(ServerGroupSpec{}, ServerGroupSingle, true, DeploymentModeSingle).New().GetCount())
+	assert.Equal(t, 2, def(ServerGroupSpec{}, ServerGroupSingle, true, DeploymentModeActiveFailover).New().GetCount())
+	assert.Equal(t, 0, def(ServerGroupSpec{}, ServerGroupSingle, false, DeploymentModeCluster).New().GetCount())
 
-	assert.Equal(t, 0, def(ServerGroupSpec{}, ServerGroupAgents, false, DeploymentModeSingle).GetCount())
-	assert.Equal(t, 3, def(ServerGroupSpec{}, ServerGroupAgents, true, DeploymentModeActiveFailover).GetCount())
-	assert.Equal(t, 3, def(ServerGroupSpec{}, ServerGroupAgents, true, DeploymentModeCluster).GetCount())
+	assert.Equal(t, 0, def(ServerGroupSpec{}, ServerGroupAgents, false, DeploymentModeSingle).New().GetCount())
+	assert.Equal(t, 3, def(ServerGroupSpec{}, ServerGroupAgents, true, DeploymentModeActiveFailover).New().GetCount())
+	assert.Equal(t, 3, def(ServerGroupSpec{}, ServerGroupAgents, true, DeploymentModeCluster).New().GetCount())
 
-	assert.Equal(t, 0, def(ServerGroupSpec{}, ServerGroupDBServers, false, DeploymentModeSingle).GetCount())
-	assert.Equal(t, 0, def(ServerGroupSpec{}, ServerGroupDBServers, false, DeploymentModeActiveFailover).GetCount())
-	assert.Equal(t, 3, def(ServerGroupSpec{}, ServerGroupDBServers, true, DeploymentModeCluster).GetCount())
+	assert.Equal(t, 0, def(ServerGroupSpec{}, ServerGroupDBServers, false, DeploymentModeSingle).New().GetCount())
+	assert.Equal(t, 0, def(ServerGroupSpec{}, ServerGroupDBServers, false, DeploymentModeActiveFailover).New().GetCount())
+	assert.Equal(t, 3, def(ServerGroupSpec{}, ServerGroupDBServers, true, DeploymentModeCluster).New().GetCount())
 
-	assert.Equal(t, 0, def(ServerGroupSpec{}, ServerGroupCoordinators, false, DeploymentModeSingle).GetCount())
-	assert.Equal(t, 0, def(ServerGroupSpec{}, ServerGroupCoordinators, false, DeploymentModeActiveFailover).GetCount())
-	assert.Equal(t, 3, def(ServerGroupSpec{}, ServerGroupCoordinators, true, DeploymentModeCluster).GetCount())
+	assert.Equal(t, 0, def(ServerGroupSpec{}, ServerGroupCoordinators, false, DeploymentModeSingle).New().GetCount())
+	assert.Equal(t, 0, def(ServerGroupSpec{}, ServerGroupCoordinators, false, DeploymentModeActiveFailover).New().GetCount())
+	assert.Equal(t, 3, def(ServerGroupSpec{}, ServerGroupCoordinators, true, DeploymentModeCluster).New().GetCount())
 
-	assert.Equal(t, 0, def(ServerGroupSpec{}, ServerGroupSyncMasters, false, DeploymentModeSingle).GetCount())
-	assert.Equal(t, 0, def(ServerGroupSpec{}, ServerGroupSyncMasters, false, DeploymentModeActiveFailover).GetCount())
-	assert.Equal(t, 3, def(ServerGroupSpec{}, ServerGroupSyncMasters, true, DeploymentModeCluster).GetCount())
+	assert.Equal(t, 0, def(ServerGroupSpec{}, ServerGroupSyncMasters, false, DeploymentModeSingle).New().GetCount())
+	assert.Equal(t, 0, def(ServerGroupSpec{}, ServerGroupSyncMasters, false, DeploymentModeActiveFailover).New().GetCount())
+	assert.Equal(t, 3, def(ServerGroupSpec{}, ServerGroupSyncMasters, true, DeploymentModeCluster).New().GetCount())
 
-	assert.Equal(t, 0, def(ServerGroupSpec{}, ServerGroupSyncWorkers, false, DeploymentModeSingle).GetCount())
-	assert.Equal(t, 0, def(ServerGroupSpec{}, ServerGroupSyncWorkers, false, DeploymentModeActiveFailover).GetCount())
-	assert.Equal(t, 3, def(ServerGroupSpec{}, ServerGroupSyncWorkers, true, DeploymentModeCluster).GetCount())
+	assert.Equal(t, 0, def(ServerGroupSpec{}, ServerGroupSyncWorkers, false, DeploymentModeSingle).New().GetCount())
+	assert.Equal(t, 0, def(ServerGroupSpec{}, ServerGroupSyncWorkers, false, DeploymentModeActiveFailover).New().GetCount())
+	assert.Equal(t, 3, def(ServerGroupSpec{}, ServerGroupSyncWorkers, true, DeploymentModeCluster).New().GetCount())
 
 	for _, g := range AllServerGroups {
 		assert.Equal(t, 0, len(def(ServerGroupSpec{}, g, true, DeploymentModeSingle).Args))
-		assert.Equal(t, "", def(ServerGroupSpec{}, g, true, DeploymentModeSingle).GetStorageClassName())
+		assert.Equal(t, "", def(ServerGroupSpec{}, g, true, DeploymentModeSingle).New().GetStorageClassName())
 	}
 }
 
 func TestServerGroupSpecValidateArgs(t *testing.T) {
 	// Valid
-	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](1), Args: []string{}}.WithDefaults(ServerGroupSingle, true, DeploymentModeSingle).Validate(ServerGroupSingle, true, DeploymentModeSingle, EnvironmentDevelopment))
-	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](1), Args: []string{"--master.endpoint"}}.WithDefaults(ServerGroupSingle, true, DeploymentModeSingle).Validate(ServerGroupSingle, true, DeploymentModeSingle, EnvironmentDevelopment))
-	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](1), Args: []string{}}.WithDefaults(ServerGroupSyncMasters, true, DeploymentModeCluster).Validate(ServerGroupSyncMasters, true, DeploymentModeCluster, EnvironmentDevelopment))
-	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](1), Args: []string{"--server.authentication=true"}}.WithDefaults(ServerGroupSyncMasters, true, DeploymentModeCluster).Validate(ServerGroupSyncMasters, true, DeploymentModeCluster, EnvironmentDevelopment))
+	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](1), Args: []string{}}.New().WithDefaults(ServerGroupSingle, true, DeploymentModeSingle).New().Validate(ServerGroupSingle, true, DeploymentModeSingle, EnvironmentDevelopment))
+	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](1), Args: []string{"--master.endpoint"}}.New().WithDefaults(ServerGroupSingle, true, DeploymentModeSingle).New().Validate(ServerGroupSingle, true, DeploymentModeSingle, EnvironmentDevelopment))
+	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](1), Args: []string{}}.New().WithDefaults(ServerGroupSyncMasters, true, DeploymentModeCluster).New().Validate(ServerGroupSyncMasters, true, DeploymentModeCluster, EnvironmentDevelopment))
+	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](1), Args: []string{"--server.authentication=true"}}.New().WithDefaults(ServerGroupSyncMasters, true, DeploymentModeCluster).New().Validate(ServerGroupSyncMasters, true, DeploymentModeCluster, EnvironmentDevelopment))
 	// Invalid
-	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](1), Args: []string{"--server.authentication=true"}}.WithDefaults(ServerGroupSingle, true, DeploymentModeSingle).Validate(ServerGroupSingle, true, DeploymentModeSingle, EnvironmentDevelopment))
-	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](1), Args: []string{"--server.authentication", "true"}}.WithDefaults(ServerGroupSingle, true, DeploymentModeSingle).Validate(ServerGroupSingle, true, DeploymentModeSingle, EnvironmentDevelopment))
-	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](1), Args: []string{"--master.endpoint=http://something"}}.WithDefaults(ServerGroupSyncMasters, true, DeploymentModeCluster).Validate(ServerGroupSyncMasters, true, DeploymentModeCluster, EnvironmentDevelopment))
-	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](1), Args: []string{"--mq.type=strange"}}.WithDefaults(ServerGroupSyncMasters, true, DeploymentModeCluster).Validate(ServerGroupSyncMasters, true, DeploymentModeCluster, EnvironmentDevelopment))
+	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](1), Args: []string{"--server.authentication=true"}}.New().WithDefaults(ServerGroupSingle, true, DeploymentModeSingle).New().Validate(ServerGroupSingle, true, DeploymentModeSingle, EnvironmentDevelopment))
+	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](1), Args: []string{"--server.authentication", "true"}}.New().WithDefaults(ServerGroupSingle, true, DeploymentModeSingle).New().Validate(ServerGroupSingle, true, DeploymentModeSingle, EnvironmentDevelopment))
+	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](1), Args: []string{"--master.endpoint=http://something"}}.New().WithDefaults(ServerGroupSyncMasters, true, DeploymentModeCluster).New().Validate(ServerGroupSyncMasters, true, DeploymentModeCluster, EnvironmentDevelopment))
+	assert.Error(t, ServerGroupSpec{Count: util.NewType[int](1), Args: []string{"--mq.type=strange"}}.New().WithDefaults(ServerGroupSyncMasters, true, DeploymentModeCluster).New().Validate(ServerGroupSyncMasters, true, DeploymentModeCluster, EnvironmentDevelopment))
 }
 
 func TestServerGroupSpecMemoryReservation(t *testing.T) {

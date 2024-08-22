@@ -36,35 +36,6 @@ import (
 	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
-// ServerGroupShutdownMethod enum of possible shutdown methods
-type ServerGroupShutdownMethod string
-
-// Default return default value for ServerGroupShutdownMethod
-func (s *ServerGroupShutdownMethod) Default() ServerGroupShutdownMethod {
-	return ServerGroupShutdownMethodAPI
-}
-
-// Get return current or default value of ServerGroupShutdownMethod
-func (s *ServerGroupShutdownMethod) Get() ServerGroupShutdownMethod {
-	if s == nil {
-		return s.Default()
-	}
-
-	switch t := *s; t {
-	case ServerGroupShutdownMethodAPI, ServerGroupShutdownMethodDelete:
-		return t
-	default:
-		return s.Default()
-	}
-}
-
-const (
-	// ServerGroupShutdownMethodAPI API Shutdown method
-	ServerGroupShutdownMethodAPI ServerGroupShutdownMethod = "api"
-	// ServerGroupShutdownMethodDelete Pod Delete shutdown method
-	ServerGroupShutdownMethodDelete ServerGroupShutdownMethod = "delete"
-)
-
 // ServerGroupSpec contains the specification for all servers in a specific group (e.g. all agents)
 type ServerGroupSpec struct {
 	group ServerGroup `json:"-"`
@@ -243,171 +214,104 @@ type ServerGroupSpec struct {
 	Numactl *ServerGroupSpecNumactl `json:"numactl,omitempty"`
 }
 
-// ServerGroupProbesSpec contains specification for probes for pods of the server group
-type ServerGroupProbesSpec struct {
-	// LivenessProbeDisabled if set to true, the operator does not generate a liveness probe for new pods belonging to this group
-	// +doc/default: false
-	LivenessProbeDisabled *bool `json:"livenessProbeDisabled,omitempty"`
-	// LivenessProbeSpec override liveness probe configuration
-	LivenessProbeSpec *ServerGroupProbeSpec `json:"livenessProbeSpec,omitempty"`
+func (s *ServerGroupSpec) Get() ServerGroupSpec {
+	if s != nil {
+		return *s
+	}
 
-	// OldReadinessProbeDisabled if true readinessProbes are disabled
-	//
-	// Deprecated: This field is deprecated, kept only for backward compatibility.
-	OldReadinessProbeDisabled *bool `json:"ReadinessProbeDisabled,omitempty"`
-	// ReadinessProbeDisabled override flag for probe disabled in good manner (lowercase) with backward compatibility
-	ReadinessProbeDisabled *bool `json:"readinessProbeDisabled,omitempty"`
-	// ReadinessProbeSpec override readiness probe configuration
-	ReadinessProbeSpec *ServerGroupProbeSpec `json:"readinessProbeSpec,omitempty"`
-
-	// StartupProbeDisabled if true startupProbes are disabled
-	StartupProbeDisabled *bool `json:"startupProbeDisabled,omitempty"`
-	// StartupProbeSpec override startup probe configuration
-	StartupProbeSpec *ServerGroupProbeSpec `json:"startupProbeSpec,omitempty"`
+	return ServerGroupSpec{}
 }
 
-// GetReadinessProbeDisabled returns in proper manner readiness probe flag with backward compatibility.
-func (s ServerGroupProbesSpec) GetReadinessProbeDisabled() *bool {
-	if s.OldReadinessProbeDisabled != nil {
-		return s.OldReadinessProbeDisabled
-	}
-
-	return s.ReadinessProbeDisabled
+func (s ServerGroupSpec) New() *ServerGroupSpec {
+	return &s
 }
 
-// ServerGroupProbeSpec
-type ServerGroupProbeSpec struct {
-	// InitialDelaySeconds specifies number of seconds after the container has started before liveness or readiness probes are initiated.
-	// Minimum value is 0.
-	// +doc/default: 2
-	InitialDelaySeconds *int32 `json:"initialDelaySeconds,omitempty"`
-	// PeriodSeconds How often (in seconds) to perform the probe.
-	// Minimum value is 1.
-	// +doc/default: 10
-	PeriodSeconds *int32 `json:"periodSeconds,omitempty"`
-	// TimeoutSeconds specifies number of seconds after which the probe times out
-	// Minimum value is 1.
-	// +doc/default: 2
-	TimeoutSeconds *int32 `json:"timeoutSeconds,omitempty"`
-	// SuccessThreshold Minimum consecutive successes for the probe to be considered successful after having failed.
-	// Minimum value is 1.
-	// +doc/default: 1
-	SuccessThreshold *int32 `json:"successThreshold,omitempty"`
-	// FailureThreshold when a Pod starts and the probe fails, Kubernetes will try failureThreshold times before giving up.
-	// Giving up means restarting the container.
-	// Minimum value is 1.
-	// +doc/default: 3
-	FailureThreshold *int32 `json:"failureThreshold,omitempty"`
-}
-
-// GetInitialDelaySeconds return InitialDelaySeconds valid value. In case if InitialDelaySeconds is nil default is returned.
-func (s *ServerGroupProbeSpec) GetInitialDelaySeconds(d int32) int32 {
-	if s == nil || s.InitialDelaySeconds == nil {
-		return d // Default Kubernetes value
+// GetNumactl returns ServerGroupSpecNumactl
+func (s *ServerGroupSpec) GetNumactl() *ServerGroupSpecNumactl {
+	if s == nil {
+		return nil
 	}
 
-	return *s.InitialDelaySeconds
-}
-
-// GetPeriodSeconds return PeriodSeconds valid value. In case if PeriodSeconds is nil default is returned.
-func (s *ServerGroupProbeSpec) GetPeriodSeconds(d int32) int32 {
-	if s == nil || s.PeriodSeconds == nil {
-		return d
-	}
-
-	if *s.PeriodSeconds <= 0 {
-		return 1 // Value 0 is not allowed
-	}
-
-	return *s.PeriodSeconds
-}
-
-// GetTimeoutSeconds return TimeoutSeconds valid value. In case if TimeoutSeconds is nil default is returned.
-func (s *ServerGroupProbeSpec) GetTimeoutSeconds(d int32) int32 {
-	if s == nil || s.TimeoutSeconds == nil {
-		return d
-	}
-
-	if *s.TimeoutSeconds <= 0 {
-		return 1 // Value 0 is not allowed
-	}
-
-	return *s.TimeoutSeconds
-}
-
-// GetSuccessThreshold return SuccessThreshold valid value. In case if SuccessThreshold is nil default is returned.
-func (s *ServerGroupProbeSpec) GetSuccessThreshold(d int32) int32 {
-	if s == nil || s.SuccessThreshold == nil {
-		return d
-	}
-
-	if *s.SuccessThreshold <= 0 {
-		return 1 // Value 0 is not allowed
-	}
-
-	return *s.SuccessThreshold
-}
-
-// GetFailureThreshold return FailureThreshold valid value. In case if FailureThreshold is nil default is returned.
-func (s *ServerGroupProbeSpec) GetFailureThreshold(d int32) int32 {
-	if s == nil || s.FailureThreshold == nil {
-		return d
-	}
-
-	if *s.FailureThreshold <= 0 {
-		return 1 // Value 0 is not allowed
-	}
-
-	return *s.FailureThreshold
+	return s.Numactl
 }
 
 // GetSidecars returns a list of sidecars the use wish to add
-func (s ServerGroupSpec) GetSidecars() []core.Container {
+func (s *ServerGroupSpec) GetSidecars() []core.Container {
+	if s == nil {
+		return nil
+	}
 	return s.Sidecars
 }
 
 // HasVolumeClaimTemplate returns whether there is a volumeClaimTemplate or not
-func (s ServerGroupSpec) HasVolumeClaimTemplate() bool {
+func (s *ServerGroupSpec) HasVolumeClaimTemplate() bool {
+	if s == nil {
+		return false
+	}
 	return s.VolumeClaimTemplate != nil
 }
 
 // GetVolumeClaimTemplate returns a pointer to a volume claim template or nil if none is specified
-func (s ServerGroupSpec) GetVolumeClaimTemplate() *core.PersistentVolumeClaim {
+func (s *ServerGroupSpec) GetVolumeClaimTemplate() *core.PersistentVolumeClaim {
+	if s == nil {
+		return nil
+	}
 	return s.VolumeClaimTemplate
 }
 
 // GetCount returns the value of count.
-func (s ServerGroupSpec) GetCount() int {
+func (s *ServerGroupSpec) GetCount() int {
+	if s == nil {
+		return 0
+	}
 	return util.TypeOrDefault[int](s.Count)
 }
 
 // GetMinCount returns MinCount or 1 if not set
-func (s ServerGroupSpec) GetMinCount() int {
+func (s *ServerGroupSpec) GetMinCount() int {
+	if s == nil {
+		return 0
+	}
 	return util.TypeOrDefault[int](s.MinCount, 1)
 }
 
 // GetMaxCount returns MaxCount or
-func (s ServerGroupSpec) GetMaxCount() int {
+func (s *ServerGroupSpec) GetMaxCount() int {
+	if s == nil {
+		return math.MaxInt32
+	}
 	return util.TypeOrDefault[int](s.MaxCount, math.MaxInt32)
 }
 
 // GetNodeSelector returns the selectors for nodes of this group
-func (s ServerGroupSpec) GetNodeSelector() map[string]string {
+func (s *ServerGroupSpec) GetNodeSelector() map[string]string {
+	if s == nil {
+		return nil
+	}
 	return s.NodeSelector
 }
 
 // GetAnnotations returns the annotations of this group
-func (s ServerGroupSpec) GetAnnotations() map[string]string {
+func (s *ServerGroupSpec) GetAnnotations() map[string]string {
+	if s == nil {
+		return nil
+	}
 	return s.Annotations
 }
 
 // GetArgs returns the value of args.
-func (s ServerGroupSpec) GetArgs() []string {
+func (s *ServerGroupSpec) GetArgs() []string {
+	if s == nil {
+		return nil
+	}
 	return s.Args
 }
 
 // GetStorageClassName returns the value of storageClassName.
-func (s ServerGroupSpec) GetStorageClassName() string {
+func (s *ServerGroupSpec) GetStorageClassName() string {
+	if s == nil {
+		return ""
+	}
 	if pvc := s.GetVolumeClaimTemplate(); pvc != nil {
 		return util.TypeOrDefault[string](pvc.Spec.StorageClassName)
 	}
@@ -415,22 +319,34 @@ func (s ServerGroupSpec) GetStorageClassName() string {
 }
 
 // GetTolerations returns the value of tolerations.
-func (s ServerGroupSpec) GetTolerations() []core.Toleration {
+func (s *ServerGroupSpec) GetTolerations() []core.Toleration {
+	if s == nil {
+		return nil
+	}
 	return s.Tolerations
 }
 
 // GetServiceAccountName returns the value of serviceAccountName.
-func (s ServerGroupSpec) GetServiceAccountName() string {
+func (s *ServerGroupSpec) GetServiceAccountName() string {
+	if s == nil {
+		return ""
+	}
 	return util.TypeOrDefault[string](s.ServiceAccountName)
 }
 
 // HasProbesSpec returns true if Probes is non nil
-func (s ServerGroupSpec) HasProbesSpec() bool {
+func (s *ServerGroupSpec) HasProbesSpec() bool {
+	if s == nil {
+		return false
+	}
 	return s.Probes != nil
 }
 
 // GetProbesSpec returns the Probes spec or the nil value if not set
-func (s ServerGroupSpec) GetProbesSpec() ServerGroupProbesSpec {
+func (s *ServerGroupSpec) GetProbesSpec() ServerGroupProbesSpec {
+	if s == nil {
+		return ServerGroupProbesSpec{}
+	}
 	if s.HasProbesSpec() {
 		return *s.Probes
 	}
@@ -438,7 +354,11 @@ func (s ServerGroupSpec) GetProbesSpec() ServerGroupProbesSpec {
 }
 
 // GetOverrideDetectedTotalMemory returns OverrideDetectedTotalMemory with default value (false)
-func (s ServerGroupSpec) GetOverrideDetectedTotalMemory() bool {
+func (s *ServerGroupSpec) GetOverrideDetectedTotalMemory() bool {
+	if s == nil {
+		return true
+	}
+
 	if s.OverrideDetectedTotalMemory == nil {
 		return true
 	}
@@ -447,7 +367,10 @@ func (s ServerGroupSpec) GetOverrideDetectedTotalMemory() bool {
 }
 
 // GetOverrideDetectedNumberOfCores returns OverrideDetectedNumberOfCores with default value (false)
-func (s ServerGroupSpec) GetOverrideDetectedNumberOfCores() bool {
+func (s *ServerGroupSpec) GetOverrideDetectedNumberOfCores() bool {
+	if s == nil {
+		return true
+	}
 	if s.OverrideDetectedNumberOfCores == nil {
 		return true
 	}
@@ -456,7 +379,11 @@ func (s ServerGroupSpec) GetOverrideDetectedNumberOfCores() bool {
 }
 
 // Validate the given group spec
-func (s ServerGroupSpec) Validate(group ServerGroup, used bool, mode DeploymentMode, env Environment) error {
+func (s *ServerGroupSpec) Validate(group ServerGroup, used bool, mode DeploymentMode, env Environment) error {
+	if s == nil {
+		return errors.WithStack(errors.Wrapf(ValidationError, "Validation is not allowed on nil group"))
+	}
+
 	if s.group != group {
 		return errors.WithStack(errors.Wrapf(ValidationError, "Group is not set"))
 	}
@@ -559,6 +486,10 @@ func (s *ServerGroupSpec) validate() error {
 }
 
 func (s *ServerGroupSpec) validateVolumes() error {
+	if s == nil {
+		return nil
+	}
+
 	volumes := map[string]bool{}
 
 	for _, volume := range s.Volumes {
@@ -593,16 +524,24 @@ func (s *ServerGroupSpec) validateVolumes() error {
 }
 
 // WithGroup copy deployment with missing group
-func (s ServerGroupSpec) WithGroup(group ServerGroup) ServerGroupSpec {
-	s.group = group
-	return s
+func (s *ServerGroupSpec) WithGroup(group ServerGroup) ServerGroupSpec {
+	if s == nil {
+		return ServerGroupSpec{
+			group: group,
+		}
+	}
+
+	var q ServerGroupSpec
+	s.DeepCopyInto(&q)
+	q.group = group
+	return q
 }
 
 // WithDefaults copy deployment with missing defaults
-func (s ServerGroupSpec) WithDefaults(group ServerGroup, used bool, mode DeploymentMode) ServerGroupSpec {
+func (s *ServerGroupSpec) WithDefaults(group ServerGroup, used bool, mode DeploymentMode) *ServerGroupSpec {
 	q := s.DeepCopy()
 	q.SetDefaults(group, used, mode)
-	return *q
+	return q
 }
 
 // SetDefaults fills in missing defaults
@@ -668,6 +607,10 @@ func setStorageDefaultsFromResourceList(s *core.ResourceList, source core.Resour
 
 // SetDefaultsFrom fills unspecified fields with a value from given source spec.
 func (s *ServerGroupSpec) SetDefaultsFrom(source ServerGroupSpec) {
+	if s == nil {
+		return
+	}
+
 	if s.Count == nil {
 		s.Count = util.NewTypeOrNil[int](source.Count)
 	}
@@ -701,7 +644,13 @@ func (s *ServerGroupSpec) SetDefaultsFrom(source ServerGroupSpec) {
 
 // ResetImmutableFields replaces all immutable fields in the given target with values from the source spec.
 // It returns a list of fields that have been reset.
-func (s ServerGroupSpec) ResetImmutableFields(group ServerGroup, fieldPrefix string, target *ServerGroupSpec) []string {
+func (s *ServerGroupSpec) ResetImmutableFields(group ServerGroup, fieldPrefix string, target *ServerGroupSpec) []string {
+	if s == nil {
+		return []string{
+			fieldPrefix,
+		}
+	}
+
 	var resetFields []string
 	if group == ServerGroupAgents {
 		if s.GetCount() != target.GetCount() {
@@ -717,7 +666,11 @@ func (s ServerGroupSpec) ResetImmutableFields(group ServerGroup, fieldPrefix str
 }
 
 // Deprecated: GetVolumeAllowShrink returns true when it is possible to shrink the volume.
-func (s ServerGroupSpec) GetVolumeAllowShrink() bool {
+func (s *ServerGroupSpec) GetVolumeAllowShrink() bool {
+	if s == nil {
+		return false
+	}
+
 	if s.VolumeAllowShrink == nil {
 		return false // Default value
 	}
@@ -734,7 +687,11 @@ func (s *ServerGroupSpec) GetEntrypoint(defaultEntrypoint string) string {
 }
 
 // GetShutdownDelay returns defined or default Group ShutdownDelay in seconds
-func (s ServerGroupSpec) GetShutdownDelay(group ServerGroup) int {
+func (s *ServerGroupSpec) GetShutdownDelay(group ServerGroup) int {
+	if s == nil {
+		return 0
+	}
+
 	if s.ShutdownDelay == nil {
 		switch group {
 		case ServerGroupCoordinators:
@@ -747,7 +704,11 @@ func (s ServerGroupSpec) GetShutdownDelay(group ServerGroup) int {
 }
 
 // GetTerminationGracePeriod returns termination grace period as Duration
-func (s ServerGroupSpec) GetTerminationGracePeriod(group ServerGroup) time.Duration {
+func (s *ServerGroupSpec) GetTerminationGracePeriod(group ServerGroup) time.Duration {
+	if s == nil {
+		return ServerGroupUnknown.DefaultTerminationGracePeriod()
+	}
+
 	if v := s.TerminationGracePeriodSeconds; v == nil {
 		return group.DefaultTerminationGracePeriod()
 	} else {
@@ -756,7 +717,11 @@ func (s ServerGroupSpec) GetTerminationGracePeriod(group ServerGroup) time.Durat
 }
 
 // GetExternalPortEnabled returns value of ExternalPortEnabled. If ExternalPortEnabled is nil true is returned
-func (s ServerGroupSpec) GetExternalPortEnabled() bool {
+func (s *ServerGroupSpec) GetExternalPortEnabled() bool {
+	if s == nil {
+		return true
+	}
+
 	if v := s.ExternalPortEnabled; v == nil {
 		return true
 	} else {
@@ -773,6 +738,10 @@ func (s *ServerGroupSpec) Group() ServerGroup {
 }
 
 func (s *ServerGroupSpec) GetPort() uint16 {
+	if s == nil {
+		return shared.ArangoPort
+	}
+
 	if s != nil {
 		if p := s.Port; p != nil {
 			return *p
@@ -790,6 +759,10 @@ func (s *ServerGroupSpec) GetPort() uint16 {
 }
 
 func (s *ServerGroupSpec) GetExporterPort() uint16 {
+	if s == nil {
+		return shared.ArangoExporterPort
+	}
+
 	if s != nil {
 		if p := s.ExporterPort; p != nil {
 			return *p
@@ -800,6 +773,10 @@ func (s *ServerGroupSpec) GetExporterPort() uint16 {
 }
 
 func (s *ServerGroupSpec) GetMemoryReservation() int64 {
+	if s == nil {
+		return 0
+	}
+
 	if s != nil {
 		if v := s.MemoryReservation; v != nil {
 			if q := *v; q < 0 {
@@ -816,6 +793,10 @@ func (s *ServerGroupSpec) GetMemoryReservation() int64 {
 }
 
 func (s *ServerGroupSpec) CalculateMemoryReservation(memory int64) int64 {
+	if s == nil {
+		return memory
+	}
+
 	if r := s.GetMemoryReservation(); r > 0 {
 		return int64((float64(memory)) * (float64(100-r) / 100))
 	}

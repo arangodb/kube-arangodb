@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -239,12 +239,12 @@ func (ci *clusterScalingIntegration) inspectCluster(ctx context.Context, expectS
 	// Let's update the spec
 	p := make([]patch.Item, 0, 2)
 	if coordinatorsChanged {
-		if min, max, expected := ci.depl.GetSpec().Coordinators.GetMinCount(), ci.depl.GetSpec().Coordinators.GetMaxCount(), req.GetCoordinators(); min <= expected && expected <= max {
+		if min, max, expected := ci.depl.GetSpec().GetServerGroupSpec(api.ServerGroupCoordinators).New().GetMinCount(), ci.depl.GetSpec().GetServerGroupSpec(api.ServerGroupCoordinators).New().GetMaxCount(), req.GetCoordinators(); min <= expected && expected <= max {
 			p = append(p, patch.ItemReplace(patch.NewPath("spec", "coordinators", "count"), expected))
 		}
 	}
 	if dbserversChanged {
-		if min, max, expected := ci.depl.GetSpec().DBServers.GetMinCount(), ci.depl.GetSpec().DBServers.GetMaxCount(), req.GetDBServers(); min <= expected && expected <= max {
+		if min, max, expected := ci.depl.GetSpec().GetServerGroupSpec(api.ServerGroupDBServers).New().GetMinCount(), ci.depl.GetSpec().GetServerGroupSpec(api.ServerGroupDBServers).New().GetMaxCount(), req.GetDBServers(); min <= expected && expected <= max {
 			p = append(p, patch.ItemReplace(patch.NewPath("spec", "dbservers", "count"), expected))
 		}
 	}
