@@ -25,6 +25,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/assertion"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
@@ -41,7 +42,8 @@ func GenerateMemberEndpoint(services service.Inspector, apiObject meta.Object, s
 }
 
 func GenerateMemberEndpointFromService(svc *core.Service, apiObject meta.Object, spec api.DeploymentSpec, group api.ServerGroup, member api.MemberStatus) (string, error) {
-	if group.IsArangod() {
+	switch group.Type() {
+	case api.ServerGroupTypeArangoD:
 		switch method := spec.CommunicationMethod.Get(); method {
 		case api.DeploymentCommunicationMethodDNS, api.DeploymentCommunicationMethodHeadlessDNS:
 			return k8sutil.CreateServiceDNSNameWithDomain(svc, spec.ClusterDomain), nil
@@ -60,7 +62,9 @@ func GenerateMemberEndpointFromService(svc *core.Service, apiObject meta.Object,
 		default:
 			return k8sutil.CreatePodDNSNameWithDomain(apiObject, spec.ClusterDomain, group.AsRole(), member.ID), nil
 		}
-	} else {
+	case api.ServerGroupTypeArangoSync:
 		return k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(apiObject, spec.ClusterDomain), nil
+	default:
+		return "", assertion.InvalidGroupKey.Assert(true, "Unable to create Endpoint for an unknown group: %s", group.AsRole())
 	}
 }

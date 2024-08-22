@@ -514,11 +514,12 @@ func (s ServerGroupSpec) Validate(group ServerGroup, used bool, mode DeploymentM
 		for _, arg := range s.Args {
 			parts := strings.Split(arg, "=")
 			optionKey := strings.TrimSpace(parts[0])
-			if group.IsArangod() {
+			switch group.Type() {
+			case ServerGroupTypeArangoD:
 				if arangodOptions.IsCriticalOption(optionKey) {
 					return errors.WithStack(errors.Wrapf(ValidationError, "Critical option '%s' cannot be overriden", optionKey))
 				}
-			} else if group.IsArangosync() {
+			case ServerGroupTypeArangoSync:
 				if arangosyncOptions.IsCriticalOption(optionKey) {
 					return errors.WithStack(errors.Wrapf(ValidationError, "Critical option '%s' cannot be overriden", optionKey))
 				}

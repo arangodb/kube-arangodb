@@ -41,6 +41,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/assertion"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/crypto"
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
@@ -542,10 +543,15 @@ func (r *Reconciler) keyfileRenewalRequired(ctx context.Context, apiObject k8sut
 
 		// Verify AltNames
 		var altNames memberTls.KeyfileInput
-		if group.IsArangosync() {
-			altNames, err = memberTls.GetSyncAltNames(apiObject, spec, tlsSpec, group, member)
-		} else {
+
+		switch group.Type() {
+		case api.ServerGroupTypeArangoD:
 			altNames, err = memberTls.GetServerAltNames(apiObject, spec, tlsSpec, service, group, member)
+		case api.ServerGroupTypeArangoSync:
+			altNames, err = memberTls.GetSyncAltNames(apiObject, spec, tlsSpec, group, member)
+		default:
+			assertion.InvalidGroupKey.Assert(true, "Unable to check TLS Key Renewal for an unknown group: %s", group.AsRole())
+			return false, false
 		}
 
 		if err != nil {
@@ -568,37 +574,44 @@ func (r *Reconciler) keyfileRenewalRequired(ctx context.Context, apiObject k8sut
 	}
 
 	// Ensure secret is propagated only on 3.7.0+ enterprise and inplace mode
-	if mode == api.TLSRotateModeInPlace && group.IsArangod() {
-		conn, err := context.GetMembersState().GetMemberClient(member.ID)
-		if err != nil {
-			r.planLogger.Err(err).Warn("Unable to get client")
-			return false, false
-		}
+	if mode == api.TLSRotateModeInPlace {
+		switch group.Type() {
+		case api.ServerGroupTypeArangoD:
+			conn, err := context.GetMembersState().GetMemberClient(member.ID)
+			if err != nil {
+				r.planLogger.Err(err).Warn("Unable to get client")
+				return false, false
+			}
 
-		s, exists := cachedStatus.Secret().V1().GetSimple(k8sutil.CreateTLSKeyfileSecretName(apiObject.GetName(), group.AsRole(), member.ID))
-		if !exists {
-			r.planLogger.Warn("Keyfile secret is missing")
-			return false, false
-		}
+			s, exists := cachedStatus.Secret().V1().GetSimple(k8sutil.CreateTLSKeyfileSecretName(apiObject.GetName(), group.AsRole(), member.ID))
+			if !exists {
+				r.planLogger.Warn("Keyfile secret is missing")
+				return false, false
+			}
 
-		c := client.NewClient(conn.Connection(), r.log)
-		tls, err := c.GetTLS(ctx)
-		if err != nil {
-			r.planLogger.Err(err).Warn("Unable to get tls details")
-			return false, false
-		}
+			c := client.NewClient(conn.Connection(), r.log)
+			tls, err := c.GetTLS(ctx)
+			if err != nil {
+				r.planLogger.Err(err).Warn("Unable to get tls details")
+				return false, false
+			}
 
-		keyfile, ok := s.Data[constants.SecretTLSKeyfile]
-		if !ok {
-			r.planLogger.Warn("Keyfile secret is invalid")
-			return false, false
-		}
+			keyfile, ok := s.Data[constants.SecretTLSKeyfile]
+			if !ok {
+				r.planLogger.Warn("Keyfile secret is invalid")
+				return false, false
+			}
 
-		keyfileSha := util.SHA256(keyfile)
+			keyfileSha := util.SHA256(keyfile)
 
-		if tls.Result.KeyFile.GetSHA().Checksum() != keyfileSha {
-			r.planLogger.Str("current", tls.Result.KeyFile.GetSHA().Checksum()).Str("desired", keyfileSha).Debug("Unable to get tls details")
-			return true, false
+			if tls.Result.KeyFile.GetSHA().Checksum() != keyfileSha {
+				r.planLogger.Str("current", tls.Result.KeyFile.GetSHA().Checksum()).Str("desired", keyfileSha).Debug("Unable to get tls details")
+				return true, false
+			}
+		case api.ServerGroupTypeArangoSync:
+			break
+		default:
+			assertion.InvalidGroupKey.Assert(true, "Unable to check TLS Key Renewal for an unknown group: %s", group.AsRole())
 		}
 	}
 

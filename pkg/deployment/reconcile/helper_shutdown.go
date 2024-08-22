@@ -31,6 +31,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/assertion"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
@@ -157,7 +158,8 @@ func (s shutdownHelperAPI) Start(ctx context.Context) (bool, error) {
 		}
 	}
 
-	if group.IsArangod() {
+	switch group.Type() {
+	case api.ServerGroupTypeArangoD:
 		// Invoke shutdown endpoint
 		c, err := s.actionCtx.GetMembersState().GetMemberClient(s.action.MemberID)
 		if err != nil {
@@ -177,14 +179,17 @@ func (s shutdownHelperAPI) Start(ctx context.Context) (bool, error) {
 			s.log.Err(err).Debug("Failed to shutdown member")
 			return false, errors.WithStack(err)
 		}
-	} else if group.IsArangosync() {
+		return false, nil
+	case api.ServerGroupTypeArangoSync:
 		// Terminate pod
 		if err := cache.Client().Kubernetes().CoreV1().Pods(cache.Namespace()).Delete(ctx, podName, meta.DeleteOptions{}); err != nil {
 			return false, errors.WithStack(err)
 		}
+		return false, nil
+	default:
+		assertion.InvalidGroupKey.Assert(true, "Unable to execute ShutdownAction for an unknown group: %s", group.AsRole())
+		return false, nil
 	}
-
-	return false, nil
 }
 
 // CheckProgress returns true when pod is terminated.

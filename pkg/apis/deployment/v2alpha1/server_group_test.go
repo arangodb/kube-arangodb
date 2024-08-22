@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -60,4 +60,15 @@ func TestServerGroupIsArangosync(t *testing.T) {
 	assert.False(t, ServerGroupCoordinators.IsArangosync())
 	assert.True(t, ServerGroupSyncMasters.IsArangosync())
 	assert.True(t, ServerGroupSyncWorkers.IsArangosync())
+}
+
+func TestServerGroupType(t *testing.T) {
+	assert.Equal(t, ServerGroupTypeUnknown, ServerGroupUnknown.Type())
+	assert.Equal(t, ServerGroupTypeID, ServerGroupImageDiscovery.Type())
+	assert.Equal(t, ServerGroupTypeArangoD, ServerGroupSingle.Type())
+	assert.Equal(t, ServerGroupTypeArangoD, ServerGroupAgents.Type())
+	assert.Equal(t, ServerGroupTypeArangoD, ServerGroupDBServers.Type())
+	assert.Equal(t, ServerGroupTypeArangoD, ServerGroupCoordinators.Type())
+	assert.Equal(t, ServerGroupTypeArangoSync, ServerGroupSyncMasters.Type())
+	assert.Equal(t, ServerGroupTypeArangoSync, ServerGroupSyncWorkers.Type())
 }

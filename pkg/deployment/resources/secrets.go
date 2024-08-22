@@ -41,6 +41,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/assertion"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
@@ -129,36 +130,41 @@ func (r *Resources) EnsureSecrets(ctx context.Context, cachedStatus inspectorInt
 		}
 
 		if err := reconcileRequired.ParallelAll(len(members), func(id int) error {
-			if !members[id].Group.IsArangod() {
+			switch members[id].Group.Type() {
+			case api.ServerGroupTypeArangoD:
+				memberName := members[id].Member.ArangoMemberName(r.context.GetAPIObject().GetName(), members[id].Group)
+
+				member, ok := cachedStatus.ArangoMember().V1().GetSimple(memberName)
+				if !ok {
+					return errors.Errorf("Member %s not found", memberName)
+				}
+
+				service, ok := cachedStatus.Service().V1().GetSimple(memberName)
+				if !ok {
+					return errors.Errorf("Service of member %s not found", memberName)
+				}
+
+				tlsKeyfileSecretName := k8sutil.AppendTLSKeyfileSecretPostfix(member.GetName())
+				if _, exists := cachedStatus.Secret().V1().GetSimple(tlsKeyfileSecretName); !exists {
+					serverNames, err := tls.GetServerAltNames(apiObject, spec, spec.TLS, service, members[id].Group, members[id].Member)
+					if err != nil {
+						return errors.WithStack(errors.Wrapf(err, "Failed to render alt names"))
+					}
+					owner := member.AsOwner()
+					if created, err := createTLSServerCertificate(ctx, log, cachedStatus, secrets, serverNames, spec.TLS, tlsKeyfileSecretName, &owner); err != nil && !kerrors.IsAlreadyExists(err) {
+						return errors.WithStack(errors.Wrapf(err, "Failed to create TLS keyfile secret"))
+					} else if created {
+						reconcileRequired.Required()
+					}
+				}
+				return nil
+			case api.ServerGroupTypeArangoSync:
+				// Nothing to do
+				return nil
+			default:
+				assertion.InvalidGroupKey.Assert(true, "Unable to create TLS Secret an unknown group: %s", members[id].Group.AsRole())
 				return nil
 			}
-
-			memberName := members[id].Member.ArangoMemberName(r.context.GetAPIObject().GetName(), members[id].Group)
-
-			member, ok := cachedStatus.ArangoMember().V1().GetSimple(memberName)
-			if !ok {
-				return errors.Errorf("Member %s not found", memberName)
-			}
-
-			service, ok := cachedStatus.Service().V1().GetSimple(memberName)
-			if !ok {
-				return errors.Errorf("Service of member %s not found", memberName)
-			}
-
-			tlsKeyfileSecretName := k8sutil.AppendTLSKeyfileSecretPostfix(member.GetName())
-			if _, exists := cachedStatus.Secret().V1().GetSimple(tlsKeyfileSecretName); !exists {
-				serverNames, err := tls.GetServerAltNames(apiObject, spec, spec.TLS, service, members[id].Group, members[id].Member)
-				if err != nil {
-					return errors.WithStack(errors.Wrapf(err, "Failed to render alt names"))
-				}
-				owner := member.AsOwner()
-				if created, err := createTLSServerCertificate(ctx, log, cachedStatus, secrets, serverNames, spec.TLS, tlsKeyfileSecretName, &owner); err != nil && !kerrors.IsAlreadyExists(err) {
-					return errors.WithStack(errors.Wrapf(err, "Failed to create TLS keyfile secret"))
-				} else if created {
-					reconcileRequired.Required()
-				}
-			}
-			return nil
 		}); err != nil {
 			return errors.Section(err, "TLS TrustStore")
 		}

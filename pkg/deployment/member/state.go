@@ -34,6 +34,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
+	"github.com/arangodb/kube-arangodb/pkg/util/assertion"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
@@ -123,12 +124,19 @@ func (s *stateInspector) RefreshState(ctx context.Context, members api.Deploymen
 		ctxChild, cancel := globals.GetGlobalTimeouts().ArangoDCheck().WithTimeout(ctx)
 		defer cancel()
 
-		if members[id].Group.IsArangosync() {
+		switch members[id].Group.Type() {
+		case api.ServerGroupTypeArangoSync:
 			results[id] = s.fetchArangosyncMemberState(ctxChild, members[id])
-		} else {
+		case api.ServerGroupTypeArangoD:
 			results[id] = s.fetchServerMemberState(ctxChild, members[id], servingGroup)
 			if results[id].IsServing() {
 				client = results[id].client
+			}
+		default:
+			assertion.InvalidGroupKey.Assert(true, "Unable to fetch Health for an unknown group: %s", members[id].Group.AsRole())
+			results[id] = State{
+				IsClusterHealthy: false,
+				serving:          false,
 			}
 		}
 	})
@@ -155,22 +163,26 @@ func (s *stateInspector) RefreshState(ctx context.Context, members api.Deploymen
 					continue
 				}
 
-				if members[i].Group.IsArangosync() {
-					// ArangoSync is considered as healthy when it is possible to fetch version.
-					results[i].IsClusterHealthy = true
-					continue
-				}
-
-				if v, ok := h.Members[driver.ServerID(m.Member.ID)]; ok {
-					results[i].IsClusterHealthy = v.Status == driver.ServerStatusGood
-					if results[i].IsServing() && v.SyncStatus == driver.ServerSyncStatusServing {
-						if cs.client == nil || util.Rand().Intn(100) > 50 {
-							// Set client from nil or take next client with 50% probability.
-							cs.client = results[i].client
-							cs.Version = results[i].Version
+				switch members[i].Group.Type() {
+				case api.ServerGroupTypeArangoD:
+					if v, ok := h.Members[driver.ServerID(m.Member.ID)]; ok {
+						results[i].IsClusterHealthy = v.Status == driver.ServerStatusGood
+						if results[i].IsServing() && v.SyncStatus == driver.ServerSyncStatusServing {
+							if cs.client == nil || util.Rand().Intn(100) > 50 {
+								// Set client from nil or take next client with 50% probability.
+								cs.client = results[i].client
+								cs.Version = results[i].Version
+							}
 						}
 					}
+				case api.ServerGroupTypeArangoSync:
+					// ArangoSync is considered as healthy when it is possible to fetch version.
+					results[i].IsClusterHealthy = true
+				default:
+					assertion.InvalidGroupKey.Assert(true, "Unable to fetch Health for an unknown group: %s", members[i].Group.AsRole())
+					results[i].IsClusterHealthy = false
 				}
+
 			}
 
 			return nil

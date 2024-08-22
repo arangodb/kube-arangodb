@@ -42,6 +42,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/assertion"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
@@ -335,7 +336,8 @@ func (r *Resources) RenderPodForMember(ctx context.Context, acs sutil.ACS, spec 
 	podName := k8sutil.CreatePodName(apiObject.GetName(), roleAbbr, m.ID, CreatePodSuffix(spec))
 
 	var podCreator interfaces.PodCreator
-	if group.IsArangod() {
+	switch group.Type() {
+	case api.ServerGroupTypeArangoD:
 		// Prepare arguments
 		autoUpgrade := m.Conditions.IsTrue(api.ConditionTypeAutoUpgrade) || spec.Upgrade.Get().AutoUpgrade
 
@@ -353,7 +355,7 @@ func (r *Resources) RenderPodForMember(ctx context.Context, acs sutil.ACS, spec 
 			arangoMember:     *member,
 			cachedStatus:     cache,
 		}
-	} else if group.IsArangosync() {
+	case api.ServerGroupTypeArangoSync:
 		// Check image
 		if !imageInfo.Enterprise {
 			log.Str("image", spec.GetImage()).Debug("Image is not an enterprise image")
@@ -377,8 +379,8 @@ func (r *Resources) RenderPodForMember(ctx context.Context, acs sutil.ACS, spec 
 			memberStatus: m,
 			cachedStatus: cache,
 		}
-	} else {
-		return nil, errors.Errorf("unable to render Pod")
+	default:
+		return nil, assertion.InvalidGroupKey.Assert(true, "Unable to render pod for an unknown group: %s", group.AsRole())
 	}
 
 	pod, err := RenderArangoPod(ctx, cache, apiObject, role, m.ID, podName, podCreator)
@@ -468,7 +470,8 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 
 	newPhase := api.MemberPhaseCreated
 	// Create pod
-	if group.IsArangod() {
+	switch group.Type() {
+	case api.ServerGroupTypeArangoD:
 		// Prepare arguments
 		autoUpgrade := m.Conditions.IsTrue(api.ConditionTypeAutoUpgrade)
 		if autoUpgrade {
@@ -507,7 +510,7 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 		} else {
 			log.Str("pod-name", pod.Name).Debug("Created pod with predefined image")
 		}
-	} else if group.IsArangosync() {
+	case api.ServerGroupTypeArangoSync:
 		// Check monitoring token secret
 		if group == api.ServerGroupSyncMasters {
 			// Create TLS secret
@@ -545,6 +548,8 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 		m.Pod.Propagate(&m)
 
 		log.Str("pod-name", pod.Name).Debug("Created pod")
+	default:
+		return assertion.InvalidGroupKey.Assert(true, "Unable to create pod for an unknown group: %s", group.AsRole())
 	}
 
 	member.GetPhaseExecutor().Execute(r.context.GetAPIObject(), spec, group, &m, api.Action{}, newPhase)
