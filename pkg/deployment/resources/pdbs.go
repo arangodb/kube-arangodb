@@ -52,23 +52,23 @@ func (r *Resources) EnsurePDBs(ctx context.Context) error {
 
 		// We want to lose at most one agent and dbserver.
 		// Coordinators are not that critical. To keep the service available two should be enough
-		minAgents := spec.GetServerGroupSpec(api.ServerGroupAgents).GetCount() - 1
+		minAgents := spec.GetServerGroupSpec(api.ServerGroupAgents).New().GetCount() - 1
 		currAgents := status.Members.Agents.MembersReady()
 
-		minDBServers := spec.GetServerGroupSpec(api.ServerGroupDBServers).GetCount() - 1
+		minDBServers := spec.GetServerGroupSpec(api.ServerGroupDBServers).New().GetCount() - 1
 		currDBServers := status.Members.DBServers.MembersReady()
 
-		minCoordinators := min(spec.GetServerGroupSpec(api.ServerGroupCoordinators).GetCount()-1, 2)
+		minCoordinators := min(spec.GetServerGroupSpec(api.ServerGroupCoordinators).New().GetCount()-1, 2)
 		currCoordinators := status.Members.Coordinators.MembersReady()
 
 		// Setting those to zero triggers a remove of the PDB
 		minSyncMaster, currSyncMaster := 0, 0
 		minSyncWorker, currSyncWorker := 0, 0
 		if r.context.IsSyncEnabled() {
-			minSyncMaster = spec.GetServerGroupSpec(api.ServerGroupSyncMasters).GetCount() - 1
+			minSyncMaster = spec.GetServerGroupSpec(api.ServerGroupSyncMasters).New().GetCount() - 1
 			currSyncMaster = status.Members.SyncMasters.MembersReady()
 
-			minSyncWorker = spec.GetServerGroupSpec(api.ServerGroupSyncWorkers).GetCount() - 1
+			minSyncWorker = spec.GetServerGroupSpec(api.ServerGroupSyncWorkers).New().GetCount() - 1
 			currSyncWorker = status.Members.SyncWorkers.MembersReady()
 		}
 
