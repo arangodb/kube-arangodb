@@ -22,6 +22,8 @@ package assertion
 
 import (
 	"fmt"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 type Key string
@@ -30,19 +32,20 @@ const (
 	KeyUnknown               Key = ""
 	DeprecatedActionKey      Key = "DeprecatedAction"
 	CommunityLicenseCheckKey Key = "CommunityLicenseCheck"
+	InvalidGroupKey          Key = "InvalidGroup"
 )
 
-func (k Key) Assert(condition bool, msg string, args ...interface{}) {
-	assert(2, condition, k, msg, args...)
+func (k Key) Assert(condition bool, msg string, args ...interface{}) error {
+	return assert(2, condition, k, msg, args...)
 }
 
-func Assert(condition bool, key Key, msg string, args ...interface{}) {
-	assert(2, condition, key, msg, args...)
+func Assert(condition bool, key Key, msg string, args ...interface{}) error {
+	return assert(2, condition, key, msg, args...)
 }
 
-func assert(skip int, condition bool, key Key, msg string, args ...interface{}) {
+func assert(skip int, condition bool, key Key, msg string, args ...interface{}) error {
 	if !condition {
-		return
+		return nil
 	}
 
 	metricsObject.incKeyMetric(key)
@@ -50,4 +53,6 @@ func assert(skip int, condition bool, key Key, msg string, args ...interface{}) 
 	frames := frames(skip)
 
 	_assert(frames, fmt.Sprintf(msg, args...))
+
+	return errors.WithStack(errors.Errorf("Error Assertion `%s`: %s", key, fmt.Sprintf(msg, args...)))
 }

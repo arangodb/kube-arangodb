@@ -122,6 +122,20 @@ var (
 	}
 )
 
+// Type returns the Group Type
+func (g ServerGroup) Type() ServerGroupType {
+	switch g {
+	case ServerGroupAgents, ServerGroupSingle, ServerGroupDBServers, ServerGroupCoordinators:
+		return ServerGroupTypeArangoD
+	case ServerGroupImageDiscovery:
+		return ServerGroupTypeID
+	case ServerGroupSyncMasters, ServerGroupSyncWorkers:
+		return ServerGroupTypeArangoSync
+	default:
+		return ServerGroupTypeUnknown
+	}
+}
+
 // AsRole returns the "role" value for the given group.
 func (g ServerGroup) AsRole() string {
 	switch g {

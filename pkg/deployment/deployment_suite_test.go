@@ -107,12 +107,14 @@ func createTestTLSVolume(serverGroupString, ID string) core.Volume {
 }
 
 func createTestLifecycle(group api.ServerGroup) *core.Lifecycle {
-	if group.IsArangosync() {
+	switch group.Type() {
+	case api.ServerGroupTypeArangoSync:
 		lifecycle, _ := k8sutil.NewLifecycleFinalizers()
 		return lifecycle
+	default:
+		lifecycle, _ := k8sutil.NewLifecyclePort()
+		return lifecycle
 	}
-	lifecycle, _ := k8sutil.NewLifecyclePort()
-	return lifecycle
 }
 
 func createTestToken(deployment *Deployment, testCase *testCaseStruct, paths []string) (string, error) {
@@ -864,51 +866,50 @@ func podDataSort() func(t *testing.T, p *core.Pod) {
 
 func addLifecycle(name string, uuidRequired bool, license string, group api.ServerGroup) func(t *testing.T, p *core.Pod) {
 	return func(t *testing.T, p *core.Pod) {
-		if group.IsArangosync() {
-			return
-		}
-
-		if len(p.Spec.Containers) > 0 {
-			p.Spec.Containers[0].Env = append(k8sutil.GetLifecycleEnv(), p.Spec.Containers[0].Env...)
-			if license != "" {
-				p.Spec.Containers[0].Env = append([]core.EnvVar{
-					k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoLicenseKey,
-						license, constants.SecretKeyToken)}, p.Spec.Containers[0].Env...)
-			}
-		}
-
-		if _, ok := k8sutil.GetAnyVolumeByName(p.Spec.Volumes, shared.LifecycleVolumeName); !ok {
-			p.Spec.Volumes = append([]core.Volume{k8sutil.LifecycleVolume()}, p.Spec.Volumes...)
-		}
-		if _, ok := k8sutil.GetAnyVolumeByName(p.Spec.Volumes, "arangod-data"); !ok {
-			p.Spec.Volumes = append([]core.Volume{k8sutil.LifecycleVolume()}, p.Spec.Volumes...)
-		}
-
-		if len(p.Spec.Containers) > 0 {
-			p.Spec.Containers[0].Lifecycle = createTestLifecycle(api.ServerGroupAgents)
-		}
-
-		if len(p.Spec.Containers) > 0 {
-			if _, ok := k8sutil.GetAnyVolumeMountByName(p.Spec.Containers[0].VolumeMounts, "lifecycle"); !ok {
-				p.Spec.Containers[0].VolumeMounts = append(p.Spec.Containers[0].VolumeMounts, k8sutil.LifecycleVolumeMount())
+		switch group.Type() {
+		case api.ServerGroupTypeArangoD:
+			if len(p.Spec.Containers) > 0 {
+				p.Spec.Containers[0].Env = append(k8sutil.GetLifecycleEnv(), p.Spec.Containers[0].Env...)
+				if license != "" {
+					p.Spec.Containers[0].Env = append([]core.EnvVar{
+						k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoLicenseKey,
+							license, constants.SecretKeyToken)}, p.Spec.Containers[0].Env...)
+				}
 			}
 
-			if _, ok := kresources.GetAnyContainerByName(p.Spec.InitContainers, "init-lifecycle"); !ok {
+			if _, ok := k8sutil.GetAnyVolumeByName(p.Spec.Volumes, shared.LifecycleVolumeName); !ok {
+				p.Spec.Volumes = append([]core.Volume{k8sutil.LifecycleVolume()}, p.Spec.Volumes...)
+			}
+			if _, ok := k8sutil.GetAnyVolumeByName(p.Spec.Volumes, "arangod-data"); !ok {
+				p.Spec.Volumes = append([]core.Volume{k8sutil.LifecycleVolume()}, p.Spec.Volumes...)
+			}
+
+			if len(p.Spec.Containers) > 0 {
+				p.Spec.Containers[0].Lifecycle = createTestLifecycle(api.ServerGroupAgents)
+			}
+
+			if len(p.Spec.Containers) > 0 {
+				if _, ok := k8sutil.GetAnyVolumeMountByName(p.Spec.Containers[0].VolumeMounts, "lifecycle"); !ok {
+					p.Spec.Containers[0].VolumeMounts = append(p.Spec.Containers[0].VolumeMounts, k8sutil.LifecycleVolumeMount())
+				}
+
+				if _, ok := kresources.GetAnyContainerByName(p.Spec.InitContainers, "init-lifecycle"); !ok {
+					p.Spec.InitContainers = append(
+						[]core.Container{createTestLifecycleContainer(emptyResources)},
+						p.Spec.InitContainers...,
+					)
+				}
+			}
+
+			if _, ok := kresources.GetAnyContainerByName(p.Spec.InitContainers, "uuid"); !ok {
+				binaryPath, _ := os.Executable()
 				p.Spec.InitContainers = append(
-					[]core.Container{createTestLifecycleContainer(emptyResources)},
+					[]core.Container{
+						k8sutil.ArangodInitContainer("uuid", name, "rocksdb", binaryPath, testImageOperator, uuidRequired, securityContext.NewSecurityContext()),
+					},
 					p.Spec.InitContainers...,
 				)
 			}
-		}
-
-		if _, ok := kresources.GetAnyContainerByName(p.Spec.InitContainers, "uuid"); !ok {
-			binaryPath, _ := os.Executable()
-			p.Spec.InitContainers = append(
-				[]core.Container{
-					k8sutil.ArangodInitContainer("uuid", name, "rocksdb", binaryPath, testImageOperator, uuidRequired, securityContext.NewSecurityContext()),
-				},
-				p.Spec.InitContainers...,
-			)
 		}
 	}
 }

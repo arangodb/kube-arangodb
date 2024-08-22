@@ -29,6 +29,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
+	"github.com/arangodb/kube-arangodb/pkg/util/assertion"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
@@ -72,22 +73,27 @@ func (a *actionWaitForMemberUp) CheckProgress(ctx context.Context) (bool, bool, 
 	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 
-	if a.action.Group.IsArangosync() {
+	switch a.action.Group.Type() {
+	case api.ServerGroupTypeArangoD:
+		switch a.actionCtx.GetMode() {
+		case api.DeploymentModeSingle:
+			return a.checkProgressSingle(ctxChild)
+		case api.DeploymentModeActiveFailover:
+			if a.action.Group == api.ServerGroupAgents {
+				return a.checkProgressAgent()
+			}
+			return a.checkProgressSingleInActiveFailover(ctxChild)
+		default:
+			if a.action.Group == api.ServerGroupAgents {
+				return a.checkProgressAgent()
+			}
+			return a.checkProgressCluster(ctx)
+		}
+	case api.ServerGroupTypeArangoSync:
 		return a.checkProgressArangoSync(ctxChild)
-	}
-	switch a.actionCtx.GetMode() {
-	case api.DeploymentModeSingle:
-		return a.checkProgressSingle(ctxChild)
-	case api.DeploymentModeActiveFailover:
-		if a.action.Group == api.ServerGroupAgents {
-			return a.checkProgressAgent()
-		}
-		return a.checkProgressSingleInActiveFailover(ctxChild)
 	default:
-		if a.action.Group == api.ServerGroupAgents {
-			return a.checkProgressAgent()
-		}
-		return a.checkProgressCluster(ctx)
+		assertion.InvalidGroupKey.Assert(true, "Unable to execute action WaitForMemberUp for an unknown group: %s", a.action.Group.AsRole())
+		return true, false, nil
 	}
 }
 

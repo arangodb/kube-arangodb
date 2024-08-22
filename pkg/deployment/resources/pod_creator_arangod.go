@@ -598,7 +598,7 @@ func (m *MemberArangoDPod) Annotations() map[string]string {
 func (m *MemberArangoDPod) Labels() map[string]string {
 	l := collection.ReservedLabels().Filter(collection.MergeAnnotations(m.spec.Labels, m.groupSpec.Labels))
 
-	if m.group.IsArangod() && m.status.Topology != nil && m.deploymentStatus.Topology.Enabled() && m.deploymentStatus.Topology.ID == m.status.Topology.ID {
+	if m.status.Topology != nil && m.deploymentStatus.Topology.Enabled() && m.deploymentStatus.Topology.ID == m.status.Topology.ID {
 		if l == nil {
 			l = map[string]string{}
 		}

@@ -61,3 +61,14 @@ func TestServerGroupIsArangosync(t *testing.T) {
 	assert.True(t, ServerGroupSyncMasters.IsArangosync())
 	assert.True(t, ServerGroupSyncWorkers.IsArangosync())
 }
+
+func TestServerGroupType(t *testing.T) {
+	assert.Equal(t, ServerGroupTypeUnknown, ServerGroupUnknown.Type())
+	assert.Equal(t, ServerGroupTypeID, ServerGroupImageDiscovery.Type())
+	assert.Equal(t, ServerGroupTypeArangoD, ServerGroupSingle.Type())
+	assert.Equal(t, ServerGroupTypeArangoD, ServerGroupAgents.Type())
+	assert.Equal(t, ServerGroupTypeArangoD, ServerGroupDBServers.Type())
+	assert.Equal(t, ServerGroupTypeArangoD, ServerGroupCoordinators.Type())
+	assert.Equal(t, ServerGroupTypeArangoSync, ServerGroupSyncMasters.Type())
+	assert.Equal(t, ServerGroupTypeArangoSync, ServerGroupSyncWorkers.Type())
+}
