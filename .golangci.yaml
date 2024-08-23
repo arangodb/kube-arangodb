@@ -103,6 +103,10 @@ linters-settings:
         alias: pbSharedV1
       - pkg: github.com/arangodb/kube-arangodb/integrations/shared/v1
         alias: pbImplSharedV1
+      - pkg: github.com/envoyproxy/go-control-plane/envoy/service/auth/v3
+        alias: pbEnvoyAuthV3
+      - pkg: github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3
+        alias: pbImplEnvoyAuthV3
       - pkg: github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources
         alias: kresources
   gci:
