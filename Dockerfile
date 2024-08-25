@@ -1,4 +1,4 @@
-ARG IMAGE=alpine:3.17
+ARG IMAGE=ubuntu:24.04
 ARG ENVOY_IMAGE=envoyproxy/envoy:v1.31.0
 
 # Build Steps
@@ -7,7 +7,7 @@ FROM ${ENVOY_IMAGE} AS envoy
 
 FROM ${IMAGE} AS base
 
-RUN apk upgrade --no-cache
+RUN apt-get update && apt-get upgrade -y && apt-get clean
 
 FROM base
 
