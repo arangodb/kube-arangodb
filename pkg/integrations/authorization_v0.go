@@ -31,7 +31,7 @@ import (
 )
 
 func init() {
-	register(func() Integration {
+	registerer.Register(pbAuthorizationV0.Name, func() Integration {
 		return &authorizationV0{}
 	})
 }

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -79,7 +79,7 @@ func Test_Verify_WrongOrder(t *testing.T) {
 		)
 
 		_, err := u.Execute(api.ArangoDeployment{}, nil, nil)
-		require.EqualError(t, err, "Invalid version in 1.1.1 - got 3, expected 2")
+		require.EqualError(t, err, "Invalid version in 1.1.1 - got 3, expected 1")
 	})
 	t.Run("Valid multi version", func(t *testing.T) {
 		var u Upgrades

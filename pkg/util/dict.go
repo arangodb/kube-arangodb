@@ -22,7 +22,6 @@ package util
 
 import (
 	"maps"
-	"reflect"
 	"sort"
 )
 
@@ -53,22 +52,32 @@ func Sort[IN any](in []IN, cmp func(i, j IN) bool) []IN {
 	return r
 }
 
-func SortKeys(m interface{}) []string {
-	if m == nil {
-		return []string{}
+func MapValues[K comparable, V any](m map[K]V) []V {
+	r := make([]V, 0, len(m))
+
+	for k := range m {
+		r = append(r, m[k])
 	}
-
-	q := reflect.ValueOf(m).MapKeys()
-
-	r := make([]string, len(q))
-
-	for id, v := range q {
-		r[id] = v.String()
-	}
-
-	sort.Strings(r)
 
 	return r
+}
+
+func MapKeys[K comparable, V any](m map[K]V) []K {
+	r := make([]K, 0, len(m))
+
+	for k := range m {
+		r = append(r, k)
+	}
+
+	return r
+}
+
+func SortKeys[V any](m map[string]V) []string {
+	keys := MapKeys(m)
+
+	sort.Strings(keys)
+
+	return keys
 }
 
 func CopyFullMap[K comparable, V any](src map[K]V) map[K]V {

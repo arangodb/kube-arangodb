@@ -24,6 +24,8 @@ import (
 	"crypto/md5"
 	"crypto/sha256"
 	"fmt"
+	"io"
+	"os"
 
 	"k8s.io/apimachinery/pkg/util/json"
 
@@ -54,6 +56,27 @@ func SHA256FromString(data string) string {
 
 func SHA256(data []byte) string {
 	return fmt.Sprintf("%0x", sha256.Sum256(data))
+}
+
+func SHA256FromFile(file string) (string, error) {
+	in, err := os.OpenFile(file, os.O_RDONLY, 0644)
+	if err != nil {
+		return "", err
+	}
+
+	defer in.Close()
+
+	return SHA256FromIO(in)
+}
+
+func SHA256FromIO(in io.Reader) (string, error) {
+	c := sha256.New()
+
+	if _, err := io.CopyBuffer(c, in, make([]byte, 4096)); err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%0x", c.Sum(nil)), nil
 }
 
 func MD5FromString(data string) string {

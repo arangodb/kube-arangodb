@@ -726,19 +726,9 @@ manifest-verify-helm-ee: manifests-verify-env-reset
 .PHONY: run-unit-tests
 run-unit-tests: $(SOURCES)
 	go test --count=1 --tags "$(GOBUILDTAGS)" $(TESTVERBOSEOPTIONS) \
-		$(REPOPATH)/pkg/apis/shared/... \
-		$(REPOPATH)/pkg/apis/backup/... \
-		$(REPOPATH)/pkg/apis/deployment/... \
-		$(REPOPATH)/pkg/apis/replication/... \
-		$(REPOPATH)/pkg/apis/storage/... \
-		$(REPOPATH)/pkg/apis/ml/... \
-		$(REPOPATH)/pkg/deployment/... \
-		$(REPOPATH)/pkg/storage/... \
-	    $(REPOPATH)/pkg/crd/... \
-		$(REPOPATH)/pkg/util/... \
-		$(REPOPATH)/pkg/generated/metric_descriptions/... \
+		$(REPOPATH)/pkg/... \
 		$(REPOPATH)/cmd/... \
-		$(REPOPATH)/pkg/handlers/...
+		$(REPOPATH)/integrations/...
 
 # Release building
 

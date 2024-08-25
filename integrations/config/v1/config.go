@@ -18,49 +18,23 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package svc
+package v1
 
-import (
-	"context"
-	"errors"
-
-	"google.golang.org/grpc/status"
-)
-
-type serviceError struct {
-	error
+type Config struct {
+	Modules ModuleDefinitions `json:"modules,omitempty"`
 }
 
-func (p serviceError) StartWithHealth(ctx context.Context, health Health) ServiceStarter {
-	return p
-}
-
-func (p serviceError) Address() string {
-	return ""
-}
-
-func (p serviceError) Wait() error {
-	return p
-}
-
-func (p serviceError) Update(key string, state HealthState) {
-
-}
-
-func (p serviceError) Start(ctx context.Context) ServiceStarter {
-	return p
-}
-
-type GRPCErrorStatus interface {
-	error
-
-	GRPCStatus() *status.Status
-}
-
-func AsGRPCErrorStatus(err error) (GRPCErrorStatus, bool) {
-	var v GRPCErrorStatus
-	if errors.As(err, &v) {
-		return v, true
+func (c *Config) Init() {
+	for k := range c.Modules {
+		m := c.Modules[k]
+		m.Name = k
+		c.Modules[k] = m
 	}
-	return nil, false
+}
+
+type ModuleDefinitions map[string]ModuleDefinition
+
+type ModuleDefinition struct {
+	Name string `json:"-"`
+	Path string `json:"path"`
 }

@@ -23,26 +23,16 @@ package integrations
 import (
 	"fmt"
 	"sort"
-	"sync"
 
 	"github.com/spf13/cobra"
 
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
-var (
-	lock       sync.Mutex
-	registered []Factory
-)
-
-func register(i Factory) {
-	lock.Lock()
-	defer lock.Unlock()
-
-	registered = append(registered, i)
-}
+var registerer = util.NewRegisterer[string, Factory]()
 
 func Register(cmd *cobra.Command) error {
 	var c configuration
@@ -65,13 +55,9 @@ type configuration struct {
 }
 
 func (c *configuration) Register(cmd *cobra.Command) error {
-	lock.Lock()
-	defer lock.Unlock()
-
-	c.registered = make([]Integration, len(registered))
-	for id := range registered {
-		c.registered[id] = registered[id]()
-	}
+	c.registered = util.FormatList(registerer.Items(), func(a util.KV[string, Factory]) Integration {
+		return a.V()
+	})
 
 	sort.Slice(c.registered, func(i, j int) bool {
 		return c.registered[i].Name() < c.registered[j].Name()

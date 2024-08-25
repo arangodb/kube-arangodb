@@ -30,7 +30,7 @@ import (
 )
 
 func init() {
-	register(func() Integration {
+	registerer.Register(storage.Name, func() Integration {
 		return &storageV1{}
 	})
 }
@@ -40,7 +40,7 @@ type storageV1 struct {
 }
 
 func (b *storageV1) Name() string {
-	return "storage.v1"
+	return storage.Name
 }
 
 func (b *storageV1) Description() string {

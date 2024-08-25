@@ -1,0 +1,106 @@
+//
+// DISCLAIMER
+//
+// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Copyright holder is ArangoDB GmbH, Cologne, Germany
+//
+
+syntax = "proto3";
+
+package config;
+
+import "google/protobuf/timestamp.proto";
+
+import "integrations/shared/v1/definition/empty.proto";
+
+option go_package = "github.com/arangodb/kube-arangodb/integrations/config/v1/definition";
+
+// ConfigV1 Service implementation
+service ConfigV1 {
+  rpc Modules(shared.Empty) returns (ConfigV1ModulesResponse);
+  rpc ModuleDetails(ConfigV1ModuleDetailsRequest) returns (ConfigV1ModuleDetailsResponse);
+  rpc FileDetails(ConfigV1FileDetailsRequest) returns (ConfigV1FileDetailsResponse);
+}
+
+// Calls
+
+// ConfigV1 Modules Call Response
+message ConfigV1ModulesResponse {
+  // List of registered modules
+  repeated string modules = 1;
+}
+
+// ConfigV1 ModuleDetails Call Request
+message ConfigV1ModuleDetailsRequest {
+  // Name of the module
+  string module = 1;
+
+  // Define if checksum of module should be returned
+  optional bool checksum = 2;
+}
+
+// ConfigV1 ModuleDetails Call Response
+message ConfigV1ModuleDetailsResponse {
+  // Name of the module
+  string module = 1;
+
+  // List of the files
+  repeated ConfigV1File files = 2;
+
+  // Sha256Sum of the module (if requested)
+  optional string checksum = 3;
+}
+
+// ConfigV1 ModuleDetails Call Request
+message ConfigV1FileDetailsRequest {
+  // Name of the module
+  string module = 1;
+
+  // Name of the file
+  string file = 2;
+
+  // Define if checksum of module should be returned
+  optional bool checksum = 3;
+}
+
+// ConfigV1 ModuleDetails Call Response
+message ConfigV1FileDetailsResponse {
+  // Name of the module
+  string module = 1;
+
+  // Spec of the file
+  ConfigV1File file = 3;
+}
+
+// Types
+
+// Information about configuration file
+message ConfigV1File {
+  // Relative path of the config file
+  string path = 1;
+
+  // Size of the config file in bytes
+  int64 size = 2;
+
+  // Sha256Sum of the file (if requested)
+  optional string checksum = 3;
+
+  // Timestamp of the file creation
+  google.protobuf.Timestamp created_at = 4;
+
+  // Timestamp of the file update
+  google.protobuf.Timestamp updated_at = 5;
+}

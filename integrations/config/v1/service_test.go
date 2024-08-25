@@ -18,39 +18,29 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package integrations
+package v1
 
 import (
 	"context"
+	"testing"
 
-	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
 
-	pbImplShutdownV1 "github.com/arangodb/kube-arangodb/integrations/shutdown/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
+	pbConfigV1 "github.com/arangodb/kube-arangodb/integrations/config/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
+	"github.com/arangodb/kube-arangodb/pkg/util/tests/tgrpc"
 )
 
-func init() {
-	registerer.Register(pbImplShutdownV1.Name, func() Integration {
-		return &shutdownV1{}
-	})
-}
+func Client(t *testing.T, ctx context.Context, config Config) pbConfigV1.ConfigV1Client {
+	h, err := New(config)
+	require.NoError(t, err)
+	local := svc.NewService(svc.Configuration{
+		Address: "127.0.0.1:0",
+	}, h)
 
-type shutdownV1 struct {
-}
+	start := local.Start(ctx)
 
-func (s *shutdownV1) Handler(ctx context.Context) (svc.Handler, error) {
-	return shutdown.NewGlobalShutdownServer(), nil
-}
+	client := tgrpc.NewGRPCClient(t, ctx, pbConfigV1.NewConfigV1Client, start.Address())
 
-func (s *shutdownV1) Name() string {
-	return pbImplShutdownV1.Name
-}
-
-func (s *shutdownV1) Description() string {
-	return "ShutdownV1 Handler"
-}
-
-func (s *shutdownV1) Register(cmd *cobra.Command, arg ArgGen) error {
-	return nil
+	return client
 }

@@ -33,7 +33,7 @@ import (
 )
 
 func init() {
-	register(func() Integration {
+	registerer.Register(pbImplSchedulerV1.Name, func() Integration {
 		return &schedulerV1{}
 	})
 }
@@ -43,7 +43,7 @@ type schedulerV1 struct {
 }
 
 func (b *schedulerV1) Name() string {
-	return "scheduler.v1"
+	return pbImplSchedulerV1.Name
 }
 
 func (b *schedulerV1) Description() string {
