@@ -391,8 +391,7 @@ func (r *Resources) RenderPodForMember(ctx context.Context, acs sutil.ACS, spec 
 			cachedStatus: cache,
 		}
 	case api.ServerGroupTypeGateway:
-		// todo change me later
-		imageInfo.Image = "envoyproxy/envoy:v1.31-latest"
+		imageInfo.Image = r.context.GetOperatorImage()
 
 		podCreator = &MemberGatewayPod{
 			podName:      podName,
