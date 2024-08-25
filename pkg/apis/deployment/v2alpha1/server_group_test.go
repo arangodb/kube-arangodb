@@ -71,4 +71,6 @@ func TestServerGroupType(t *testing.T) {
 	assert.Equal(t, ServerGroupTypeArangoD, ServerGroupCoordinators.Type())
 	assert.Equal(t, ServerGroupTypeArangoSync, ServerGroupSyncMasters.Type())
 	assert.Equal(t, ServerGroupTypeArangoSync, ServerGroupSyncWorkers.Type())
+	assert.Equal(t, ServerGroupTypeGateway, ServerGroupGateways.Type())
+
 }

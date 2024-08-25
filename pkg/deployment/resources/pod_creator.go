@@ -390,7 +390,7 @@ func (r *Resources) RenderPodForMember(ctx context.Context, acs sutil.ACS, spec 
 			memberStatus: m,
 			cachedStatus: cache,
 		}
-	case api.ServerGroupGateways:
+	case api.ServerGroupTypeGateway:
 		// todo change me later
 		imageInfo.Image = "envoyproxy/envoy:v1.31-latest"
 
@@ -575,7 +575,7 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 		m.Pod.Propagate(&m)
 
 		log.Str("pod-name", pod.Name).Debug("Created pod")
-	case api.ServerGroupGateways:
+	case api.ServerGroupTypeGateway:
 		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
 		podName, uid, err := CreateArangoPod(ctxChild, cachedStatus.PodsModInterface().V1(), apiObject, spec, group, CreatePodFromTemplate(template.PodSpec))

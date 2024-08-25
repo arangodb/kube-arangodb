@@ -75,7 +75,7 @@ func (r *Resources) EnsurePDBs(ctx context.Context) error {
 
 		minGateways, currGateways := 0, 0
 		if features.Gateway().Enabled() && spec.IsGatewayEnabled() {
-			minGateways = spec.GetServerGroupSpec(api.ServerGroupGateways).GetCount() - 1
+			minGateways = spec.GetServerGroupSpec(api.ServerGroupGateways).New().GetCount() - 1
 			currGateways = status.Members.Gateways.MembersReady()
 		}
 

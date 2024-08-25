@@ -27,4 +27,5 @@ const (
 	ServerGroupTypeArangoD
 	ServerGroupTypeArangoSync
 	ServerGroupTypeID
+	ServerGroupTypeGateway
 )

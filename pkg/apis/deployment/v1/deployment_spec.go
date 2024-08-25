@@ -200,7 +200,7 @@ type DeploymentSpec struct {
 	SyncWorkers ServerGroupSpec `json:"syncworkers"`
 
 	// Gateways contain specification for Gateway pods running in deployment mode `Single` or `Cluster`.
-	Gateways *ServerGroupSpec `json:"gateways,omitempty"`
+	Gateways ServerGroupSpec `json:"gateways,omitempty"`
 
 	// MemberPropagationMode defines how changes to pod spec should be propogated.
 	// Changes to a pod’s configuration require a restart of that pod in almost all cases.
@@ -415,7 +415,7 @@ func (s *DeploymentSpec) UpdateServerGroupSpec(group ServerGroup, gspec ServerGr
 	case ServerGroupSyncWorkers:
 		s.SyncWorkers = gspec
 	case ServerGroupGateways:
-		s.Gateways = gspec.DeepCopy()
+		s.Gateways = gspec
 	}
 }
 
@@ -435,11 +435,6 @@ func (s *DeploymentSpec) SetDefaults(deploymentName string) {
 	}
 	if s.GetImagePullPolicy() == "" {
 		s.ImagePullPolicy = util.NewType[core.PullPolicy](core.PullIfNotPresent)
-	}
-	if s.Gateway.IsEnabled() {
-		if s.Gateways == nil {
-			s.Gateways = &ServerGroupSpec{}
-		}
 	}
 	s.ExternalAccess.SetDefaults()
 	s.RocksDB.SetDefaults()
@@ -495,12 +490,12 @@ func (s *DeploymentSpec) SetDefaultsFrom(source DeploymentSpec) {
 	s.Authentication.SetDefaultsFrom(source.Authentication)
 	s.TLS.SetDefaultsFrom(source.TLS)
 	s.Sync.SetDefaultsFrom(source.Sync)
-	s.Single.SetDefaultsFrom(&source.Single)
-	s.Agents.SetDefaultsFrom(&source.Agents)
-	s.DBServers.SetDefaultsFrom(&source.DBServers)
-	s.Coordinators.SetDefaultsFrom(&source.Coordinators)
-	s.SyncMasters.SetDefaultsFrom(&source.SyncMasters)
-	s.SyncWorkers.SetDefaultsFrom(&source.SyncWorkers)
+	s.Single.SetDefaultsFrom(source.Single)
+	s.Agents.SetDefaultsFrom(source.Agents)
+	s.DBServers.SetDefaultsFrom(source.DBServers)
+	s.Coordinators.SetDefaultsFrom(source.Coordinators)
+	s.SyncMasters.SetDefaultsFrom(source.SyncMasters)
+	s.SyncWorkers.SetDefaultsFrom(source.SyncWorkers)
 	s.Gateways.SetDefaultsFrom(source.Gateways)
 	s.Metrics.SetDefaultsFrom(source.Metrics)
 	s.Lifecycle.SetDefaultsFrom(source.Lifecycle)
@@ -642,13 +637,8 @@ func (s DeploymentSpec) ResetImmutableFields(target *DeploymentSpec) []string {
 	if l := s.SyncWorkers.ResetImmutableFields(ServerGroupSyncWorkers, "syncworkers", &target.SyncWorkers); l != nil {
 		resetFields = append(resetFields, l...)
 	}
-	if s.Gateways != nil {
-		if target.Gateways == nil {
-			target.Gateways = &ServerGroupSpec{}
-		}
-		if l := s.Gateways.ResetImmutableFields(ServerGroupGateways, "gateways", target.Gateways); l != nil {
-			resetFields = append(resetFields, l...)
-		}
+	if l := s.Gateways.ResetImmutableFields(ServerGroupGateways, "gateways", &target.Gateways); l != nil {
+		resetFields = append(resetFields, l...)
 	}
 	if l := s.Metrics.ResetImmutableFields("metrics", &target.Metrics); l != nil {
 		resetFields = append(resetFields, l...)

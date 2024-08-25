@@ -1101,11 +1101,7 @@ func (in *DeploymentSpec) DeepCopyInto(out *DeploymentSpec) {
 	in.Coordinators.DeepCopyInto(&out.Coordinators)
 	in.SyncMasters.DeepCopyInto(&out.SyncMasters)
 	in.SyncWorkers.DeepCopyInto(&out.SyncWorkers)
-	if in.Gateways != nil {
-		in, out := &in.Gateways, &out.Gateways
-		*out = new(ServerGroupSpec)
-		(*in).DeepCopyInto(*out)
-	}
+	in.Gateways.DeepCopyInto(&out.Gateways)
 	if in.MemberPropagationMode != nil {
 		in, out := &in.MemberPropagationMode, &out.MemberPropagationMode
 		*out = new(DeploymentMemberPropagationMode)

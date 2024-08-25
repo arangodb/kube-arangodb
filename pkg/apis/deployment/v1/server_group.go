@@ -135,6 +135,8 @@ func (g ServerGroup) Type() ServerGroupType {
 		return ServerGroupTypeID
 	case ServerGroupSyncMasters, ServerGroupSyncWorkers:
 		return ServerGroupTypeArangoSync
+	case ServerGroupGateways:
+		return ServerGroupTypeGateway
 	default:
 		return ServerGroupTypeUnknown
 	}
