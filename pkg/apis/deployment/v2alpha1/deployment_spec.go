@@ -561,8 +561,10 @@ func (s *DeploymentSpec) Validate() error {
 	if err := s.SyncWorkers.Validate(ServerGroupSyncWorkers, s.Sync.IsEnabled(), s.GetMode(), s.GetEnvironment()); err != nil {
 		return errors.WithStack(err)
 	}
-	if err := s.Gateways.Validate(ServerGroupGateways, s.IsGatewayEnabled(), s.GetMode(), s.GetEnvironment()); err != nil {
-		return errors.WithStack(err)
+	if s.IsGatewayEnabled() {
+		if err := s.Gateways.Validate(ServerGroupGateways, s.IsGatewayEnabled(), s.GetMode(), s.GetEnvironment()); err != nil {
+			return errors.WithStack(err)
+		}
 	}
 	if err := s.Metrics.Validate(); err != nil {
 		return errors.WithStack(errors.Wrap(err, "spec.metrics"))

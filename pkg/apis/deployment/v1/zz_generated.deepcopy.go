@@ -1322,6 +1322,11 @@ func (in *DeploymentStatus) DeepCopyInto(out *DeploymentStatus) {
 		*out = new(ServerGroupStatus)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.Gateways != nil {
+		in, out := &in.Gateways, &out.Gateways
+		*out = new(ServerGroupStatus)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 
