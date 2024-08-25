@@ -46,6 +46,7 @@ func TestServerGroupSpecValidateCount(t *testing.T) {
 	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](2)}.New().WithGroup(ServerGroupCoordinators).New().Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentProduction))
 	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](2)}.New().WithGroup(ServerGroupSyncMasters).New().Validate(ServerGroupSyncMasters, true, DeploymentModeCluster, EnvironmentProduction))
 	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](2)}.New().WithGroup(ServerGroupSyncWorkers).New().Validate(ServerGroupSyncWorkers, true, DeploymentModeCluster, EnvironmentProduction))
+	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](2)}.New().WithGroup(ServerGroupGateways).New().Validate(ServerGroupGateways, true, DeploymentModeCluster, EnvironmentProduction))
 
 	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](2), MinCount: util.NewType[int](2), MaxCount: util.NewType[int](5)}.New().WithGroup(ServerGroupCoordinators).New().Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentDevelopment))
 	assert.Nil(t, ServerGroupSpec{Count: util.NewType[int](1), MaxCount: util.NewType[int](5)}.New().WithGroup(ServerGroupCoordinators).New().Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentDevelopment))
@@ -111,6 +112,10 @@ func TestServerGroupSpecDefault(t *testing.T) {
 	assert.Equal(t, 0, def(ServerGroupSpec{}, ServerGroupSyncWorkers, false, DeploymentModeSingle).New().GetCount())
 	assert.Equal(t, 0, def(ServerGroupSpec{}, ServerGroupSyncWorkers, false, DeploymentModeActiveFailover).New().GetCount())
 	assert.Equal(t, 3, def(ServerGroupSpec{}, ServerGroupSyncWorkers, true, DeploymentModeCluster).New().GetCount())
+
+	assert.Equal(t, 0, def(ServerGroupSpec{}, ServerGroupGateways, false, DeploymentModeSingle).New().GetCount())
+	assert.Equal(t, 0, def(ServerGroupSpec{}, ServerGroupGateways, false, DeploymentModeActiveFailover).New().GetCount())
+	assert.Equal(t, 3, def(ServerGroupSpec{}, ServerGroupGateways, true, DeploymentModeCluster).New().GetCount())
 
 	for _, g := range AllServerGroups {
 		assert.Equal(t, 0, len(def(ServerGroupSpec{}, g, true, DeploymentModeSingle).Args))

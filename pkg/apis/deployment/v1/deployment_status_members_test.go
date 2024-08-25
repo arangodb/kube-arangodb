@@ -34,6 +34,7 @@ func newMemberList() DeploymentStatusMembers {
 		Coordinators: MemberStatusList{{ID: ServerGroupCoordinators.AsRole()}},
 		SyncMasters:  MemberStatusList{{ID: ServerGroupSyncMasters.AsRole()}},
 		SyncWorkers:  MemberStatusList{{ID: ServerGroupSyncWorkers.AsRole()}},
+		Gateways:     MemberStatusList{{ID: ServerGroupGateways.AsRole()}},
 	}
 }
 

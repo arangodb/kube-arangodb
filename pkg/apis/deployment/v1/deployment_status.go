@@ -103,6 +103,7 @@ type DeploymentStatus struct {
 	Coordinators *ServerGroupStatus `json:"coordinators,omitempty"`
 	SyncMasters  *ServerGroupStatus `json:"syncmasters,omitempty"`
 	SyncWorkers  *ServerGroupStatus `json:"syncworkers,omitempty"`
+	Gateways     *ServerGroupStatus `json:"gateways,omitempty"`
 }
 
 // Equal checks for equality
@@ -174,6 +175,8 @@ func (ds DeploymentStatus) getServerGroupStatus(group ServerGroup) *ServerGroupS
 		return ds.SyncMasters.DeepCopy()
 	case ServerGroupSyncWorkers:
 		return ds.SyncWorkers.DeepCopy()
+	case ServerGroupGateways:
+		return ds.Gateways.DeepCopy()
 	default:
 		return nil
 	}
@@ -195,5 +198,7 @@ func (ds *DeploymentStatus) UpdateServerGroupStatus(group ServerGroup, gspec Ser
 		ds.SyncMasters = &gspec
 	case ServerGroupSyncWorkers:
 		ds.SyncWorkers = &gspec
+	case ServerGroupGateways:
+		ds.Gateways = &gspec
 	}
 }
