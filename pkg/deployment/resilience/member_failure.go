@@ -131,7 +131,9 @@ func (r *Resilience) isMemberFailureAcceptable(group api.ServerGroup, m api.Memb
 		return true, ""
 	case api.ServerGroupSyncMasters, api.ServerGroupSyncWorkers:
 		// Sync masters & workers can be replaced at will
-		// todo ServerGroupFromRole here?
+		return true, ""
+	case api.ServerGroupGateways:
+		// Gateways can be replaced at will
 		return true, ""
 	case api.ServerGroupSingle:
 		return false, "ServerGroupSingle can not marked as a failed"

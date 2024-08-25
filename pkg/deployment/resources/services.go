@@ -134,7 +134,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 
 	// Group Services
 	for _, group := range api.AllServerGroups {
-		if !group.Enabled(spec.GetMode()) && !group.IsGateway() {
+		if !group.Enabled(spec.GetMode()) {
 			continue
 		}
 
