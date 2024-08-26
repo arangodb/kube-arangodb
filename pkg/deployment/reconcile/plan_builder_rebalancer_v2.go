@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import (
 	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 )
 
 func (r *Reconciler) createRebalancerV2GeneratePlan(spec api.DeploymentSpec, status api.DeploymentStatus) api.Plan {
@@ -44,7 +45,7 @@ func (r *Reconciler) createRebalancerV2GeneratePlan(spec api.DeploymentSpec, sta
 
 	r.metrics.Rebalancer.SetEnabled(true)
 
-	if !status.Members.AllMembersReady(spec.Mode.Get(), spec.Sync.IsEnabled()) {
+	if !status.Members.AllMembersReady(spec.Mode.Get(), spec.Sync.IsEnabled(), features.Gateway().Enabled() && spec.IsGatewayEnabled()) {
 		return nil
 	}
 

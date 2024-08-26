@@ -25,6 +25,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	sharedReconcile "github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
@@ -68,6 +69,11 @@ func (r *Reconciler) createScaleMemberPlan(ctx context.Context, apiObject k8suti
 			plan = append(plan, r.createScalePlan(status, status.Members.SyncMasters, api.ServerGroupSyncMasters, 0, context)...)
 			plan = append(plan, r.createScalePlan(status, status.Members.SyncWorkers, api.ServerGroupSyncWorkers, 0, context)...)
 		}
+	}
+	if features.Gateway().Enabled() && spec.IsGatewayEnabled() {
+		plan = append(plan, r.createScalePlan(status, status.Members.Gateways, api.ServerGroupGateways, spec.Gateways.GetCount(), context)...)
+	} else {
+		plan = append(plan, r.createScalePlan(status, status.Members.Gateways, api.ServerGroupGateways, 0, context)...)
 	}
 
 	return plan

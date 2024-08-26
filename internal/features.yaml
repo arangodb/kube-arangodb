@@ -257,3 +257,8 @@ features:
     releases:
       - operatorVersion: 1.2.36
         state: Alpha
+  - name: Gateway
+    remarks: Support for ArangoDeployment Gateway Group
+    releases:
+      - operatorVersion: 1.2.43
+        state: Alpha

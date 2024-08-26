@@ -20,12 +20,18 @@
 
 package v2alpha1
 
-type ServerGroupType int
+type DeploymentSpecGateway struct {
+	Enabled *bool `json:"enabled,omitempty"`
+}
 
-const (
-	ServerGroupTypeUnknown ServerGroupType = iota
-	ServerGroupTypeArangoD
-	ServerGroupTypeArangoSync
-	ServerGroupTypeID
-	ServerGroupTypeGateway
-)
+func (d *DeploymentSpecGateway) IsEnabled() bool {
+	if d == nil || d.Enabled == nil {
+		return false
+	}
+
+	return *d.Enabled
+}
+
+func (d *DeploymentSpecGateway) Validate() error {
+	return nil
+}

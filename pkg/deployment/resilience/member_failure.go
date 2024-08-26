@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -131,6 +131,9 @@ func (r *Resilience) isMemberFailureAcceptable(group api.ServerGroup, m api.Memb
 		return true, ""
 	case api.ServerGroupSyncMasters, api.ServerGroupSyncWorkers:
 		// Sync masters & workers can be replaced at will
+		return true, ""
+	case api.ServerGroupGateways:
+		// Gateways can be replaced at will
 		return true, ""
 	case api.ServerGroupSingle:
 		return false, "ServerGroupSingle can not marked as a failed"

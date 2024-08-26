@@ -29,6 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -72,6 +73,12 @@ func (r *Resources) EnsurePDBs(ctx context.Context) error {
 			currSyncWorker = status.Members.SyncWorkers.MembersReady()
 		}
 
+		minGateways, currGateways := 0, 0
+		if features.Gateway().Enabled() && spec.IsGatewayEnabled() {
+			minGateways = spec.GetServerGroupSpec(api.ServerGroupGateways).New().GetCount() - 1
+			currGateways = status.Members.Gateways.MembersReady()
+		}
+
 		// Ensure all PDBs as calculated
 		if err := r.ensurePDBForGroup(ctx, api.ServerGroupAgents, minAgents, currAgents); err != nil {
 			return err
@@ -86,6 +93,9 @@ func (r *Resources) EnsurePDBs(ctx context.Context) error {
 			return err
 		}
 		if err := r.ensurePDBForGroup(ctx, api.ServerGroupSyncWorkers, minSyncWorker, currSyncWorker); err != nil {
+			return err
+		}
+		if err := r.ensurePDBForGroup(ctx, api.ServerGroupGateways, minGateways, currGateways); err != nil {
 			return err
 		}
 	}

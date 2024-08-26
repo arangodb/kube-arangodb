@@ -44,7 +44,7 @@ const (
 	LabelKeyArangoScheduled = "deployment.arangodb.com/scheduled"
 	// LabelKeyArangoTopology is the key of the label used to store the ArangoDeployment topology ID in
 	LabelKeyArangoTopology = "deployment.arangodb.com/topology"
-	// LabelKeyArangoLeader is the key of the label used to store the current leader of a group instances.
+	// LabelKeyArangoLeader is the key of the label used to store the current leader of a group instances. AF only.
 	LabelKeyArangoLeader = "deployment.arangodb.com/leader"
 	// LabelKeyArangoActive is the key of the label used to mark members as active.
 	LabelKeyArangoActive = "deployment.arangodb.com/active"

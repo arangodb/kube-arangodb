@@ -82,6 +82,10 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 	defer metrics.SetDuration(inspectServicesDurationGauges.WithLabelValues(deploymentName), start)
 	counterMetric := inspectedServicesCounters.WithLabelValues(deploymentName)
 
+	if features.Gateway().Enabled() && spec.IsGatewayEnabled() {
+		role = api.ServerGroupGateways.AsRole()
+	}
+
 	// Fetch existing services
 	svcs := cachedStatus.ServicesModInterface().V1()
 	amInspector := cachedStatus.ArangoMember().V1()

@@ -33,6 +33,7 @@ func TestServerGroupAsRole(t *testing.T) {
 	assert.Equal(t, "coordinator", ServerGroupCoordinators.AsRole())
 	assert.Equal(t, "syncmaster", ServerGroupSyncMasters.AsRole())
 	assert.Equal(t, "syncworker", ServerGroupSyncWorkers.AsRole())
+	assert.Equal(t, "gateways", ServerGroupGateways.AsRole())
 }
 
 func TestServerGroupAsRoleAbbreviated(t *testing.T) {
@@ -42,6 +43,7 @@ func TestServerGroupAsRoleAbbreviated(t *testing.T) {
 	assert.Equal(t, "crdn", ServerGroupCoordinators.AsRoleAbbreviated())
 	assert.Equal(t, "syma", ServerGroupSyncMasters.AsRoleAbbreviated())
 	assert.Equal(t, "sywo", ServerGroupSyncWorkers.AsRoleAbbreviated())
+	assert.Equal(t, "gway", ServerGroupGateways.AsRoleAbbreviated())
 }
 
 func TestServerGroupIsArangod(t *testing.T) {
@@ -51,6 +53,7 @@ func TestServerGroupIsArangod(t *testing.T) {
 	assert.True(t, ServerGroupCoordinators.IsArangod())
 	assert.False(t, ServerGroupSyncMasters.IsArangod())
 	assert.False(t, ServerGroupSyncWorkers.IsArangod())
+	assert.False(t, ServerGroupGateways.IsArangod())
 }
 
 func TestServerGroupIsArangosync(t *testing.T) {
@@ -60,6 +63,7 @@ func TestServerGroupIsArangosync(t *testing.T) {
 	assert.False(t, ServerGroupCoordinators.IsArangosync())
 	assert.True(t, ServerGroupSyncMasters.IsArangosync())
 	assert.True(t, ServerGroupSyncWorkers.IsArangosync())
+	assert.False(t, ServerGroupGateways.IsArangosync())
 }
 
 func TestServerGroupType(t *testing.T) {
@@ -71,4 +75,6 @@ func TestServerGroupType(t *testing.T) {
 	assert.Equal(t, ServerGroupTypeArangoD, ServerGroupCoordinators.Type())
 	assert.Equal(t, ServerGroupTypeArangoSync, ServerGroupSyncMasters.Type())
 	assert.Equal(t, ServerGroupTypeArangoSync, ServerGroupSyncWorkers.Type())
+	assert.Equal(t, ServerGroupTypeGateway, ServerGroupGateways.Type())
+
 }

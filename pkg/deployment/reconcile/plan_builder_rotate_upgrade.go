@@ -49,6 +49,7 @@ var (
 		api.ServerGroupDBServers,
 		api.ServerGroupSyncMasters,
 		api.ServerGroupSyncWorkers,
+		api.ServerGroupGateways,
 	}
 )
 

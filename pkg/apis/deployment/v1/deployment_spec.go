@@ -199,6 +199,9 @@ type DeploymentSpec struct {
 	// SyncWorkers contains specification for Syncworker pods running in deployment mode `Cluster`.
 	SyncWorkers ServerGroupSpec `json:"syncworkers"`
 
+	// Gateways contain specification for Gateway pods running in deployment mode `Single` or `Cluster`.
+	Gateways *ServerGroupSpec `json:"gateways,omitempty"`
+
 	// MemberPropagationMode defines how changes to pod spec should be propogated.
 	// Changes to a pod’s configuration require a restart of that pod in almost all cases.
 	// Pods are restarted eagerly by default, which can cause more restarts than desired, especially when updating arangod as well as the operator.
@@ -256,6 +259,9 @@ type DeploymentSpec struct {
 	// Timezone if specified, will set a timezone for deployment.
 	// Must be in format accepted by "tzdata", e.g. `America/New_York` or `Europe/London`
 	Timezone *string `json:"timezone,omitempty"`
+
+	// Gateway defined main Gateway configuration.
+	Gateway *DeploymentSpecGateway `json:"gateway,omitempty"`
 }
 
 // GetAllowMemberRecreation returns member recreation policy based on group and settings
@@ -267,6 +273,8 @@ func (s *DeploymentSpec) GetAllowMemberRecreation(group ServerGroup) bool {
 	groupSpec := s.GetServerGroupSpec(group)
 
 	switch group {
+	case ServerGroupGateways:
+		return true
 	case ServerGroupDBServers, ServerGroupCoordinators, ServerGroupSyncMasters, ServerGroupSyncWorkers:
 		if v := groupSpec.AllowMemberRecreation; v == nil {
 			return true
@@ -326,6 +334,11 @@ func (s DeploymentSpec) GetSyncImage() string {
 	return s.GetImage()
 }
 
+// IsGatewayEnabled returns true when the deployment has gateways enabled.
+func (s DeploymentSpec) IsGatewayEnabled() bool {
+	return s.Gateway.IsEnabled()
+}
+
 // GetImagePullPolicy returns the value of imagePullPolicy.
 func (s DeploymentSpec) GetImagePullPolicy() core.PullPolicy {
 	return util.TypeOrDefault[core.PullPolicy](s.ImagePullPolicy)
@@ -364,8 +377,7 @@ func (s DeploymentSpec) IsSecure() bool {
 	return s.TLS.IsSecure()
 }
 
-// GetServerGroupSpec returns the server group spec (from this
-// deployment spec) for the given group.
+// GetServerGroupSpec returns the server group spec (from this deployment spec) for the given group.
 func (s DeploymentSpec) GetServerGroupSpec(group ServerGroup) ServerGroupSpec {
 	switch group {
 	case ServerGroupSingle:
@@ -380,13 +392,14 @@ func (s DeploymentSpec) GetServerGroupSpec(group ServerGroup) ServerGroupSpec {
 		return s.SyncMasters.WithGroup(group)
 	case ServerGroupSyncWorkers:
 		return s.SyncWorkers.WithGroup(group)
+	case ServerGroupGateways:
+		return s.Gateways.WithGroup(group)
 	default:
 		return ServerGroupSpec{}
 	}
 }
 
-// UpdateServerGroupSpec returns the server group spec (from this
-// deployment spec) for the given group.
+// UpdateServerGroupSpec returns the server group spec (from this deployment spec) for the given group.
 func (s *DeploymentSpec) UpdateServerGroupSpec(group ServerGroup, gspec ServerGroupSpec) {
 	switch group {
 	case ServerGroupSingle:
@@ -401,6 +414,8 @@ func (s *DeploymentSpec) UpdateServerGroupSpec(group ServerGroup, gspec ServerGr
 		s.SyncMasters = gspec
 	case ServerGroupSyncWorkers:
 		s.SyncWorkers = gspec
+	case ServerGroupGateways:
+		s.Gateways = gspec.DeepCopy()
 	}
 }
 
@@ -421,6 +436,11 @@ func (s *DeploymentSpec) SetDefaults(deploymentName string) {
 	if s.GetImagePullPolicy() == "" {
 		s.ImagePullPolicy = util.NewType[core.PullPolicy](core.PullIfNotPresent)
 	}
+	if s.Gateway.IsEnabled() {
+		if s.Gateways == nil {
+			s.Gateways = &ServerGroupSpec{}
+		}
+	}
 	s.ExternalAccess.SetDefaults()
 	s.RocksDB.SetDefaults()
 	s.Authentication.SetDefaults(deploymentName + "-jwt")
@@ -432,6 +452,7 @@ func (s *DeploymentSpec) SetDefaults(deploymentName string) {
 	s.Coordinators.SetDefaults(ServerGroupCoordinators, s.GetMode().HasCoordinators(), s.GetMode())
 	s.SyncMasters.SetDefaults(ServerGroupSyncMasters, s.Sync.IsEnabled(), s.GetMode())
 	s.SyncWorkers.SetDefaults(ServerGroupSyncWorkers, s.Sync.IsEnabled(), s.GetMode())
+	s.Gateways.SetDefaults(ServerGroupGateways, s.IsGatewayEnabled(), s.GetMode())
 	s.Metrics.SetDefaults(deploymentName+"-exporter-jwt-token", s.Authentication.IsAuthenticated())
 	s.Chaos.SetDefaults()
 	s.Bootstrap.SetDefaults(deploymentName)
@@ -480,6 +501,7 @@ func (s *DeploymentSpec) SetDefaultsFrom(source DeploymentSpec) {
 	s.Coordinators.SetDefaultsFrom(source.Coordinators)
 	s.SyncMasters.SetDefaultsFrom(source.SyncMasters)
 	s.SyncWorkers.SetDefaultsFrom(source.SyncWorkers)
+	s.Gateways.SetDefaultsFrom(source.Gateways.Get())
 	s.Metrics.SetDefaultsFrom(source.Metrics)
 	s.Lifecycle.SetDefaultsFrom(source.Lifecycle)
 	s.Chaos.SetDefaultsFrom(source.Chaos)
@@ -539,6 +561,11 @@ func (s *DeploymentSpec) Validate() error {
 	if err := s.SyncWorkers.Validate(ServerGroupSyncWorkers, s.Sync.IsEnabled(), s.GetMode(), s.GetEnvironment()); err != nil {
 		return errors.WithStack(err)
 	}
+	if s.IsGatewayEnabled() {
+		if err := s.Gateways.Validate(ServerGroupGateways, s.IsGatewayEnabled(), s.GetMode(), s.GetEnvironment()); err != nil {
+			return errors.WithStack(err)
+		}
+	}
 	if err := s.Metrics.Validate(); err != nil {
 		return errors.WithStack(errors.Wrap(err, "spec.metrics"))
 	}
@@ -552,6 +579,9 @@ func (s *DeploymentSpec) Validate() error {
 		return errors.WithStack(err)
 	}
 	if err := s.Architecture.Validate(); err != nil {
+		return errors.WithStack(errors.Wrap(err, "spec.architecture"))
+	}
+	if err := s.Gateway.Validate(); err != nil {
 		return errors.WithStack(errors.Wrap(err, "spec.architecture"))
 	}
 	return nil
@@ -613,6 +643,14 @@ func (s DeploymentSpec) ResetImmutableFields(target *DeploymentSpec) []string {
 	}
 	if l := s.SyncWorkers.ResetImmutableFields(ServerGroupSyncWorkers, "syncworkers", &target.SyncWorkers); l != nil {
 		resetFields = append(resetFields, l...)
+	}
+	if s.Gateways != nil {
+		if target.Gateways == nil {
+			target.Gateways = &ServerGroupSpec{}
+		}
+		if l := s.Gateways.ResetImmutableFields(ServerGroupGateways, "gateways", target.Gateways); l != nil {
+			resetFields = append(resetFields, l...)
+		}
 	}
 	if l := s.Metrics.ResetImmutableFields("metrics", &target.Metrics); l != nil {
 		resetFields = append(resetFields, l...)

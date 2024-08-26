@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -73,7 +73,7 @@ func (d *ArangoDeployment) AsOwner() meta.OwnerReference {
 // ForeachServerGroup calls the given callback for all server groups.
 // If the callback returns an error, this error is returned and no other server
 // groups are processed.
-// Groups are processed in this order: agents, single, dbservers, coordinators, syncmasters, syncworkers
+// Groups are processed in this order: agents, single, dbservers, coordinators, syncmasters, syncworkers, gateways
 func (d *ArangoDeployment) ForeachServerGroup(cb ServerGroupFunc, status *DeploymentStatus) error {
 	if status == nil {
 		status = &d.Status
@@ -84,7 +84,7 @@ func (d *ArangoDeployment) ForeachServerGroup(cb ServerGroupFunc, status *Deploy
 // ForeachServerGroupAccepted calls the given callback for all accepted server groups.
 // If the callback returns an error, this error is returned and no other server
 // groups are processed.
-// Groups are processed in this order: agents, single, dbservers, coordinators, syncmasters, syncworkers
+// Groups are processed in this order: agents, single, dbservers, coordinators, syncmasters, syncworkers, gateways
 func (d *ArangoDeployment) ForeachServerGroupAccepted(cb ServerGroupFunc, status *DeploymentStatus) error {
 	if status == nil {
 		status = &d.Status
@@ -113,6 +113,9 @@ func (d *ArangoDeployment) foreachServerGroup(cb ServerGroupFunc, spec Deploymen
 		return errors.WithStack(err)
 	}
 	if err := cb(ServerGroupSyncWorkers, spec.SyncWorkers, &status.Members.SyncWorkers); err != nil {
+		return errors.WithStack(err)
+	}
+	if err := cb(ServerGroupGateways, spec.Gateways.Get(), &status.Members.Gateways); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil

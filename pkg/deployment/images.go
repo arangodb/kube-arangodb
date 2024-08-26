@@ -81,6 +81,11 @@ type ArangoSyncIdentity struct {
 	interfaces.ContainerCreator
 }
 
+// GatewayIdentity helps to resolve the Gateway identity, e.g.: image ID, version of the entrypoint.
+type GatewayIdentity struct {
+	interfaces.ContainerCreator
+}
+
 type imagesBuilder struct {
 	Log            logging.Logger
 	Context        resources.Context

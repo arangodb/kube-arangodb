@@ -210,6 +210,16 @@ func (d *Deployment) renderMember(spec api.DeploymentSpec, status *api.Deploymen
 			Image:        apiObject.Status.CurrentImage,
 			Architecture: &arch,
 		}, nil
+	case api.ServerGroupGateways:
+		d.log.Str("id", id).Debug("Adding gateway")
+		return &api.MemberStatus{
+			ID:           id,
+			UID:          uuid.NewUUID(),
+			CreatedAt:    meta.Now(),
+			Phase:        api.MemberPhaseNone,
+			Image:        apiObject.Status.CurrentImage,
+			Architecture: &arch,
+		}, nil
 	default:
 		return nil, errors.WithStack(errors.Errorf("Unknown server group %d", group))
 	}

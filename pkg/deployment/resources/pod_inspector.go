@@ -33,6 +33,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -530,7 +531,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 	}
 
 	spec := r.context.GetSpec()
-	allMembersReady := status.Members.AllMembersReady(spec.GetMode(), r.context.IsSyncEnabled())
+	allMembersReady := status.Members.AllMembersReady(spec.GetMode(), r.context.IsSyncEnabled(), features.Gateway().Enabled() && spec.IsGatewayEnabled())
 	status.Conditions.Update(api.ConditionTypeReady, allMembersReady, "", "")
 
 	// Update conditions

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,14 +18,20 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v2alpha1
+package features
 
-type ServerGroupType int
+func init() {
+	registerFeature(gateway)
+}
 
-const (
-	ServerGroupTypeUnknown ServerGroupType = iota
-	ServerGroupTypeArangoD
-	ServerGroupTypeArangoSync
-	ServerGroupTypeID
-	ServerGroupTypeGateway
-)
+var gateway = &feature{
+	name:               "gateway",
+	description:        "Defines if gateway extension is enabled",
+	enterpriseRequired: false,
+	enabledByDefault:   false,
+	hidden:             true,
+}
+
+func Gateway() Feature {
+	return gateway
+}
