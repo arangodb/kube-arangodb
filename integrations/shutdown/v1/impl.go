@@ -45,7 +45,7 @@ type impl struct {
 }
 
 func (i *impl) Name() string {
-	return Name
+	return pbShutdownV1.Name
 }
 
 func (i *impl) Health() svc.HealthState {

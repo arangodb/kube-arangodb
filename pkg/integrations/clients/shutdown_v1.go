@@ -18,40 +18,43 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package integrations
+package clients
 
 import (
 	"context"
 
 	"github.com/spf13/cobra"
 
-	pbImplShutdownV1 "github.com/arangodb/kube-arangodb/integrations/shutdown/v1"
+	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	pbShutdownV1 "github.com/arangodb/kube-arangodb/integrations/shutdown/v1/definition"
-	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
-	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
 func init() {
-	registerer.Register(pbShutdownV1.Name, func() Integration {
-		return &shutdownV1{}
+	registerer.MustRegister("shutdown/v1", func(cfg *Config) Client {
+		return &shutdownV1{
+			cfg: cfg,
+		}
 	})
 }
 
 type shutdownV1 struct {
-}
-
-func (s *shutdownV1) Handler(ctx context.Context) (svc.Handler, error) {
-	return pbImplShutdownV1.New(shutdown.Stop), nil
+	cfg *Config
 }
 
 func (s *shutdownV1) Name() string {
-	return pbShutdownV1.Name
+	return "shutdown"
 }
 
-func (s *shutdownV1) Description() string {
-	return "ShutdownV1 Handler"
+func (s *shutdownV1) Version() string {
+	return "v1"
 }
 
-func (s *shutdownV1) Register(cmd *cobra.Command, arg ArgGen) error {
+func (s *shutdownV1) Register(cmd *cobra.Command) error {
+	withCommandRun(cmd, s.cfg, pbShutdownV1.NewShutdownV1Client).
+		Register("shutdown", "Runs the Shutdown GRPC Call", func(ctx context.Context, client pbShutdownV1.ShutdownV1Client) error {
+			_, err := client.Shutdown(ctx, &pbSharedV1.Empty{})
+
+			return err
+		})
 	return nil
 }

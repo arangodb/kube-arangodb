@@ -40,3 +40,17 @@ type Integration interface {
 
 	Handler(ctx context.Context) (svc.Handler, error)
 }
+
+type IntegrationEnablement interface {
+	Integration
+
+	EnabledTypes() (internal, external bool)
+}
+
+func GetIntegrationEnablement(in Integration) (internal, external bool) {
+	if v, ok := in.(IntegrationEnablement); ok {
+		return v.EnabledTypes()
+	}
+
+	return true, false
+}

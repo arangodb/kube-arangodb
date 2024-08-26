@@ -47,6 +47,8 @@ type Health interface {
 }
 
 type HealthService interface {
+	Handler
+
 	Service
 
 	Health

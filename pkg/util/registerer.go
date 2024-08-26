@@ -55,9 +55,6 @@ func (r *registerer[K, V]) Register(key K, value V) bool {
 }
 
 func (r *registerer[K, V]) MustRegister(key K, value V) {
-	r.lock.Lock()
-	defer r.lock.Unlock()
-
 	if !r.Register(key, value) {
 		panic("Unable to register item")
 	}
