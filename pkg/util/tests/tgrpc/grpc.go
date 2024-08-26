@@ -28,33 +28,22 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
 func NewGRPCClient[T any](t *testing.T, ctx context.Context, in func(cc grpc.ClientConnInterface) T, addr string, opts ...grpc.DialOption) T {
-	return in(NewGRPCConn(t, ctx, addr, opts...))
-}
-
-func NewGRPCConn(t *testing.T, ctx context.Context, addr string, opts ...grpc.DialOption) *grpc.ClientConn {
-	var z []grpc.DialOption
-
-	z = append(z, grpc.WithTransportCredentials(insecure.NewCredentials()))
-
-	z = append(z, opts...)
-
-	conn, err := grpc.DialContext(ctx, addr, z...)
+	client, closer, err := util.NewGRPCClient(ctx, in, addr, opts...)
 	require.NoError(t, err)
-
 	go func() {
 		<-ctx.Done()
 
-		require.NoError(t, conn.Close())
+		require.NoError(t, closer.Close())
 	}()
 
-	return conn
+	return client
 }
 
 type ErrorStatusValidator interface {

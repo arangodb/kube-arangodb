@@ -25,9 +25,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-
-	pbImplShutdownV1 "github.com/arangodb/kube-arangodb/integrations/shutdown/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
 func init() {
@@ -41,10 +38,6 @@ func init() {
 		defer stop()
 		<-sigChannel
 	}()
-}
-
-func NewGlobalShutdownServer() svc.Handler {
-	return pbImplShutdownV1.New(stop)
 }
 
 var (

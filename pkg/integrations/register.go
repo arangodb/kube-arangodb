@@ -21,11 +21,17 @@
 package integrations
 
 import (
+	"context"
 	"fmt"
 	"sort"
+	"strings"
+	"sync"
 
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc"
 
+	pbImplShutdownV1 "github.com/arangodb/kube-arangodb/integrations/shutdown/v1"
+	"github.com/arangodb/kube-arangodb/pkg/integrations/clients"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
@@ -40,18 +46,60 @@ func Register(cmd *cobra.Command) error {
 	return c.Register(cmd)
 }
 
+type configurationTest struct {
+	ctx    context.Context
+	cancel context.CancelFunc
+}
+
 type configuration struct {
+	// Only for testing
+	test *configurationTest
+
 	registered []Integration
 
 	health struct {
+		serviceConfiguration
 		shutdownEnabled bool
-
-		config svc.Configuration
 	}
 
 	services struct {
-		config svc.Configuration
+		internal, external serviceConfiguration
 	}
+}
+
+type serviceConfiguration struct {
+	enabled bool
+
+	address string
+
+	auth struct {
+		t string
+
+		token string
+	}
+}
+
+func (s *serviceConfiguration) Config() (svc.Configuration, error) {
+	var opts []grpc.ServerOption
+
+	switch strings.ToLower(s.auth.t) {
+	case "none":
+		break
+	case "token":
+		if s.auth.token == "" {
+			return util.Default[svc.Configuration](), errors.Errorf("Token is empty")
+		}
+
+		opts = append(opts,
+			basicTokenAuthUnaryInterceptor(s.auth.token),
+			basicTokenAuthStreamInterceptor(s.auth.token),
+		)
+	}
+
+	return svc.Configuration{
+		Options: opts,
+		Address: s.address,
+	}, nil
 }
 
 func (c *configuration) Register(cmd *cobra.Command) error {
@@ -67,14 +115,28 @@ func (c *configuration) Register(cmd *cobra.Command) error {
 
 	f := cmd.Flags()
 
-	f.StringVar(&c.health.config.Address, "health.address", "0.0.0.0:9091", "Address to expose health service")
+	f.StringVar(&c.health.address, "health.address", "0.0.0.0:9091", "Address to expose health service")
 	f.BoolVar(&c.health.shutdownEnabled, "health.shutdown.enabled", true, "Determines if shutdown service should be enabled and exposed")
-	f.StringVar(&c.services.config.Address, "services.address", "127.0.0.1:9092", "Address to expose services")
+	f.StringVar(&c.health.auth.t, "health.auth.type", "None", "Auth type for health service")
+	f.StringVar(&c.health.auth.token, "health.auth.token", "", "Token for health service (when auth service is token)")
+
+	f.BoolVar(&c.services.internal.enabled, "services.enabled", true, "Defines if internal access is enabled")
+	f.StringVar(&c.services.internal.address, "services.address", "127.0.0.1:9092", "Address to expose internal services")
+	f.StringVar(&c.services.internal.auth.t, "services.auth.type", "None", "Auth type for internal service")
+	f.StringVar(&c.services.internal.auth.token, "services.auth.token", "", "Token for internal service (when auth service is token)")
+
+	f.BoolVar(&c.services.external.enabled, "services.external.enabled", false, "Defines if external access is enabled")
+	f.StringVar(&c.services.external.address, "services.external.address", "0.0.0.0:9093", "Address to expose external services")
+	f.StringVar(&c.services.external.auth.t, "services.external.auth.type", "None", "Auth type for external service")
+	f.StringVar(&c.services.external.auth.token, "services.external.auth.token", "", "Token for external service (when auth service is token)")
 
 	for _, service := range c.registered {
 		prefix := fmt.Sprintf("integration.%s", service.Name())
 
 		f.Bool(prefix, false, service.Description())
+		internal, external := GetIntegrationEnablement(service)
+		f.Bool(fmt.Sprintf("%s.internal", prefix), internal, fmt.Sprintf("Defones if Internal access to service %s is enabled", service.Name()))
+		f.Bool(fmt.Sprintf("%s.external", prefix), external, fmt.Sprintf("Defones if External access to service %s is enabled", service.Name()))
 
 		if err := service.Register(cmd, func(name string) string {
 			return fmt.Sprintf("%s.%s", prefix, name)
@@ -83,22 +145,65 @@ func (c *configuration) Register(cmd *cobra.Command) error {
 		}
 	}
 
-	return nil
+	return clients.Register(cmd)
 }
 
 func (c *configuration) run(cmd *cobra.Command, args []string) error {
-	handlers := make([]svc.Handler, 0, len(c.registered))
+	if t := c.test; t == nil {
+		return c.runWithContext(shutdown.Context(), shutdown.Stop, cmd)
+	} else {
+		return c.runWithContext(t.ctx, t.cancel, cmd)
+	}
+}
+
+func (c *configuration) runWithContext(ctx context.Context, cancel context.CancelFunc, cmd *cobra.Command) error {
+	healthConfig, err := c.health.Config()
+	if err != nil {
+		return errors.Wrapf(err, "Unable to parse health config")
+	}
+	internalConfig, err := c.services.internal.Config()
+	if err != nil {
+		return errors.Wrapf(err, "Unable to parse internal config")
+	}
+	externalConfig, err := c.services.external.Config()
+	if err != nil {
+		return errors.Wrapf(err, "Unable to parse external config")
+	}
+
+	var internalHandlers, externalHandlers []svc.Handler
 
 	for _, handler := range c.registered {
 		if ok, err := cmd.Flags().GetBool(fmt.Sprintf("integration.%s", handler.Name())); err != nil {
 			return err
 		} else {
-			logger.Str("service", handler.Name()).Bool("enabled", ok).Info("Service discovered")
-			if ok {
-				if svc, err := handler.Handler(shutdown.Context()); err != nil {
+			internalEnabled, err := cmd.Flags().GetBool(fmt.Sprintf("integration.%s.internal", handler.Name()))
+			if err != nil {
+				return err
+			}
+
+			externalEnabled, err := cmd.Flags().GetBool(fmt.Sprintf("integration.%s.external", handler.Name()))
+			if err != nil {
+				return err
+			}
+
+			logger.
+				Str("service", handler.Name()).
+				Bool("enabled", ok).
+				Bool("internal", internalEnabled).
+				Bool("external", externalEnabled).
+				Info("Service discovered")
+
+			if ok && (internalEnabled || externalEnabled) {
+				if svc, err := handler.Handler(ctx); err != nil {
 					return err
 				} else {
-					handlers = append(handlers, svc)
+					if internalEnabled {
+						internalHandlers = append(internalHandlers, svc)
+					}
+
+					if externalEnabled {
+						externalHandlers = append(externalHandlers, svc)
+					}
 				}
 			}
 		}
@@ -107,18 +212,57 @@ func (c *configuration) run(cmd *cobra.Command, args []string) error {
 	var healthServices []svc.Handler
 
 	if c.health.shutdownEnabled {
-		healthServices = append(healthServices, shutdown.NewGlobalShutdownServer())
+		healthServices = append(healthServices, pbImplShutdownV1.New(cancel))
 	}
 
-	health := svc.NewHealthService(c.health.config, svc.Readiness, healthServices...)
+	health := svc.NewHealthService(healthConfig, svc.Readiness, healthServices...)
 
-	healthHandler := health.Start(shutdown.Context())
+	internalHandlers = append(internalHandlers, health)
+	externalHandlers = append(externalHandlers, health)
+
+	healthHandler := health.Start(ctx)
 
 	logger.Str("address", healthHandler.Address()).Info("Health handler started")
 
-	s := svc.NewService(c.services.config, handlers...).StartWithHealth(shutdown.Context(), health)
+	var wg sync.WaitGroup
 
-	logger.Str("address", s.Address()).Info("Service handler started")
+	var internal, external error
 
-	return s.Wait()
+	if c.services.internal.enabled {
+		wg.Add(1)
+
+		go func() {
+			defer wg.Done()
+			s := svc.NewService(internalConfig, internalHandlers...).StartWithHealth(ctx, health)
+
+			logger.Str("address", s.Address()).Str("type", "internal").Info("Service handler started")
+
+			internal = s.Wait()
+
+			if internal != nil {
+				logger.Err(internal).Str("address", s.Address()).Str("type", "internal").Error("Service handler failed")
+			}
+		}()
+	}
+
+	if c.services.external.enabled {
+		wg.Add(1)
+
+		go func() {
+			defer wg.Done()
+			s := svc.NewService(externalConfig, externalHandlers...).StartWithHealth(ctx, health)
+
+			logger.Str("address", s.Address()).Str("type", "external").Info("Service handler started")
+
+			external = s.Wait()
+
+			if external != nil {
+				logger.Err(external).Str("address", s.Address()).Str("type", "external").Error("Service handler failed")
+			}
+		}()
+	}
+
+	wg.Wait()
+
+	return errors.Errors(internal, external)
 }
