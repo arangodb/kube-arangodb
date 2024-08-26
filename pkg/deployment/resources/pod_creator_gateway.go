@@ -39,11 +39,12 @@ import (
 )
 
 const (
-	ArangoGatewayExecutor string = "/usr/local/bin/envoy"
-	GatewayVolumeMountDir        = "/etc/gateway/"
-	GatewayVolumeName            = "gateway"
-	GatewayConfigFileName        = "gateway.yaml"
-	GatewayConfigFilePath        = GatewayVolumeMountDir + GatewayConfigFileName
+	ArangoGatewayExecutor     string = "/usr/local/bin/envoy"
+	GatewayVolumeMountDir            = "/etc/gateway/"
+	GatewayVolumeName                = "gateway"
+	GatewayConfigFileName            = "gateway.yaml"
+	GatewayConfigChecksumName        = "gateway.yaml-checksum"
+	GatewayConfigFilePath            = GatewayVolumeMountDir + GatewayConfigFileName
 )
 
 type ArangoGatewayContainer struct {

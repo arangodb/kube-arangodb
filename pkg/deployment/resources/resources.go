@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -56,6 +56,7 @@ func (r *Resources) EnsureCoreResources(ctx context.Context, cachedStatus inspec
 	return errors.Errors(errors.Section(r.EnsureLeader(ctx, cachedStatus), "EnsureLeader"),
 		errors.Section(r.EnsureArangoMembers(ctx, cachedStatus), "EnsureArangoMembers"),
 		errors.Section(r.EnsureServices(ctx, cachedStatus), "EnsureServices"),
+		errors.Section(r.EnsureConfigMaps(ctx, cachedStatus), "EnsureConfigMaps"),
 		errors.Section(r.EnsureSecrets(ctx, cachedStatus), "EnsureSecrets"))
 }
 
