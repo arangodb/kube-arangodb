@@ -26,6 +26,33 @@ import (
 	"sort"
 )
 
+type KV[K comparable, V any] struct {
+	K K
+	V V
+}
+
+func Extract[K comparable, V any](in map[K]V) []KV[K, V] {
+	r := make([]KV[K, V], 0, len(in))
+
+	for k, v := range in {
+		r = append(r, KV[K, V]{
+			K: k,
+			V: v,
+		})
+	}
+
+	return r
+}
+
+func Sort[IN any](in []IN, cmp func(i, j IN) bool) []IN {
+	r := make([]IN, len(in))
+	copy(r, in)
+	sort.Slice(r, func(i, j int) bool {
+		return cmp(r[i], r[j])
+	})
+	return r
+}
+
 func SortKeys(m interface{}) []string {
 	if m == nil {
 		return []string{}
