@@ -130,6 +130,23 @@ func Split(s, sep string) []string {
 	return strings.Split(s, sep)
 }
 
+// SplitN slices s into substrings separated by sep and returns a slice of
+// the substrings between those separators.
+//
+// The count determines the number of substrings to return:
+//
+//	n > 0: at most n substrings; the last substring will be the unsplit remainder.
+//	n == 0: the result is nil (zero substrings)
+//	n < 0: all substrings
+//
+// Edge cases for s and sep (for example, empty strings) are handled
+// as described in the documentation for [Split].
+//
+// To split around the first instance of a separator, see Cut.
+func SplitN(s, sep string, n int) []string {
+	return strings.SplitN(s, sep, n)
+}
+
 // ToLower returns s with all Unicode letters mapped to their lower case.
 func ToLower(s string) string {
 	return strings.ToLower(s)

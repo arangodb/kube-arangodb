@@ -30,7 +30,7 @@ import (
 )
 
 func init() {
-	register(func() Integration {
+	registerer.Register(pbImplEnvoyAuthV3.Name, func() Integration {
 		return &envoyAuthV3{}
 	})
 }

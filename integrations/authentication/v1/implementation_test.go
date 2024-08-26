@@ -40,10 +40,11 @@ func Test_Basic(t *testing.T) {
 	ctx, c := context.WithCancel(context.Background())
 	defer c()
 
-	s, err := newInternal(ctx, Configuration{
-		Path: directory,
-		TTL:  time.Duration(0),
-	})
+	s, err := newInternal(ctx, NewConfiguration().With(func(c Configuration) Configuration {
+		c.Path = directory
+		c.TTL = 0
+		return c
+	}))
 	require.NoError(t, err)
 
 	// Create token
