@@ -26,7 +26,6 @@ import (
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/cache"
-	"runtime/debug"
 
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 )
