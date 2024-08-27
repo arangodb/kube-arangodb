@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,12 +24,13 @@ import (
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/cache"
+	"runtime/debug"
 
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 )
 
 var (
-	informerLogger = logging.Global().Get("kubernetes-informer")
+	informerLogger = logging.Global().RegisterAndGetLogger("kubernetes-informer", logging.Info)
 )
 
 // ResourceWatcher is a helper to watch for events in a specific type
@@ -52,7 +53,7 @@ func NewResourceWatcher(getter cache.Getter, resource, namespace string,
 		AddFunc: func(obj interface{}) {
 			defer func() {
 				if err := recover(); err != nil {
-					informerLogger.Interface("error", err).Error("Recovered from panic")
+					informerLogger.Interface("error", err).Error("Recovered from panic. Stack trace:", string(debug.Stack()))
 				}
 			}()
 			if h.AddFunc != nil {
@@ -62,7 +63,7 @@ func NewResourceWatcher(getter cache.Getter, resource, namespace string,
 		UpdateFunc: func(oldObj, newObj interface{}) {
 			defer func() {
 				if err := recover(); err != nil {
-					informerLogger.Interface("error", err).Error("Recovered from panic")
+					informerLogger.Interface("error", err).Error("Recovered from panic. Stack trace:", string(debug.Stack()))
 				}
 			}()
 			if h.UpdateFunc != nil {
@@ -72,7 +73,7 @@ func NewResourceWatcher(getter cache.Getter, resource, namespace string,
 		DeleteFunc: func(obj interface{}) {
 			defer func() {
 				if err := recover(); err != nil {
-					informerLogger.Interface("error", err).Error("Recovered from panic")
+					informerLogger.Interface("error", err).Error("Recovered from panic. Stack trace:", string(debug.Stack()))
 				}
 			}()
 			if h.DeleteFunc != nil {
