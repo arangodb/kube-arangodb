@@ -20,8 +20,11 @@
 
 package v2alpha1
 
+import "github.com/arangodb/kube-arangodb/pkg/util"
+
 type DeploymentSpecGateway struct {
-	Enabled *bool `json:"enabled,omitempty"`
+	Enabled *bool   `json:"enabled,omitempty"`
+	Image   *string `json:"image"`
 }
 
 func (d *DeploymentSpecGateway) IsEnabled() bool {
@@ -34,4 +37,8 @@ func (d *DeploymentSpecGateway) IsEnabled() bool {
 
 func (d *DeploymentSpecGateway) Validate() error {
 	return nil
+}
+
+func (d *DeploymentSpecGateway) GetImage() string {
+	return util.TypeOrDefault[string](d.Image)
 }
