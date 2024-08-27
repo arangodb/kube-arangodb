@@ -103,6 +103,10 @@ linters-settings:
         alias: pbConfigV1
       - pkg: github.com/arangodb/kube-arangodb/integrations/config/v1
         alias: pbImplConfigV1
+      - pkg: github.com/arangodb/kube-arangodb/integrations/pong/v1/definition
+        alias: pbPongV1
+      - pkg: github.com/arangodb/kube-arangodb/integrations/pong/v1
+        alias: pbImplPongV1
       - pkg: github.com/arangodb/kube-arangodb/integrations/shared/v1/definition
         alias: pbSharedV1
       - pkg: github.com/arangodb/kube-arangodb/integrations/shared/v1

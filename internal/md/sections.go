@@ -81,16 +81,10 @@ func ReplaceSection(in, replace, section string) (string, error) {
 			return "", errors.Errorf("END_INJECT sections is missing for section %s. Note that newline is required at the end and before tag", section)
 		}
 
-		if strings.HasSuffix(replace, "\n\n") {
-			// if section ends with empty line, we don't need to write newline for END marker
-			end = strings.TrimLeft(end, "\n")
-		} else {
-			end = "\n" + end
-		}
+		in = moveString(in, endID+len(end))
 
 		b.WriteString(end)
 
-		in = moveString(in, endID+len(end))
 	}
 
 	return b.String(), nil

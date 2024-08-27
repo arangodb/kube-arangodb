@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,4 +31,22 @@ func Test_GenerateReadme(t *testing.T) {
 	root := os.Getenv("ROOT")
 
 	require.NoError(t, GenerateReadme(root))
+}
+
+func Test_GenerateCli_ArangoDBOperator(t *testing.T) {
+	root := os.Getenv("ROOT")
+
+	require.NoError(t, GenerateCLIArangoDBOperatorReadme(root))
+}
+
+func Test_GenerateCli_ArangoDBOperatorOps(t *testing.T) {
+	root := os.Getenv("ROOT")
+
+	require.NoError(t, GenerateCLIArangoDBOperatorOpsReadme(root))
+}
+
+func Test_GenerateCli_ArangoDBOperatorIntegration(t *testing.T) {
+	root := os.Getenv("ROOT")
+
+	require.NoError(t, GenerateCLIArangoDBOperatorIntegrationReadme(root))
 }
