@@ -123,6 +123,14 @@ func (h *handler) refreshDeployment(deployment *database.ArangoDeployment) error
 		return err
 	}
 
+	for _, backup := range backups.Items {
+		switch backup.GetStatus().ArangoBackupState.State {
+		case backupApi.ArangoBackupStateCreate, backupApi.ArangoBackupStateCreating:
+			// Skip refreshing backups if they are in creation state
+			return nil
+		}
+	}
+
 	existingBackups, err := client.List()
 	if err != nil {
 		return err
