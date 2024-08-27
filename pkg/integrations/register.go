@@ -28,7 +28,6 @@ import (
 	"sync"
 
 	"github.com/spf13/cobra"
-	"google.golang.org/grpc"
 
 	pbImplPongV1 "github.com/arangodb/kube-arangodb/integrations/pong/v1"
 	pbImplShutdownV1 "github.com/arangodb/kube-arangodb/integrations/shutdown/v1"
@@ -73,6 +72,10 @@ type serviceConfiguration struct {
 
 	address string
 
+	tls struct {
+		keyfile string
+	}
+
 	auth struct {
 		t string
 
@@ -81,7 +84,9 @@ type serviceConfiguration struct {
 }
 
 func (s *serviceConfiguration) Config() (svc.Configuration, error) {
-	var opts []grpc.ServerOption
+	var cfg svc.Configuration
+
+	cfg.Address = s.address
 
 	switch strings.ToLower(s.auth.t) {
 	case "none":
@@ -91,16 +96,21 @@ func (s *serviceConfiguration) Config() (svc.Configuration, error) {
 			return util.Default[svc.Configuration](), errors.Errorf("Token is empty")
 		}
 
-		opts = append(opts,
+		cfg.Options = append(cfg.Options,
 			basicTokenAuthUnaryInterceptor(s.auth.token),
 			basicTokenAuthStreamInterceptor(s.auth.token),
 		)
 	}
 
-	return svc.Configuration{
-		Options: opts,
-		Address: s.address,
-	}, nil
+	if keyfile := s.tls.keyfile; keyfile != "" {
+		if tls, err := tlsServerOptions(keyfile); err != nil {
+			return svc.Configuration{}, err
+		} else {
+			cfg.TLSOptions = tls
+		}
+	}
+
+	return cfg, nil
 }
 
 func (c *configuration) Register(cmd *cobra.Command) error {
@@ -120,16 +130,19 @@ func (c *configuration) Register(cmd *cobra.Command) error {
 	f.BoolVar(&c.health.shutdownEnabled, "health.shutdown.enabled", true, "Determines if shutdown service should be enabled and exposed")
 	f.StringVar(&c.health.auth.t, "health.auth.type", "None", "Auth type for health service")
 	f.StringVar(&c.health.auth.token, "health.auth.token", "", "Token for health service (when auth service is token)")
+	f.StringVar(&c.health.tls.keyfile, "health.tls.keyfile", "", "Path to the keyfile")
 
 	f.BoolVar(&c.services.internal.enabled, "services.enabled", true, "Defines if internal access is enabled")
 	f.StringVar(&c.services.internal.address, "services.address", "127.0.0.1:9092", "Address to expose internal services")
 	f.StringVar(&c.services.internal.auth.t, "services.auth.type", "None", "Auth type for internal service")
 	f.StringVar(&c.services.internal.auth.token, "services.auth.token", "", "Token for internal service (when auth service is token)")
+	f.StringVar(&c.services.internal.tls.keyfile, "services.tls.keyfile", "", "Path to the keyfile")
 
 	f.BoolVar(&c.services.external.enabled, "services.external.enabled", false, "Defines if external access is enabled")
 	f.StringVar(&c.services.external.address, "services.external.address", "0.0.0.0:9093", "Address to expose external services")
 	f.StringVar(&c.services.external.auth.t, "services.external.auth.type", "None", "Auth type for external service")
 	f.StringVar(&c.services.external.auth.token, "services.external.auth.token", "", "Token for external service (when auth service is token)")
+	f.StringVar(&c.services.external.tls.keyfile, "services.external.tls.keyfile", "", "Path to the keyfile")
 
 	for _, service := range c.registered {
 		prefix := fmt.Sprintf("integration.%s", service.Name())
@@ -227,7 +240,7 @@ func (c *configuration) runWithContext(ctx context.Context, cancel context.Cance
 
 	healthHandler := health.Start(ctx)
 
-	logger.Str("address", healthHandler.Address()).Info("Health handler started")
+	logger.Str("address", healthHandler.Address()).Bool("ssl", healthConfig.TLSOptions != nil).Info("Health handler started")
 
 	var wg sync.WaitGroup
 
@@ -240,7 +253,7 @@ func (c *configuration) runWithContext(ctx context.Context, cancel context.Cance
 			defer wg.Done()
 			s := svc.NewService(internalConfig, internalHandlers...).StartWithHealth(ctx, health)
 
-			logger.Str("address", s.Address()).Str("type", "internal").Info("Service handler started")
+			logger.Str("address", s.Address()).Str("type", "internal").Bool("ssl", internalConfig.TLSOptions != nil).Info("Service handler started")
 
 			internal = s.Wait()
 
@@ -257,7 +270,7 @@ func (c *configuration) runWithContext(ctx context.Context, cancel context.Cance
 			defer wg.Done()
 			s := svc.NewService(externalConfig, externalHandlers...).StartWithHealth(ctx, health)
 
-			logger.Str("address", s.Address()).Str("type", "external").Info("Service handler started")
+			logger.Str("address", s.Address()).Str("type", "external").Bool("ssl", externalConfig.TLSOptions != nil).Info("Service handler started")
 
 			external = s.Wait()
 

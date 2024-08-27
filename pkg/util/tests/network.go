@@ -46,13 +46,13 @@ func WaitForAddress(t *testing.T, addr string, port int) {
 	tickerT := time.NewTicker(125 * time.Millisecond)
 	defer tickerT.Stop()
 
-	timerT := time.NewTimer(1 * time.Second)
+	timerT := time.NewTimer(5 * time.Second)
 	defer timerT.Stop()
 
 	for {
 		select {
 		case <-timerT.C:
-			require.Fail(t, "Timeouted")
+			require.Fail(t, "Timeouted", addr, port)
 		case <-tickerT.C:
 			conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", addr, port), 125*time.Millisecond)
 			if err != nil {

@@ -18,34 +18,22 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package svc
+package integrations
 
 import (
 	"crypto/tls"
 
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
+	"github.com/arangodb-helper/go-certificates"
 )
 
-type Configuration struct {
-	Address string
-
-	TLSOptions *tls.Config
-
-	Options []grpc.ServerOption
-}
-
-func (c *Configuration) RenderOptions() []grpc.ServerOption {
-	if c == nil {
-		return nil
+func tlsServerOptions(keyfile string) (*tls.Config, error) {
+	cert, err := certificates.LoadKeyFile(keyfile)
+	if err != nil {
+		return nil, err
 	}
 
-	ret := make([]grpc.ServerOption, len(c.Options))
-	copy(ret, c.Options)
-
-	if tls := c.TLSOptions; tls != nil {
-		ret = append(ret, grpc.Creds(credentials.NewTLS(tls)))
-	}
-
-	return ret
+	return &tls.Config{
+		Certificates: []tls.Certificate{cert},
+		ClientAuth:   tls.NoClientCert,
+	}, nil
 }

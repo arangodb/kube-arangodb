@@ -29,7 +29,6 @@ import (
 
 	pbPongV1 "github.com/arangodb/kube-arangodb/integrations/pong/v1/definition"
 	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
-	pbShutdownV1 "github.com/arangodb/kube-arangodb/integrations/shutdown/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
@@ -45,7 +44,7 @@ type impl struct {
 }
 
 func (i *impl) Name() string {
-	return pbShutdownV1.Name
+	return pbPongV1.Name
 }
 
 func (i *impl) Health() svc.HealthState {

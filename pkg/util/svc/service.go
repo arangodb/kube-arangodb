@@ -56,7 +56,7 @@ func newService(cfg Configuration, handlers ...Handler) *service {
 	var q service
 
 	q.cfg = cfg
-	q.server = grpc.NewServer(cfg.Options...)
+	q.server = grpc.NewServer(cfg.RenderOptions()...)
 	q.handlers = handlers
 
 	for _, handler := range q.handlers {

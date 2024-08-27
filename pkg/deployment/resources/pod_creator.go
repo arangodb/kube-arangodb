@@ -51,7 +51,7 @@ import (
 	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
+	ktls "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tolerations"
 )
 
@@ -549,7 +549,7 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 			// Create TLS secret
 			tlsKeyfileSecretName := k8sutil.CreateTLSKeyfileSecretName(apiObject.GetName(), role, m.ID)
 
-			names, err := tls.GetSyncAltNames(apiObject, spec, spec.Sync.TLS, group, m)
+			names, err := ktls.GetSyncAltNames(apiObject, spec, spec.Sync.TLS, group, m)
 			if err != nil {
 				return errors.WithStack(errors.Wrapf(err, "Failed to render alt names"))
 			}

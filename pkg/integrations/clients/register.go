@@ -33,6 +33,10 @@ type Factory func(c *Config) Client
 type Config struct {
 	Address string
 	Token   string
+	TLS     struct {
+		Enabled, Insecure, Fallback bool
+		CA                          string
+	}
 }
 
 func (c *Config) Register(cmd *cobra.Command) error {
@@ -40,6 +44,10 @@ func (c *Config) Register(cmd *cobra.Command) error {
 
 	f.StringVar(&c.Address, "address", "127.0.0.1:8080", "GRPC Service Address")
 	f.StringVar(&c.Token, "token", "", "GRPC Token")
+	f.BoolVar(&c.TLS.Enabled, "tls.enabled", false, "Defines if GRPC is protected with TLS")
+	f.StringVar(&c.TLS.CA, "tls.ca", "", "Path to the custom CA")
+	f.BoolVar(&c.TLS.Insecure, "tls.insecure", false, "Enables Insecure TLS Connection")
+	f.BoolVar(&c.TLS.Fallback, "tls.fallback", false, "Enables TLS Fallback")
 
 	return nil
 }

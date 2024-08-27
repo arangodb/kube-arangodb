@@ -23,27 +23,19 @@ package resources
 import (
 	"context"
 	"fmt"
-	"strings"
-	"time"
 
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	certificates "github.com/arangodb-helper/go-certificates"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	secretv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
-)
-
-const (
-	caTTL         = time.Hour * 24 * 365 * 10 // 10 year
-	tlsECDSACurve = "P256"                    // This curve is the default that ArangoDB accepts and plenty strong
+	ktls "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
 )
 
 // createTLSCACertificate creates a CA certificate and stores it in a secret with name
@@ -52,18 +44,12 @@ func (r *Resources) createTLSCACertificate(ctx context.Context, secrets secretv1
 	deploymentName string, ownerRef *meta.OwnerReference) error {
 	log := r.log.Str("section", "tls").Str("secret", spec.GetCASecretName())
 
-	options := certificates.CreateCertificateOptions{
-		CommonName: fmt.Sprintf("%s Root Certificate", deploymentName),
-		ValidFrom:  time.Now(),
-		ValidFor:   caTTL,
-		IsCA:       true,
-		ECDSACurve: tlsECDSACurve,
-	}
-	cert, priv, err := certificates.CreateCertificate(options, nil)
+	cert, priv, err := ktls.CreateTLSCACertificate(fmt.Sprintf("%s Root Certificate", deploymentName))
 	if err != nil {
 		log.Err(err).Debug("Failed to create CA certificate")
 		return errors.WithStack(err)
 	}
+
 	if err := k8sutil.CreateCASecret(ctx, secrets, spec.GetCASecretName(), cert, priv, ownerRef); err != nil {
 		if kerrors.IsAlreadyExists(err) {
 			log.Debug("CA Secret already exists")
@@ -78,9 +64,13 @@ func (r *Resources) createTLSCACertificate(ctx context.Context, secrets secretv1
 
 // createTLSServerCertificate creates a TLS certificate for a specific server and stores
 // it in a secret with the given name.
-func createTLSServerCertificate(ctx context.Context, log logging.Logger, cachedStatus inspectorInterface.Inspector, secrets secretv1.ModInterface, names tls.KeyfileInput, spec api.TLSSpec,
+func createTLSServerCertificate(ctx context.Context, log logging.Logger, cachedStatus inspectorInterface.Inspector, secrets secretv1.ModInterface, names ktls.KeyfileInput, spec api.TLSSpec,
 	secretName string, ownerRef *meta.OwnerReference) (bool, error) {
 	log = log.Str("secret", secretName)
+	// Setup defaults
+	if names.TTL == nil {
+		names.TTL = util.NewType(spec.GetTTL().AsDuration())
+	}
 	// Load CA certificate
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
@@ -89,28 +79,11 @@ func createTLSServerCertificate(ctx context.Context, log logging.Logger, cachedS
 		log.Err(err).Debug("Failed to load CA certificate")
 		return false, errors.WithStack(err)
 	}
-	ca, err := certificates.LoadCAFromPEM(caCert, caKey)
-	if err != nil {
-		log.Err(err).Debug("Failed to decode CA certificate")
-		return false, errors.WithStack(err)
-	}
-
-	options := certificates.CreateCertificateOptions{
-		CommonName:     names.AltNames[0],
-		Hosts:          names.AltNames,
-		EmailAddresses: names.Email,
-		ValidFrom:      time.Now(),
-		ValidFor:       spec.GetTTL().AsDuration(),
-		IsCA:           false,
-		ECDSACurve:     tlsECDSACurve,
-	}
-	cert, priv, err := certificates.CreateCertificate(options, &ca)
+	keyfile, err := ktls.CreateTLSServerKeyfile(caCert, caKey, names)
 	if err != nil {
 		log.Err(err).Debug("Failed to create server certificate")
 		return false, errors.WithStack(err)
 	}
-	keyfile := strings.TrimSpace(cert) + "\n" +
-		strings.TrimSpace(priv)
 
 	err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		_, err := k8sutil.CreateTLSKeyfileSecret(ctxChild, secrets, secretName, keyfile, ownerRef)
