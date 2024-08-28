@@ -3045,7 +3045,21 @@ Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.
 
 ### .spec.gateway.enabled
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/deployment/v1/deployment_spec_gateway.go#L24)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/deployment/v1/deployment_spec_gateway.go#L29)</sup>
+
+Enabled setting enables/disables support for gateway in the cluster.
+When enabled, the cluster will contain a number of `gateway` servers.
+
+Default Value: `false`
+
+***
+
+### .spec.gateway.image
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/deployment/v1/deployment_spec_gateway.go#L33)</sup>
+
+Image is the image to use for the gateway.
+By default, the image is determined by the operator.
 
 ***
 

@@ -390,6 +390,9 @@ func (r *Resources) RenderPodForMember(ctx context.Context, acs sutil.ACS, spec 
 		}
 	case api.ServerGroupTypeGateway:
 		imageInfo.Image = r.context.GetOperatorImage()
+		if spec.Gateway.GetImage() != "" {
+			imageInfo.Image = spec.Gateway.GetImage()
+		}
 
 		podCreator = &MemberGatewayPod{
 			podName:      podName,

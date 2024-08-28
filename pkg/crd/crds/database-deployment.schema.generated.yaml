@@ -6568,7 +6568,15 @@ v1:
             description: Gateway defined main Gateway configuration.
             properties:
               enabled:
+                description: |-
+                  Enabled setting enables/disables support for gateway in the cluster.
+                  When enabled, the cluster will contain a number of `gateway` servers.
                 type: boolean
+              image:
+                description: |-
+                  Image is the image to use for the gateway.
+                  By default, the image is determined by the operator.
+                type: string
             type: object
           gateways:
             description: Gateways contain specification for Gateway pods running in deployment mode `Single` or `Cluster`.
@@ -22587,7 +22595,15 @@ v1alpha:
             description: Gateway defined main Gateway configuration.
             properties:
               enabled:
+                description: |-
+                  Enabled setting enables/disables support for gateway in the cluster.
+                  When enabled, the cluster will contain a number of `gateway` servers.
                 type: boolean
+              image:
+                description: |-
+                  Image is the image to use for the gateway.
+                  By default, the image is determined by the operator.
+                type: string
             type: object
           gateways:
             description: Gateways contain specification for Gateway pods running in deployment mode `Single` or `Cluster`.
@@ -38607,6 +38623,8 @@ v2alpha1:
             properties:
               enabled:
                 type: boolean
+              image:
+                type: string
             type: object
           gateways:
             description: Gateways contain specification for Gateway pods running in deployment mode `Single` or `Cluster`.
