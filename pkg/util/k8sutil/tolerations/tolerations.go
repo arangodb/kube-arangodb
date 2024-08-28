@@ -24,8 +24,6 @@ import (
 	"time"
 
 	core "k8s.io/api/core/v1"
-
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
 
 const (
@@ -104,42 +102,4 @@ func AddTolerationIfNotFound(source []core.Toleration, toAdd core.Toleration) []
 	}
 
 	return append(source, toAdd)
-}
-
-// CreatePodTolerations creates a list of tolerations for a pod created for the given group.
-func CreatePodTolerations(mode api.DeploymentMode, group api.ServerGroup) []core.Toleration {
-	notReadyDur := TolerationDuration{Forever: false, TimeSpan: time.Minute}
-	unreachableDur := TolerationDuration{Forever: false, TimeSpan: time.Minute}
-	switch group {
-	case api.ServerGroupAgents:
-		notReadyDur.Forever = true
-		unreachableDur.Forever = true
-	case api.ServerGroupCoordinators:
-		notReadyDur.TimeSpan = 15 * time.Second
-		unreachableDur.TimeSpan = 15 * time.Second
-	case api.ServerGroupDBServers:
-		notReadyDur.TimeSpan = 5 * time.Minute
-		unreachableDur.TimeSpan = 5 * time.Minute
-	case api.ServerGroupSingle:
-		if mode == api.DeploymentModeSingle {
-			notReadyDur.Forever = true
-			unreachableDur.Forever = true
-		} else {
-			notReadyDur.TimeSpan = 5 * time.Minute
-			unreachableDur.TimeSpan = 5 * time.Minute
-		}
-	case api.ServerGroupSyncMasters:
-		notReadyDur.TimeSpan = 15 * time.Second
-		unreachableDur.TimeSpan = 15 * time.Second
-	case api.ServerGroupSyncWorkers:
-		notReadyDur.TimeSpan = 1 * time.Minute
-		unreachableDur.TimeSpan = 1 * time.Minute
-	case api.ServerGroupGateways:
-		notReadyDur.TimeSpan = 15 * time.Second
-		unreachableDur.TimeSpan = 15 * time.Second
-	}
-	return []core.Toleration{NewNoExecuteToleration(TolerationKeyNodeNotReady, notReadyDur),
-		NewNoExecuteToleration(TolerationKeyNodeUnreachable, unreachableDur),
-		NewNoExecuteToleration(TolerationKeyNodeAlphaUnreachable, unreachableDur),
-	}
 }

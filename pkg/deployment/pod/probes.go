@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -79,6 +79,11 @@ var probeMap = map[api.ServerGroup]probes{
 	api.ServerGroupSyncWorkers: {
 		startup:   newProbe(true, false),
 		liveness:  newProbe(true, true),
+		readiness: newProbe(false, false),
+	},
+	api.ServerGroupGateways: { // TODO: Enable Probes
+		startup:   newProbe(false, false),
+		liveness:  newProbe(false, false),
 		readiness: newProbe(false, false),
 	},
 }

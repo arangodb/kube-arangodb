@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import (
 
 	core "k8s.io/api/core/v1"
 
+	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
 )
@@ -39,11 +40,11 @@ type PodModifier interface {
 }
 
 type PodCreator interface {
-	Init(context.Context, Inspector, *core.Pod) error
+	Init(context.Context, Inspector, *core.PodTemplateSpec) error
 	GetName() string
 	GetRole() string
 	GetVolumes() []core.Volume
-	GetSidecars(*core.Pod) error
+	GetSidecars(*core.PodTemplateSpec) error
 	GetInitContainers(cachedStatus Inspector) ([]core.Container, error)
 	GetFinalizers() []string
 	GetTolerations() []core.Toleration
@@ -60,6 +61,8 @@ type PodCreator interface {
 
 	Annotations() map[string]string
 	Labels() map[string]string
+
+	Profiles() (schedulerApi.ProfileTemplates, error)
 
 	PodModifier
 }

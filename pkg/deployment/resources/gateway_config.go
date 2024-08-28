@@ -21,9 +21,6 @@
 package resources
 
 import (
-	"fmt"
-	"net/url"
-	"strconv"
 	"time"
 
 	bootstrapAPI "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
@@ -34,6 +31,7 @@ import (
 	routeAPI "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	routerAPI "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/router/v3"
 	httpConnectionManagerAPI "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
+	tlsApi "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
@@ -41,42 +39,88 @@ import (
 
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-type Redirect util.KV[string, []string]
+type GatewayConfig struct {
+	DefaultAddress string `json:"defaultAddress,omitempty"`
 
-func WithRedirect(prefix string, target ...string) Redirect {
-	return Redirect{
-		K: prefix,
-		V: target,
-	}
+	DefaultTLS *GatewayConfigTLS `json:"defaultTLS,omitempty"`
 }
 
-func RenderGatewayConfigYAML(dbServiceAddress string, redirects ...Redirect) ([]byte, error) {
-	cfg, err := RenderConfig(dbServiceAddress, redirects...)
+type GatewayConfigTLS struct {
+	CertificatePath string `json:"certificatePath,omitempty"`
+	PrivateKeyPath  string `json:"privateKeyPath,omitempty"`
+}
+
+func (g GatewayConfig) Validate() error {
+	if g.DefaultAddress == "" {
+		return errors.Errorf(".defaultAddress cannot be empty")
+	}
+
+	return nil
+}
+
+func (g GatewayConfig) RenderYAML() ([]byte, string, *bootstrapAPI.Bootstrap, error) {
+	cfg, err := g.Render()
 	if err != nil {
-		return nil, err
+		return nil, "", nil, err
 	}
 
 	data, err := protojson.MarshalOptions{
 		UseProtoNames: true,
 	}.Marshal(cfg)
 	if err != nil {
-		return nil, err
+		return nil, "", nil, err
 	}
 
 	data, err = yaml.JSONToYAML(data)
-	return data, err
+	return data, util.SHA256(data), cfg, err
 }
 
-func RenderConfig(dbServiceAddress string, redirects ...Redirect) (*bootstrapAPI.Bootstrap, error) {
-	clusters := []*clusterAPI.Cluster{
+func (g GatewayConfig) Render() (*bootstrapAPI.Bootstrap, error) {
+	if err := g.Validate(); err != nil {
+		return nil, errors.Wrapf(err, "Validation failed")
+	}
+
+	clusters, err := g.RenderClusters()
+	if err != nil {
+		return nil, errors.Wrapf(err, "Unable to render clusters")
+	}
+
+	listener, err := g.RenderListener()
+	if err != nil {
+		return nil, errors.Wrapf(err, "Unable to render listener")
+	}
+
+	return &bootstrapAPI.Bootstrap{
+		Admin: &bootstrapAPI.Admin{
+			Address: &coreAPI.Address{
+				Address: &coreAPI.Address_SocketAddress{
+					SocketAddress: &coreAPI.SocketAddress{
+						Address:       "127.0.0.1",
+						PortSpecifier: &coreAPI.SocketAddress_PortValue{PortValue: 9901},
+					},
+				},
+			},
+		},
+		StaticResources: &bootstrapAPI.Bootstrap_StaticResources{
+			Listeners: []*listenerAPI.Listener{
+				listener,
+			},
+			Clusters: clusters,
+		},
+	}, nil
+}
+
+func (g GatewayConfig) RenderClusters() ([]*clusterAPI.Cluster, error) {
+	return []*clusterAPI.Cluster{
 		{
-			Name:           "arangodb",
-			ConnectTimeout: durationpb.New(250 * time.Millisecond),
+			Name:           "default",
+			ConnectTimeout: durationpb.New(time.Second),
 			LbPolicy:       clusterAPI.Cluster_ROUND_ROBIN,
 			LoadAssignment: &endpointAPI.ClusterLoadAssignment{
-				ClusterName: "arangodb",
+				ClusterName: "default",
 				Endpoints: []*endpointAPI.LocalityLbEndpoints{
 					{
 						LbEndpoints: []*endpointAPI.LbEndpoint{
@@ -86,7 +130,7 @@ func RenderConfig(dbServiceAddress string, redirects ...Redirect) (*bootstrapAPI
 										Address: &coreAPI.Address{
 											Address: &coreAPI.Address_SocketAddress{
 												SocketAddress: &coreAPI.SocketAddress{
-													Address: dbServiceAddress,
+													Address: g.DefaultAddress,
 													PortSpecifier: &coreAPI.SocketAddress_PortValue{
 														PortValue: shared.ArangoPort,
 													},
@@ -101,9 +145,11 @@ func RenderConfig(dbServiceAddress string, redirects ...Redirect) (*bootstrapAPI
 				},
 			},
 		},
-	}
+	}, nil
+}
 
-	routes := []*routeAPI.Route{
+func (g GatewayConfig) RenderRoutes() ([]*routeAPI.Route, error) {
+	return []*routeAPI.Route{
 		{
 			Match: &routeAPI.RouteMatch{
 				PathSpecifier: &routeAPI.RouteMatch_Prefix{
@@ -113,88 +159,24 @@ func RenderConfig(dbServiceAddress string, redirects ...Redirect) (*bootstrapAPI
 			Action: &routeAPI.Route_Route{
 				Route: &routeAPI.RouteAction{
 					ClusterSpecifier: &routeAPI.RouteAction_Cluster{
-						Cluster: "arangodb",
+						Cluster: "default",
 					},
 					PrefixRewrite: "/",
 				},
 			},
 		},
-	}
+	}, nil
+}
 
-	for id, redirect := range redirects {
-		var endpoints []*endpointAPI.LbEndpoint
-
-		for _, target := range redirect.V {
-			req, err := url.Parse(target)
-			if err != nil {
-				return nil, err
-			}
-
-			port, err := strconv.Atoi(req.Port())
-			if err != nil {
-				return nil, err
-			}
-
-			endpoints = append(endpoints, &endpointAPI.LbEndpoint{
-				HostIdentifier: &endpointAPI.LbEndpoint_Endpoint{
-					Endpoint: &endpointAPI.Endpoint{
-						Address: &coreAPI.Address{
-							Address: &coreAPI.Address_SocketAddress{
-								SocketAddress: &coreAPI.SocketAddress{
-									Address: req.Hostname(),
-									PortSpecifier: &coreAPI.SocketAddress_PortValue{
-										PortValue: uint32(port),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			)
-		}
-
-		cluster := &clusterAPI.Cluster{
-			Name:           fmt.Sprintf("cluster_%05d", id),
-			ConnectTimeout: durationpb.New(250 * time.Millisecond),
-			LbPolicy:       clusterAPI.Cluster_ROUND_ROBIN,
-			LoadAssignment: &endpointAPI.ClusterLoadAssignment{
-				ClusterName: fmt.Sprintf("cluster_%05d", id),
-				Endpoints: []*endpointAPI.LocalityLbEndpoints{
-					{
-						LbEndpoints: endpoints,
-					},
-				},
-			},
-		}
-
-		route := &routeAPI.Route{
-			Match: &routeAPI.RouteMatch{
-				PathSpecifier: &routeAPI.RouteMatch_Prefix{
-					Prefix: redirect.K,
-				},
-			},
-			Action: &routeAPI.Route_Route{
-				Route: &routeAPI.RouteAction{
-					ClusterSpecifier: &routeAPI.RouteAction_Cluster{
-						Cluster: fmt.Sprintf("cluster_%05d", id),
-					},
-					PrefixRewrite: "/",
-				},
-			},
-		}
-
-		clusters = append(clusters, cluster)
-		routes = append(routes, route)
-	}
-
-	routes = util.Sort(routes, func(i, j *routeAPI.Route) bool {
-		return i.Match.GetPrefix() > j.Match.GetPrefix()
-	})
-
+func (g GatewayConfig) RenderFilters() ([]*listenerAPI.Filter, error) {
 	httpFilterConfigType, err := anypb.New(&routerAPI.Router{})
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "Unable to render route config")
+	}
+
+	routes, err := g.RenderRoutes()
+	if err != nil {
+		return nil, errors.Wrapf(err, "Unable to render routes")
 	}
 
 	filterConfigType, err := anypb.New(&httpConnectionManagerAPI.HttpConnectionManager{
@@ -222,47 +204,90 @@ func RenderConfig(dbServiceAddress string, redirects ...Redirect) (*bootstrapAPI
 		},
 	})
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "Unable to render http connection manager")
 	}
 
-	return &bootstrapAPI.Bootstrap{
-		Admin: &bootstrapAPI.Admin{
-			Address: &coreAPI.Address{
-				Address: &coreAPI.Address_SocketAddress{
-					SocketAddress: &coreAPI.SocketAddress{
-						Address:       "127.0.0.1",
-						PortSpecifier: &coreAPI.SocketAddress_PortValue{PortValue: 9901},
-					},
-				},
+	return []*listenerAPI.Filter{
+		{
+			Name: "envoy.filters.network.httpConnectionManagerAPI",
+			ConfigType: &listenerAPI.Filter_TypedConfig{
+				TypedConfig: filterConfigType,
 			},
 		},
-		StaticResources: &bootstrapAPI.Bootstrap_StaticResources{
-			Listeners: []*listenerAPI.Listener{
-				{
-					Name: "listener_0",
-					Address: &coreAPI.Address{
-						Address: &coreAPI.Address_SocketAddress{
-							SocketAddress: &coreAPI.SocketAddress{
-								Address:       "0.0.0.0",
-								PortSpecifier: &coreAPI.SocketAddress_PortValue{PortValue: shared.ArangoPort},
+	}, nil
+}
+
+func (g GatewayConfig) RenderDefaultFilterChain() (*listenerAPI.FilterChain, error) {
+	filters, err := g.RenderFilters()
+	if err != nil {
+		return nil, errors.Wrapf(err, "Unable to render filters")
+	}
+
+	ret := &listenerAPI.FilterChain{
+		Filters: filters,
+	}
+
+	if tls := g.DefaultTLS; tls != nil {
+		tlsContext, err := anypb.New(&tlsApi.DownstreamTlsContext{
+			CommonTlsContext: &tlsApi.CommonTlsContext{
+				TlsCertificates: []*tlsApi.TlsCertificate{
+					{
+						CertificateChain: &coreAPI.DataSource{
+							Specifier: &coreAPI.DataSource_Filename{
+								Filename: tls.CertificatePath,
+							},
+						},
+						PrivateKey: &coreAPI.DataSource{
+							Specifier: &coreAPI.DataSource_Filename{
+								Filename: tls.PrivateKeyPath,
 							},
 						},
 					},
-					FilterChains: []*listenerAPI.FilterChain{
-						{
-							Filters: []*listenerAPI.Filter{
-								{
-									Name: "envoy.filters.network.httpConnectionManagerAPI",
-									ConfigType: &listenerAPI.Filter_TypedConfig{
-										TypedConfig: filterConfigType,
-									},
-								},
-							},
-						},
-					},
 				},
 			},
-			Clusters: clusters,
+		})
+		if err != nil {
+			return nil, errors.Wrapf(err, "Unable to render tls context")
+		}
+
+		ret.TransportSocket = &coreAPI.TransportSocket{
+			Name: "envoy.transport_sockets.tls",
+			ConfigType: &coreAPI.TransportSocket_TypedConfig{
+				TypedConfig: tlsContext,
+			},
+		}
+	}
+
+	return ret, nil
+}
+
+func (g GatewayConfig) RenderSecondaryFilterChains() ([]*listenerAPI.FilterChain, error) {
+	return nil, nil
+}
+
+func (g GatewayConfig) RenderListener() (*listenerAPI.Listener, error) {
+	filterChains, err := g.RenderSecondaryFilterChains()
+	if err != nil {
+		return nil, errors.Wrapf(err, "Unable to render secondary filter chains")
+	}
+
+	defaultFilterChain, err := g.RenderDefaultFilterChain()
+	if err != nil {
+		return nil, errors.Wrapf(err, "Unable to render default filter")
+	}
+
+	return &listenerAPI.Listener{
+		Name: "default",
+		Address: &coreAPI.Address{
+			Address: &coreAPI.Address_SocketAddress{
+				SocketAddress: &coreAPI.SocketAddress{
+					Address:       "0.0.0.0",
+					PortSpecifier: &coreAPI.SocketAddress_PortValue{PortValue: shared.ArangoPort},
+				},
+			},
 		},
+		FilterChains: filterChains,
+
+		DefaultFilterChain: defaultFilterChain,
 	}, nil
 }

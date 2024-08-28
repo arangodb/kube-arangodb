@@ -120,7 +120,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 			continue
 		} else {
 
-			if changed, err := patcher.ServicePatcher(ctx, svcs, s, meta.PatchOptions{},
+			if _, changed, err := patcher.Patcher[*core.Service](ctx, svcs, s, meta.PatchOptions{},
 				patcher.PatchServicePorts(ports),
 				patcher.PatchServiceSelector(selector),
 				patcher.PatchServicePublishNotReadyAddresses(true),
@@ -176,7 +176,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 				reconcileRequired.Required()
 				continue
 			} else {
-				if changed, err := patcher.ServicePatcher(ctx, svcs, s, meta.PatchOptions{},
+				if _, changed, err := patcher.Patcher[*core.Service](ctx, svcs, s, meta.PatchOptions{},
 					patcher.PatchServicePorts(ports),
 					patcher.PatchServiceSelector(selector),
 					patcher.PatchServicePublishNotReadyAddresses(false),
@@ -205,7 +205,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 			log.Str("service", svcName).Debug("Created headless service")
 		}
 	} else {
-		if changed, err := patcher.ServicePatcher(ctx, svcs, s, meta.PatchOptions{}, patcher.PatchServicePorts(headlessPorts), patcher.PatchServiceSelector(headlessSelector)); err != nil {
+		if _, changed, err := patcher.Patcher[*core.Service](ctx, svcs, s, meta.PatchOptions{}, patcher.PatchServicePorts(headlessPorts), patcher.PatchServiceSelector(headlessSelector)); err != nil {
 			log.Err(err).Debug("Failed to patch headless service")
 			return errors.WithStack(err)
 		} else if changed {
@@ -245,7 +245,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 			}
 		}
 	} else {
-		if changed, err := patcher.ServicePatcher(ctx, svcs, s, meta.PatchOptions{}, patcher.PatchServiceOnlyPorts(clientServicePorts...), patcher.PatchServiceSelector(clientServiceSelectors)); err != nil {
+		if _, changed, err := patcher.Patcher[*core.Service](ctx, svcs, s, meta.PatchOptions{}, patcher.PatchServiceOnlyPorts(clientServicePorts...), patcher.PatchServiceSelector(clientServiceSelectors)); err != nil {
 			log.Err(err).Debug("Failed to patch database client service")
 			return errors.WithStack(err)
 		} else if changed {
@@ -380,7 +380,7 @@ func (r *Resources) ensureExternalAccessServices(ctx context.Context, cachedStat
 			}
 		}
 		if !createExternalAccessService && !deleteExternalAccessService {
-			if changed, err := patcher.ServicePatcher(ctx, svcs, existing, meta.PatchOptions{},
+			if _, changed, err := patcher.Patcher[*core.Service](ctx, svcs, existing, meta.PatchOptions{},
 				patcher.PatchServiceSelector(eaSelector),
 				patcher.Optional(patcher.PatchServiceOnlyPorts(eaPorts...), owned)); err != nil {
 				log.Err(err).Debug("Failed to patch database client service")
@@ -434,8 +434,8 @@ func (r *Resources) ensureExternalAccessManagedServices(ctx context.Context, cac
 	log := r.log.Str("section", "service-ea").Str("service", eaServiceName)
 	managedServiceNames := spec.GetManagedServiceNames()
 
-	apply := func(svc *core.Service) (bool, error) {
-		return patcher.ServicePatcher(ctx, cachedStatus.ServicesModInterface().V1(), svc, meta.PatchOptions{},
+	apply := func(svc *core.Service) (*core.Service, bool, error) {
+		return patcher.Patcher[*core.Service](ctx, cachedStatus.ServicesModInterface().V1(), svc, meta.PatchOptions{},
 			patcher.PatchServiceSelector(selectors))
 	}
 
@@ -446,7 +446,7 @@ func (r *Resources) ensureExternalAccessManagedServices(ctx context.Context, cac
 			log.Warn("the field \"spec.externalAccess.managedServiceNames\" should be provided for \"managed\" service type")
 			return nil
 		}
-	} else if changed, err := apply(svc); err != nil {
+	} else if _, changed, err := apply(svc); err != nil {
 		return errors.WithMessage(err, "failed to ensure service selector")
 	} else if changed {
 		log.Info("selector applied to the managed service \"%s\"", svc.GetName())
@@ -464,7 +464,7 @@ func (r *Resources) ensureExternalAccessManagedServices(ctx context.Context, cac
 			continue
 		}
 
-		if changed, err := apply(svc); err != nil {
+		if _, changed, err := apply(svc); err != nil {
 			return errors.WithMessage(err, "failed to ensure service selector")
 		} else if changed {
 			log.Info("selector applied to the managed service \"%s\"", svcName)

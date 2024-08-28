@@ -37,6 +37,7 @@ import (
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	configMapsV1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/configmap/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/patcher"
 )
 
 var (
@@ -69,28 +70,41 @@ func (r *Resources) EnsureConfigMaps(ctx context.Context, cachedStatus inspector
 func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspectorInterface.Inspector, configMaps configMapsV1.ModInterface) error {
 	deploymentName := r.context.GetAPIObject().GetName()
 	configMapName := GetGatewayConfigMapName(deploymentName)
+	log := r.log.Str("section", "gateway-config").Str("name", configMapName)
 
-	if _, exists := cachedStatus.ConfigMap().V1().GetSimple(configMapName); !exists {
-		// Find serving service (single/crdn)
-		spec := r.context.GetSpec()
-		svcServingName := fmt.Sprintf("%s-%s", deploymentName, spec.Mode.Get().ServingGroup().AsRole())
+	spec := r.context.GetSpec()
+	svcServingName := fmt.Sprintf("%s-%s", deploymentName, spec.Mode.Get().ServingGroup().AsRole())
 
-		svc, svcExist := cachedStatus.Service().V1().GetSimple(svcServingName)
-		if !svcExist {
-			return errors.Errorf("Service %s not found", svcServingName)
+	svc, svcExist := cachedStatus.Service().V1().GetSimple(svcServingName)
+	if !svcExist {
+		return errors.Errorf("Service %s not found", svcServingName)
+	}
+
+	var cfg GatewayConfig
+
+	cfg.DefaultAddress = svc.Spec.ClusterIP
+
+	if spec.TLS.IsSecure() {
+		// Enabled TLS, add config
+		cfg.DefaultTLS = &GatewayConfigTLS{
+			CertificatePath: "",
+			PrivateKeyPath:  "",
 		}
+	}
 
-		gatewayCfgYaml, err := RenderGatewayConfigYAML(svc.Spec.ClusterIP)
-		if err != nil {
-			return errors.WithStack(errors.Wrapf(err, "Failed to render gateway config"))
-		}
-		cm := &core.ConfigMap{
+	gatewayCfgYaml, gatewayCfgChecksum, _, err := cfg.RenderYAML()
+	if err != nil {
+		return errors.WithStack(errors.Wrapf(err, "Failed to render gateway config"))
+	}
+
+	if cm, exists := cachedStatus.ConfigMap().V1().GetSimple(configMapName); !exists {
+		// Create
+		cm = &core.ConfigMap{
 			ObjectMeta: meta.ObjectMeta{
 				Name: configMapName,
 			},
 			Data: map[string]string{
-				GatewayConfigFileName:     string(gatewayCfgYaml),
-				GatewayConfigChecksumName: util.SHA256(gatewayCfgYaml),
+				GatewayConfigFileName: string(gatewayCfgYaml),
 			},
 		}
 
@@ -108,6 +122,20 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 		}
 
 		return errors.Reconcile()
+	} else {
+		// CM Exists, checks checksum - if key is not in the map we return empty string
+		if existingSha := util.SHA256FromString(cm.Data[GatewayConfigFileName]); existingSha != gatewayCfgChecksum {
+			// We need to do the update
+			if _, changed, err := patcher.Patcher[*core.ConfigMap](ctx, cachedStatus.ConfigMapsModInterface().V1(), cm, meta.PatchOptions{},
+				patcher.PatchConfigMapData(map[string]string{
+					GatewayConfigFileName: string(gatewayCfgYaml),
+				})); err != nil {
+				log.Err(err).Debug("Failed to patch GatewayConfig ConfigMap")
+				return errors.WithStack(err)
+			} else if changed {
+				log.Str("service", cm.GetName()).Str("before", existingSha).Str("after", gatewayCfgChecksum).Info("Updated GatewayConfig")
+			}
+		}
 	}
 	return nil
 }

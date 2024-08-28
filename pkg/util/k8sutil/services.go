@@ -82,7 +82,7 @@ func CreateExporterService(ctx context.Context, cachedStatus inspector.Inspector
 	svcName := CreateExporterClientServiceName(deploymentName)
 
 	if svc, exists := cachedStatus.Service().V1().GetSimple(svcName); exists {
-		if changed, err := patcher.ServicePatcher(ctx, cachedStatus.ServicesModInterface().V1(), svc, meta.PatchOptions{}, patcher.PatchServiceSelector(selectors), patcher.PatchServicePorts(ports)); err != nil {
+		if _, changed, err := patcher.Patcher[*core.Service](ctx, cachedStatus.ServicesModInterface().V1(), svc, meta.PatchOptions{}, patcher.PatchServiceSelector(selectors), patcher.PatchServicePorts(ports)); err != nil {
 			return "", false, err
 		} else {
 			return svcName, changed, nil

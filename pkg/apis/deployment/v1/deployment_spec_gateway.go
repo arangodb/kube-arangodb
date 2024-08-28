@@ -20,7 +20,11 @@
 
 package v1
 
-import "github.com/arangodb/kube-arangodb/pkg/util"
+import (
+	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util"
+)
 
 type DeploymentSpecGateway struct {
 	// Enabled setting enables/disables support for gateway in the cluster.
@@ -31,6 +35,9 @@ type DeploymentSpecGateway struct {
 	// Image is the image to use for the gateway.
 	// By default, the image is determined by the operator.
 	Image *string `json:"image"`
+
+	// Sidecar define the integration sidecar spec
+	Sidecar *schedulerApi.IntegrationSidecar `json:"sidecar,omitempty"`
 }
 
 // IsEnabled returns whether the gateway is enabled.
@@ -42,9 +49,22 @@ func (d *DeploymentSpecGateway) IsEnabled() bool {
 	return *d.Enabled
 }
 
+func (d *DeploymentSpecGateway) GetSidecar() *schedulerApi.IntegrationSidecar {
+	if d == nil || d.Sidecar == nil {
+		return nil
+	}
+	return d.Sidecar
+}
+
 // Validate the given spec
 func (d *DeploymentSpecGateway) Validate() error {
-	return nil
+	if d == nil {
+		d = &DeploymentSpecGateway{}
+	}
+
+	return shared.WithErrors(
+		shared.PrefixResourceErrors("integrationSidecar", d.GetSidecar().Validate()),
+	)
 }
 
 // GetImage returns the image to use for the gateway.

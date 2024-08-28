@@ -28,6 +28,7 @@ package v2alpha1
 import (
 	time "time"
 
+	v1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	sharedv1 "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -1183,6 +1184,11 @@ func (in *DeploymentSpecGateway) DeepCopyInto(out *DeploymentSpecGateway) {
 		in, out := &in.Image, &out.Image
 		*out = new(string)
 		**out = **in
+	}
+	if in.Sidecar != nil {
+		in, out := &in.Sidecar, &out.Sidecar
+		*out = new(v1beta1.IntegrationSidecar)
+		(*in).DeepCopyInto(*out)
 	}
 	return
 }

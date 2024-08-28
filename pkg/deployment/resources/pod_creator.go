@@ -286,10 +286,18 @@ func createArangoSyncArgs(apiObject meta.Object, spec api.DeploymentSpec, group 
 	return args
 }
 
-func createArangoGatewayArgs(groupSpec api.ServerGroupSpec) []string {
-	args := []string{"--config-path", GatewayConfigFilePath}
-	if len(groupSpec.Args) > 0 {
-		args = append(args, groupSpec.Args...)
+func createArangoGatewayArgs(input pod.Input, additionalOptions ...k8sutil.OptionPair) []string {
+	options := k8sutil.CreateOptionPairs(64)
+	options.Add("--config-path", GatewayConfigFilePath)
+
+	options.Append(additionalOptions...)
+
+	// TLS
+	options.Merge(pod.TLS().Args(input))
+
+	args := options.Sort().AsArgs()
+	if len(input.GroupSpec.Args) > 0 {
+		args = append(args, input.GroupSpec.Args...)
 	}
 
 	return args
@@ -297,7 +305,7 @@ func createArangoGatewayArgs(groupSpec api.ServerGroupSpec) []string {
 
 // CreatePodTolerations creates a list of tolerations for a pod created for the given group.
 func (r *Resources) CreatePodTolerations(group api.ServerGroup, groupSpec api.ServerGroupSpec) []core.Toleration {
-	return tolerations.MergeTolerationsIfNotFound(tolerations.CreatePodTolerations(r.context.GetMode(), group), groupSpec.GetTolerations())
+	return tolerations.MergeTolerationsIfNotFound(CreatePodTolerations(r.context.GetMode(), group), groupSpec.GetTolerations())
 }
 
 func (r *Resources) RenderPodTemplateForMember(ctx context.Context, acs sutil.ACS, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.PodTemplateSpec, error) {
@@ -395,16 +403,17 @@ func (r *Resources) RenderPodForMember(ctx context.Context, acs sutil.ACS, spec 
 		}
 
 		podCreator = &MemberGatewayPod{
-			podName:      podName,
-			groupSpec:    groupSpec,
-			spec:         spec,
-			group:        group,
-			resources:    r,
-			imageInfo:    imageInfo,
-			arangoMember: *member,
-			apiObject:    apiObject,
-			memberStatus: m,
-			cachedStatus: cache,
+			podName:          podName,
+			status:           m,
+			groupSpec:        groupSpec,
+			spec:             spec,
+			group:            group,
+			resources:        r,
+			imageInfo:        imageInfo,
+			context:          r.context,
+			deploymentStatus: status,
+			arangoMember:     *member,
+			cachedStatus:     cache,
 		}
 	default:
 		return nil, assertion.InvalidGroupKey.Assert(true, "Unable to render pod for an unknown group: %s", group.AsRole())
@@ -687,7 +696,17 @@ func RenderArangoPod(ctx context.Context, cachedStatus inspectorInterface.Inspec
 		PodAffinity:     podCreator.GetPodAffinity(),
 	}
 
-	return &p, nil
+	if profiles, err := podCreator.Profiles(); err != nil {
+		return nil, err
+	} else if len(profiles) > 0 {
+
+		profiles.RenderOnTemplate(&p)
+	}
+
+	return &core.Pod{
+		ObjectMeta: p.ObjectMeta,
+		Spec:       p.Spec,
+	}, nil
 }
 
 // CreateArangoPod creates a new Pod with container provided by parameter 'containerCreator'

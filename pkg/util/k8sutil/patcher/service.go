@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,57 +21,13 @@
 package patcher
 
 import (
-	"context"
-
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-	v1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service/v1"
 )
 
-type ServicePatch func(in *core.Service) []patch.Item
-
-func ServicePatcher(ctx context.Context, client v1.ModInterface, in *core.Service, opts meta.PatchOptions, functions ...ServicePatch) (bool, error) {
-	if in == nil {
-		return false, nil
-	}
-
-	if in.GetName() == "" {
-		return false, nil
-	}
-
-	var items []patch.Item
-
-	for id := range functions {
-		if f := functions[id]; f != nil {
-			items = append(items, f(in)...)
-		}
-	}
-
-	if len(items) == 0 {
-		return false, nil
-	}
-
-	data, err := patch.NewPatch(items...).Marshal()
-	if err != nil {
-		return false, err
-	}
-
-	nctx, c := globals.GetGlobals().Timeouts().Kubernetes().WithTimeout(ctx)
-	defer c()
-
-	if _, err := client.Patch(nctx, in.GetName(), types.JSONPatchType, data, opts); err != nil {
-		return false, err
-	}
-
-	return true, nil
-}
-
-func PatchServicePorts(ports []core.ServicePort) ServicePatch {
+func PatchServicePorts(ports []core.ServicePort) Patch[*core.Service] {
 	return func(in *core.Service) []patch.Item {
 		if len(ports) == len(in.Spec.Ports) && equality.Semantic.DeepDerivative(ports, in.Spec.Ports) {
 			return nil
@@ -83,21 +39,7 @@ func PatchServicePorts(ports []core.ServicePort) ServicePatch {
 	}
 }
 
-func Optional(p ServicePatch, enabled bool) ServicePatch {
-	return func(in *core.Service) []patch.Item {
-		if !enabled {
-			return nil
-		}
-
-		if p != nil {
-			return p(in)
-		}
-
-		return nil
-	}
-}
-
-func PatchServiceOnlyPorts(ports ...core.ServicePort) ServicePatch {
+func PatchServiceOnlyPorts(ports ...core.ServicePort) Patch[*core.Service] {
 	return func(in *core.Service) []patch.Item {
 		psvc := in.Spec.DeepCopy()
 		cp := psvc.Ports
@@ -149,7 +91,7 @@ func PatchServiceOnlyPorts(ports ...core.ServicePort) ServicePatch {
 	}
 }
 
-func PatchServiceSelector(selector map[string]string) ServicePatch {
+func PatchServiceSelector(selector map[string]string) Patch[*core.Service] {
 	return func(in *core.Service) []patch.Item {
 		if in.Spec.Selector != nil && equality.Semantic.DeepEqual(in.Spec.Selector, selector) {
 			return nil
@@ -161,7 +103,7 @@ func PatchServiceSelector(selector map[string]string) ServicePatch {
 	}
 }
 
-func PatchServiceType(t core.ServiceType) ServicePatch {
+func PatchServiceType(t core.ServiceType) Patch[*core.Service] {
 	return func(in *core.Service) []patch.Item {
 		if in.Spec.Type == t {
 			return nil
@@ -173,7 +115,7 @@ func PatchServiceType(t core.ServiceType) ServicePatch {
 	}
 }
 
-func PatchServicePublishNotReadyAddresses(publishNotReadyAddresses bool) ServicePatch {
+func PatchServicePublishNotReadyAddresses(publishNotReadyAddresses bool) Patch[*core.Service] {
 	return func(in *core.Service) []patch.Item {
 		if in.Spec.PublishNotReadyAddresses == publishNotReadyAddresses {
 			return nil
