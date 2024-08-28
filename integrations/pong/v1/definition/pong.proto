@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,32 +18,26 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package cmd
+syntax = "proto3";
 
-import (
-	goflag "flag"
+package pong;
 
-	"github.com/spf13/cobra"
-	flag "github.com/spf13/pflag"
-)
+import "google/protobuf/timestamp.proto";
 
-var (
-	cmdOps = cobra.Command{
-		Use: "arangodb_operator_ops",
-		Run: executeUsage,
-	}
-)
+import "integrations/shared/v1/definition/empty.proto";
 
-func CommandOps() *cobra.Command {
-	return &cmdOps
+option go_package = "github.com/arangodb/kube-arangodb/integrations/pong/v1/definition";
+
+// PongV1 Service implementation
+service PongV1 {
+  rpc Ping(shared.Empty) returns (PongV1PingResponse);
 }
 
-func ExecuteOps() int {
-	flag.CommandLine.AddGoFlagSet(goflag.CommandLine)
+// Responses
 
-	if err := cmdOps.Execute(); err != nil {
-		return 1
-	}
 
-	return 0
+// PongV1 Ping Call Response
+message PongV1PingResponse {
+  // Current time in UTC
+  google.protobuf.Timestamp time = 1;
 }

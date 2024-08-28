@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,30 +18,41 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package cmd
+package integration
 
 import (
 	goflag "flag"
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
+
+	"github.com/arangodb/kube-arangodb/pkg/integrations"
 )
 
 var (
-	cmdOps = cobra.Command{
-		Use: "arangodb_operator_ops",
-		Run: executeUsage,
+	cmd = cobra.Command{
+		Use: "arangodb_operator_integration",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return cmd.Usage()
+		},
 	}
 )
 
-func CommandOps() *cobra.Command {
-	return &cmdOps
+func init() {
+	if err := integrations.Register(&cmd); err != nil {
+		panic(err.Error())
+	}
+	flag.CommandLine.AddGoFlagSet(goflag.CommandLine)
 }
 
-func ExecuteOps() int {
+func Command() *cobra.Command {
+	return &cmd
+}
+
+func Execute() int {
 	flag.CommandLine.AddGoFlagSet(goflag.CommandLine)
 
-	if err := cmdOps.Execute(); err != nil {
+	if err := cmd.Execute(); err != nil {
 		return 1
 	}
 

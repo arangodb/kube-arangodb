@@ -21,40 +21,11 @@
 package main
 
 import (
-	goflag "flag"
 	"os"
 
-	"github.com/spf13/cobra"
-	flag "github.com/spf13/pflag"
-
-	"github.com/arangodb/kube-arangodb/pkg/integrations"
+	"github.com/arangodb/kube-arangodb/cmd/integration"
 )
-
-var (
-	cmd = cobra.Command{
-		Use: "arangodb_int",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return cmd.Usage()
-		},
-	}
-)
-
-func init() {
-	if err := integrations.Register(&cmd); err != nil {
-		panic(err.Error())
-	}
-}
-
-func Execute() int {
-	flag.CommandLine.AddGoFlagSet(goflag.CommandLine)
-
-	if err := cmd.Execute(); err != nil {
-		return 1
-	}
-
-	return 0
-}
 
 func main() {
-	os.Exit(Execute())
+	os.Exit(integration.Execute())
 }

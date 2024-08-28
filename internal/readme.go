@@ -144,22 +144,15 @@ func GenerateReadme(root string) error {
 	return nil
 }
 
-func GenerateHelp(cmd *cobra.Command) (string, error) {
+func GenerateHelp(cmd *cobra.Command, args ...string) (string, error) {
 	var lines []string
 
 	lines = append(lines, "```", "Flags:")
 
-	buff := bytes.NewBuffer(nil)
-
-	cmd.SetOut(buff)
-
-	cmd.SetArgs([]string{"--help"})
-
-	if err := cmd.Execute(); err != nil {
+	help, err := GenerateHelpRaw(cmd, args...)
+	if err != nil {
 		return "", err
 	}
-
-	help := buff.String()
 
 	for _, line := range strings.Split(help, "\n") {
 		if strings.HasPrefix(line, "      --") {
@@ -170,6 +163,29 @@ func GenerateHelp(cmd *cobra.Command) (string, error) {
 	lines = append(lines, "```")
 
 	return md.WrapWithNewLines(md.WrapWithNewLines(strings.Join(lines, "\n"))), nil
+}
+
+func GenerateHelpQuoted(cmd *cobra.Command, args ...string) (string, error) {
+	h, err := GenerateHelpRaw(cmd, args...)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("```\n%s```\n", h), nil
+}
+
+func GenerateHelpRaw(cmd *cobra.Command, args ...string) (string, error) {
+	buff := bytes.NewBuffer(nil)
+
+	cmd.SetOut(buff)
+
+	cmd.SetArgs(append(args, "--help"))
+
+	if err := cmd.Execute(); err != nil {
+		return "", err
+	}
+
+	return buff.String(), nil
 }
 
 func GenerateReadmeFeatures(root, basePath string, eeOnly bool) (string, error) {

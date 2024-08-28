@@ -30,6 +30,7 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
+	pbImplPongV1 "github.com/arangodb/kube-arangodb/integrations/pong/v1"
 	pbImplShutdownV1 "github.com/arangodb/kube-arangodb/integrations/shutdown/v1"
 	"github.com/arangodb/kube-arangodb/pkg/integrations/clients"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -170,7 +171,13 @@ func (c *configuration) runWithContext(ctx context.Context, cancel context.Cance
 		return errors.Wrapf(err, "Unable to parse external config")
 	}
 
-	var internalHandlers, externalHandlers []svc.Handler
+	var internalHandlers, externalHandlers, healthHandlers []svc.Handler
+
+	pong := pbImplPongV1.New()
+
+	internalHandlers = append(internalHandlers, pong)
+	externalHandlers = append(externalHandlers, pong)
+	healthHandlers = append(healthHandlers, pong)
 
 	for _, handler := range c.registered {
 		if ok, err := cmd.Flags().GetBool(fmt.Sprintf("integration.%s", handler.Name())); err != nil {
@@ -209,13 +216,11 @@ func (c *configuration) runWithContext(ctx context.Context, cancel context.Cance
 		}
 	}
 
-	var healthServices []svc.Handler
-
 	if c.health.shutdownEnabled {
-		healthServices = append(healthServices, pbImplShutdownV1.New(cancel))
+		healthHandlers = append(healthHandlers, pbImplShutdownV1.New(cancel))
 	}
 
-	health := svc.NewHealthService(healthConfig, svc.Readiness, healthServices...)
+	health := svc.NewHealthService(healthConfig, svc.Readiness, healthHandlers...)
 
 	internalHandlers = append(internalHandlers, health)
 	externalHandlers = append(externalHandlers, health)
