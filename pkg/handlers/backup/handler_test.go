@@ -129,4 +129,51 @@ func Test_Refresh_Cleanup(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, backups.Items, 0)
 	})
+
+	t.Run("Do not refresh if backup is creating", func(t *testing.T) {
+		// Arrange
+		fakeId := driver.BackupID(uuid.NewUUID())
+		createBackup := backupApi.ArangoBackup{
+
+			ObjectMeta: meta.ObjectMeta{
+				Name: "backup",
+			},
+			Status: backupApi.ArangoBackupStatus{
+				ArangoBackupState: backupApi.ArangoBackupState{
+					State: backupApi.ArangoBackupStateCreating,
+				},
+				Backup: &backupApi.ArangoBackupDetails{
+					ID: string(fakeId),
+				},
+			},
+		}
+		b, err := handler.client.BackupV1().ArangoBackups(tests.FakeNamespace).Create(context.Background(), &createBackup, meta.CreateOptions{})
+		require.NoError(t, err)
+		require.NotNil(t, b)
+		require.Equal(t, backupApi.ArangoBackupStateCreating, b.Status.State)
+
+		t.Run("Refresh should not happen if there is Backup in creation state", func(t *testing.T) {
+			require.NoError(t, handler.refreshDeployment(arangoDeployment))
+
+			backups, err := handler.client.BackupV1().ArangoBackups(tests.FakeNamespace).List(context.Background(), meta.ListOptions{})
+			require.NoError(t, err)
+			require.Len(t, backups.Items, 1)
+			require.NotNil(t, backups.Items[0].Status.Backup)
+			require.EqualValues(t, fakeId, backups.Items[0].Status.Backup.ID)
+		})
+
+		createBackup.Status.State = backupApi.ArangoBackupStateReady
+		b, err = handler.client.BackupV1().ArangoBackups(tests.FakeNamespace).UpdateStatus(context.Background(), &createBackup, meta.UpdateOptions{})
+		require.NoError(t, err)
+		require.NotNil(t, b)
+		require.Equal(t, backupApi.ArangoBackupStateReady, b.Status.State)
+
+		t.Run("Refresh should happen if there is Backup in ready state", func(t *testing.T) {
+			require.NoError(t, handler.refreshDeployment(arangoDeployment))
+
+			backups, err := handler.client.BackupV1().ArangoBackups(tests.FakeNamespace).List(context.Background(), meta.ListOptions{})
+			require.NoError(t, err)
+			require.Len(t, backups.Items, 2)
+		})
+	})
 }

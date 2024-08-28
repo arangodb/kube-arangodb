@@ -23,10 +23,17 @@ package v2alpha1
 import "github.com/arangodb/kube-arangodb/pkg/util"
 
 type DeploymentSpecGateway struct {
-	Enabled *bool   `json:"enabled,omitempty"`
-	Image   *string `json:"image"`
+	// Enabled setting enables/disables support for gateway in the cluster.
+	// When enabled, the cluster will contain a number of `gateway` servers.
+	// +doc/default: false
+	Enabled *bool `json:"enabled,omitempty"`
+
+	// Image is the image to use for the gateway.
+	// By default, the image is determined by the operator.
+	Image *string `json:"image"`
 }
 
+// IsEnabled returns whether the gateway is enabled.
 func (d *DeploymentSpecGateway) IsEnabled() bool {
 	if d == nil || d.Enabled == nil {
 		return false
@@ -35,10 +42,12 @@ func (d *DeploymentSpecGateway) IsEnabled() bool {
 	return *d.Enabled
 }
 
+// Validate the given spec
 func (d *DeploymentSpecGateway) Validate() error {
 	return nil
 }
 
+// GetImage returns the image to use for the gateway.
 func (d *DeploymentSpecGateway) GetImage() string {
 	return util.TypeOrDefault[string](d.Image)
 }
