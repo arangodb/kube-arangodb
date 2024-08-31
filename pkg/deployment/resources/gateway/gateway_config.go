@@ -18,23 +18,21 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package resources
+package gateway
 
 import (
-	"time"
+	"fmt"
+	"sort"
 
 	bootstrapAPI "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
 	clusterAPI "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
 	coreAPI "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
-	endpointAPI "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
 	listenerAPI "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
 	routeAPI "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	routerAPI "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/router/v3"
 	httpConnectionManagerAPI "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
-	tlsApi "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/anypb"
-	"google.golang.org/protobuf/types/known/durationpb"
 	"sigs.k8s.io/yaml"
 
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
@@ -42,27 +40,23 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-type GatewayConfig struct {
-	DefaultAddress string `json:"defaultAddress,omitempty"`
+type Config struct {
+	DefaultDestination ConfigDestination `json:"defaultDestination,omitempty"`
 
-	DefaultTLS *GatewayConfigTLS `json:"defaultTLS,omitempty"`
+	Destinations ConfigDestinations `json:"destinations,omitempty"`
+
+	DefaultTLS *ConfigTLS `json:"defaultTLS,omitempty"`
 }
 
-type GatewayConfigTLS struct {
-	CertificatePath string `json:"certificatePath,omitempty"`
-	PrivateKeyPath  string `json:"privateKeyPath,omitempty"`
+func (c Config) Validate() error {
+	return errors.Errors(
+		shared.PrefixResourceErrors("defaultDestination", c.DefaultDestination.Validate()),
+		shared.PrefixResourceErrors("destinations", c.Destinations.Validate()),
+	)
 }
 
-func (g GatewayConfig) Validate() error {
-	if g.DefaultAddress == "" {
-		return errors.Errorf(".defaultAddress cannot be empty")
-	}
-
-	return nil
-}
-
-func (g GatewayConfig) RenderYAML() ([]byte, string, *bootstrapAPI.Bootstrap, error) {
-	cfg, err := g.Render()
+func (c Config) RenderYAML() ([]byte, string, *bootstrapAPI.Bootstrap, error) {
+	cfg, err := c.Render()
 	if err != nil {
 		return nil, "", nil, err
 	}
@@ -78,17 +72,17 @@ func (g GatewayConfig) RenderYAML() ([]byte, string, *bootstrapAPI.Bootstrap, er
 	return data, util.SHA256(data), cfg, err
 }
 
-func (g GatewayConfig) Render() (*bootstrapAPI.Bootstrap, error) {
-	if err := g.Validate(); err != nil {
+func (c Config) Render() (*bootstrapAPI.Bootstrap, error) {
+	if err := c.Validate(); err != nil {
 		return nil, errors.Wrapf(err, "Validation failed")
 	}
 
-	clusters, err := g.RenderClusters()
+	clusters, err := c.RenderClusters()
 	if err != nil {
 		return nil, errors.Wrapf(err, "Unable to render clusters")
 	}
 
-	listener, err := g.RenderListener()
+	listener, err := c.RenderListener()
 	if err != nil {
 		return nil, errors.Wrapf(err, "Unable to render listener")
 	}
@@ -113,68 +107,65 @@ func (g GatewayConfig) Render() (*bootstrapAPI.Bootstrap, error) {
 	}, nil
 }
 
-func (g GatewayConfig) RenderClusters() ([]*clusterAPI.Cluster, error) {
-	return []*clusterAPI.Cluster{
-		{
-			Name:           "default",
-			ConnectTimeout: durationpb.New(time.Second),
-			LbPolicy:       clusterAPI.Cluster_ROUND_ROBIN,
-			LoadAssignment: &endpointAPI.ClusterLoadAssignment{
-				ClusterName: "default",
-				Endpoints: []*endpointAPI.LocalityLbEndpoints{
-					{
-						LbEndpoints: []*endpointAPI.LbEndpoint{
-							{
-								HostIdentifier: &endpointAPI.LbEndpoint_Endpoint{
-									Endpoint: &endpointAPI.Endpoint{
-										Address: &coreAPI.Address{
-											Address: &coreAPI.Address_SocketAddress{
-												SocketAddress: &coreAPI.SocketAddress{
-													Address: g.DefaultAddress,
-													PortSpecifier: &coreAPI.SocketAddress_PortValue{
-														PortValue: shared.ArangoPort,
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	}, nil
+func (c Config) RenderClusters() ([]*clusterAPI.Cluster, error) {
+	def, err := c.DefaultDestination.RenderCluster("default")
+	if err != nil {
+		return nil, err
+	}
+	clusters := []*clusterAPI.Cluster{
+		def,
+	}
+
+	for k, v := range c.Destinations {
+		name := fmt.Sprintf("cluster_%s", util.SHA256FromString(k))
+		c, err := v.RenderCluster(name)
+		if err != nil {
+			return nil, err
+		}
+
+		clusters = append(clusters, c)
+	}
+
+	sort.Slice(clusters, func(i, j int) bool {
+		return clusters[i].Name < clusters[j].Name
+	})
+
+	return clusters, nil
 }
 
-func (g GatewayConfig) RenderRoutes() ([]*routeAPI.Route, error) {
-	return []*routeAPI.Route{
-		{
-			Match: &routeAPI.RouteMatch{
-				PathSpecifier: &routeAPI.RouteMatch_Prefix{
-					Prefix: "/",
-				},
-			},
-			Action: &routeAPI.Route_Route{
-				Route: &routeAPI.RouteAction{
-					ClusterSpecifier: &routeAPI.RouteAction_Cluster{
-						Cluster: "default",
-					},
-					PrefixRewrite: "/",
-				},
-			},
-		},
-	}, nil
+func (c Config) RenderRoutes() ([]*routeAPI.Route, error) {
+	def, err := c.DefaultDestination.RenderRoute("default", "/")
+	if err != nil {
+		return nil, err
+	}
+	routes := []*routeAPI.Route{
+		def,
+	}
+
+	for k, v := range c.Destinations {
+		name := fmt.Sprintf("cluster_%s", util.SHA256FromString(k))
+		c, err := v.RenderRoute(name, k)
+		if err != nil {
+			return nil, err
+		}
+
+		routes = append(routes, c)
+	}
+
+	sort.Slice(routes, func(i, j int) bool {
+		return routes[i].GetMatch().GetPrefix() > routes[j].GetMatch().GetPrefix()
+	})
+
+	return routes, nil
 }
 
-func (g GatewayConfig) RenderFilters() ([]*listenerAPI.Filter, error) {
+func (c Config) RenderFilters() ([]*listenerAPI.Filter, error) {
 	httpFilterConfigType, err := anypb.New(&routerAPI.Router{})
 	if err != nil {
 		return nil, errors.Wrapf(err, "Unable to render route config")
 	}
 
-	routes, err := g.RenderRoutes()
+	routes, err := c.RenderRoutes()
 	if err != nil {
 		return nil, errors.Wrapf(err, "Unable to render routes")
 	}
@@ -184,10 +175,10 @@ func (g GatewayConfig) RenderFilters() ([]*listenerAPI.Filter, error) {
 		CodecType:  httpConnectionManagerAPI.HttpConnectionManager_AUTO,
 		RouteSpecifier: &httpConnectionManagerAPI.HttpConnectionManager_RouteConfig{
 			RouteConfig: &routeAPI.RouteConfiguration{
-				Name: "local_route",
+				Name: "default",
 				VirtualHosts: []*routeAPI.VirtualHost{
 					{
-						Name:    "local_service",
+						Name:    "default",
 						Domains: []string{"*"},
 						Routes:  routes,
 					},
@@ -217,8 +208,8 @@ func (g GatewayConfig) RenderFilters() ([]*listenerAPI.Filter, error) {
 	}, nil
 }
 
-func (g GatewayConfig) RenderDefaultFilterChain() (*listenerAPI.FilterChain, error) {
-	filters, err := g.RenderFilters()
+func (c Config) RenderDefaultFilterChain() (*listenerAPI.FilterChain, error) {
+	filters, err := c.RenderFilters()
 	if err != nil {
 		return nil, errors.Wrapf(err, "Unable to render filters")
 	}
@@ -227,51 +218,26 @@ func (g GatewayConfig) RenderDefaultFilterChain() (*listenerAPI.FilterChain, err
 		Filters: filters,
 	}
 
-	if tls := g.DefaultTLS; tls != nil {
-		tlsContext, err := anypb.New(&tlsApi.DownstreamTlsContext{
-			CommonTlsContext: &tlsApi.CommonTlsContext{
-				TlsCertificates: []*tlsApi.TlsCertificate{
-					{
-						CertificateChain: &coreAPI.DataSource{
-							Specifier: &coreAPI.DataSource_Filename{
-								Filename: tls.CertificatePath,
-							},
-						},
-						PrivateKey: &coreAPI.DataSource{
-							Specifier: &coreAPI.DataSource_Filename{
-								Filename: tls.PrivateKeyPath,
-							},
-						},
-					},
-				},
-			},
-		})
-		if err != nil {
-			return nil, errors.Wrapf(err, "Unable to render tls context")
-		}
-
-		ret.TransportSocket = &coreAPI.TransportSocket{
-			Name: "envoy.transport_sockets.tls",
-			ConfigType: &coreAPI.TransportSocket_TypedConfig{
-				TypedConfig: tlsContext,
-			},
-		}
+	if tls, err := c.DefaultTLS.RenderListenerTransportSocket(); err != nil {
+		return nil, err
+	} else {
+		ret.TransportSocket = tls
 	}
 
 	return ret, nil
 }
 
-func (g GatewayConfig) RenderSecondaryFilterChains() ([]*listenerAPI.FilterChain, error) {
+func (c Config) RenderSecondaryFilterChains() ([]*listenerAPI.FilterChain, error) {
 	return nil, nil
 }
 
-func (g GatewayConfig) RenderListener() (*listenerAPI.Listener, error) {
-	filterChains, err := g.RenderSecondaryFilterChains()
+func (c Config) RenderListener() (*listenerAPI.Listener, error) {
+	filterChains, err := c.RenderSecondaryFilterChains()
 	if err != nil {
 		return nil, errors.Wrapf(err, "Unable to render secondary filter chains")
 	}
 
-	defaultFilterChain, err := g.RenderDefaultFilterChain()
+	defaultFilterChain, err := c.RenderDefaultFilterChain()
 	if err != nil {
 		return nil, errors.Wrapf(err, "Unable to render default filter")
 	}

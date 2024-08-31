@@ -4,11 +4,14 @@ v1alpha1:
       spec:
         properties:
           deployment:
-            description: DeploymentName specifies the ArangoDeployment object name
+            description: Deployment specifies the ArangoDeployment object name
             type: string
           destination:
             description: Destination defines the route destination
             properties:
+              path:
+                description: Path defines service path used for overrides
+                type: string
               schema:
                 description: Schema defines HTTP/S schema used for connection
                 type: string

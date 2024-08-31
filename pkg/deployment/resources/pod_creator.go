@@ -292,10 +292,7 @@ func createArangoGatewayArgs(input pod.Input, additionalOptions ...k8sutil.Optio
 
 	options.Append(additionalOptions...)
 
-	// TLS
-	options.Merge(pod.TLS().Args(input))
-
-	args := options.Sort().AsArgs()
+	args := options.Sort().AsSplittedArgs()
 	if len(input.GroupSpec.Args) > 0 {
 		args = append(args, input.GroupSpec.Args...)
 	}
@@ -699,8 +696,9 @@ func RenderArangoPod(ctx context.Context, cachedStatus inspectorInterface.Inspec
 	if profiles, err := podCreator.Profiles(); err != nil {
 		return nil, err
 	} else if len(profiles) > 0 {
-
-		profiles.RenderOnTemplate(&p)
+		if err := profiles.RenderOnTemplate(&p); err != nil {
+			return nil, err
+		}
 	}
 
 	return &core.Pod{

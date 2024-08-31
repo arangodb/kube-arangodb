@@ -20,25 +20,46 @@
 
 package v1alpha1
 
-import "github.com/arangodb/kube-arangodb/pkg/util"
+import (
+	"fmt"
 
-type ArangoRouteStatusTargets []ArangoRouteStatusTarget
-
-func (a ArangoRouteStatusTargets) Hash() string {
-	return util.SHA256FromExtract(func(t ArangoRouteStatusTarget) string {
-		return t.Hash()
-	}, a...)
-}
+	"github.com/arangodb/kube-arangodb/pkg/util"
+)
 
 type ArangoRouteStatusTarget struct {
-	Url string `json:"url,omitempty"`
+	// Destinations keeps target destinations
+	Destinations ArangoRouteStatusTargetDestinations `json:"destinations,omitempty"`
 
-	TLS ArangoRouteStatusTargetTLS `json:"tls,omitempty"`
+	// TLS Keeps target TLS Settings (if not nil, TLS is enabled)
+	TLS *ArangoRouteStatusTargetTLS `json:"TLS,omitempty"`
+
+	// Path specifies request path override
+	Path string `json:"path,omitempty"`
+}
+
+func (a *ArangoRouteStatusTarget) RenderURLs() []string {
+	if a == nil {
+		return nil
+	}
+
+	var urls = make([]string, len(a.Destinations))
+
+	proto := "http"
+
+	if a.TLS != nil {
+		proto = "https"
+	}
+
+	for id, dest := range a.Destinations {
+		urls[id] = fmt.Sprintf("%s://%s:%d%s", proto, dest.Host, dest.Port, a.Path)
+	}
+
+	return urls
 }
 
 func (a *ArangoRouteStatusTarget) Hash() string {
 	if a == nil {
 		return ""
 	}
-	return util.SHA256FromStringArray(a.Url, a.TLS.Hash())
+	return util.SHA256FromStringArray(a.Destinations.Hash(), a.TLS.Hash(), a.Path)
 }

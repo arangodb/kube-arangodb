@@ -21,32 +21,27 @@
 package v1alpha1
 
 import (
-	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"fmt"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-type ArangoRouteSpecRoute struct {
-	// Path specifies the Path route
-	Path *string `json:"path,omitempty"`
+type ArangoRouteStatusTargetDestinations []ArangoRouteStatusTargetDestination
+
+func (a ArangoRouteStatusTargetDestinations) Hash() string {
+	return util.SHA256FromExtract(func(t ArangoRouteStatusTargetDestination) string {
+		return t.Hash()
+	}, a...)
 }
 
-func (a *ArangoRouteSpecRoute) GetPath() string {
-	if a == nil || a.Path == nil {
+type ArangoRouteStatusTargetDestination struct {
+	Host string `json:"host,omitempty"`
+	Port int32  `json:"port,omitempty"`
+}
+
+func (a *ArangoRouteStatusTargetDestination) Hash() string {
+	if a == nil {
 		return ""
 	}
-
-	return *a.Path
-}
-
-func (a *ArangoRouteSpecRoute) Validate() error {
-	if a == nil {
-		a = &ArangoRouteSpecRoute{}
-	}
-
-	if err := shared.WithErrors(
-		shared.ValidateRequiredPath("path", a.Path, shared.ValidateAPIPath),
-	); err != nil {
-		return err
-	}
-
-	return nil
+	return util.SHA256FromStringArray(fmt.Sprintf("%s:%d", a.Host, a.Port))
 }

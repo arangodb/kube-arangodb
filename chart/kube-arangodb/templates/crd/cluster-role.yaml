@@ -13,19 +13,61 @@ metadata:
         app.kubernetes.io/instance: {{ .Release.Name }}
         release: {{ .Release.Name }}
 rules:
-    - apiGroups: ["apiextensions.k8s.io"]
-      resources: ["customresourcedefinitions"]
-      verbs: ["get", "list", "watch", "update", "delete"]
-      resourceNames:
-        - "arangodeployments.database.arangodb.com"
-        - "arangoclustersynchronizations.database.arangodb.com"
-        - "arangomembers.database.arangodb.com"
-        - "arangotasks.database.arangodb.com"
-        - "arangodeploymentreplications.replication.database.arangodb.com"
-        - "arangobackups.backup.arangodb.com"
-        - "arangobackuppolicies.backup.arangodb.com"
-        - "arangojobs.apps.arangodb.com"
-        - "arangolocalstorages.storage.arangodb.com"
+# analytics.arangodb.com
+  - apiGroups: ["apiextensions.k8s.io"]
+    resources: ["customresourcedefinitions"]
+    verbs: ["get", "list", "watch", "update", "delete"]
+    resourceNames:
+      - "graphanalyticsengines.analytics.arangodb.com"
+# apps.arangodb.com
+  - apiGroups: ["apiextensions.k8s.io"]
+    resources: ["customresourcedefinitions"]
+    verbs: ["get", "list", "watch", "update", "delete"]
+    resourceNames:
+      - "arangojobs.apps.arangodb.com"
+# backup.arangodb.com
+  - apiGroups: ["apiextensions.k8s.io"]
+    resources: ["customresourcedefinitions"]
+    verbs: ["get", "list", "watch", "update", "delete"]
+    resourceNames:
+      - "arangobackuppolicies.backup.arangodb.com"
+      - "arangobackups.backup.arangodb.com"
+# database.arangodb.com
+  - apiGroups: ["apiextensions.k8s.io"]
+    resources: ["customresourcedefinitions"]
+    verbs: ["get", "list", "watch", "update", "delete"]
+    resourceNames:
+      - "arangoclustersynchronizations.database.arangodb.com"
+      - "arangodeployments.database.arangodb.com"
+      - "arangomembers.database.arangodb.com"
+      - "arangotasks.database.arangodb.com"
+# ml.arangodb.com
+  - apiGroups: ["apiextensions.k8s.io"]
+    resources: ["customresourcedefinitions"]
+    verbs: ["get", "list", "watch", "update", "delete"]
+    resourceNames:
+      - "arangomlbatchjobs.ml.arangodb.com"
+      - "arangomlcronjobs.ml.arangodb.com"
+      - "arangomlextensions.ml.arangodb.com"
+      - "arangomlstorages.ml.arangodb.com"
+# networking.arangodb.com
+  - apiGroups: ["apiextensions.k8s.io"]
+    resources: ["customresourcedefinitions"]
+    verbs: ["get", "list", "watch", "update", "delete"]
+    resourceNames:
+      - "arangoroutes.networking.arangodb.com"
+# replication.database.arangodb.com
+  - apiGroups: ["apiextensions.k8s.io"]
+    resources: ["customresourcedefinitions"]
+    verbs: ["get", "list", "watch", "update", "delete"]
+    resourceNames:
+      - "arangodeploymentreplications.replication.database.arangodb.com"
+# scheduler.arangodb.com
+  - apiGroups: ["apiextensions.k8s.io"]
+    resources: ["customresourcedefinitions"]
+    verbs: ["get", "list", "watch", "update", "delete"]
+    resourceNames:
+      - "arangoprofiles.scheduler.arangodb.com"
 
 {{- end }}
 {{- end }}

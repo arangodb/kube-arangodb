@@ -34,7 +34,7 @@ import (
 
 var (
 	resourceNameRE = regexp.MustCompile(`^([0-9\-\.a-z])+$`)
-	apiPathRE      = regexp.MustCompile(`^/([A-Za-z0-9\-]+/)*$`)
+	apiPathRE      = regexp.MustCompile(`^/([_A-Za-z0-9\-]+/)*$`)
 )
 
 const (
@@ -185,6 +185,19 @@ func ValidateList[T any](in []T, validator func(T) error) error {
 
 	for id := range in {
 		errors[id] = PrefixResourceError(fmt.Sprintf("[%d]", id), validator(in[id]))
+	}
+
+	return WithErrors(errors...)
+}
+
+// ValidateMap validates all elements on the list
+func ValidateMap[T any](in map[string]T, validator func(string, T) error) error {
+	errors := make([]error, 0, len(in))
+
+	for id := range in {
+		if err := PrefixResourceError(fmt.Sprintf("`%s`", id), validator(id, in[id])); err != nil {
+			errors = append(errors, err)
+		}
 	}
 
 	return WithErrors(errors...)

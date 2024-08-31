@@ -31,30 +31,41 @@ type ArangoRouteSpecDestination struct {
 
 	// TLS defines TLS Configuration
 	TLS *ArangoRouteSpecDestinationTLS `json:"tls,omitempty"`
+
+	// Path defines service path used for overrides
+	Path *string `json:"path,omitempty"`
 }
 
-func (s *ArangoRouteSpecDestination) GetService() *ArangoRouteSpecDestinationService {
-	if s == nil || s.Service == nil {
+func (a *ArangoRouteSpecDestination) GetService() *ArangoRouteSpecDestinationService {
+	if a == nil || a.Service == nil {
 		return nil
 	}
 
-	return s.Service
+	return a.Service
 }
 
-func (s *ArangoRouteSpecDestination) GetSchema() *ArangoRouteSpecDestinationSchema {
-	if s == nil || s.Schema == nil {
+func (a *ArangoRouteSpecDestination) GetSchema() *ArangoRouteSpecDestinationSchema {
+	if a == nil || a.Schema == nil {
 		return nil
 	}
 
-	return s.Schema
+	return a.Schema
 }
 
-func (s *ArangoRouteSpecDestination) GetTLS() *ArangoRouteSpecDestinationTLS {
-	if s == nil || s.TLS == nil {
+func (a *ArangoRouteSpecDestination) GetPath() string {
+	if a == nil || a.Path == nil {
+		return "/"
+	}
+
+	return *a.Path
+}
+
+func (a *ArangoRouteSpecDestination) GetTLS() *ArangoRouteSpecDestinationTLS {
+	if a == nil || a.TLS == nil {
 		return nil
 	}
 
-	return s.TLS
+	return a.TLS
 }
 
 func (a *ArangoRouteSpecDestination) Validate() error {
@@ -66,6 +77,7 @@ func (a *ArangoRouteSpecDestination) Validate() error {
 		shared.ValidateOptionalInterfacePath("service", a.Service),
 		shared.ValidateOptionalInterfacePath("schema", a.Schema),
 		shared.ValidateOptionalInterfacePath("tls", a.TLS),
+		shared.PrefixResourceError("path", shared.ValidateAPIPath(a.GetPath())),
 	); err != nil {
 		return err
 	}

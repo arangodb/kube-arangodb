@@ -132,6 +132,8 @@ func (s *stateInspector) RefreshState(ctx context.Context, members api.Deploymen
 			if results[id].IsServing() {
 				client = results[id].client
 			}
+		case api.ServerGroupTypeGateway:
+			results[id] = s.fetchGatewayMemberState(ctxChild, members[id])
 		default:
 			assertion.InvalidGroupKey.Assert(true, "Unable to fetch Health for an unknown group: %s", members[id].Group.AsRole())
 			results[id] = State{
@@ -177,6 +179,9 @@ func (s *stateInspector) RefreshState(ctx context.Context, members api.Deploymen
 					}
 				case api.ServerGroupTypeArangoSync:
 					// ArangoSync is considered as healthy when it is possible to fetch version.
+					results[i].IsClusterHealthy = true
+				case api.ServerGroupTypeGateway:
+					// Gateway is considered as healthy when it is possible to fetch version.
 					results[i].IsClusterHealthy = true
 				default:
 					assertion.InvalidGroupKey.Assert(true, "Unable to fetch Health for an unknown group: %s", members[i].Group.AsRole())
@@ -225,6 +230,26 @@ func (s *stateInspector) fetchArangosyncMemberState(ctx context.Context, m api.D
 		}
 		state.syncClient = c
 	}
+	return state
+}
+
+func (s *stateInspector) fetchGatewayMemberState(ctx context.Context, m api.DeploymentStatusMemberElement) State {
+	// by default, it is not serving. It will be changed if it serves.
+	var state State
+	c, err := s.deployment.GetServerClient(ctx, m.Group, m.Member.ID)
+	if err != nil {
+		state.NotReachableErr = err
+		return state
+	}
+
+	if v, err := c.Version(ctx); err != nil {
+		state.NotReachableErr = err
+		return state
+	} else {
+		state.Version = v
+		state.client = c
+	}
+
 	return state
 }
 

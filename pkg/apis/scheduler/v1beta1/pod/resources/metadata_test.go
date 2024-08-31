@@ -136,4 +136,47 @@ func Test_Metadata(t *testing.T) {
 			require.EqualValues(t, "test2", pod.OwnerReferences[1].UID)
 		})
 	})
+	t.Run("Update Template", func(t *testing.T) {
+		applyMetadata(t, &core.PodTemplateSpec{
+			ObjectMeta: meta.ObjectMeta{
+				Labels: map[string]string{
+					"A": "1",
+				},
+				Annotations: map[string]string{
+					"B": "2",
+				},
+				OwnerReferences: []meta.OwnerReference{
+					{
+						UID: "test",
+					},
+				},
+			},
+		}, &Metadata{
+			Labels: map[string]string{
+				"A": "3",
+			},
+			Annotations: map[string]string{
+				"B2": "4",
+			},
+			OwnerReferences: []meta.OwnerReference{
+				{
+					UID: "test2",
+				},
+			},
+		})(func(t *testing.T, pod *core.PodTemplateSpec) {
+			require.Len(t, pod.Labels, 1)
+			require.Contains(t, pod.Labels, "A")
+			require.EqualValues(t, "3", pod.Labels["A"])
+
+			require.Len(t, pod.Annotations, 2)
+			require.Contains(t, pod.Annotations, "B")
+			require.EqualValues(t, "2", pod.Annotations["B"])
+			require.Contains(t, pod.Annotations, "B2")
+			require.EqualValues(t, "4", pod.Annotations["B2"])
+
+			require.Len(t, pod.OwnerReferences, 2)
+			require.EqualValues(t, "test", pod.OwnerReferences[0].UID)
+			require.EqualValues(t, "test2", pod.OwnerReferences[1].UID)
+		})
+	})
 }

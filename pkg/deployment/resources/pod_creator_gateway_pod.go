@@ -22,6 +22,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 	"math"
 
 	core "k8s.io/api/core/v1"
@@ -35,6 +36,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/integrations/sidecar"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/collection"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
@@ -213,7 +215,18 @@ func (m *MemberGatewayPod) Annotations() map[string]string {
 }
 
 func (m *MemberGatewayPod) Labels() map[string]string {
-	return collection.ReservedLabels().Filter(collection.MergeAnnotations(m.spec.Labels, m.groupSpec.Labels))
+	l := collection.ReservedLabels().Filter(collection.MergeAnnotations(m.spec.Labels, m.groupSpec.Labels))
+
+	if m.status.Topology != nil && m.deploymentStatus.Topology.Enabled() && m.deploymentStatus.Topology.ID == m.status.Topology.ID {
+		if l == nil {
+			l = map[string]string{}
+		}
+
+		l[k8sutil.LabelKeyArangoZone] = fmt.Sprintf("%d", m.status.Topology.Zone)
+		l[k8sutil.LabelKeyArangoTopology] = string(m.status.Topology.ID)
+	}
+
+	return l
 }
 
 func (m *MemberGatewayPod) Profiles() (schedulerApi.ProfileTemplates, error) {
