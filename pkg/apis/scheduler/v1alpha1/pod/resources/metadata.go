@@ -59,9 +59,9 @@ func (m *Metadata) Apply(template *core.PodTemplateSpec) error {
 
 	z := m.DeepCopy()
 
-	template.Labels = z.Labels
-	template.Annotations = z.Annotations
-	template.OwnerReferences = z.OwnerReferences
+	template.Labels = util.MergeMaps(true, template.Labels, z.Labels)
+	template.Annotations = util.MergeMaps(true, template.Annotations, z.Annotations)
+	template.OwnerReferences = append(template.OwnerReferences, z.OwnerReferences...)
 
 	return nil
 }

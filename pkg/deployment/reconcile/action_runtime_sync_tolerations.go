@@ -29,6 +29,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tolerations"
@@ -78,7 +79,7 @@ func (a actionRuntimeContainerSyncTolerations) Start(ctx context.Context) (bool,
 
 	expectedTolerations := member.Spec.Template.PodSpec.Spec.Tolerations
 
-	origTolerations := tolerations.CreatePodTolerations(a.actionCtx.GetMode(), a.action.Group)
+	origTolerations := resources.CreatePodTolerations(a.actionCtx.GetMode(), a.action.Group)
 
 	calculatedTolerations := tolerations.MergeTolerationsIfNotFound(currentTolerations, origTolerations, expectedTolerations)
 

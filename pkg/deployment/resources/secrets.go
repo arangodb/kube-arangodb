@@ -131,7 +131,7 @@ func (r *Resources) EnsureSecrets(ctx context.Context, cachedStatus inspectorInt
 
 		if err := reconcileRequired.ParallelAll(len(members), func(id int) error {
 			switch members[id].Group.Type() {
-			case api.ServerGroupTypeArangoD:
+			case api.ServerGroupTypeArangoD, api.ServerGroupTypeGateway:
 				memberName := members[id].Member.ArangoMemberName(r.context.GetAPIObject().GetName(), members[id].Group)
 
 				member, ok := cachedStatus.ArangoMember().V1().GetSimple(memberName)

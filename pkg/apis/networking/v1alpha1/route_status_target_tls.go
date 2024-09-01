@@ -24,7 +24,7 @@ import "github.com/arangodb/kube-arangodb/pkg/util"
 
 type ArangoRouteStatusTargetTLS struct {
 	// Insecure allows Insecure traffic
-	Insecure bool `json:"insecure"`
+	Insecure *bool `json:"insecure"`
 }
 
 func (a *ArangoRouteStatusTargetTLS) Hash() string {
@@ -32,5 +32,13 @@ func (a *ArangoRouteStatusTargetTLS) Hash() string {
 		return ""
 	}
 
-	return util.SHA256FromStringArray(util.BoolSwitch(a.Insecure, "true", "false"))
+	return util.SHA256FromStringArray(util.BoolSwitch(a.IsInsecure(), "true", "false"))
+}
+
+func (a *ArangoRouteStatusTargetTLS) IsInsecure() bool {
+	if a == nil || a.Insecure == nil {
+		return false
+	}
+
+	return *a.Insecure
 }

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -53,7 +53,7 @@ func Test_Service(t *testing.T) {
 			require.True(t, ok)
 			require.False(t, svc.Spec.PublishNotReadyAddresses)
 
-			changed, err := ServicePatcher(context.Background(), c.ServicesModInterface().V1(), svc, meta.PatchOptions{}, PatchServicePublishNotReadyAddresses(true))
+			_, changed, err := Patcher[*core.Service](context.Background(), c.ServicesModInterface().V1(), svc, meta.PatchOptions{}, PatchServicePublishNotReadyAddresses(true))
 			require.NoError(t, err)
 			require.True(t, changed)
 
@@ -69,7 +69,7 @@ func Test_Service(t *testing.T) {
 			require.True(t, ok)
 			require.True(t, svc.Spec.PublishNotReadyAddresses)
 
-			changed, err := ServicePatcher(context.Background(), c.ServicesModInterface().V1(), svc, meta.PatchOptions{}, PatchServicePublishNotReadyAddresses(true))
+			_, changed, err := Patcher[*core.Service](context.Background(), c.ServicesModInterface().V1(), svc, meta.PatchOptions{}, PatchServicePublishNotReadyAddresses(true))
 			require.NoError(t, err)
 			require.False(t, changed)
 
@@ -85,7 +85,7 @@ func Test_Service(t *testing.T) {
 			require.True(t, ok)
 			require.True(t, svc.Spec.PublishNotReadyAddresses)
 
-			changed, err := ServicePatcher(context.Background(), c.ServicesModInterface().V1(), svc, meta.PatchOptions{}, PatchServicePublishNotReadyAddresses(false))
+			_, changed, err := Patcher[*core.Service](context.Background(), c.ServicesModInterface().V1(), svc, meta.PatchOptions{}, PatchServicePublishNotReadyAddresses(false))
 			require.NoError(t, err)
 			require.True(t, changed)
 

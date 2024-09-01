@@ -41,7 +41,7 @@ func Test_Handler_Deployment(t *testing.T) {
 	// Arrange
 	extension := tests.NewMetaObject[*networkingApi.ArangoRoute](t, tests.FakeNamespace, "test",
 		func(t *testing.T, obj *networkingApi.ArangoRoute) {
-			obj.Spec.DeploymentName = util.NewType("deployment")
+			obj.Spec.Deployment = util.NewType("deployment")
 		},
 		func(t *testing.T, obj *networkingApi.ArangoRoute) {
 			obj.Spec.Destination = &networkingApi.ArangoRouteSpecDestination{
@@ -73,7 +73,7 @@ func Test_Handler_MissingDeployment(t *testing.T) {
 
 	// Arrange
 	extension := tests.NewMetaObject[*networkingApi.ArangoRoute](t, tests.FakeNamespace, "test", func(t *testing.T, obj *networkingApi.ArangoRoute) {
-		obj.Spec.DeploymentName = util.NewType("deployment-missing")
+		obj.Spec.Deployment = util.NewType("deployment-missing")
 	},
 		func(t *testing.T, obj *networkingApi.ArangoRoute) {
 			obj.Spec.Destination = &networkingApi.ArangoRouteSpecDestination{
@@ -105,7 +105,7 @@ func Test_Handler_Deployment_Changed(t *testing.T) {
 
 	// Arrange
 	extension := tests.NewMetaObject[*networkingApi.ArangoRoute](t, tests.FakeNamespace, "test", func(t *testing.T, obj *networkingApi.ArangoRoute) {
-		obj.Spec.DeploymentName = util.NewType("deployment")
+		obj.Spec.Deployment = util.NewType("deployment")
 	},
 		func(t *testing.T, obj *networkingApi.ArangoRoute) {
 			obj.Spec.Destination = &networkingApi.ArangoRouteSpecDestination{

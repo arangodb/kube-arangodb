@@ -30,6 +30,7 @@ import (
 	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
@@ -321,7 +322,7 @@ func (m *MemberArangoDPod) AsInput() pod.Input {
 	}
 }
 
-func (m *MemberArangoDPod) Init(_ context.Context, _ interfaces.Inspector, pod *core.Pod) error {
+func (m *MemberArangoDPod) Init(_ context.Context, _ interfaces.Inspector, pod *core.PodTemplateSpec) error {
 	terminationGracePeriodSeconds := int64(math.Ceil(m.groupSpec.GetTerminationGracePeriod(m.group).Seconds()))
 	pod.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds
 	pod.Spec.PriorityClassName = m.groupSpec.PriorityClassName
@@ -409,7 +410,7 @@ func (m *MemberArangoDPod) GetServiceAccountName() string {
 	return m.groupSpec.GetServiceAccountName()
 }
 
-func (m *MemberArangoDPod) GetSidecars(pod *core.Pod) error {
+func (m *MemberArangoDPod) GetSidecars(pod *core.PodTemplateSpec) error {
 	//nolint:staticcheck
 	if m.spec.Metrics.IsEnabled() && m.spec.Metrics.Mode.Get() != api.MetricsModeInternal {
 		var c *core.Container
@@ -593,6 +594,10 @@ func (m *MemberArangoDPod) ApplyPodSpec(p *core.PodSpec) error {
 
 func (m *MemberArangoDPod) Annotations() map[string]string {
 	return collection.MergeAnnotations(m.spec.Annotations, m.groupSpec.Annotations)
+}
+
+func (m *MemberArangoDPod) Profiles() (schedulerApi.ProfileTemplates, error) {
+	return nil, nil
 }
 
 func (m *MemberArangoDPod) Labels() map[string]string {

@@ -175,6 +175,14 @@ func Test_GenerateAPIDocs(t *testing.T) {
 						"Spec": deploymentApi.ArangoMember{}.Spec,
 					},
 				},
+				Shared: []string{
+					"shared/v1",
+					"scheduler/v1beta1",
+					"scheduler/v1beta1/container",
+					"scheduler/v1beta1/container/resources",
+					"scheduler/v1beta1/pod",
+					"scheduler/v1beta1/pod/resources",
+				},
 			},
 		},
 		"apps": map[string]inputPackage{

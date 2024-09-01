@@ -125,7 +125,7 @@ func (r *Resources) EnsureLeader(ctx context.Context, cachedStatus inspectorInte
 	selector := k8sutil.LabelsForLeaderMember(deploymentName, group.AsRole(), leaderID)
 
 	if s, ok := cachedStatus.Service().V1().GetSimple(leaderAgentSvcName); ok {
-		if c, err := patcher.ServicePatcher(ctx, cachedStatus.ServicesModInterface().V1(), s, meta.PatchOptions{}, patcher.PatchServiceSelector(selector), patcher.PatchServicePorts(ports)); err != nil {
+		if _, c, err := patcher.Patcher[*core.Service](ctx, cachedStatus.ServicesModInterface().V1(), s, meta.PatchOptions{}, patcher.PatchServiceSelector(selector), patcher.PatchServicePorts(ports)); err != nil {
 			return err
 		} else {
 			if !c {

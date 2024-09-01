@@ -33,6 +33,6 @@ type ArangoRouteStatus struct {
 	// Deployment keeps the ArangoDeployment reference
 	Deployment *sharedApi.Object `json:"deployment,omitempty"`
 
-	// Targets keeps the target details
-	Targets ArangoRouteStatusTargets `json:"targets,omitempty"`
+	// Target keeps the target details
+	Target *ArangoRouteStatusTarget `json:"target,omitempty"`
 }

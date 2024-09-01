@@ -32,6 +32,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
@@ -266,7 +267,7 @@ func (m *MemberSyncPod) GetServiceAccountName() string {
 	return m.groupSpec.GetServiceAccountName()
 }
 
-func (m *MemberSyncPod) GetSidecars(pod *core.Pod) error {
+func (m *MemberSyncPod) GetSidecars(pod *core.PodTemplateSpec) error {
 	// A sidecar provided by the user
 	sidecars := m.groupSpec.GetSidecars()
 	if len(sidecars) > 0 {
@@ -350,7 +351,7 @@ func (m *MemberSyncPod) GetRestartPolicy() core.RestartPolicy {
 }
 
 // Init initializes the arangosync pod.
-func (m *MemberSyncPod) Init(ctx context.Context, cachedStatus interfaces.Inspector, pod *core.Pod) error {
+func (m *MemberSyncPod) Init(ctx context.Context, cachedStatus interfaces.Inspector, pod *core.PodTemplateSpec) error {
 	terminationGracePeriodSeconds := int64(math.Ceil(m.groupSpec.GetTerminationGracePeriod(m.group).Seconds()))
 	pod.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds
 	pod.Spec.PriorityClassName = m.groupSpec.PriorityClassName
@@ -516,4 +517,8 @@ func (m *MemberSyncPod) syncHostAlias() *core.HostAlias {
 	alias.Hostnames = aliases
 
 	return &alias
+}
+
+func (m *MemberSyncPod) Profiles() (schedulerApi.ProfileTemplates, error) {
+	return nil, nil
 }

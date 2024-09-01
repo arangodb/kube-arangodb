@@ -12,7 +12,15 @@ title: ArangoRoute V1Alpha1
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/networking/v1alpha1/route_spec.go#L27)</sup>
 
-DeploymentName specifies the ArangoDeployment object name
+Deployment specifies the ArangoDeployment object name
+
+***
+
+### .spec.destination.path
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/networking/v1alpha1/route_spec_destination.go#L36)</sup>
+
+Path defines service path used for overrides
 
 ***
 
@@ -123,15 +131,29 @@ UID keeps the information about object UID
 
 ***
 
-### .status.targets\[int\].tls.insecure
+### .status.target.destinations\[int\].host
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/networking/v1alpha1/route_status_target_destination.go#L38)</sup>
+
+***
+
+### .status.target.destinations\[int\].port
+
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/networking/v1alpha1/route_status_target_destination.go#L39)</sup>
+
+***
+
+### .status.target.path
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/networking/v1alpha1/route_status_target.go#L37)</sup>
+
+Path specifies request path override
+
+***
+
+### .status.target.TLS.insecure
 
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/networking/v1alpha1/route_status_target_tls.go#L27)</sup>
 
 Insecure allows Insecure traffic
-
-***
-
-### .status.targets\[int\].url
-
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/networking/v1alpha1/route_status_target.go#L34)</sup>
 

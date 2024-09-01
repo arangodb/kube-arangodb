@@ -35,7 +35,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-func (h *handler) HandleArangoDestination(ctx context.Context, item operation.Item, extension *networkingApi.ArangoRoute, status *networkingApi.ArangoRouteStatus, _ *api.ArangoDeployment) (*operator.Condition, bool, error) {
+func (h *handler) HandleArangoDestination(ctx context.Context, item operation.Item, extension *networkingApi.ArangoRoute, status *networkingApi.ArangoRouteStatus, deployment *api.ArangoDeployment) (*operator.Condition, bool, error) {
 	if dest := extension.Spec.GetDestination(); dest != nil {
 		if svc := dest.GetService(); svc != nil {
 			port := svc.Port
@@ -117,30 +117,56 @@ func (h *handler) HandleArangoDestination(ctx context.Context, item operation.It
 				}, false, nil
 			}
 
-			var targets = networkingApi.ArangoRouteStatusTargets{
-				networkingApi.ArangoRouteStatusTarget{
-					Url: fmt.Sprintf("%s://%s.%s.svc:%d%s", dest.GetSchema().String(), s.GetName(), s.GetNamespace(), destPort, extension.Spec.GetRoute().GetPath()),
-					TLS: networkingApi.ArangoRouteStatusTargetTLS{
-						Insecure: extension.Spec.Destination.GetTLS().GetInsecure(),
-					},
-				},
+			var target networkingApi.ArangoRouteStatusTarget
+
+			target.Path = dest.GetPath()
+
+			if dest.Schema.Get() == networkingApi.ArangoRouteSpecDestinationSchemaHTTPS {
+				target.TLS = &networkingApi.ArangoRouteStatusTargetTLS{
+					Insecure: util.NewType(extension.Spec.Destination.GetTLS().GetInsecure()),
+				}
 			}
 
-			if status.Targets.Hash() == targets.Hash() {
+			if ip := s.Spec.ClusterIP; ip != "" {
+				target.Destinations = networkingApi.ArangoRouteStatusTargetDestinations{
+					networkingApi.ArangoRouteStatusTargetDestination{
+						Host: ip,
+						Port: destPort,
+					},
+				}
+			} else {
+				if domain := deployment.Spec.ClusterDomain; domain != nil {
+					target.Destinations = networkingApi.ArangoRouteStatusTargetDestinations{
+						networkingApi.ArangoRouteStatusTargetDestination{
+							Host: fmt.Sprintf("%s.%s.svc.%s", s.GetName(), s.GetNamespace(), *domain),
+							Port: destPort,
+						},
+					}
+				} else {
+					target.Destinations = networkingApi.ArangoRouteStatusTargetDestinations{
+						networkingApi.ArangoRouteStatusTargetDestination{
+							Host: fmt.Sprintf("%s.%s.svc", s.GetName(), s.GetNamespace()),
+							Port: destPort,
+						},
+					}
+				}
+			}
+
+			if status.Target.Hash() == target.Hash() {
 				return &operator.Condition{
 					Status:  true,
 					Reason:  "Destination Found",
 					Message: "Destination Found",
-					Hash:    targets.Hash(),
+					Hash:    target.Hash(),
 				}, false, nil
 			}
 
-			status.Targets = targets
+			status.Target = &target
 			return &operator.Condition{
 				Status:  true,
 				Reason:  "Destination Found",
 				Message: "Destination Found",
-				Hash:    targets.Hash(),
+				Hash:    target.Hash(),
 			}, true, nil
 		}
 	}
@@ -154,8 +180,8 @@ func (h *handler) HandleArangoDestination(ctx context.Context, item operation.It
 
 func (h *handler) HandleArangoDestinationWithTargets(ctx context.Context, item operation.Item, extension *networkingApi.ArangoRoute, status *networkingApi.ArangoRouteStatus, depl *api.ArangoDeployment) (*operator.Condition, bool, error) {
 	c, changed, err := h.HandleArangoDestination(ctx, item, extension, status, depl)
-	if c == nil && !c.Status && status.Targets != nil {
-		status.Targets = nil
+	if c == nil && !c.Status && status.Target != nil {
+		status.Target = nil
 		changed = true
 	}
 

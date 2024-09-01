@@ -35,7 +35,7 @@ import (
 )
 
 func (h *handler) HandleArangoDeployment(ctx context.Context, item operation.Item, extension *networkingApi.ArangoRoute, status *networkingApi.ArangoRouteStatus) (bool, error) {
-	var name = util.WithDefault(extension.Spec.DeploymentName)
+	var name = util.WithDefault(extension.Spec.Deployment)
 
 	if status.Deployment != nil {
 		name = status.Deployment.GetName()

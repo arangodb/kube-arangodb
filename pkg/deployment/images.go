@@ -31,6 +31,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
@@ -283,7 +284,7 @@ func (i *ImageUpdatePod) GetRole() string {
 	return "id"
 }
 
-func (i *ImageUpdatePod) Init(_ context.Context, _ interfaces.Inspector, pod *core.Pod) error {
+func (i *ImageUpdatePod) Init(_ context.Context, _ interfaces.Inspector, pod *core.PodTemplateSpec) error {
 	terminationGracePeriodSeconds := int64((time.Second * 30).Seconds())
 	pod.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds
 	pod.Spec.PriorityClassName = i.spec.ID.Get().PriorityClassName
@@ -311,7 +312,7 @@ func (i *ImageUpdatePod) GetVolumes() []core.Volume {
 	return getVolumes(i.AsInput()).Volumes()
 }
 
-func (i *ImageUpdatePod) GetSidecars(*core.Pod) error {
+func (i *ImageUpdatePod) GetSidecars(spec *core.PodTemplateSpec) error {
 	return nil
 }
 
@@ -501,6 +502,10 @@ func (a *ImageUpdatePod) AsInput() pod.Input {
 		Status:     a.status,
 		Group:      api.ServerGroupImageDiscovery,
 	}
+}
+
+func (i *ImageUpdatePod) Profiles() (schedulerApi.ProfileTemplates, error) {
+	return nil, nil
 }
 
 // GetExecutor returns the fixed path to the ArangoSync binary in the container.

@@ -560,10 +560,10 @@ func NewContainer(containerCreator interfaces.ContainerCreator) (core.Container,
 }
 
 // NewPod creates a basic Pod for given settings.
-func NewPod(deploymentName, role, id, podName string, podCreator interfaces.PodCreator) core.Pod {
+func NewPod(deploymentName, role, id, podName string, podCreator interfaces.PodCreator) core.PodTemplateSpec {
 
 	hostname := shared.CreatePodHostName(deploymentName, role, id)
-	p := core.Pod{
+	p := core.PodTemplateSpec{
 		ObjectMeta: meta.ObjectMeta{
 			Name:       podName,
 			Labels:     LabelsForMember(deploymentName, role, id),

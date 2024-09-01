@@ -31,7 +31,7 @@ type ArangoRouteSpecRoute struct {
 
 func (a *ArangoRouteSpecRoute) GetPath() string {
 	if a == nil || a.Path == nil {
-		return "/"
+		return ""
 	}
 
 	return *a.Path
@@ -43,7 +43,7 @@ func (a *ArangoRouteSpecRoute) Validate() error {
 	}
 
 	if err := shared.WithErrors(
-		shared.PrefixResourceError("path", shared.ValidateAPIPath(a.GetPath())),
+		shared.ValidateRequiredPath("path", a.Path, shared.ValidateAPIPath),
 	); err != nil {
 		return err
 	}
