@@ -26,6 +26,7 @@ import (
 	clusterAPI "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
 	endpointAPI "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
 	routeAPI "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
+	anypb "github.com/golang/protobuf/ptypes/any"
 	"google.golang.org/protobuf/types/known/durationpb"
 
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
@@ -63,7 +64,10 @@ type ConfigDestination struct {
 	Path *string `json:"path,omitempty"`
 }
 
-func (c ConfigDestination) Validate() error {
+func (c *ConfigDestination) Validate() error {
+	if c == nil {
+		c = &ConfigDestination{}
+	}
 	return shared.WithErrors(
 		shared.PrefixResourceError("targets", c.Targets.Validate()),
 		shared.PrefixResourceError("type", c.Type.Validate()),
@@ -71,15 +75,15 @@ func (c ConfigDestination) Validate() error {
 	)
 }
 
-func (c ConfigDestination) GetPath() string {
-	if c.Path == nil {
+func (c *ConfigDestination) GetPath() string {
+	if c == nil || c.Path == nil {
 		return "/"
 	}
 
 	return *c.Path
 }
 
-func (c ConfigDestination) RenderRoute(name, prefix string) (*routeAPI.Route, error) {
+func (c *ConfigDestination) RenderRoute(name, prefix string) (*routeAPI.Route, error) {
 	return &routeAPI.Route{
 		Match: &routeAPI.RouteMatch{
 			PathSpecifier: &routeAPI.RouteMatch_Prefix{
@@ -94,10 +98,11 @@ func (c ConfigDestination) RenderRoute(name, prefix string) (*routeAPI.Route, er
 				PrefixRewrite: c.GetPath(),
 			},
 		},
+		TypedPerFilterConfig: map[string]*anypb.Any{},
 	}, nil
 }
 
-func (c ConfigDestination) RenderCluster(name string) (*clusterAPI.Cluster, error) {
+func (c *ConfigDestination) RenderCluster(name string) (*clusterAPI.Cluster, error) {
 	cluster := &clusterAPI.Cluster{
 		Name:           name,
 		ConnectTimeout: durationpb.New(time.Second),

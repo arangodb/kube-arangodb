@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -50,10 +51,12 @@ func (c *Core) GetExternal() bool {
 
 func (c *Core) Args(int Integration) k8sutil.OptionPairs {
 	var options k8sutil.OptionPairs
-	name, ver := int.Name()
+	cmd := strings.Join(util.FormatList(int.Name(), func(a string) string {
+		return strings.ToLower(a)
+	}), ".")
 
-	options.Add(fmt.Sprintf("--integration.%s.%s.internal", strings.ToLower(name), strings.ToLower(ver)), c.GetInternal())
-	options.Add(fmt.Sprintf("--integration.%s.%s.external", strings.ToLower(name), strings.ToLower(ver)), c.GetExternal())
+	options.Add(fmt.Sprintf("--integration.%s.internal", cmd), c.GetInternal())
+	options.Add(fmt.Sprintf("--integration.%s.external", cmd), c.GetExternal())
 
 	return options
 }

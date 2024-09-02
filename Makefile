@@ -121,6 +121,8 @@ ifndef LOCALONLY
 	PUSHIMAGES := 1
 endif
 
+BUILD_SKIP_UPDATE ?= false
+
 ifdef IMAGETAG
 	IMAGESUFFIX := :$(IMAGETAG)
 else
@@ -272,7 +274,7 @@ NON_EE_SOURCES := $(shell $(NON_EE_SOURCES_QUERY))
 
 YAML_EXCLUDE_DIRS := vendor .gobuild deps tools pkg/generated/clientset pkg/generated/informers pkg/generated/listers \
                      chart/kube-arangodb/templates chart/kube-arangodb-arm64/templates chart/kube-arangodb-enterprise/templates chart/kube-arangodb-enterprise-arm64/templates  \
-                     chart/kube-arangodb-crd/templates chart/arangodb-ingress-proxy/templates
+                     chart/kube-arangodb-crd/templates
 YAML_EXCLUDE_FILES :=
 YAML_QUERY := find ./ -type f -name '*.yaml' $(foreach EXCLUDE_DIR,$(YAML_EXCLUDE_DIRS), ! -path "*/$(EXCLUDE_DIR)/*") $(foreach EXCLUDE_FILE,$(YAML_EXCLUDE_FILES), ! -path "*/$(EXCLUDE_FILE)")
 YAMLS := $(shell $(YAML_QUERY))
@@ -478,11 +480,11 @@ $(BIN): $(VBIN_LINUX_AMD64) $(VBIN_OPS_LINUX_AMD64) $(VBIN_INT_LINUX_AMD64)
 docker: clean check-vars $(VBIN_LINUX_AMD64) $(VBIN_LINUX_ARM64)
 ifdef PUSHIMAGES
 	docker buildx build --no-cache -f $(DOCKERFILE) --build-arg GOVERSION=$(GOVERSION) --build-arg DISTRIBUTION=$(DISTRIBUTION) \
-		--build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "RELEASE_MODE=$(RELEASE_MODE)" \
+		--build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "RELEASE_MODE=$(RELEASE_MODE)" --build-arg "BUILD_SKIP_UPDATE=${BUILD_SKIP_UPDATE}" \
 		--platform linux/amd64,linux/arm64 --push -t $(OPERATORIMAGE) .
 else
 	docker buildx build --no-cache -f $(DOCKERFILE) --build-arg GOVERSION=$(GOVERSION) --build-arg DISTRIBUTION=$(DISTRIBUTION) \
-		--build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "RELEASE_MODE=$(RELEASE_MODE)" \
+		--build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "RELEASE_MODE=$(RELEASE_MODE)" --build-arg "BUILD_SKIP_UPDATE=${BUILD_SKIP_UPDATE}" \
 		--platform linux/amd64,linux/arm64 -t $(OPERATORIMAGE) .
 endif
 
@@ -802,6 +804,7 @@ set-typed-api-version/%:
 	@grep -rHn "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/$*/v[A-Za-z0-9]\+" \
 	      "$(ROOT)/pkg/deployment/" \
 	      "$(ROOT)/pkg/replication/" \
+	      "$(ROOT)/pkg/integrations/" \
 	      "$(ROOT)/pkg/operator/" \
 	      "$(ROOT)/pkg/operatorV2/" \
 	      "$(ROOT)/pkg/server/" \
@@ -818,6 +821,7 @@ set-api-version/%:
 	@grep -rHn "github.com/arangodb/kube-arangodb/pkg/apis/$*/v[A-Za-z0-9]\+" \
 	      "$(ROOT)/pkg/deployment/" \
 	      "$(ROOT)/pkg/replication/" \
+	      "$(ROOT)/pkg/integrations/" \
 	      "$(ROOT)/pkg/operator/" \
 	      "$(ROOT)/pkg/operatorV2/" \
 	      "$(ROOT)/pkg/server/" \
@@ -831,6 +835,7 @@ set-api-version/%:
 	@grep -rHn "DatabaseV[A-Za-z0-9]\+()" \
 		  "$(ROOT)/pkg/deployment/" \
 	      "$(ROOT)/pkg/replication/" \
+	      "$(ROOT)/pkg/integrations/" \
 	      "$(ROOT)/pkg/operator/" \
 	      "$(ROOT)/pkg/operatorV2/" \
 	      "$(ROOT)/pkg/server/" \
@@ -844,6 +849,7 @@ set-api-version/%:
 	@grep -rHn "ReplicationV[A-Za-z0-9]\+()" \
 		  "$(ROOT)/pkg/deployment/" \
 		  "$(ROOT)/pkg/replication/" \
+	      "$(ROOT)/pkg/integrations/" \
 		  "$(ROOT)/pkg/operator/" \
 	      "$(ROOT)/pkg/operatorV2/" \
 		  "$(ROOT)/pkg/server/" \

@@ -28,8 +28,8 @@ type IntegrationShutdownV1 struct {
 	Core *Core
 }
 
-func (i IntegrationShutdownV1) Name() (string, string) {
-	return "SHUTDOWN", "V1"
+func (i IntegrationShutdownV1) Name() []string {
+	return []string{"SHUTDOWN", "V1"}
 }
 
 func (i IntegrationShutdownV1) Validate() error {

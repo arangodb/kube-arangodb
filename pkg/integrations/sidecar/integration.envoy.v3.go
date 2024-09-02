@@ -22,34 +22,26 @@ package sidecar
 
 import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 type IntegrationEnvoyV3 struct {
-	Core       *Core
-	Deployment *api.ArangoDeployment
+	Core *Core
+	Spec api.DeploymentSpec
 }
 
-func (i IntegrationEnvoyV3) Name() (string, string) {
-	return "ENVOY", "V3"
+func (i IntegrationEnvoyV3) Name() []string {
+	return []string{"ENVOY", "AUTH", "V3"}
 }
 
 func (i IntegrationEnvoyV3) Validate() error {
-	if i.Deployment == nil {
-		return errors.Errorf("Deployment is nil")
-	}
-
 	return nil
 }
 
 func (i IntegrationEnvoyV3) Args() (k8sutil.OptionPairs, error) {
 	options := k8sutil.CreateOptionPairs()
 
-	options.Add("--integration.authentication.v1", true)
-	options.Add("--integration.authentication.v1.enabled", i.Deployment.GetAcceptedSpec().IsAuthenticated())
-	options.Add("--integration.authentication.v1.path", shared.ClusterJWTSecretVolumeMountDir)
+	options.Add("--integration.envoy.auth.v3", true)
 
 	options.Merge(i.Core.Args(i))
 

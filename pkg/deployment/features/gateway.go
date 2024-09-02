@@ -20,6 +20,8 @@
 
 package features
 
+import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+
 func init() {
 	registerFeature(gateway)
 }
@@ -34,4 +36,8 @@ var gateway = &feature{
 
 func Gateway() Feature {
 	return gateway
+}
+
+func IsGatewayEnabled(spec api.DeploymentSpec) bool {
+	return Gateway().Enabled() && spec.IsGatewayEnabled()
 }

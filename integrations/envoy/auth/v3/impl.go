@@ -53,5 +53,10 @@ func (i *impl) Register(registrar *grpc.Server) {
 }
 
 func (i *impl) Check(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest) (*pbEnvoyAuthV3.CheckResponse, error) {
-	return &pbEnvoyAuthV3.CheckResponse{}, nil
+	logger.Info("Request Received")
+	return &pbEnvoyAuthV3.CheckResponse{
+		HttpResponse: &pbEnvoyAuthV3.CheckResponse_OkResponse{
+			OkResponse: &pbEnvoyAuthV3.OkHttpResponse{},
+		},
+	}, nil
 }

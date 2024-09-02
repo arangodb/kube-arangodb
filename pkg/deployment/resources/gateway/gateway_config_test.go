@@ -147,4 +147,45 @@ func Test_GatewayConfig(t *testing.T) {
 			},
 		})
 	})
+	t.Run("Default", func(t *testing.T) {
+		renderAndPrintGatewayConfig(t, Config{
+			DefaultDestination: ConfigDestination{
+				Targets: []ConfigDestinationTarget{
+					{
+						Host: "127.0.0.1",
+						Port: 12345,
+					},
+				},
+				Path: util.NewType("/test/path/"),
+				Type: util.NewType(ConfigDestinationTypeHTTPS),
+			},
+			DefaultTLS: &ConfigTLS{
+				CertificatePath: "/test",
+				PrivateKeyPath:  "/test12",
+			},
+			SNI: []ConfigSNI{
+				{
+					ConfigTLS: ConfigTLS{
+						CertificatePath: "/cp",
+						PrivateKeyPath:  "/pp",
+					},
+					ServerNames: []string{
+						"example.com",
+					},
+				},
+			},
+			Destinations: ConfigDestinations{
+				"/_test/": {
+					Targets: []ConfigDestinationTarget{
+						{
+							Host: "127.0.0.1",
+							Port: 12346,
+						},
+					},
+					Path: util.NewType("/test/path/"),
+					Type: util.NewType(ConfigDestinationTypeHTTP),
+				},
+			},
+		})
+	})
 }
