@@ -112,6 +112,28 @@ func FormatList[A, B any](in []A, format func(A) B) []B {
 	return r
 }
 
+func ContainsList[A comparable](in []A, item A) bool {
+	for _, el := range in {
+		if el == item {
+			return true
+		}
+	}
+
+	return false
+}
+
+func UniqueList[A comparable](in []A) []A {
+	var r = make([]A, 0, len(in))
+
+	for _, el := range in {
+		if !ContainsList(r, el) {
+			r = append(r, el)
+		}
+	}
+
+	return r
+}
+
 func FormatListErr[A, B any](in []A, format func(A) (B, error)) ([]B, error) {
 	var r = make([]B, len(in))
 
