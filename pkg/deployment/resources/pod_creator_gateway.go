@@ -30,11 +30,13 @@ import (
 )
 
 const (
-	ArangoGatewayExecutor string = "/usr/local/bin/envoy"
-	GatewayVolumeMountDir        = "/etc/gateway/"
-	GatewayVolumeName            = "gateway"
-	GatewayConfigFileName        = "gateway.yaml"
-	GatewayConfigFilePath        = GatewayVolumeMountDir + GatewayConfigFileName
+	ArangoGatewayExecutor         string = "/usr/local/bin/envoy"
+	GatewayVolumeMountDir                = "/etc/gateway/"
+	GatewayVolumeName                    = "gateway"
+	GatewayConfigFileName                = "gateway.yaml"
+	GatewayConfigChecksumFileName        = "gateway.checksum"
+	GatewayConfigChecksumENV             = "GATEWAY_CONFIG_CHECKSUM"
+	GatewayConfigFilePath                = GatewayVolumeMountDir + GatewayConfigFileName
 )
 
 func GetGatewayConfigMapName(name string) string {
@@ -49,6 +51,9 @@ func createGatewayVolumes(input pod.Input) pod.Volumes {
 
 	// TLS
 	volumes.Append(pod.TLS(), input)
+
+	// SNI
+	volumes.Append(pod.SNIGateway(), input)
 
 	return volumes
 }

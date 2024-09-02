@@ -28,6 +28,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
+	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests/tgrpc"
 )
 
@@ -53,6 +54,7 @@ func Test_AllowAll(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, resp.Validate())
 	require.Nil(t, resp.Status)
-	require.Nil(t, resp.HttpResponse)
+	require.NotNil(t, resp.HttpResponse)
+	require.NotNil(t, tests.CastAs[*pbEnvoyAuthV3.CheckResponse_OkResponse](t, resp.GetHttpResponse()).OkResponse)
 	require.Nil(t, resp.DynamicMetadata)
 }

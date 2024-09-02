@@ -70,7 +70,7 @@ func (r *Reconciler) createScaleMemberPlan(ctx context.Context, apiObject k8suti
 			plan = append(plan, r.createScalePlan(status, status.Members.SyncWorkers, api.ServerGroupSyncWorkers, 0, context)...)
 		}
 	}
-	if features.Gateway().Enabled() && spec.IsGatewayEnabled() {
+	if features.IsGatewayEnabled(spec) {
 		plan = append(plan, r.createScalePlan(status, status.Members.Gateways, api.ServerGroupGateways, spec.Gateways.GetCount(), context)...)
 	} else {
 		plan = append(plan, r.createScalePlan(status, status.Members.Gateways, api.ServerGroupGateways, 0, context)...)

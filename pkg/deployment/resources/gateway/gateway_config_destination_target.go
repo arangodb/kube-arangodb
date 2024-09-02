@@ -54,7 +54,10 @@ type ConfigDestinationTarget struct {
 	Port int32  `json:"port,omitempty"`
 }
 
-func (c ConfigDestinationTarget) Validate() error {
+func (c *ConfigDestinationTarget) Validate() error {
+	if c == nil {
+		return nil
+	}
 	return shared.WithErrors(
 		shared.ValidateRequiredPath("ip", &c.Host, func(t string) error {
 			if t == "" {
@@ -71,7 +74,10 @@ func (c ConfigDestinationTarget) Validate() error {
 	)
 }
 
-func (c ConfigDestinationTarget) RenderEndpoint() *endpointAPI.LbEndpoint {
+func (c *ConfigDestinationTarget) RenderEndpoint() *endpointAPI.LbEndpoint {
+	if c == nil {
+		return nil
+	}
 	return &endpointAPI.LbEndpoint{
 		HostIdentifier: &endpointAPI.LbEndpoint_Endpoint{
 			Endpoint: &endpointAPI.Endpoint{

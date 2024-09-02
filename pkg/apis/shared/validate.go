@@ -180,24 +180,32 @@ func ValidateRequiredInterfacePath[T ValidateInterface](path string, in T) error
 }
 
 // ValidateList validates all elements on the list
-func ValidateList[T any](in []T, validator func(T) error) error {
-	errors := make([]error, len(in))
+func ValidateList[T any](in []T, validator func(T) error, checks ...func(in []T) error) error {
+	errors := make([]error, len(in)+len(checks))
 
 	for id := range in {
 		errors[id] = PrefixResourceError(fmt.Sprintf("[%d]", id), validator(in[id]))
+	}
+
+	for id, c := range checks {
+		errors[len(in)+id] = c(in)
 	}
 
 	return WithErrors(errors...)
 }
 
 // ValidateMap validates all elements on the list
-func ValidateMap[T any](in map[string]T, validator func(string, T) error) error {
-	errors := make([]error, 0, len(in))
+func ValidateMap[T any](in map[string]T, validator func(string, T) error, checks ...func(in map[string]T) error) error {
+	errors := make([]error, 0, len(in)+len(checks))
 
 	for id := range in {
 		if err := PrefixResourceError(fmt.Sprintf("`%s`", id), validator(id, in[id])); err != nil {
 			errors = append(errors, err)
 		}
+	}
+
+	for id, c := range checks {
+		errors[len(in)+id] = c(in)
 	}
 
 	return WithErrors(errors...)

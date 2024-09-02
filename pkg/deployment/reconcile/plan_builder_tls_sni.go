@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -57,7 +57,11 @@ func (r *Reconciler) createRotateTLSServerSNIPlan(ctx context.Context, apiObject
 
 	var plan api.Plan
 	for _, group := range api.AllServerGroups {
-		if !pod.GroupSNISupported(spec.Mode.Get(), group) {
+		if group == api.ServerGroupGateways {
+			// Gateways are managed differently
+			continue
+		}
+		if !pod.GroupSNISupported(spec, group) {
 			continue
 		}
 		for _, m := range status.Members.MembersOfGroup(group) {

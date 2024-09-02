@@ -37,8 +37,8 @@ type IntegrationAuthenticationV1 struct {
 	Deployment *api.ArangoDeployment
 }
 
-func (i IntegrationAuthenticationV1) Name() (string, string) {
-	return "AUTHENTICATION", "V1"
+func (i IntegrationAuthenticationV1) Name() []string {
+	return []string{"AUTHENTICATION", "V1"}
 }
 
 func (i IntegrationAuthenticationV1) Validate() error {

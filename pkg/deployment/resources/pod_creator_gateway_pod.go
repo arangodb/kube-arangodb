@@ -192,7 +192,13 @@ func (m *MemberGatewayPod) Init(ctx context.Context, cachedStatus interfaces.Ins
 	return nil
 }
 
-func (m *MemberGatewayPod) Validate(_ interfaces.Inspector) error {
+func (m *MemberGatewayPod) Validate(cachedStatus interfaces.Inspector) error {
+	i := m.AsInput()
+
+	if err := pod.SNI().Verify(i, cachedStatus); err != nil {
+		return err
+	}
+
 	if err := validateSidecars(m.groupSpec.SidecarCoreNames, m.groupSpec.GetSidecars()); err != nil {
 		return err
 	}
@@ -232,7 +238,9 @@ func (m *MemberGatewayPod) Labels() map[string]string {
 func (m *MemberGatewayPod) Profiles() (schedulerApi.ProfileTemplates, error) {
 	integration, err := sidecar.NewIntegration(&schedulerContainerResourcesApi.Image{
 		Image: util.NewType(m.resources.context.GetOperatorImage()),
-	}, m.spec.Gateway.GetSidecar(), []string{shared.ServerContainerName})
+	}, m.spec.Gateway.GetSidecar(), []string{shared.ServerContainerName}, sidecar.IntegrationEnvoyV3{
+		Spec: m.spec,
+	})
 
 	if err != nil {
 		return nil, err

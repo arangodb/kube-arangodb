@@ -18,30 +18,8 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package sidecar
+package v3
 
-import (
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-)
+import "github.com/arangodb/kube-arangodb/pkg/logging"
 
-type IntegrationAuthorizationV0 struct {
-	Core *Core
-}
-
-func (i IntegrationAuthorizationV0) Name() []string {
-	return []string{"AUTHORIZATION", "V0"}
-}
-
-func (i IntegrationAuthorizationV0) Validate() error {
-	return nil
-}
-
-func (i IntegrationAuthorizationV0) Args() (k8sutil.OptionPairs, error) {
-	options := k8sutil.CreateOptionPairs()
-
-	options.Add("--integration.authorization.v0", true)
-
-	options.Merge(i.Core.Args(i))
-
-	return options, nil
-}
+var logger = logging.Global().RegisterAndGetLogger("integration-envoy-auth-v3", logging.Info)
