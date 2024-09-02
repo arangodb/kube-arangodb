@@ -24,6 +24,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -68,6 +69,7 @@ func executeSync(t *testing.T, ctx context.Context, args ...string) error {
 	cmd.SetOut(os.Stdout)
 
 	cmd.SetArgs(append([]string{"test"}, args...))
+	logger.Info("Command: %s", strings.Join(args, " "))
 
 	return cmd.Execute()
 }

@@ -49,7 +49,7 @@ const (
 )
 
 const (
-	defaultTLSTTL = Duration("2610h") // About 3 month
+	DefaultTLSTTL = Duration("2610h") // About 3 month
 )
 
 // TLSSpec holds TLS specific configuration settings
@@ -157,7 +157,7 @@ func (s *TLSSpec) SetDefaults(defaultCASecretName string) {
 	if s.GetTTL() == "" {
 		// Note that we don't check for nil here, since even a specified, but zero
 		// should result in the default value.
-		s.TTL = NewDuration(defaultTLSTTL)
+		s.TTL = NewDuration(DefaultTLSTTL)
 	}
 }
 

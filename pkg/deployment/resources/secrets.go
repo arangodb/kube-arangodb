@@ -49,7 +49,7 @@ import (
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	secretv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
+	ktls "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
 	"github.com/arangodb/kube-arangodb/pkg/util/token"
 )
 
@@ -146,7 +146,7 @@ func (r *Resources) EnsureSecrets(ctx context.Context, cachedStatus inspectorInt
 
 				tlsKeyfileSecretName := k8sutil.AppendTLSKeyfileSecretPostfix(member.GetName())
 				if _, exists := cachedStatus.Secret().V1().GetSimple(tlsKeyfileSecretName); !exists {
-					serverNames, err := tls.GetServerAltNames(apiObject, spec, spec.TLS, service, members[id].Group, members[id].Member)
+					serverNames, err := ktls.GetServerAltNames(apiObject, spec, spec.TLS, service, members[id].Group, members[id].Member)
 					if err != nil {
 						return errors.WithStack(errors.Wrapf(err, "Failed to render alt names"))
 					}

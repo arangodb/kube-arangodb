@@ -22,6 +22,7 @@ Flags:
       --health.auth.token string                                   Token for health service (when auth service is token)
       --health.auth.type string                                    Auth type for health service (default "None")
       --health.shutdown.enabled                                    Determines if shutdown service should be enabled and exposed (default true)
+      --health.tls.keyfile string                                  Path to the keyfile
   -h, --help                                                       help for arangodb_operator_integration
       --integration.authentication.v1                              Enable AuthenticationV1 Integration Service
       --integration.authentication.v1.enabled                      Defines if Authentication is enabled (default true)
@@ -74,6 +75,8 @@ Flags:
       --services.external.auth.token string                        Token for external service (when auth service is token)
       --services.external.auth.type string                         Auth type for external service (default "None")
       --services.external.enabled                                  Defines if external access is enabled
+      --services.external.tls.keyfile string                       Path to the keyfile
+      --services.tls.keyfile string                                Path to the keyfile
 
 Use "arangodb_operator_integration [command] --help" for more information about a command.
 ```
@@ -94,6 +97,10 @@ Available Commands:
 Flags:
       --address string   GRPC Service Address (default "127.0.0.1:8080")
   -h, --help             help for client
+      --tls.ca string    Path to the custom CA
+      --tls.enabled      Defines if GRPC is protected with TLS
+      --tls.fallback     Enables TLS Fallback
+      --tls.insecure     Enables Insecure TLS Connection
       --token string     GRPC Token
 
 Use "arangodb_operator_integration client [command] --help" for more information about a command.

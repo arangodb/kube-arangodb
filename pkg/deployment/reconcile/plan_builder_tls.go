@@ -47,7 +47,7 @@ import (
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-	memberTls "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
+	ktls "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tools"
 	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
@@ -542,13 +542,13 @@ func (r *Reconciler) keyfileRenewalRequired(ctx context.Context, apiObject k8sut
 		}
 
 		// Verify AltNames
-		var altNames memberTls.KeyfileInput
+		var altNames ktls.KeyfileInput
 
 		switch group.Type() {
 		case api.ServerGroupTypeArangoD:
-			altNames, err = memberTls.GetServerAltNames(apiObject, spec, tlsSpec, service, group, member)
+			altNames, err = ktls.GetServerAltNames(apiObject, spec, tlsSpec, service, group, member)
 		case api.ServerGroupTypeArangoSync:
-			altNames, err = memberTls.GetSyncAltNames(apiObject, spec, tlsSpec, group, member)
+			altNames, err = ktls.GetSyncAltNames(apiObject, spec, tlsSpec, group, member)
 		default:
 			assertion.InvalidGroupKey.Assert(true, "Unable to check TLS Key Renewal for an unknown group: %s", group.AsRole())
 			return false, false

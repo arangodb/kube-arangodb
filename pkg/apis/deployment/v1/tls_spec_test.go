@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -60,6 +60,6 @@ func TestTLSSpecSetDefaults(t *testing.T) {
 	assert.Equal(t, "foo", def(TLSSpec{CASecretName: util.NewType[string]("foo")}).GetCASecretName())
 	assert.Len(t, def(TLSSpec{}).GetAltNames(), 0)
 	assert.Len(t, def(TLSSpec{AltNames: []string{"foo.local"}}).GetAltNames(), 1)
-	assert.Equal(t, defaultTLSTTL, def(TLSSpec{}).GetTTL())
+	assert.Equal(t, DefaultTLSTTL, def(TLSSpec{}).GetTTL())
 	assert.Equal(t, time.Hour, def(TLSSpec{TTL: NewDuration("1h")}).GetTTL().AsDuration())
 }

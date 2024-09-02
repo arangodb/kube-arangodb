@@ -22,11 +22,18 @@ package util
 
 import (
 	"context"
+	"crypto/tls"
 	"io"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
+
+	pbPongV1 "github.com/arangodb/kube-arangodb/integrations/pong/v1/definition"
+	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
+	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
 const AuthorizationGRPCHeader = "adb-authorization"
@@ -40,7 +47,54 @@ func NewGRPCClient[T any](ctx context.Context, in func(cc grpc.ClientConnInterfa
 	return in(con), con, nil
 }
 
-func NewGRPCConn(ctx context.Context, addr string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
+func NewOptionalTLSGRPCClient[T any](ctx context.Context, in func(cc grpc.ClientConnInterface) T, addr string, tls *tls.Config, opts ...grpc.DialOption) (T, io.Closer, error) {
+	con, err := NewOptionalTLSGRPCConn(ctx, addr, tls, opts...)
+	if err != nil {
+		return Default[T](), nil, err
+	}
+
+	return in(con), con, nil
+}
+
+func NewOptionalTLSGRPCConn(ctx context.Context, addr string, tls *tls.Config, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
+	if tls != nil {
+		// Try with TLS
+		tlsOpts := ClientTLS(tls)
+		newOpts := make([]grpc.DialOption, len(opts)+len(tlsOpts))
+		copy(newOpts, opts)
+		copy(newOpts[len(opts):], tlsOpts)
+
+		// Create conn
+		conn, err := newGRPCConn(ctx, addr, tlsOpts...)
+		if err != nil {
+			return nil, err
+		}
+
+		if _, err := pbPongV1.NewPongV1Client(conn).Ping(ctx, &pbSharedV1.Empty{}); err != nil {
+			if v, ok := svc.AsGRPCErrorStatus(err); !ok {
+				return nil, err
+			} else {
+				if status := v.GRPCStatus(); status == nil {
+					return nil, err
+				} else {
+					if status.Code() != codes.Unavailable {
+						return nil, err
+					}
+				}
+			}
+		} else {
+			return conn, nil
+		}
+
+		if err := conn.Close(); err != nil {
+			return nil, err
+		}
+	}
+
+	return newGRPCConn(ctx, addr, opts...)
+}
+
+func newGRPCConn(ctx context.Context, addr string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	var z []grpc.DialOption
 
 	z = append(z, grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -53,6 +107,16 @@ func NewGRPCConn(ctx context.Context, addr string, opts ...grpc.DialOption) (*gr
 	}
 
 	return conn, nil
+}
+
+func NewGRPCConn(ctx context.Context, addr string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
+	return newGRPCConn(ctx, addr, opts...)
+}
+
+func ClientTLS(config *tls.Config) []grpc.DialOption {
+	return []grpc.DialOption{
+		grpc.WithTransportCredentials(credentials.NewTLS(config)),
+	}
 }
 
 func TokenAuthInterceptors(token string) []grpc.DialOption {

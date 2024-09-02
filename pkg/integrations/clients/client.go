@@ -22,7 +22,10 @@ package clients
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"io"
+	"os"
 
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
@@ -72,6 +75,39 @@ func client[T any](ctx context.Context, cfg *Config, in func(cc grpc.ClientConnI
 
 	if token := cfg.Token; token != "" {
 		opts = append(opts, util.TokenAuthInterceptors(token)...)
+	}
+
+	if cfg.TLS.Enabled {
+		config := &tls.Config{}
+
+		if ca := cfg.TLS.CA; ca != "" {
+			pemServerCA, err := os.ReadFile(ca)
+			if err != nil {
+				return util.Default[T](), nil, err
+			}
+
+			certPool := x509.NewCertPool()
+			if !certPool.AppendCertsFromPEM(pemServerCA) {
+				return util.Default[T](), nil, err
+			}
+
+			config.RootCAs = certPool
+		}
+
+		if cfg.TLS.Insecure {
+			config.InsecureSkipVerify = true
+		}
+
+		if cfg.TLS.Fallback {
+			client, closer, err := util.NewOptionalTLSGRPCClient(ctx, in, cfg.Address, config, opts...)
+			if err != nil {
+				return util.Default[T](), nil, err
+			}
+
+			return client, closer, nil
+		} else {
+			opts = append(opts, util.ClientTLS(config)...)
+		}
 	}
 
 	client, closer, err := util.NewGRPCClient(ctx, in, cfg.Address, opts...)
