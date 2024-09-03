@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 package version
 
 import (
+	"fmt"
 	"runtime"
 
 	"github.com/arangodb/go-driver"
@@ -56,6 +57,10 @@ type InfoV1 struct {
 
 func (i InfoV1) IsEnterprise() bool {
 	return i.Edition == EnterpriseEdition
+}
+
+func (i InfoV1) String() string {
+	return fmt.Sprintf("Version: %s %s, Build: %s, Go: %s, Build Date: %s", i.Edition.Title(), i.Version, i.Build, i.GoVersion, i.BuildDate)
 }
 
 func GetVersionV1() InfoV1 {

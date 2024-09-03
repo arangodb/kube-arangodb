@@ -25,7 +25,9 @@ import (
 
 	"github.com/spf13/cobra"
 
+	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
 	pbImplEnvoyAuthV3 "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
@@ -42,14 +44,26 @@ func (a envoyAuthV3) Name() string {
 	return pbImplEnvoyAuthV3.Name
 }
 
-func (a envoyAuthV3) Description() string {
+func (a *envoyAuthV3) Description() string {
 	return "Enable EnvoyAuthV3 Integration Service"
 }
 
-func (a envoyAuthV3) Register(cmd *cobra.Command, arg ArgGen) error {
+func (a *envoyAuthV3) Register(cmd *cobra.Command, arg ArgGen) error {
 	return nil
 }
 
-func (a envoyAuthV3) Handler(ctx context.Context) (svc.Handler, error) {
-	return pbImplEnvoyAuthV3.New(), nil
+func (a *envoyAuthV3) Handler(ctx context.Context, cmd *cobra.Command) (svc.Handler, error) {
+	f := cmd.Flags()
+
+	v, err := f.GetString("services.address")
+	if err != nil {
+		return nil, err
+	}
+
+	c, _, err := util.NewGRPCClient(ctx, pbAuthenticationV1.NewAuthenticationV1Client, v)
+	if err != nil {
+		return nil, err
+	}
+
+	return pbImplEnvoyAuthV3.New(c), nil
 }

@@ -16,6 +16,12 @@ Deployment specifies the ArangoDeployment object name
 
 ***
 
+### .spec.destination.authentication.type
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/networking/v1alpha1/route_spec_destination_authentication.go#L28)</sup>
+
+***
+
 ### .spec.destination.path
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/networking/v1alpha1/route_spec_destination.go#L36)</sup>
@@ -131,6 +137,12 @@ UID keeps the information about object UID
 
 ***
 
+### .status.target.authentication.type
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/networking/v1alpha1/route_status_target_authentication.go#L26)</sup>
+
+***
+
 ### .status.target.destinations\[int\].host
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/networking/v1alpha1/route_status_target_destination.go#L38)</sup>
@@ -145,7 +157,7 @@ Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.
 
 ### .status.target.path
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/networking/v1alpha1/route_status_target.go#L37)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/networking/v1alpha1/route_status_target.go#L40)</sup>
 
 Path specifies request path override
 

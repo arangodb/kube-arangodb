@@ -238,9 +238,13 @@ func (m *MemberGatewayPod) Labels() map[string]string {
 func (m *MemberGatewayPod) Profiles() (schedulerApi.ProfileTemplates, error) {
 	integration, err := sidecar.NewIntegration(&schedulerContainerResourcesApi.Image{
 		Image: util.NewType(m.resources.context.GetOperatorImage()),
-	}, m.spec.Gateway.GetSidecar(), []string{shared.ServerContainerName}, sidecar.IntegrationEnvoyV3{
-		Spec: m.spec,
-	})
+	}, m.spec.Gateway.GetSidecar(), []string{shared.ServerContainerName},
+		sidecar.IntegrationEnvoyV3{
+			Spec: m.spec,
+		}, sidecar.IntegrationAuthenticationV1{
+			DeploymentName: m.context.GetName(),
+			Spec:           m.spec,
+		})
 
 	if err != nil {
 		return nil, err

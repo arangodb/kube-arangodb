@@ -51,6 +51,10 @@ func (a authorizationV0) Register(cmd *cobra.Command, arg ArgGen) error {
 	return nil
 }
 
-func (a authorizationV0) Handler(ctx context.Context) (svc.Handler, error) {
+func (a authorizationV0) Handler(ctx context.Context, cmd *cobra.Command) (svc.Handler, error) {
 	return pbImplAuthorizationV0.New(), nil
+}
+
+func (a authorizationV0) Init(ctx context.Context, cmd *cobra.Command) error {
+	return nil
 }

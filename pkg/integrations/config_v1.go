@@ -49,7 +49,7 @@ func (a *configV1) Register(cmd *cobra.Command, arg ArgGen) error {
 	return nil
 }
 
-func (a *configV1) Handler(ctx context.Context) (svc.Handler, error) {
+func (a *configV1) Handler(ctx context.Context, cmd *cobra.Command) (svc.Handler, error) {
 	var cfg pbImplConfigV1.Config
 
 	cfg.Modules = map[string]pbImplConfigV1.ModuleDefinition{}
@@ -74,4 +74,8 @@ func (a *configV1) Name() string {
 
 func (a *configV1) Description() string {
 	return "Enable ConfigV1 Integration Service"
+}
+
+func (*configV1) Init(ctx context.Context, cmd *cobra.Command) error {
+	return nil
 }

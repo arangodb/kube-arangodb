@@ -22,15 +22,23 @@ package v3
 
 import (
 	"context"
+	"net/http"
 
+	corev3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	pbEnvoyAuthV3 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
 	"google.golang.org/grpc"
 
+	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors/panics"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
-func New() svc.Handler {
-	return &impl{}
+func New(authClient pbAuthenticationV1.AuthenticationV1Client) svc.Handler {
+	return &impl{
+		authClient: authClient,
+	}
 }
 
 var _ pbEnvoyAuthV3.AuthorizationServer = &impl{}
@@ -38,6 +46,8 @@ var _ svc.Handler = &impl{}
 
 type impl struct {
 	pbEnvoyAuthV3.UnimplementedAuthorizationServer
+
+	authClient pbAuthenticationV1.AuthenticationV1Client
 }
 
 func (i *impl) Name() string {
@@ -53,10 +63,84 @@ func (i *impl) Register(registrar *grpc.Server) {
 }
 
 func (i *impl) Check(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest) (*pbEnvoyAuthV3.CheckResponse, error) {
-	logger.Info("Request Received")
+	resp, err := panics.RecoverO1(func() (*pbEnvoyAuthV3.CheckResponse, error) {
+		return i.check(ctx, request)
+	})
+
+	if err != nil {
+		var v DeniedResponse
+		if errors.As(err, &v) {
+			return v.GetCheckResponse()
+		}
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (i *impl) check(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest) (*pbEnvoyAuthV3.CheckResponse, error) {
+	ext := request.GetAttributes().GetContextExtensions()
+
+	if v, ok := ext[AuthConfigTypeKey]; !ok || v != AuthConfigTypeValue {
+		return nil, DeniedResponse{
+			Code: http.StatusBadRequest,
+			Message: &DeniedMessage{
+				Message: "Auth plugin is not enabled for this request",
+			},
+		}
+	}
+
+	authenticated, err := MergeAuthRequest(ctx, request, i.checkADBJWT)
+	if err != nil {
+		return nil, err
+	}
+
+	if util.Optional(ext, AuthConfigAuthRequiredKey, AuthConfigKeywordFalse) == AuthConfigKeywordTrue && authenticated == nil {
+		return nil, DeniedResponse{
+			Code: http.StatusUnauthorized,
+			Message: &DeniedMessage{
+				Message: "Unauthorized",
+			},
+		}
+	}
+
+	if authenticated != nil {
+		return &pbEnvoyAuthV3.CheckResponse{
+			HttpResponse: &pbEnvoyAuthV3.CheckResponse_OkResponse{
+				OkResponse: &pbEnvoyAuthV3.OkHttpResponse{
+					Headers: []*corev3.HeaderValueOption{
+						{
+							Header: &corev3.HeaderValue{
+								Key:   AuthUsernameHeader,
+								Value: authenticated.Username,
+							},
+							AppendAction: corev3.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
+						},
+						{
+							Header: &corev3.HeaderValue{
+								Key:   AuthAuthenticatedHeader,
+								Value: "true",
+							},
+							AppendAction: corev3.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
+						},
+					},
+				},
+			},
+		}, nil
+	}
+
 	return &pbEnvoyAuthV3.CheckResponse{
 		HttpResponse: &pbEnvoyAuthV3.CheckResponse_OkResponse{
-			OkResponse: &pbEnvoyAuthV3.OkHttpResponse{},
+			OkResponse: &pbEnvoyAuthV3.OkHttpResponse{
+				Headers: []*corev3.HeaderValueOption{
+					{
+						Header: &corev3.HeaderValue{
+							Key:   AuthAuthenticatedHeader,
+							Value: "false",
+						},
+						AppendAction: corev3.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
+					},
+				},
+			},
 		},
 	}, nil
 }

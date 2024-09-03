@@ -36,6 +36,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
+	"github.com/arangodb/kube-arangodb/pkg/version"
 )
 
 var registerer = util.NewRegisterer[string, Factory]()
@@ -171,6 +172,8 @@ func (c *configuration) run(cmd *cobra.Command, args []string) error {
 }
 
 func (c *configuration) runWithContext(ctx context.Context, cancel context.CancelFunc, cmd *cobra.Command) error {
+	println(version.GetVersionV1().String())
+
 	healthConfig, err := c.health.Config()
 	if err != nil {
 		return errors.Wrapf(err, "Unable to parse health config")
@@ -214,7 +217,7 @@ func (c *configuration) runWithContext(ctx context.Context, cancel context.Cance
 				Info("Service discovered")
 
 			if ok && (internalEnabled || externalEnabled) {
-				if svc, err := handler.Handler(ctx); err != nil {
+				if svc, err := handler.Handler(ctx, cmd); err != nil {
 					return err
 				} else {
 					if internalEnabled {

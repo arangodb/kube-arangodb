@@ -40,7 +40,7 @@ func init() {
 type shutdownV1 struct {
 }
 
-func (s *shutdownV1) Handler(ctx context.Context) (svc.Handler, error) {
+func (s *shutdownV1) Handler(ctx context.Context, cmd *cobra.Command) (svc.Handler, error) {
 	return pbImplShutdownV1.New(shutdown.Stop), nil
 }
 
@@ -53,5 +53,9 @@ func (s *shutdownV1) Description() string {
 }
 
 func (s *shutdownV1) Register(cmd *cobra.Command, arg ArgGen) error {
+	return nil
+}
+
+func (*shutdownV1) Init(ctx context.Context, cmd *cobra.Command) error {
 	return nil
 }

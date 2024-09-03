@@ -22,4 +22,18 @@ package v3
 
 const (
 	Name = "envoy.auth.v3"
+
+	AuthConfigKeywordTrue  = "true"
+	AuthConfigKeywordFalse = "false"
+
+	AuthConfigNamespace     = "platform.arangodb.com"
+	AuthConfigAuthNamespace = "auth." + AuthConfigNamespace
+
+	AuthConfigTypeKey   = AuthConfigNamespace + "/type"
+	AuthConfigTypeValue = "ArangoDBPlatform"
+
+	AuthConfigAuthRequiredKey = AuthConfigAuthNamespace + "/required"
+
+	AuthUsernameHeader      = "arangodb-platform-user"
+	AuthAuthenticatedHeader = "arangodb-platform-authenticated"
 )

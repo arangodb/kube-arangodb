@@ -26,7 +26,6 @@ import (
 	clusterAPI "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
 	endpointAPI "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
 	routeAPI "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
-	anypb "github.com/golang/protobuf/ptypes/any"
 	"google.golang.org/protobuf/types/known/durationpb"
 
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
@@ -62,6 +61,8 @@ type ConfigDestination struct {
 	Type *ConfigDestinationType `json:"type,omitempty"`
 
 	Path *string `json:"path,omitempty"`
+
+	AuthExtension *ConfigAuthZExtension `json:"authExtension,omitempty"`
 }
 
 func (c *ConfigDestination) Validate() error {
@@ -72,6 +73,7 @@ func (c *ConfigDestination) Validate() error {
 		shared.PrefixResourceError("targets", c.Targets.Validate()),
 		shared.PrefixResourceError("type", c.Type.Validate()),
 		shared.PrefixResourceError("path", shared.ValidateAPIPath(c.GetPath())),
+		shared.PrefixResourceError("authExtension", c.AuthExtension.Validate()),
 	)
 }
 
@@ -84,6 +86,16 @@ func (c *ConfigDestination) GetPath() string {
 }
 
 func (c *ConfigDestination) RenderRoute(name, prefix string) (*routeAPI.Route, error) {
+	var tcg []TypedFilterConfigGen
+
+	if c != nil && c.AuthExtension != nil {
+		tcg = append(tcg, c.AuthExtension)
+	}
+	tc, err := NewTypedFilterConfig(tcg...)
+	if err != nil {
+		return nil, err
+	}
+
 	return &routeAPI.Route{
 		Match: &routeAPI.RouteMatch{
 			PathSpecifier: &routeAPI.RouteMatch_Prefix{
@@ -98,7 +110,7 @@ func (c *ConfigDestination) RenderRoute(name, prefix string) (*routeAPI.Route, e
 				PrefixRewrite: c.GetPath(),
 			},
 		},
-		TypedPerFilterConfig: map[string]*anypb.Any{},
+		TypedPerFilterConfig: tc,
 	}, nil
 }
 

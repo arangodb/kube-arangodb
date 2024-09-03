@@ -121,6 +121,10 @@ func (h *handler) HandleArangoDestination(ctx context.Context, item operation.It
 
 			target.Path = dest.GetPath()
 
+			// Render Auth Settings
+
+			target.Authentication.Type = dest.GetAuthentication().GetType()
+
 			if dest.Schema.Get() == networkingApi.ArangoRouteSpecDestinationSchemaHTTPS {
 				target.TLS = &networkingApi.ArangoRouteStatusTargetTLS{
 					Insecure: util.NewType(extension.Spec.Destination.GetTLS().GetInsecure()),

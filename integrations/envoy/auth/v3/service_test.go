@@ -22,6 +22,7 @@ package v3
 
 import (
 	"context"
+	"net/http"
 	"testing"
 
 	pbEnvoyAuthV3 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
@@ -35,7 +36,7 @@ import (
 func Client(t *testing.T, ctx context.Context) pbEnvoyAuthV3.AuthorizationClient {
 	local := svc.NewService(svc.Configuration{
 		Address: "127.0.0.1:0",
-	}, New())
+	}, New(nil))
 
 	start := local.Start(ctx)
 
@@ -44,7 +45,7 @@ func Client(t *testing.T, ctx context.Context) pbEnvoyAuthV3.AuthorizationClient
 	return client
 }
 
-func Test_AllowAll(t *testing.T) {
+func Test_DenyHeader(t *testing.T) {
 	ctx, c := context.WithCancel(context.Background())
 	defer c()
 
@@ -53,8 +54,28 @@ func Test_AllowAll(t *testing.T) {
 	resp, err := client.Check(ctx, &pbEnvoyAuthV3.CheckRequest{})
 	require.NoError(t, err)
 	require.NoError(t, resp.Validate())
+	require.NotNil(t, resp.Status)
+	require.NotNil(t, resp.HttpResponse)
+	require.NotNil(t, tests.CastAs[*pbEnvoyAuthV3.CheckResponse_DeniedResponse](t, resp.GetHttpResponse()).DeniedResponse)
+	require.EqualValues(t, http.StatusBadRequest, tests.CastAs[*pbEnvoyAuthV3.CheckResponse_DeniedResponse](t, resp.GetHttpResponse()).DeniedResponse.GetStatus().GetCode())
+}
+
+func Test_AllowAll(t *testing.T) {
+	ctx, c := context.WithCancel(context.Background())
+	defer c()
+
+	client := Client(t, ctx)
+
+	resp, err := client.Check(ctx, &pbEnvoyAuthV3.CheckRequest{
+		Attributes: &pbEnvoyAuthV3.AttributeContext{
+			ContextExtensions: map[string]string{
+				AuthConfigTypeKey: AuthConfigTypeValue,
+			},
+		},
+	})
+	require.NoError(t, err)
+	require.NoError(t, resp.Validate())
 	require.Nil(t, resp.Status)
 	require.NotNil(t, resp.HttpResponse)
 	require.NotNil(t, tests.CastAs[*pbEnvoyAuthV3.CheckResponse_OkResponse](t, resp.GetHttpResponse()).OkResponse)
-	require.Nil(t, resp.DynamicMetadata)
 }
