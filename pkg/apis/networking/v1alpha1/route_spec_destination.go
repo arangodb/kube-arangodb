@@ -34,6 +34,9 @@ type ArangoRouteSpecDestination struct {
 
 	// Path defines service path used for overrides
 	Path *string `json:"path,omitempty"`
+
+	// Authentication defines auth methods
+	Authentication *ArangoRouteSpecDestinationAuthentication `json:"authentication,omitempty"`
 }
 
 func (a *ArangoRouteSpecDestination) GetService() *ArangoRouteSpecDestinationService {
@@ -68,6 +71,14 @@ func (a *ArangoRouteSpecDestination) GetTLS() *ArangoRouteSpecDestinationTLS {
 	return a.TLS
 }
 
+func (a *ArangoRouteSpecDestination) GetAuthentication() *ArangoRouteSpecDestinationAuthentication {
+	if a == nil || a.Authentication == nil {
+		return nil
+	}
+
+	return a.Authentication
+}
+
 func (a *ArangoRouteSpecDestination) Validate() error {
 	if a == nil {
 		a = &ArangoRouteSpecDestination{}
@@ -77,6 +88,7 @@ func (a *ArangoRouteSpecDestination) Validate() error {
 		shared.ValidateOptionalInterfacePath("service", a.Service),
 		shared.ValidateOptionalInterfacePath("schema", a.Schema),
 		shared.ValidateOptionalInterfacePath("tls", a.TLS),
+		shared.ValidateOptionalInterfacePath("authentication", a.Authentication),
 		shared.PrefixResourceError("path", shared.ValidateAPIPath(a.GetPath())),
 	); err != nil {
 		return err

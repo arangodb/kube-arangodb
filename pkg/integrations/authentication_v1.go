@@ -56,7 +56,7 @@ func (a *authenticationV1) Register(cmd *cobra.Command, arg ArgGen) error {
 	return nil
 }
 
-func (a *authenticationV1) Handler(ctx context.Context) (svc.Handler, error) {
+func (a *authenticationV1) Handler(ctx context.Context, cmd *cobra.Command) (svc.Handler, error) {
 	return pbImplAuthenticationV1.New(ctx, a.config)
 }
 
@@ -66,4 +66,8 @@ func (a *authenticationV1) Name() string {
 
 func (a *authenticationV1) Description() string {
 	return "Enable AuthenticationV1 Integration Service"
+}
+
+func (*authenticationV1) Init(ctx context.Context, cmd *cobra.Command) error {
+	return nil
 }

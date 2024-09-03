@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,32 +18,29 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package panics
+package v3
 
-func recoverPanic(skipFrames int, in func() error) (err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			err = newPanicError(r, GetStack(skipFrames))
+import (
+	"context"
+
+	pbEnvoyAuthV3 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
+)
+
+type AuthResponse struct {
+	Username string
+}
+
+type AuthRequestFunc func(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest, current *AuthResponse) (*AuthResponse, error)
+
+func MergeAuthRequest(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest, requests ...AuthRequestFunc) (*AuthResponse, error) {
+	var resp *AuthResponse
+	for _, r := range requests {
+		if v, err := r(ctx, request, resp); err != nil {
+			return nil, err
+		} else {
+			resp = v
 		}
-	}()
+	}
 
-	return in()
-}
-
-func recoverPanicO1[O1 any](skipFrames int, in func() (O1, error)) (o1 O1, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			err = newPanicError(r, GetStack(skipFrames))
-		}
-	}()
-
-	return in()
-}
-
-func Recover(in func() error) (err error) {
-	return recoverPanic(4, in)
-}
-
-func RecoverO1[O1 any](in func() (O1, error)) (O1, error) {
-	return recoverPanicO1(4, in)
+	return resp, nil
 }

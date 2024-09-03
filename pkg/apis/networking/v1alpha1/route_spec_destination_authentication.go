@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,32 +18,30 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package panics
+package v1alpha1
 
-func recoverPanic(skipFrames int, in func() error) (err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			err = newPanicError(r, GetStack(skipFrames))
-		}
-	}()
+import (
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+)
 
-	return in()
+type ArangoRouteSpecDestinationAuthentication struct {
+	Type *ArangoRouteSpecAuthenticationType `json:"type,omitempty"`
 }
 
-func recoverPanicO1[O1 any](skipFrames int, in func() (O1, error)) (o1 O1, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			err = newPanicError(r, GetStack(skipFrames))
-		}
-	}()
+func (a *ArangoRouteSpecDestinationAuthentication) GetType() ArangoRouteSpecAuthenticationType {
+	if a == nil {
+		return ArangoRouteSpecAuthenticationTypeOptional
+	}
 
-	return in()
+	return a.Type.Get()
 }
 
-func Recover(in func() error) (err error) {
-	return recoverPanic(4, in)
-}
+func (a *ArangoRouteSpecDestinationAuthentication) Validate() error {
+	if a == nil {
+		return nil
+	}
 
-func RecoverO1[O1 any](in func() (O1, error)) (O1, error) {
-	return recoverPanicO1(4, in)
+	return shared.WithErrors(
+		shared.ValidateOptionalInterfacePath("type", a.Type),
+	)
 }

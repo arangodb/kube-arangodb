@@ -38,7 +38,7 @@ type Integration interface {
 
 	Register(cmd *cobra.Command, arg ArgGen) error
 
-	Handler(ctx context.Context) (svc.Handler, error)
+	Handler(ctx context.Context, cmd *cobra.Command) (svc.Handler, error)
 }
 
 type IntegrationEnablement interface {

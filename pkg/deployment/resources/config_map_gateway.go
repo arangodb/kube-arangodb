@@ -30,6 +30,7 @@ import (
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	pbImplEnvoyAuthV3 "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3"
 	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/gateway"
@@ -131,6 +132,7 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 				Port: shared.ArangoPort,
 			},
 		},
+		AuthExtension: &gateway.ConfigAuthZExtension{},
 	}
 
 	if spec.TLS.IsSecure() {
@@ -193,6 +195,11 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 					dest.Type = util.NewType(gateway.ConfigDestinationTypeHTTPS)
 				}
 				dest.Path = util.NewType(target.Path)
+				dest.AuthExtension = &gateway.ConfigAuthZExtension{
+					AuthZExtension: map[string]string{
+						pbImplEnvoyAuthV3.AuthConfigAuthRequiredKey: util.BoolSwitch(target.Authentication.Type.Get() == networkingApi.ArangoRouteSpecAuthenticationTypeRequired, pbImplEnvoyAuthV3.AuthConfigKeywordTrue, pbImplEnvoyAuthV3.AuthConfigKeywordFalse),
+					},
+				}
 				cfg.Destinations[at.Spec.GetRoute().GetPath()] = dest
 			}
 

@@ -115,3 +115,12 @@ func IterateSorted[V any](m map[string]V, cb func(string, V)) {
 		cb(k, m[k])
 	}
 }
+
+func Optional[K comparable, V any](m map[K]V, key K, def V) V {
+	v, ok := m[key]
+	if ok {
+		return v
+	}
+
+	return def
+}

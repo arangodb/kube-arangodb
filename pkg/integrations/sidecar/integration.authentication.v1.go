@@ -26,15 +26,16 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 var _ IntegrationVolumes = IntegrationAuthenticationV1{}
 
 type IntegrationAuthenticationV1 struct {
-	Core       *Core
-	Deployment *api.ArangoDeployment
+	Core *Core
+
+	DeploymentName string
+	Spec           api.DeploymentSpec
 }
 
 func (i IntegrationAuthenticationV1) Name() []string {
@@ -42,10 +43,6 @@ func (i IntegrationAuthenticationV1) Name() []string {
 }
 
 func (i IntegrationAuthenticationV1) Validate() error {
-	if i.Deployment == nil {
-		return errors.Errorf("Deployment is nil")
-	}
-
 	return nil
 }
 
@@ -53,7 +50,7 @@ func (i IntegrationAuthenticationV1) Args() (k8sutil.OptionPairs, error) {
 	options := k8sutil.CreateOptionPairs()
 
 	options.Add("--integration.authentication.v1", true)
-	options.Add("--integration.authentication.v1.enabled", i.Deployment.GetAcceptedSpec().IsAuthenticated())
+	options.Add("--integration.authentication.v1.enabled", i.Spec.IsAuthenticated())
 	options.Add("--integration.authentication.v1.path", shared.ClusterJWTSecretVolumeMountDir)
 
 	options.Merge(i.Core.Args(i))
@@ -62,13 +59,13 @@ func (i IntegrationAuthenticationV1) Args() (k8sutil.OptionPairs, error) {
 }
 
 func (i IntegrationAuthenticationV1) Volumes() ([]core.Volume, []core.VolumeMount, error) {
-	if i.Deployment.GetAcceptedSpec().IsAuthenticated() {
+	if i.Spec.IsAuthenticated() {
 		return []core.Volume{
 				{
 					Name: shared.ClusterJWTSecretVolumeName,
 					VolumeSource: core.VolumeSource{
 						Secret: &core.SecretVolumeSource{
-							SecretName: pod.JWTSecretFolder(i.Deployment.GetName()),
+							SecretName: pod.JWTSecretFolder(i.DeploymentName),
 						},
 					},
 				},

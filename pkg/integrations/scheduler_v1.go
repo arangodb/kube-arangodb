@@ -59,11 +59,15 @@ func (b *schedulerV1) Register(cmd *cobra.Command, arg ArgGen) error {
 	return nil
 }
 
-func (b *schedulerV1) Handler(ctx context.Context) (svc.Handler, error) {
+func (b *schedulerV1) Handler(ctx context.Context, cmd *cobra.Command) (svc.Handler, error) {
 	client, ok := kclient.GetDefaultFactory().Client()
 	if !ok {
 		return nil, errors.Errorf("Unable to create Kubernetes Client")
 	}
 
 	return pbImplSchedulerV1.New(ctx, client, b.Configuration)
+}
+
+func (*schedulerV1) Init(ctx context.Context, cmd *cobra.Command) error {
+	return nil
 }

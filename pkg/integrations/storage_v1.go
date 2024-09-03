@@ -64,6 +64,10 @@ func (b *storageV1) Register(cmd *cobra.Command, arg ArgGen) error {
 	return nil
 }
 
-func (b *storageV1) Handler(ctx context.Context) (svc.Handler, error) {
+func (b *storageV1) Handler(ctx context.Context, cmd *cobra.Command) (svc.Handler, error) {
 	return storage.NewService(ctx, b.Configuration)
+}
+
+func (*storageV1) Init(ctx context.Context, cmd *cobra.Command) error {
+	return nil
 }

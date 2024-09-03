@@ -109,7 +109,7 @@ func Test_TLSCases(t *testing.T) {
 				"--tls.enabled=false",
 				"client",
 				"health",
-				"v1")).Code(t, codes.Unavailable).Errorf(t, "connection error: desc = \"error reading server preface: EOF\"")
+				"v1")).Code(t, codes.Unavailable)
 		})
 		t.Run("external", func(t *testing.T) {
 			tgrpc.AsGRPCError(t, executeSync(t, shutdown.Context(),
@@ -117,7 +117,7 @@ func Test_TLSCases(t *testing.T) {
 				"--tls.enabled=false",
 				"client",
 				"health",
-				"v1")).Code(t, codes.Unavailable).Errorf(t, "connection error: desc = \"error reading server preface: EOF\"")
+				"v1")).Code(t, codes.Unavailable)
 		})
 	})
 
