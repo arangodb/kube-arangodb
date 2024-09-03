@@ -45,7 +45,7 @@ func (r *Reconciler) createRebalancerV2GeneratePlan(spec api.DeploymentSpec, sta
 
 	r.metrics.Rebalancer.SetEnabled(true)
 
-	if !status.Members.AllMembersReady(spec.Mode.Get(), spec.Sync.IsEnabled(), features.Gateway().Enabled() && spec.IsGatewayEnabled()) {
+	if !status.Members.AllMembersReady(spec.Mode.Get(), spec.Sync.IsEnabled(), features.IsGatewayEnabled(spec)) {
 		return nil
 	}
 

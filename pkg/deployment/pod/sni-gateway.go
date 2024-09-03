@@ -25,7 +25,6 @@ import (
 
 	core "k8s.io/api/core/v1"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -35,42 +34,22 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 )
 
-func GroupSNISupported(spec api.DeploymentSpec, group api.ServerGroup) bool {
-	switch spec.Mode.Get() {
-	case api.DeploymentModeCluster:
-		if features.IsGatewayEnabled(spec) {
-			return group == api.ServerGroupGateways
-		}
-		return group == api.ServerGroupCoordinators
-
-	case api.DeploymentModeSingle:
-		if features.IsGatewayEnabled(spec) {
-			return group == api.ServerGroupGateways
-		}
-		fallthrough
-	case api.DeploymentModeActiveFailover:
-		return group == api.ServerGroupSingle
-	default:
-		return false
-	}
+func SNIGateway() Builder {
+	return sniGateway{}
 }
 
-func SNI() Builder {
-	return sni{}
-}
+type sniGateway struct{}
 
-type sni struct{}
-
-func (s sni) Envs(i Input) []core.EnvVar {
+func (s sniGateway) Envs(i Input) []core.EnvVar {
 	return nil
 }
 
-func (s sni) isSupported(i Input) bool {
+func (s sniGateway) isSupported(i Input) bool {
 	if !i.Deployment.TLS.IsSecure() {
 		return false
 	}
 
-	if !features.TLSSNI().Supported(i.Version, i.Enterprise) {
+	if !features.Gateway().Supported(i.Version, i.Enterprise) {
 		// We need 3.7.0+ and Enterprise to support this
 		return false
 	}
@@ -78,7 +57,7 @@ func (s sni) isSupported(i Input) bool {
 	return GroupSNISupported(i.Deployment, i.Group)
 }
 
-func (s sni) Verify(i Input, cachedStatus interfaces.Inspector) error {
+func (s sniGateway) Verify(i Input, cachedStatus interfaces.Inspector) error {
 	if !s.isSupported(i) {
 		return nil
 	}
@@ -97,7 +76,7 @@ func (s sni) Verify(i Input, cachedStatus interfaces.Inspector) error {
 	return nil
 }
 
-func (s sni) Volumes(i Input) ([]core.Volume, []core.VolumeMount) {
+func (s sniGateway) Volumes(i Input) ([]core.Volume, []core.VolumeMount) {
 	if !s.isSupported(i) {
 		return nil, nil
 	}
@@ -133,23 +112,6 @@ func (s sni) Volumes(i Input) ([]core.Volume, []core.VolumeMount) {
 	return volumes, volumeMounts
 }
 
-func (s sni) Args(i Input) k8sutil.OptionPairs {
-	if !s.isSupported(i) {
-		return nil
-	}
-
-	opts := k8sutil.CreateOptionPairs()
-
-	for _, volume := range util.SortKeys(i.Deployment.TLS.GetSNI().Mapping) {
-		servers, ok := i.Deployment.TLS.SNI.Mapping[volume]
-		if !ok {
-			continue
-		}
-
-		for _, server := range servers {
-			opts.Addf("--ssl.server-name-indication", "%s=%s/%s/%s", server, shared.TLSSNIKeyfileVolumeMountDir, volume, constants.SecretTLSKeyfile)
-		}
-	}
-
-	return opts
+func (s sniGateway) Args(i Input) k8sutil.OptionPairs {
+	return nil
 }

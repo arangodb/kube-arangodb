@@ -49,7 +49,7 @@ func (r *Resources) EnsureConfigMaps(ctx context.Context, cachedStatus inspector
 
 	reconcileRequired := k8sutil.NewReconcile(cachedStatus)
 
-	if features.Gateway().Enabled() && spec.IsGatewayEnabled() {
+	if features.IsGatewayEnabled(spec) {
 		counterMetric.Inc()
 		if err := reconcileRequired.WithError(r.ensureGatewayConfig(ctx, cachedStatus, configMaps)); err != nil {
 			return errors.Section(err, "Gateway ConfigMap")

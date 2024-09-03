@@ -101,3 +101,9 @@ func FormatListErr[A, B any](in []A, format func(A) (B, error)) ([]B, error) {
 
 	return r, nil
 }
+
+func CopyList[A any](in []A) []A {
+	ret := make([]A, len(in))
+	copy(ret, in)
+	return ret
+}

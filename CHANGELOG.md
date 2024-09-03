@@ -21,6 +21,7 @@
 - (Bugfix) Fix race condition in ArangoBackup
 - (Feature) Improve Gateway Config gen
 - (Feature) Integration Service TLS
+- (Feature) (Gateway) SNI and Authz support
 - (Maintenance) Bump Examples to ArangoDB 3.12
 
 ## [1.2.42](https://github.com/arangodb/kube-arangodb/tree/1.2.42) (2024-07-23)

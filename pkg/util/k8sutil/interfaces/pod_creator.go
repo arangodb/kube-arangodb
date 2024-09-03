@@ -26,6 +26,7 @@ import (
 	core "k8s.io/api/core/v1"
 
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/configmap"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
 )
@@ -33,6 +34,7 @@ import (
 type Inspector interface {
 	secret.Inspector
 	service.Inspector
+	configmap.Inspector
 }
 
 type PodModifier interface {

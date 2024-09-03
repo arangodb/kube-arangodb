@@ -23,6 +23,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"path"
 	"path/filepath"
 
 	core "k8s.io/api/core/v1"
@@ -65,7 +66,8 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 				Name: configMapName,
 			},
 			Data: map[string]string{
-				GatewayConfigFileName: string(gatewayCfgYaml),
+				GatewayConfigFileName:         string(gatewayCfgYaml),
+				GatewayConfigChecksumFileName: gatewayCfgChecksum,
 			},
 		}
 
@@ -85,11 +87,12 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 		return errors.Reconcile()
 	} else {
 		// CM Exists, checks checksum - if key is not in the map we return empty string
-		if existingSha := util.SHA256FromString(cm.Data[GatewayConfigFileName]); existingSha != gatewayCfgChecksum {
+		if existingSha, existingChecksumSha := util.SHA256FromString(cm.Data[GatewayConfigFileName]), cm.Data[GatewayConfigChecksumFileName]; existingSha != gatewayCfgChecksum || existingChecksumSha != gatewayCfgChecksum {
 			// We need to do the update
 			if _, changed, err := patcher.Patcher[*core.ConfigMap](ctx, cachedStatus.ConfigMapsModInterface().V1(), cm, meta.PatchOptions{},
 				patcher.PatchConfigMapData(map[string]string{
-					GatewayConfigFileName: string(gatewayCfgYaml),
+					GatewayConfigFileName:         string(gatewayCfgYaml),
+					GatewayConfigChecksumFileName: gatewayCfgChecksum,
 				})); err != nil {
 				log.Err(err).Debug("Failed to patch GatewayConfig ConfigMap")
 				return errors.WithStack(err)
@@ -116,6 +119,11 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 
 	var cfg gateway.Config
 
+	cfg.IntegrationSidecar = &gateway.ConfigDestinationTarget{
+		Host: "127.0.0.1",
+		Port: int32(r.context.GetSpec().Gateway.GetSidecar().GetListenPort()),
+	}
+
 	cfg.DefaultDestination = gateway.ConfigDestination{
 		Targets: []gateway.ConfigDestinationTarget{
 			{
@@ -133,6 +141,25 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 			PrivateKeyPath:  keyPath,
 		}
 		cfg.DefaultDestination.Type = util.NewType(gateway.ConfigDestinationTypeHTTPS)
+
+		// Check SNI
+		if sni := spec.TLS.GetSNI().Mapping; len(sni) > 0 {
+			for _, volume := range util.SortKeys(sni) {
+				servers, ok := sni[volume]
+				if !ok {
+					continue
+				}
+
+				var s gateway.ConfigSNI
+				f := path.Join(shared.TLSSNIKeyfileVolumeMountDir, volume, constants.SecretTLSKeyfile)
+				s.ConfigTLS = gateway.ConfigTLS{
+					CertificatePath: f,
+					PrivateKeyPath:  f,
+				}
+				s.ServerNames = servers
+				cfg.SNI = append(cfg.SNI, s)
+			}
+		}
 	}
 
 	// Check ArangoRoutes

@@ -131,6 +131,19 @@ func (a *ArangoGatewayContainer) GetEnvs() ([]core.EnvVar, []core.EnvFromSource)
 
 	envs.Add(true, k8sutil.GetLifecycleEnv()...)
 
+	var cmChecksum = ""
+
+	if cm, ok := a.cachedStatus.ConfigMap().V1().GetSimple(GetGatewayConfigMapName(a.input.ApiObject.GetName())); ok {
+		if v, ok := cm.Data[GatewayConfigChecksumFileName]; ok {
+			cmChecksum = v
+		}
+	}
+
+	envs.Add(true, core.EnvVar{
+		Name:  GatewayConfigChecksumENV,
+		Value: cmChecksum,
+	})
+
 	if len(a.groupSpec.Envs) > 0 {
 		for _, env := range a.groupSpec.Envs {
 			// Do not override preset envs
