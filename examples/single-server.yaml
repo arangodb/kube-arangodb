@@ -4,4 +4,4 @@ metadata:
   name: "example-simple-single"
 spec:
   mode: Single
-  image: 'arangodb/arangodb:3.10.8'
+  image: 'arangodb/arangodb:3.12.2'
