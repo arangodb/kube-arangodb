@@ -22,13 +22,16 @@ package v3
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"strings"
 
 	corev3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	pbEnvoyAuthV3 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
 	"google.golang.org/grpc"
 
 	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
+	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors/panics"
@@ -37,7 +40,7 @@ import (
 
 func New(authClient pbAuthenticationV1.AuthenticationV1Client) svc.Handler {
 	return &impl{
-		authClient: authClient,
+		helper: NewADBHelper(authClient),
 	}
 }
 
@@ -47,7 +50,7 @@ var _ svc.Handler = &impl{}
 type impl struct {
 	pbEnvoyAuthV3.UnimplementedAuthorizationServer
 
-	authClient pbAuthenticationV1.AuthenticationV1Client
+	helper ADBHelper
 }
 
 func (i *impl) Name() string {
@@ -104,25 +107,62 @@ func (i *impl) check(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest) (
 	}
 
 	if authenticated != nil {
+		var headers = []*corev3.HeaderValueOption{
+			{
+				Header: &corev3.HeaderValue{
+					Key:   AuthUsernameHeader,
+					Value: authenticated.Username,
+				},
+				AppendAction: corev3.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
+			},
+			{
+				Header: &corev3.HeaderValue{
+					Key:   AuthAuthenticatedHeader,
+					Value: "true",
+				},
+				AppendAction: corev3.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
+			},
+		}
+
+		switch networkingApi.ArangoRouteSpecAuthenticationPassMode(strings.ToLower(util.Optional(ext, AuthConfigAuthPassModeKey, ""))) {
+		case networkingApi.ArangoRouteSpecAuthenticationPassModeOverride:
+			token, ok, err := i.helper.Token(ctx, authenticated)
+			if err != nil {
+				return nil, err
+			}
+
+			if !ok {
+				return nil, DeniedResponse{
+					Code: http.StatusUnauthorized,
+					Message: &DeniedMessage{
+						Message: "Unable to render token",
+					},
+				}
+			}
+
+			headers = append(headers, &corev3.HeaderValueOption{
+				Header: &corev3.HeaderValue{
+					Key:   "authorization",
+					Value: fmt.Sprintf("bearer %s", token),
+				},
+				AppendAction: corev3.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
+			},
+			)
+		case networkingApi.ArangoRouteSpecAuthenticationPassModeRemove:
+			headers = append(headers, &corev3.HeaderValueOption{
+				Header: &corev3.HeaderValue{
+					Key: "authorization",
+				},
+				AppendAction:   corev3.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
+				KeepEmptyValue: false,
+			},
+			)
+		}
+
 		return &pbEnvoyAuthV3.CheckResponse{
 			HttpResponse: &pbEnvoyAuthV3.CheckResponse_OkResponse{
 				OkResponse: &pbEnvoyAuthV3.OkHttpResponse{
-					Headers: []*corev3.HeaderValueOption{
-						{
-							Header: &corev3.HeaderValue{
-								Key:   AuthUsernameHeader,
-								Value: authenticated.Username,
-							},
-							AppendAction: corev3.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
-						},
-						{
-							Header: &corev3.HeaderValue{
-								Key:   AuthAuthenticatedHeader,
-								Value: "true",
-							},
-							AppendAction: corev3.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
-						},
-					},
+					Headers: headers,
 				},
 			},
 		}, nil

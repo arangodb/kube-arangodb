@@ -25,7 +25,6 @@ import (
 
 	pbEnvoyAuthV3 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
 
-	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
 
@@ -38,20 +37,13 @@ func (i *impl) checkADBJWT(ctx context.Context, request *pbEnvoyAuthV3.CheckRequ
 		parts := strings.SplitN(auth, " ", 2)
 		if len(parts) == 2 {
 			if strings.ToLower(parts[0]) == "bearer" {
-				resp, err := i.authClient.Validate(ctx, &pbAuthenticationV1.ValidateRequest{
-					Token: parts[1],
-				})
+				resp, err := i.helper.Validate(ctx, parts[1])
 				if err != nil {
 					logger.Err(err).Warn("Auth failure")
 					return nil, nil
 				}
 
-				if err == nil && resp.GetIsValid() {
-					// All went fine!
-					return &AuthResponse{
-						Username: resp.GetDetails().GetUser(),
-					}, nil
-				}
+				return resp, nil
 			}
 		}
 	}
