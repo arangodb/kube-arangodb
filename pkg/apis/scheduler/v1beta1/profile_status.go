@@ -20,5 +20,4 @@
 
 package v1beta1
 
-type ProfileStatus struct {
-}
+type ProfileStatus struct{}

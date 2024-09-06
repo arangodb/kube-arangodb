@@ -1,0 +1,32 @@
+{{ if .Values.rbac.enabled -}}
+{{ if .Values.operator.features.scheduler -}}
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+    name: {{ template "kube-arangodb.rbac" . }}-scheduler
+    namespace: {{ .Release.Namespace }}
+    labels:
+        app.kubernetes.io/name: {{ template "kube-arangodb.name" . }}
+        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+        app.kubernetes.io/managed-by: {{ .Release.Service }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        release: {{ .Release.Name }}
+rules:
+    - apiGroups:
+        - "scheduler.arangodb.com"
+      resources:
+        - "arangoprofiles"
+        - "arangoprofiles/status"
+      verbs:
+        - "*"
+    - apiGroups:
+        - "database.arangodb.com"
+      resources:
+        - "arangodeployments"
+      verbs:
+        - "get"
+        - "list"
+        - "watch"
+{{- end }}
+{{- end }}

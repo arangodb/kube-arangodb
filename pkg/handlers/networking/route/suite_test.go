@@ -23,7 +23,7 @@ package route
 import (
 	"k8s.io/client-go/kubernetes/fake"
 
-	"github.com/arangodb/kube-arangodb/pkg/apis/analytics"
+	"github.com/arangodb/kube-arangodb/pkg/apis/networking"
 	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
 	fakeClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/fake"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
@@ -51,7 +51,7 @@ func newItem(o operation.Operation, namespace, name string) operation.Item {
 	return operation.Item{
 		Group:   networkingApi.SchemeGroupVersion.Group,
 		Version: networkingApi.SchemeGroupVersion.Version,
-		Kind:    analytics.GraphAnalyticsEngineResourceKind,
+		Kind:    networking.ArangoRouteResourceKind,
 
 		Operation: o,
 

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,11 +31,16 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
+	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 )
 
 func Test_GVK(t *testing.T) {
 	testGVK(t, ArangoClusterSynchronizationGKv1(), &api.ArangoClusterSynchronization{}, api.ArangoClusterSynchronization{})
 	testGVK(t, ArangoMemberGKv1(), &api.ArangoMember{}, api.ArangoMember{})
+	testGVK(t, ArangoTaskGKv1(), &api.ArangoTask{}, api.ArangoTask{})
+	testGVK(t, ArangoRouteGKv1(), &networkingApi.ArangoRoute{}, networkingApi.ArangoRoute{})
+	testGVK(t, ArangoProfileGKv1(), &schedulerApi.ArangoProfile{}, schedulerApi.ArangoProfile{})
 	testGVK(t, ArangoTaskGKv1(), &api.ArangoTask{}, api.ArangoTask{})
 	testGVK(t, EndpointsGKv1(), &core.Endpoints{}, core.Endpoints{})
 	testGVK(t, NodeGKv1(), &core.Node{}, core.Node{})
