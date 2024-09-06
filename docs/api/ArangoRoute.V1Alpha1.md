@@ -16,9 +16,15 @@ Deployment specifies the ArangoDeployment object name
 
 ***
 
-### .spec.destination.authentication.type
+### .spec.destination.authentication.passMode
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/networking/v1alpha1/route_spec_destination_authentication.go#L28)</sup>
+
+***
+
+### .spec.destination.authentication.type
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/networking/v1alpha1/route_spec_destination_authentication.go#L29)</sup>
 
 ***
 
@@ -134,6 +140,12 @@ Namespace of the object. Should default to the namespace of the parent object
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/shared/v1/object.go#L58)</sup>
 
 UID keeps the information about object UID
+
+***
+
+### .status.target.authentication.passMode
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/networking/v1alpha1/route_status_target_authentication.go#L27)</sup>
 
 ***
 

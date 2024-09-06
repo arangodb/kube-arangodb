@@ -23,12 +23,13 @@ package v1alpha1
 import "github.com/arangodb/kube-arangodb/pkg/util"
 
 type ArangoRouteStatusTargetAuthentication struct {
-	Type ArangoRouteSpecAuthenticationType `json:"type,omitempty"`
+	Type     ArangoRouteSpecAuthenticationType     `json:"type,omitempty"`
+	PassMode ArangoRouteSpecAuthenticationPassMode `json:"passMode,omitempty"`
 }
 
 func (a *ArangoRouteStatusTargetAuthentication) Hash() string {
 	if a == nil {
 		return ""
 	}
-	return util.SHA256FromStringArray(a.Type.Hash())
+	return util.SHA256FromStringArray(a.Type.Hash(), a.PassMode.Hash())
 }

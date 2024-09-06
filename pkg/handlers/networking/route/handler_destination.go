@@ -124,6 +124,7 @@ func (h *handler) HandleArangoDestination(ctx context.Context, item operation.It
 			// Render Auth Settings
 
 			target.Authentication.Type = dest.GetAuthentication().GetType()
+			target.Authentication.PassMode = dest.GetAuthentication().GetPassMode()
 
 			if dest.Schema.Get() == networkingApi.ArangoRouteSpecDestinationSchemaHTTPS {
 				target.TLS = &networkingApi.ArangoRouteStatusTargetTLS{

@@ -12,6 +12,8 @@ v1alpha1:
               authentication:
                 description: Authentication defines auth methods
                 properties:
+                  passMode:
+                    type: string
                   type:
                     type: string
                 type: object

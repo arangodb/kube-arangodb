@@ -33,6 +33,7 @@ const (
 	AuthConfigTypeValue = "ArangoDBPlatform"
 
 	AuthConfigAuthRequiredKey = AuthConfigAuthNamespace + "/required"
+	AuthConfigAuthPassModeKey = AuthConfigAuthNamespace + "/pass_mode"
 
 	AuthUsernameHeader      = "arangodb-platform-user"
 	AuthAuthenticatedHeader = "arangodb-platform-authenticated"

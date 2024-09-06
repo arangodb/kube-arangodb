@@ -25,7 +25,8 @@ import (
 )
 
 type ArangoRouteSpecDestinationAuthentication struct {
-	Type *ArangoRouteSpecAuthenticationType `json:"type,omitempty"`
+	PassMode *ArangoRouteSpecAuthenticationPassMode `json:"passMode,omitempty"`
+	Type     *ArangoRouteSpecAuthenticationType     `json:"type,omitempty"`
 }
 
 func (a *ArangoRouteSpecDestinationAuthentication) GetType() ArangoRouteSpecAuthenticationType {
@@ -36,6 +37,14 @@ func (a *ArangoRouteSpecDestinationAuthentication) GetType() ArangoRouteSpecAuth
 	return a.Type.Get()
 }
 
+func (a *ArangoRouteSpecDestinationAuthentication) GetPassMode() ArangoRouteSpecAuthenticationPassMode {
+	if a == nil {
+		return ArangoRouteSpecAuthenticationPassModeOverride
+	}
+
+	return a.PassMode.Get()
+}
+
 func (a *ArangoRouteSpecDestinationAuthentication) Validate() error {
 	if a == nil {
 		return nil
@@ -43,5 +52,6 @@ func (a *ArangoRouteSpecDestinationAuthentication) Validate() error {
 
 	return shared.WithErrors(
 		shared.ValidateOptionalInterfacePath("type", a.Type),
+		shared.ValidateOptionalInterfacePath("passMode", a.PassMode),
 	)
 }
