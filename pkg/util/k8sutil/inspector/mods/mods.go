@@ -23,6 +23,7 @@ package mods
 import (
 	arangoclustersynchronizationv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoclustersynchronization/v1"
 	arangomemberv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember/v1"
+	arangoProfilev1beta1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoprofile/v1beta1"
 	arangoroutev1alpha1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoroute/v1alpha1"
 	arangotaskv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangotask/v1"
 	configMapv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/configmap/v1"
@@ -88,6 +89,10 @@ type ArangoRouteMods interface {
 	V1Alpha1() arangoroutev1alpha1.ModInterface
 }
 
+type ArangoProfileMods interface {
+	V1Beta1() arangoProfilev1beta1.ModInterface
+}
+
 type Mods interface {
 	PodsModInterface() PodsMods
 	ServiceAccountsModInterface() ServiceAccountsMods
@@ -103,4 +108,5 @@ type Mods interface {
 	ArangoTaskModInterface() ArangoTaskMods
 	ArangoClusterSynchronizationModInterface() ArangoClusterSynchronizationMods
 	ArangoRouteModInterface() ArangoRouteMods
+	ArangoProfileModInterface() ArangoProfileMods
 }

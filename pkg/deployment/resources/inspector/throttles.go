@@ -32,6 +32,7 @@ func NewDefaultThrottle() throttle.Components {
 		30*time.Second, // ArangoMember
 		30*time.Second, // ArangoTask
 		30*time.Second, // ArangoRoute
+		30*time.Second, // ArangoProfile
 		30*time.Second, // Node
 		30*time.Second, // PV
 		15*time.Second, // PVC

@@ -40,6 +40,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/networking"
 	repldef "github.com/arangodb/kube-arangodb/pkg/apis/replication"
 	replapi "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/scheduler"
 	lsapi "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/deployment"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
@@ -48,6 +49,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/handlers/job"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/networking/route"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/policy"
+	"github.com/arangodb/kube-arangodb/pkg/handlers/scheduler/profile"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
 	operatorV2 "github.com/arangodb/kube-arangodb/pkg/operatorV2"
@@ -74,6 +76,7 @@ const (
 	mlOperator         operatorV2type = "ml"
 	analyticsOperator  operatorV2type = "analytics"
 	networkingOperator operatorV2type = "networking"
+	schedulerOperator  operatorV2type = "scheduler"
 	appsOperator       operatorV2type = "apps"
 )
 
@@ -106,6 +109,7 @@ type Config struct {
 	EnableML                    bool
 	EnableAnalytics             bool
 	EnableNetworking            bool
+	EnableScheduler             bool
 	EnableBackup                bool
 	EnableApps                  bool
 	EnableK2KClusterSync        bool
@@ -129,6 +133,7 @@ type Dependencies struct {
 	MlProbe                    *probe.ReadyProbe
 	AnalyticsProbe             *probe.ReadyProbe
 	NetworkingProbe            *probe.ReadyProbe
+	SchedulerProbe             *probe.ReadyProbe
 	AppsProbe                  *probe.ReadyProbe
 	K2KClusterSyncProbe        *probe.ReadyProbe
 }
@@ -202,6 +207,13 @@ func (o *Operator) Run() {
 			go o.runLeaderElection("arango-networking-operator", constants.NetworkingLabelRole, o.onStartNetworking, o.Dependencies.NetworkingProbe)
 		} else {
 			go o.runWithoutLeaderElection("arango-networking-operator", constants.NetworkingLabelRole, o.onStartNetworking, o.Dependencies.NetworkingProbe)
+		}
+	}
+	if o.Config.EnableScheduler {
+		if !o.Config.SingleMode {
+			go o.runLeaderElection("arango-scheduler-operator", constants.SchedulerLabelRole, o.onStartScheduler, o.Dependencies.SchedulerProbe)
+		} else {
+			go o.runWithoutLeaderElection("arango-scheduler-operator", constants.SchedulerLabelRole, o.onStartScheduler, o.Dependencies.SchedulerProbe)
 		}
 	}
 	if o.Config.EnableK2KClusterSync {
@@ -279,6 +291,11 @@ func (o *Operator) onStartNetworking(stop <-chan struct{}) {
 	o.onStartOperatorV2(networkingOperator, stop)
 }
 
+// onStartNetworking starts the operator and run till given channel is closed.
+func (o *Operator) onStartScheduler(stop <-chan struct{}) {
+	o.onStartOperatorV2(schedulerOperator, stop)
+}
+
 // onStartOperatorV2 run the operatorV2 type
 func (o *Operator) onStartOperatorV2(operatorType operatorV2type, stop <-chan struct{}) {
 	operatorName := fmt.Sprintf("arangodb-%s-operator", operatorType)
@@ -310,6 +327,9 @@ func (o *Operator) onStartOperatorV2(operatorType operatorV2type, stop <-chan st
 	case networkingOperator:
 		o.onStartOperatorV2Networking(operator, eventRecorder, o.Client.Arango(), o.Client.Kubernetes(), arangoInformer, kubeInformer)
 		o.Dependencies.NetworkingProbe.SetReady()
+	case schedulerOperator:
+		o.onStartOperatorV2Scheduler(operator, eventRecorder, o.Client.Arango(), o.Client.Kubernetes(), arangoInformer, kubeInformer)
+		o.Dependencies.SchedulerProbe.SetReady()
 	}
 
 	if err := operator.RegisterStarter(arangoInformer); err != nil {
@@ -349,6 +369,18 @@ func (o *Operator) onStartOperatorV2Networking(operator operatorV2.Operator, rec
 	o.waitForCRD(networking.ArangoRouteCRDName, checkFn)
 
 	if err := route.RegisterInformer(operator, recorder, client, kubeClient, informer, kubeInformer); err != nil {
+		panic(err)
+	}
+}
+
+func (o *Operator) onStartOperatorV2Scheduler(operator operatorV2.Operator, recorder event.Recorder, client arangoClientSet.Interface, kubeClient kubernetes.Interface, informer arangoInformer.SharedInformerFactory, kubeInformer informers.SharedInformerFactory) {
+	checkFn := func() error {
+		_, err := o.Client.Arango().SchedulerV1beta1().ArangoProfiles(o.Namespace).List(context.Background(), meta.ListOptions{})
+		return err
+	}
+	o.waitForCRD(scheduler.ArangoProfileCRDName, checkFn)
+
+	if err := profile.RegisterInformer(operator, recorder, client, kubeClient, informer, kubeInformer); err != nil {
 		panic(err)
 	}
 }

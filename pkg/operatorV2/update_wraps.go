@@ -30,6 +30,7 @@ import (
 	mlApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
 	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
 	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
+	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 )
 
 func WithArangoBackupUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[backupApi.ArangoBackupStatus, *backupApi.ArangoBackup], obj *backupApi.ArangoBackup, status backupApi.ArangoBackupStatus, opts meta.UpdateOptions) (*backupApi.ArangoBackup, error) {
@@ -54,6 +55,10 @@ func WithAnalyticsGAEUpdateStatusInterfaceRetry(ctx context.Context, client Upda
 
 func WithNetworkingArangoRouteUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[networkingApi.ArangoRouteStatus, *networkingApi.ArangoRoute], obj *networkingApi.ArangoRoute, status networkingApi.ArangoRouteStatus, opts meta.UpdateOptions) (*networkingApi.ArangoRoute, error) {
 	return WithUpdateStatusInterfaceRetry[networkingApi.ArangoRouteStatus, *networkingApi.ArangoRoute](ctx, client, obj, status, opts)
+}
+
+func WithNetworkingArangoProfileUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[schedulerApi.ProfileStatus, *schedulerApi.ArangoProfile], obj *schedulerApi.ArangoProfile, status schedulerApi.ProfileStatus, opts meta.UpdateOptions) (*schedulerApi.ArangoProfile, error) {
+	return WithUpdateStatusInterfaceRetry[schedulerApi.ProfileStatus, *schedulerApi.ArangoProfile](ctx, client, obj, status, opts)
 }
 
 func WithArangoStorageUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[mlApi.ArangoMLStorageStatus, *mlApi.ArangoMLStorage], obj *mlApi.ArangoMLStorage, status mlApi.ArangoMLStorageStatus, opts meta.UpdateOptions) (*mlApi.ArangoMLStorage, error) {

@@ -32,15 +32,16 @@ type Inspector interface {
 }
 
 func NewAlwaysThrottleComponents() Components {
-	return NewThrottleComponents(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+	return NewThrottleComponents(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 }
 
-func NewThrottleComponents(acs, am, at, ar, node, pvc, pod, pv, pdb, secret, cm, service, serviceAccount, sm, endpoints time.Duration) Components {
+func NewThrottleComponents(acs, am, at, ar, ap, node, pvc, pod, pv, pdb, secret, cm, service, serviceAccount, sm, endpoints time.Duration) Components {
 	return &throttleComponents{
 		arangoClusterSynchronization: NewThrottle(acs),
 		arangoMember:                 NewThrottle(am),
 		arangoTask:                   NewThrottle(at),
 		arangoRoute:                  NewThrottle(ar),
+		arangoProfile:                NewThrottle(ap),
 		node:                         NewThrottle(node),
 		persistentVolume:             NewThrottle(pv),
 		persistentVolumeClaim:        NewThrottle(pvc),
@@ -60,6 +61,7 @@ type Components interface {
 	ArangoMember() Throttle
 	ArangoTask() Throttle
 	ArangoRoute() Throttle
+	ArangoProfile() Throttle
 	Node() Throttle
 	PersistentVolume() Throttle
 	PersistentVolumeClaim() Throttle
@@ -84,6 +86,7 @@ type throttleComponents struct {
 	arangoMember                 Throttle
 	arangoTask                   Throttle
 	arangoRoute                  Throttle
+	arangoProfile                Throttle
 	node                         Throttle
 	persistentVolume             Throttle
 	persistentVolumeClaim        Throttle
@@ -138,6 +141,8 @@ func (t *throttleComponents) Get(c definitions.Component) Throttle {
 		return t.arangoTask
 	case definitions.ArangoRoute:
 		return t.arangoRoute
+	case definitions.ArangoProfile:
+		return t.arangoProfile
 	case definitions.Node:
 		return t.node
 	case definitions.PersistentVolume:
@@ -171,6 +176,7 @@ func (t *throttleComponents) Copy() Components {
 		arangoMember:                 t.arangoMember.Copy(),
 		arangoTask:                   t.arangoTask.Copy(),
 		arangoRoute:                  t.arangoRoute.Copy(),
+		arangoProfile:                t.arangoProfile.Copy(),
 		node:                         t.node.Copy(),
 		persistentVolume:             t.persistentVolume.Copy(),
 		persistentVolumeClaim:        t.persistentVolumeClaim.Copy(),
@@ -199,6 +205,10 @@ func (t *throttleComponents) ArangoTask() Throttle {
 
 func (t *throttleComponents) ArangoRoute() Throttle {
 	return t.arangoRoute
+}
+
+func (t *throttleComponents) ArangoProfile() Throttle {
+	return t.arangoProfile
 }
 
 func (t *throttleComponents) Node() Throttle {

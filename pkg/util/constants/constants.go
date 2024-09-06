@@ -74,6 +74,7 @@ const (
 	MLLabelRole          = "ml/role"
 	AnalyticsLabelRole   = "analytics/role"
 	NetworkingLabelRole  = "networking/role"
+	SchedulerLabelRole   = "scheduler/role"
 	AppsLabelRole        = "apps/role"
 	ClusterSyncLabelRole = "clustersync/role"
 	LabelRole            = "role"

@@ -43,3 +43,11 @@ type ArangoProfile struct {
 	Spec   ProfileSpec   `json:"spec"`
 	Status ProfileStatus `json:"status"`
 }
+
+func (a *ArangoProfile) GetStatus() ProfileStatus {
+	return a.Status
+}
+
+func (a *ArangoProfile) SetStatus(status ProfileStatus) {
+	a.Status = status
+}

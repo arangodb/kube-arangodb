@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,6 +27,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
+	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 )
 
 func ExtractGVKFromObject(in interface{}) (schema.GroupVersionKind, bool) {
@@ -38,6 +40,10 @@ func ExtractGVKFromObject(in interface{}) (schema.GroupVersionKind, bool) {
 			return ArangoMemberGKv1(), true
 		case *api.ArangoTask, api.ArangoTask:
 			return ArangoTaskGKv1(), true
+		case *schedulerApi.ArangoProfile, schedulerApi.ArangoProfile:
+			return ArangoProfileGKv1(), true
+		case *networkingApi.ArangoRoute, networkingApi.ArangoRoute:
+			return ArangoRouteGKv1(), true
 		case *core.Endpoints, core.Endpoints:
 			return EndpointsGKv1(), true
 		case *core.Node, core.Node:
