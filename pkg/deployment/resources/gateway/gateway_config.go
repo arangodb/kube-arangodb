@@ -22,7 +22,6 @@ package gateway
 
 import (
 	"fmt"
-	"github.com/golang/protobuf/ptypes/wrappers"
 	"sort"
 	"time"
 
@@ -39,6 +38,7 @@ import (
 	upstreamHttpApi "github.com/envoyproxy/go-control-plane/envoy/extensions/upstreams/http/v3"
 	discoveryApi "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3"
 	"github.com/golang/protobuf/ptypes/any"
+	"github.com/golang/protobuf/ptypes/wrappers"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
 
