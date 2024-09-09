@@ -43,6 +43,12 @@ func Extract[K comparable, V any](in map[K]V) []KV[K, V] {
 	return r
 }
 
+func ExtractWithSort[K comparable, V any](in map[K]V, cmp func(i, j K) bool) []KV[K, V] {
+	return Sort(Extract(in), func(i, j KV[K, V]) bool {
+		return cmp(i.K, j.K)
+	})
+}
+
 func Sort[IN any](in []IN, cmp func(i, j IN) bool) []IN {
 	r := make([]IN, len(in))
 	copy(r, in)

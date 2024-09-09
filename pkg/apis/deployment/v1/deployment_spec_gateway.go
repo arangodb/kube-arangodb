@@ -32,6 +32,11 @@ type DeploymentSpecGateway struct {
 	// +doc/default: false
 	Enabled *bool `json:"enabled,omitempty"`
 
+	// Dynamic setting enables/disables support dynamic configuration of the gateway in the cluster.
+	// When enabled, gateway config will be reloaded by ConfigMap live updates.
+	// +doc/default: false
+	Dynamic *bool `json:"dynamic,omitempty"`
+
 	// Image is the image to use for the gateway.
 	// By default, the image is determined by the operator.
 	Image *string `json:"image"`
@@ -47,6 +52,15 @@ func (d *DeploymentSpecGateway) IsEnabled() bool {
 	}
 
 	return *d.Enabled
+}
+
+// IsDynamic returns whether the gateway dynamic config is enabled.
+func (d *DeploymentSpecGateway) IsDynamic() bool {
+	if d == nil || d.Dynamic == nil {
+		return false
+	}
+
+	return *d.Dynamic
 }
 
 func (d *DeploymentSpecGateway) GetSidecar() *schedulerApi.IntegrationSidecar {
