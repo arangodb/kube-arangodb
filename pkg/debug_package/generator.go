@@ -46,6 +46,7 @@ var rootFactories = []shared.Factory{
 	kubernetes.Analytics(),
 	kubernetes.Backup(),
 	kubernetes.Scheduler(),
+	kubernetes.Networking(),
 }
 
 func InitCommand(cmd *cobra.Command) {
