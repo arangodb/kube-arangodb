@@ -55,7 +55,26 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 		return errors.WithStack(errors.Wrapf(err, "Failed to generate gateway config"))
 	}
 
-	gatewayCfgYaml, gatewayCfgChecksum, _, err := cfg.RenderYAML()
+	gatewayCfgYaml, _, _, err := cfg.RenderYAML()
+	if err != nil {
+		return errors.WithStack(errors.Wrapf(err, "Failed to render gateway config"))
+	}
+
+	gatewayCfgCDSYaml, _, _, err := cfg.RenderCDSYAML()
+	if err != nil {
+		return errors.WithStack(errors.Wrapf(err, "Failed to render gateway cds config"))
+	}
+
+	gatewayCfgLDSYaml, _, _, err := cfg.RenderLDSYAML()
+	if err != nil {
+		return errors.WithStack(errors.Wrapf(err, "Failed to render gateway lds config"))
+	}
+
+	elements, err := r.renderConfigMap(map[string]string{
+		GatewayConfigFileName:    string(gatewayCfgYaml),
+		GatewayCDSConfigFileName: string(gatewayCfgCDSYaml),
+		GatewayLDSConfigFileName: string(gatewayCfgLDSYaml),
+	})
 	if err != nil {
 		return errors.WithStack(errors.Wrapf(err, "Failed to render gateway config"))
 	}
@@ -66,10 +85,7 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 			ObjectMeta: meta.ObjectMeta{
 				Name: configMapName,
 			},
-			Data: map[string]string{
-				GatewayConfigFileName:         string(gatewayCfgYaml),
-				GatewayConfigChecksumFileName: gatewayCfgChecksum,
-			},
+			Data: elements,
 		}
 
 		owner := r.context.GetAPIObject().AsOwner()
@@ -88,17 +104,14 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 		return errors.Reconcile()
 	} else {
 		// CM Exists, checks checksum - if key is not in the map we return empty string
-		if existingSha, existingChecksumSha := util.SHA256FromString(cm.Data[GatewayConfigFileName]), cm.Data[GatewayConfigChecksumFileName]; existingSha != gatewayCfgChecksum || existingChecksumSha != gatewayCfgChecksum {
+		if currentSha, expectedSha := util.Optional(cm.Data, ConfigMapChecksumKey, ""), util.Optional(elements, ConfigMapChecksumKey, ""); currentSha != expectedSha || currentSha == "" {
 			// We need to do the update
 			if _, changed, err := patcher.Patcher[*core.ConfigMap](ctx, cachedStatus.ConfigMapsModInterface().V1(), cm, meta.PatchOptions{},
-				patcher.PatchConfigMapData(map[string]string{
-					GatewayConfigFileName:         string(gatewayCfgYaml),
-					GatewayConfigChecksumFileName: gatewayCfgChecksum,
-				})); err != nil {
+				patcher.PatchConfigMapData(elements)); err != nil {
 				log.Err(err).Debug("Failed to patch GatewayConfig ConfigMap")
 				return errors.WithStack(err)
 			} else if changed {
-				log.Str("service", cm.GetName()).Str("before", existingSha).Str("after", gatewayCfgChecksum).Info("Updated GatewayConfig")
+				log.Str("configmap", cm.GetName()).Str("before", currentSha).Str("after", expectedSha).Info("Updated GatewayConfig")
 			}
 		}
 	}

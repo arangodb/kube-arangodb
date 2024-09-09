@@ -30,13 +30,14 @@ import (
 )
 
 const (
-	ArangoGatewayExecutor         string = "/usr/local/bin/envoy"
-	GatewayVolumeMountDir                = "/etc/gateway/"
-	GatewayVolumeName                    = "gateway"
-	GatewayConfigFileName                = "gateway.yaml"
-	GatewayConfigChecksumFileName        = "gateway.checksum"
-	GatewayConfigChecksumENV             = "GATEWAY_CONFIG_CHECKSUM"
-	GatewayConfigFilePath                = GatewayVolumeMountDir + GatewayConfigFileName
+	ArangoGatewayExecutor        = "/usr/local/bin/envoy"
+	GatewayVolumeMountDir        = "/etc/gateway/"
+	GatewayVolumeName            = "gateway"
+	GatewayConfigFileName        = "gateway.yaml"
+	GatewayDynamicConfigFileName = "gateway.dynamic.yaml"
+	GatewayCDSConfigFileName     = "gateway.dynamic.cds.yaml"
+	GatewayLDSConfigFileName     = "gateway.dynamic.lds.yaml"
+	GatewayConfigChecksumENV     = "GATEWAY_CONFIG_CHECKSUM"
 )
 
 func GetGatewayConfigMapName(name string) string {
@@ -47,7 +48,17 @@ func createGatewayVolumes(input pod.Input) pod.Volumes {
 	volumes := pod.NewVolumes()
 
 	volumes.AddVolume(k8sutil.CreateVolumeWithConfigMap(GatewayVolumeName, GetGatewayConfigMapName(input.ApiObject.GetName())))
-	volumes.AddVolumeMount(GatewayVolumeMount())
+	volumes.AddVolume(k8sutil.CreateVolumeWithConfigMap(MemberConfigVolumeName, input.ArangoMember.GetName()))
+	volumes.AddVolumeMount(core.VolumeMount{
+		Name:      GatewayVolumeName,
+		MountPath: GatewayVolumeMountDir,
+		ReadOnly:  true,
+	})
+	volumes.AddVolumeMount(core.VolumeMount{
+		Name:      MemberConfigVolumeName,
+		MountPath: MemberConfigVolumeMountDir,
+		ReadOnly:  true,
+	})
 
 	// TLS
 	volumes.Append(pod.TLS(), input)
@@ -56,12 +67,4 @@ func createGatewayVolumes(input pod.Input) pod.Volumes {
 	volumes.Append(pod.SNIGateway(), input)
 
 	return volumes
-}
-
-func GatewayVolumeMount() core.VolumeMount {
-	return core.VolumeMount{
-		Name:      GatewayVolumeName,
-		MountPath: GatewayVolumeMountDir,
-		ReadOnly:  true,
-	}
 }

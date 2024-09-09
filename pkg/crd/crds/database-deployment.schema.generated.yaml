@@ -6567,6 +6567,11 @@ v1:
           gateway:
             description: Gateway defined main Gateway configuration.
             properties:
+              dynamic:
+                description: |-
+                  Dynamic setting enables/disables support dynamic configuration of the gateway in the cluster.
+                  When enabled, gateway config will be reloaded by ConfigMap live updates.
+                type: boolean
               enabled:
                 description: |-
                   Enabled setting enables/disables support for gateway in the cluster.
@@ -23084,6 +23089,11 @@ v1alpha:
           gateway:
             description: Gateway defined main Gateway configuration.
             properties:
+              dynamic:
+                description: |-
+                  Dynamic setting enables/disables support dynamic configuration of the gateway in the cluster.
+                  When enabled, gateway config will be reloaded by ConfigMap live updates.
+                type: boolean
               enabled:
                 description: |-
                   Enabled setting enables/disables support for gateway in the cluster.

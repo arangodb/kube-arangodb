@@ -36,11 +36,10 @@ import (
 	tlsInspectorApi "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/listener/tls_inspector/v3"
 	httpConnectionManagerAPI "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	upstreamHttpApi "github.com/envoyproxy/go-control-plane/envoy/extensions/upstreams/http/v3"
+	discoveryApi "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3"
 	"github.com/golang/protobuf/ptypes/any"
-	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
-	"sigs.k8s.io/yaml"
 
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -74,15 +73,51 @@ func (c Config) RenderYAML() ([]byte, string, *bootstrapAPI.Bootstrap, error) {
 		return nil, "", nil, err
 	}
 
-	data, err := protojson.MarshalOptions{
-		UseProtoNames: true,
-	}.Marshal(cfg)
+	return Marshal(cfg)
+}
+
+func (c Config) RenderCDSYAML() ([]byte, string, *discoveryApi.DiscoveryResponse, error) {
+	cfg, err := c.RenderCDS()
 	if err != nil {
 		return nil, "", nil, err
 	}
 
-	data, err = yaml.JSONToYAML(data)
-	return data, util.SHA256(data), cfg, err
+	return Marshal(cfg)
+}
+
+func (c Config) RenderLDSYAML() ([]byte, string, *discoveryApi.DiscoveryResponse, error) {
+	cfg, err := c.RenderLDS()
+	if err != nil {
+		return nil, "", nil, err
+	}
+
+	return Marshal(cfg)
+}
+
+func (c Config) RenderCDS() (*discoveryApi.DiscoveryResponse, error) {
+	if err := c.Validate(); err != nil {
+		return nil, errors.Wrapf(err, "Validation failed")
+	}
+
+	clusters, err := c.RenderClusters()
+	if err != nil {
+		return nil, errors.Wrapf(err, "Unable to render clusters")
+	}
+
+	return DynamicConfigResponse(clusters...)
+}
+
+func (c Config) RenderLDS() (*discoveryApi.DiscoveryResponse, error) {
+	if err := c.Validate(); err != nil {
+		return nil, errors.Wrapf(err, "Validation failed")
+	}
+
+	listener, err := c.RenderListener()
+	if err != nil {
+		return nil, errors.Wrapf(err, "Unable to render listener")
+	}
+
+	return DynamicConfigResponse(listener)
 }
 
 func (c Config) Render() (*bootstrapAPI.Bootstrap, error) {

@@ -50,6 +50,14 @@ func SHA256FromStringArray(data ...string) string {
 	return SHA256FromString(strings.Join(data, "|"))
 }
 
+func SHA256FromStringMap(data map[string]string) string {
+	return SHA256FromExtract(func(t KV[string, string]) string {
+		return fmt.Sprintf("%s:%s", t.K, SHA256FromString(t.V))
+	}, ExtractWithSort(data, func(i, j string) bool {
+		return i < j
+	})...)
+}
+
 func SHA256FromString(data string) string {
 	return SHA256([]byte(data))
 }

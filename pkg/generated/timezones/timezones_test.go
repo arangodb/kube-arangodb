@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,6 +28,10 @@ import (
 )
 
 func Test_Timezone(t *testing.T) {
+	// Ensure we use static time for comparison
+	testTime, err := time.Parse(time.RFC3339, "2024-09-01T00:00:00Z")
+	require.NoError(t, err)
+
 	for tz, tq := range timezones {
 		t.Run(tz, func(t *testing.T) {
 			t.Run("Check fields", func(t *testing.T) {
@@ -49,7 +53,7 @@ func Test_Timezone(t *testing.T) {
 				l, err := time.LoadLocationFromTZData("", tz)
 				require.NoError(t, err)
 
-				z, offset := time.Now().In(l).Zone()
+				z, offset := testTime.In(l).Zone()
 				require.Equal(t, tq.Zone, z)
 
 				require.Equal(t, int(tq.Offset/time.Second), offset)

@@ -1180,6 +1180,11 @@ func (in *DeploymentSpecGateway) DeepCopyInto(out *DeploymentSpecGateway) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.Dynamic != nil {
+		in, out := &in.Dynamic, &out.Dynamic
+		*out = new(bool)
+		**out = **in
+	}
 	if in.Image != nil {
 		in, out := &in.Image, &out.Image
 		*out = new(string)

@@ -26,6 +26,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"path"
 	"path/filepath"
 	"strconv"
 	"sync"
@@ -288,7 +289,11 @@ func createArangoSyncArgs(apiObject meta.Object, spec api.DeploymentSpec, group 
 
 func createArangoGatewayArgs(input pod.Input, additionalOptions ...k8sutil.OptionPair) []string {
 	options := k8sutil.CreateOptionPairs(64)
-	options.Add("--config-path", GatewayConfigFilePath)
+	if input.Deployment.Gateway.IsDynamic() {
+		options.Add("--config-path", path.Join(MemberConfigVolumeMountDir, GatewayDynamicConfigFileName))
+	} else {
+		options.Add("--config-path", path.Join(GatewayVolumeMountDir, GatewayConfigFileName))
+	}
 
 	options.Append(additionalOptions...)
 

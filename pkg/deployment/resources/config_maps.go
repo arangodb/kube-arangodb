@@ -54,6 +54,9 @@ func (r *Resources) EnsureConfigMaps(ctx context.Context, cachedStatus inspector
 		if err := reconcileRequired.WithError(r.ensureGatewayConfig(ctx, cachedStatus, configMaps)); err != nil {
 			return errors.Section(err, "Gateway ConfigMap")
 		}
+		if err := reconcileRequired.WithError(r.ensureMemberConfig(ctx, cachedStatus, configMaps)); err != nil {
+			return errors.Section(err, "Member ConfigMap")
+		}
 	}
 	return reconcileRequired.Reconcile(ctx)
 }
