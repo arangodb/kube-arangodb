@@ -22,6 +22,7 @@ package gateway
 
 import (
 	"fmt"
+	"github.com/golang/protobuf/ptypes/wrappers"
 	"sort"
 	"time"
 
@@ -302,6 +303,9 @@ func (c Config) RenderFilters() ([]*listenerAPI.Filter, error) {
 						Domains: []string{"*"},
 						Routes:  routes,
 					},
+				},
+				ValidateClusters: &wrappers.BoolValue{
+					Value: false,
 				},
 			},
 		},
