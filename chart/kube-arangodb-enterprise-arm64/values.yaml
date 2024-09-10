@@ -1,10 +1,10 @@
 operator:
-  image: arangodb/kube-arangodb:1.2.42
+  image: arangodb/kube-arangodb-enterprise:1.2.42
   imagePullPolicy: IfNotPresent
   imagePullSecrets: []
   scope: legacy
   architectures:
-    - amd64
+    - arm64
   debug: false
   args: []
   service:
