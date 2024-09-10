@@ -594,6 +594,8 @@ v1alpha1:
                     format: int32
                     type: integer
                 type: object
+              method:
+                type: string
               nodeSelector:
                 additionalProperties:
                   type: string
@@ -1898,6 +1900,8 @@ v1alpha1:
                     format: int32
                     type: integer
                 type: object
+              method:
+                type: string
               ports:
                 items:
                   properties:

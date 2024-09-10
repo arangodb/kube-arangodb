@@ -6828,6 +6828,8 @@ v1:
                         format: int32
                         type: integer
                     type: object
+                  method:
+                    type: string
                   ports:
                     items:
                       properties:
@@ -23350,6 +23352,8 @@ v1alpha:
                         format: int32
                         type: integer
                     type: object
+                  method:
+                    type: string
                   ports:
                     items:
                       properties:
@@ -39872,6 +39876,8 @@ v2alpha1:
                         format: int32
                         type: integer
                     type: object
+                  method:
+                    type: string
                   ports:
                     items:
                       properties:

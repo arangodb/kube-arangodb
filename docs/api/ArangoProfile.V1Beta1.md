@@ -48,7 +48,7 @@ VolumeMounts keeps list of pod volumes to mount into the container's filesystem.
 
 ### .spec.template.container.containers.\<string\>.args
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/core.go#L50)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/core.go#L54)</sup>
 
 Arguments to the entrypoint.
 The container image's CMD is used if this is not provided.
@@ -65,7 +65,7 @@ Links:
 
 ### .spec.template.container.containers.\<string\>.command
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/core.go#L40)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/core.go#L44)</sup>
 
 Entrypoint array. Not executed within a shell.
 The container image's ENTRYPOINT is used if this is not provided.
@@ -140,6 +140,18 @@ Links:
 
 ***
 
+### .spec.template.container.containers.\<string\>.method
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/policy/merge.go#L32)</sup>
+
+Method defines the merge method
+
+Possible Values: 
+* `"override"` (default) - Overrides values during configuration merge
+* `"append"` - Appends, if possible, values during configuration merge
+
+***
+
 ### .spec.template.container.containers.\<string\>.ports
 
 Type: `[]core.ContainerPort` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/networking.go#L39)</sup>
@@ -210,7 +222,7 @@ VolumeMounts keeps list of pod volumes to mount into the container's filesystem.
 
 ### .spec.template.container.containers.\<string\>.workingDir
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/core.go#L55)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/core.go#L59)</sup>
 
 Container's working directory.
 If not specified, the container runtime's default will be used, which
@@ -394,5 +406,5 @@ Links:
 
 ### .spec.template.priority
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/profile_template.go#L31)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/profile_template.go#L32)</sup>
 
