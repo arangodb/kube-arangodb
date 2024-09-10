@@ -21,6 +21,8 @@
 package v1beta1
 
 import (
+	"encoding/json"
+
 	schedulerPodApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/pod"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -76,6 +78,19 @@ func (p *ProfileTemplate) With(other *ProfileTemplate) *ProfileTemplate {
 		Pod:       p.Pod.With(other.Pod),
 		Container: p.Container.With(other.Container),
 	}
+}
+
+func (p *ProfileTemplate) Checksum() (string, error) {
+	if p == nil {
+		return "", nil
+	}
+
+	data, err := json.Marshal(p)
+	if err != nil {
+		return "", err
+	}
+
+	return util.SHA256(data), nil
 }
 
 func (p *ProfileTemplate) Validate() error {

@@ -21,7 +21,7 @@
 package v2alpha1
 
 import (
-	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
+	schedulerIntegrationApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/integration"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
@@ -42,7 +42,7 @@ type DeploymentSpecGateway struct {
 	Image *string `json:"image"`
 
 	// Sidecar define the integration sidecar spec
-	Sidecar *schedulerApi.IntegrationSidecar `json:"sidecar,omitempty"`
+	Sidecar *schedulerIntegrationApi.Sidecar `json:"sidecar,omitempty"`
 }
 
 // IsEnabled returns whether the gateway is enabled.
@@ -63,7 +63,7 @@ func (d *DeploymentSpecGateway) IsDynamic() bool {
 	return *d.Dynamic
 }
 
-func (d *DeploymentSpecGateway) GetSidecar() *schedulerApi.IntegrationSidecar {
+func (d *DeploymentSpecGateway) GetSidecar() *schedulerIntegrationApi.Sidecar {
 	if d == nil || d.Sidecar == nil {
 		return nil
 	}

@@ -21,7 +21,7 @@
 package v1beta1
 
 import (
-	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
+	schedulerIntegrationApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/integration"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 )
@@ -44,7 +44,7 @@ type ArangoMLExtensionSpec struct {
 	JobsTemplates *ArangoMLJobsTemplates `json:"jobsTemplates,omitempty"`
 
 	// IntegrationSidecar define the integration sidecar spec
-	IntegrationSidecar *schedulerApi.IntegrationSidecar `json:"integrationSidecar,omitempty"`
+	IntegrationSidecar *schedulerIntegrationApi.Sidecar `json:"integrationSidecar,omitempty"`
 }
 
 func (a *ArangoMLExtensionSpec) GetMetadataService() *ArangoMLExtensionSpecMetadataService {
@@ -85,7 +85,7 @@ func (a *ArangoMLExtensionSpec) GetJobsTemplates() *ArangoMLJobsTemplates {
 	return a.JobsTemplates
 }
 
-func (a *ArangoMLExtensionSpec) GetIntegrationSidecar() *schedulerApi.IntegrationSidecar {
+func (a *ArangoMLExtensionSpec) GetIntegrationSidecar() *schedulerIntegrationApi.Sidecar {
 	if a == nil || a.IntegrationSidecar == nil {
 		return nil
 	}

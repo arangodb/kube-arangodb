@@ -452,7 +452,7 @@ update-generated:
 			"github.com/arangodb/kube-arangodb/pkg/apis" \
 			"shared:v1 \
 			scheduler:v1alpha1/container scheduler:v1alpha1/container/resources scheduler:v1alpha1/pod scheduler:v1alpha1/pod/resources \
-			scheduler:v1beta1/container scheduler:v1beta1/container/resources scheduler:v1beta1/pod scheduler:v1beta1/pod/resources" \
+			scheduler:v1beta1/integration scheduler:v1beta1/container scheduler:v1beta1/container/resources scheduler:v1beta1/pod scheduler:v1beta1/pod/resources" \
 			--go-header-file "./tools/codegen/boilerplate.go.txt" \
 			$(VERIFYARGS)
 

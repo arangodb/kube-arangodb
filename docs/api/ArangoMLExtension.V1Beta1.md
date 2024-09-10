@@ -798,7 +798,7 @@ Links:
 
 ### .spec.integrationSidecar.controllerListenPort
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/integration.go#L36)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/integration/integration.go#L16)</sup>
 
 ControllerListenPort defines on which port the sidecar container will be listening for controller requests
 
@@ -856,7 +856,7 @@ Lifecycle keeps actions that the management system should take in response to co
 
 ### .spec.integrationSidecar.listenPort
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/integration.go#L32)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/integration/integration.go#L12)</sup>
 
 ListenPort defines on which port the sidecar container will be listening for connections
 
