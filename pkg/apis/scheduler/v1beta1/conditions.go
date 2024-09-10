@@ -22,11 +22,7 @@ package v1beta1
 
 import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 
-type ProfileStatus struct {
-	// Conditions specific to the entire extension
-	// +doc/type: api.Conditions
-	Conditions api.ConditionList `json:"conditions,omitempty"`
-
-	// Accepted keeps accepted template
-	Accepted *ProfileAcceptedTemplate `json:"accepted,omitempty"`
-}
+const (
+	ReadyCondition     api.ConditionType = "Ready"
+	SpecValidCondition api.ConditionType = "SpecValid"
+)

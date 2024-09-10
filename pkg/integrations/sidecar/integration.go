@@ -14,6 +14,7 @@ import (
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	schedulerContainerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container"
 	schedulerContainerResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container/resources"
+	schedulerIntegrationApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/integration"
 	schedulerPodApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/pod"
 	schedulerPodResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/pod/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -60,7 +61,7 @@ type Integration interface {
 	Validate() error
 }
 
-func NewIntegration(image *schedulerContainerResourcesApi.Image, integration *schedulerApi.IntegrationSidecar, coreContainers []string, integrations ...Integration) (*schedulerApi.ProfileTemplate, error) {
+func NewIntegration(image *schedulerContainerResourcesApi.Image, integration *schedulerIntegrationApi.Sidecar, coreContainers []string, integrations ...Integration) (*schedulerApi.ProfileTemplate, error) {
 	for _, integration := range integrations {
 		if err := integration.Validate(); err != nil {
 			name := strings.Join(integration.Name(), "/")

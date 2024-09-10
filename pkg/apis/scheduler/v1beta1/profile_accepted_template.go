@@ -20,13 +20,10 @@
 
 package v1beta1
 
-import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+type ProfileAcceptedTemplate struct {
+	// Checksum keeps accepted template checksum
+	Checksum string `json:"checksum,omitempty"`
 
-type ProfileStatus struct {
-	// Conditions specific to the entire extension
-	// +doc/type: api.Conditions
-	Conditions api.ConditionList `json:"conditions,omitempty"`
-
-	// Accepted keeps accepted template
-	Accepted *ProfileAcceptedTemplate `json:"accepted,omitempty"`
+	// Template keeps the Profile Template
+	Template *ProfileTemplate `json:"template,omitempty"`
 }

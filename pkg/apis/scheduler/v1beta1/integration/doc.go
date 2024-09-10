@@ -18,15 +18,6 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1beta1
-
-import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-
-type ProfileStatus struct {
-	// Conditions specific to the entire extension
-	// +doc/type: api.Conditions
-	Conditions api.ConditionList `json:"conditions,omitempty"`
-
-	// Accepted keeps accepted template
-	Accepted *ProfileAcceptedTemplate `json:"accepted,omitempty"`
-}
+// +k8s:deepcopy-gen=package
+// +groupName=scheduler.arangodb.com
+package integration

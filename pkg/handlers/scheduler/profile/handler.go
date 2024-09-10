@@ -92,6 +92,26 @@ func (h *handler) Handle(ctx context.Context, item operation.Item) error {
 }
 
 func (h *handler) handle(ctx context.Context, item operation.Item, extension *schedulerApi.ArangoProfile, status *schedulerApi.ProfileStatus) (bool, error) {
+	return operator.HandleP3WithCondition(ctx, &status.Conditions, schedulerApi.ReadyCondition, item, extension, status, h.HandleSpecValidity, h.HandleTemplate)
+}
+
+func (h *handler) HandleSpecValidity(ctx context.Context, item operation.Item, extension *schedulerApi.ArangoProfile, status *schedulerApi.ProfileStatus) (bool, error) {
+	if err := extension.Spec.Validate(); err != nil {
+		// We have received an error in the spec!
+
+		logger.Err(err).Warn("Invalid Spec on %s", item.String())
+
+		if status.Conditions.Update(schedulerApi.SpecValidCondition, false, "Spec is invalid", "Spec is invalid") || status.Accepted != nil {
+			status.Accepted = nil
+			return true, operator.Stop("Invalid spec")
+		}
+		return false, operator.Stop("Invalid spec")
+	}
+
+	if status.Conditions.Update(schedulerApi.SpecValidCondition, true, "Spec is valid", "Spec is valid") {
+		return true, operator.Reconcile("Conditions updated")
+	}
+
 	return false, nil
 }
 

@@ -18,7 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1beta1
+package integration
 
 import (
 	schedulerContainerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container"
@@ -26,7 +26,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-type IntegrationSidecar struct {
+type Sidecar struct {
 	// ListenPort defines on which port the sidecar container will be listening for connections
 	// +doc/default: 9201
 	ListenPort *uint16 `json:"listenPort,omitempty"`
@@ -39,7 +39,7 @@ type IntegrationSidecar struct {
 	*schedulerContainerApi.Container `json:",inline"`
 }
 
-func (s *IntegrationSidecar) GetContainer() *schedulerContainerApi.Container {
+func (s *Sidecar) GetContainer() *schedulerContainerApi.Container {
 	if s == nil || s.Container == nil {
 		return nil
 	}
@@ -47,9 +47,9 @@ func (s *IntegrationSidecar) GetContainer() *schedulerContainerApi.Container {
 	return s.Container
 }
 
-func (s *IntegrationSidecar) Validate() error {
+func (s *Sidecar) Validate() error {
 	if s == nil {
-		s = &IntegrationSidecar{}
+		s = &Sidecar{}
 	}
 
 	var err []error
@@ -67,14 +67,14 @@ func (s *IntegrationSidecar) Validate() error {
 	return shared.WithErrors(err...)
 }
 
-func (s *IntegrationSidecar) GetListenPort() uint16 {
+func (s *Sidecar) GetListenPort() uint16 {
 	if s == nil || s.ListenPort == nil {
 		return 9201
 	}
 	return *s.ListenPort
 }
 
-func (s *IntegrationSidecar) GetControllerListenPort() uint16 {
+func (s *Sidecar) GetControllerListenPort() uint16 {
 	if s == nil || s.ControllerListenPort == nil {
 		return 9202
 	}

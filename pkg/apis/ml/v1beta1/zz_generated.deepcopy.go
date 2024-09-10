@@ -27,8 +27,8 @@ package v1beta1
 
 import (
 	deploymentv1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	schedulerv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	container "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container"
+	integration "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/integration"
 	pod "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/pod"
 	v1 "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -126,7 +126,7 @@ func (in *ArangoMLExtensionSpec) DeepCopyInto(out *ArangoMLExtensionSpec) {
 	}
 	if in.IntegrationSidecar != nil {
 		in, out := &in.IntegrationSidecar, &out.IntegrationSidecar
-		*out = new(schedulerv1beta1.IntegrationSidecar)
+		*out = new(integration.Sidecar)
 		(*in).DeepCopyInto(*out)
 	}
 	return

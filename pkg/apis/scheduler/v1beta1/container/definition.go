@@ -27,7 +27,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/interfaces"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
@@ -114,13 +113,17 @@ func (c Containers) With(other Containers) Containers {
 }
 
 func (c Containers) Validate() error {
-	for name, container := range c {
-		if err := container.Validate(); err != nil {
-			return errors.Wrapf(err, "Container %s failed", name)
+	return shared.ValidateMap(c, func(s string, container Container) error {
+		if err := shared.ValidateResourceName(s); err != nil {
+			return err
 		}
-	}
 
-	return nil
+		if err := container.Validate(); err != nil {
+			return err
+		}
+
+		return nil
+	})
 }
 
 var _ interfaces.Container[Container] = &Container{}

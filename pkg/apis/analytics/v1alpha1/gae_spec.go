@@ -21,7 +21,7 @@
 package v1alpha1
 
 import (
-	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
+	schedulerIntegrationApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/integration"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
@@ -34,7 +34,7 @@ type GraphAnalyticsEngineSpec struct {
 	Deployment *GraphAnalyticsEngineSpecDeployment `json:"deployment,omitempty"`
 
 	// IntegrationSidecar define the integration sidecar spec
-	IntegrationSidecar *schedulerApi.IntegrationSidecar `json:"integrationSidecar,omitempty"`
+	IntegrationSidecar *schedulerIntegrationApi.Sidecar `json:"integrationSidecar,omitempty"`
 }
 
 func (a *GraphAnalyticsEngineSpec) GetDeployment() *GraphAnalyticsEngineSpecDeployment {
@@ -44,7 +44,7 @@ func (a *GraphAnalyticsEngineSpec) GetDeployment() *GraphAnalyticsEngineSpecDepl
 	return a.Deployment
 }
 
-func (a *GraphAnalyticsEngineSpec) GetIntegrationSidecar() *schedulerApi.IntegrationSidecar {
+func (a *GraphAnalyticsEngineSpec) GetIntegrationSidecar() *schedulerIntegrationApi.Sidecar {
 	if a == nil || a.IntegrationSidecar == nil {
 		return nil
 	}
