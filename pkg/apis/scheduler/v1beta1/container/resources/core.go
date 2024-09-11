@@ -24,11 +24,15 @@ import (
 	core "k8s.io/api/core/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/interfaces"
+	schedulerPolicyApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/policy"
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 )
 
 var _ interfaces.Container[Core] = &Core{}
 
 type Core struct {
+	*schedulerPolicyApi.Policy `json:",inline"`
+
 	// Entrypoint array. Not executed within a shell.
 	// The container image's ENTRYPOINT is used if this is not provided.
 	// Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
@@ -78,9 +82,25 @@ func (c *Core) With(other *Core) *Core {
 		return c.DeepCopy()
 	}
 
-	return other.DeepCopy()
+	if c == nil {
+		return other.DeepCopy()
+	}
+
+	o := other.DeepCopy()
+
+	if o.GetMethod(schedulerPolicyApi.Override) == schedulerPolicyApi.Append {
+		o.Args = append(c.Args, o.Args...)
+	}
+
+	return o
 }
 
 func (c *Core) Validate() error {
-	return nil
+	if c == nil {
+		return nil
+	}
+
+	return shared.WithErrors(
+		shared.ValidateOptionalInterface(c.Policy),
+	)
 }

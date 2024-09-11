@@ -452,7 +452,7 @@ update-generated:
 			"github.com/arangodb/kube-arangodb/pkg/apis" \
 			"shared:v1 \
 			scheduler:v1alpha1/container scheduler:v1alpha1/container/resources scheduler:v1alpha1/pod scheduler:v1alpha1/pod/resources \
-			scheduler:v1beta1/integration scheduler:v1beta1/container scheduler:v1beta1/container/resources scheduler:v1beta1/pod scheduler:v1beta1/pod/resources" \
+			scheduler:v1beta1/integration scheduler:v1beta1/policy scheduler:v1beta1/container scheduler:v1beta1/container/resources scheduler:v1beta1/pod scheduler:v1beta1/pod/resources" \
 			--go-header-file "./tools/codegen/boilerplate.go.txt" \
 			$(VERIFYARGS)
 
@@ -815,6 +815,7 @@ set-typed-api-version/%:
 	      "$(ROOT)/pkg/handlers/" \
 	      "$(ROOT)/pkg/apis/backup/" \
 	      "$(ROOT)/pkg/apis/networking/" \
+	      "$(ROOT)/pkg/apis/scheduler/" \
 	      "$(ROOT)/pkg/upgrade/" \
 	  | cut -d ':' -f 1 | sort | uniq \
 	  | xargs -n 1 $(SED) -i "s#github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/$*/v[A-Za-z0-9]\+#github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/$*/v$(API_VERSION)#g"
@@ -832,6 +833,7 @@ set-api-version/%:
 	      "$(ROOT)/pkg/handlers/" \
 	      "$(ROOT)/pkg/apis/backup/" \
 	      "$(ROOT)/pkg/apis/networking/" \
+	      "$(ROOT)/pkg/apis/scheduler/" \
 	      "$(ROOT)/pkg/upgrade/" \
 	  | cut -d ':' -f 1 | sort | uniq \
 	  | xargs -n 1 $(SED) -i "s#github.com/arangodb/kube-arangodb/pkg/apis/$*/v[A-Za-z0-9]\+#github.com/arangodb/kube-arangodb/pkg/apis/$*/v$(API_VERSION)#g"
@@ -846,6 +848,7 @@ set-api-version/%:
 	      "$(ROOT)/pkg/handlers/" \
 	      "$(ROOT)/pkg/apis/backup/" \
 	      "$(ROOT)/pkg/apis/networking/" \
+	      "$(ROOT)/pkg/apis/scheduler/" \
 	      "$(ROOT)/pkg/upgrade/" \
 	  | cut -d ':' -f 1 | sort | uniq \
 	  | xargs -n 1 $(SED) -i "s#DatabaseV[A-Za-z0-9]\+()\.#DatabaseV$(API_VERSION)().#g"
@@ -860,6 +863,7 @@ set-api-version/%:
 		  "$(ROOT)/pkg/handlers" \
 		  "$(ROOT)/pkg/apis/backup/" \
 	      "$(ROOT)/pkg/apis/networking/" \
+	      "$(ROOT)/pkg/apis/scheduler/" \
 	      "$(ROOT)/pkg/upgrade/" \
 	  | cut -d ':' -f 1 | sort | uniq \
 	  | xargs -n 1 $(SED) -i "s#ReplicationV[A-Za-z0-9]\+()\.#ReplicationV$(API_VERSION)().#g"

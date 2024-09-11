@@ -30,6 +30,7 @@
 - (Feature) DebugPackage ArangoRoutes
 - (Feature) (Scheduler) Add Status Conditions
 - (Bugfix) Versioning Alignment
+- (Feature) (Scheduler) Merge Strategy
 
 ## [1.2.42](https://github.com/arangodb/kube-arangodb/tree/1.2.42) (2024-07-23)
 - (Maintenance) Go 1.22.4 & Kubernetes 1.29.6 libraries

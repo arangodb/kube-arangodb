@@ -25,6 +25,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
+
+	schedulerPolicyApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/policy"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 func applyCore(t *testing.T, template *core.PodTemplateSpec, container *core.Container, ns ...*Core) func(in func(t *testing.T, pod *core.PodTemplateSpec, container *core.Container)) {
@@ -100,6 +103,28 @@ func Test_Core(t *testing.T) {
 
 			require.Len(t, container.Command, 1)
 			require.Contains(t, container.Command, "B")
+
+			require.EqualValues(t, "", container.WorkingDir)
+		})
+	})
+	t.Run("With Append", func(t *testing.T) {
+		applyCore(t, &core.PodTemplateSpec{}, &core.Container{}, &Core{
+			Command: []string{"B"},
+			Args:    []string{"A"},
+		}, &Core{
+			Policy: &schedulerPolicyApi.Policy{
+				Method: util.NewType(schedulerPolicyApi.Append),
+			},
+			Command: []string{"C"},
+			Args:    []string{"D"},
+		})(func(t *testing.T, _ *core.PodTemplateSpec, container *core.Container) {
+			require.Len(t, container.Args, 2)
+			require.Contains(t, container.Args, "A")
+			require.Contains(t, container.Args, "D")
+			require.Equal(t, []string{"A", "D"}, container.Args)
+
+			require.Len(t, container.Command, 1)
+			require.Contains(t, container.Command, "C")
 
 			require.EqualValues(t, "", container.WorkingDir)
 		})

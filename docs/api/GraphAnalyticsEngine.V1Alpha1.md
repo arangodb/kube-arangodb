@@ -34,7 +34,7 @@ Links:
 
 ### .spec.deployment.args
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/core.go#L50)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/core.go#L54)</sup>
 
 Arguments to the entrypoint.
 The container image's CMD is used if this is not provided.
@@ -59,7 +59,7 @@ AutomountServiceAccountToken indicates whether a service account token should be
 
 ### .spec.deployment.command
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/core.go#L40)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/core.go#L44)</sup>
 
 Entrypoint array. Not executed within a shell.
 The container image's ENTRYPOINT is used if this is not provided.
@@ -183,6 +183,18 @@ Container will be restarted if the probe fails.
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
+
+***
+
+### .spec.deployment.method
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/policy/merge.go#L32)</sup>
+
+Method defines the merge method
+
+Possible Values: 
+* `"override"` (default) - Overrides values during configuration merge
+* `"append"` - Appends, if possible, values during configuration merge
 
 ***
 
@@ -388,7 +400,7 @@ Links:
 
 ### .spec.deployment.workingDir
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/core.go#L55)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/core.go#L59)</sup>
 
 Container's working directory.
 If not specified, the container runtime's default will be used, which
@@ -406,7 +418,7 @@ DeploymentName define deployment name used in the object. Immutable
 
 ### .spec.integrationSidecar.args
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/core.go#L50)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/core.go#L54)</sup>
 
 Arguments to the entrypoint.
 The container image's CMD is used if this is not provided.
@@ -423,7 +435,7 @@ Links:
 
 ### .spec.integrationSidecar.command
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/core.go#L40)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/core.go#L44)</sup>
 
 Entrypoint array. Not executed within a shell.
 The container image's ENTRYPOINT is used if this is not provided.
@@ -440,7 +452,7 @@ Links:
 
 ### .spec.integrationSidecar.controllerListenPort
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/integration/integration.go#L16)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/integration/integration.go#L36)</sup>
 
 ControllerListenPort defines on which port the sidecar container will be listening for controller requests
 
@@ -498,7 +510,7 @@ Lifecycle keeps actions that the management system should take in response to co
 
 ### .spec.integrationSidecar.listenPort
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/integration/integration.go#L12)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/integration/integration.go#L32)</sup>
 
 ListenPort defines on which port the sidecar container will be listening for connections
 
@@ -515,6 +527,18 @@ Container will be restarted if the probe fails.
 
 Links:
 * [Kubernetes docs](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes)
+
+***
+
+### .spec.integrationSidecar.method
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/policy/merge.go#L32)</sup>
+
+Method defines the merge method
+
+Possible Values: 
+* `"override"` (default) - Overrides values during configuration merge
+* `"append"` - Appends, if possible, values during configuration merge
 
 ***
 
@@ -588,7 +612,7 @@ VolumeMounts keeps list of pod volumes to mount into the container's filesystem.
 
 ### .spec.integrationSidecar.workingDir
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/core.go#L55)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/scheduler/v1beta1/container/resources/core.go#L59)</sup>
 
 Container's working directory.
 If not specified, the container runtime's default will be used, which
