@@ -747,7 +747,10 @@ patch-release: patch-readme patch-examples patch-chart
 
 .PHONY: patch-chart
 patch-chart:
-	$(ROOTDIR)/scripts/patch_chart.sh "$(VERSION_MAJOR_MINOR_PATCH)" "$(OPERATORIMAGE)"
+	$(ROOTDIR)/scripts/patch_chart.sh $(VERSION_MAJOR_MINOR_PATCH)
+
+.PHONY: patch
+patch: patch-chart patch-release patch-examples patch-readme
 
 .PHONY: tidy
 tidy:

@@ -9,7 +9,7 @@ if [ -z $VERSION ]; then
     exit 1
 fi
 
-ARANGODB_VERSION=3.10.8
+ARANGODB_VERSION=3.12.2
 
 function replaceInFile {
     local EXPR=$1
