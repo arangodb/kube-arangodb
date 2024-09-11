@@ -50,13 +50,11 @@ func (b *schedulerV1) Description() string {
 	return "SchedulerV1 Integration"
 }
 
-func (b *schedulerV1) Register(cmd *cobra.Command, arg ArgGen) error {
-	f := cmd.Flags()
-
-	f.StringVar(&b.Configuration.Namespace, arg("namespace"), constants.NamespaceWithDefault("default"), "Kubernetes Namespace")
-	f.BoolVar(&b.Configuration.VerifyAccess, arg("verify-access"), true, "Verify the CRD Access")
-
-	return nil
+func (b *schedulerV1) Register(cmd *cobra.Command, fs FlagEnvHandler) error {
+	return errors.Errors(
+		fs.StringVar(&b.Configuration.Namespace, "namespace", constants.NamespaceWithDefault("default"), "Kubernetes Namespace"),
+		fs.BoolVar(&b.Configuration.VerifyAccess, "verify-access", true, "Verify the CRD Access"),
+	)
 }
 
 func (b *schedulerV1) Handler(ctx context.Context, cmd *cobra.Command) (svc.Handler, error) {

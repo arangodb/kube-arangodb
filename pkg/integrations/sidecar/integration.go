@@ -29,47 +29,93 @@ const (
 	ListenPortHealthName = "health"
 )
 
-func WithIntegrationEnvs(in Integration) ([]core.EnvVar, error) {
-	if v, ok := in.(IntegrationEnvs); ok {
-		return v.Envs()
-	}
-
-	return nil, nil
-}
-
-type IntegrationEnvs interface {
-	Integration
-	Envs() ([]core.EnvVar, error)
-}
-
-func WithIntegrationVolumes(in Integration) ([]core.Volume, []core.VolumeMount, error) {
-	if v, ok := in.(IntegrationVolumes); ok {
-		return v.Volumes()
-	}
-
-	return nil, nil, nil
-}
-
-type IntegrationVolumes interface {
-	Integration
-	Volumes() ([]core.Volume, []core.VolumeMount, error)
-}
-
 type Integration interface {
 	Name() []string
-	Args() (k8sutil.OptionPairs, error)
+	Envs() ([]core.EnvVar, error)
+	GlobalEnvs() ([]core.EnvVar, error)
+	Volumes() ([]core.Volume, []core.VolumeMount, error)
 	Validate() error
 }
 
-func NewIntegration(image *schedulerContainerResourcesApi.Image, integration *schedulerIntegrationApi.Sidecar, coreContainers []string, integrations ...Integration) (*schedulerApi.ProfileTemplate, error) {
-	for _, integration := range integrations {
-		if err := integration.Validate(); err != nil {
-			name := strings.Join(integration.Name(), "/")
+func NewShutdownAnnotations(coreContainers []string) *schedulerApi.ProfileTemplate {
+	pt := schedulerApi.ProfileTemplate{
+		Pod: &schedulerPodApi.Pod{
+			Metadata: &schedulerPodResourcesApi.Metadata{
+				Annotations: map[string]string{},
+			},
+		},
+	}
 
+	for _, container := range coreContainers {
+		pt.Pod.Metadata.Annotations[fmt.Sprintf("%s/%s", constants.AnnotationShutdownCoreContainer, container)] = constants.AnnotationShutdownCoreContainerModeWait
+	}
+
+	return &pt
+}
+
+func NewIntegrationEnablement(integrations ...Integration) (*schedulerApi.ProfileTemplate, error) {
+	var envs, gEnvs []core.EnvVar
+	var volumes []core.Volume
+	var volumeMounts []core.VolumeMount
+
+	for _, integration := range integrations {
+		name := strings.Join(integration.Name(), "/")
+
+		if err := integration.Validate(); err != nil {
 			return nil, errors.Wrapf(err, "Failure in %s", name)
+		}
+
+		if lvolumes, lvolumeMounts, err := integration.Volumes(); err != nil {
+			return nil, errors.Wrapf(err, "Failure in volumes %s", name)
+		} else if len(lvolumes) > 0 || len(lvolumeMounts) > 0 {
+			volumes = append(volumes, lvolumes...)
+			volumeMounts = append(volumeMounts, lvolumeMounts...)
+		}
+
+		if lenvs, err := integration.Envs(); err != nil {
+			return nil, errors.Wrapf(err, "Failure in envs %s", name)
+		} else if len(lenvs) > 0 {
+			envs = append(envs, lenvs...)
+		}
+
+		if lgenvs, err := integration.GlobalEnvs(); err != nil {
+			return nil, errors.Wrapf(err, "Failure in global envs %s", name)
+		} else if len(lgenvs) > 0 {
+			gEnvs = append(gEnvs, lgenvs...)
 		}
 	}
 
+	if len(envs) == 0 && len(gEnvs) == 0 {
+		return nil, nil
+	}
+
+	return &schedulerApi.ProfileTemplate{
+		Pod: &schedulerPodApi.Pod{
+			Volumes: &schedulerPodResourcesApi.Volumes{
+				Volumes: volumes,
+			},
+		},
+		Container: &schedulerApi.ProfileContainerTemplate{
+			Containers: map[string]schedulerContainerApi.Container{
+				ContainerName: {
+					Environments: &schedulerContainerResourcesApi.Environments{
+						Env: envs,
+					},
+					VolumeMounts: &schedulerContainerResourcesApi.VolumeMounts{
+						VolumeMounts: volumeMounts,
+					},
+				},
+			},
+			All: &schedulerContainerApi.Generic{
+				Environments: &schedulerContainerResourcesApi.Environments{
+					Env: gEnvs,
+				},
+			},
+		},
+	}, nil
+}
+
+func NewIntegration(image *schedulerContainerResourcesApi.Image, integration *schedulerIntegrationApi.Sidecar) (*schedulerApi.ProfileTemplate, error) {
 	// Arguments
 
 	exePath := k8sutil.BinaryPath()
@@ -83,10 +129,6 @@ func NewIntegration(image *schedulerContainerResourcesApi.Image, integration *sc
 	options.Addf("--services.address", "127.0.0.1:%d", integration.GetListenPort())
 	options.Addf("--health.address", "0.0.0.0:%d", integration.GetControllerListenPort())
 
-	// Volumes
-	var volumes []core.Volume
-	var volumeMounts []core.VolumeMount
-
 	// Envs
 
 	var envs = []core.EnvVar{
@@ -98,40 +140,6 @@ func NewIntegration(image *schedulerContainerResourcesApi.Image, integration *sc
 			Name:  "INTEGRATION_SERVICE_ADDRESS",
 			Value: fmt.Sprintf("127.0.0.1:%d", integration.GetListenPort()),
 		},
-	}
-
-	for _, i := range integrations {
-		name := strings.Join(i.Name(), "/")
-
-		if err := i.Validate(); err != nil {
-			return nil, errors.Wrapf(err, "Failure in %s", name)
-		}
-
-		if args, err := i.Args(); err != nil {
-			return nil, errors.Wrapf(err, "Failure in arguments %s", name)
-		} else if len(args) > 0 {
-			options.Merge(args)
-		}
-
-		if lvolumes, lvolumeMounts, err := WithIntegrationVolumes(i); err != nil {
-			return nil, errors.Wrapf(err, "Failure in volumes %s", name)
-		} else if len(lvolumes) > 0 || len(lvolumeMounts) > 0 {
-			volumes = append(volumes, lvolumes...)
-			volumeMounts = append(volumeMounts, lvolumeMounts...)
-		}
-
-		if lenvs, err := WithIntegrationEnvs(i); err != nil {
-			return nil, errors.Wrapf(err, "Failure in envs %s", name)
-		} else if len(lenvs) > 0 {
-			envs = append(envs, lenvs...)
-		}
-
-		envs = append(envs, core.EnvVar{
-			Name: fmt.Sprintf("INTEGRATION_SERVICE_%s", strings.Join(util.FormatList(i.Name(), func(a string) string {
-				return strings.ToUpper(a)
-			}), "_")),
-			Value: fmt.Sprintf("127.0.0.1:%d", integration.GetListenPort()),
-		})
 	}
 
 	c := schedulerContainerApi.Container{
@@ -175,14 +183,15 @@ func NewIntegration(image *schedulerContainerResourcesApi.Image, integration *sc
 				FailureThreshold:    2,  // Need 2 failed probes to consider a failed state
 			},
 		},
-
-		VolumeMounts: &schedulerContainerResourcesApi.VolumeMounts{
-			VolumeMounts: volumeMounts,
-		},
 	}
 
 	pt := schedulerApi.ProfileTemplate{
 		Container: &schedulerApi.ProfileContainerTemplate{
+			All: &schedulerContainerApi.Generic{
+				Environments: &schedulerContainerResourcesApi.Environments{
+					Env: envs,
+				},
+			},
 			Containers: map[string]schedulerContainerApi.Container{
 				ContainerName: util.TypeOrDefault(k8sutil.CreateDefaultContainerTemplate(image).With(&c).With(integration.GetContainer())),
 			},
@@ -191,24 +200,15 @@ func NewIntegration(image *schedulerContainerResourcesApi.Image, integration *sc
 			Metadata: &schedulerPodResourcesApi.Metadata{
 				Annotations: map[string]string{},
 			},
-			Volumes: &schedulerPodResourcesApi.Volumes{
-				Volumes: volumes,
-			},
 		},
-	}
-
-	for _, container := range coreContainers {
-		pt.Pod.Metadata.Annotations[fmt.Sprintf("%s/%s", constants.AnnotationShutdownCoreContainer, container)] = constants.AnnotationShutdownCoreContainerModeWait
 	}
 
 	pt.Pod.Metadata.Annotations[fmt.Sprintf("%s/%s", constants.AnnotationShutdownContainer, ContainerName)] = ListenPortHealthName
 	pt.Pod.Metadata.Annotations[constants.AnnotationShutdownManagedContainer] = "true"
 
-	pt.Container.Containers.ExtendContainers(&schedulerContainerApi.Container{
-		Environments: &schedulerContainerResourcesApi.Environments{
-			Env: envs,
-		},
-	}, coreContainers...)
+	pt.Container.All.Environments = &schedulerContainerResourcesApi.Environments{
+		Env: envs,
+	}
 
 	return &pt, nil
 }

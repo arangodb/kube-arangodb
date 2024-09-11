@@ -21,7 +21,7 @@
 package sidecar
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	core "k8s.io/api/core/v1"
 )
 
 type IntegrationShutdownV1 struct {
@@ -36,12 +36,21 @@ func (i IntegrationShutdownV1) Validate() error {
 	return nil
 }
 
-func (i IntegrationShutdownV1) Args() (k8sutil.OptionPairs, error) {
-	options := k8sutil.CreateOptionPairs()
+func (i IntegrationShutdownV1) Envs() ([]core.EnvVar, error) {
+	var envs = []core.EnvVar{
+		{
+			Name:  "INTEGRATION_SHUTDOWN_V1",
+			Value: "true",
+		},
+	}
 
-	options.Add("--integration.shutdown.v1", true)
+	return i.Core.Envs(i, envs...), nil
+}
 
-	options.Merge(i.Core.Args(i))
+func (i IntegrationShutdownV1) GlobalEnvs() ([]core.EnvVar, error) {
+	return nil, nil
+}
 
-	return options, nil
+func (i IntegrationShutdownV1) Volumes() ([]core.Volume, []core.VolumeMount, error) {
+	return nil, nil, nil
 }

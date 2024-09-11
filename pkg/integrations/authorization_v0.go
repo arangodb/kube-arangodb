@@ -47,7 +47,7 @@ func (a authorizationV0) Description() string {
 	return "Enable AuthorizationV0 Integration Service"
 }
 
-func (a authorizationV0) Register(cmd *cobra.Command, arg ArgGen) error {
+func (a authorizationV0) Register(cmd *cobra.Command, fs FlagEnvHandler) error {
 	return nil
 }
 

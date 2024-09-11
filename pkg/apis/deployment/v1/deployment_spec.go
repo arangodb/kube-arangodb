@@ -262,6 +262,9 @@ type DeploymentSpec struct {
 
 	// Gateway defined main Gateway configuration.
 	Gateway *DeploymentSpecGateway `json:"gateway,omitempty"`
+
+	// Integration defined main Integration configuration.
+	Integration *DeploymentSpecIntegration `json:"integration,omitempty"`
 }
 
 // GetAllowMemberRecreation returns member recreation policy based on group and settings
@@ -582,7 +585,10 @@ func (s *DeploymentSpec) Validate() error {
 		return errors.WithStack(errors.Wrap(err, "spec.architecture"))
 	}
 	if err := s.Gateway.Validate(); err != nil {
-		return errors.WithStack(errors.Wrap(err, "spec.architecture"))
+		return errors.WithStack(errors.Wrap(err, "spec.gateway"))
+	}
+	if err := s.Integration.Validate(); err != nil {
+		return errors.WithStack(errors.Wrap(err, "spec.integration"))
 	}
 	return nil
 }

@@ -30,13 +30,11 @@ import (
 
 type Factory func() Integration
 
-type ArgGen func(name string) string
-
 type Integration interface {
 	Name() string
 	Description() string
 
-	Register(cmd *cobra.Command, arg ArgGen) error
+	Register(cmd *cobra.Command, fs FlagEnvHandler) error
 
 	Handler(ctx context.Context, cmd *cobra.Command) (svc.Handler, error)
 }

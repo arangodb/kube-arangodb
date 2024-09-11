@@ -52,7 +52,7 @@ func (s *shutdownV1) Description() string {
 	return "ShutdownV1 Handler"
 }
 
-func (s *shutdownV1) Register(cmd *cobra.Command, arg ArgGen) error {
+func (s *shutdownV1) Register(cmd *cobra.Command, fs FlagEnvHandler) error {
 	return nil
 }
 

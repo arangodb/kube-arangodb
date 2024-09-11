@@ -41,12 +41,10 @@ type configV1 struct {
 	modules []string
 }
 
-func (a *configV1) Register(cmd *cobra.Command, arg ArgGen) error {
-	f := cmd.Flags()
-
-	f.StringSliceVar(&a.modules, arg("module"), nil, "Module in the reference <name>=<abs path>")
-
-	return nil
+func (a *configV1) Register(cmd *cobra.Command, fs FlagEnvHandler) error {
+	return errors.Errors(
+		fs.StringSliceVar(&a.modules, "module", nil, "Module in the reference <name>=<abs path>"),
+	)
 }
 
 func (a *configV1) Handler(ctx context.Context, cmd *cobra.Command) (svc.Handler, error) {

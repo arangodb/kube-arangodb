@@ -26,10 +26,8 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
-
-var _ IntegrationVolumes = IntegrationAuthenticationV1{}
 
 type IntegrationAuthenticationV1 struct {
 	Core *Core
@@ -46,16 +44,27 @@ func (i IntegrationAuthenticationV1) Validate() error {
 	return nil
 }
 
-func (i IntegrationAuthenticationV1) Args() (k8sutil.OptionPairs, error) {
-	options := k8sutil.CreateOptionPairs()
+func (i IntegrationAuthenticationV1) Envs() ([]core.EnvVar, error) {
+	var envs = []core.EnvVar{
+		{
+			Name:  "INTEGRATION_AUTHENTICATION_V1",
+			Value: "true",
+		},
+		{
+			Name:  "INTEGRATION_AUTHENTICATION_V1_ENABLED",
+			Value: util.BoolSwitch(i.Spec.IsAuthenticated(), "true", "false"),
+		},
+		{
+			Name:  "INTEGRATION_AUTHENTICATION_V1_PATH",
+			Value: shared.ClusterJWTSecretVolumeMountDir,
+		},
+	}
 
-	options.Add("--integration.authentication.v1", true)
-	options.Add("--integration.authentication.v1.enabled", i.Spec.IsAuthenticated())
-	options.Add("--integration.authentication.v1.path", shared.ClusterJWTSecretVolumeMountDir)
+	return i.Core.Envs(i, envs...), nil
+}
 
-	options.Merge(i.Core.Args(i))
-
-	return options, nil
+func (i IntegrationAuthenticationV1) GlobalEnvs() ([]core.EnvVar, error) {
+	return nil, nil
 }
 
 func (i IntegrationAuthenticationV1) Volumes() ([]core.Volume, []core.VolumeMount, error) {
