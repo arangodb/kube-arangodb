@@ -107,3 +107,19 @@ func CopyList[A any](in []A) []A {
 	copy(ret, in)
 	return ret
 }
+
+func FlattenList[A any](in [][]A) []A {
+	count := 0
+
+	for _, v := range in {
+		count += len(v)
+	}
+
+	res := make([]A, 0, count)
+
+	for _, v := range in {
+		res = append(res, v...)
+	}
+
+	return res
+}

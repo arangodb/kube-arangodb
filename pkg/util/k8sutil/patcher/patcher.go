@@ -30,12 +30,13 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 )
 
 type Patch[T meta.Object] func(in T) []patch.Item
 
 type Client[T meta.Object] interface {
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts meta.PatchOptions, subresources ...string) (result T, err error)
+	generic.PatchInterface[T]
 }
 
 func Patcher[T meta.Object](ctx context.Context, client Client[T], in T, opts meta.PatchOptions, functions ...Patch[T]) (T, bool, error) {

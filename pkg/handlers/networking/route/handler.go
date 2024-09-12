@@ -101,7 +101,7 @@ func (h *handler) HandleSpecValidity(ctx context.Context, item operation.Item, e
 
 		logger.Err(err).Warn("Invalid Spec on %s", item.String())
 
-		if status.Conditions.Update(networkingApi.SpecValidCondition, false, "Spec is invalid", "Spec is invalid") {
+		if status.Conditions.Update(networkingApi.SpecValidCondition, false, "Spec is invalid", err.Error()) {
 			return true, operator.Stop("Invalid spec")
 		}
 		return false, operator.Stop("Invalid spec")

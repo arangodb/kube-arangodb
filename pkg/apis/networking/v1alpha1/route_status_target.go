@@ -30,6 +30,9 @@ type ArangoRouteStatusTarget struct {
 	// Destinations keeps target destinations
 	Destinations ArangoRouteStatusTargetDestinations `json:"destinations,omitempty"`
 
+	// Type define destination type
+	Type ArangoRouteStatusTargetType `json:"type,omitempty"`
+
 	// TLS Keeps target TLS Settings (if not nil, TLS is enabled)
 	TLS *ArangoRouteStatusTargetTLS `json:"TLS,omitempty"`
 
@@ -64,5 +67,5 @@ func (a *ArangoRouteStatusTarget) Hash() string {
 	if a == nil {
 		return ""
 	}
-	return util.SHA256FromStringArray(a.Destinations.Hash(), a.TLS.Hash(), a.Path, a.Authentication.Hash())
+	return util.SHA256FromStringArray(a.Destinations.Hash(), a.Type.Hash(), a.TLS.Hash(), a.Path, a.Authentication.Hash())
 }

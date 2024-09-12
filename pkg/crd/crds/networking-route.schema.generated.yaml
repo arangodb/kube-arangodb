@@ -13,8 +13,37 @@ v1alpha1:
                 description: Authentication defines auth methods
                 properties:
                   passMode:
+                    description: PassMode define authorization details pass mode when authorization was successful
+                    enum:
+                      - override
+                      - pass
+                      - remove
                     type: string
                   type:
+                    description: Type of the authentication
+                    enum:
+                      - optional
+                      - required
+                    type: string
+                type: object
+              endpoints:
+                description: Endpoints defines service upstream reference - which is used to find endpoints
+                properties:
+                  checksum:
+                    description: UID keeps the information about object Checksum
+                    type: string
+                  name:
+                    description: Name of the object
+                    type: string
+                  namespace:
+                    description: Namespace of the object. Should default to the namespace of the parent object
+                    type: string
+                  port:
+                    description: Port defines Port or Port Name used as destination
+                    type: string
+                    x-kubernetes-int-or-string: true
+                  uid:
+                    description: UID keeps the information about object UID
                     type: string
                 type: object
               path:

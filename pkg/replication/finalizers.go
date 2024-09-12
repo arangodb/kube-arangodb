@@ -32,7 +32,6 @@ import (
 	"github.com/arangodb/go-driver"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
-	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -85,7 +84,9 @@ func (dr *DeploymentReplication) runFinalizers(ctx context.Context, p *api.Arang
 	}
 
 	removalList := []string{constants.FinalizerDeplReplStopSync}
-	if err := removeDeploymentReplicationFinalizers(dr.deps.Client.Arango(), p, removalList, false); err != nil {
+	c := dr.deps.Client.Arango().ReplicationV1().ArangoDeploymentReplications(p.GetNamespace())
+
+	if _, err := k8sutil.RemoveSelectedFinalizers[*api.ArangoDeploymentReplication](ctx, c, c, p, removalList, false); err != nil {
 		return true, errors.WithMessage(err, "Failed to update deployment replication (to remove finalizers)")
 	}
 
@@ -230,31 +231,6 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 
 	return true, nil
 
-}
-
-// removeDeploymentReplicationFinalizers removes the given finalizers from the given DeploymentReplication.
-func removeDeploymentReplicationFinalizers(crcli versioned.Interface, p *api.ArangoDeploymentReplication, finalizers []string, ignoreNotFound bool) error {
-	repls := crcli.ReplicationV1().ArangoDeploymentReplications(p.GetNamespace())
-	getFunc := func() (meta.Object, error) {
-		result, err := repls.Get(context.Background(), p.GetName(), meta.GetOptions{})
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
-		return result, nil
-	}
-	updateFunc := func(updated meta.Object) error {
-		updatedRepl := updated.(*api.ArangoDeploymentReplication)
-		result, err := repls.Update(context.Background(), updatedRepl, meta.UpdateOptions{})
-		if err != nil {
-			return errors.WithStack(err)
-		}
-		*p = *result
-		return nil
-	}
-	if _, err := k8sutil.RemoveFinalizers(finalizers, getFunc, updateFunc, ignoreNotFound); err != nil {
-		return errors.WithStack(err)
-	}
-	return nil
 }
 
 // finalizerExists returns true if a given finalizer exists.

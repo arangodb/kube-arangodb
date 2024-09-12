@@ -73,6 +73,7 @@ func Test_NewMetaObject(t *testing.T) {
 	NewMetaObjectRun[*core.ConfigMap](t)
 	NewMetaObjectRun[*core.ServiceAccount](t)
 	NewMetaObjectRun[*core.Service](t)
+	NewMetaObjectRun[*core.Endpoints](t)
 	NewMetaObjectRun[*apps.StatefulSet](t)
 	NewMetaObjectRun[*rbac.Role](t)
 	NewMetaObjectRun[*rbac.RoleBinding](t)
