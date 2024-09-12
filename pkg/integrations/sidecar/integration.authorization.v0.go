@@ -21,7 +21,7 @@
 package sidecar
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	core "k8s.io/api/core/v1"
 )
 
 type IntegrationAuthorizationV0 struct {
@@ -36,12 +36,21 @@ func (i IntegrationAuthorizationV0) Validate() error {
 	return nil
 }
 
-func (i IntegrationAuthorizationV0) Args() (k8sutil.OptionPairs, error) {
-	options := k8sutil.CreateOptionPairs()
+func (i IntegrationAuthorizationV0) Envs() ([]core.EnvVar, error) {
+	var envs = []core.EnvVar{
+		{
+			Name:  "INTEGRATION_AUTHENTICATION_V0",
+			Value: "true",
+		},
+	}
 
-	options.Add("--integration.authorization.v0", true)
+	return i.Core.Envs(i, envs...), nil
+}
 
-	options.Merge(i.Core.Args(i))
+func (i IntegrationAuthorizationV0) GlobalEnvs() ([]core.EnvVar, error) {
+	return nil, nil
+}
 
-	return options, nil
+func (i IntegrationAuthorizationV0) Volumes() ([]core.Volume, []core.VolumeMount, error) {
+	return nil, nil, nil
 }

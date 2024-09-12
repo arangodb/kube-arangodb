@@ -26,6 +26,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/arangodb/kube-arangodb/pkg/ml/storage"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
@@ -47,21 +48,19 @@ func (b *storageV1) Description() string {
 	return "StorageBucket Integration"
 }
 
-func (b *storageV1) Register(cmd *cobra.Command, arg ArgGen) error {
-	f := cmd.Flags()
-
-	f.StringVar((*string)(&b.Configuration.Type), arg("type"), string(storage.S3), "Type of the Storage Integration")
-	f.StringVar(&b.Configuration.S3.Endpoint, arg("s3.endpoint"), "", "Endpoint of S3 API implementation")
-	f.StringVar(&b.Configuration.S3.CACrtFile, arg("s3.ca-crt"), "", "Path to file containing CA certificate to validate endpoint connection")
-	f.StringVar(&b.Configuration.S3.CAKeyFile, arg("s3.ca-key"), "", "Path to file containing keyfile to validate endpoint connection")
-	f.BoolVar(&b.Configuration.S3.AllowInsecure, arg("s3.allow-insecure"), false, "If set to true, the Endpoint certificates won't be checked")
-	f.BoolVar(&b.Configuration.S3.DisableSSL, arg("s3.disable-ssl"), false, "If set to true, the SSL won't be used when connecting to Endpoint")
-	f.StringVar(&b.Configuration.S3.Region, arg("s3.region"), "", "Region")
-	f.StringVar(&b.Configuration.S3.BucketName, arg("s3.bucket"), "", "Bucket name")
-	f.StringVar(&b.Configuration.S3.AccessKeyFile, arg("s3.access-key"), "", "Path to file containing S3 AccessKey")
-	f.StringVar(&b.Configuration.S3.SecretKeyFile, arg("s3.secret-key"), "", "Path to file containing S3 SecretKey")
-
-	return nil
+func (b *storageV1) Register(cmd *cobra.Command, fs FlagEnvHandler) error {
+	return errors.Errors(
+		fs.StringVar((*string)(&b.Configuration.Type), "type", string(storage.S3), "Type of the Storage Integration"),
+		fs.StringVar(&b.Configuration.S3.Endpoint, "s3.endpoint", "", "Endpoint of S3 API implementation"),
+		fs.StringVar(&b.Configuration.S3.CACrtFile, "s3.ca-crt", "", "Path to file containing CA certificate to validate endpoint connection"),
+		fs.StringVar(&b.Configuration.S3.CAKeyFile, "s3.ca-key", "", "Path to file containing keyfile to validate endpoint connection"),
+		fs.BoolVar(&b.Configuration.S3.AllowInsecure, "s3.allow-insecure", false, "If set to true, the Endpoint certificates won't be checked"),
+		fs.BoolVar(&b.Configuration.S3.DisableSSL, "s3.disable-ssl", false, "If set to true, the SSL won't be used when connecting to Endpoint"),
+		fs.StringVar(&b.Configuration.S3.Region, "s3.region", "", "Region"),
+		fs.StringVar(&b.Configuration.S3.BucketName, "s3.bucket", "", "Bucket name"),
+		fs.StringVar(&b.Configuration.S3.AccessKeyFile, "s3.access-key", "", "Path to file containing S3 AccessKey"),
+		fs.StringVar(&b.Configuration.S3.SecretKeyFile, "s3.secret-key", "", "Path to file containing S3 SecretKey"),
+	)
 }
 
 func (b *storageV1) Handler(ctx context.Context, cmd *cobra.Command) (svc.Handler, error) {

@@ -125,37 +125,44 @@ func (c *configuration) Register(cmd *cobra.Command) error {
 
 	cmd.RunE = c.run
 
-	f := cmd.Flags()
+	f := NewFlagEnvHandler(cmd.Flags())
 
-	f.StringVar(&c.health.address, "health.address", "0.0.0.0:9091", "Address to expose health service")
-	f.BoolVar(&c.health.shutdownEnabled, "health.shutdown.enabled", true, "Determines if shutdown service should be enabled and exposed")
-	f.StringVar(&c.health.auth.t, "health.auth.type", "None", "Auth type for health service")
-	f.StringVar(&c.health.auth.token, "health.auth.token", "", "Token for health service (when auth service is token)")
-	f.StringVar(&c.health.tls.keyfile, "health.tls.keyfile", "", "Path to the keyfile")
+	if err := errors.Errors(
+		f.StringVar(&c.health.address, "health.address", "0.0.0.0:9091", "Address to expose health service"),
+		f.BoolVar(&c.health.shutdownEnabled, "health.shutdown.enabled", true, "Determines if shutdown service should be enabled and exposed"),
+		f.StringVar(&c.health.auth.t, "health.auth.type", "None", "Auth type for health service"),
+		f.StringVar(&c.health.auth.token, "health.auth.token", "", "Token for health service (when auth service is token)"),
+		f.StringVar(&c.health.tls.keyfile, "health.tls.keyfile", "", "Path to the keyfile"),
 
-	f.BoolVar(&c.services.internal.enabled, "services.enabled", true, "Defines if internal access is enabled")
-	f.StringVar(&c.services.internal.address, "services.address", "127.0.0.1:9092", "Address to expose internal services")
-	f.StringVar(&c.services.internal.auth.t, "services.auth.type", "None", "Auth type for internal service")
-	f.StringVar(&c.services.internal.auth.token, "services.auth.token", "", "Token for internal service (when auth service is token)")
-	f.StringVar(&c.services.internal.tls.keyfile, "services.tls.keyfile", "", "Path to the keyfile")
+		f.BoolVar(&c.services.internal.enabled, "services.enabled", true, "Defines if internal access is enabled"),
+		f.StringVar(&c.services.internal.address, "services.address", "127.0.0.1:9092", "Address to expose internal services"),
+		f.StringVar(&c.services.internal.auth.t, "services.auth.type", "None", "Auth type for internal service"),
+		f.StringVar(&c.services.internal.auth.token, "services.auth.token", "", "Token for internal service (when auth service is token)"),
+		f.StringVar(&c.services.internal.tls.keyfile, "services.tls.keyfile", "", "Path to the keyfile"),
 
-	f.BoolVar(&c.services.external.enabled, "services.external.enabled", false, "Defines if external access is enabled")
-	f.StringVar(&c.services.external.address, "services.external.address", "0.0.0.0:9093", "Address to expose external services")
-	f.StringVar(&c.services.external.auth.t, "services.external.auth.type", "None", "Auth type for external service")
-	f.StringVar(&c.services.external.auth.token, "services.external.auth.token", "", "Token for external service (when auth service is token)")
-	f.StringVar(&c.services.external.tls.keyfile, "services.external.tls.keyfile", "", "Path to the keyfile")
-
+		f.BoolVar(&c.services.external.enabled, "services.external.enabled", false, "Defines if external access is enabled"),
+		f.StringVar(&c.services.external.address, "services.external.address", "0.0.0.0:9093", "Address to expose external services"),
+		f.StringVar(&c.services.external.auth.t, "services.external.auth.type", "None", "Auth type for external service"),
+		f.StringVar(&c.services.external.auth.token, "services.external.auth.token", "", "Token for external service (when auth service is token)"),
+		f.StringVar(&c.services.external.tls.keyfile, "services.external.tls.keyfile", "", "Path to the keyfile"),
+	); err != nil {
+		return err
+	}
 	for _, service := range c.registered {
 		prefix := fmt.Sprintf("integration.%s", service.Name())
 
-		f.Bool(prefix, false, service.Description())
+		fs := f.WithPrefix(prefix)
 		internal, external := GetIntegrationEnablement(service)
-		f.Bool(fmt.Sprintf("%s.internal", prefix), internal, fmt.Sprintf("Defones if Internal access to service %s is enabled", service.Name()))
-		f.Bool(fmt.Sprintf("%s.external", prefix), external, fmt.Sprintf("Defones if External access to service %s is enabled", service.Name()))
 
-		if err := service.Register(cmd, func(name string) string {
-			return fmt.Sprintf("%s.%s", prefix, name)
-		}); err != nil {
+		if err := errors.Errors(
+			fs.Bool("", false, service.Description()),
+			fs.Bool("internal", internal, fmt.Sprintf("Defones if Internal access to service %s is enabled", service.Name())),
+			fs.Bool("external", external, fmt.Sprintf("Defones if External access to service %s is enabled", service.Name())),
+		); err != nil {
+			return err
+		}
+
+		if err := service.Register(cmd, fs); err != nil {
 			return errors.Wrapf(err, "Unable to register service %s", service.Name())
 		}
 	}

@@ -135,7 +135,7 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 
 	cfg.IntegrationSidecar = &gateway.ConfigDestinationTarget{
 		Host: "127.0.0.1",
-		Port: int32(r.context.GetSpec().Gateway.GetSidecar().GetListenPort()),
+		Port: int32(r.context.GetSpec().Integration.GetSidecar().GetListenPort()),
 	}
 
 	cfg.DefaultDestination = gateway.ConfigDestination{

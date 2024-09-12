@@ -21,8 +21,9 @@
 package sidecar
 
 import (
+	core "k8s.io/api/core/v1"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 type IntegrationEnvoyV3 struct {
@@ -38,12 +39,21 @@ func (i IntegrationEnvoyV3) Validate() error {
 	return nil
 }
 
-func (i IntegrationEnvoyV3) Args() (k8sutil.OptionPairs, error) {
-	options := k8sutil.CreateOptionPairs()
+func (i IntegrationEnvoyV3) Envs() ([]core.EnvVar, error) {
+	var envs = []core.EnvVar{
+		{
+			Name:  "INTEGRATION_ENVOY_AUTH_V3",
+			Value: "true",
+		},
+	}
 
-	options.Add("--integration.envoy.auth.v3", true)
+	return i.Core.Envs(i, envs...), nil
+}
 
-	options.Merge(i.Core.Args(i))
+func (i IntegrationEnvoyV3) GlobalEnvs() ([]core.EnvVar, error) {
+	return nil, nil
+}
 
-	return options, nil
+func (i IntegrationEnvoyV3) Volumes() ([]core.Volume, []core.VolumeMount, error) {
+	return nil, nil, nil
 }

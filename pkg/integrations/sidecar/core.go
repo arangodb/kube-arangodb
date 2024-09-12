@@ -24,8 +24,9 @@ import (
 	"fmt"
 	"strings"
 
+	core "k8s.io/api/core/v1"
+
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 type Core struct {
@@ -49,14 +50,22 @@ func (c *Core) GetExternal() bool {
 	return *c.External
 }
 
-func (c *Core) Args(int Integration) k8sutil.OptionPairs {
-	var options k8sutil.OptionPairs
+func (c *Core) Envs(int Integration, envs ...core.EnvVar) []core.EnvVar {
 	cmd := strings.Join(util.FormatList(int.Name(), func(a string) string {
-		return strings.ToLower(a)
-	}), ".")
+		return strings.ToUpper(a)
+	}), "_")
+	var r = []core.EnvVar{
+		{
+			Name:  fmt.Sprintf("INTEGRATION_%s_INTERNAL", cmd),
+			Value: util.BoolSwitch(c.GetInternal(), "true", "false"),
+		},
+		{
+			Name:  fmt.Sprintf("INTEGRATION_%s_EXTERNAL", cmd),
+			Value: util.BoolSwitch(c.GetExternal(), "true", "false"),
+		},
+	}
 
-	options.Add(fmt.Sprintf("--integration.%s.internal", cmd), c.GetInternal())
-	options.Add(fmt.Sprintf("--integration.%s.external", cmd), c.GetExternal())
+	r = append(r, envs...)
 
-	return options
+	return r
 }

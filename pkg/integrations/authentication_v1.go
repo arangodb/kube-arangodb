@@ -27,6 +27,7 @@ import (
 
 	pbImplAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1"
 	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
@@ -40,20 +41,18 @@ type authenticationV1 struct {
 	config pbImplAuthenticationV1.Configuration
 }
 
-func (a *authenticationV1) Register(cmd *cobra.Command, arg ArgGen) error {
-	f := cmd.Flags()
-
-	f.StringVar(&a.config.Path, arg("path"), "", "Path to the JWT Folder")
-	f.BoolVar(&a.config.Enabled, arg("enabled"), true, "Defines if Authentication is enabled")
-	f.DurationVar(&a.config.TTL, arg("ttl"), pbImplAuthenticationV1.DefaultTTL, "TTL of the JWT cache")
-	f.StringVar(&a.config.Create.DefaultUser, arg("token.user"), pbImplAuthenticationV1.DefaultUser, "Default user of the Token")
-	f.DurationVar(&a.config.Create.DefaultTTL, arg("token.ttl.default"), pbImplAuthenticationV1.DefaultTokenDefaultTTL, "Default Token TTL")
-	f.DurationVar(&a.config.Create.MinTTL, arg("token.ttl.min"), pbImplAuthenticationV1.DefaultTokenMinTTL, "Min Token TTL")
-	f.DurationVar(&a.config.Create.MaxTTL, arg("token.ttl.max"), pbImplAuthenticationV1.DefaultTokenMaxTTL, "Max Token TTL")
-	f.Uint16Var(&a.config.Create.MaxSize, arg("token.max-size"), pbImplAuthenticationV1.DefaultMaxTokenSize, "Max Token max size in bytes")
-	f.StringSliceVar(&a.config.Create.AllowedUsers, arg("token.allowed"), []string{}, "Allowed users for the Token")
-
-	return nil
+func (a *authenticationV1) Register(cmd *cobra.Command, fs FlagEnvHandler) error {
+	return errors.Errors(
+		fs.StringVar(&a.config.Path, "path", "", "Path to the JWT Folder"),
+		fs.BoolVar(&a.config.Enabled, "enabled", true, "Defines if Authentication is enabled"),
+		fs.DurationVar(&a.config.TTL, "ttl", pbImplAuthenticationV1.DefaultTTL, "TTL of the JWT cache"),
+		fs.StringVar(&a.config.Create.DefaultUser, "token.user", pbImplAuthenticationV1.DefaultUser, "Default user of the Token"),
+		fs.DurationVar(&a.config.Create.DefaultTTL, "token.ttl.default", pbImplAuthenticationV1.DefaultTokenDefaultTTL, "Default Token TTL"),
+		fs.DurationVar(&a.config.Create.MinTTL, "token.ttl.min", pbImplAuthenticationV1.DefaultTokenMinTTL, "Min Token TTL"),
+		fs.DurationVar(&a.config.Create.MaxTTL, "token.ttl.max", pbImplAuthenticationV1.DefaultTokenMaxTTL, "Max Token TTL"),
+		fs.Uint16Var(&a.config.Create.MaxSize, "token.max-size", pbImplAuthenticationV1.DefaultMaxTokenSize, "Max Token max size in bytes"),
+		fs.StringSliceVar(&a.config.Create.AllowedUsers, "token.allowed", []string{}, "Allowed users for the Token"),
+	)
 }
 
 func (a *authenticationV1) Handler(ctx context.Context, cmd *cobra.Command) (svc.Handler, error) {

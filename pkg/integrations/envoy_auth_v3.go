@@ -48,7 +48,7 @@ func (a *envoyAuthV3) Description() string {
 	return "Enable EnvoyAuthV3 Integration Service"
 }
 
-func (a *envoyAuthV3) Register(cmd *cobra.Command, arg ArgGen) error {
+func (a *envoyAuthV3) Register(cmd *cobra.Command, fs FlagEnvHandler) error {
 	return nil
 }
 
