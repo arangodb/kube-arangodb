@@ -57,7 +57,8 @@ func (r *Resources) EnsureCoreResources(ctx context.Context, cachedStatus inspec
 		errors.Section(r.EnsureArangoMembers(ctx, cachedStatus), "EnsureArangoMembers"),
 		errors.Section(r.EnsureServices(ctx, cachedStatus), "EnsureServices"),
 		errors.Section(r.EnsureConfigMaps(ctx, cachedStatus), "EnsureConfigMaps"),
-		errors.Section(r.EnsureSecrets(ctx, cachedStatus), "EnsureSecrets"))
+		errors.Section(r.EnsureSecrets(ctx, cachedStatus), "EnsureSecrets"),
+		errors.Section(r.EnsureArangoProfiles(ctx, cachedStatus), "EnsureArangoProfiles"))
 }
 
 func (r *Resources) EnsureResources(ctx context.Context, serviceMonitorEnabled bool, cachedStatus inspectorInterface.Inspector) error {
