@@ -27,7 +27,8 @@ import (
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 )
 
-type ArangoRouteSpecDestinationService struct {
+type ArangoRouteSpecDestinationEndpoints struct {
+	// Keeps information on the service, which maps then to the endpoints
 	*sharedApi.Object `json:",inline,omitempty"`
 
 	// Port defines Port or Port Name used as destination
@@ -35,7 +36,7 @@ type ArangoRouteSpecDestinationService struct {
 	Port *intstr.IntOrString `json:"port,omitempty"`
 }
 
-func (a *ArangoRouteSpecDestinationService) GetPort() *intstr.IntOrString {
+func (a *ArangoRouteSpecDestinationEndpoints) GetPort() *intstr.IntOrString {
 	if a == nil || a.Port == nil {
 		return nil
 	}
@@ -43,9 +44,9 @@ func (a *ArangoRouteSpecDestinationService) GetPort() *intstr.IntOrString {
 	return a.Port
 }
 
-func (a *ArangoRouteSpecDestinationService) Validate() error {
+func (a *ArangoRouteSpecDestinationEndpoints) Validate() error {
 	if a == nil {
-		a = &ArangoRouteSpecDestinationService{}
+		a = &ArangoRouteSpecDestinationEndpoints{}
 	}
 
 	if err := shared.WithErrors(a.Object.Validate(), shared.ValidateRequiredPath("port", a.Port, func(i intstr.IntOrString) error {

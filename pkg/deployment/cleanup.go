@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ func (d *Deployment) removePodFinalizers(ctx context.Context, cachedStatus inspe
 
 	if err := cachedStatus.Pod().V1().Iterate(func(pod *core.Pod) error {
 		log.Str("pod", pod.GetName()).Info("Removing Pod Finalizer")
-		if count, err := k8sutil.RemovePodFinalizers(ctx, cachedStatus, d.PodsModInterface(), pod, constants.ManagedFinalizers(), true); err != nil {
+		if count, err := k8sutil.RemoveSelectedFinalizers[*core.Pod](ctx, cachedStatus.Pod().V1().Read(), cachedStatus.PodsModInterface().V1(), pod, constants.ManagedFinalizers(), true); err != nil {
 			log.Err(err).Warn("Failed to remove pod finalizers")
 			return err
 		} else if count > 0 {
@@ -78,7 +78,7 @@ func (d *Deployment) removePVCFinalizers(ctx context.Context, cachedStatus inspe
 
 	if err := cachedStatus.PersistentVolumeClaim().V1().Iterate(func(pvc *core.PersistentVolumeClaim) error {
 		log.Str("pvc", pvc.GetName()).Info("Removing PVC Finalizer")
-		if count, err := k8sutil.RemovePVCFinalizers(ctx, cachedStatus, d.PersistentVolumeClaimsModInterface(), pvc, constants.ManagedFinalizers(), true); err != nil {
+		if count, err := k8sutil.RemoveSelectedFinalizers[*core.PersistentVolumeClaim](ctx, cachedStatus.PersistentVolumeClaim().V1().Read(), cachedStatus.PersistentVolumeClaimsModInterface().V1(), pvc, constants.ManagedFinalizers(), true); err != nil {
 			log.Err(err).Warn("Failed to remove PVC finalizers")
 			return err
 		} else if count > 0 {

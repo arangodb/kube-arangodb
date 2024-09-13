@@ -26,6 +26,9 @@ type ArangoRouteSpecDestination struct {
 	// Service defines service upstream reference
 	Service *ArangoRouteSpecDestinationService `json:"service,omitempty"`
 
+	// Endpoints defines service upstream reference - which is used to find endpoints
+	Endpoints *ArangoRouteSpecDestinationEndpoints `json:"endpoints,omitempty"`
+
 	// Schema defines HTTP/S schema used for connection
 	Schema *ArangoRouteSpecDestinationSchema `json:"schema,omitempty"`
 
@@ -45,6 +48,14 @@ func (a *ArangoRouteSpecDestination) GetService() *ArangoRouteSpecDestinationSer
 	}
 
 	return a.Service
+}
+
+func (a *ArangoRouteSpecDestination) GetEndpoints() *ArangoRouteSpecDestinationEndpoints {
+	if a == nil || a.Endpoints == nil {
+		return nil
+	}
+
+	return a.Endpoints
 }
 
 func (a *ArangoRouteSpecDestination) GetSchema() *ArangoRouteSpecDestinationSchema {
@@ -85,7 +96,9 @@ func (a *ArangoRouteSpecDestination) Validate() error {
 	}
 
 	if err := shared.WithErrors(
+		shared.ValidateExclusiveFields(a, 1, "Service", "Endpoints"),
 		shared.ValidateOptionalInterfacePath("service", a.Service),
+		shared.ValidateOptionalInterfacePath("endpoints", a.Endpoints),
 		shared.ValidateOptionalInterfacePath("schema", a.Schema),
 		shared.ValidateOptionalInterfacePath("tls", a.TLS),
 		shared.ValidateOptionalInterfacePath("authentication", a.Authentication),

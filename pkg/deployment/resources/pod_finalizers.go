@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -115,7 +115,7 @@ func (r *Resources) runPodFinalizers(ctx context.Context, p *core.Pod, memberSta
 	}
 	// Remove finalizers (if needed)
 	if len(removalList) > 0 {
-		if _, err := k8sutil.RemovePodFinalizers(ctx, r.context.ACS().CurrentClusterCache(), r.context.ACS().CurrentClusterCache().PodsModInterface().V1(), p, removalList, false); err != nil {
+		if _, err := k8sutil.RemoveSelectedFinalizers[*core.Pod](ctx, r.context.ACS().CurrentClusterCache().Pod().V1().Read(), r.context.ACS().CurrentClusterCache().PodsModInterface().V1(), p, removalList, false); err != nil {
 			log.Err(err).Debug("Failed to update pod (to remove finalizers)")
 			return 0, errors.WithStack(err)
 		}

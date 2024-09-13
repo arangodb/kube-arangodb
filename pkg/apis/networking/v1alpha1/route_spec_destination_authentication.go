@@ -25,8 +25,16 @@ import (
 )
 
 type ArangoRouteSpecDestinationAuthentication struct {
+	// PassMode define authorization details pass mode when authorization was successful
+	// +doc/enum: override|Generates new token for the user
+	// +doc/enum: pass|Pass token provided by the user
+	// +doc/enum: remove|Removes authorization details from the request
 	PassMode *ArangoRouteSpecAuthenticationPassMode `json:"passMode,omitempty"`
-	Type     *ArangoRouteSpecAuthenticationType     `json:"type,omitempty"`
+
+	// Type of the authentication
+	// +doc/enum: optional|Authentication is header is validated and passed to the service. In case if is unauthorized, requests is still passed
+	// +doc/enum: required|Authentication is header is validated and passed to the service. In case if is unauthorized, returns 403
+	Type *ArangoRouteSpecAuthenticationType `json:"type,omitempty"`
 }
 
 func (a *ArangoRouteSpecDestinationAuthentication) GetType() ArangoRouteSpecAuthenticationType {

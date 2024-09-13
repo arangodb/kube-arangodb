@@ -24,11 +24,13 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"strings"
 
 	"github.com/google/uuid"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -242,4 +244,109 @@ func ValidateServiceType(st core.ServiceType) error {
 		return nil
 	}
 	return errors.Errorf("Unsupported service type %s", st)
+}
+
+// ValidateExclusiveFields check if fields are defined in exclusive way
+func ValidateExclusiveFields(in any, expected int, fields ...string) error {
+	v := reflect.ValueOf(in)
+	t := v.Type()
+
+	if expected > len(fields) {
+		return errors.Errorf("Expected more fields than allowed")
+	}
+
+	if t.Kind() == reflect.Pointer {
+		if !v.IsValid() {
+			return errors.Errorf("Invalid reference")
+		}
+
+		if v.IsZero() {
+			// Skip in case of zero value
+			return nil
+		}
+
+		// We got a ptr, detach type
+		return ValidateExclusiveFields(v.Elem().Interface(), expected, fields...)
+	}
+
+	if t.Kind() == reflect.Struct {
+		foundFields := map[string]bool{}
+		for _, field := range fields {
+			tf, ok := t.FieldByName(field)
+			if !ok {
+				continue
+			}
+
+			n := field
+			if tg, ok := tf.Tag.Lookup("json"); ok {
+				p := strings.Split(tg, ",")[0]
+				if p != "" {
+					n = p
+				}
+			}
+			foundFields[n] = false
+
+			vf := v.FieldByName(field)
+			if !vf.IsValid() {
+				continue
+			}
+			if vf.IsZero() {
+				// Empty or nil
+				continue
+			}
+
+			foundFields[n] = true
+		}
+
+		existing := util.Sort(util.FlattenList(util.FormatList(util.Extract(foundFields), func(a util.KV[string, bool]) []string {
+			if a.V {
+				return []string{a.K}
+			}
+
+			return nil
+		})), func(i, j string) bool {
+			return i < j
+		})
+
+		missing := util.Sort(util.FlattenList(util.FormatList(util.Extract(foundFields), func(a util.KV[string, bool]) []string {
+			if !a.V {
+				return []string{a.K}
+			}
+
+			return nil
+		})), func(i, j string) bool {
+			return i < j
+		})
+
+		all := util.SortKeys(foundFields)
+
+		if len(existing) != expected {
+			// We did not get all fields, check condition
+			if len(existing) == 0 {
+				return errors.Errorf("Elements not provided. Expected %d. Possible: %s",
+					expected,
+					strings.Join(all, ", "),
+				)
+			}
+			if len(existing) < expected {
+				return errors.Errorf("Not enough elements provided. Expected %d, got %d. Defined: %s, Additionally Possible: %s",
+					expected,
+					len(existing),
+					strings.Join(existing, ", "),
+					strings.Join(missing, ", "),
+				)
+			}
+			if len(existing) > expected {
+				return errors.Errorf("Too many elements provided. Expected %d, got %d. Defined: %s",
+					expected,
+					len(existing),
+					strings.Join(existing, ", "),
+				)
+			}
+		}
+
+		return nil
+	}
+
+	return errors.Errorf("Invalid reference")
 }

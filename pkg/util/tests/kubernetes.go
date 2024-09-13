@@ -143,6 +143,12 @@ func CreateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			vl := *v
 			_, err := k8s.CoreV1().Services(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
 			require.NoError(t, err)
+		case **core.Endpoints:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := k8s.CoreV1().Endpoints(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
+			require.NoError(t, err)
 		case **core.ServiceAccount:
 			require.NotNil(t, v)
 
@@ -310,6 +316,12 @@ func UpdateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			vl := *v
 			_, err := k8s.CoreV1().Services(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
 			require.NoError(t, err)
+		case **core.Endpoints:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := k8s.CoreV1().Endpoints(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
 		case **core.ServiceAccount:
 			require.NotNil(t, v)
 
@@ -466,6 +478,11 @@ func DeleteObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 
 			vl := *v
 			require.NoError(t, k8s.CoreV1().Services(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **core.Endpoints:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, k8s.CoreV1().Endpoints(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
 		case **core.ServiceAccount:
 			require.NotNil(t, v)
 
@@ -655,6 +672,21 @@ func RefreshObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientS
 			vl := *v
 
 			vn, err := k8s.CoreV1().Services(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
+			if err != nil {
+				if kerrors.IsNotFound(err) {
+					*v = nil
+				} else {
+					require.NoError(t, err)
+				}
+			} else {
+				*v = vn
+			}
+		case **core.Endpoints:
+			require.NotNil(t, v)
+
+			vl := *v
+
+			vn, err := k8s.CoreV1().Endpoints(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
 			if err != nil {
 				if kerrors.IsNotFound(err) {
 					*v = nil
@@ -994,6 +1026,12 @@ func SetMetaBasedOnType(t *testing.T, object meta.Object) {
 		v.SetSelfLink(fmt.Sprintf("/api/v1/services/%s/%s",
 			object.GetNamespace(),
 			object.GetName()))
+	case *core.Endpoints:
+		v.Kind = "Endpoints"
+		v.APIVersion = "v1"
+		v.SetSelfLink(fmt.Sprintf("/api/v1/endpoints/%s/%s",
+			object.GetNamespace(),
+			object.GetName()))
 	case *core.ServiceAccount:
 		v.Kind = "ServiceAccount"
 		v.APIVersion = "v1"
@@ -1213,6 +1251,12 @@ func GVK(t *testing.T, object meta.Object) schema.GroupVersionKind {
 			Group:   "",
 			Version: "v1",
 			Kind:    "Service",
+		}
+	case *core.Endpoints:
+		return schema.GroupVersionKind{
+			Group:   "",
+			Version: "v1",
+			Kind:    "Endpoints",
 		}
 	case *core.ServiceAccount:
 		return schema.GroupVersionKind{

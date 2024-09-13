@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,95 +24,42 @@ import (
 	"context"
 	"sort"
 
-	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
-	persistentvolumeclaimv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
-	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/patcher"
 )
 
 const (
 	maxRemoveFinalizersAttempts = 50
 )
 
-// RemovePodFinalizers removes the given finalizers from the given pod.
-func RemovePodFinalizers(ctx context.Context, cachedStatus pod.Inspector, c podv1.ModInterface, p *core.Pod,
+// RemoveSelectedFinalizers removes the given finalizers from the given pod.
+func RemoveSelectedFinalizers[T meta.Object](ctx context.Context, getter generic.GetInterface[T], patcher generic.PatchInterface[T], p T,
 	finalizers []string, ignoreNotFound bool) (int, error) {
-	getFunc := func() (meta.Object, error) {
-		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
-		defer cancel()
-
-		result, err := cachedStatus.Pod().V1().Read().Get(ctxChild, p.GetName(), meta.GetOptions{})
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
-		return result, nil
-	}
-	updateFunc := func(updated meta.Object) error {
-		updatedPod := updated.(*core.Pod)
-		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
-		defer cancel()
-
-		result, err := c.Update(ctxChild, updatedPod, meta.UpdateOptions{})
-		if err != nil {
-			return errors.WithStack(err)
-		}
-		*p = *result
-		return nil
-	}
-	if count, err := RemoveFinalizers(finalizers, getFunc, updateFunc, ignoreNotFound); err != nil {
+	if count, err := RemoveFinalizers(ctx, getter, patcher, p.GetName(), finalizers, ignoreNotFound); err != nil {
 		return 0, errors.WithStack(err)
 	} else {
 		return count, nil
 	}
 }
 
-// RemovePVCFinalizers removes the given finalizers from the given PVC.
-func RemovePVCFinalizers(ctx context.Context, cachedStatus persistentvolumeclaim.Inspector, c persistentvolumeclaimv1.ModInterface,
-	p *core.PersistentVolumeClaim, finalizers []string, ignoreNotFound bool) (int, error) {
-	getFunc := func() (meta.Object, error) {
-		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
-		defer cancel()
-
-		result, err := cachedStatus.PersistentVolumeClaim().V1().Read().Get(ctxChild, p.GetName(), meta.GetOptions{})
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
-		return result, nil
-	}
-	updateFunc := func(updated meta.Object) error {
-		updatedPVC := updated.(*core.PersistentVolumeClaim)
-		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
-		defer cancel()
-
-		result, err := c.Update(ctxChild, updatedPVC, meta.UpdateOptions{})
-		if err != nil {
-			return errors.WithStack(err)
-		}
-		*p = *result
-		return nil
-	}
-	if count, err := RemoveFinalizers(finalizers, getFunc, updateFunc, ignoreNotFound); err != nil {
-		return 0, errors.WithStack(err)
-	} else {
-		return count, nil
-	}
+type RemoveFinalizersClient[T meta.Object] interface {
+	generic.GetInterface[T]
+	generic.PatchInterface[T]
 }
 
 // RemoveFinalizers is a helper used to remove finalizers from an object.
 // The functions tries to get the object using the provided get function,
 // then remove the given finalizers and update the update using the given update function.
 // In case of an update conflict, the functions tries again.
-func RemoveFinalizers(finalizers []string, getFunc func() (meta.Object, error), updateFunc func(meta.Object) error, ignoreNotFound bool) (int, error) {
+func RemoveFinalizers[T meta.Object](ctx context.Context, getter generic.GetInterface[T], p generic.PatchInterface[T], name string, finalizers []string, ignoreNotFound bool) (int, error) {
 	attempts := 0
 	for {
 		attempts++
-		obj, err := getFunc()
+		obj, err := getter.Get(ctx, name, meta.GetOptions{})
 		if err != nil {
 			if kerrors.IsNotFound(err) && ignoreNotFound {
 				// Object no longer found and we're allowed to ignore that.
@@ -140,8 +87,7 @@ func RemoveFinalizers(finalizers []string, getFunc func() (meta.Object, error), 
 			}
 		}
 		if z := len(original) - len(newList); z > 0 {
-			obj.SetFinalizers(newList)
-			if err := updateFunc(obj); kerrors.IsConflict(err) {
+			if _, _, err := patcher.Patcher[T](ctx, p, obj, meta.PatchOptions{}, patcher.Finalizers[T](newList)); kerrors.IsConflict(err) {
 				if attempts > maxRemoveFinalizersAttempts {
 					return 0, errors.WithStack(err)
 				} else {

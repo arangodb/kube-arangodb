@@ -18,19 +18,72 @@ Deployment specifies the ArangoDeployment object name
 
 ### .spec.destination.authentication.passMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/networking/v1alpha1/route_spec_destination_authentication.go#L28)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/networking/v1alpha1/route_spec_destination_authentication.go#L32)</sup>
+
+PassMode define authorization details pass mode when authorization was successful
+
+Possible Values: 
+* `"override"` (default) - Generates new token for the user
+* `"pass"` - Pass token provided by the user
+* `"remove"` - Removes authorization details from the request
 
 ***
 
 ### .spec.destination.authentication.type
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/networking/v1alpha1/route_spec_destination_authentication.go#L29)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/networking/v1alpha1/route_spec_destination_authentication.go#L37)</sup>
+
+Type of the authentication
+
+Possible Values: 
+* `"optional"` (default) - Authentication is header is validated and passed to the service. In case if is unauthorized, requests is still passed
+* `"required"` - Authentication is header is validated and passed to the service. In case if is unauthorized, returns 403
+
+***
+
+### .spec.destination.endpoints.checksum
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/shared/v1/object.go#L61)</sup>
+
+UID keeps the information about object Checksum
+
+***
+
+### .spec.destination.endpoints.name
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/shared/v1/object.go#L52)</sup>
+
+Name of the object
+
+***
+
+### .spec.destination.endpoints.namespace
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/shared/v1/object.go#L55)</sup>
+
+Namespace of the object. Should default to the namespace of the parent object
+
+***
+
+### .spec.destination.endpoints.port
+
+Type: `intstr.IntOrString` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/networking/v1alpha1/route_spec_destination_endpoint.go#L36)</sup>
+
+Port defines Port or Port Name used as destination
+
+***
+
+### .spec.destination.endpoints.uid
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/shared/v1/object.go#L58)</sup>
+
+UID keeps the information about object UID
 
 ***
 
 ### .spec.destination.path
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/networking/v1alpha1/route_spec_destination.go#L36)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/networking/v1alpha1/route_spec_destination.go#L39)</sup>
 
 Path defines service path used for overrides
 
@@ -38,7 +91,7 @@ Path defines service path used for overrides
 
 ### .spec.destination.schema
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/networking/v1alpha1/route_spec_destination.go#L30)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/networking/v1alpha1/route_spec_destination.go#L33)</sup>
 
 Schema defines HTTP/S schema used for connection
 
@@ -70,12 +123,9 @@ Namespace of the object. Should default to the namespace of the parent object
 
 ### .spec.destination.service.port
 
-Type: `intstr.IntOrString` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/networking/v1alpha1/route_spec_destination_service.go#L36)</sup>
+Type: `intstr.IntOrString` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/networking/v1alpha1/route_spec_destination_service.go#L35)</sup>
 
 Port defines Port or Port Name used as destination
-
-Links:
-* [Documentation](https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/)
 
 ***
 
@@ -169,7 +219,7 @@ Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.
 
 ### .status.target.path
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/networking/v1alpha1/route_status_target.go#L40)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/networking/v1alpha1/route_status_target.go#L43)</sup>
 
 Path specifies request path override
 
@@ -180,4 +230,12 @@ Path specifies request path override
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/networking/v1alpha1/route_status_target_tls.go#L27)</sup>
 
 Insecure allows Insecure traffic
+
+***
+
+### .status.target.type
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.42/pkg/apis/networking/v1alpha1/route_status_target.go#L34)</sup>
+
+Type define destination type
 

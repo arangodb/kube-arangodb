@@ -399,7 +399,7 @@ func (d *Deployment) RemovePodFinalizers(ctx context.Context, podName string) er
 		return errors.WithStack(err)
 	}
 
-	_, err = k8sutil.RemovePodFinalizers(ctx, d.GetCachedStatus(), d.PodsModInterface(), p, p.GetFinalizers(), true)
+	_, err = k8sutil.RemoveSelectedFinalizers[*core.Pod](ctx, d.GetCachedStatus().Pod().V1().Read(), d.GetCachedStatus().PodsModInterface().V1(), p, p.GetFinalizers(), true)
 	if err != nil {
 		return errors.WithStack(err)
 	}
