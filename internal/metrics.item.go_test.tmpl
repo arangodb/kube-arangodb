@@ -23,28 +23,24 @@ package metric_descriptions
 
 import (
     "testing"
-{{- if .global }}
 
 	"github.com/stretchr/testify/require"
-{{- end }}
 )
 
 func Test_{{ .ename }}_Descriptor(t *testing.T) {
 	{{ .ename }}()
 }
 
-{{- if .global }}
+func Test_{{ .ename }}_Factory(t *testing.T) {
+	global := New{{ .ename }}{{ .type }}Factory()
 
-func Test_{{ .ename }}_Global(t *testing.T) {
-	global := Get{{ .ename }}Factory()
-
-	object1 := {{ .ename }}Item{
+	object1 := {{ .ename }}Input{
 {{- range $i, $field := .mapKeys }}
         {{ $field }}: "1",
 {{- end }}
 	}
 
-	object2 := {{ .ename }}Item{
+	object2 := {{ .ename }}Input{
 {{- range $i, $field := .mapKeys }}
         {{ $field }}: "2",
 {{- end }}
@@ -60,7 +56,7 @@ func Test_{{ .ename }}_Global(t *testing.T) {
 	})
 
 	t.Run("Add", func(t *testing.T) {
-	    global.Add(10, object1)
+	    global.Add(object1, 10)
 
 		require.EqualValues(t, 10, global.Get(object1))
 		require.EqualValues(t, 0, global.Get(object2))
@@ -71,7 +67,7 @@ func Test_{{ .ename }}_Global(t *testing.T) {
 	})
 
 	t.Run("Add", func(t *testing.T) {
-	    global.Add(3, object2)
+	    global.Add(object2, 3)
 
 		require.EqualValues(t, 10, global.Get(object1))
 		require.EqualValues(t, 3, global.Get(object2))
@@ -82,7 +78,7 @@ func Test_{{ .ename }}_Global(t *testing.T) {
 	})
 
 	t.Run("Dec", func(t *testing.T) {
-	    global.Add(-1, object1)
+	    global.Add(object1, -1)
 
 		require.EqualValues(t, 9, global.Get(object1))
 		require.EqualValues(t, 3, global.Get(object2))
@@ -127,16 +123,16 @@ func Test_{{ .ename }}_Global(t *testing.T) {
 }
 {{- if eq .type "Counter" }}
 
-func Test_{{ .ename }}_Global_Counter(t *testing.T) {
-	global := Get{{ .ename }}Factory()
+func Test_{{ .ename }}_Factory_Counter(t *testing.T) {
+	global := New{{ .ename }}{{ .type }}Factory()
 
-	object1 := {{ .ename }}Item{
+	object1 := {{ .ename }}Input{
 {{- range $i, $field := .mapKeys }}
         {{ $field }}: "1",
 {{- end }}
 	}
 
-	object2 := {{ .ename }}Item{
+	object2 := {{ .ename }}Input{
 {{- range $i, $field := .mapKeys }}
         {{ $field }}: "2",
 {{- end }}
@@ -152,7 +148,7 @@ func Test_{{ .ename }}_Global_Counter(t *testing.T) {
 	})
 
 	t.Run("Add", func(t *testing.T) {
-	    global.Add(10, object1)
+	    global.Add(object1, 10)
 
 		require.EqualValues(t, 10, global.Get(object1))
 		require.EqualValues(t, 0, global.Get(object2))
@@ -175,5 +171,54 @@ func Test_{{ .ename }}_Global_Counter(t *testing.T) {
 	})
 }
 {{- end }}
+{{- if eq .type "Gauge" }}
 
+func Test_{{ .ename }}_Factory_Gauge(t *testing.T) {
+	global := New{{ .ename }}{{ .type }}Factory()
+
+	object1 := {{ .ename }}Input{
+{{- range $i, $field := .mapKeys }}
+        {{ $field }}: "1",
 {{- end }}
+	}
+
+	object2 := {{ .ename }}Input{
+{{- range $i, $field := .mapKeys }}
+        {{ $field }}: "2",
+{{- end }}
+	}
+
+	t.Run("List", func(t *testing.T) {
+		require.Len(t, global.Items(), 0)
+	})
+
+	t.Run("Precheck", func(t *testing.T) {
+		require.EqualValues(t, 0, global.Get(object1))
+		require.EqualValues(t, 0, global.Get(object2))
+	})
+
+	t.Run("Add", func(t *testing.T) {
+	    global.Add(object1, 10)
+
+		require.EqualValues(t, 10, global.Get(object1))
+		require.EqualValues(t, 0, global.Get(object2))
+	})
+
+	t.Run("List", func(t *testing.T) {
+		require.Len(t, global.Items(), 1)
+	})
+
+	t.Run("Set", func(t *testing.T) {
+	    global.Set(object1, 3)
+	    global.Set(object2, 1)
+
+		require.EqualValues(t, 3, global.Get(object1))
+		require.EqualValues(t, 1, global.Get(object2))
+	})
+
+	t.Run("List", func(t *testing.T) {
+		require.Len(t, global.Items(), 2)
+	})
+}
+{{- end }}
+

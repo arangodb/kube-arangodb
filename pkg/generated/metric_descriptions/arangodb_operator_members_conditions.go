@@ -32,6 +32,34 @@ func init() {
 	registerDescription(arangodbOperatorMembersConditions)
 }
 
+func NewArangodbOperatorMembersConditionsGaugeFactory() metrics.FactoryGauge[ArangodbOperatorMembersConditionsInput] {
+	return metrics.NewFactoryGauge[ArangodbOperatorMembersConditionsInput]()
+}
+
+func NewArangodbOperatorMembersConditionsInput(namespace string, name string, member string, condition string) ArangodbOperatorMembersConditionsInput {
+	return ArangodbOperatorMembersConditionsInput{
+		Namespace: namespace,
+		Name:      name,
+		Member:    member,
+		Condition: condition,
+	}
+}
+
+type ArangodbOperatorMembersConditionsInput struct {
+	Namespace string `json:"namespace"`
+	Name      string `json:"name"`
+	Member    string `json:"member"`
+	Condition string `json:"condition"`
+}
+
+func (i ArangodbOperatorMembersConditionsInput) Gauge(value float64) metrics.Metric {
+	return ArangodbOperatorMembersConditionsGauge(value, i.Namespace, i.Name, i.Member, i.Condition)
+}
+
+func (i ArangodbOperatorMembersConditionsInput) Desc() metrics.Description {
+	return ArangodbOperatorMembersConditions()
+}
+
 func ArangodbOperatorMembersConditions() metrics.Description {
 	return arangodbOperatorMembersConditions
 }

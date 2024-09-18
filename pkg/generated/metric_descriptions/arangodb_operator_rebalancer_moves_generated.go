@@ -32,6 +32,30 @@ func init() {
 	registerDescription(arangodbOperatorRebalancerMovesGenerated)
 }
 
+func NewArangodbOperatorRebalancerMovesGeneratedCounterFactory() metrics.FactoryCounter[ArangodbOperatorRebalancerMovesGeneratedInput] {
+	return metrics.NewFactoryCounter[ArangodbOperatorRebalancerMovesGeneratedInput]()
+}
+
+func NewArangodbOperatorRebalancerMovesGeneratedInput(namespace string, name string) ArangodbOperatorRebalancerMovesGeneratedInput {
+	return ArangodbOperatorRebalancerMovesGeneratedInput{
+		Namespace: namespace,
+		Name:      name,
+	}
+}
+
+type ArangodbOperatorRebalancerMovesGeneratedInput struct {
+	Namespace string `json:"namespace"`
+	Name      string `json:"name"`
+}
+
+func (i ArangodbOperatorRebalancerMovesGeneratedInput) Counter(value float64) metrics.Metric {
+	return ArangodbOperatorRebalancerMovesGeneratedCounter(value, i.Namespace, i.Name)
+}
+
+func (i ArangodbOperatorRebalancerMovesGeneratedInput) Desc() metrics.Description {
+	return ArangodbOperatorRebalancerMovesGenerated()
+}
+
 func ArangodbOperatorRebalancerMovesGenerated() metrics.Description {
 	return arangodbOperatorRebalancerMovesGenerated
 }

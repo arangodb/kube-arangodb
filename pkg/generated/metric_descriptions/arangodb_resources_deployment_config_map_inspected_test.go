@@ -26,21 +26,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_ArangodbOperatorResourcesArangodeploymentreplicationFailed_Descriptor(t *testing.T) {
-	ArangodbOperatorResourcesArangodeploymentreplicationFailed()
+func Test_ArangodbResourcesDeploymentConfigMapInspected_Descriptor(t *testing.T) {
+	ArangodbResourcesDeploymentConfigMapInspected()
 }
 
-func Test_ArangodbOperatorResourcesArangodeploymentreplicationFailed_Factory(t *testing.T) {
-	global := NewArangodbOperatorResourcesArangodeploymentreplicationFailedGaugeFactory()
+func Test_ArangodbResourcesDeploymentConfigMapInspected_Factory(t *testing.T) {
+	global := NewArangodbResourcesDeploymentConfigMapInspectedCounterFactory()
 
-	object1 := ArangodbOperatorResourcesArangodeploymentreplicationFailedInput{
-		Namespace: "1",
-		Name:      "1",
+	object1 := ArangodbResourcesDeploymentConfigMapInspectedInput{
+		Deployment: "1",
 	}
 
-	object2 := ArangodbOperatorResourcesArangodeploymentreplicationFailedInput{
-		Namespace: "2",
-		Name:      "2",
+	object2 := ArangodbResourcesDeploymentConfigMapInspectedInput{
+		Deployment: "2",
 	}
 
 	t.Run("List", func(t *testing.T) {
@@ -119,17 +117,15 @@ func Test_ArangodbOperatorResourcesArangodeploymentreplicationFailed_Factory(t *
 	})
 }
 
-func Test_ArangodbOperatorResourcesArangodeploymentreplicationFailed_Factory_Gauge(t *testing.T) {
-	global := NewArangodbOperatorResourcesArangodeploymentreplicationFailedGaugeFactory()
+func Test_ArangodbResourcesDeploymentConfigMapInspected_Factory_Counter(t *testing.T) {
+	global := NewArangodbResourcesDeploymentConfigMapInspectedCounterFactory()
 
-	object1 := ArangodbOperatorResourcesArangodeploymentreplicationFailedInput{
-		Namespace: "1",
-		Name:      "1",
+	object1 := ArangodbResourcesDeploymentConfigMapInspectedInput{
+		Deployment: "1",
 	}
 
-	object2 := ArangodbOperatorResourcesArangodeploymentreplicationFailedInput{
-		Namespace: "2",
-		Name:      "2",
+	object2 := ArangodbResourcesDeploymentConfigMapInspectedInput{
+		Deployment: "2",
 	}
 
 	t.Run("List", func(t *testing.T) {
@@ -152,11 +148,11 @@ func Test_ArangodbOperatorResourcesArangodeploymentreplicationFailed_Factory_Gau
 		require.Len(t, global.Items(), 1)
 	})
 
-	t.Run("Set", func(t *testing.T) {
-		global.Set(object1, 3)
-		global.Set(object2, 1)
+	t.Run("Inc", func(t *testing.T) {
+		global.Inc(object1)
+		global.Inc(object2)
 
-		require.EqualValues(t, 3, global.Get(object1))
+		require.EqualValues(t, 11, global.Get(object1))
 		require.EqualValues(t, 1, global.Get(object2))
 	})
 

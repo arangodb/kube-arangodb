@@ -32,6 +32,30 @@ func init() {
 	registerDescription(arangodbOperatorResourcesArangodeploymentreplicationFailed)
 }
 
+func NewArangodbOperatorResourcesArangodeploymentreplicationFailedGaugeFactory() metrics.FactoryGauge[ArangodbOperatorResourcesArangodeploymentreplicationFailedInput] {
+	return metrics.NewFactoryGauge[ArangodbOperatorResourcesArangodeploymentreplicationFailedInput]()
+}
+
+func NewArangodbOperatorResourcesArangodeploymentreplicationFailedInput(namespace string, name string) ArangodbOperatorResourcesArangodeploymentreplicationFailedInput {
+	return ArangodbOperatorResourcesArangodeploymentreplicationFailedInput{
+		Namespace: namespace,
+		Name:      name,
+	}
+}
+
+type ArangodbOperatorResourcesArangodeploymentreplicationFailedInput struct {
+	Namespace string `json:"namespace"`
+	Name      string `json:"name"`
+}
+
+func (i ArangodbOperatorResourcesArangodeploymentreplicationFailedInput) Gauge(value float64) metrics.Metric {
+	return ArangodbOperatorResourcesArangodeploymentreplicationFailedGauge(value, i.Namespace, i.Name)
+}
+
+func (i ArangodbOperatorResourcesArangodeploymentreplicationFailedInput) Desc() metrics.Description {
+	return ArangodbOperatorResourcesArangodeploymentreplicationFailed()
+}
+
 func ArangodbOperatorResourcesArangodeploymentreplicationFailed() metrics.Description {
 	return arangodbOperatorResourcesArangodeploymentreplicationFailed
 }

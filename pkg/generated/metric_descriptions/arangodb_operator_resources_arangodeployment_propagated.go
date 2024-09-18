@@ -32,6 +32,30 @@ func init() {
 	registerDescription(arangodbOperatorResourcesArangodeploymentPropagated)
 }
 
+func NewArangodbOperatorResourcesArangodeploymentPropagatedGaugeFactory() metrics.FactoryGauge[ArangodbOperatorResourcesArangodeploymentPropagatedInput] {
+	return metrics.NewFactoryGauge[ArangodbOperatorResourcesArangodeploymentPropagatedInput]()
+}
+
+func NewArangodbOperatorResourcesArangodeploymentPropagatedInput(namespace string, name string) ArangodbOperatorResourcesArangodeploymentPropagatedInput {
+	return ArangodbOperatorResourcesArangodeploymentPropagatedInput{
+		Namespace: namespace,
+		Name:      name,
+	}
+}
+
+type ArangodbOperatorResourcesArangodeploymentPropagatedInput struct {
+	Namespace string `json:"namespace"`
+	Name      string `json:"name"`
+}
+
+func (i ArangodbOperatorResourcesArangodeploymentPropagatedInput) Gauge(value float64) metrics.Metric {
+	return ArangodbOperatorResourcesArangodeploymentPropagatedGauge(value, i.Namespace, i.Name)
+}
+
+func (i ArangodbOperatorResourcesArangodeploymentPropagatedInput) Desc() metrics.Description {
+	return ArangodbOperatorResourcesArangodeploymentPropagated()
+}
+
 func ArangodbOperatorResourcesArangodeploymentPropagated() metrics.Description {
 	return arangodbOperatorResourcesArangodeploymentPropagated
 }

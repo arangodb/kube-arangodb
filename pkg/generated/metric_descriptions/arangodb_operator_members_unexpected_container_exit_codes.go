@@ -32,6 +32,40 @@ func init() {
 	registerDescription(arangodbOperatorMembersUnexpectedContainerExitCodes)
 }
 
+func NewArangodbOperatorMembersUnexpectedContainerExitCodesCounterFactory() metrics.FactoryCounter[ArangodbOperatorMembersUnexpectedContainerExitCodesInput] {
+	return metrics.NewFactoryCounter[ArangodbOperatorMembersUnexpectedContainerExitCodesInput]()
+}
+
+func NewArangodbOperatorMembersUnexpectedContainerExitCodesInput(namespace string, name string, member string, container string, containerType string, code string, reason string) ArangodbOperatorMembersUnexpectedContainerExitCodesInput {
+	return ArangodbOperatorMembersUnexpectedContainerExitCodesInput{
+		Namespace:     namespace,
+		Name:          name,
+		Member:        member,
+		Container:     container,
+		ContainerType: containerType,
+		Code:          code,
+		Reason:        reason,
+	}
+}
+
+type ArangodbOperatorMembersUnexpectedContainerExitCodesInput struct {
+	Namespace     string `json:"namespace"`
+	Name          string `json:"name"`
+	Member        string `json:"member"`
+	Container     string `json:"container"`
+	ContainerType string `json:"containerType"`
+	Code          string `json:"code"`
+	Reason        string `json:"reason"`
+}
+
+func (i ArangodbOperatorMembersUnexpectedContainerExitCodesInput) Counter(value float64) metrics.Metric {
+	return ArangodbOperatorMembersUnexpectedContainerExitCodesCounter(value, i.Namespace, i.Name, i.Member, i.Container, i.ContainerType, i.Code, i.Reason)
+}
+
+func (i ArangodbOperatorMembersUnexpectedContainerExitCodesInput) Desc() metrics.Description {
+	return ArangodbOperatorMembersUnexpectedContainerExitCodes()
+}
+
 func ArangodbOperatorMembersUnexpectedContainerExitCodes() metrics.Description {
 	return arangodbOperatorMembersUnexpectedContainerExitCodes
 }

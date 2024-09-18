@@ -26,18 +26,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_ArangoOperatorObjectsProcessed_Descriptor(t *testing.T) {
-	ArangoOperatorObjectsProcessed()
+func Test_ArangodbOperatorObjectsProcessed_Descriptor(t *testing.T) {
+	ArangodbOperatorObjectsProcessed()
 }
 
-func Test_ArangoOperatorObjectsProcessed_Global(t *testing.T) {
-	global := GetArangoOperatorObjectsProcessedFactory()
+func Test_ArangodbOperatorObjectsProcessed_Factory(t *testing.T) {
+	global := NewArangodbOperatorObjectsProcessedCounterFactory()
 
-	object1 := ArangoOperatorObjectsProcessedItem{
+	object1 := ArangodbOperatorObjectsProcessedInput{
 		OperatorName: "1",
 	}
 
-	object2 := ArangoOperatorObjectsProcessedItem{
+	object2 := ArangodbOperatorObjectsProcessedInput{
 		OperatorName: "2",
 	}
 
@@ -51,7 +51,7 @@ func Test_ArangoOperatorObjectsProcessed_Global(t *testing.T) {
 	})
 
 	t.Run("Add", func(t *testing.T) {
-		global.Add(10, object1)
+		global.Add(object1, 10)
 
 		require.EqualValues(t, 10, global.Get(object1))
 		require.EqualValues(t, 0, global.Get(object2))
@@ -62,7 +62,7 @@ func Test_ArangoOperatorObjectsProcessed_Global(t *testing.T) {
 	})
 
 	t.Run("Add", func(t *testing.T) {
-		global.Add(3, object2)
+		global.Add(object2, 3)
 
 		require.EqualValues(t, 10, global.Get(object1))
 		require.EqualValues(t, 3, global.Get(object2))
@@ -73,7 +73,7 @@ func Test_ArangoOperatorObjectsProcessed_Global(t *testing.T) {
 	})
 
 	t.Run("Dec", func(t *testing.T) {
-		global.Add(-1, object1)
+		global.Add(object1, -1)
 
 		require.EqualValues(t, 9, global.Get(object1))
 		require.EqualValues(t, 3, global.Get(object2))
@@ -117,14 +117,14 @@ func Test_ArangoOperatorObjectsProcessed_Global(t *testing.T) {
 	})
 }
 
-func Test_ArangoOperatorObjectsProcessed_Global_Counter(t *testing.T) {
-	global := GetArangoOperatorObjectsProcessedFactory()
+func Test_ArangodbOperatorObjectsProcessed_Factory_Counter(t *testing.T) {
+	global := NewArangodbOperatorObjectsProcessedCounterFactory()
 
-	object1 := ArangoOperatorObjectsProcessedItem{
+	object1 := ArangodbOperatorObjectsProcessedInput{
 		OperatorName: "1",
 	}
 
-	object2 := ArangoOperatorObjectsProcessedItem{
+	object2 := ArangodbOperatorObjectsProcessedInput{
 		OperatorName: "2",
 	}
 
@@ -138,7 +138,7 @@ func Test_ArangoOperatorObjectsProcessed_Global_Counter(t *testing.T) {
 	})
 
 	t.Run("Add", func(t *testing.T) {
-		global.Add(10, object1)
+		global.Add(object1, 10)
 
 		require.EqualValues(t, 10, global.Get(object1))
 		require.EqualValues(t, 0, global.Get(object2))

@@ -102,7 +102,7 @@ func (o *operator) processObject(obj interface{}) error {
 		return nil
 	}
 
-	metric_descriptions.ArangoOperatorObjectsProcessedInc(o.operator.name)
+	metric_descriptions.GlobalArangodbOperatorObjectsProcessedCounter().Inc(metric_descriptions.NewArangodbOperatorObjectsProcessedInput(o.operator.name))
 
 	loggerWorker.Trace("Received Item Action: %s, Type: %s/%s/%s, Namespace: %s, Name: %s",
 		item.Operation,

@@ -32,6 +32,30 @@ func init() {
 	registerDescription(arangodbOperatorKubernetesClientRequestErrors)
 }
 
+func NewArangodbOperatorKubernetesClientRequestErrorsCounterFactory() metrics.FactoryCounter[ArangodbOperatorKubernetesClientRequestErrorsInput] {
+	return metrics.NewFactoryCounter[ArangodbOperatorKubernetesClientRequestErrorsInput]()
+}
+
+func NewArangodbOperatorKubernetesClientRequestErrorsInput(component string, verb string) ArangodbOperatorKubernetesClientRequestErrorsInput {
+	return ArangodbOperatorKubernetesClientRequestErrorsInput{
+		Component: component,
+		Verb:      verb,
+	}
+}
+
+type ArangodbOperatorKubernetesClientRequestErrorsInput struct {
+	Component string `json:"component"`
+	Verb      string `json:"verb"`
+}
+
+func (i ArangodbOperatorKubernetesClientRequestErrorsInput) Counter(value float64) metrics.Metric {
+	return ArangodbOperatorKubernetesClientRequestErrorsCounter(value, i.Component, i.Verb)
+}
+
+func (i ArangodbOperatorKubernetesClientRequestErrorsInput) Desc() metrics.Description {
+	return ArangodbOperatorKubernetesClientRequestErrors()
+}
+
 func ArangodbOperatorKubernetesClientRequestErrors() metrics.Description {
 	return arangodbOperatorKubernetesClientRequestErrors
 }

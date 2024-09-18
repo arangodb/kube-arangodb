@@ -32,6 +32,30 @@ func init() {
 	registerDescription(arangodbOperatorAgencyFetches)
 }
 
+func NewArangodbOperatorAgencyFetchesCounterFactory() metrics.FactoryCounter[ArangodbOperatorAgencyFetchesInput] {
+	return metrics.NewFactoryCounter[ArangodbOperatorAgencyFetchesInput]()
+}
+
+func NewArangodbOperatorAgencyFetchesInput(namespace string, name string) ArangodbOperatorAgencyFetchesInput {
+	return ArangodbOperatorAgencyFetchesInput{
+		Namespace: namespace,
+		Name:      name,
+	}
+}
+
+type ArangodbOperatorAgencyFetchesInput struct {
+	Namespace string `json:"namespace"`
+	Name      string `json:"name"`
+}
+
+func (i ArangodbOperatorAgencyFetchesInput) Counter(value float64) metrics.Metric {
+	return ArangodbOperatorAgencyFetchesCounter(value, i.Namespace, i.Name)
+}
+
+func (i ArangodbOperatorAgencyFetchesInput) Desc() metrics.Description {
+	return ArangodbOperatorAgencyFetches()
+}
+
 func ArangodbOperatorAgencyFetches() metrics.Description {
 	return arangodbOperatorAgencyFetches
 }

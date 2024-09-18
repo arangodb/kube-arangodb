@@ -32,6 +32,28 @@ func init() {
 	registerDescription(arangodbOperatorEnginePanicsRecovered)
 }
 
+func NewArangodbOperatorEnginePanicsRecoveredCounterFactory() metrics.FactoryCounter[ArangodbOperatorEnginePanicsRecoveredInput] {
+	return metrics.NewFactoryCounter[ArangodbOperatorEnginePanicsRecoveredInput]()
+}
+
+func NewArangodbOperatorEnginePanicsRecoveredInput(section string) ArangodbOperatorEnginePanicsRecoveredInput {
+	return ArangodbOperatorEnginePanicsRecoveredInput{
+		Section: section,
+	}
+}
+
+type ArangodbOperatorEnginePanicsRecoveredInput struct {
+	Section string `json:"section"`
+}
+
+func (i ArangodbOperatorEnginePanicsRecoveredInput) Counter(value float64) metrics.Metric {
+	return ArangodbOperatorEnginePanicsRecoveredCounter(value, i.Section)
+}
+
+func (i ArangodbOperatorEnginePanicsRecoveredInput) Desc() metrics.Description {
+	return ArangodbOperatorEnginePanicsRecovered()
+}
+
 func ArangodbOperatorEnginePanicsRecovered() metrics.Description {
 	return arangodbOperatorEnginePanicsRecovered
 }
