@@ -32,6 +32,30 @@ func init() {
 	registerDescription(arangodbOperatorAgencyCacheHealthy)
 }
 
+func NewArangodbOperatorAgencyCacheHealthyGaugeFactory() metrics.FactoryGauge[ArangodbOperatorAgencyCacheHealthyInput] {
+	return metrics.NewFactoryGauge[ArangodbOperatorAgencyCacheHealthyInput]()
+}
+
+func NewArangodbOperatorAgencyCacheHealthyInput(namespace string, name string) ArangodbOperatorAgencyCacheHealthyInput {
+	return ArangodbOperatorAgencyCacheHealthyInput{
+		Namespace: namespace,
+		Name:      name,
+	}
+}
+
+type ArangodbOperatorAgencyCacheHealthyInput struct {
+	Namespace string `json:"namespace"`
+	Name      string `json:"name"`
+}
+
+func (i ArangodbOperatorAgencyCacheHealthyInput) Gauge(value float64) metrics.Metric {
+	return ArangodbOperatorAgencyCacheHealthyGauge(value, i.Namespace, i.Name)
+}
+
+func (i ArangodbOperatorAgencyCacheHealthyInput) Desc() metrics.Description {
+	return ArangodbOperatorAgencyCacheHealthy()
+}
+
 func ArangodbOperatorAgencyCacheHealthy() metrics.Description {
 	return arangodbOperatorAgencyCacheHealthy
 }

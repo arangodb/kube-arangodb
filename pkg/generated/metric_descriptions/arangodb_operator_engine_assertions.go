@@ -32,6 +32,28 @@ func init() {
 	registerDescription(arangodbOperatorEngineAssertions)
 }
 
+func NewArangodbOperatorEngineAssertionsCounterFactory() metrics.FactoryCounter[ArangodbOperatorEngineAssertionsInput] {
+	return metrics.NewFactoryCounter[ArangodbOperatorEngineAssertionsInput]()
+}
+
+func NewArangodbOperatorEngineAssertionsInput(key string) ArangodbOperatorEngineAssertionsInput {
+	return ArangodbOperatorEngineAssertionsInput{
+		Key: key,
+	}
+}
+
+type ArangodbOperatorEngineAssertionsInput struct {
+	Key string `json:"key"`
+}
+
+func (i ArangodbOperatorEngineAssertionsInput) Counter(value float64) metrics.Metric {
+	return ArangodbOperatorEngineAssertionsCounter(value, i.Key)
+}
+
+func (i ArangodbOperatorEngineAssertionsInput) Desc() metrics.Description {
+	return ArangodbOperatorEngineAssertions()
+}
+
 func ArangodbOperatorEngineAssertions() metrics.Description {
 	return arangodbOperatorEngineAssertions
 }

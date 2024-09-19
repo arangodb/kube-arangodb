@@ -32,6 +32,30 @@ func init() {
 	registerDescription(arangodbOperatorResourcesArangodeploymentValidationErrors)
 }
 
+func NewArangodbOperatorResourcesArangodeploymentValidationErrorsCounterFactory() metrics.FactoryCounter[ArangodbOperatorResourcesArangodeploymentValidationErrorsInput] {
+	return metrics.NewFactoryCounter[ArangodbOperatorResourcesArangodeploymentValidationErrorsInput]()
+}
+
+func NewArangodbOperatorResourcesArangodeploymentValidationErrorsInput(namespace string, name string) ArangodbOperatorResourcesArangodeploymentValidationErrorsInput {
+	return ArangodbOperatorResourcesArangodeploymentValidationErrorsInput{
+		Namespace: namespace,
+		Name:      name,
+	}
+}
+
+type ArangodbOperatorResourcesArangodeploymentValidationErrorsInput struct {
+	Namespace string `json:"namespace"`
+	Name      string `json:"name"`
+}
+
+func (i ArangodbOperatorResourcesArangodeploymentValidationErrorsInput) Counter(value float64) metrics.Metric {
+	return ArangodbOperatorResourcesArangodeploymentValidationErrorsCounter(value, i.Namespace, i.Name)
+}
+
+func (i ArangodbOperatorResourcesArangodeploymentValidationErrorsInput) Desc() metrics.Description {
+	return ArangodbOperatorResourcesArangodeploymentValidationErrors()
+}
+
 func ArangodbOperatorResourcesArangodeploymentValidationErrors() metrics.Description {
 	return arangodbOperatorResourcesArangodeploymentValidationErrors
 }

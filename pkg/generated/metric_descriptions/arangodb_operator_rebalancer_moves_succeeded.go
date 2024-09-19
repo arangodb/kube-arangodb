@@ -32,6 +32,30 @@ func init() {
 	registerDescription(arangodbOperatorRebalancerMovesSucceeded)
 }
 
+func NewArangodbOperatorRebalancerMovesSucceededCounterFactory() metrics.FactoryCounter[ArangodbOperatorRebalancerMovesSucceededInput] {
+	return metrics.NewFactoryCounter[ArangodbOperatorRebalancerMovesSucceededInput]()
+}
+
+func NewArangodbOperatorRebalancerMovesSucceededInput(namespace string, name string) ArangodbOperatorRebalancerMovesSucceededInput {
+	return ArangodbOperatorRebalancerMovesSucceededInput{
+		Namespace: namespace,
+		Name:      name,
+	}
+}
+
+type ArangodbOperatorRebalancerMovesSucceededInput struct {
+	Namespace string `json:"namespace"`
+	Name      string `json:"name"`
+}
+
+func (i ArangodbOperatorRebalancerMovesSucceededInput) Counter(value float64) metrics.Metric {
+	return ArangodbOperatorRebalancerMovesSucceededCounter(value, i.Namespace, i.Name)
+}
+
+func (i ArangodbOperatorRebalancerMovesSucceededInput) Desc() metrics.Description {
+	return ArangodbOperatorRebalancerMovesSucceeded()
+}
+
 func ArangodbOperatorRebalancerMovesSucceeded() metrics.Description {
 	return arangodbOperatorRebalancerMovesSucceeded
 }

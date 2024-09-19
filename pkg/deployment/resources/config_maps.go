@@ -22,35 +22,28 @@ package resources
 
 import (
 	"context"
-	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
-	"github.com/arangodb/kube-arangodb/pkg/metrics"
+	"github.com/arangodb/kube-arangodb/pkg/generated/metric_descriptions"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-)
-
-var (
-	inspectedConfigMapsCounters     = metrics.MustRegisterCounterVec(metricsComponent, "inspected_config_maps", "Number of ConfigMaps inspections per deployment", metrics.DeploymentName)
-	inspectConfigMapsDurationGauges = metrics.MustRegisterGaugeVec(metricsComponent, "inspect_config_maps_duration", "Amount of time taken by a single inspection of all ConfigMaps for a deployment (in sec)", metrics.DeploymentName)
+	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
 )
 
 // EnsureConfigMaps creates all ConfigMaps needed to run the given deployment
 func (r *Resources) EnsureConfigMaps(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
-	start := time.Now()
 	spec := r.context.GetSpec()
 	configMaps := cachedStatus.ConfigMapsModInterface().V1()
 	apiObject := r.context.GetAPIObject()
 	deploymentName := apiObject.GetName()
 
-	defer metrics.SetDuration(inspectConfigMapsDurationGauges.WithLabelValues(deploymentName), start)
-	counterMetric := inspectedConfigMapsCounters.WithLabelValues(deploymentName)
+	defer metrics.WithDuration(metric_descriptions.GlobalArangodbResourcesDeploymentConfigMapDurationGauge(), metric_descriptions.NewArangodbResourcesDeploymentConfigMapDurationInput(deploymentName))
 
 	reconcileRequired := k8sutil.NewReconcile(cachedStatus)
 
 	if features.IsGatewayEnabled(spec) {
-		counterMetric.Inc()
+		metric_descriptions.GlobalArangodbResourcesDeploymentConfigMapInspectedCounter().Inc(metric_descriptions.NewArangodbResourcesDeploymentConfigMapInspectedInput(deploymentName))
 		if err := reconcileRequired.WithError(r.ensureGatewayConfig(ctx, cachedStatus, configMaps)); err != nil {
 			return errors.Section(err, "Gateway ConfigMap")
 		}

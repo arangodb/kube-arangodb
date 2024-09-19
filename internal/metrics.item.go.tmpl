@@ -23,154 +23,61 @@ package metric_descriptions
 
 import (
     "github.com/arangodb/kube-arangodb/pkg/util/metrics"
-{{- if .global }}
-
-	"sync"
-{{- end }}
 )
 
 var (
     {{ .fname }} = metrics.NewDescription("{{ .name }}", "{{ .shortDescription }}", {{ .labels }}, nil)
+{{- if .global }}
+
+    // Global Fields
+    global{{ .ename }}{{ .type }} = New{{ .ename }}{{ .type }}Factory()
+{{- end }}
 )
 
 func init() {
     registerDescription({{ .fname }})
 {{- if .global }}
-    registerCollector({{ .fname }}Global)
+	registerCollector(global{{ .ename }}{{ .type }})
 {{- end }}
+}
+{{- if .global }}
+
+func Global{{ .ename }}{{ .type }}() metrics.Factory{{ .type }}[{{ .ename }}Input] {
+    return global{{ .ename }}{{ .type }}
+}
+{{- end }}
+
+
+func New{{ .ename }}{{ .type }}Factory() metrics.Factory{{ .type }}[{{ .ename }}Input] {
+    return metrics.NewFactory{{ .type }}[{{ .ename }}Input]()
+}
+
+func New{{ .ename }}Input({{- range $i, $e := .mapKeys }}{{ if $i }}, {{ end }}{{ index $root.mapIKeys . }} {{ index $root.mapTypes . }}{{- end }}) {{ .ename }}Input {
+    return {{ .ename }}Input{
+{{- range .mapKeys }}
+        {{ . }}: {{ index $root.mapIKeys . }},
+{{- end }}
+    }
+}
+
+type {{ .ename }}Input struct {
+{{- range .mapKeys }}
+    {{ . }} {{ index $root.mapTypes . }} `json:"{{ index $root.mapIKeys . }}"`
+{{- end }}
+}
+
+func (i {{ .ename }}Input) {{ .type }}(value float64) metrics.Metric {
+    return {{ .ename }}{{ .type }}(value {{- range .mapKeys }}, i.{{ . }}{{- end }})
+}
+
+func (i {{ .ename }}Input) Desc() metrics.Description {
+    return {{ .ename }}()
 }
 
 func {{ .ename }}() metrics.Description {
     return {{ .fname }}
 }
 
-{{- if .global }}
-
-func {{ .ename }}Get({{ .args }}) float64 {
-    return {{ .fname }}Global.Get({{ .ename }}Item{
-{{- range $i, $field := .mapKeys }}
-        {{ $field }}: {{ index $root.mapIKeys $field }},
-{{- end }}
-    })
-}
-
-func {{ .ename }}Add({{ .fparams }}) {
-    {{ .fname }}Global.Add(value, {{ .ename }}Item{
-{{- range $i, $field := .mapKeys }}
-        {{ $field }}: {{ index $root.mapIKeys $field }},
-{{- end }}
-    })
-}
-{{- if eq .type "Counter" }}
-
-func {{ .ename }}Inc({{ .args }}) {
-    {{ .fname }}Global.Inc({{ .ename }}Item{
-{{- range $i, $field := .mapKeys }}
-        {{ $field }}: {{ index $root.mapIKeys $field }},
-{{- end }}
-    })
-}
-{{- end }}
-
-func Get{{ .ename }}Factory() {{ .ename }}Factory {
-    return {{ .fname }}Global
-}
-
-var {{ .fname }}Global = &{{ .fname }}Factory{
- items: {{ .fname }}Items{},
-}
-
-type {{ .ename }}Factory interface {
-    Get(object {{ .ename }}Item) float64
-    Add(value float64, object {{ .ename }}Item)
-    Remove(object {{ .ename }}Item)
-    Items() []{{ .ename }}Item
-{{- if eq .type "Counter" }}
-
-    Inc(object {{ .ename }}Item)
-{{- end }}
-}
-
-type {{ .fname }}Factory struct {
-    lock sync.RWMutex
-
-    items {{ .fname }}Items
-}
-
-func (a *{{ .fname }}Factory) Get(object {{ .ename }}Item) float64 {
-    a.lock.Lock()
-    defer a.lock.Unlock()
-
-    v, ok := a.items[object]
-    if !ok {
-        return 0
-    }
-
-    return v
-}
-
-func (a *{{ .fname }}Factory) Add(value float64, object {{ .ename }}Item) {
-    a.lock.Lock()
-    defer a.lock.Unlock()
-
-    v, ok := a.items[object]
-    if !ok {
-        a.items[object] = value
-        return
-    }
-
-    a.items[object] = value + v
-}
-
-func (a *{{ .fname }}Factory) Remove(obj {{ .ename }}Item) {
-    a.lock.Lock()
-    defer a.lock.Unlock()
-
-    delete(a.items, obj)
-}
-
-func (a *{{ .fname }}Factory) Items() []{{ .ename }}Item {
-    a.lock.Lock()
-    defer a.lock.Unlock()
-
-    var r = make([]{{ .ename }}Item, 0, len(a.items))
-
-    for k := range a.items {
-        r = append(r, k)
-    }
-
-    return r
-}
-{{- if eq .type "Counter" }}
-
-func (a *{{ .fname }}Factory) Inc(object {{ .ename }}Item) {
-    a.Add(1, object)
-}
-{{- end }}
-
-func (a *{{ .fname }}Factory) CollectMetrics(in metrics.PushMetric) {
-    a.lock.RLock()
-    defer a.lock.RUnlock()
-
-	for k, v := range a.items {
-	    in.Push({{ .fname }}.{{ .type }}(v{{- range .mapKeys }}, k.{{ . }}{{- end }}))
-	}
-}
-
-func (a *{{ .fname }}Factory) CollectDescriptions(in metrics.PushDescription) {
-	in.Push({{ .fname }})
-}
-
-type {{ .fname }}Items map[{{ .ename }}Item]float64
-
-type {{ .ename }}Item struct {
-{{- range .mapKeys }}
-    {{ . }} {{ index $root.mapTypes . }}
-{{- end }}
-}
-{{- else }}
-
 func {{ .ename }}{{ .type }}({{ .fparams }}) metrics.Metric {
     return {{ .ename }}().{{ .type }}({{ .fkeys }})
 }
-{{- end }}

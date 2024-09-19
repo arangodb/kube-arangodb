@@ -32,6 +32,32 @@ func init() {
 	registerDescription(arangodbOperatorAgencyCacheLeaders)
 }
 
+func NewArangodbOperatorAgencyCacheLeadersGaugeFactory() metrics.FactoryGauge[ArangodbOperatorAgencyCacheLeadersInput] {
+	return metrics.NewFactoryGauge[ArangodbOperatorAgencyCacheLeadersInput]()
+}
+
+func NewArangodbOperatorAgencyCacheLeadersInput(namespace string, name string, agent string) ArangodbOperatorAgencyCacheLeadersInput {
+	return ArangodbOperatorAgencyCacheLeadersInput{
+		Namespace: namespace,
+		Name:      name,
+		Agent:     agent,
+	}
+}
+
+type ArangodbOperatorAgencyCacheLeadersInput struct {
+	Namespace string `json:"namespace"`
+	Name      string `json:"name"`
+	Agent     string `json:"agent"`
+}
+
+func (i ArangodbOperatorAgencyCacheLeadersInput) Gauge(value float64) metrics.Metric {
+	return ArangodbOperatorAgencyCacheLeadersGauge(value, i.Namespace, i.Name, i.Agent)
+}
+
+func (i ArangodbOperatorAgencyCacheLeadersInput) Desc() metrics.Description {
+	return ArangodbOperatorAgencyCacheLeaders()
+}
+
 func ArangodbOperatorAgencyCacheLeaders() metrics.Description {
 	return arangodbOperatorAgencyCacheLeaders
 }

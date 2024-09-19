@@ -26,21 +26,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_ArangodbOperatorResourcesArangodeploymentreplicationFailed_Descriptor(t *testing.T) {
-	ArangodbOperatorResourcesArangodeploymentreplicationFailed()
+func Test_ArangodbResourcesDeploymentConfigMapDuration_Descriptor(t *testing.T) {
+	ArangodbResourcesDeploymentConfigMapDuration()
 }
 
-func Test_ArangodbOperatorResourcesArangodeploymentreplicationFailed_Factory(t *testing.T) {
-	global := NewArangodbOperatorResourcesArangodeploymentreplicationFailedGaugeFactory()
+func Test_ArangodbResourcesDeploymentConfigMapDuration_Factory(t *testing.T) {
+	global := NewArangodbResourcesDeploymentConfigMapDurationGaugeFactory()
 
-	object1 := ArangodbOperatorResourcesArangodeploymentreplicationFailedInput{
-		Namespace: "1",
-		Name:      "1",
+	object1 := ArangodbResourcesDeploymentConfigMapDurationInput{
+		Deployment: "1",
 	}
 
-	object2 := ArangodbOperatorResourcesArangodeploymentreplicationFailedInput{
-		Namespace: "2",
-		Name:      "2",
+	object2 := ArangodbResourcesDeploymentConfigMapDurationInput{
+		Deployment: "2",
 	}
 
 	t.Run("List", func(t *testing.T) {
@@ -119,17 +117,15 @@ func Test_ArangodbOperatorResourcesArangodeploymentreplicationFailed_Factory(t *
 	})
 }
 
-func Test_ArangodbOperatorResourcesArangodeploymentreplicationFailed_Factory_Gauge(t *testing.T) {
-	global := NewArangodbOperatorResourcesArangodeploymentreplicationFailedGaugeFactory()
+func Test_ArangodbResourcesDeploymentConfigMapDuration_Factory_Gauge(t *testing.T) {
+	global := NewArangodbResourcesDeploymentConfigMapDurationGaugeFactory()
 
-	object1 := ArangodbOperatorResourcesArangodeploymentreplicationFailedInput{
-		Namespace: "1",
-		Name:      "1",
+	object1 := ArangodbResourcesDeploymentConfigMapDurationInput{
+		Deployment: "1",
 	}
 
-	object2 := ArangodbOperatorResourcesArangodeploymentreplicationFailedInput{
-		Namespace: "2",
-		Name:      "2",
+	object2 := ArangodbResourcesDeploymentConfigMapDurationInput{
+		Deployment: "2",
 	}
 
 	t.Run("List", func(t *testing.T) {

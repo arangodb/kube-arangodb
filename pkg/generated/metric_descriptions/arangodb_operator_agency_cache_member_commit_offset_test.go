@@ -22,8 +22,149 @@ package metric_descriptions
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func Test_ArangodbOperatorAgencyCacheMemberCommitOffset_Descriptor(t *testing.T) {
 	ArangodbOperatorAgencyCacheMemberCommitOffset()
+}
+
+func Test_ArangodbOperatorAgencyCacheMemberCommitOffset_Factory(t *testing.T) {
+	global := NewArangodbOperatorAgencyCacheMemberCommitOffsetGaugeFactory()
+
+	object1 := ArangodbOperatorAgencyCacheMemberCommitOffsetInput{
+		Namespace: "1",
+		Name:      "1",
+		Agent:     "1",
+	}
+
+	object2 := ArangodbOperatorAgencyCacheMemberCommitOffsetInput{
+		Namespace: "2",
+		Name:      "2",
+		Agent:     "2",
+	}
+
+	t.Run("List", func(t *testing.T) {
+		require.Len(t, global.Items(), 0)
+	})
+
+	t.Run("Precheck", func(t *testing.T) {
+		require.EqualValues(t, 0, global.Get(object1))
+		require.EqualValues(t, 0, global.Get(object2))
+	})
+
+	t.Run("Add", func(t *testing.T) {
+		global.Add(object1, 10)
+
+		require.EqualValues(t, 10, global.Get(object1))
+		require.EqualValues(t, 0, global.Get(object2))
+	})
+
+	t.Run("List", func(t *testing.T) {
+		require.Len(t, global.Items(), 1)
+	})
+
+	t.Run("Add", func(t *testing.T) {
+		global.Add(object2, 3)
+
+		require.EqualValues(t, 10, global.Get(object1))
+		require.EqualValues(t, 3, global.Get(object2))
+	})
+
+	t.Run("List", func(t *testing.T) {
+		require.Len(t, global.Items(), 2)
+	})
+
+	t.Run("Dec", func(t *testing.T) {
+		global.Add(object1, -1)
+
+		require.EqualValues(t, 9, global.Get(object1))
+		require.EqualValues(t, 3, global.Get(object2))
+	})
+
+	t.Run("List", func(t *testing.T) {
+		require.Len(t, global.Items(), 2)
+	})
+
+	t.Run("Remove", func(t *testing.T) {
+		global.Remove(object1)
+
+		require.EqualValues(t, 0, global.Get(object1))
+		require.EqualValues(t, 3, global.Get(object2))
+	})
+
+	t.Run("List", func(t *testing.T) {
+		require.Len(t, global.Items(), 1)
+	})
+
+	t.Run("Remove", func(t *testing.T) {
+		global.Remove(object1)
+
+		require.EqualValues(t, 0, global.Get(object1))
+		require.EqualValues(t, 3, global.Get(object2))
+	})
+
+	t.Run("List", func(t *testing.T) {
+		require.Len(t, global.Items(), 1)
+	})
+
+	t.Run("Remove", func(t *testing.T) {
+		global.Remove(object2)
+
+		require.EqualValues(t, 0, global.Get(object1))
+		require.EqualValues(t, 0, global.Get(object2))
+	})
+
+	t.Run("List", func(t *testing.T) {
+		require.Len(t, global.Items(), 0)
+	})
+}
+
+func Test_ArangodbOperatorAgencyCacheMemberCommitOffset_Factory_Gauge(t *testing.T) {
+	global := NewArangodbOperatorAgencyCacheMemberCommitOffsetGaugeFactory()
+
+	object1 := ArangodbOperatorAgencyCacheMemberCommitOffsetInput{
+		Namespace: "1",
+		Name:      "1",
+		Agent:     "1",
+	}
+
+	object2 := ArangodbOperatorAgencyCacheMemberCommitOffsetInput{
+		Namespace: "2",
+		Name:      "2",
+		Agent:     "2",
+	}
+
+	t.Run("List", func(t *testing.T) {
+		require.Len(t, global.Items(), 0)
+	})
+
+	t.Run("Precheck", func(t *testing.T) {
+		require.EqualValues(t, 0, global.Get(object1))
+		require.EqualValues(t, 0, global.Get(object2))
+	})
+
+	t.Run("Add", func(t *testing.T) {
+		global.Add(object1, 10)
+
+		require.EqualValues(t, 10, global.Get(object1))
+		require.EqualValues(t, 0, global.Get(object2))
+	})
+
+	t.Run("List", func(t *testing.T) {
+		require.Len(t, global.Items(), 1)
+	})
+
+	t.Run("Set", func(t *testing.T) {
+		global.Set(object1, 3)
+		global.Set(object2, 1)
+
+		require.EqualValues(t, 3, global.Get(object1))
+		require.EqualValues(t, 1, global.Get(object2))
+	})
+
+	t.Run("List", func(t *testing.T) {
+		require.Len(t, global.Items(), 2)
+	})
 }

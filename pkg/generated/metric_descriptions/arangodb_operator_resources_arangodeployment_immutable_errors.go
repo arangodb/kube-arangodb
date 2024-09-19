@@ -32,6 +32,30 @@ func init() {
 	registerDescription(arangodbOperatorResourcesArangodeploymentImmutableErrors)
 }
 
+func NewArangodbOperatorResourcesArangodeploymentImmutableErrorsCounterFactory() metrics.FactoryCounter[ArangodbOperatorResourcesArangodeploymentImmutableErrorsInput] {
+	return metrics.NewFactoryCounter[ArangodbOperatorResourcesArangodeploymentImmutableErrorsInput]()
+}
+
+func NewArangodbOperatorResourcesArangodeploymentImmutableErrorsInput(namespace string, name string) ArangodbOperatorResourcesArangodeploymentImmutableErrorsInput {
+	return ArangodbOperatorResourcesArangodeploymentImmutableErrorsInput{
+		Namespace: namespace,
+		Name:      name,
+	}
+}
+
+type ArangodbOperatorResourcesArangodeploymentImmutableErrorsInput struct {
+	Namespace string `json:"namespace"`
+	Name      string `json:"name"`
+}
+
+func (i ArangodbOperatorResourcesArangodeploymentImmutableErrorsInput) Counter(value float64) metrics.Metric {
+	return ArangodbOperatorResourcesArangodeploymentImmutableErrorsCounter(value, i.Namespace, i.Name)
+}
+
+func (i ArangodbOperatorResourcesArangodeploymentImmutableErrorsInput) Desc() metrics.Description {
+	return ArangodbOperatorResourcesArangodeploymentImmutableErrors()
+}
+
 func ArangodbOperatorResourcesArangodeploymentImmutableErrors() metrics.Description {
 	return arangodbOperatorResourcesArangodeploymentImmutableErrors
 }

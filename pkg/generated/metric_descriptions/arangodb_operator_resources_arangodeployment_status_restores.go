@@ -32,6 +32,30 @@ func init() {
 	registerDescription(arangodbOperatorResourcesArangodeploymentStatusRestores)
 }
 
+func NewArangodbOperatorResourcesArangodeploymentStatusRestoresCounterFactory() metrics.FactoryCounter[ArangodbOperatorResourcesArangodeploymentStatusRestoresInput] {
+	return metrics.NewFactoryCounter[ArangodbOperatorResourcesArangodeploymentStatusRestoresInput]()
+}
+
+func NewArangodbOperatorResourcesArangodeploymentStatusRestoresInput(namespace string, name string) ArangodbOperatorResourcesArangodeploymentStatusRestoresInput {
+	return ArangodbOperatorResourcesArangodeploymentStatusRestoresInput{
+		Namespace: namespace,
+		Name:      name,
+	}
+}
+
+type ArangodbOperatorResourcesArangodeploymentStatusRestoresInput struct {
+	Namespace string `json:"namespace"`
+	Name      string `json:"name"`
+}
+
+func (i ArangodbOperatorResourcesArangodeploymentStatusRestoresInput) Counter(value float64) metrics.Metric {
+	return ArangodbOperatorResourcesArangodeploymentStatusRestoresCounter(value, i.Namespace, i.Name)
+}
+
+func (i ArangodbOperatorResourcesArangodeploymentStatusRestoresInput) Desc() metrics.Description {
+	return ArangodbOperatorResourcesArangodeploymentStatusRestores()
+}
+
 func ArangodbOperatorResourcesArangodeploymentStatusRestores() metrics.Description {
 	return arangodbOperatorResourcesArangodeploymentStatusRestores
 }

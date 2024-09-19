@@ -32,6 +32,30 @@ func init() {
 	registerDescription(arangodbOperatorRebalancerMovesCurrent)
 }
 
+func NewArangodbOperatorRebalancerMovesCurrentGaugeFactory() metrics.FactoryGauge[ArangodbOperatorRebalancerMovesCurrentInput] {
+	return metrics.NewFactoryGauge[ArangodbOperatorRebalancerMovesCurrentInput]()
+}
+
+func NewArangodbOperatorRebalancerMovesCurrentInput(namespace string, name string) ArangodbOperatorRebalancerMovesCurrentInput {
+	return ArangodbOperatorRebalancerMovesCurrentInput{
+		Namespace: namespace,
+		Name:      name,
+	}
+}
+
+type ArangodbOperatorRebalancerMovesCurrentInput struct {
+	Namespace string `json:"namespace"`
+	Name      string `json:"name"`
+}
+
+func (i ArangodbOperatorRebalancerMovesCurrentInput) Gauge(value float64) metrics.Metric {
+	return ArangodbOperatorRebalancerMovesCurrentGauge(value, i.Namespace, i.Name)
+}
+
+func (i ArangodbOperatorRebalancerMovesCurrentInput) Desc() metrics.Description {
+	return ArangodbOperatorRebalancerMovesCurrent()
+}
+
 func ArangodbOperatorRebalancerMovesCurrent() metrics.Description {
 	return arangodbOperatorRebalancerMovesCurrent
 }

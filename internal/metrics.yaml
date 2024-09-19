@@ -1,7 +1,25 @@
 documentation: docs/generated/metrics
 destination: pkg/generated/metric_descriptions
 namespaces:
-  arango_operator:
+  arangodb_resources:
+    deployment_config_map:
+      inspected:
+        shortDescription: "Number of inspected ConfigMaps by Deployment"
+        description: "Number of inspected ConfigMaps by Deployment"
+        type: "Counter"
+        global: true
+        labels:
+          - key: deployment
+            description: "Deployment Name"
+      duration:
+        shortDescription: "Duration of inspected ConfigMaps by Deployment in seconds"
+        description: "Duration of inspected ConfigMaps by Deployment in seconds"
+        type: "Gauge"
+        global: true
+        labels:
+          - key: deployment
+            description: "Deployment Name"
+  arangodb_operator:
     objects:
       processed:
         shortDescription: "Number of the processed objects"
@@ -11,7 +29,6 @@ namespaces:
         labels:
           - key: operator_name
             description: "Operator Name"
-  arangodb_operator:
     agency_cache:
       present:
         shortDescription: "Determines if local agency cache is present"

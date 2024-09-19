@@ -32,6 +32,30 @@ func init() {
 	registerDescription(arangodbOperatorResourcesArangodeploymentreplicationActive)
 }
 
+func NewArangodbOperatorResourcesArangodeploymentreplicationActiveGaugeFactory() metrics.FactoryGauge[ArangodbOperatorResourcesArangodeploymentreplicationActiveInput] {
+	return metrics.NewFactoryGauge[ArangodbOperatorResourcesArangodeploymentreplicationActiveInput]()
+}
+
+func NewArangodbOperatorResourcesArangodeploymentreplicationActiveInput(namespace string, name string) ArangodbOperatorResourcesArangodeploymentreplicationActiveInput {
+	return ArangodbOperatorResourcesArangodeploymentreplicationActiveInput{
+		Namespace: namespace,
+		Name:      name,
+	}
+}
+
+type ArangodbOperatorResourcesArangodeploymentreplicationActiveInput struct {
+	Namespace string `json:"namespace"`
+	Name      string `json:"name"`
+}
+
+func (i ArangodbOperatorResourcesArangodeploymentreplicationActiveInput) Gauge(value float64) metrics.Metric {
+	return ArangodbOperatorResourcesArangodeploymentreplicationActiveGauge(value, i.Namespace, i.Name)
+}
+
+func (i ArangodbOperatorResourcesArangodeploymentreplicationActiveInput) Desc() metrics.Description {
+	return ArangodbOperatorResourcesArangodeploymentreplicationActive()
+}
+
 func ArangodbOperatorResourcesArangodeploymentreplicationActive() metrics.Description {
 	return arangodbOperatorResourcesArangodeploymentreplicationActive
 }

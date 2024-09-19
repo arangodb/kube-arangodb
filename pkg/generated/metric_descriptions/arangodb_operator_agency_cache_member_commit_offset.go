@@ -32,6 +32,32 @@ func init() {
 	registerDescription(arangodbOperatorAgencyCacheMemberCommitOffset)
 }
 
+func NewArangodbOperatorAgencyCacheMemberCommitOffsetGaugeFactory() metrics.FactoryGauge[ArangodbOperatorAgencyCacheMemberCommitOffsetInput] {
+	return metrics.NewFactoryGauge[ArangodbOperatorAgencyCacheMemberCommitOffsetInput]()
+}
+
+func NewArangodbOperatorAgencyCacheMemberCommitOffsetInput(namespace string, name string, agent string) ArangodbOperatorAgencyCacheMemberCommitOffsetInput {
+	return ArangodbOperatorAgencyCacheMemberCommitOffsetInput{
+		Namespace: namespace,
+		Name:      name,
+		Agent:     agent,
+	}
+}
+
+type ArangodbOperatorAgencyCacheMemberCommitOffsetInput struct {
+	Namespace string `json:"namespace"`
+	Name      string `json:"name"`
+	Agent     string `json:"agent"`
+}
+
+func (i ArangodbOperatorAgencyCacheMemberCommitOffsetInput) Gauge(value float64) metrics.Metric {
+	return ArangodbOperatorAgencyCacheMemberCommitOffsetGauge(value, i.Namespace, i.Name, i.Agent)
+}
+
+func (i ArangodbOperatorAgencyCacheMemberCommitOffsetInput) Desc() metrics.Description {
+	return ArangodbOperatorAgencyCacheMemberCommitOffset()
+}
+
 func ArangodbOperatorAgencyCacheMemberCommitOffset() metrics.Description {
 	return arangodbOperatorAgencyCacheMemberCommitOffset
 }
