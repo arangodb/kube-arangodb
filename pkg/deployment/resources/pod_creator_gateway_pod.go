@@ -29,13 +29,12 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
-	schedulerContainerResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container/resources"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/integrations/sidecar"
-	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/collection"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
@@ -203,6 +202,14 @@ func (m *MemberGatewayPod) Validate(cachedStatus interfaces.Inspector) error {
 		return err
 	}
 
+	if c, err := cachedStatus.ArangoProfile().V1Beta1(); err != nil {
+		return err
+	} else {
+		if _, ok := c.GetSimple(fmt.Sprintf("%s-int", m.context.GetName())); !ok {
+			return errors.Errorf("Unable to find deployment integration")
+		}
+	}
+
 	return nil
 }
 
@@ -236,12 +243,18 @@ func (m *MemberGatewayPod) Labels() map[string]string {
 }
 
 func (m *MemberGatewayPod) Profiles() (schedulerApi.ProfileTemplates, error) {
-	integration, err := sidecar.NewIntegration(&schedulerContainerResourcesApi.Image{
-		Image: util.NewType(m.resources.context.GetOperatorImage()),
-	}, m.spec.Integration.GetSidecar())
-
+	c, err := m.cachedStatus.ArangoProfile().V1Beta1()
 	if err != nil {
 		return nil, err
+	}
+
+	integration, ok := c.GetSimple(fmt.Sprintf("%s-int", m.context.GetName()))
+	if !ok {
+		return nil, errors.Errorf("Unable to find deployment integration")
+	}
+
+	if integration.Status.Accepted == nil {
+		return nil, errors.Errorf("Unable to find accepted integration integration")
 	}
 
 	integrations, err := sidecar.NewIntegrationEnablement(
@@ -258,5 +271,5 @@ func (m *MemberGatewayPod) Profiles() (schedulerApi.ProfileTemplates, error) {
 
 	shutdownAnnotation := sidecar.NewShutdownAnnotations([]string{shared.ServerContainerName})
 
-	return []*schedulerApi.ProfileTemplate{integration, integrations, shutdownAnnotation}, nil
+	return []*schedulerApi.ProfileTemplate{integration.Status.Accepted.Template, integrations, shutdownAnnotation}, nil
 }

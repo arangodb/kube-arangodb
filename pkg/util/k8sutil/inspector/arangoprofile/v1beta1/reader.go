@@ -31,9 +31,9 @@ import (
 
 // ModInterface has methods to work with ArangoTask resources only for creation
 type ModInterface interface {
-	Create(ctx context.Context, arangotask *schedulerApi.ArangoProfile, opts meta.CreateOptions) (*schedulerApi.ArangoProfile, error)
-	Update(ctx context.Context, arangotask *schedulerApi.ArangoProfile, opts meta.UpdateOptions) (*schedulerApi.ArangoProfile, error)
-	UpdateStatus(ctx context.Context, arangotask *schedulerApi.ArangoProfile, opts meta.UpdateOptions) (*schedulerApi.ArangoProfile, error)
+	Create(ctx context.Context, arangoProfile *schedulerApi.ArangoProfile, opts meta.CreateOptions) (*schedulerApi.ArangoProfile, error)
+	Update(ctx context.Context, arangoProfile *schedulerApi.ArangoProfile, opts meta.UpdateOptions) (*schedulerApi.ArangoProfile, error)
+	UpdateStatus(ctx context.Context, arangoProfile *schedulerApi.ArangoProfile, opts meta.UpdateOptions) (*schedulerApi.ArangoProfile, error)
 	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts meta.PatchOptions, subresources ...string) (result *schedulerApi.ArangoProfile, err error)
 	Delete(ctx context.Context, name string, opts meta.DeleteOptions) error
 }
