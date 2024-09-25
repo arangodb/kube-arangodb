@@ -153,7 +153,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 	defer cancel()
 	pod, err := ib.Context.ACS().CurrentClusterCache().Pod().V1().Read().Get(ctxChild, podName, meta.GetOptions{})
 	if err == nil {
-		// Pod found
+		//  ArangoSchedulerPod found
 		if k8sutil.IsPodFailed(pod, utils.StringList{shared.ServerContainerName}) {
 			// Wait some time before deleting the pod
 			if time.Now().After(pod.GetCreationTimestamp().Add(30 * time.Second)) {
@@ -161,14 +161,14 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 					return ib.Context.ACS().CurrentClusterCache().PodsModInterface().V1().Delete(ctxChild, podName, meta.DeleteOptions{})
 				})
 				if err != nil && !kerrors.IsNotFound(err) {
-					log.Err(err).Warn("Failed to delete Image ID Pod")
+					log.Err(err).Warn("Failed to delete Image ID  ArangoSchedulerPod")
 					return false, nil
 				}
 			}
 			return false, nil
 		}
 		if !k8sutil.IsPodReady(pod) {
-			log.Debug("Image ID Pod is not yet ready")
+			log.Debug("Image ID  ArangoSchedulerPod is not yet ready")
 			return true, nil
 		}
 
@@ -181,14 +181,14 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 		// Try fetching the ArangoDB version
 		client, err := arangod.CreateArangodImageIDClient(ctx, ib.APIObject, pod.Status.PodIP, false)
 		if err != nil {
-			log.Err(err).Warn("Failed to create Image ID Pod client")
+			log.Err(err).Warn("Failed to create Image ID  ArangoSchedulerPod client")
 			return true, nil
 		}
 		ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 		defer cancel()
 		v, err := client.Version(ctxChild)
 		if err != nil {
-			log.Err(err).Debug("Failed to fetch version from Image ID Pod")
+			log.Err(err).Debug("Failed to fetch version from Image ID  ArangoSchedulerPod")
 			return true, nil
 		}
 		version := v.Version
@@ -199,7 +199,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 			return ib.Context.ACS().CurrentClusterCache().PodsModInterface().V1().Delete(ctxChild, podName, meta.DeleteOptions{})
 		})
 		if err != nil && !kerrors.IsNotFound(err) {
-			log.Err(err).Warn("Failed to delete Image ID Pod")
+			log.Err(err).Warn("Failed to delete Image ID  ArangoSchedulerPod")
 			return true, nil
 		}
 

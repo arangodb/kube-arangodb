@@ -18,17 +18,26 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package crd
+package v1
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/crd/crds"
+	pbSchedulerV1 "github.com/arangodb/kube-arangodb/integrations/scheduler/v1/definition"
+	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-func init() {
-	registerCRDWithPanic(func(opts *crds.CRDOptions) crds.Definition {
-		return crds.SchedulerProfileDefinitionWithOptions(opts.AsFunc())
-	}, &crds.CRDOptions{
-		WithSchema:   true,
-		WithPreserve: false,
-	})
+func ExtractStatusMetadata(mt schedulerApi.ArangoSchedulerStatusMetadata) *pbSchedulerV1.StatusMetadata {
+	var r pbSchedulerV1.StatusMetadata
+
+	r.Profiles = mt.Profiles
+
+	if obj := mt.Object; obj == nil {
+		r.Created = false
+	} else {
+		r.Created = true
+		r.Checksum = util.NewType(obj.GetChecksum())
+		r.Uid = util.NewType(obj.GetChecksum())
+	}
+
+	return &r
 }

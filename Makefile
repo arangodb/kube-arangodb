@@ -911,7 +911,7 @@ CRDS:=apps-job \
       database-clustersynchronization database-deployment database-member database-task \
       replication-deploymentreplication \
       ml-storage ml-extension ml-job-batch ml-job-cron \
-      scheduler-profile \
+      scheduler-profile scheduler-pod scheduler-deployment scheduler-batchjob scheduler-cronjob \
       analytics-graphanalyticsengine \
       networking-route
 

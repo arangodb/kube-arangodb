@@ -161,6 +161,12 @@ func CreateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			vl := *v
 			_, err := k8s.AppsV1().StatefulSets(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
 			require.NoError(t, err)
+		case **apps.Deployment:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := k8s.AppsV1().Deployments(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
+			require.NoError(t, err)
 		case **api.ArangoDeployment:
 			require.NotNil(t, v)
 
@@ -251,6 +257,30 @@ func CreateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			vl := *v
 			_, err := arango.SchedulerV1beta1().ArangoProfiles(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
 			require.NoError(t, err)
+		case **schedulerApi.ArangoSchedulerPod:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.SchedulerV1beta1().ArangoSchedulerPods(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
+			require.NoError(t, err)
+		case **schedulerApi.ArangoSchedulerDeployment:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.SchedulerV1beta1().ArangoSchedulerDeployments(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
+			require.NoError(t, err)
+		case **schedulerApi.ArangoSchedulerBatchJob:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.SchedulerV1beta1().ArangoSchedulerBatchJobs(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
+			require.NoError(t, err)
+		case **schedulerApi.ArangoSchedulerCronJob:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.SchedulerV1beta1().ArangoSchedulerCronJobs(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
+			require.NoError(t, err)
 		case **analyticsApi.GraphAnalyticsEngine:
 			require.NotNil(t, v)
 
@@ -332,6 +362,11 @@ func UpdateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			require.NotNil(t, v)
 			vl := *v
 			_, err := k8s.AppsV1().StatefulSets(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **apps.Deployment:
+			require.NotNil(t, v)
+			vl := *v
+			_, err := k8s.AppsV1().Deployments(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
 			require.NoError(t, err)
 		case **api.ArangoDeployment:
 			require.NotNil(t, v)
@@ -423,6 +458,30 @@ func UpdateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			vl := *v
 			_, err := arango.SchedulerV1beta1().ArangoProfiles(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
 			require.NoError(t, err)
+		case **schedulerApi.ArangoSchedulerPod:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.SchedulerV1beta1().ArangoSchedulerPods(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **schedulerApi.ArangoSchedulerDeployment:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.SchedulerV1beta1().ArangoSchedulerDeployments(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **schedulerApi.ArangoSchedulerBatchJob:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.SchedulerV1beta1().ArangoSchedulerBatchJobs(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **schedulerApi.ArangoSchedulerCronJob:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.SchedulerV1beta1().ArangoSchedulerCronJobs(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
 		case **analyticsApi.GraphAnalyticsEngine:
 			require.NotNil(t, v)
 
@@ -492,6 +551,11 @@ func DeleteObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			require.NotNil(t, v)
 			vl := *v
 			err := k8s.AppsV1().StatefulSets(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{})
+			require.NoError(t, err)
+		case **apps.Deployment:
+			require.NotNil(t, v)
+			vl := *v
+			err := k8s.AppsV1().Deployments(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{})
 			require.NoError(t, err)
 		case **api.ArangoDeployment:
 			require.NotNil(t, v)
@@ -568,6 +632,26 @@ func DeleteObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 
 			vl := *v
 			require.NoError(t, arango.SchedulerV1beta1().ArangoProfiles(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **schedulerApi.ArangoSchedulerPod:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, arango.SchedulerV1beta1().ArangoSchedulerPods(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **schedulerApi.ArangoSchedulerDeployment:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, arango.SchedulerV1beta1().ArangoSchedulerDeployments(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **schedulerApi.ArangoSchedulerBatchJob:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, arango.SchedulerV1beta1().ArangoSchedulerBatchJobs(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **schedulerApi.ArangoSchedulerCronJob:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, arango.SchedulerV1beta1().ArangoSchedulerCronJobs(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
 		case **analyticsApi.GraphAnalyticsEngine:
 			require.NotNil(t, v)
 
@@ -716,6 +800,20 @@ func RefreshObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientS
 
 			vl := *v
 			vn, err := k8s.AppsV1().StatefulSets(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
+			if err != nil {
+				if kerrors.IsNotFound(err) {
+					*v = nil
+				} else {
+					require.NoError(t, err)
+				}
+			} else {
+				*v = vn
+			}
+		case **apps.Deployment:
+			require.NotNil(t, v)
+
+			vl := *v
+			vn, err := k8s.AppsV1().Deployments(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
 			if err != nil {
 				if kerrors.IsNotFound(err) {
 					*v = nil
@@ -950,6 +1048,66 @@ func RefreshObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientS
 			} else {
 				*v = vn
 			}
+		case **schedulerApi.ArangoSchedulerPod:
+			require.NotNil(t, v)
+
+			vl := *v
+
+			vn, err := arango.SchedulerV1beta1().ArangoSchedulerPods(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
+			if err != nil {
+				if kerrors.IsNotFound(err) {
+					*v = nil
+				} else {
+					require.NoError(t, err)
+				}
+			} else {
+				*v = vn
+			}
+		case **schedulerApi.ArangoSchedulerDeployment:
+			require.NotNil(t, v)
+
+			vl := *v
+
+			vn, err := arango.SchedulerV1beta1().ArangoSchedulerDeployments(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
+			if err != nil {
+				if kerrors.IsNotFound(err) {
+					*v = nil
+				} else {
+					require.NoError(t, err)
+				}
+			} else {
+				*v = vn
+			}
+		case **schedulerApi.ArangoSchedulerBatchJob:
+			require.NotNil(t, v)
+
+			vl := *v
+
+			vn, err := arango.SchedulerV1beta1().ArangoSchedulerBatchJobs(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
+			if err != nil {
+				if kerrors.IsNotFound(err) {
+					*v = nil
+				} else {
+					require.NoError(t, err)
+				}
+			} else {
+				*v = vn
+			}
+		case **schedulerApi.ArangoSchedulerCronJob:
+			require.NotNil(t, v)
+
+			vl := *v
+
+			vn, err := arango.SchedulerV1beta1().ArangoSchedulerCronJobs(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
+			if err != nil {
+				if kerrors.IsNotFound(err) {
+					*v = nil
+				} else {
+					require.NoError(t, err)
+				}
+			} else {
+				*v = vn
+			}
 		case **analyticsApi.GraphAnalyticsEngine:
 			require.NotNil(t, v)
 
@@ -988,10 +1146,16 @@ func RefreshObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientS
 
 type MetaObjectMod[T meta.Object] func(t *testing.T, obj T)
 
+func Apply[T meta.Object](t *testing.T, obj T, mods ...MetaObjectMod[T]) {
+	for _, m := range mods {
+		m(t, obj)
+	}
+}
+
 func SetMetaBasedOnType(t *testing.T, object meta.Object) {
 	switch v := object.(type) {
 	case *batch.CronJob:
-		v.Kind = "CronJob"
+		v.Kind = " ArangoSchedulerCronJob"
 		v.APIVersion = "batch/v1"
 		v.SetSelfLink(fmt.Sprintf("/api/batch/v1/cronjobs/%s/%s",
 			object.GetNamespace(),
@@ -1003,7 +1167,7 @@ func SetMetaBasedOnType(t *testing.T, object meta.Object) {
 			object.GetNamespace(),
 			object.GetName()))
 	case *core.Pod:
-		v.Kind = "Pod"
+		v.Kind = " ArangoSchedulerPod"
 		v.APIVersion = "v1"
 		v.SetSelfLink(fmt.Sprintf("/api/v1/Pods/%s/%s",
 			object.GetNamespace(),
@@ -1042,6 +1206,12 @@ func SetMetaBasedOnType(t *testing.T, object meta.Object) {
 		v.Kind = "StatefulSet"
 		v.APIVersion = "v1"
 		v.SetSelfLink(fmt.Sprintf("/api/apps/v1/statefulsets/%s/%s",
+			object.GetNamespace(),
+			object.GetName()))
+	case *apps.Deployment:
+		v.Kind = "Deployment"
+		v.APIVersion = "v1"
+		v.SetSelfLink(fmt.Sprintf("/api/apps/v1/deployments/%s/%s",
 			object.GetNamespace(),
 			object.GetName()))
 	case *api.ArangoDeployment:
@@ -1156,6 +1326,38 @@ func SetMetaBasedOnType(t *testing.T, object meta.Object) {
 			scheduler.ArangoProfileResourcePlural,
 			object.GetNamespace(),
 			object.GetName()))
+	case *schedulerApi.ArangoSchedulerPod:
+		v.Kind = scheduler.PodResourceKind
+		v.APIVersion = schedulerApi.SchemeGroupVersion.String()
+		v.SetSelfLink(fmt.Sprintf("/api/%s/%s/%s/%s",
+			schedulerApi.SchemeGroupVersion.String(),
+			scheduler.PodResourcePlural,
+			object.GetNamespace(),
+			object.GetName()))
+	case *schedulerApi.ArangoSchedulerDeployment:
+		v.Kind = scheduler.DeploymentResourceKind
+		v.APIVersion = schedulerApi.SchemeGroupVersion.String()
+		v.SetSelfLink(fmt.Sprintf("/api/%s/%s/%s/%s",
+			schedulerApi.SchemeGroupVersion.String(),
+			scheduler.DeploymentResourcePlural,
+			object.GetNamespace(),
+			object.GetName()))
+	case *schedulerApi.ArangoSchedulerBatchJob:
+		v.Kind = scheduler.BatchJobResourceKind
+		v.APIVersion = schedulerApi.SchemeGroupVersion.String()
+		v.SetSelfLink(fmt.Sprintf("/api/%s/%s/%s/%s",
+			schedulerApi.SchemeGroupVersion.String(),
+			scheduler.BatchJobResourcePlural,
+			object.GetNamespace(),
+			object.GetName()))
+	case *schedulerApi.ArangoSchedulerCronJob:
+		v.Kind = scheduler.CronJobResourceKind
+		v.APIVersion = schedulerApi.SchemeGroupVersion.String()
+		v.SetSelfLink(fmt.Sprintf("/api/%s/%s/%s/%s",
+			schedulerApi.SchemeGroupVersion.String(),
+			scheduler.CronJobResourcePlural,
+			object.GetNamespace(),
+			object.GetName()))
 	case *analyticsApi.GraphAnalyticsEngine:
 		v.Kind = analytics.GraphAnalyticsEngineResourceKind
 		v.APIVersion = analyticsApi.SchemeGroupVersion.String()
@@ -1198,9 +1400,7 @@ func NewMetaObject[T meta.Object](t *testing.T, namespace, name string, mods ...
 
 	SetMetaBasedOnType(t, obj)
 
-	for _, mod := range mods {
-		mod(t, obj)
-	}
+	Apply(t, obj, mods...)
 
 	return obj
 }
@@ -1220,7 +1420,7 @@ func GVK(t *testing.T, object meta.Object) schema.GroupVersionKind {
 		return schema.GroupVersionKind{
 			Group:   "batch",
 			Version: "v1",
-			Kind:    "CronJob",
+			Kind:    " ArangoSchedulerCronJob",
 		}
 	case *batch.Job:
 		return schema.GroupVersionKind{
@@ -1232,7 +1432,7 @@ func GVK(t *testing.T, object meta.Object) schema.GroupVersionKind {
 		return schema.GroupVersionKind{
 			Group:   "",
 			Version: "v1",
-			Kind:    "Pod",
+			Kind:    " ArangoSchedulerPod",
 		}
 	case *core.Secret:
 		return schema.GroupVersionKind{
@@ -1269,6 +1469,12 @@ func GVK(t *testing.T, object meta.Object) schema.GroupVersionKind {
 			Group:   "apps",
 			Version: "v1",
 			Kind:    "StatefulSet",
+		}
+	case *apps.Deployment:
+		return schema.GroupVersionKind{
+			Group:   "apps",
+			Version: "v1",
+			Kind:    "Deployment",
 		}
 	case *api.ArangoDeployment:
 		return schema.GroupVersionKind{
@@ -1353,6 +1559,30 @@ func GVK(t *testing.T, object meta.Object) schema.GroupVersionKind {
 			Group:   scheduler.ArangoSchedulerGroupName,
 			Version: schedulerApi.ArangoSchedulerVersion,
 			Kind:    scheduler.ArangoProfileResourceKind,
+		}
+	case *schedulerApi.ArangoSchedulerPod:
+		return schema.GroupVersionKind{
+			Group:   scheduler.ArangoSchedulerGroupName,
+			Version: schedulerApi.ArangoSchedulerVersion,
+			Kind:    scheduler.PodResourceKind,
+		}
+	case *schedulerApi.ArangoSchedulerDeployment:
+		return schema.GroupVersionKind{
+			Group:   scheduler.ArangoSchedulerGroupName,
+			Version: schedulerApi.ArangoSchedulerVersion,
+			Kind:    scheduler.DeploymentResourceKind,
+		}
+	case *schedulerApi.ArangoSchedulerBatchJob:
+		return schema.GroupVersionKind{
+			Group:   scheduler.ArangoSchedulerGroupName,
+			Version: schedulerApi.ArangoSchedulerVersion,
+			Kind:    scheduler.BatchJobResourceKind,
+		}
+	case *schedulerApi.ArangoSchedulerCronJob:
+		return schema.GroupVersionKind{
+			Group:   scheduler.ArangoSchedulerGroupName,
+			Version: schedulerApi.ArangoSchedulerVersion,
+			Kind:    scheduler.CronJobResourceKind,
 		}
 	case *analyticsApi.GraphAnalyticsEngine:
 		return schema.GroupVersionKind{

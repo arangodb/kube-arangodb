@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,6 +26,14 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
+
+type ListContinue interface {
+	GetContinue() string
+}
+
+type ListInterface[S ListContinue] interface {
+	List(ctx context.Context, opts meta.ListOptions) (S, error)
+}
 
 type GetInterface[S meta.Object] interface {
 	Get(ctx context.Context, name string, opts meta.GetOptions) (S, error)

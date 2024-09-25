@@ -23,3 +23,11 @@
 package v1beta1
 
 type ArangoProfileExpansion interface{}
+
+type ArangoSchedulerBatchJobExpansion interface{}
+
+type ArangoSchedulerCronJobExpansion interface{}
+
+type ArangoSchedulerDeploymentExpansion interface{}
+
+type ArangoSchedulerPodExpansion interface{}

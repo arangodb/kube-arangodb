@@ -68,6 +68,10 @@ rules:
     verbs: ["get", "list", "watch", "update", "delete"]
     resourceNames:
       - "arangoprofiles.scheduler.arangodb.com"
+      - "arangoschedulerpods.scheduler.arangodb.com"
+      - "arangoschedulerdeploymets.scheduler.arangodb.com"
+      - "arangoschedulerbatchjobs.scheduler.arangodb.com"
+      - "arangoschedulercronjobs.scheduler.arangodb.com"
 
 {{- end }}
 {{- end }}

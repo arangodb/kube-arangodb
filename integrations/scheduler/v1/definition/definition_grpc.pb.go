@@ -40,6 +40,16 @@ type SchedulerV1Client interface {
 	ListCronJob(ctx context.Context, in *ListCronJobRequest, opts ...grpc.CallOption) (*ListCronJobResponse, error)
 	// Deletes CronJob. If job does not exists, Exists flag is set to false
 	DeleteCronJob(ctx context.Context, in *DeleteCronJobRequest, opts ...grpc.CallOption) (*DeleteCronJobResponse, error)
+	// Creates Deployment from specification
+	CreateDeployment(ctx context.Context, in *CreateDeploymentRequest, opts ...grpc.CallOption) (*CreateDeploymentResponse, error)
+	// Returns Deployment. If job does not exists, Exists flag is set to false
+	GetDeployment(ctx context.Context, in *GetDeploymentRequest, opts ...grpc.CallOption) (*GetDeploymentResponse, error)
+	// Updates Deployment from specification
+	UpdateDeployment(ctx context.Context, in *UpdateDeploymentRequest, opts ...grpc.CallOption) (*UpdateDeploymentResponse, error)
+	// Returns list of the Deployments
+	ListDeployment(ctx context.Context, in *ListDeploymentRequest, opts ...grpc.CallOption) (*ListDeploymentResponse, error)
+	// Deletes Deployment. If job does not exists, Exists flag is set to false
+	DeleteDeployment(ctx context.Context, in *DeleteDeploymentRequest, opts ...grpc.CallOption) (*DeleteDeploymentResponse, error)
 }
 
 type schedulerV1Client struct {
@@ -131,6 +141,51 @@ func (c *schedulerV1Client) DeleteCronJob(ctx context.Context, in *DeleteCronJob
 	return out, nil
 }
 
+func (c *schedulerV1Client) CreateDeployment(ctx context.Context, in *CreateDeploymentRequest, opts ...grpc.CallOption) (*CreateDeploymentResponse, error) {
+	out := new(CreateDeploymentResponse)
+	err := c.cc.Invoke(ctx, "/scheduler.SchedulerV1/CreateDeployment", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *schedulerV1Client) GetDeployment(ctx context.Context, in *GetDeploymentRequest, opts ...grpc.CallOption) (*GetDeploymentResponse, error) {
+	out := new(GetDeploymentResponse)
+	err := c.cc.Invoke(ctx, "/scheduler.SchedulerV1/GetDeployment", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *schedulerV1Client) UpdateDeployment(ctx context.Context, in *UpdateDeploymentRequest, opts ...grpc.CallOption) (*UpdateDeploymentResponse, error) {
+	out := new(UpdateDeploymentResponse)
+	err := c.cc.Invoke(ctx, "/scheduler.SchedulerV1/UpdateDeployment", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *schedulerV1Client) ListDeployment(ctx context.Context, in *ListDeploymentRequest, opts ...grpc.CallOption) (*ListDeploymentResponse, error) {
+	out := new(ListDeploymentResponse)
+	err := c.cc.Invoke(ctx, "/scheduler.SchedulerV1/ListDeployment", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *schedulerV1Client) DeleteDeployment(ctx context.Context, in *DeleteDeploymentRequest, opts ...grpc.CallOption) (*DeleteDeploymentResponse, error) {
+	out := new(DeleteDeploymentResponse)
+	err := c.cc.Invoke(ctx, "/scheduler.SchedulerV1/DeleteDeployment", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SchedulerV1Server is the server API for SchedulerV1 service.
 // All implementations must embed UnimplementedSchedulerV1Server
 // for forward compatibility
@@ -153,6 +208,16 @@ type SchedulerV1Server interface {
 	ListCronJob(context.Context, *ListCronJobRequest) (*ListCronJobResponse, error)
 	// Deletes CronJob. If job does not exists, Exists flag is set to false
 	DeleteCronJob(context.Context, *DeleteCronJobRequest) (*DeleteCronJobResponse, error)
+	// Creates Deployment from specification
+	CreateDeployment(context.Context, *CreateDeploymentRequest) (*CreateDeploymentResponse, error)
+	// Returns Deployment. If job does not exists, Exists flag is set to false
+	GetDeployment(context.Context, *GetDeploymentRequest) (*GetDeploymentResponse, error)
+	// Updates Deployment from specification
+	UpdateDeployment(context.Context, *UpdateDeploymentRequest) (*UpdateDeploymentResponse, error)
+	// Returns list of the Deployments
+	ListDeployment(context.Context, *ListDeploymentRequest) (*ListDeploymentResponse, error)
+	// Deletes Deployment. If job does not exists, Exists flag is set to false
+	DeleteDeployment(context.Context, *DeleteDeploymentRequest) (*DeleteDeploymentResponse, error)
 	mustEmbedUnimplementedSchedulerV1Server()
 }
 
@@ -186,6 +251,21 @@ func (UnimplementedSchedulerV1Server) ListCronJob(context.Context, *ListCronJobR
 }
 func (UnimplementedSchedulerV1Server) DeleteCronJob(context.Context, *DeleteCronJobRequest) (*DeleteCronJobResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteCronJob not implemented")
+}
+func (UnimplementedSchedulerV1Server) CreateDeployment(context.Context, *CreateDeploymentRequest) (*CreateDeploymentResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateDeployment not implemented")
+}
+func (UnimplementedSchedulerV1Server) GetDeployment(context.Context, *GetDeploymentRequest) (*GetDeploymentResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDeployment not implemented")
+}
+func (UnimplementedSchedulerV1Server) UpdateDeployment(context.Context, *UpdateDeploymentRequest) (*UpdateDeploymentResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateDeployment not implemented")
+}
+func (UnimplementedSchedulerV1Server) ListDeployment(context.Context, *ListDeploymentRequest) (*ListDeploymentResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListDeployment not implemented")
+}
+func (UnimplementedSchedulerV1Server) DeleteDeployment(context.Context, *DeleteDeploymentRequest) (*DeleteDeploymentResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteDeployment not implemented")
 }
 func (UnimplementedSchedulerV1Server) mustEmbedUnimplementedSchedulerV1Server() {}
 
@@ -362,6 +442,96 @@ func _SchedulerV1_DeleteCronJob_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SchedulerV1_CreateDeployment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateDeploymentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SchedulerV1Server).CreateDeployment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/scheduler.SchedulerV1/CreateDeployment",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SchedulerV1Server).CreateDeployment(ctx, req.(*CreateDeploymentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SchedulerV1_GetDeployment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetDeploymentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SchedulerV1Server).GetDeployment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/scheduler.SchedulerV1/GetDeployment",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SchedulerV1Server).GetDeployment(ctx, req.(*GetDeploymentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SchedulerV1_UpdateDeployment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateDeploymentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SchedulerV1Server).UpdateDeployment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/scheduler.SchedulerV1/UpdateDeployment",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SchedulerV1Server).UpdateDeployment(ctx, req.(*UpdateDeploymentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SchedulerV1_ListDeployment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListDeploymentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SchedulerV1Server).ListDeployment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/scheduler.SchedulerV1/ListDeployment",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SchedulerV1Server).ListDeployment(ctx, req.(*ListDeploymentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SchedulerV1_DeleteDeployment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteDeploymentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SchedulerV1Server).DeleteDeployment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/scheduler.SchedulerV1/DeleteDeployment",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SchedulerV1Server).DeleteDeployment(ctx, req.(*DeleteDeploymentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // SchedulerV1_ServiceDesc is the grpc.ServiceDesc for SchedulerV1 service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -404,6 +574,26 @@ var SchedulerV1_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteCronJob",
 			Handler:    _SchedulerV1_DeleteCronJob_Handler,
+		},
+		{
+			MethodName: "CreateDeployment",
+			Handler:    _SchedulerV1_CreateDeployment_Handler,
+		},
+		{
+			MethodName: "GetDeployment",
+			Handler:    _SchedulerV1_GetDeployment_Handler,
+		},
+		{
+			MethodName: "UpdateDeployment",
+			Handler:    _SchedulerV1_UpdateDeployment_Handler,
+		},
+		{
+			MethodName: "ListDeployment",
+			Handler:    _SchedulerV1_ListDeployment_Handler,
+		},
+		{
+			MethodName: "DeleteDeployment",
+			Handler:    _SchedulerV1_DeleteDeployment_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

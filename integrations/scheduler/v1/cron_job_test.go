@@ -25,7 +25,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	batch "k8s.io/api/batch/v1"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -43,7 +42,7 @@ func Test_CronJob(t *testing.T) {
 	client := kclient.NewFakeClientBuilder().Add(
 		tests.NewMetaObject(t, tests.FakeNamespace, "test", func(t *testing.T, obj *schedulerApi.ArangoProfile) {
 			obj.Spec = schedulerApi.ProfileSpec{}
-		}),
+		}, tests.MarkArangoProfileAsReady),
 		tests.NewMetaObject(t, tests.FakeNamespace, "test-select-all", func(t *testing.T, obj *schedulerApi.ArangoProfile) {
 			obj.Spec = schedulerApi.ProfileSpec{
 				Selectors: &schedulerApi.ProfileSelectors{
@@ -51,7 +50,7 @@ func Test_CronJob(t *testing.T) {
 				},
 				Template: &schedulerApi.ProfileTemplate{},
 			}
-		}),
+		}, tests.MarkArangoProfileAsReady),
 		tests.NewMetaObject(t, tests.FakeNamespace, "test-select-specific", func(t *testing.T, obj *schedulerApi.ArangoProfile) {
 			obj.Spec = schedulerApi.ProfileSpec{
 				Selectors: &schedulerApi.ProfileSelectors{
@@ -63,7 +62,7 @@ func Test_CronJob(t *testing.T) {
 				},
 				Template: &schedulerApi.ProfileTemplate{},
 			}
-		}),
+		}, tests.MarkArangoProfileAsReady),
 	).Client()
 
 	scheduler := Client(t, ctx, client, func(c Configuration) Configuration {
@@ -94,7 +93,7 @@ func Test_CronJob(t *testing.T) {
 				Metadata: &pbSchedulerV1.Metadata{
 					Name: "test",
 				},
-				Job: &pbSchedulerV1.JobBase{
+				Base: &pbSchedulerV1.ObjectBase{
 					Labels: nil,
 					Profiles: []string{
 						"test",
@@ -123,10 +122,6 @@ func Test_CronJob(t *testing.T) {
 		require.NoError(t, err)
 
 		require.EqualValues(t, "test", resp.GetName())
-		require.Len(t, resp.Profiles, 2)
-		require.Contains(t, resp.Profiles, "test")
-		require.Contains(t, resp.Profiles, "test-select-all")
-		require.NotContains(t, resp.Profiles, "test-select-specific")
 	})
 
 	t.Run("Ensure job exist - get", func(t *testing.T) {
@@ -153,11 +148,11 @@ func Test_CronJob(t *testing.T) {
 		require.NoError(t, err)
 
 		require.True(t, resp.GetExists())
-		require.Len(t, resp.GetBatchJobs(), 0)
+		require.Len(t, resp.GetCronJob().GetStatus().GetBatchJobs(), 0)
 	})
 
 	t.Run("Ensure job details - update", func(t *testing.T) {
-		job := tests.NewMetaObject[*batch.CronJob](t, tests.FakeNamespace, "test")
+		job := tests.NewMetaObject[*schedulerApi.ArangoSchedulerCronJob](t, tests.FakeNamespace, "test")
 
 		tests.RefreshObjectsC(t, client, &job)
 
@@ -177,7 +172,7 @@ func Test_CronJob(t *testing.T) {
 		require.NoError(t, err)
 
 		require.True(t, resp.GetExists())
-		require.Len(t, resp.GetBatchJobs(), 1)
+		require.Len(t, resp.GetCronJob().GetStatus().GetBatchJobs(), 1)
 	})
 
 	t.Run("Update Job - Pre", func(t *testing.T) {

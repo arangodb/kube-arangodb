@@ -28,6 +28,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/timer"
 )
 
@@ -39,15 +40,14 @@ type Object[T interface{}] interface {
 }
 
 type GetInterface[S interface{}, T Object[S]] interface {
-	Get(ctx context.Context, name string, options meta.GetOptions) (T, error)
+	generic.GetInterface[T]
 }
 
 type UpdateStatusInterfaceClient[S interface{}, T Object[S]] func(namespace string) UpdateStatusInterface[S, T]
 
 type UpdateStatusInterface[S interface{}, T Object[S]] interface {
-	GetInterface[S, T]
-
-	UpdateStatus(ctx context.Context, in T, options meta.UpdateOptions) (T, error)
+	generic.GetInterface[T]
+	generic.UpdateStatusInterface[T]
 }
 
 func WithUpdateStatusInterfaceRetry[S interface{}, T Object[S]](ctx context.Context, client UpdateStatusInterface[S, T], obj T, status S, opts meta.UpdateOptions) (T, error) {

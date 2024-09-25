@@ -20,7 +20,11 @@
 
 package v1beta1
 
-import meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+import (
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/apis/scheduler"
+)
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
@@ -42,6 +46,18 @@ type ArangoProfile struct {
 
 	Spec   ProfileSpec   `json:"spec"`
 	Status ProfileStatus `json:"status"`
+}
+
+// AsOwner creates an OwnerReference for the given  ArangoSchedulerBatchJob
+func (a *ArangoProfile) AsOwner() meta.OwnerReference {
+	trueVar := true
+	return meta.OwnerReference{
+		APIVersion: SchemeGroupVersion.String(),
+		Kind:       scheduler.ArangoProfileResourceKind,
+		Name:       a.Name,
+		UID:        a.UID,
+		Controller: &trueVar,
+	}
 }
 
 func (a *ArangoProfile) GetStatus() ProfileStatus {

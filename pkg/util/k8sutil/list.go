@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,17 +24,11 @@ import (
 	"context"
 
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 )
 
-type ListContinue interface {
-	GetContinue() string
-}
-
-type ListAPI[T ListContinue] interface {
-	List(ctx context.Context, opts meta.ListOptions) (T, error)
-}
-
-func APIList[T ListContinue](ctx context.Context, api ListAPI[T], opts meta.ListOptions, parser func(result T, err error) error) error {
+func APIList[T generic.ListContinue](ctx context.Context, api generic.ListInterface[T], opts meta.ListOptions, parser func(result T, err error) error) error {
 	result, err := api.List(ctx, opts)
 	for {
 		if err := parser(result, err); err != nil {

@@ -24,8 +24,8 @@ package scheduler;
 
 option go_package = "github.com/arangodb/kube-arangodb/integrations/scheduler/v1/definition";
 
-// Common base of the Jobs
-message JobBase {
+// Common base of the objects
+message ObjectBase {
   // Map of the Labels assigned to the job. Used for Profile selection
   map<string, string> labels = 1;
 
@@ -60,8 +60,23 @@ message Spec {
   Metadata metadata = 1;
 
   // Keeps requested Job base
-  JobBase job = 2;
+  ObjectBase base = 2;
 
   // Keeps map of the containers
   map<string, ContainerBase> containers = 3;
+}
+
+// Defines status of the scheduled object
+message StatusMetadata {
+  // Defines if upstream object has been created
+  bool created = 1;
+
+  // Defines checksum
+  optional string checksum =2;
+
+  // Defines uid
+  optional string uid =3;
+
+  // Defiles list of applied profiles
+  repeated string profiles = 4;
 }

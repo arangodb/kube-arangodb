@@ -84,7 +84,7 @@ func (h *handler) Handle(ctx context.Context, item operation.Item) error {
 		item.Namespace,
 		item.Name)
 
-	if _, err := operator.WithNetworkingArangoProfileUpdateStatusInterfaceRetry(context.Background(), h.client.SchedulerV1beta1().ArangoProfiles(object.GetNamespace()), object, *status, meta.UpdateOptions{}); err != nil {
+	if _, err := operator.WithSchedulerArangoProfileUpdateStatusInterfaceRetry(context.Background(), h.client.SchedulerV1beta1().ArangoProfiles(object.GetNamespace()), object, *status, meta.UpdateOptions{}); err != nil {
 		return err
 	}
 

@@ -36,6 +36,22 @@ func (c *FakeSchedulerV1beta1) ArangoProfiles(namespace string) v1beta1.ArangoPr
 	return &FakeArangoProfiles{c, namespace}
 }
 
+func (c *FakeSchedulerV1beta1) ArangoSchedulerBatchJobs(namespace string) v1beta1.ArangoSchedulerBatchJobInterface {
+	return &FakeArangoSchedulerBatchJobs{c, namespace}
+}
+
+func (c *FakeSchedulerV1beta1) ArangoSchedulerCronJobs(namespace string) v1beta1.ArangoSchedulerCronJobInterface {
+	return &FakeArangoSchedulerCronJobs{c, namespace}
+}
+
+func (c *FakeSchedulerV1beta1) ArangoSchedulerDeployments(namespace string) v1beta1.ArangoSchedulerDeploymentInterface {
+	return &FakeArangoSchedulerDeployments{c, namespace}
+}
+
+func (c *FakeSchedulerV1beta1) ArangoSchedulerPods(namespace string) v1beta1.ArangoSchedulerPodInterface {
+	return &FakeArangoSchedulerPods{c, namespace}
+}
+
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
 func (c *FakeSchedulerV1beta1) RESTClient() rest.Interface {

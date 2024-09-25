@@ -25,6 +25,7 @@ package scheduler;
 import "integrations/scheduler/v1/definition/batchjob.proto";
 import "integrations/scheduler/v1/definition/common.proto";
 import "integrations/scheduler/v1/definition/cronjob.proto";
+import "integrations/scheduler/v1/definition/deployment.proto";
 
 option go_package = "github.com/arangodb/kube-arangodb/integrations/scheduler/v1/definition";
 
@@ -60,6 +61,23 @@ service SchedulerV1 {
 
   // Deletes CronJob. If job does not exists, Exists flag is set to false
   rpc DeleteCronJob(DeleteCronJobRequest) returns (DeleteCronJobResponse) {};
+
+  // Deployment
+
+  // Creates Deployment from specification
+  rpc CreateDeployment(CreateDeploymentRequest) returns (CreateDeploymentResponse) {};
+
+  // Returns Deployment. If job does not exists, Exists flag is set to false
+  rpc GetDeployment(GetDeploymentRequest) returns (GetDeploymentResponse) {};
+
+  // Updates Deployment from specification
+  rpc UpdateDeployment(UpdateDeploymentRequest) returns (UpdateDeploymentResponse) {};
+
+  // Returns list of the Deployments
+  rpc ListDeployment(ListDeploymentRequest) returns (ListDeploymentResponse) {};
+
+  // Deletes Deployment. If job does not exists, Exists flag is set to false
+  rpc DeleteDeployment(DeleteDeploymentRequest) returns (DeleteDeploymentResponse) {};
 }
 
 // BatchJob
@@ -77,9 +95,6 @@ message CreateBatchJobRequest {
 message CreateBatchJobResponse {
   // Name of the scheduled job
   string name = 1;
-
-  // List of the assigned profiles
-  repeated string profiles = 2;
 }
 
 // Get Request
@@ -138,9 +153,6 @@ message CreateCronJobRequest {
 message CreateCronJobResponse {
   // Name of the scheduled job
   string name = 1;
-
-  // List of the assigned profiles
-  repeated string profiles = 2;
 }
 
 // Get Request
@@ -156,9 +168,6 @@ message GetCronJobResponse {
 
   // CronJob run settings and current status
   optional CronJob cron_job = 2;
-  
-  // Keeps list of created BatchJobs
-  repeated string batch_jobs = 3;
 }
 
 // Update Request
@@ -201,5 +210,80 @@ message DeleteCronJobRequest {
 // Delete Response
 message DeleteCronJobResponse {
   // Defines if job was found
+  bool exists = 1;
+}
+
+// Deployment
+
+// Create Request
+message CreateDeploymentRequest {
+  // Spec of the Schedule request
+  Spec spec = 1;
+
+  // Deployment run settings
+  DeploymentSpec deployment = 2;
+}
+
+// Create Response
+message CreateDeploymentResponse {
+  // Name of the scheduled deployment
+  string name = 1;
+}
+
+// Get Request
+message GetDeploymentRequest {
+  // Name of the scheduled deployment
+  string name = 1;
+}
+
+// Get Response
+message GetDeploymentResponse {
+  // Defines if deployment was found
+  bool exists = 1;
+
+  // Deployment run settings and current status
+  optional Deployment deployment = 2;
+}
+
+// Update Request
+message UpdateDeploymentRequest {
+  // Name of the scheduled deployment
+  string name = 1;
+
+  // Deployment spec to be updated
+  DeploymentSpec spec = 2;
+}
+
+// Update Response
+message UpdateDeploymentResponse {
+  // Defines if deployment was found
+  bool exists = 1;
+
+  // Deployment run settings and current status
+  optional Deployment deployment = 2;
+}
+
+// List Request
+message ListDeploymentRequest {
+}
+
+// List Response
+message ListDeploymentResponse {
+  // List of the Deployments
+  repeated string deployments = 1;
+}
+
+// Delete Request
+message DeleteDeploymentRequest {
+  // Name of the scheduled deployment
+  string name = 1;
+
+  // Defines if all child containers/pods should be removed together with deployment
+  optional bool delete_child_pods = 2;
+}
+
+// Delete Response
+message DeleteDeploymentResponse {
+  // Defines if deployment was found
   bool exists = 1;
 }

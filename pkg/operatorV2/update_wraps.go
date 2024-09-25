@@ -57,8 +57,24 @@ func WithNetworkingArangoRouteUpdateStatusInterfaceRetry(ctx context.Context, cl
 	return WithUpdateStatusInterfaceRetry[networkingApi.ArangoRouteStatus, *networkingApi.ArangoRoute](ctx, client, obj, status, opts)
 }
 
-func WithNetworkingArangoProfileUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[schedulerApi.ProfileStatus, *schedulerApi.ArangoProfile], obj *schedulerApi.ArangoProfile, status schedulerApi.ProfileStatus, opts meta.UpdateOptions) (*schedulerApi.ArangoProfile, error) {
+func WithSchedulerArangoProfileUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[schedulerApi.ProfileStatus, *schedulerApi.ArangoProfile], obj *schedulerApi.ArangoProfile, status schedulerApi.ProfileStatus, opts meta.UpdateOptions) (*schedulerApi.ArangoProfile, error) {
 	return WithUpdateStatusInterfaceRetry[schedulerApi.ProfileStatus, *schedulerApi.ArangoProfile](ctx, client, obj, status, opts)
+}
+
+func WithSchedulerPodUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[schedulerApi.ArangoSchedulerPodStatus, *schedulerApi.ArangoSchedulerPod], obj *schedulerApi.ArangoSchedulerPod, status schedulerApi.ArangoSchedulerPodStatus, opts meta.UpdateOptions) (*schedulerApi.ArangoSchedulerPod, error) {
+	return WithUpdateStatusInterfaceRetry[schedulerApi.ArangoSchedulerPodStatus, *schedulerApi.ArangoSchedulerPod](ctx, client, obj, status, opts)
+}
+
+func WithSchedulerDeploymentUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[schedulerApi.ArangoSchedulerDeploymentStatus, *schedulerApi.ArangoSchedulerDeployment], obj *schedulerApi.ArangoSchedulerDeployment, status schedulerApi.ArangoSchedulerDeploymentStatus, opts meta.UpdateOptions) (*schedulerApi.ArangoSchedulerDeployment, error) {
+	return WithUpdateStatusInterfaceRetry[schedulerApi.ArangoSchedulerDeploymentStatus, *schedulerApi.ArangoSchedulerDeployment](ctx, client, obj, status, opts)
+}
+
+func WithSchedulerBatchJobUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[schedulerApi.ArangoSchedulerBatchJobStatus, *schedulerApi.ArangoSchedulerBatchJob], obj *schedulerApi.ArangoSchedulerBatchJob, status schedulerApi.ArangoSchedulerBatchJobStatus, opts meta.UpdateOptions) (*schedulerApi.ArangoSchedulerBatchJob, error) {
+	return WithUpdateStatusInterfaceRetry[schedulerApi.ArangoSchedulerBatchJobStatus, *schedulerApi.ArangoSchedulerBatchJob](ctx, client, obj, status, opts)
+}
+
+func WithSchedulerCronJobUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[schedulerApi.ArangoSchedulerCronJobStatus, *schedulerApi.ArangoSchedulerCronJob], obj *schedulerApi.ArangoSchedulerCronJob, status schedulerApi.ArangoSchedulerCronJobStatus, opts meta.UpdateOptions) (*schedulerApi.ArangoSchedulerCronJob, error) {
+	return WithUpdateStatusInterfaceRetry[schedulerApi.ArangoSchedulerCronJobStatus, *schedulerApi.ArangoSchedulerCronJob](ctx, client, obj, status, opts)
 }
 
 func WithArangoStorageUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[mlApi.ArangoMLStorageStatus, *mlApi.ArangoMLStorage], obj *mlApi.ArangoMLStorage, status mlApi.ArangoMLStorageStatus, opts meta.UpdateOptions) (*mlApi.ArangoMLStorage, error) {
