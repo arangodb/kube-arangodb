@@ -18,31 +18,9 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package pod
+package constants
 
-import (
-	"k8s.io/apimachinery/pkg/runtime/schema"
+const ProfileGroup = "profiles.arangodb.com"
 
-	"github.com/arangodb/kube-arangodb/pkg/apis/scheduler"
-	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
-)
-
-func GVK() schema.GroupVersionKind {
-	return schema.GroupVersionKind{
-		Group:   Group(),
-		Version: Version(),
-		Kind:    Kind(),
-	}
-}
-
-func Kind() string {
-	return scheduler.PodResourceKind
-}
-
-func Group() string {
-	return schedulerApi.SchemeGroupVersion.Group
-}
-
-func Version() string {
-	return schedulerApi.SchemeGroupVersion.Version
-}
+const ProfilesDeployment = ProfileGroup + "/deployment"
+const ProfilesIntegrationPrefix = "integration." + ProfileGroup

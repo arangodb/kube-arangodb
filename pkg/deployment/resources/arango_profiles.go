@@ -23,10 +23,9 @@ package resources
 import (
 	"context"
 	"fmt"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"time"
 
+	"k8s.io/apimachinery/pkg/api/equality"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
@@ -35,8 +34,11 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/integrations/sidecar"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/patcher"
 )
 
@@ -44,6 +46,18 @@ var (
 	inspectedArangoProfilesCounters     = metrics.MustRegisterCounterVec(metricsComponent, "inspected_arango_profiles", "Number of ArangoProfiles inspections per deployment", metrics.DeploymentName)
 	inspectArangoProfilesDurationGauges = metrics.MustRegisterGaugeVec(metricsComponent, "inspect_arango_profiles_duration", "Amount of time taken by a single inspection of all ArangoProfiles for a deployment (in sec)", metrics.DeploymentName)
 )
+
+func matchArangoProfilesLabels(labels map[string]string) *schedulerApi.ProfileSelectors {
+	if labels == nil {
+		return nil
+	}
+
+	return &schedulerApi.ProfileSelectors{
+		Label: &meta.LabelSelector{
+			MatchLabels: labels,
+		},
+	}
+}
 
 // EnsureArangoProfiles creates all ArangoProfiles needed to run the given deployment
 func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
@@ -57,25 +71,29 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 
 	reconcileRequired := k8sutil.NewReconcile(cachedStatus)
 
-	gen := func(name string, integrations ...sidecar.Integration) func() (string, *schedulerApi.ArangoProfile, error) {
+	gen := func(name, version string, integrations ...sidecar.Integration) func() (string, *schedulerApi.ArangoProfile, error) {
 		return func() (string, *schedulerApi.ArangoProfile, error) {
 			counterMetric.Inc()
-			name := fmt.Sprintf("%s-int-%s", deploymentName, name)
+			fullName := fmt.Sprintf("%s-int-%s-%s", deploymentName, name, version)
 
 			integration, err := sidecar.NewIntegrationEnablement(integrations...)
 			if err != nil {
 				return "", nil, err
 			}
 
-			return name, &schedulerApi.ArangoProfile{
+			return fullName, &schedulerApi.ArangoProfile{
 				ObjectMeta: meta.ObjectMeta{
-					Name:      name,
+					Name:      fullName,
 					Namespace: apiObject.GetNamespace(),
 					OwnerReferences: []meta.OwnerReference{
 						apiObject.AsOwner(),
 					},
 				},
 				Spec: schedulerApi.ProfileSpec{
+					Selectors: matchArangoProfilesLabels(map[string]string{
+						constants.ProfilesDeployment:                                    deploymentName,
+						fmt.Sprintf("%s/%s", constants.ProfilesIntegrationPrefix, name): version,
+					}),
 					Template: integration,
 				},
 			}, nil
@@ -103,12 +121,15 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 					},
 				},
 				Spec: schedulerApi.ProfileSpec{
+					Selectors: matchArangoProfilesLabels(map[string]string{
+						constants.ProfilesDeployment: deploymentName,
+					}),
 					Template: integration,
 				},
 			}, nil
 		},
-		gen("authz-v0", sidecar.IntegrationAuthorizationV0{}),
-		gen("authn-v1", sidecar.IntegrationAuthenticationV1{Spec: spec, DeploymentName: apiObject.GetName()}),
+		gen("authz", "v0", sidecar.IntegrationAuthorizationV0{}),
+		gen("authn", "v1", sidecar.IntegrationAuthenticationV1{Spec: spec, DeploymentName: apiObject.GetName()}),
 	); err != nil {
 		return err
 	} else if changed {
@@ -172,11 +193,23 @@ func (r *Resources) ensureArangoProfile(ctx context.Context, cachedStatus inspec
 				return false, err
 			}
 
-			if s.Spec.Selectors != nil {
+			if expected.Spec.Selectors == nil && s.Spec.Selectors != nil {
+				// Remove
 				if _, changed, err := patcher.Patcher[*schedulerApi.ArangoProfile](ctx, arangoProfiles, s, meta.PatchOptions{},
 					func(in *schedulerApi.ArangoProfile) []patch.Item {
 						return []patch.Item{
 							patch.ItemRemove(patch.NewPath("spec", "selectors")),
+						}
+					}); err != nil {
+					return false, err
+				} else if changed {
+					return true, nil
+				}
+			} else if !equality.Semantic.DeepEqual(expected.Spec.Selectors, s.Spec.Selectors) {
+				if _, changed, err := patcher.Patcher[*schedulerApi.ArangoProfile](ctx, arangoProfiles, s, meta.PatchOptions{},
+					func(in *schedulerApi.ArangoProfile) []patch.Item {
+						return []patch.Item{
+							patch.ItemReplace(patch.NewPath("spec", "selectors"), expected.Spec.Selectors),
 						}
 					}); err != nil {
 					return false, err
