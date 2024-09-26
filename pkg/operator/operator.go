@@ -49,7 +49,11 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/handlers/job"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/networking/route"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/policy"
-	"github.com/arangodb/kube-arangodb/pkg/handlers/scheduler/profile"
+	schedulerBatchJobHandler "github.com/arangodb/kube-arangodb/pkg/handlers/scheduler/batchjob"
+	schedulerCronJobHandler "github.com/arangodb/kube-arangodb/pkg/handlers/scheduler/cronjob"
+	schedulerDeploymentHandler "github.com/arangodb/kube-arangodb/pkg/handlers/scheduler/deployment"
+	schedulerPodHandler "github.com/arangodb/kube-arangodb/pkg/handlers/scheduler/pod"
+	schedulerProfileHandler "github.com/arangodb/kube-arangodb/pkg/handlers/scheduler/profile"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
 	operatorV2 "github.com/arangodb/kube-arangodb/pkg/operatorV2"
@@ -380,7 +384,47 @@ func (o *Operator) onStartOperatorV2Scheduler(operator operatorV2.Operator, reco
 	}
 	o.waitForCRD(scheduler.ArangoProfileCRDName, checkFn)
 
-	if err := profile.RegisterInformer(operator, recorder, client, kubeClient, informer, kubeInformer); err != nil {
+	checkFn = func() error {
+		_, err := o.Client.Arango().SchedulerV1beta1().ArangoSchedulerPods(o.Namespace).List(context.Background(), meta.ListOptions{})
+		return err
+	}
+	o.waitForCRD(scheduler.PodCRDName, checkFn)
+
+	checkFn = func() error {
+		_, err := o.Client.Arango().SchedulerV1beta1().ArangoSchedulerDeployments(o.Namespace).List(context.Background(), meta.ListOptions{})
+		return err
+	}
+	o.waitForCRD(scheduler.DeploymentCRDName, checkFn)
+
+	checkFn = func() error {
+		_, err := o.Client.Arango().SchedulerV1beta1().ArangoSchedulerBatchJobs(o.Namespace).List(context.Background(), meta.ListOptions{})
+		return err
+	}
+	o.waitForCRD(scheduler.BatchJobCRDName, checkFn)
+
+	checkFn = func() error {
+		_, err := o.Client.Arango().SchedulerV1beta1().ArangoSchedulerCronJobs(o.Namespace).List(context.Background(), meta.ListOptions{})
+		return err
+	}
+	o.waitForCRD(scheduler.CronJobCRDName, checkFn)
+
+	if err := schedulerProfileHandler.RegisterInformer(operator, recorder, client, kubeClient, informer, kubeInformer); err != nil {
+		panic(err)
+	}
+
+	if err := schedulerPodHandler.RegisterInformer(operator, recorder, client, kubeClient, informer, kubeInformer); err != nil {
+		panic(err)
+	}
+
+	if err := schedulerDeploymentHandler.RegisterInformer(operator, recorder, client, kubeClient, informer, kubeInformer); err != nil {
+		panic(err)
+	}
+
+	if err := schedulerBatchJobHandler.RegisterInformer(operator, recorder, client, kubeClient, informer, kubeInformer); err != nil {
+		panic(err)
+	}
+
+	if err := schedulerCronJobHandler.RegisterInformer(operator, recorder, client, kubeClient, informer, kubeInformer); err != nil {
 		panic(err)
 	}
 }

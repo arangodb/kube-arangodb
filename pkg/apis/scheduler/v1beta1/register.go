@@ -50,6 +50,14 @@ func addKnownTypes(s *runtime.Scheme) error {
 	s.AddKnownTypes(SchemeGroupVersion,
 		&ArangoProfile{},
 		&ArangoProfileList{},
+		&ArangoSchedulerPod{},
+		&ArangoSchedulerPodList{},
+		&ArangoSchedulerDeployment{},
+		&ArangoSchedulerDeploymentList{},
+		&ArangoSchedulerBatchJob{},
+		&ArangoSchedulerBatchJobList{},
+		&ArangoSchedulerCronJob{},
+		&ArangoSchedulerCronJobList{},
 	)
 	meta.AddToGroupVersion(s, SchemeGroupVersion)
 	return nil

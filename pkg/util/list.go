@@ -22,7 +22,7 @@ package util
 
 import "sort"
 
-type List[T comparable] []T
+type List[T any] []T
 
 func (l List[T]) Filter(fn func(T) bool) List[T] {
 	if l == nil {
@@ -55,6 +55,30 @@ func (l List[T]) Sort(fn func(T, T) bool) List[T] {
 		return fn(clone[i], clone[j])
 	})
 	return clone
+}
+
+func (l List[T]) Contains(fn func(T) bool) bool {
+	for _, e := range l {
+		if fn(e) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (l List[T]) Unique(f func(existing List[T], a T) bool) List[T] {
+	r := make(List[T], 0, len(l))
+
+	for _, o := range l {
+		if f(r, o) {
+			continue
+		}
+
+		r = append(r, o)
+	}
+
+	return r
 }
 
 func PickFromList[V any](in []V, q func(v V) bool) (V, bool) {

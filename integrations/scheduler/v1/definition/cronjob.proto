@@ -22,14 +22,21 @@ syntax = "proto3";
 
 package scheduler;
 
+import "integrations/scheduler/v1/definition/common.proto";
 import "integrations/scheduler/v1/definition/batchjob.proto";
 
 option go_package = "github.com/arangodb/kube-arangodb/integrations/scheduler/v1/definition";
 
 // Keeps information about Kubernetes Batch/V1 CronJob
 message CronJob {
+  // defines object status metadate
+  StatusMetadata metadata = 1;
+
   // Keeps the CronJob Settings
-  CronJobSpec spec = 1;
+  CronJobSpec spec = 2;
+
+  // Keeps the CronJob Status
+  CronJobStatus status = 3;
 }
 
 // Information about CronJob run settings
@@ -39,4 +46,10 @@ message CronJobSpec {
 
   // Keeps BatchJob settings
   BatchJobSpec job = 2;
+}
+
+// Information about CronJob Status
+message CronJobStatus {
+  // Keeps list of created BatchJobs
+  repeated string batch_jobs = 1;
 }

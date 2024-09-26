@@ -29,3 +29,35 @@ type ArangoProfileListerExpansion interface{}
 // ArangoProfileNamespaceListerExpansion allows custom methods to be added to
 // ArangoProfileNamespaceLister.
 type ArangoProfileNamespaceListerExpansion interface{}
+
+// ArangoSchedulerBatchJobListerExpansion allows custom methods to be added to
+// ArangoSchedulerBatchJobLister.
+type ArangoSchedulerBatchJobListerExpansion interface{}
+
+// ArangoSchedulerBatchJobNamespaceListerExpansion allows custom methods to be added to
+// ArangoSchedulerBatchJobNamespaceLister.
+type ArangoSchedulerBatchJobNamespaceListerExpansion interface{}
+
+// ArangoSchedulerCronJobListerExpansion allows custom methods to be added to
+// ArangoSchedulerCronJobLister.
+type ArangoSchedulerCronJobListerExpansion interface{}
+
+// ArangoSchedulerCronJobNamespaceListerExpansion allows custom methods to be added to
+// ArangoSchedulerCronJobNamespaceLister.
+type ArangoSchedulerCronJobNamespaceListerExpansion interface{}
+
+// ArangoSchedulerDeploymentListerExpansion allows custom methods to be added to
+// ArangoSchedulerDeploymentLister.
+type ArangoSchedulerDeploymentListerExpansion interface{}
+
+// ArangoSchedulerDeploymentNamespaceListerExpansion allows custom methods to be added to
+// ArangoSchedulerDeploymentNamespaceLister.
+type ArangoSchedulerDeploymentNamespaceListerExpansion interface{}
+
+// ArangoSchedulerPodListerExpansion allows custom methods to be added to
+// ArangoSchedulerPodLister.
+type ArangoSchedulerPodListerExpansion interface{}
+
+// ArangoSchedulerPodNamespaceListerExpansion allows custom methods to be added to
+// ArangoSchedulerPodNamespaceLister.
+type ArangoSchedulerPodNamespaceListerExpansion interface{}

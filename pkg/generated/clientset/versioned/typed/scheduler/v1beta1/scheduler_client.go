@@ -33,6 +33,10 @@ import (
 type SchedulerV1beta1Interface interface {
 	RESTClient() rest.Interface
 	ArangoProfilesGetter
+	ArangoSchedulerBatchJobsGetter
+	ArangoSchedulerCronJobsGetter
+	ArangoSchedulerDeploymentsGetter
+	ArangoSchedulerPodsGetter
 }
 
 // SchedulerV1beta1Client is used to interact with features provided by the scheduler.arangodb.com group.
@@ -42,6 +46,22 @@ type SchedulerV1beta1Client struct {
 
 func (c *SchedulerV1beta1Client) ArangoProfiles(namespace string) ArangoProfileInterface {
 	return newArangoProfiles(c, namespace)
+}
+
+func (c *SchedulerV1beta1Client) ArangoSchedulerBatchJobs(namespace string) ArangoSchedulerBatchJobInterface {
+	return newArangoSchedulerBatchJobs(c, namespace)
+}
+
+func (c *SchedulerV1beta1Client) ArangoSchedulerCronJobs(namespace string) ArangoSchedulerCronJobInterface {
+	return newArangoSchedulerCronJobs(c, namespace)
+}
+
+func (c *SchedulerV1beta1Client) ArangoSchedulerDeployments(namespace string) ArangoSchedulerDeploymentInterface {
+	return newArangoSchedulerDeployments(c, namespace)
+}
+
+func (c *SchedulerV1beta1Client) ArangoSchedulerPods(namespace string) ArangoSchedulerPodInterface {
+	return newArangoSchedulerPods(c, namespace)
 }
 
 // NewForConfig creates a new SchedulerV1beta1Client for the given config.

@@ -25,6 +25,7 @@ import (
 
 	"github.com/rs/zerolog"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
@@ -55,6 +56,11 @@ func NewItemFromString(itemString string) (Item, error) {
 	}
 
 	return NewItem(Operation(parts[0]), parts[1], parts[2], parts[3], parts[4], parts[5])
+}
+
+// NewItemFromGVKObject creates new item from Kubernetes Object
+func NewItemFromGVKObject(operation Operation, gvk schema.GroupVersionKind, object meta.Object) (Item, error) {
+	return NewItem(operation, gvk.Group, gvk.Version, gvk.Kind, object.GetNamespace(), object.GetName())
 }
 
 // NewItemFromObject creates new item from Kubernetes Object
@@ -90,6 +96,12 @@ type Item struct {
 
 	Namespace string
 	Name      string
+}
+
+func (i Item) GVK(gvk schema.GroupVersionKind) bool {
+	return i.Group == gvk.Group &&
+		i.Version == gvk.Version &&
+		i.Kind == gvk.Kind
 }
 
 func validateField(name, value string, allowEmpty bool) error {

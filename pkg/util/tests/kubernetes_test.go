@@ -68,6 +68,7 @@ func NewMetaObjectRun[T meta.Object](t *testing.T) {
 
 func Test_NewMetaObject(t *testing.T) {
 	NewMetaObjectRun[*batch.Job](t)
+	NewMetaObjectRun[*batch.CronJob](t)
 	NewMetaObjectRun[*core.Pod](t)
 	NewMetaObjectRun[*core.Secret](t)
 	NewMetaObjectRun[*core.ConfigMap](t)
@@ -75,6 +76,7 @@ func Test_NewMetaObject(t *testing.T) {
 	NewMetaObjectRun[*core.Service](t)
 	NewMetaObjectRun[*core.Endpoints](t)
 	NewMetaObjectRun[*apps.StatefulSet](t)
+	NewMetaObjectRun[*apps.Deployment](t)
 	NewMetaObjectRun[*rbac.Role](t)
 	NewMetaObjectRun[*rbac.RoleBinding](t)
 	NewMetaObjectRun[*rbac.ClusterRole](t)
@@ -89,6 +91,10 @@ func Test_NewMetaObject(t *testing.T) {
 	NewMetaObjectRun[*mlApiv1alpha1.ArangoMLBatchJob](t)
 	NewMetaObjectRun[*mlApiv1alpha1.ArangoMLCronJob](t)
 	NewMetaObjectRun[*schedulerApi.ArangoProfile](t)
+	NewMetaObjectRun[*schedulerApi.ArangoSchedulerPod](t)
+	NewMetaObjectRun[*schedulerApi.ArangoSchedulerDeployment](t)
+	NewMetaObjectRun[*schedulerApi.ArangoSchedulerBatchJob](t)
+	NewMetaObjectRun[*schedulerApi.ArangoSchedulerCronJob](t)
 	NewMetaObjectRun[*analyticsApi.GraphAnalyticsEngine](t)
 	NewMetaObjectRun[*networkingApi.ArangoRoute](t)
 }

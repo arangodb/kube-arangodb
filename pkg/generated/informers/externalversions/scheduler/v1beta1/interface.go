@@ -30,6 +30,14 @@ import (
 type Interface interface {
 	// ArangoProfiles returns a ArangoProfileInformer.
 	ArangoProfiles() ArangoProfileInformer
+	// ArangoSchedulerBatchJobs returns a ArangoSchedulerBatchJobInformer.
+	ArangoSchedulerBatchJobs() ArangoSchedulerBatchJobInformer
+	// ArangoSchedulerCronJobs returns a ArangoSchedulerCronJobInformer.
+	ArangoSchedulerCronJobs() ArangoSchedulerCronJobInformer
+	// ArangoSchedulerDeployments returns a ArangoSchedulerDeploymentInformer.
+	ArangoSchedulerDeployments() ArangoSchedulerDeploymentInformer
+	// ArangoSchedulerPods returns a ArangoSchedulerPodInformer.
+	ArangoSchedulerPods() ArangoSchedulerPodInformer
 }
 
 type version struct {
@@ -46,4 +54,24 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // ArangoProfiles returns a ArangoProfileInformer.
 func (v *version) ArangoProfiles() ArangoProfileInformer {
 	return &arangoProfileInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// ArangoSchedulerBatchJobs returns a ArangoSchedulerBatchJobInformer.
+func (v *version) ArangoSchedulerBatchJobs() ArangoSchedulerBatchJobInformer {
+	return &arangoSchedulerBatchJobInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// ArangoSchedulerCronJobs returns a ArangoSchedulerCronJobInformer.
+func (v *version) ArangoSchedulerCronJobs() ArangoSchedulerCronJobInformer {
+	return &arangoSchedulerCronJobInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// ArangoSchedulerDeployments returns a ArangoSchedulerDeploymentInformer.
+func (v *version) ArangoSchedulerDeployments() ArangoSchedulerDeploymentInformer {
+	return &arangoSchedulerDeploymentInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// ArangoSchedulerPods returns a ArangoSchedulerPodInformer.
+func (v *version) ArangoSchedulerPods() ArangoSchedulerPodInformer {
+	return &arangoSchedulerPodInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

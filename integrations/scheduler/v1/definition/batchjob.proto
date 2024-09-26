@@ -22,15 +22,20 @@ syntax = "proto3";
 
 package scheduler;
 
+import "integrations/scheduler/v1/definition/common.proto";
+
 option go_package = "github.com/arangodb/kube-arangodb/integrations/scheduler/v1/definition";
 
 // Keeps information about Kubernetes Batch/V1 Job
 message BatchJob {
+  // defines object status metadate
+  StatusMetadata metadata = 1;
+
   // Keeps BatchJob settings
-  BatchJobSpec spec = 1;
+  BatchJobSpec spec = 2;
 
   // Keeps current BatchJob Status
-  optional BatchJobStatus status = 2;
+  optional BatchJobStatus status = 3;
 }
 
 // Information about BatchJob run settings, like completions and parallelism

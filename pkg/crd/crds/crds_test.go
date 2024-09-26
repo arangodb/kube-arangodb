@@ -92,6 +92,10 @@ func Test_CRD(t *testing.T) {
 		{ml.ArangoMLCronJobCRDName, MLCronJobDefinitionWithOptions},
 		{ml.ArangoMLBatchJobCRDName, MLBatchJobDefinitionWithOptions},
 		{scheduler.ArangoProfileCRDName, SchedulerProfileDefinitionWithOptions},
+		{scheduler.PodCRDName, SchedulerPodDefinitionWithOptions},
+		{scheduler.DeploymentCRDName, SchedulerDeploymentDefinitionWithOptions},
+		{scheduler.BatchJobCRDName, SchedulerBatchJobDefinitionWithOptions},
+		{scheduler.CronJobCRDName, SchedulerCronJobDefinitionWithOptions},
 	}
 
 	for _, tc := range testCases {
@@ -143,6 +147,10 @@ func Test_CRDGetters(t *testing.T) {
 		ReplicationDeploymentReplicationWithOptions,
 		StorageLocalStorageWithOptions,
 		SchedulerProfileWithOptions,
+		SchedulerPodWithOptions,
+		SchedulerDeploymentWithOptions,
+		SchedulerBatchJobWithOptions,
+		SchedulerCronJobWithOptions,
 		AnalyticsGAEWithOptions,
 		NetworkingRouteWithOptions,
 	}

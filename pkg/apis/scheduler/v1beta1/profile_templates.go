@@ -55,19 +55,19 @@ func (p ProfileTemplates) Merge() *ProfileTemplate {
 func (p ProfileTemplates) RenderOnTemplate(pod *core.PodTemplateSpec) error {
 	t := p.Merge()
 
-	// Apply Pod Spec
+	// Apply  ArangoSchedulerPod Spec
 	if err := t.GetPod().Apply(pod); err != nil {
-		return errors.Wrapf(err, "Error while rendering Pod")
+		return errors.Wrapf(err, "Error while rendering  ArangoSchedulerPod")
 	}
 
 	// Apply Generic Containers Spec
 	if err := t.GetContainer().ApplyGeneric(pod); err != nil {
-		return errors.Wrapf(err, "Error while rendering Pod")
+		return errors.Wrapf(err, "Error while rendering  ArangoSchedulerPod")
 	}
 
 	// Apply Containers Spec
 	if err := t.GetContainer().ApplyContainers(pod); err != nil {
-		return errors.Wrapf(err, "Error while rendering Pod")
+		return errors.Wrapf(err, "Error while rendering  ArangoSchedulerPod")
 	}
 
 	return nil

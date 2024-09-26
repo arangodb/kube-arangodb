@@ -90,6 +90,7 @@ func NewIntegrationEnablement(integrations ...Integration) (*schedulerApi.Profil
 	}
 
 	return &schedulerApi.ProfileTemplate{
+		Priority: util.NewType(127),
 		Pod: &schedulerPodApi.Pod{
 			Volumes: &schedulerPodResourcesApi.Volumes{
 				Volumes: volumes,
@@ -186,6 +187,7 @@ func NewIntegration(image *schedulerContainerResourcesApi.Image, integration *sc
 	}
 
 	pt := schedulerApi.ProfileTemplate{
+		Priority: util.NewType(128),
 		Container: &schedulerApi.ProfileContainerTemplate{
 			All: &schedulerContainerApi.Generic{
 				Environments: &schedulerContainerResourcesApi.Environments{

@@ -21,68 +21,43 @@
 package scheduler
 
 import (
-	"math"
-
 	core "k8s.io/api/core/v1"
 
 	pbSchedulerV1 "github.com/arangodb/kube-arangodb/integrations/scheduler/v1/definition"
-	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
-	schedulerContainerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container"
-	schedulerContainerResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container/resources"
-	schedulerPodApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/pod"
-	schedulerPodResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/pod/resources"
-	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-func baseAsTemplate(in *pbSchedulerV1.Spec) *schedulerApi.ProfileTemplate {
-	containers := schedulerContainerApi.Containers{}
-
-	for n, c := range in.Containers {
+func SpecAsTemplate(in *pbSchedulerV1.Spec) *core.PodTemplateSpec {
+	var ret core.PodTemplateSpec
+	for _, c := range in.Containers {
 		if c == nil {
 			continue
 		}
 
-		var container schedulerContainerApi.Container
+		var container core.Container
 
 		if image := c.Image; image != nil {
-			container.Image = &schedulerContainerResourcesApi.Image{
-				Image: c.Image,
-			}
+			container.Image = *image
 		}
 
 		if len(c.Args) > 0 {
-			container.Core = &schedulerContainerResourcesApi.Core{
-				Args: c.Args,
-			}
+			container.Args = c.Args
 		}
 
-		if len(c.EnvironmentVariables) > 0 {
-			container.Environments = &schedulerContainerResourcesApi.Environments{}
-
-			for k, v := range c.EnvironmentVariables {
-				container.Env = append(container.Env, core.EnvVar{
-					Name:  k,
-					Value: v,
-				})
-			}
+		for k, v := range c.EnvironmentVariables {
+			container.Env = append(container.Env, core.EnvVar{
+				Name:  k,
+				Value: v,
+			})
 		}
 
-		containers[n] = container
+		ret.Spec.Containers = append(ret.Spec.Containers, container)
 	}
 
-	var t = schedulerApi.ProfileTemplate{
-		Priority: util.NewType(math.MaxInt),
-		Pod:      &schedulerPodApi.Pod{},
-		Container: &schedulerApi.ProfileContainerTemplate{
-			Containers: containers,
-		},
+	if base := in.Base; base != nil {
+		ret.ObjectMeta.Labels = base.Labels
 	}
 
-	if job := in.Job; job != nil {
-		t.Pod.Metadata = &schedulerPodResourcesApi.Metadata{
-			Labels: job.Labels,
-		}
-	}
+	ret.Spec.RestartPolicy = core.RestartPolicyNever
 
-	return &t
+	return &ret
 }

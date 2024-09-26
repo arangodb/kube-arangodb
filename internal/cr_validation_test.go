@@ -229,6 +229,42 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 				},
 			},
 		},
+		"scheduler-pod": {
+			fmt.Sprintf("%s/pkg/apis/scheduler/v1alpha1", root): {
+				"v1beta1": {
+					objects: map[string]interface{}{
+						"spec": schedulerApi.ArangoSchedulerPod{}.Spec,
+					},
+				},
+			},
+		},
+		"scheduler-deployment": {
+			fmt.Sprintf("%s/pkg/apis/scheduler/v1alpha1", root): {
+				"v1beta1": {
+					objects: map[string]interface{}{
+						"spec": schedulerApi.ArangoSchedulerDeployment{}.Spec,
+					},
+				},
+			},
+		},
+		"scheduler-batchjob": {
+			fmt.Sprintf("%s/pkg/apis/scheduler/v1alpha1", root): {
+				"v1beta1": {
+					objects: map[string]interface{}{
+						"spec": schedulerApi.ArangoSchedulerBatchJob{}.Spec,
+					},
+				},
+			},
+		},
+		"scheduler-cronjob": {
+			fmt.Sprintf("%s/pkg/apis/scheduler/v1alpha1", root): {
+				"v1beta1": {
+					objects: map[string]interface{}{
+						"spec": schedulerApi.ArangoSchedulerCronJob{}.Spec,
+					},
+				},
+			},
+		},
 		"ml-extension": {
 			fmt.Sprintf("%s/pkg/apis/ml/v1alpha1", root): {
 				"v1alpha1": {

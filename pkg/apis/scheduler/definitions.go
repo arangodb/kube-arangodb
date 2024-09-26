@@ -25,5 +25,21 @@ const (
 	ArangoProfileResourceKind   = "ArangoProfile"
 	ArangoProfileResourcePlural = "arangoprofiles"
 
+	PodCRDName        = PodResourcePlural + "." + ArangoSchedulerGroupName
+	PodResourceKind   = "ArangoSchedulerPod"
+	PodResourcePlural = "arangoschedulerpods"
+
+	DeploymentCRDName        = DeploymentResourcePlural + "." + ArangoSchedulerGroupName
+	DeploymentResourceKind   = "ArangoSchedulerDeployment"
+	DeploymentResourcePlural = "arangoschedulerdeployments"
+
+	BatchJobCRDName        = BatchJobResourcePlural + "." + ArangoSchedulerGroupName
+	BatchJobResourceKind   = "ArangoSchedulerBatchJob"
+	BatchJobResourcePlural = "arangoschedulerbatchjobs"
+
+	CronJobCRDName        = CronJobResourcePlural + "." + ArangoSchedulerGroupName
+	CronJobResourceKind   = "ArangoSchedulerCronJob"
+	CronJobResourcePlural = "arangoschedulercronjobs"
+
 	ArangoSchedulerGroupName = "scheduler.arangodb.com"
 )

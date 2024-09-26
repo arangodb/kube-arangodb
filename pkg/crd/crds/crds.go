@@ -87,6 +87,10 @@ func AllDefinitions() []Definition {
 
 		// Scheduler
 		SchedulerProfileDefinitionWithOptions(),
+		SchedulerPodDefinitionWithOptions(),
+		SchedulerDeploymentDefinitionWithOptions(),
+		SchedulerBatchJobDefinitionWithOptions(),
+		SchedulerCronJobDefinitionWithOptions(),
 
 		// Analytics
 		AnalyticsGAEDefinitionWithOptions(),

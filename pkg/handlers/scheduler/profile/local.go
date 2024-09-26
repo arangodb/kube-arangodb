@@ -21,9 +21,19 @@
 package profile
 
 import (
+	"k8s.io/apimachinery/pkg/runtime/schema"
+
 	"github.com/arangodb/kube-arangodb/pkg/apis/scheduler"
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 )
+
+func GVK() schema.GroupVersionKind {
+	return schema.GroupVersionKind{
+		Group:   Group(),
+		Version: Version(),
+		Kind:    Kind(),
+	}
+}
 
 func Kind() string {
 	return scheduler.ArangoProfileResourceKind
