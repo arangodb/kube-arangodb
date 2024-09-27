@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ package reconcile
 
 import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
@@ -62,7 +63,10 @@ func (r *Reconciler) createRotateOrUpgradeDecision(spec api.DeploymentSpec, stat
 	d := updateUpgradeDecisionMap{}
 
 	// Init phase
-	for _, m := range status.Members.AsList() {
+
+	upgradeOrder := util.BoolSwitch(features.UpgradeAlternativeOrder().Enabled(), alternativeUpgradeOrder, api.AllServerGroups)
+
+	for _, m := range status.Members.AsListInGroups(upgradeOrder...) {
 		d[m.Member.ID] = r.createRotateOrUpgradeDecisionMember(spec, status, context, m)
 	}
 

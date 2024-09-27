@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,6 +30,24 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
+
+func Test_EnsureGroupsContainsAll(t *testing.T) {
+	ensure := func(t *testing.T, groups ...api.ServerGroup) {
+		require.Equal(t, groups, util.UniqueList(groups))
+
+		for _, expected := range api.AllServerGroups {
+			t.Run(expected.AsRole(), func(t *testing.T) {
+				require.Contains(t, groups, expected)
+			})
+		}
+	}
+	t.Run("rotationByAnnotationOrder", func(t *testing.T) {
+		ensure(t, rotationByAnnotationOrder...)
+	})
+	t.Run("alternativeUpgradeOrder", func(t *testing.T) {
+		ensure(t, alternativeUpgradeOrder...)
+	})
+}
 
 func Test_RotateUpgrade_Condition(t *testing.T) {
 	type testCase struct {

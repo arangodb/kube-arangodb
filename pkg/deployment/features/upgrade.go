@@ -23,6 +23,7 @@ package features
 func init() {
 	registerFeature(upgradeVersionCheck)
 	registerFeature(upgradeVersionCheckV2)
+	registerFeature(upgradeAlternativeOrder)
 }
 
 var upgradeVersionCheck Feature = &feature{
@@ -39,6 +40,14 @@ var upgradeVersionCheckV2 Feature = &feature{
 	enabledByDefault:   false,
 }
 
+var upgradeAlternativeOrder Feature = &feature{
+	name:               "upgrade-alternative-order",
+	description:        "Changes order of the upgrade process - Coordinators are upgraded before DBServers",
+	enterpriseRequired: false,
+	enabledByDefault:   false,
+	hidden:             true,
+}
+
 func UpgradeVersionCheck() Feature {
 	return upgradeVersionCheck
 }
@@ -46,3 +55,5 @@ func UpgradeVersionCheck() Feature {
 func UpgradeVersionCheckV2() Feature {
 	return upgradeVersionCheckV2
 }
+
+func UpgradeAlternativeOrder() Feature { return upgradeAlternativeOrder }

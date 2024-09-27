@@ -51,6 +51,17 @@ var (
 		api.ServerGroupSyncWorkers,
 		api.ServerGroupGateways,
 	}
+
+	// alternativeUpgradeOrder contains execution order which enforce upgrade of Coordinators before DBServers
+	alternativeUpgradeOrder = []api.ServerGroup{
+		api.ServerGroupAgents,
+		api.ServerGroupSingle,
+		api.ServerGroupCoordinators,
+		api.ServerGroupDBServers,
+		api.ServerGroupSyncMasters,
+		api.ServerGroupSyncWorkers,
+		api.ServerGroupGateways,
+	}
 )
 
 // upgradeDecision is the result of an upgrade check.
