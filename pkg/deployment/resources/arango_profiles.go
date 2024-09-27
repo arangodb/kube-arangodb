@@ -81,6 +81,8 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 				return "", nil, err
 			}
 
+			key, v := constants.NewProfileIntegration(name, version)
+
 			return fullName, &schedulerApi.ArangoProfile{
 				ObjectMeta: meta.ObjectMeta{
 					Name:      fullName,
@@ -91,8 +93,8 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 				},
 				Spec: schedulerApi.ProfileSpec{
 					Selectors: matchArangoProfilesLabels(map[string]string{
-						constants.ProfilesDeployment:                                    deploymentName,
-						fmt.Sprintf("%s/%s", constants.ProfilesIntegrationPrefix, name): version,
+						constants.ProfilesDeployment: deploymentName,
+						key:                          v,
 					}),
 					Template: integration,
 				},
@@ -128,8 +130,9 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 				},
 			}, nil
 		},
-		gen("authz", "v0", sidecar.IntegrationAuthorizationV0{}),
-		gen("authn", "v1", sidecar.IntegrationAuthenticationV1{Spec: spec, DeploymentName: apiObject.GetName()}),
+		gen(constants.ProfilesIntegrationAuthz, constants.ProfilesIntegrationV0, sidecar.IntegrationAuthorizationV0{}),
+		gen(constants.ProfilesIntegrationAuthn, constants.ProfilesIntegrationV1, sidecar.IntegrationAuthenticationV1{Spec: spec, DeploymentName: apiObject.GetName()}),
+		gen(constants.ProfilesIntegrationSched, constants.ProfilesIntegrationV1, sidecar.IntegrationSchedulerV1{}),
 	); err != nil {
 		return err
 	} else if changed {

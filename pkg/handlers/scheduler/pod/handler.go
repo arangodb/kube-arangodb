@@ -109,6 +109,14 @@ func (h *handler) HandleObject(ctx context.Context, item operation.Item, extensi
 		return false, err
 	}
 
+	// Try to fetch status
+	if profileNames := util.FormatList(calculatedProfiles, func(a util.KV[string, schedulerApi.ProfileAcceptedTemplate]) string {
+		return a.K
+	}); !equality.Semantic.DeepEqual(status.Profiles, profileNames) {
+		status.Profiles = profileNames
+		return true, operator.Reconcile("Status Changed")
+	}
+
 	var podSpecTemplate core.PodTemplateSpec
 
 	podSpecTemplate.ObjectMeta = meta.ObjectMeta{
@@ -162,16 +170,6 @@ func (h *handler) HandleObject(ctx context.Context, item operation.Item, extensi
 			return true, operator.Reconcile("Pod Reference Removed")
 		}
 		return false, err
-	}
-
-	profileNames := util.FormatList(calculatedProfiles, func(a util.KV[string, schedulerApi.ProfileAcceptedTemplate]) string {
-		return a.K
-	})
-
-	// Try to fetch status
-	if !equality.Semantic.DeepEqual(status.Profiles, profileNames) {
-		status.Profiles = profileNames
-		return true, operator.Reconcile("Status Changed")
 	}
 
 	// Try to fetch status

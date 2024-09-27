@@ -20,7 +20,24 @@
 
 package constants
 
+import "fmt"
+
 const ProfileGroup = "profiles.arangodb.com"
 
 const ProfilesDeployment = ProfileGroup + "/deployment"
 const ProfilesIntegrationPrefix = "integration." + ProfileGroup
+
+const (
+	ProfilesIntegrationAuthn = "authn"
+	ProfilesIntegrationAuthz = "authz"
+	ProfilesIntegrationSched = "sched"
+)
+
+const (
+	ProfilesIntegrationV0 = "v0"
+	ProfilesIntegrationV1 = "v1"
+)
+
+func NewProfileIntegration(name, version string) (string, string) {
+	return fmt.Sprintf("%s/%s", ProfilesIntegrationPrefix, name), version
+}
