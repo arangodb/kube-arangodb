@@ -43,5 +43,25 @@ func scheduler(logger zerolog.Logger, files chan<- shared.File) error {
 		return err
 	}
 
+	if err := schedulerPods(logger, files, k); err != nil {
+		logger.Err(err).Msgf("Error while collecting arango scheduler extension")
+		return err
+	}
+
+	if err := schedulerDeployments(logger, files, k); err != nil {
+		logger.Err(err).Msgf("Error while collecting arango scheduler extension")
+		return err
+	}
+
+	if err := schedulerBatchJobs(logger, files, k); err != nil {
+		logger.Err(err).Msgf("Error while collecting arango scheduler extension")
+		return err
+	}
+
+	if err := schedulerCronJobs(logger, files, k); err != nil {
+		logger.Err(err).Msgf("Error while collecting arango scheduler extension")
+		return err
+	}
+
 	return nil
 }
