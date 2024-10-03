@@ -557,7 +557,8 @@ func (r *Reconciler) createUpgradeMemberPlan(member api.MemberStatus,
 }
 
 func withSecureWrap(member api.MemberStatus,
-	group api.ServerGroup, spec api.DeploymentSpec, rebootID *int, plan ...api.Action) api.Plan {
+	group api.ServerGroup, spec api.DeploymentSpec, rebootID *int,
+	plan ...api.Action) api.Plan {
 	image := member.Image
 	if image == nil {
 		return plan
