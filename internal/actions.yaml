@@ -33,6 +33,9 @@ actions:
     description: Run the ResignLeadership job on DBServer and checks data compatibility after
     timeout: 45m
     optional: true
+  EnsureSecuredResignLeadership:
+    description: Ensures that data is still replicated on other servers
+    timeout: 10m
   KillMemberPod:
     description: Execute Delete on Pod (put pod in Terminating state)
     scopes:

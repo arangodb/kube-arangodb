@@ -37,6 +37,7 @@
 - (Feature) (Scheduler) Additional types
 - (Feature) Alternative Upgrade Order Feature
 - (Feature) (Scheduler) SchedV1 Integration
+- (Feature) Require ResignLeadership during upgrade
 
 ## [1.2.42](https://github.com/arangodb/kube-arangodb/tree/1.2.42) (2024-07-23)
 - (Maintenance) Go 1.22.4 & Kubernetes 1.29.6 libraries

@@ -150,6 +150,7 @@ Flags:
       --deployment.feature.backup-cleanup                      Cleanup imported backups if required - Required ArangoDB 3.8.0 or higher
       --deployment.feature.deployment-spec-defaults-restore    Restore defaults from last accepted state of deployment - Required ArangoDB 3.8.0 or higher (default true)
       --deployment.feature.enforced-resign-leadership          Enforce ResignLeadership and ensure that Leaders are moved from restarted DBServer - Required ArangoDB 3.8.0 or higher (default true)
+      --deployment.feature.ensure-secured-resign-leadership    Ensures that even if ResignLeadership job timeouted, data is still replicated on other servers - Required ArangoDB 3.8.0 or higher (default true)
       --deployment.feature.ephemeral-volumes                   Enables ephemeral volumes for apps and tmp directory - Required ArangoDB 3.8.0 or higher
       --deployment.feature.failover-leadership                 Support for leadership in fail-over mode - Required ArangoDB 3.8.0 or higher
       --deployment.feature.init-containers-copy-resources      Copy resources spec to built-in init containers if they are not specified - Required ArangoDB 3.8.0 or higher (default true)

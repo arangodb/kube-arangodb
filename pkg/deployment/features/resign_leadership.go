@@ -22,6 +22,7 @@ package features
 
 func init() {
 	registerFeature(enforcedResignLeadership)
+	registerFeature(ensureSecuredResignLeadership)
 }
 
 var enforcedResignLeadership = &feature{
@@ -31,7 +32,19 @@ var enforcedResignLeadership = &feature{
 	enabledByDefault:   true,
 }
 
+var ensureSecuredResignLeadership = &feature{
+	name:               "ensure-secured-resign-leadership",
+	description:        "Ensures that even if ResignLeadership job timeouted, data is still replicated on other servers",
+	enterpriseRequired: false,
+	enabledByDefault:   true,
+}
+
 // EnforcedResignLeadership returns enforced ResignLeadership.
 func EnforcedResignLeadership() Feature {
 	return enforcedResignLeadership
+}
+
+// EnsureSecuredResignLeadership returns information if data is saved on other DBServers.
+func EnsureSecuredResignLeadership() Feature {
+	return ensureSecuredResignLeadership
 }
