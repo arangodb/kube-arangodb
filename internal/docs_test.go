@@ -21,15 +21,17 @@
 package internal
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"go/ast"
 	"go/token"
 	"io"
 	"os"
+	"os/exec"
 	"path"
-	"path/filepath"
 	"reflect"
+	"sort"
 	"strings"
 	"testing"
 
@@ -365,12 +367,60 @@ func Test_GenerateAPIDocs(t *testing.T) {
 	}
 }
 
-func prepareGitHubTreePath(t *testing.T, root string) string {
-	vStr, err := os.ReadFile(filepath.Join(root, "VERSION"))
-	require.NoError(t, err, "failed to read VERSION file")
-	opVersion, err := semver.NewVersion(string(vStr))
+func writeFrontMatter(t *testing.T, out io.Writer, keyVals map[string]string) {
+	fm := ""
+	util.IterateSorted(keyVals, func(key, val string) {
+		fm += fmt.Sprintf("%s: %s\n", key, val)
+	})
+
+	if fm != "" {
+		fm = "---\n" + fm + "---\n\n"
+	}
+
+	write(t, out, fm)
+}
+
+func extractVersion(t *testing.T, root string) *semver.Version {
+	cmd := exec.Command("git", "tag", "--list")
+	cmd.Dir = root
+
+	out, err := cmd.StdoutPipe()
 	require.NoError(t, err)
 
+	require.NoError(t, cmd.Start())
+
+	versions := semver.Versions{}
+
+	scanner := bufio.NewScanner(out)
+	// optionally, resize scanner's capacity for lines over 64K, see next example
+	for scanner.Scan() {
+		v := strings.TrimSpace(scanner.Text())
+		sm, err := semver.NewVersion(v)
+		if err != nil {
+			t.Logf("Unable to parse: %s", v)
+			continue
+		}
+
+		if v := sm.PreRelease.Slice(); len(v) > 0 && v[0] != "" {
+			continue
+		}
+
+		versions = append(versions, sm)
+	}
+
+	require.NoError(t, cmd.Wait())
+
+	sort.Sort(versions)
+
+	if len(versions) == 0 {
+		require.Fail(t, "Required at least one version")
+	}
+
+	return versions[len(versions)-1]
+}
+
+func prepareGitHubTreePath(t *testing.T, root string) string {
+	opVersion := extractVersion(t, root)
 	ref := fmt.Sprintf("%d.%d.%d", opVersion.Major, opVersion.Minor, opVersion.Patch)
 	return fmt.Sprintf("https://github.com/arangodb/kube-arangodb/blob/%s", ref)
 }
@@ -433,17 +483,4 @@ func generateDocs(t *testing.T, objects map[string]map[string]interface{}, field
 func write(t *testing.T, out io.Writer, format string, args ...interface{}) {
 	_, err := out.Write([]byte(fmt.Sprintf(format, args...)))
 	require.NoError(t, err)
-}
-
-func writeFrontMatter(t *testing.T, out io.Writer, keyVals map[string]string) {
-	fm := ""
-	util.IterateSorted(keyVals, func(key, val string) {
-		fm += fmt.Sprintf("%s: %s\n", key, val)
-	})
-
-	if fm != "" {
-		fm = "---\n" + fm + "---\n\n"
-	}
-
-	write(t, out, fm)
 }

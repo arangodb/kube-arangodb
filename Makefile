@@ -542,75 +542,100 @@ manifests-crd-kustomize: manifests-crd-file
 manifests: manifests-crd-kustomize
 
 $(eval $(call manifest-generator, deployment, kube-arangodb, \
-       --set "operator.features.deployment=true" \
-	   --set "operator.features.deploymentReplications=false" \
-	   --set "operator.features.storage=false" \
-	   --set "operator.features.apps=false" \
-	   --set "operator.features.ml=false" \
-	   --set "operator.features.k8sToK8sClusterSync=false" \
-	   --set "operator.features.backup=false"))
+		--set "operator.features.deployment=true" \
+		--set "operator.features.deploymentReplications=false" \
+		--set "operator.features.storage=false" \
+		--set "operator.features.backup=false" \
+		--set "operator.features.apps=false" \
+		--set "operator.features.k8sToK8sClusterSync=false" \
+		--set "operator.features.ml=false" \
+		--set "operator.features.analytics=false" \
+		--set "operator.features.networking=true" \
+		--set "operator.features.scheduler=true"))
 
 $(eval $(call manifest-generator, deployment-replication, kube-arangodb, \
-       --set "operator.features.deployment=false" \
-       --set "operator.features.deploymentReplications=true" \
-       --set "operator.features.storage=false" \
-       --set "operator.features.apps=false" \
-       --set "operator.features.k8sToK8sClusterSync=false" \
-       --set "operator.features.backup=false"))
+		--set "operator.features.deployment=false" \
+		--set "operator.features.deploymentReplications=true" \
+		--set "operator.features.storage=false" \
+		--set "operator.features.backup=false" \
+		--set "operator.features.apps=false" \
+		--set "operator.features.k8sToK8sClusterSync=false" \
+		--set "operator.features.ml=false" \
+		--set "operator.features.analytics=false" \
+		--set "operator.features.networking=false" \
+		--set "operator.features.scheduler=false"))
 
 $(eval $(call manifest-generator, storage, kube-arangodb, \
-       --set "operator.features.deployment=false" \
-       --set "operator.features.deploymentReplications=false" \
-       --set "operator.features.storage=true" \
-       --set "operator.features.apps=false" \
-	   --set "operator.features.ml=false" \
-       --set "operator.features.k8sToK8sClusterSync=false" \
-       --set "operator.features.backup=false"))
+		--set "operator.features.deployment=false" \
+		--set "operator.features.deploymentReplications=false" \
+		--set "operator.features.storage=true" \
+		--set "operator.features.backup=false" \
+		--set "operator.features.apps=false" \
+		--set "operator.features.k8sToK8sClusterSync=false" \
+		--set "operator.features.ml=false" \
+		--set "operator.features.analytics=false" \
+		--set "operator.features.networking=false" \
+		--set "operator.features.scheduler=false"))
 
 $(eval $(call manifest-generator, backup, kube-arangodb, \
-       --set "operator.features.deployment=false" \
-       --set "operator.features.deploymentReplications=false" \
-       --set "operator.features.storage=false" \
-       --set "operator.features.apps=false" \
-	   --set "operator.features.ml=false" \
-       --set "operator.features.k8sToK8sClusterSync=false" \
-       --set "operator.features.backup=true"))
+		--set "operator.features.deployment=false" \
+		--set "operator.features.deploymentReplications=false" \
+		--set "operator.features.storage=false" \
+		--set "operator.features.backup=true" \
+		--set "operator.features.apps=false" \
+		--set "operator.features.k8sToK8sClusterSync=false" \
+		--set "operator.features.ml=false" \
+		--set "operator.features.analytics=false" \
+		--set "operator.features.networking=false" \
+		--set "operator.features.scheduler=false"))
 
 $(eval $(call manifest-generator, apps, kube-arangodb, \
-       --set "operator.features.deployment=false" \
-       --set "operator.features.deploymentReplications=false" \
-       --set "operator.features.storage=false" \
-       --set "operator.features.apps=true" \
-	   --set "operator.features.ml=false" \
-       --set "operator.features.k8sToK8sClusterSync=false" \
-       --set "operator.features.backup=false"))
+		--set "operator.features.deployment=false" \
+		--set "operator.features.deploymentReplications=false" \
+		--set "operator.features.storage=false" \
+		--set "operator.features.backup=false" \
+		--set "operator.features.apps=true" \
+		--set "operator.features.k8sToK8sClusterSync=false" \
+		--set "operator.features.ml=false" \
+		--set "operator.features.analytics=false" \
+		--set "operator.features.networking=false" \
+		--set "operator.features.scheduler=false"))
 
 $(eval $(call manifest-generator, ml, kube-arangodb, \
-       --set "operator.features.deployment=false" \
-       --set "operator.features.deploymentReplications=false" \
-       --set "operator.features.storage=false" \
-       --set "operator.features.apps=false" \
-	   --set "operator.features.ml=true" \
-       --set "operator.features.k8sToK8sClusterSync=false" \
-       --set "operator.features.backup=false"))
+		--set "operator.features.deployment=false" \
+		--set "operator.features.deploymentReplications=false" \
+		--set "operator.features.storage=false" \
+		--set "operator.features.backup=false" \
+		--set "operator.features.apps=false" \
+		--set "operator.features.k8sToK8sClusterSync=false" \
+		--set "operator.features.ml=true" \
+		--set "operator.features.analytics=false" \
+		--set "operator.features.networking=false" \
+		--set "operator.features.scheduler=false"))
 
 $(eval $(call manifest-generator, k2kclustersync, kube-arangodb, \
-       --set "operator.features.deployment=false" \
-       --set "operator.features.deploymentReplications=false" \
-       --set "operator.features.storage=false" \
-       --set "operator.features.apps=false" \
-	   --set "operator.features.ml=false" \
-       --set "operator.features.k8sToK8sClusterSync=true" \
-       --set "operator.features.backup=false"))
+		--set "operator.features.deployment=false" \
+		--set "operator.features.deploymentReplications=false" \
+		--set "operator.features.storage=false" \
+		--set "operator.features.backup=false" \
+		--set "operator.features.apps=false" \
+		--set "operator.features.k8sToK8sClusterSync=true" \
+		--set "operator.features.ml=false" \
+		--set "operator.features.analytics=false" \
+		--set "operator.features.networking=false" \
+		--set "operator.features.scheduler=false"))
 
 $(eval $(call manifest-generator, all, kube-arangodb, \
-       --set "operator.features.deployment=true" \
-       --set "operator.features.deploymentReplications=true" \
-       --set "operator.features.storage=true" \
-       --set "operator.features.apps=true" \
-	   --set "operator.features.ml=true" \
-       --set "operator.features.k8sToK8sClusterSync=true" \
-       --set "operator.features.backup=true"))
+		--set "operator.features.deployment=true" \
+		--set "operator.features.deploymentReplications=true" \
+		--set "operator.features.storage=true" \
+		--set "operator.features.backup=true" \
+		--set "operator.features.apps=true" \
+		--set "operator.features.k8sToK8sClusterSync=true" \
+		--set "operator.features.ml=true" \
+		--set "operator.features.analytics=true" \
+		--set "operator.features.networking=true" \
+		--set "operator.features.scheduler=true"))
 
 .PHONY: chart-crd
 chart-crd: export CHART_NAME := kube-arangodb-crd

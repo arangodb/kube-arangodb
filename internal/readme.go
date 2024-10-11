@@ -331,9 +331,9 @@ func GenerateReadmePlatforms(root string) (string, error) {
 	pRemarks := md.NewColumn("Provider Remarks", md.ColumnLeftAlign)
 	t := md.NewTable(
 		platform,
+		state,
 		kVersion,
 		aVersion,
-		state,
 		remarks,
 		pRemarks,
 	)
@@ -350,9 +350,13 @@ func GenerateReadmePlatforms(root string) (string, error) {
 	}
 
 	for _, p := range d.Platforms {
-		for _, v := range p.Versions {
+		for id, v := range p.Versions {
+			n := ""
+			if id == 0 {
+				n = p.Name
+			}
 			if err := t.AddRow(map[md.Column]string{
-				platform: p.Name,
+				platform: n,
 				kVersion: util.TypeOrDefault[string](v.KubernetesVersion, ""),
 				aVersion: util.TypeOrDefault[string](v.ArangoDBVersion, ""),
 				state:    util.TypeOrDefault[string](v.State, ""),
