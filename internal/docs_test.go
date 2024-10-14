@@ -381,6 +381,39 @@ func writeFrontMatter(t *testing.T, out io.Writer, keyVals map[string]string) {
 }
 
 func extractVersion(t *testing.T, root string) *semver.Version {
+	if v := extractVersionFile(t, root); v != nil {
+		return v
+	} else {
+		t.Logf("Unable to get Version from file, fallback to git")
+	}
+
+	if v := extractVersionGit(t, root); v != nil {
+		return v
+	} else {
+		t.Logf("Unable to get Version from Git")
+	}
+
+	require.FailNow(t, "Unable to get version")
+
+	return nil
+}
+
+func extractVersionFile(t *testing.T, root string) *semver.Version {
+	data, err := os.ReadFile(path.Join(root, "VERSION"))
+	require.NoError(t, err)
+
+	v := strings.TrimSpace(string(data))
+	sm, err := semver.NewVersion(v)
+	require.NoError(t, err)
+
+	if v := sm.PreRelease.Slice(); len(v) > 0 && v[0] != "" {
+		return nil
+	}
+
+	return sm
+}
+
+func extractVersionGit(t *testing.T, root string) *semver.Version {
 	cmd := exec.Command("git", "tag", "--list")
 	cmd.Dir = root
 
@@ -410,11 +443,11 @@ func extractVersion(t *testing.T, root string) *semver.Version {
 
 	require.NoError(t, cmd.Wait())
 
-	sort.Sort(versions)
-
 	if len(versions) == 0 {
-		require.Fail(t, "Required at least one version")
+		return nil
 	}
+
+	sort.Sort(versions)
 
 	return versions[len(versions)-1]
 }
