@@ -38,6 +38,15 @@ func NewTypeOrNil[T interface{}](input *T) *T {
 	return NewType(*input)
 }
 
+// OptionalType returns the default value (or T default value)
+func OptionalType[T any](in *T, v T) T {
+	if in == nil {
+		return v
+	}
+
+	return *in
+}
+
 // TypeOrDefault returns the default value (or T default value) if input is nil, otherwise returns the referenced value.
 func TypeOrDefault[T interface{}](input *T, defaultValue ...T) T {
 	if input == nil {
@@ -154,4 +163,12 @@ func And(in ...bool) bool {
 	}
 
 	return len(in) > 0
+}
+
+type Mod[T any] func(in *T)
+
+func ApplyMods[T any](in *T, mods ...Mod[T]) {
+	for _, mod := range mods {
+		mod(in)
+	}
 }
