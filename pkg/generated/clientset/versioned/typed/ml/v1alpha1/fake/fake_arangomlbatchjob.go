@@ -45,22 +45,24 @@ var arangomlbatchjobsKind = v1alpha1.SchemeGroupVersion.WithKind("ArangoMLBatchJ
 
 // Get takes name of the arangoMLBatchJob, and returns the corresponding arangoMLBatchJob object, and an error if there is any.
 func (c *FakeArangoMLBatchJobs) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.ArangoMLBatchJob, err error) {
+	emptyResult := &v1alpha1.ArangoMLBatchJob{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(arangomlbatchjobsResource, c.ns, name), &v1alpha1.ArangoMLBatchJob{})
+		Invokes(testing.NewGetActionWithOptions(arangomlbatchjobsResource, c.ns, name, options), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ArangoMLBatchJob), err
 }
 
 // List takes label and field selectors, and returns the list of ArangoMLBatchJobs that match those selectors.
 func (c *FakeArangoMLBatchJobs) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.ArangoMLBatchJobList, err error) {
+	emptyResult := &v1alpha1.ArangoMLBatchJobList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(arangomlbatchjobsResource, arangomlbatchjobsKind, c.ns, opts), &v1alpha1.ArangoMLBatchJobList{})
+		Invokes(testing.NewListActionWithOptions(arangomlbatchjobsResource, arangomlbatchjobsKind, c.ns, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -79,40 +81,43 @@ func (c *FakeArangoMLBatchJobs) List(ctx context.Context, opts v1.ListOptions) (
 // Watch returns a watch.Interface that watches the requested arangoMLBatchJobs.
 func (c *FakeArangoMLBatchJobs) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(arangomlbatchjobsResource, c.ns, opts))
+		InvokesWatch(testing.NewWatchActionWithOptions(arangomlbatchjobsResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a arangoMLBatchJob and creates it.  Returns the server's representation of the arangoMLBatchJob, and an error, if there is any.
 func (c *FakeArangoMLBatchJobs) Create(ctx context.Context, arangoMLBatchJob *v1alpha1.ArangoMLBatchJob, opts v1.CreateOptions) (result *v1alpha1.ArangoMLBatchJob, err error) {
+	emptyResult := &v1alpha1.ArangoMLBatchJob{}
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(arangomlbatchjobsResource, c.ns, arangoMLBatchJob), &v1alpha1.ArangoMLBatchJob{})
+		Invokes(testing.NewCreateActionWithOptions(arangomlbatchjobsResource, c.ns, arangoMLBatchJob, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ArangoMLBatchJob), err
 }
 
 // Update takes the representation of a arangoMLBatchJob and updates it. Returns the server's representation of the arangoMLBatchJob, and an error, if there is any.
 func (c *FakeArangoMLBatchJobs) Update(ctx context.Context, arangoMLBatchJob *v1alpha1.ArangoMLBatchJob, opts v1.UpdateOptions) (result *v1alpha1.ArangoMLBatchJob, err error) {
+	emptyResult := &v1alpha1.ArangoMLBatchJob{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(arangomlbatchjobsResource, c.ns, arangoMLBatchJob), &v1alpha1.ArangoMLBatchJob{})
+		Invokes(testing.NewUpdateActionWithOptions(arangomlbatchjobsResource, c.ns, arangoMLBatchJob, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ArangoMLBatchJob), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeArangoMLBatchJobs) UpdateStatus(ctx context.Context, arangoMLBatchJob *v1alpha1.ArangoMLBatchJob, opts v1.UpdateOptions) (*v1alpha1.ArangoMLBatchJob, error) {
+func (c *FakeArangoMLBatchJobs) UpdateStatus(ctx context.Context, arangoMLBatchJob *v1alpha1.ArangoMLBatchJob, opts v1.UpdateOptions) (result *v1alpha1.ArangoMLBatchJob, err error) {
+	emptyResult := &v1alpha1.ArangoMLBatchJob{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(arangomlbatchjobsResource, "status", c.ns, arangoMLBatchJob), &v1alpha1.ArangoMLBatchJob{})
+		Invokes(testing.NewUpdateSubresourceActionWithOptions(arangomlbatchjobsResource, "status", c.ns, arangoMLBatchJob, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ArangoMLBatchJob), err
 }
@@ -127,7 +132,7 @@ func (c *FakeArangoMLBatchJobs) Delete(ctx context.Context, name string, opts v1
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeArangoMLBatchJobs) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(arangomlbatchjobsResource, c.ns, listOpts)
+	action := testing.NewDeleteCollectionActionWithOptions(arangomlbatchjobsResource, c.ns, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.ArangoMLBatchJobList{})
 	return err
@@ -135,11 +140,12 @@ func (c *FakeArangoMLBatchJobs) DeleteCollection(ctx context.Context, opts v1.De
 
 // Patch applies the patch and returns the patched arangoMLBatchJob.
 func (c *FakeArangoMLBatchJobs) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.ArangoMLBatchJob, err error) {
+	emptyResult := &v1alpha1.ArangoMLBatchJob{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(arangomlbatchjobsResource, c.ns, name, pt, data, subresources...), &v1alpha1.ArangoMLBatchJob{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(arangomlbatchjobsResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ArangoMLBatchJob), err
 }

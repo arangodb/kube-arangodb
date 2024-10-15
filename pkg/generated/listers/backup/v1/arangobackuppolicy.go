@@ -24,8 +24,8 @@ package v1
 
 import (
 	v1 "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -42,25 +42,17 @@ type ArangoBackupPolicyLister interface {
 
 // arangoBackupPolicyLister implements the ArangoBackupPolicyLister interface.
 type arangoBackupPolicyLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v1.ArangoBackupPolicy]
 }
 
 // NewArangoBackupPolicyLister returns a new ArangoBackupPolicyLister.
 func NewArangoBackupPolicyLister(indexer cache.Indexer) ArangoBackupPolicyLister {
-	return &arangoBackupPolicyLister{indexer: indexer}
-}
-
-// List lists all ArangoBackupPolicies in the indexer.
-func (s *arangoBackupPolicyLister) List(selector labels.Selector) (ret []*v1.ArangoBackupPolicy, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1.ArangoBackupPolicy))
-	})
-	return ret, err
+	return &arangoBackupPolicyLister{listers.New[*v1.ArangoBackupPolicy](indexer, v1.Resource("arangobackuppolicy"))}
 }
 
 // ArangoBackupPolicies returns an object that can list and get ArangoBackupPolicies.
 func (s *arangoBackupPolicyLister) ArangoBackupPolicies(namespace string) ArangoBackupPolicyNamespaceLister {
-	return arangoBackupPolicyNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return arangoBackupPolicyNamespaceLister{listers.NewNamespaced[*v1.ArangoBackupPolicy](s.ResourceIndexer, namespace)}
 }
 
 // ArangoBackupPolicyNamespaceLister helps list and get ArangoBackupPolicies.
@@ -78,26 +70,5 @@ type ArangoBackupPolicyNamespaceLister interface {
 // arangoBackupPolicyNamespaceLister implements the ArangoBackupPolicyNamespaceLister
 // interface.
 type arangoBackupPolicyNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all ArangoBackupPolicies in the indexer for a given namespace.
-func (s arangoBackupPolicyNamespaceLister) List(selector labels.Selector) (ret []*v1.ArangoBackupPolicy, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1.ArangoBackupPolicy))
-	})
-	return ret, err
-}
-
-// Get retrieves the ArangoBackupPolicy from the indexer for a given namespace and name.
-func (s arangoBackupPolicyNamespaceLister) Get(name string) (*v1.ArangoBackupPolicy, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1.Resource("arangobackuppolicy"), name)
-	}
-	return obj.(*v1.ArangoBackupPolicy), nil
+	listers.ResourceIndexer[*v1.ArangoBackupPolicy]
 }

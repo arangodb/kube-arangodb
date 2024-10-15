@@ -45,22 +45,24 @@ var arangoschedulerdeploymentsKind = v1beta1.SchemeGroupVersion.WithKind("Arango
 
 // Get takes name of the arangoSchedulerDeployment, and returns the corresponding arangoSchedulerDeployment object, and an error if there is any.
 func (c *FakeArangoSchedulerDeployments) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1beta1.ArangoSchedulerDeployment, err error) {
+	emptyResult := &v1beta1.ArangoSchedulerDeployment{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(arangoschedulerdeploymentsResource, c.ns, name), &v1beta1.ArangoSchedulerDeployment{})
+		Invokes(testing.NewGetActionWithOptions(arangoschedulerdeploymentsResource, c.ns, name, options), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta1.ArangoSchedulerDeployment), err
 }
 
 // List takes label and field selectors, and returns the list of ArangoSchedulerDeployments that match those selectors.
 func (c *FakeArangoSchedulerDeployments) List(ctx context.Context, opts v1.ListOptions) (result *v1beta1.ArangoSchedulerDeploymentList, err error) {
+	emptyResult := &v1beta1.ArangoSchedulerDeploymentList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(arangoschedulerdeploymentsResource, arangoschedulerdeploymentsKind, c.ns, opts), &v1beta1.ArangoSchedulerDeploymentList{})
+		Invokes(testing.NewListActionWithOptions(arangoschedulerdeploymentsResource, arangoschedulerdeploymentsKind, c.ns, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -79,40 +81,43 @@ func (c *FakeArangoSchedulerDeployments) List(ctx context.Context, opts v1.ListO
 // Watch returns a watch.Interface that watches the requested arangoSchedulerDeployments.
 func (c *FakeArangoSchedulerDeployments) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(arangoschedulerdeploymentsResource, c.ns, opts))
+		InvokesWatch(testing.NewWatchActionWithOptions(arangoschedulerdeploymentsResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a arangoSchedulerDeployment and creates it.  Returns the server's representation of the arangoSchedulerDeployment, and an error, if there is any.
 func (c *FakeArangoSchedulerDeployments) Create(ctx context.Context, arangoSchedulerDeployment *v1beta1.ArangoSchedulerDeployment, opts v1.CreateOptions) (result *v1beta1.ArangoSchedulerDeployment, err error) {
+	emptyResult := &v1beta1.ArangoSchedulerDeployment{}
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(arangoschedulerdeploymentsResource, c.ns, arangoSchedulerDeployment), &v1beta1.ArangoSchedulerDeployment{})
+		Invokes(testing.NewCreateActionWithOptions(arangoschedulerdeploymentsResource, c.ns, arangoSchedulerDeployment, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta1.ArangoSchedulerDeployment), err
 }
 
 // Update takes the representation of a arangoSchedulerDeployment and updates it. Returns the server's representation of the arangoSchedulerDeployment, and an error, if there is any.
 func (c *FakeArangoSchedulerDeployments) Update(ctx context.Context, arangoSchedulerDeployment *v1beta1.ArangoSchedulerDeployment, opts v1.UpdateOptions) (result *v1beta1.ArangoSchedulerDeployment, err error) {
+	emptyResult := &v1beta1.ArangoSchedulerDeployment{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(arangoschedulerdeploymentsResource, c.ns, arangoSchedulerDeployment), &v1beta1.ArangoSchedulerDeployment{})
+		Invokes(testing.NewUpdateActionWithOptions(arangoschedulerdeploymentsResource, c.ns, arangoSchedulerDeployment, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta1.ArangoSchedulerDeployment), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeArangoSchedulerDeployments) UpdateStatus(ctx context.Context, arangoSchedulerDeployment *v1beta1.ArangoSchedulerDeployment, opts v1.UpdateOptions) (*v1beta1.ArangoSchedulerDeployment, error) {
+func (c *FakeArangoSchedulerDeployments) UpdateStatus(ctx context.Context, arangoSchedulerDeployment *v1beta1.ArangoSchedulerDeployment, opts v1.UpdateOptions) (result *v1beta1.ArangoSchedulerDeployment, err error) {
+	emptyResult := &v1beta1.ArangoSchedulerDeployment{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(arangoschedulerdeploymentsResource, "status", c.ns, arangoSchedulerDeployment), &v1beta1.ArangoSchedulerDeployment{})
+		Invokes(testing.NewUpdateSubresourceActionWithOptions(arangoschedulerdeploymentsResource, "status", c.ns, arangoSchedulerDeployment, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta1.ArangoSchedulerDeployment), err
 }
@@ -127,7 +132,7 @@ func (c *FakeArangoSchedulerDeployments) Delete(ctx context.Context, name string
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeArangoSchedulerDeployments) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(arangoschedulerdeploymentsResource, c.ns, listOpts)
+	action := testing.NewDeleteCollectionActionWithOptions(arangoschedulerdeploymentsResource, c.ns, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1beta1.ArangoSchedulerDeploymentList{})
 	return err
@@ -135,11 +140,12 @@ func (c *FakeArangoSchedulerDeployments) DeleteCollection(ctx context.Context, o
 
 // Patch applies the patch and returns the patched arangoSchedulerDeployment.
 func (c *FakeArangoSchedulerDeployments) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1beta1.ArangoSchedulerDeployment, err error) {
+	emptyResult := &v1beta1.ArangoSchedulerDeployment{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(arangoschedulerdeploymentsResource, c.ns, name, pt, data, subresources...), &v1beta1.ArangoSchedulerDeployment{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(arangoschedulerdeploymentsResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta1.ArangoSchedulerDeployment), err
 }

@@ -45,22 +45,24 @@ var arangotasksKind = v2alpha1.SchemeGroupVersion.WithKind("ArangoTask")
 
 // Get takes name of the arangoTask, and returns the corresponding arangoTask object, and an error if there is any.
 func (c *FakeArangoTasks) Get(ctx context.Context, name string, options v1.GetOptions) (result *v2alpha1.ArangoTask, err error) {
+	emptyResult := &v2alpha1.ArangoTask{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(arangotasksResource, c.ns, name), &v2alpha1.ArangoTask{})
+		Invokes(testing.NewGetActionWithOptions(arangotasksResource, c.ns, name, options), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v2alpha1.ArangoTask), err
 }
 
 // List takes label and field selectors, and returns the list of ArangoTasks that match those selectors.
 func (c *FakeArangoTasks) List(ctx context.Context, opts v1.ListOptions) (result *v2alpha1.ArangoTaskList, err error) {
+	emptyResult := &v2alpha1.ArangoTaskList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(arangotasksResource, arangotasksKind, c.ns, opts), &v2alpha1.ArangoTaskList{})
+		Invokes(testing.NewListActionWithOptions(arangotasksResource, arangotasksKind, c.ns, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -79,40 +81,43 @@ func (c *FakeArangoTasks) List(ctx context.Context, opts v1.ListOptions) (result
 // Watch returns a watch.Interface that watches the requested arangoTasks.
 func (c *FakeArangoTasks) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(arangotasksResource, c.ns, opts))
+		InvokesWatch(testing.NewWatchActionWithOptions(arangotasksResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a arangoTask and creates it.  Returns the server's representation of the arangoTask, and an error, if there is any.
 func (c *FakeArangoTasks) Create(ctx context.Context, arangoTask *v2alpha1.ArangoTask, opts v1.CreateOptions) (result *v2alpha1.ArangoTask, err error) {
+	emptyResult := &v2alpha1.ArangoTask{}
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(arangotasksResource, c.ns, arangoTask), &v2alpha1.ArangoTask{})
+		Invokes(testing.NewCreateActionWithOptions(arangotasksResource, c.ns, arangoTask, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v2alpha1.ArangoTask), err
 }
 
 // Update takes the representation of a arangoTask and updates it. Returns the server's representation of the arangoTask, and an error, if there is any.
 func (c *FakeArangoTasks) Update(ctx context.Context, arangoTask *v2alpha1.ArangoTask, opts v1.UpdateOptions) (result *v2alpha1.ArangoTask, err error) {
+	emptyResult := &v2alpha1.ArangoTask{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(arangotasksResource, c.ns, arangoTask), &v2alpha1.ArangoTask{})
+		Invokes(testing.NewUpdateActionWithOptions(arangotasksResource, c.ns, arangoTask, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v2alpha1.ArangoTask), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeArangoTasks) UpdateStatus(ctx context.Context, arangoTask *v2alpha1.ArangoTask, opts v1.UpdateOptions) (*v2alpha1.ArangoTask, error) {
+func (c *FakeArangoTasks) UpdateStatus(ctx context.Context, arangoTask *v2alpha1.ArangoTask, opts v1.UpdateOptions) (result *v2alpha1.ArangoTask, err error) {
+	emptyResult := &v2alpha1.ArangoTask{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(arangotasksResource, "status", c.ns, arangoTask), &v2alpha1.ArangoTask{})
+		Invokes(testing.NewUpdateSubresourceActionWithOptions(arangotasksResource, "status", c.ns, arangoTask, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v2alpha1.ArangoTask), err
 }
@@ -127,7 +132,7 @@ func (c *FakeArangoTasks) Delete(ctx context.Context, name string, opts v1.Delet
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeArangoTasks) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(arangotasksResource, c.ns, listOpts)
+	action := testing.NewDeleteCollectionActionWithOptions(arangotasksResource, c.ns, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v2alpha1.ArangoTaskList{})
 	return err
@@ -135,11 +140,12 @@ func (c *FakeArangoTasks) DeleteCollection(ctx context.Context, opts v1.DeleteOp
 
 // Patch applies the patch and returns the patched arangoTask.
 func (c *FakeArangoTasks) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v2alpha1.ArangoTask, err error) {
+	emptyResult := &v2alpha1.ArangoTask{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(arangotasksResource, c.ns, name, pt, data, subresources...), &v2alpha1.ArangoTask{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(arangotasksResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v2alpha1.ArangoTask), err
 }

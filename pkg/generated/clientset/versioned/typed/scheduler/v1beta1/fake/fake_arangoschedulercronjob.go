@@ -45,22 +45,24 @@ var arangoschedulercronjobsKind = v1beta1.SchemeGroupVersion.WithKind("ArangoSch
 
 // Get takes name of the arangoSchedulerCronJob, and returns the corresponding arangoSchedulerCronJob object, and an error if there is any.
 func (c *FakeArangoSchedulerCronJobs) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1beta1.ArangoSchedulerCronJob, err error) {
+	emptyResult := &v1beta1.ArangoSchedulerCronJob{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(arangoschedulercronjobsResource, c.ns, name), &v1beta1.ArangoSchedulerCronJob{})
+		Invokes(testing.NewGetActionWithOptions(arangoschedulercronjobsResource, c.ns, name, options), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta1.ArangoSchedulerCronJob), err
 }
 
 // List takes label and field selectors, and returns the list of ArangoSchedulerCronJobs that match those selectors.
 func (c *FakeArangoSchedulerCronJobs) List(ctx context.Context, opts v1.ListOptions) (result *v1beta1.ArangoSchedulerCronJobList, err error) {
+	emptyResult := &v1beta1.ArangoSchedulerCronJobList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(arangoschedulercronjobsResource, arangoschedulercronjobsKind, c.ns, opts), &v1beta1.ArangoSchedulerCronJobList{})
+		Invokes(testing.NewListActionWithOptions(arangoschedulercronjobsResource, arangoschedulercronjobsKind, c.ns, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -79,40 +81,43 @@ func (c *FakeArangoSchedulerCronJobs) List(ctx context.Context, opts v1.ListOpti
 // Watch returns a watch.Interface that watches the requested arangoSchedulerCronJobs.
 func (c *FakeArangoSchedulerCronJobs) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(arangoschedulercronjobsResource, c.ns, opts))
+		InvokesWatch(testing.NewWatchActionWithOptions(arangoschedulercronjobsResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a arangoSchedulerCronJob and creates it.  Returns the server's representation of the arangoSchedulerCronJob, and an error, if there is any.
 func (c *FakeArangoSchedulerCronJobs) Create(ctx context.Context, arangoSchedulerCronJob *v1beta1.ArangoSchedulerCronJob, opts v1.CreateOptions) (result *v1beta1.ArangoSchedulerCronJob, err error) {
+	emptyResult := &v1beta1.ArangoSchedulerCronJob{}
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(arangoschedulercronjobsResource, c.ns, arangoSchedulerCronJob), &v1beta1.ArangoSchedulerCronJob{})
+		Invokes(testing.NewCreateActionWithOptions(arangoschedulercronjobsResource, c.ns, arangoSchedulerCronJob, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta1.ArangoSchedulerCronJob), err
 }
 
 // Update takes the representation of a arangoSchedulerCronJob and updates it. Returns the server's representation of the arangoSchedulerCronJob, and an error, if there is any.
 func (c *FakeArangoSchedulerCronJobs) Update(ctx context.Context, arangoSchedulerCronJob *v1beta1.ArangoSchedulerCronJob, opts v1.UpdateOptions) (result *v1beta1.ArangoSchedulerCronJob, err error) {
+	emptyResult := &v1beta1.ArangoSchedulerCronJob{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(arangoschedulercronjobsResource, c.ns, arangoSchedulerCronJob), &v1beta1.ArangoSchedulerCronJob{})
+		Invokes(testing.NewUpdateActionWithOptions(arangoschedulercronjobsResource, c.ns, arangoSchedulerCronJob, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta1.ArangoSchedulerCronJob), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeArangoSchedulerCronJobs) UpdateStatus(ctx context.Context, arangoSchedulerCronJob *v1beta1.ArangoSchedulerCronJob, opts v1.UpdateOptions) (*v1beta1.ArangoSchedulerCronJob, error) {
+func (c *FakeArangoSchedulerCronJobs) UpdateStatus(ctx context.Context, arangoSchedulerCronJob *v1beta1.ArangoSchedulerCronJob, opts v1.UpdateOptions) (result *v1beta1.ArangoSchedulerCronJob, err error) {
+	emptyResult := &v1beta1.ArangoSchedulerCronJob{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(arangoschedulercronjobsResource, "status", c.ns, arangoSchedulerCronJob), &v1beta1.ArangoSchedulerCronJob{})
+		Invokes(testing.NewUpdateSubresourceActionWithOptions(arangoschedulercronjobsResource, "status", c.ns, arangoSchedulerCronJob, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta1.ArangoSchedulerCronJob), err
 }
@@ -127,7 +132,7 @@ func (c *FakeArangoSchedulerCronJobs) Delete(ctx context.Context, name string, o
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeArangoSchedulerCronJobs) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(arangoschedulercronjobsResource, c.ns, listOpts)
+	action := testing.NewDeleteCollectionActionWithOptions(arangoschedulercronjobsResource, c.ns, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1beta1.ArangoSchedulerCronJobList{})
 	return err
@@ -135,11 +140,12 @@ func (c *FakeArangoSchedulerCronJobs) DeleteCollection(ctx context.Context, opts
 
 // Patch applies the patch and returns the patched arangoSchedulerCronJob.
 func (c *FakeArangoSchedulerCronJobs) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1beta1.ArangoSchedulerCronJob, err error) {
+	emptyResult := &v1beta1.ArangoSchedulerCronJob{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(arangoschedulercronjobsResource, c.ns, name, pt, data, subresources...), &v1beta1.ArangoSchedulerCronJob{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(arangoschedulercronjobsResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta1.ArangoSchedulerCronJob), err
 }

@@ -45,22 +45,24 @@ var arangojobsKind = v1.SchemeGroupVersion.WithKind("ArangoJob")
 
 // Get takes name of the arangoJob, and returns the corresponding arangoJob object, and an error if there is any.
 func (c *FakeArangoJobs) Get(ctx context.Context, name string, options metav1.GetOptions) (result *v1.ArangoJob, err error) {
+	emptyResult := &v1.ArangoJob{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(arangojobsResource, c.ns, name), &v1.ArangoJob{})
+		Invokes(testing.NewGetActionWithOptions(arangojobsResource, c.ns, name, options), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.ArangoJob), err
 }
 
 // List takes label and field selectors, and returns the list of ArangoJobs that match those selectors.
 func (c *FakeArangoJobs) List(ctx context.Context, opts metav1.ListOptions) (result *v1.ArangoJobList, err error) {
+	emptyResult := &v1.ArangoJobList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(arangojobsResource, arangojobsKind, c.ns, opts), &v1.ArangoJobList{})
+		Invokes(testing.NewListActionWithOptions(arangojobsResource, arangojobsKind, c.ns, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -79,40 +81,43 @@ func (c *FakeArangoJobs) List(ctx context.Context, opts metav1.ListOptions) (res
 // Watch returns a watch.Interface that watches the requested arangoJobs.
 func (c *FakeArangoJobs) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(arangojobsResource, c.ns, opts))
+		InvokesWatch(testing.NewWatchActionWithOptions(arangojobsResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a arangoJob and creates it.  Returns the server's representation of the arangoJob, and an error, if there is any.
 func (c *FakeArangoJobs) Create(ctx context.Context, arangoJob *v1.ArangoJob, opts metav1.CreateOptions) (result *v1.ArangoJob, err error) {
+	emptyResult := &v1.ArangoJob{}
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(arangojobsResource, c.ns, arangoJob), &v1.ArangoJob{})
+		Invokes(testing.NewCreateActionWithOptions(arangojobsResource, c.ns, arangoJob, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.ArangoJob), err
 }
 
 // Update takes the representation of a arangoJob and updates it. Returns the server's representation of the arangoJob, and an error, if there is any.
 func (c *FakeArangoJobs) Update(ctx context.Context, arangoJob *v1.ArangoJob, opts metav1.UpdateOptions) (result *v1.ArangoJob, err error) {
+	emptyResult := &v1.ArangoJob{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(arangojobsResource, c.ns, arangoJob), &v1.ArangoJob{})
+		Invokes(testing.NewUpdateActionWithOptions(arangojobsResource, c.ns, arangoJob, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.ArangoJob), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeArangoJobs) UpdateStatus(ctx context.Context, arangoJob *v1.ArangoJob, opts metav1.UpdateOptions) (*v1.ArangoJob, error) {
+func (c *FakeArangoJobs) UpdateStatus(ctx context.Context, arangoJob *v1.ArangoJob, opts metav1.UpdateOptions) (result *v1.ArangoJob, err error) {
+	emptyResult := &v1.ArangoJob{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(arangojobsResource, "status", c.ns, arangoJob), &v1.ArangoJob{})
+		Invokes(testing.NewUpdateSubresourceActionWithOptions(arangojobsResource, "status", c.ns, arangoJob, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.ArangoJob), err
 }
@@ -127,7 +132,7 @@ func (c *FakeArangoJobs) Delete(ctx context.Context, name string, opts metav1.De
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeArangoJobs) DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(arangojobsResource, c.ns, listOpts)
+	action := testing.NewDeleteCollectionActionWithOptions(arangojobsResource, c.ns, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1.ArangoJobList{})
 	return err
@@ -135,11 +140,12 @@ func (c *FakeArangoJobs) DeleteCollection(ctx context.Context, opts metav1.Delet
 
 // Patch applies the patch and returns the patched arangoJob.
 func (c *FakeArangoJobs) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.ArangoJob, err error) {
+	emptyResult := &v1.ArangoJob{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(arangojobsResource, c.ns, name, pt, data, subresources...), &v1.ArangoJob{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(arangojobsResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.ArangoJob), err
 }

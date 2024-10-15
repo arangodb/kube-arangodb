@@ -24,8 +24,8 @@ package v1beta1
 
 import (
 	v1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -42,25 +42,17 @@ type ArangoMLStorageLister interface {
 
 // arangoMLStorageLister implements the ArangoMLStorageLister interface.
 type arangoMLStorageLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v1beta1.ArangoMLStorage]
 }
 
 // NewArangoMLStorageLister returns a new ArangoMLStorageLister.
 func NewArangoMLStorageLister(indexer cache.Indexer) ArangoMLStorageLister {
-	return &arangoMLStorageLister{indexer: indexer}
-}
-
-// List lists all ArangoMLStorages in the indexer.
-func (s *arangoMLStorageLister) List(selector labels.Selector) (ret []*v1beta1.ArangoMLStorage, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1beta1.ArangoMLStorage))
-	})
-	return ret, err
+	return &arangoMLStorageLister{listers.New[*v1beta1.ArangoMLStorage](indexer, v1beta1.Resource("arangomlstorage"))}
 }
 
 // ArangoMLStorages returns an object that can list and get ArangoMLStorages.
 func (s *arangoMLStorageLister) ArangoMLStorages(namespace string) ArangoMLStorageNamespaceLister {
-	return arangoMLStorageNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return arangoMLStorageNamespaceLister{listers.NewNamespaced[*v1beta1.ArangoMLStorage](s.ResourceIndexer, namespace)}
 }
 
 // ArangoMLStorageNamespaceLister helps list and get ArangoMLStorages.
@@ -78,26 +70,5 @@ type ArangoMLStorageNamespaceLister interface {
 // arangoMLStorageNamespaceLister implements the ArangoMLStorageNamespaceLister
 // interface.
 type arangoMLStorageNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all ArangoMLStorages in the indexer for a given namespace.
-func (s arangoMLStorageNamespaceLister) List(selector labels.Selector) (ret []*v1beta1.ArangoMLStorage, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1beta1.ArangoMLStorage))
-	})
-	return ret, err
-}
-
-// Get retrieves the ArangoMLStorage from the indexer for a given namespace and name.
-func (s arangoMLStorageNamespaceLister) Get(name string) (*v1beta1.ArangoMLStorage, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1beta1.Resource("arangomlstorage"), name)
-	}
-	return obj.(*v1beta1.ArangoMLStorage), nil
+	listers.ResourceIndexer[*v1beta1.ArangoMLStorage]
 }

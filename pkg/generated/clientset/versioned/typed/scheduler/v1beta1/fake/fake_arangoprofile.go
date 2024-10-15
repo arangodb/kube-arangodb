@@ -45,22 +45,24 @@ var arangoprofilesKind = v1beta1.SchemeGroupVersion.WithKind("ArangoProfile")
 
 // Get takes name of the arangoProfile, and returns the corresponding arangoProfile object, and an error if there is any.
 func (c *FakeArangoProfiles) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1beta1.ArangoProfile, err error) {
+	emptyResult := &v1beta1.ArangoProfile{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(arangoprofilesResource, c.ns, name), &v1beta1.ArangoProfile{})
+		Invokes(testing.NewGetActionWithOptions(arangoprofilesResource, c.ns, name, options), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta1.ArangoProfile), err
 }
 
 // List takes label and field selectors, and returns the list of ArangoProfiles that match those selectors.
 func (c *FakeArangoProfiles) List(ctx context.Context, opts v1.ListOptions) (result *v1beta1.ArangoProfileList, err error) {
+	emptyResult := &v1beta1.ArangoProfileList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(arangoprofilesResource, arangoprofilesKind, c.ns, opts), &v1beta1.ArangoProfileList{})
+		Invokes(testing.NewListActionWithOptions(arangoprofilesResource, arangoprofilesKind, c.ns, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -79,40 +81,43 @@ func (c *FakeArangoProfiles) List(ctx context.Context, opts v1.ListOptions) (res
 // Watch returns a watch.Interface that watches the requested arangoProfiles.
 func (c *FakeArangoProfiles) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(arangoprofilesResource, c.ns, opts))
+		InvokesWatch(testing.NewWatchActionWithOptions(arangoprofilesResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a arangoProfile and creates it.  Returns the server's representation of the arangoProfile, and an error, if there is any.
 func (c *FakeArangoProfiles) Create(ctx context.Context, arangoProfile *v1beta1.ArangoProfile, opts v1.CreateOptions) (result *v1beta1.ArangoProfile, err error) {
+	emptyResult := &v1beta1.ArangoProfile{}
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(arangoprofilesResource, c.ns, arangoProfile), &v1beta1.ArangoProfile{})
+		Invokes(testing.NewCreateActionWithOptions(arangoprofilesResource, c.ns, arangoProfile, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta1.ArangoProfile), err
 }
 
 // Update takes the representation of a arangoProfile and updates it. Returns the server's representation of the arangoProfile, and an error, if there is any.
 func (c *FakeArangoProfiles) Update(ctx context.Context, arangoProfile *v1beta1.ArangoProfile, opts v1.UpdateOptions) (result *v1beta1.ArangoProfile, err error) {
+	emptyResult := &v1beta1.ArangoProfile{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(arangoprofilesResource, c.ns, arangoProfile), &v1beta1.ArangoProfile{})
+		Invokes(testing.NewUpdateActionWithOptions(arangoprofilesResource, c.ns, arangoProfile, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta1.ArangoProfile), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeArangoProfiles) UpdateStatus(ctx context.Context, arangoProfile *v1beta1.ArangoProfile, opts v1.UpdateOptions) (*v1beta1.ArangoProfile, error) {
+func (c *FakeArangoProfiles) UpdateStatus(ctx context.Context, arangoProfile *v1beta1.ArangoProfile, opts v1.UpdateOptions) (result *v1beta1.ArangoProfile, err error) {
+	emptyResult := &v1beta1.ArangoProfile{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(arangoprofilesResource, "status", c.ns, arangoProfile), &v1beta1.ArangoProfile{})
+		Invokes(testing.NewUpdateSubresourceActionWithOptions(arangoprofilesResource, "status", c.ns, arangoProfile, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta1.ArangoProfile), err
 }
@@ -127,7 +132,7 @@ func (c *FakeArangoProfiles) Delete(ctx context.Context, name string, opts v1.De
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeArangoProfiles) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(arangoprofilesResource, c.ns, listOpts)
+	action := testing.NewDeleteCollectionActionWithOptions(arangoprofilesResource, c.ns, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1beta1.ArangoProfileList{})
 	return err
@@ -135,11 +140,12 @@ func (c *FakeArangoProfiles) DeleteCollection(ctx context.Context, opts v1.Delet
 
 // Patch applies the patch and returns the patched arangoProfile.
 func (c *FakeArangoProfiles) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1beta1.ArangoProfile, err error) {
+	emptyResult := &v1beta1.ArangoProfile{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(arangoprofilesResource, c.ns, name, pt, data, subresources...), &v1beta1.ArangoProfile{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(arangoprofilesResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta1.ArangoProfile), err
 }

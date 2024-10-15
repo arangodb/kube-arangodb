@@ -24,8 +24,8 @@ package v1beta1
 
 import (
 	v1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -42,25 +42,17 @@ type ArangoSchedulerCronJobLister interface {
 
 // arangoSchedulerCronJobLister implements the ArangoSchedulerCronJobLister interface.
 type arangoSchedulerCronJobLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v1beta1.ArangoSchedulerCronJob]
 }
 
 // NewArangoSchedulerCronJobLister returns a new ArangoSchedulerCronJobLister.
 func NewArangoSchedulerCronJobLister(indexer cache.Indexer) ArangoSchedulerCronJobLister {
-	return &arangoSchedulerCronJobLister{indexer: indexer}
-}
-
-// List lists all ArangoSchedulerCronJobs in the indexer.
-func (s *arangoSchedulerCronJobLister) List(selector labels.Selector) (ret []*v1beta1.ArangoSchedulerCronJob, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1beta1.ArangoSchedulerCronJob))
-	})
-	return ret, err
+	return &arangoSchedulerCronJobLister{listers.New[*v1beta1.ArangoSchedulerCronJob](indexer, v1beta1.Resource("arangoschedulercronjob"))}
 }
 
 // ArangoSchedulerCronJobs returns an object that can list and get ArangoSchedulerCronJobs.
 func (s *arangoSchedulerCronJobLister) ArangoSchedulerCronJobs(namespace string) ArangoSchedulerCronJobNamespaceLister {
-	return arangoSchedulerCronJobNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return arangoSchedulerCronJobNamespaceLister{listers.NewNamespaced[*v1beta1.ArangoSchedulerCronJob](s.ResourceIndexer, namespace)}
 }
 
 // ArangoSchedulerCronJobNamespaceLister helps list and get ArangoSchedulerCronJobs.
@@ -78,26 +70,5 @@ type ArangoSchedulerCronJobNamespaceLister interface {
 // arangoSchedulerCronJobNamespaceLister implements the ArangoSchedulerCronJobNamespaceLister
 // interface.
 type arangoSchedulerCronJobNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all ArangoSchedulerCronJobs in the indexer for a given namespace.
-func (s arangoSchedulerCronJobNamespaceLister) List(selector labels.Selector) (ret []*v1beta1.ArangoSchedulerCronJob, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1beta1.ArangoSchedulerCronJob))
-	})
-	return ret, err
-}
-
-// Get retrieves the ArangoSchedulerCronJob from the indexer for a given namespace and name.
-func (s arangoSchedulerCronJobNamespaceLister) Get(name string) (*v1beta1.ArangoSchedulerCronJob, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1beta1.Resource("arangoschedulercronjob"), name)
-	}
-	return obj.(*v1beta1.ArangoSchedulerCronJob), nil
+	listers.ResourceIndexer[*v1beta1.ArangoSchedulerCronJob]
 }
