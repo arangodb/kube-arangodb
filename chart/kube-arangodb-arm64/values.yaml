@@ -34,6 +34,8 @@ operator:
     k8sToK8sClusterSync: false
     ml: false
     analytics: false
+    networking: true
+    scheduler: true
   tolerations: []
 rbac:
   enabled: true
