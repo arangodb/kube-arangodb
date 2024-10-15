@@ -58,19 +58,32 @@ covers individual newer features separately.
 
 [START_INJECT]: # (kubernetesVersionsTable)
 
-| Platform            | Kubernetes Version | ArangoDB Version | State      | Remarks                                   | Provider Remarks                   |
-|:--------------------|:-------------------|:-----------------|:-----------|:------------------------------------------|:-----------------------------------|
-| Google GKE          | 1.25-1.30          | >= 3.8.0         | Production | Don't use micro nodes                     |                                    |
-| Azure AKS           | 1.25-1.30          | >= 3.8.0         | Production |                                           |                                    |
-| Amazon EKS          | 1.25-1.30          | >= 3.8.0         | Production |                                           | [Amazon EKS](./docs/providers/eks) |
-| IBM Cloud           | <= 1.20            | >= 3.8.0         | Deprecated | Support will be dropped in Operator 1.5.0 |                                    |
-| IBM Cloud           | 1.25-1.30          | >= 3.8.0         | Production |                                           |                                    |
-| OpenShift           | 3.11               | >= 3.8.0         | Deprecated | Support will be dropped in Operator 1.5.0 |                                    |
-| OpenShift           | 4.2-4.14           | >= 3.8.0         | Production |                                           |                                    |
-| BareMetal (kubeadm) | <= 1.20            | >= 3.8.0         | Deprecated | Support will be dropped in Operator 1.5.0 |                                    |
-| BareMetal (kubeadm) | 1.25-1.30          | >= 3.8.0         | Production |                                           |                                    |
-| Minikube            | 1.25-1.30          | >= 3.8.0         | Devel Only |                                           |                                    |
-| Other               | 1.25-1.30          | >= 3.8.0         | Devel Only |                                           |                                    |
+| Platform            | State        | Kubernetes Version | ArangoDB Version | Remarks               | Provider Remarks                   |
+|:--------------------|:-------------|:-------------------|:-----------------|:----------------------|:-----------------------------------|
+| Google GKE          | Production   | 1.28-1.31          | >= 3.11.0        | Don't use micro nodes |                                    |
+|                     | EOL          | 1.25-1.27          | 3.9.0-3.10.0     | Don't use micro nodes |                                    |
+|                     | NotSupported | < 1.25             | < 3.8.0          | Don't use micro nodes |                                    |
+| Azure AKS           | Production   | 1.28-1.32          | >= 3.11.0        |                       |                                    |
+|                     | EOL          | 1.25-1.27          | 3.9.0-3.10.0     |                       |                                    |
+|                     | NotSupported | < 1.25             | < 3.8.0          |                       |                                    |
+| Amazon EKS          | Production   | 1.28-1.31          | >= 3.11.0        |                       | [Amazon EKS](./docs/providers/eks) |
+|                     | EOL          | 1.25-1.27          | 3.9.0-3.10.0     |                       | [Amazon EKS](./docs/providers/eks) |
+|                     | NotSupported | < 1.25             | < 3.8.0          |                       | [Amazon EKS](./docs/providers/eks) |
+| IBM Cloud           | Production   | 1.29-1.31          | >= 3.11.0        |                       |                                    |
+|                     | EOL          | 1.25-1.28          | 3.9.0-3.10.0     |                       |                                    |
+|                     | NotSupported | < 1.25             | < 3.8.0          |                       |                                    |
+| OpenShift           | Production   | 4.11-4.17          | >= 3.11.0        |                       |                                    |
+|                     | EOL          | 4.2-4.11           | 3.9.0-3.10.0     |                       |                                    |
+|                     | NotSupported | < 4.2              | < 3.8.0          |                       |                                    |
+| BareMetal (kubeadm) | Production   | 1.28-1.31          | >= 3.11.0        |                       |                                    |
+|                     | EOL          | 1.25-1.27          | 3.9.0-3.10.0     |                       |                                    |
+|                     | NotSupported | < 1.25             | < 3.8.0          |                       |                                    |
+| Minikube            | Devel Only   | 1.28-1.31          | >= 3.11.0        |                       |                                    |
+|                     | EOL          | 1.25-1.27          | 3.9.0-3.10.0     |                       |                                    |
+|                     | NotSupported | < 1.25             | < 3.8.0          |                       |                                    |
+| Other               | Production   | 1.28-1.31          | >= 3.11.0        |                       |                                    |
+|                     | EOL          | 1.25-1.27          | 3.9.0-3.10.0     |                       |                                    |
+|                     | NotSupported | < 1.25             | < 3.8.0          |                       |                                    |
 
 [END_INJECT]: # (kubernetesVersionsTable)
 
@@ -80,6 +93,7 @@ covers individual newer features separately.
 
 | Feature                                                                       | Operator Version | Introduced | ArangoDB Version | ArangoDB Edition      | State        | Enabled | Flag                                                   | Remarks                                                                                   |
 |:------------------------------------------------------------------------------|:-----------------|:-----------|:-----------------|:----------------------|:-------------|:--------|:-------------------------------------------------------|:------------------------------------------------------------------------------------------|
+| Gateway                                                                       | 1.2.43           | 1.2.43     | >= 3.8.0         | Community, Enterprise | Alpha        | True    | N/A                                                    | Support for ArangoDeployment Gateway Group                                                |
 | Cleanup Imported Backups                                                      | 1.2.41           | 1.2.41     | >= 3.8.0         | Community, Enterprise | Production   | False   | --deployment.feature.backup-cleanup                    | Cleanup backups created outside of the Operator and imported into Kubernetes ArangoBackup |
 | Upscale resources spec in init containers                                     | 1.2.36           | 1.2.36     | >= 3.8.0         | Community, Enterprise | Production   | True    | --deployment.feature.init-containers-upscale-resources | Upscale resources spec to built-in init containers if they are not specified or lower     |
 | Create backups asynchronously                                                 | 1.2.35           | 1.2.41     | >= 3.8.0         | Community, Enterprise | Production   | True    | --deployment.feature.async-backup-creation             | Create backups asynchronously to avoid blocking the operator and reaching the timeout     |
@@ -187,7 +201,7 @@ Flags:
       --kubernetes.max-batch-size int                          Size of batch during objects read (default 256)
       --kubernetes.qps float32                                 Number of queries per second for k8s API (default 15)
       --log.format string                                      Set log format. Allowed values: 'pretty', 'JSON'. If empty, default format is used (default "pretty")
-      --log.level stringArray                                  Set log levels in format <level> or <logger>=<level>. Possible loggers: action, agency, api-server, assertion, backup-operator, chaos-monkey, crd, deployment, deployment-ci, deployment-reconcile, deployment-replication, deployment-resilience, deployment-resources, deployment-storage, deployment-storage-pc, deployment-storage-service, http, inspector, integrations, k8s-client, monitor, operator, operator-arangojob-handler, operator-v2, operator-v2-event, operator-v2-worker, panics, pod_compare, root, root-event-recorder, server, server-authentication (default [info])
+      --log.level stringArray                                  Set log levels in format <level> or <logger>=<level>. Possible loggers: action, agency, api-server, assertion, backup-operator, chaos-monkey, crd, deployment, deployment-ci, deployment-reconcile, deployment-replication, deployment-resilience, deployment-resources, deployment-storage, deployment-storage-pc, deployment-storage-service, generic-parent-operator, http, inspector, integration-config-v1, integration-envoy-auth-v3, integrations, k8s-client, kubernetes-informer, monitor, networking-route-operator, operator, operator-arangojob-handler, operator-v2, operator-v2-event, operator-v2-worker, panics, pod_compare, root, root-event-recorder, scheduler-batchjob-operator, scheduler-cronjob-operator, scheduler-deployment-operator, scheduler-pod-operator, scheduler-profile-operator, server, server-authentication (default [info])
       --log.sampling                                           If true, operator will try to minimize duplication of logging events (default true)
       --memory-limit uint                                      Define memory limit for hard shutdown and the dump of goroutines. Used for testing
       --metrics.excluded-prefixes stringArray                  List of the excluded metrics prefixes
@@ -198,8 +212,10 @@ Flags:
       --operator.deployment                                    Enable to run the ArangoDeployment operator
       --operator.deployment-replication                        Enable to run the ArangoDeploymentReplication operator
       --operator.ml                                            Enable to run the ArangoML operator
+      --operator.networking                                    Enable to run the Networking operator
       --operator.reconciliation.retry.count int                Count of retries during Object Update operations in the Reconciliation loop (default 25)
       --operator.reconciliation.retry.delay duration           Delay between Object Update operations in the Reconciliation loop (default 1s)
+      --operator.scheduler                                     Enable to run the Scheduler operator
       --operator.storage                                       Enable to run the ArangoLocalStorage operator
       --operator.version                                       Enable only version endpoint in Operator
       --reconciliation.delay duration                          Delay between reconciliation loops (<= 0 -> Disabled)
@@ -229,8 +245,8 @@ Flags:
 ### Installation and Usage
 
 Docker images:
-- Community Edition: `arangodb/kube-arangodb:1.2.42`
-- Enterprise Edition: `arangodb/kube-arangodb-enterprise:1.2.42`
+- Community Edition: `arangodb/kube-arangodb:1.2.43`
+- Enterprise Edition: `arangodb/kube-arangodb-enterprise:1.2.43`
 
 ### Installation of latest release using Kubectl
 
@@ -239,22 +255,22 @@ running ArangoDB deployments.
 
 ##### Community Edition
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.42/manifests/arango-crd.yaml
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.42/manifests/arango-deployment.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.43/manifests/arango-crd.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.43/manifests/arango-deployment.yaml
 # To use `ArangoLocalStorage`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.42/manifests/arango-storage.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.43/manifests/arango-storage.yaml
 # To use `ArangoDeploymentReplication`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.42/manifests/arango-deployment-replication.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.43/manifests/arango-deployment-replication.yaml
 ```
 
 ##### Enterprise Edition
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.42/manifests/enterprise-crd.yaml
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.42/manifests/enterprise-deployment.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.43/manifests/enterprise-crd.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.43/manifests/enterprise-deployment.yaml
 # To use `ArangoLocalStorage`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.42/manifests/enterprise-storage.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.43/manifests/enterprise-storage.yaml
 # To use `ArangoDeploymentReplication`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.42/manifests/enterprise-deployment-replication.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.43/manifests/enterprise-deployment-replication.yaml
 ```
 
 ### Installation of latest release using kustomize
@@ -320,17 +336,17 @@ helm install --generate-name kube-arangodb/kube-arangodb-enterprise --set "opera
 ##### Community Edition
 ```bash
 # The following will install the operator and basic CRDs resources.
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.42/kube-arangodb-1.2.42.tgz
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.43/kube-arangodb-1.2.43.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.42/kube-arangodb-1.2.42.tgz --set "operator.features.storage=true"
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.43/kube-arangodb-1.2.43.tgz --set "operator.features.storage=true"
 ```
 
 ##### Enterprise Edition
 ```bash
 # The following will install the operator and basic CRDs resources.
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.42/kube-arangodb-enterprise-1.2.42.tgz
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.43/kube-arangodb-enterprise-1.2.43.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.42/kube-arangodb-enterprise-1.2.42.tgz --set "operator.features.storage=true"
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.43/kube-arangodb-enterprise-1.2.43.tgz --set "operator.features.storage=true"
 ```
 
 ### Upgrading the operator using Helm
@@ -359,17 +375,17 @@ Then you can install the new version with `helm install` as normal:
 ##### Community Edition
 ```bash
 # The following will install the operator and basic CRDs resources.
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.42/kube-arangodb-1.2.42.tgz
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.43/kube-arangodb-1.2.43.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.42/kube-arangodb-1.2.42.tgz --set "operator.features.storage=true"
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.43/kube-arangodb-1.2.43.tgz --set "operator.features.storage=true"
 ```
 
 ##### Enterprise Edition
 ```bash
 # The following will install the operator and basic CRDs resources.
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.42/kube-arangodb-enterprise-1.2.42.tgz
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.43/kube-arangodb-enterprise-1.2.43.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.42/kube-arangodb-enterprise-1.2.42.tgz --set "operator.features.storage=true"
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.43/kube-arangodb-enterprise-1.2.43.tgz --set "operator.features.storage=true"
 ```
 
 ## Building
