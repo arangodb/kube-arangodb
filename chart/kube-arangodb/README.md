@@ -189,6 +189,30 @@ Define if ArangoClusterSynchronization Operator should be enabled.
 
 Default: `false`
 
+### `operator.features.ml`
+
+Define if ML Operator should be enabled.
+
+Default: `false`
+
+### `operator.features.analytics`
+
+Define if GAE Operator should be enabled.
+
+Default: `false`
+
+### `operator.features.networking`
+
+Define if ArangoNetworking Operator should be enabled.
+
+Default: `true`
+
+### `operator.features.scheduler`
+
+Define if ArangoScheduler Operator should be enabled.
+
+Default: `true`
+
 ### `rbac.enabled`
 
 Define if RBAC should be enabled.

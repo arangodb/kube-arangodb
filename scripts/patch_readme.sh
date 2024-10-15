@@ -22,6 +22,8 @@ f=README.md
 replaceInFile "s@arangodb/kube-arangodb:[0-9]+\.[0-9]+\.[0-9]+@arangodb/kube-arangodb:${VERSION}@g" ${f}
 replaceInFile "s@arangodb/kube-arangodb-enterprise:[0-9]+\.[0-9]+\.[0-9]+@arangodb/kube-arangodb-enterprise:${VERSION}@g" ${f}
 
+replaceInFile "s@kube-arangodb/manifests/(kustomize|kustomize-enterprise)/([a-z]+)\?ref=[0-9]+\.[0-9]+\.[0-9]+@kube-arangodb/manifests/\1/\2?ref=${VERSION}@g" ${f}
+
 replaceInFile "s@^kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/.*/manifests/arango-crd.yaml\$@kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/${VERSION}/manifests/arango-crd.yaml@g" ${f}
 replaceInFile "s@^kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/.*/manifests/arango-deployment.yaml\$@kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/${VERSION}/manifests/arango-deployment.yaml@g" ${f}
 replaceInFile "s@^kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/.*/manifests/arango-deployment-replication.yaml\$@kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/${VERSION}/manifests/arango-deployment-replication.yaml@g" ${f}
