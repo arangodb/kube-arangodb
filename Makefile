@@ -917,7 +917,7 @@ check-community:
 _check: sync-crds
 	@$(MAKE) fmt yamlfmt license-verify linter run-unit-tests bin-all vulncheck-optional
 
-generate: generate-internal generate-proto fmt yamlfmt
+generate: generate-internal generate-proto fmt yamlfmt license
 
 generate-internal:
 	ROOT=$(ROOT) go test --count=1 "$(REPOPATH)/internal/..."
