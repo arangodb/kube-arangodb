@@ -22,10 +22,12 @@ package helm
 
 import (
 	"context"
+
+	"helm.sh/helm/v3/pkg/action"
+
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
-	"helm.sh/helm/v3/pkg/action"
 )
 
 func NewClient(cfg Configuration) (Client, error) {

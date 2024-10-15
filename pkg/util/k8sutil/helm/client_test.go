@@ -22,11 +22,13 @@ package helm
 
 import (
 	"context"
-	"github.com/arangodb/kube-arangodb/pkg/util/tests"
+	"testing"
+
 	"github.com/stretchr/testify/require"
 	"helm.sh/helm/v3/pkg/action"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"testing"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 )
 
 func cleanup(t *testing.T, c Client) func() {

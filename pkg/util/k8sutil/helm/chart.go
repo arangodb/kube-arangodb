@@ -22,9 +22,10 @@ package helm
 
 import (
 	"bytes"
+	"io"
+
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chart/loader"
-	"io"
 )
 
 type Chart []byte

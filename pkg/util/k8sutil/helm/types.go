@@ -21,8 +21,9 @@
 package helm
 
 import (
-	"helm.sh/helm/v3/pkg/release"
 	"time"
+
+	"helm.sh/helm/v3/pkg/release"
 )
 
 func fromHelmRelease(in *release.Release) Release {

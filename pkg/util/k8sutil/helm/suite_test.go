@@ -22,12 +22,14 @@ package helm
 
 import (
 	_ "embed"
-	"github.com/arangodb/kube-arangodb/pkg/logging"
-	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
-	"github.com/stretchr/testify/require"
-	"k8s.io/client-go/tools/clientcmd"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+	"k8s.io/client-go/tools/clientcmd"
+
+	"github.com/arangodb/kube-arangodb/pkg/logging"
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
 func init() {
