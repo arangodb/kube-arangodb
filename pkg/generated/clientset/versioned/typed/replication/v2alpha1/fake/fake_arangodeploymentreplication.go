@@ -45,22 +45,24 @@ var arangodeploymentreplicationsKind = v2alpha1.SchemeGroupVersion.WithKind("Ara
 
 // Get takes name of the arangoDeploymentReplication, and returns the corresponding arangoDeploymentReplication object, and an error if there is any.
 func (c *FakeArangoDeploymentReplications) Get(ctx context.Context, name string, options v1.GetOptions) (result *v2alpha1.ArangoDeploymentReplication, err error) {
+	emptyResult := &v2alpha1.ArangoDeploymentReplication{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(arangodeploymentreplicationsResource, c.ns, name), &v2alpha1.ArangoDeploymentReplication{})
+		Invokes(testing.NewGetActionWithOptions(arangodeploymentreplicationsResource, c.ns, name, options), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v2alpha1.ArangoDeploymentReplication), err
 }
 
 // List takes label and field selectors, and returns the list of ArangoDeploymentReplications that match those selectors.
 func (c *FakeArangoDeploymentReplications) List(ctx context.Context, opts v1.ListOptions) (result *v2alpha1.ArangoDeploymentReplicationList, err error) {
+	emptyResult := &v2alpha1.ArangoDeploymentReplicationList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(arangodeploymentreplicationsResource, arangodeploymentreplicationsKind, c.ns, opts), &v2alpha1.ArangoDeploymentReplicationList{})
+		Invokes(testing.NewListActionWithOptions(arangodeploymentreplicationsResource, arangodeploymentreplicationsKind, c.ns, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -79,40 +81,43 @@ func (c *FakeArangoDeploymentReplications) List(ctx context.Context, opts v1.Lis
 // Watch returns a watch.Interface that watches the requested arangoDeploymentReplications.
 func (c *FakeArangoDeploymentReplications) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(arangodeploymentreplicationsResource, c.ns, opts))
+		InvokesWatch(testing.NewWatchActionWithOptions(arangodeploymentreplicationsResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a arangoDeploymentReplication and creates it.  Returns the server's representation of the arangoDeploymentReplication, and an error, if there is any.
 func (c *FakeArangoDeploymentReplications) Create(ctx context.Context, arangoDeploymentReplication *v2alpha1.ArangoDeploymentReplication, opts v1.CreateOptions) (result *v2alpha1.ArangoDeploymentReplication, err error) {
+	emptyResult := &v2alpha1.ArangoDeploymentReplication{}
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(arangodeploymentreplicationsResource, c.ns, arangoDeploymentReplication), &v2alpha1.ArangoDeploymentReplication{})
+		Invokes(testing.NewCreateActionWithOptions(arangodeploymentreplicationsResource, c.ns, arangoDeploymentReplication, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v2alpha1.ArangoDeploymentReplication), err
 }
 
 // Update takes the representation of a arangoDeploymentReplication and updates it. Returns the server's representation of the arangoDeploymentReplication, and an error, if there is any.
 func (c *FakeArangoDeploymentReplications) Update(ctx context.Context, arangoDeploymentReplication *v2alpha1.ArangoDeploymentReplication, opts v1.UpdateOptions) (result *v2alpha1.ArangoDeploymentReplication, err error) {
+	emptyResult := &v2alpha1.ArangoDeploymentReplication{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(arangodeploymentreplicationsResource, c.ns, arangoDeploymentReplication), &v2alpha1.ArangoDeploymentReplication{})
+		Invokes(testing.NewUpdateActionWithOptions(arangodeploymentreplicationsResource, c.ns, arangoDeploymentReplication, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v2alpha1.ArangoDeploymentReplication), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeArangoDeploymentReplications) UpdateStatus(ctx context.Context, arangoDeploymentReplication *v2alpha1.ArangoDeploymentReplication, opts v1.UpdateOptions) (*v2alpha1.ArangoDeploymentReplication, error) {
+func (c *FakeArangoDeploymentReplications) UpdateStatus(ctx context.Context, arangoDeploymentReplication *v2alpha1.ArangoDeploymentReplication, opts v1.UpdateOptions) (result *v2alpha1.ArangoDeploymentReplication, err error) {
+	emptyResult := &v2alpha1.ArangoDeploymentReplication{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(arangodeploymentreplicationsResource, "status", c.ns, arangoDeploymentReplication), &v2alpha1.ArangoDeploymentReplication{})
+		Invokes(testing.NewUpdateSubresourceActionWithOptions(arangodeploymentreplicationsResource, "status", c.ns, arangoDeploymentReplication, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v2alpha1.ArangoDeploymentReplication), err
 }
@@ -127,7 +132,7 @@ func (c *FakeArangoDeploymentReplications) Delete(ctx context.Context, name stri
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeArangoDeploymentReplications) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(arangodeploymentreplicationsResource, c.ns, listOpts)
+	action := testing.NewDeleteCollectionActionWithOptions(arangodeploymentreplicationsResource, c.ns, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v2alpha1.ArangoDeploymentReplicationList{})
 	return err
@@ -135,11 +140,12 @@ func (c *FakeArangoDeploymentReplications) DeleteCollection(ctx context.Context,
 
 // Patch applies the patch and returns the patched arangoDeploymentReplication.
 func (c *FakeArangoDeploymentReplications) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v2alpha1.ArangoDeploymentReplication, err error) {
+	emptyResult := &v2alpha1.ArangoDeploymentReplication{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(arangodeploymentreplicationsResource, c.ns, name, pt, data, subresources...), &v2alpha1.ArangoDeploymentReplication{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(arangodeploymentreplicationsResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v2alpha1.ArangoDeploymentReplication), err
 }

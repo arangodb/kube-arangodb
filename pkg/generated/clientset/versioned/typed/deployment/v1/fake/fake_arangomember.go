@@ -45,22 +45,24 @@ var arangomembersKind = v1.SchemeGroupVersion.WithKind("ArangoMember")
 
 // Get takes name of the arangoMember, and returns the corresponding arangoMember object, and an error if there is any.
 func (c *FakeArangoMembers) Get(ctx context.Context, name string, options metav1.GetOptions) (result *v1.ArangoMember, err error) {
+	emptyResult := &v1.ArangoMember{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(arangomembersResource, c.ns, name), &v1.ArangoMember{})
+		Invokes(testing.NewGetActionWithOptions(arangomembersResource, c.ns, name, options), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.ArangoMember), err
 }
 
 // List takes label and field selectors, and returns the list of ArangoMembers that match those selectors.
 func (c *FakeArangoMembers) List(ctx context.Context, opts metav1.ListOptions) (result *v1.ArangoMemberList, err error) {
+	emptyResult := &v1.ArangoMemberList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(arangomembersResource, arangomembersKind, c.ns, opts), &v1.ArangoMemberList{})
+		Invokes(testing.NewListActionWithOptions(arangomembersResource, arangomembersKind, c.ns, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -79,40 +81,43 @@ func (c *FakeArangoMembers) List(ctx context.Context, opts metav1.ListOptions) (
 // Watch returns a watch.Interface that watches the requested arangoMembers.
 func (c *FakeArangoMembers) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(arangomembersResource, c.ns, opts))
+		InvokesWatch(testing.NewWatchActionWithOptions(arangomembersResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a arangoMember and creates it.  Returns the server's representation of the arangoMember, and an error, if there is any.
 func (c *FakeArangoMembers) Create(ctx context.Context, arangoMember *v1.ArangoMember, opts metav1.CreateOptions) (result *v1.ArangoMember, err error) {
+	emptyResult := &v1.ArangoMember{}
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(arangomembersResource, c.ns, arangoMember), &v1.ArangoMember{})
+		Invokes(testing.NewCreateActionWithOptions(arangomembersResource, c.ns, arangoMember, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.ArangoMember), err
 }
 
 // Update takes the representation of a arangoMember and updates it. Returns the server's representation of the arangoMember, and an error, if there is any.
 func (c *FakeArangoMembers) Update(ctx context.Context, arangoMember *v1.ArangoMember, opts metav1.UpdateOptions) (result *v1.ArangoMember, err error) {
+	emptyResult := &v1.ArangoMember{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(arangomembersResource, c.ns, arangoMember), &v1.ArangoMember{})
+		Invokes(testing.NewUpdateActionWithOptions(arangomembersResource, c.ns, arangoMember, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.ArangoMember), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeArangoMembers) UpdateStatus(ctx context.Context, arangoMember *v1.ArangoMember, opts metav1.UpdateOptions) (*v1.ArangoMember, error) {
+func (c *FakeArangoMembers) UpdateStatus(ctx context.Context, arangoMember *v1.ArangoMember, opts metav1.UpdateOptions) (result *v1.ArangoMember, err error) {
+	emptyResult := &v1.ArangoMember{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(arangomembersResource, "status", c.ns, arangoMember), &v1.ArangoMember{})
+		Invokes(testing.NewUpdateSubresourceActionWithOptions(arangomembersResource, "status", c.ns, arangoMember, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.ArangoMember), err
 }
@@ -127,7 +132,7 @@ func (c *FakeArangoMembers) Delete(ctx context.Context, name string, opts metav1
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeArangoMembers) DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(arangomembersResource, c.ns, listOpts)
+	action := testing.NewDeleteCollectionActionWithOptions(arangomembersResource, c.ns, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1.ArangoMemberList{})
 	return err
@@ -135,11 +140,12 @@ func (c *FakeArangoMembers) DeleteCollection(ctx context.Context, opts metav1.De
 
 // Patch applies the patch and returns the patched arangoMember.
 func (c *FakeArangoMembers) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.ArangoMember, err error) {
+	emptyResult := &v1.ArangoMember{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(arangomembersResource, c.ns, name, pt, data, subresources...), &v1.ArangoMember{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(arangomembersResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.ArangoMember), err
 }

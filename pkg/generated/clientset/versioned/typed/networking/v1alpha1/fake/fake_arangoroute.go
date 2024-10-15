@@ -45,22 +45,24 @@ var arangoroutesKind = v1alpha1.SchemeGroupVersion.WithKind("ArangoRoute")
 
 // Get takes name of the arangoRoute, and returns the corresponding arangoRoute object, and an error if there is any.
 func (c *FakeArangoRoutes) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.ArangoRoute, err error) {
+	emptyResult := &v1alpha1.ArangoRoute{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(arangoroutesResource, c.ns, name), &v1alpha1.ArangoRoute{})
+		Invokes(testing.NewGetActionWithOptions(arangoroutesResource, c.ns, name, options), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ArangoRoute), err
 }
 
 // List takes label and field selectors, and returns the list of ArangoRoutes that match those selectors.
 func (c *FakeArangoRoutes) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.ArangoRouteList, err error) {
+	emptyResult := &v1alpha1.ArangoRouteList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(arangoroutesResource, arangoroutesKind, c.ns, opts), &v1alpha1.ArangoRouteList{})
+		Invokes(testing.NewListActionWithOptions(arangoroutesResource, arangoroutesKind, c.ns, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -79,40 +81,43 @@ func (c *FakeArangoRoutes) List(ctx context.Context, opts v1.ListOptions) (resul
 // Watch returns a watch.Interface that watches the requested arangoRoutes.
 func (c *FakeArangoRoutes) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(arangoroutesResource, c.ns, opts))
+		InvokesWatch(testing.NewWatchActionWithOptions(arangoroutesResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a arangoRoute and creates it.  Returns the server's representation of the arangoRoute, and an error, if there is any.
 func (c *FakeArangoRoutes) Create(ctx context.Context, arangoRoute *v1alpha1.ArangoRoute, opts v1.CreateOptions) (result *v1alpha1.ArangoRoute, err error) {
+	emptyResult := &v1alpha1.ArangoRoute{}
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(arangoroutesResource, c.ns, arangoRoute), &v1alpha1.ArangoRoute{})
+		Invokes(testing.NewCreateActionWithOptions(arangoroutesResource, c.ns, arangoRoute, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ArangoRoute), err
 }
 
 // Update takes the representation of a arangoRoute and updates it. Returns the server's representation of the arangoRoute, and an error, if there is any.
 func (c *FakeArangoRoutes) Update(ctx context.Context, arangoRoute *v1alpha1.ArangoRoute, opts v1.UpdateOptions) (result *v1alpha1.ArangoRoute, err error) {
+	emptyResult := &v1alpha1.ArangoRoute{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(arangoroutesResource, c.ns, arangoRoute), &v1alpha1.ArangoRoute{})
+		Invokes(testing.NewUpdateActionWithOptions(arangoroutesResource, c.ns, arangoRoute, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ArangoRoute), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeArangoRoutes) UpdateStatus(ctx context.Context, arangoRoute *v1alpha1.ArangoRoute, opts v1.UpdateOptions) (*v1alpha1.ArangoRoute, error) {
+func (c *FakeArangoRoutes) UpdateStatus(ctx context.Context, arangoRoute *v1alpha1.ArangoRoute, opts v1.UpdateOptions) (result *v1alpha1.ArangoRoute, err error) {
+	emptyResult := &v1alpha1.ArangoRoute{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(arangoroutesResource, "status", c.ns, arangoRoute), &v1alpha1.ArangoRoute{})
+		Invokes(testing.NewUpdateSubresourceActionWithOptions(arangoroutesResource, "status", c.ns, arangoRoute, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ArangoRoute), err
 }
@@ -127,7 +132,7 @@ func (c *FakeArangoRoutes) Delete(ctx context.Context, name string, opts v1.Dele
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeArangoRoutes) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(arangoroutesResource, c.ns, listOpts)
+	action := testing.NewDeleteCollectionActionWithOptions(arangoroutesResource, c.ns, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.ArangoRouteList{})
 	return err
@@ -135,11 +140,12 @@ func (c *FakeArangoRoutes) DeleteCollection(ctx context.Context, opts v1.DeleteO
 
 // Patch applies the patch and returns the patched arangoRoute.
 func (c *FakeArangoRoutes) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.ArangoRoute, err error) {
+	emptyResult := &v1alpha1.ArangoRoute{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(arangoroutesResource, c.ns, name, pt, data, subresources...), &v1alpha1.ArangoRoute{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(arangoroutesResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ArangoRoute), err
 }

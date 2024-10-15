@@ -24,14 +24,13 @@ package v1alpha1
 
 import (
 	"context"
-	"time"
 
 	v1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
 	scheme "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
-	rest "k8s.io/client-go/rest"
+	gentype "k8s.io/client-go/gentype"
 )
 
 // ArangoMLExtensionsGetter has a method to return a ArangoMLExtensionInterface.
@@ -44,6 +43,7 @@ type ArangoMLExtensionsGetter interface {
 type ArangoMLExtensionInterface interface {
 	Create(ctx context.Context, arangoMLExtension *v1alpha1.ArangoMLExtension, opts v1.CreateOptions) (*v1alpha1.ArangoMLExtension, error)
 	Update(ctx context.Context, arangoMLExtension *v1alpha1.ArangoMLExtension, opts v1.UpdateOptions) (*v1alpha1.ArangoMLExtension, error)
+	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
 	UpdateStatus(ctx context.Context, arangoMLExtension *v1alpha1.ArangoMLExtension, opts v1.UpdateOptions) (*v1alpha1.ArangoMLExtension, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
@@ -56,144 +56,18 @@ type ArangoMLExtensionInterface interface {
 
 // arangoMLExtensions implements ArangoMLExtensionInterface
 type arangoMLExtensions struct {
-	client rest.Interface
-	ns     string
+	*gentype.ClientWithList[*v1alpha1.ArangoMLExtension, *v1alpha1.ArangoMLExtensionList]
 }
 
 // newArangoMLExtensions returns a ArangoMLExtensions
 func newArangoMLExtensions(c *MlV1alpha1Client, namespace string) *arangoMLExtensions {
 	return &arangoMLExtensions{
-		client: c.RESTClient(),
-		ns:     namespace,
+		gentype.NewClientWithList[*v1alpha1.ArangoMLExtension, *v1alpha1.ArangoMLExtensionList](
+			"arangomlextensions",
+			c.RESTClient(),
+			scheme.ParameterCodec,
+			namespace,
+			func() *v1alpha1.ArangoMLExtension { return &v1alpha1.ArangoMLExtension{} },
+			func() *v1alpha1.ArangoMLExtensionList { return &v1alpha1.ArangoMLExtensionList{} }),
 	}
-}
-
-// Get takes name of the arangoMLExtension, and returns the corresponding arangoMLExtension object, and an error if there is any.
-func (c *arangoMLExtensions) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.ArangoMLExtension, err error) {
-	result = &v1alpha1.ArangoMLExtension{}
-	err = c.client.Get().
-		Namespace(c.ns).
-		Resource("arangomlextensions").
-		Name(name).
-		VersionedParams(&options, scheme.ParameterCodec).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// List takes label and field selectors, and returns the list of ArangoMLExtensions that match those selectors.
-func (c *arangoMLExtensions) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.ArangoMLExtensionList, err error) {
-	var timeout time.Duration
-	if opts.TimeoutSeconds != nil {
-		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
-	}
-	result = &v1alpha1.ArangoMLExtensionList{}
-	err = c.client.Get().
-		Namespace(c.ns).
-		Resource("arangomlextensions").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Watch returns a watch.Interface that watches the requested arangoMLExtensions.
-func (c *arangoMLExtensions) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
-	var timeout time.Duration
-	if opts.TimeoutSeconds != nil {
-		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
-	}
-	opts.Watch = true
-	return c.client.Get().
-		Namespace(c.ns).
-		Resource("arangomlextensions").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Watch(ctx)
-}
-
-// Create takes the representation of a arangoMLExtension and creates it.  Returns the server's representation of the arangoMLExtension, and an error, if there is any.
-func (c *arangoMLExtensions) Create(ctx context.Context, arangoMLExtension *v1alpha1.ArangoMLExtension, opts v1.CreateOptions) (result *v1alpha1.ArangoMLExtension, err error) {
-	result = &v1alpha1.ArangoMLExtension{}
-	err = c.client.Post().
-		Namespace(c.ns).
-		Resource("arangomlextensions").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(arangoMLExtension).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Update takes the representation of a arangoMLExtension and updates it. Returns the server's representation of the arangoMLExtension, and an error, if there is any.
-func (c *arangoMLExtensions) Update(ctx context.Context, arangoMLExtension *v1alpha1.ArangoMLExtension, opts v1.UpdateOptions) (result *v1alpha1.ArangoMLExtension, err error) {
-	result = &v1alpha1.ArangoMLExtension{}
-	err = c.client.Put().
-		Namespace(c.ns).
-		Resource("arangomlextensions").
-		Name(arangoMLExtension.Name).
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(arangoMLExtension).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *arangoMLExtensions) UpdateStatus(ctx context.Context, arangoMLExtension *v1alpha1.ArangoMLExtension, opts v1.UpdateOptions) (result *v1alpha1.ArangoMLExtension, err error) {
-	result = &v1alpha1.ArangoMLExtension{}
-	err = c.client.Put().
-		Namespace(c.ns).
-		Resource("arangomlextensions").
-		Name(arangoMLExtension.Name).
-		SubResource("status").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(arangoMLExtension).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Delete takes name of the arangoMLExtension and deletes it. Returns an error if one occurs.
-func (c *arangoMLExtensions) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
-	return c.client.Delete().
-		Namespace(c.ns).
-		Resource("arangomlextensions").
-		Name(name).
-		Body(&opts).
-		Do(ctx).
-		Error()
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *arangoMLExtensions) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	var timeout time.Duration
-	if listOpts.TimeoutSeconds != nil {
-		timeout = time.Duration(*listOpts.TimeoutSeconds) * time.Second
-	}
-	return c.client.Delete().
-		Namespace(c.ns).
-		Resource("arangomlextensions").
-		VersionedParams(&listOpts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Body(&opts).
-		Do(ctx).
-		Error()
-}
-
-// Patch applies the patch and returns the patched arangoMLExtension.
-func (c *arangoMLExtensions) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.ArangoMLExtension, err error) {
-	result = &v1alpha1.ArangoMLExtension{}
-	err = c.client.Patch(pt).
-		Namespace(c.ns).
-		Resource("arangomlextensions").
-		Name(name).
-		SubResource(subresources...).
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(data).
-		Do(ctx).
-		Into(result)
-	return
 }

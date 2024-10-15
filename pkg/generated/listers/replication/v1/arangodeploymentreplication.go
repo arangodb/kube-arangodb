@@ -24,8 +24,8 @@ package v1
 
 import (
 	v1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -42,25 +42,17 @@ type ArangoDeploymentReplicationLister interface {
 
 // arangoDeploymentReplicationLister implements the ArangoDeploymentReplicationLister interface.
 type arangoDeploymentReplicationLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v1.ArangoDeploymentReplication]
 }
 
 // NewArangoDeploymentReplicationLister returns a new ArangoDeploymentReplicationLister.
 func NewArangoDeploymentReplicationLister(indexer cache.Indexer) ArangoDeploymentReplicationLister {
-	return &arangoDeploymentReplicationLister{indexer: indexer}
-}
-
-// List lists all ArangoDeploymentReplications in the indexer.
-func (s *arangoDeploymentReplicationLister) List(selector labels.Selector) (ret []*v1.ArangoDeploymentReplication, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1.ArangoDeploymentReplication))
-	})
-	return ret, err
+	return &arangoDeploymentReplicationLister{listers.New[*v1.ArangoDeploymentReplication](indexer, v1.Resource("arangodeploymentreplication"))}
 }
 
 // ArangoDeploymentReplications returns an object that can list and get ArangoDeploymentReplications.
 func (s *arangoDeploymentReplicationLister) ArangoDeploymentReplications(namespace string) ArangoDeploymentReplicationNamespaceLister {
-	return arangoDeploymentReplicationNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return arangoDeploymentReplicationNamespaceLister{listers.NewNamespaced[*v1.ArangoDeploymentReplication](s.ResourceIndexer, namespace)}
 }
 
 // ArangoDeploymentReplicationNamespaceLister helps list and get ArangoDeploymentReplications.
@@ -78,26 +70,5 @@ type ArangoDeploymentReplicationNamespaceLister interface {
 // arangoDeploymentReplicationNamespaceLister implements the ArangoDeploymentReplicationNamespaceLister
 // interface.
 type arangoDeploymentReplicationNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all ArangoDeploymentReplications in the indexer for a given namespace.
-func (s arangoDeploymentReplicationNamespaceLister) List(selector labels.Selector) (ret []*v1.ArangoDeploymentReplication, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1.ArangoDeploymentReplication))
-	})
-	return ret, err
-}
-
-// Get retrieves the ArangoDeploymentReplication from the indexer for a given namespace and name.
-func (s arangoDeploymentReplicationNamespaceLister) Get(name string) (*v1.ArangoDeploymentReplication, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1.Resource("arangodeploymentreplication"), name)
-	}
-	return obj.(*v1.ArangoDeploymentReplication), nil
+	listers.ResourceIndexer[*v1.ArangoDeploymentReplication]
 }

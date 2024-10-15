@@ -46,12 +46,12 @@ func Test_Service(t *testing.T) {
 
 	othStart := other.StartWithHealth(ctx, h)
 
-	healthConn, err := grpc.DialContext(ctx, st.Address(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	healthConn, err := grpc.NewClient(st.Address(), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	require.NoError(t, err)
 
 	defer healthConn.Close()
 
-	otherConn, err := grpc.DialContext(ctx, othStart.Address(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	otherConn, err := grpc.NewClient(othStart.Address(), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	require.NoError(t, err)
 
 	defer otherConn.Close()

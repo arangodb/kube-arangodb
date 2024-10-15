@@ -24,8 +24,8 @@ package v1alpha1
 
 import (
 	v1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -42,25 +42,17 @@ type ArangoMLCronJobLister interface {
 
 // arangoMLCronJobLister implements the ArangoMLCronJobLister interface.
 type arangoMLCronJobLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v1alpha1.ArangoMLCronJob]
 }
 
 // NewArangoMLCronJobLister returns a new ArangoMLCronJobLister.
 func NewArangoMLCronJobLister(indexer cache.Indexer) ArangoMLCronJobLister {
-	return &arangoMLCronJobLister{indexer: indexer}
-}
-
-// List lists all ArangoMLCronJobs in the indexer.
-func (s *arangoMLCronJobLister) List(selector labels.Selector) (ret []*v1alpha1.ArangoMLCronJob, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.ArangoMLCronJob))
-	})
-	return ret, err
+	return &arangoMLCronJobLister{listers.New[*v1alpha1.ArangoMLCronJob](indexer, v1alpha1.Resource("arangomlcronjob"))}
 }
 
 // ArangoMLCronJobs returns an object that can list and get ArangoMLCronJobs.
 func (s *arangoMLCronJobLister) ArangoMLCronJobs(namespace string) ArangoMLCronJobNamespaceLister {
-	return arangoMLCronJobNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return arangoMLCronJobNamespaceLister{listers.NewNamespaced[*v1alpha1.ArangoMLCronJob](s.ResourceIndexer, namespace)}
 }
 
 // ArangoMLCronJobNamespaceLister helps list and get ArangoMLCronJobs.
@@ -78,26 +70,5 @@ type ArangoMLCronJobNamespaceLister interface {
 // arangoMLCronJobNamespaceLister implements the ArangoMLCronJobNamespaceLister
 // interface.
 type arangoMLCronJobNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all ArangoMLCronJobs in the indexer for a given namespace.
-func (s arangoMLCronJobNamespaceLister) List(selector labels.Selector) (ret []*v1alpha1.ArangoMLCronJob, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.ArangoMLCronJob))
-	})
-	return ret, err
-}
-
-// Get retrieves the ArangoMLCronJob from the indexer for a given namespace and name.
-func (s arangoMLCronJobNamespaceLister) Get(name string) (*v1alpha1.ArangoMLCronJob, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1alpha1.Resource("arangomlcronjob"), name)
-	}
-	return obj.(*v1alpha1.ArangoMLCronJob), nil
+	listers.ResourceIndexer[*v1alpha1.ArangoMLCronJob]
 }

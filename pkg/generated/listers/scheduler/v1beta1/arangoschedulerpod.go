@@ -24,8 +24,8 @@ package v1beta1
 
 import (
 	v1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -42,25 +42,17 @@ type ArangoSchedulerPodLister interface {
 
 // arangoSchedulerPodLister implements the ArangoSchedulerPodLister interface.
 type arangoSchedulerPodLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v1beta1.ArangoSchedulerPod]
 }
 
 // NewArangoSchedulerPodLister returns a new ArangoSchedulerPodLister.
 func NewArangoSchedulerPodLister(indexer cache.Indexer) ArangoSchedulerPodLister {
-	return &arangoSchedulerPodLister{indexer: indexer}
-}
-
-// List lists all ArangoSchedulerPods in the indexer.
-func (s *arangoSchedulerPodLister) List(selector labels.Selector) (ret []*v1beta1.ArangoSchedulerPod, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1beta1.ArangoSchedulerPod))
-	})
-	return ret, err
+	return &arangoSchedulerPodLister{listers.New[*v1beta1.ArangoSchedulerPod](indexer, v1beta1.Resource("arangoschedulerpod"))}
 }
 
 // ArangoSchedulerPods returns an object that can list and get ArangoSchedulerPods.
 func (s *arangoSchedulerPodLister) ArangoSchedulerPods(namespace string) ArangoSchedulerPodNamespaceLister {
-	return arangoSchedulerPodNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return arangoSchedulerPodNamespaceLister{listers.NewNamespaced[*v1beta1.ArangoSchedulerPod](s.ResourceIndexer, namespace)}
 }
 
 // ArangoSchedulerPodNamespaceLister helps list and get ArangoSchedulerPods.
@@ -78,26 +70,5 @@ type ArangoSchedulerPodNamespaceLister interface {
 // arangoSchedulerPodNamespaceLister implements the ArangoSchedulerPodNamespaceLister
 // interface.
 type arangoSchedulerPodNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all ArangoSchedulerPods in the indexer for a given namespace.
-func (s arangoSchedulerPodNamespaceLister) List(selector labels.Selector) (ret []*v1beta1.ArangoSchedulerPod, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1beta1.ArangoSchedulerPod))
-	})
-	return ret, err
-}
-
-// Get retrieves the ArangoSchedulerPod from the indexer for a given namespace and name.
-func (s arangoSchedulerPodNamespaceLister) Get(name string) (*v1beta1.ArangoSchedulerPod, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1beta1.Resource("arangoschedulerpod"), name)
-	}
-	return obj.(*v1beta1.ArangoSchedulerPod), nil
+	listers.ResourceIndexer[*v1beta1.ArangoSchedulerPod]
 }

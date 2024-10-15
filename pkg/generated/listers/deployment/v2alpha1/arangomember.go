@@ -24,8 +24,8 @@ package v2alpha1
 
 import (
 	v2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v2alpha1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -42,25 +42,17 @@ type ArangoMemberLister interface {
 
 // arangoMemberLister implements the ArangoMemberLister interface.
 type arangoMemberLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v2alpha1.ArangoMember]
 }
 
 // NewArangoMemberLister returns a new ArangoMemberLister.
 func NewArangoMemberLister(indexer cache.Indexer) ArangoMemberLister {
-	return &arangoMemberLister{indexer: indexer}
-}
-
-// List lists all ArangoMembers in the indexer.
-func (s *arangoMemberLister) List(selector labels.Selector) (ret []*v2alpha1.ArangoMember, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v2alpha1.ArangoMember))
-	})
-	return ret, err
+	return &arangoMemberLister{listers.New[*v2alpha1.ArangoMember](indexer, v2alpha1.Resource("arangomember"))}
 }
 
 // ArangoMembers returns an object that can list and get ArangoMembers.
 func (s *arangoMemberLister) ArangoMembers(namespace string) ArangoMemberNamespaceLister {
-	return arangoMemberNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return arangoMemberNamespaceLister{listers.NewNamespaced[*v2alpha1.ArangoMember](s.ResourceIndexer, namespace)}
 }
 
 // ArangoMemberNamespaceLister helps list and get ArangoMembers.
@@ -78,26 +70,5 @@ type ArangoMemberNamespaceLister interface {
 // arangoMemberNamespaceLister implements the ArangoMemberNamespaceLister
 // interface.
 type arangoMemberNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all ArangoMembers in the indexer for a given namespace.
-func (s arangoMemberNamespaceLister) List(selector labels.Selector) (ret []*v2alpha1.ArangoMember, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v2alpha1.ArangoMember))
-	})
-	return ret, err
-}
-
-// Get retrieves the ArangoMember from the indexer for a given namespace and name.
-func (s arangoMemberNamespaceLister) Get(name string) (*v2alpha1.ArangoMember, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v2alpha1.Resource("arangomember"), name)
-	}
-	return obj.(*v2alpha1.ArangoMember), nil
+	listers.ResourceIndexer[*v2alpha1.ArangoMember]
 }

@@ -39,7 +39,7 @@ import (
 const AuthorizationGRPCHeader = "adb-authorization"
 
 func NewGRPCClient[T any](ctx context.Context, in func(cc grpc.ClientConnInterface) T, addr string, opts ...grpc.DialOption) (T, io.Closer, error) {
-	con, err := NewGRPCConn(ctx, addr, opts...)
+	con, err := NewGRPCConn(addr, opts...)
 	if err != nil {
 		return Default[T](), nil, err
 	}
@@ -65,7 +65,7 @@ func NewOptionalTLSGRPCConn(ctx context.Context, addr string, tls *tls.Config, o
 		copy(newOpts[len(opts):], tlsOpts)
 
 		// Create conn
-		conn, err := newGRPCConn(ctx, addr, tlsOpts...)
+		conn, err := newGRPCConn(addr, tlsOpts...)
 		if err != nil {
 			return nil, err
 		}
@@ -91,17 +91,17 @@ func NewOptionalTLSGRPCConn(ctx context.Context, addr string, tls *tls.Config, o
 		}
 	}
 
-	return newGRPCConn(ctx, addr, opts...)
+	return newGRPCConn(addr, opts...)
 }
 
-func newGRPCConn(ctx context.Context, addr string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
+func newGRPCConn(addr string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	var z []grpc.DialOption
 
 	z = append(z, grpc.WithTransportCredentials(insecure.NewCredentials()))
 
 	z = append(z, opts...)
 
-	conn, err := grpc.DialContext(ctx, addr, z...)
+	conn, err := grpc.NewClient(addr, z...)
 	if err != nil {
 		return nil, err
 	}
@@ -109,8 +109,8 @@ func newGRPCConn(ctx context.Context, addr string, opts ...grpc.DialOption) (*gr
 	return conn, nil
 }
 
-func NewGRPCConn(ctx context.Context, addr string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
-	return newGRPCConn(ctx, addr, opts...)
+func NewGRPCConn(addr string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
+	return newGRPCConn(addr, opts...)
 }
 
 func ClientTLS(config *tls.Config) []grpc.DialOption {

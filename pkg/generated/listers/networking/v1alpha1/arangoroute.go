@@ -24,8 +24,8 @@ package v1alpha1
 
 import (
 	v1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -42,25 +42,17 @@ type ArangoRouteLister interface {
 
 // arangoRouteLister implements the ArangoRouteLister interface.
 type arangoRouteLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v1alpha1.ArangoRoute]
 }
 
 // NewArangoRouteLister returns a new ArangoRouteLister.
 func NewArangoRouteLister(indexer cache.Indexer) ArangoRouteLister {
-	return &arangoRouteLister{indexer: indexer}
-}
-
-// List lists all ArangoRoutes in the indexer.
-func (s *arangoRouteLister) List(selector labels.Selector) (ret []*v1alpha1.ArangoRoute, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.ArangoRoute))
-	})
-	return ret, err
+	return &arangoRouteLister{listers.New[*v1alpha1.ArangoRoute](indexer, v1alpha1.Resource("arangoroute"))}
 }
 
 // ArangoRoutes returns an object that can list and get ArangoRoutes.
 func (s *arangoRouteLister) ArangoRoutes(namespace string) ArangoRouteNamespaceLister {
-	return arangoRouteNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return arangoRouteNamespaceLister{listers.NewNamespaced[*v1alpha1.ArangoRoute](s.ResourceIndexer, namespace)}
 }
 
 // ArangoRouteNamespaceLister helps list and get ArangoRoutes.
@@ -78,26 +70,5 @@ type ArangoRouteNamespaceLister interface {
 // arangoRouteNamespaceLister implements the ArangoRouteNamespaceLister
 // interface.
 type arangoRouteNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all ArangoRoutes in the indexer for a given namespace.
-func (s arangoRouteNamespaceLister) List(selector labels.Selector) (ret []*v1alpha1.ArangoRoute, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.ArangoRoute))
-	})
-	return ret, err
-}
-
-// Get retrieves the ArangoRoute from the indexer for a given namespace and name.
-func (s arangoRouteNamespaceLister) Get(name string) (*v1alpha1.ArangoRoute, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1alpha1.Resource("arangoroute"), name)
-	}
-	return obj.(*v1alpha1.ArangoRoute), nil
+	listers.ResourceIndexer[*v1alpha1.ArangoRoute]
 }

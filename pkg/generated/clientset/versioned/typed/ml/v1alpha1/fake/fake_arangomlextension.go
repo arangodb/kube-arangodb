@@ -45,22 +45,24 @@ var arangomlextensionsKind = v1alpha1.SchemeGroupVersion.WithKind("ArangoMLExten
 
 // Get takes name of the arangoMLExtension, and returns the corresponding arangoMLExtension object, and an error if there is any.
 func (c *FakeArangoMLExtensions) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.ArangoMLExtension, err error) {
+	emptyResult := &v1alpha1.ArangoMLExtension{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(arangomlextensionsResource, c.ns, name), &v1alpha1.ArangoMLExtension{})
+		Invokes(testing.NewGetActionWithOptions(arangomlextensionsResource, c.ns, name, options), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ArangoMLExtension), err
 }
 
 // List takes label and field selectors, and returns the list of ArangoMLExtensions that match those selectors.
 func (c *FakeArangoMLExtensions) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.ArangoMLExtensionList, err error) {
+	emptyResult := &v1alpha1.ArangoMLExtensionList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(arangomlextensionsResource, arangomlextensionsKind, c.ns, opts), &v1alpha1.ArangoMLExtensionList{})
+		Invokes(testing.NewListActionWithOptions(arangomlextensionsResource, arangomlextensionsKind, c.ns, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -79,40 +81,43 @@ func (c *FakeArangoMLExtensions) List(ctx context.Context, opts v1.ListOptions) 
 // Watch returns a watch.Interface that watches the requested arangoMLExtensions.
 func (c *FakeArangoMLExtensions) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(arangomlextensionsResource, c.ns, opts))
+		InvokesWatch(testing.NewWatchActionWithOptions(arangomlextensionsResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a arangoMLExtension and creates it.  Returns the server's representation of the arangoMLExtension, and an error, if there is any.
 func (c *FakeArangoMLExtensions) Create(ctx context.Context, arangoMLExtension *v1alpha1.ArangoMLExtension, opts v1.CreateOptions) (result *v1alpha1.ArangoMLExtension, err error) {
+	emptyResult := &v1alpha1.ArangoMLExtension{}
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(arangomlextensionsResource, c.ns, arangoMLExtension), &v1alpha1.ArangoMLExtension{})
+		Invokes(testing.NewCreateActionWithOptions(arangomlextensionsResource, c.ns, arangoMLExtension, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ArangoMLExtension), err
 }
 
 // Update takes the representation of a arangoMLExtension and updates it. Returns the server's representation of the arangoMLExtension, and an error, if there is any.
 func (c *FakeArangoMLExtensions) Update(ctx context.Context, arangoMLExtension *v1alpha1.ArangoMLExtension, opts v1.UpdateOptions) (result *v1alpha1.ArangoMLExtension, err error) {
+	emptyResult := &v1alpha1.ArangoMLExtension{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(arangomlextensionsResource, c.ns, arangoMLExtension), &v1alpha1.ArangoMLExtension{})
+		Invokes(testing.NewUpdateActionWithOptions(arangomlextensionsResource, c.ns, arangoMLExtension, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ArangoMLExtension), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeArangoMLExtensions) UpdateStatus(ctx context.Context, arangoMLExtension *v1alpha1.ArangoMLExtension, opts v1.UpdateOptions) (*v1alpha1.ArangoMLExtension, error) {
+func (c *FakeArangoMLExtensions) UpdateStatus(ctx context.Context, arangoMLExtension *v1alpha1.ArangoMLExtension, opts v1.UpdateOptions) (result *v1alpha1.ArangoMLExtension, err error) {
+	emptyResult := &v1alpha1.ArangoMLExtension{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(arangomlextensionsResource, "status", c.ns, arangoMLExtension), &v1alpha1.ArangoMLExtension{})
+		Invokes(testing.NewUpdateSubresourceActionWithOptions(arangomlextensionsResource, "status", c.ns, arangoMLExtension, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ArangoMLExtension), err
 }
@@ -127,7 +132,7 @@ func (c *FakeArangoMLExtensions) Delete(ctx context.Context, name string, opts v
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeArangoMLExtensions) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(arangomlextensionsResource, c.ns, listOpts)
+	action := testing.NewDeleteCollectionActionWithOptions(arangomlextensionsResource, c.ns, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.ArangoMLExtensionList{})
 	return err
@@ -135,11 +140,12 @@ func (c *FakeArangoMLExtensions) DeleteCollection(ctx context.Context, opts v1.D
 
 // Patch applies the patch and returns the patched arangoMLExtension.
 func (c *FakeArangoMLExtensions) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.ArangoMLExtension, err error) {
+	emptyResult := &v1alpha1.ArangoMLExtension{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(arangomlextensionsResource, c.ns, name, pt, data, subresources...), &v1alpha1.ArangoMLExtension{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(arangomlextensionsResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ArangoMLExtension), err
 }

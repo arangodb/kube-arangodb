@@ -50,38 +50,44 @@ func NewResourceWatcher(getter cache.Getter, resource, namespace string,
 		namespace,
 		fields.Everything())
 
-	_, informer := cache.NewIndexerInformer(source, objType, 0, cache.ResourceEventHandlerFuncs{
-		AddFunc: func(obj interface{}) {
-			defer func() {
-				if err := recover(); err != nil {
-					informerLogger.Interface("error", err).Error("Recovered from panic. Stack trace:", string(debug.Stack()))
+	_, informer := cache.NewInformerWithOptions(cache.InformerOptions{
+		ListerWatcher: source,
+		ObjectType:    objType,
+		Handler: cache.ResourceEventHandlerFuncs{
+			AddFunc: func(obj interface{}) {
+				defer func() {
+					if err := recover(); err != nil {
+						informerLogger.Interface("error", err).Error("Recovered from panic. Stack trace:", string(debug.Stack()))
+					}
+				}()
+				if h.AddFunc != nil {
+					h.AddFunc(obj)
 				}
-			}()
-			if h.AddFunc != nil {
-				h.AddFunc(obj)
-			}
-		},
-		UpdateFunc: func(oldObj, newObj interface{}) {
-			defer func() {
-				if err := recover(); err != nil {
-					informerLogger.Interface("error", err).Error("Recovered from panic. Stack trace:", string(debug.Stack()))
+			},
+			UpdateFunc: func(oldObj, newObj interface{}) {
+				defer func() {
+					if err := recover(); err != nil {
+						informerLogger.Interface("error", err).Error("Recovered from panic. Stack trace:", string(debug.Stack()))
+					}
+				}()
+				if h.UpdateFunc != nil {
+					h.UpdateFunc(oldObj, newObj)
 				}
-			}()
-			if h.UpdateFunc != nil {
-				h.UpdateFunc(oldObj, newObj)
-			}
-		},
-		DeleteFunc: func(obj interface{}) {
-			defer func() {
-				if err := recover(); err != nil {
-					informerLogger.Interface("error", err).Error("Recovered from panic. Stack trace:", string(debug.Stack()))
+			},
+			DeleteFunc: func(obj interface{}) {
+				defer func() {
+					if err := recover(); err != nil {
+						informerLogger.Interface("error", err).Error("Recovered from panic. Stack trace:", string(debug.Stack()))
+					}
+				}()
+				if h.DeleteFunc != nil {
+					h.DeleteFunc(obj)
 				}
-			}()
-			if h.DeleteFunc != nil {
-				h.DeleteFunc(obj)
-			}
+			},
 		},
-	}, cache.Indexers{})
+		ResyncPeriod: 0,
+		Indexers:     cache.Indexers{},
+	})
 
 	return &ResourceWatcher{
 		informer: informer,

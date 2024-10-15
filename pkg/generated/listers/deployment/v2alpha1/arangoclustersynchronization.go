@@ -24,8 +24,8 @@ package v2alpha1
 
 import (
 	v2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v2alpha1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -42,25 +42,17 @@ type ArangoClusterSynchronizationLister interface {
 
 // arangoClusterSynchronizationLister implements the ArangoClusterSynchronizationLister interface.
 type arangoClusterSynchronizationLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v2alpha1.ArangoClusterSynchronization]
 }
 
 // NewArangoClusterSynchronizationLister returns a new ArangoClusterSynchronizationLister.
 func NewArangoClusterSynchronizationLister(indexer cache.Indexer) ArangoClusterSynchronizationLister {
-	return &arangoClusterSynchronizationLister{indexer: indexer}
-}
-
-// List lists all ArangoClusterSynchronizations in the indexer.
-func (s *arangoClusterSynchronizationLister) List(selector labels.Selector) (ret []*v2alpha1.ArangoClusterSynchronization, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v2alpha1.ArangoClusterSynchronization))
-	})
-	return ret, err
+	return &arangoClusterSynchronizationLister{listers.New[*v2alpha1.ArangoClusterSynchronization](indexer, v2alpha1.Resource("arangoclustersynchronization"))}
 }
 
 // ArangoClusterSynchronizations returns an object that can list and get ArangoClusterSynchronizations.
 func (s *arangoClusterSynchronizationLister) ArangoClusterSynchronizations(namespace string) ArangoClusterSynchronizationNamespaceLister {
-	return arangoClusterSynchronizationNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return arangoClusterSynchronizationNamespaceLister{listers.NewNamespaced[*v2alpha1.ArangoClusterSynchronization](s.ResourceIndexer, namespace)}
 }
 
 // ArangoClusterSynchronizationNamespaceLister helps list and get ArangoClusterSynchronizations.
@@ -78,26 +70,5 @@ type ArangoClusterSynchronizationNamespaceLister interface {
 // arangoClusterSynchronizationNamespaceLister implements the ArangoClusterSynchronizationNamespaceLister
 // interface.
 type arangoClusterSynchronizationNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all ArangoClusterSynchronizations in the indexer for a given namespace.
-func (s arangoClusterSynchronizationNamespaceLister) List(selector labels.Selector) (ret []*v2alpha1.ArangoClusterSynchronization, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v2alpha1.ArangoClusterSynchronization))
-	})
-	return ret, err
-}
-
-// Get retrieves the ArangoClusterSynchronization from the indexer for a given namespace and name.
-func (s arangoClusterSynchronizationNamespaceLister) Get(name string) (*v2alpha1.ArangoClusterSynchronization, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v2alpha1.Resource("arangoclustersynchronization"), name)
-	}
-	return obj.(*v2alpha1.ArangoClusterSynchronization), nil
+	listers.ResourceIndexer[*v2alpha1.ArangoClusterSynchronization]
 }

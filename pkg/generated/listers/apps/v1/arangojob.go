@@ -24,8 +24,8 @@ package v1
 
 import (
 	v1 "github.com/arangodb/kube-arangodb/pkg/apis/apps/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -42,25 +42,17 @@ type ArangoJobLister interface {
 
 // arangoJobLister implements the ArangoJobLister interface.
 type arangoJobLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v1.ArangoJob]
 }
 
 // NewArangoJobLister returns a new ArangoJobLister.
 func NewArangoJobLister(indexer cache.Indexer) ArangoJobLister {
-	return &arangoJobLister{indexer: indexer}
-}
-
-// List lists all ArangoJobs in the indexer.
-func (s *arangoJobLister) List(selector labels.Selector) (ret []*v1.ArangoJob, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1.ArangoJob))
-	})
-	return ret, err
+	return &arangoJobLister{listers.New[*v1.ArangoJob](indexer, v1.Resource("arangojob"))}
 }
 
 // ArangoJobs returns an object that can list and get ArangoJobs.
 func (s *arangoJobLister) ArangoJobs(namespace string) ArangoJobNamespaceLister {
-	return arangoJobNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return arangoJobNamespaceLister{listers.NewNamespaced[*v1.ArangoJob](s.ResourceIndexer, namespace)}
 }
 
 // ArangoJobNamespaceLister helps list and get ArangoJobs.
@@ -78,26 +70,5 @@ type ArangoJobNamespaceLister interface {
 // arangoJobNamespaceLister implements the ArangoJobNamespaceLister
 // interface.
 type arangoJobNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all ArangoJobs in the indexer for a given namespace.
-func (s arangoJobNamespaceLister) List(selector labels.Selector) (ret []*v1.ArangoJob, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1.ArangoJob))
-	})
-	return ret, err
-}
-
-// Get retrieves the ArangoJob from the indexer for a given namespace and name.
-func (s arangoJobNamespaceLister) Get(name string) (*v1.ArangoJob, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1.Resource("arangojob"), name)
-	}
-	return obj.(*v1.ArangoJob), nil
+	listers.ResourceIndexer[*v1.ArangoJob]
 }
