@@ -1,0 +1,93 @@
+//
+// DISCLAIMER
+//
+// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Copyright holder is ArangoDB GmbH, Cologne, Germany
+//
+
+syntax = "proto3";
+
+package scheduler;
+
+import "integrations/scheduler/v2/definition/release.proto";
+
+option go_package = "github.com/arangodb/kube-arangodb/integrations/scheduler/v2/definition";
+
+// Request
+message SchedulerV2DiscoverAPIResourcesRequest {
+  // Kubernetes API Group
+  string group = 1;
+  // Kubernetes API Version
+  string version = 2;
+}
+
+// Response
+message SchedulerV2DiscoverAPIResourcesResponse {
+  // Kubernetes API Resources
+  repeated SchedulerV2DiscoverAPIResource resources = 1;
+}
+
+// Request
+message SchedulerV2DiscoverAPIResourceRequest {
+  // Kubernetes API Group
+  string group = 1;
+  // Kubernetes API Version
+  string version = 2;
+  // Kubernetes API Kind
+  string kind = 3;
+}
+
+// Response
+message SchedulerV2DiscoverAPIResourceResponse {
+  // Kubernetes API Resource
+  optional SchedulerV2DiscoverAPIResource resource = 1;
+}
+
+// Kubernetes API Resource Definition
+message SchedulerV2DiscoverAPIResource {
+  // Kubernetes API Resource PluralName
+  string name = 1;
+  // Kubernetes API Resource SingularName
+  string singular_name = 2;
+  // Kubernetes API Resource Namespaced flag
+  bool namespaced = 3;
+  // Kubernetes API Group
+  string group = 4;
+  // Kubernetes API Version
+  string version = 5;
+  // Kubernetes API Kind
+  string kind = 6;
+  // Kubernetes API Resource Verbs
+  repeated string verbs = 7;
+  // Kubernetes API Resource ShortNames
+  repeated string short_names = 8;
+  // Kubernetes API Resource Categories
+  repeated string categories = 9;
+  // Kubernetes API Resource StorageVersionHash
+  string  storage_version_hash = 10;
+}
+
+// Request
+message SchedulerV2KubernetesGetRequest {
+  // Kubernetes API Resources
+  repeated SchedulerV2ReleaseInfoResource resources = 1;
+}
+
+// Response
+message SchedulerV2KubernetesGetResponse {
+  // Kubernetes API Objects
+  repeated SchedulerV2ReleaseInfoResourceObject objects = 1;
+}
