@@ -116,7 +116,7 @@ func NewIntegrationEnablement(integrations ...Integration) (*schedulerApi.Profil
 	}, nil
 }
 
-func NewIntegration(image *schedulerContainerResourcesApi.Image, integration *schedulerIntegrationApi.Sidecar) (*schedulerApi.ProfileTemplate, error) {
+func NewIntegration(image *schedulerContainerResourcesApi.Image, integration *schedulerIntegrationApi.Sidecar, profiles ...*schedulerApi.ProfileTemplate) (*schedulerApi.ProfileTemplate, error) {
 	// Arguments
 
 	exePath := k8sutil.BinaryPath()
@@ -212,5 +212,11 @@ func NewIntegration(image *schedulerContainerResourcesApi.Image, integration *sc
 		Env: envs,
 	}
 
-	return &pt, nil
+	res := &pt
+
+	for _, prof := range profiles {
+		res = res.With(prof)
+	}
+
+	return res, nil
 }

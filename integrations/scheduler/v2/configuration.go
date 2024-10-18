@@ -18,29 +18,42 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package constants
+package v2
 
-import "fmt"
+import "github.com/pkg/errors"
 
-const ProfileGroup = "profiles.arangodb.com"
+type Mod func(c Configuration) Configuration
 
-const ProfilesDeployment = ProfileGroup + "/deployment"
-const ProfilesIntegrationPrefix = "integration." + ProfileGroup
+func NewConfiguration() Configuration {
+	return Configuration{
+		Namespace: "default",
+	}
+}
 
-const (
-	ProfilesIntegrationAuthn = "authn"
-	ProfilesIntegrationAuthz = "authz"
-	ProfilesIntegrationSched = "sched"
-	ProfilesIntegrationEnvoy = "envoy"
-)
+type Configuration struct {
+	Namespace string
 
-const (
-	ProfilesIntegrationV0 = "v0"
-	ProfilesIntegrationV1 = "v1"
-	ProfilesIntegrationV2 = "v2"
-	ProfilesIntegrationV3 = "v3"
-)
+	Deployment string
+}
 
-func NewProfileIntegration(name, version string) (string, string) {
-	return fmt.Sprintf("%s/%s", ProfilesIntegrationPrefix, name), version
+func (c Configuration) Validate() error {
+	if c.Deployment == "" {
+		return errors.Errorf("Invalid empty name of deployment")
+	}
+
+	if c.Namespace == "" {
+		return errors.Errorf("Invalid empty name of namespace")
+	}
+
+	return nil
+}
+
+func (c Configuration) With(mods ...Mod) Configuration {
+	n := c
+
+	for _, mod := range mods {
+		n = mod(n)
+	}
+
+	return n
 }
