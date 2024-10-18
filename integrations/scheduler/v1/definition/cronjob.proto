@@ -22,8 +22,8 @@ syntax = "proto3";
 
 package scheduler;
 
-import "integrations/scheduler/v1/definition/common.proto";
 import "integrations/scheduler/v1/definition/batchjob.proto";
+import "integrations/scheduler/v1/definition/common.proto";
 
 option go_package = "github.com/arangodb/kube-arangodb/integrations/scheduler/v1/definition";
 

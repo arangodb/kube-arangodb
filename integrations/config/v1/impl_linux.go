@@ -64,8 +64,8 @@ func (i *impl) fileDetails(module ModuleDefinition, file string, checksum bool) 
 
 	f.Path = strings.TrimPrefix(expectedPath, fmt.Sprintf("%s/", module.Path))
 	f.Size = finfo.Size
-	f.CreatedAt = timestamppb.New(time.Unix(finfo.Ctim.Sec, finfo.Ctim.Nsec))
-	f.UpdatedAt = timestamppb.New(time.Unix(finfo.Mtim.Sec, finfo.Mtim.Nsec))
+	f.Created = timestamppb.New(time.Unix(finfo.Ctim.Sec, finfo.Ctim.Nsec))
+	f.Updated = timestamppb.New(time.Unix(finfo.Mtim.Sec, finfo.Mtim.Nsec))
 
 	if checksum {
 		c, err := util.SHA256FromFile(expectedPath)

@@ -32,7 +32,7 @@ option go_package = "github.com/arangodb/kube-arangodb/integrations/scheduler/v1
 // Definition of the ServiceInterface for Scheduler V1
 service SchedulerV1 {
   // BatchJob
-  
+
   // Creates BatchJob from specification
   rpc CreateBatchJob(CreateBatchJobRequest) returns (CreateBatchJobResponse) {};
 
@@ -44,7 +44,7 @@ service SchedulerV1 {
 
   // Deletes BatchJob. If job does not exists, Exists flag is set to false
   rpc DeleteBatchJob(DeleteBatchJobRequest) returns (DeleteBatchJobResponse) {};
-  
+
   // CronJob
 
   // Creates CronJob from specification
