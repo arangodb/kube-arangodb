@@ -26,6 +26,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"helm.sh/helm/v3/pkg/action"
+	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
@@ -33,7 +34,10 @@ import (
 
 func cleanup(t *testing.T, c Client) func() {
 	t.Run("Cleanup Pre", func(t *testing.T) {
-		items, err := c.List(context.Background())
+		items, err := c.List(context.Background(), func(in *action.List) {
+			in.All = true
+			in.StateMask = action.ListDeployed | action.ListUninstalled | action.ListUninstalling | action.ListPendingInstall | action.ListPendingUpgrade | action.ListPendingRollback | action.ListSuperseded | action.ListFailed | action.ListUnknown
+		})
 		require.NoError(t, err)
 
 		for _, item := range items {
@@ -46,7 +50,10 @@ func cleanup(t *testing.T, c Client) func() {
 
 	return func() {
 		t.Run("Cleanup Post", func(t *testing.T) {
-			items, err := c.List(context.Background())
+			items, err := c.List(context.Background(), func(in *action.List) {
+				in.All = true
+				in.StateMask = action.ListDeployed | action.ListUninstalled | action.ListUninstalling | action.ListPendingInstall | action.ListPendingUpgrade | action.ListPendingRollback | action.ListSuperseded | action.ListFailed | action.ListUnknown
+			})
 			require.NoError(t, err)
 
 			for _, item := range items {
@@ -82,14 +89,37 @@ func Test_Connection(t *testing.T) {
 		require.NotNil(t, resp)
 	})
 
-	t.Run("Upgrade", func(t *testing.T) {
-		resp, err := c.Upgrade(context.Background(), "test", example_1_0_0, nil, func(in *action.Upgrade) {
-			in.Install = true
-			in.Wait = true
-		})
+	t.Run("Upgrade With No change", func(t *testing.T) {
+		resp, err := c.Upgrade(context.Background(), "test", example_1_0_0, nil)
 		require.NoError(t, err)
 
 		require.NotNil(t, resp)
+		require.NotNil(t, resp.Before)
+		require.Nil(t, resp.After)
+	})
+
+	t.Run("Upgrade With change", func(t *testing.T) {
+		resp, err := c.Upgrade(context.Background(), "test", example_1_0_0, Values(`{"A":"X"}`))
+		require.NoError(t, err)
+
+		require.NotNil(t, resp)
+		require.NotNil(t, resp.Before)
+		require.NotNil(t, resp.After)
+	})
+
+	t.Run("Get all manifests", func(t *testing.T) {
+		resp, mans, err := c.StatusObjects(context.Background(), "test")
+		require.NoError(t, err)
+
+		require.NotNil(t, resp)
+		require.NotNil(t, mans)
+		require.Len(t, mans, 1)
+
+		var d core.ConfigMap
+
+		require.NoError(t, mans[0].Object.Unmarshal(&d))
+
+		t.Logf(string(d.GetUID()))
 	})
 
 	t.Run("Test", func(t *testing.T) {
