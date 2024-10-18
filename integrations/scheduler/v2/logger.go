@@ -18,29 +18,8 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package constants
+package v2
 
-import "fmt"
+import "github.com/arangodb/kube-arangodb/pkg/logging"
 
-const ProfileGroup = "profiles.arangodb.com"
-
-const ProfilesDeployment = ProfileGroup + "/deployment"
-const ProfilesIntegrationPrefix = "integration." + ProfileGroup
-
-const (
-	ProfilesIntegrationAuthn = "authn"
-	ProfilesIntegrationAuthz = "authz"
-	ProfilesIntegrationSched = "sched"
-	ProfilesIntegrationEnvoy = "envoy"
-)
-
-const (
-	ProfilesIntegrationV0 = "v0"
-	ProfilesIntegrationV1 = "v1"
-	ProfilesIntegrationV2 = "v2"
-	ProfilesIntegrationV3 = "v3"
-)
-
-func NewProfileIntegration(name, version string) (string, string) {
-	return fmt.Sprintf("%s/%s", ProfilesIntegrationPrefix, name), version
-}
+var logger = logging.Global().RegisterAndGetLogger("integration-scheduler-v2", logging.Info)

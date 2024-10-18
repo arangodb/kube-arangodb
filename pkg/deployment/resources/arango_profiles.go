@@ -109,7 +109,7 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 
 			integration, err := sidecar.NewIntegration(&schedulerContainerResourcesApi.Image{
 				Image: util.NewType(r.context.GetOperatorImage()),
-			}, spec.Integration.GetSidecar())
+			}, spec.Integration.GetSidecar(), r.arangoDeploymentProfileTemplate())
 			if err != nil {
 				return "", nil, err
 			}
@@ -133,6 +133,8 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 		gen(constants.ProfilesIntegrationAuthz, constants.ProfilesIntegrationV0, sidecar.IntegrationAuthorizationV0{}),
 		gen(constants.ProfilesIntegrationAuthn, constants.ProfilesIntegrationV1, sidecar.IntegrationAuthenticationV1{Spec: spec, DeploymentName: apiObject.GetName()}),
 		gen(constants.ProfilesIntegrationSched, constants.ProfilesIntegrationV1, sidecar.IntegrationSchedulerV1{}),
+		gen(constants.ProfilesIntegrationSched, constants.ProfilesIntegrationV2, sidecar.IntegrationSchedulerV2{}),
+		gen(constants.ProfilesIntegrationEnvoy, constants.ProfilesIntegrationV3, sidecar.IntegrationEnvoyV3{Spec: spec}),
 	); err != nil {
 		return err
 	} else if changed {
@@ -140,6 +142,10 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 	}
 
 	return reconcileRequired.Reconcile(ctx)
+}
+
+func (r *Resources) arangoDeploymentProfileTemplate() *schedulerApi.ProfileTemplate {
+	return nil
 }
 
 func (r *Resources) ensureArangoProfilesFactory(ctx context.Context, cachedStatus inspectorInterface.Inspector, expected ...func() (string, *schedulerApi.ArangoProfile, error)) (bool, error) {

@@ -18,29 +18,8 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package constants
-
-import "fmt"
-
-const ProfileGroup = "profiles.arangodb.com"
-
-const ProfilesDeployment = ProfileGroup + "/deployment"
-const ProfilesIntegrationPrefix = "integration." + ProfileGroup
+package v2
 
 const (
-	ProfilesIntegrationAuthn = "authn"
-	ProfilesIntegrationAuthz = "authz"
-	ProfilesIntegrationSched = "sched"
-	ProfilesIntegrationEnvoy = "envoy"
+	LabelArangoDBDeploymentName = "deployment.arangodb.com/name"
 )
-
-const (
-	ProfilesIntegrationV0 = "v0"
-	ProfilesIntegrationV1 = "v1"
-	ProfilesIntegrationV2 = "v2"
-	ProfilesIntegrationV3 = "v3"
-)
-
-func NewProfileIntegration(name, version string) (string, string) {
-	return fmt.Sprintf("%s/%s", ProfilesIntegrationPrefix, name), version
-}
