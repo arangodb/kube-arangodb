@@ -47,7 +47,7 @@ jobs:
           name: Run Vendor
           command: make vendor
       - save_cache:
-          keys: build-mod-{{ checksum ".checksum.mod" }}
+          key: build-mod-{{ checksum ".checksum.mod" }}
           paths:
             - /tmp/go/path
       - run:
@@ -106,7 +106,7 @@ jobs:
             fi
             make ci-check
       - save_cache:
-          keys: build-code-{{ checksum ".checksum.code" }}
+          key: build-code-{{ checksum ".checksum.code" }}
           paths:
             - /tmp/go/cache
 
