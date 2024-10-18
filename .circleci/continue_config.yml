@@ -42,25 +42,14 @@ jobs:
       - restore_cache:
           keys:
             - build-mod-{{ checksum ".checksum.mod" }}
-            - build-code-{{ checksum ".checksum.code" }}
+            - build-code-{{ checksum ".checksum.mod" }}
       - run:
           name: Run Vendor
-          command: make vendor
+          command: make vendor tools-min init
       - save_cache:
           key: build-mod-{{ checksum ".checksum.mod" }}
           paths:
             - /tmp/go/path
-      - run:
-          name: Install deps
-          command: |
-            if [ -z "$CIRCLE_PULL_REQUEST" ]; then
-              make vendor
-              make tools-min
-              exit 0
-            fi
-            apt-get update
-            apt-get install -y unzip
-            make init
       - run:
           name: License check
           command: |
@@ -106,7 +95,7 @@ jobs:
             fi
             make ci-check
       - save_cache:
-          key: build-code-{{ checksum ".checksum.code" }}
+          key: build-code-{{ checksum ".checksum.mod" }}
           paths:
             - /tmp/go/cache
 
