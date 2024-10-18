@@ -20,7 +20,11 @@
 
 package helm
 
-import "encoding/json"
+import (
+	"encoding/json"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
+)
 
 func NewValues(in any) (Values, error) {
 	data, err := json.Marshal(in)
@@ -33,9 +37,41 @@ func NewValues(in any) (Values, error) {
 
 type Values []byte
 
+func (v Values) Equals(other Values) bool {
+	a, err := v.Marshal()
+	if err != nil {
+		return false
+	}
+
+	if len(a) == 0 {
+		a = nil
+	}
+
+	ad, err := json.Marshal(a)
+	if err != nil {
+		return false
+	}
+
+	b, err := other.Marshal()
+	if err != nil {
+		return false
+	}
+
+	if len(b) == 0 {
+		b = nil
+	}
+
+	bd, err := json.Marshal(b)
+	if err != nil {
+		return false
+	}
+
+	return util.SHA256(ad) == util.SHA256(bd)
+}
+
 func (v Values) Marshal() (map[string]interface{}, error) {
 	if len(v) == 0 {
-		return nil, nil
+		return map[string]interface{}{}, nil
 	}
 
 	var q map[string]interface{}
