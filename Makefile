@@ -25,7 +25,13 @@ RELEASE_MODE ?= community
 
 MAIN_DIR := $(ROOT)/pkg/entry/$(RELEASE_MODE)
 
-GOBUILDDIR := $(SCRIPTDIR)/.gobuild
+ifndef KEEP_GOPATH
+	GOBUILDDIR := $(SCRIPTDIR)/.gobuild
+	GOPATH := $(GOBUILDDIR)
+else
+	GOBUILDDIR := $(GOPATH)
+endif
+
 SRCDIR := $(SCRIPTDIR)
 CACHEVOL := $(PROJECT)-gocache
 BINDIR := $(ROOTDIR)/bin
@@ -41,10 +47,6 @@ REPODIR := $(ORGDIR)/$(REPONAME)
 REPOPATH := $(ORGPATH)/$(REPONAME)
 
 include $(ROOT)/$(RELEASE_MODE).mk
-
-ifndef KEEP_GOPATH
-	GOPATH := $(GOBUILDDIR)
-endif
 
 TEST_BUILD ?= 0
 GOBUILDARGS ?=
@@ -427,11 +429,8 @@ update-vendor:
 
 .PHONY: update-generated
 update-generated:
-	@rm -fr $(ORGDIR)
-	@mkdir -p $(ORGDIR)
-	@ln -s -f $(SCRIPTDIR) $(ORGDIR)/kube-arangodb
 	@$(SED) -e 's/^/\/\/ /' -e 's/ *$$//' $(ROOTDIR)/tools/codegen/license-header.txt > $(ROOTDIR)/tools/codegen/boilerplate.go.txt
-	GOPATH=$(GOBUILDDIR) bash "${ROOTDIR}/scripts/codegen.sh" "${ROOTDIR}"
+	bash "${ROOTDIR}/scripts/codegen.sh" "${ROOTDIR}"
 
 dashboard/assets.go:
 	cd $(DASHBOARDDIR) && docker build -t $(DASHBOARDBUILDIMAGE) -f Dockerfile.build $(DASHBOARDDIR)
@@ -792,7 +791,7 @@ tools: tools-min
 	@GOBIN=$(GOPATH)/bin go install github.com/golang/protobuf/protoc-gen-go@v1.5.2
 	@GOBIN=$(GOPATH)/bin go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
 	@echo ">> Fetching govulncheck"
-	@GOBIN=$(GOPATH)/bin go install golang.org/x/vuln/cmd/govulncheck@v1.0.4
+	@GOBIN=$(GOPATH)/bin go install golang.org/x/vuln/cmd/govulncheck@v1.1.3
 
 .PHONY: vendor
 vendor:
