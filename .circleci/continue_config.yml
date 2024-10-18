@@ -27,10 +27,29 @@ executors:
 jobs:
   check-code:
     executor: golang-executor
+    environment:
+      GOCACHE: "/tmp/go/cache"
+      GOPATH: "/tmp/go/path"
+      GO111MODULES: off
+      KEEP_GOPATH: 1
     steps:
       - setup_remote_docker:
           docker_layer_caching: true
       - checkout
+      - run:
+          name: Calculate cache
+          command: bash ./scripts/cache.sh .
+      - restore_cache:
+          keys:
+            - build-mod-{{ checksum ".checksum.mod" }}
+            - build-code-{{ checksum ".checksum.code" }}
+      - run:
+          name: Run Vendor
+          command: make vendor
+      - save_cache:
+          keys: build-mod-{{ checksum ".checksum.mod" }}
+          paths:
+            - /tmp/go/path
       - run:
           name: Install deps
           command: |
@@ -71,6 +90,7 @@ jobs:
              make bin
       - run:
           name: vulncheck
+          no_output_timeout: 1.5h
           command: |
             if [ -z "$CIRCLE_PULL_REQUEST" ]; then
               echo "This is not a pull request. Skipping..."
@@ -85,8 +105,10 @@ jobs:
               exit 0
             fi
             make ci-check
-    environment:
-      GO111MODULES: off
+      - save_cache:
+          keys: build-code-{{ checksum ".checksum.code" }}
+          paths:
+            - /tmp/go/cache
 
   manifests_verify:
     executor: machine-executor
