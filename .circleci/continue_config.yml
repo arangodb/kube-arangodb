@@ -42,6 +42,8 @@ jobs:
       - restore_cache:
           keys:
             - build-mod-{{ checksum ".checksum.mod" }}
+      - restore_cache:
+          keys:
             - build-code-{{ checksum ".checksum.mod" }}
       - run:
           name: Run Vendor
