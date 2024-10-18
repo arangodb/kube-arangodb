@@ -48,7 +48,7 @@ message DeploymentSpec {
 message DeploymentStatus {
 
   // Total number of non-terminated pods targeted by this deployment (their labels match the selector).
-  int32 replicas=1;
+  int32 replicas = 1;
 
   // Total number of non-terminated pods targeted by this deployment that have the desired template spec.
   int32 updated_replicas = 2;

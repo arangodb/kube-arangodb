@@ -30,8 +30,11 @@ option go_package = "github.com/arangodb/kube-arangodb/integrations/config/v1/de
 
 // ConfigV1 Service implementation
 service ConfigV1 {
+  // Returns list of registered modules
   rpc Modules(shared.Empty) returns (ConfigV1ModulesResponse);
+  // Returns details of the module
   rpc ModuleDetails(ConfigV1ModuleDetailsRequest) returns (ConfigV1ModuleDetailsResponse);
+  // Returns file details
   rpc FileDetails(ConfigV1FileDetailsRequest) returns (ConfigV1FileDetailsResponse);
 }
 
@@ -99,8 +102,8 @@ message ConfigV1File {
   optional string checksum = 3;
 
   // Timestamp of the file creation
-  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp created = 4;
 
   // Timestamp of the file update
-  google.protobuf.Timestamp updated_at = 5;
+  google.protobuf.Timestamp updated = 5;
 }

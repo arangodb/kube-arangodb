@@ -30,6 +30,7 @@ option go_package = "github.com/arangodb/kube-arangodb/integrations/pong/v1/defi
 
 // PongV1 Service implementation
 service PongV1 {
+  // Sends ping to the server
   rpc Ping(shared.Empty) returns (PongV1PingResponse);
 }
 
