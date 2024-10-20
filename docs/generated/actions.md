@@ -37,6 +37,7 @@ nav_order: 11
 |        EncryptionKeyRemove         |    no    |  10m0s  |    no    |    Enterprise Only     |                                       Remove the encryption key to the pool                                        |
 |     EncryptionKeyStatusUpdate      |    no    |  10m0s  |    no    |    Enterprise Only     |                                      Update status of encryption propagation                                       |
 |      EnforceResignLeadership       |    no    |  45m0s  |   yes    | Community & Enterprise |                    Run the ResignLeadership job on DBServer and checks data compatibility after                    |
+|   EnsureSecuredResignLeadership    |    no    |  10m0s  |    no    | Community & Enterprise |                               Ensures that data is still replicated on other servers                               |
 |                Idle                |    no    |  10m0s  |    no    | Community & Enterprise |                            Define idle operation in case if preconditions are not meet                             |
 |               JWTAdd               |    no    |  10m0s  |    no    |    Enterprise Only     |                                              Adds new JWT to the pool                                              |
 |              JWTClean              |    no    |  10m0s  |    no    |    Enterprise Only     |                                            Remove JWT key from the pool                                            |
@@ -133,6 +134,7 @@ spec:
       EncryptionKeyRemove: 10m0s
       EncryptionKeyStatusUpdate: 10m0s
       EnforceResignLeadership: 45m0s
+      EnsureSecuredResignLeadership: 10m0s
       Idle: 10m0s
       JWTAdd: 10m0s
       JWTClean: 10m0s

@@ -1,5 +1,5 @@
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -95,6 +95,9 @@ var (
 
 	_ Action        = &actionEnforceResignLeadership{}
 	_ actionFactory = newEnforceResignLeadershipAction
+
+	_ Action        = &actionEnsureSecuredResignLeadership{}
+	_ actionFactory = newEnsureSecuredResignLeadershipAction
 
 	_ Action        = &actionIdle{}
 	_ actionFactory = newIdleAction
@@ -612,6 +615,20 @@ func init() {
 
 		// Get Action defition
 		function := newEnforceResignLeadershipAction
+
+		// Wrap action main function
+
+		// Register action
+		registerAction(action, function)
+	}
+
+	// EnsureSecuredResignLeadership
+	{
+		// Get Action type
+		action := api.ActionTypeEnsureSecuredResignLeadership
+
+		// Get Action defition
+		function := newEnsureSecuredResignLeadershipAction
 
 		// Wrap action main function
 

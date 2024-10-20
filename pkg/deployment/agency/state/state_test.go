@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -302,6 +302,58 @@ func Test_IsDBServerReadyToRestart(t *testing.T) {
 			}
 			for _, server := range tc.notReady {
 				require.NotEqual(t, len(s.Filter(FilterDBServerShardRestart(Server(server)))), 0, "server %s should not be in sync", server)
+			}
+		})
+	}
+}
+
+func Test_IsServerWithShardBackup(t *testing.T) {
+	type testCase struct {
+		generator Generator
+		ready     bool
+		server    Server
+	}
+	newDBWithCol := func(writeConcern int) CollectionGeneratorInterface {
+		return NewDatabaseRandomGenerator().RandomCollection().WithWriteConcern(writeConcern)
+	}
+	tcs := map[string]testCase{
+		"missing replica": {
+			generator: newDBWithCol(1).WithShard().WithPlan("A", "B").WithCurrent("A").Add().Add().Add(),
+			ready:     false,
+			server:    "A",
+		},
+		"ready replica": {
+			generator: newDBWithCol(1).WithShard().WithPlan("A", "B").WithCurrent("A", "B").Add().Add().Add(),
+			ready:     true,
+			server:    "A",
+		},
+		"not affected replica": {
+			generator: newDBWithCol(1).WithShard().WithPlan("A", "B").WithCurrent("A").Add().Add().Add(),
+			ready:     true,
+			server:    "B",
+		},
+		"not affected nonexisting replica": {
+			generator: newDBWithCol(1).WithShard().WithPlan("A", "B").WithCurrent("A").Add().Add().Add(),
+			ready:     true,
+			server:    "C",
+		},
+		"rf1": {
+			generator: newDBWithCol(1).WithShard().WithPlan("A").WithCurrent("A").Add().Add().Add(),
+			ready:     true,
+			server:    "A",
+		},
+	}
+
+	for name, tc := range tcs {
+		t.Run(name, func(t *testing.T) {
+			s := GenerateState(t, tc.generator)
+
+			res := s.IsServerWithShardBackup(tc.server)
+
+			if tc.ready {
+				require.True(t, res)
+			} else {
+				require.False(t, res)
 			}
 		})
 	}
