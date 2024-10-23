@@ -40,6 +40,20 @@ type Integration interface {
 	Handler(ctx context.Context, cmd *cobra.Command) (svc.Handler, error)
 }
 
+type IntegrationVisibility interface {
+	Integration
+
+	Visible() bool
+}
+
+func GetIntegrationVisibility(in Integration) bool {
+	if v, ok := in.(IntegrationVisibility); ok {
+		return v.Visible()
+	}
+
+	return true
+}
+
 type IntegrationEnablement interface {
 	Integration
 

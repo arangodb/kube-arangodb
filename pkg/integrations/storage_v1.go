@@ -70,3 +70,7 @@ func (b *storageV1) Handler(ctx context.Context, cmd *cobra.Command) (svc.Handle
 func (*storageV1) Init(ctx context.Context, cmd *cobra.Command) error {
 	return nil
 }
+
+func (*storageV1) Visible() bool {
+	return false
+}

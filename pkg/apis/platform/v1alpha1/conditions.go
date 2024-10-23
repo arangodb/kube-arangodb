@@ -23,6 +23,7 @@ package v1alpha1
 import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 
 const (
-	SpecValidCondition api.ConditionType = "SpecValid"
-	ReadyCondition     api.ConditionType = "Ready"
+	DeploymentFoundCondition api.ConditionType = "DeploymentFound"
+	SpecValidCondition       api.ConditionType = "SpecValid"
+	ReadyCondition           api.ConditionType = "Ready"
 )
