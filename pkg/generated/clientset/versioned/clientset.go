@@ -34,6 +34,7 @@ import (
 	mlv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/ml/v1alpha1"
 	mlv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/ml/v1beta1"
 	networkingv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/networking/v1alpha1"
+	platformv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/platform/v1alpha1"
 	replicationv1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/replication/v1"
 	replicationv2alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/replication/v2alpha1"
 	schedulerv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/scheduler/v1alpha1"
@@ -54,6 +55,7 @@ type Interface interface {
 	MlV1alpha1() mlv1alpha1.MlV1alpha1Interface
 	MlV1beta1() mlv1beta1.MlV1beta1Interface
 	NetworkingV1alpha1() networkingv1alpha1.NetworkingV1alpha1Interface
+	PlatformV1alpha1() platformv1alpha1.PlatformV1alpha1Interface
 	ReplicationV1() replicationv1.ReplicationV1Interface
 	ReplicationV2alpha1() replicationv2alpha1.ReplicationV2alpha1Interface
 	SchedulerV1alpha1() schedulerv1alpha1.SchedulerV1alpha1Interface
@@ -72,6 +74,7 @@ type Clientset struct {
 	mlV1alpha1          *mlv1alpha1.MlV1alpha1Client
 	mlV1beta1           *mlv1beta1.MlV1beta1Client
 	networkingV1alpha1  *networkingv1alpha1.NetworkingV1alpha1Client
+	platformV1alpha1    *platformv1alpha1.PlatformV1alpha1Client
 	replicationV1       *replicationv1.ReplicationV1Client
 	replicationV2alpha1 *replicationv2alpha1.ReplicationV2alpha1Client
 	schedulerV1alpha1   *schedulerv1alpha1.SchedulerV1alpha1Client
@@ -117,6 +120,11 @@ func (c *Clientset) MlV1beta1() mlv1beta1.MlV1beta1Interface {
 // NetworkingV1alpha1 retrieves the NetworkingV1alpha1Client
 func (c *Clientset) NetworkingV1alpha1() networkingv1alpha1.NetworkingV1alpha1Interface {
 	return c.networkingV1alpha1
+}
+
+// PlatformV1alpha1 retrieves the PlatformV1alpha1Client
+func (c *Clientset) PlatformV1alpha1() platformv1alpha1.PlatformV1alpha1Interface {
+	return c.platformV1alpha1
 }
 
 // ReplicationV1 retrieves the ReplicationV1Client
@@ -220,6 +228,10 @@ func NewForConfigAndClient(c *rest.Config, httpClient *http.Client) (*Clientset,
 	if err != nil {
 		return nil, err
 	}
+	cs.platformV1alpha1, err = platformv1alpha1.NewForConfigAndClient(&configShallowCopy, httpClient)
+	if err != nil {
+		return nil, err
+	}
 	cs.replicationV1, err = replicationv1.NewForConfigAndClient(&configShallowCopy, httpClient)
 	if err != nil {
 		return nil, err
@@ -269,6 +281,7 @@ func New(c rest.Interface) *Clientset {
 	cs.mlV1alpha1 = mlv1alpha1.New(c)
 	cs.mlV1beta1 = mlv1beta1.New(c)
 	cs.networkingV1alpha1 = networkingv1alpha1.New(c)
+	cs.platformV1alpha1 = platformv1alpha1.New(c)
 	cs.replicationV1 = replicationv1.New(c)
 	cs.replicationV2alpha1 = replicationv2alpha1.New(c)
 	cs.schedulerV1alpha1 = schedulerv1alpha1.New(c)

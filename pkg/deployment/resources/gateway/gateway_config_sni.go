@@ -32,8 +32,8 @@ import (
 type ConfigSNIList []ConfigSNI
 
 func (c ConfigSNIList) RenderFilterChain(filters []*listenerAPI.Filter) ([]*listenerAPI.FilterChain, error) {
-	var r = make([]*listenerAPI.FilterChain, len(filters))
-	for id := range filters {
+	var r = make([]*listenerAPI.FilterChain, len(c))
+	for id := range c {
 		if f, err := c[id].RenderFilterChain(filters); err != nil {
 			return nil, err
 		} else {

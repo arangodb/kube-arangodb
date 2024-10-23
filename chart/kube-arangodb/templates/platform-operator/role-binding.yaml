@@ -1,10 +1,10 @@
 {{ if .Values.rbac.enabled -}}
-{{ if .Values.operator.features.networking -}}
+{{ if .Values.operator.features.platform -}}
 
 apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
+kind: RoleBinding
 metadata:
-    name: {{ template "kube-arangodb.rbac" . }}-networking
+    name: {{ template "kube-arangodb.rbac" . }}-platform
     namespace: {{ .Release.Namespace }}
     labels:
         app.kubernetes.io/name: {{ template "kube-arangodb.name" . }}
@@ -12,12 +12,14 @@ metadata:
         app.kubernetes.io/managed-by: {{ .Release.Service }}
         app.kubernetes.io/instance: {{ .Release.Name }}
         release: {{ .Release.Name }}
-rules:
-  - apiGroups: ["networking.arangodb.com"]
-    resources: ["arangoroutes", "arangoroutes/status"]
-    verbs: ["*"]
-  - apiGroups: [""]
-    resources: ["pods", "services", "endpoints"]
-    verbs: ["get", "list", "watch"]
+roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: Role
+    name: {{ template "kube-arangodb.rbac" . }}-platform
+subjects:
+    - kind: ServiceAccount
+      name: {{ template "kube-arangodb.operatorName" . }}
+      namespace: {{ .Release.Namespace }}
+
 {{- end }}
 {{- end }}

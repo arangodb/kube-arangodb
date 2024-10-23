@@ -36,6 +36,7 @@ operator:
     analytics: false
     networking: true
     scheduler: true
+    platform: true
   tolerations: []
 rbac:
   enabled: true
