@@ -21,6 +21,7 @@
 package tests
 
 import (
+	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
 	"reflect"
 	"testing"
 
@@ -98,4 +99,5 @@ func Test_NewMetaObject(t *testing.T) {
 	NewMetaObjectRun[*schedulerApi.ArangoSchedulerCronJob](t)
 	NewMetaObjectRun[*analyticsApi.GraphAnalyticsEngine](t)
 	NewMetaObjectRun[*networkingApi.ArangoRoute](t)
+	NewMetaObjectRun[*platformApi.ArangoPlatformStorage](t)
 }

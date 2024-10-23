@@ -34,7 +34,7 @@ type ArangoRouteSpec struct {
 }
 
 func (s *ArangoRouteSpec) GetDeployment() string {
-	if s == nil || s.Destination == nil {
+	if s == nil || s.Deployment == nil {
 		return ""
 	}
 
