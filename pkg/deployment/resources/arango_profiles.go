@@ -23,6 +23,10 @@ package resources
 import (
 	"context"
 	"fmt"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	schedulerContainerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container"
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	core "k8s.io/api/core/v1"
 	"time"
 
 	"k8s.io/apimachinery/pkg/api/equality"
@@ -109,7 +113,7 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 
 			integration, err := sidecar.NewIntegration(&schedulerContainerResourcesApi.Image{
 				Image: util.NewType(r.context.GetOperatorImage()),
-			}, spec.Integration.GetSidecar(), r.arangoDeploymentProfileTemplate())
+			}, spec.Integration.GetSidecar(), r.arangoDeploymentProfileTemplate(cachedStatus))
 			if err != nil {
 				return "", nil, err
 			}
@@ -144,8 +148,48 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 	return reconcileRequired.Reconcile(ctx)
 }
 
-func (r *Resources) arangoDeploymentProfileTemplate() *schedulerApi.ProfileTemplate {
-	return nil
+func (r *Resources) arangoDeploymentInternalAddress(cachedStatus inspectorInterface.Inspector) string {
+	spec := r.context.GetSpec()
+	apiObject := r.context.GetAPIObject()
+	deploymentName := apiObject.GetName()
+
+	proto := util.BoolSwitch(spec.IsSecure(), "https", "http")
+	svc, ok := cachedStatus.Service().V1().GetSimple(fmt.Sprintf("%s-int", deploymentName))
+	if !ok {
+		return ""
+	}
+
+	if spec.CommunicationMethod.Get() == api.DeploymentCommunicationMethodIP {
+		if ip := svc.Spec.ClusterIP; ip != core.ClusterIPNone && ip != "" {
+			return fmt.Sprintf("%s://%s:%d", proto, ip, shared.ArangoPort)
+		}
+	}
+
+	return fmt.Sprintf("%s://%s:%d", proto, k8sutil.CreateDatabaseClientServiceDNSNameWithDomain(svc, spec.ClusterDomain), shared.ArangoPort)
+}
+
+func (r *Resources) arangoDeploymentProfileTemplate(cachedStatus inspectorInterface.Inspector) *schedulerApi.ProfileTemplate {
+	apiObject := r.context.GetAPIObject()
+	deploymentName := apiObject.GetName()
+
+	return &schedulerApi.ProfileTemplate{
+		Container: &schedulerApi.ProfileContainerTemplate{
+			All: &schedulerContainerApi.Generic{
+				Environments: &schedulerContainerResourcesApi.Environments{
+					Env: []core.EnvVar{
+						{
+							Name:  "ARANGO_DEPLOYMENT_NAME",
+							Value: deploymentName,
+						},
+						{
+							Name:  "ARANGO_DEPLOYMENT_ENDPOINT",
+							Value: r.arangoDeploymentInternalAddress(cachedStatus),
+						},
+					},
+				},
+			},
+		},
+	}
 }
 
 func (r *Resources) ensureArangoProfilesFactory(ctx context.Context, cachedStatus inspectorInterface.Inspector, expected ...func() (string, *schedulerApi.ArangoProfile, error)) (bool, error) {
