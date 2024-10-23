@@ -25,4 +25,4 @@ Example: `deployment`
 
 HTTP/S Endpoint of the ArangoDeployment Internal Service.
 
-Example: `https://deployment-int.default.svc:8529`
+Example: `https://deployment.default.svc:8529`

@@ -23,17 +23,17 @@ package resources
 import (
 	"context"
 	"fmt"
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	schedulerContainerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container"
-	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	core "k8s.io/api/core/v1"
 	"time"
 
+	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
+	schedulerContainerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container"
 	schedulerContainerResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container/resources"
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/integrations/sidecar"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
@@ -154,7 +154,7 @@ func (r *Resources) arangoDeploymentInternalAddress(cachedStatus inspectorInterf
 	deploymentName := apiObject.GetName()
 
 	proto := util.BoolSwitch(spec.IsSecure(), "https", "http")
-	svc, ok := cachedStatus.Service().V1().GetSimple(fmt.Sprintf("%s-int", deploymentName))
+	svc, ok := cachedStatus.Service().V1().GetSimple(deploymentName)
 	if !ok {
 		return ""
 	}
