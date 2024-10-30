@@ -47,7 +47,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	secretv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
@@ -296,7 +296,7 @@ func createClient(endpoints []string, certCA *x509.CertPool, auth connection.Aut
 }
 
 // getJWTTokenFromSecrets returns token from the secret.
-func getJWTTokenFromSecrets(ctx context.Context, secrets secretv1.ReadInterface, name string) (connection.Authentication, error) {
+func getJWTTokenFromSecrets(ctx context.Context, secrets generic.ReadClient[*core.Secret], name string) (connection.Authentication, error) {
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 
@@ -314,7 +314,7 @@ func getJWTTokenFromSecrets(ctx context.Context, secrets secretv1.ReadInterface,
 }
 
 // getCACertificate returns CA certificate from the secret.
-func getCACertificate(ctx context.Context, secrets secretv1.ReadInterface, name string) (*x509.CertPool, error) {
+func getCACertificate(ctx context.Context, secrets generic.ReadClient[*core.Secret], name string) (*x509.CertPool, error) {
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 

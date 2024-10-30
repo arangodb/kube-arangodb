@@ -25,11 +25,12 @@ import (
 	"time"
 
 	core "k8s.io/api/core/v1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/node"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
 )
@@ -49,90 +50,16 @@ func (p nodesInspectorLoader) Component() definitions.Component {
 
 func (p nodesInspectorLoader) Load(ctx context.Context, i *inspectorState) {
 	var q nodesInspector
-	p.loadV1(ctx, i, &q)
+
+	q.v1 = newInspectorVersion[*core.NodeList, *core.Node](ctx,
+		constants.NodeGRv1(),
+		constants.NodeGKv1(),
+		i.client.Kubernetes().CoreV1().Nodes(),
+		node.List())
+
 	i.nodes = &q
 	q.state = i
 	q.last = time.Now()
-}
-
-func (p nodesInspectorLoader) loadV1(ctx context.Context, i *inspectorState, q *nodesInspector) {
-	var z nodesInspectorV1
-
-	z.nodeInspector = q
-
-	z.nodes, z.err = p.getV1Nodes(ctx, i)
-
-	q.v1 = &z
-}
-
-func (p nodesInspectorLoader) getV1Nodes(ctx context.Context, i *inspectorState) (map[string]*core.Node, error) {
-	objs, err := p.getV1NodesList(ctx, i)
-	if err != nil {
-		return nil, err
-	}
-
-	r := make(map[string]*core.Node, len(objs))
-
-	for id := range objs {
-		r[objs[id].GetName()] = objs[id]
-	}
-
-	return r, nil
-}
-
-func (p nodesInspectorLoader) getV1NodesList(ctx context.Context, i *inspectorState) ([]*core.Node, error) {
-	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
-	defer cancel()
-	obj, err := i.client.Kubernetes().CoreV1().Nodes().List(ctxChild, meta.ListOptions{
-		Limit: globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	items := obj.Items
-	cont := obj.Continue
-	var s = int64(len(items))
-
-	if z := obj.RemainingItemCount; z != nil {
-		s += *z
-	}
-
-	ptrs := make([]*core.Node, 0, s)
-
-	for {
-		for id := range items {
-			ptrs = append(ptrs, &items[id])
-		}
-
-		if cont == "" {
-			break
-		}
-
-		items, cont, err = p.getV1NodesListRequest(ctx, i, cont)
-
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return ptrs, nil
-}
-
-func (p nodesInspectorLoader) getV1NodesListRequest(ctx context.Context, i *inspectorState, cont string) ([]core.Node, string, error) {
-	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
-	defer cancel()
-	obj, err := i.client.Kubernetes().CoreV1().Nodes().List(ctxChild, meta.ListOptions{
-		Limit:    globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
-		Continue: cont,
-	})
-
-	if err != nil {
-		return nil, "", err
-	}
-
-	return obj.Items, obj.Continue, err
 }
 
 func (p nodesInspectorLoader) Verify(i *inspectorState) error {
@@ -159,7 +86,7 @@ type nodesInspector struct {
 
 	last time.Time
 
-	v1 *nodesInspectorV1
+	v1 *inspectorVersion[*core.Node]
 }
 
 func (p *nodesInspector) LastRefresh() time.Time {
@@ -189,4 +116,12 @@ func (p *nodesInspector) validate() error {
 	}
 
 	return p.v1.validate()
+}
+
+func (p *nodesInspector) V1() (generic.Inspector[*core.Node], error) {
+	if p.v1.err != nil {
+		return nil, p.v1.err
+	}
+
+	return p.v1, nil
 }

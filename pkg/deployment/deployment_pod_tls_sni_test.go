@@ -34,10 +34,10 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	secretv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 )
 
-func createTLSSNISecret(t *testing.T, client secretv1.ModInterface, name, namespace string) {
+func createTLSSNISecret(t *testing.T, client generic.ModClient[*core.Secret], name, namespace string) {
 	secret := core.Secret{
 		ObjectMeta: meta.ObjectMeta{
 			Name:      name,

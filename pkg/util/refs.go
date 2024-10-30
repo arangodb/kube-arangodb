@@ -188,3 +188,12 @@ func JSONRemarshal[A, B any](in A) (B, error) {
 
 	return o, nil
 }
+
+func InitOptional[T any](in *T, ok bool) *T {
+	if ok {
+		return in
+	}
+
+	var z T
+	return &z
+}

@@ -8,6 +8,7 @@
 - (Maintenance) Proto Lint
 - (Feature) (Integration) SchedulerV2
 - (Feature) (Integration) Basic Envs
+- (Maintenance) Inspector Generics
 
 ## [1.2.43](https://github.com/arangodb/kube-arangodb/tree/1.2.43) (2024-10-14)
 - (Feature) ArangoRoute CRD

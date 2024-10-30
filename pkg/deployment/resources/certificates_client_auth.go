@@ -24,19 +24,20 @@ import (
 	"context"
 	"fmt"
 
+	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	secretv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	ktls "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
 )
 
 // createClientAuthCACertificate creates a client authentication CA certificate and stores it in a secret with name
 // specified in the given spec.
-func (r *Resources) createClientAuthCACertificate(ctx context.Context, secrets secretv1.ModInterface, spec api.SyncAuthenticationSpec, deploymentName string, ownerRef *meta.OwnerReference) error {
+func (r *Resources) createClientAuthCACertificate(ctx context.Context, secrets generic.ModClient[*core.Secret], spec api.SyncAuthenticationSpec, deploymentName string, ownerRef *meta.OwnerReference) error {
 	log := r.log.Str("section", "secrets")
 
 	cert, priv, err := ktls.CreateTLSCACertificate(fmt.Sprintf("%s Client Authentication Root Certificate", deploymentName))

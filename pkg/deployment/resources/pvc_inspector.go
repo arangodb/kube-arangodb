@@ -36,7 +36,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-	pvcv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 )
 
 var (
@@ -157,7 +157,7 @@ func (r *Resources) InspectPVCs(ctx context.Context, cachedStatus inspectorInter
 		}
 
 		return nil
-	}, pvcv1.FilterPersistentVolumeClaimsByLabels(k8sutil.LabelsForDeployment(deploymentName, ""))); err != nil {
+	}, generic.FilterByLabels[*core.PersistentVolumeClaim](k8sutil.LabelsForDeployment(deploymentName, ""))); err != nil {
 		return 0, err
 	}
 

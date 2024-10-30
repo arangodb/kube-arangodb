@@ -23,16 +23,18 @@ package scheduler
 import (
 	"context"
 
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
-	"github.com/arangodb/kube-arangodb/pkg/debug_package/generators/kubernetes"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/list"
 	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
 
 func Profiles(ctx context.Context, client generic.ListInterface[*schedulerApi.ArangoProfileList], labels map[string]string, profiles ...string) ([]util.KV[string, schedulerApi.ProfileAcceptedTemplate], string, error) {
-	profileMap, err := kubernetes.MapObjects[*schedulerApi.ArangoProfileList, *schedulerApi.ArangoProfile](ctx, client, func(result *schedulerApi.ArangoProfileList) []*schedulerApi.ArangoProfile {
+	profileList, err := list.APIList[*schedulerApi.ArangoProfileList, *schedulerApi.ArangoProfile](ctx, client, meta.ListOptions{}, func(result *schedulerApi.ArangoProfileList) []*schedulerApi.ArangoProfile {
 		q := make([]*schedulerApi.ArangoProfile, len(result.Items))
 
 		for id, e := range result.Items {
@@ -41,12 +43,15 @@ func Profiles(ctx context.Context, client generic.ListInterface[*schedulerApi.Ar
 
 		return q
 	})
-
 	if err != nil {
 		return nil, "", err
 	}
 
-	extractedProfiles := profileMap.AsList().Filter(func(a *schedulerApi.ArangoProfile) bool {
+	profileMap := util.ListAsMap(profileList, func(in *schedulerApi.ArangoProfile) string {
+		return in.GetName()
+	})
+
+	extractedProfiles := util.List[*schedulerApi.ArangoProfile](profileList).Filter(func(a *schedulerApi.ArangoProfile) bool {
 		return a != nil && a.Spec.Template != nil
 	}).Filter(func(a *schedulerApi.ArangoProfile) bool {
 		if a.Spec.Selectors == nil {
@@ -61,7 +66,7 @@ func Profiles(ctx context.Context, client generic.ListInterface[*schedulerApi.Ar
 	})
 
 	for _, name := range profiles {
-		p, ok := profileMap.ByName(name)
+		p, ok := profileMap[name]
 		if !ok {
 			return nil, "", errors.Errorf("Profile with name `%s` is missing", name)
 		}

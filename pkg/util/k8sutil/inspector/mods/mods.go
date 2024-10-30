@@ -21,76 +21,70 @@
 package mods
 
 import (
-	arangoclustersynchronizationv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoclustersynchronization/v1"
-	arangomemberv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember/v1"
-	arangoProfilev1beta1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoprofile/v1beta1"
-	arangoroutev1alpha1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoroute/v1alpha1"
-	arangotaskv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangotask/v1"
-	configMapv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/configmap/v1"
-	endpointsv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/endpoints/v1"
-	persistentvolumeclaimv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim/v1"
-	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
-	poddisruptionbudgetv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget/v1"
-	secretv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
-	servicev1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service/v1"
-	serviceaccountv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount/v1"
-	servicemonitorv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor/v1"
+	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	core "k8s.io/api/core/v1"
+	policy "k8s.io/api/policy/v1"
+
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
+	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 )
 
 type PodsMods interface {
-	V1() podv1.ModInterface
+	V1() generic.ModClient[*core.Pod]
 }
 
 type ServiceAccountsMods interface {
-	V1() serviceaccountv1.ModInterface
+	V1() generic.ModClient[*core.ServiceAccount]
 }
 
 type SecretsMods interface {
-	V1() secretv1.ModInterface
+	V1() generic.ModClient[*core.Secret]
 }
 
 type ConfigMapsMods interface {
-	V1() configMapv1.ModInterface
+	V1() generic.ModClient[*core.ConfigMap]
 }
 
 type PersistentVolumeClaimsMods interface {
-	V1() persistentvolumeclaimv1.ModInterface
+	V1() generic.ModClient[*core.PersistentVolumeClaim]
 }
 
 type ServicesMods interface {
-	V1() servicev1.ModInterface
+	V1() generic.ModClient[*core.Service]
 }
 
 type EndpointsMods interface {
-	V1() endpointsv1.ModInterface
+	V1() generic.ModClient[*core.Endpoints]
 }
 
 type ServiceMonitorsMods interface {
-	V1() servicemonitorv1.ModInterface
+	V1() generic.ModClient[*monitoring.ServiceMonitor]
 }
 
 type PodDisruptionBudgetsMods interface {
-	V1() poddisruptionbudgetv1.ModInterface
+	V1() generic.ModClient[*policy.PodDisruptionBudget]
 }
 
 type ArangoMemberMods interface {
-	V1() arangomemberv1.ModInterface
+	V1() generic.ModStatusClient[*api.ArangoMember]
 }
 
 type ArangoTaskMods interface {
-	V1() arangotaskv1.ModInterface
+	V1() generic.ModStatusClient[*api.ArangoTask]
 }
 
 type ArangoClusterSynchronizationMods interface {
-	V1() arangoclustersynchronizationv1.ModInterface
+	V1() generic.ModStatusClient[*api.ArangoClusterSynchronization]
 }
 
 type ArangoRouteMods interface {
-	V1Alpha1() arangoroutev1alpha1.ModInterface
+	V1Alpha1() generic.ModStatusClient[*networkingApi.ArangoRoute]
 }
 
 type ArangoProfileMods interface {
-	V1Beta1() arangoProfilev1beta1.ModInterface
+	V1Beta1() generic.ModStatusClient[*schedulerApi.ArangoProfile]
 }
 
 type Mods interface {

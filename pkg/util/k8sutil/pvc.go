@@ -29,7 +29,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	persistentvolumeclaimv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
@@ -66,7 +66,7 @@ func IsPersistentVolumeClaimResizing(pvc *core.PersistentVolumeClaim) bool {
 // CreatePersistentVolumeClaim creates a persistent volume claim with given name and configuration.
 // If the pvc already exists, nil is returned.
 // If another error occurs, that error is returned.
-func CreatePersistentVolumeClaim(ctx context.Context, pvcs persistentvolumeclaimv1.ModInterface, pvcName, deploymentName,
+func CreatePersistentVolumeClaim(ctx context.Context, pvcs generic.ModClient[*core.PersistentVolumeClaim], pvcName, deploymentName,
 	storageClassName, role string, enforceAntiAffinity bool, resources core.ResourceRequirements,
 	vct *core.PersistentVolumeClaim, finalizers []string, owner meta.OwnerReference) error {
 	labels := LabelsForDeployment(deploymentName, role)

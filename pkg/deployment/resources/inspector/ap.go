@@ -24,12 +24,12 @@ import (
 	"context"
 	"time"
 
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoprofile"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
 )
@@ -49,90 +49,16 @@ func (p arangoProfilesInspectorLoader) Component() definitions.Component {
 
 func (p arangoProfilesInspectorLoader) Load(ctx context.Context, i *inspectorState) {
 	var q arangoProfilesInspector
-	p.loadV1Beta1(ctx, i, &q)
+
+	q.v1beta1 = newInspectorVersion[*schedulerApi.ArangoProfileList, *schedulerApi.ArangoProfile](ctx,
+		constants.ArangoProfileGRv1(),
+		constants.ArangoProfileGKv1(),
+		i.client.Arango().SchedulerV1beta1().ArangoProfiles(i.namespace),
+		arangoprofile.List())
+
 	i.arangoProfiles = &q
 	q.state = i
 	q.last = time.Now()
-}
-
-func (p arangoProfilesInspectorLoader) loadV1Beta1(ctx context.Context, i *inspectorState, q *arangoProfilesInspector) {
-	var z arangoProfilesInspectorV1Beta1
-
-	z.arangoProfileInspector = q
-
-	z.arangoProfiles, z.err = p.getV1ArangoProfiles(ctx, i)
-
-	q.v1beta1 = &z
-}
-
-func (p arangoProfilesInspectorLoader) getV1ArangoProfiles(ctx context.Context, i *inspectorState) (map[string]*schedulerApi.ArangoProfile, error) {
-	objs, err := p.getV1ArangoProfilesList(ctx, i)
-	if err != nil {
-		return nil, err
-	}
-
-	r := make(map[string]*schedulerApi.ArangoProfile, len(objs))
-
-	for id := range objs {
-		r[objs[id].GetName()] = objs[id]
-	}
-
-	return r, nil
-}
-
-func (p arangoProfilesInspectorLoader) getV1ArangoProfilesList(ctx context.Context, i *inspectorState) ([]*schedulerApi.ArangoProfile, error) {
-	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
-	defer cancel()
-	obj, err := i.client.Arango().SchedulerV1beta1().ArangoProfiles(i.namespace).List(ctxChild, meta.ListOptions{
-		Limit: globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	items := obj.Items
-	cont := obj.Continue
-	var s = int64(len(items))
-
-	if z := obj.RemainingItemCount; z != nil {
-		s += *z
-	}
-
-	ptrs := make([]*schedulerApi.ArangoProfile, 0, s)
-
-	for {
-		for id := range items {
-			ptrs = append(ptrs, &items[id])
-		}
-
-		if cont == "" {
-			break
-		}
-
-		items, cont, err = p.getV1ArangoProfilesListRequest(ctx, i, cont)
-
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return ptrs, nil
-}
-
-func (p arangoProfilesInspectorLoader) getV1ArangoProfilesListRequest(ctx context.Context, i *inspectorState, cont string) ([]schedulerApi.ArangoProfile, string, error) {
-	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
-	defer cancel()
-	obj, err := i.client.Arango().SchedulerV1beta1().ArangoProfiles(i.namespace).List(ctxChild, meta.ListOptions{
-		Limit:    globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
-		Continue: cont,
-	})
-
-	if err != nil {
-		return nil, "", err
-	}
-
-	return obj.Items, obj.Continue, err
 }
 
 func (p arangoProfilesInspectorLoader) Verify(i *inspectorState) error {
@@ -159,7 +85,7 @@ type arangoProfilesInspector struct {
 
 	last time.Time
 
-	v1beta1 *arangoProfilesInspectorV1Beta1
+	v1beta1 *inspectorVersion[*schedulerApi.ArangoProfile]
 }
 
 func (p *arangoProfilesInspector) LastRefresh() time.Time {
@@ -189,4 +115,12 @@ func (p *arangoProfilesInspector) validate() error {
 	}
 
 	return p.v1beta1.validate()
+}
+
+func (p *arangoProfilesInspector) V1Beta1() (generic.Inspector[*schedulerApi.ArangoProfile], error) {
+	if p.v1beta1.err != nil {
+		return nil, p.v1beta1.err
+	}
+
+	return p.v1beta1, nil
 }

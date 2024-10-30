@@ -25,11 +25,12 @@ import (
 	"time"
 
 	core "k8s.io/api/core/v1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
 )
@@ -49,90 +50,16 @@ func (p serviceAccountsInspectorLoader) Component() definitions.Component {
 
 func (p serviceAccountsInspectorLoader) Load(ctx context.Context, i *inspectorState) {
 	var q serviceAccountsInspector
-	p.loadV1(ctx, i, &q)
+
+	q.v1 = newInspectorVersion[*core.ServiceAccountList, *core.ServiceAccount](ctx,
+		constants.ServiceAccountGRv1(),
+		constants.ServiceAccountGKv1(),
+		i.client.Kubernetes().CoreV1().ServiceAccounts(i.namespace),
+		serviceaccount.List())
+
 	i.serviceAccounts = &q
 	q.state = i
 	q.last = time.Now()
-}
-
-func (p serviceAccountsInspectorLoader) loadV1(ctx context.Context, i *inspectorState, q *serviceAccountsInspector) {
-	var z serviceAccountsInspectorV1
-
-	z.serviceAccountInspector = q
-
-	z.serviceAccounts, z.err = p.getV1ServiceAccounts(ctx, i)
-
-	q.v1 = &z
-}
-
-func (p serviceAccountsInspectorLoader) getV1ServiceAccounts(ctx context.Context, i *inspectorState) (map[string]*core.ServiceAccount, error) {
-	objs, err := p.getV1ServiceAccountsList(ctx, i)
-	if err != nil {
-		return nil, err
-	}
-
-	r := make(map[string]*core.ServiceAccount, len(objs))
-
-	for id := range objs {
-		r[objs[id].GetName()] = objs[id]
-	}
-
-	return r, nil
-}
-
-func (p serviceAccountsInspectorLoader) getV1ServiceAccountsList(ctx context.Context, i *inspectorState) ([]*core.ServiceAccount, error) {
-	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
-	defer cancel()
-	obj, err := i.client.Kubernetes().CoreV1().ServiceAccounts(i.namespace).List(ctxChild, meta.ListOptions{
-		Limit: globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	items := obj.Items
-	cont := obj.Continue
-	var s = int64(len(items))
-
-	if z := obj.RemainingItemCount; z != nil {
-		s += *z
-	}
-
-	ptrs := make([]*core.ServiceAccount, 0, s)
-
-	for {
-		for id := range items {
-			ptrs = append(ptrs, &items[id])
-		}
-
-		if cont == "" {
-			break
-		}
-
-		items, cont, err = p.getV1ServiceAccountsListRequest(ctx, i, cont)
-
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return ptrs, nil
-}
-
-func (p serviceAccountsInspectorLoader) getV1ServiceAccountsListRequest(ctx context.Context, i *inspectorState, cont string) ([]core.ServiceAccount, string, error) {
-	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
-	defer cancel()
-	obj, err := i.client.Kubernetes().CoreV1().ServiceAccounts(i.namespace).List(ctxChild, meta.ListOptions{
-		Limit:    globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
-		Continue: cont,
-	})
-
-	if err != nil {
-		return nil, "", err
-	}
-
-	return obj.Items, obj.Continue, err
 }
 
 func (p serviceAccountsInspectorLoader) Verify(i *inspectorState) error {
@@ -163,7 +90,7 @@ type serviceAccountsInspector struct {
 
 	last time.Time
 
-	v1 *serviceAccountsInspectorV1
+	v1 *inspectorVersion[*core.ServiceAccount]
 }
 
 func (p *serviceAccountsInspector) LastRefresh() time.Time {
@@ -193,4 +120,8 @@ func (p *serviceAccountsInspector) validate() error {
 	}
 
 	return p.v1.validate()
+}
+
+func (p *serviceAccountsInspector) V1() generic.Inspector[*core.ServiceAccount] {
+	return p.v1
 }

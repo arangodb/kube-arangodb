@@ -24,60 +24,11 @@ import (
 	"context"
 
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 
-	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/list"
 )
 
-type ObjectList[T meta.Object] map[types.UID]T
-
-func (d ObjectList[T]) ByName(name string) (T, bool) {
-	for _, obj := range d {
-		if obj.GetName() == name {
-			return obj, true
-		}
-	}
-
-	return util.Default[T](), false
-}
-
-func (d ObjectList[T]) AsList() util.List[T] {
-	list := make([]T, 0, len(d))
-	for _, p := range d {
-		list = append(list, p)
-	}
-
-	return list
-}
-
-func MapObjects[L generic.ListContinue, T meta.Object](ctx context.Context, k generic.ListInterface[L], extract func(result L) []T) (ObjectList[T], error) {
-	objects := ObjectList[T]{}
-
-	if err := k8sutil.APIList[L](ctx, k, meta.ListOptions{}, func(result L, err error) error {
-		if err != nil {
-			return err
-		}
-		for _, obj := range extract(result) {
-			obj.SetManagedFields(nil)
-
-			objects[obj.GetUID()] = obj
-		}
-
-		return nil
-	}); err != nil {
-		return nil, err
-	}
-
-	return objects, nil
-}
-
 func ListObjects[L generic.ListContinue, T meta.Object](ctx context.Context, k generic.ListInterface[L], extract func(result L) []T) ([]T, error) {
-	objects, err := MapObjects[L, T](ctx, k, extract)
-	if err != nil {
-		return nil, err
-	}
-
-	return objects.AsList(), nil
+	return list.APIList[L, T](ctx, k, meta.ListOptions{}, extract)
 }

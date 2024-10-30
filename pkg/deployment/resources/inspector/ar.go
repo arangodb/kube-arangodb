@@ -24,12 +24,12 @@ import (
 	"context"
 	"time"
 
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoroute"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
 )
@@ -49,90 +49,16 @@ func (p arangoRoutesInspectorLoader) Component() definitions.Component {
 
 func (p arangoRoutesInspectorLoader) Load(ctx context.Context, i *inspectorState) {
 	var q arangoRoutesInspector
-	p.loadV1Alpha1(ctx, i, &q)
+
+	q.v1alpha1 = newInspectorVersion[*networkingApi.ArangoRouteList, *networkingApi.ArangoRoute](ctx,
+		constants.ArangoRouteGRv1(),
+		constants.ArangoRouteGKv1(),
+		i.client.Arango().NetworkingV1alpha1().ArangoRoutes(i.namespace),
+		arangoroute.List())
+
 	i.arangoRoutes = &q
 	q.state = i
 	q.last = time.Now()
-}
-
-func (p arangoRoutesInspectorLoader) loadV1Alpha1(ctx context.Context, i *inspectorState, q *arangoRoutesInspector) {
-	var z arangoRoutesInspectorV1Alpha1
-
-	z.arangoRouteInspector = q
-
-	z.arangoRoutes, z.err = p.getV1ArangoRoutes(ctx, i)
-
-	q.v1alpha1 = &z
-}
-
-func (p arangoRoutesInspectorLoader) getV1ArangoRoutes(ctx context.Context, i *inspectorState) (map[string]*networkingApi.ArangoRoute, error) {
-	objs, err := p.getV1ArangoRoutesList(ctx, i)
-	if err != nil {
-		return nil, err
-	}
-
-	r := make(map[string]*networkingApi.ArangoRoute, len(objs))
-
-	for id := range objs {
-		r[objs[id].GetName()] = objs[id]
-	}
-
-	return r, nil
-}
-
-func (p arangoRoutesInspectorLoader) getV1ArangoRoutesList(ctx context.Context, i *inspectorState) ([]*networkingApi.ArangoRoute, error) {
-	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
-	defer cancel()
-	obj, err := i.client.Arango().NetworkingV1alpha1().ArangoRoutes(i.namespace).List(ctxChild, meta.ListOptions{
-		Limit: globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	items := obj.Items
-	cont := obj.Continue
-	var s = int64(len(items))
-
-	if z := obj.RemainingItemCount; z != nil {
-		s += *z
-	}
-
-	ptrs := make([]*networkingApi.ArangoRoute, 0, s)
-
-	for {
-		for id := range items {
-			ptrs = append(ptrs, &items[id])
-		}
-
-		if cont == "" {
-			break
-		}
-
-		items, cont, err = p.getV1ArangoRoutesListRequest(ctx, i, cont)
-
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return ptrs, nil
-}
-
-func (p arangoRoutesInspectorLoader) getV1ArangoRoutesListRequest(ctx context.Context, i *inspectorState, cont string) ([]networkingApi.ArangoRoute, string, error) {
-	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
-	defer cancel()
-	obj, err := i.client.Arango().NetworkingV1alpha1().ArangoRoutes(i.namespace).List(ctxChild, meta.ListOptions{
-		Limit:    globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
-		Continue: cont,
-	})
-
-	if err != nil {
-		return nil, "", err
-	}
-
-	return obj.Items, obj.Continue, err
 }
 
 func (p arangoRoutesInspectorLoader) Verify(i *inspectorState) error {
@@ -159,7 +85,7 @@ type arangoRoutesInspector struct {
 
 	last time.Time
 
-	v1alpha1 *arangoRoutesInspectorV1Alpha1
+	v1alpha1 *inspectorVersion[*networkingApi.ArangoRoute]
 }
 
 func (p *arangoRoutesInspector) LastRefresh() time.Time {
@@ -189,4 +115,12 @@ func (p *arangoRoutesInspector) validate() error {
 	}
 
 	return p.v1alpha1.validate()
+}
+
+func (p *arangoRoutesInspector) V1Alpha1() (generic.Inspector[*networkingApi.ArangoRoute], error) {
+	if p.v1alpha1.err != nil {
+		return nil, p.v1alpha1.err
+	}
+
+	return p.v1alpha1, nil
 }

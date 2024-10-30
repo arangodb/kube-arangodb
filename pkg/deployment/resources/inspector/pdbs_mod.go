@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/mods"
-	policyv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget/v1"
 )
 
 func (i *inspectorState) PodDisruptionBudgetsModInterface() mods.PodDisruptionBudgetsMods {
@@ -40,7 +39,7 @@ type podDisruptionBudgetsMod struct {
 	i *inspectorState
 }
 
-func (p podDisruptionBudgetsMod) V1() policyv1.ModInterface {
+func (p podDisruptionBudgetsMod) V1() generic.ModClient[*policy.PodDisruptionBudget] {
 	return wrapMod[*policy.PodDisruptionBudget](definitions.PodDisruptionBudget, p.i.GetThrottles, generic.WithModStatusGetter[*policy.PodDisruptionBudget](constants.PodDisruptionBudgetGKv1(), p.clientv1))
 }
 

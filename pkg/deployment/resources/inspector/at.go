@@ -24,12 +24,12 @@ import (
 	"context"
 	"time"
 
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangotask"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
 )
@@ -49,90 +49,16 @@ func (p arangoTasksInspectorLoader) Component() definitions.Component {
 
 func (p arangoTasksInspectorLoader) Load(ctx context.Context, i *inspectorState) {
 	var q arangoTasksInspector
-	p.loadV1(ctx, i, &q)
+
+	q.v1 = newInspectorVersion[*api.ArangoTaskList, *api.ArangoTask](ctx,
+		constants.ArangoTaskGRv1(),
+		constants.ArangoTaskGKv1(),
+		i.client.Arango().DatabaseV1().ArangoTasks(i.namespace),
+		arangotask.List())
+
 	i.arangoTasks = &q
 	q.state = i
 	q.last = time.Now()
-}
-
-func (p arangoTasksInspectorLoader) loadV1(ctx context.Context, i *inspectorState, q *arangoTasksInspector) {
-	var z arangoTasksInspectorV1
-
-	z.arangoTaskInspector = q
-
-	z.arangoTasks, z.err = p.getV1ArangoTasks(ctx, i)
-
-	q.v1 = &z
-}
-
-func (p arangoTasksInspectorLoader) getV1ArangoTasks(ctx context.Context, i *inspectorState) (map[string]*api.ArangoTask, error) {
-	objs, err := p.getV1ArangoTasksList(ctx, i)
-	if err != nil {
-		return nil, err
-	}
-
-	r := make(map[string]*api.ArangoTask, len(objs))
-
-	for id := range objs {
-		r[objs[id].GetName()] = objs[id]
-	}
-
-	return r, nil
-}
-
-func (p arangoTasksInspectorLoader) getV1ArangoTasksList(ctx context.Context, i *inspectorState) ([]*api.ArangoTask, error) {
-	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
-	defer cancel()
-	obj, err := i.client.Arango().DatabaseV1().ArangoTasks(i.namespace).List(ctxChild, meta.ListOptions{
-		Limit: globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	items := obj.Items
-	cont := obj.Continue
-	var s = int64(len(items))
-
-	if z := obj.RemainingItemCount; z != nil {
-		s += *z
-	}
-
-	ptrs := make([]*api.ArangoTask, 0, s)
-
-	for {
-		for id := range items {
-			ptrs = append(ptrs, &items[id])
-		}
-
-		if cont == "" {
-			break
-		}
-
-		items, cont, err = p.getV1ArangoTasksListRequest(ctx, i, cont)
-
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return ptrs, nil
-}
-
-func (p arangoTasksInspectorLoader) getV1ArangoTasksListRequest(ctx context.Context, i *inspectorState, cont string) ([]api.ArangoTask, string, error) {
-	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
-	defer cancel()
-	obj, err := i.client.Arango().DatabaseV1().ArangoTasks(i.namespace).List(ctxChild, meta.ListOptions{
-		Limit:    globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
-		Continue: cont,
-	})
-
-	if err != nil {
-		return nil, "", err
-	}
-
-	return obj.Items, obj.Continue, err
 }
 
 func (p arangoTasksInspectorLoader) Verify(i *inspectorState) error {
@@ -159,7 +85,7 @@ type arangoTasksInspector struct {
 
 	last time.Time
 
-	v1 *arangoTasksInspectorV1
+	v1 *inspectorVersion[*api.ArangoTask]
 }
 
 func (p *arangoTasksInspector) LastRefresh() time.Time {
@@ -189,4 +115,12 @@ func (p *arangoTasksInspector) validate() error {
 	}
 
 	return p.v1.validate()
+}
+
+func (p *arangoTasksInspector) V1() (generic.Inspector[*api.ArangoTask], error) {
+	if p.v1.err != nil {
+		return nil, p.v1.err
+	}
+
+	return p.v1, nil
 }

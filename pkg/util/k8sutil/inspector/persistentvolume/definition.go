@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,11 +21,10 @@
 package persistentvolume
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/gvk"
-	v1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolume/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/refresh"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
+	core "k8s.io/api/core/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/base"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 )
 
 type Inspector interface {
@@ -33,12 +32,7 @@ type Inspector interface {
 }
 
 type Definition interface {
-	refresh.Inspector
+	base.Inspector
 
-	gvk.GK
-	anonymous.Impl
-
-	Version() version.Version
-
-	V1() (v1.Inspector, error)
+	V1() (generic.Inspector[*core.PersistentVolume], error)
 }

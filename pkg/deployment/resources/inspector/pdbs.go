@@ -25,11 +25,12 @@ import (
 	"time"
 
 	policy "k8s.io/api/policy/v1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
 )
@@ -51,97 +52,20 @@ func (p podDisruptionBudgetsInspectorLoader) Load(ctx context.Context, i *inspec
 	var q podDisruptionBudgetsInspector
 
 	if i.versionInfo.CompareTo("1.21") >= 1 {
-		p.loadV1(ctx, i, &q)
+		q.v1 = newInspectorVersion[*policy.PodDisruptionBudgetList, *policy.PodDisruptionBudget](ctx,
+			constants.PodDisruptionBudgetGRv1(),
+			constants.PodDisruptionBudgetGKv1(),
+			i.client.Kubernetes().PolicyV1().PodDisruptionBudgets(i.namespace),
+			poddisruptionbudget.List())
 	} else {
-		q.v1 = &podDisruptionBudgetsInspectorV1{
-			podDisruptionBudgetInspector: &q,
-			err:                          newMinK8SVersion("1.20"),
+		q.v1 = &inspectorVersion[*policy.PodDisruptionBudget]{
+			err: newMinK8SVersion("1.20"),
 		}
 	}
 
 	i.podDisruptionBudgets = &q
 	q.state = i
 	q.last = time.Now()
-}
-
-func (p podDisruptionBudgetsInspectorLoader) loadV1(ctx context.Context, i *inspectorState, q *podDisruptionBudgetsInspector) {
-	var z podDisruptionBudgetsInspectorV1
-
-	z.podDisruptionBudgetInspector = q
-
-	z.podDisruptionBudgets, z.err = p.getV1PodDisruptionBudgets(ctx, i)
-
-	q.v1 = &z
-}
-
-func (p podDisruptionBudgetsInspectorLoader) getV1PodDisruptionBudgets(ctx context.Context, i *inspectorState) (map[string]*policy.PodDisruptionBudget, error) {
-	objs, err := p.getV1PodDisruptionBudgetsList(ctx, i)
-	if err != nil {
-		return nil, err
-	}
-
-	r := make(map[string]*policy.PodDisruptionBudget, len(objs))
-
-	for id := range objs {
-		r[objs[id].GetName()] = objs[id]
-	}
-
-	return r, nil
-}
-
-func (p podDisruptionBudgetsInspectorLoader) getV1PodDisruptionBudgetsList(ctx context.Context, i *inspectorState) ([]*policy.PodDisruptionBudget, error) {
-	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
-	defer cancel()
-	obj, err := i.client.Kubernetes().PolicyV1().PodDisruptionBudgets(i.namespace).List(ctxChild, meta.ListOptions{
-		Limit: globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	items := obj.Items
-	cont := obj.Continue
-	var s = int64(len(items))
-
-	if z := obj.RemainingItemCount; z != nil {
-		s += *z
-	}
-
-	ptrs := make([]*policy.PodDisruptionBudget, 0, s)
-
-	for {
-		for id := range items {
-			ptrs = append(ptrs, &items[id])
-		}
-
-		if cont == "" {
-			break
-		}
-
-		items, cont, err = p.getV1PodDisruptionBudgetsListRequest(ctx, i, cont)
-
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return ptrs, nil
-}
-
-func (p podDisruptionBudgetsInspectorLoader) getV1PodDisruptionBudgetsListRequest(ctx context.Context, i *inspectorState, cont string) ([]policy.PodDisruptionBudget, string, error) {
-	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
-	defer cancel()
-	obj, err := i.client.Kubernetes().PolicyV1().PodDisruptionBudgets(i.namespace).List(ctxChild, meta.ListOptions{
-		Limit:    globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
-		Continue: cont,
-	})
-
-	if err != nil {
-		return nil, "", err
-	}
-
-	return obj.Items, obj.Continue, err
 }
 
 func (p podDisruptionBudgetsInspectorLoader) Verify(i *inspectorState) error {
@@ -168,7 +92,7 @@ type podDisruptionBudgetsInspector struct {
 
 	last time.Time
 
-	v1 *podDisruptionBudgetsInspectorV1
+	v1 *inspectorVersion[*policy.PodDisruptionBudget]
 }
 
 func (p *podDisruptionBudgetsInspector) LastRefresh() time.Time {
@@ -204,4 +128,12 @@ func (p *podDisruptionBudgetsInspector) validate() error {
 	}
 
 	return nil
+}
+
+func (p *podDisruptionBudgetsInspector) V1() (generic.Inspector[*policy.PodDisruptionBudget], error) {
+	if p.v1.err != nil {
+		return nil, p.v1.err
+	}
+
+	return p.v1, nil
 }

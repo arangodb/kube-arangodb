@@ -81,6 +81,16 @@ func (l List[T]) Unique(f func(existing List[T], a T) bool) List[T] {
 	return r
 }
 
+func ListAsMap[K comparable, V any](in []V, extract func(in V) K) map[K]V {
+	ret := make(map[K]V, len(in))
+
+	for _, el := range in {
+		ret[extract(el)] = el
+	}
+
+	return ret
+}
+
 func PickFromList[V any](in []V, q func(v V) bool) (V, bool) {
 	for _, v := range in {
 		if q(v) {

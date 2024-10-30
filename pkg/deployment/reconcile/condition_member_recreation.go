@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -113,7 +113,7 @@ func (r *Reconciler) isStorageClassChanged(_ context.Context, apiObject k8sutil.
 		return false, "", nil
 	}
 
-	am := cache.ArangoMember().V1().GetSimpleOptional(member.ArangoMemberName(context.GetName(), group))
+	am := util.InitOptional(cache.ArangoMember().V1().GetSimple(member.ArangoMemberName(context.GetName(), group)))
 
 	groupSpec := spec.GetServerGroupSpec(group)
 	storageClassName := am.Spec.Overrides.GetStorageClassName(&groupSpec)
@@ -186,7 +186,7 @@ func (r *Reconciler) isVolumeSizeChanged(_ context.Context, _ k8sutil.APIObject,
 		return false, "", nil
 	}
 
-	am := cache.ArangoMember().V1().GetSimpleOptional(member.ArangoMemberName(context.GetName(), group))
+	am := util.InitOptional(cache.ArangoMember().V1().GetSimple(member.ArangoMemberName(context.GetName(), group)))
 
 	pvc, ok := cache.PersistentVolumeClaim().V1().GetSimple(member.PersistentVolumeClaim.GetName())
 	if !ok {
