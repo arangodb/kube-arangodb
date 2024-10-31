@@ -24,8 +24,12 @@ import (
 	"time"
 
 	clusterAPI "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
+	coreAPI "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	endpointAPI "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
 	routeAPI "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
+	upstreamHttpApi "github.com/envoyproxy/go-control-plane/envoy/extensions/upstreams/http/v3"
+	"github.com/golang/protobuf/ptypes/any"
+	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
 
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
@@ -115,6 +119,25 @@ func (c *ConfigDestination) RenderRoute(name, prefix string) (*routeAPI.Route, e
 }
 
 func (c *ConfigDestination) RenderCluster(name string) (*clusterAPI.Cluster, error) {
+	hpo, err := anypb.New(&upstreamHttpApi.HttpProtocolOptions{
+		UpstreamProtocolOptions: &upstreamHttpApi.HttpProtocolOptions_ExplicitHttpConfig_{
+			ExplicitHttpConfig: &upstreamHttpApi.HttpProtocolOptions_ExplicitHttpConfig{
+				ProtocolConfig: &upstreamHttpApi.HttpProtocolOptions_ExplicitHttpConfig_Http2ProtocolOptions{
+					Http2ProtocolOptions: &coreAPI.Http2ProtocolOptions{
+						ConnectionKeepalive: &coreAPI.KeepaliveSettings{
+							Interval:               durationpb.New(15 * time.Second),
+							Timeout:                durationpb.New(30 * time.Second),
+							ConnectionIdleInterval: durationpb.New(60 * time.Second),
+						},
+					},
+				},
+			},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	cluster := &clusterAPI.Cluster{
 		Name:           name,
 		ConnectTimeout: durationpb.New(time.Second),
@@ -126,6 +149,9 @@ func (c *ConfigDestination) RenderCluster(name string) (*clusterAPI.Cluster, err
 					LbEndpoints: c.Targets.RenderEndpoints(),
 				},
 			},
+		},
+		TypedExtensionProtocolOptions: map[string]*any.Any{
+			"envoy.extensions.upstreams.http.v3.HttpProtocolOptions": hpo,
 		},
 	}
 

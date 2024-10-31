@@ -81,7 +81,15 @@ func Profiles(ctx context.Context, client generic.ListInterface[*schedulerApi.Ar
 	})
 
 	extractedProfiles = extractedProfiles.Sort(func(a, b *schedulerApi.ArangoProfile) bool {
-		return a.Spec.Template.GetPriority() > b.Spec.Template.GetPriority()
+		if ca, cb := a.Spec.Template.GetPriority(), b.Spec.Template.GetPriority(); ca != cb {
+			return ca > cb
+		}
+
+		if ca, cb := a.GetName(), b.GetName(); ca != cb {
+			return ca > cb
+		}
+
+		return a.GetCreationTimestamp().After(b.GetCreationTimestamp().Time)
 	})
 
 	// Check if everything is valid

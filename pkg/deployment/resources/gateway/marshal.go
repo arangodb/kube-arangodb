@@ -39,3 +39,13 @@ func Marshal[T proto.Message](in T) ([]byte, string, T, error) {
 	data, err = yaml.JSONToYAML(data)
 	return data, util.SHA256(data), in, err
 }
+
+func Unmarshal[T proto.Message](data []byte) (T, error) {
+	var v T
+
+	if err := (protojson.UnmarshalOptions{}).Unmarshal(data, v); err != nil {
+		return util.Default[T](), err
+	}
+
+	return v, nil
+}

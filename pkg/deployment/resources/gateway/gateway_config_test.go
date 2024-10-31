@@ -21,6 +21,7 @@
 package gateway
 
 import (
+	"fmt"
 	"testing"
 
 	bootstrapAPI "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
@@ -29,14 +30,18 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-func renderAndPrintGatewayConfig(t *testing.T, cfg Config) *bootstrapAPI.Bootstrap {
+func renderAndPrintGatewayConfig(t *testing.T, cfg Config, validates ...func(t *testing.T, b *bootstrapAPI.Bootstrap)) {
 	data, checksum, obj, err := cfg.RenderYAML()
 	require.NoError(t, err)
 
 	t.Logf("Checksum: %s", checksum)
 	t.Log(string(data))
 
-	return obj
+	for id := range validates {
+		t.Run(fmt.Sprintf("Validation%d", id), func(t *testing.T) {
+			validates[id](t, obj)
+		})
+	}
 }
 
 func Test_GatewayConfig(t *testing.T) {
@@ -50,8 +55,27 @@ func Test_GatewayConfig(t *testing.T) {
 					},
 				},
 			},
+		}, func(t *testing.T, b *bootstrapAPI.Bootstrap) {
+			require.NotNil(t, b)
+			require.NotNil(t, b.StaticResources)
+			require.NotNil(t, b.StaticResources.Clusters)
+			require.Len(t, b.StaticResources.Clusters, 1)
+			require.NotNil(t, b.StaticResources.Clusters[0])
+			require.NotNil(t, b.StaticResources.Clusters[0].LoadAssignment)
+			require.NotNil(t, b.StaticResources.Clusters[0].LoadAssignment.Endpoints)
+			require.Len(t, b.StaticResources.Clusters[0].LoadAssignment.Endpoints, 1)
+			require.NotNil(t, b.StaticResources.Clusters[0].LoadAssignment.Endpoints[0])
+			require.NotNil(t, b.StaticResources.Clusters[0].LoadAssignment.Endpoints[0].LbEndpoints)
+			require.Len(t, b.StaticResources.Clusters[0].LoadAssignment.Endpoints[0].LbEndpoints, 1)
+			require.NotNil(t, b.StaticResources.Clusters[0].LoadAssignment.Endpoints[0].LbEndpoints[0])
+			require.NotNil(t, b.StaticResources.Clusters[0].LoadAssignment.Endpoints[0].LbEndpoints[0].GetEndpoint())
+			require.NotNil(t, b.StaticResources.Clusters[0].LoadAssignment.Endpoints[0].LbEndpoints[0].GetEndpoint().Address)
+			require.NotNil(t, b.StaticResources.Clusters[0].LoadAssignment.Endpoints[0].LbEndpoints[0].GetEndpoint().Address.GetSocketAddress())
+			require.EqualValues(t, "127.0.0.1", b.StaticResources.Clusters[0].LoadAssignment.Endpoints[0].LbEndpoints[0].GetEndpoint().Address.GetSocketAddress().Address)
+			require.EqualValues(t, 12345, b.StaticResources.Clusters[0].LoadAssignment.Endpoints[0].LbEndpoints[0].GetEndpoint().Address.GetSocketAddress().GetPortValue())
 		})
 	})
+
 	t.Run("Default", func(t *testing.T) {
 		renderAndPrintGatewayConfig(t, Config{
 			DefaultDestination: ConfigDestination{
@@ -69,6 +93,7 @@ func Test_GatewayConfig(t *testing.T) {
 			},
 		})
 	})
+
 	t.Run("Default", func(t *testing.T) {
 		renderAndPrintGatewayConfig(t, Config{
 			DefaultDestination: ConfigDestination{
@@ -87,6 +112,7 @@ func Test_GatewayConfig(t *testing.T) {
 			},
 		})
 	})
+
 	t.Run("Default", func(t *testing.T) {
 		renderAndPrintGatewayConfig(t, Config{
 			DefaultDestination: ConfigDestination{
@@ -117,6 +143,7 @@ func Test_GatewayConfig(t *testing.T) {
 			},
 		})
 	})
+
 	t.Run("Default", func(t *testing.T) {
 		renderAndPrintGatewayConfig(t, Config{
 			DefaultDestination: ConfigDestination{
@@ -147,6 +174,7 @@ func Test_GatewayConfig(t *testing.T) {
 			},
 		})
 	})
+
 	t.Run("Default", func(t *testing.T) {
 		renderAndPrintGatewayConfig(t, Config{
 			DefaultDestination: ConfigDestination{
@@ -171,6 +199,57 @@ func Test_GatewayConfig(t *testing.T) {
 					},
 					ServerNames: []string{
 						"example.com",
+					},
+				},
+			},
+			Destinations: ConfigDestinations{
+				"/_test/": {
+					Targets: []ConfigDestinationTarget{
+						{
+							Host: "127.0.0.1",
+							Port: 12346,
+						},
+					},
+					Path: util.NewType("/test/path/"),
+					Type: util.NewType(ConfigDestinationTypeHTTP),
+				},
+			},
+		})
+	})
+
+	t.Run("Default", func(t *testing.T) {
+		renderAndPrintGatewayConfig(t, Config{
+			DefaultDestination: ConfigDestination{
+				Targets: []ConfigDestinationTarget{
+					{
+						Host: "127.0.0.1",
+						Port: 12345,
+					},
+				},
+				Path: util.NewType("/test/path/"),
+				Type: util.NewType(ConfigDestinationTypeHTTPS),
+			},
+			DefaultTLS: &ConfigTLS{
+				CertificatePath: "/test",
+				PrivateKeyPath:  "/test12",
+			},
+			SNI: []ConfigSNI{
+				{
+					ConfigTLS: ConfigTLS{
+						CertificatePath: "/cp",
+						PrivateKeyPath:  "/pp",
+					},
+					ServerNames: []string{
+						"example.com",
+					},
+				},
+				{
+					ConfigTLS: ConfigTLS{
+						CertificatePath: "/c2",
+						PrivateKeyPath:  "/p2",
+					},
+					ServerNames: []string{
+						"2.example.com",
 					},
 				},
 			},
