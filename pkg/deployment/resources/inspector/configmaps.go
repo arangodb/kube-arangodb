@@ -25,11 +25,12 @@ import (
 	"time"
 
 	core "k8s.io/api/core/v1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/configmap"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
 )
@@ -49,90 +50,16 @@ func (p configMapsInspectorLoader) Component() definitions.Component {
 
 func (p configMapsInspectorLoader) Load(ctx context.Context, i *inspectorState) {
 	var q configMapsInspector
-	p.loadV1(ctx, i, &q)
+
+	q.v1 = newInspectorVersion[*core.ConfigMapList, *core.ConfigMap](ctx,
+		constants.ConfigMapGRv1(),
+		constants.ConfigMapGKv1(),
+		i.client.Kubernetes().CoreV1().ConfigMaps(i.namespace),
+		configmap.List())
+
 	i.configMaps = &q
 	q.state = i
 	q.last = time.Now()
-}
-
-func (p configMapsInspectorLoader) loadV1(ctx context.Context, i *inspectorState, q *configMapsInspector) {
-	var z configMapsInspectorV1
-
-	z.configMapInspector = q
-
-	z.configMaps, z.err = p.getV1ConfigMaps(ctx, i)
-
-	q.v1 = &z
-}
-
-func (p configMapsInspectorLoader) getV1ConfigMaps(ctx context.Context, i *inspectorState) (map[string]*core.ConfigMap, error) {
-	objs, err := p.getV1ConfigMapsList(ctx, i)
-	if err != nil {
-		return nil, err
-	}
-
-	r := make(map[string]*core.ConfigMap, len(objs))
-
-	for id := range objs {
-		r[objs[id].GetName()] = objs[id]
-	}
-
-	return r, nil
-}
-
-func (p configMapsInspectorLoader) getV1ConfigMapsList(ctx context.Context, i *inspectorState) ([]*core.ConfigMap, error) {
-	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
-	defer cancel()
-	obj, err := i.client.Kubernetes().CoreV1().ConfigMaps(i.namespace).List(ctxChild, meta.ListOptions{
-		Limit: globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	items := obj.Items
-	cont := obj.Continue
-	var s = int64(len(items))
-
-	if z := obj.RemainingItemCount; z != nil {
-		s += *z
-	}
-
-	ptrs := make([]*core.ConfigMap, 0, s)
-
-	for {
-		for id := range items {
-			ptrs = append(ptrs, &items[id])
-		}
-
-		if cont == "" {
-			break
-		}
-
-		items, cont, err = p.getV1ConfigMapsListRequest(ctx, i, cont)
-
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return ptrs, nil
-}
-
-func (p configMapsInspectorLoader) getV1ConfigMapsListRequest(ctx context.Context, i *inspectorState, cont string) ([]core.ConfigMap, string, error) {
-	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
-	defer cancel()
-	obj, err := i.client.Kubernetes().CoreV1().ConfigMaps(i.namespace).List(ctxChild, meta.ListOptions{
-		Limit:    globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
-		Continue: cont,
-	})
-
-	if err != nil {
-		return nil, "", err
-	}
-
-	return obj.Items, obj.Continue, err
 }
 
 func (p configMapsInspectorLoader) Verify(i *inspectorState) error {
@@ -163,7 +90,7 @@ type configMapsInspector struct {
 
 	last time.Time
 
-	v1 *configMapsInspectorV1
+	v1 *inspectorVersion[*core.ConfigMap]
 }
 
 func (p *configMapsInspector) LastRefresh() time.Time {
@@ -193,4 +120,8 @@ func (p *configMapsInspector) validate() error {
 	}
 
 	return p.v1.validate()
+}
+
+func (p *configMapsInspector) V1() generic.Inspector[*core.ConfigMap] {
+	return p.v1
 }

@@ -26,11 +26,11 @@ import (
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	configMapsV1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/configmap/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
-func CreateConfigMap(ctx context.Context, configMaps configMapsV1.ModInterface, cm *core.ConfigMap, ownerRef *meta.OwnerReference) error {
+func CreateConfigMap(ctx context.Context, configMaps generic.ModClient[*core.ConfigMap], cm *core.ConfigMap, ownerRef *meta.OwnerReference) error {
 	AddOwnerRefToObject(cm, ownerRef)
 
 	if _, err := configMaps.Create(ctx, cm, meta.CreateOptions{}); err != nil {

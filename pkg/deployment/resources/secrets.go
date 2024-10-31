@@ -47,7 +47,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-	secretv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	ktls "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
 	"github.com/arangodb/kube-arangodb/pkg/util/token"
@@ -197,7 +197,7 @@ func (r *Resources) EnsureSecrets(ctx context.Context, cachedStatus inspectorInt
 	return reconcileRequired.Reconcile(ctx)
 }
 
-func (r *Resources) ensureTokenSecretFolder(ctx context.Context, cachedStatus inspectorInterface.Inspector, secrets secretv1.ModInterface, secretName, folderSecretName string) error {
+func (r *Resources) ensureTokenSecretFolder(ctx context.Context, cachedStatus inspectorInterface.Inspector, secrets generic.ModClient[*core.Secret], secretName, folderSecretName string) error {
 	if f, exists := cachedStatus.Secret().V1().GetSimple(folderSecretName); exists {
 		if len(f.Data) == 0 {
 			s, exists := cachedStatus.Secret().V1().GetSimple(secretName)
@@ -295,7 +295,7 @@ func (r *Resources) ensureTokenSecretFolder(ctx context.Context, cachedStatus in
 	return nil
 }
 
-func (r *Resources) ensureTokenSecret(ctx context.Context, cachedStatus inspectorInterface.Inspector, secrets secretv1.ModInterface, secretName string) error {
+func (r *Resources) ensureTokenSecret(ctx context.Context, cachedStatus inspectorInterface.Inspector, secrets generic.ModClient[*core.Secret], secretName string) error {
 	if _, exists := cachedStatus.Secret().V1().GetSimple(secretName); !exists {
 		return r.createTokenSecret(ctx, secrets, secretName)
 	}
@@ -303,7 +303,7 @@ func (r *Resources) ensureTokenSecret(ctx context.Context, cachedStatus inspecto
 	return nil
 }
 
-func (r *Resources) ensureSecretWithEmptyKey(ctx context.Context, cachedStatus inspectorInterface.Inspector, secrets secretv1.ModInterface, secretName, keyName string) error {
+func (r *Resources) ensureSecretWithEmptyKey(ctx context.Context, cachedStatus inspectorInterface.Inspector, secrets generic.ModClient[*core.Secret], secretName, keyName string) error {
 	if _, exists := cachedStatus.Secret().V1().GetSimple(secretName); !exists {
 		return r.createSecretWithKey(ctx, secrets, secretName, keyName, nil)
 	}
@@ -311,7 +311,7 @@ func (r *Resources) ensureSecretWithEmptyKey(ctx context.Context, cachedStatus i
 	return nil
 }
 
-func (r *Resources) createSecretWithMod(ctx context.Context, secrets secretv1.ModInterface, secretName string, f func(s *core.Secret)) error {
+func (r *Resources) createSecretWithMod(ctx context.Context, secrets generic.ModClient[*core.Secret], secretName string, f func(s *core.Secret)) error {
 	// Create secret
 	secret := &core.Secret{
 		ObjectMeta: meta.ObjectMeta{
@@ -337,13 +337,13 @@ func (r *Resources) createSecretWithMod(ctx context.Context, secrets secretv1.Mo
 	return errors.Reconcile()
 }
 
-func (r *Resources) createSecretWithKey(ctx context.Context, secrets secretv1.ModInterface, secretName, keyName string, value []byte) error {
+func (r *Resources) createSecretWithKey(ctx context.Context, secrets generic.ModClient[*core.Secret], secretName, keyName string, value []byte) error {
 	return r.createSecretWithMod(ctx, secrets, secretName, func(s *core.Secret) {
 		s.Data[keyName] = value
 	})
 }
 
-func (r *Resources) createTokenSecret(ctx context.Context, secrets secretv1.ModInterface, secretName string) error {
+func (r *Resources) createTokenSecret(ctx context.Context, secrets generic.ModClient[*core.Secret], secretName string) error {
 	tokenData := make([]byte, 32)
 	util.Rand().Read(tokenData)
 	token := hex.EncodeToString(tokenData)
@@ -364,7 +364,7 @@ func (r *Resources) createTokenSecret(ctx context.Context, secrets secretv1.ModI
 	return errors.Reconcile()
 }
 
-func (r *Resources) ensureEncryptionKeyfolderSecret(ctx context.Context, cachedStatus inspectorInterface.Inspector, secrets secretv1.ModInterface, keyfileSecretName, secretName string) error {
+func (r *Resources) ensureEncryptionKeyfolderSecret(ctx context.Context, cachedStatus inspectorInterface.Inspector, secrets generic.ModClient[*core.Secret], keyfileSecretName, secretName string) error {
 	_, folderExists := cachedStatus.Secret().V1().GetSimple(secretName)
 
 	keyfile, exists := cachedStatus.Secret().V1().GetSimple(keyfileSecretName)
@@ -401,7 +401,7 @@ func (r *Resources) ensureEncryptionKeyfolderSecret(ctx context.Context, cachedS
 }
 
 func AppendKeyfileToKeyfolder(ctx context.Context, cachedStatus inspectorInterface.Inspector,
-	secrets secretv1.ModInterface, ownerRef *meta.OwnerReference, secretName string, encryptionKey []byte) error {
+	secrets generic.ModClient[*core.Secret], ownerRef *meta.OwnerReference, secretName string, encryptionKey []byte) error {
 	encSha := fmt.Sprintf("%0x", sha256.Sum256(encryptionKey))
 	if _, exists := cachedStatus.Secret().V1().GetSimple(secretName); !exists {
 
@@ -443,7 +443,7 @@ var (
 // ensureExporterTokenSecret checks if a secret with given name exists in the namespace
 // of the deployment. If not, it will add such a secret with correct access.
 func (r *Resources) ensureExporterTokenSecret(ctx context.Context, cachedStatus inspectorInterface.Inspector,
-	secrets secretv1.ModInterface, tokenSecretName, secretSecretName string) error {
+	secrets generic.ModClient[*core.Secret], tokenSecretName, secretSecretName string) error {
 	if update, exists, err := r.ensureExporterTokenSecretCreateRequired(cachedStatus, tokenSecretName, secretSecretName); err != nil {
 		return err
 	} else if update {
@@ -513,7 +513,7 @@ func (r *Resources) ensureExporterTokenSecretCreateRequired(cachedStatus inspect
 
 // ensureTLSCACertificateSecret checks if a secret with given name exists in the namespace
 // of the deployment. If not, it will add such a secret with a generated CA certificate.
-func (r *Resources) ensureTLSCACertificateSecret(ctx context.Context, cachedStatus inspectorInterface.Inspector, secrets secretv1.ModInterface, spec api.TLSSpec) error {
+func (r *Resources) ensureTLSCACertificateSecret(ctx context.Context, cachedStatus inspectorInterface.Inspector, secrets generic.ModClient[*core.Secret], spec api.TLSSpec) error {
 	if _, exists := cachedStatus.Secret().V1().GetSimple(spec.GetCASecretName()); !exists {
 		// Secret not found, create it
 		apiObject := r.context.GetAPIObject()
@@ -537,7 +537,7 @@ func (r *Resources) ensureTLSCACertificateSecret(ctx context.Context, cachedStat
 
 // ensureClientAuthCACertificateSecret checks if a secret with given name exists in the namespace
 // of the deployment. If not, it will add such a secret with a generated CA certificate.
-func (r *Resources) ensureClientAuthCACertificateSecret(ctx context.Context, cachedStatus inspectorInterface.Inspector, secrets secretv1.ModInterface, spec api.SyncAuthenticationSpec) error {
+func (r *Resources) ensureClientAuthCACertificateSecret(ctx context.Context, cachedStatus inspectorInterface.Inspector, secrets generic.ModClient[*core.Secret], spec api.SyncAuthenticationSpec) error {
 	if _, exists := cachedStatus.Secret().V1().GetSimple(spec.GetClientCASecretName()); !exists {
 		// Secret not found, create it
 		apiObject := r.context.GetAPIObject()

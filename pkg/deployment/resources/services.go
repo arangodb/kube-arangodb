@@ -38,8 +38,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-	v1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember/v1"
-	servicev1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/patcher"
 )
@@ -302,7 +301,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 
 // ensureExternalAccessServices ensures all services needed for a deployment.
 func (r *Resources) ensureExternalAccessServices(ctx context.Context, cachedStatus inspectorInterface.Inspector,
-	svcs servicev1.ModInterface, eaServiceName, role string, port int, noneIsClusterIP bool, withLeader bool,
+	svcs generic.ModClient[*core.Service], eaServiceName, role string, port int, noneIsClusterIP bool, withLeader bool,
 	spec api.ExternalAccessSpec, apiObject k8sutil.APIObject) error {
 
 	eaPorts, eaSelector := k8sutil.ExternalAccessDetails(port, spec.GetNodePort(), apiObject.GetName(), role, withLeader)
@@ -475,7 +474,7 @@ func (r *Resources) ensureExternalAccessManagedServices(ctx context.Context, cac
 }
 
 // CreateServerServicePortsWithSidecars returns ports for the service.
-func CreateServerServicePortsWithSidecars(amInspector v1.Inspector, am string) []core.ServicePort {
+func CreateServerServicePortsWithSidecars(amInspector generic.Inspector[*api.ArangoMember], am string) []core.ServicePort {
 	// Create service port for the `server` container.
 	ports := []core.ServicePort{CreateServerServicePort()}
 

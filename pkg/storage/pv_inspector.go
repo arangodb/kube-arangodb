@@ -32,7 +32,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/list"
 )
 
 // inspectPVs queries all PersistentVolume's and triggers a cleanup for
@@ -41,13 +41,16 @@ import (
 func (ls *LocalStorage) inspectPVs() (int, error) {
 	var volumes []*core.PersistentVolume
 
-	if err := k8sutil.APIList[*core.PersistentVolumeList](context.Background(), ls.deps.Client.Kubernetes().CoreV1().PersistentVolumes(), meta.ListOptions{}, func(result *core.PersistentVolumeList, err error) error {
-		for _, r := range result.Items {
-			volumes = append(volumes, r.DeepCopy())
+	volumes, err := list.APIList[*core.PersistentVolumeList](context.Background(), ls.deps.Client.Kubernetes().CoreV1().PersistentVolumes(), meta.ListOptions{}, func(result *core.PersistentVolumeList) []*core.PersistentVolume {
+		q := make([]*core.PersistentVolume, len(result.Items))
+
+		for id, e := range result.Items {
+			q[id] = e.DeepCopy()
 		}
 
-		return nil
-	}); err != nil {
+		return q
+	})
+	if err != nil {
 		if err != nil {
 			return 0, errors.WithStack(err)
 		}

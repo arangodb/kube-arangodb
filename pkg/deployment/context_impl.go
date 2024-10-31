@@ -26,7 +26,9 @@ import (
 	"net"
 	"strconv"
 
+	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	core "k8s.io/api/core/v1"
+	policy "k8s.io/api/policy/v1"
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -57,13 +59,7 @@ import (
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-	persistentvolumeclaimv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim/v1"
-	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
-	poddisruptionbudgetv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget/v1"
-	secretv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
-	servicev1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service/v1"
-	serviceaccountv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount/v1"
-	servicemonitorv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
@@ -557,37 +553,37 @@ func (d *Deployment) WithStatusUpdate(ctx context.Context, action reconciler.Dep
 	})
 }
 
-func (d *Deployment) SecretsModInterface() secretv1.ModInterface {
+func (d *Deployment) SecretsModInterface() generic.ModClient[*core.Secret] {
 	d.acs.CurrentClusterCache().GetThrottles().Secret().Invalidate()
 	return kclient.NewModInterface(d.deps.Client, d.namespace).Secrets()
 }
 
-func (d *Deployment) PodsModInterface() podv1.ModInterface {
+func (d *Deployment) PodsModInterface() generic.ModClient[*core.Pod] {
 	d.acs.CurrentClusterCache().GetThrottles().Pod().Invalidate()
 	return kclient.NewModInterface(d.deps.Client, d.namespace).Pods()
 }
 
-func (d *Deployment) ServiceAccountsModInterface() serviceaccountv1.ModInterface {
+func (d *Deployment) ServiceAccountsModInterface() generic.ModClient[*core.ServiceAccount] {
 	d.acs.CurrentClusterCache().GetThrottles().ServiceAccount().Invalidate()
 	return kclient.NewModInterface(d.deps.Client, d.namespace).ServiceAccounts()
 }
 
-func (d *Deployment) ServicesModInterface() servicev1.ModInterface {
+func (d *Deployment) ServicesModInterface() generic.ModClient[*core.Service] {
 	d.acs.CurrentClusterCache().GetThrottles().Service().Invalidate()
 	return kclient.NewModInterface(d.deps.Client, d.namespace).Services()
 }
 
-func (d *Deployment) PersistentVolumeClaimsModInterface() persistentvolumeclaimv1.ModInterface {
+func (d *Deployment) PersistentVolumeClaimsModInterface() generic.ModClient[*core.PersistentVolumeClaim] {
 	d.acs.CurrentClusterCache().GetThrottles().PersistentVolumeClaim().Invalidate()
 	return kclient.NewModInterface(d.deps.Client, d.namespace).PersistentVolumeClaims()
 }
 
-func (d *Deployment) PodDisruptionBudgetsModInterface() poddisruptionbudgetv1.ModInterface {
+func (d *Deployment) PodDisruptionBudgetsModInterface() generic.ModClient[*policy.PodDisruptionBudget] {
 	d.acs.CurrentClusterCache().GetThrottles().PodDisruptionBudget().Invalidate()
 	return kclient.NewModInterface(d.deps.Client, d.namespace).PodDisruptionBudgets()
 }
 
-func (d *Deployment) ServiceMonitorsModInterface() servicemonitorv1.ModInterface {
+func (d *Deployment) ServiceMonitorsModInterface() generic.ModClient[*monitoring.ServiceMonitor] {
 	d.acs.CurrentClusterCache().GetThrottles().ServiceMonitor().Invalidate()
 	return kclient.NewModInterface(d.deps.Client, d.namespace).ServiceMonitors()
 }

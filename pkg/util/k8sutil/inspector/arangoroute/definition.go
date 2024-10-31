@@ -21,11 +21,9 @@
 package arangoroute
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
-	v1alpha1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoroute/v1alpha1"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/gvk"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/refresh"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
+	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/base"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 )
 
 type Inspector interface {
@@ -33,12 +31,7 @@ type Inspector interface {
 }
 
 type Definition interface {
-	refresh.Inspector
+	base.Inspector
 
-	gvk.GK
-	anonymous.Impl
-
-	Version() version.Version
-
-	V1Alpha1() (v1alpha1.Inspector, error)
+	V1Alpha1() (generic.Inspector[*networkingApi.ArangoRoute], error)
 }

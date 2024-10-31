@@ -31,8 +31,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-	pvcv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim/v1"
-	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
@@ -63,7 +62,7 @@ func (d *Deployment) removePodFinalizers(ctx context.Context, cachedStatus inspe
 			}
 		}
 		return nil
-	}, podv1.FilterPodsByLabels(k8sutil.LabelsForDeployment(d.GetName(), ""))); err != nil {
+	}, generic.FilterByLabels[*core.Pod](k8sutil.LabelsForDeployment(d.GetName(), ""))); err != nil {
 		return false, err
 	}
 
@@ -85,7 +84,7 @@ func (d *Deployment) removePVCFinalizers(ctx context.Context, cachedStatus inspe
 			found = true
 		}
 		return nil
-	}, pvcv1.FilterPersistentVolumeClaimsByLabels(k8sutil.LabelsForDeployment(d.GetName(), ""))); err != nil {
+	}, generic.FilterByLabels[*core.PersistentVolumeClaim](k8sutil.LabelsForDeployment(d.GetName(), ""))); err != nil {
 		return false, err
 	}
 

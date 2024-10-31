@@ -24,12 +24,12 @@ import (
 	"context"
 	"time"
 
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoclustersynchronization"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
 )
@@ -49,90 +49,16 @@ func (p arangoClusterSynchronizationsInspectorLoader) Component() definitions.Co
 
 func (p arangoClusterSynchronizationsInspectorLoader) Load(ctx context.Context, i *inspectorState) {
 	var q arangoClusterSynchronizationsInspector
-	p.loadV1(ctx, i, &q)
+
+	q.v1 = newInspectorVersion[*api.ArangoClusterSynchronizationList, *api.ArangoClusterSynchronization](ctx,
+		constants.ArangoClusterSynchronizationGRv1(),
+		constants.ArangoClusterSynchronizationGKv1(),
+		i.client.Arango().DatabaseV1().ArangoClusterSynchronizations(i.namespace),
+		arangoclustersynchronization.List())
+
 	i.arangoClusterSynchronizations = &q
 	q.state = i
 	q.last = time.Now()
-}
-
-func (p arangoClusterSynchronizationsInspectorLoader) loadV1(ctx context.Context, i *inspectorState, q *arangoClusterSynchronizationsInspector) {
-	var z arangoClusterSynchronizationsInspectorV1
-
-	z.arangoClusterSynchronizationInspector = q
-
-	z.arangoClusterSynchronizations, z.err = p.getV1ArangoClusterSynchronizations(ctx, i)
-
-	q.v1 = &z
-}
-
-func (p arangoClusterSynchronizationsInspectorLoader) getV1ArangoClusterSynchronizations(ctx context.Context, i *inspectorState) (map[string]*api.ArangoClusterSynchronization, error) {
-	objs, err := p.getV1ArangoClusterSynchronizationsList(ctx, i)
-	if err != nil {
-		return nil, err
-	}
-
-	r := make(map[string]*api.ArangoClusterSynchronization, len(objs))
-
-	for id := range objs {
-		r[objs[id].GetName()] = objs[id]
-	}
-
-	return r, nil
-}
-
-func (p arangoClusterSynchronizationsInspectorLoader) getV1ArangoClusterSynchronizationsList(ctx context.Context, i *inspectorState) ([]*api.ArangoClusterSynchronization, error) {
-	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
-	defer cancel()
-	obj, err := i.client.Arango().DatabaseV1().ArangoClusterSynchronizations(i.namespace).List(ctxChild, meta.ListOptions{
-		Limit: globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	items := obj.Items
-	cont := obj.Continue
-	var s = int64(len(items))
-
-	if z := obj.RemainingItemCount; z != nil {
-		s += *z
-	}
-
-	ptrs := make([]*api.ArangoClusterSynchronization, 0, s)
-
-	for {
-		for id := range items {
-			ptrs = append(ptrs, &items[id])
-		}
-
-		if cont == "" {
-			break
-		}
-
-		items, cont, err = p.getV1ArangoClusterSynchronizationsListRequest(ctx, i, cont)
-
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return ptrs, nil
-}
-
-func (p arangoClusterSynchronizationsInspectorLoader) getV1ArangoClusterSynchronizationsListRequest(ctx context.Context, i *inspectorState, cont string) ([]api.ArangoClusterSynchronization, string, error) {
-	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
-	defer cancel()
-	obj, err := i.client.Arango().DatabaseV1().ArangoClusterSynchronizations(i.namespace).List(ctxChild, meta.ListOptions{
-		Limit:    globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
-		Continue: cont,
-	})
-
-	if err != nil {
-		return nil, "", err
-	}
-
-	return obj.Items, obj.Continue, err
 }
 
 func (p arangoClusterSynchronizationsInspectorLoader) Verify(i *inspectorState) error {
@@ -159,7 +85,7 @@ type arangoClusterSynchronizationsInspector struct {
 
 	last time.Time
 
-	v1 *arangoClusterSynchronizationsInspectorV1
+	v1 *inspectorVersion[*api.ArangoClusterSynchronization]
 }
 
 func (p *arangoClusterSynchronizationsInspector) LastRefresh() time.Time {
@@ -189,4 +115,12 @@ func (p *arangoClusterSynchronizationsInspector) validate() error {
 	}
 
 	return p.v1.validate()
+}
+
+func (p *arangoClusterSynchronizationsInspector) V1() (generic.Inspector[*api.ArangoClusterSynchronization], error) {
+	if p.v1.err != nil {
+		return nil, p.v1.err
+	}
+
+	return p.v1, nil
 }

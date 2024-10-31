@@ -22,7 +22,6 @@ package inspector
 
 import (
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
-	arangoProfilev1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoprofile/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/mods"
@@ -38,7 +37,7 @@ type arangoProfileMod struct {
 	i *inspectorState
 }
 
-func (p arangoProfileMod) V1Beta1() arangoProfilev1.ModInterface {
+func (p arangoProfileMod) V1Beta1() generic.ModStatusClient[*schedulerApi.ArangoProfile] {
 	return wrapMod[*schedulerApi.ArangoProfile](definitions.ArangoProfile, p.i.GetThrottles, p.clientv1beta1)
 }
 

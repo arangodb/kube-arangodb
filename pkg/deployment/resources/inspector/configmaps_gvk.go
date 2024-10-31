@@ -26,14 +26,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 )
 
-func (p *configMapsInspectorV1) GroupVersionKind() schema.GroupVersionKind {
-	return constants.ConfigMapGKv1()
-}
-
-func (p *configMapsInspectorV1) GroupVersionResource() schema.GroupVersionResource {
-	return constants.ConfigMapGRv1()
-}
-
 func (p *configMapsInspector) GroupKind() schema.GroupKind {
 	return constants.ConfigMapGK()
 }

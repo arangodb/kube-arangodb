@@ -45,7 +45,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
@@ -607,7 +607,7 @@ func GetPodSpecChecksum(podSpec core.PodSpec) (string, error) {
 // CreatePod adds an owner to the given pod and calls the k8s api-server to created it.
 // If the pod already exists, nil is returned.
 // If another error occurs, that error is returned.
-func CreatePod(ctx context.Context, c podv1.ModInterface, pod *core.Pod, ns string,
+func CreatePod(ctx context.Context, c generic.ModClient[*core.Pod], pod *core.Pod, ns string,
 	owner meta.OwnerReference) (string, types.UID, error) {
 	AddOwnerRefToObject(pod.GetObjectMeta(), &owner)
 
@@ -691,7 +691,7 @@ func CreateEnvSecretKeySelector(name, SecretKeyName, secretKey string) core.EnvV
 	}
 }
 
-func EnsureFinalizerAbsent(ctx context.Context, pods podv1.Interface, pod *core.Pod, finalizers ...string) error {
+func EnsureFinalizerAbsent(ctx context.Context, pods generic.ModClient[*core.Pod], pod *core.Pod, finalizers ...string) error {
 	var newFinalizers []string
 
 	c := utils.StringList(finalizers)
@@ -709,7 +709,7 @@ func EnsureFinalizerAbsent(ctx context.Context, pods podv1.Interface, pod *core.
 	return SetFinalizers(ctx, pods, pod, newFinalizers...)
 }
 
-func EnsureFinalizerPresent(ctx context.Context, pods podv1.Interface, pod *core.Pod, finalizers ...string) error {
+func EnsureFinalizerPresent(ctx context.Context, pods generic.ModClient[*core.Pod], pod *core.Pod, finalizers ...string) error {
 	var newFinalizers []string
 
 	newFinalizers = append(newFinalizers, pod.Finalizers...)
@@ -729,7 +729,7 @@ func EnsureFinalizerPresent(ctx context.Context, pods podv1.Interface, pod *core
 	return SetFinalizers(ctx, pods, pod, newFinalizers...)
 }
 
-func SetFinalizers(ctx context.Context, pods podv1.Interface, pod *core.Pod, finalizers ...string) error {
+func SetFinalizers(ctx context.Context, pods generic.ModClient[*core.Pod], pod *core.Pod, finalizers ...string) error {
 	d, err := patch.NewPatch(patch.ItemReplace(patch.NewPath("metadata", "finalizers"), finalizers)).Marshal()
 	if err != nil {
 		return err

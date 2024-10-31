@@ -24,6 +24,7 @@ import (
 	"context"
 	"fmt"
 
+	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -33,14 +34,14 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-	secretv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	ktls "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
 )
 
 // createTLSCACertificate creates a CA certificate and stores it in a secret with name
 // specified in the given spec.
-func (r *Resources) createTLSCACertificate(ctx context.Context, secrets secretv1.ModInterface, spec api.TLSSpec,
+func (r *Resources) createTLSCACertificate(ctx context.Context, secrets generic.ModClient[*core.Secret], spec api.TLSSpec,
 	deploymentName string, ownerRef *meta.OwnerReference) error {
 	log := r.log.Str("section", "tls").Str("secret", spec.GetCASecretName())
 
@@ -64,7 +65,7 @@ func (r *Resources) createTLSCACertificate(ctx context.Context, secrets secretv1
 
 // createTLSServerCertificate creates a TLS certificate for a specific server and stores
 // it in a secret with the given name.
-func createTLSServerCertificate(ctx context.Context, log logging.Logger, cachedStatus inspectorInterface.Inspector, secrets secretv1.ModInterface, names ktls.KeyfileInput, spec api.TLSSpec,
+func createTLSServerCertificate(ctx context.Context, log logging.Logger, cachedStatus inspectorInterface.Inspector, secrets generic.ModClient[*core.Secret], names ktls.KeyfileInput, spec api.TLSSpec,
 	secretName string, ownerRef *meta.OwnerReference) (bool, error) {
 	log = log.Str("secret", secretName)
 	// Setup defaults

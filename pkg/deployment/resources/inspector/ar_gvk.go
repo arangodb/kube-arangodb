@@ -26,14 +26,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 )
 
-func (p *arangoRoutesInspectorV1Alpha1) GroupVersionKind() schema.GroupVersionKind {
-	return constants.ArangoRouteGKv1()
-}
-
-func (p *arangoRoutesInspectorV1Alpha1) GroupVersionResource() schema.GroupVersionResource {
-	return constants.ArangoRouteGRv1()
-}
-
 func (p *arangoRoutesInspector) GroupKind() schema.GroupKind {
 	return constants.ArangoRouteGK()
 }

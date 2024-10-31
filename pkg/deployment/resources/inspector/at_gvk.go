@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,14 +25,6 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 )
-
-func (p *arangoTasksInspectorV1) GroupVersionKind() schema.GroupVersionKind {
-	return constants.ArangoTaskGKv1()
-}
-
-func (p *arangoTasksInspectorV1) GroupVersionResource() schema.GroupVersionResource {
-	return constants.ArangoTaskGRv1()
-}
 
 func (p *arangoTasksInspector) GroupKind() schema.GroupKind {
 	return constants.ArangoTaskGK()

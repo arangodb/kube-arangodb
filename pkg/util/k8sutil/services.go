@@ -35,7 +35,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-	servicev1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/patcher"
 )
@@ -126,7 +126,7 @@ func ExporterServiceDetails(deploymentName string) ([]core.ServicePort, map[stri
 // If the service already exists, nil is returned.
 // If another error occurs, that error is returned.
 // The returned bool is true if the service is created, or false when the service already existed.
-func CreateHeadlessService(ctx context.Context, svcs servicev1.ModInterface, deployment meta.Object,
+func CreateHeadlessService(ctx context.Context, svcs generic.ModClient[*core.Service], deployment meta.Object,
 	ports []core.ServicePort, selectors map[string]string,
 	owner meta.OwnerReference) (string, bool, error) {
 	deploymentName := deployment.GetName()
@@ -158,7 +158,7 @@ func HeadlessServiceDetails(deploymentName string) ([]core.ServicePort, map[stri
 // If the service already exists, nil is returned.
 // If another error occurs, that error is returned.
 // The returned bool is true if the service is created, or false when the service already existed.
-func CreateDatabaseClientService(ctx context.Context, svcs servicev1.ModInterface, deployment meta.Object,
+func CreateDatabaseClientService(ctx context.Context, svcs generic.ModClient[*core.Service], deployment meta.Object,
 	ports []core.ServicePort, selectors map[string]string, owner meta.OwnerReference) (string, bool, error) {
 	deploymentName := deployment.GetName()
 	svcName := CreateDatabaseClientServiceName(deploymentName)
@@ -193,7 +193,7 @@ func DatabaseClientDetails(deploymentName string, role string, withLeader bool) 
 // If the service already exists, nil is returned.
 // If another error occurs, that error is returned.
 // The returned bool is true if the service is created, or false when the service already existed.
-func CreateExternalAccessService(ctx context.Context, svcs servicev1.ModInterface, svcName string, serviceType core.ServiceType,
+func CreateExternalAccessService(ctx context.Context, svcs generic.ModClient[*core.Service], svcName string, serviceType core.ServiceType,
 	ports []core.ServicePort, selectors map[string]string, loadBalancerIP string,
 	loadBalancerSourceRanges []string, owner meta.OwnerReference) (string, bool, error) {
 
@@ -228,7 +228,7 @@ func ExternalAccessDetails(port, nodePort int, deploymentName, role string, with
 // If the service already exists, nil is returned.
 // If another error occurs, that error is returned.
 // The returned bool is true if the service is created, or false when the service already existed.
-func createService(ctx context.Context, svcs servicev1.ModInterface, svcName, clusterIP string,
+func createService(ctx context.Context, svcs generic.ModClient[*core.Service], svcName, clusterIP string,
 	serviceType core.ServiceType, ports []core.ServicePort, selectors map[string]string, loadBalancerIP string, loadBalancerSourceRanges []string,
 	publishNotReadyAddresses bool, owner meta.OwnerReference) (bool, error) {
 	svc := &core.Service{

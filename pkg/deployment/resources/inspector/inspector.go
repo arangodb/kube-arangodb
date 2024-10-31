@@ -174,7 +174,7 @@ func (i *inspectorState) RegisterInformers(k8s informers.SharedInformerFactory, 
 		arango.Database().V1().ArangoTasks().Informer().AddEventHandler(i.eventHandler(definitions.ArangoTask))
 	}
 
-	if _, err := i.ArangoProfiles().V1Beta1(); err == nil {
+	if _, err := i.ArangoProfile().V1Beta1(); err == nil {
 		arango.Scheduler().V1beta1().ArangoProfiles().Informer().AddEventHandler(i.eventHandler(definitions.ArangoProfile))
 	}
 
@@ -343,10 +343,6 @@ func (i *inspectorState) ArangoRoute() arangoroute.Definition {
 }
 
 func (i *inspectorState) ArangoProfile() arangoprofile.Definition {
-	return i.arangoProfiles
-}
-
-func (i *inspectorState) ArangoProfiles() arangoprofile.Definition {
 	return i.arangoProfiles
 }
 

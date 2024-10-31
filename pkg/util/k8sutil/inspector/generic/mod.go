@@ -31,6 +31,8 @@ type ListContinue interface {
 	GetContinue() string
 }
 
+type ExtractorList[L ListContinue, S meta.Object] func(in L) []S
+
 type ListInterface[S ListContinue] interface {
 	List(ctx context.Context, opts meta.ListOptions) (S, error)
 }
@@ -66,7 +68,6 @@ type ReadClient[S meta.Object] interface {
 type ModClient[S meta.Object] interface {
 	CreateInterface[S]
 	UpdateInterface[S]
-	PatchInterface[S]
 	PatchInterface[S]
 	DeleteInterface[S]
 }

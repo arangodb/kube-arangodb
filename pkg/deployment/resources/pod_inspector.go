@@ -42,7 +42,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/info"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
@@ -474,7 +474,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 		}
 
 		return nil
-	}, podv1.FilterPodsByLabels(k8sutil.LabelsForDeployment(deploymentName, "")))
+	}, generic.FilterByLabels[*core.Pod](k8sutil.LabelsForDeployment(deploymentName, "")))
 	if err != nil {
 		return 0, err
 	}

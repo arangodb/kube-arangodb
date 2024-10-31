@@ -33,7 +33,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-	configMapsV1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/configmap/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/patcher"
 )
@@ -49,7 +49,7 @@ const (
 
 type memberConfigMapRenderer func(ctx context.Context, cachedStatus inspectorInterface.Inspector, member api.DeploymentStatusMemberElement) (map[string]string, error)
 
-func (r *Resources) ensureMemberConfig(ctx context.Context, cachedStatus inspectorInterface.Inspector, configMaps configMapsV1.ModInterface) error {
+func (r *Resources) ensureMemberConfig(ctx context.Context, cachedStatus inspectorInterface.Inspector, configMaps generic.ModClient[*core.ConfigMap]) error {
 	status := r.context.GetStatus()
 
 	log := r.log.Str("section", "member-config-render")

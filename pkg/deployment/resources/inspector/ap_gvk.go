@@ -26,14 +26,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 )
 
-func (p *arangoProfilesInspectorV1Beta1) GroupVersionKind() schema.GroupVersionKind {
-	return constants.ArangoProfileGKv1()
-}
-
-func (p *arangoProfilesInspectorV1Beta1) GroupVersionResource() schema.GroupVersionResource {
-	return constants.ArangoProfileGRv1()
-}
-
 func (p *arangoProfilesInspector) GroupKind() schema.GroupKind {
 	return constants.ArangoProfileGK()
 }
