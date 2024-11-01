@@ -23,6 +23,7 @@ package util
 import (
 	"io"
 	"os"
+	"time"
 
 	"github.com/pkg/errors"
 )
@@ -60,4 +61,29 @@ func Read(in io.Reader, buff []byte) (int, error) {
 			return readed, err
 		}
 	}
+}
+
+func RecentFileModTime(files ...string) time.Time {
+	var t time.Time
+
+	for _, file := range files {
+		if z := FileModTime(file); !z.IsZero() && z.After(t) {
+			t = z
+		}
+	}
+
+	return t
+}
+
+func FileModTime(file string) time.Time {
+	if file == "" {
+		return time.Time{}
+	}
+
+	stat, err := os.Stat(file)
+	if err != nil {
+		return time.Time{}
+	}
+
+	return stat.ModTime()
 }
