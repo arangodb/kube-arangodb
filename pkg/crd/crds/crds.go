@@ -97,6 +97,9 @@ func AllDefinitions() []Definition {
 
 		// Networking
 		NetworkingRouteDefinitionWithOptions(),
+
+		// Platform
+		PlatformStorageDefinitionWithOptions(),
 	}
 }
 

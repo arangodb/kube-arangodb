@@ -72,7 +72,10 @@ require (
 	sigs.k8s.io/yaml v1.4.0
 )
 
-require helm.sh/helm/v3 v3.16.2
+require (
+	github.com/aws/aws-sdk-go v1.55.5
+	helm.sh/helm/v3 v3.16.2
+)
 
 require (
 	cel.dev/expr v0.15.0 // indirect
@@ -88,7 +91,6 @@ require (
 	github.com/Microsoft/hcsshim v0.11.4 // indirect
 	github.com/arangodb/go-velocypack v0.0.0-20200318135517-5af53c29c67e // indirect
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
-	github.com/aws/aws-sdk-go v1.55.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
 	github.com/bytedance/sonic v1.9.1 // indirect

@@ -41,6 +41,7 @@ import (
 	mlApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
 	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
 	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
+	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
 	replicationv1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	replicationv2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v2alpha1"
 	schedulerApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
@@ -325,6 +326,15 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 				"v1alpha1": {
 					objects: map[string]interface{}{
 						"spec": networkingApi.ArangoRoute{}.Spec,
+					},
+				},
+			},
+		},
+		"platform-storage": {
+			fmt.Sprintf("%s/pkg/apis/platform/v1alpha1", root): {
+				"v1alpha1": {
+					objects: map[string]interface{}{
+						"spec": platformApi.ArangoPlatformStorage{}.Spec,
 					},
 				},
 			},

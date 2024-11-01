@@ -22,10 +22,15 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type StorageV2Client interface {
+	// Allows to Read Objects using stream
 	ReadObject(ctx context.Context, in *StorageV2ReadObjectRequest, opts ...grpc.CallOption) (StorageV2_ReadObjectClient, error)
+	// Allows to Write Objects using stream
 	WriteObject(ctx context.Context, opts ...grpc.CallOption) (StorageV2_WriteObjectClient, error)
+	// Gets basic info about object
 	HeadObject(ctx context.Context, in *StorageV2HeadObjectRequest, opts ...grpc.CallOption) (*StorageV2HeadObjectResponse, error)
+	// Deletes object
 	DeleteObject(ctx context.Context, in *StorageV2DeleteObjectRequest, opts ...grpc.CallOption) (*StorageV2DeleteObjectResponse, error)
+	// List all objects in batches
 	ListObjects(ctx context.Context, in *StorageV2ListObjectsRequest, opts ...grpc.CallOption) (StorageV2_ListObjectsClient, error)
 }
 
@@ -157,10 +162,15 @@ func (x *storageV2ListObjectsClient) Recv() (*StorageV2ListObjectsResponse, erro
 // All implementations must embed UnimplementedStorageV2Server
 // for forward compatibility
 type StorageV2Server interface {
+	// Allows to Read Objects using stream
 	ReadObject(*StorageV2ReadObjectRequest, StorageV2_ReadObjectServer) error
+	// Allows to Write Objects using stream
 	WriteObject(StorageV2_WriteObjectServer) error
+	// Gets basic info about object
 	HeadObject(context.Context, *StorageV2HeadObjectRequest) (*StorageV2HeadObjectResponse, error)
+	// Deletes object
 	DeleteObject(context.Context, *StorageV2DeleteObjectRequest) (*StorageV2DeleteObjectResponse, error)
+	// List all objects in batches
 	ListObjects(*StorageV2ListObjectsRequest, StorageV2_ListObjectsServer) error
 	mustEmbedUnimplementedStorageV2Server()
 }

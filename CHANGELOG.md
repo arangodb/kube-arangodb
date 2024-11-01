@@ -12,6 +12,7 @@
 - (Bugfix) Fix Gateway Options
 - (Feature) StorageV2 Integration Service Definition
 - (Feature) AWS Client
+- (Feature) (Platform) Storage V1Alpha1
 
 ## [1.2.43](https://github.com/arangodb/kube-arangodb/tree/1.2.43) (2024-10-14)
 - (Feature) ArangoRoute CRD
