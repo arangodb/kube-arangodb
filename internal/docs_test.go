@@ -45,6 +45,7 @@ import (
 	mlApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
 	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
 	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
+	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
 	replicationApi "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	schedulerApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
@@ -344,6 +345,18 @@ func Test_GenerateAPIDocs(t *testing.T) {
 					"ArangoLocalStorage.V1Alpha": {
 						"Spec": storageApi.ArangoLocalStorage{}.Spec,
 					},
+				},
+			},
+		},
+		"platform": map[string]inputPackage{
+			"v1alpha1": {
+				Types: inputPackageTypes{
+					"ArangoPlatformStorage.V1Alpha1": {
+						"Spec": platformApi.ArangoPlatformStorage{}.Spec,
+					},
+				},
+				Shared: []string{
+					"shared/v1",
 				},
 			},
 		},

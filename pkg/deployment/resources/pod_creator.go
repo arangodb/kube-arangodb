@@ -754,7 +754,6 @@ func (r *Resources) EnsurePods(ctx context.Context, cachedStatus inspectorInterf
 	iterator := r.context.GetServerGroupIterator()
 	deploymentStatus := r.context.GetStatus()
 	imageNotFoundOnce := &sync.Once{}
-	changed := false
 
 	log := r.log.Str("section", "member")
 
@@ -784,17 +783,13 @@ func (r *Resources) EnsurePods(ctx context.Context, cachedStatus inspectorInterf
 				return errors.WithStack(err)
 			}
 
-			changed = true
+			if err := cachedStatus.Refresh(ctx); err != nil {
+				return err
+			}
 		}
 		return nil
 	}, &deploymentStatus); err != nil {
 		return errors.WithStack(err)
-	}
-
-	if changed {
-		if err := cachedStatus.Refresh(ctx); err != nil {
-			return err
-		}
 	}
 
 	return nil
